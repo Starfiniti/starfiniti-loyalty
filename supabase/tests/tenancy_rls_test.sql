@@ -37,14 +37,28 @@ select is_empty(
 
 select is_empty(
   $$
-    select relation.relname
+    select 'owner:' || relation.relname as violation
     from pg_class as relation
     join pg_namespace as namespace on namespace.oid = relation.relnamespace
+    join pg_roles as owner_role on owner_role.oid = relation.relowner
     where namespace.nspname = 'loyalty'
       and relation.relkind in ('r', 'p')
-      and not relation.relforcerowsecurity
+      and owner_role.rolname <> 'loyalty_owner'
+    union all
+    select 'membership:' || member_role.rolname as violation
+    from pg_auth_members as membership
+    join pg_roles as owner_role on owner_role.oid = membership.roleid
+    join pg_roles as member_role on member_role.oid = membership.member
+    where owner_role.rolname = 'loyalty_owner'
+      and member_role.rolname in (
+        'anon',
+        'authenticated',
+        'authenticator',
+        'loyalty_runtime',
+        'loyalty_worker'
+      )
   $$,
-  'every loyalty table forces RLS for non-privileged owners'
+  'tenant tables use the no-login owner and runtime roles cannot assume it'
 );
 
 select ok(

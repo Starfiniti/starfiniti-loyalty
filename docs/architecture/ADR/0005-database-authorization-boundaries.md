@@ -6,7 +6,7 @@
 
 ## Context
 
-The platform is multi-tenant and self-hosted. Supabase secret/service keys bypass ordinary RLS and are too powerful for browsers, WordPress, or routine server requests. JWT organization claims can be stale, and `user_metadata` is user-editable. Direct application ownership of tables would also bypass forced RLS expectations.
+The platform is multi-tenant and self-hosted. Supabase secret/service keys bypass ordinary RLS and are too powerful for browsers, WordPress, or routine server requests. JWT organization claims can be stale, and `user_metadata` is user-editable. Direct application ownership of tables would also bypass RLS expectations.
 
 ## Decision
 

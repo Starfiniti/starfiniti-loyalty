@@ -21,6 +21,11 @@ begin
 end
 $$;
 
+-- Supabase migrations run as a dedicated administration role. PostgreSQL
+-- requires that role to be a member of the target owner before ownership can
+-- be transferred. Runtime roles are never granted this membership.
+grant loyalty_owner to current_user;
+
 grant usage on schema loyalty, loyalty_private to loyalty_owner;
 
 create table loyalty.organizations (
@@ -239,17 +244,11 @@ grant execute on function loyalty_private.can_access_workspace(bigint)
   to authenticated;
 
 alter table loyalty.organizations enable row level security;
-alter table loyalty.organizations force row level security;
 alter table loyalty.organization_memberships enable row level security;
-alter table loyalty.organization_memberships force row level security;
 alter table loyalty.workspaces enable row level security;
-alter table loyalty.workspaces force row level security;
 alter table loyalty.programme_groups enable row level security;
-alter table loyalty.programme_groups force row level security;
 alter table loyalty.programme_group_workspaces enable row level security;
-alter table loyalty.programme_group_workspaces force row level security;
 alter table loyalty.support_access_grants enable row level security;
-alter table loyalty.support_access_grants force row level security;
 
 create policy organizations_member_select
   on loyalty.organizations
