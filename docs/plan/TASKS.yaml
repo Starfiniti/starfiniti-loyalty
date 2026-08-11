@@ -72,7 +72,7 @@ tasks:
   - id: P2-ARCHITECTURE
     title: Complete modular architecture and threat-model gate
     phase: 2
-    status: in_progress
+    status: complete
     dependencies: [P1-DOMAIN-DECISIONS]
     acceptance:
       - Authoritative writes and every external trust boundary are documented
@@ -95,11 +95,18 @@ tasks:
         docs/operations/BACKUP_RESTORE.md,
         docs/operations/DEPLOYMENT.md,
       ]
-    evidence: []
+    evidence:
+      - eight architecture security privacy and operations models define trust boundaries state models controls and verification
+      - ADR-0005 selects live database membership RLS and least-privilege private commands
+      - ADR-0006 selects immutable balanced double-entry points with rebuildable projections
+      - ADR-0007 selects signed inbox transactional outbox layered idempotency and reconciliation
+      - Supabase breaking changes reviewed on 2026-08-11 including Envoy API_EXTERNAL_URL PostgreSQL 17 ownership Data API and auth keys
+      - npm run architecture:validate passed for eight models and three accepted ADRs
+      - npm run check db:validate secrets:scan audit:prod and licenses passed
   - id: P3-TENANCY-SCHEMA
     title: Implement tenancy schema and adversarial RLS tests
     phase: 3
-    status: proposed
+    status: in_progress
     dependencies: [P2-ARCHITECTURE]
     acceptance:
       - Every exposed tenant table has RLS

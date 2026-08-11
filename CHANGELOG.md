@@ -19,3 +19,6 @@
 - Licensed the hosted platform under AGPL-3.0-or-later while retaining GPL-2.0-or-later for the WooCommerce plugin.
 - Completed the Phase 1 product-model gate for the active WooCommerce scope; Shopify remains deferred.
 - Merged the verified Phase 0/1 work and published `Starfiniti/starfiniti-loyalty` as a public AGPL repository.
+- Completed Phase 2 with reviewable architecture, data, identity, event, threat, privacy, recovery, deployment, and SLO models.
+- Accepted ADR-0005 through ADR-0007 for database authorization boundaries, an immutable double-entry points ledger, and transactional inbox/outbox processing.
+- Added a deterministic Phase 2 architecture validator to the complete repository gate.

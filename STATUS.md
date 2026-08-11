@@ -8,10 +8,11 @@
 - Pure domain behavior covers integer award calculation, explicit historical tier snapshots, 30-day release, 12-month rolling expiry, earliest-expiry redemption ordering, rolling-spend tiers with grace, cumulative original-attribution refund reversal, and negative balances.
 - Sixteen domain tests and two contract tests pass.
 - The platform carries a full AGPL-3.0 license and package metadata; the WooCommerce connector remains independently GPL-2.0-or-later.
+- Phase 2 architecture is complete and deterministically validated: tenant/Auth trust, identity, double-entry ledger, signed inbox/outbox, reward reservation, privacy, backup/restore, deployment, and SLO models are reviewable.
 
 ## Partial
 
-- Phases 0 and 1 are complete for the active WooCommerce scope. Phase 2 architecture/threat modelling is the next gate.
+- Phases 0 through 2 are complete for the active WooCommerce scope. Phase 3 tenancy/RLS implementation is in progress.
 - Only the Overview dashboard route and WooCommerce administrative boundary exist; the API, workers, ledger, programme editor, customer views, and production connector flows are pending.
 
 ## Broken or unavailable
@@ -37,13 +38,14 @@ Public repository `Starfiniti/starfiniti-loyalty`; clean local `main`; PR `#1` m
 - `npm run secrets:scan` — passed for 147 tracked files.
 - `npm run audit:prod` — passed with zero production vulnerabilities.
 - `npm run licenses` — passed for five AGPL npm package declarations, the full AGPL text, and both WooCommerce GPL declarations.
+- `npm run architecture:validate` — passed for eight Phase 2 models and three accepted ADRs; it now runs inside `npm run check`.
 - PR exact-head run `31512548299` passed the baseline and Docker/Supabase database jobs.
 - Public `main` run `31513294330` passed both jobs after merge, including migration replay, seed, pgTAP, and cleanup.
 
 ## Next recommended task
 
-Complete `P2-ARCHITECTURE`, then implement Phase 3 tenancy schema and adversarial RLS tests.
+Implement the Phase 3 tenancy schema, least-privilege grants, and adversarial RLS tests.
 
 ## Blockers
 
-Phase 2 work is unblocked. Proxmox deployment requires working SSH authentication, DNS/TLS choices, an off-host backup target, and production credentials; none should be guessed or committed.
+Phase 3 work is unblocked. Proxmox deployment requires working SSH authentication, DNS/TLS choices, an off-host backup target, and production credentials; none should be guessed or committed.

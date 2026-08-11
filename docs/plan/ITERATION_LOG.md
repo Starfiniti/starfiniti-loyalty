@@ -38,3 +38,13 @@
 - Added the full AGPL license and package metadata while retaining the WooCommerce plugin's GPL license.
 - Closed Phase 1 for the owner-directed WooCommerce scope and restored the Phase 2 architecture/threat-model gate before tenancy implementation.
 - Merged PR `#1`, published the repository publicly under AGPL, and confirmed public `main` CI run `31513294330` passed both baseline and Docker/Supabase jobs.
+
+## 2026-08-11 — Phase 2 architecture and threat-model gate
+
+- Reviewed the current Supabase breaking-change changelog and self-hosting, RLS, Auth-key, JWT, and connection guidance.
+- Incorporated Envoy's default gateway, `/auth/v1` external Auth URL, PostgreSQL 17 upgrade boundary, Studio ownership change, opt-in Data API exposure, and generated publishable/secret/asymmetric keys.
+- Defined explicit browser, BFF, ingestion, worker, database-role, WordPress, and infrastructure trust boundaries.
+- Designed live membership authorization, composite tenant keys, immutable double-entry ledger/projections, signed inbox/outbox, reward reservation, identity claim, privacy, backup/restore, and failure state models.
+- Accepted ADR-0005, ADR-0006, and ADR-0007 with alternatives and rollback implications.
+- Added `architecture:validate` to `npm run check`; full check, migration validation, secret scan, production audit, and license validation passed.
+- Closed `P2-ARCHITECTURE` and started `P3-TENANCY-SCHEMA`.
