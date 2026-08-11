@@ -12,7 +12,7 @@ WooCommerce deliveries use a versioned JSON envelope over HTTPS, but the signatu
 - `X-Starfiniti-Signature`: versioned HMAC-SHA-256 value.
 - `Content-Type: application/json` and a supported contract version in the body.
 
-The canonical signature input is versioned and length-delimited so fields cannot be concatenation-ambiguous. It binds the HTTP method/path, connection, delivery ID, timestamp, nonce, and raw-body SHA-256. Exact format is frozen with cross-language PHP/TypeScript contract fixtures before connector traffic is enabled.
+The canonical signature input is newline-delimited after validating every identifier as a newline-free token. In order, it binds the signature version, request target, connection ID, delivery ID, timestamp, nonce, and raw-body SHA-256. The PHP connector and TypeScript receiver use this same frozen format.
 
 ## Receiver behavior
 

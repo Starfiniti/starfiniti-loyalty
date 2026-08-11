@@ -10,18 +10,29 @@ const encoder = new TextEncoder();
 const secret = encoder.encode("local-fixture-key-material");
 const rawBody = encoder.encode('{"version":"1","deliveryId":"delivery-42"}');
 const requestTarget = "/api/v1/integrations/woocommerce/events";
+const connectionId = "5abf9309-a530-489f-a63f-51130c4fc01d";
+const deliveryId = "delivery-42";
 const timestamp = "1786471200";
 const nonce = "delivery-42-attempt-1";
 
 function signedHeaders() {
   const signed = signWooCommerceDelivery({
     requestTarget,
+    connectionId,
+    deliveryId,
     timestamp,
     nonce,
     rawBody,
     secret,
   });
-  return { timestamp, nonce, keyVersion: "v1", ...signed };
+  return {
+    connectionId,
+    deliveryId,
+    timestamp,
+    nonce,
+    keyVersion: "v1",
+    ...signed,
+  };
 }
 
 describe("WooCommerce delivery contracts", () => {
@@ -29,7 +40,7 @@ describe("WooCommerce delivery contracts", () => {
     const result = wooCommerceDeliveryEnvelopeV1.safeParse({
       version: "1",
       deliveryId: "delivery-42",
-      connectionId: "5abf9309-a530-489f-a63f-51130c4fc01d",
+      connectionId,
       sourceEventId: "order-42-revision-3",
       eventType: "commerce.order.status_changed",
       sourceObjectId: "42",
@@ -54,7 +65,7 @@ describe("WooCommerce delivery contracts", () => {
     const result = canonicalCommerceEventV1.safeParse({
       version: "1",
       normalizationVersion: "v1",
-      connectionId: "5abf9309-a530-489f-a63f-51130c4fc01d",
+      connectionId,
       sourceEventId: "refund-9",
       eventType: "commerce.order.refunded",
       sourceObjectId: "42",

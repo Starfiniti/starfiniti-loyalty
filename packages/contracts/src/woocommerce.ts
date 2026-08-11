@@ -58,6 +58,8 @@ export const canonicalCommerceEventV1 = z
 export type CanonicalCommerceEventV1 = z.infer<typeof canonicalCommerceEventV1>;
 
 export type WooCommerceSignatureHeaders = Readonly<{
+  connectionId: string;
+  deliveryId: string;
   timestamp: string;
   nonce: string;
   keyVersion: string;
@@ -81,6 +83,8 @@ const SAFE_TOKEN = /^[A-Za-z0-9._:-]{1,255}$/u;
 
 export function buildWooCommerceSigningMessage(input: {
   requestTarget: string;
+  connectionId: string;
+  deliveryId: string;
   timestamp: string;
   nonce: string;
   bodySha256: string;
@@ -88,6 +92,8 @@ export function buildWooCommerceSigningMessage(input: {
   return [
     "starfiniti-woocommerce-v1",
     input.requestTarget,
+    input.connectionId,
+    input.deliveryId,
     input.timestamp,
     input.nonce,
     input.bodySha256,
@@ -96,6 +102,8 @@ export function buildWooCommerceSigningMessage(input: {
 
 export function signWooCommerceDelivery(input: {
   requestTarget: string;
+  connectionId: string;
+  deliveryId: string;
   timestamp: string;
   nonce: string;
   rawBody: Uint8Array;
@@ -104,6 +112,8 @@ export function signWooCommerceDelivery(input: {
   const bodySha256 = createHash("sha256").update(input.rawBody).digest("hex");
   const message = buildWooCommerceSigningMessage({
     requestTarget: input.requestTarget,
+    connectionId: input.connectionId,
+    deliveryId: input.deliveryId,
     timestamp: input.timestamp,
     nonce: input.nonce,
     bodySha256,
@@ -128,8 +138,18 @@ export function verifyWooCommerceDelivery(input: {
     return { ok: false, reason: "body_too_large" };
   }
 
-  const { timestamp, nonce, keyVersion, bodySha256, signature } = input.headers;
+  const {
+    connectionId,
+    deliveryId,
+    timestamp,
+    nonce,
+    keyVersion,
+    bodySha256,
+    signature,
+  } = input.headers;
   if (
+    !z.uuid().safeParse(connectionId).success ||
+    !SAFE_TOKEN.test(deliveryId) ||
     !/^\d{10}$/u.test(timestamp) ||
     !SAFE_TOKEN.test(nonce) ||
     !SAFE_TOKEN.test(keyVersion) ||
@@ -159,6 +179,8 @@ export function verifyWooCommerceDelivery(input: {
 
   const message = buildWooCommerceSigningMessage({
     requestTarget: input.requestTarget,
+    connectionId,
+    deliveryId,
     timestamp,
     nonce,
     bodySha256,

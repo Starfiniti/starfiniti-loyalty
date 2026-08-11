@@ -176,13 +176,15 @@ final class Outbox
         $path = (string) wp_parse_url($endpoint, PHP_URL_PATH);
         $query = (string) wp_parse_url($endpoint, PHP_URL_QUERY);
         $requestTarget = $path . ('' !== $query ? '?' . $query : '');
-        $message = implode("\n", ['starfiniti-woocommerce-v1', $requestTarget, $timestamp, $nonce, $bodyHash]);
+        $message = implode("\n", ['starfiniti-woocommerce-v1', $requestTarget, $connectionId, (string) $row['delivery_id'], $timestamp, $nonce, $bodyHash]);
         $signature = hash_hmac('sha256', $message, $signingKey);
 
         $response = wp_remote_post($endpoint, [
             'timeout' => 10,
             'headers' => [
                 'Content-Type' => 'application/json',
+                'X-Starfiniti-Connection-ID' => $connectionId,
+                'X-Starfiniti-Delivery-ID' => (string) $row['delivery_id'],
                 'X-Starfiniti-Timestamp' => $timestamp,
                 'X-Starfiniti-Nonce' => $nonce,
                 'X-Starfiniti-Key-Version' => $keyVersion,

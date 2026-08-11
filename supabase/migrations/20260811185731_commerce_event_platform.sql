@@ -298,6 +298,8 @@ create policy commerce_connections_member_select
   using ((select loyalty_private.is_organization_member(organization_id)));
 create policy commerce_connections_worker_all
   on loyalty.commerce_connections for all to loyalty_worker using (true) with check (true);
+create policy commerce_connections_runtime_select
+  on loyalty.commerce_connections for select to loyalty_runtime using (true);
 create policy commerce_delivery_inbox_worker_all
   on loyalty_private.commerce_delivery_inbox for all to loyalty_worker using (true) with check (true);
 create policy canonical_commerce_events_worker_all
@@ -309,6 +311,7 @@ create policy transactional_outbox_worker_all
 
 revoke all on loyalty.commerce_connections from public, anon, authenticated;
 grant select on loyalty.commerce_connections to authenticated;
+grant select on loyalty.commerce_connections to loyalty_runtime;
 
 revoke all on all tables in schema loyalty_private from public, anon, authenticated, loyalty_runtime;
 revoke all on all sequences in schema loyalty_private from public, anon, authenticated, loyalty_runtime;

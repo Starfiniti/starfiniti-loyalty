@@ -11,6 +11,9 @@ services:
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:?required}
       SUPABASE_SECRET_KEY: ${SUPABASE_SECRET_KEY:?required}
       DATABASE_URL: ${DATABASE_URL:?required}
+      WOOCOMMERCE_SIGNING_MATERIAL_FILE: /run/secrets/woocommerce_signing_material
+    secrets:
+      - woocommerce_signing_material
     ports:
       - "127.0.0.1:3000:3000"
     security_opt:
@@ -23,3 +26,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
+
+secrets:
+  woocommerce_signing_material:
+    file: ${WOOCOMMERCE_SIGNING_MATERIAL_PATH:?required}
