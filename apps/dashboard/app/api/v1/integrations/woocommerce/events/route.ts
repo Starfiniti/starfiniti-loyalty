@@ -22,6 +22,10 @@ type ConnectionRow = {
 };
 
 type ReceiptRow = { receipt_id: string; outcome: "accepted" | "duplicate" };
+type NormalizationRow = {
+  canonical_event_id: string;
+  outcome: "created" | "duplicate";
+};
 
 export async function POST(request: Request): Promise<Response> {
   const contentLength = Number(request.headers.get("content-length") ?? "0");
@@ -96,7 +100,18 @@ export async function POST(request: Request): Promise<Response> {
     `;
     const receipt = receipts[0];
     if (!receipt) throw new Error("receipt_unavailable");
-    return Response.json(receipt, { status: 202 });
+    const normalized = await sql<NormalizationRow[]>`
+      select canonical_event_id, outcome
+      from loyalty_private.normalize_commerce_delivery(
+        ${receipt.receipt_id}::uuid,
+        'v1'
+      )
+    `;
+    if (!normalized[0]) throw new Error("normalization_unavailable");
+    return Response.json(
+      { ...receipt, normalization: normalized[0] },
+      { status: 202 },
+    );
   } catch (error) {
     const code = databaseErrorCode(error);
     if (code === "23505" || code === "23514") {

@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(31);
+select plan(35);
 
 select has_table('loyalty', 'commerce_connections', 'commerce connections exist');
 select has_table('loyalty_private', 'commerce_delivery_inbox', 'delivery inbox exists');
@@ -46,6 +46,14 @@ select ok(
     'EXECUTE'
   ),
   'ingestion runtime can execute only the acceptance command'
+);
+select ok(
+  has_function_privilege(
+    'loyalty_runtime',
+    'loyalty_private.normalize_commerce_delivery(uuid,text)',
+    'EXECUTE'
+  ),
+  'ingestion runtime can execute the idempotent normalization command'
 );
 select ok(
   not has_table_privilege(
@@ -142,7 +150,7 @@ from loyalty_private.accept_commerce_delivery(
   (select id from loyalty.commerce_connections where external_store_id = 'store-one'),
   'delivery-42', '1', 'order-42-v3', 'commerce.order.status_changed',
   '42', '3', '2026-08-11T18:00:00Z', '2026-08-11T18:00:01Z',
-  'v1', 'nonce-42', repeat('a', 64), '{"version":"1"}'::jsonb
+  'v1', 'nonce-42', repeat('a', 64), '{"version":"1","payload":{"status":"completed"}}'::jsonb
 ) as accepted;
 
 select results_eq(
@@ -163,7 +171,7 @@ from loyalty_private.accept_commerce_delivery(
   (select id from loyalty.commerce_connections where external_store_id = 'store-one'),
   'delivery-42', '1', 'order-42-v3', 'commerce.order.status_changed',
   '42', '3', '2026-08-11T18:00:00Z', '2026-08-11T18:00:02Z',
-  'v1', 'nonce-42-retry', repeat('a', 64), '{"version":"1"}'::jsonb
+  'v1', 'nonce-42-retry', repeat('a', 64), '{"version":"1","payload":{"status":"completed"}}'::jsonb
 ) as accepted;
 
 select results_eq(
@@ -232,15 +240,29 @@ select throws_ok(
 update loyalty.commerce_connections set status = 'active'
 where external_store_id = 'store-one';
 
-insert into loyalty_private.canonical_commerce_events (
-  organization_id, connection_id, delivery_inbox_id, source_event_id,
-  normalization_version, event_type, source_object_id, source_revision,
-  occurred_at, payload
-)
-select inbox.organization_id, inbox.connection_id, inbox.id, inbox.source_event_id,
-  'v1', inbox.event_type, inbox.source_object_id, inbox.source_revision,
-  inbox.occurred_at, '{"status":"completed"}'::jsonb
-from loyalty_private.commerce_delivery_inbox as inbox;
+select results_eq(
+  $$
+    select outcome from loyalty_private.normalize_commerce_delivery(
+      (select receipt_id from delivery_results where attempt = 1), 'v1'
+    )
+  $$,
+  array['created'::text],
+  'accepted delivery creates one canonical fact'
+);
+select results_eq(
+  'select count(*)::bigint from loyalty_private.canonical_commerce_events',
+  array[1::bigint],
+  'normalization stores exactly one canonical event'
+);
+select results_eq(
+  $$
+    select outcome from loyalty_private.normalize_commerce_delivery(
+      (select receipt_id from delivery_results where attempt = 1), 'v1'
+    )
+  $$,
+  array['duplicate'::text],
+  'repeated normalization returns the existing canonical fact'
+);
 
 select throws_ok(
   $$

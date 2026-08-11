@@ -278,6 +278,79 @@ alter function loyalty_private.accept_commerce_delivery(
   timestamptz, text, text, text, jsonb
 ) owner to loyalty_owner;
 
+create or replace function loyalty_private.normalize_commerce_delivery(
+  target_receipt_id uuid,
+  target_normalization_version text default 'v1'
+)
+returns table (canonical_event_id uuid, outcome text)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  target_delivery loyalty_private.commerce_delivery_inbox%rowtype;
+  normalized_event_id uuid;
+  normalization_outcome text := 'created';
+begin
+  select inbox.* into target_delivery
+  from loyalty_private.commerce_delivery_inbox as inbox
+  where inbox.receipt_id = target_receipt_id
+  for update;
+
+  if not found then
+    raise exception using errcode = '22023', message = 'unknown commerce delivery receipt';
+  end if;
+  if target_normalization_version !~ '^v[1-9][0-9]*$' then
+    raise exception using errcode = '22023', message = 'invalid normalization version';
+  end if;
+
+  insert into loyalty_private.canonical_commerce_events (
+    organization_id,
+    connection_id,
+    delivery_inbox_id,
+    source_event_id,
+    normalization_version,
+    event_type,
+    source_object_id,
+    source_revision,
+    occurred_at,
+    payload
+  ) values (
+    target_delivery.organization_id,
+    target_delivery.connection_id,
+    target_delivery.id,
+    target_delivery.source_event_id,
+    target_normalization_version,
+    target_delivery.event_type,
+    target_delivery.source_object_id,
+    target_delivery.source_revision,
+    target_delivery.occurred_at,
+    target_delivery.raw_body -> 'payload'
+  )
+  on conflict (connection_id, source_event_id, normalization_version) do nothing
+  returning public_id into normalized_event_id;
+
+  if normalized_event_id is null then
+    normalization_outcome := 'duplicate';
+    select event.public_id into normalized_event_id
+    from loyalty_private.canonical_commerce_events as event
+    where event.connection_id = target_delivery.connection_id
+      and event.source_event_id = target_delivery.source_event_id
+      and event.normalization_version = target_normalization_version;
+  end if;
+
+  update loyalty_private.commerce_delivery_inbox
+  set state = 'applied', processed_at = coalesce(processed_at, now()),
+      lease_owner = null, lease_expires_at = null, last_error_code = null
+  where id = target_delivery.id;
+
+  return query select normalized_event_id, normalization_outcome;
+end;
+$$;
+
+alter function loyalty_private.normalize_commerce_delivery(uuid, text)
+  owner to loyalty_owner;
+
 revoke all on function loyalty_private.accept_commerce_delivery(
   bigint, bigint, text, text, text, text, text, text, timestamptz,
   timestamptz, text, text, text, jsonb
@@ -286,6 +359,10 @@ grant execute on function loyalty_private.accept_commerce_delivery(
   bigint, bigint, text, text, text, text, text, text, timestamptz,
   timestamptz, text, text, text, jsonb
 ) to loyalty_runtime;
+revoke all on function loyalty_private.normalize_commerce_delivery(uuid, text)
+  from public, anon, authenticated;
+grant execute on function loyalty_private.normalize_commerce_delivery(uuid, text)
+  to loyalty_runtime;
 
 alter table loyalty.commerce_connections enable row level security;
 alter table loyalty_private.commerce_delivery_inbox enable row level security;
