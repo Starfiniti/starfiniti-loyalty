@@ -2,47 +2,44 @@
 
 ## Objective
 
-Finish Starfiniti Loyalty as an open-source, self-hosted platform on Proxmox using Next.js, PostgreSQL/Supabase, and a production WooCommerce plugin. Shopify is deferred, not removed from the long-term product model.
+Finish Starfiniti Loyalty as an open-source, self-hosted platform on Proxmox using Next.js, PostgreSQL/Supabase, and a production WooCommerce plugin. Shopify is deferred by product-owner direction.
 
 ## Current phase
 
-Phase 1 — loyalty value semantics and executable programme examples.
+Phase 2 — architecture, data model, and threat-model gate.
 
 ## Evidence and completed work
 
-- Repository discovery found only the approved design ZIP; there was no Git repository or application code.
-- The master plan and complete design prototype are preserved in `docs/`.
-- Current Supabase self-hosting and WooCommerce primary documentation was reviewed on 2026-08-11.
-- npm workspaces were selected because npm 11 is available while the local pnpm shim is broken.
-- A faithful responsive Overview route, standalone packaging, four unit tests, Supabase migration baseline, WooCommerce HPOS scaffold, and Proxmox deployment contract are implemented and verified.
-- `design-qa.md` passed at 912 × 512 and responsive navigation passed at 390 × 844.
-- The private GitHub repository was created at `Starfiniti/starfiniti-loyalty`.
-- GitHub Actions run `31506030405` passed both the baseline job and the Linux/Docker database job, including migration replay, seed, pgTAP, and cleanup.
+- Phase 0 is complete: the npm workspace, responsive Next.js Overview, Supabase migration baseline, WooCommerce HPOS scaffold, Proxmox deployment contract, operating documents, and pinned CI exist.
+- GitHub Actions run `31506030405` passed the baseline and Docker-backed database jobs, including migration replay, seed, eight pgTAP assertions, and cleanup.
+- Phase 1 is complete for the active WooCommerce scope. The owner approved ADR-0004 on 2026-08-11.
+- `rosyRewardsV1` encodes 100 points/EUR redemption, a 30-day pending period, 12-month rolling expiry, original-attribution refunds, and Rose/Bloom/Icon tiers at EUR 0/150/500 with 5/6/7 points per EUR.
+- Domain helpers require the historical programme version and tier snapshot. Sixteen domain tests cover configuration, award rounding, tier boundaries/grace, cumulative refunds, negative balances, release, expiry, ordering, and invalid inputs.
+- AGPL-3.0-or-later is approved for the hosted platform. The WooCommerce plugin remains GPL-2.0-or-later.
+- The private GitHub repository and draft PR are at `Starfiniti/starfiniti-loyalty` and PR `#1`.
 
 ## Active work
 
-- `P1-DOMAIN-DECISIONS` (in progress): approve loyalty value semantics and encode Rosy Rewards as executable, policy-driven fixtures.
+- `P2-ARCHITECTURE` (in progress): make modular boundaries, tenancy, identity, immutable-ledger, event, reward-reservation, threat, and recovery models reviewable before schema implementation.
 
 ## Next safe tasks
 
-1. Approve or amend ADR-0004 recommendations for points value, award timing, refunds, expiry, rounding, guest identity, and negative balances.
-2. Encode the approved policies as required domain configuration and executable Rosy Rewards fixtures.
-3. Begin the tenancy schema only after Phase 1 tests and examples pass.
+1. Complete the Phase 2 system, data, event, identity, threat, privacy, and operations models with explicit trust boundaries and rollback implications.
+2. Close every critical architecture/threat issue or record the exact owner decision required.
+3. Begin the tenancy schema and adversarial RLS tests only after the Phase 2 gate passes.
 
 ## Dependencies and blockers
 
 - Docker is not installed on this Windows workstation; GitHub Actions is the verified Linux/Docker database runner.
-- Direct Proxmox SSH currently fails: the public alias rejects the configured key and the VPN alias times out.
-- The repository-wide open-source license needs owner approval; the WooCommerce plugin can independently use GPL-2.0-or-later.
-- Proxmox host addresses, DNS, TLS issuer, backup target, and production credentials are intentionally absent.
+- Direct Proxmox SSH is unavailable: the public alias rejects the configured keys, the VPN alias times out, and the tested jump-host route cannot reach the private alias.
+- Proxmox deployment ultimately needs a working SSH route plus host addresses, DNS, TLS issuer, off-host backup target, and production credentials. These inputs do not block Phase 2 design.
 
 ## Decisions awaiting approval
 
-- Repository license: recommended AGPL-3.0-or-later for the hosted platform; alternatives are Apache-2.0 or a split-license model.
-- Product semantics in proposed ADR-0004; recommendations require explicit owner approval before balance-affecting code is implemented.
+No Phase 1 value-semantics or licensing decision remains open. New material product, legal, production-access, or architecture tradeoffs will be raised when evidence requires them.
 
 ## Quality gate
 
-`npm run check && npm run db:validate && npm run secrets:scan && npm run audit:prod`
+`npm run check && npm run db:validate && npm run secrets:scan && npm run audit:prod && npm run licenses`
 
-See `docs/architecture/ADR/` and `RISKS.md`.
+See `docs/architecture/ADR/`, `RISKS.md`, and `docs/plan/TASKS.yaml`.

@@ -2,55 +2,48 @@
 
 ## What works
 
-- Approved prototype and master plan are preserved under `docs/`.
-- Root npm workspace, repository instructions, plan/task ledger, and CI contract exist.
-- The responsive Next.js Overview route builds as a standalone production server and matches the approved 912 × 512 reference; `design-qa.md` passed.
-- Date range, publish confirmation, and mobile navigation interactions work with no browser console warnings/errors.
-- Domain integer value types and canonical commerce-envelope contracts have four passing unit tests.
-- The WooCommerce scaffold declares HPOS compatibility and passes PHP 8.3 syntax checks.
-- Supabase CLI 2.113.0 generated the first versioned schema migration.
-- A Docker-backed GitHub Actions job now replays migrations/seed and runs pgTAP using the lockfile-pinned CLI.
-- Static verification covers the Postgres 17 configuration, migration naming/secrets, Data API schema boundary, pgTAP transaction structure, workflow triggers, permissions, cleanup, and pinned action SHAs.
-- GitHub Actions run `31506030405` passed the baseline and database jobs, including migration replay, seed, all eight pgTAP assertions, and destructive test-container cleanup.
+- Phase 0's reproducible npm workspace, responsive standalone Next.js Overview, Supabase migration baseline, WooCommerce HPOS scaffold, repository operating system, and pinned CI are verified.
+- The Docker-backed GitHub Actions database job replays migrations/seed and passes all eight transactional pgTAP assertions.
+- Phase 1 Rosy Rewards semantics are owner-approved and encoded as versioned configuration rather than global merchant assumptions.
+- Pure domain behavior covers integer award calculation, explicit historical tier snapshots, 30-day release, 12-month rolling expiry, earliest-expiry redemption ordering, rolling-spend tiers with grace, cumulative original-attribution refund reversal, and negative balances.
+- Sixteen domain tests and two contract tests pass.
+- The platform carries a full AGPL-3.0 license and package metadata; the WooCommerce connector remains independently GPL-2.0-or-later.
 
 ## Partial
 
-- Phase 0 is complete. Phase 1 value semantics are proposed in ADR-0004 and await explicit owner approval before balance-affecting implementation.
-- Only the Overview dashboard route and WooCommerce administrative boundary are implemented; the remaining approved routes and connector behavior are pending.
+- Phases 0 and 1 are complete for the active WooCommerce scope. Phase 2 architecture/threat modelling is the next gate.
+- Only the Overview dashboard route and WooCommerce administrative boundary exist; the API, workers, ledger, programme editor, customer views, and production connector flows are pending.
 
 ## Broken or unavailable
 
-- Docker, Podman, and WSL remain unavailable on this workstation; GitHub Actions provides the verified database runner.
-- Direct Proxmox SSH is not usable with the current aliases: public-key authentication fails on `proxmox`, while `proxmox-vpn` times out.
-- The globally configured `pnpm` shim points to a missing module; npm is the supported package manager.
-- No Supabase or WooCommerce environment is connected yet.
+- Docker, Podman, and WSL remain unavailable on this workstation; GitHub Actions is the verified database runner.
+- Direct Proxmox SSH is not usable with the available aliases and keys. No persistent Supabase or WooCommerce environment has been mutated.
+- The globally configured `pnpm` shim is broken; npm is the supported package manager.
 
 ## Database migration state
 
-The foundation migration and seed were executed successfully against the disposable Supabase CI database. No persistent or production database has been mutated.
+The foundation migration and seed executed successfully against disposable Supabase CI. No persistent or production database has been changed.
 
 ## Git state
 
-Private repository `Starfiniti/starfiniti-loyalty`; initial commit `3e822e8` is on `main`. Phase-closing documentation is on `agent/close-phase-0` pending review.
+Private repository `Starfiniti/starfiniti-loyalty`; branch `agent/close-phase-0`; draft PR `#1`. The approved semantics, AGPL license, tests, and Phase 1 evidence are the current branch changes pending final CI verification.
 
 ## Last verification
 
-- `npm ci --cache .npm-cache --no-audit --no-fund` — passed from an empty `node_modules`.
-- `npm run check` — passed (format, lint, TypeScript, 4 tests, standalone production build).
-- `npm run ci:validate` — passed; 2 CI jobs and all external actions pinned by commit SHA.
-- `npm run db:validate` — passed; Postgres 17 config, 1 migration, and 1 transactional pgTAP file.
-- `npm run db:verify` — intentionally failed at the container-runtime preflight; no Docker, Podman, or WSL is installed. Database SQL was not executed.
-- `npm run secrets:scan` — passed; 139 files scanned at the final run.
-- `npm run audit:prod` — passed; 0 production vulnerabilities.
-- `npm run licenses` — passed; repository root remains intentionally `UNLICENSED` until owner approval.
-- PHP syntax checks — passed for both plugin PHP files.
-- Production HTML/CSS/JS asset checks — HTTP 200.
-- GitHub Actions run `31506030405` — passed; baseline completed in 1m08s and database completed in 2m36s.
+- `npm run test --workspace=@starfiniti/domain` — passed with 16 tests.
+- `npm run typecheck --workspace=@starfiniti/domain` — passed.
+- `npm run check` — passed: formatting, zero-warning lint, all workspace type checks, 18 unit tests, CI contract validation, and standalone Next.js production build.
+- `npm run db:validate` — passed for one migration, Supabase config, and one transactional pgTAP file.
+- `npm run secrets:scan` — passed for 147 tracked files.
+- `npm run audit:prod` — passed with zero production vulnerabilities.
+- `npm run licenses` — passed for five AGPL npm package declarations, the full AGPL text, and both WooCommerce GPL declarations.
+- The exact-head GitHub Actions run is pending publication of the final commit.
+- Prior GitHub Actions run `31506030405` passed the baseline and database jobs.
 
 ## Next recommended task
 
-Approve or amend ADR-0004, then encode the selected policies and Rosy Rewards executable examples in `packages/domain`.
+Complete `P2-ARCHITECTURE`, then implement Phase 3 tenancy schema and adversarial RLS tests.
 
 ## Blockers
 
-Balance-affecting Phase 1 decisions and the repository license require explicit product-owner approval. Proxmox deployment additionally needs working SSH authentication, DNS/TLS choices, and a backup target; none block policy-neutral domain design.
+Phase 2 work is unblocked. Proxmox deployment requires working SSH authentication, DNS/TLS choices, an off-host backup target, and production credentials; none should be guessed or committed.

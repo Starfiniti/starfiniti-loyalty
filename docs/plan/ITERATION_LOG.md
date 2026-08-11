@@ -27,3 +27,13 @@
 - Replayed the foundation migration and seed, passed all eight pgTAP assertions, and removed the disposable test containers and volumes.
 - Closed `P0-BOOTSTRAP` with execution evidence and started `P1-DOMAIN-DECISIONS`.
 - Probed both Proxmox SSH aliases; the public host rejected the configured key and the VPN route timed out.
+
+## 2026-08-11 — Rosy Rewards semantics and Phase 1 closure
+
+- Received explicit owner approval for ADR-0004, a 30-day pending period, rolling eligible-spend tiers, Rose/Bloom/Icon at EUR 0/150/500 with 5/6/7 points, and AGPL-3.0-or-later.
+- Resolved the master-plan/prototype tier conflict in the accepted ADR; EUR 1,000/8 points remains an unpublished future concept.
+- Encoded Rosy Rewards as a validated, versioned fixture and kept programme behavior merchant-neutral.
+- Added integer award, original-attribution refund, negative-balance, expiry-lot, and tier-review helpers. Award calculation requires the stored historical tier snapshot.
+- Added 16 domain tests covering approved values, thresholds, month-end dates, cumulative partial refunds, downgrade grace persistence, negative balances, expiry ordering, and invalid inputs.
+- Added the full AGPL license and package metadata while retaining the WooCommerce plugin's GPL license.
+- Closed Phase 1 for the owner-directed WooCommerce scope and restored the Phase 2 architecture/threat-model gate before tenancy implementation.

@@ -4,7 +4,7 @@ Open-source, self-hosted loyalty infrastructure for WooCommerce, built with Next
 
 ## Current status
 
-The repository is in Phase 0/1: the verified dashboard foundation, domain/contracts packages, Supabase migration/test harness, WooCommerce plugin boundary, and Proxmox deployment contract exist. This is not yet a production loyalty system; see `STATUS.md` and `docs/plan/TASKS.yaml` for evidence and remaining gates.
+Phase 0 and Phase 1 are implemented: the verified dashboard foundation, approved policy-driven Rosy Rewards domain fixture, Supabase migration/test harness, WooCommerce plugin boundary, and Proxmox deployment contract exist. This is not yet a production loyalty system; see `STATUS.md` and `docs/plan/TASKS.yaml` for evidence and remaining gates.
 
 ## Prerequisites
 
@@ -40,3 +40,7 @@ Start the dashboard with `npm run dev` and open `http://127.0.0.1:3000`.
 - Every points movement must eventually be represented by an immutable ledger transaction.
 
 Read `AGENTS.md`, `docs/product/MASTER_PLAN.md`, `PLANS.md`, and `STATUS.md` before changing behavior.
+
+## License
+
+The hosted platform, dashboard, and shared TypeScript packages are licensed under [GNU AGPL-3.0-or-later](LICENSE). The WooCommerce connector is distributed separately under GPL-2.0-or-later, as declared in its plugin header and Composer metadata.
