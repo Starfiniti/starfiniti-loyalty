@@ -7,7 +7,7 @@ tasks:
   - id: P0-BOOTSTRAP
     title: Bootstrap repository and reproducible baseline
     phase: 0
-    status: blocked
+    status: complete
     dependencies: []
     acceptance:
       - npm clean install succeeds
@@ -42,10 +42,13 @@ tasks:
       - npm run db:validate passed for Postgres 17 config, one migration, and one pgTAP file
       - local npm run db:verify correctly stopped because Docker, Podman, and WSL are unavailable
       - third consecutive blocker audit confirmed no container runtime, Git remote, Supabase MCP configuration, or Proxmox access on 2026-08-11
+      - GitHub repository Starfiniti/starfiniti-loyalty created and initial commit 3e822e8 pushed
+      - GitHub Actions run 31506030405 passed baseline and Docker database jobs on 2026-08-11
+      - migrations seed and eight pgTAP assertions executed successfully on Linux
   - id: P1-DOMAIN-DECISIONS
     title: Resolve and encode loyalty value semantics
     phase: 1
-    status: proposed
+    status: in_progress
     dependencies: [P0-BOOTSTRAP]
     acceptance:
       - Balance-affecting behavior is unambiguous
@@ -55,7 +58,8 @@ tasks:
     risks: [R-007]
     docs:
       [docs/product/PRODUCT_REQUIREMENTS.md, docs/product/PROGRAMME_EXAMPLES.md]
-    evidence: []
+    evidence:
+      - proposed ADR-0004 documents explicit options recommendations and rollback implications
   - id: P2-TENANCY-SCHEMA
     title: Implement tenancy schema and adversarial RLS tests
     phase: 3

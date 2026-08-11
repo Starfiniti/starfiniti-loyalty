@@ -19,3 +19,11 @@
 - Added a parallel Ubuntu/Docker database CI job using the lockfile-pinned CLI and full-SHA GitHub Actions.
 - Added static validators for Supabase config/tests and CI safety contracts.
 - Confirmed Docker, Podman, and WSL are unavailable locally. Kept Phase 0 in verification instead of claiming an unexecuted database pass.
+
+## 2026-08-11 — GitHub publication and Phase 0 closure
+
+- Created private repository `Starfiniti/starfiniti-loyalty` and pushed initial commit `3e822e8`.
+- GitHub Actions run `31506030405` passed the baseline job and Linux/Docker database job.
+- Replayed the foundation migration and seed, passed all eight pgTAP assertions, and removed the disposable test containers and volumes.
+- Closed `P0-BOOTSTRAP` with execution evidence and started `P1-DOMAIN-DECISIONS`.
+- Probed both Proxmox SSH aliases; the public host rejected the configured key and the VPN route timed out.

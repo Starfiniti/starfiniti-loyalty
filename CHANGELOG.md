@@ -12,3 +12,5 @@
 - Added a Docker-backed Supabase CI job that replays migrations/seed and runs pgTAP security checks.
 - Added durable guards for schema grants, RLS coverage, security-definer placement, pinned CI actions, and exact Supabase CLI versions.
 - Added clear container-runtime preflight diagnostics and database-testing documentation.
+- Created the private GitHub repository and verified the full baseline plus migration/seed/pgTAP database gate on GitHub Actions.
+- Completed Phase 0 and opened ADR-0004 for explicit loyalty value-semantics approval.

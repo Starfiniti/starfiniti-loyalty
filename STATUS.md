@@ -11,26 +11,27 @@
 - Supabase CLI 2.113.0 generated the first versioned schema migration.
 - A Docker-backed GitHub Actions job now replays migrations/seed and runs pgTAP using the lockfile-pinned CLI.
 - Static verification covers the Postgres 17 configuration, migration naming/secrets, Data API schema boundary, pgTAP transaction structure, workflow triggers, permissions, cleanup, and pinned action SHAs.
+- GitHub Actions run `31506030405` passed the baseline and database jobs, including migration replay, seed, all eight pgTAP assertions, and destructive test-container cleanup.
 
 ## Partial
 
-- Phase 0 implementation is blocked in verification; it is not complete until the Docker-backed Supabase reset/migration/seed/RLS job actually passes in CI or on the Proxmox Linux VM.
+- Phase 0 is complete. Phase 1 value semantics are proposed in ADR-0004 and await explicit owner approval before balance-affecting implementation.
 - Only the Overview dashboard route and WooCommerce administrative boundary are implemented; the remaining approved routes and connector behavior are pending.
 
 ## Broken or unavailable
 
-- Docker is unavailable on this workstation.
-- Podman and WSL are also unavailable, so the pgTAP suite cannot execute locally.
+- Docker, Podman, and WSL remain unavailable on this workstation; GitHub Actions provides the verified database runner.
+- Direct Proxmox SSH is not usable with the current aliases: public-key authentication fails on `proxmox`, while `proxmox-vpn` times out.
 - The globally configured `pnpm` shim points to a missing module; npm is the supported package manager.
 - No Supabase or WooCommerce environment is connected yet.
 
 ## Database migration state
 
-No database has been mutated. `20260811141308_foundation_schemas.sql` is repository-only until container verification succeeds.
+The foundation migration and seed were executed successfully against the disposable Supabase CI database. No persistent or production database has been mutated.
 
 ## Git state
 
-Branch `main`; Git is initialized with no commits. All bootstrap files and the user-owned source ZIP are untracked; nothing has been staged or committed.
+Private repository `Starfiniti/starfiniti-loyalty`; initial commit `3e822e8` is on `main`. Phase-closing documentation is on `agent/close-phase-0` pending review.
 
 ## Last verification
 
@@ -44,13 +45,12 @@ Branch `main`; Git is initialized with no commits. All bootstrap files and the u
 - `npm run licenses` — passed; repository root remains intentionally `UNLICENSED` until owner approval.
 - PHP syntax checks — passed for both plugin PHP files.
 - Production HTML/CSS/JS asset checks — HTTP 200.
+- GitHub Actions run `31506030405` — passed; baseline completed in 1m08s and database completed in 2m36s.
 
 ## Next recommended task
 
-Run the existing `database` CI job or `npm run db:verify` on the Proxmox Linux VM. Close `P0-BOOTSTRAP` only after it passes, then start `P1-DOMAIN-DECISIONS`.
+Approve or amend ADR-0004, then encode the selected policies and Rosy Rewards executable examples in `packages/domain`.
 
 ## Blockers
 
-Container verification requires Docker on CI or the Proxmox Linux VM. This is the third consecutive goal turn where Docker, Podman, WSL, a Git remote, Supabase MCP configuration, and Proxmox access are all unavailable. The master plan forbids starting Phase 1 before this gate passes.
-
-To resume, provide either a connected Git remote with CI enabled or access to a non-production Proxmox Linux VM with Docker Engine and Compose. No production database credentials are needed for `npm run db:verify`.
+Balance-affecting Phase 1 decisions and the repository license require explicit product-owner approval. Proxmox deployment additionally needs working SSH authentication, DNS/TLS choices, and a backup target; none block policy-neutral domain design.
