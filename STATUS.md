@@ -26,7 +26,7 @@ The foundation migration and seed executed successfully against disposable Supab
 
 ## Git state
 
-Private repository `Starfiniti/starfiniti-loyalty`; branch `agent/close-phase-0`; draft PR `#1`. The approved semantics, AGPL license, tests, and Phase 1 evidence are the current branch changes pending final CI verification.
+Public repository `Starfiniti/starfiniti-loyalty`; clean local `main`; PR `#1` merged as commit `63d1acb`. GitHub recognizes the repository license as GNU AGPLv3.
 
 ## Last verification
 
@@ -37,8 +37,8 @@ Private repository `Starfiniti/starfiniti-loyalty`; branch `agent/close-phase-0`
 - `npm run secrets:scan` — passed for 147 tracked files.
 - `npm run audit:prod` — passed with zero production vulnerabilities.
 - `npm run licenses` — passed for five AGPL npm package declarations, the full AGPL text, and both WooCommerce GPL declarations.
-- The exact-head GitHub Actions run is pending publication of the final commit.
-- Prior GitHub Actions run `31506030405` passed the baseline and database jobs.
+- PR exact-head run `31512548299` passed the baseline and Docker/Supabase database jobs.
+- Public `main` run `31513294330` passed both jobs after merge, including migration replay, seed, pgTAP, and cleanup.
 
 ## Next recommended task
 

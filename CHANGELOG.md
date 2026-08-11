@@ -18,3 +18,4 @@
 - Added versioned programme configuration plus pure integer award, release, expiry, refund-reversal, negative-balance, redemption-lot, and tier-review helpers with 16 domain tests.
 - Licensed the hosted platform under AGPL-3.0-or-later while retaining GPL-2.0-or-later for the WooCommerce plugin.
 - Completed the Phase 1 product-model gate for the active WooCommerce scope; Shopify remains deferred.
+- Merged the verified Phase 0/1 work and published `Starfiniti/starfiniti-loyalty` as a public AGPL repository.

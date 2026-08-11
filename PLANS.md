@@ -16,7 +16,8 @@ Phase 2 — architecture, data model, and threat-model gate.
 - `rosyRewardsV1` encodes 100 points/EUR redemption, a 30-day pending period, 12-month rolling expiry, original-attribution refunds, and Rose/Bloom/Icon tiers at EUR 0/150/500 with 5/6/7 points per EUR.
 - Domain helpers require the historical programme version and tier snapshot. Sixteen domain tests cover configuration, award rounding, tier boundaries/grace, cumulative refunds, negative balances, release, expiry, ordering, and invalid inputs.
 - AGPL-3.0-or-later is approved for the hosted platform. The WooCommerce plugin remains GPL-2.0-or-later.
-- The private GitHub repository and draft PR are at `Starfiniti/starfiniti-loyalty` and PR `#1`.
+- The public GitHub repository is `Starfiniti/starfiniti-loyalty`; PR `#1` merged the verified Phase 0/1 work into `main`.
+- Public `main` CI run `31513294330` passed the baseline and Docker/Supabase database jobs.
 
 ## Active work
 
