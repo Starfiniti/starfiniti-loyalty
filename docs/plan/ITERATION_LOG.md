@@ -19,3 +19,21 @@
 - Added a parallel Ubuntu/Docker database CI job using the lockfile-pinned CLI and full-SHA GitHub Actions.
 - Added static validators for Supabase config/tests and CI safety contracts.
 - Confirmed Docker, Podman, and WSL are unavailable locally. Kept Phase 0 in verification instead of claiming an unexecuted database pass.
+
+## 2026-08-11 — GitHub publication and Phase 0 closure
+
+- Created private repository `Starfiniti/starfiniti-loyalty` and pushed initial commit `3e822e8`.
+- GitHub Actions run `31506030405` passed the baseline job and Linux/Docker database job.
+- Replayed the foundation migration and seed, passed all eight pgTAP assertions, and removed the disposable test containers and volumes.
+- Closed `P0-BOOTSTRAP` with execution evidence and started `P1-DOMAIN-DECISIONS`.
+- Probed both Proxmox SSH aliases; the public host rejected the configured key and the VPN route timed out.
+
+## 2026-08-11 — Rosy Rewards semantics and Phase 1 closure
+
+- Received explicit owner approval for ADR-0004, a 30-day pending period, rolling eligible-spend tiers, Rose/Bloom/Icon at EUR 0/150/500 with 5/6/7 points, and AGPL-3.0-or-later.
+- Resolved the master-plan/prototype tier conflict in the accepted ADR; EUR 1,000/8 points remains an unpublished future concept.
+- Encoded Rosy Rewards as a validated, versioned fixture and kept programme behavior merchant-neutral.
+- Added integer award, original-attribution refund, negative-balance, expiry-lot, and tier-review helpers. Award calculation requires the stored historical tier snapshot.
+- Added 16 domain tests covering approved values, thresholds, month-end dates, cumulative partial refunds, downgrade grace persistence, negative balances, expiry ordering, and invalid inputs.
+- Added the full AGPL license and package metadata while retaining the WooCommerce plugin's GPL license.
+- Closed Phase 1 for the owner-directed WooCommerce scope and restored the Phase 2 architecture/threat-model gate before tenancy implementation.

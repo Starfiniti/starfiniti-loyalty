@@ -1,4 +1,4 @@
-version: 1
+version: 2
 updated: 2026-08-11
 scope:
   active: [self-hosted-supabase, proxmox, nextjs, woocommerce]
@@ -7,7 +7,7 @@ tasks:
   - id: P0-BOOTSTRAP
     title: Bootstrap repository and reproducible baseline
     phase: 0
-    status: blocked
+    status: complete
     dependencies: []
     acceptance:
       - npm clean install succeeds
@@ -42,10 +42,13 @@ tasks:
       - npm run db:validate passed for Postgres 17 config, one migration, and one pgTAP file
       - local npm run db:verify correctly stopped because Docker, Podman, and WSL are unavailable
       - third consecutive blocker audit confirmed no container runtime, Git remote, Supabase MCP configuration, or Proxmox access on 2026-08-11
+      - GitHub repository Starfiniti/starfiniti-loyalty created and initial commit 3e822e8 pushed
+      - GitHub Actions run 31506030405 passed baseline and Docker database jobs on 2026-08-11
+      - migrations seed and eight pgTAP assertions executed successfully on Linux
   - id: P1-DOMAIN-DECISIONS
     title: Resolve and encode loyalty value semantics
     phase: 1
-    status: proposed
+    status: complete
     dependencies: [P0-BOOTSTRAP]
     acceptance:
       - Balance-affecting behavior is unambiguous
@@ -54,13 +57,50 @@ tasks:
     verification: [npm run test --workspace=@starfiniti/domain]
     risks: [R-007]
     docs:
-      [docs/product/PRODUCT_REQUIREMENTS.md, docs/product/PROGRAMME_EXAMPLES.md]
+      [
+        docs/product/PRODUCT_REQUIREMENTS.md,
+        docs/product/PROGRAMME_EXAMPLES.md,
+        docs/architecture/ADR/0004-loyalty-value-semantics.md,
+      ]
+    evidence:
+      - product owner approved ADR-0004 and AGPL-3.0-or-later on 2026-08-11
+      - rosyRewardsV1 encodes the approved 30-day release, expiry, refunds, eligible spend, identity, sharing, and tier policies
+      - Rose Bloom and Icon thresholds are EUR 0 EUR 150 and EUR 500 with rates of 5 6 and 7 points per EUR
+      - 16 domain tests cover approved configuration boundaries and failure paths
+      - historical programme version and tier snapshot are required for award calculation
+      - full AGPL license added; WooCommerce plugin remains GPL-2.0-or-later
+  - id: P2-ARCHITECTURE
+    title: Complete modular architecture and threat-model gate
+    phase: 2
+    status: in_progress
+    dependencies: [P1-DOMAIN-DECISIONS]
+    acceptance:
+      - Authoritative writes and every external trust boundary are documented
+      - Tenant identity ledger event reward and audit state models are reviewable
+      - Authentication authorization and service-role boundaries are explicit
+      - Self-hosted topology secrets upgrades queues backup restore and failure modes are decided
+      - No unresolved critical architecture or threat-model issue remains
+    verification:
+      - npm run check
+      - npm run db:validate
+      - npm run secrets:scan
+    risks: [R-001, R-003, R-004, R-005]
+    docs:
+      [
+        docs/architecture/SYSTEM_ARCHITECTURE.md,
+        docs/architecture/DATA_MODEL.md,
+        docs/architecture/EVENT_MODEL.md,
+        docs/architecture/IDENTITY_MODEL.md,
+        docs/security/THREAT_MODEL.md,
+        docs/operations/BACKUP_RESTORE.md,
+        docs/operations/DEPLOYMENT.md,
+      ]
     evidence: []
-  - id: P2-TENANCY-SCHEMA
+  - id: P3-TENANCY-SCHEMA
     title: Implement tenancy schema and adversarial RLS tests
     phase: 3
     status: proposed
-    dependencies: [P1-DOMAIN-DECISIONS]
+    dependencies: [P2-ARCHITECTURE]
     acceptance:
       - Every exposed tenant table has RLS
       - Cross-tenant tests fail closed
@@ -73,7 +113,7 @@ tasks:
     title: Implement signed WooCommerce inbox and idempotent normalization
     phase: 4
     status: proposed
-    dependencies: [P2-TENANCY-SCHEMA]
+    dependencies: [P3-TENANCY-SCHEMA]
     acceptance:
       - Duplicate, delayed, and out-of-order events are safe
       - Invalid signatures fail before payload processing

@@ -7,6 +7,6 @@ Starfiniti Loyalty is a multi-tenant loyalty system in which the central Postgre
 - Self-hosted open-source deployment on Proxmox
 - Next.js merchant dashboard and hosted customer experiences
 - WooCommerce order/refund/customer ingestion and storefront/plugin surfaces
-- Rosy Rewards acceptance configuration: 100 points = EUR 1, 12-month expiry, spend tiers at EUR 150/500/1,000, earn rates 5/6/7 points per EUR
+- Rosy Rewards v1 acceptance configuration: 100 points = EUR 1, 30-day pending release, 12-month rolling expiry, and Rose/Bloom/Icon tiers from EUR 0/150/500 at 5/6/7 points per EUR. EUR 1,000/8 points is reserved as an unpublished future concept.
 
-Shopify is deferred. Product decisions about legal value, award timing, returns, negative balances, guest identity, and shared wallets remain Phase 1 gates and must not be inferred from the prototype.
+Shopify is deferred. ADR-0004 records the approved legal value, award timing, returns, negative-balance, guest-identity, wallet-sharing, expiry, rounding, and tier policies. Programme versions must encode these policies explicitly rather than infer them from UI prototypes.
