@@ -1,0 +1,14 @@
+{
+  "name": "starfiniti/loyalty-woocommerce",
+  "description": "WooCommerce connector for Starfiniti Loyalty",
+  "type": "wordpress-plugin",
+  "license": "GPL-2.0-or-later",
+  "require": {
+    "php": ">=8.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "Starfiniti\\Loyalty\\": "src/"
+    }
+  }
+}

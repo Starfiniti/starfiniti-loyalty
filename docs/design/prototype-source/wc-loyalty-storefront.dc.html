@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body { margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, sans-serif; background:#f0f0f1; color:#1d2327; -webkit-font-smoothing:antialiased; }
+a { color:#5346e6; text-decoration:none; } a:hover { color:#4438c9; text-decoration:underline; }
+* { box-sizing:border-box; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:0.01ms !important; transition-duration:0.01ms !important; } }
+@media (max-width: 880px) { div[data-wpnav] { display:none; } }
+@keyframes wspin { to { transform:rotate(360deg); } }
+
+html[data-sf-dark] body { background:#1F1F1E !important; color:#E5E4DF; }
+html[data-sf-dark] a { color:#9A85F0; }
+html[data-sf-dark] input, html[data-sf-dark] select { background:#2C2C2A !important; color:#E5E4DF !important; border-color:#3A3A37 !important; }
+html[data-sf-dark] [style*="background: rgb(255, 255, 255)"] { background:#292927 !important; }
+html[data-sf-dark] [style*="background: rgb(250, 251, 254)"], html[data-sf-dark] [style*="background: rgb(246, 247, 247)"], html[data-sf-dark] [style*="background: rgb(240, 240, 241)"] { background:#343432 !important; }
+html[data-sf-dark] [style*="background: rgb(237, 250, 239)"] { background:#26382D !important; }
+html[data-sf-dark] [style*="background: rgb(252, 240, 241)"] { background:#3D292A !important; }
+html[data-sf-dark] [style*="background: rgb(255, 248, 229)"] { background:#3E3423 !important; }
+html[data-sf-dark] [style*="background: rgb(238, 237, 252)"] { background:#37334F !important; }
+html[data-sf-dark] [style*="color: rgb(29, 35, 39)"], html[data-sf-dark] [style*="color: rgb(17, 24, 39)"] { color:#E5E4DF !important; }
+html[data-sf-dark] [style*="color: rgb(107, 114, 128)"], html[data-sf-dark] [style*="color: rgb(80, 87, 94)"] { color:#A09F99 !important; }
+html[data-sf-dark] [style*="color: rgb(120, 124, 130)"] { color:#8B8A84 !important; }
+html[data-sf-dark] [style*="color: rgb(21, 128, 61)"] { color:#3BB87C !important; }
+html[data-sf-dark] [style*="color: rgb(153, 104, 0)"], html[data-sf-dark] [style*="color: rgb(219, 166, 23)"] { color:#E0A23C !important; }
+html[data-sf-dark] [style*="color: rgb(214, 54, 56)"], html[data-sf-dark] [style*="color: rgb(138, 36, 36)"] { color:#E76B72 !important; }
+html[data-sf-dark] [style*="color: rgb(83, 70, 230)"], html[data-sf-dark] [style*="color: rgb(68, 56, 201)"] { color:#9A85F0 !important; }
+html[data-sf-dark] [style*="rgb(231, 233, 242)"], html[data-sf-dark] [style*="rgb(226, 232, 240)"], html[data-sf-dark] [style*="rgb(220, 220, 222)"] { border-color:#3A3A37 !important; }
+html[data-sf-dark] [style*="rgb(240, 241, 247)"], html[data-sf-dark] [style*="border-top: 1px solid rgb(240, 240, 241)"] { border-color:#333330 !important; }
+html[data-sf-dark] [style*="rgb(240, 183, 184)"] { border-color:#5C3234 !important; }
+</style>
+<script>try{if(localStorage.getItem('sf_dark')==='1')document.documentElement.setAttribute('data-sf-dark','1')}catch(e){}</script>
+</helmet>
+<div style="min-height:100vh; display:flex; flex-direction:column; font-size:13px;">
+  <div style="height:32px; background:#1d2327; color:#c3c4c7; display:flex; align-items:center; gap:16px; padding:0 14px; font-size:13px; flex-shrink:0;">
+    <span style="display:flex; align-items:center; gap:6px;"><span style="width:16px; height:16px; border-radius:50%; border:1.5px solid #c3c4c7; display:inline-flex; align-items:center; justify-content:center; font-size:10px; font-weight:700;">W</span>Nina &amp; Valentin — Demo Store</span>
+    <span style="flex:1;"></span>
+    <button onClick="{{ toggleDark }}" aria-label="Toggle dark mode" style="background:transparent; border:none; color:#c3c4c7; cursor:pointer; display:flex; align-items:center; padding:3px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg></button>
+    <span style="font-size:11px; font-weight:600; color:#f0c33c;">WP-ADMIN PROTOTYPE</span>
+    <span>Howdy, nina</span>
+  </div>
+  <div style="flex:1; display:flex; align-items:stretch;">
+    <div data-wpnav="1" style="width:160px; flex-shrink:0; background:#1d2327; color:#c3c4c7; padding:8px 0 40px; font-size:13px;">
+      <div style="padding:8px 12px;">Dashboard</div>
+      <div style="padding:8px 12px;">Posts</div>
+      <div style="padding:8px 12px;">Media</div>
+      <div style="padding:8px 12px;">Pages</div>
+      <div style="padding:8px 12px;">Comments</div>
+      <div style="background:#2271b1; color:#fff;">
+        <div style="padding:8px 12px; font-weight:600;">WooCommerce</div>
+        <div style="background:#2c3338; padding:6px 0;">
+          <div style="padding:5px 12px 5px 20px; color:#c3c4c7; font-size:12.5px;">Home</div>
+          <div style="padding:5px 12px 5px 20px; color:#c3c4c7; font-size:12.5px;">Orders</div>
+          <div style="padding:5px 12px 5px 20px; color:#c3c4c7; font-size:12.5px;">Customers</div>
+          <div style="padding:5px 12px 5px 20px; color:#fff; font-weight:600; font-size:12.5px;">Loyalty</div>
+          <div style="padding:5px 12px 5px 20px; color:#c3c4c7; font-size:12.5px;">Settings</div>
+          <div style="padding:5px 12px 5px 20px; color:#c3c4c7; font-size:12.5px;">Status</div>
+        </div>
+      </div>
+      <div style="padding:8px 12px;">Products</div>
+      <div style="padding:8px 12px;">Analytics</div>
+      <div style="padding:8px 12px;">Appearance</div>
+      <div style="padding:8px 12px;">Plugins</div>
+      <div style="padding:8px 12px;">Users</div>
+      <div style="padding:8px 12px;">Tools</div>
+      <div style="padding:8px 12px;">Settings</div>
+    </div>
+    <div style="flex:1; min-width:0; padding:20px 20px 70px;">
+      <div style="height:3px; background:linear-gradient(90deg, #3b2fc9, #7c5cfc); border-radius:9px 3px 0 0;"></div>
+      <div style="background:#fff; border:1px solid #e7e9f2; border-top:none; border-radius:0 0 14px 14px; padding:14px 20px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+        <img src="assets/images/starfiniti-icon.png" alt="Starfiniti" style="width:40px; height:40px; border-radius:10px; flex-shrink:0;">
+        <span style="min-width:0;"><span style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;"><h1 style="margin:0; font-size:18px; font-weight:800; letter-spacing:-0.2px; color:#111827;">Starfiniti Loyalty</h1><span style="background:#eeedfc; border-radius:20px; color:#4438c9; font-size:11px; font-weight:700; padding:2px 8px;">CONNECTED</span></span><span style="display:block; color:#6b7280; font-size:12.5px; margin-top:1px;">Slovenia Store · shop.ninavalentin.si · connector v1.4.2</span></span>
+        
+        <span style="flex:1;"></span>
+        <a href="experience.dc.html" style="height:30px; padding:0 12px; border:1px solid #e2e8f0; border-radius:9px; color:#4438c9; background:#fff; display:inline-flex; align-items:center; text-decoration:none;" style-hover="background:#f0f0f1; text-decoration:none;">Edit design in Starfiniti ↗</a>
+      </div>
+      <nav style="margin-top:16px; background:#fff; border:1px solid #e7e9f2; border-radius:12px; padding:6px; display:flex; gap:6px; flex-wrap:wrap;">
+        <a href="wc-loyalty.dc.html" style="padding:9px 15px; border-radius:8px; color:#374151; font-weight:600; text-decoration:none;" style-hover="background:#f3f4fa; text-decoration:none;">Overview</a>
+        <a href="wc-loyalty-storefront.dc.html" style="padding:9px 15px; border-radius:8px; background:linear-gradient(90deg, #4438c9, #6d4ef0); color:#fff; font-weight:600; text-decoration:none;">Storefront</a>
+        <a href="wc-loyalty-sync.dc.html" style="padding:9px 15px; border-radius:8px; color:#374151; font-weight:600; text-decoration:none;" style-hover="background:#f3f4fa; text-decoration:none;">Sync</a>
+        <a href="wc-loyalty-diagnostics.dc.html" style="padding:9px 15px; border-radius:8px; color:#374151; font-weight:600; text-decoration:none;" style-hover="background:#f3f4fa; text-decoration:none;">Diagnostics</a>
+        <a href="wc-loyalty-settings.dc.html" style="padding:9px 15px; border-radius:8px; color:#374151; font-weight:600; text-decoration:none;" style-hover="background:#f3f4fa; text-decoration:none;">Settings</a>
+      </nav>
+      <sc-if value="{{ emergency }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:14px; background:#fff; border-radius:10px; border-left:4px solid #d63638; box-shadow:0 1px 1px rgba(0,0,0,.04); padding:10px 14px;"><strong>Emergency hide is ON.</strong> All loyalty components are hidden from shoppers; event processing continues. <button onClick="{{ toggleEmergency }}" style="border:none; background:none; color:#5346e6; cursor:pointer; font-size:13px; text-decoration:underline; padding:0;">Turn off</button></div>
+      </sc-if>
+      <div style="margin-top:14px; background:#fff; border:1px solid #e7e9f2; border-radius:14px; overflow-x:auto;">
+        <div style="padding:11px 15px; border-bottom:1px solid #f0f1f7; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <span style="font-weight:600;">Customer-facing components</span>
+          <span style="font-size:12px; color:#787c82;">Theme: Aurora (block theme) · detected automatically</span>
+          <span style="flex:1;"></span>
+          <label style="display:inline-flex; align-items:center; gap:7px; font-size:12.5px; cursor:pointer; color:#8a2424;"><input type="checkbox" checked="{{ emergency }}" onChange="{{ toggleEmergency }}" style="accent-color:#d63638;">Emergency hide all</label>
+        </div>
+        <table style="width:100%; border-collapse:collapse; font-size:12.5px; min-width:760px;">
+          <thead><tr style="text-align:left; color:#6b7280; background:#f6f7f7;">
+            <th style="padding:9px 15px; font-weight:500;">Surface</th><th style="padding:9px 10px; font-weight:500;">Placement</th><th style="padding:9px 10px; font-weight:500;">Audience</th><th style="padding:9px 10px; font-weight:500;">Last render check</th><th style="padding:9px 10px; font-weight:500;">Status</th><th style="padding:9px 15px; font-weight:500;"></th>
+          </tr></thead>
+          <tbody>
+            <sc-for list="{{ surfaces }}" as="sf" hint-placeholder-count="7">
+              <tr style="border-top:1px solid #f0f0f1;">
+                <td style="padding:10px 15px; font-weight:600;">{{ sf.name }}</td>
+                <td style="padding:10px 10px; color:#6b7280;">{{ sf.placement }}</td>
+                <td style="padding:10px 10px; color:#6b7280;">{{ sf.audience }}</td>
+                <td style="padding:10px 10px; color:#6b7280;">{{ sf.check }}</td>
+                <td style="padding:10px 10px;"><span style="color:{{ sf.stColor }}; font-weight:600;">{{ sf.status }}</span></td>
+                <td style="padding:10px 15px; white-space:nowrap;">
+                  <a href="{{ sf.preview }}" style="margin-right:8px;">Preview</a>
+                  <button onClick="{{ sf.test }}" style="height:26px; padding:0 9px; border:1px solid #e2e8f0; border-radius:9px; background:#fff; font-family:inherit; font-size:12px; cursor:pointer; margin-right:8px;">{{ sf.testLabel }}</button>
+                  <button onClick="{{ sf.toggle }}" style="height:26px; padding:0 9px; border:1px solid #e2e8f0; border-radius:9px; background:#fff; font-family:inherit; font-size:12px; cursor:pointer; color:#6b7280;">{{ sf.toggleLabel }}</button>
+                </td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:14px; display:flex; gap:12px; flex-wrap:wrap; align-items:flex-start;">
+        <div style="flex:1 1 340px; min-width:0; background:#fff; border:1px solid #e7e9f2; border-radius:14px; padding:13px 15px;">
+          <div style="font-weight:600;">Placement guidance</div>
+          <p style="margin:8px 0 0; font-size:12.5px; color:#6b7280; line-height:1.65;"><strong>Block theme (detected):</strong> insert the "Rosy points message" block from the inserter into your Product template near Price. <strong>Classic theme:</strong> the plugin hooks <code style="background:#f0f0f1; padding:1px 5px; border-radius:9px;">woocommerce_single_product_summary</code> (priority 15) automatically.</p>
+          <p style="margin:8px 0 0; font-size:12.5px; color:#996800;">Checkout message: not placed — optional, plan-independent surfaces (cart, account, thank-you) already cover the journey.</p>
+          <div style="margin-top:8px;"><a href="#" onClick="{{ noop }}" style="font-size:12.5px;">Advanced: hooks &amp; selectors ▸</a></div>
+        </div>
+        <div style="flex:1 1 340px; min-width:0; background:#fff; border:1px solid #e7e9f2; border-radius:14px; padding:13px 15px;">
+          <div style="font-weight:600;">Previews</div>
+          <div style="margin-top:8px; font-size:12.5px; line-height:2;">
+            <a href="storefront-product.dc.html">Product page — guest &amp; member (desktop / mobile) ↗</a><br>
+            <a href="storefront-cart.dc.html">Cart module — all reward states ↗</a><br>
+            <a href="storefront-account.dc.html">My Account → Rewards ↗</a><br>
+            <a href="rosy-rewards.dc.html">Dedicated rewards page ↗</a>
+          </div>
+          <p style="margin:10px 0 0; font-size:12px; color:#787c82;">Copy and design are edited in the Starfiniti experience builder, not in WordPress.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#111827; color:#fff; border-radius:10px; padding:11px 16px; font-size:13px; z-index:60;">{{ toastMsg }}</div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1366,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  state = { testing: {}, toast: false, toastMsg: '' };
+  loadWc() {
+    const d = { emergency: false, disabled: {} };
+    try { return Object.assign(d, JSON.parse(localStorage.getItem('sf_wc_store') || '{}')); } catch (e) { return d; }
+  }
+  saveWc(patch) {
+    const st = Object.assign(this.loadWc(), patch);
+    try { localStorage.setItem('sf_wc_store', JSON.stringify(st)); } catch (e) {}
+    this.forceUpdate();
+  }
+  say(msg) { this.setState({ toast: true, toastMsg: msg }); setTimeout(() => this.setState({ toast: false }), 3000); }
+  renderVals() { const vals = this.__rv3 ? this.__rv3() : {}; vals.toggleDark = () => { const r = document.documentElement; const on = r.getAttribute('data-sf-dark') === '1'; if (on) { r.removeAttribute('data-sf-dark'); } else { r.setAttribute('data-sf-dark', '1'); } try { localStorage.setItem('sf_dark', on ? '0' : '1'); } catch (e) {} this.forceUpdate(); }; return vals; }
+  __rv3() {
+    const wc = this.loadWc();
+    const defs = [
+      { id: 'launcher', name: 'Launcher & wallet drawer', placement: 'Site-wide app embed', audience: 'All shoppers', preview: 'storefront-product.dc.html' },
+      { id: 'product', name: 'Product points message', placement: 'Product template · near price', audience: 'All shoppers', preview: 'storefront-product.dc.html' },
+      { id: 'cart', name: 'Cart reward module', placement: 'Cart Block integration', audience: 'All shoppers', preview: 'storefront-cart.dc.html' },
+      { id: 'account', name: 'My Account → Rewards', placement: 'Account endpoint', audience: 'Members', preview: 'storefront-account.dc.html' },
+      { id: 'checkout', name: 'Checkout message', placement: 'Not placed', audience: 'Members', preview: 'storefront-checkout.dc.html' },
+      { id: 'thanks', name: 'Thank-you summary', placement: 'Order-received block', audience: 'All shoppers', preview: 'storefront-thankyou.dc.html' },
+      { id: 'page', name: 'Dedicated rewards page', placement: '/rewards page', audience: 'All shoppers', preview: 'rosy-rewards.dc.html' }
+    ];
+    const surfaces = defs.map(d => {
+      const disabled = !!wc.disabled[d.id];
+      const notPlaced = d.id === 'checkout';
+      const testing = this.state.testing[d.id];
+      const status = wc.emergency ? 'Hidden (emergency)' : notPlaced ? 'Not placed' : disabled ? 'Disabled' : 'Live';
+      return {
+        name: d.name, placement: d.placement, audience: d.audience,
+        check: notPlaced ? '—' : testing === 'done' ? 'just now ✓' : 'today 09:12 ✓',
+        status,
+        stColor: wc.emergency ? '#d63638' : notPlaced ? '#996800' : disabled ? '#50575e' : '#15803d',
+        preview: d.preview,
+        testLabel: testing === 'run' ? 'Testing…' : 'Test',
+        test: () => {
+          if (testing === 'run') return;
+          this.setState({ testing: { ...this.state.testing, [d.id]: 'run' } });
+          setTimeout(() => {
+            this.setState({ testing: { ...this.state.testing, [d.id]: 'done' } });
+            this.say(notPlaced ? 'Test: block not found in checkout template' : d.name + ' rendered correctly for guest and member');
+          }, 1300);
+        },
+        toggleLabel: disabled ? 'Enable' : 'Disable',
+        toggle: () => {
+          const dis = { ...wc.disabled, [d.id]: !disabled };
+          this.saveWc({ disabled: dis });
+          this.say(d.name + (disabled ? ' enabled' : ' disabled'));
+        }
+      };
+    });
+    return {
+      surfaces,
+      emergency: wc.emergency,
+      toggleEmergency: () => this.saveWc({ emergency: !wc.emergency }),
+      noop: e => { if (e && e.preventDefault) e.preventDefault(); },
+      toast: this.state.toast, toastMsg: this.state.toastMsg
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Lora:wght@500;600&display=swap" rel="stylesheet">
+<style>
+body { margin:0; font-family:'Geist',ui-sans-serif,system-ui,sans-serif; background:#faf7f4; color:#2d2420; -webkit-font-smoothing:antialiased; }
+a { color:var(--rosy, #b13d5e); text-decoration:none; } a:hover { color:var(--rosy-deep, #8f2f4b); }
+* { box-sizing:border-box; }
+:where(button, a, input, select, textarea):focus-visible { outline:2px solid var(--rosy, #b13d5e) !important; outline-offset:2px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:0.01ms !important; transition-duration:0.01ms !important; } }
+</style>
+</helmet>
+<div style="--rosy:{{ themeBrand }}; --rosy-deep:{{ themeBrandDeep }}; min-height:100vh; display:flex; flex-direction:column;">
+  <header style="background:#fff; border-bottom:1px solid #eee3da;">
+    <div style="max-width:760px; margin:0 auto; padding:0 20px; height:58px; display:flex; align-items:center; justify-content:center;">
+      <span style="font-family:'Lora',serif; font-size:15px; font-weight:600; letter-spacing:.12em;">NINA &amp; VALENTIN</span>
+    </div>
+  </header>
+  <main style="flex:1; max-width:760px; width:100%; margin:0 auto; padding:36px 20px 90px;">
+    <div style="text-align:center;">
+      <div style="width:54px; height:54px; border-radius:50%; background:#ecfdf5; display:flex; align-items:center; justify-content:center; margin:0 auto;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></div>
+      <h1 style="margin:16px 0 0; font-family:'Lora',serif; font-size:27px; font-weight:600;">Thank you, Maja</h1>
+      <p style="margin:8px 0 0; font-size:13.5px; color:#6e5d52;">Order <strong style="font-variant-numeric:tabular-nums;">#8459</strong> is confirmed · {{ totalFmt }} · arriving Wed–Fri</p>
+    </div>
+    <sc-if value="{{ showLoyalty }}" hint-placeholder-val="{{ true }}">
+      <div style="margin-top:26px; background:var(--rosy, #b13d5e); border-radius:20px; padding:24px; color:#fff; position:relative; overflow:hidden;">
+        <div style="position:absolute; right:-40px; top:-50px; width:170px; height:170px; border-radius:50%; background:rgba(255,255,255,.08);"></div>
+        <div style="display:flex; align-items:center; gap:9px; position:relative;"><span style="width:26px; height:26px; border-radius:50%; background:rgba(255,255,255,.2); display:flex; align-items:center; justify-content:center; font-family:'Lora',serif; font-size:12px; font-weight:600;">R</span><span style="font-family:'Lora',serif; font-size:15px; font-weight:600;">Rosy Rewards</span><span style="flex:1;"></span><sc-if value="{{ bonusOn }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px; font-weight:700; background:rgba(255,255,255,.2); border-radius:999px; padding:2px 9px;">2× today</span></sc-if></div>
+        <div style="display:flex; gap:26px; margin-top:16px; flex-wrap:wrap; position:relative;">
+          <div><div style="font-size:11.5px; opacity:.8;">{{ currencyName }} earned</div><div style="font-size:30px; font-weight:600; font-variant-numeric:tabular-nums;">+{{ earned }}</div></div>
+          <div><div style="font-size:11.5px; opacity:.8;">New balance</div><div style="font-size:30px; font-weight:600; font-variant-numeric:tabular-nums;">{{ newBalance }}</div><div style="font-size:11px; opacity:.75; margin-top:2px;">worth {{ newBalanceEur }}</div></div>
+        </div>
+        <div style="margin-top:16px; position:relative;">
+          <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:5px;"><span style="font-weight:600;">Bloom</span><span style="opacity:.8;">{{ toIcon }} spend to Icon</span></div>
+          <div style="height:6px; border-radius:999px; background:rgba(255,255,255,.28);"><div style="width:{{ tierPct }}%; height:100%; border-radius:999px; background:#fff;"></div></div>
+        </div>
+        <sc-if value="{{ usedReward }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:14px; font-size:12px; opacity:.85; position:relative;">{{ rewardNote }}</div>
+        </sc-if>
+        <a href="rosy-account.dc.html" style="display:inline-flex; align-items:center; margin-top:16px; height:38px; padding:0 18px; border-radius:999px; background:#fff; color:var(--rosy, #b13d5e); font-size:13px; font-weight:600; position:relative;" style-hover="background:#fce7ef; color:var(--rosy-deep, #8f2f4b);">See your rewards →</a>
+      </div>
+    </sc-if>
+    <sc-if value="{{ showGuestJoin }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-top:26px; background:#fdf2f6; border:1px solid #f3d7e1; border-radius:20px; padding:22px; text-align:center;">
+        <div style="font-family:'Lora',serif; font-size:18px; font-weight:600;">This order was worth {{ earned }} {{ currencyName }}</div>
+        <p style="margin:8px 0 0; font-size:13px; color:#6e4a58; line-height:1.55;">Join Rosy Rewards in the next 7 days and we'll credit them retroactively — plus 100 welcome {{ currencyName }}.</p>
+        <a href="rosy-rewards.dc.html" style="display:inline-flex; align-items:center; margin-top:14px; height:40px; padding:0 22px; border-radius:999px; background:var(--rosy, #b13d5e); color:#fff; font-size:13.5px; font-weight:600;" style-hover="background:var(--rosy-deep, #8f2f4b); color:#fff;">Claim my {{ currencyName }}</a>
+      </div>
+    </sc-if>
+    <sc-if value="{{ svcDown }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-top:26px; background:#faf7f4; border:1px dashed #ddc9bb; border-radius:16px; padding:14px 18px; font-size:12.5px; color:#a08d80; line-height:1.55; text-align:center;">Rosy Rewards is temporarily unavailable — your {{ currencyName }} from this order will appear in your account automatically. Nothing is lost.</div>
+    </sc-if>
+    <div style="margin-top:22px; background:#fff; border:1px solid #eee3da; border-radius:16px; padding:16px 20px; font-size:13.5px;">
+      <div style="display:flex; padding:6px 0;"><span style="color:#6e5d52;">Rose Petal Serum</span><span style="flex:1;"></span><span style="font-variant-numeric:tabular-nums;">€38.00</span></div>
+      <div style="display:flex; padding:6px 0;"><span style="color:#6e5d52;">Silk Cleansing Balm</span><span style="flex:1;"></span><span style="font-variant-numeric:tabular-nums;">€24.00</span></div>
+      <sc-if value="{{ usedReward }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex; padding:6px 0; color:#0f766e;"><span>{{ rewardLabel }}</span><span style="flex:1;"></span><span style="font-variant-numeric:tabular-nums;">−{{ discountFmt }}</span></div>
+      </sc-if>
+      <div style="display:flex; padding:9px 0 2px; border-top:1px solid #f6ede5; font-weight:600;"><span>Total paid</span><span style="flex:1;"></span><span style="font-variant-numeric:tabular-nums;">{{ totalFmt }}</span></div>
+    </div>
+    <div style="margin-top:20px; text-align:center;">
+      <a href="storefront-product.dc.html" style="font-size:13px; font-weight:600;">Continue shopping</a>
+      <span style="color:#ddc9bb; margin:0 10px;">·</span>
+      <a href="storefront-account.dc.html" style="font-size:13px; font-weight:600;">Your account</a>
+    </div>
+    <p style="margin:26px 0 0; text-align:center; font-size:11px; color:#c4b2a5;">Thank-you surface via {{ deliveryLabel }} · demo order, no payment taken</p>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  componentDidMount() {
+    try {
+      const st = Object.assign({ viewer: 'member', error: false, bonus: false }, JSON.parse(localStorage.getItem('sf_store') || '{}'));
+      if (st.viewer !== 'member' || st.error) return;
+      if (localStorage.getItem('sf_ty_credited') === '1') return;
+      const applied = JSON.parse(localStorage.getItem('sf_cart_reward') || 'null');
+      const discount = applied && applied.type === 'discount' ? applied.value : 0;
+      const earned = Math.round((62 - discount) * 6 * (st.bonus ? 2 : 1));
+      const w = Object.assign({ balance: 2450, redeemedList: [] }, JSON.parse(localStorage.getItem('rosy_wallet') || '{}'));
+      w.balance = w.balance - (applied ? applied.cost : 0) + earned;
+      localStorage.setItem('rosy_wallet', JSON.stringify(w));
+      const orders = JSON.parse(localStorage.getItem('rosy_orders') || '[]');
+      orders.unshift({ label: 'Earned from order #8459 (€' + (62 - discount).toFixed(2) + ')', meta: 'Today · Bloom rate' + (st.bonus ? ' · 2× campaign' : '') + (applied ? ' · redeemed ' + applied.name : ''), delta: '+' + earned });
+      localStorage.setItem('rosy_orders', JSON.stringify(orders));
+      localStorage.setItem('sf_ty_credited', '1');
+    } catch (e) {}
+  }
+  loadStore() {
+    const d = { viewer: 'member', platform: 'woo', bonus: false, error: false };
+    try { return Object.assign(d, JSON.parse(localStorage.getItem('sf_store') || '{}')); } catch (e) { return d; }
+  }
+  renderVals() { const vals = this.__rv2(); let th = null; try { th = JSON.parse(localStorage.getItem('sf_theme') || 'null'); } catch (e) {} const b = (th && th.brand) || '#b13d5e'; vals.themeBrand = b; vals.themeBrandDeep = 'color-mix(in srgb, ' + b + ' 76%, #000)'; vals.currencyName = (th && th.currency) || 'Petals'; vals.heroMsg = (th && th.hero) || 'Beauty that gives back'; return vals; }
+  __rv2() {
+    const st = this.loadStore();
+    const member = st.viewer === 'member';
+    let applied = null;
+    if (member) { try { applied = JSON.parse(localStorage.getItem('sf_cart_reward') || 'null'); } catch (e) {} }
+    const subtotal = 62;
+    const discount = applied && applied.type === 'discount' ? applied.value : 0;
+    const shipping = applied && applied.type === 'shipping' ? 0 : 4.9;
+    const total = subtotal - discount + shipping;
+    const mult = st.bonus ? 2 : 1;
+    const earned = Math.round((subtotal - discount) * (member ? 6 : 5) * mult);
+    const newBal = 2450 - (applied ? applied.cost : 0) + earned;
+    const spend = 318 + (subtotal - discount);
+    return {
+      totalFmt: '€' + total.toFixed(2),
+      showLoyalty: member && !st.error, showGuestJoin: !member && !st.error, svcDown: !!st.error,
+      bonusOn: !!st.bonus, earned,
+      newBalance: newBal.toLocaleString('en-IE'), newBalanceEur: '€' + (newBal / 100).toFixed(2),
+      tierPct: Math.min(100, Math.round(((spend - 150) / 350) * 100)),
+      toIcon: '€' + Math.max(0, 500 - spend).toFixed(0),
+      usedReward: !!applied,
+      rewardLabel: applied ? applied.name : '',
+      discountFmt: '€' + (applied && applied.type === 'discount' ? applied.value : applied ? 4.9 : 0).toFixed(2),
+      rewardNote: applied ? applied.cost.toLocaleString('en-IE') + ' Petals were redeemed for "' + applied.name + '" on this order.' : '',
+      deliveryLabel: st.platform === 'shopify' ? 'Shopify order-status UI extension' : 'WooCommerce order-received block'
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body { margin:0; font-family:'Geist',ui-sans-serif,system-ui,sans-serif; background:#faf9f7; color:#1c1917; -webkit-font-smoothing:antialiased; }
+a { color:#4f46e5; text-decoration:none; } a:hover { color:#4338ca; }
+* { box-sizing:border-box; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; } }
+@media (max-width: 900px) {
+  aside[data-nav] { display:none !important; }
+  aside[data-nav][data-open="1"] { display:flex !important; position:fixed !important; left:0; top:0; bottom:0; width:282px !important; z-index:70; box-shadow:12px 0 40px rgba(0,0,0,.18); }
+  div[data-nav-scrim][data-open="1"] { display:block !important; }
+  button[data-menu-btn] { display:flex !important; }
+}
+
+:where(button, a, input, select, textarea):focus-visible { outline:2px solid #4f46e5 !important; outline-offset:2px; }
+@keyframes sfdraw { to { stroke-dashoffset:0; } }
+html[data-sf-dark] body { background:#1F1F1E !important; color:#E5E4DF; }
+html[data-sf-dark] [style*="background: rgb(255, 255, 255)"] { background:#292927 !important; }
+html[data-sf-dark] [style*="background: rgb(250, 250, 249)"] { background:#262625 !important; }
+html[data-sf-dark] [style*="background: rgb(245, 245, 244)"] { background:#343432 !important; }
+html[data-sf-dark] [style*="background: rgb(238, 242, 255)"] { background:#37334F !important; }
+html[data-sf-dark] [style*="background: rgb(236, 253, 245)"] { background:#26382D !important; }
+html[data-sf-dark] [style*="background: rgb(255, 251, 235)"] { background:#3E3423 !important; }
+html[data-sf-dark] [style*="background: rgb(254, 242, 242)"] { background:#3D292A !important; }
+html[data-sf-dark] [style*="background: rgb(253, 242, 248)"] { background:#3A2C37 !important; }
+html[data-sf-dark] [style*="background: rgb(252, 231, 243)"] { background:#3A2C37 !important; }
+html[data-sf-dark] [style*="background: rgb(28, 25, 23)"] { background:#343432 !important; }
+html[data-sf-dark] [style*="background: rgb(253, 248, 246)"] { background:#33302E !important; }
+html[data-sf-dark] [style*="color: rgb(28, 25, 23)"] { color:#E5E4DF !important; }
+html[data-sf-dark] [style*="color: rgb(68, 64, 60)"], html[data-sf-dark] [style*="color: rgb(87, 83, 78)"] { color:#C0BFB9 !important; }
+html[data-sf-dark] [style*="color: rgb(120, 113, 108)"] { color:#A09F99 !important; }
+html[data-sf-dark] [style*="color: rgb(168, 162, 158)"] { color:#8B8A84 !important; }
+html[data-sf-dark] [style*="color: rgb(4, 120, 87)"], html[data-sf-dark] [style*="color: rgb(6, 95, 70)"] { color:#3BB87C !important; }
+html[data-sf-dark] [style*="color: rgb(180, 83, 9)"], html[data-sf-dark] [style*="color: rgb(146, 64, 14)"], html[data-sf-dark] [style*="color: rgb(120, 53, 15)"] { color:#E0A23C !important; }
+html[data-sf-dark] [style*="color: rgb(153, 27, 27)"], html[data-sf-dark] [style*="color: rgb(185, 28, 28)"] { color:#E76B72 !important; }
+html[data-sf-dark] [style*="color: rgb(67, 56, 202)"], html[data-sf-dark] [style*="color: rgb(55, 48, 163)"] { color:#9A85F0 !important; }
+html[data-sf-dark] [style*="rgb(231, 229, 228)"] { border-color:#3A3A37 !important; }
+html[data-sf-dark] [style*="rgb(245, 245, 244)"] { border-color:#333330 !important; }
+html[data-sf-dark] [style*="rgb(214, 211, 209)"] { border-color:#4A4A46 !important; }
+html[data-sf-dark] [style*="rgb(199, 210, 254)"] { border-color:#4A4666 !important; }
+html[data-sf-dark] [style*="rgb(167, 243, 208)"] { border-color:#2F5240 !important; }
+html[data-sf-dark] [style*="rgb(253, 230, 138)"] { border-color:#5C4A22 !important; }
+html[data-sf-dark] [style*="rgb(254, 202, 202)"] { border-color:#5C3234 !important; }
+
+html[data-sf-dark] [style*="background:#fff"] { background:#292927 !important; }
+html[data-sf-dark] [style*="background:#fafaf9"] { background:#262625 !important; }
+html[data-sf-dark] [style*="background:#f5f5f4"] { background:#343432 !important; }
+html[data-sf-dark] [style*="background:#eef2ff"] { background:#37334F !important; }
+html[data-sf-dark] [style*="background:#ecfdf5"] { background:#26382D !important; }
+html[data-sf-dark] [style*="background:#fffbeb"] { background:#3E3423 !important; }
+html[data-sf-dark] [style*="background:#fef2f2"] { background:#3D292A !important; }
+html[data-sf-dark] [style*="background:#fdf2f8"] { background:#3A2C37 !important; }
+html[data-sf-dark] [style*="background:#fce7f3"] { background:#3A2C37 !important; }
+html[data-sf-dark] [style*="background:#1c1917"] { background:#343432 !important; }
+html[data-sf-dark] [style*="background:#fdf8f6"] { background:#33302E !important; }
+html[data-sf-dark] [style*="color:#1c1917"] { color:#E5E4DF !important; }
+html[data-sf-dark] [style*="color:#44403c"], html[data-sf-dark] [style*="color:#57534e"] { color:#C0BFB9 !important; }
+html[data-sf-dark] [style*="color:#78716c"] { color:#A09F99 !important; }
+html[data-sf-dark] [style*="color:#a8a29e"] { color:#8B8A84 !important; }
+html[data-sf-dark] [style*="color:#047857"], html[data-sf-dark] [style*="color:#065f46"] { color:#3BB87C !important; }
+html[data-sf-dark] [style*="color:#b45309"], html[data-sf-dark] [style*="color:#92400e"], html[data-sf-dark] [style*="color:#78350f"] { color:#E0A23C !important; }
+html[data-sf-dark] [style*="color:#991b1b"], html[data-sf-dark] [style*="color:#b91c1c"] { color:#E76B72 !important; }
+html[data-sf-dark] [style*="color:#4338ca"], html[data-sf-dark] [style*="color:#3730a3"] { color:#9A85F0 !important; }
+html[data-sf-dark] [style*="color:#3b2b30"], html[data-sf-dark] [style*="color:#6b4a55"], html[data-sf-dark] [style*="color:#8f6f7c"] { color:#C0BFB9 !important; }
+html[data-sf-dark] [style*="#e7e5e4"] { border-color:#3A3A37 !important; }
+html[data-sf-dark] [style*="#f5f5f4"] { border-color:#333330 !important; }
+html[data-sf-dark] [style*="#d6d3d1"] { border-color:#4A4A46 !important; }
+html[data-sf-dark] [style*="#c7d2fe"] { border-color:#4A4666 !important; }
+html[data-sf-dark] [style*="#a7f3d0"] { border-color:#2F5240 !important; }
+html[data-sf-dark] [style*="#fde68a"] { border-color:#5C4A22 !important; }
+html[data-sf-dark] [style*="#fecaca"] { border-color:#5C3234 !important; }
+html[data-sf-dark] [style*="#f3dfe6"] { border-color:#4A3A41 !important; }
+html[data-sf-dark] a { color:#9A85F0; }
+html[data-sf-dark] input, html[data-sf-dark] select, html[data-sf-dark] textarea { background:#2C2C2A !important; color:#E5E4DF !important; border-color:#3A3A37 !important; }
+</style>
+<script>try{if(localStorage.getItem('sf_dark')==='1')document.documentElement.setAttribute('data-sf-dark','1')}catch(e){}</script>
+</helmet>
+<div style="display:flex; min-height:100vh; align-items:stretch;">
+  <div data-nav-scrim="1" data-open="{{ navOpen }}" onClick="{{ closeNav }}" style="display:none; position:fixed; inset:0; background:rgba(28,25,23,.45); z-index:69;"></div>
+  <aside data-nav="1" data-open="{{ navOpen }}" style="width:244px; flex-shrink:0; background:#fafaf9; border-right:1px solid #e7e5e4; display:flex; flex-direction:column; position:sticky; top:0; height:100vh;">
+    <div style="padding:12px;">
+      <div style="display:flex; align-items:center; gap:10px; padding:8px; border-radius:8px; cursor:pointer;" style-hover="background:#f5f5f4;">
+        <div style="width:32px; height:32px; border-radius:8px; background:#4f46e5; color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; letter-spacing:.02em;">NV</div>
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:13px; font-weight:600; color:#1c1917; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Nina &amp; Valentin</div>
+          <div style="font-size:11.5px; color:#78716c;">Slovenia Store</div>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a8a29e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"></path><path d="m7 9 5-5 5 5"></path></svg>
+      </div>
+      <div style="display:flex; align-items:center; gap:6px; margin:6px 8px 0;">
+        <span style="display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:500; color:#047857; background:#ecfdf5; border:1px solid #a7f3d0; border-radius:999px; padding:2px 8px;"><span style="width:6px; height:6px; border-radius:50%; background:#10b981;"></span>Live</span>
+      </div>
+    </div>
+    <nav style="flex:1; overflow-y:auto; padding:4px 12px; display:flex; flex-direction:column; gap:1px; font-size:13.5px;">
+      <a href="overview.dc.html" style="display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"></rect><rect width="7" height="5" x="14" y="3" rx="1"></rect><rect width="7" height="9" x="14" y="12" rx="1"></rect><rect width="7" height="5" x="3" y="12" rx="1"></rect></svg>Overview</a>
+      <div style="display:flex; align-items:center; gap:10px; padding:9px 10px 3px; font-size:11px; font-weight:600; color:#a8a29e; text-transform:uppercase; letter-spacing:.06em;">Programme</div>
+      <a href="programme.dc.html" style="display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l4 6-10 13L2 9Z"></path><path d="M11 3 8 9l4 13 4-13-3-6"></path><path d="M2 9h20"></path></svg>Programme overview</a>
+      <a href="earning.dc.html" style="display:flex; align-items:center; gap:10px; padding:6px 10px 6px 36px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;">Earning rules</a>
+      <a href="rewards.dc.html" style="display:flex; align-items:center; gap:10px; padding:6px 10px 6px 36px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;">Rewards</a>
+      <a href="tiers.dc.html" style="display:flex; align-items:center; gap:10px; padding:6px 10px 6px 36px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;">VIP tiers</a>
+      <a href="expiry.dc.html" style="display:flex; align-items:center; gap:10px; padding:6px 10px 6px 36px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;">Points expiry</a>
+      <div style="display:flex; align-items:center; gap:10px; padding:9px 10px 3px; font-size:11px; font-weight:600; color:#a8a29e; text-transform:uppercase; letter-spacing:.06em;">Grow</div>
+      <a href="customers.dc.html" style="display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:8px; background:#eef2ff; color:#4338ca; font-weight:600;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Customers</a>
+      <a href="campaigns.dc.html" style="display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3z"></path><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"></path></svg>Campaigns</a>
+      <a href="referrals.dc.html" style="display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" x2="19" y1="8" y2="14"></line><line x1="22" x2="16" y1="11" y2="11"></line></svg>Referrals</a>
+      <a href="analytics.dc.html" style="display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg>Analytics</a>
+      <div style="display:flex; align-items:center; gap:10px; padding:9px 10px 3px; font-size:11px; font-weight:600; color:#a8a29e; text-transform:uppercase; letter-spacing:.06em;">Platform</div>
+      <a href="experience.dc.html" style="display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path></svg>Experience</a>
+      <a href="integrations.dc.html" style="display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-5"></path><path d="M9 8V2"></path><path d="M15 8V2"></path><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"></path></svg>Integrations</a>
+      <a href="settings.dc.html" style="display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>Settings</a>
+    </nav>
+    <div style="padding:12px; border-top:1px solid #e7e5e4; display:flex; flex-direction:column; gap:10px;">
+      <div style="font-size:11px; color:#a8a29e; display:flex; align-items:center; gap:6px; padding:0 4px;"><span style="width:6px; height:6px; border-radius:2px; background:#c4b5fd;"></span>Demo environment · seeded data</div>
+      <div style="display:flex; align-items:center; gap:10px; padding:4px; border-radius:8px; cursor:pointer;" style-hover="background:#f5f5f4;">
+        <div style="width:28px; height:28px; border-radius:50%; background:#fce7f3; color:#9d174d; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600;">NR</div>
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:12.5px; font-weight:600;">Nina Rozman</div>
+          <div style="font-size:11px; color:#78716c;">nina@ninavalentin.si</div>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a8a29e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"></path><path d="m7 9 5-5 5 5"></path></svg>
+      </div>
+    </div>
+  </aside>
+  <main style="flex:1; min-width:0; display:flex; flex-direction:column;">
+    <header style="height:56px; flex-shrink:0; background:#fff; border-bottom:1px solid #e7e5e4; display:flex; align-items:center; gap:12px; padding:0 24px;">
+      <button data-menu-btn="1" onClick="{{ toggleNav }}" aria-label="Menu" style="display:none; width:36px; height:36px; border-radius:8px; border:1px solid #e7e5e4; background:#fff; color:#44403c; cursor:pointer; align-items:center; justify-content:center; flex-shrink:0;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button>
+      <a href="customers.dc.html" style="display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:500; color:#78716c;" style-hover="color:#1c1917;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>Customers</a>
+      <span style="color:#d6d3d1;">/</span>
+      <span style="font-size:13px; font-weight:600;">Maja Kovač</span>
+      <div style="flex:1;"></div>
+      <button aria-label="Toggle dark mode" title="Light / dark" onClick="{{ toggleDark }}" style="width:34px; height:34px; border-radius:8px; border:none; background:transparent; color:#78716c; cursor:pointer; display:flex; align-items:center; justify-content:center;" style-hover="background:#f5f5f4;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg></button>
+      <button aria-label="Help" style="width:34px; height:34px; border-radius:8px; border:none; background:transparent; color:#78716c; cursor:pointer; display:flex; align-items:center; justify-content:center;" style-hover="background:#f5f5f4;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path></svg></button>
+      <div style="position:relative;">
+      <button aria-label="Notifications" onClick="{{ toggleNotif }}" style="width:34px; height:34px; border-radius:8px; border:none; background:transparent; color:#78716c; cursor:pointer; display:flex; align-items:center; justify-content:center; position:relative;" style-hover="background:#f5f5f4;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg><span style="position:absolute; top:7px; right:8px; width:7px; height:7px; border-radius:50%; background:#4f46e5; border:1.5px solid #fff;"></span></button>
+      <sc-if value="{{ notifOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="position:fixed; inset:0; z-index:74;" onClick="{{ closeNotif }}"></div>
+        <div style="position:absolute; right:0; top:42px; width:360px; max-width:86vw; background:#fff; border:1px solid #e7e5e4; border-radius:12px; box-shadow:0 16px 44px rgba(0,0,0,.14); z-index:75; overflow:hidden;">
+          <div style="display:flex; align-items:center; padding:12px 16px; border-bottom:1px solid #f5f5f4;"><span style="font-size:13.5px; font-weight:600; color:#1c1917;">Notifications</span><span style="flex:1;"></span><span style="font-size:11.5px; color:#78716c;">4 new</span></div>
+          <a href="integrations.dc.html" style="display:flex; gap:11px; padding:12px 16px; border-bottom:1px solid #f5f5f4; color:#1c1917;" style-hover="background:#fafaf9;"><span style="width:8px; height:8px; border-radius:50%; background:#f59e0b; margin-top:5px; flex-shrink:0;"></span><span style="flex:1; font-size:13px; line-height:1.45;"><strong style="font-weight:600;">Klaviyo sync degraded</strong> — events delayed 26 min. Expiry reminders may send late.<span style="display:block; font-size:11.5px; color:#a8a29e; margin-top:2px;">18 min ago</span></span></a>
+          <a href="referrals.dc.html" style="display:flex; gap:11px; padding:12px 16px; border-bottom:1px solid #f5f5f4; color:#1c1917;" style-hover="background:#fafaf9;"><span style="width:8px; height:8px; border-radius:50%; background:#dc2626; margin-top:5px; flex-shrink:0;"></span><span style="flex:1; font-size:13px; line-height:1.45;"><strong style="font-weight:600;">Referral flagged</strong> — Rok Jerman, self-referral signals. 400 pts on hold.<span style="display:block; font-size:11.5px; color:#a8a29e; margin-top:2px;">2 d ago</span></span></a>
+          <a href="expiry.dc.html" style="display:flex; gap:11px; padding:12px 16px; border-bottom:1px solid #f5f5f4; color:#1c1917;" style-hover="background:#fafaf9;"><span style="width:8px; height:8px; border-radius:50%; background:#f59e0b; margin-top:5px; flex-shrink:0;"></span><span style="flex:1; font-size:13px; line-height:1.45;"><strong style="font-weight:600;">24,180 pts expire within 30 days</strong> — 312 members affected.<span style="display:block; font-size:11.5px; color:#a8a29e; margin-top:2px;">Today, 06:00</span></span></a>
+          <a href="programme.dc.html" style="display:flex; gap:11px; padding:12px 16px; border-bottom:1px solid #f5f5f4; color:#1c1917;" style-hover="background:#fafaf9;"><span style="width:8px; height:8px; border-radius:50%; background:#a8a29e; margin-top:5px; flex-shrink:0;"></span><span style="flex:1; font-size:13px; line-height:1.45;"><strong style="font-weight:600;">2 draft changes awaiting publication</strong> — birthday rule &amp; free-shipping reprice.<span style="display:block; font-size:11.5px; color:#a8a29e; margin-top:2px;">28 Jul</span></span></a>
+          <a href="settings.dc.html?tab=Notifications" style="display:block; padding:11px 16px; font-size:12.5px; font-weight:500; text-align:center;">Notification settings</a>
+        </div>
+      </sc-if>
+    </div>
+    </header>
+    <div style="flex:1; padding:28px 32px 48px; display:flex; flex-direction:column; gap:16px; max-width:1280px; width:100%; margin:0 auto;">
+      <div style="background:#fff; border:1px solid #e7e5e4; border-radius:12px; padding:20px 22px; box-shadow:0 1px 2px rgba(0,0,0,.04); display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
+        <div style="width:52px; height:52px; border-radius:50%; background:#fce7f3; color:#9d174d; display:flex; align-items:center; justify-content:center; font-size:17px; font-weight:600;">MK</div>
+        <div style="flex:1; min-width:200px;">
+          <div style="display:flex; align-items:center; gap:9px; flex-wrap:wrap;">
+            <h1 style="margin:0; font-size:19px; font-weight:600;">Maja Kovač</h1>
+            <span style="display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:500; color:#9d174d; background:#fdf2f8; border-radius:999px; padding:2px 9px;"><span style="width:8px; height:8px; border-radius:2.5px; background:#f43f5e;"></span>Bloom member</span>
+          </div>
+          <div style="font-size:12.5px; color:#78716c; margin-top:4px;">maja.kovac@gmail.com · WooCommerce customer #2841 · joined 14 Mar 2025 · Ljubljana, SI</div>
+        </div>
+        <button onClick="{{ openAdjust }}" style="height:36px; padding:0 14px; border-radius:8px; border:1px solid #e7e5e4; background:#fff; font-family:inherit; font-size:13.5px; font-weight:500; color:#44403c; cursor:pointer; display:flex; align-items:center; gap:7px;" style-hover="background:#fafaf9;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.375 2.625a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4Z"></path></svg>Manual adjustment</button>
+        <a href="rosy-account.dc.html" style="height:36px; padding:0 14px; border-radius:8px; border:1px solid #e7e5e4; background:#fff; font-size:13.5px; font-weight:500; color:#44403c; display:inline-flex; align-items:center; gap:7px;" style-hover="background:#fafaf9; color:#1c1917;">View as customer</a>
+      </div>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:14px;">
+        <div style="background:#fff; border:1px solid #e7e5e4; border-radius:12px; padding:15px 18px; box-shadow:0 1px 2px rgba(0,0,0,.04);">
+          <div style="font-size:12.5px; font-weight:500; color:#78716c;">Balance</div>
+          <div style="font-size:22px; font-weight:600; margin-top:5px; font-variant-numeric:tabular-nums;">{{ balanceFmt }} pts</div>
+          <div style="font-size:12px; margin-top:4px; color:#78716c;">≈ {{ balanceEur }}</div>
+        </div>
+        <div style="background:#fff; border:1px solid #e7e5e4; border-radius:12px; padding:15px 18px; box-shadow:0 1px 2px rgba(0,0,0,.04);">
+          <div style="font-size:12.5px; font-weight:500; color:#78716c;">Tier progress</div>
+          <div style="font-size:22px; font-weight:600; margin-top:5px; font-variant-numeric:tabular-nums;">€318 / €500</div>
+          <div style="height:5px; border-radius:999px; background:#f5f5f4; margin-top:8px;"><div style="width:48%; height:100%; border-radius:999px; background:#f43f5e;"></div></div>
+          <div style="font-size:12px; margin-top:5px; color:#78716c;">€182 spend to Icon</div>
+        </div>
+        <div style="background:#fff; border:1px solid #e7e5e4; border-radius:12px; padding:15px 18px; box-shadow:0 1px 2px rgba(0,0,0,.04);">
+          <div style="font-size:12.5px; font-weight:500; color:#78716c;">Lifetime</div>
+          <div style="font-size:22px; font-weight:600; margin-top:5px; font-variant-numeric:tabular-nums;">€318</div>
+          <div style="font-size:12px; margin-top:4px; color:#78716c;">9 orders · AOV €35.30</div>
+        </div>
+        <div style="background:#fff; border:1px solid #fde68a; border-radius:12px; padding:15px 18px; box-shadow:0 1px 2px rgba(0,0,0,.04);">
+          <div style="font-size:12.5px; font-weight:500; color:#b45309;">Expiring soon</div>
+          <div style="font-size:22px; font-weight:600; margin-top:5px; font-variant-numeric:tabular-nums;">180 pts</div>
+          <div style="font-size:12px; margin-top:4px; color:#78716c;">on 14 Sep 2026 · reminder scheduled</div>
+        </div>
+        <div style="background:#fff; border:1px solid #e7e5e4; border-radius:12px; padding:15px 18px; box-shadow:0 1px 2px rgba(0,0,0,.04);">
+          <div style="font-size:12.5px; font-weight:500; color:#78716c;">Referrals</div>
+          <div style="font-size:22px; font-weight:600; margin-top:5px; font-variant-numeric:tabular-nums;">3</div>
+          <div style="font-size:12px; margin-top:4px; color:#78716c;">1 converted · +400 pts earned</div>
+        </div>
+      </div>
+      <div style="display:flex; flex-wrap:wrap; gap:14px; align-items:flex-start;">
+        <div style="flex:1.6 1 460px; min-width:0; background:#fff; border:1px solid #e7e5e4; border-radius:12px; box-shadow:0 1px 2px rgba(0,0,0,.04); overflow:hidden;">
+          <div style="display:flex; align-items:center; padding:16px 20px 12px; gap:10px; flex-wrap:wrap;">
+            <span style="font-size:14px; font-weight:600;">Points timeline</span>
+            <span style="font-size:12px; color:#78716c;">every movement, with its reason</span>
+            <span style="flex:1;"></span>
+            <span style="font-size:12px; color:#a8a29e;">Oldest points are spent first</span>
+          </div>
+          <div style="font-size:13px;">
+            <sc-for list="{{ timeline }}" as="t" hint-placeholder-count="8">
+              <div style="display:flex; gap:13px; padding:13px 20px; border-top:1px solid #f5f5f4;">
+                <span style="width:9px; height:9px; border-radius:50%; background:{{ t.dot }}; margin-top:5px; flex-shrink:0;"></span>
+                <div style="flex:1; min-width:0;">
+                  <div style="font-weight:500;">{{ t.label }}</div>
+                  <div style="font-size:12px; color:#78716c; margin-top:2px;">{{ t.why }}</div>
+                </div>
+                <div style="text-align:right; flex-shrink:0;">
+                  <div style="font-weight:600; font-variant-numeric:tabular-nums; color:{{ t.deltaColor }};">{{ t.delta }}</div>
+                  <div style="font-size:11.5px; color:#a8a29e; margin-top:2px;">{{ t.when }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="flex:1 1 300px; min-width:0; display:flex; flex-direction:column; gap:14px;">
+          <div style="background:#fff; border:1px solid #e7e5e4; border-radius:12px; padding:16px 18px; box-shadow:0 1px 2px rgba(0,0,0,.04);">
+            <div style="font-size:14px; font-weight:600;">Rewards</div>
+            <div style="margin-top:11px; display:flex; flex-direction:column; gap:9px; font-size:13px;">
+              <sc-for list="{{ vouchers }}" as="v" hint-placeholder-count="2">
+                <div style="display:flex; align-items:center; gap:10px; border:1px solid #e7e5e4; border-radius:10px; padding:10px 12px;">
+                  <span style="width:8px; height:8px; border-radius:50%; background:{{ v.dot }};"></span>
+                  <span style="flex:1; font-weight:500;">{{ v.name }}</span>
+                  <span style="font-size:11.5px; color:#78716c;">{{ v.state }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="background:#fff; border:1px solid #e7e5e4; border-radius:12px; padding:16px 18px; box-shadow:0 1px 2px rgba(0,0,0,.04);">
+            <div style="font-size:14px; font-weight:600;">Referral activity</div>
+            <div style="margin-top:11px; display:flex; flex-direction:column; gap:10px; font-size:13px;">
+              <div style="display:flex; align-items:center; gap:9px;"><span style="width:7px; height:7px; border-radius:50%; background:#10b981;"></span><span style="flex:1;">Nika Zupan — first order placed</span><span style="color:#047857; font-weight:600; font-variant-numeric:tabular-nums;">+400</span></div>
+              <div style="display:flex; align-items:center; gap:9px;"><span style="width:7px; height:7px; border-radius:50%; background:#f59e0b;"></span><span style="flex:1;">tia.p@… — signed up, no order yet</span><span style="color:#a8a29e;">pending</span></div>
+              <div style="display:flex; align-items:center; gap:9px;"><span style="width:7px; height:7px; border-radius:50%; background:#a8a29e;"></span><span style="flex:1;">link clicked 12× this month</span><span></span></div>
+            </div>
+          </div>
+          <div style="background:#fff; border:1px solid #e7e5e4; border-radius:12px; padding:16px 18px; box-shadow:0 1px 2px rgba(0,0,0,.04);">
+            <div style="font-size:14px; font-weight:600;">Connected account</div>
+            <div style="margin-top:11px; font-size:13px; color:#57534e; display:flex; flex-direction:column; gap:8px;">
+              <div style="display:flex;"><span style="width:110px; color:#78716c;">Platform</span><span>WooCommerce · #2841</span></div>
+              <div style="display:flex;"><span style="width:110px; color:#78716c;">Email opt-in</span><span>Yes · Klaviyo synced</span></div>
+              <div style="display:flex;"><span style="width:110px; color:#78716c;">Birthday</span><span>2 July</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <sc-if value="{{ adjustOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed; inset:0; background:rgba(28,25,23,.4); z-index:50;" onClick="{{ closeAdjust }}"></div>
+    <div style="position:fixed; top:0; right:0; bottom:0; width:430px; max-width:94vw; background:#fff; z-index:51; box-shadow:-12px 0 40px rgba(0,0,0,.12); display:flex; flex-direction:column;">
+      <div style="padding:18px 22px; border-bottom:1px solid #f5f5f4; display:flex; align-items:center; gap:10px;">
+        <div style="flex:1;">
+          <div style="font-size:15px; font-weight:600;">Manual points adjustment</div>
+          <div style="font-size:12px; color:#78716c; margin-top:2px;">Maja Kovač · audited action</div>
+        </div>
+        <button onClick="{{ closeAdjust }}" aria-label="Close" style="width:30px; height:30px; border-radius:8px; border:none; background:transparent; color:#78716c; cursor:pointer;" style-hover="background:#f5f5f4;">✕</button>
+      </div>
+      <div style="flex:1; overflow-y:auto; padding:20px 22px;">
+        <sc-if value="{{ notConfirming }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex; gap:8px;">
+            <button onClick="{{ modeAdd }}" style="flex:1; height:36px; border-radius:8px; border:1px solid {{ addBorder }}; background:{{ addBg }}; color:{{ addColor }}; font-family:inherit; font-size:13px; font-weight:600; cursor:pointer;">Add points</button>
+            <button onClick="{{ modeRemove }}" style="flex:1; height:36px; border-radius:8px; border:1px solid {{ remBorder }}; background:{{ remBg }}; color:{{ remColor }}; font-family:inherit; font-size:13px; font-weight:600; cursor:pointer;">Remove points</button>
+          </div>
+          <sc-if value="{{ isRemove }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:12px; background:#fef2f2; border:1px solid #fecaca; border-radius:10px; padding:11px 13px; font-size:12.5px; color:#991b1b; display:flex; gap:9px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-top:1px;"><path d="M12 9v4"></path><path d="M12 17h.01"></path><circle cx="12" cy="12" r="10"></circle></svg><span>Removing points is visible to the customer and cannot be undone silently. Prefer expiring or reversing the source entry when possible.</span></div>
+          </sc-if>
+          <label style="display:block; font-size:12.5px; font-weight:600; color:#44403c; margin-top:16px;">Amount (points)</label>
+          <input value="{{ amount }}" onChange="{{ setAmount }}" type="number" style="margin-top:7px; width:100%; height:38px; border:1px solid #e7e5e4; border-radius:8px; padding:0 12px; font-family:inherit; font-size:14px; font-variant-numeric:tabular-nums;" style-focus="outline:2px solid #c7d2fe; border-color:#a5b4fc;">
+          <label style="display:block; font-size:12.5px; font-weight:600; color:#44403c; margin-top:14px;">Reason <span style="color:#dc2626;">*</span></label>
+          <select onChange="{{ setReason }}" style="margin-top:7px; width:100%; height:38px; border:1px solid {{ reasonBorder }}; border-radius:8px; font-family:inherit; font-size:13.5px; color:#44403c; padding:0 10px; background:#fff;">
+            <option value="">Select a reason…</option>
+            <option>Goodwill / service recovery</option>
+            <option>Order issue not synced</option>
+            <option>Fraud correction</option>
+            <option>Campaign make-good</option>
+            <option>Other (explain in note)</option>
+          </select>
+          <sc-if value="{{ reasonMissing }}" hint-placeholder-val="{{ false }}">
+            <div style="font-size:12px; color:#dc2626; margin-top:6px;">A reason is required for the audit log.</div>
+          </sc-if>
+          <label style="display:block; font-size:12.5px; font-weight:600; color:#44403c; margin-top:14px;">Internal note <span style="font-weight:400; color:#a8a29e;">(optional)</span></label>
+          <textarea onChange="{{ setNote }}" placeholder="e.g. Ticket #4521 — damaged parcel" style="margin-top:7px; width:100%; height:70px; border:1px solid #e7e5e4; border-radius:8px; padding:9px 12px; font-family:inherit; font-size:13px; resize:vertical;" style-focus="outline:2px solid #c7d2fe; border-color:#a5b4fc;"></textarea>
+          <div style="margin-top:16px; background:#fafaf9; border:1px solid #e7e5e4; border-radius:10px; padding:13px 15px; font-size:13px;">
+            <div style="display:flex;"><span style="color:#78716c;">Current balance</span><span style="flex:1;"></span><span style="font-variant-numeric:tabular-nums;">{{ balanceFmt }} pts</span></div>
+            <div style="display:flex; margin-top:6px;"><span style="color:#78716c;">Adjustment</span><span style="flex:1;"></span><span style="font-variant-numeric:tabular-nums; color:{{ deltaPreviewColor }};">{{ deltaPreview }}</span></div>
+            <div style="display:flex; margin-top:6px; padding-top:8px; border-top:1px solid #e7e5e4; font-weight:600;"><span>Resulting balance</span><span style="flex:1;"></span><span style="font-variant-numeric:tabular-nums;">{{ resultFmt }} pts</span></div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ confirming }}" hint-placeholder-val="{{ false }}">
+          <div style="border:1px solid {{ confirmBorder }}; background:{{ confirmBg }}; border-radius:12px; padding:16px 18px;">
+            <div style="font-size:14px; font-weight:600; color:{{ confirmTitleColor }};">{{ confirmTitle }}</div>
+            <div style="margin-top:10px; font-size:13px; color:#44403c; display:flex; flex-direction:column; gap:6px;">
+              <div style="display:flex;"><span style="width:110px; color:#78716c;">Customer</span><span>Maja Kovač</span></div>
+              <div style="display:flex;"><span style="width:110px; color:#78716c;">Change</span><span style="font-variant-numeric:tabular-nums; font-weight:600;">{{ deltaPreview }}</span></div>
+              <div style="display:flex;"><span style="width:110px; color:#78716c;">New balance</span><span style="font-variant-numeric:tabular-nums;">{{ resultFmt }} pts</span></div>
+              <div style="display:flex;"><span style="width:110px; color:#78716c;">Reason</span><span>{{ reason }}</span></div>
+              <div style="display:flex;"><span style="width:110px; color:#78716c;">Recorded by</span><span>Nina Rozman · audit log entry</span></div>
+            </div>
+          </div>
+          <p style="margin:14px 0 0; font-size:12.5px; color:#78716c; line-height:1.5;">The customer will see this as "{{ customerFacing }}" in their history.</p>
+        </sc-if>
+      </div>
+      <div style="padding:16px 22px; border-top:1px solid #f5f5f4; display:flex; gap:10px;">
+        <sc-if value="{{ confirming }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ backToEdit }}" style="height:38px; padding:0 16px; border-radius:8px; border:1px solid #e7e5e4; background:#fff; font-family:inherit; font-size:13.5px; font-weight:500; color:#44403c; cursor:pointer;" style-hover="background:#fafaf9;">Back</button>
+        </sc-if>
+        <div style="flex:1;"></div>
+        <sc-if value="{{ notConfirming }}" hint-placeholder-val="{{ true }}">
+          <button onClick="{{ review }}" style="height:38px; padding:0 18px; border-radius:8px; border:none; background:linear-gradient(90deg, #4438c9, #6d4ef0); font-family:inherit; font-size:13.5px; font-weight:500; color:#fff; cursor:pointer;" style-hover="background:#4338ca;">Review adjustment</button>
+        </sc-if>
+        <sc-if value="{{ confirming }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ confirm }}" style="height:38px; padding:0 18px; border-radius:8px; border:none; background:{{ confirmBtnBg }}; font-family:inherit; font-size:13.5px; font-weight:500; color:#fff; cursor:pointer;">{{ confirmBtnLabel }}</button>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed; bottom:24px; right:24px; background:#1c1917; color:#fff; border-radius:10px; padding:12px 16px; font-size:13.5px; display:flex; align-items:center; gap:9px; box-shadow:0 10px 30px rgba(0,0,0,.25); z-index:60;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>Adjustment recorded · audit log updated</div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  state = { adjustOpen: false, confirming: false, mode: 'add', amount: 200, reason: '', note: '', reasonMissing: false,
+    adjustments: [], walletRedemptions: [], walletBalance: null, toast: false };
+  componentDidMount() {
+    try { const a = JSON.parse(localStorage.getItem('sf_adjustments') || '[]'); if (Array.isArray(a)) this.setState({ adjustments: a }); } catch (e) {}
+    try {
+      const w = JSON.parse(localStorage.getItem('rosy_wallet') || 'null');
+      if (w) this.setState({ walletRedemptions: w.redeemedList || [], walletBalance: w.balance });
+    } catch (e) {}
+  }
+  fmt(n) { return n.toLocaleString('en-IE'); }
+  renderVals() { const vals = this.__rv(); vals.navOpen = this.state.navOpen ? '1' : '0'; vals.toggleNav = () => this.setState({ navOpen: !this.state.navOpen }); vals.closeNav = () => this.setState({ navOpen: false }); vals.toggleDark = () => { const r = document.documentElement; const on = r.getAttribute('data-sf-dark') === '1'; if (on) { r.removeAttribute('data-sf-dark'); } else { r.setAttribute('data-sf-dark', '1'); } try { localStorage.setItem('sf_dark', on ? '0' : '1'); } catch (e) {} this.forceUpdate(); }; vals.notifOpen = !!this.state.notifOpen; vals.toggleNotif = () => this.setState({ notifOpen: !this.state.notifOpen }); vals.closeNotif = () => this.setState({ notifOpen: false }); return vals; }
+  __rv() {
+    const s = this.state;
+    const adjTotal = s.adjustments.reduce((sum, a) => sum + a.delta, 0);
+    const base = s.walletBalance !== null ? s.walletBalance : 2450;
+    const balance = base + adjTotal;
+    const delta = (s.mode === 'add' ? 1 : -1) * (s.amount || 0);
+    const result = balance + delta;
+    const adjRows = s.adjustments.map(a => ({
+      label: 'Manual adjustment — ' + (a.delta > 0 ? 'points added' : 'points removed'),
+      why: a.reason + (a.note ? ' · "' + a.note + '"' : '') + ' · by Nina Rozman',
+      delta: (a.delta > 0 ? '+' : '\u2212') + this.fmt(Math.abs(a.delta)), deltaColor: a.delta > 0 ? '#047857' : '#b91c1c',
+      dot: '#4f46e5', when: 'Today'
+    }));
+    const redRows = s.walletRedemptions.map(r => ({
+      label: 'Redeemed ' + r.name, why: 'Self-service in loyalty account · code ROSY-MK-7D2F',
+      delta: '\u2212' + this.fmt(r.cost), deltaColor: '#b91c1c', dot: '#b13d5e', when: 'Today'
+    }));
+    const baseRows = [
+      { label: 'Earned from order #8412 (€56.70)', why: 'Purchase rule: 6 pts/€1 (Bloom) + skincare 2× bonus', delta: '+340', deltaColor: '#047857', dot: '#10b981', when: '02 Aug' },
+      { label: 'Double points weekend bonus', why: 'Campaign: Double points weekend (25–27 Jul)', delta: '+290', deltaColor: '#047857', dot: '#6366f1', when: '27 Jul' },
+      { label: 'Referral converted — Nika Zupan', why: 'Friend\u2019s first order over €30 · advocate reward', delta: '+400', deltaColor: '#047857', dot: '#10b981', when: '21 Jul' },
+      { label: 'Redeemed €5 discount', why: 'Code ROSY-MK-3B1A · used on order #8341', delta: '\u2212500', deltaColor: '#b91c1c', dot: '#b13d5e', when: '14 Jul' },
+      { label: 'Birthday points', why: 'Birthday rule · verified birth date 2 Jul', delta: '+300', deltaColor: '#047857', dot: '#10b981', when: '02 Jul' },
+      { label: 'Reached Bloom tier', why: 'Rolling 12-month spend passed €150', delta: 'tier up', deltaColor: '#4338ca', dot: '#f43f5e', when: '18 Jun' },
+      { label: 'Earned from order #8102 (€44.20)', why: 'Purchase rule: 5 pts/€1 (Rose at the time)', delta: '+221', deltaColor: '#047857', dot: '#10b981', when: '11 Jun' },
+      { label: 'Points reversed — refund on #8064', why: 'Item returned · original earn reversed automatically', delta: '\u2212180', deltaColor: '#b91c1c', dot: '#f59e0b', when: '29 May' },
+      { label: 'Earned from order #8064 (€36.00)', why: 'Purchase rule: 5 pts/€1 (Rose)', delta: '+180', deltaColor: '#047857', dot: '#10b981', when: '26 May' },
+      { label: 'Account created', why: 'Welcome rule · signed up on the loyalty page', delta: '+100', deltaColor: '#047857', dot: '#10b981', when: '14 Mar 2025' }
+    ];
+    const sel = on => ({ bg: on ? '#eef2ff' : '#fff', border: on ? '#a5b4fc' : '#e7e5e4', color: on ? '#4338ca' : '#57534e' });
+    const rs = on => ({ bg: on ? '#fef2f2' : '#fff', border: on ? '#fca5a5' : '#e7e5e4', color: on ? '#b91c1c' : '#57534e' });
+    const add = sel(s.mode === 'add'), rem = rs(s.mode === 'remove');
+    const isRemove = s.mode === 'remove';
+    return {
+      balanceFmt: this.fmt(balance), balanceEur: '€' + (balance / 100).toFixed(2),
+      resultFmt: this.fmt(result),
+      timeline: [...adjRows, ...redRows, ...baseRows],
+      vouchers: [
+        ...s.walletRedemptions.map(r => ({ name: r.name + ' — ROSY-MK-7D2F', state: 'issued today', dot: '#10b981' })),
+        { name: '€5 discount — ROSY-MK-3B1A', state: 'used 14 Jul', dot: '#a8a29e' }
+      ],
+      adjustOpen: s.adjustOpen, confirming: s.confirming, notConfirming: !s.confirming,
+      openAdjust: () => this.setState({ adjustOpen: true, confirming: false, reasonMissing: false }),
+      closeAdjust: () => this.setState({ adjustOpen: false, confirming: false }),
+      modeAdd: () => this.setState({ mode: 'add' }), modeRemove: () => this.setState({ mode: 'remove' }),
+      addBg: add.bg, addBorder: add.border, addColor: add.color,
+      remBg: rem.bg, remBorder: rem.border, remColor: rem.color,
+      isRemove,
+      amount: s.amount, setAmount: e => this.setState({ amount: Math.max(0, parseInt(e.target.value || '0', 10)) }),
+      reason: s.reason, setReason: e => this.setState({ reason: e.target.value, reasonMissing: false }),
+      setNote: e => this.setState({ note: e.target.value }),
+      reasonBorder: s.reasonMissing ? '#fca5a5' : '#e7e5e4', reasonMissing: s.reasonMissing,
+      deltaPreview: (delta >= 0 ? '+' : '\u2212') + this.fmt(Math.abs(delta)) + ' pts',
+      deltaPreviewColor: delta >= 0 ? '#047857' : '#b91c1c',
+      review: () => { if (!s.reason) { this.setState({ reasonMissing: true }); return; } this.setState({ confirming: true }); },
+      backToEdit: () => this.setState({ confirming: false }),
+      confirmTitle: isRemove ? 'Confirm points removal' : 'Confirm points addition',
+      confirmTitleColor: isRemove ? '#991b1b' : '#1c1917',
+      confirmBorder: isRemove ? '#fecaca' : '#e7e5e4', confirmBg: isRemove ? '#fef2f2' : '#fafaf9',
+      confirmBtnBg: isRemove ? '#dc2626' : '#4f46e5',
+      confirmBtnLabel: isRemove ? 'Remove ' + this.fmt(s.amount || 0) + ' pts' : 'Add ' + this.fmt(s.amount || 0) + ' pts',
+      customerFacing: (isRemove ? '\u2212' : '+') + this.fmt(s.amount || 0) + ' pts — adjustment by Nina & Valentin',
+      confirm: () => {
+        const entry = { delta, reason: s.reason, note: s.note, at: Date.now() };
+        const list = [entry, ...s.adjustments];
+        try { localStorage.setItem('sf_adjustments', JSON.stringify(list)); } catch (e) {}
+        try {
+          const log = JSON.parse(localStorage.getItem('sf_audit') || '[]');
+          log.unshift({ actor: 'Nina Rozman', action: (delta > 0 ? 'Added ' : 'Removed ') + Math.abs(delta) + ' pts', target: 'Maja Kovač', context: s.reason, at: Date.now() });
+          localStorage.setItem('sf_audit', JSON.stringify(log));
+        } catch (e) {}
+        this.setState({ adjustments: list, adjustOpen: false, confirming: false, toast: true, reason: '', note: '' });
+        setTimeout(() => this.setState({ toast: false }), 3500);
+      },
+      toast: s.toast
+    };
+  }
+}
+</script>
+</body>
+</html>

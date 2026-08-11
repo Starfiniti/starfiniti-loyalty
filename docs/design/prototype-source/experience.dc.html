@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Lora:wght@500;600&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+<style>
+body { margin:0; font-family:'Geist',ui-sans-serif,system-ui,sans-serif; background:#faf9f7; color:#1c1917; -webkit-font-smoothing:antialiased; }
+a { color:#4f46e5; text-decoration:none; } a:hover { color:#4338ca; }
+* { box-sizing:border-box; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; } }
+@media (max-width: 900px) {
+  aside[data-nav] { display:none !important; }
+  aside[data-nav][data-open="1"] { display:flex !important; position:fixed !important; left:0; top:0; bottom:0; width:282px !important; z-index:70; box-shadow:12px 0 40px rgba(0,0,0,.18); }
+  div[data-nav-scrim][data-open="1"] { display:block !important; }
+  button[data-menu-btn] { display:flex !important; }
+}
+
+:where(button, a, input, select, textarea):focus-visible { outline:2px solid #4f46e5 !important; outline-offset:2px; }
+@keyframes sfdraw { to { stroke-dashoffset:0; } }
+html[data-sf-dark] body { background:#1F1F1E !important; color:#E5E4DF; }
+html[data-sf-dark] [style*="background: rgb(255, 255, 255)"] { background:#292927 !important; }
+html[data-sf-dark] [style*="background: rgb(250, 250, 249)"] { background:#262625 !important; }
+html[data-sf-dark] [style*="background: rgb(245, 245, 244)"] { background:#343432 !important; }
+html[data-sf-dark] [style*="background: rgb(238, 242, 255)"] { background:#37334F !important; }
+html[data-sf-dark] [style*="background: rgb(236, 253, 245)"] { background:#26382D !important; }
+html[data-sf-dark] [style*="background: rgb(255, 251, 235)"] { background:#3E3423 !important; }
+html[data-sf-dark] [style*="background: rgb(254, 242, 242)"] { background:#3D292A !important; }
+html[data-sf-dark] [style*="background: rgb(253, 242, 248)"] { background:#3A2C37 !important; }
+html[data-sf-dark] [style*="background: rgb(252, 231, 243)"] { background:#3A2C37 !important; }
+html[data-sf-dark] [style*="background: rgb(28, 25, 23)"] { background:#343432 !important; }
+html[data-sf-dark] [style*="background: rgb(253, 248, 246)"] { background:#33302E !important; }
+html[data-sf-dark] [style*="color: rgb(28, 25, 23)"] { color:#E5E4DF !important; }
+html[data-sf-dark] [style*="color: rgb(68, 64, 60)"], html[data-sf-dark] [style*="color: rgb(87, 83, 78)"] { color:#C0BFB9 !important; }
+html[data-sf-dark] [style*="color: rgb(120, 113, 108)"] { color:#A09F99 !important; }
+html[data-sf-dark] [style*="color: rgb(168, 162, 158)"] { color:#8B8A84 !important; }
+html[data-sf-dark] [style*="color: rgb(4, 120, 87)"], html[data-sf-dark] [style*="color: rgb(6, 95, 70)"] { color:#3BB87C !important; }
+html[data-sf-dark] [style*="color: rgb(180, 83, 9)"], html[data-sf-dark] [style*="color: rgb(146, 64, 14)"], html[data-sf-dark] [style*="color: rgb(120, 53, 15)"] { color:#E0A23C !important; }
+html[data-sf-dark] [style*="color: rgb(153, 27, 27)"], html[data-sf-dark] [style*="color: rgb(185, 28, 28)"] { color:#E76B72 !important; }
+html[data-sf-dark] [style*="color: rgb(67, 56, 202)"], html[data-sf-dark] [style*="color: rgb(55, 48, 163)"] { color:#9A85F0 !important; }
+html[data-sf-dark] [style*="rgb(231, 229, 228)"] { border-color:#3A3A37 !important; }
+html[data-sf-dark] [style*="rgb(245, 245, 244)"] { border-color:#333330 !important; }
+html[data-sf-dark] [style*="rgb(214, 211, 209)"] { border-color:#4A4A46 !important; }
+html[data-sf-dark] [style*="rgb(199, 210, 254)"] { border-color:#4A4666 !important; }
+html[data-sf-dark] [style*="rgb(167, 243, 208)"] { border-color:#2F5240 !important; }
+html[data-sf-dark] [style*="rgb(253, 230, 138)"] { border-color:#5C4A22 !important; }
+html[data-sf-dark] [style*="rgb(254, 202, 202)"] { border-color:#5C3234 !important; }
+
+html[data-sf-dark] [style*="background:#fff"] { background:#292927 !important; }
+html[data-sf-dark] [style*="background:#fafaf9"] { background:#262625 !important; }
+html[data-sf-dark] [style*="background:#f5f5f4"] { background:#343432 !important; }
+html[data-sf-dark] [style*="background:#eef2ff"] { background:#37334F !important; }
+html[data-sf-dark] [style*="background:#ecfdf5"] { background:#26382D !important; }
+html[data-sf-dark] [style*="background:#fffbeb"] { background:#3E3423 !important; }
+html[data-sf-dark] [style*="background:#fef2f2"] { background:#3D292A !important; }
+html[data-sf-dark] [style*="background:#fdf2f8"] { background:#3A2C37 !important; }
+html[data-sf-dark] [style*="background:#fce7f3"] { background:#3A2C37 !important; }
+html[data-sf-dark] [style*="background:#1c1917"] { background:#343432 !important; }
+html[data-sf-dark] [style*="background:#fdf8f6"] { background:#33302E !important; }
+html[data-sf-dark] [style*="color:#1c1917"] { color:#E5E4DF !important; }
+html[data-sf-dark] [style*="color:#44403c"], html[data-sf-dark] [style*="color:#57534e"] { color:#C0BFB9 !important; }
+html[data-sf-dark] [style*="color:#78716c"] { color:#A09F99 !important; }
+html[data-sf-dark] [style*="color:#a8a29e"] { color:#8B8A84 !important; }
+html[data-sf-dark] [style*="color:#047857"], html[data-sf-dark] [style*="color:#065f46"] { color:#3BB87C !important; }
+html[data-sf-dark] [style*="color:#b45309"], html[data-sf-dark] [style*="color:#92400e"], html[data-sf-dark] [style*="color:#78350f"] { color:#E0A23C !important; }
+html[data-sf-dark] [style*="color:#991b1b"], html[data-sf-dark] [style*="color:#b91c1c"] { color:#E76B72 !important; }
+html[data-sf-dark] [style*="color:#4338ca"], html[data-sf-dark] [style*="color:#3730a3"] { color:#9A85F0 !important; }
+html[data-sf-dark] [style*="color:#3b2b30"], html[data-sf-dark] [style*="color:#6b4a55"], html[data-sf-dark] [style*="color:#8f6f7c"] { color:#C0BFB9 !important; }
+html[data-sf-dark] [style*="#e7e5e4"] { border-color:#3A3A37 !important; }
+html[data-sf-dark] [style*="#f5f5f4"] { border-color:#333330 !important; }
+html[data-sf-dark] [style*="#d6d3d1"] { border-color:#4A4A46 !important; }
+html[data-sf-dark] [style*="#c7d2fe"] { border-color:#4A4666 !important; }
+html[data-sf-dark] [style*="#a7f3d0"] { border-color:#2F5240 !important; }
+html[data-sf-dark] [style*="#fde68a"] { border-color:#5C4A22 !important; }
+html[data-sf-dark] [style*="#fecaca"] { border-color:#5C3234 !important; }
+html[data-sf-dark] [style*="#f3dfe6"] { border-color:#4A3A41 !important; }
+html[data-sf-dark] a { color:#9A85F0; }
+html[data-sf-dark] input, html[data-sf-dark] select, html[data-sf-dark] textarea { background:#2C2C2A !important; color:#E5E4DF !important; border-color:#3A3A37 !important; }
+</style>
+<script>try{if(localStorage.getItem('sf_dark')==='1')document.documentElement.setAttribute('data-sf-dark','1')}catch(e){}</script>
+</helmet>
+<div style="display:flex; min-height:100vh; align-items:stretch;">
+  <div data-nav-scrim="1" data-open="{{ navOpen }}" onClick="{{ closeNav }}" style="display:none; position:fixed; inset:0; background:rgba(28,25,23,.45); z-index:69;"></div>
+  <aside data-nav="1" data-open="{{ navOpen }}" style="width:244px; flex-shrink:0; background:#fafaf9; border-right:1px solid #e7e5e4; display:flex; flex-direction:column; position:sticky; top:0; height:100vh;">
+    <div style="padding:12px;">
+      <div style="display:flex; align-items:center; gap:10px; padding:8px; border-radius:8px; cursor:pointer;" style-hover="background:#f5f5f4;">
+        <div style="width:32px; height:32px; border-radius:8px; background:#4f46e5; color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; letter-spacing:.02em;">NV</div>
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:13px; font-weight:600; color:#1c1917; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Nina &amp; Valentin</div>
+          <div style="font-size:11.5px; color:#78716c;">Slovenia Store</div>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a8a29e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"></path><path d="m7 9 5-5 5 5"></path></svg>
+      </div>
+      <div style="display:flex; align-items:center; gap:6px; margin:6px 8px 0;">
+        <span style="display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:500; color:#047857; background:#ecfdf5; border:1px solid #a7f3d0; border-radius:999px; padding:2px 8px;"><span style="width:6px; height:6px; border-radius:50%; background:#10b981;"></span>Live</span>
+      </div>
+    </div>
+    <nav style="flex:1; overflow-y:auto; padding:4px 12px; display:flex; flex-direction:column; gap:1px; font-size:13.5px;">
+      <a href="overview.dc.html" style="display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"></rect><rect width="7" height="5" x="14" y="3" rx="1"></rect><rect width="7" height="9" x="14" y="12" rx="1"></rect><rect width="7" height="5" x="3" y="12" rx="1"></rect></svg>Overview</a>
+      <div style="display:flex; align-items:center; gap:10px; padding:9px 10px 3px; font-size:11px; font-weight:600; color:#a8a29e; text-transform:uppercase; letter-spacing:.06em;">Programme</div>
+      <a href="programme.dc.html" style="display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l4 6-10 13L2 9Z"></path><path d="M11 3 8 9l4 13 4-13-3-6"></path><path d="M2 9h20"></path></svg>Programme overview</a>
+      <a href="earning.dc.html" style="display:flex; align-items:center; gap:10px; padding:6px 10px 6px 36px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;">Earning rules</a>
+      <a href="rewards.dc.html" style="display:flex; align-items:center; gap:10px; padding:6px 10px 6px 36px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;">Rewards</a>
+      <a href="tiers.dc.html" style="display:flex; align-items:center; gap:10px; padding:6px 10px 6px 36px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;">VIP tiers</a>
+      <a href="expiry.dc.html" style="display:flex; align-items:center; gap:10px; padding:6px 10px 6px 36px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;">Points expiry</a>
+      <div style="display:flex; align-items:center; gap:10px; padding:9px 10px 3px; font-size:11px; font-weight:600; color:#a8a29e; text-transform:uppercase; letter-spacing:.06em;">Grow</div>
+      <a href="customers.dc.html" style="display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Customers</a>
+      <a href="campaigns.dc.html" style="display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3z"></path><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"></path></svg>Campaigns</a>
+      <a href="referrals.dc.html" style="display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" x2="19" y1="8" y2="14"></line><line x1="22" x2="16" y1="11" y2="11"></line></svg>Referrals</a>
+      <a href="analytics.dc.html" style="display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg>Analytics</a>
+      <div style="display:flex; align-items:center; gap:10px; padding:9px 10px 3px; font-size:11px; font-weight:600; color:#a8a29e; text-transform:uppercase; letter-spacing:.06em;">Platform</div>
+      <a href="experience.dc.html" style="display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:8px; background:#eef2ff; color:#4338ca; font-weight:600;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path></svg>Experience</a>
+      <a href="integrations.dc.html" style="display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-5"></path><path d="M9 8V2"></path><path d="M15 8V2"></path><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"></path></svg>Integrations</a>
+      <a href="settings.dc.html" style="display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>Settings</a>
+    </nav>
+    <div style="padding:12px; border-top:1px solid #e7e5e4; display:flex; flex-direction:column; gap:10px;">
+      <div style="font-size:11px; color:#a8a29e; display:flex; align-items:center; gap:6px; padding:0 4px;"><span style="width:6px; height:6px; border-radius:2px; background:#c4b5fd;"></span>Demo environment · seeded data</div>
+      <div style="display:flex; align-items:center; gap:10px; padding:4px; border-radius:8px; cursor:pointer;" style-hover="background:#f5f5f4;">
+        <div style="width:28px; height:28px; border-radius:50%; background:#fce7f3; color:#9d174d; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600;">NR</div>
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:12.5px; font-weight:600;">Nina Rozman</div>
+          <div style="font-size:11px; color:#78716c;">nina@ninavalentin.si</div>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a8a29e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"></path><path d="m7 9 5-5 5 5"></path></svg>
+      </div>
+    </div>
+  </aside>
+  <main style="flex:1; min-width:0; display:flex; flex-direction:column;">
+    <header style="height:56px; flex-shrink:0; background:#fff; border-bottom:1px solid #e7e5e4; display:flex; align-items:center; gap:12px; padding:0 24px;">
+      <button data-menu-btn="1" onClick="{{ toggleNav }}" aria-label="Menu" style="display:none; width:36px; height:36px; border-radius:8px; border:1px solid #e7e5e4; background:#fff; color:#44403c; cursor:pointer; align-items:center; justify-content:center; flex-shrink:0;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button>
+      <div style="font-size:14px; font-weight:600;">Experience builder</div>
+      <span style="font-size:12px; color:#78716c;">Loyalty page &amp; widget</span>
+      <div style="flex:1;"></div>
+      <sc-if value="{{ savedChip }}" hint-placeholder-val="{{ false }}">
+        <span style="display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:500; color:#047857;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>Saved</span>
+      </sc-if>
+      <button aria-label="Toggle dark mode" title="Light / dark" onClick="{{ toggleDark }}" style="width:34px; height:34px; border-radius:8px; border:none; background:transparent; color:#78716c; cursor:pointer; display:flex; align-items:center; justify-content:center;" style-hover="background:#f5f5f4;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg></button>
+      <button onClick="{{ resetTheme }}" style="height:34px; padding:0 12px; border-radius:8px; border:1px solid #e7e5e4; background:#fff; font-family:inherit; font-size:13px; font-weight:500; color:#44403c; cursor:pointer;" style-hover="background:#fafaf9;">Reset to brand default</button>
+      <a href="rosy-account.dc.html" style="height:34px; padding:0 12px; border-radius:8px; background:#4f46e5; color:#fff; font-size:13px; font-weight:500; display:inline-flex; align-items:center;" style-hover="background:#4338ca; color:#fff;">Open live page</a>
+    </header>
+    <div style="flex:1; display:flex; min-height:0; align-items:stretch; flex-wrap:wrap;">
+      <div style="width:340px; flex-shrink:0; border-right:1px solid #e7e5e4; background:#fff; overflow-y:auto; padding:20px 22px; display:flex; flex-direction:column; gap:20px;">
+        <div>
+          <div style="font-size:12px; font-weight:600; color:#78716c; text-transform:uppercase; letter-spacing:.05em;">Brand colour</div>
+          <div style="display:flex; gap:8px; margin-top:10px;">
+            <sc-for list="{{ colors }}" as="c" hint-placeholder-count="4">
+              <button onClick="{{ c.pick }}" aria-label="{{ c.name }}" title="{{ c.name }}" style="width:34px; height:34px; border-radius:50%; background:{{ c.value }}; border:2px solid {{ c.ring }}; cursor:pointer; box-shadow:0 0 0 2px #fff inset;"></button>
+            </sc-for>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:12px; font-weight:600; color:#78716c; text-transform:uppercase; letter-spacing:.05em;">Display font</div>
+          <select onChange="{{ setFont }}" style="margin-top:10px; width:100%; height:36px; border:1px solid #e7e5e4; border-radius:8px; font-family:inherit; font-size:13px; color:#44403c; padding:0 10px; background:#fff;">
+            <option value="Lora">Lora (serif)</option>
+            <option value="Playfair Display">Playfair Display (serif)</option>
+            <option value="Geist">Geist (sans)</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:12px; font-weight:600; color:#78716c; text-transform:uppercase; letter-spacing:.05em;">Corner radius</div>
+          <div style="display:flex; gap:8px; margin-top:10px;">
+            <sc-for list="{{ radii }}" as="r" hint-placeholder-count="3">
+              <button onClick="{{ r.pick }}" style="flex:1; height:34px; border-radius:8px; border:1px solid {{ r.border }}; background:{{ r.bg }}; color:{{ r.color }}; font-family:inherit; font-size:12.5px; font-weight:600; cursor:pointer;">{{ r.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:12px; font-weight:600; color:#78716c; text-transform:uppercase; letter-spacing:.05em;">Hero message</div>
+          <input value="{{ hero }}" onChange="{{ setHero }}" style="margin-top:10px; width:100%; height:36px; border:1px solid #e7e5e4; border-radius:8px; padding:0 12px; font-family:inherit; font-size:13px;" style-focus="outline:2px solid #c7d2fe; border-color:#a5b4fc;">
+        </div>
+        <div>
+          <div style="font-size:12px; font-weight:600; color:#78716c; text-transform:uppercase; letter-spacing:.05em;">Points currency name</div>
+          <input value="{{ currency }}" onChange="{{ setCurrency }}" style="margin-top:10px; width:100%; height:36px; border:1px solid #e7e5e4; border-radius:8px; padding:0 12px; font-family:inherit; font-size:13px;" style-focus="outline:2px solid #c7d2fe; border-color:#a5b4fc;">
+        </div>
+        <div>
+          <div style="font-size:12px; font-weight:600; color:#78716c; text-transform:uppercase; letter-spacing:.05em;">Sections</div>
+          <label style="display:flex; align-items:center; gap:10px; padding:10px 0 0; font-size:13.5px; cursor:pointer;"><input type="checkbox" checked="{{ showTier }}" onChange="{{ toggleTier }}" style="accent-color:#4f46e5; width:15px; height:15px;">Tier progress</label>
+          <label style="display:flex; align-items:center; gap:10px; padding:8px 0 0; font-size:13.5px; cursor:pointer;"><input type="checkbox" checked="{{ showRewards }}" onChange="{{ toggleRewards }}" style="accent-color:#4f46e5; width:15px; height:15px;">Rewards carousel</label>
+          <label style="display:flex; align-items:center; gap:10px; padding:8px 0 0; font-size:13.5px; cursor:pointer;"><input type="checkbox" checked="{{ showReferral }}" onChange="{{ toggleReferral }}" style="accent-color:#4f46e5; width:15px; height:15px;">Referral block</label>
+        </div>
+        <div>
+          <div style="font-size:12px; font-weight:600; color:#78716c; text-transform:uppercase; letter-spacing:.05em;">Widget position</div>
+          <div style="display:flex; gap:8px; margin-top:10px;">
+            <button onClick="{{ posLeft }}" style="flex:1; height:34px; border-radius:8px; border:1px solid {{ leftBorder }}; background:{{ leftBg }}; color:{{ leftColor }}; font-family:inherit; font-size:12.5px; font-weight:600; cursor:pointer;">Bottom left</button>
+            <button onClick="{{ posRight }}" style="flex:1; height:34px; border-radius:8px; border:1px solid {{ rightBorder }}; background:{{ rightBg }}; color:{{ rightColor }}; font-family:inherit; font-size:12.5px; font-weight:600; cursor:pointer;">Bottom right</button>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:12px; font-weight:600; color:#78716c; text-transform:uppercase; letter-spacing:.05em;">Storefront surfaces</div>
+          <label style="display:flex; align-items:center; gap:10px; padding:10px 0 0; font-size:13.5px; cursor:pointer;"><input type="checkbox" checked="{{ surfLauncher }}" onChange="{{ toggleSurfLauncher }}" style="accent-color:#4f46e5; width:15px; height:15px;">Launcher &amp; wallet drawer</label>
+          <label style="display:flex; align-items:center; gap:10px; padding:8px 0 0; font-size:13.5px; cursor:pointer;"><input type="checkbox" checked="{{ surfProduct }}" onChange="{{ toggleSurfProduct }}" style="accent-color:#4f46e5; width:15px; height:15px;">Product earning block</label>
+          <label style="display:flex; align-items:center; gap:10px; padding:8px 0 0; font-size:13.5px; cursor:pointer;"><input type="checkbox" checked="{{ surfCart }}" onChange="{{ toggleSurfCart }}" style="accent-color:#4f46e5; width:15px; height:15px;">Cart reward module</label>
+          <label style="display:flex; align-items:center; gap:10px; padding:8px 0 0; font-size:13.5px; cursor:pointer;"><input type="checkbox" checked="{{ surfThanks }}" onChange="{{ toggleSurfThanks }}" style="accent-color:#4f46e5; width:15px; height:15px;">Thank-you summary</label>
+          <div style="font-size:12px; color:#78716c; margin-top:12px;">Drawer open frequency cap</div>
+          <select onChange="{{ setFreqCap }}" style="margin-top:7px; width:100%; height:36px; border:1px solid #e7e5e4; border-radius:8px; font-family:inherit; font-size:13px; color:#44403c; padding:0 10px; background:#fff;">
+            <option>1 per session</option>
+            <option>1 per day</option>
+            <option>Manual open only</option>
+          </select>
+          <p style="margin:10px 0 0; font-size:12px; color:#a8a29e; line-height:1.5;">Delivery: Shopify theme app embed / WooCommerce plugin per surface. Never auto-opens on checkout.</p>
+          <a href="storefront-product.dc.html" style="display:inline-flex; margin-top:8px; font-size:12.5px; font-weight:600;">Preview storefront demo →</a>
+        </div>
+        <p style="margin:0; font-size:12px; color:#a8a29e; line-height:1.5;">Changes save automatically to this workspace's theme and apply to the loyalty page, widget, and emails.</p>
+      </div>
+      <div style="flex:1; min-width:320px; background:#f5f5f4; display:flex; flex-direction:column; align-items:center; padding:24px; overflow-y:auto;">
+        <div style="display:flex; gap:8px; margin-bottom:16px;">
+          <button onClick="{{ viewLogged }}" style="height:32px; padding:0 14px; border-radius:999px; border:1px solid {{ loggedBorder }}; background:{{ loggedBg }}; color:{{ loggedColor }}; font-family:inherit; font-size:12.5px; font-weight:600; cursor:pointer;">Logged in</button>
+          <button onClick="{{ viewLoggedOut }}" style="height:32px; padding:0 14px; border-radius:999px; border:1px solid {{ outBorder }}; background:{{ outBg }}; color:{{ outColor }}; font-family:inherit; font-size:12.5px; font-weight:600; cursor:pointer;">Logged out</button>
+          <span style="width:1px; background:#e7e5e4; margin:4px 2px;"></span>
+          <button onClick="{{ deviceMobile }}" style="height:32px; padding:0 14px; border-radius:999px; border:1px solid {{ mobBorder }}; background:{{ mobBg }}; color:{{ mobColor }}; font-family:inherit; font-size:12.5px; font-weight:600; cursor:pointer;">Mobile</button>
+          <button onClick="{{ deviceDesktop }}" style="height:32px; padding:0 14px; border-radius:999px; border:1px solid {{ deskBorder }}; background:{{ deskBg }}; color:{{ deskColor }}; font-family:inherit; font-size:12.5px; font-weight:600; cursor:pointer;">Desktop</button>
+        </div>
+        <div style="width:{{ frameWidth }}; max-width:100%; background:#fdf8f6; border:1px solid #e7e5e4; border-radius:18px; overflow:hidden; box-shadow:0 12px 40px rgba(0,0,0,.08); transition:width .3s ease; position:relative;">
+          <div style="display:flex; align-items:center; gap:8px; padding:14px 18px; border-bottom:1px solid #f3dfe6;">
+            <span style="width:26px; height:26px; border-radius:50%; background:{{ brand }}; color:#fff; display:inline-flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; font-family:{{ displayFont }};">R</span>
+            <span style="font-family:{{ displayFont }}; font-size:15px; font-weight:600; color:#3b2b30;">Rosy Rewards</span>
+          </div>
+          <div style="padding:18px;">
+            <sc-if value="{{ loggedIn }}" hint-placeholder-val="{{ true }}">
+              <div style="background:{{ brand }}; border-radius:{{ cardRadius }}; padding:18px; color:#fff;">
+                <div style="font-size:11.5px; opacity:.85;">Hi Maja, your balance</div>
+                <div style="font-size:26px; font-weight:600; margin-top:4px; font-variant-numeric:tabular-nums;">2,450 <span style="font-size:12px; font-weight:400; opacity:.85;">{{ currency }} · €24.50</span></div>
+                <sc-if value="{{ showTier }}" hint-placeholder-val="{{ true }}">
+                  <div style="margin-top:12px;">
+                    <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:5px;"><span style="font-weight:600;">Bloom</span><span style="opacity:.8;">€182 to Icon</span></div>
+                    <div style="height:5px; border-radius:999px; background:rgba(255,255,255,.28);"><div style="width:48%; height:100%; border-radius:999px; background:#fff;"></div></div>
+                  </div>
+                </sc-if>
+              </div>
+              <sc-if value="{{ showRewards }}" hint-placeholder-val="{{ true }}">
+                <div style="font-family:{{ displayFont }}; font-size:15px; font-weight:600; color:#3b2b30; margin:16px 0 10px;">Your rewards</div>
+                <div style="display:flex; gap:8px; overflow:hidden;">
+                  <div style="flex-shrink:0; width:104px; background:#fff; border:1px solid #f3dfe6; border-radius:{{ cardRadius }}; padding:10px; font-size:11px;"><div style="font-weight:600; color:#3b2b30;">€5 discount</div><div style="color:#a5798a; margin-top:2px;">500 {{ currency }}</div><div style="margin-top:8px; height:24px; border-radius:999px; background:{{ brand }}; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:600;">Redeem</div></div>
+                  <div style="flex-shrink:0; width:104px; background:#fff; border:1px solid #f3dfe6; border-radius:{{ cardRadius }}; padding:10px; font-size:11px;"><div style="font-weight:600; color:#3b2b30;">€10 discount</div><div style="color:#a5798a; margin-top:2px;">1,000 {{ currency }}</div><div style="margin-top:8px; height:24px; border-radius:999px; background:{{ brand }}; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:600;">Redeem</div></div>
+                  <div style="flex-shrink:0; width:104px; background:#fff; border:1px solid #f3dfe6; border-radius:{{ cardRadius }}; padding:10px; font-size:11px;"><div style="font-weight:600; color:#3b2b30;">Free shipping</div><div style="color:#a5798a; margin-top:2px;">700 {{ currency }}</div><div style="margin-top:8px; height:24px; border-radius:999px; background:#faf0f3; color:#c9a2b1; display:flex; align-items:center; justify-content:center; font-weight:600;">Redeem</div></div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ showReferral }}" hint-placeholder-val="{{ true }}">
+                <div style="margin-top:14px; background:#fff; border:1px solid #f3dfe6; border-radius:{{ cardRadius }}; padding:12px 14px; display:flex; align-items:center; gap:10px;">
+                  <div style="flex:1;"><div style="font-size:12px; font-weight:600; color:#3b2b30;">Give €10, get 400 {{ currency }}</div><div style="font-size:11px; color:#a5798a; margin-top:2px;">Share your link with friends</div></div>
+                  <div style="height:26px; padding:0 11px; border-radius:999px; border:1px solid #ecc9d6; color:{{ brand }}; font-size:11px; font-weight:600; display:flex; align-items:center;">Copy</div>
+                </div>
+              </sc-if>
+            </sc-if>
+            <sc-if value="{{ loggedOut }}" hint-placeholder-val="{{ false }}">
+              <div style="text-align:center; padding:8px 6px 4px;">
+                <div style="font-family:{{ displayFont }}; font-size:21px; font-weight:600; color:#3b2b30; line-height:1.3;">{{ hero }}</div>
+                <p style="margin:8px 0 0; font-size:12px; color:#8f6f7c; line-height:1.5;">Earn {{ currency }} on every order, unlock VIP tiers, and turn points into rewards.</p>
+                <div style="margin-top:14px; height:36px; border-radius:999px; background:{{ brand }}; color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:600;">Join free</div>
+                <div style="margin-top:8px; font-size:11.5px; color:{{ brand }}; font-weight:600;">Already a member? Sign in</div>
+              </div>
+              <div style="display:flex; gap:8px; margin-top:16px;">
+                <div style="flex:1; background:#fff; border:1px solid #f3dfe6; border-radius:{{ cardRadius }}; padding:10px; font-size:10.5px; text-align:center;"><div style="font-size:14px; font-weight:600; color:#3b2b30;">5–7</div><div style="color:#a5798a;">{{ currency }} per €1</div></div>
+                <div style="flex:1; background:#fff; border:1px solid #f3dfe6; border-radius:{{ cardRadius }}; padding:10px; font-size:10.5px; text-align:center;"><div style="font-size:14px; font-weight:600; color:#3b2b30;">100</div><div style="color:#a5798a;">welcome {{ currency }}</div></div>
+                <div style="flex:1; background:#fff; border:1px solid #f3dfe6; border-radius:{{ cardRadius }}; padding:10px; font-size:10.5px; text-align:center;"><div style="font-size:14px; font-weight:600; color:#3b2b30;">3</div><div style="color:#a5798a;">VIP tiers</div></div>
+              </div>
+            </sc-if>
+          </div>
+          <div style="position:absolute; bottom:12px; {{ widgetSide }}:12px; width:40px; height:40px; border-radius:50%; background:{{ brand }}; color:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 16px rgba(0,0,0,.18);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v10H4V12"></path><path d="M2 7h20v5H2z"></path><path d="M12 22V7"></path></svg></div>
+        </div>
+        <p style="margin:14px 0 0; font-size:12px; color:#a8a29e;">Preview updates live · widget bubble shows the on-store entry point</p>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  state = { brand: '#b13d5e', font: 'Lora', radius: 'M', hero: 'Beauty that gives back', currency: 'Petals',
+    showTier: true, showRewards: true, showReferral: true, widget: 'right', logged: true, device: 'mobile', savedChip: false,
+    surfLauncher: true, surfProduct: true, surfCart: true, surfThanks: true, freqCap: '1 per session' };
+  componentDidMount() {
+    try { const t = JSON.parse(localStorage.getItem('sf_theme') || 'null'); if (t) this.setState(t); } catch (e) {}
+  }
+  save(patch) {
+    this.setState({ ...patch, savedChip: true });
+    clearTimeout(this._t);
+    this._t = setTimeout(() => this.setState({ savedChip: false }), 1800);
+    setTimeout(() => {
+      const { brand, font, radius, hero, currency, showTier, showRewards, showReferral, widget, logged, device, surfLauncher, surfProduct, surfCart, surfThanks, freqCap } = this.state;
+      try { localStorage.setItem('sf_theme', JSON.stringify({ brand, font, radius, hero, currency, showTier, showRewards, showReferral, widget, logged, device, surfLauncher, surfProduct, surfCart, surfThanks, freqCap })); } catch (e) {}
+    }, 0);
+  }
+  renderVals() { const vals = this.__rv(); vals.navOpen = this.state.navOpen ? '1' : '0'; vals.toggleNav = () => this.setState({ navOpen: !this.state.navOpen }); vals.closeNav = () => this.setState({ navOpen: false }); vals.toggleDark = () => { const r = document.documentElement; const on = r.getAttribute('data-sf-dark') === '1'; if (on) { r.removeAttribute('data-sf-dark'); } else { r.setAttribute('data-sf-dark', '1'); } try { localStorage.setItem('sf_dark', on ? '0' : '1'); } catch (e) {} this.forceUpdate(); }; return vals; }
+  __rv() {
+    const s = this.state;
+    const colorDefs = [
+      { name: 'Rosy rose', value: '#b13d5e' }, { name: 'Deep plum', value: '#7c2d5c' },
+      { name: 'Terracotta', value: '#b45309' }, { name: 'Forest', value: '#166534' }
+    ];
+    const radiusMap = { S: '8px', M: '14px', L: '22px' };
+    const pill = on => ({ bg: on ? '#eef2ff' : '#fff', border: on ? '#a5b4fc' : '#e7e5e4', color: on ? '#4338ca' : '#57534e' });
+    const lg = pill(s.logged), lo = pill(!s.logged), mb = pill(s.device === 'mobile'), dk = pill(s.device === 'desktop');
+    const lf = pill(s.widget === 'left'), rt = pill(s.widget === 'right');
+    return {
+      colors: colorDefs.map(c => ({ name: c.name, value: c.value, ring: s.brand === c.value ? '#1c1917' : '#e7e5e4', pick: () => this.save({ brand: c.value }) })),
+      setFont: e => this.save({ font: e.target.value }),
+      radii: ['S', 'M', 'L'].map(r => { const p = pill(s.radius === r); return { label: r, bg: p.bg, border: p.border, color: p.color, pick: () => this.save({ radius: r }) }; }),
+      hero: s.hero, setHero: e => this.save({ hero: e.target.value }),
+      currency: s.currency, setCurrency: e => this.save({ currency: e.target.value }),
+      showTier: s.showTier, toggleTier: () => this.save({ showTier: !s.showTier }),
+      showRewards: s.showRewards, toggleRewards: () => this.save({ showRewards: !s.showRewards }),
+      showReferral: s.showReferral, toggleReferral: () => this.save({ showReferral: !s.showReferral }),
+      posLeft: () => this.save({ widget: 'left' }), posRight: () => this.save({ widget: 'right' }),
+      leftBg: lf.bg, leftBorder: lf.border, leftColor: lf.color,
+      rightBg: rt.bg, rightBorder: rt.border, rightColor: rt.color,
+      viewLogged: () => this.save({ logged: true }), viewLoggedOut: () => this.save({ logged: false }),
+      loggedBg: lg.bg, loggedBorder: lg.border, loggedColor: lg.color,
+      outBg: lo.bg, outBorder: lo.border, outColor: lo.color,
+      deviceMobile: () => this.save({ device: 'mobile' }), deviceDesktop: () => this.save({ device: 'desktop' }),
+      mobBg: mb.bg, mobBorder: mb.border, mobColor: mb.color,
+      deskBg: dk.bg, deskBorder: dk.border, deskColor: dk.color,
+      loggedIn: s.logged, loggedOut: !s.logged,
+      brand: s.brand, displayFont: "'" + s.font + "', serif",
+      cardRadius: radiusMap[s.radius], widgetSide: s.widget,
+      frameWidth: s.device === 'mobile' ? '340px' : '640px',
+      savedChip: s.savedChip,
+      surfLauncher: s.surfLauncher, toggleSurfLauncher: () => this.save({ surfLauncher: !s.surfLauncher }),
+      surfProduct: s.surfProduct, toggleSurfProduct: () => this.save({ surfProduct: !s.surfProduct }),
+      surfCart: s.surfCart, toggleSurfCart: () => this.save({ surfCart: !s.surfCart }),
+      surfThanks: s.surfThanks, toggleSurfThanks: () => this.save({ surfThanks: !s.surfThanks }),
+      setFreqCap: e => this.save({ freqCap: e.target.value }),
+      resetTheme: () => {
+        try { localStorage.removeItem('sf_theme'); } catch (e) {}
+        this.setState({ brand: '#b13d5e', font: 'Lora', radius: 'M', hero: 'Beauty that gives back', currency: 'Petals', showTier: true, showRewards: true, showReferral: true, widget: 'right' });
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

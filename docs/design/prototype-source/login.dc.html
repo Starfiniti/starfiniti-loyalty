@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body { margin:0; font-family:'Geist',ui-sans-serif,system-ui,sans-serif; background:#faf9f7; color:#1c1917; -webkit-font-smoothing:antialiased; }
+a { color:#4f46e5; text-decoration:none; } a:hover { color:#4338ca; }
+* { box-sizing:border-box; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; } }
+@keyframes sfspin { to { transform:rotate(360deg); } }
+</style>
+</helmet>
+<div style="min-height:100vh; display:flex; align-items:stretch;">
+  <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px 24px;">
+    <div style="width:100%; max-width:380px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="width:36px; height:36px; border-radius:9px; background:#4f46e5; color:#fff; display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:700;">S</div>
+        <div>
+          <div style="font-size:15px; font-weight:600; letter-spacing:-.01em;">Starfiniti Loyalty</div>
+          <div style="font-size:11.5px; color:#78716c;">loyalty.starfiniti.com</div>
+        </div>
+      </div>
+      <sc-if value="{{ modeLogin }}" hint-placeholder-val="{{ true }}">
+        <h1 style="margin:28px 0 0; font-size:21px; font-weight:600; letter-spacing:-.01em;">Sign in</h1>
+        <p style="margin:6px 0 0; font-size:13.5px; color:#78716c;">Use your work email or a magic link.</p>
+        <label style="display:block; font-size:12.5px; font-weight:600; color:#44403c; margin-top:22px;">Email</label>
+        <input value="{{ email }}" onChange="{{ setEmail }}" type="email" placeholder="you@company.com" style="margin-top:7px; width:100%; height:40px; border:1px solid {{ emailBorder }}; border-radius:8px; padding:0 12px; font-family:inherit; font-size:14px; background:#fff;" style-focus="outline:2px solid #c7d2fe; border-color:#a5b4fc;">
+        <label style="display:block; font-size:12.5px; font-weight:600; color:#44403c; margin-top:14px;">Password</label>
+        <input value="{{ password }}" onChange="{{ setPassword }}" type="password" placeholder="••••••••" style="margin-top:7px; width:100%; height:40px; border:1px solid {{ emailBorder }}; border-radius:8px; padding:0 12px; font-family:inherit; font-size:14px; background:#fff;" style-focus="outline:2px solid #c7d2fe; border-color:#a5b4fc;">
+        <sc-if value="{{ error }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:10px; background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:10px 12px; font-size:12.5px; color:#991b1b;">That email and password don't match. Try the demo account below.</div>
+        </sc-if>
+        <button onClick="{{ signIn }}" style="margin-top:18px; width:100%; height:40px; border-radius:8px; border:none; background:#4f46e5; font-family:inherit; font-size:14px; font-weight:600; color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;" style-hover="background:#4338ca;">
+          <sc-if value="{{ loading }}" hint-placeholder-val="{{ false }}"><span style="width:14px; height:14px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; display:inline-block; animation:sfspin .7s linear infinite;"></span></sc-if>
+          {{ signInLabel }}
+        </button>
+        <button onClick="{{ magicLink }}" style="margin-top:10px; width:100%; height:40px; border-radius:8px; border:1px solid #e7e5e4; background:#fff; font-family:inherit; font-size:13.5px; font-weight:500; color:#44403c; cursor:pointer;" style-hover="background:#fafaf9;">Email me a magic link</button>
+        <div style="display:flex; justify-content:space-between; margin-top:14px; font-size:12.5px;">
+          <a href="#" onClick="{{ goForgot }}">Forgot password?</a>
+        </div>
+        <div style="margin-top:24px; background:#eef2ff; border:1px solid #c7d2fe; border-radius:10px; padding:13px 15px;">
+          <div style="font-size:12.5px; font-weight:600; color:#3730a3;">Reviewing this prototype?</div>
+          <p style="margin:5px 0 0; font-size:12px; color:#4338ca; line-height:1.5;">Skip credentials and open the seeded demo merchant (Nina &amp; Valentin · Rosy Rewards).</p>
+          <button onClick="{{ demoLogin }}" style="margin-top:10px; height:32px; padding:0 13px; border-radius:8px; border:none; background:#4f46e5; font-family:inherit; font-size:12.5px; font-weight:600; color:#fff; cursor:pointer;" style-hover="background:#4338ca;">Enter demo account →</button>
+        </div>
+      </sc-if>
+      <sc-if value="{{ modeForgot }}" hint-placeholder-val="{{ false }}">
+        <h1 style="margin:28px 0 0; font-size:21px; font-weight:600; letter-spacing:-.01em;">Reset password</h1>
+        <p style="margin:6px 0 0; font-size:13.5px; color:#78716c;">We'll email you a reset link. Links expire after 60 minutes.</p>
+        <label style="display:block; font-size:12.5px; font-weight:600; color:#44403c; margin-top:22px;">Email</label>
+        <input value="{{ email }}" onChange="{{ setEmail }}" type="email" placeholder="you@company.com" style="margin-top:7px; width:100%; height:40px; border:1px solid #e7e5e4; border-radius:8px; padding:0 12px; font-family:inherit; font-size:14px; background:#fff;" style-focus="outline:2px solid #c7d2fe; border-color:#a5b4fc;">
+        <button onClick="{{ sendReset }}" style="margin-top:18px; width:100%; height:40px; border-radius:8px; border:none; background:#4f46e5; font-family:inherit; font-size:14px; font-weight:600; color:#fff; cursor:pointer;" style-hover="background:#4338ca;">Send reset link</button>
+        <button onClick="{{ goLogin }}" style="margin-top:10px; width:100%; height:40px; border-radius:8px; border:1px solid #e7e5e4; background:#fff; font-family:inherit; font-size:13.5px; font-weight:500; color:#44403c; cursor:pointer;" style-hover="background:#fafaf9;">Back to sign in</button>
+      </sc-if>
+      <sc-if value="{{ modeSent }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:28px; text-align:center; padding:20px 0;">
+          <div style="width:48px; height:48px; border-radius:50%; background:#ecfdf5; display:flex; align-items:center; justify-content:center; margin:0 auto;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg></div>
+          <h1 style="margin:16px 0 0; font-size:19px; font-weight:600;">Check your inbox</h1>
+          <p style="margin:8px 0 0; font-size:13.5px; color:#78716c; line-height:1.5;">We sent a link to <strong style="color:#1c1917;">{{ email }}</strong>.<br>It expires in 60 minutes.</p>
+          <button onClick="{{ simulateExpired }}" style="margin-top:16px; height:32px; padding:0 12px; border-radius:8px; border:1px solid #e7e5e4; background:#fff; font-family:inherit; font-size:12px; color:#78716c; cursor:pointer;" style-hover="background:#fafaf9;">Simulate expired link (demo)</button>
+          <div style="margin-top:12px;"><a href="#" onClick="{{ goLogin }}" style="font-size:12.5px;">Back to sign in</a></div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ modeExpired }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:28px; text-align:center; padding:20px 0;">
+          <div style="width:48px; height:48px; border-radius:50%; background:#fffbeb; display:flex; align-items:center; justify-content:center; margin:0 auto;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
+          <h1 style="margin:16px 0 0; font-size:19px; font-weight:600;">This link has expired</h1>
+          <p style="margin:8px 0 0; font-size:13.5px; color:#78716c; line-height:1.5;">Reset links are valid for 60 minutes. Request a new one to continue.</p>
+          <button onClick="{{ goForgot }}" style="margin-top:16px; width:100%; height:40px; border-radius:8px; border:none; background:#4f46e5; font-family:inherit; font-size:14px; font-weight:600; color:#fff; cursor:pointer;" style-hover="background:#4338ca;">Request a new link</button>
+        </div>
+      </sc-if>
+      <p style="margin:28px 0 0; font-size:11.5px; color:#a8a29e; text-align:center;">Demo environment · authentication is simulated in this prototype · <a href="admin.dc.html" style="color:#a8a29e; text-decoration:underline;">platform admin</a></p>
+    </div>
+  </div>
+  <div style="flex:1; background:#1c1917; display:flex; flex-direction:column; justify-content:center; padding:56px; min-width:0;">
+    <div style="max-width:420px;">
+      <div style="display:inline-flex; align-items:center; gap:7px; font-size:11.5px; font-weight:600; color:#a5b4fc; background:rgba(99,102,241,.15); border:1px solid rgba(99,102,241,.3); border-radius:999px; padding:3px 10px;">Multi-tenant loyalty platform</div>
+      <h2 style="margin:18px 0 0; font-size:28px; font-weight:600; color:#fff; letter-spacing:-.02em; line-height:1.25; text-wrap:pretty;">One loyalty engine for every storefront you run.</h2>
+      <p style="margin:14px 0 0; font-size:14px; color:#a8a29e; line-height:1.6;">Points, VIP tiers, referrals, and campaigns across Shopify and WooCommerce — with liability your finance team can trust.</p>
+      <div style="margin-top:28px; background:#292524; border:1px solid #44403c; border-radius:14px; padding:18px;">
+        <div style="display:flex; align-items:center; gap:8px;"><span style="width:22px; height:22px; border-radius:50%; background:#b13d5e; color:#fff; display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:600;">R</span><span style="font-size:13px; font-weight:600; color:#fff;">Rosy Rewards</span><span style="flex:1;"></span><span style="display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:500; color:#34d399;"><span style="width:5px; height:5px; border-radius:50%; background:#34d399;"></span>Live</span></div>
+        <div style="display:flex; gap:18px; margin-top:14px;">
+          <div><div style="font-size:11px; color:#78716c;">Members</div><div style="font-size:18px; font-weight:600; color:#fff; font-variant-numeric:tabular-nums;">12,842</div></div>
+          <div><div style="font-size:11px; color:#78716c;">Member revenue</div><div style="font-size:18px; font-weight:600; color:#fff; font-variant-numeric:tabular-nums;">€184,320</div></div>
+          <div><div style="font-size:11px; color:#78716c;">Repeat rate</div><div style="font-size:18px; font-weight:600; color:#fff; font-variant-numeric:tabular-nums;">38.6%</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  state = { mode: 'login', email: '', password: '', loading: false, error: false };
+  renderVals() {
+    const s = this.state;
+    return {
+      modeLogin: s.mode === 'login', modeForgot: s.mode === 'forgot', modeSent: s.mode === 'sent', modeExpired: s.mode === 'expired',
+      email: s.email, setEmail: e => this.setState({ email: e.target.value, error: false }),
+      password: s.password, setPassword: e => this.setState({ password: e.target.value, error: false }),
+      emailBorder: s.error ? '#fca5a5' : '#e7e5e4',
+      error: s.error, loading: s.loading,
+      signInLabel: s.loading ? 'Signing in…' : 'Sign in',
+      signIn: () => {
+        if (s.loading) return;
+        this.setState({ loading: true, error: false });
+        setTimeout(() => {
+          if (s.email === 'nina@ninavalentin.si' && s.password.length > 0) location.href = 'overview.dc.html';
+          else this.setState({ loading: false, error: true });
+        }, 900);
+      },
+      magicLink: () => this.setState({ mode: 'sent', email: s.email || 'you@company.com' }),
+      demoLogin: () => {
+        this.setState({ loading: true });
+        setTimeout(() => { location.href = 'overview.dc.html'; }, 500);
+      },
+      goForgot: e => { if (e && e.preventDefault) e.preventDefault(); this.setState({ mode: 'forgot' }); },
+      goLogin: e => { if (e && e.preventDefault) e.preventDefault(); this.setState({ mode: 'login', error: false }); },
+      sendReset: () => this.setState({ mode: 'sent', email: s.email || 'you@company.com' }),
+      simulateExpired: () => this.setState({ mode: 'expired' })
+    };
+  }
+}
+</script>
+</body>
+</html>

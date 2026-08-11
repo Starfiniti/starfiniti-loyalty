@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body { margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, sans-serif; background:#f0f0f1; color:#1d2327; -webkit-font-smoothing:antialiased; }
+a { color:#5346e6; text-decoration:none; } a:hover { color:#4438c9; text-decoration:underline; }
+* { box-sizing:border-box; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:0.01ms !important; transition-duration:0.01ms !important; } }
+@media (max-width: 880px) { div[data-wpnav] { display:none; } }
+@keyframes wspin { to { transform:rotate(360deg); } }
+
+html[data-sf-dark] body { background:#1F1F1E !important; color:#E5E4DF; }
+html[data-sf-dark] a { color:#9A85F0; }
+html[data-sf-dark] input, html[data-sf-dark] select { background:#2C2C2A !important; color:#E5E4DF !important; border-color:#3A3A37 !important; }
+html[data-sf-dark] [style*="background: rgb(255, 255, 255)"] { background:#292927 !important; }
+html[data-sf-dark] [style*="background: rgb(250, 251, 254)"], html[data-sf-dark] [style*="background: rgb(246, 247, 247)"], html[data-sf-dark] [style*="background: rgb(240, 240, 241)"] { background:#343432 !important; }
+html[data-sf-dark] [style*="background: rgb(237, 250, 239)"] { background:#26382D !important; }
+html[data-sf-dark] [style*="background: rgb(252, 240, 241)"] { background:#3D292A !important; }
+html[data-sf-dark] [style*="background: rgb(255, 248, 229)"] { background:#3E3423 !important; }
+html[data-sf-dark] [style*="background: rgb(238, 237, 252)"] { background:#37334F !important; }
+html[data-sf-dark] [style*="color: rgb(29, 35, 39)"], html[data-sf-dark] [style*="color: rgb(17, 24, 39)"] { color:#E5E4DF !important; }
+html[data-sf-dark] [style*="color: rgb(107, 114, 128)"], html[data-sf-dark] [style*="color: rgb(80, 87, 94)"] { color:#A09F99 !important; }
+html[data-sf-dark] [style*="color: rgb(120, 124, 130)"] { color:#8B8A84 !important; }
+html[data-sf-dark] [style*="color: rgb(21, 128, 61)"] { color:#3BB87C !important; }
+html[data-sf-dark] [style*="color: rgb(153, 104, 0)"], html[data-sf-dark] [style*="color: rgb(219, 166, 23)"] { color:#E0A23C !important; }
+html[data-sf-dark] [style*="color: rgb(214, 54, 56)"], html[data-sf-dark] [style*="color: rgb(138, 36, 36)"] { color:#E76B72 !important; }
+html[data-sf-dark] [style*="color: rgb(83, 70, 230)"], html[data-sf-dark] [style*="color: rgb(68, 56, 201)"] { color:#9A85F0 !important; }
+html[data-sf-dark] [style*="rgb(231, 233, 242)"], html[data-sf-dark] [style*="rgb(226, 232, 240)"], html[data-sf-dark] [style*="rgb(220, 220, 222)"] { border-color:#3A3A37 !important; }
+html[data-sf-dark] [style*="rgb(240, 241, 247)"], html[data-sf-dark] [style*="border-top: 1px solid rgb(240, 240, 241)"] { border-color:#333330 !important; }
+html[data-sf-dark] [style*="rgb(240, 183, 184)"] { border-color:#5C3234 !important; }
+</style>
+<script>try{if(localStorage.getItem('sf_dark')==='1')document.documentElement.setAttribute('data-sf-dark','1')}catch(e){}</script>
+</helmet>
+<div style="min-height:100vh; display:flex; flex-direction:column; font-size:13px;">
+  <div style="height:32px; background:#1d2327; color:#c3c4c7; display:flex; align-items:center; gap:16px; padding:0 14px; font-size:13px; flex-shrink:0;">
+    <span style="display:flex; align-items:center; gap:6px;"><span style="width:16px; height:16px; border-radius:50%; border:1.5px solid #c3c4c7; display:inline-flex; align-items:center; justify-content:center; font-size:10px; font-weight:700;">W</span>Nina &amp; Valentin — Demo Store</span>
+    <span style="flex:1;"></span>
+    <button onClick="{{ toggleDark }}" aria-label="Toggle dark mode" style="background:transparent; border:none; color:#c3c4c7; cursor:pointer; display:flex; align-items:center; padding:3px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg></button>
+    <span style="font-size:11px; font-weight:600; color:#f0c33c;">WP-ADMIN PROTOTYPE</span>
+    <span>Howdy, nina</span>
+  </div>
+  <div style="flex:1; display:flex; align-items:stretch;">
+    <div data-wpnav="1" style="width:160px; flex-shrink:0; background:#1d2327; color:#c3c4c7; padding:8px 0 40px; font-size:13px;">
+      <div style="padding:8px 12px;">Dashboard</div>
+      <div style="padding:8px 12px;">Posts</div>
+      <div style="padding:8px 12px;">Media</div>
+      <div style="padding:8px 12px;">Pages</div>
+      <div style="padding:8px 12px;">Comments</div>
+      <div style="background:#2271b1; color:#fff;">
+        <div style="padding:8px 12px; font-weight:600;">WooCommerce</div>
+        <div style="background:#2c3338; padding:6px 0;">
+          <div style="padding:5px 12px 5px 20px; color:#c3c4c7; font-size:12.5px;">Home</div>
+          <div style="padding:5px 12px 5px 20px; color:#c3c4c7; font-size:12.5px;">Orders</div>
+          <div style="padding:5px 12px 5px 20px; color:#c3c4c7; font-size:12.5px;">Customers</div>
+          <div style="padding:5px 12px 5px 20px; color:#fff; font-weight:600; font-size:12.5px;">Loyalty</div>
+          <div style="padding:5px 12px 5px 20px; color:#c3c4c7; font-size:12.5px;">Settings</div>
+          <div style="padding:5px 12px 5px 20px; color:#c3c4c7; font-size:12.5px;">Status</div>
+        </div>
+      </div>
+      <div style="padding:8px 12px;">Products</div>
+      <div style="padding:8px 12px;">Analytics</div>
+      <div style="padding:8px 12px;">Appearance</div>
+      <div style="padding:8px 12px;">Plugins</div>
+      <div style="padding:8px 12px;">Users</div>
+      <div style="padding:8px 12px;">Tools</div>
+      <div style="padding:8px 12px;">Settings</div>
+    </div>
+    <div style="flex:1; min-width:0; padding:20px 20px 70px;">
+      <div style="height:3px; background:linear-gradient(90deg, #3b2fc9, #7c5cfc); border-radius:9px 3px 0 0;"></div>
+      <div style="background:#fff; border:1px solid #e7e9f2; border-top:none; border-radius:0 0 14px 14px; padding:14px 20px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+        <img src="assets/images/starfiniti-icon.png" alt="Starfiniti" style="width:40px; height:40px; border-radius:10px; flex-shrink:0;">
+        <span style="min-width:0;"><span style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;"><h1 style="margin:0; font-size:18px; font-weight:800; letter-spacing:-0.2px; color:#111827;">Starfiniti Loyalty</h1><span style="background:#eeedfc; border-radius:20px; color:#4438c9; font-size:11px; font-weight:700; padding:2px 8px;">CONNECTED</span></span><span style="display:block; color:#6b7280; font-size:12.5px; margin-top:1px;">Slovenia Store · shop.ninavalentin.si · connector v1.4.2</span></span>
+        
+        <span style="flex:1;"></span>
+        <button onClick="{{ runChecks }}" style="height:30px; padding:0 12px; border:none; border-radius:9px; background:linear-gradient(90deg, #4438c9, #6d4ef0); color:#fff; box-shadow:0 2px 8px rgba(83,70,230,.35); font-family:inherit; font-size:13px; cursor:pointer; display:inline-flex; align-items:center; gap:7px;" style-hover="background:#4438c9;">
+          <sc-if value="{{ running }}" hint-placeholder-val="{{ false }}"><span style="width:12px; height:12px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; display:inline-block; animation:wspin .7s linear infinite;"></span></sc-if>
+          {{ runLabel }}
+        </button>
+      </div>
+      <nav style="margin-top:16px; background:#fff; border:1px solid #e7e9f2; border-radius:12px; padding:6px; display:flex; gap:6px; flex-wrap:wrap;">
+        <a href="wc-loyalty.dc.html" style="padding:9px 15px; border-radius:8px; color:#374151; font-weight:600; text-decoration:none;" style-hover="background:#f3f4fa; text-decoration:none;">Overview</a>
+        <a href="wc-loyalty-storefront.dc.html" style="padding:9px 15px; border-radius:8px; color:#374151; font-weight:600; text-decoration:none;" style-hover="background:#f3f4fa; text-decoration:none;">Storefront</a>
+        <a href="wc-loyalty-sync.dc.html" style="padding:9px 15px; border-radius:8px; color:#374151; font-weight:600; text-decoration:none;" style-hover="background:#f3f4fa; text-decoration:none;">Sync</a>
+        <a href="wc-loyalty-diagnostics.dc.html" style="padding:9px 15px; border-radius:8px; background:linear-gradient(90deg, #4438c9, #6d4ef0); color:#fff; font-weight:600; text-decoration:none;">Diagnostics</a>
+        <a href="wc-loyalty-settings.dc.html" style="padding:9px 15px; border-radius:8px; color:#374151; font-weight:600; text-decoration:none;" style-hover="background:#f3f4fa; text-decoration:none;">Settings</a>
+      </nav>
+      <div style="margin-top:16px; background:#fff; border:1px solid #e7e9f2; border-radius:14px;">
+        <div style="padding:11px 15px; border-bottom:1px solid #f0f1f7; display:flex; align-items:center; gap:10px;"><span style="font-weight:600;">Health checks</span><span style="font-size:12px; color:#787c82;">{{ checkedAt }}</span></div>
+        <div style="font-size:12.5px;">
+          <sc-for list="{{ checks }}" as="c" hint-placeholder-count="9">
+            <div style="display:flex; align-items:center; gap:10px; padding:9px 15px; border-bottom:1px solid #f0f0f1;">
+              <sc-if value="{{ c.pending }}" hint-placeholder-val="{{ false }}"><span style="width:11px; height:11px; border:2px solid #dcdcde; border-top-color:#5346e6; border-radius:50%; display:inline-block; animation:wspin .7s linear infinite; flex-shrink:0;"></span></sc-if>
+              <sc-if value="{{ c.ok }}" hint-placeholder-val="{{ true }}"><span style="color:#22c55e; flex-shrink:0;">✓</span></sc-if>
+              <sc-if value="{{ c.warn }}" hint-placeholder-val="{{ false }}"><span style="color:#dba617; flex-shrink:0;">▲</span></sc-if>
+              <span style="width:280px; flex-shrink:0; font-weight:600;">{{ c.name }}</span>
+              <span style="flex:1; color:#6b7280;">{{ c.detail }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="margin-top:14px; display:flex; gap:12px; flex-wrap:wrap; align-items:flex-start;">
+        <div style="flex:1.4 1 400px; min-width:0; background:#fff; border:1px solid #e7e9f2; border-radius:14px;">
+          <div style="padding:11px 15px; border-bottom:1px solid #f0f1f7; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <span style="font-weight:600;">Recent log</span><span style="font-size:12px; color:#787c82;">redacted · no secrets or personal data</span>
+            <span style="flex:1;"></span>
+            <select style="height:26px; border:1px solid #e2e8f0; border-radius:9px; font-family:inherit; font-size:12px; background:#fff;"><option>Keep 14 days</option><option>Keep 30 days</option><option>Keep 90 days</option></select>
+          </div>
+          <div style="font-family:Menlo, Consolas, monospace; font-size:11.5px; line-height:1.8; padding:10px 15px; color:#6b7280;">
+            <div><span style="color:#22c55e;">[info ]</span> 09:41:02 evt_8459_earn_01 delivered (204) in 182 ms</div>
+            <div><span style="color:#22c55e;">[info ]</span> 09:39:47 reconciliation nightly ok · 12,842 customers, 0 drift</div>
+            <div><span style="color:#d63638;">[error]</span> 09:14:33 evt_8444_rev_01 → 429 rate-limited · attempt 5/5, parked for manual retry</div>
+            <div><span style="color:#dba617;">[warn ]</span> 09:14:31 API latency 2,140 ms (threshold 2,000 ms)</div>
+            <div><span style="color:#22c55e;">[info ]</span> 09:12:09 storefront render check ok · launcher, product, cart</div>
+            <div><span style="color:#22c55e;">[info ]</span> 08:55:12 coupon ROSY-MK-7D2F created (id 9912)</div>
+          </div>
+        </div>
+        <div style="flex:1 1 300px; min-width:0; background:#fff; border:1px solid #e7e9f2; border-radius:14px; padding:13px 15px;">
+          <div style="font-weight:600;">Support tools</div>
+          <div style="margin-top:10px; display:flex; flex-direction:column; gap:8px;">
+            <button onClick="{{ downloadBundle }}" style="height:30px; border:1px solid #e2e8f0; border-radius:9px; color:#4438c9; background:#fff; font-family:inherit; font-size:12.5px; cursor:pointer;" style-hover="background:#f0f0f1;">{{ bundleLabel }}</button>
+            <button onClick="{{ copyStatus }}" style="height:30px; border:1px solid #e2e8f0; border-radius:9px; color:#6b7280; background:#fff; font-family:inherit; font-size:12.5px; cursor:pointer;" style-hover="background:#f6f7f7;">{{ copyLabel }}</button>
+            <button onClick="{{ testEvent }}" style="height:30px; border:1px solid #e2e8f0; border-radius:9px; color:#6b7280; background:#fff; font-family:inherit; font-size:12.5px; cursor:pointer;" style-hover="background:#f6f7f7;">{{ testEvtLabel }}</button>
+          </div>
+          <p style="margin:12px 0 0; font-size:12px; color:#787c82; line-height:1.6;">Support bundles and diagnostics never contain API secrets, tokens, or customer personal data. Bundle contents: versions, health results, redacted logs, queue summary.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#111827; color:#fff; border-radius:10px; padding:11px 16px; font-size:13px; z-index:60;">{{ toastMsg }}</div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1366,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  state = { running: false, doneAt: '09:41 today (automatic)', pendingIdx: -1, toast: false, toastMsg: '', copied: false, evtSent: false, bundled: false };
+  say(msg) { this.setState({ toast: true, toastMsg: msg }); setTimeout(() => this.setState({ toast: false }), 3000); }
+  renderVals() { const vals = this.__rv3 ? this.__rv3() : {}; vals.toggleDark = () => { const r = document.documentElement; const on = r.getAttribute('data-sf-dark') === '1'; if (on) { r.removeAttribute('data-sf-dark'); } else { r.setAttribute('data-sf-dark', '1'); } try { localStorage.setItem('sf_dark', on ? '0' : '1'); } catch (e) {} this.forceUpdate(); }; return vals; }
+  __rv3() {
+    const s = this.state;
+    const defs = [
+      ['Starfiniti API & signed requests', 'reachable · 184 ms · signature valid', 'ok'],
+      ['Webhook endpoint', 'last delivery 2 min ago · 100% (24 h)', 'ok'],
+      ['REST API & permalinks', 'pretty permalinks active', 'ok'],
+      ['Action Scheduler', 'running · 3 queued actions', 'ok'],
+      ['HPOS compatibility', 'high-performance order storage active', 'ok'],
+      ['Versions', 'WooCommerce 9.8 · WordPress 6.8 · PHP 8.3 · plugin 1.4.2', 'ok'],
+      ['Cache / CDN / CSP conflicts', 'page cache detected — storefront script excluded correctly', 'warn'],
+      ['Database tables & permissions', '4/4 plugin tables present, writable', 'ok'],
+      ['Storefront script & render', 'launcher + product + cart rendered on last check', 'ok']
+    ];
+    const checks = defs.map((d, i) => ({
+      name: d[0], detail: s.pendingIdx >= 0 && i > s.pendingIdx ? 'waiting…' : d[1],
+      pending: s.pendingIdx === i, ok: s.pendingIdx !== i && d[2] === 'ok' && !(s.pendingIdx >= 0 && i > s.pendingIdx),
+      warn: s.pendingIdx !== i && d[2] === 'warn' && !(s.pendingIdx >= 0 && i > s.pendingIdx)
+    }));
+    return {
+      checks, checkedAt: 'checked ' + s.doneAt,
+      running: s.running, runLabel: s.running ? 'Running checks…' : 'Run all checks',
+      runChecks: () => {
+        if (s.running) return;
+        this.setState({ running: true, pendingIdx: 0 });
+        let i = 0;
+        const step = () => {
+          i++;
+          if (i >= 9) { this.setState({ running: false, pendingIdx: -1, doneAt: 'just now' }); this.say('9 checks finished · 1 warning (page cache)'); return; }
+          this.setState({ pendingIdx: i });
+          setTimeout(step, 260);
+        };
+        setTimeout(step, 260);
+      },
+      bundleLabel: s.bundled ? 'Bundle downloaded ✓' : 'Download support bundle',
+      downloadBundle: () => {
+        try {
+          const txt = 'STARFINITI LOYALTY SUPPORT BUNDLE (DEMO, REDACTED)\nGenerated: ' + new Date().toISOString() + '\nStore: shop.ninavalentin.si · workspace Slovenia Store\nVersions: WC 9.8 / WP 6.8 / PHP 8.3 / plugin 1.4.2\nHealth: 8 ok, 1 warning (page cache)\nQueue: see sync tab snapshot\nLogs: 6 recent entries, secrets and personal data removed\n';
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(new Blob([txt], { type: 'text/plain' }));
+          a.download = 'starfiniti-support-bundle-demo.txt';
+          a.click();
+        } catch (e) {}
+        this.setState({ bundled: true });
+        setTimeout(() => this.setState({ bundled: false }), 2500);
+      },
+      copyLabel: s.copied ? 'Copied ✓' : 'Copy system status',
+      copyStatus: () => {
+        try { navigator.clipboard.writeText('WC 9.8 / WP 6.8 / PHP 8.3 / Starfiniti Loyalty 1.4.2 / HPOS on / AS running'); } catch (e) {}
+        this.setState({ copied: true });
+        setTimeout(() => this.setState({ copied: false }), 2000);
+      },
+      testEvtLabel: s.evtSent ? 'Test event accepted ✓' : 'Send test event',
+      testEvent: () => {
+        this.setState({ evtSent: true });
+        this.say('Test event delivered and acknowledged in 178 ms');
+        setTimeout(() => this.setState({ evtSent: false }), 2500);
+      },
+      toast: s.toast, toastMsg: s.toastMsg
+    };
+  }
+}
+</script>
+</body>
+</html>

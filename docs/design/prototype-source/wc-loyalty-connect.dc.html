@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body { margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, sans-serif; background:#f0f0f1; color:#1d2327; -webkit-font-smoothing:antialiased; }
+a { color:#5346e6; text-decoration:none; } a:hover { color:#4438c9; text-decoration:underline; }
+* { box-sizing:border-box; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:0.01ms !important; transition-duration:0.01ms !important; } }
+@media (max-width: 880px) { div[data-wpnav] { display:none; } }
+@keyframes wspin { to { transform:rotate(360deg); } }
+
+html[data-sf-dark] body { background:#1F1F1E !important; color:#E5E4DF; }
+html[data-sf-dark] a { color:#9A85F0; }
+html[data-sf-dark] input, html[data-sf-dark] select { background:#2C2C2A !important; color:#E5E4DF !important; border-color:#3A3A37 !important; }
+html[data-sf-dark] [style*="background: rgb(255, 255, 255)"] { background:#292927 !important; }
+html[data-sf-dark] [style*="background: rgb(250, 251, 254)"], html[data-sf-dark] [style*="background: rgb(246, 247, 247)"], html[data-sf-dark] [style*="background: rgb(240, 240, 241)"] { background:#343432 !important; }
+html[data-sf-dark] [style*="background: rgb(237, 250, 239)"] { background:#26382D !important; }
+html[data-sf-dark] [style*="background: rgb(252, 240, 241)"] { background:#3D292A !important; }
+html[data-sf-dark] [style*="background: rgb(255, 248, 229)"] { background:#3E3423 !important; }
+html[data-sf-dark] [style*="background: rgb(238, 237, 252)"] { background:#37334F !important; }
+html[data-sf-dark] [style*="color: rgb(29, 35, 39)"], html[data-sf-dark] [style*="color: rgb(17, 24, 39)"] { color:#E5E4DF !important; }
+html[data-sf-dark] [style*="color: rgb(107, 114, 128)"], html[data-sf-dark] [style*="color: rgb(80, 87, 94)"] { color:#A09F99 !important; }
+html[data-sf-dark] [style*="color: rgb(120, 124, 130)"] { color:#8B8A84 !important; }
+html[data-sf-dark] [style*="color: rgb(21, 128, 61)"] { color:#3BB87C !important; }
+html[data-sf-dark] [style*="color: rgb(153, 104, 0)"], html[data-sf-dark] [style*="color: rgb(219, 166, 23)"] { color:#E0A23C !important; }
+html[data-sf-dark] [style*="color: rgb(214, 54, 56)"], html[data-sf-dark] [style*="color: rgb(138, 36, 36)"] { color:#E76B72 !important; }
+html[data-sf-dark] [style*="color: rgb(83, 70, 230)"], html[data-sf-dark] [style*="color: rgb(68, 56, 201)"] { color:#9A85F0 !important; }
+html[data-sf-dark] [style*="rgb(231, 233, 242)"], html[data-sf-dark] [style*="rgb(226, 232, 240)"], html[data-sf-dark] [style*="rgb(220, 220, 222)"] { border-color:#3A3A37 !important; }
+html[data-sf-dark] [style*="rgb(240, 241, 247)"], html[data-sf-dark] [style*="border-top: 1px solid rgb(240, 240, 241)"] { border-color:#333330 !important; }
+html[data-sf-dark] [style*="rgb(240, 183, 184)"] { border-color:#5C3234 !important; }
+</style>
+<script>try{if(localStorage.getItem('sf_dark')==='1')document.documentElement.setAttribute('data-sf-dark','1')}catch(e){}</script>
+</helmet>
+<div style="min-height:100vh; display:flex; flex-direction:column; font-size:13px;">
+  <div style="height:32px; background:#1d2327; color:#c3c4c7; display:flex; align-items:center; gap:16px; padding:0 14px; font-size:13px; flex-shrink:0;">
+    <span style="display:flex; align-items:center; gap:6px;"><span style="width:16px; height:16px; border-radius:50%; border:1.5px solid #c3c4c7; display:inline-flex; align-items:center; justify-content:center; font-size:10px; font-weight:700;">W</span>Nina &amp; Valentin — Demo Store</span>
+    <span style="flex:1;"></span>
+    <button onClick="{{ toggleDark }}" aria-label="Toggle dark mode" style="background:transparent; border:none; color:#c3c4c7; cursor:pointer; display:flex; align-items:center; padding:3px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg></button>
+    <span style="font-size:11px; font-weight:600; color:#f0c33c;">WP-ADMIN PROTOTYPE</span>
+    <span>Howdy, nina</span>
+  </div>
+  <div style="flex:1; display:flex; align-items:stretch;">
+    <div data-wpnav="1" style="width:160px; flex-shrink:0; background:#1d2327; color:#c3c4c7; padding:8px 0 40px; font-size:13px;">
+      <div style="padding:8px 12px;">Dashboard</div>
+      <div style="padding:8px 12px;">Posts</div>
+      <div style="padding:8px 12px;">Media</div>
+      <div style="padding:8px 12px;">Pages</div>
+      <div style="padding:8px 12px;">Comments</div>
+      <div style="background:#2271b1; color:#fff;">
+        <div style="padding:8px 12px; font-weight:600;">WooCommerce</div>
+        <div style="background:#2c3338; padding:6px 0;">
+          <div style="padding:5px 12px 5px 20px; color:#c3c4c7; font-size:12.5px;">Home</div>
+          <div style="padding:5px 12px 5px 20px; color:#c3c4c7; font-size:12.5px;">Orders</div>
+          <div style="padding:5px 12px 5px 20px; color:#fff; font-weight:600; font-size:12.5px;">Loyalty</div>
+          <div style="padding:5px 12px 5px 20px; color:#c3c4c7; font-size:12.5px;">Settings</div>
+        </div>
+      </div>
+      <div style="padding:8px 12px;">Products</div>
+      <div style="padding:8px 12px;">Plugins</div>
+      <div style="padding:8px 12px;">Users</div>
+      <div style="padding:8px 12px;">Tools</div>
+      <div style="padding:8px 12px;">Settings</div>
+    </div>
+    <div style="flex:1; min-width:0; padding:20px 20px 70px; max-width:860px;">
+      <div style="height:3px; background:linear-gradient(90deg, #3b2fc9, #7c5cfc); border-radius:9px;"></div>
+      <h1 style="margin:16px 0 0; font-size:18px; font-weight:800; letter-spacing:-0.2px; color:#111827;">Connect Starfiniti Loyalty</h1>
+      <p style="margin:6px 0 0; font-size:13px; color:#6b7280;">A guided one-time setup. Your progress is saved — you can leave and come back.</p>
+      <div style="margin-top:14px; display:flex; gap:4px;">
+        <div style="flex:1; height:4px; border-radius:2px; background:{{ seg1 }};"></div><div style="flex:1; height:4px; border-radius:2px; background:{{ seg2 }};"></div><div style="flex:1; height:4px; border-radius:2px; background:{{ seg3 }};"></div><div style="flex:1; height:4px; border-radius:2px; background:{{ seg4 }};"></div><div style="flex:1; height:4px; border-radius:2px; background:{{ seg5 }};"></div>
+      </div>
+      <sc-if value="{{ isStep1 }}" hint-placeholder-val="{{ true }}">
+        <div style="margin-top:16px; background:#fff; border:1px solid #e7e9f2; border-radius:14px; padding:16px;">
+          <div style="font-weight:600; font-size:14px;">Step 1 · Environment checks</div>
+          <div style="margin-top:10px; font-size:12.5px;">
+            <div style="display:flex; gap:9px; padding:6px 0;"><span style="color:#22c55e;">✓</span>WooCommerce 9.8 (minimum 8.0)</div>
+            <div style="display:flex; gap:9px; padding:6px 0;"><span style="color:#22c55e;">✓</span>HTTPS active</div>
+            <div style="display:flex; gap:9px; padding:6px 0;"><span style="color:#22c55e;">✓</span>Pretty permalinks &amp; REST API reachable</div>
+            <div style="display:flex; gap:9px; padding:6px 0;"><span style="color:#22c55e;">✓</span>Action Scheduler running</div>
+            <div style="display:flex; gap:9px; padding:6px 0;"><span style="color:#22c55e;">✓</span>HPOS (high-performance order storage) compatible</div>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ isStep2 }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:16px; background:#fff; border:1px solid #e7e9f2; border-radius:14px; padding:16px;">
+          <div style="font-weight:600; font-size:14px;">Step 2 · Authorize</div>
+          <p style="margin:8px 0 0; font-size:12.5px; color:#6b7280; line-height:1.6;">You'll be sent to loyalty.starfiniti.com to approve this store with a secure one-time code. No passwords or API keys are typed into WordPress.</p>
+          <sc-if value="{{ authIdle }}" hint-placeholder-val="{{ true }}">
+            <button onClick="{{ authorize }}" style="margin-top:12px; height:32px; padding:0 14px; border:none; border-radius:9px; background:linear-gradient(90deg, #4438c9, #6d4ef0); color:#fff; box-shadow:0 2px 8px rgba(83,70,230,.35); font-family:inherit; font-size:13px; cursor:pointer;" style-hover="background:#4438c9;">Connect to Starfiniti Loyalty →</button>
+          </sc-if>
+          <sc-if value="{{ authPending }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:12px; display:flex; align-items:center; gap:9px; font-size:12.5px; color:#6b7280;"><span style="width:13px; height:13px; border:2px solid #dcdcde; border-top-color:#5346e6; border-radius:50%; display:inline-block; animation:wspin .7s linear infinite;"></span>Authorization pending — approve in the Starfiniti tab…</div>
+          </sc-if>
+          <sc-if value="{{ authDone }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:12px; background:#edfaef; border-left:4px solid #22c55e; padding:9px 13px; font-size:12.5px;">Authorized as <strong>nina@ninavalentin.si</strong> · organization Nina &amp; Valentin Demo</div>
+          </sc-if>
+        </div>
+      </sc-if>
+      <sc-if value="{{ isStep3 }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:16px; background:#fff; border:1px solid #e7e9f2; border-radius:14px; padding:16px;">
+          <div style="font-weight:600; font-size:14px;">Step 3 · Workspace &amp; scopes</div>
+          <div style="margin-top:10px; font-size:12.5px; display:grid; grid-template-columns:150px 1fr; gap:7px 10px; color:#6b7280;">
+            <span>Workspace</span>
+            <select style="height:30px; border:1px solid #e2e8f0; border-radius:9px; font-family:inherit; font-size:12.5px; background:#fff; max-width:320px;"><option>Slovenia Store (recommended — matches this domain)</option><option>Create new workspace…</option></select>
+          </div>
+          <div style="margin-top:12px; font-weight:600; font-size:12.5px;">This connection will:</div>
+          <div style="margin-top:6px; font-size:12.5px; color:#6b7280; line-height:1.8;">
+            • Read orders, refunds, and customers to award and reverse points<br>
+            • Create WooCommerce coupons when members redeem rewards<br>
+            • Render the loyalty storefront components you enable<br>
+            • Never read payment details, admin users, or other plugins' data
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ isStep4 }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:16px; background:#fff; border:1px solid #e7e9f2; border-radius:14px; padding:16px;">
+          <div style="font-weight:600; font-size:14px;">Step 4 · Initial reconciliation</div>
+          <p style="margin:8px 0 0; font-size:12.5px; color:#6b7280;">Linking existing customers and orders. Runs in the background — you can leave this page.</p>
+          <div style="margin-top:12px; height:10px; border-radius:5px; background:#f0f0f1; overflow:hidden;"><div style="width:{{ reconPct }}%; height:100%; background:#5346e6; transition:width .4s ease;"></div></div>
+          <div style="margin-top:8px; font-size:12.5px; color:#6b7280; font-variant-numeric:tabular-nums;">{{ reconLabel }}</div>
+          <sc-if value="{{ reconIdle }}" hint-placeholder-val="{{ true }}">
+            <button onClick="{{ startRecon }}" style="margin-top:10px; height:32px; padding:0 14px; border:none; border-radius:9px; background:linear-gradient(90deg, #4438c9, #6d4ef0); color:#fff; box-shadow:0 2px 8px rgba(83,70,230,.35); font-family:inherit; font-size:13px; cursor:pointer;" style-hover="background:#4438c9;">Start reconciliation</button>
+          </sc-if>
+        </div>
+      </sc-if>
+      <sc-if value="{{ isStep5 }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:16px; background:#fff; border:1px solid #e7e9f2; border-radius:14px; padding:16px;">
+          <div style="font-weight:600; font-size:14px;">Step 5 · Storefront surfaces &amp; test</div>
+          <div style="margin-top:8px; font-size:12.5px;">
+            <label style="display:flex; align-items:center; gap:8px; padding:5px 0; cursor:pointer;"><input type="checkbox" checked="{{ true }}" style="accent-color:#5346e6;">Launcher &amp; wallet drawer (recommended)</label>
+            <label style="display:flex; align-items:center; gap:8px; padding:5px 0; cursor:pointer;"><input type="checkbox" checked="{{ true }}" style="accent-color:#5346e6;">Product points message</label>
+            <label style="display:flex; align-items:center; gap:8px; padding:5px 0; cursor:pointer;"><input type="checkbox" checked="{{ true }}" style="accent-color:#5346e6;">Cart reward module + My Account → Rewards</label>
+          </div>
+          <div style="margin-top:10px; background:#edfaef; border-left:4px solid #22c55e; padding:9px 13px; font-size:12.5px;">Connection test passed · 178 ms · signed request verified. <a href="storefront-product.dc.html">Open customer-facing preview ↗</a></div>
+        </div>
+      </sc-if>
+      <div style="margin-top:14px; display:flex; gap:8px;">
+        <sc-if value="{{ canBack }}" hint-placeholder-val="{{ false }}">
+          <button onClick="{{ back }}" style="height:32px; padding:0 13px; border:1px solid #e2e8f0; border-radius:9px; background:#fff; color:#6b7280; font-family:inherit; font-size:13px; cursor:pointer;">Back</button>
+        </sc-if>
+        <span style="flex:1;"></span>
+        <a href="wc-loyalty.dc.html" style="height:32px; padding:0 13px; display:inline-flex; align-items:center; color:#6b7280; text-decoration:none;">Finish later</a>
+        <sc-if value="{{ notLast }}" hint-placeholder-val="{{ true }}">
+          <button onClick="{{ next }}" disabled="{{ nextDisabled }}" style="height:32px; padding:0 14px; border:none; border-radius:9px; background:{{ nextBg }}; color:#fff; font-family:inherit; font-size:13px; cursor:pointer;">Continue</button>
+        </sc-if>
+        <sc-if value="{{ isStep5 }}" hint-placeholder-val="{{ false }}">
+          <a href="wc-loyalty.dc.html" style="height:32px; padding:0 14px; border-radius:9px; background:linear-gradient(90deg, #4438c9, #6d4ef0); color:#fff; box-shadow:0 2px 8px rgba(83,70,230,.35); display:inline-flex; align-items:center; text-decoration:none;" style-hover="background:#4438c9; color:#fff; text-decoration:none;">Finish setup →</a>
+        </sc-if>
+      </div>
+      <p style="margin:14px 0 0; font-size:12px; color:#787c82;">Setup states supported: new · authorization pending · connected · partially synchronized · permission missing · expired authorization · reconnect required · failed. Recovery never requires reinstalling the plugin.</p>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1366,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  state = { step: 1, auth: 'idle', recon: 'idle', reconPct: 0 };
+  componentDidMount() {
+    try { const s = JSON.parse(localStorage.getItem('sf_wc_connect') || 'null'); if (s) this.setState(s); } catch (e) {}
+  }
+  save(patch) {
+    this.setState(patch);
+    setTimeout(() => {
+      const { step, auth, recon, reconPct } = this.state;
+      try { localStorage.setItem('sf_wc_connect', JSON.stringify({ step, auth, recon, reconPct })); } catch (e) {}
+    }, 0);
+  }
+  renderVals() { const vals = this.__rv3 ? this.__rv3() : {}; vals.toggleDark = () => { const r = document.documentElement; const on = r.getAttribute('data-sf-dark') === '1'; if (on) { r.removeAttribute('data-sf-dark'); } else { r.setAttribute('data-sf-dark', '1'); } try { localStorage.setItem('sf_dark', on ? '0' : '1'); } catch (e) {} this.forceUpdate(); }; return vals; }
+  __rv3() {
+    const s = this.state;
+    const seg = i => (s.step >= i ? '#5346e6' : '#dcdcde');
+    const nextDisabled = (s.step === 2 && s.auth !== 'done') || (s.step === 4 && s.recon !== 'done');
+    return {
+      seg1: seg(1), seg2: seg(2), seg3: seg(3), seg4: seg(4), seg5: seg(5),
+      isStep1: s.step === 1, isStep2: s.step === 2, isStep3: s.step === 3, isStep4: s.step === 4, isStep5: s.step === 5,
+      canBack: s.step > 1, notLast: s.step < 5,
+      back: () => this.save({ step: s.step - 1 }),
+      next: () => { if (nextDisabled) return; this.save({ step: s.step + 1 }); },
+      nextDisabled, nextBg: nextDisabled ? '#c3c4c7' : '#5346e6',
+      authIdle: s.auth === 'idle', authPending: s.auth === 'pending', authDone: s.auth === 'done',
+      authorize: () => {
+        this.save({ auth: 'pending' });
+        setTimeout(() => this.save({ auth: 'done' }), 1600);
+      },
+      reconIdle: s.recon === 'idle',
+      reconPct: s.reconPct,
+      reconLabel: s.recon === 'idle' ? 'Not started · 12,842 customers, 31,208 orders, 412 refunds, 96 coupons to link'
+        : s.recon === 'run' ? Math.round(s.reconPct) + '% · linking customers and orders… (safe to navigate away)'
+        : '100% · 12,842 customers, 31,208 orders, 412 refunds, 96 coupons linked · 0 conflicts',
+      startRecon: () => {
+        this.save({ recon: 'run' });
+        const tick = () => {
+          const p = Math.min(100, this.state.reconPct + 9 + Math.random() * 12);
+          if (p >= 100) { this.save({ reconPct: 100, recon: 'done' }); return; }
+          this.save({ reconPct: p });
+          setTimeout(tick, 300);
+        };
+        setTimeout(tick, 300);
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

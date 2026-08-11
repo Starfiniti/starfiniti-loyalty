@@ -1,0 +1,88 @@
+begin;
+
+create extension if not exists pgtap with schema extensions;
+
+select plan(8);
+
+select has_schema('loyalty', 'loyalty application schema exists');
+select has_schema('loyalty_private', 'private database schema exists');
+
+select ok(
+  not exists (
+    select 1
+    from pg_namespace as namespace
+    cross join lateral aclexplode(
+      coalesce(namespace.nspacl, acldefault('n', namespace.nspowner))
+    ) as grant_entry
+    where namespace.nspname = 'loyalty'
+      and grant_entry.grantee = 0
+      and grant_entry.privilege_type = 'USAGE'
+  ),
+  'PUBLIC cannot use the loyalty schema before explicit Data API exposure'
+);
+
+select ok(
+  not has_schema_privilege('anon', 'loyalty', 'USAGE'),
+  'anonymous clients cannot use the loyalty schema'
+);
+
+select ok(
+  not has_schema_privilege('authenticated', 'loyalty', 'USAGE'),
+  'authenticated clients cannot use the loyalty schema before policies exist'
+);
+
+select ok(
+  not exists (
+    select 1
+    from pg_namespace as namespace
+    cross join lateral aclexplode(
+      coalesce(namespace.nspacl, acldefault('n', namespace.nspowner))
+    ) as grant_entry
+    where namespace.nspname = 'loyalty_private'
+      and grant_entry.grantee = 0
+      and grant_entry.privilege_type = 'USAGE'
+  ),
+  'PUBLIC cannot use the private schema'
+);
+
+select is_empty(
+  $$
+    select format('%I.%I', namespace.nspname, relation.relname)
+    from pg_class as relation
+    join pg_namespace as namespace on namespace.oid = relation.relnamespace
+    where namespace.nspname in ('public', 'loyalty')
+      and relation.relkind in ('r', 'p')
+      and not relation.relrowsecurity
+      and not exists (
+        select 1
+        from pg_depend as dependency
+        join pg_extension as extension on extension.oid = dependency.refobjid
+        where dependency.classid = 'pg_class'::regclass
+          and dependency.objid = relation.oid
+          and dependency.deptype = 'e'
+      )
+  $$,
+  'every application table in an exposed or candidate schema has RLS enabled'
+);
+
+select is_empty(
+  $$
+    select routine.oid::regprocedure::text
+    from pg_proc as routine
+    join pg_namespace as namespace on namespace.oid = routine.pronamespace
+    where namespace.nspname in ('public', 'loyalty')
+      and routine.prosecdef
+      and not exists (
+        select 1
+        from pg_depend as dependency
+        join pg_extension as extension on extension.oid = dependency.refobjid
+        where dependency.classid = 'pg_proc'::regclass
+          and dependency.objid = routine.oid
+          and dependency.deptype = 'e'
+      )
+  $$,
+  'no application security-definer function exists in an exposed schema'
+);
+
+select * from finish();
+rollback;

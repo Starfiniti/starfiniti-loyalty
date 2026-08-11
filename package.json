@@ -1,0 +1,53 @@
+{
+  "name": "starfiniti-loyalty",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Open-source, self-hosted multi-tenant loyalty platform for WooCommerce.",
+  "engines": {
+    "node": ">=24.0.0",
+    "npm": ">=11.0.0"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "overrides": {
+    "typescript-eslint": "8.65.0",
+    "@typescript-eslint/eslint-plugin": "8.65.0",
+    "@typescript-eslint/parser": "8.65.0",
+    "@typescript-eslint/typescript-estree": "8.65.0",
+    "@typescript-eslint/utils": "8.65.0"
+  },
+  "scripts": {
+    "dev": "npm run dev --workspace=@starfiniti/dashboard",
+    "build": "npm run build --workspaces --if-present",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "test:coverage": "npm run test:coverage --workspaces --if-present",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run ci:validate && npm run build",
+    "ci:validate": "node scripts/validate-workflows.mjs",
+    "audit:prod": "npm audit --omit=dev --audit-level=high",
+    "licenses": "license-checker-rseidelsohn --production --summary",
+    "secrets:scan": "node scripts/scan-secrets.mjs",
+    "db:validate": "node scripts/validate-migrations.mjs",
+    "db:start": "supabase db start",
+    "db:reset": "supabase db reset --local",
+    "db:test": "supabase test db supabase/tests --local",
+    "db:verify": "node scripts/require-container-runtime.mjs && npm run db:start && npm run db:reset && npm run db:test",
+    "db:stop": "supabase stop --no-backup"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.3",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.0",
+    "license-checker-rseidelsohn": "5.0.1",
+    "prettier": "3.9.6",
+    "supabase": "2.113.0",
+    "typescript": "6.0.3",
+    "vitest": "4.1.10",
+    "yaml": "2.9.0"
+  }
+}

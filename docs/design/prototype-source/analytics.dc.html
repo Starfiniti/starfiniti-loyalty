@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body { margin:0; font-family:'Geist',ui-sans-serif,system-ui,sans-serif; background:#faf9f7; color:#1c1917; -webkit-font-smoothing:antialiased; }
+a { color:#4f46e5; text-decoration:none; } a:hover { color:#4338ca; }
+* { box-sizing:border-box; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; } }
+@media (max-width: 900px) {
+  aside[data-nav] { display:none !important; }
+  aside[data-nav][data-open="1"] { display:flex !important; position:fixed !important; left:0; top:0; bottom:0; width:282px !important; z-index:70; box-shadow:12px 0 40px rgba(0,0,0,.18); }
+  div[data-nav-scrim][data-open="1"] { display:block !important; }
+  button[data-menu-btn] { display:flex !important; }
+}
+
+:where(button, a, input, select, textarea):focus-visible { outline:2px solid #4f46e5 !important; outline-offset:2px; }
+@keyframes sfdraw { to { stroke-dashoffset:0; } }
+html[data-sf-dark] body { background:#1F1F1E !important; color:#E5E4DF; }
+html[data-sf-dark] [style*="background: rgb(255, 255, 255)"] { background:#292927 !important; }
+html[data-sf-dark] [style*="background: rgb(250, 250, 249)"] { background:#262625 !important; }
+html[data-sf-dark] [style*="background: rgb(245, 245, 244)"] { background:#343432 !important; }
+html[data-sf-dark] [style*="background: rgb(238, 242, 255)"] { background:#37334F !important; }
+html[data-sf-dark] [style*="background: rgb(236, 253, 245)"] { background:#26382D !important; }
+html[data-sf-dark] [style*="background: rgb(255, 251, 235)"] { background:#3E3423 !important; }
+html[data-sf-dark] [style*="background: rgb(254, 242, 242)"] { background:#3D292A !important; }
+html[data-sf-dark] [style*="background: rgb(253, 242, 248)"] { background:#3A2C37 !important; }
+html[data-sf-dark] [style*="background: rgb(252, 231, 243)"] { background:#3A2C37 !important; }
+html[data-sf-dark] [style*="background: rgb(28, 25, 23)"] { background:#343432 !important; }
+html[data-sf-dark] [style*="background: rgb(253, 248, 246)"] { background:#33302E !important; }
+html[data-sf-dark] [style*="color: rgb(28, 25, 23)"] { color:#E5E4DF !important; }
+html[data-sf-dark] [style*="color: rgb(68, 64, 60)"], html[data-sf-dark] [style*="color: rgb(87, 83, 78)"] { color:#C0BFB9 !important; }
+html[data-sf-dark] [style*="color: rgb(120, 113, 108)"] { color:#A09F99 !important; }
+html[data-sf-dark] [style*="color: rgb(168, 162, 158)"] { color:#8B8A84 !important; }
+html[data-sf-dark] [style*="color: rgb(4, 120, 87)"], html[data-sf-dark] [style*="color: rgb(6, 95, 70)"] { color:#3BB87C !important; }
+html[data-sf-dark] [style*="color: rgb(180, 83, 9)"], html[data-sf-dark] [style*="color: rgb(146, 64, 14)"], html[data-sf-dark] [style*="color: rgb(120, 53, 15)"] { color:#E0A23C !important; }
+html[data-sf-dark] [style*="color: rgb(153, 27, 27)"], html[data-sf-dark] [style*="color: rgb(185, 28, 28)"] { color:#E76B72 !important; }
+html[data-sf-dark] [style*="color: rgb(67, 56, 202)"], html[data-sf-dark] [style*="color: rgb(55, 48, 163)"] { color:#9A85F0 !important; }
+html[data-sf-dark] [style*="rgb(231, 229, 228)"] { border-color:#3A3A37 !important; }
+html[data-sf-dark] [style*="rgb(245, 245, 244)"] { border-color:#333330 !important; }
+html[data-sf-dark] [style*="rgb(214, 211, 209)"] { border-color:#4A4A46 !important; }
+html[data-sf-dark] [style*="rgb(199, 210, 254)"] { border-color:#4A4666 !important; }
+html[data-sf-dark] [style*="rgb(167, 243, 208)"] { border-color:#2F5240 !important; }
+html[data-sf-dark] [style*="rgb(253, 230, 138)"] { border-color:#5C4A22 !important; }
+html[data-sf-dark] [style*="rgb(254, 202, 202)"] { border-color:#5C3234 !important; }
+
+html[data-sf-dark] [style*="background:#fff"] { background:#292927 !important; }
+html[data-sf-dark] [style*="background:#fafaf9"] { background:#262625 !important; }
+html[data-sf-dark] [style*="background:#f5f5f4"] { background:#343432 !important; }
+html[data-sf-dark] [style*="background:#eef2ff"] { background:#37334F !important; }
+html[data-sf-dark] [style*="background:#ecfdf5"] { background:#26382D !important; }
+html[data-sf-dark] [style*="background:#fffbeb"] { background:#3E3423 !important; }
+html[data-sf-dark] [style*="background:#fef2f2"] { background:#3D292A !important; }
+html[data-sf-dark] [style*="background:#fdf2f8"] { background:#3A2C37 !important; }
+html[data-sf-dark] [style*="background:#fce7f3"] { background:#3A2C37 !important; }
+html[data-sf-dark] [style*="background:#1c1917"] { background:#343432 !important; }
+html[data-sf-dark] [style*="background:#fdf8f6"] { background:#33302E !important; }
+html[data-sf-dark] [style*="color:#1c1917"] { color:#E5E4DF !important; }
+html[data-sf-dark] [style*="color:#44403c"], html[data-sf-dark] [style*="color:#57534e"] { color:#C0BFB9 !important; }
+html[data-sf-dark] [style*="color:#78716c"] { color:#A09F99 !important; }
+html[data-sf-dark] [style*="color:#a8a29e"] { color:#8B8A84 !important; }
+html[data-sf-dark] [style*="color:#047857"], html[data-sf-dark] [style*="color:#065f46"] { color:#3BB87C !important; }
+html[data-sf-dark] [style*="color:#b45309"], html[data-sf-dark] [style*="color:#92400e"], html[data-sf-dark] [style*="color:#78350f"] { color:#E0A23C !important; }
+html[data-sf-dark] [style*="color:#991b1b"], html[data-sf-dark] [style*="color:#b91c1c"] { color:#E76B72 !important; }
+html[data-sf-dark] [style*="color:#4338ca"], html[data-sf-dark] [style*="color:#3730a3"] { color:#9A85F0 !important; }
+html[data-sf-dark] [style*="color:#3b2b30"], html[data-sf-dark] [style*="color:#6b4a55"], html[data-sf-dark] [style*="color:#8f6f7c"] { color:#C0BFB9 !important; }
+html[data-sf-dark] [style*="#e7e5e4"] { border-color:#3A3A37 !important; }
+html[data-sf-dark] [style*="#f5f5f4"] { border-color:#333330 !important; }
+html[data-sf-dark] [style*="#d6d3d1"] { border-color:#4A4A46 !important; }
+html[data-sf-dark] [style*="#c7d2fe"] { border-color:#4A4666 !important; }
+html[data-sf-dark] [style*="#a7f3d0"] { border-color:#2F5240 !important; }
+html[data-sf-dark] [style*="#fde68a"] { border-color:#5C4A22 !important; }
+html[data-sf-dark] [style*="#fecaca"] { border-color:#5C3234 !important; }
+html[data-sf-dark] [style*="#f3dfe6"] { border-color:#4A3A41 !important; }
+html[data-sf-dark] a { color:#9A85F0; }
+html[data-sf-dark] input, html[data-sf-dark] select, html[data-sf-dark] textarea { background:#2C2C2A !important; color:#E5E4DF !important; border-color:#3A3A37 !important; }
+</style>
+<script>try{if(localStorage.getItem('sf_dark')==='1')document.documentElement.setAttribute('data-sf-dark','1')}catch(e){}</script>
+</helmet>
+<div style="display:flex; min-height:100vh; align-items:stretch;">
+  <div data-nav-scrim="1" data-open="{{ navOpen }}" onClick="{{ closeNav }}" style="display:none; position:fixed; inset:0; background:rgba(28,25,23,.45); z-index:69;"></div>
+  <aside data-nav="1" data-open="{{ navOpen }}" style="width:244px; flex-shrink:0; background:#fafaf9; border-right:1px solid #e7e5e4; display:flex; flex-direction:column; position:sticky; top:0; height:100vh;">
+    <div style="padding:12px;">
+      <div style="display:flex; align-items:center; gap:10px; padding:8px; border-radius:8px; cursor:pointer;" style-hover="background:#f5f5f4;">
+        <div style="width:32px; height:32px; border-radius:8px; background:#4f46e5; color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; letter-spacing:.02em;">NV</div>
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:13px; font-weight:600; color:#1c1917; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Nina &amp; Valentin</div>
+          <div style="font-size:11.5px; color:#78716c;">Slovenia Store</div>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a8a29e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"></path><path d="m7 9 5-5 5 5"></path></svg>
+      </div>
+      <div style="display:flex; align-items:center; gap:6px; margin:6px 8px 0;">
+        <span style="display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:500; color:#047857; background:#ecfdf5; border:1px solid #a7f3d0; border-radius:999px; padding:2px 8px;"><span style="width:6px; height:6px; border-radius:50%; background:#10b981;"></span>Live</span>
+      </div>
+    </div>
+    <nav style="flex:1; overflow-y:auto; padding:4px 12px; display:flex; flex-direction:column; gap:1px; font-size:13.5px;">
+      <a href="overview.dc.html" style="display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"></rect><rect width="7" height="5" x="14" y="3" rx="1"></rect><rect width="7" height="9" x="14" y="12" rx="1"></rect><rect width="7" height="5" x="3" y="12" rx="1"></rect></svg>Overview</a>
+      <div style="display:flex; align-items:center; gap:10px; padding:9px 10px 3px; font-size:11px; font-weight:600; color:#a8a29e; text-transform:uppercase; letter-spacing:.06em;">Programme</div>
+      <a href="programme.dc.html" style="display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l4 6-10 13L2 9Z"></path><path d="M11 3 8 9l4 13 4-13-3-6"></path><path d="M2 9h20"></path></svg>Programme overview</a>
+      <a href="earning.dc.html" style="display:flex; align-items:center; gap:10px; padding:6px 10px 6px 36px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;">Earning rules</a>
+      <a href="rewards.dc.html" style="display:flex; align-items:center; gap:10px; padding:6px 10px 6px 36px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;">Rewards</a>
+      <a href="tiers.dc.html" style="display:flex; align-items:center; gap:10px; padding:6px 10px 6px 36px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;">VIP tiers</a>
+      <a href="expiry.dc.html" style="display:flex; align-items:center; gap:10px; padding:6px 10px 6px 36px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;">Points expiry</a>
+      <div style="display:flex; align-items:center; gap:10px; padding:9px 10px 3px; font-size:11px; font-weight:600; color:#a8a29e; text-transform:uppercase; letter-spacing:.06em;">Grow</div>
+      <a href="customers.dc.html" style="display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Customers</a>
+      <a href="campaigns.dc.html" style="display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3z"></path><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"></path></svg>Campaigns</a>
+      <a href="referrals.dc.html" style="display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" x2="19" y1="8" y2="14"></line><line x1="22" x2="16" y1="11" y2="11"></line></svg>Referrals</a>
+      <a href="analytics.dc.html" style="display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:8px; background:#eef2ff; color:#4338ca; font-weight:600;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg>Analytics</a>
+      <div style="display:flex; align-items:center; gap:10px; padding:9px 10px 3px; font-size:11px; font-weight:600; color:#a8a29e; text-transform:uppercase; letter-spacing:.06em;">Platform</div>
+      <a href="experience.dc.html" style="display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"></path></svg>Experience</a>
+      <a href="integrations.dc.html" style="display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-5"></path><path d="M9 8V2"></path><path d="M15 8V2"></path><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"></path></svg>Integrations</a>
+      <a href="settings.dc.html" style="display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:8px; color:#57534e; font-weight:500;" style-hover="background:#f5f5f4; color:#1c1917;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>Settings</a>
+    </nav>
+    <div style="padding:12px; border-top:1px solid #e7e5e4; display:flex; flex-direction:column; gap:10px;">
+      <div style="font-size:11px; color:#a8a29e; display:flex; align-items:center; gap:6px; padding:0 4px;"><span style="width:6px; height:6px; border-radius:2px; background:#c4b5fd;"></span>Demo environment · seeded data</div>
+      <div style="display:flex; align-items:center; gap:10px; padding:4px; border-radius:8px; cursor:pointer;" style-hover="background:#f5f5f4;">
+        <div style="width:28px; height:28px; border-radius:50%; background:#fce7f3; color:#9d174d; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600;">NR</div>
+        <div style="flex:1; min-width:0;">
+          <div style="font-size:12.5px; font-weight:600;">Nina Rozman</div>
+          <div style="font-size:11px; color:#78716c;">nina@ninavalentin.si</div>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a8a29e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 15 5 5 5-5"></path><path d="m7 9 5-5 5 5"></path></svg>
+      </div>
+    </div>
+  </aside>
+  <main style="flex:1; min-width:0; display:flex; flex-direction:column;">
+    <header style="height:56px; flex-shrink:0; background:#fff; border-bottom:1px solid #e7e5e4; display:flex; align-items:center; gap:12px; padding:0 24px;">
+      <button data-menu-btn="1" onClick="{{ toggleNav }}" aria-label="Menu" style="display:none; width:36px; height:36px; border-radius:8px; border:1px solid #e7e5e4; background:#fff; color:#44403c; cursor:pointer; align-items:center; justify-content:center; flex-shrink:0;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button>
+      <div style="display:flex; align-items:center; gap:8px; flex:0 1 300px; min-width:130px; height:36px; border:1px solid #e7e5e4; border-radius:8px; background:#fff; padding:0 10px; color:#a8a29e; font-size:13px; cursor:pointer;" style-hover="border-color:#d6d3d1;" onClick="{{ openCmdk }}">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+        <span style="flex:1;">Search customers, rewards, rules…</span>
+        <kbd style="font-family:inherit; font-size:11px; color:#78716c; background:#f5f5f4; border:1px solid #e7e5e4; border-radius:5px; padding:1px 5px;">⌘K</kbd>
+      </div>
+      <sc-if value="{{ cmdkOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="position:fixed; inset:0; background:rgba(28,25,23,.45); z-index:80; display:flex; align-items:flex-start; justify-content:center; padding:90px 20px 20px;" onClick="{{ closeCmdk }}">
+          <div style="width:560px; max-width:100%; background:#fff; border-radius:14px; box-shadow:0 24px 60px rgba(0,0,0,.25); overflow:hidden;" onClick="{{ stopCmdk }}">
+            <div style="display:flex; align-items:center; gap:10px; padding:13px 16px; border-bottom:1px solid #f5f5f4;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a8a29e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+              <input value="{{ cmdkQuery }}" onChange="{{ setCmdkQuery }}" autoFocus="{{ true }}" placeholder="Search customers, rewards, rules, pages…" style="flex:1; border:none; outline:none; font-family:inherit; font-size:14px; background:transparent; min-width:0;">
+              <kbd style="font-family:inherit; font-size:11px; color:#78716c; background:#f5f5f4; border:1px solid #e7e5e4; border-radius:5px; padding:1px 5px;">esc</kbd>
+            </div>
+            <div style="max-height:330px; overflow-y:auto; padding:6px;">
+              <sc-for list="{{ cmdkResults }}" as="cr" hint-placeholder-count="6">
+                <a href="{{ cr.href }}" style="display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:8px; color:#1c1917; font-size:13.5px;" style-hover="background:#f5f5f4;">
+                  <span style="font-size:10.5px; font-weight:600; color:#78716c; background:#f5f5f4; border:1px solid #e7e5e4; border-radius:5px; padding:1px 0; width:66px; text-align:center; flex-shrink:0;">{{ cr.type }}</span>
+                  <span style="flex:1; font-weight:500;">{{ cr.label }}</span>
+                  <span style="font-size:12px; color:#a8a29e;">{{ cr.hint }}</span>
+                </a>
+              </sc-for>
+              <sc-if value="{{ cmdkEmpty }}" hint-placeholder-val="{{ false }}">
+                <div style="padding:22px 12px; text-align:center; font-size:13px; color:#78716c;">Nothing found — try a customer name, reward, or page.</div>
+              </sc-if>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+      <div style="flex:1;"></div>
+      <button aria-label="Toggle dark mode" title="Light / dark" onClick="{{ toggleDark }}" style="width:34px; height:34px; border-radius:8px; border:none; background:transparent; color:#78716c; cursor:pointer; display:flex; align-items:center; justify-content:center;" style-hover="background:#f5f5f4;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg></button>
+      <button aria-label="Help" style="width:34px; height:34px; border-radius:8px; border:none; background:transparent; color:#78716c; cursor:pointer; display:flex; align-items:center; justify-content:center;" style-hover="background:#f5f5f4;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path></svg></button>
+      <div style="position:relative;">
+      <button aria-label="Notifications" onClick="{{ toggleNotif }}" style="width:34px; height:34px; border-radius:8px; border:none; background:transparent; color:#78716c; cursor:pointer; display:flex; align-items:center; justify-content:center; position:relative;" style-hover="background:#f5f5f4;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg><span style="position:absolute; top:7px; right:8px; width:7px; height:7px; border-radius:50%; background:#4f46e5; border:1.5px solid #fff;"></span></button>
+      <sc-if value="{{ notifOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="position:fixed; inset:0; z-index:74;" onClick="{{ closeNotif }}"></div>
+        <div style="position:absolute; right:0; top:42px; width:360px; max-width:86vw; background:#fff; border:1px solid #e7e5e4; border-radius:12px; box-shadow:0 16px 44px rgba(0,0,0,.14); z-index:75; overflow:hidden;">
+          <div style="display:flex; align-items:center; padding:12px 16px; border-bottom:1px solid #f5f5f4;"><span style="font-size:13.5px; font-weight:600; color:#1c1917;">Notifications</span><span style="flex:1;"></span><span style="font-size:11.5px; color:#78716c;">4 new</span></div>
+          <a href="integrations.dc.html" style="display:flex; gap:11px; padding:12px 16px; border-bottom:1px solid #f5f5f4; color:#1c1917;" style-hover="background:#fafaf9;"><span style="width:8px; height:8px; border-radius:50%; background:#f59e0b; margin-top:5px; flex-shrink:0;"></span><span style="flex:1; font-size:13px; line-height:1.45;"><strong style="font-weight:600;">Klaviyo sync degraded</strong> — events delayed 26 min. Expiry reminders may send late.<span style="display:block; font-size:11.5px; color:#a8a29e; margin-top:2px;">18 min ago</span></span></a>
+          <a href="referrals.dc.html" style="display:flex; gap:11px; padding:12px 16px; border-bottom:1px solid #f5f5f4; color:#1c1917;" style-hover="background:#fafaf9;"><span style="width:8px; height:8px; border-radius:50%; background:#dc2626; margin-top:5px; flex-shrink:0;"></span><span style="flex:1; font-size:13px; line-height:1.45;"><strong style="font-weight:600;">Referral flagged</strong> — Rok Jerman, self-referral signals. 400 pts on hold.<span style="display:block; font-size:11.5px; color:#a8a29e; margin-top:2px;">2 d ago</span></span></a>
+          <a href="expiry.dc.html" style="display:flex; gap:11px; padding:12px 16px; border-bottom:1px solid #f5f5f4; color:#1c1917;" style-hover="background:#fafaf9;"><span style="width:8px; height:8px; border-radius:50%; background:#f59e0b; margin-top:5px; flex-shrink:0;"></span><span style="flex:1; font-size:13px; line-height:1.45;"><strong style="font-weight:600;">24,180 pts expire within 30 days</strong> — 312 members affected.<span style="display:block; font-size:11.5px; color:#a8a29e; margin-top:2px;">Today, 06:00</span></span></a>
+          <a href="programme.dc.html" style="display:flex; gap:11px; padding:12px 16px; border-bottom:1px solid #f5f5f4; color:#1c1917;" style-hover="background:#fafaf9;"><span style="width:8px; height:8px; border-radius:50%; background:#a8a29e; margin-top:5px; flex-shrink:0;"></span><span style="flex:1; font-size:13px; line-height:1.45;"><strong style="font-weight:600;">2 draft changes awaiting publication</strong> — birthday rule &amp; free-shipping reprice.<span style="display:block; font-size:11.5px; color:#a8a29e; margin-top:2px;">28 Jul</span></span></a>
+          <a href="settings.dc.html?tab=Notifications" style="display:block; padding:11px 16px; font-size:12.5px; font-weight:500; text-align:center;">Notification settings</a>
+        </div>
+      </sc-if>
+    </div>
+    </header>
+    <div style="flex:1; padding:28px 32px 48px; display:flex; flex-direction:column; gap:16px; max-width:1180px; width:100%; margin:0 auto;">
+      <div style="display:flex; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+        <div style="flex:1; min-width:220px;">
+          <h1 style="margin:0; font-size:22px; font-weight:600; letter-spacing:-.01em;">Analytics</h1>
+          <p style="margin:4px 0 0; font-size:13.5px; color:#78716c;">1 Jul – 9 Aug 2026 · compared with the previous 40 days</p>
+        </div>
+        <div style="position:relative;">
+        <button onClick="{{ toggleRange }}" style="height:36px; padding:0 14px; border-radius:8px; border:1px solid #e7e5e4; background:#fff; font-family:inherit; font-size:13.5px; font-weight:500; color:#44403c; cursor:pointer; display:flex; align-items:center; gap:7px;" style-hover="background:#fafaf9;">{{ rangeLabel }}<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#a8a29e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"></path></svg></button>
+        <sc-if value="{{ rangeOpen }}" hint-placeholder-val="{{ false }}">
+          <div style="position:fixed; inset:0; z-index:74;" onClick="{{ closeRange }}"></div>
+          <div style="position:absolute; right:0; top:42px; width:190px; background:#fff; border:1px solid #e7e5e4; border-radius:10px; box-shadow:0 12px 34px rgba(0,0,0,.12); z-index:75; padding:5px;">
+            <sc-for list="{{ rangeOptions }}" as="ro" hint-placeholder-count="4">
+              <button onClick="{{ ro.pick }}" style="width:100%; text-align:left; padding:8px 10px; border:none; border-radius:7px; background:{{ ro.bg }}; font-family:inherit; font-size:13px; font-weight:{{ ro.weight }}; color:#1c1917; cursor:pointer;" style-hover="background:#f5f5f4;">{{ ro.label }}</button>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+        <button style="height:36px; padding:0 14px; border-radius:8px; border:1px solid #e7e5e4; background:#fff; font-family:inherit; font-size:13.5px; font-weight:500; color:#44403c; cursor:pointer; display:flex; align-items:center; gap:7px;" style-hover="background:#fafaf9;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" x2="12" y1="15" y2="3"></line></svg>Export</button>
+      </div>
+      <div style="display:flex; gap:6px; border-bottom:1px solid #e7e5e4; flex-wrap:wrap;">
+        <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="6">
+          <button onClick="{{ t.pick }}" style="padding:9px 13px; border:none; background:transparent; font-family:inherit; font-size:13.5px; font-weight:{{ t.weight }}; color:{{ t.color }}; cursor:pointer; border-bottom:2px solid {{ t.underline }}; margin-bottom:-1px;">{{ t.label }}</button>
+        </sc-for>
+      </div>
+      <sc-if value="{{ tabOverview }}" hint-placeholder-val="{{ true }}">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:14px;">
+          <div style="background:#fff; border:1px solid #e7e5e4; border-radius:12px; padding:15px 18px; box-shadow:0 1px 2px rgba(0,0,0,.04);">
+            <div style="font-size:12.5px; font-weight:500; color:#78716c;">Member revenue</div>
+            <div style="font-size:22px; font-weight:600; margin-top:5px; font-variant-numeric:tabular-nums;">€184,320</div>
+            <div style="font-size:12px; margin-top:4px; color:#047857;">↑ 8.2%</div>
+          </div>
+          <div style="background:#fff; border:1px solid #e7e5e4; border-radius:12px; padding:15px 18px; box-shadow:0 1px 2px rgba(0,0,0,.04);">
+            <div style="font-size:12.5px; font-weight:500; color:#78716c;">Non-member revenue</div>
+            <div style="font-size:22px; font-weight:600; margin-top:5px; font-variant-numeric:tabular-nums;">€96,140</div>
+            <div style="font-size:12px; margin-top:4px; color:#78716c;">↑ 1.1%</div>
+          </div>
+          <div style="background:#fff; border:1px solid #e7e5e4; border-radius:12px; padding:15px 18px; box-shadow:0 1px 2px rgba(0,0,0,.04);">
+            <div style="font-size:12.5px; font-weight:500; color:#78716c;">Member AOV</div>
+            <div style="font-size:22px; font-weight:600; margin-top:5px; font-variant-numeric:tabular-nums;">€41.20</div>
+            <div style="font-size:12px; margin-top:4px; color:#78716c;">vs €29.60 non-member</div>
+          </div>
+          <div style="background:#fff; border:1px solid #e7e5e4; border-radius:12px; padding:15px 18px; box-shadow:0 1px 2px rgba(0,0,0,.04);">
+            <div style="font-size:12.5px; font-weight:500; color:#78716c;">Repeat-purchase rate</div>
+            <div style="font-size:22px; font-weight:600; margin-top:5px; font-variant-numeric:tabular-nums;">38.6%</div>
+            <div style="font-size:12px; margin-top:4px; color:#78716c;">vs 21.4% non-member</div>
+          </div>
+        </div>
+        <div style="background:#fff; border:1px solid #e7e5e4; border-radius:12px; padding:18px 20px; box-shadow:0 1px 2px rgba(0,0,0,.04);">
+          <div style="display:flex; align-items:center; gap:8px; font-size:14px; font-weight:600;">Influenced vs proven incremental revenue
+            <span title="Influenced: revenue from any member order. Incremental: modelled uplift vs matched non-member baseline." style="color:#a8a29e; cursor:help; display:inline-flex;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path></svg></span>
+          </div>
+          <div style="margin-top:14px; display:flex; flex-direction:column; gap:12px;">
+            <div>
+              <div style="display:flex; font-size:13px; margin-bottom:5px;"><span style="font-weight:500;">Influenced (all member orders)</span><span style="flex:1;"></span><span style="font-variant-numeric:tabular-nums; color:#57534e;">€184,320</span></div>
+              <div style="height:10px; border-radius:999px; background:#f5f5f4;"><div style="width:100%; height:100%; border-radius:999px; background:#c7d2fe;"></div></div>
+            </div>
+            <div>
+              <div style="display:flex; font-size:13px; margin-bottom:5px;"><span style="font-weight:500;">Proven incremental (modelled)</span><span style="flex:1;"></span><span style="font-variant-numeric:tabular-nums; color:#57534e;">€31,330 · 17%</span></div>
+              <div style="height:10px; border-radius:999px; background:#f5f5f4;"><div style="width:17%; height:100%; border-radius:999px; background:#4f46e5;"></div></div>
+            </div>
+          </div>
+          <p style="margin:14px 0 0; font-size:12.5px; color:#78716c; line-height:1.5;">Do not report the influenced figure as programme ROI. The incremental model compares members against matched non-members with similar first-order behaviour.</p>
+        </div>
+      </sc-if>
+      <sc-if value="{{ tabMembers }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:14px;">
+          <div style="background:#fff; border:1px solid #e7e5e4; border-radius:12px; padding:15px 18px; box-shadow:0 1px 2px rgba(0,0,0,.04);"><div style="font-size:12.5px; font-weight:500; color:#78716c;">New members</div><div style="font-size:22px; font-weight:600; margin-top:5px; font-variant-numeric:tabular-nums;">684</div><div style="font-size:12px; margin-top:4px; color:#047857;">↑ 5.6%</div></div>
+          <div style="background:#fff; border:1px solid #e7e5e4; border-radius:12px; padding:15px 18px; box-shadow:0 1px 2px rgba(0,0,0,.04);"><div style="font-size:12.5px; font-weight:500; color:#78716c;">Active members (30 d)</div><div style="font-size:22px; font-weight:600; margin-top:5px; font-variant-numeric:tabular-nums;">4,918</div><div style="font-size:12px; margin-top:4px; color:#78716c;">38% of base</div></div>
+          <div style="background:#fff; border:1px solid #e7e5e4; border-radius:12px; padding:15px 18px; box-shadow:0 1px 2px rgba(0,0,0,.04);"><div style="font-size:12.5px; font-weight:500; color:#78716c;">Joined via referral</div><div style="font-size:22px; font-weight:600; margin-top:5px; font-variant-numeric:tabular-nums;">211</div><div style="font-size:12px; margin-top:4px; color:#78716c;">31% of new members</div></div>
+          <div style="background:#fff; border:1px solid #e7e5e4; border-radius:12px; padding:15px 18px; box-shadow:0 1px 2px rgba(0,0,0,.04);"><div style="font-size:12.5px; font-weight:500; color:#78716c;">Inactive 90+ days</div><div style="font-size:22px; font-weight:600; margin-top:5px; font-variant-numeric:tabular-nums;">1,832</div><div style="font-size:12px; margin-top:4px; color:#b45309;">win-back candidates</div></div>
+        </div>
+        <div style="background:#fff; border:1px solid #e7e5e4; border-radius:12px; padding:18px 20px; box-shadow:0 1px 2px rgba(0,0,0,.04);">
+          <div style="font-size:14px; font-weight:600;">Where new members come from</div>
+          <div style="margin-top:14px; display:flex; flex-direction:column; gap:11px;">
+            <div><div style="display:flex; font-size:13px; margin-bottom:5px;"><span style="font-weight:500;">Checkout prompt</span><span style="flex:1;"></span><span style="font-variant-numeric:tabular-nums; color:#57534e;">312 · 46%</span></div><div style="height:8px; border-radius:999px; background:#f5f5f4;"><div style="width:46%; height:100%; border-radius:999px; background:#4f46e5;"></div></div></div>
+            <div><div style="display:flex; font-size:13px; margin-bottom:5px;"><span style="font-weight:500;">Referral links</span><span style="flex:1;"></span><span style="font-variant-numeric:tabular-nums; color:#57534e;">211 · 31%</span></div><div style="height:8px; border-radius:999px; background:#f5f5f4;"><div style="width:31%; height:100%; border-radius:999px; background:#6366f1;"></div></div></div>
+            <div><div style="display:flex; font-size:13px; margin-bottom:5px;"><span style="font-weight:500;">Loyalty page</span><span style="flex:1;"></span><span style="font-variant-numeric:tabular-nums; color:#57534e;">98 · 14%</span></div><div style="height:8px; border-radius:999px; background:#f5f5f4;"><div style="width:14%; height:100%; border-radius:999px; background:#818cf8;"></div></div></div>
+            <div><div style="display:flex; font-size:13px; margin-bottom:5px;"><span style="font-weight:500;">Email campaigns</span><span style="flex:1;"></span><span style="font-variant-numeric:tabular-nums; color:#57534e;">63 · 9%</span></div><div style="height:8px; border-radius:999px; background:#f5f5f4;"><div style="width:9%; height:100%; border-radius:999px; background:#c7d2fe;"></div></div></div>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ tabRewards }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#fff; border:1px solid #e7e5e4; border-radius:12px; box-shadow:0 1px 2px rgba(0,0,0,.04); overflow-x:auto;">
+          <table style="width:100%; border-collapse:collapse; font-size:13px; min-width:640px;">
+            <thead><tr style="text-align:left; color:#78716c; font-size:12px;">
+              <th style="padding:12px 18px; font-weight:500;">Reward</th><th style="padding:12px 10px; font-weight:500; text-align:right;">Redemptions</th><th style="padding:12px 10px; font-weight:500; text-align:right;">Points spent</th><th style="padding:12px 10px; font-weight:500; text-align:right;">Discount value</th><th style="padding:12px 10px; font-weight:500; text-align:right;">Attached revenue</th><th style="padding:12px 18px; font-weight:500; text-align:right;">Revenue / € given</th>
+            </tr></thead>
+            <tbody>
+              <tr style="border-top:1px solid #f5f5f4;"><td style="padding:11px 18px; font-weight:500;">€10 discount</td><td style="padding:11px 10px; text-align:right; font-variant-numeric:tabular-nums;">486</td><td style="padding:11px 10px; text-align:right; font-variant-numeric:tabular-nums;">486,000</td><td style="padding:11px 10px; text-align:right; font-variant-numeric:tabular-nums;">€4,860</td><td style="padding:11px 10px; text-align:right; font-variant-numeric:tabular-nums;">€24,410</td><td style="padding:11px 18px; text-align:right; font-variant-numeric:tabular-nums; font-weight:600;">€5.02</td></tr>
+              <tr style="border-top:1px solid #f5f5f4;"><td style="padding:11px 18px; font-weight:500;">€5 discount</td><td style="padding:11px 10px; text-align:right; font-variant-numeric:tabular-nums;">402</td><td style="padding:11px 10px; text-align:right; font-variant-numeric:tabular-nums;">201,000</td><td style="padding:11px 10px; text-align:right; font-variant-numeric:tabular-nums;">€2,010</td><td style="padding:11px 10px; text-align:right; font-variant-numeric:tabular-nums;">€13,640</td><td style="padding:11px 18px; text-align:right; font-variant-numeric:tabular-nums; font-weight:600;">€6.79</td></tr>
+              <tr style="border-top:1px solid #f5f5f4;"><td style="padding:11px 18px; font-weight:500;">Free shipping</td><td style="padding:11px 10px; text-align:right; font-variant-numeric:tabular-nums;">291</td><td style="padding:11px 10px; text-align:right; font-variant-numeric:tabular-nums;">232,800</td><td style="padding:11px 10px; text-align:right; font-variant-numeric:tabular-nums;">€1,280</td><td style="padding:11px 10px; text-align:right; font-variant-numeric:tabular-nums;">€11,050</td><td style="padding:11px 18px; text-align:right; font-variant-numeric:tabular-nums; font-weight:600;">€8.63</td></tr>
+              <tr style="border-top:1px solid #f5f5f4;"><td style="padding:11px 18px; font-weight:500;">Free gift — mini serum</td><td style="padding:11px 10px; text-align:right; font-variant-numeric:tabular-nums;">76</td><td style="padding:11px 10px; text-align:right; font-variant-numeric:tabular-nums;">114,000</td><td style="padding:11px 10px; text-align:right; font-variant-numeric:tabular-nums;">€460</td><td style="padding:11px 10px; text-align:right; font-variant-numeric:tabular-nums;">€3,890</td><td style="padding:11px 18px; text-align:right; font-variant-numeric:tabular-nums; font-weight:600;">€8.46</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="margin:0; font-size:12.5px; color:#78716c;">"Attached revenue" is the order value where the reward was applied — it is influenced, not incremental.</p>
+      </sc-if>
+      <sc-if value="{{ tabTiers }}" hint-placeholder-val="{{ false }}">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:14px;">
+          <div style="background:#fff; border:1px solid #e7e5e4; border-radius:12px; padding:15px 18px; box-shadow:0 1px 2px rgba(0,0,0,.04);"><div style="font-size:12.5px; font-weight:500; color:#78716c;">Moved up (40 d)</div><div style="font-size:22px; font-weight:600; margin-top:5px; font-variant-numeric:tabular-nums;">148</div><div style="font-size:12px; margin-top:4px; color:#047857;">Rose→Bloom 126 · Bloom→Icon 22</div></div>
+          <div style="background:#fff; border:1px solid #e7e5e4; border-radius:12px; padding:15px 18px; box-shadow:0 1px 2px rgba(0,0,0,.04);"><div style="font-size:12.5px; font-weight:500; color:#78716c;">Moved down</div><div style="font-size:22px; font-weight:600; margin-top:5px; font-variant-numeric:tabular-nums;">37</div><div style="font-size:12px; margin-top:4px; color:#78716c;">after grace period</div></div>
+          <div style="background:#fff; border:1px solid #e7e5e4; border-radius:12px; padding:15px 18px; box-shadow:0 1px 2px rgba(0,0,0,.04);"><div style="font-size:12.5px; font-weight:500; color:#78716c;">Within €25 of next tier</div><div style="font-size:22px; font-weight:600; margin-top:5px; font-variant-numeric:tabular-nums;">128</div><div style="font-size:12px; margin-top:4px;"><a href="campaigns.dc.html">Nudge with a challenge</a></div></div>
+        </div>
+        <div style="background:#fff; border:1px solid #e7e5e4; border-radius:12px; padding:18px 20px; box-shadow:0 1px 2px rgba(0,0,0,.04);">
+          <div style="font-size:14px; font-weight:600;">Spend per member by tier</div>
+          <div style="margin-top:14px; display:flex; flex-direction:column; gap:11px;">
+            <div><div style="display:flex; font-size:13px; margin-bottom:5px;"><span style="display:inline-flex; align-items:center; gap:6px; font-weight:500;"><span style="width:8px; height:8px; border-radius:2.5px; background:#fda4af;"></span>Rose</span><span style="flex:1;"></span><span style="font-variant-numeric:tabular-nums; color:#57534e;">€9.10 / month</span></div><div style="height:8px; border-radius:999px; background:#f5f5f4;"><div style="width:18%; height:100%; border-radius:999px; background:#fda4af;"></div></div></div>
+            <div><div style="display:flex; font-size:13px; margin-bottom:5px;"><span style="display:inline-flex; align-items:center; gap:6px; font-weight:500;"><span style="width:8px; height:8px; border-radius:2.5px; background:#f43f5e;"></span>Bloom</span><span style="flex:1;"></span><span style="font-variant-numeric:tabular-nums; color:#57534e;">€24.80 / month</span></div><div style="height:8px; border-radius:999px; background:#f5f5f4;"><div style="width:49%; height:100%; border-radius:999px; background:#f43f5e;"></div></div></div>
+            <div><div style="display:flex; font-size:13px; margin-bottom:5px;"><span style="display:inline-flex; align-items:center; gap:6px; font-weight:500;"><span style="width:8px; height:8px; border-radius:2.5px; background:#881337;"></span>Icon</span><span style="flex:1;"></span><span style="font-variant-numeric:tabular-nums; color:#57534e;">€50.40 / month</span></div><div style="height:8px; border-radius:999px; background:#f5f5f4;"><div style="width:100%; height:100%; border-radius:999px; background:#881337;"></div></div></div>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ tabCampaigns }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#fff; border:1px solid #e7e5e4; border-radius:12px; box-shadow:0 1px 2px rgba(0,0,0,.04); overflow-x:auto;">
+          <table style="width:100%; border-collapse:collapse; font-size:13px; min-width:640px;">
+            <thead><tr style="text-align:left; color:#78716c; font-size:12px;">
+              <th style="padding:12px 18px; font-weight:500;">Campaign</th><th style="padding:12px 10px; font-weight:500;">Status</th><th style="padding:12px 10px; font-weight:500; text-align:right;">Reached</th><th style="padding:12px 10px; font-weight:500; text-align:right;">Participated</th><th style="padding:12px 10px; font-weight:500; text-align:right;">Bonus points</th><th style="padding:12px 18px; font-weight:500; text-align:right;">Order uplift</th>
+            </tr></thead>
+            <tbody>
+              <tr style="border-top:1px solid #f5f5f4;"><td style="padding:11px 18px; font-weight:500;">Double points weekend</td><td style="padding:11px 10px;"><span style="font-size:11.5px; font-weight:500; color:#57534e; background:#f5f5f4; border-radius:999px; padding:2px 8px;">Completed</span></td><td style="padding:11px 10px; text-align:right; font-variant-numeric:tabular-nums;">12,842</td><td style="padding:11px 10px; text-align:right; font-variant-numeric:tabular-nums;">1,904</td><td style="padding:11px 10px; text-align:right; font-variant-numeric:tabular-nums;">41,220</td><td style="padding:11px 18px; text-align:right; font-variant-numeric:tabular-nums; font-weight:600; color:#047857;">+38%</td></tr>
+              <tr style="border-top:1px solid #f5f5f4;"><td style="padding:11px 18px; font-weight:500;">Birthday-month bonus</td><td style="padding:11px 10px;"><span style="font-size:11.5px; font-weight:500; color:#047857; background:#ecfdf5; border-radius:999px; padding:2px 8px;">Active</span></td><td style="padding:11px 10px; text-align:right; font-variant-numeric:tabular-nums;">318</td><td style="padding:11px 10px; text-align:right; font-variant-numeric:tabular-nums;">64</td><td style="padding:11px 10px; text-align:right; font-variant-numeric:tabular-nums;">9,860</td><td style="padding:11px 18px; text-align:right; font-variant-numeric:tabular-nums; font-weight:600; color:#047857;">+12%</td></tr>
+              <tr style="border-top:1px solid #f5f5f4;"><td style="padding:11px 18px; font-weight:500;">Summer flash 3×</td><td style="padding:11px 10px;"><span style="font-size:11.5px; font-weight:500; color:#991b1b; background:#fef2f2; border-radius:999px; padding:2px 8px;">Stopped</span></td><td style="padding:11px 10px; text-align:right; font-variant-numeric:tabular-nums;">12,614</td><td style="padding:11px 10px; text-align:right; font-variant-numeric:tabular-nums;">2,241</td><td style="padding:11px 10px; text-align:right; font-variant-numeric:tabular-nums;">96,480</td><td style="padding:11px 18px; text-align:right; font-variant-numeric:tabular-nums; font-weight:600; color:#b45309;">+61% / high cost</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="margin:0; font-size:12.5px; color:#78716c;">Uplift compares orders in the campaign window with the same weekday window in the prior 4 weeks.</p>
+      </sc-if>
+      <sc-if value="{{ tabLiability }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#fff; border:1px solid #e7e5e4; border-radius:12px; padding:18px 20px; box-shadow:0 1px 2px rgba(0,0,0,.04);">
+          <div style="display:flex; align-items:center; gap:8px; font-size:14px; font-weight:600;">Points flow · last 40 days
+            <span title="Outstanding = issued − spent − expired − reserved. Reserved covers pending redemptions." style="color:#a8a29e; cursor:help; display:inline-flex;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path></svg></span>
+          </div>
+          <div style="margin-top:14px; font-size:13px; display:flex; flex-direction:column;">
+            <div style="display:flex; align-items:center; padding:10px 0; border-bottom:1px solid #f5f5f4;"><span style="width:9px; height:9px; border-radius:50%; background:#10b981; margin-right:11px;"></span><span style="flex:1; font-weight:500;">Issued</span><span style="font-variant-numeric:tabular-nums;">+128,410 pts · €1,284.10</span></div>
+            <div style="display:flex; align-items:center; padding:10px 0; border-bottom:1px solid #f5f5f4;"><span style="width:9px; height:9px; border-radius:50%; background:#4f46e5; margin-right:11px;"></span><span style="flex:1; font-weight:500;">Spent on rewards</span><span style="font-variant-numeric:tabular-nums;">−103,380 pts · €1,033.80</span></div>
+            <div style="display:flex; align-items:center; padding:10px 0; border-bottom:1px solid #f5f5f4;"><span style="width:9px; height:9px; border-radius:50%; background:#f59e0b; margin-right:11px;"></span><span style="flex:1; font-weight:500;">Expired</span><span style="font-variant-numeric:tabular-nums;">−6,420 pts · €64.20</span></div>
+            <div style="display:flex; align-items:center; padding:10px 0; border-bottom:1px solid #f5f5f4;"><span style="width:9px; height:9px; border-radius:50%; background:#a8a29e; margin-right:11px;"></span><span style="flex:1; font-weight:500;">Reserved (pending redemptions)</span><span style="font-variant-numeric:tabular-nums;">−4,120 pts · €41.20</span></div>
+            <div style="display:flex; align-items:center; padding:12px 0 2px; font-weight:600;"><span style="flex:1;">Outstanding liability (all time)</span><span style="font-variant-numeric:tabular-nums;">846,270 pts · €8,462.70</span></div>
+          </div>
+        </div>
+        <div style="background:#fff; border:1px solid #e7e5e4; border-radius:12px; padding:18px 20px; box-shadow:0 1px 2px rgba(0,0,0,.04);">
+          <div style="font-size:14px; font-weight:600;">Accounting view</div>
+          <p style="margin:10px 0 0; font-size:13px; color:#57534e; line-height:1.6;">Liability is valued at redemption cost (€1 per 100 pts) with a 71% historical breakage-adjusted redemption expectation: <strong style="font-weight:600;">provisioned €6,008.50</strong>. Export the monthly liability statement for your accountant from the Export menu.</p>
+        </div>
+      </sc-if>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  state = { tab: 'Overview' };
+  componentDidMount() {
+    try { const t = new URLSearchParams(location.search).get('tab'); if (t) this.setState({ tab: t }); } catch (e) {}
+  }
+  renderVals() { const vals = this.__rv(); vals.navOpen = this.state.navOpen ? '1' : '0'; vals.toggleNav = () => this.setState({ navOpen: !this.state.navOpen }); vals.closeNav = () => this.setState({ navOpen: false });
+    if (!this.__cmdkBound) { this.__cmdkBound = true; window.addEventListener('keydown', (e) => { if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) { e.preventDefault(); this.setState({ cmdkOpen: true, cmdkQuery: '' }); } if (e.key === 'Escape' && this.state.cmdkOpen) this.setState({ cmdkOpen: false }); }); }
+    const __idx = [
+      ['Customer','Maja Kovač','Bloom · 2,450 pts','customer-profile.dc.html'],
+      ['Customer','Katarina Oblak','Icon · 9,840 pts','customer-profile.dc.html'],
+      ['Customer','Luka Novak','Bloom · 1,210 pts','customer-profile.dc.html'],
+      ['Customer','Jan Krajnc','Rose · points reversal','customer-profile.dc.html'],
+      ['Customer','Nika Zupan','Rose · new member','customer-profile.dc.html'],
+      ['Customer','Blaž Hribar','Icon · top spender','customer-profile.dc.html'],
+      ['Reward','€10 discount','1,000 pts','rewards.dc.html'],
+      ['Reward','€5 discount','500 pts','rewards.dc.html'],
+      ['Reward','Free shipping','700 pts','rewards.dc.html'],
+      ['Reward','Free gift — mini serum','1,500 pts','rewards.dc.html'],
+      ['Rule','Purchase · 5–7 pts per €1','per tier','earning.dc.html'],
+      ['Rule','Birthday · 300 pts','draft','earning.dc.html'],
+      ['Rule','Skincare 2× bonus','active','earning.dc.html'],
+      ['Page','Overview','','overview.dc.html'],
+      ['Page','Programme overview','','programme.dc.html'],
+      ['Page','Earning rules','','earning.dc.html'],
+      ['Page','Rewards','','rewards.dc.html'],
+      ['Page','VIP tiers','','tiers.dc.html'],
+      ['Page','Points expiry','','expiry.dc.html'],
+      ['Page','Customers','','customers.dc.html'],
+      ['Page','Campaigns','','campaigns.dc.html'],
+      ['Page','Referrals','','referrals.dc.html'],
+      ['Page','Analytics','','analytics.dc.html'],
+      ['Page','Experience','','experience.dc.html'],
+      ['Page','Integrations','','integrations.dc.html'],
+      ['Page','Settings','','settings.dc.html']
+    ];
+    const __q = (this.state.cmdkQuery || '').toLowerCase();
+    const __res = __idx.filter(r => !__q || (r[0] + ' ' + r[1] + ' ' + r[2]).toLowerCase().includes(__q)).slice(0, 9);
+    vals.cmdkOpen = !!this.state.cmdkOpen;
+    vals.openCmdk = () => this.setState({ cmdkOpen: true, cmdkQuery: '' });
+    vals.closeCmdk = () => this.setState({ cmdkOpen: false });
+    vals.stopCmdk = (e) => e.stopPropagation();
+    vals.cmdkQuery = this.state.cmdkQuery || '';
+    vals.setCmdkQuery = (e) => this.setState({ cmdkQuery: e.target.value });
+    vals.cmdkResults = __res.map(r => ({ type: r[0], label: r[1], hint: r[2], href: r[3] }));
+    vals.cmdkEmpty = __res.length === 0; vals.toggleDark = () => { const r = document.documentElement; const on = r.getAttribute('data-sf-dark') === '1'; if (on) { r.removeAttribute('data-sf-dark'); } else { r.setAttribute('data-sf-dark', '1'); } try { localStorage.setItem('sf_dark', on ? '0' : '1'); } catch (e) {} this.forceUpdate(); }; vals.notifOpen = !!this.state.notifOpen; vals.toggleNotif = () => this.setState({ notifOpen: !this.state.notifOpen }); vals.closeNotif = () => this.setState({ notifOpen: false });
+    return vals; }
+  __rv() {
+    const s = this.state;
+    const tabs = ['Overview', 'Members', 'Rewards', 'Tiers', 'Campaigns', 'Liability'];
+    return {
+      rangeLabel: s.range || 'Last 40 days',
+      rangeOpen: !!s.rangeOpen,
+      toggleRange: () => this.setState({ rangeOpen: !s.rangeOpen }),
+      closeRange: () => this.setState({ rangeOpen: false }),
+      rangeOptions: ['Last 7 days', 'Last 40 days', 'Last 90 days', 'Year to date'].map(r => ({
+        label: r, bg: (s.range || 'Last 40 days') === r ? '#eef2ff' : '#fff',
+        weight: (s.range || 'Last 40 days') === r ? 600 : 500,
+        pick: () => this.setState({ range: r, rangeOpen: false })
+      })),
+      tabs: tabs.map(t => ({
+        label: t, weight: s.tab === t ? 600 : 500, color: s.tab === t ? '#1c1917' : '#78716c',
+        underline: s.tab === t ? '#4f46e5' : 'transparent',
+        pick: () => this.setState({ tab: t })
+      })),
+      tabOverview: s.tab === 'Overview', tabMembers: s.tab === 'Members', tabRewards: s.tab === 'Rewards',
+      tabTiers: s.tab === 'Tiers', tabCampaigns: s.tab === 'Campaigns', tabLiability: s.tab === 'Liability'
+    };
+  }
+}
+</script>
+</body>
+</html>

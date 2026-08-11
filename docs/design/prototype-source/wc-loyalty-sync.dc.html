@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body { margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, sans-serif; background:#f0f0f1; color:#1d2327; -webkit-font-smoothing:antialiased; }
+a { color:#5346e6; text-decoration:none; } a:hover { color:#4438c9; text-decoration:underline; }
+* { box-sizing:border-box; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:0.01ms !important; transition-duration:0.01ms !important; } }
+@media (max-width: 880px) { div[data-wpnav] { display:none; } }
+@keyframes wspin { to { transform:rotate(360deg); } }
+
+html[data-sf-dark] body { background:#1F1F1E !important; color:#E5E4DF; }
+html[data-sf-dark] a { color:#9A85F0; }
+html[data-sf-dark] input, html[data-sf-dark] select { background:#2C2C2A !important; color:#E5E4DF !important; border-color:#3A3A37 !important; }
+html[data-sf-dark] [style*="background: rgb(255, 255, 255)"] { background:#292927 !important; }
+html[data-sf-dark] [style*="background: rgb(250, 251, 254)"], html[data-sf-dark] [style*="background: rgb(246, 247, 247)"], html[data-sf-dark] [style*="background: rgb(240, 240, 241)"] { background:#343432 !important; }
+html[data-sf-dark] [style*="background: rgb(237, 250, 239)"] { background:#26382D !important; }
+html[data-sf-dark] [style*="background: rgb(252, 240, 241)"] { background:#3D292A !important; }
+html[data-sf-dark] [style*="background: rgb(255, 248, 229)"] { background:#3E3423 !important; }
+html[data-sf-dark] [style*="background: rgb(238, 237, 252)"] { background:#37334F !important; }
+html[data-sf-dark] [style*="color: rgb(29, 35, 39)"], html[data-sf-dark] [style*="color: rgb(17, 24, 39)"] { color:#E5E4DF !important; }
+html[data-sf-dark] [style*="color: rgb(107, 114, 128)"], html[data-sf-dark] [style*="color: rgb(80, 87, 94)"] { color:#A09F99 !important; }
+html[data-sf-dark] [style*="color: rgb(120, 124, 130)"] { color:#8B8A84 !important; }
+html[data-sf-dark] [style*="color: rgb(21, 128, 61)"] { color:#3BB87C !important; }
+html[data-sf-dark] [style*="color: rgb(153, 104, 0)"], html[data-sf-dark] [style*="color: rgb(219, 166, 23)"] { color:#E0A23C !important; }
+html[data-sf-dark] [style*="color: rgb(214, 54, 56)"], html[data-sf-dark] [style*="color: rgb(138, 36, 36)"] { color:#E76B72 !important; }
+html[data-sf-dark] [style*="color: rgb(83, 70, 230)"], html[data-sf-dark] [style*="color: rgb(68, 56, 201)"] { color:#9A85F0 !important; }
+html[data-sf-dark] [style*="rgb(231, 233, 242)"], html[data-sf-dark] [style*="rgb(226, 232, 240)"], html[data-sf-dark] [style*="rgb(220, 220, 222)"] { border-color:#3A3A37 !important; }
+html[data-sf-dark] [style*="rgb(240, 241, 247)"], html[data-sf-dark] [style*="border-top: 1px solid rgb(240, 240, 241)"] { border-color:#333330 !important; }
+html[data-sf-dark] [style*="rgb(240, 183, 184)"] { border-color:#5C3234 !important; }
+</style>
+<script>try{if(localStorage.getItem('sf_dark')==='1')document.documentElement.setAttribute('data-sf-dark','1')}catch(e){}</script>
+</helmet>
+<div style="min-height:100vh; display:flex; flex-direction:column; font-size:13px;">
+  <div style="height:32px; background:#1d2327; color:#c3c4c7; display:flex; align-items:center; gap:16px; padding:0 14px; font-size:13px; flex-shrink:0;">
+    <span style="display:flex; align-items:center; gap:6px;"><span style="width:16px; height:16px; border-radius:50%; border:1.5px solid #c3c4c7; display:inline-flex; align-items:center; justify-content:center; font-size:10px; font-weight:700;">W</span>Nina &amp; Valentin — Demo Store</span>
+    <span style="flex:1;"></span>
+    <button onClick="{{ toggleDark }}" aria-label="Toggle dark mode" style="background:transparent; border:none; color:#c3c4c7; cursor:pointer; display:flex; align-items:center; padding:3px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg></button>
+    <span style="font-size:11px; font-weight:600; color:#f0c33c;">WP-ADMIN PROTOTYPE</span>
+    <span>Howdy, nina</span>
+  </div>
+  <div style="flex:1; display:flex; align-items:stretch;">
+    <div data-wpnav="1" style="width:160px; flex-shrink:0; background:#1d2327; color:#c3c4c7; padding:8px 0 40px; font-size:13px;">
+      <div style="padding:8px 12px;">Dashboard</div>
+      <div style="padding:8px 12px;">Posts</div>
+      <div style="padding:8px 12px;">Media</div>
+      <div style="padding:8px 12px;">Pages</div>
+      <div style="padding:8px 12px;">Comments</div>
+      <div style="background:#2271b1; color:#fff;">
+        <div style="padding:8px 12px; font-weight:600;">WooCommerce</div>
+        <div style="background:#2c3338; padding:6px 0;">
+          <div style="padding:5px 12px 5px 20px; color:#c3c4c7; font-size:12.5px;">Home</div>
+          <div style="padding:5px 12px 5px 20px; color:#c3c4c7; font-size:12.5px;">Orders</div>
+          <div style="padding:5px 12px 5px 20px; color:#c3c4c7; font-size:12.5px;">Customers</div>
+          <div style="padding:5px 12px 5px 20px; color:#fff; font-weight:600; font-size:12.5px;">Loyalty</div>
+          <div style="padding:5px 12px 5px 20px; color:#c3c4c7; font-size:12.5px;">Settings</div>
+          <div style="padding:5px 12px 5px 20px; color:#c3c4c7; font-size:12.5px;">Status</div>
+        </div>
+      </div>
+      <div style="padding:8px 12px;">Products</div>
+      <div style="padding:8px 12px;">Analytics</div>
+      <div style="padding:8px 12px;">Appearance</div>
+      <div style="padding:8px 12px;">Plugins</div>
+      <div style="padding:8px 12px;">Users</div>
+      <div style="padding:8px 12px;">Tools</div>
+      <div style="padding:8px 12px;">Settings</div>
+    </div>
+    <div style="flex:1; min-width:0; padding:20px 20px 70px;">
+      <div style="height:3px; background:linear-gradient(90deg, #3b2fc9, #7c5cfc); border-radius:9px 3px 0 0;"></div>
+      <div style="background:#fff; border:1px solid #e7e9f2; border-top:none; border-radius:0 0 14px 14px; padding:14px 20px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+        <img src="assets/images/starfiniti-icon.png" alt="Starfiniti" style="width:40px; height:40px; border-radius:10px; flex-shrink:0;">
+        <span style="min-width:0;"><span style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;"><h1 style="margin:0; font-size:18px; font-weight:800; letter-spacing:-0.2px; color:#111827;">Starfiniti Loyalty</h1><span style="background:#eeedfc; border-radius:20px; color:#4438c9; font-size:11px; font-weight:700; padding:2px 8px;">CONNECTED</span></span><span style="display:block; color:#6b7280; font-size:12.5px; margin-top:1px;">Slovenia Store · shop.ninavalentin.si · connector v1.4.2</span></span>
+        
+        <span style="flex:1;"></span>
+        <button onClick="{{ syncNow }}" style="height:30px; padding:0 12px; border:1px solid #e2e8f0; border-radius:9px; color:#4438c9; background:#fff; font-family:inherit; font-size:13px; cursor:pointer; display:inline-flex; align-items:center; gap:7px;" style-hover="background:#f0f0f1;">
+          <sc-if value="{{ syncing }}" hint-placeholder-val="{{ false }}"><span style="width:12px; height:12px; border:2px solid #c3c4c7; border-top-color:#5346e6; border-radius:50%; display:inline-block; animation:wspin .7s linear infinite;"></span></sc-if>
+          {{ syncLabel }}
+        </button>
+      </div>
+      <nav style="margin-top:16px; background:#fff; border:1px solid #e7e9f2; border-radius:12px; padding:6px; display:flex; gap:6px; flex-wrap:wrap;">
+        <a href="wc-loyalty.dc.html" style="padding:9px 15px; border-radius:8px; color:#374151; font-weight:600; text-decoration:none;" style-hover="background:#f3f4fa; text-decoration:none;">Overview</a>
+        <a href="wc-loyalty-storefront.dc.html" style="padding:9px 15px; border-radius:8px; color:#374151; font-weight:600; text-decoration:none;" style-hover="background:#f3f4fa; text-decoration:none;">Storefront</a>
+        <a href="wc-loyalty-sync.dc.html" style="padding:9px 15px; border-radius:8px; background:linear-gradient(90deg, #4438c9, #6d4ef0); color:#fff; font-weight:600; text-decoration:none;">Sync</a>
+        <a href="wc-loyalty-diagnostics.dc.html" style="padding:9px 15px; border-radius:8px; color:#374151; font-weight:600; text-decoration:none;" style-hover="background:#f3f4fa; text-decoration:none;">Diagnostics</a>
+        <a href="wc-loyalty-settings.dc.html" style="padding:9px 15px; border-radius:8px; color:#374151; font-weight:600; text-decoration:none;" style-hover="background:#f3f4fa; text-decoration:none;">Settings</a>
+      </nav>
+      <div style="margin-top:16px; display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:12px;">
+        <div style="background:#fff; border:1px solid #e7e9f2; border-radius:14px; padding:12px 14px;"><div style="font-size:11px; color:#6b7280; font-weight:700; text-transform:uppercase; letter-spacing:.5px;">Pending</div><div style="font-size:22px; font-weight:800; margin-top:3px; font-variant-numeric:tabular-nums;">{{ pendingN }}</div></div>
+        <div style="background:#fff; border:1px solid #e7e9f2; border-radius:14px; padding:12px 14px;"><div style="font-size:11px; color:#6b7280; font-weight:700; text-transform:uppercase; letter-spacing:.5px;">Processing</div><div style="font-size:22px; font-weight:800; margin-top:3px; font-variant-numeric:tabular-nums;">{{ processingN }}</div></div>
+        <div style="background:#fff; border:1px solid #e7e9f2; border-radius:14px; padding:12px 14px;"><div style="font-size:11px; color:#6b7280; font-weight:700; text-transform:uppercase; letter-spacing:.5px;">Retrying</div><div style="font-size:22px; font-weight:800; margin-top:3px; font-variant-numeric:tabular-nums;">{{ retryingN }}</div></div>
+        <div style="background:#fff; border:1px solid {{ failedBorder }}; border-radius:4px; padding:12px 14px;"><div style="font-size:12px; color:{{ failedLabelColor }};">Failed</div><div style="font-size:22px; font-weight:800; margin-top:3px; font-variant-numeric:tabular-nums; color:{{ failedColor }};">{{ failedN }}</div></div>
+        <div style="background:#fff; border:1px solid #e7e9f2; border-radius:14px; padding:12px 14px;"><div style="font-size:11px; color:#6b7280; font-weight:700; text-transform:uppercase; letter-spacing:.5px;">Dead-lettered</div><div style="font-size:22px; font-weight:800; margin-top:3px; font-variant-numeric:tabular-nums;">0</div></div>
+      </div>
+      <div style="margin-top:12px; font-size:12.5px; color:#6b7280;">Last received event: order #8459 earn (2 min ago) · last acknowledged by Starfiniti: 2 min ago · work continues via Action Scheduler — you can close this page.</div>
+      <div style="margin-top:14px; background:#fff; border:1px solid #e7e9f2; border-radius:14px; overflow-x:auto;">
+        <div style="padding:11px 15px; border-bottom:1px solid #f0f1f7; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <span style="font-weight:600;">Event queue</span>
+          <span style="flex:1;"></span>
+          <select style="height:28px; border:1px solid #e2e8f0; border-radius:9px; font-family:inherit; font-size:12.5px; background:#fff;"><option>All object types</option><option>Orders</option><option>Refunds</option><option>Customers</option><option>Coupons</option></select>
+          <select style="height:28px; border:1px solid #e2e8f0; border-radius:9px; font-family:inherit; font-size:12.5px; background:#fff;"><option>Last 7 days</option><option>Last 30 days</option></select>
+          <button onClick="{{ reconcile }}" style="height:28px; padding:0 10px; border:1px solid #e2e8f0; border-radius:9px; color:#4438c9; background:#fff; font-family:inherit; font-size:12.5px; cursor:pointer;" style-hover="background:#f0f0f1;">{{ reconcileLabel }}</button>
+        </div>
+        <table style="width:100%; border-collapse:collapse; font-size:12.5px; min-width:720px;">
+          <thead><tr style="text-align:left; color:#6b7280; background:#f6f7f7;">
+            <th style="padding:9px 15px; font-weight:500;">Event</th><th style="padding:9px 10px; font-weight:500;">WooCommerce object</th><th style="padding:9px 10px; font-weight:500; text-align:right;">Attempts</th><th style="padding:9px 10px; font-weight:500;">Next retry</th><th style="padding:9px 10px; font-weight:500;">Status</th><th style="padding:9px 15px; font-weight:500;"></th>
+          </tr></thead>
+          <tbody>
+            <sc-if value="{{ jobFailed }}" hint-placeholder-val="{{ true }}">
+              <tr style="border-top:1px solid #f0f0f1; background:#fcf0f1;">
+                <td style="padding:10px 15px; font-weight:600;">points.reversal</td><td style="padding:10px 10px;">Refund #8444 (Jan Krajnc)</td><td style="padding:10px 10px; text-align:right; font-variant-numeric:tabular-nums;">5</td><td style="padding:10px 10px;">manual</td>
+                <td style="padding:10px 10px;"><span style="color:#d63638; font-weight:600;">Failed</span></td>
+                <td style="padding:10px 15px; white-space:nowrap;"><button onClick="{{ inspect }}" style="height:26px; padding:0 9px; border:1px solid #e2e8f0; border-radius:9px; background:#fff; font-family:inherit; font-size:12px; cursor:pointer; margin-right:6px;">Inspect</button><button onClick="{{ retryJob }}" style="height:26px; padding:0 9px; border:none; border-radius:9px; background:linear-gradient(90deg, #4438c9, #6d4ef0); color:#fff; box-shadow:0 2px 8px rgba(83,70,230,.35); font-family:inherit; font-size:12px; cursor:pointer;" style-hover="background:#4438c9;">Retry</button></td>
+              </tr>
+              <sc-if value="{{ inspectOpen }}" hint-placeholder-val="{{ false }}">
+                <tr style="border-top:1px solid #f0f0f1; background:#fff8e5;">
+                  <td colspan="6" style="padding:12px 15px; font-size:12.5px; line-height:1.7;">
+                    <strong>Why it failed:</strong> Starfiniti API answered <code style="background:#f0f0f1; padding:1px 5px; border-radius:9px;">429 Too Many Requests</code> five times during the 09:14 traffic spike. The refund reversal (−520 pts for Jan Krajnc) is safely stored locally and has <strong>not</strong> been applied twice.<br>
+                    <strong>Suggested fix:</strong> retry now — the rate-limit window has passed. Event ID <code style="background:#f0f0f1; padding:1px 5px; border-radius:9px;">evt_8444_rev_01</code>.
+                  </td>
+                </tr>
+              </sc-if>
+            </sc-if>
+            <sc-if value="{{ jobRetrying }}" hint-placeholder-val="{{ false }}">
+              <tr style="border-top:1px solid #f0f0f1;">
+                <td style="padding:10px 15px; font-weight:600;">points.reversal</td><td style="padding:10px 10px;">Refund #8444 (Jan Krajnc)</td><td style="padding:10px 10px; text-align:right; font-variant-numeric:tabular-nums;">6</td><td style="padding:10px 10px;">now</td>
+                <td style="padding:10px 10px;"><span style="color:#996800; font-weight:600; display:inline-flex; align-items:center; gap:6px;"><span style="width:11px; height:11px; border:2px solid #dcdcde; border-top-color:#996800; border-radius:50%; display:inline-block; animation:wspin .7s linear infinite;"></span>Retrying…</span></td>
+                <td style="padding:10px 15px;"></td>
+              </tr>
+            </sc-if>
+            <sc-if value="{{ jobDone }}" hint-placeholder-val="{{ false }}">
+              <tr style="border-top:1px solid #f0f0f1; background:#edfaef;">
+                <td style="padding:10px 15px; font-weight:600;">points.reversal</td><td style="padding:10px 10px;">Refund #8444 (Jan Krajnc)</td><td style="padding:10px 10px; text-align:right; font-variant-numeric:tabular-nums;">6</td><td style="padding:10px 10px;">—</td>
+                <td style="padding:10px 10px;"><span style="color:#15803d; font-weight:600;">Delivered ✓</span></td>
+                <td style="padding:10px 15px;"><button onClick="{{ resetDemo }}" style="height:26px; padding:0 9px; border:1px solid #e2e8f0; border-radius:9px; background:#fff; font-family:inherit; font-size:12px; cursor:pointer; color:#6b7280;">Reset demo</button></td>
+              </tr>
+            </sc-if>
+            <tr style="border-top:1px solid #f0f0f1;">
+              <td style="padding:10px 15px;">points.earn</td><td style="padding:10px 10px;">Order #8459 (Maja Kovač)</td><td style="padding:10px 10px; text-align:right; font-variant-numeric:tabular-nums;">1</td><td style="padding:10px 10px;">—</td>
+              <td style="padding:10px 10px;"><span style="color:#15803d;">Accepted</span></td><td style="padding:10px 15px;"></td>
+            </tr>
+            <tr style="border-top:1px solid #f0f0f1;">
+              <td style="padding:10px 15px;">coupon.create</td><td style="padding:10px 10px;">ROSY-MK-7D2F</td><td style="padding:10px 10px; text-align:right; font-variant-numeric:tabular-nums;">2</td><td style="padding:10px 10px;">—</td>
+              <td style="padding:10px 10px;"><span style="color:#15803d;">Accepted</span></td><td style="padding:10px 15px;"></td>
+            </tr>
+            <tr style="border-top:1px solid #f0f0f1;">
+              <td style="padding:10px 15px;">customer.link</td><td style="padding:10px 10px;">nika.zupan@… → member #12841</td><td style="padding:10px 10px; text-align:right; font-variant-numeric:tabular-nums;">1</td><td style="padding:10px 10px;">—</td>
+              <td style="padding:10px 10px;"><span style="color:#15803d;">Accepted</span></td><td style="padding:10px 15px;"></td>
+            </tr>
+            <tr style="border-top:1px solid #f0f0f1;">
+              <td style="padding:10px 15px;">points.earn</td><td style="padding:10px 10px;">Order #8460 (guest — held)</td><td style="padding:10px 10px; text-align:right; font-variant-numeric:tabular-nums;">0</td><td style="padding:10px 10px;">on join</td>
+              <td style="padding:10px 10px;"><span style="color:#6b7280;">Waiting locally</span></td><td style="padding:10px 15px;"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:10px; font-size:12px; color:#787c82;">Waiting locally = stored on this site · Accepted = acknowledged by Starfiniti · Rejected events appear here with a reason · nightly reconciliation resolves drift.</div>
+    </div>
+  </div>
+  <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#111827; color:#fff; border-radius:10px; padding:11px 16px; font-size:13px; z-index:60;">{{ toastMsg }}</div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1366,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  state = { phase: null, inspectOpen: false, syncing: false, reconciling: false, toast: false, toastMsg: '' };
+  componentDidMount() {
+    try { if (localStorage.getItem('sf_wc_fixed') === '1') this.setState({ phase: 'done' }); else this.setState({ phase: 'failed' }); } catch (e) { this.setState({ phase: 'failed' }); }
+  }
+  say(msg) { this.setState({ toast: true, toastMsg: msg }); setTimeout(() => this.setState({ toast: false }), 3000); }
+  renderVals() { const vals = this.__rv3 ? this.__rv3() : {}; vals.toggleDark = () => { const r = document.documentElement; const on = r.getAttribute('data-sf-dark') === '1'; if (on) { r.removeAttribute('data-sf-dark'); } else { r.setAttribute('data-sf-dark', '1'); } try { localStorage.setItem('sf_dark', on ? '0' : '1'); } catch (e) {} this.forceUpdate(); }; return vals; }
+  __rv3() {
+    const s = this.state;
+    const phase = s.phase || 'failed';
+    const failed = phase === 'failed';
+    return {
+      jobFailed: phase === 'failed', jobRetrying: phase === 'retrying', jobDone: phase === 'done',
+      inspectOpen: s.inspectOpen, inspect: () => this.setState({ inspectOpen: !s.inspectOpen }),
+      retryJob: () => {
+        this.setState({ phase: 'retrying', inspectOpen: false });
+        setTimeout(() => {
+          try { localStorage.setItem('sf_wc_fixed', '1'); } catch (e) {}
+          this.setState({ phase: 'done' });
+          this.say('Reversal delivered — queue healthy again');
+        }, 1600);
+      },
+      resetDemo: () => { try { localStorage.removeItem('sf_wc_fixed'); } catch (e) {} this.setState({ phase: 'failed' }); },
+      pendingN: failed ? 3 : 0, processingN: phase === 'retrying' ? 1 : 0, retryingN: phase === 'retrying' ? 1 : 0,
+      failedN: failed ? 1 : 0,
+      failedBorder: failed ? '#f0b7b8' : '#c3c4c7',
+      failedColor: failed ? '#d63638' : '#1d2327',
+      failedLabelColor: failed ? '#d63638' : '#50575e',
+      syncing: s.syncing, syncLabel: s.syncing ? 'Syncing…' : 'Sync now',
+      syncNow: () => { if (s.syncing) return; this.setState({ syncing: true }); setTimeout(() => { this.setState({ syncing: false }); this.say('Sync complete · 4 events delivered'); }, 1500); },
+      reconcileLabel: s.reconciling ? 'Reconciling…' : 'Run reconciliation',
+      reconcile: () => { if (s.reconciling) return; this.setState({ reconciling: true }); setTimeout(() => { this.setState({ reconciling: false }); this.say('Reconciliation finished · 0 mismatches in 12,842 customers'); }, 2000); },
+      toast: s.toast, toastMsg: s.toastMsg
+    };
+  }
+}
+</script>
+</body>
+</html>

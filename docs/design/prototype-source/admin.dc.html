@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body { margin:0; font-family:'Geist',ui-sans-serif,system-ui,sans-serif; background:#0c0a09; color:#fafaf9; -webkit-font-smoothing:antialiased; }
+a { color:#a5b4fc; text-decoration:none; } a:hover { color:#c7d2fe; }
+* { box-sizing:border-box; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:0.01ms !important; transition-duration:0.01ms !important; } }
+</style>
+</helmet>
+<div style="min-height:100vh; display:flex; flex-direction:column;">
+  <div style="background:#4f46e5; color:#fff; font-size:12.5px; font-weight:600; text-align:center; padding:7px 16px;">Starfiniti platform administration — internal. Never confuse this with merchant admin. All actions are logged.</div>
+  <header style="height:58px; border-bottom:1px solid #292524; display:flex; align-items:center; gap:12px; padding:0 28px;">
+    <div style="width:30px; height:30px; border-radius:8px; background:#4f46e5; color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700;">S</div>
+    <div style="font-size:14px; font-weight:600;">Starfiniti Loyalty · Platform Admin</div>
+    <span style="font-size:11.5px; font-weight:600; color:#fbbf24; background:rgba(251,191,36,.12); border:1px solid rgba(251,191,36,.3); border-radius:999px; padding:2px 9px;">INTERNAL</span>
+    <div style="flex:1;"></div>
+    <a href="login.dc.html" style="font-size:13px; font-weight:500;">Sign out</a>
+    <div style="width:28px; height:28px; border-radius:50%; background:#292524; color:#d6d3d1; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600;">AK</div>
+  </header>
+  <div style="flex:1; padding:32px 28px 56px; max-width:1180px; width:100%; margin:0 auto; display:flex; flex-direction:column; gap:18px;">
+    <div style="display:flex; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+      <div style="flex:1; min-width:220px;">
+        <h1 style="margin:0; font-size:21px; font-weight:600; letter-spacing:-.01em;">Connected organizations</h1>
+        <p style="margin:4px 0 0; font-size:13.5px; color:#a8a29e;">4 organizations · 6 stores · demo data</p>
+      </div>
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:14px;">
+      <div style="background:#1c1917; border:1px solid #292524; border-radius:12px; padding:15px 18px;"><div style="font-size:12.5px; color:#a8a29e;">Organizations</div><div style="font-size:22px; font-weight:600; margin-top:5px; font-variant-numeric:tabular-nums;">4</div></div>
+      <div style="background:#1c1917; border:1px solid #292524; border-radius:12px; padding:15px 18px;"><div style="font-size:12.5px; color:#a8a29e;">Healthy connections</div><div style="font-size:22px; font-weight:600; margin-top:5px; font-variant-numeric:tabular-nums; color:#34d399;">4 / 6</div></div>
+      <div style="background:#1c1917; border:1px solid rgba(251,191,36,.35); border-radius:12px; padding:15px 18px;"><div style="font-size:12.5px; color:#fbbf24;">Degraded</div><div style="font-size:22px; font-weight:600; margin-top:5px; font-variant-numeric:tabular-nums;">1</div></div>
+      <div style="background:#1c1917; border:1px solid rgba(248,113,113,.35); border-radius:12px; padding:15px 18px;"><div style="font-size:12.5px; color:#f87171;">Disconnected</div><div style="font-size:22px; font-weight:600; margin-top:5px; font-variant-numeric:tabular-nums;">1</div></div>
+    </div>
+    <div style="background:#1c1917; border:1px solid #292524; border-radius:12px; overflow-x:auto;">
+      <table style="width:100%; border-collapse:collapse; font-size:13px; min-width:760px;">
+        <thead><tr style="text-align:left; color:#78716c; font-size:12px;">
+          <th style="padding:12px 18px; font-weight:500;">Organization</th><th style="padding:12px 10px; font-weight:500;">Store</th><th style="padding:12px 10px; font-weight:500;">Platform</th><th style="padding:12px 10px; font-weight:500; text-align:right;">Members</th><th style="padding:12px 10px; font-weight:500;">Health</th><th style="padding:12px 18px; font-weight:500;"></th>
+        </tr></thead>
+        <tbody>
+          <tr style="border-top:1px solid #292524;">
+            <td style="padding:12px 18px; font-weight:600;">Nina &amp; Valentin Demo</td><td style="padding:12px 10px; color:#d6d3d1;">shop.ninavalentin.si</td><td style="padding:12px 10px; color:#d6d3d1;">WooCommerce</td><td style="padding:12px 10px; text-align:right; font-variant-numeric:tabular-nums;">12,842</td>
+            <td style="padding:12px 10px;"><span style="display:inline-flex; align-items:center; gap:6px; font-size:12px; color:#34d399;"><span style="width:6px; height:6px; border-radius:50%; background:#34d399;"></span>Healthy · 4 min</span></td>
+            <td style="padding:12px 18px;"><button onClick="{{ enterSupport }}" style="height:30px; padding:0 12px; border-radius:8px; border:1px solid #44403c; background:transparent; font-family:inherit; font-size:12.5px; font-weight:600; color:#e7e5e4; cursor:pointer;" style-hover="background:#292524;">Support view</button></td>
+          </tr>
+          <tr style="border-top:1px solid #292524;">
+            <td style="padding:12px 18px; font-weight:600;">Alpine Trails d.o.o.</td><td style="padding:12px 10px; color:#d6d3d1;">alpinetrails.si</td><td style="padding:12px 10px; color:#d6d3d1;">Shopify</td><td style="padding:12px 10px; text-align:right; font-variant-numeric:tabular-nums;">7,204</td>
+            <td style="padding:12px 10px;"><span style="display:inline-flex; align-items:center; gap:6px; font-size:12px; color:#34d399;"><span style="width:6px; height:6px; border-radius:50%; background:#34d399;"></span>Healthy · 2 min</span></td>
+            <td style="padding:12px 18px;"><button style="height:30px; padding:0 12px; border-radius:8px; border:1px solid #44403c; background:transparent; font-family:inherit; font-size:12.5px; font-weight:600; color:#e7e5e4; cursor:pointer;" style-hover="background:#292524;">Support view</button></td>
+          </tr>
+          <tr style="border-top:1px solid #292524;">
+            <td style="padding:12px 18px; font-weight:600;">Café Zvezda</td><td style="padding:12px 10px; color:#d6d3d1;">cafezvezda.com</td><td style="padding:12px 10px; color:#d6d3d1;">Shopify</td><td style="padding:12px 10px; text-align:right; font-variant-numeric:tabular-nums;">2,981</td>
+            <td style="padding:12px 10px;"><button onClick="{{ toggleDiag }}" style="display:inline-flex; align-items:center; gap:6px; font-size:12px; color:#fbbf24; background:transparent; border:none; font-family:inherit; cursor:pointer; padding:0;"><span style="width:6px; height:6px; border-radius:50%; background:#fbbf24;"></span>Degraded · webhooks lag {{ diagChevron }}</button></td>
+            <td style="padding:12px 18px;"><button style="height:30px; padding:0 12px; border-radius:8px; border:1px solid #44403c; background:transparent; font-family:inherit; font-size:12.5px; font-weight:600; color:#e7e5e4; cursor:pointer;" style-hover="background:#292524;">Support view</button></td>
+          </tr>
+          <sc-if value="{{ diagOpen }}" hint-placeholder-val="{{ false }}">
+            <tr style="border-top:1px solid #292524; background:#171412;">
+              <td colspan="6" style="padding:14px 18px;">
+                <div style="font-size:12.5px; color:#d6d3d1; line-height:1.7;">
+                  <strong style="color:#fbbf24; font-weight:600;">Diagnosis:</strong> order webhooks delayed 18–24 min since 07:40 CEST · queue depth 412 · Shopify API status green → bottleneck is the org's rate-limit tier.<br>
+                  <strong style="color:#e7e5e4; font-weight:600;">Suggested action:</strong> enable batched sync for this store; no merchant data loss, points award retroactively when the queue drains.
+                </div>
+                <button onClick="{{ resolveDiag }}" style="margin-top:10px; height:30px; padding:0 12px; border-radius:8px; border:none; background:#4f46e5; font-family:inherit; font-size:12.5px; font-weight:600; color:#fff; cursor:pointer;" style-hover="background:#4338ca;">{{ diagAction }}</button>
+              </td>
+            </tr>
+          </sc-if>
+          <tr style="border-top:1px solid #292524;">
+            <td style="padding:12px 18px; font-weight:600;">Studio Marmor</td><td style="padding:12px 10px; color:#d6d3d1;">studiomarmor.de</td><td style="padding:12px 10px; color:#d6d3d1;">WooCommerce</td><td style="padding:12px 10px; text-align:right; font-variant-numeric:tabular-nums;">1,146</td>
+            <td style="padding:12px 10px;"><span style="display:inline-flex; align-items:center; gap:6px; font-size:12px; color:#f87171;"><span style="width:6px; height:6px; border-radius:50%; background:#f87171;"></span>Disconnected · 3 d</span></td>
+            <td style="padding:12px 18px;"><button style="height:30px; padding:0 12px; border-radius:8px; border:1px solid #44403c; background:transparent; font-family:inherit; font-size:12.5px; font-weight:600; color:#e7e5e4; cursor:pointer;" style-hover="background:#292524;">Support view</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin:0; font-size:12px; color:#57534e;">Support view opens the merchant's workspace with a persistent internal banner; every action is written to that organization's audit log. This route is a limited prototype per the brief — merchant and customer experiences are the priority.</p>
+  </div>
+  <sc-if value="{{ supportOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed; inset:0; background:rgba(0,0,0,.55); display:flex; align-items:center; justify-content:center; z-index:50;" onClick="{{ closeSupport }}">
+      <div style="background:#1c1917; border:1px solid #44403c; border-radius:14px; width:440px; max-width:92vw; padding:22px 24px;" onClick="{{ stop }}">
+        <div style="font-size:15px; font-weight:600;">Enter support view — Nina &amp; Valentin Demo</div>
+        <p style="margin:8px 0 0; font-size:13px; color:#a8a29e; line-height:1.6;">You will see the merchant admin exactly as their team does, with an internal banner. Reads and writes are logged to their audit trail as "Starfiniti support (Alex K.)".</p>
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:18px;">
+          <button onClick="{{ closeSupport }}" style="height:36px; padding:0 14px; border-radius:8px; border:1px solid #44403c; background:transparent; font-family:inherit; font-size:13.5px; font-weight:500; color:#e7e5e4; cursor:pointer;" style-hover="background:#292524;">Cancel</button>
+          <a href="overview.dc.html" style="height:36px; padding:0 14px; border-radius:8px; background:#4f46e5; color:#fff; font-size:13.5px; font-weight:600; display:inline-flex; align-items:center;" style-hover="background:#4338ca; color:#fff;">Enter support view</a>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  state = { diagOpen: false, diagFixed: false, supportOpen: false };
+  renderVals() {
+    const s = this.state;
+    return {
+      diagOpen: s.diagOpen, diagChevron: s.diagOpen ? '▴' : '▾',
+      toggleDiag: () => this.setState({ diagOpen: !s.diagOpen }),
+      diagAction: s.diagFixed ? 'Batched sync enabled ✓' : 'Enable batched sync',
+      resolveDiag: () => this.setState({ diagFixed: true }),
+      supportOpen: s.supportOpen,
+      enterSupport: () => this.setState({ supportOpen: true }),
+      closeSupport: () => this.setState({ supportOpen: false }),
+      stop: (e) => e.stopPropagation()
+    };
+  }
+}
+</script>
+</body>
+</html>

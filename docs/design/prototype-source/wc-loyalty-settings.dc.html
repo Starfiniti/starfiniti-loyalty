@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body { margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, sans-serif; background:#f0f0f1; color:#1d2327; -webkit-font-smoothing:antialiased; }
+a { color:#5346e6; text-decoration:none; } a:hover { color:#4438c9; text-decoration:underline; }
+* { box-sizing:border-box; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:0.01ms !important; transition-duration:0.01ms !important; } }
+@media (max-width: 880px) { div[data-wpnav] { display:none; } }
+
+html[data-sf-dark] body { background:#1F1F1E !important; color:#E5E4DF; }
+html[data-sf-dark] a { color:#9A85F0; }
+html[data-sf-dark] input, html[data-sf-dark] select { background:#2C2C2A !important; color:#E5E4DF !important; border-color:#3A3A37 !important; }
+html[data-sf-dark] [style*="background: rgb(255, 255, 255)"] { background:#292927 !important; }
+html[data-sf-dark] [style*="background: rgb(250, 251, 254)"], html[data-sf-dark] [style*="background: rgb(246, 247, 247)"], html[data-sf-dark] [style*="background: rgb(240, 240, 241)"] { background:#343432 !important; }
+html[data-sf-dark] [style*="background: rgb(237, 250, 239)"] { background:#26382D !important; }
+html[data-sf-dark] [style*="background: rgb(252, 240, 241)"] { background:#3D292A !important; }
+html[data-sf-dark] [style*="background: rgb(255, 248, 229)"] { background:#3E3423 !important; }
+html[data-sf-dark] [style*="background: rgb(238, 237, 252)"] { background:#37334F !important; }
+html[data-sf-dark] [style*="color: rgb(29, 35, 39)"], html[data-sf-dark] [style*="color: rgb(17, 24, 39)"] { color:#E5E4DF !important; }
+html[data-sf-dark] [style*="color: rgb(107, 114, 128)"], html[data-sf-dark] [style*="color: rgb(80, 87, 94)"] { color:#A09F99 !important; }
+html[data-sf-dark] [style*="color: rgb(120, 124, 130)"] { color:#8B8A84 !important; }
+html[data-sf-dark] [style*="color: rgb(21, 128, 61)"] { color:#3BB87C !important; }
+html[data-sf-dark] [style*="color: rgb(153, 104, 0)"], html[data-sf-dark] [style*="color: rgb(219, 166, 23)"] { color:#E0A23C !important; }
+html[data-sf-dark] [style*="color: rgb(214, 54, 56)"], html[data-sf-dark] [style*="color: rgb(138, 36, 36)"] { color:#E76B72 !important; }
+html[data-sf-dark] [style*="color: rgb(83, 70, 230)"], html[data-sf-dark] [style*="color: rgb(68, 56, 201)"] { color:#9A85F0 !important; }
+html[data-sf-dark] [style*="rgb(231, 233, 242)"], html[data-sf-dark] [style*="rgb(226, 232, 240)"], html[data-sf-dark] [style*="rgb(220, 220, 222)"] { border-color:#3A3A37 !important; }
+html[data-sf-dark] [style*="rgb(240, 241, 247)"], html[data-sf-dark] [style*="border-top: 1px solid rgb(240, 240, 241)"] { border-color:#333330 !important; }
+html[data-sf-dark] [style*="rgb(240, 183, 184)"] { border-color:#5C3234 !important; }
+</style>
+<script>try{if(localStorage.getItem('sf_dark')==='1')document.documentElement.setAttribute('data-sf-dark','1')}catch(e){}</script>
+</helmet>
+<div style="min-height:100vh; display:flex; flex-direction:column; font-size:13px;">
+  <div style="height:32px; background:#1d2327; color:#c3c4c7; display:flex; align-items:center; gap:16px; padding:0 14px; font-size:13px; flex-shrink:0;">
+    <span style="display:flex; align-items:center; gap:6px;"><span style="width:16px; height:16px; border-radius:50%; border:1.5px solid #c3c4c7; display:inline-flex; align-items:center; justify-content:center; font-size:10px; font-weight:700;">W</span>Nina &amp; Valentin — Demo Store</span>
+    <span style="flex:1;"></span>
+    <button onClick="{{ toggleDark }}" aria-label="Toggle dark mode" style="background:transparent; border:none; color:#c3c4c7; cursor:pointer; display:flex; align-items:center; padding:3px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg></button>
+    <span style="font-size:11px; font-weight:600; color:#f0c33c;">WP-ADMIN PROTOTYPE</span>
+    <span>Howdy, nina</span>
+  </div>
+  <div style="flex:1; display:flex; align-items:stretch;">
+    <div data-wpnav="1" style="width:160px; flex-shrink:0; background:#1d2327; color:#c3c4c7; padding:8px 0 40px; font-size:13px;">
+      <div style="padding:8px 12px;">Dashboard</div>
+      <div style="padding:8px 12px;">Posts</div>
+      <div style="padding:8px 12px;">Media</div>
+      <div style="padding:8px 12px;">Pages</div>
+      <div style="padding:8px 12px;">Comments</div>
+      <div style="background:#2271b1; color:#fff;">
+        <div style="padding:8px 12px; font-weight:600;">WooCommerce</div>
+        <div style="background:#2c3338; padding:6px 0;">
+          <div style="padding:5px 12px 5px 20px; color:#c3c4c7; font-size:12.5px;">Home</div>
+          <div style="padding:5px 12px 5px 20px; color:#c3c4c7; font-size:12.5px;">Orders</div>
+          <div style="padding:5px 12px 5px 20px; color:#c3c4c7; font-size:12.5px;">Customers</div>
+          <div style="padding:5px 12px 5px 20px; color:#fff; font-weight:600; font-size:12.5px;">Loyalty</div>
+          <div style="padding:5px 12px 5px 20px; color:#c3c4c7; font-size:12.5px;">Settings</div>
+          <div style="padding:5px 12px 5px 20px; color:#c3c4c7; font-size:12.5px;">Status</div>
+        </div>
+      </div>
+      <div style="padding:8px 12px;">Products</div>
+      <div style="padding:8px 12px;">Analytics</div>
+      <div style="padding:8px 12px;">Appearance</div>
+      <div style="padding:8px 12px;">Plugins</div>
+      <div style="padding:8px 12px;">Users</div>
+      <div style="padding:8px 12px;">Tools</div>
+      <div style="padding:8px 12px;">Settings</div>
+    </div>
+    <div style="flex:1; min-width:0; padding:20px 20px 70px; max-width:980px;">
+      <div style="height:3px; background:linear-gradient(90deg, #3b2fc9, #7c5cfc); border-radius:9px 3px 0 0;"></div>
+      <div style="background:#fff; border:1px solid #e7e9f2; border-top:none; border-radius:0 0 14px 14px; padding:14px 20px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+        <img src="assets/images/starfiniti-icon.png" alt="Starfiniti" style="width:40px; height:40px; border-radius:10px; flex-shrink:0;">
+        <span style="min-width:0;"><span style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;"><h1 style="margin:0; font-size:18px; font-weight:800; letter-spacing:-0.2px; color:#111827;">Starfiniti Loyalty</h1><span style="background:#eeedfc; border-radius:20px; color:#4438c9; font-size:11px; font-weight:700; padding:2px 8px;">CONNECTED</span></span><span style="display:block; color:#6b7280; font-size:12.5px; margin-top:1px;">Slovenia Store · shop.ninavalentin.si · connector v1.4.2</span></span>
+        
+      </div>
+      <nav style="margin-top:16px; background:#fff; border:1px solid #e7e9f2; border-radius:12px; padding:6px; display:flex; gap:6px; flex-wrap:wrap;">
+        <a href="wc-loyalty.dc.html" style="padding:9px 15px; border-radius:8px; color:#374151; font-weight:600; text-decoration:none;" style-hover="background:#f3f4fa; text-decoration:none;">Overview</a>
+        <a href="wc-loyalty-storefront.dc.html" style="padding:9px 15px; border-radius:8px; color:#374151; font-weight:600; text-decoration:none;" style-hover="background:#f3f4fa; text-decoration:none;">Storefront</a>
+        <a href="wc-loyalty-sync.dc.html" style="padding:9px 15px; border-radius:8px; color:#374151; font-weight:600; text-decoration:none;" style-hover="background:#f3f4fa; text-decoration:none;">Sync</a>
+        <a href="wc-loyalty-diagnostics.dc.html" style="padding:9px 15px; border-radius:8px; color:#374151; font-weight:600; text-decoration:none;" style-hover="background:#f3f4fa; text-decoration:none;">Diagnostics</a>
+        <a href="wc-loyalty-settings.dc.html" style="padding:9px 15px; border-radius:8px; background:linear-gradient(90deg, #4438c9, #6d4ef0); color:#fff; font-weight:600; text-decoration:none;">Settings</a>
+      </nav>
+      <div style="margin-top:16px; background:#fff; border:1px solid #e7e9f2; border-radius:14px; padding:14px 16px;">
+        <div style="font-weight:600;">Connection</div>
+        <div style="margin-top:10px; font-size:12.5px; color:#6b7280; display:grid; grid-template-columns:170px 1fr; gap:7px 10px;">
+          <span>Workspace</span><span style="color:#1d2327;">Nina &amp; Valentin Demo → Slovenia Store <a href="wc-loyalty-connect.dc.html">change</a></span>
+          <span>Store identity</span><span style="color:#1d2327;">shop.ninavalentin.si · connection ID <code style="background:#f0f0f1; padding:1px 5px; border-radius:9px;">conn_sl_01</code></span>
+          <span>Environment</span><span style="color:#1d2327;">Production</span>
+          <span>Credentials</span><span style="color:#1d2327;">Secret stored server-side, never displayed · <a href="#" onClick="{{ rotate }}">{{ rotateLabel }}</a> (no downtime)</span>
+        </div>
+      </div>
+      <div style="margin-top:12px; background:#fff; border:1px solid #e7e9f2; border-radius:14px; padding:14px 16px;">
+        <div style="font-weight:600;">Event delivery</div>
+        <div style="margin-top:8px; font-size:12.5px;">
+          <label style="display:flex; align-items:center; gap:8px; padding:5px 0; cursor:pointer;"><input type="checkbox" checked="{{ true }}" style="accent-color:#5346e6;">Orders &amp; refunds (required for points)</label>
+          <label style="display:flex; align-items:center; gap:8px; padding:5px 0; cursor:pointer;"><input type="checkbox" checked="{{ true }}" style="accent-color:#5346e6;">Customers &amp; account linking</label>
+          <label style="display:flex; align-items:center; gap:8px; padding:5px 0; cursor:pointer;"><input type="checkbox" checked="{{ true }}" style="accent-color:#5346e6;">Coupon execution for reward redemptions</label>
+          <label style="display:flex; align-items:center; gap:8px; padding:5px 0; cursor:pointer;"><input type="checkbox" style="accent-color:#5346e6;">Product catalogue (only needed for category bonus rules)</label>
+        </div>
+        <div style="margin-top:6px; font-size:12px; color:#787c82;">Retries: 5 automatic attempts with backoff, then parked for manual review (recommended default).</div>
+      </div>
+      <div style="margin-top:12px; background:#fff; border:1px solid #e7e9f2; border-radius:14px; padding:14px 16px;">
+        <div style="font-weight:600;">Privacy &amp; data</div>
+        <div style="margin-top:8px; font-size:12.5px; color:#6b7280; line-height:1.7;">
+          Identity exchange: email hash + WooCommerce customer ID · consent respected from checkout marketing opt-in · erasure requests forwarded to Starfiniti within 24 h · local event copies kept 30 days.
+        </div>
+      </div>
+      <div style="margin-top:12px; background:#fff; border:1px solid #e7e9f2; border-radius:14px; padding:14px 16px;">
+        <div style="font-weight:600;">Storefront fallback &amp; permissions</div>
+        <div style="margin-top:8px; font-size:12.5px; color:#6b7280; display:grid; grid-template-columns:170px 1fr; gap:7px 10px;">
+          <span>During outage</span><span style="color:#1d2327;">Hide balances, keep commerce flow, queue events locally (cache 15 min)</span>
+          <span>View status</span><span style="color:#1d2327;">Shop manager, Administrator</span>
+          <span>Manage placement</span><span style="color:#1d2327;">Administrator</span>
+          <span>Recovery &amp; disconnect</span><span style="color:#1d2327;">Administrator only</span>
+        </div>
+      </div>
+      <div style="margin-top:12px; background:#fff; border:1px solid #f0b7b8; border-radius:4px; padding:14px 16px;">
+        <div style="font-weight:600; color:#8a2424;">Danger zone</div>
+        <div style="margin-top:8px; font-size:12.5px; color:#6b7280; line-height:1.6;">Disconnecting stops event delivery; balances remain safe in Starfiniti. Uninstall options: keep connection data (default) · remove local plugin data · request SaaS disconnection.</div>
+        <sc-if value="{{ notConfirming }}" hint-placeholder-val="{{ true }}">
+          <button onClick="{{ startDisconnect }}" style="margin-top:10px; height:30px; padding:0 12px; border:1px solid #d63638; border-radius:9px; color:#d63638; background:#fff; font-family:inherit; font-size:12.5px; cursor:pointer;" style-hover="background:#fcf0f1;">Disconnect store…</button>
+        </sc-if>
+        <sc-if value="{{ confirming }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:10px; font-size:12.5px;">Type <strong>disconnect</strong> to confirm:</div>
+          <div style="display:flex; gap:8px; margin-top:7px;">
+            <input value="{{ confirmText }}" onChange="{{ setConfirmText }}" placeholder="disconnect" style="height:30px; border:1px solid #e2e8f0; border-radius:9px; padding:0 9px; font-family:inherit; font-size:12.5px; width:180px;">
+            <button onClick="{{ doDisconnect }}" disabled="{{ confirmDisabled }}" style="height:30px; padding:0 12px; border:none; border-radius:9px; background:{{ disconnectBg }}; color:#fff; font-family:inherit; font-size:12.5px; cursor:pointer;">Disconnect</button>
+            <button onClick="{{ cancelDisconnect }}" style="height:30px; padding:0 12px; border:1px solid #e2e8f0; border-radius:9px; background:#fff; color:#6b7280; font-family:inherit; font-size:12.5px; cursor:pointer;">Cancel</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ disconnected }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:10px; background:#fcf0f1; border-left:4px solid #d63638; padding:9px 13px; font-size:12.5px;">Store disconnected (demo). <a href="wc-loyalty-connect.dc.html">Reconnect</a> any time — nothing was lost. <button onClick="{{ resetDisconnect }}" style="border:none; background:none; color:#5346e6; cursor:pointer; font-size:12.5px; text-decoration:underline; padding:0;">Undo (demo)</button></div>
+        </sc-if>
+      </div>
+    </div>
+  </div>
+  <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#111827; color:#fff; border-radius:10px; padding:11px 16px; font-size:13px; z-index:60;">{{ toastMsg }}</div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1366,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  state = { confirming: false, confirmText: '', disconnected: false, rotated: false, toast: false, toastMsg: '' };
+  say(msg) { this.setState({ toast: true, toastMsg: msg }); setTimeout(() => this.setState({ toast: false }), 3000); }
+  renderVals() { const vals = this.__rv3 ? this.__rv3() : {}; vals.toggleDark = () => { const r = document.documentElement; const on = r.getAttribute('data-sf-dark') === '1'; if (on) { r.removeAttribute('data-sf-dark'); } else { r.setAttribute('data-sf-dark', '1'); } try { localStorage.setItem('sf_dark', on ? '0' : '1'); } catch (e) {} this.forceUpdate(); }; return vals; }
+  __rv3() {
+    const s = this.state;
+    return {
+      rotateLabel: s.rotated ? 'rotated ✓' : 'rotate credentials',
+      rotate: e => { if (e && e.preventDefault) e.preventDefault(); this.setState({ rotated: true }); this.say('New credentials issued · old ones valid 24 h for zero-downtime rollover'); setTimeout(() => this.setState({ rotated: false }), 3000); },
+      notConfirming: !s.confirming && !s.disconnected, confirming: s.confirming, disconnected: s.disconnected,
+      startDisconnect: () => this.setState({ confirming: true, confirmText: '' }),
+      cancelDisconnect: () => this.setState({ confirming: false }),
+      confirmText: s.confirmText, setConfirmText: e => this.setState({ confirmText: e.target.value }),
+      confirmDisabled: s.confirmText !== 'disconnect',
+      disconnectBg: s.confirmText === 'disconnect' ? '#d63638' : '#c3c4c7',
+      doDisconnect: () => { if (s.confirmText !== 'disconnect') return; this.setState({ confirming: false, disconnected: true }); },
+      resetDisconnect: () => this.setState({ disconnected: false }),
+      toast: s.toast, toastMsg: s.toastMsg
+    };
+  }
+}
+</script>
+</body>
+</html>

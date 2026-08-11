@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body { margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, sans-serif; background:#f0f0f1; color:#1d2327; -webkit-font-smoothing:antialiased; }
+a { color:#5346e6; text-decoration:none; } a:hover { color:#4438c9; text-decoration:underline; }
+* { box-sizing:border-box; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:0.01ms !important; transition-duration:0.01ms !important; } }
+@media (max-width: 880px) { div[data-wpnav] { display:none; } }
+
+html[data-sf-dark] body { background:#1F1F1E !important; color:#E5E4DF; }
+html[data-sf-dark] a { color:#9A85F0; }
+html[data-sf-dark] input, html[data-sf-dark] select { background:#2C2C2A !important; color:#E5E4DF !important; border-color:#3A3A37 !important; }
+html[data-sf-dark] [style*="background: rgb(255, 255, 255)"] { background:#292927 !important; }
+html[data-sf-dark] [style*="background: rgb(250, 251, 254)"], html[data-sf-dark] [style*="background: rgb(246, 247, 247)"], html[data-sf-dark] [style*="background: rgb(240, 240, 241)"] { background:#343432 !important; }
+html[data-sf-dark] [style*="background: rgb(237, 250, 239)"] { background:#26382D !important; }
+html[data-sf-dark] [style*="background: rgb(252, 240, 241)"] { background:#3D292A !important; }
+html[data-sf-dark] [style*="background: rgb(255, 248, 229)"] { background:#3E3423 !important; }
+html[data-sf-dark] [style*="background: rgb(238, 237, 252)"] { background:#37334F !important; }
+html[data-sf-dark] [style*="color: rgb(29, 35, 39)"], html[data-sf-dark] [style*="color: rgb(17, 24, 39)"] { color:#E5E4DF !important; }
+html[data-sf-dark] [style*="color: rgb(107, 114, 128)"], html[data-sf-dark] [style*="color: rgb(80, 87, 94)"] { color:#A09F99 !important; }
+html[data-sf-dark] [style*="color: rgb(120, 124, 130)"] { color:#8B8A84 !important; }
+html[data-sf-dark] [style*="color: rgb(21, 128, 61)"] { color:#3BB87C !important; }
+html[data-sf-dark] [style*="color: rgb(153, 104, 0)"], html[data-sf-dark] [style*="color: rgb(219, 166, 23)"] { color:#E0A23C !important; }
+html[data-sf-dark] [style*="color: rgb(214, 54, 56)"], html[data-sf-dark] [style*="color: rgb(138, 36, 36)"] { color:#E76B72 !important; }
+html[data-sf-dark] [style*="color: rgb(83, 70, 230)"], html[data-sf-dark] [style*="color: rgb(68, 56, 201)"] { color:#9A85F0 !important; }
+html[data-sf-dark] [style*="rgb(231, 233, 242)"], html[data-sf-dark] [style*="rgb(226, 232, 240)"], html[data-sf-dark] [style*="rgb(220, 220, 222)"] { border-color:#3A3A37 !important; }
+html[data-sf-dark] [style*="rgb(240, 241, 247)"], html[data-sf-dark] [style*="border-top: 1px solid rgb(240, 240, 241)"] { border-color:#333330 !important; }
+html[data-sf-dark] [style*="rgb(240, 183, 184)"] { border-color:#5C3234 !important; }
+</style>
+<script>try{if(localStorage.getItem('sf_dark')==='1')document.documentElement.setAttribute('data-sf-dark','1')}catch(e){}</script>
+</helmet>
+<div style="min-height:100vh; display:flex; flex-direction:column; font-size:13px;">
+  <div style="height:32px; background:#1d2327; color:#c3c4c7; display:flex; align-items:center; gap:16px; padding:0 14px; font-size:13px; flex-shrink:0;">
+    <span style="display:flex; align-items:center; gap:6px;"><span style="width:16px; height:16px; border-radius:50%; border:1.5px solid #c3c4c7; display:inline-flex; align-items:center; justify-content:center; font-size:10px; font-weight:700;">W</span>Nina &amp; Valentin — Demo Store</span>
+    <span style="color:#72777c;">＋ New</span>
+    <span style="flex:1;"></span>
+    <button onClick="{{ toggleDark }}" aria-label="Toggle dark mode" style="background:transparent; border:none; color:#c3c4c7; cursor:pointer; display:flex; align-items:center; padding:3px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg></button>
+    <span style="font-size:11px; font-weight:600; color:#f0c33c;">WP-ADMIN PROTOTYPE</span>
+    <span>Howdy, nina</span>
+  </div>
+  <div style="flex:1; display:flex; align-items:stretch;">
+    <div data-wpnav="1" style="width:160px; flex-shrink:0; background:#1d2327; color:#c3c4c7; padding:8px 0 40px; font-size:13px;">
+      <div style="padding:8px 12px; color:#c3c4c7;">Dashboard</div>
+      <div style="padding:8px 12px;">Posts</div>
+      <div style="padding:8px 12px;">Media</div>
+      <div style="padding:8px 12px;">Pages</div>
+      <div style="padding:8px 12px;">Comments</div>
+      <div style="background:#2271b1; color:#fff;">
+        <div style="padding:8px 12px; font-weight:600;">WooCommerce</div>
+        <div style="background:#2c3338; padding:6px 0;">
+          <div style="padding:5px 12px 5px 20px; color:#c3c4c7; font-size:12.5px;">Home</div>
+          <div style="padding:5px 12px 5px 20px; color:#c3c4c7; font-size:12.5px;">Orders</div>
+          <div style="padding:5px 12px 5px 20px; color:#c3c4c7; font-size:12.5px;">Customers</div>
+          <div style="padding:5px 12px 5px 20px; color:#fff; font-weight:600; font-size:12.5px;">Loyalty</div>
+          <div style="padding:5px 12px 5px 20px; color:#c3c4c7; font-size:12.5px;">Settings</div>
+          <div style="padding:5px 12px 5px 20px; color:#c3c4c7; font-size:12.5px;">Status</div>
+        </div>
+      </div>
+      <div style="padding:8px 12px;">Products</div>
+      <div style="padding:8px 12px;">Analytics</div>
+      <div style="padding:8px 12px;">Appearance</div>
+      <div style="padding:8px 12px;">Plugins <span style="background:#d63638; color:#fff; border-radius:9px; font-size:10px; padding:1px 6px; margin-left:4px;">2</span></div>
+      <div style="padding:8px 12px;">Users</div>
+      <div style="padding:8px 12px;">Tools</div>
+      <div style="padding:8px 12px;">Settings</div>
+    </div>
+    <div style="flex:1; min-width:0; padding:20px 20px 70px;">
+      <div style="height:3px; background:linear-gradient(90deg, #3b2fc9, #7c5cfc); border-radius:9px 3px 0 0;"></div>
+      <div style="background:#fff; border:1px solid #e7e9f2; border-top:none; border-radius:0 0 14px 14px; padding:14px 20px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+        <img src="assets/images/starfiniti-icon.png" alt="Starfiniti" style="width:40px; height:40px; border-radius:10px; flex-shrink:0;">
+        <span style="min-width:0;"><span style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;"><h1 style="margin:0; font-size:18px; font-weight:800; letter-spacing:-0.2px; color:#111827;">Starfiniti Loyalty</h1><span style="background:#eeedfc; border-radius:20px; color:#4438c9; font-size:11px; font-weight:700; padding:2px 8px;">CONNECTED</span></span><span style="display:block; color:#6b7280; font-size:12.5px; margin-top:1px;">Slovenia Store · shop.ninavalentin.si · connector v1.4.2</span></span>
+        
+        <span style="flex:1;"></span>
+        <a href="overview.dc.html" style="display:inline-flex; align-items:center; height:30px; padding:0 12px; background:linear-gradient(90deg, #4438c9, #6d4ef0); color:#fff; border-radius:9px; box-shadow:0 2px 8px rgba(83,70,230,.35); font-size:13px; font-weight:400; text-decoration:none;" style-hover="background:#4438c9; color:#fff; text-decoration:none;">Open Loyalty Dashboard ↗</a>
+      </div>
+      <div style="margin-top:14px; background:#fff; border-radius:10px; border-left:4px solid #72aee6; box-shadow:0 1px 1px rgba(0,0,0,.04); padding:10px 14px; font-size:13px;">This is a design prototype of the plugin admin. Programme rules, rewards, and balances live in loyalty.starfiniti.com — this page only connects and monitors.</div>
+      <nav style="margin-top:16px; background:#fff; border:1px solid #e7e9f2; border-radius:12px; padding:6px; display:flex; gap:6px; flex-wrap:wrap;">
+        <a href="wc-loyalty.dc.html" style="padding:9px 15px; border-radius:8px; background:linear-gradient(90deg, #4438c9, #6d4ef0); color:#fff; font-weight:600; text-decoration:none;">Overview</a>
+        <a href="wc-loyalty-storefront.dc.html" style="padding:9px 15px; border-radius:8px; color:#374151; font-weight:600; text-decoration:none;" style-hover="background:#f3f4fa; text-decoration:none;">Storefront</a>
+        <a href="wc-loyalty-sync.dc.html" style="padding:9px 15px; border-radius:8px; color:#374151; font-weight:600; text-decoration:none;" style-hover="background:#f3f4fa; text-decoration:none;">Sync</a>
+        <a href="wc-loyalty-diagnostics.dc.html" style="padding:9px 15px; border-radius:8px; color:#374151; font-weight:600; text-decoration:none;" style-hover="background:#f3f4fa; text-decoration:none;">Diagnostics</a>
+        <a href="wc-loyalty-settings.dc.html" style="padding:9px 15px; border-radius:8px; color:#374151; font-weight:600; text-decoration:none;" style-hover="background:#f3f4fa; text-decoration:none;">Settings</a>
+      </nav>
+      <div style="margin-top:16px; background:#fff; border:1px solid #e7e9f2; border-radius:14px; padding:14px 16px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+        <img src="assets/images/starfiniti-icon.png" alt="Starfiniti" style="width:34px; height:34px; border-radius:8px; flex-shrink:0;">
+        <div style="flex:1; min-width:220px;">
+          <div style="font-size:14px; font-weight:600;">Connected to Starfiniti Loyalty <span style="display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:400; color:#15803d; background:#edfaef; border:1px solid #b8e6bf; border-radius:9px; padding:1px 7px; margin-left:6px;"><span style="width:6px; height:6px; border-radius:50%; background:#22c55e;"></span>Connected · checked 09:41</span></div>
+          <div style="font-size:12.5px; color:#6b7280; margin-top:3px;">Organization Nina &amp; Valentin Demo · workspace Slovenia Store · environment Production</div>
+        </div>
+        <a href="wc-loyalty-connect.dc.html" style="height:30px; padding:0 12px; border:1px solid #e2e8f0; border-radius:9px; color:#4438c9; background:#fff; display:inline-flex; align-items:center; text-decoration:none;" style-hover="background:#f0f0f1; text-decoration:none;">Reconnect</a>
+      </div>
+      <div style="margin-top:14px; background:#fff; border:1px solid #e7e9f2; border-radius:14px; padding:12px 16px; display:flex; gap:0; flex-wrap:wrap;">
+        <div style="flex:1; min-width:140px; display:flex; align-items:center; gap:8px; padding:4px 0;"><span style="width:8px; height:8px; border-radius:50%; background:#22c55e;"></span>API connection</div>
+        <div style="flex:1; min-width:140px; display:flex; align-items:center; gap:8px; padding:4px 0;"><span style="width:8px; height:8px; border-radius:50%; background:#22c55e;"></span>Webhooks</div>
+        <div style="flex:1; min-width:140px; display:flex; align-items:center; gap:8px; padding:4px 0;"><span style="width:8px; height:8px; border-radius:50%; background:{{ queueDot }};"></span>Background queue</div>
+        <div style="flex:1; min-width:140px; display:flex; align-items:center; gap:8px; padding:4px 0;"><span style="width:8px; height:8px; border-radius:50%; background:#22c55e;"></span>Storefront components</div>
+        <div style="flex:1; min-width:140px; display:flex; align-items:center; gap:8px; padding:4px 0;"><span style="width:8px; height:8px; border-radius:50%; background:#22c55e;"></span>Compatibility (HPOS)</div>
+      </div>
+      <div style="margin-top:14px; display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
+        <a href="analytics.dc.html" style="background:#fff; border:1px solid #e7e9f2; border-radius:14px; padding:13px 15px; text-decoration:none; color:#1d2327;" style-hover="border-color:#5346e6; text-decoration:none;"><div style="font-size:11px; color:#6b7280; font-weight:700; text-transform:uppercase; letter-spacing:.5px;">Members</div><div style="font-size:22px; font-weight:800; margin-top:4px; font-variant-numeric:tabular-nums;">12,842</div><div style="font-size:11.5px; color:#5346e6; margin-top:4px;">View in Starfiniti ↗</div></a>
+        <a href="analytics.dc.html" style="background:#fff; border:1px solid #e7e9f2; border-radius:14px; padding:13px 15px; text-decoration:none; color:#1d2327;" style-hover="border-color:#5346e6; text-decoration:none;"><div style="font-size:11px; color:#6b7280; font-weight:700; text-transform:uppercase; letter-spacing:.5px;">Points issued · 30 d</div><div style="font-size:22px; font-weight:800; margin-top:4px; font-variant-numeric:tabular-nums;">128,410</div><div style="font-size:11.5px; color:#5346e6; margin-top:4px;">View in Starfiniti ↗</div></a>
+        <a href="analytics.dc.html" style="background:#fff; border:1px solid #e7e9f2; border-radius:14px; padding:13px 15px; text-decoration:none; color:#1d2327;" style-hover="border-color:#5346e6; text-decoration:none;"><div style="font-size:11px; color:#6b7280; font-weight:700; text-transform:uppercase; letter-spacing:.5px;">Rewards redeemed · 30 d</div><div style="font-size:22px; font-weight:800; margin-top:4px; font-variant-numeric:tabular-nums;">1,255</div><div style="font-size:11.5px; color:#5346e6; margin-top:4px;">View in Starfiniti ↗</div></a>
+        <a href="analytics.dc.html" style="background:#fff; border:1px solid #e7e9f2; border-radius:14px; padding:13px 15px; text-decoration:none; color:#1d2327;" style-hover="border-color:#5346e6; text-decoration:none;"><div style="font-size:11px; color:#6b7280; font-weight:700; text-transform:uppercase; letter-spacing:.5px;">Member revenue · 30 d</div><div style="font-size:22px; font-weight:800; margin-top:4px; font-variant-numeric:tabular-nums;">€184,320</div><div style="font-size:11.5px; color:#5346e6; margin-top:4px;">View in Starfiniti ↗</div></a>
+      </div>
+      <sc-if value="{{ needsAttention }}" hint-placeholder-val="{{ true }}">
+        <div style="margin-top:14px; background:#fff; border-radius:10px; border-left:4px solid #dba617; box-shadow:0 1px 1px rgba(0,0,0,.04); padding:10px 14px;">
+          <strong>Needs attention:</strong> 1 synchronization job failed (order #8444 refund event). <a href="wc-loyalty-sync.dc.html">Review in Sync</a>
+        </div>
+      </sc-if>
+      <div style="margin-top:14px; display:flex; gap:12px; flex-wrap:wrap; align-items:flex-start;">
+        <div style="flex:1.4 1 380px; min-width:0; background:#fff; border:1px solid #e7e9f2; border-radius:14px;">
+          <div style="padding:11px 15px; border-bottom:1px solid #f0f1f7; font-weight:600;">Recent events</div>
+          <div style="font-size:12.5px;">
+            <div style="display:flex; gap:10px; padding:9px 15px; border-bottom:1px solid #f0f0f1;"><span style="color:#22c55e;">✓</span><span style="flex:1;">Order #8459 (Maja Kovač) → earn event accepted · +{{ lastEarn }} pts</span><span style="color:#787c82;">2 min</span></div>
+            <div style="display:flex; gap:10px; padding:9px 15px; border-bottom:1px solid #f0f0f1;"><span style="color:#22c55e;">✓</span><span style="flex:1;">Coupon ROSY-MK-7D2F created from reward redemption</span><span style="color:#787c82;">14 min</span></div>
+            <sc-if value="{{ needsAttention }}" hint-placeholder-val="{{ true }}"><div style="display:flex; gap:10px; padding:9px 15px; border-bottom:1px solid #f0f0f1;"><span style="color:#d63638;">✕</span><span style="flex:1;">Refund #8444 → reversal event failed (HTTP 429) · queued for retry</span><span style="color:#787c82;">31 min</span></div></sc-if>
+            <sc-if value="{{ recovered }}" hint-placeholder-val="{{ false }}"><div style="display:flex; gap:10px; padding:9px 15px; border-bottom:1px solid #f0f0f1;"><span style="color:#22c55e;">✓</span><span style="flex:1;">Refund #8444 → reversal event delivered after retry</span><span style="color:#787c82;">just now</span></div></sc-if>
+            <div style="display:flex; gap:10px; padding:9px 15px; border-bottom:1px solid #f0f0f1;"><span style="color:#22c55e;">✓</span><span style="flex:1;">Customer nika.zupan@… identity linked to loyalty member</span><span style="color:#787c82;">3 h</span></div>
+            <div style="display:flex; gap:10px; padding:9px 15px;"><span style="color:#22c55e;">✓</span><span style="flex:1;">Nightly reconciliation completed · 0 mismatches</span><span style="color:#787c82;">06:00</span></div>
+          </div>
+        </div>
+        <div style="flex:1 1 280px; min-width:0; background:#fff; border:1px solid #e7e9f2; border-radius:14px; padding:13px 15px;">
+          <div style="font-weight:600;">Synchronization</div>
+          <div style="margin-top:9px; font-size:12.5px; color:#6b7280; line-height:1.7;">
+            Last successful sync: <strong style="color:#1d2327;">today 09:39</strong><br>
+            Last processed order: <strong style="color:#1d2327;">#8459 · 2 min ago</strong><br>
+            Queue: <strong style="color:#1d2327;">{{ queueSummary }}</strong>
+          </div>
+          <a href="wc-loyalty-sync.dc.html" style="display:inline-flex; margin-top:10px;">Open Sync tab</a>
+          <div style="margin-top:14px; padding-top:12px; border-top:1px solid #dcdcde; font-weight:600;">Setup checklist</div>
+          <div style="margin-top:8px; font-size:12.5px; line-height:1.9;">
+            <div><span style="color:#22c55e;">✓</span> Store connected &amp; reconciled</div>
+            <div><span style="color:#22c55e;">✓</span> Launcher, product &amp; cart surfaces live</div>
+            <div><span style="color:#dba617;">•</span> Checkout message not placed (optional) — <a href="wc-loyalty-storefront.dc.html">placement help</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1366,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  renderVals() { const vals = this.__rv3 ? this.__rv3() : {}; vals.toggleDark = () => { const r = document.documentElement; const on = r.getAttribute('data-sf-dark') === '1'; if (on) { r.removeAttribute('data-sf-dark'); } else { r.setAttribute('data-sf-dark', '1'); } try { localStorage.setItem('sf_dark', on ? '0' : '1'); } catch (e) {} this.forceUpdate(); }; return vals; }
+  __rv3() {
+    let fixed = false;
+    try { fixed = localStorage.getItem('sf_wc_fixed') === '1'; } catch (e) {}
+    return {
+      needsAttention: !fixed, recovered: fixed,
+      queueDot: fixed ? '#22c55e' : '#dba617',
+      queueSummary: fixed ? '0 pending · 0 failed' : '3 pending · 1 failed',
+      lastEarn: 372
+    };
+  }
+}
+</script>
+</body>
+</html>

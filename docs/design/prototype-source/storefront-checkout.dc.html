@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Lora:wght@500;600&display=swap" rel="stylesheet">
+<style>
+body { margin:0; font-family:'Geist',ui-sans-serif,system-ui,sans-serif; background:#faf7f4; color:#2d2420; -webkit-font-smoothing:antialiased; }
+a { color:var(--rosy, #b13d5e); text-decoration:none; } a:hover { color:var(--rosy-deep, #8f2f4b); }
+* { box-sizing:border-box; }
+:where(button, a, input, select, textarea):focus-visible { outline:2px solid var(--rosy, #b13d5e) !important; outline-offset:2px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:0.01ms !important; transition-duration:0.01ms !important; } }
+</style>
+</helmet>
+<div style="--rosy:{{ themeBrand }}; --rosy-deep:{{ themeBrandDeep }}; min-height:100vh; display:flex; flex-direction:column;">
+  <header style="background:#fff; border-bottom:1px solid #eee3da;">
+    <div style="max-width:980px; margin:0 auto; padding:0 20px; height:58px; display:flex; align-items:center; gap:14px;">
+      <a href="storefront-cart.dc.html" style="display:flex; align-items:center; gap:6px; font-size:13px; color:#6e5d52;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>Cart</a>
+      <div style="flex:1;"></div>
+      <span style="font-family:'Lora',serif; font-size:15px; font-weight:600; letter-spacing:.12em;">NINA &amp; VALENTIN</span>
+      <div style="flex:1;"></div>
+      <span style="font-size:12px; color:#a08d80; display:inline-flex; align-items:center; gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>Secure checkout</span>
+    </div>
+  </header>
+  <main style="flex:1; max-width:980px; width:100%; margin:0 auto; padding:26px 20px 90px; display:flex; gap:28px; flex-wrap:wrap; align-items:flex-start;">
+    <div style="flex:1.3 1 400px; min-width:0; display:flex; flex-direction:column; gap:16px;">
+      <div style="background:#fff; border:1px solid #eee3da; border-radius:16px; padding:18px 20px;">
+        <div style="font-size:14px; font-weight:600;">Contact</div>
+        <input value="maja.kovac@gmail.com" style="margin-top:10px; width:100%; height:42px; border:1px solid #ddc9bb; border-radius:10px; padding:0 13px; font-family:inherit; font-size:13.5px; background:#fff;" style-focus="outline:2px solid #f3d7e1; border-color:#e0aebf;">
+      </div>
+      <div style="background:#fff; border:1px solid #eee3da; border-radius:16px; padding:18px 20px;">
+        <div style="font-size:14px; font-weight:600;">Delivery</div>
+        <input value="Maja Kovač" style="margin-top:10px; width:100%; height:42px; border:1px solid #ddc9bb; border-radius:10px; padding:0 13px; font-family:inherit; font-size:13.5px;" style-focus="outline:2px solid #f3d7e1; border-color:#e0aebf;">
+        <input value="Trubarjeva cesta 24" style="margin-top:9px; width:100%; height:42px; border:1px solid #ddc9bb; border-radius:10px; padding:0 13px; font-family:inherit; font-size:13.5px;" style-focus="outline:2px solid #f3d7e1; border-color:#e0aebf;">
+        <div style="display:flex; gap:9px; margin-top:9px;">
+          <input value="1000" style="width:110px; height:42px; border:1px solid #ddc9bb; border-radius:10px; padding:0 13px; font-family:inherit; font-size:13.5px;" style-focus="outline:2px solid #f3d7e1; border-color:#e0aebf;">
+          <input value="Ljubljana" style="flex:1; height:42px; border:1px solid #ddc9bb; border-radius:10px; padding:0 13px; font-family:inherit; font-size:13.5px;" style-focus="outline:2px solid #f3d7e1; border-color:#e0aebf;">
+        </div>
+      </div>
+      <div style="background:#fff; border:1px solid #eee3da; border-radius:16px; padding:18px 20px;">
+        <div style="font-size:14px; font-weight:600;">Payment</div>
+        <div style="margin-top:10px; border:1px solid #ddc9bb; border-radius:10px; padding:12px 13px; display:flex; align-items:center; gap:10px; font-size:13.5px;"><span style="width:16px; height:16px; border-radius:50%; border:5px solid var(--rosy, #b13d5e);"></span>Card ending 4421<span style="flex:1;"></span><span style="font-size:11px; color:#a08d80;">demo</span></div>
+      </div>
+    </div>
+    <div style="flex:1 1 300px; min-width:0; background:#fff; border:1px solid #eee3da; border-radius:16px; padding:18px 20px; position:sticky; top:16px;">
+      <div style="font-family:'Lora',serif; font-size:16px; font-weight:600;">Order summary</div>
+      <div style="margin-top:12px; font-size:13.5px; display:flex; flex-direction:column; gap:9px;">
+        <div style="display:flex;"><span style="color:#6e5d52;">Rose Petal Serum</span><span style="flex:1;"></span><span style="font-variant-numeric:tabular-nums;">€38.00</span></div>
+        <div style="display:flex;"><span style="color:#6e5d52;">Silk Cleansing Balm</span><span style="flex:1;"></span><span style="font-variant-numeric:tabular-nums;">€24.00</span></div>
+        <sc-if value="{{ hasReward }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex; color:#0f766e;"><span>{{ rewardLabel }} ✓</span><span style="flex:1;"></span><span style="font-variant-numeric:tabular-nums;">−{{ discountFmt }}</span></div>
+        </sc-if>
+        <div style="display:flex;"><span style="color:#6e5d52;">Shipping</span><span style="flex:1;"></span><span style="font-variant-numeric:tabular-nums;">{{ shippingFmt }}</span></div>
+        <div style="display:flex; border-top:1px solid #f6ede5; padding-top:10px; font-weight:600; font-size:15px;"><span>Total</span><span style="flex:1;"></span><span style="font-variant-numeric:tabular-nums;">{{ totalFmt }}</span></div>
+      </div>
+      <sc-if value="{{ showEarn }}" hint-placeholder-val="{{ true }}">
+        <div style="margin-top:12px; background:#fdf2f6; border:1px solid #f3d7e1; border-radius:10px; padding:10px 13px; font-size:12.5px; color:#6e4a58;">You'll earn about <strong style="color:#2d2420;">{{ projected }} {{ currencyName }}</strong> when this order ships.</div>
+      </sc-if>
+      <a href="storefront-thankyou.dc.html" style="display:flex; align-items:center; justify-content:center; margin-top:14px; height:46px; border-radius:999px; background:#2d2420; color:#fff; font-size:14px; font-weight:600;" style-hover="background:#1a1512; color:#fff;">Pay {{ totalFmt }}</a>
+      <div style="margin-top:10px; font-size:11px; color:#c4b2a5; text-align:center;">Demo checkout · no payment is taken · {{ deliveryLabel }}</div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  loadStore() {
+    const d = { viewer: 'member', platform: 'woo', bonus: false, error: false };
+    try { return Object.assign(d, JSON.parse(localStorage.getItem('sf_store') || '{}')); } catch (e) { return d; }
+  }
+  renderVals() { const vals = this.__rv2(); let th = null; try { th = JSON.parse(localStorage.getItem('sf_theme') || 'null'); } catch (e) {} const b = (th && th.brand) || '#b13d5e'; vals.themeBrand = b; vals.themeBrandDeep = 'color-mix(in srgb, ' + b + ' 76%, #000)'; vals.currencyName = (th && th.currency) || 'Petals'; vals.heroMsg = (th && th.hero) || 'Beauty that gives back'; return vals; }
+  __rv2() {
+    const st = this.loadStore();
+    const member = st.viewer === 'member';
+    let applied = null;
+    if (member && !st.error) { try { applied = JSON.parse(localStorage.getItem('sf_cart_reward') || 'null'); } catch (e) {} }
+    const subtotal = 62;
+    const discount = applied && applied.type === 'discount' ? applied.value : 0;
+    const shipping = applied && applied.type === 'shipping' ? 0 : 4.9;
+    const total = subtotal - discount + shipping;
+    const projected = Math.round((subtotal - discount) * (member ? 6 : 5) * (st.bonus ? 2 : 1));
+    return {
+      hasReward: !!applied && (applied.type === 'shipping' ? false : applied.value > 0),
+      rewardLabel: applied ? applied.name : '', discountFmt: '€' + discount.toFixed(2),
+      shippingFmt: shipping === 0 ? 'Free ✓' : '€' + shipping.toFixed(2),
+      totalFmt: '€' + total.toFixed(2),
+      showEarn: member && !st.error, projected,
+      deliveryLabel: st.platform === 'shopify' ? 'thank-you via Shopify UI extension' : 'WooCommerce Blocks checkout'
+    };
+  }
+}
+</script>
+</body>
+</html>

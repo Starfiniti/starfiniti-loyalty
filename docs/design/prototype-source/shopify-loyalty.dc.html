@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body { margin:0; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background:#f1f1f1; color:#303030; -webkit-font-smoothing:antialiased; }
+a { color:#005bd3; text-decoration:none; } a:hover { color:#004299; text-decoration:underline; }
+* { box-sizing:border-box; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:0.01ms !important; transition-duration:0.01ms !important; } }
+@media (max-width: 880px) { div[data-shnav] { display:none; } }
+:where(button, a, input, select):focus-visible { outline:2px solid #005bd3 !important; outline-offset:2px; }
+</style>
+</helmet>
+<div style="min-height:100vh; display:flex; flex-direction:column; font-size:13px;">
+  <div style="height:56px; background:#1a1a1a; color:#e3e3e3; display:flex; align-items:center; gap:14px; padding:0 16px; flex-shrink:0;">
+    <span style="display:flex; align-items:center; gap:8px; font-weight:700; font-size:14px;"><span style="width:26px; height:26px; border-radius:7px; background:#95bf47; color:#fff; display:inline-flex; align-items:center; justify-content:center; font-size:14px; font-weight:800;">S</span><span style="color:#fff;">shopify</span></span>
+    <div style="flex:1; max-width:620px; margin:0 auto; height:32px; background:#303030; border:1px solid #616161; border-radius:8px; display:flex; align-items:center; gap:8px; padding:0 10px; color:#b5b5b5; font-size:12.5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>Search<span style="flex:1;"></span><kbd style="font-family:inherit; font-size:10.5px; background:#1a1a1a; border:1px solid #616161; border-radius:4px; padding:1px 5px;">⌘K</kbd></div>
+    <span style="font-size:11px; font-weight:600; color:#f0c33c;">SHOPIFY-ADMIN PROTOTYPE</span>
+    <span style="width:28px; height:28px; border-radius:50%; background:#b13d5e; color:#fff; display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:700;">NV</span>
+  </div>
+  <div style="flex:1; display:flex; align-items:stretch;">
+    <div data-shnav="1" style="width:232px; flex-shrink:0; background:#ebebeb; padding:12px 8px 40px; font-size:13px; color:#303030;">
+      <div style="padding:6px 10px; border-radius:8px; font-weight:500; color:#616161;">Home</div>
+      <div style="padding:6px 10px; border-radius:8px; font-weight:500; color:#616161;">Orders <span style="float:right; font-size:11px; color:#8a8a8a;">14</span></div>
+      <div style="padding:6px 10px; border-radius:8px; font-weight:500; color:#616161;">Products</div>
+      <div style="padding:6px 10px; border-radius:8px; font-weight:500; color:#616161;">Customers</div>
+      <div style="padding:6px 10px; border-radius:8px; font-weight:500; color:#616161;">Marketing</div>
+      <div style="padding:6px 10px; border-radius:8px; font-weight:500; color:#616161;">Discounts</div>
+      <div style="padding:6px 10px; border-radius:8px; font-weight:500; color:#616161;">Analytics</div>
+      <div style="margin-top:10px; padding:6px 10px; font-size:11px; font-weight:600; color:#8a8a8a; text-transform:uppercase; letter-spacing:.04em;">Apps</div>
+      <div style="padding:6px 10px; border-radius:8px; font-weight:600; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.08); display:flex; align-items:center; gap:8px;"><img src="assets/images/starfiniti-icon.png" alt="" style="width:18px; height:18px; border-radius:5px;">Starfiniti Loyalty</div>
+      <div style="padding:6px 10px 6px 36px; border-radius:8px; font-size:12.5px; color:#303030; font-weight:600;">Overview</div>
+      <div style="padding:5px 10px 5px 36px; border-radius:8px; font-size:12.5px; color:#616161;">Storefront</div>
+      <div style="padding:5px 10px 5px 36px; border-radius:8px; font-size:12.5px; color:#616161;">Sync</div>
+      <div style="padding:5px 10px 5px 36px; border-radius:8px; font-size:12.5px; color:#616161;">Settings</div>
+      <div style="margin-top:10px; padding:6px 10px; border-radius:8px; font-weight:500; color:#616161;">Settings</div>
+    </div>
+    <div style="flex:1; min-width:0; padding:20px 24px 70px; max-width:1100px;">
+      <div style="height:3px; background:linear-gradient(90deg, #3b2fc9, #7c5cfc); border-radius:3px 3px 0 0;"></div>
+      <div style="background:#fff; border:1px solid #e3e3e3; border-top:none; border-radius:0 0 12px 12px; padding:14px 18px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; box-shadow:0 1px 2px rgba(0,0,0,.05);">
+        <img src="assets/images/starfiniti-icon.png" alt="Starfiniti" style="width:40px; height:40px; border-radius:10px; flex-shrink:0;">
+        <div style="flex:1; min-width:220px;">
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;"><h1 style="margin:0; font-size:18px; font-weight:800; letter-spacing:-0.2px; color:#111827;">Starfiniti Loyalty</h1><span style="background:#eeedfc; border-radius:20px; color:#4438c9; font-size:11px; font-weight:700; padding:2px 8px;">CONNECTED</span><span style="background:#f1f8f5; border:1px solid #b4dfc4; border-radius:20px; color:#0c5132; font-size:11px; font-weight:600; padding:2px 8px;">Theme app embed active</span></div>
+          <div style="color:#616161; font-size:12.5px; margin-top:2px;">Alpine Trails · alpinetrails.myshopify.com · same workspace pattern as WooCommerce</div>
+        </div>
+        <a href="overview.dc.html" style="height:32px; padding:0 14px; border-radius:8px; background:linear-gradient(90deg, #4438c9, #6d4ef0); color:#fff; font-size:12.5px; font-weight:700; display:inline-flex; align-items:center; box-shadow:0 2px 8px rgba(83,70,230,.35); text-decoration:none;" style-hover="color:#fff; text-decoration:none;">Open Loyalty Dashboard ↗</a>
+      </div>
+      <div style="margin-top:14px; background:#fff; border:1px solid #e3e3e3; border-radius:12px; padding:12px 16px; display:flex; gap:0; flex-wrap:wrap; box-shadow:0 1px 2px rgba(0,0,0,.05);">
+        <div style="flex:1; min-width:150px; display:flex; align-items:center; gap:8px; padding:4px 0;"><span style="width:8px; height:8px; border-radius:50%; background:#22c55e;"></span>API connection</div>
+        <div style="flex:1; min-width:150px; display:flex; align-items:center; gap:8px; padding:4px 0;"><span style="width:8px; height:8px; border-radius:50%; background:#22c55e;"></span>Webhooks (GraphQL)</div>
+        <div style="flex:1; min-width:150px; display:flex; align-items:center; gap:8px; padding:4px 0;"><span style="width:8px; height:8px; border-radius:50%; background:#22c55e;"></span>Theme app extension</div>
+        <div style="flex:1; min-width:150px; display:flex; align-items:center; gap:8px; padding:4px 0;"><span style="width:8px; height:8px; border-radius:50%; background:#22c55e;"></span>Customer Account ext.</div>
+        <div style="flex:1; min-width:150px; display:flex; align-items:center; gap:8px; padding:4px 0;"><span style="width:8px; height:8px; border-radius:50%; background:#8a8a8a;"></span>Checkout ext. (plan-gated)</div>
+      </div>
+      <div style="margin-top:14px; display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
+        <a href="analytics.dc.html" style="background:#fff; border:1px solid #e3e3e3; border-radius:12px; padding:13px 15px; text-decoration:none; color:#303030; box-shadow:0 1px 2px rgba(0,0,0,.05);" style-hover="border-color:#5346e6; text-decoration:none;"><div style="font-size:11px; color:#6b7280; font-weight:700; text-transform:uppercase; letter-spacing:.5px;">Members</div><div style="font-size:22px; font-weight:800; margin-top:4px; font-variant-numeric:tabular-nums;">7,204</div><div style="font-size:11.5px; color:#5346e6; margin-top:4px;">View in Starfiniti ↗</div></a>
+        <a href="analytics.dc.html" style="background:#fff; border:1px solid #e3e3e3; border-radius:12px; padding:13px 15px; text-decoration:none; color:#303030; box-shadow:0 1px 2px rgba(0,0,0,.05);" style-hover="border-color:#5346e6; text-decoration:none;"><div style="font-size:11px; color:#6b7280; font-weight:700; text-transform:uppercase; letter-spacing:.5px;">Points issued · 30 d</div><div style="font-size:22px; font-weight:800; margin-top:4px; font-variant-numeric:tabular-nums;">74,180</div><div style="font-size:11.5px; color:#5346e6; margin-top:4px;">View in Starfiniti ↗</div></a>
+        <a href="analytics.dc.html" style="background:#fff; border:1px solid #e3e3e3; border-radius:12px; padding:13px 15px; text-decoration:none; color:#303030; box-shadow:0 1px 2px rgba(0,0,0,.05);" style-hover="border-color:#5346e6; text-decoration:none;"><div style="font-size:11px; color:#6b7280; font-weight:700; text-transform:uppercase; letter-spacing:.5px;">Rewards redeemed · 30 d</div><div style="font-size:22px; font-weight:800; margin-top:4px; font-variant-numeric:tabular-nums;">691</div><div style="font-size:11.5px; color:#5346e6; margin-top:4px;">View in Starfiniti ↗</div></a>
+        <a href="analytics.dc.html" style="background:#fff; border:1px solid #e3e3e3; border-radius:12px; padding:13px 15px; text-decoration:none; color:#303030; box-shadow:0 1px 2px rgba(0,0,0,.05);" style-hover="border-color:#5346e6; text-decoration:none;"><div style="font-size:11px; color:#6b7280; font-weight:700; text-transform:uppercase; letter-spacing:.5px;">Member revenue · 30 d</div><div style="font-size:22px; font-weight:800; margin-top:4px; font-variant-numeric:tabular-nums;">€96,410</div><div style="font-size:11.5px; color:#5346e6; margin-top:4px;">View in Starfiniti ↗</div></a>
+      </div>
+      <div style="margin-top:14px; display:flex; gap:12px; flex-wrap:wrap; align-items:flex-start;">
+        <div style="flex:1.4 1 380px; min-width:0; background:#fff; border:1px solid #e3e3e3; border-radius:12px; box-shadow:0 1px 2px rgba(0,0,0,.05);">
+          <div style="padding:11px 15px; border-bottom:1px solid #f0f1f7; font-weight:600;">Storefront surfaces (theme app extension)</div>
+          <div style="font-size:12.5px;">
+            <div style="display:flex; gap:10px; padding:9px 15px; border-bottom:1px solid #f1f1f1; align-items:center;"><span style="flex:1; font-weight:600;">Launcher &amp; wallet drawer</span><span style="color:#616161;">App embed · all pages</span><span style="color:#15803d; font-weight:600;">Live</span></div>
+            <div style="display:flex; gap:10px; padding:9px 15px; border-bottom:1px solid #f1f1f1; align-items:center;"><span style="flex:1; font-weight:600;">Product points block</span><span style="color:#616161;">Theme app block · near price</span><span style="color:#15803d; font-weight:600;">Live</span></div>
+            <div style="display:flex; gap:10px; padding:9px 15px; border-bottom:1px solid #f1f1f1; align-items:center;"><span style="flex:1; font-weight:600;">Cart reward module</span><span style="color:#616161;">Cart integration</span><span style="color:#15803d; font-weight:600;">Live</span></div>
+            <div style="display:flex; gap:10px; padding:9px 15px; border-bottom:1px solid #f1f1f1; align-items:center;"><span style="flex:1; font-weight:600;">Customer Account → Rewards</span><span style="color:#616161;">Full-page UI extension</span><span style="color:#15803d; font-weight:600;">Live</span></div>
+            <div style="display:flex; gap:10px; padding:9px 15px; align-items:center;"><span style="flex:1; font-weight:600;">Checkout message</span><span style="color:#616161;">Checkout UI extension</span><span style="color:#996800; font-weight:600;">Plan-gated · optional</span></div>
+          </div>
+        </div>
+        <div style="flex:1 1 300px; min-width:0; background:#fff; border:1px solid #e3e3e3; border-radius:12px; padding:13px 15px; box-shadow:0 1px 2px rgba(0,0,0,.05);">
+          <div style="font-weight:600;">Same connector, Shopify delivery</div>
+          <p style="margin:8px 0 0; font-size:12.5px; color:#616161; line-height:1.65;">This app mirrors the WooCommerce plugin: thin connector, signed events, retry queue, deep links to the hosted dashboard. Surfaces render via theme app extensions instead of plugin hooks; the core journey works through cart, account, and thank-you even without the plan-gated checkout step.</p>
+          <div style="margin-top:10px; font-size:12.5px; line-height:2;">
+            <a href="wc-loyalty.dc.html">Compare: WooCommerce plugin admin ↗</a><br>
+            <a href="storefront-product.dc.html">Storefront demo (switch delivery to Shopify) ↗</a>
+          </div>
+        </div>
+      </div>
+      <p style="margin:14px 0 0; font-size:12px; color:#8a8a8a;">Prototype route per brief §5.19 note — Shopify admin is the optional twin; WooCommerce is the reference implementation.</p>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1366,&quot;height&quot;:900}}"></script>
+</body>
+</html>

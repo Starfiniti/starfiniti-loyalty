@@ -1,0 +1,84 @@
+version: 1
+updated: 2026-08-11
+scope:
+  active: [self-hosted-supabase, proxmox, nextjs, woocommerce]
+  deferred: [shopify]
+tasks:
+  - id: P0-BOOTSTRAP
+    title: Bootstrap repository and reproducible baseline
+    phase: 0
+    status: blocked
+    dependencies: []
+    acceptance:
+      - npm clean install succeeds
+      - format, lint, typecheck, unit tests, and production build pass
+      - migration and secret validation pass
+      - CI encodes the same gates
+      - new agents can reconstruct state from repository documents
+    verification:
+      - npm ci
+      - npm run check
+      - npm run db:validate
+      - npm run secrets:scan
+      - npm run audit:prod
+    risks: [R-003, R-006]
+    docs:
+      [
+        AGENTS.md,
+        PLANS.md,
+        STATUS.md,
+        docs/architecture/ADR/0001-modular-monolith-and-npm-workspaces.md,
+      ]
+    evidence:
+      - npm ci passed from an empty node_modules on 2026-08-11
+      - npm run check passed on 2026-08-11
+      - four unit tests passed
+      - standalone HTML CSS and JavaScript returned HTTP 200
+      - design-qa.md final result passed
+      - PHP 8.3 syntax checks passed
+      - Docker-backed database gate remains outstanding
+      - database CI job and pgTAP security suite added on 2026-08-11
+      - npm run ci:validate passed for two pinned-action jobs
+      - npm run db:validate passed for Postgres 17 config, one migration, and one pgTAP file
+      - local npm run db:verify correctly stopped because Docker, Podman, and WSL are unavailable
+      - third consecutive blocker audit confirmed no container runtime, Git remote, Supabase MCP configuration, or Proxmox access on 2026-08-11
+  - id: P1-DOMAIN-DECISIONS
+    title: Resolve and encode loyalty value semantics
+    phase: 1
+    status: proposed
+    dependencies: [P0-BOOTSTRAP]
+    acceptance:
+      - Balance-affecting behavior is unambiguous
+      - Rosy Rewards has executable examples
+      - Owner decisions are recorded without hardcoded merchant assumptions
+    verification: [npm run test --workspace=@starfiniti/domain]
+    risks: [R-007]
+    docs:
+      [docs/product/PRODUCT_REQUIREMENTS.md, docs/product/PROGRAMME_EXAMPLES.md]
+    evidence: []
+  - id: P2-TENANCY-SCHEMA
+    title: Implement tenancy schema and adversarial RLS tests
+    phase: 3
+    status: proposed
+    dependencies: [P1-DOMAIN-DECISIONS]
+    acceptance:
+      - Every exposed tenant table has RLS
+      - Cross-tenant tests fail closed
+      - No service key reaches client bundles
+    verification: [npm run db:test]
+    risks: [R-001]
+    docs: [docs/architecture/DATA_MODEL.md, docs/security/THREAT_MODEL.md]
+    evidence: []
+  - id: P4-WC-INBOX
+    title: Implement signed WooCommerce inbox and idempotent normalization
+    phase: 4
+    status: proposed
+    dependencies: [P2-TENANCY-SCHEMA]
+    acceptance:
+      - Duplicate, delayed, and out-of-order events are safe
+      - Invalid signatures fail before payload processing
+      - Checkout never depends synchronously on the central service
+    verification: [npm run test]
+    risks: [R-002, R-005]
+    docs: [docs/integrations/WOOCOMMERCE.md, docs/api/WEBHOOKS.md]
+    evidence: []

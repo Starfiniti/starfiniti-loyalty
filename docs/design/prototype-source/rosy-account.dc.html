@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Lora:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
+<style>
+body { margin:0; font-family:'Geist',ui-sans-serif,system-ui,sans-serif; background:#fdf8f6; color:#3b2b30; -webkit-font-smoothing:antialiased; }
+a { color:var(--rosy, #b13d5e); text-decoration:none; } a:hover { color:var(--rosy-deep, #8f2f4b); }
+* { box-sizing:border-box; }
+:where(button, a, input, select, textarea):focus-visible { outline:2px solid var(--rosy, #b13d5e) !important; outline-offset:2px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; } }
+</style>
+</helmet>
+<div style="--rosy:{{ themeBrand }}; --rosy-deep:{{ themeBrandDeep }}; min-height:100vh; display:flex; flex-direction:column; align-items:center;">
+  <div style="width:100%; max-width:960px; padding:0 0 56px; display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:center;">
+    <header style="width:100%; display:flex; align-items:center; gap:10px; padding:18px 20px;">
+      <div style="width:30px; height:30px; border-radius:50%; background:var(--rosy, #b13d5e); color:#fff; display:flex; align-items:center; justify-content:center; font-family:'Lora',serif; font-size:14px; font-weight:600;">R</div>
+      <div style="font-family:'Lora',serif; font-size:17px; font-weight:600; letter-spacing:.01em;">Rosy Rewards</div>
+      <div style="flex:1;"></div>
+      <a href="rosy-rewards.dc.html" style="font-size:13px; font-weight:500;">How it works</a>
+      <div style="width:30px; height:30px; border-radius:50%; background:#fce7ef; color:var(--rosy-deep, #8f2f4b); display:flex; align-items:center; justify-content:center; font-size:11.5px; font-weight:600;">MK</div>
+    </header>
+    <div style="flex:1 1 340px; min-width:0; max-width:480px; display:flex; flex-direction:column;">
+    <div style="margin:6px 16px 0; background:var(--rosy, #b13d5e); border-radius:20px; padding:24px 22px; color:#fff; position:relative; overflow:hidden;">
+      <div style="position:absolute; right:-40px; top:-50px; width:180px; height:180px; border-radius:50%; background:rgba(255,255,255,.07);"></div>
+      <div style="position:absolute; right:30px; bottom:-70px; width:140px; height:140px; border-radius:50%; background:rgba(255,255,255,.05);"></div>
+      <div style="font-size:12.5px; opacity:.85;">Hi Maja, your balance</div>
+      <div style="display:flex; align-items:baseline; gap:8px; margin-top:6px;">
+        <span style="font-size:38px; font-weight:600; letter-spacing:-.02em; font-variant-numeric:tabular-nums;">{{ balanceFmt }}</span>
+        <span style="font-size:14px; opacity:.85;">pts · worth {{ valueFmt }}</span>
+      </div>
+      <div style="margin-top:18px;">
+        <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:7px;">
+          <span style="font-weight:600;">Bloom member</span>
+          <span style="opacity:.85;">{{ toIconFmt }} to Icon</span>
+        </div>
+        <div style="height:7px; border-radius:999px; background:rgba(255,255,255,.25);"><div style="width:{{ tierPct }}%; height:100%; border-radius:999px; background:#fff; transition:width .4s ease;"></div></div>
+        <div style="display:flex; justify-content:space-between; font-size:11px; opacity:.7; margin-top:6px;"><span>€150</span><span>€500</span></div>
+      </div>
+    </div>
+    <div style="margin:12px 16px 0; background:#fff; border:1px solid #f3dfe6; border-radius:16px; padding:14px 16px; display:flex; gap:12px; align-items:center;">
+      <div style="width:36px; height:36px; border-radius:10px; background:#fff7ed; display:flex; align-items:center; justify-content:center; flex-shrink:0;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
+      <div style="flex:1; font-size:13px; line-height:1.45; color:#6b4a55;"><strong style="color:#3b2b30; font-weight:600;">180 points expire on 14 Sep.</strong> Redeem a reward before then so they don't go to waste.</div>
+    </div>
+    <div style="display:flex; align-items:baseline; gap:8px; margin:26px 20px 12px;">
+      <h2 style="margin:0; font-family:'Lora',serif; font-size:19px; font-weight:600;">Your rewards</h2>
+      <span style="font-size:12.5px; color:#a5798a;">Redeem anytime at checkout</span>
+    </div>
+    <div style="display:flex; gap:10px; overflow-x:auto; padding:2px 16px 8px; scrollbar-width:none;">
+      <sc-for list="{{ rewards }}" as="r" hint-placeholder-count="4">
+        <div style="flex-shrink:0; width:150px; background:#fff; border:1px solid #f3dfe6; border-radius:16px; padding:14px; display:flex; flex-direction:column; gap:8px;">
+          <div style="width:34px; height:34px; border-radius:10px; background:#fce7ef; display:flex; align-items:center; justify-content:center; font-size:15px; color:var(--rosy, #b13d5e); font-family:'Lora',serif; font-weight:600;">{{ r.glyph }}</div>
+          <div style="font-size:13.5px; font-weight:600; line-height:1.3;">{{ r.name }}</div>
+          <div style="font-size:12px; color:#a5798a; font-variant-numeric:tabular-nums;">{{ r.costFmt }} pts</div>
+          <sc-if value="{{ r.affordable }}" hint-placeholder-val="{{ true }}">
+            <button onClick="{{ r.pick }}" style="margin-top:2px; height:32px; border-radius:999px; border:none; background:var(--rosy, #b13d5e); color:#fff; font-family:inherit; font-size:12.5px; font-weight:600; cursor:pointer;" style-hover="background:var(--rosy-deep, #8f2f4b);">Redeem</button>
+          </sc-if>
+          <sc-if value="{{ r.locked }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:2px; height:32px; border-radius:999px; background:#faf0f3; color:#c9a2b1; font-size:12.5px; font-weight:600; display:flex; align-items:center; justify-content:center;">{{ r.shortFmt }} pts to go</div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+    </div>
+    <div style="flex:1 1 340px; min-width:0; max-width:480px; display:flex; flex-direction:column;">
+    <div style="margin:22px 16px 0; background:#fff; border:1px solid #f3dfe6; border-radius:16px; padding:16px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="flex:1;">
+          <div style="font-size:14px; font-weight:600;">Give €10, get 400 points</div>
+          <div style="font-size:12.5px; color:#a5798a; margin-top:3px;">When a friend places their first order</div>
+        </div>
+        <button onClick="{{ copyLink }}" style="height:34px; padding:0 14px; border-radius:999px; border:1px solid #ecc9d6; background:#fff; color:var(--rosy, #b13d5e); font-family:inherit; font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap;" style-hover="background:#fce7ef;">{{ copyLabel }}</button>
+      </div>
+      <div style="margin-top:10px; background:#fdf8f6; border-radius:10px; padding:9px 12px; font-size:12.5px; color:#8f6f7c; font-variant-numeric:tabular-nums; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">ninavalentin.si/r/maja-k4v2</div>
+    </div>
+    <div style="display:flex; align-items:baseline; gap:8px; margin:26px 20px 6px;">
+      <h2 style="margin:0; font-family:'Lora',serif; font-size:19px; font-weight:600;">History</h2>
+    </div>
+    <div style="margin:0 16px; background:#fff; border:1px solid #f3dfe6; border-radius:16px; overflow:hidden;">
+      <sc-for list="{{ history }}" as="h" hint-placeholder-count="5">
+        <div style="display:flex; align-items:center; gap:12px; padding:13px 16px; border-bottom:1px solid #faf0f3;">
+          <div style="flex:1; min-width:0;">
+            <div style="font-size:13.5px; font-weight:500;">{{ h.label }}</div>
+            <div style="font-size:12px; color:#a5798a; margin-top:2px;">{{ h.meta }}</div>
+          </div>
+          <div style="font-size:13.5px; font-weight:600; font-variant-numeric:tabular-nums; color:{{ h.color }};">{{ h.delta }}</div>
+        </div>
+      </sc-for>
+    </div>
+    <p style="margin:18px 20px 0; font-size:11.5px; color:#c9a2b1; text-align:center;">Points expire 12 months after they are earned. Demo environment with sample data.</p>
+    </div>
+  </div>
+  <sc-if value="{{ confirmReward }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed; inset:0; background:rgba(59,43,48,.45); display:flex; align-items:flex-end; justify-content:center; z-index:50;" onClick="{{ closeConfirm }}">
+      <div style="background:#fff; border-radius:24px 24px 0 0; width:100%; max-width:480px; padding:24px 22px 30px;" onClick="{{ stop }}">
+        <div style="width:36px; height:4px; border-radius:999px; background:#f3dfe6; margin:0 auto 18px;"></div>
+        <sc-if value="{{ notRedeemed }}" hint-placeholder-val="{{ true }}">
+          <h3 style="margin:0; font-family:'Lora',serif; font-size:20px; font-weight:600;">Redeem {{ confirmName }}?</h3>
+          <p style="margin:8px 0 0; font-size:13.5px; color:#8f6f7c; line-height:1.5;">{{ confirmCostFmt }} points will be deducted. Your new balance will be <strong style="color:#3b2b30;">{{ afterBalanceFmt }} pts</strong>. The discount code applies automatically at checkout and is valid for 60 days.</p>
+          <div style="display:flex; gap:10px; margin-top:20px;">
+            <button onClick="{{ closeConfirm }}" style="flex:1; height:44px; border-radius:999px; border:1px solid #ecc9d6; background:#fff; color:var(--rosy-deep, #8f2f4b); font-family:inherit; font-size:14px; font-weight:600; cursor:pointer;" style-hover="background:#fce7ef;">Cancel</button>
+            <button onClick="{{ doRedeem }}" style="flex:1; height:44px; border-radius:999px; border:none; background:var(--rosy, #b13d5e); color:#fff; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer;" style-hover="background:var(--rosy-deep, #8f2f4b);">Confirm</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ redeemed }}" hint-placeholder-val="{{ false }}">
+          <div style="text-align:center; padding:6px 0 2px;">
+            <div style="width:52px; height:52px; border-radius:50%; background:#ecfdf5; display:flex; align-items:center; justify-content:center; margin:0 auto;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></div>
+            <h3 style="margin:14px 0 0; font-family:'Lora',serif; font-size:20px; font-weight:600;">{{ confirmName }} is yours</h3>
+            <p style="margin:8px 0 0; font-size:13.5px; color:#8f6f7c;">Code <strong style="color:#3b2b30; font-variant-numeric:tabular-nums;">ROSY-MK-7D2F</strong> · applied at checkout</p>
+            <button onClick="{{ closeConfirm }}" style="margin-top:20px; width:100%; height:44px; border-radius:999px; border:none; background:#3b2b30; color:#fff; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer;" style-hover="background:#2a1e22;">Done</button>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:844}}">
+class Component extends DCLogic {
+  state = { balance: 2450, redeemedList: [], confirm: null, done: false, copied: false };
+  componentDidMount() {
+    try {
+      const s = JSON.parse(localStorage.getItem('rosy_wallet') || 'null');
+      if (s && typeof s.balance === 'number') this.setState({ balance: s.balance, redeemedList: s.redeemedList || [] });
+    } catch (e) {}
+    try {
+      const o = JSON.parse(localStorage.getItem('rosy_orders') || '[]');
+      if (Array.isArray(o) && o.length) this.setState({ orders: o });
+    } catch (e) {}
+  }
+  persist(next) { try { localStorage.setItem('rosy_wallet', JSON.stringify(next)); } catch (e) {} }
+  fmt(n) { return n.toLocaleString('en-IE'); }
+  renderVals() { const vals = this.__rv2(); let th = null; try { th = JSON.parse(localStorage.getItem('sf_theme') || 'null'); } catch (e) {} const b = (th && th.brand) || '#b13d5e'; vals.themeBrand = b; vals.themeBrandDeep = 'color-mix(in srgb, ' + b + ' 76%, #000)'; vals.currencyName = (th && th.currency) || 'Petals'; vals.heroMsg = (th && th.hero) || 'Beauty that gives back'; return vals; }
+  __rv2() {
+    const catalog = [
+      { name: '€5 discount', cost: 500, glyph: '€5' },
+      { name: '€10 discount', cost: 1000, glyph: '€10' },
+      { name: 'Free shipping', cost: 700, glyph: '✈' },
+      { name: 'Free gift', cost: 1500, glyph: '❦' },
+      { name: 'Early access drop', cost: 2000, glyph: '★' }
+    ];
+    const bal = this.state.balance;
+    const rewards = catalog.map(r => ({
+      name: r.name, glyph: r.glyph, costFmt: this.fmt(r.cost),
+      affordable: bal >= r.cost, locked: bal < r.cost,
+      shortFmt: this.fmt(r.cost - bal),
+      pick: () => this.setState({ confirm: r, done: false })
+    }));
+    const baseHistory = [
+      { label: 'Order #8412', meta: '02 Aug · 5 pts per €1 + Bloom bonus', delta: '+340', color: '#059669' },
+      { label: 'Double points weekend', meta: '27 Jul · Campaign bonus', delta: '+290', color: '#059669' },
+      { label: 'Referred Nika Z.', meta: '21 Jul · Friend\u2019s first order', delta: '+400', color: '#059669' },
+      { label: 'Redeemed €5 discount', meta: '14 Jul · Code ROSY-MK-3B1A', delta: '\u2212500', color: '#b13d5e' },
+      { label: 'Birthday points', meta: '02 Jul · Happy birthday!', delta: '+300', color: '#059669' }
+    ];
+    const redeemedRows = this.state.redeemedList.map(r => ({
+      label: 'Redeemed ' + r.name, meta: 'Today · Code ROSY-MK-7D2F', delta: '\u2212' + this.fmt(r.cost), color: '#b13d5e'
+    }));
+    const c = this.state.confirm;
+    const spendToIcon = 500 - 318;
+    return {
+      balanceFmt: this.fmt(bal),
+      valueFmt: '€' + (bal / 100).toFixed(2),
+      tierPct: Math.round(((318 - 150) / 350) * 100),
+      toIconFmt: '€' + spendToIcon + ' spend',
+      rewards, history: [...((this.state.orders || []).map(o => ({ label: o.label, meta: o.meta, delta: o.delta, color: '#059669' }))), ...redeemedRows, ...baseHistory],
+      confirmReward: !!c, notRedeemed: !!c && !this.state.done, redeemed: !!c && this.state.done,
+      confirmName: c ? c.name : '', confirmCostFmt: c ? this.fmt(c.cost) : '',
+      afterBalanceFmt: c ? this.fmt(bal - c.cost) : '',
+      closeConfirm: () => this.setState({ confirm: null, done: false }),
+      stop: (e) => e.stopPropagation(),
+      doRedeem: () => {
+        const nb = bal - c.cost;
+        const list = [{ name: c.name, cost: c.cost }, ...this.state.redeemedList];
+        this.setState({ balance: nb, redeemedList: list, done: true });
+        this.persist({ balance: nb, redeemedList: list });
+      },
+      copyLink: () => {
+        try { navigator.clipboard.writeText('https://ninavalentin.si/r/maja-k4v2'); } catch (e) {}
+        this.setState({ copied: true });
+        setTimeout(() => this.setState({ copied: false }), 2000);
+      },
+      copyLabel: this.state.copied ? 'Copied ✓' : 'Copy link'
+    };
+  }
+}
+</script>
+</body>
+</html>

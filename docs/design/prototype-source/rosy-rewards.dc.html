@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Lora:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
+<style>
+body { margin:0; font-family:'Geist',ui-sans-serif,system-ui,sans-serif; background:#fdf8f6; color:#3b2b30; -webkit-font-smoothing:antialiased; }
+a { color:var(--rosy, #b13d5e); text-decoration:none; } a:hover { color:var(--rosy-deep, #8f2f4b); }
+* { box-sizing:border-box; }
+:where(button, a, input, select, textarea):focus-visible { outline:2px solid var(--rosy, #b13d5e) !important; outline-offset:2px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; } }
+</style>
+</helmet>
+<div style="--rosy:{{ themeBrand }}; --rosy-deep:{{ themeBrandDeep }}; min-height:100vh; display:flex; flex-direction:column; align-items:center;">
+  <div style="width:100%; max-width:920px; padding:0 20px 64px;">
+    <header style="display:flex; align-items:center; gap:10px; padding:20px 0;">
+      <div style="width:32px; height:32px; border-radius:50%; background:var(--rosy, #b13d5e); color:#fff; display:flex; align-items:center; justify-content:center; font-family:'Lora',serif; font-size:15px; font-weight:600;">R</div>
+      <div style="font-family:'Lora',serif; font-size:18px; font-weight:600;">Rosy Rewards</div>
+      <span style="font-size:12px; color:#c9a2b1;">by Nina &amp; Valentin</span>
+      <div style="flex:1;"></div>
+      <a href="storefront-product.dc.html" style="font-size:13px; font-weight:600; margin-right:14px;">Shop</a>
+      <a href="rosy-account.dc.html" style="height:36px; padding:0 16px; border-radius:999px; border:1px solid #ecc9d6; font-size:13px; font-weight:600; display:inline-flex; align-items:center;" style-hover="background:#fce7ef;">Sign in</a>
+    </header>
+    <section style="text-align:center; padding:44px 16px 12px;">
+      <div style="display:inline-flex; align-items:center; gap:7px; font-size:12px; font-weight:600; color:var(--rosy-deep, #8f2f4b); background:#fce7ef; border-radius:999px; padding:4px 12px;">Free to join · 100 Petals welcome gift</div>
+      <h1 style="margin:20px auto 0; font-family:'Lora',serif; font-size:38px; font-weight:600; line-height:1.2; max-width:560px; letter-spacing:-.01em; text-wrap:pretty;">{{ heroMsg }}</h1>
+      <p style="margin:14px auto 0; font-size:15px; color:#8f6f7c; line-height:1.6; max-width:460px;">Earn Petals on every order, unlock VIP treatment as you grow, and turn your points into real rewards.</p>
+      <a href="rosy-account.dc.html" style="display:inline-flex; align-items:center; margin-top:24px; height:46px; padding:0 28px; border-radius:999px; background:var(--rosy, #b13d5e); color:#fff; font-size:15px; font-weight:600;" style-hover="background:var(--rosy-deep, #8f2f4b); color:#fff;">Join free</a>
+      <div style="margin-top:12px; font-size:12.5px; color:#a5798a;">Already shopping with us? Your account is ready — just sign in.</div>
+    </section>
+    <section style="margin-top:44px;">
+      <h2 style="margin:0; font-family:'Lora',serif; font-size:23px; font-weight:600; text-align:center;">How it works</h2>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin-top:20px;">
+        <div style="background:#fff; border:1px solid #f3dfe6; border-radius:18px; padding:22px; text-align:center;">
+          <div style="width:44px; height:44px; border-radius:14px; background:#fce7ef; color:var(--rosy, #b13d5e); display:flex; align-items:center; justify-content:center; margin:0 auto;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></svg></div>
+          <div style="font-size:15px; font-weight:600; margin-top:12px;">1 · Shop</div>
+          <p style="margin:6px 0 0; font-size:13px; color:#8f6f7c; line-height:1.55;">Earn 5–7 Petals per €1 depending on your tier — plus bonuses on skincare.</p>
+        </div>
+        <div style="background:#fff; border:1px solid #f3dfe6; border-radius:18px; padding:22px; text-align:center;">
+          <div style="width:44px; height:44px; border-radius:14px; background:#fce7ef; color:var(--rosy, #b13d5e); display:flex; align-items:center; justify-content:center; margin:0 auto;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l4 6-10 13L2 9Z"></path><path d="M2 9h20"></path></svg></div>
+          <div style="font-size:15px; font-weight:600; margin-top:12px;">2 · Grow</div>
+          <p style="margin:6px 0 0; font-size:13px; color:#8f6f7c; line-height:1.55;">Climb from Rose to Bloom to Icon and earn faster with every tier.</p>
+        </div>
+        <div style="background:#fff; border:1px solid #f3dfe6; border-radius:18px; padding:22px; text-align:center;">
+          <div style="width:44px; height:44px; border-radius:14px; background:#fce7ef; color:var(--rosy, #b13d5e); display:flex; align-items:center; justify-content:center; margin:0 auto;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v10H4V12"></path><path d="M2 7h20v5H2z"></path><path d="M12 22V7"></path><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg></div>
+          <div style="font-size:15px; font-weight:600; margin-top:12px;">3 · Redeem</div>
+          <p style="margin:6px 0 0; font-size:13px; color:#8f6f7c; line-height:1.55;">Trade Petals for discounts, free shipping, gifts, and early access.</p>
+        </div>
+      </div>
+    </section>
+    <section style="margin-top:44px;">
+      <h2 style="margin:0; font-family:'Lora',serif; font-size:23px; font-weight:600; text-align:center;">Ways to earn</h2>
+      <div style="background:#fff; border:1px solid #f3dfe6; border-radius:18px; margin-top:20px; overflow:hidden;">
+        <div style="display:flex; align-items:center; gap:12px; padding:15px 20px; border-bottom:1px solid #faf0f3; font-size:14px;"><span style="font-weight:600; flex:1;">Place an order</span><span style="color:var(--rosy, #b13d5e); font-weight:600; font-variant-numeric:tabular-nums;">5–7 Petals / €1</span></div>
+        <div style="display:flex; align-items:center; gap:12px; padding:15px 20px; border-bottom:1px solid #faf0f3; font-size:14px;"><span style="font-weight:600; flex:1;">Create an account</span><span style="color:var(--rosy, #b13d5e); font-weight:600; font-variant-numeric:tabular-nums;">100 Petals</span></div>
+        <div style="display:flex; align-items:center; gap:12px; padding:15px 20px; border-bottom:1px solid #faf0f3; font-size:14px;"><span style="font-weight:600; flex:1;">Your birthday</span><span style="color:var(--rosy, #b13d5e); font-weight:600; font-variant-numeric:tabular-nums;">300 Petals</span></div>
+        <div style="display:flex; align-items:center; gap:12px; padding:15px 20px; border-bottom:1px solid #faf0f3; font-size:14px;"><span style="font-weight:600; flex:1;">Skincare products</span><span style="color:var(--rosy, #b13d5e); font-weight:600; font-variant-numeric:tabular-nums;">2× Petals</span></div>
+        <div style="display:flex; align-items:center; gap:12px; padding:15px 20px; font-size:14px;"><span style="font-weight:600; flex:1;">Refer a friend</span><span style="color:var(--rosy, #b13d5e); font-weight:600; font-variant-numeric:tabular-nums;">400 Petals</span></div>
+      </div>
+    </section>
+    <section style="margin-top:44px;">
+      <h2 style="margin:0; font-family:'Lora',serif; font-size:23px; font-weight:600; text-align:center;">Rewards you'll actually use</h2>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:12px; margin-top:20px;">
+        <div style="background:#fff; border:1px solid #f3dfe6; border-radius:16px; padding:18px; text-align:center;"><div style="font-family:'Lora',serif; font-size:20px; font-weight:600; color:var(--rosy, #b13d5e);">€5</div><div style="font-size:13px; font-weight:600; margin-top:4px;">off your order</div><div style="font-size:12px; color:#a5798a; margin-top:3px; font-variant-numeric:tabular-nums;">500 Petals</div></div>
+        <div style="background:#fff; border:1px solid #f3dfe6; border-radius:16px; padding:18px; text-align:center;"><div style="font-family:'Lora',serif; font-size:20px; font-weight:600; color:var(--rosy, #b13d5e);">€10</div><div style="font-size:13px; font-weight:600; margin-top:4px;">off your order</div><div style="font-size:12px; color:#a5798a; margin-top:3px; font-variant-numeric:tabular-nums;">1,000 Petals</div></div>
+        <div style="background:#fff; border:1px solid #f3dfe6; border-radius:16px; padding:18px; text-align:center;"><div style="font-family:'Lora',serif; font-size:20px; font-weight:600; color:var(--rosy, #b13d5e);">✈</div><div style="font-size:13px; font-weight:600; margin-top:4px;">free shipping</div><div style="font-size:12px; color:#a5798a; margin-top:3px; font-variant-numeric:tabular-nums;">700 Petals</div></div>
+        <div style="background:#fff; border:1px solid #f3dfe6; border-radius:16px; padding:18px; text-align:center;"><div style="font-family:'Lora',serif; font-size:20px; font-weight:600; color:var(--rosy, #b13d5e);">❦</div><div style="font-size:13px; font-weight:600; margin-top:4px;">free mini serum</div><div style="font-size:12px; color:#a5798a; margin-top:3px; font-variant-numeric:tabular-nums;">1,500 Petals</div></div>
+      </div>
+    </section>
+    <section style="margin-top:44px;">
+      <h2 style="margin:0; font-family:'Lora',serif; font-size:23px; font-weight:600; text-align:center;">VIP tiers</h2>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin-top:20px;">
+        <div style="background:#fff; border:1px solid #f3dfe6; border-radius:18px; overflow:hidden;">
+          <div style="height:5px; background:#fda4af;"></div>
+          <div style="padding:20px;">
+            <div style="font-family:'Lora',serif; font-size:17px; font-weight:600;">Rose</div>
+            <div style="font-size:12px; color:#a5798a; margin-top:2px;">from €0 / year</div>
+            <ul style="margin:12px 0 0; padding:0 0 0 16px; font-size:13px; color:#6b4a55; line-height:1.9;"><li>5 Petals per €1</li><li>Birthday Petals</li><li>Member-only sales</li></ul>
+          </div>
+        </div>
+        <div style="background:#fff; border:1px solid #ecc9d6; border-radius:18px; overflow:hidden; box-shadow:0 8px 24px rgba(177,61,94,.08);">
+          <div style="height:5px; background:#f43f5e;"></div>
+          <div style="padding:20px;">
+            <div style="font-family:'Lora',serif; font-size:17px; font-weight:600;">Bloom</div>
+            <div style="font-size:12px; color:#a5798a; margin-top:2px;">from €150 / year</div>
+            <ul style="margin:12px 0 0; padding:0 0 0 16px; font-size:13px; color:#6b4a55; line-height:1.9;"><li>6 Petals per €1</li><li>Free shipping over €40</li><li>Early sale access</li></ul>
+          </div>
+        </div>
+        <div style="background:#fff; border:1px solid #f3dfe6; border-radius:18px; overflow:hidden;">
+          <div style="height:5px; background:#881337;"></div>
+          <div style="padding:20px;">
+            <div style="font-family:'Lora',serif; font-size:17px; font-weight:600;">Icon</div>
+            <div style="font-size:12px; color:#a5798a; margin-top:2px;">from €500 / year</div>
+            <ul style="margin:12px 0 0; padding:0 0 0 16px; font-size:13px; color:#6b4a55; line-height:1.9;"><li>7 Petals per €1</li><li>Early access drops</li><li>Free gift wrap · priority care</li></ul>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section style="margin-top:44px; background:var(--rosy, #b13d5e); border-radius:22px; padding:32px 28px; color:#fff; text-align:center; position:relative; overflow:hidden;">
+      <div style="position:absolute; left:-50px; top:-60px; width:180px; height:180px; border-radius:50%; background:rgba(255,255,255,.07);"></div>
+      <h2 style="margin:0; font-family:'Lora',serif; font-size:23px; font-weight:600; position:relative;">Give €10, get 400 Petals</h2>
+      <p style="margin:10px auto 0; font-size:13.5px; opacity:.9; line-height:1.6; max-width:420px; position:relative;">Share your personal link. Your friend gets €10 off their first order over €30 — you get 400 Petals when it ships.</p>
+      <a href="rosy-account.dc.html" style="display:inline-flex; align-items:center; margin-top:18px; height:42px; padding:0 24px; border-radius:999px; background:#fff; color:var(--rosy, #b13d5e); font-size:14px; font-weight:600; position:relative;" style-hover="background:#fce7ef; color:var(--rosy-deep, #8f2f4b);">Get your link</a>
+    </section>
+    <section style="margin-top:44px; max-width:640px; margin-left:auto; margin-right:auto;">
+      <h2 style="margin:0; font-family:'Lora',serif; font-size:23px; font-weight:600; text-align:center;">Questions, answered</h2>
+      <div style="margin-top:18px; display:flex; flex-direction:column; gap:8px;">
+        <sc-for list="{{ faqs }}" as="f" hint-placeholder-count="5">
+          <div style="background:#fff; border:1px solid #f3dfe6; border-radius:14px; overflow:hidden;">
+            <button onClick="{{ f.toggle }}" style="width:100%; display:flex; align-items:center; gap:12px; padding:15px 18px; border:none; background:transparent; font-family:inherit; font-size:14px; font-weight:600; color:#3b2b30; text-align:left; cursor:pointer;">
+              <span style="flex:1;">{{ f.q }}</span>
+              <span style="color:#c9a2b1; font-size:16px;">{{ f.chevron }}</span>
+            </button>
+            <sc-if value="{{ f.open }}" hint-placeholder-val="{{ false }}">
+              <p style="margin:0; padding:0 18px 15px; font-size:13px; color:#8f6f7c; line-height:1.6;">{{ f.a }}</p>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+    <section style="margin-top:48px; text-align:center;">
+      <a href="rosy-account.dc.html" style="display:inline-flex; align-items:center; height:46px; padding:0 28px; border-radius:999px; background:var(--rosy, #b13d5e); color:#fff; font-size:15px; font-weight:600;" style-hover="background:var(--rosy-deep, #8f2f4b); color:#fff;">Join Rosy Rewards — it's free</a>
+      <p style="margin:16px 0 0; font-size:11.5px; color:#c9a2b1;">Demo experience with sample data · <a href="overview.dc.html" style="color:#c9a2b1; text-decoration:underline;">back to merchant admin</a></p>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:920,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  state = { open: -1 };
+  renderVals() { const vals = this.__rv2(); let th = null; try { th = JSON.parse(localStorage.getItem('sf_theme') || 'null'); } catch (e) {} const b = (th && th.brand) || '#b13d5e'; vals.themeBrand = b; vals.themeBrandDeep = 'color-mix(in srgb, ' + b + ' 76%, #000)'; vals.currencyName = (th && th.currency) || 'Petals'; vals.heroMsg = (th && th.hero) || 'Beauty that gives back'; return vals; }
+  __rv2() {
+    const faqs = [
+      { q: 'How much are Petals worth?', a: '100 Petals = €1.00. A €5 discount costs 500 Petals, and you earn at least 5 Petals per €1 spent — about a 5% reward on every order.' },
+      { q: 'Do my Petals expire?', a: 'Petals are valid for 12 months after you earn them. We email you 60 days and 14 days before any expire, and redemptions always use your oldest Petals first.' },
+      { q: 'How do tiers work?', a: 'Your tier follows what you spend in a rolling 12 months: Bloom from €150 and Icon from €500. If you dip below a threshold you keep your tier for a 30-day grace period.' },
+      { q: 'What happens if I return an order?', a: 'The Petals earned on the returned items are removed, and you can see exactly why in your points history. Any tier progress is recalculated.' },
+      { q: 'Can I combine rewards with sales?', a: 'Discount rewards apply on top of sale prices unless a product is excluded (gift cards, and some limited drops). Excluded items are marked at checkout.' }
+    ];
+    return {
+      faqs: faqs.map((f, i) => ({
+        q: f.q, a: f.a, open: this.state.open === i,
+        chevron: this.state.open === i ? '−' : '+',
+        toggle: () => this.setState({ open: this.state.open === i ? -1 : i })
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

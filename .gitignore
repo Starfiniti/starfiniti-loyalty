@@ -1,0 +1,17 @@
+node_modules/
+.npm-cache/
+.runtime/
+*.tsbuildinfo
+.next/
+dist/
+coverage/
+.turbo/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+Thumbs.db
+supabase/.branches/
+supabase/.temp/
+infrastructure/**/secrets/

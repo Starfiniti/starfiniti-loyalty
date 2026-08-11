@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Lora:ital,wght@0,600;1,500&display=swap" rel="stylesheet">
+<style>
+:root { --type-title: 72px; --type-subtitle: 40px; --type-body: 32px; --type-small: 26px; --pad-x: 110px; --pad-top: 96px; --pad-bottom: 90px; --gap-title: 44px; --gap-item: 26px; }
+body { margin:0; font-family:'Geist',ui-sans-serif,system-ui,sans-serif; background:#111; }
+a { color:#a5b4fc; }
+* { box-sizing:border-box; }
+</style>
+</helmet>
+<x-import component-from-global-scope="deck-stage" from="./deck-stage.js" width="1920" height="1080" hint-size="100%,100%">
+  <section data-label="Title" data-speaker-notes="10-minute client demo. Everything shown is the live prototype — offer to click through afterwards." style="background:#1c1917; color:#fff; display:flex; flex-direction:column; justify-content:center; padding:var(--pad-top) var(--pad-x) var(--pad-bottom); overflow:hidden;">
+    <div style="position:absolute; top:0; left:0; right:0; height:6px; background:linear-gradient(90deg, #3b2fc9, #7c5cfc);"></div>
+    <div style="display:flex; align-items:center; gap:24px;">
+      <img src="assets/images/starfiniti-icon.png" alt="Starfiniti" style="width:88px; height:88px; border-radius:22px;">
+      <span style="font-size:var(--type-subtitle); font-weight:600; color:#d6d3d1;">Starfiniti</span>
+    </div>
+    <h1 style="margin:var(--gap-title) 0 0; font-size:104px; font-weight:800; letter-spacing:-0.02em; line-height:1.05;">Starfiniti Loyalty</h1>
+    <p style="margin:28px 0 0; font-size:var(--type-subtitle); color:#a8a29e; max-width:1200px; line-height:1.35;">Points, VIP tiers, referrals, and campaigns for every storefront you run</p>
+    <p style="margin:auto 0 0; font-size:var(--type-small); color:#57534e;">Product prototype demo · Nina &amp; Valentin seeded data · August 2026</p>
+  </section>
+  <section data-label="Positioning" data-speaker-notes="One hosted engine owns the ledger; thin connectors deliver it everywhere. This is the architecture story in one slide." style="background:#faf9f7; color:#1c1917; display:flex; flex-direction:column; padding:var(--pad-top) var(--pad-x) var(--pad-bottom);">
+    <h2 style="margin:0; font-size:var(--type-title); font-weight:800; letter-spacing:-0.02em;">One loyalty engine, every storefront</h2>
+    <div style="display:flex; gap:36px; margin-top:var(--gap-title); flex:1; align-items:stretch;">
+      <div style="flex:1; background:#fff; border:1px solid #e7e5e4; border-radius:24px; padding:52px 48px; display:flex; flex-direction:column;">
+        <span style="font-size:var(--type-small); font-weight:700; color:#4438c9; text-transform:uppercase; letter-spacing:.06em;">The engine</span>
+        <span style="margin-top:22px; font-size:var(--type-body); font-weight:700;">loyalty.starfiniti.com</span>
+        <span style="margin-top:16px; font-size:var(--type-small); color:#57534e; line-height:1.5;">Programmes, rules, rewards, tiers, campaigns, the points ledger, analytics, and the experience builder</span>
+      </div>
+      <div style="flex:1; background:#fff; border:1px solid #e7e5e4; border-radius:24px; padding:52px 48px; display:flex; flex-direction:column;">
+        <span style="font-size:var(--type-small); font-weight:700; color:#4438c9; text-transform:uppercase; letter-spacing:.06em;">The connectors</span>
+        <span style="margin-top:22px; font-size:var(--type-body); font-weight:700;">WooCommerce &amp; Shopify</span>
+        <span style="margin-top:16px; font-size:var(--type-small); color:#57534e; line-height:1.5;">Thin plugins that sync orders, render storefront surfaces, and hand off to the hosted dashboard</span>
+      </div>
+      <div style="flex:1; background:#b13d5e; color:#fff; border-radius:24px; padding:52px 48px; display:flex; flex-direction:column;">
+        <span style="font-size:var(--type-small); font-weight:700; text-transform:uppercase; letter-spacing:.06em; opacity:.85;">The brand</span>
+        <span style="margin-top:22px; font-family:'Lora',serif; font-size:var(--type-body); font-weight:600;">Rosy Rewards</span>
+        <span style="margin-top:16px; font-size:var(--type-small); line-height:1.5; opacity:.9;">Customers see the merchant's brand — never ours — on every surface from product page to thank-you</span>
+      </div>
+    </div>
+  </section>
+  <section data-label="Dashboard" data-speaker-notes="Live prototype screenshot. Point out liability, draft publishing, and the recommendation card." style="background:#1c1917; color:#fff; display:flex; flex-direction:column; padding:72px 90px 70px;">
+    <div style="display:flex; align-items:baseline; gap:28px;">
+      <h2 style="margin:0; font-size:56px; font-weight:800; letter-spacing:-0.02em;">The merchant dashboard</h2>
+      <span style="font-size:var(--type-small); color:#a8a29e;">health, liability, and the next best action</span>
+    </div>
+    <div style="flex:1; margin-top:36px; background:#faf9f7; border-radius:18px; overflow:hidden; display:flex; align-items:flex-start; justify-content:center;">
+      <img src="screenshots/01-overview-light.jpg" alt="Overview dashboard" style="width:100%; height:100%; object-fit:cover; object-position:top;">
+    </div>
+  </section>
+  <section data-label="Programme design" data-speaker-notes="Full-screen guided flows — no developer needed. Every flow works in the prototype." style="background:#faf9f7; color:#1c1917; display:flex; flex-direction:column; padding:var(--pad-top) var(--pad-x) var(--pad-bottom);">
+    <h2 style="margin:0; font-size:var(--type-title); font-weight:800; letter-spacing:-0.02em;">Programme design without developers</h2>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:28px; margin-top:var(--gap-title); flex:1;">
+      <div style="background:#fff; border:1px solid #e7e5e4; border-radius:20px; padding:40px 44px;">
+        <span style="font-size:var(--type-body); font-weight:700;">Earning rules</span>
+        <span style="display:block; margin-top:12px; font-size:var(--type-small); color:#57534e; line-height:1.45;">Six-step builder with conflict warnings, drafts, and schedules</span>
+      </div>
+      <div style="background:#fff; border:1px solid #e7e5e4; border-radius:20px; padding:40px 44px;">
+        <span style="font-size:var(--type-body); font-weight:700;">Rewards catalogue</span>
+        <span style="display:block; margin-top:12px; font-size:var(--type-small); color:#57534e; line-height:1.45;">Discounts, shipping, gifts, VIP perks — with liability cost per redemption</span>
+      </div>
+      <div style="background:#fff; border:1px solid #e7e5e4; border-radius:20px; padding:40px 44px;">
+        <span style="font-size:var(--type-body); font-weight:700;">VIP tiers</span>
+        <span style="display:block; margin-top:12px; font-size:var(--type-small); color:#57534e; line-height:1.45;">Threshold edits with validation and a named preview of who moves</span>
+      </div>
+      <div style="background:#fff; border:1px solid #e7e5e4; border-radius:20px; padding:40px 44px;">
+        <span style="font-size:var(--type-body); font-weight:700;">Campaigns</span>
+        <span style="display:block; margin-top:12px; font-size:var(--type-small); color:#57534e; line-height:1.45;">Goal → audience → incentive, with a liability estimate before launch</span>
+      </div>
+    </div>
+    <p style="margin:32px 0 0; font-size:var(--type-small); color:#78716c;">Every change ships as a reviewed, versioned publish — v2.3 → v2.4 with an explicit diff</p>
+  </section>
+  <section data-label="Customer profile" data-speaker-notes="The support-agent story: find anyone in seconds via command palette, read the timeline in plain language, adjust with an audit trail." style="background:#faf9f7; color:#1c1917; display:flex; flex-direction:column; padding:72px 90px 70px;">
+    <div style="display:flex; align-items:baseline; gap:28px;">
+      <h2 style="margin:0; font-size:56px; font-weight:800; letter-spacing:-0.02em;">Every point, explained</h2>
+      <span style="font-size:var(--type-small); color:#78716c;">search, timeline, audited adjustments</span>
+    </div>
+    <div style="flex:1; margin-top:36px; border:1px solid #e7e5e4; border-radius:18px; overflow:hidden; display:flex; align-items:flex-start; justify-content:center; background:#fff;">
+      <img src="screenshots/customers.jpg" alt="Customers table" style="width:100%; height:100%; object-fit:cover; object-position:top;">
+    </div>
+  </section>
+  <section data-label="Customer experience" data-speaker-notes="Mobile-first wallet in the merchant's brand. Redeem live; the merchant timeline updates instantly." style="background:#fdf8f6; color:#3b2b30; display:flex; padding:var(--pad-top) var(--pad-x) var(--pad-bottom); gap:80px; align-items:center;">
+    <div style="flex:1;">
+      <h2 style="margin:0; font-family:'Lora',serif; font-size:var(--type-title); font-weight:600; letter-spacing:-0.01em;">The customer experience</h2>
+      <p style="margin:36px 0 0; font-size:var(--type-body); color:#6b4a55; line-height:1.45; max-width:640px;">Balance, tier progress, rewards, referrals, and expiry — in the merchant's brand, themed live from the experience builder</p>
+      <p style="margin:28px 0 0; font-size:var(--type-small); color:#a5798a;">Redemptions persist and appear in the merchant's ledger seconds later</p>
+    </div>
+    <div style="width:520px; flex-shrink:0; border-radius:28px; overflow:hidden; box-shadow:0 30px 80px rgba(177,61,94,.25); background:#fff;">
+      <img src="screenshots/wallet.jpg" alt="Rosy Rewards wallet" style="width:100%; display:block;">
+    </div>
+  </section>
+  <section data-label="Storefront surfaces" data-speaker-notes="Seven surfaces, one journey: launcher, product block, cart module, account, checkout, thank-you, nudges. Cart applies rewards directly — no codes." style="background:#faf7f4; color:#2d2420; display:flex; flex-direction:column; padding:72px 90px 70px;">
+    <div style="display:flex; align-items:baseline; gap:28px;">
+      <h2 style="margin:0; font-size:56px; font-weight:800; letter-spacing:-0.02em;">Loyalty where shopping happens</h2>
+      <span style="font-size:var(--type-small); color:#a08d80;">apply rewards in the cart — no codes</span>
+    </div>
+    <div style="flex:1; margin-top:36px; border:1px solid #eee3da; border-radius:18px; overflow:hidden; display:flex; align-items:flex-start; justify-content:center; background:#fff;">
+      <img src="screenshots/cart.jpg" alt="Cart with loyalty module" style="width:100%; height:100%; object-fit:cover; object-position:top;">
+    </div>
+  </section>
+  <section data-label="Connectors" data-speaker-notes="The WooCommerce plugin is an operator tool: queue, retries, diagnostics, redacted support bundles. Shopify twin mirrors it." style="background:#1c1917; color:#fff; display:flex; flex-direction:column; padding:72px 90px 70px;">
+    <div style="display:flex; align-items:baseline; gap:28px;">
+      <h2 style="margin:0; font-size:56px; font-weight:800; letter-spacing:-0.02em;">Thin connectors, one source of truth</h2>
+      <span style="font-size:var(--type-small); color:#a8a29e;">wp-admin plugin · retry queue · diagnostics</span>
+    </div>
+    <div style="flex:1; margin-top:36px; border-radius:18px; overflow:hidden; display:flex; align-items:flex-start; justify-content:center; background:#f0f0f1;">
+      <img src="screenshots/plugin-sync.jpg" alt="WooCommerce plugin sync queue" style="width:100%; height:100%; object-fit:cover; object-position:top;">
+    </div>
+  </section>
+  <section data-label="Dark mode" data-speaker-notes="Same warm graphite palette as Starfiniti Hub — one toggle, persisted everywhere in the merchant app." style="background:#1F1F1E; color:#E5E4DF; display:flex; flex-direction:column; padding:72px 90px 70px;">
+    <div style="display:flex; align-items:baseline; gap:28px;">
+      <h2 style="margin:0; font-size:56px; font-weight:800; letter-spacing:-0.02em;">Built-in dark mode</h2>
+      <span style="font-size:var(--type-small); color:#A09F99;">the Starfiniti Hub graphite palette</span>
+    </div>
+    <div style="flex:1; margin-top:36px; border:1px solid #3A3A37; border-radius:18px; overflow:hidden; display:flex; align-items:flex-start; justify-content:center;">
+      <img src="screenshots/02-overview-light.jpg" alt="Dashboard in dark mode" style="width:100%; height:100%; object-fit:cover; object-position:top;">
+    </div>
+  </section>
+  <section data-label="Next steps" data-speaker-notes="Close: the prototype is the spec. Ask for a pilot merchant and agree the production timeline." style="background:#faf9f7; color:#1c1917; display:flex; flex-direction:column; padding:var(--pad-top) var(--pad-x) var(--pad-bottom);">
+    <h2 style="margin:0; font-size:var(--type-title); font-weight:800; letter-spacing:-0.02em;">What's next</h2>
+    <div style="display:flex; flex-direction:column; gap:var(--gap-item); margin-top:var(--gap-title); max-width:1360px;">
+      <div style="display:flex; gap:32px; align-items:baseline; border-bottom:1px solid #e7e5e4; padding-bottom:26px;">
+        <span style="font-size:var(--type-body); font-weight:800; color:#4438c9; width:80px; font-variant-numeric:tabular-nums;">01</span>
+        <span style="font-size:var(--type-body); font-weight:600;">Pilot merchant on WooCommerce</span>
+        <span style="font-size:var(--type-small); color:#78716c; margin-left:auto;">validate flows with real orders</span>
+      </div>
+      <div style="display:flex; gap:32px; align-items:baseline; border-bottom:1px solid #e7e5e4; padding-bottom:26px;">
+        <span style="font-size:var(--type-body); font-weight:800; color:#4438c9; width:80px; font-variant-numeric:tabular-nums;">02</span>
+        <span style="font-size:var(--type-body); font-weight:600;">Production build from the handoff spec</span>
+        <span style="font-size:var(--type-small); color:#78716c; margin-left:auto;">Next.js · Supabase · signed events</span>
+      </div>
+      <div style="display:flex; gap:32px; align-items:baseline; border-bottom:1px solid #e7e5e4; padding-bottom:26px;">
+        <span style="font-size:var(--type-body); font-weight:800; color:#4438c9; width:80px; font-variant-numeric:tabular-nums;">03</span>
+        <span style="font-size:var(--type-body); font-weight:600;">Shopify app to follow the plugin</span>
+        <span style="font-size:var(--type-small); color:#78716c; margin-left:auto;">same connector contract</span>
+      </div>
+    </div>
+    <div style="margin-top:auto; display:flex; align-items:center; gap:20px;">
+      <img src="assets/images/starfiniti-icon.png" alt="Starfiniti" style="width:56px; height:56px; border-radius:14px;">
+      <span style="font-size:var(--type-small); color:#78716c;">The full prototype is clickable — every screen in this deck is live</span>
+    </div>
+  </section>
+</x-import>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1920,&quot;height&quot;:1080}}"></script>
+</body>
+</html>
