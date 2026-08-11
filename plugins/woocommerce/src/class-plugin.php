@@ -9,6 +9,7 @@ final class Plugin
     public static function boot(): void
     {
         add_action('admin_menu', [self::class, 'registerMenu']);
+        Outbox::boot();
     }
 
     public static function registerMenu(): void
@@ -31,9 +32,8 @@ final class Plugin
 
         echo '<div class="wrap"><h1>' . esc_html__('Starfiniti Loyalty', 'starfiniti-loyalty') . '</h1>';
         echo '<p>' . esc_html__(
-            'The connector is not configured. Programme rules and balances remain in the central loyalty platform.',
+            'Programme rules and balances remain in the central loyalty platform. Commerce events use a local durable outbox and never wait on the hub during checkout.',
             'starfiniti-loyalty'
         ) . '</p></div>';
     }
 }
-

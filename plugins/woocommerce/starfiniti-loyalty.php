@@ -16,6 +16,11 @@ defined('ABSPATH') || exit;
 define('STARFINITI_LOYALTY_VERSION', '0.1.0-dev');
 define('STARFINITI_LOYALTY_FILE', __FILE__);
 
+register_activation_hook(__FILE__, static function (): void {
+    require_once __DIR__ . '/src/class-outbox.php';
+    Starfiniti\Loyalty\Outbox::install();
+});
+
 add_action('before_woocommerce_init', static function (): void {
     if (class_exists(\Automattic\WooCommerce\Utilities\FeaturesUtil::class)) {
         \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
@@ -38,6 +43,6 @@ add_action('plugins_loaded', static function (): void {
     }
 
     require_once __DIR__ . '/src/class-plugin.php';
+    require_once __DIR__ . '/src/class-outbox.php';
     Starfiniti\Loyalty\Plugin::boot();
 });
-
