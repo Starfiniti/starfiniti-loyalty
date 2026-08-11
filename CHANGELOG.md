@@ -22,3 +22,5 @@
 - Completed Phase 2 with reviewable architecture, data, identity, event, threat, privacy, recovery, deployment, and SLO models.
 - Accepted ADR-0005 through ADR-0007 for database authorization boundaries, an immutable double-entry points ledger, and transactional inbox/outbox processing.
 - Added a deterministic Phase 2 architecture validator to the complete repository gate.
+- Completed the Phase 3 tenancy foundation with no-login roles, explicit grants, composite tenant keys, live membership RLS, and scoped support access.
+- Added 41 adversarial tenancy assertions; exact-head Docker/Supabase CI now passes 49 total pgTAP checks across migration replay and reset.

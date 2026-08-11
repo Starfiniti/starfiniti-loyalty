@@ -6,7 +6,7 @@ Finish Starfiniti Loyalty as an open-source, self-hosted platform on Proxmox usi
 
 ## Current phase
 
-Phase 3 — secure platform foundation and tenancy.
+Phase 4 — reliable WooCommerce commerce-event ingestion.
 
 ## Evidence and completed work
 
@@ -21,22 +21,24 @@ Phase 3 — secure platform foundation and tenancy.
 - Phase 2 is complete: eight reviewable architecture/security/operations models and ADR-0005 through ADR-0007 define database authorization, double-entry ledger, signed inbox/outbox, identity, privacy, recovery, and failure behavior.
 - Current Supabase breaking changes were incorporated: Envoy default, `/auth/v1` external Auth URL, PostgreSQL 17 upgrade boundary, explicit Data API exposure, Studio ownership change, and new publishable/secret/asymmetric keys.
 - `npm run architecture:validate` deterministically checks the Phase 2 gate and is part of `npm run check`.
+- `P3-TENANCY-SCHEMA` is complete: six tenant-owned tables, no-login database roles, composite tenant foreign keys, explicit grants, live membership RLS, and scoped support access are implemented.
+- Exact-head GitHub Actions run `31524730760` passed the baseline and Docker/Supabase jobs, including two migration replays, reset, seed, 49 pgTAP assertions, and cleanup.
 
 ## Active work
 
-- `P3-TENANCY-SCHEMA` (in progress): implement organizations, workspaces, memberships, roles, least-privilege grants, live membership helpers, and adversarial RLS tests.
+- `P4-WC-INBOX` (in progress): implement signed WooCommerce delivery intake, durable inbox deduplication, canonical event normalization, and transactional outbox processing.
 
 ## Next safe tasks
 
-1. Create the Phase 3 migration using the pinned Supabase CLI workflow.
-2. Implement tenant keys, membership authorization, explicit grants, RLS, and safe helper functions.
-3. Prove cross-tenant, forged-ID, absent-membership, and revoked-membership paths fail closed in pgTAP/CI.
+1. Add versioned WooCommerce delivery, canonical event, inbox, and outbox contracts.
+2. Implement signature-first intake and idempotent database commands without any checkout dependency.
+3. Prove duplicate, delayed, invalid-signature, retry, and out-of-order paths create one business effect.
 
 ## Dependencies and blockers
 
 - Docker is not installed on this Windows workstation; GitHub Actions is the verified Linux/Docker database runner.
 - Direct Proxmox SSH is unavailable: the public alias rejects the configured keys, the VPN alias times out, and the tested jump-host route cannot reach the private alias.
-- Proxmox deployment ultimately needs a working SSH route plus host addresses, DNS, TLS issuer, off-host backup target, and production credentials. These inputs do not block Phase 3 implementation.
+- Proxmox deployment ultimately needs a working SSH route plus host addresses, DNS, TLS issuer, off-host backup target, and production credentials. These inputs do not block Phase 4 implementation.
 
 ## Decisions awaiting approval
 

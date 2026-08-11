@@ -106,7 +106,7 @@ tasks:
   - id: P3-TENANCY-SCHEMA
     title: Implement tenancy schema and adversarial RLS tests
     phase: 3
-    status: in_progress
+    status: complete
     dependencies: [P2-ARCHITECTURE]
     acceptance:
       - Every exposed tenant table has RLS
@@ -115,11 +115,16 @@ tasks:
     verification: [npm run db:test]
     risks: [R-001]
     docs: [docs/architecture/DATA_MODEL.md, docs/security/THREAT_MODEL.md]
-    evidence: []
+    evidence:
+      - migration 20260811183138 creates organizations memberships workspaces programme groups support grants and composite tenant keys
+      - no-login non-bypass ownership runtime and worker roles plus explicit schema table sequence and function grants
+      - all six exposed loyalty tables enable RLS with live membership and scoped support policies
+      - 41 tenancy pgTAP assertions cover cross-tenant revoked outsider support direct-DML and forged-key paths
+      - exact-head GitHub Actions run 31524730760 passed baseline and Docker Supabase migration reset seed 49 pgTAP assertions and cleanup
   - id: P4-WC-INBOX
     title: Implement signed WooCommerce inbox and idempotent normalization
     phase: 4
-    status: proposed
+    status: in_progress
     dependencies: [P3-TENANCY-SCHEMA]
     acceptance:
       - Duplicate, delayed, and out-of-order events are safe
