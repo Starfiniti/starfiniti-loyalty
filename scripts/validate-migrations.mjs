@@ -36,6 +36,10 @@ if (!/schemas\s*=\s*\[[^\]]*"public"[^\]]*\]/u.test(apiBlock)) {
   throw new Error("Supabase Data API must explicitly expose public");
 }
 
+if (!/schemas\s*=\s*\[[^\]]*"loyalty"[^\]]*\]/u.test(apiBlock)) {
+  throw new Error("Supabase Data API must explicitly expose loyalty");
+}
+
 if (/schemas\s*=\s*\[[^\]]*"loyalty_private"[^\]]*\]/u.test(apiBlock)) {
   throw new Error("loyalty_private must never be exposed through the Data API");
 }

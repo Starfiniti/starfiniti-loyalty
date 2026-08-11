@@ -1,2 +1,2 @@
--- Seed data will be added only after Phase 1 programme semantics are approved.
-
+-- Production tenancy is created only through authorized application commands.
+-- Deterministic Phase 3 isolation fixtures live in transactional pgTAP tests.

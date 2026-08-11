@@ -2,6 +2,7 @@
 
 - Status: Accepted for development/staging; production approval still required
 - Date: 2026-08-11
+- Upstream review: Supabase breaking-change changelog, self-hosting Docker/Auth-key guides, and `self-hosted/v0.8.0` tag checked 2026-08-11
 
 ## Context
 
@@ -10,6 +11,8 @@ The product must be open-source and self-hosted on Proxmox. Supabase's current s
 ## Decision
 
 Run official, pinned Supabase Docker Compose assets inside a dedicated Linux VM on Proxmox. Use Envoy as the default API gateway, terminate public TLS explicitly, keep Postgres volumes on durable VM storage, and send encrypted backups off-host. Deploy application containers separately so application rollback does not roll back the database stack.
+
+Configure the current self-hosted contract explicitly: PostgreSQL 17, `API_EXTERNAL_URL` ending in `/auth/v1`, separate public/site URLs, Supavisor for pooled application traffic, generated publishable/secret keys plus asymmetric signing keys, and opt-in Analytics/Vector only when their resource/operational cost is justified.
 
 ## Alternatives
 
@@ -22,7 +25,7 @@ Pinned versions and separated secrets reduce supply-chain and rollback risk. The
 
 ## Operations
 
-Minimum upstream guidance is 4 GB RAM/2 cores/40 GB SSD; plan 8 GB+/4 cores/80 GB+ SSD before load evidence. Stage upgrades and validate Envoy/auth routing, backups, and restores.
+Minimum upstream guidance is 4 GB RAM/2 cores/40 GB SSD; plan 8 GB+/4 cores/80 GB+ SSD before load evidence. Stage upgrades and validate Envoy/auth routing, API key/JWKS behavior, Studio ownership, PostgreSQL major-version compatibility, backups, and restores.
 
 ## Migration and rollback
 

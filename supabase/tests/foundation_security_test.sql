@@ -27,8 +27,8 @@ select ok(
 );
 
 select ok(
-  not has_schema_privilege('authenticated', 'loyalty', 'USAGE'),
-  'authenticated clients cannot use the loyalty schema before policies exist'
+  has_schema_privilege('authenticated', 'loyalty', 'USAGE'),
+  'authenticated clients can use the loyalty schema after policies exist'
 );
 
 select ok(
