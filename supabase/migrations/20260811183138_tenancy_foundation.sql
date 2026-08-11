@@ -26,7 +26,7 @@ $$;
 -- be transferred. Runtime roles are never granted this membership.
 grant loyalty_owner to current_user;
 
-grant usage on schema loyalty, loyalty_private to loyalty_owner;
+grant usage, create on schema loyalty, loyalty_private to loyalty_owner;
 
 create table loyalty.organizations (
   id bigint generated always as identity primary key,
