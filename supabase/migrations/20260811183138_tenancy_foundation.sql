@@ -171,12 +171,22 @@ stable
 security definer
 set search_path = ''
 as $$
-  select (select auth.uid()) is not null
+  select (
+      select coalesce(
+        nullif(current_setting('request.jwt.claim.sub', true), ''),
+        nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub'
+      )::uuid
+    ) is not null
     and exists (
       select 1
       from loyalty.organization_memberships as membership
       where membership.organization_id = target_organization_id
-        and membership.user_id = (select auth.uid())
+        and membership.user_id = (
+          select coalesce(
+            nullif(current_setting('request.jwt.claim.sub', true), ''),
+            nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub'
+          )::uuid
+        )
         and membership.revoked_at is null
     );
 $$;
@@ -191,13 +201,23 @@ stable
 security definer
 set search_path = ''
 as $$
-  select (select auth.uid()) is not null
+  select (
+      select coalesce(
+        nullif(current_setting('request.jwt.claim.sub', true), ''),
+        nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub'
+      )::uuid
+    ) is not null
     and coalesce(cardinality(allowed_roles), 0) > 0
     and exists (
       select 1
       from loyalty.organization_memberships as membership
       where membership.organization_id = target_organization_id
-        and membership.user_id = (select auth.uid())
+        and membership.user_id = (
+          select coalesce(
+            nullif(current_setting('request.jwt.claim.sub', true), ''),
+            nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub'
+          )::uuid
+        )
         and membership.role = any(allowed_roles)
         and membership.revoked_at is null
     );
@@ -218,7 +238,12 @@ as $$
     join loyalty.organization_memberships as membership
       on membership.organization_id = workspace.organization_id
     where workspace.id = target_workspace_id
-      and membership.user_id = (select auth.uid())
+      and membership.user_id = (
+        select coalesce(
+          nullif(current_setting('request.jwt.claim.sub', true), ''),
+          nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub'
+        )::uuid
+      )
       and membership.revoked_at is null
   );
 $$;
