@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(35);
+select plan(38);
 
 select has_table('loyalty', 'commerce_connections', 'commerce connections exist');
 select has_table('loyalty_private', 'commerce_delivery_inbox', 'delivery inbox exists');
@@ -330,6 +330,56 @@ select throws_ok(
   $$,
   '23503', null,
   'composite foreign key rejects a cross-tenant connection'
+);
+
+insert into delivery_results
+select 3, accepted.receipt_id, accepted.outcome
+from loyalty_private.accept_commerce_delivery(
+  (select id from loyalty.organizations where slug = 'commerce-one'),
+  (select id from loyalty.commerce_connections where external_store_id = 'store-one'),
+  'delivery-order-50-v5', '1', 'order-50-v5', 'commerce.order.status_changed',
+  '50', '5', '2026-08-11T18:05:00Z', '2026-08-11T18:05:01Z',
+  'v1', 'nonce-order-50-v5', repeat('e', 64),
+  '{"version":"1","payload":{"status":"completed"}}'::jsonb
+) as accepted;
+select results_eq(
+  $$
+    select outcome from loyalty_private.normalize_commerce_delivery(
+      (select receipt_id from delivery_results where attempt = 3), 'v1'
+    )
+  $$,
+  array['created'::text],
+  'newer aggregate revision is recorded'
+);
+
+insert into delivery_results
+select 4, accepted.receipt_id, accepted.outcome
+from loyalty_private.accept_commerce_delivery(
+  (select id from loyalty.organizations where slug = 'commerce-one'),
+  (select id from loyalty.commerce_connections where external_store_id = 'store-one'),
+  'delivery-order-50-v4-late', '1', 'order-50-v4', 'commerce.order.status_changed',
+  '50', '4', '2026-08-11T18:04:00Z', '2026-08-11T18:10:00Z',
+  'v1', 'nonce-order-50-v4', repeat('f', 64),
+  '{"version":"1","payload":{"status":"processing"}}'::jsonb
+) as accepted;
+select results_eq(
+  $$
+    select outcome from loyalty_private.normalize_commerce_delivery(
+      (select receipt_id from delivery_results where attempt = 4), 'v1'
+    )
+  $$,
+  array['created'::text],
+  'late older revision remains a distinct canonical fact'
+);
+select results_eq(
+  $$
+    select source_event_id
+    from loyalty_private.canonical_commerce_events
+    where source_object_id = '50'
+    order by occurred_at desc, id desc
+  $$,
+  $$ values ('order-50-v5'::text), ('order-50-v4'::text) $$,
+  'aggregate history has deterministic source occurrence ordering'
 );
 
 set local role authenticated;
