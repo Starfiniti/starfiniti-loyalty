@@ -2,6 +2,8 @@
 -- intentionally fast; a separately credentialed worker owns leases and value
 -- effects. Customer links use channel IDs only and never infer identity by email.
 
+grant usage on schema extensions to loyalty_owner;
+
 alter table loyalty.commerce_connections
   add column programme_id bigint,
   add foreign key (organization_id, programme_id)
