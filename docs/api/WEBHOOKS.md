@@ -25,4 +25,20 @@ The canonical signature input is newline-delimited after validating every identi
 
 Acknowledgement never means points were applied; it means the delivery is durably accepted. Processing status is available through authenticated diagnostics.
 
+## WooCommerce payloads
+
+The strict v1 worker boundary accepts these value-bearing payloads:
+
+- `commerce.order.status_changed`: a PII-free HPOS order snapshot. Only `completed` creates an award; other statuses are recorded as skipped.
+- `commerce.order.refunded`: a refund ID plus the cumulative order/refund snapshot. Reversal uses the original immutable award evidence, cumulative rounding, and a full-refund cap.
+- `commerce.coupon.captured`: `{ kind, reservationId, orderId }`. No email, coupon plaintext, or customer profile is accepted.
+
+Malformed value facts are quarantined without logging their bodies. Retryable dependency failures use durable leases and bounded backoff; repeated failures become dead letters.
+
+## Signed command polling
+
+The same signature format protects `POST /api/v1/integrations/woocommerce/commands`. A connector sends either a `poll` request or an `acknowledge` request. Polling claims leased `woocommerce.coupon.issue` and `woocommerce.coupon.cancel` commands; acknowledgement records only a bounded outcome, opaque native reference, error code, and retry delay.
+
+Issuance becomes `issued` only after a successful native WooCommerce acknowledgement. Cancellation releases points only after WooCommerce confirms the unused coupon was disabled. Command IDs, reservation IDs, outbox uniqueness, and ledger idempotency provide independent duplicate fences.
+
 See `docs/architecture/EVENT_MODEL.md` and ADR-0007 for retries, ordering, outbox, dead letters, and reconciliation.

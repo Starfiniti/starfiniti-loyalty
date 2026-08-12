@@ -1,5 +1,5 @@
 version: 2
-updated: 2026-08-11
+updated: 2026-08-12
 scope:
   active: [self-hosted-supabase, proxmox, nextjs, woocommerce]
   deferred: [shopify]
@@ -198,7 +198,7 @@ tasks:
   - id: P7-WOOCOMMERCE-CONNECTOR
     title: Complete the production WooCommerce connector and plugin
     phase: 7
-    status: in_progress
+    status: complete
     dependencies: [P6-PROGRAMME-ENGINE]
     acceptance:
       - Completed orders and refunds create exactly one explainable loyalty effect
@@ -216,4 +216,33 @@ tasks:
         docs/api/WEBHOOKS.md,
         docs/api/PROGRAMME_ENGINE.md,
       ]
+    evidence:
+      - strict PII-free order status refund coupon-capture and signed command contracts have 26 contract tests
+      - a separately credentialed worker owns durable leases customer resolution programme evaluation awards cumulative refunds coupon capture and expiry sweeps
+      - completed-order awards ignore later cumulative refund fields while refund events use immutable original award evidence and capped cumulative rounding
+      - native fixed percentage and free-shipping coupons are high entropy one use customer scoped idempotent and created through signed polling commands
+      - coupon capture spends reserved points once and confirmed-unused cancellation releases them through an attributable compensating ledger transaction
+      - plugin signing material is encrypted at rest and no Supabase service credential is sent to WordPress or browser code
+      - plugin settings queue diagnostics dead-letter retry source-order reconciliation customer account privacy exporter eraser and opt-in uninstall cleanup exist
+      - HPOS is declared multisite network activation is rejected and the installable GPL artifact builds as dist/starfiniti-loyalty.zip
+      - exact-head GitHub Actions run 31575751260 passed baseline packaging six migrations 322 pgTAP assertions and concurrency property probes
+      - exact-head GitHub Actions run 31577312529 passed baseline database and four real WooCommerce runtime jobs
+      - WordPress 6.6.5 WooCommerce 9.0.2 PHP 8.1 and WordPress 7.0.2 WooCommerce 10.9.4 PHP 8.3 pass in HPOS and legacy modes
+      - the runtime matrix executes classic and Blocks coupon paths with zero hub HTTP calls plus order capture partial and full refunds reconciliation activation lifecycle dead-letter exhaustion and operator retry
+  - id: P9-MERCHANT-HUB
+    title: Build authenticated merchant programme customer and operations surfaces
+    phase: 9
+    status: ready
+    dependencies: [P7-WOOCOMMERCE-CONNECTOR]
+    acceptance:
+      - Merchant routes derive organization and workspace context from authenticated membership
+      - A merchant can draft preview validate and publish a safe versioned programme
+      - Customer ledger and connector queue views are tenant scoped auditable and operator actionable
+      - Responsive keyboard and screen-reader checks cover primary workflows
+    verification:
+      - npm run check
+      - npm run db:test
+      - browser workflow verification
+    risks: [R-001, R-007]
+    docs: [docs/product/PRODUCT_REQUIREMENTS.md, docs/security/THREAT_MODEL.md]
     evidence: []

@@ -89,3 +89,16 @@
 - Added idempotent advance point-expiry notification fences and transactional outbox commands.
 - Added 82 programme pgTAP assertions and versioned programme contracts, bringing the database suite to 260 assertions plus the ledger concurrency/property probe.
 - Closed `P6-PROGRAMME-ENGINE` and started `P7-WOOCOMMERCE-CONNECTOR`.
+
+## 2026-08-12 — Phase 7 WooCommerce pipeline implementation
+
+- Added a bundled, separately credentialed worker with durable claim leases, retries, quarantine/dead-letter states, signed channel-ID customer resolution, and explicit connection-to-programme binding.
+- Connected completed orders to immutable evaluation/award evidence and cumulative refund snapshots to original-attribution reversal with deterministic rounding and a full-refund cap.
+- Added signed command polling/acknowledgement and idempotent native fixed, percentage, and free-shipping coupons without any checkout-time hub dependency.
+- Added PII-free completed-order coupon capture, atomic reserved-to-spent settlement, expiry cancellation, and points release only after WooCommerce confirms an unused coupon was disabled.
+- Added encrypted plugin signing material, validated settings, queue diagnostics, WP-CLI dead-letter retry and order reconciliation, customer reward surfaces, privacy export/erase, multisite policy, uninstall policy, and plugin ZIP packaging.
+- Added a worker service and least-privilege database credential to the Proxmox compose contract; no persistent environment was mutated because the available SSH routes remain unusable.
+- GitHub Actions run `31575751260` passed the final settlement database checkpoint with six migrations, 322 pgTAP assertions, concurrency/property probes, and cleanup. The expanded suite covers origin-pointer preservation, delayed issue acknowledgement, definitive issue failure, ambiguous cancellation, capture retry, and compensating release.
+- Added a four-case Docker-backed matrix for WordPress 6.6.5/WooCommerce 9.0.2/PHP 8.1 and WordPress 7.0.2/WooCommerce 10.9.4/PHP 8.3 in HPOS and legacy modes.
+- Exact-head run `31577312529` passed classic and Blocks-native coupon use with a configured unreachable hub and zero checkout HTTP calls, PII-free capture, partial/full refunds, reconciliation idempotency, activate/deactivate/reactivate, bounded dead-letter exhaustion, and operator retry.
+- Closed `P7-WOOCOMMERCE-CONNECTOR`; the broader PHP, money, cache, and lifecycle release matrix remains tracked by R-008 rather than overstated.
