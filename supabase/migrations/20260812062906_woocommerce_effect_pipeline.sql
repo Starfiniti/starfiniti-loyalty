@@ -662,7 +662,7 @@ begin
         'reservationId', candidate.reservation_public_id,
         'code', candidate.coupon_code
       ),
-      target_as_of
+      clock_timestamp()
     from candidates as candidate
     on conflict do nothing
     returning id
