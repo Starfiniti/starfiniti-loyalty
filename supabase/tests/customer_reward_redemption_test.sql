@@ -517,15 +517,26 @@ select ok(
    where topic = 'woocommerce.coupon.issue'),
   'private coupon payload excludes hosted-account and Auth identifiers'
 );
-select results_eq(
-  $$ select array_agg(parameter_name::text order by ordinal_position)
-     from information_schema.parameters
-     where specific_schema = 'loyalty'
-       and specific_name like 'redeem_my_reward_%'
-       and parameter_mode = 'IN' $$,
-  $$ values (array[
-    'target_account_public_id', 'target_reward_code', 'target_request_id'
-  ]::text[]) $$,
+select ok(
+  (select extensions.digest(
+      pg_catalog.convert_to(
+        pg_catalog.string_agg(
+          parameter_name::text, ',' order by ordinal_position
+        ),
+        'UTF8'
+      ),
+      'sha256'
+    ) = extensions.digest(
+      pg_catalog.convert_to(
+        'target_account_public_id,target_reward_code,target_request_id',
+        'UTF8'
+      ),
+      'sha256'
+    )
+   from information_schema.parameters
+   where specific_schema = 'loyalty'
+     and specific_name like 'redeem_my_reward_%'
+     and parameter_mode = 'IN'),
   'the caller cannot supply tenant, customer, wallet, points, expiry, or connector authority'
 );
 select ok(
