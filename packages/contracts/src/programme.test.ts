@@ -84,6 +84,12 @@ describe("programme contracts", () => {
     expect(
       programmeEvaluationEvidenceV1.safeParse({
         ...evidence,
+        kind: "live_refund",
+      }).success,
+    ).toBe(true);
+    expect(
+      programmeEvaluationEvidenceV1.safeParse({
+        ...evidence,
         inputSha256: "bad",
       }).success,
     ).toBe(false);

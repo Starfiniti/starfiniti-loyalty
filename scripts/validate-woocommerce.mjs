@@ -5,6 +5,20 @@ const bootstrap = readFileSync(
   "utf8",
 );
 const plugin = readFileSync("plugins/woocommerce/src/class-plugin.php", "utf8");
+const settings = readFileSync(
+  "plugins/woocommerce/src/class-settings.php",
+  "utf8",
+);
+const cli = readFileSync("plugins/woocommerce/src/class-cli.php", "utf8");
+const commands = readFileSync(
+  "plugins/woocommerce/src/class-commands.php",
+  "utf8",
+);
+const privacy = readFileSync(
+  "plugins/woocommerce/src/class-privacy.php",
+  "utf8",
+);
+const uninstall = readFileSync("plugins/woocommerce/uninstall.php", "utf8");
 const outbox = readFileSync("plugins/woocommerce/src/class-outbox.php", "utf8");
 const receiver = readFileSync(
   "apps/dashboard/app/api/v1/integrations/woocommerce/events/route.ts",
@@ -21,7 +35,65 @@ for (const [label, content, requirements] of [
       "class-outbox.php",
     ],
   ],
-  ["plugin", plugin, ["Outbox::boot()", "manage_woocommerce"]],
+  [
+    "plugin",
+    plugin,
+    [
+      "Outbox::boot()",
+      "manage_woocommerce",
+      "woocommerce_account_loyalty_endpoint",
+      "woocommerce_before_cart",
+      "wc_get_account_endpoint_url('loyalty')",
+    ],
+  ],
+  [
+    "settings",
+    settings,
+    [
+      "check_admin_referer",
+      "sodium_crypto_secretbox",
+      "sodium_crypto_secretbox_open",
+      "base64_decode",
+      "update_option",
+    ],
+  ],
+  [
+    "cli",
+    cli,
+    [
+      "WP_CLI::add_command",
+      "retry-dead-letters",
+      "reconcile-order",
+      "Outbox::diagnostics",
+    ],
+  ],
+  [
+    "commands",
+    commands,
+    [
+      "as_schedule_recurring_action",
+      "woocommerce_coupon_is_valid",
+      "set_usage_limit(1)",
+      "_starfiniti_command_id",
+      "_starfiniti_external_customer_id",
+      "woocommerce.coupon.issue",
+      "woocommerce.coupon.cancel",
+    ],
+  ],
+  [
+    "privacy",
+    privacy,
+    [
+      "wp_privacy_personal_data_exporters",
+      "wp_privacy_personal_data_erasers",
+      "Undelivered event evidence is retained",
+    ],
+  ],
+  [
+    "uninstall",
+    uninstall,
+    ["WP_UNINSTALL_PLUGIN", "STARFINITI_LOYALTY_REMOVE_DATA"],
+  ],
   [
     "outbox",
     outbox,
@@ -29,6 +101,8 @@ for (const [label, content, requirements] of [
       "INSERT IGNORE INTO",
       "woocommerce_order_status_changed",
       "woocommerce_refund_created",
+      "commerce.coupon.captured",
+      "captureCoupons",
       "as_schedule_single_action",
       "wp_remote_post",
       "hash_hmac('sha256'",
@@ -63,7 +137,11 @@ for (const forbidden of [
   /get_billing_(?:email|phone|address)/iu,
   /error_log\s*\(/iu,
 ]) {
-  if (forbidden.test(`${bootstrap}\n${plugin}\n${outbox}\n${receiver}`)) {
+  if (
+    forbidden.test(
+      `${bootstrap}\n${plugin}\n${settings}\n${cli}\n${commands}\n${privacy}\n${uninstall}\n${outbox}\n${receiver}`,
+    )
+  ) {
     throw new Error(
       `WooCommerce connector contains forbidden pattern ${forbidden}`,
     );

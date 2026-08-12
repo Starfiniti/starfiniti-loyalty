@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(82);
+select plan(104);
 
 select has_table('loyalty', 'programme_tiers', 'programme tiers exist');
 select has_table('loyalty', 'programme_rewards', 'programme rewards exist');
@@ -82,9 +82,33 @@ select organization.id, programme_group.id, 'rosy', 'Rosy Rewards'
 from loyalty.organizations as organization
 join loyalty.programme_groups as programme_group on programme_group.organization_id = organization.id;
 
+insert into loyalty.workspaces (organization_id, slug, name)
+select id, 'store', name || ' Store'
+from loyalty.organizations where slug in ('programme-one', 'programme-two');
+insert into loyalty.commerce_connections (
+  organization_id, workspace_id, programme_id, external_store_id,
+  display_name, current_key_version, signing_material_ref
+)
+select organization.id, workspace.id, programme.id,
+  organization.slug || '-store', organization.name || ' Store',
+  'v1', 'vault://' || organization.slug
+from loyalty.organizations as organization
+join loyalty.workspaces as workspace on workspace.organization_id = organization.id
+join loyalty.programmes as programme on programme.organization_id = organization.id
+where organization.slug in ('programme-one', 'programme-two');
+
 insert into loyalty.customers (organization_id, display_reference)
 select id, slug || '-customer'
 from loyalty.organizations where slug in ('programme-one', 'programme-two');
+insert into loyalty.customer_identities (
+  organization_id, customer_id, commerce_connection_id,
+  external_customer_id, identity_kind, verified_at
+)
+select customer.organization_id, customer.id, connection.id,
+  'registered:7', 'registered', now()
+from loyalty.customers as customer
+join loyalty.commerce_connections as connection
+  on connection.organization_id = customer.organization_id;
 
 create temporary table programme_refs (
   name text primary key,
@@ -202,7 +226,7 @@ from loyalty_private.create_programme_draft(
       {"code":"rose","name":"Rose","minimumEligibleSpendMinor":0,"pointsPerMajorUnit":6},
       {"code":"bloom","name":"Bloom","minimumEligibleSpendMinor":20000,"pointsPerMajorUnit":7}
     ],
-    "rewards": [{"code":"ten-euro","name":"Ten euro off","kind":"fixed_discount","costPoints":100}]
+    "rewards": [{"code":"ten-euro","name":"Ten euro off","kind":"fixed_discount","costPoints":100,"configuration":{"amountMinor":1000}}]
   }'::jsonb,
   decode(repeat('3', 64), 'hex'),
   '61000000-0000-4000-8000-000000000001'
@@ -339,6 +363,21 @@ select throws_ok(
   ) $$,
   '23514', 'evaluation idempotency hash conflict',
   'evaluation idempotency key rejects changed input'
+);
+select results_eq(
+  $$
+    select outcome from loyalty_private.record_programme_evaluation(
+      (select id from loyalty.organizations where slug = 'programme-one'),
+      (select id from loyalty.programme_groups where organization_id = (select id from loyalty.organizations where slug = 'programme-one')),
+      (select id from loyalty.programme_versions where public_id = (select public_id from programme_refs where name = 'version-two')),
+      null, 'live_refund', 'order:42:refund:9', 'evaluation:42:refund:9',
+      decode(repeat('8', 64), 'hex'), decode(repeat('9', 64), 'hex'),
+      '{"reversalPoints":25}'::jsonb, '{"rules":["original-award"]}'::jsonb,
+      '2026-12-02T01:05:00Z'
+    )
+  $$,
+  array['created'::text],
+  'refund evaluation stores immutable original-award evidence'
 );
 select throws_ok(
   $$ delete from loyalty_private.programme_evaluations where idempotency_key = 'evaluation:42' $$,
@@ -563,22 +602,69 @@ select throws_ok(
   '23514', 'invalid reward reservation transition',
   'state machine rejects reserved-to-captured shortcut'
 );
-select lives_ok(
-  $$ select * from loyalty_private.transition_reward_reservation(
-    (select public_id from programme_results where operation = 'reservation'),
-    'issued', 'transition:42:issued', decode(repeat('0', 64), 'hex'),
-    'reward-worker', null, null, 'woocommerce:coupon:ROSY42'
-  ) $$,
-  'connector execution can mark a reserved reward issued'
+select ok(
+  has_function_privilege(
+    'loyalty_worker',
+    'loyalty_private.enqueue_woocommerce_coupon_issue(uuid,uuid,smallint)',
+    'EXECUTE'
+  ),
+  'the worker can enqueue a native coupon from a reserved reward'
+);
+create temporary table coupon_command as
+select * from loyalty_private.enqueue_woocommerce_coupon_issue(
+  (select public_id from programme_results where operation = 'reservation'),
+  (select public_id from loyalty.commerce_connections where external_store_id = 'programme-one-store'),
+  2::smallint
+);
+select results_eq(
+  $$ select outcome from coupon_command $$,
+  array['created'::text],
+  'a reserved fixed reward creates one native coupon command'
+);
+select matches(
+  (select coupon_code from coupon_command),
+  '^SF[A-F0-9]{32}$',
+  'generated coupon codes have high-entropy connector-safe form'
+);
+select results_eq(
+  $$
+    select coupon_code, outcome
+    from loyalty_private.enqueue_woocommerce_coupon_issue(
+      (select public_id from programme_results where operation = 'reservation'),
+      (select public_id from loyalty.commerce_connections where external_store_id = 'programme-one-store'),
+      2::smallint
+    )
+  $$,
+  $$ select coupon_code, 'duplicate'::text from coupon_command $$,
+  'coupon enqueue retry returns the original command and code'
+);
+create temporary table claimed_coupon_command as
+select * from loyalty_private.claim_woocommerce_commands(
+  (select public_id from loyalty.commerce_connections where external_store_id = 'programme-one-store'),
+  10, 60
+);
+select results_eq(
+  $$ select command_id from claimed_coupon_command $$,
+  $$ select command_id from coupon_command $$,
+  'the connector claims the exact persisted reward command'
+);
+select results_eq(
+  $$
+    select outcome from loyalty_private.finish_woocommerce_command(
+      (select public_id from loyalty.commerce_connections where external_store_id = 'programme-one-store'),
+      (select command_id from coupon_command),
+      'delivered', 'woocommerce:coupon:42', null, 0
+    )
+  $$,
+  array['delivered'::text],
+  'native coupon acknowledgement completes the connector command'
+);
+select results_eq(
+  $$ select state from loyalty.reward_reservations where public_id = (select public_id from programme_results where operation = 'reservation') $$,
+  array['issued'::text],
+  'successful coupon acknowledgement marks the reserved reward issued'
 );
 
-insert into programme_results
-select 'ledger-capture', result.transaction_public_id, result.outcome
-from loyalty_private.capture_reservation(
-  (select id from loyalty.organizations where slug = 'programme-one'),
-  (select public_id from programme_results where operation = 'ledger-reserve'),
-  'ledger:reward:42:capture', decode(repeat('1a', 32), 'hex'), '2026-12-02T05:00:00Z'
-) as result;
 select throws_ok(
   $$ select * from loyalty_private.transition_reward_reservation(
     (select public_id from programme_results where operation = 'reservation'),
@@ -589,23 +675,83 @@ select throws_ok(
   '23514', 'ledger transaction kind does not match reward transition',
   'capture transition rejects reservation ledger evidence'
 );
+select ok(
+  has_function_privilege(
+    'loyalty_worker',
+    'loyalty_private.capture_woocommerce_coupon_use(bigint,bigint,uuid,text,timestamp with time zone)',
+    'EXECUTE'
+  ),
+  'the worker can capture a signed native coupon use'
+);
+create temporary table woocommerce_capture as
+select * from loyalty_private.capture_woocommerce_coupon_use(
+  (select id from loyalty.organizations where slug = 'programme-one'),
+  (select id from loyalty.commerce_connections where external_store_id = 'programme-one-store'),
+  (select public_id from programme_results where operation = 'reservation'),
+  '42',
+  '2026-12-02T05:00:00Z'
+);
 select results_eq(
-  $$ select outcome from loyalty_private.transition_reward_reservation(
-    (select public_id from programme_results where operation = 'reservation'),
-    'captured', 'transition:42:captured', decode(repeat('3a', 32), 'hex'),
-    'reward-worker', null,
-    (select public_id from programme_results where operation = 'ledger-capture'), null
-  ) $$,
+  $$ select outcome from woocommerce_capture $$,
   array['created'::text],
-  'issued reward captures with its related ledger transaction'
+  'signed coupon use creates one capture transaction and transition'
 );
 select results_eq(
   $$ select state from loyalty.reward_reservations where public_id = (select public_id from programme_results where operation = 'reservation') $$,
   array['captured'::text],
   'captured reward reaches its terminal state'
 );
+select results_eq(
+  $$
+    select transaction.transaction_kind
+    from loyalty.ledger_transactions as transaction
+    join loyalty.reward_reservation_transitions as transition
+      on transition.ledger_transaction_id = transaction.id
+    where transition.reservation_id = (
+      select id from loyalty.reward_reservations
+      where public_id = (select public_id from programme_results where operation = 'reservation')
+    ) and transition.to_state = 'captured'
+  $$,
+  array['capture'::text],
+  'coupon capture transition retains immutable spend-ledger evidence'
+);
+select results_eq(
+  $$
+    select transaction.transaction_kind
+    from loyalty.reward_reservations as reservation
+    join loyalty.ledger_transactions as transaction
+      on transaction.id = reservation.ledger_reservation_transaction_id
+    where reservation.public_id = (select public_id from programme_results where operation = 'reservation')
+  $$,
+  array['reserve'::text],
+  'capture preserves the immutable original reservation-ledger pointer'
+);
+select results_eq(
+  $$
+    select outcome from loyalty_private.capture_woocommerce_coupon_use(
+      (select id from loyalty.organizations where slug = 'programme-one'),
+      (select id from loyalty.commerce_connections where external_store_id = 'programme-one-store'),
+      (select public_id from programme_results where operation = 'reservation'),
+      '42', '2026-12-02T05:00:00Z'
+    )
+  $$,
+  array['duplicate'::text],
+  'coupon capture retry has exactly one ledger effect'
+);
 select throws_ok(
-  $$ delete from loyalty.reward_reservation_transitions where idempotency_key = 'transition:42:issued' $$,
+  $$
+    select * from loyalty_private.capture_woocommerce_coupon_use(
+      (select id from loyalty.organizations where slug = 'programme-one'),
+      (select id from loyalty.commerce_connections where external_store_id = 'programme-one-store'),
+      (select public_id from programme_results where operation = 'reservation'),
+      'forged-order', '2026-12-02T05:00:00Z'
+    )
+  $$,
+  '23514', 'idempotency key reused with different request hash',
+  'one reservation cannot be captured against a second order'
+);
+select throws_ok(
+  $$ delete from loyalty.reward_reservation_transitions where connector_execution_reference = 'woocommerce:coupon:42' $$,
   '55000', 'immutable loyalty history cannot be changed',
   'reward transition history cannot be deleted'
 );
@@ -651,37 +797,159 @@ select results_eq(
   array['created'::text],
   'second reward reserves its own points and ledger transaction'
 );
-select results_eq(
-  $$ select outcome from loyalty_private.transition_reward_reservation(
-    (select public_id from programme_results where operation = 'reservation-two'),
-    'cancelled', 'transition:43:cancelled', decode(repeat('7a', 32), 'hex'),
-    'woocommerce-worker', 'coupon creation failed'
-  ) $$,
-  array['created'::text],
-  'connector failure records cancellation before compensation'
+create temporary table coupon_command_two as
+select * from loyalty_private.enqueue_woocommerce_coupon_issue(
+  (select public_id from programme_results where operation = 'reservation-two'),
+  (select public_id from loyalty.commerce_connections where external_store_id = 'programme-one-store'),
+  2::smallint
 );
-
-insert into programme_results
-select 'ledger-cancel-two', result.transaction_public_id, result.outcome
-from loyalty_private.cancel_reservation(
-  (select id from loyalty.organizations where slug = 'programme-one'),
-  (select public_id from programme_results where operation = 'ledger-reserve-two'),
-  'ledger:reward:43:cancel', decode(repeat('8a', 32), 'hex'), '2026-12-02T06:01:00Z'
-) as result;
 select results_eq(
-  $$ select outcome from loyalty_private.transition_reward_reservation(
-    (select public_id from programme_results where operation = 'reservation-two'),
-    'released', 'transition:43:released', decode(repeat('9a', 32), 'hex'),
-    'reward-worker', 'connector failure compensated',
-    (select public_id from programme_results where operation = 'ledger-cancel-two'), null
-  ) $$,
+  $$ select outcome from coupon_command_two $$,
   array['created'::text],
-  'cancelled reward releases through its related compensating transaction'
+  'a second reserved reward creates its own native coupon command'
+);
+create temporary table claimed_coupon_command_two as
+select * from loyalty_private.claim_woocommerce_commands(
+  (select public_id from loyalty.commerce_connections where external_store_id = 'programme-one-store'),
+  10, 60
+);
+select results_eq(
+  $$
+    select outcome from loyalty_private.finish_woocommerce_command(
+      (select public_id from loyalty.commerce_connections where external_store_id = 'programme-one-store'),
+      (select command_id from coupon_command_two),
+      'delivered', 'woocommerce:coupon:43', null, 0
+    )
+  $$,
+  array['delivered'::text],
+  'the second native coupon reaches issued state before expiry'
+);
+select ok(
+  has_function_privilege(
+    'loyalty_worker',
+    'loyalty_private.enqueue_expired_woocommerce_coupon_cancellations(timestamp with time zone,integer)',
+    'EXECUTE'
+  ),
+  'the worker can sweep expired native coupons'
+);
+select results_eq(
+  $$ select loyalty_private.enqueue_expired_woocommerce_coupon_cancellations('2026-12-04T00:00:00Z', 100) $$,
+  array[1::bigint],
+  'expiry queues exactly one cancellation for the unused coupon'
+);
+create temporary table claimed_cancel_command as
+select * from loyalty_private.claim_woocommerce_commands(
+  (select public_id from loyalty.commerce_connections where external_store_id = 'programme-one-store'),
+  10, 60
+);
+select results_eq(
+  $$ select topic from claimed_cancel_command $$,
+  array['woocommerce.coupon.cancel'::text],
+  'the connector claims the native cancellation after issue'
+);
+select results_eq(
+  $$
+    select outcome from loyalty_private.finish_woocommerce_command(
+      (select public_id from loyalty.commerce_connections where external_store_id = 'programme-one-store'),
+      (select command_id from claimed_cancel_command),
+      'cancelled', 'woocommerce:coupon:43', null, 0
+    )
+  $$,
+  array['cancelled'::text],
+  'unused coupon cancellation acknowledges its compensating workflow'
 );
 select results_eq(
   $$ select state from loyalty.reward_reservations where public_id = (select public_id from programme_results where operation = 'reservation-two') $$,
   array['released'::text],
-  'compensated reward reaches released state'
+  'acknowledged coupon cancellation releases the reservation'
+);
+select results_eq(
+  $$
+    select count(*)::bigint
+    from loyalty.ledger_transactions as transaction
+    where transaction.transaction_kind = 'cancel'
+      and transaction.related_transaction_id = (
+        select id from loyalty.ledger_transactions
+        where public_id = (select public_id from programme_results where operation = 'ledger-reserve-two')
+      )
+  $$,
+  array[1::bigint],
+  'cancellation creates exactly one compensating ledger transaction'
+);
+
+insert into programme_results
+select 'reservation-three', result.reservation_public_id, result.outcome
+from loyalty_private.create_reward_reservation(
+  (select id from loyalty.organizations where slug = 'programme-one'),
+  (select id from loyalty.programme_groups where organization_id = (select id from loyalty.organizations where slug = 'programme-one')),
+  (select id from loyalty.programme_versions where public_id = (select public_id from programme_refs where name = 'version-two')),
+  (select id from loyalty.wallets where organization_id = (select id from loyalty.organizations where slug = 'programme-one')),
+  (select id from loyalty.programme_rewards where code = 'ten-euro' and programme_version_id =
+    (select id from loyalty.programme_versions where public_id = (select public_id from programme_refs where name = 'version-two'))),
+  100, '2026-12-03T00:00:00Z', 'reward:44', decode(repeat('aa', 32), 'hex')
+) as result;
+insert into programme_results
+select 'ledger-reserve-three', result.transaction_public_id, result.outcome
+from loyalty_private.reserve_points(
+  (select id from loyalty.organizations where slug = 'programme-one'),
+  (select id from loyalty.programme_groups where organization_id = (select id from loyalty.organizations where slug = 'programme-one')),
+  (select id from loyalty.programme_versions where public_id = (select public_id from programme_refs where name = 'version-two')),
+  (select public_id from loyalty.wallets where organization_id = (select id from loyalty.organizations where slug = 'programme-one')),
+  100, 'ledger:reward:44:reserve', decode(repeat('ab', 32), 'hex'), '2026-12-02T07:00:00Z'
+) as result;
+select results_eq(
+  $$ select outcome from loyalty_private.transition_reward_reservation(
+    (select public_id from programme_results where operation = 'reservation-three'),
+    'reserved', 'transition:44:reserved', decode(repeat('ac', 32), 'hex'),
+    'reward-worker', null,
+    (select public_id from programme_results where operation = 'ledger-reserve-three'), null
+  ) $$,
+  array['created'::text],
+  'a third reward reserves points before native issuance'
+);
+create temporary table coupon_command_three as
+select * from loyalty_private.enqueue_woocommerce_coupon_issue(
+  (select public_id from programme_results where operation = 'reservation-three'),
+  (select public_id from loyalty.commerce_connections where external_store_id = 'programme-one-store'),
+  2::smallint
+);
+select throws_ok(
+  $$
+    select * from loyalty_private.capture_woocommerce_coupon_use(
+      (select id from loyalty.organizations where slug = 'programme-one'),
+      (select id from loyalty.commerce_connections where external_store_id = 'programme-one-store'),
+      (select public_id from programme_results where operation = 'reservation-three'),
+      '44', '2026-12-02T07:01:00Z'
+    )
+  $$,
+  '55000', 'coupon issuance not yet acknowledged',
+  'coupon use arriving before issue acknowledgement remains retryable'
+);
+select results_eq(
+  $$ select loyalty_private.enqueue_expired_woocommerce_coupon_cancellations('2026-12-04T00:00:00Z', 100) $$,
+  array[0::bigint],
+  'expiry never races a native issue command whose outcome is still uncertain'
+);
+create temporary table claimed_coupon_command_three as
+select * from loyalty_private.claim_woocommerce_commands(
+  (select public_id from loyalty.commerce_connections where external_store_id = 'programme-one-store'),
+  10, 60
+);
+select results_eq(
+  $$
+    select outcome from loyalty_private.finish_woocommerce_command(
+      (select public_id from loyalty.commerce_connections where external_store_id = 'programme-one-store'),
+      (select command_id from coupon_command_three),
+      'dead_letter', null, 'invalid_fixed_discount', 0
+    )
+  $$,
+  array['dead_letter'::text],
+  'definitive pre-creation issue rejection triggers compensation'
+);
+select results_eq(
+  $$ select state from loyalty.reward_reservations where public_id = (select public_id from programme_results where operation = 'reservation-three') $$,
+  array['released'::text],
+  'definitive issue rejection releases its reserved points'
 );
 select results_eq(
   $$ select points from loyalty.wallet_balances where account_kind = 'available' $$,
@@ -698,7 +966,7 @@ select results_eq(
 );
 select results_eq(
   'select count(*)::bigint from loyalty.reward_reservations',
-  array[2::bigint],
+  array[3::bigint],
   'member can read their reward reservations'
 );
 set local request.jwt.claim.sub = '62000000-0000-4000-8000-000000000002';

@@ -39,6 +39,10 @@ Value-bearing transitions must reference a unique ledger transaction for the sam
 
 Connector execution references must be opaque object IDs. Coupon plaintext is not persisted in this boundary.
 
+For WooCommerce native rewards, a reserved reward queues one high-entropy, customer-scoped coupon issue command. Successful connector acknowledgement records `issued`. A signed completed-order coupon fact then calls the narrow capture command, which locks the reservation and creates both the related `capture` ledger transaction and `captured` transition atomically. A retry returns the original transaction; the same reservation against another order conflicts.
+
+Expired unused coupons follow the inverse sequence: the worker queues one cancellation, WooCommerce refuses cancellation when native usage is already non-zero, and only a confirmed unused cancellation creates the related `cancel` ledger transaction and `released` transition. Capture and release serialize on the reservation row and remain mutually exclusive.
+
 ## Expiry notifications
 
 `enqueue_point_expiry_notifications` finds non-empty lots within a positive lead-time window, writes one tenant/lot/lead-time fence, and appends a `loyalty.points.expiring` command to the transactional outbox. A scheduler retry creates no duplicate notification. Actual value expiry remains the immutable `expire_points` ledger command.

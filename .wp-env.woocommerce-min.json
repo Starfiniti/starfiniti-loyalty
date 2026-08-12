@@ -1,0 +1,15 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/wp-env.json",
+  "core": "https://wordpress.org/wordpress-6.6.5.zip",
+  "phpVersion": "8.1",
+  "plugins": ["https://downloads.wordpress.org/plugin/woocommerce.9.0.2.zip"],
+  "mappings": {
+    "wp-content/plugins/starfiniti-loyalty": "./plugins/woocommerce"
+  },
+  "testsEnvironment": false,
+  "config": {
+    "WP_DEBUG": true,
+    "WP_DEBUG_LOG": true,
+    "WP_DEBUG_DISPLAY": false
+  }
+}

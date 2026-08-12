@@ -101,7 +101,7 @@ export const programmeEvaluationEvidenceV1 = z.object({
   programmeGroupId: positiveBigintString,
   programmeVersionId: positiveBigintString,
   canonicalEventId: positiveBigintString.nullable(),
-  kind: z.enum(["live_award", "simulation", "tier_review"]),
+  kind: z.enum(["live_award", "live_refund", "simulation", "tier_review"]),
   subjectReference: z.string().min(1).max(500),
   idempotencyKey: operationKey,
   inputSha256: sha256Hex,

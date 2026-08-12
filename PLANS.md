@@ -6,7 +6,7 @@ Finish Starfiniti Loyalty as an open-source, self-hosted platform on Proxmox usi
 
 ## Current phase
 
-Phase 7 — production WooCommerce connector and plugin.
+Phase 9 — merchant administration and customer experience. Shopify Phase 8 remains deferred by product-owner direction.
 
 ## Evidence and completed work
 
@@ -29,22 +29,25 @@ Phase 7 — production WooCommerce connector and plugin.
 - Exact-head run `31566530867` passed the full gate with 178 pgTAP assertions plus a two-session overspend test and deterministic 20-round property sequence.
 - Phase 6 is complete: immutable publication/scheduling, deterministic award/simulation parity, tier qualification/history, reward reservation compensation, and advance expiry notifications are implemented.
 - Exact-head run `31569179555` passed the full baseline and Docker database gate with five migrations, 260 pgTAP assertions, ledger overspend, concurrent evaluation idempotency, and property probes.
+- Phase 7 implementation includes the durable WooCommerce worker, completed-order awards, cumulative refund reversals, explicit programme binding, native coupon issue/cancel polling, coupon-use capture, confirmed-unused expiry compensation, customer/privacy surfaces, source reconciliation, queue operations, and an installable plugin ZIP.
+- Exact-head run `31575751260` passed the six-migration baseline with 322 pgTAP assertions plus concurrency/property probes.
+- Phase 7 is complete for the active WooCommerce scope. Exact-head run `31577312529` passed the baseline, database, and four real WordPress/WooCommerce runtime jobs across minimum/current versions, HPOS/legacy storage, classic/Blocks coupon paths, hub outage, partial/full refunds, reconciliation, activation lifecycle, and queue recovery.
 
 ## Active work
 
-- `P7-WOOCOMMERCE-CONNECTOR` (in progress): complete order/refund normalization effects, reward command execution, storefront/customer surfaces, and reconciliation without making checkout depend on the hub.
+- `P9-MERCHANT-HUB` (ready): build the missing merchant programme, customer/ledger, and connector operations surfaces on the proven database commands.
 
 ## Next safe tasks
 
-1. Connect canonical WooCommerce order/refund facts to programme evaluation and idempotent ledger effects.
-2. Implement idempotent native reward/coupon command execution and status callbacks in the plugin.
-3. Add reconciliation, queue recovery, Blocks/classic compatibility tests, and customer-safe cached loyalty reads.
+1. Add authenticated merchant shell and organization/workspace context without exposing trusted database credentials to the browser.
+2. Build the programme editor and preview against versioned programme contracts and safe publish commands.
+3. Add tenant-scoped customer/ledger and connector queue/reconciliation operations.
 
 ## Dependencies and blockers
 
 - Docker is not installed on this Windows workstation; GitHub Actions is the verified Linux/Docker database runner.
 - Direct Proxmox SSH is unavailable: the public alias rejects the configured keys, the VPN alias times out, and the tested jump-host route cannot reach the private alias.
-- Proxmox deployment ultimately needs a working SSH route plus host addresses, DNS, TLS issuer, off-host backup target, and production credentials. These inputs do not block Phase 6 implementation.
+- Proxmox deployment ultimately needs a working SSH route plus host addresses, DNS, TLS issuer, off-host backup target, and production credentials. These inputs do not block repository implementation or disposable CI verification.
 
 ## Decisions awaiting approval
 

@@ -57,6 +57,332 @@ export const canonicalCommerceEventV1 = z
 
 export type CanonicalCommerceEventV1 = z.infer<typeof canonicalCommerceEventV1>;
 
+export const wooCommerceDecimal = z
+  .string()
+  .regex(/^(?:0|[1-9][0-9]*)(?:\.[0-9]+)?$/u);
+
+const wooCommerceOrderLineV1 = z
+  .object({
+    lineId: z.string().min(1).max(255),
+    productId: z.string().min(1).max(255),
+    variationId: z.string().min(1).max(255).nullable(),
+    quantity: wooCommerceDecimal,
+    categoryIds: z.array(z.string().min(1).max(255)),
+    collectionIds: z.array(z.string().min(1).max(255)).default([]),
+    subtotal: wooCommerceDecimal,
+    total: wooCommerceDecimal,
+    refundedTotal: wooCommerceDecimal,
+  })
+  .strict();
+
+export const wooCommerceOrderFactV1 = z
+  .object({
+    kind: z.literal("order"),
+    orderId: z.string().min(1).max(255),
+    status: z.string().regex(/^[a-z0-9_-]{1,100}$/u),
+    currency: z.string().regex(/^[A-Z]{3}$/u),
+    currencyMinorUnitDigits: z.int().min(0).max(6),
+    market: z.string().regex(/^[A-Z]{2}$/u),
+    customer: z.discriminatedUnion("kind", [
+      z
+        .object({
+          kind: z.literal("registered"),
+          externalCustomerId: z.string().min(1).max(255),
+        })
+        .strict(),
+      z
+        .object({
+          kind: z.literal("guest"),
+          guestOrderId: z.string().min(1).max(255),
+        })
+        .strict(),
+    ]),
+    paymentKind: z.enum(["money", "gift-card", "store-credit"]),
+    lines: z.array(wooCommerceOrderLineV1),
+    shippingTotal: wooCommerceDecimal,
+    taxTotal: wooCommerceDecimal,
+    feeTotal: wooCommerceDecimal,
+    discountTotal: wooCommerceDecimal,
+    refundedTotal: wooCommerceDecimal,
+  })
+  .strict()
+  .superRefine((order, context) => {
+    let lineRefundTotal = 0n;
+    const orderAmounts = [
+      "shippingTotal",
+      "taxTotal",
+      "feeTotal",
+      "discountTotal",
+      "refundedTotal",
+    ] as const;
+    for (const field of orderAmounts) {
+      if (
+        scaledBigIntOrNull(order[field], order.currencyMinorUnitDigits) === null
+      ) {
+        context.addIssue({
+          code: "custom",
+          message: "Amount exceeds the currency fractional precision",
+          path: [field],
+        });
+      }
+    }
+    order.lines.forEach((line, index) => {
+      const subtotal = scaledBigIntOrNull(
+        line.subtotal,
+        order.currencyMinorUnitDigits,
+      );
+      const total = scaledBigIntOrNull(
+        line.total,
+        order.currencyMinorUnitDigits,
+      );
+      const refunded = scaledBigIntOrNull(
+        line.refundedTotal,
+        order.currencyMinorUnitDigits,
+      );
+      if (subtotal === null || total === null || refunded === null) {
+        context.addIssue({
+          code: "custom",
+          message: "Line amount exceeds the currency fractional precision",
+          path: ["lines", index],
+        });
+        return;
+      }
+      lineRefundTotal += refunded;
+      if (total > subtotal) {
+        context.addIssue({
+          code: "custom",
+          message: "Line total cannot exceed its pre-discount subtotal",
+          path: ["lines", index, "total"],
+        });
+      }
+      if (refunded > total) {
+        context.addIssue({
+          code: "custom",
+          message: "Line refunded total cannot exceed its paid total",
+          path: ["lines", index, "refundedTotal"],
+        });
+      }
+    });
+    const orderRefundTotal = scaledBigIntOrNull(
+      order.refundedTotal,
+      order.currencyMinorUnitDigits,
+    );
+    if (orderRefundTotal !== null && lineRefundTotal > orderRefundTotal) {
+      context.addIssue({
+        code: "custom",
+        message: "Line refunds cannot exceed the cumulative order refund",
+        path: ["refundedTotal"],
+      });
+    }
+  });
+
+export const wooCommerceOrderStatusChangedPayloadV1 = z
+  .object({
+    kind: z.literal("order_status_changed"),
+    previousStatus: z.string().regex(/^[a-z0-9_-]{1,100}$/u),
+    order: wooCommerceOrderFactV1,
+  })
+  .strict();
+
+export const wooCommerceOrderRefundedPayloadV1 = z
+  .object({
+    kind: z.literal("order_refunded"),
+    refundId: z.string().min(1).max(255),
+    refundAmount: wooCommerceDecimal,
+    order: wooCommerceOrderFactV1,
+  })
+  .strict()
+  .superRefine((payload, context) => {
+    const digits = payload.order.currencyMinorUnitDigits;
+    const refundAmount = scaledBigIntOrNull(payload.refundAmount, digits);
+    const cumulativeRefund = scaledBigIntOrNull(
+      payload.order.refundedTotal,
+      digits,
+    );
+    if (refundAmount === null) {
+      context.addIssue({
+        code: "custom",
+        message: "Refund amount exceeds the currency fractional precision",
+        path: ["refundAmount"],
+      });
+    } else if (cumulativeRefund !== null && refundAmount > cumulativeRefund) {
+      context.addIssue({
+        code: "custom",
+        message: "Refund amount cannot exceed the cumulative order refund",
+        path: ["refundAmount"],
+      });
+    }
+  });
+
+export const wooCommerceCouponCapturedPayloadV1 = z
+  .object({
+    kind: z.literal("coupon_captured"),
+    reservationId: z.uuid(),
+    orderId: z.string().min(1).max(255),
+  })
+  .strict();
+
+function scaledBigIntOrNull(
+  value: string,
+  minorUnitDigits: number,
+): bigint | null {
+  if (!wooCommerceDecimal.safeParse(value).success) return null;
+  const [, fraction = ""] = value.split(".");
+  return fraction.length > minorUnitDigits
+    ? null
+    : decimalToScaledBigInt(value, minorUnitDigits);
+}
+
+function decimalToScaledBigInt(value: string, minorUnitDigits: number): bigint {
+  const [major, fraction = ""] = value.split(".");
+  if (fraction.length > minorUnitDigits) {
+    throw new RangeError("WooCommerce amount has excess fractional precision");
+  }
+  return (
+    BigInt(major!) * 10n ** BigInt(minorUnitDigits) +
+    BigInt(fraction.padEnd(minorUnitDigits, "0") || "0")
+  );
+}
+
+export function wooCommerceDecimalToMinor(
+  value: string,
+  minorUnitDigits: number,
+): number {
+  if (!wooCommerceDecimal.safeParse(value).success) {
+    throw new TypeError(
+      "WooCommerce amount must be a non-negative decimal string",
+    );
+  }
+  if (
+    !Number.isSafeInteger(minorUnitDigits) ||
+    minorUnitDigits < 0 ||
+    minorUnitDigits > 6
+  ) {
+    throw new RangeError(
+      "Currency minor-unit digits must be between zero and six",
+    );
+  }
+  const minor = decimalToScaledBigInt(value, minorUnitDigits);
+  if (minor > BigInt(Number.MAX_SAFE_INTEGER)) {
+    throw new RangeError("WooCommerce amount exceeds safe integer range");
+  }
+  return Number(minor);
+}
+
+export type WooCommerceOrderFactV1 = z.infer<typeof wooCommerceOrderFactV1>;
+export type WooCommerceOrderStatusChangedPayloadV1 = z.infer<
+  typeof wooCommerceOrderStatusChangedPayloadV1
+>;
+export type WooCommerceOrderRefundedPayloadV1 = z.infer<
+  typeof wooCommerceOrderRefundedPayloadV1
+>;
+export type WooCommerceCouponCapturedPayloadV1 = z.infer<
+  typeof wooCommerceCouponCapturedPayloadV1
+>;
+
+const wooCommerceCouponIssuePayloadV1 = z
+  .object({
+    kind: z.literal("issue_coupon"),
+    reservationId: z.uuid(),
+    code: z.string().regex(/^SF[A-Z0-9]{20,48}$/u),
+    externalCustomerId: z.string().min(1).max(255),
+    expiresAt: z.iso.datetime({ offset: true }),
+    reward: z.discriminatedUnion("kind", [
+      z
+        .object({
+          kind: z.literal("fixed_discount"),
+          amountMinor: z.string().regex(/^[1-9][0-9]*$/u),
+          currencyMinorUnitDigits: z.int().min(0).max(6),
+        })
+        .strict(),
+      z
+        .object({
+          kind: z.literal("percentage_discount"),
+          percentageBasisPoints: z.int().min(1).max(10_000),
+          maximumDiscountMinor: z
+            .string()
+            .regex(/^[1-9][0-9]*$/u)
+            .nullable(),
+          currencyMinorUnitDigits: z.int().min(0).max(6),
+        })
+        .strict(),
+      z.object({ kind: z.literal("free_shipping") }).strict(),
+    ]),
+  })
+  .strict();
+
+const wooCommerceCouponCancelPayloadV1 = z
+  .object({
+    kind: z.literal("cancel_coupon"),
+    reservationId: z.uuid(),
+    code: z.string().regex(/^SF[A-Z0-9]{20,48}$/u),
+  })
+  .strict();
+
+export const wooCommerceCouponCommandEnvelopeV1 = z
+  .object({
+    version: z.literal("1"),
+    commandId: z.uuid(),
+    connectionId: z.uuid(),
+    topic: z.enum(["woocommerce.coupon.issue", "woocommerce.coupon.cancel"]),
+    payloadVersion: z.literal("v1"),
+    deliveredAt: z.iso.datetime({ offset: true }),
+    payload: z.discriminatedUnion("kind", [
+      wooCommerceCouponIssuePayloadV1,
+      wooCommerceCouponCancelPayloadV1,
+    ]),
+  })
+  .strict()
+  .superRefine((command, context) => {
+    const expectedKind =
+      command.topic === "woocommerce.coupon.issue"
+        ? "issue_coupon"
+        : "cancel_coupon";
+    if (command.payload.kind !== expectedKind) {
+      context.addIssue({
+        code: "custom",
+        message: "Coupon command topic and payload kind do not match",
+        path: ["payload", "kind"],
+      });
+    }
+  });
+
+export type WooCommerceCouponCommandEnvelopeV1 = z.infer<
+  typeof wooCommerceCouponCommandEnvelopeV1
+>;
+
+export const wooCommerceCommandRequestV1 = z.discriminatedUnion("kind", [
+  z
+    .object({
+      version: z.literal("1"),
+      kind: z.literal("poll"),
+      connectionId: z.uuid(),
+      requestId: z.uuid(),
+      batchSize: z.int().min(1).max(25).default(10),
+    })
+    .strict(),
+  z
+    .object({
+      version: z.literal("1"),
+      kind: z.literal("acknowledge"),
+      connectionId: z.uuid(),
+      requestId: z.uuid(),
+      commandId: z.uuid(),
+      outcome: z.enum(["delivered", "retryable", "dead_letter", "cancelled"]),
+      resultReference: z.string().min(1).max(500).nullable(),
+      errorCode: z
+        .string()
+        .regex(/^[a-z0-9_.-]{1,100}$/u)
+        .nullable(),
+      retryDelaySeconds: z.int().min(0).max(86_400),
+    })
+    .strict(),
+]);
+
+export type WooCommerceCommandRequestV1 = z.infer<
+  typeof wooCommerceCommandRequestV1
+>;
+
 export type WooCommerceSignatureHeaders = Readonly<{
   connectionId: string;
   deliveryId: string;

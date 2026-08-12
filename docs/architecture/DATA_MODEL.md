@@ -2,7 +2,7 @@
 
 ## Implementation status
 
-The tenancy, WooCommerce event, ledger, and Phase 6 programme-engine portions below are implemented in five versioned migrations. The ledger uses immutable transaction headers/entries, six wallet buckets, programme control accounts, original-attribution lots, signed compensating allocations, same-transaction projections, tenant RLS, and narrow worker commands. Programme publication, materialized tiers/rewards, reward reservations, tier history, evaluation evidence, and expiry-notification fences are implemented; general audit and privacy workflows remain later phases.
+The tenancy, WooCommerce event/effect, ledger, and programme-engine portions below are implemented in six versioned migrations. The ledger uses immutable transaction headers/entries, six wallet buckets, programme control accounts, original-attribution lots, signed compensating allocations, same-transaction projections, tenant RLS, and narrow worker commands. Programme publication, materialized tiers/rewards, reward reservations, tier history, evaluation evidence, expiry-notification fences, WooCommerce order/refund effects, and native coupon settlement are implemented; general platform audit and privacy workflows remain later slices.
 
 ## Database boundaries
 
@@ -123,11 +123,11 @@ An available credit creates an immutable lot linked to its credit entry, program
 
 ## Commerce and idempotency tables
 
-- `commerce_connections`: workspace-scoped WooCommerce installation, status, endpoint metadata, credential reference, signing-key version, and reconciliation watermark. Secrets live in the deployment secret store, not rows.
+- `commerce_connections`: workspace-scoped WooCommerce installation, explicit programme binding, status, endpoint metadata, credential reference, signing-key version, health/reconciliation watermark. Secrets live in the deployment secret store, not rows.
 - `webhook_deliveries` (`loyalty_private`): raw verified body bytes, body hash, headers allowlist, signature-key version, delivery/source IDs, receipt time, processing status, and retention deadline. Unique `(connection_id, source_delivery_id)`.
-- `commerce_events`: canonical versioned fact with source aggregate ID, source version/modified time, occurred time, canonical payload/hash, and normalization version.
+- `commerce_events`: canonical versioned fact with source aggregate ID, source version/modified time, occurred time, canonical payload/hash, normalization version, durable effect lease/attempt state, and bounded failure code.
 - `business_effects`: unique `(organization_id, event_id, effect_kind, effect_key)` linking an event to the ledger/audit result.
-- `outbox_messages`: transactionally written command/event with availability, attempts, lease, result, and dead-letter state. Consumers are idempotent.
+- `outbox_messages`: transactionally written command/event with availability, attempts, lease, opaque native result, and dead-letter state. WooCommerce issue/cancel commands are unique per reservation and topic; consumers are idempotent.
 - `reconciliation_runs/items`: source range, counts, mismatches, repairs, operator, and evidence.
 
 Raw bodies are restricted and short-lived; canonical facts and hashes retain enough evidence to explain effects after raw-body deletion.
@@ -144,7 +144,7 @@ requested -> reserved -> issued -> captured
                             +-> released (compensating ledger transaction)
 ```
 
-The reservation holds programme version, wallet, reward, points, expiry, idempotency key, and an opaque connector execution reference. `reward_reservation_transitions` preserves every state change and binds each value-bearing change to one unique same-wallet ledger transaction. Coupon plaintext is transmitted only where required and is not persisted in the reservation boundary. Capture and release remain mutually exclusive ledger effects under row locks.
+The reservation holds programme version, wallet, reward, points, expiry, idempotency key, and an opaque connector execution reference. `reward_reservation_transitions` preserves every state change and binds each value-bearing change to one unique same-wallet ledger transaction. Coupon plaintext is transmitted only in the private connector outbox and is not persisted in the reservation boundary or coupon-capture event. WooCommerce capture and confirmed-unused cancellation both lock the reservation; capture and compensating release remain mutually exclusive ledger effects.
 
 ## Tier history and audit
 

@@ -34,3 +34,9 @@
 - Added immutable programme draft/publish/schedule/supersede lifecycle, materialized tier/reward definitions, effective tier intervals, approval attribution, and versioned programme contracts.
 - Added idempotent reward reservations with audited state transitions bound to exact ledger effects, safe connector-failure compensation, and transactional advance expiry notifications.
 - Added 82 programme pgTAP assertions; the five-migration database gate now exercises 260 assertions plus ledger concurrency/property checks.
+- Added the Phase 7 WooCommerce worker with durable effect leases, explicit programme binding, PII-free channel identity resolution, completed-order awards, and cumulative original-attribution refund reversals.
+- Added signed native coupon issue/cancel polling, idempotent customer-scoped WooCommerce coupons, completed-order coupon capture, and expiry cancellation that releases points only after confirmed unused native cancellation.
+- Added encrypted-at-rest plugin signing material, connection/queue diagnostics, WP-CLI dead-letter recovery and source reconciliation, My Account/cart reward surfaces, privacy export/erase, and opt-in uninstall cleanup.
+- Added a separate Proxmox worker service/credential, connection health watermarks, installable plugin ZIP packaging, and Phase 7 contract/worker/pgTAP coverage.
+- Fixed reservation settlement so capture/release preserves the immutable original reserve-ledger pointer and retries can continue proving their origin.
+- Added a real minimum/current WordPress and WooCommerce runtime matrix across HPOS and legacy storage, classic and Blocks coupon paths, hub outage, partial/full refunds, activation lifecycle, reconciliation, and dead-letter recovery.

@@ -3,7 +3,12 @@ import {
   canonicalCommerceEventV1,
   signWooCommerceDelivery,
   verifyWooCommerceDelivery,
+  wooCommerceCouponCapturedPayloadV1,
+  wooCommerceCouponCommandEnvelopeV1,
+  wooCommerceDecimalToMinor,
   wooCommerceDeliveryEnvelopeV1,
+  wooCommerceOrderRefundedPayloadV1,
+  wooCommerceOrderStatusChangedPayloadV1,
 } from "./woocommerce";
 
 const encoder = new TextEncoder();
@@ -79,6 +84,127 @@ describe("WooCommerce delivery contracts", () => {
   });
 });
 
+const order = {
+  kind: "order" as const,
+  orderId: "42",
+  status: "completed",
+  currency: "EUR",
+  currencyMinorUnitDigits: 2,
+  market: "SI",
+  customer: { kind: "registered" as const, externalCustomerId: "7" },
+  paymentKind: "money" as const,
+  lines: [
+    {
+      lineId: "1",
+      productId: "10",
+      variationId: null,
+      quantity: "2",
+      categoryIds: ["3"],
+      collectionIds: [],
+      subtotal: "12.34",
+      total: "10.00",
+      refundedTotal: "2.50",
+    },
+  ],
+  shippingTotal: "4.99",
+  taxTotal: "2.10",
+  feeTotal: "0.00",
+  discountTotal: "2.34",
+  refundedTotal: "2.50",
+};
+
+describe("WooCommerce commerce facts", () => {
+  it("accepts full order and cumulative refund snapshots without PII", () => {
+    expect(
+      wooCommerceOrderStatusChangedPayloadV1.safeParse({
+        kind: "order_status_changed",
+        previousStatus: "processing",
+        order,
+      }).success,
+    ).toBe(true);
+    expect(
+      wooCommerceOrderRefundedPayloadV1.safeParse({
+        kind: "order_refunded",
+        refundId: "9",
+        refundAmount: "2.50",
+        order,
+      }).success,
+    ).toBe(true);
+  });
+
+  it("converts decimal strings to integer minor units without floating point", () => {
+    expect(wooCommerceDecimalToMinor("12.34", 2)).toBe(1234);
+    expect(wooCommerceDecimalToMinor("12", 2)).toBe(1200);
+    expect(wooCommerceDecimalToMinor("12.3", 2)).toBe(1230);
+    expect(() => wooCommerceDecimalToMinor("12.345", 2)).toThrow(
+      "excess fractional precision",
+    );
+    expect(() => wooCommerceDecimalToMinor("1e3", 2)).toThrow("decimal string");
+  });
+
+  it("rejects customer PII and malformed money facts at the strict boundary", () => {
+    expect(
+      wooCommerceOrderStatusChangedPayloadV1.safeParse({
+        kind: "order_status_changed",
+        previousStatus: "processing",
+        order: {
+          ...order,
+          customer: {
+            kind: "registered",
+            externalCustomerId: "7",
+            email: "customer@example.test",
+          },
+        },
+      }).success,
+    ).toBe(false);
+    expect(
+      wooCommerceOrderStatusChangedPayloadV1.safeParse({
+        kind: "order_status_changed",
+        previousStatus: "processing",
+        order: { ...order, shippingTotal: "4,99" },
+      }).success,
+    ).toBe(false);
+  });
+
+  it("rejects internally inconsistent line and refund totals", () => {
+    expect(
+      wooCommerceOrderStatusChangedPayloadV1.safeParse({
+        kind: "order_status_changed",
+        previousStatus: "processing",
+        order: {
+          ...order,
+          lines: [{ ...order.lines[0], refundedTotal: "10.01" }],
+        },
+      }).success,
+    ).toBe(false);
+    expect(
+      wooCommerceOrderRefundedPayloadV1.safeParse({
+        kind: "order_refunded",
+        refundId: "9",
+        refundAmount: "2.51",
+        order,
+      }).success,
+    ).toBe(false);
+  });
+
+  it("accepts a PII-free coupon capture fact and rejects extra fields", () => {
+    const fact = {
+      kind: "coupon_captured",
+      reservationId: "63000000-0000-4000-8000-000000000001",
+      orderId: "42",
+    };
+    expect(wooCommerceCouponCapturedPayloadV1.safeParse(fact).success).toBe(
+      true,
+    );
+    expect(
+      wooCommerceCouponCapturedPayloadV1.safeParse({
+        ...fact,
+        email: "customer@example.test",
+      }).success,
+    ).toBe(false);
+  });
+});
+
 describe("WooCommerce raw-body signatures", () => {
   it("verifies a current exact-body signature", () => {
     expect(
@@ -143,5 +269,53 @@ describe("WooCommerce raw-body signatures", () => {
         maxBodyBytes: 8,
       }),
     ).toEqual({ ok: false, reason: "body_too_large" });
+  });
+});
+
+describe("WooCommerce coupon commands", () => {
+  it("accepts a customer-scoped one-use native coupon command", () => {
+    expect(
+      wooCommerceCouponCommandEnvelopeV1.safeParse({
+        version: "1",
+        commandId: "61000000-0000-4000-8000-000000000001",
+        connectionId: "62000000-0000-4000-8000-000000000001",
+        topic: "woocommerce.coupon.issue",
+        payloadVersion: "v1",
+        deliveredAt: "2026-08-12T10:00:00Z",
+        payload: {
+          kind: "issue_coupon",
+          reservationId: "63000000-0000-4000-8000-000000000001",
+          code: "SF0123456789ABCDEFGHIJ",
+          externalCustomerId: "7",
+          expiresAt: "2026-08-13T10:00:00Z",
+          reward: {
+            kind: "fixed_discount",
+            amountMinor: "1000",
+            currencyMinorUnitDigits: 2,
+          },
+        },
+      }).success,
+    ).toBe(true);
+  });
+
+  it("rejects mismatched topics and weak coupon codes", () => {
+    expect(
+      wooCommerceCouponCommandEnvelopeV1.safeParse({
+        version: "1",
+        commandId: "61000000-0000-4000-8000-000000000001",
+        connectionId: "62000000-0000-4000-8000-000000000001",
+        topic: "woocommerce.coupon.cancel",
+        payloadVersion: "v1",
+        deliveredAt: "2026-08-12T10:00:00Z",
+        payload: {
+          kind: "issue_coupon",
+          reservationId: "63000000-0000-4000-8000-000000000001",
+          code: "SHORT",
+          externalCustomerId: "7",
+          expiresAt: "2026-08-13T10:00:00Z",
+          reward: { kind: "free_shipping" },
+        },
+      }).success,
+    ).toBe(false);
   });
 });

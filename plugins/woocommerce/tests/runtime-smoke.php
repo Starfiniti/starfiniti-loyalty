@@ -1,0 +1,277 @@
+<?php
+
+use Automattic\WooCommerce\Utilities\OrderUtil;
+use Automattic\WooCommerce\StoreApi\Utilities\CartController;
+use Starfiniti\Loyalty\Commands;
+use Starfiniti\Loyalty\Outbox;
+
+defined('ABSPATH') || exit(1);
+
+/** @param mixed $condition */
+function starfiniti_runtime_assert($condition, string $message): void
+{
+    if (! $condition) {
+        fwrite(STDERR, "FAIL: {$message}\n");
+        exit(1);
+    }
+    fwrite(STDOUT, "PASS: {$message}\n");
+}
+
+starfiniti_runtime_assert(class_exists('WooCommerce'), 'WooCommerce is active');
+starfiniti_runtime_assert(class_exists(Outbox::class), 'Starfiniti Loyalty is active');
+$expectedHpos = get_option('starfiniti_runtime_expected_hpos');
+starfiniti_runtime_assert(
+    in_array($expectedHpos, ['yes', 'no'], true),
+    'runtime smoke declares the expected order storage mode'
+);
+starfiniti_runtime_assert(
+    OrderUtil::custom_orders_table_usage_is_enabled() === ($expectedHpos === 'yes'),
+    $expectedHpos === 'yes'
+        ? 'HPOS is enabled for the runtime smoke test'
+        : 'legacy order storage is enabled for the runtime smoke test'
+);
+
+Outbox::install();
+global $wpdb;
+$outboxTable = $wpdb->prefix . 'starfiniti_loyalty_outbox';
+starfiniti_runtime_assert(
+    $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $outboxTable)) === $outboxTable,
+    'plugin activation creates the durable local outbox'
+);
+
+$customerId = wc_create_new_customer(
+    'runtime-smoke@example.test',
+    'starfiniti-runtime-smoke',
+    wp_generate_password(24, true)
+);
+starfiniti_runtime_assert(! is_wp_error($customerId), 'WooCommerce customer fixture is created');
+
+$product = new WC_Product_Simple();
+$product->set_name('Starfiniti runtime smoke product');
+$product->set_status('publish');
+$product->set_regular_price('20.00');
+$productId = $product->save();
+starfiniti_runtime_assert($productId > 0, 'WooCommerce product fixture is created');
+
+$reservationId = '63000000-0000-4000-8000-000000000001';
+$couponCode = 'SF0123456789ABCDEF0123456789ABCDEF';
+$execute = new ReflectionMethod(Commands::class, 'execute');
+$execute->setAccessible(true);
+$issue = $execute->invoke(null, [
+    'version' => '1',
+    'commandId' => '61000000-0000-4000-8000-000000000001',
+    'connectionId' => '62000000-0000-4000-8000-000000000001',
+    'topic' => 'woocommerce.coupon.issue',
+    'payloadVersion' => 'v1',
+    'deliveredAt' => gmdate('c'),
+    'payload' => [
+        'kind' => 'issue_coupon',
+        'reservationId' => $reservationId,
+        'code' => $couponCode,
+        'externalCustomerId' => (string) $customerId,
+        'expiresAt' => gmdate('c', time() + DAY_IN_SECONDS),
+        'reward' => [
+            'kind' => 'fixed_discount',
+            'amountMinor' => '1000',
+            'currencyMinorUnitDigits' => 2,
+        ],
+    ],
+]);
+starfiniti_runtime_assert(
+    is_array($issue) && ($issue['outcome'] ?? null) === 'delivered',
+    'signed-command executor creates a native coupon'
+);
+$couponId = wc_get_coupon_id_by_code($couponCode);
+$coupon = new WC_Coupon($couponId);
+starfiniti_runtime_assert(
+    $couponId > 0
+    && $coupon->get_usage_limit() === 1
+    && (string) $coupon->get_meta('_starfiniti_reservation_id', true) === $reservationId
+    && (string) $coupon->get_meta('_starfiniti_external_customer_id', true) === (string) $customerId,
+    'native coupon is one-use and bound to the reservation and customer'
+);
+
+update_option(
+    'starfiniti_loyalty_endpoint',
+    'https://unreachable.invalid/api/v1/integrations/woocommerce/events',
+    false
+);
+$checkoutHttpRequests = 0;
+$rejectCheckoutHttp = static function ($preempt) use (&$checkoutHttpRequests) {
+    $checkoutHttpRequests++;
+    return new WP_Error('starfiniti_runtime_hub_unavailable', 'Hub unavailable in runtime smoke.');
+};
+add_filter('pre_http_request', $rejectCheckoutHttp, 10, 1);
+
+wp_set_current_user((int) $customerId);
+$cartController = new CartController();
+$cartController->load_cart();
+$cart = $cartController->get_cart_instance();
+$cart->empty_cart();
+$cartItemKey = $cart->add_to_cart($productId, 1);
+starfiniti_runtime_assert(false !== $cartItemKey, 'classic cart fixture contains the product');
+starfiniti_runtime_assert(
+    $cart->apply_coupon($couponCode) && $cart->has_discount($couponCode),
+    'classic cart applies the native loyalty coupon'
+);
+$cart->remove_coupon($couponCode);
+$storeApiCouponCode = wc_format_coupon_code($couponCode);
+$cartController->apply_coupon($storeApiCouponCode);
+starfiniti_runtime_assert(
+    $cartController->has_coupon($storeApiCouponCode),
+    'Cart and Checkout Blocks Store API controller applies the native loyalty coupon'
+);
+$cart->empty_cart();
+
+$order = wc_create_order(['customer_id' => $customerId]);
+starfiniti_runtime_assert(! is_wp_error($order), 'order fixture is created through WooCommerce CRUD');
+$order->add_product($product, 1);
+$applyResult = $order->apply_coupon($couponCode);
+starfiniti_runtime_assert(! is_wp_error($applyResult), 'native coupon applies through WooCommerce core');
+starfiniti_runtime_assert(
+    0 === $checkoutHttpRequests,
+    'coupon validation makes no hub request when the configured hub is unavailable'
+);
+remove_filter('pre_http_request', $rejectCheckoutHttp, 10);
+$order->calculate_totals();
+$order->save();
+$order->update_status('completed');
+$orderId = $order->get_id();
+starfiniti_runtime_assert(
+    wc_get_order($orderId) instanceof WC_Order,
+    'completed order round-trips through WooCommerce CRUD getters'
+);
+
+$captureRows = (int) $wpdb->get_var($wpdb->prepare(
+    "SELECT COUNT(*) FROM {$outboxTable} WHERE event_type = %s AND source_object_id = %s",
+    'commerce.coupon.captured',
+    $reservationId
+));
+starfiniti_runtime_assert($captureRows === 1, 'completed coupon use creates one local capture event');
+$capturePayload = (string) $wpdb->get_var($wpdb->prepare(
+    "SELECT event_payload FROM {$outboxTable} WHERE event_type = %s AND source_object_id = %s LIMIT 1",
+    'commerce.coupon.captured',
+    $reservationId
+));
+starfiniti_runtime_assert(
+    str_contains($capturePayload, $reservationId)
+    && str_contains($capturePayload, (string) $orderId)
+    && ! str_contains($capturePayload, 'runtime-smoke@example.test'),
+    'coupon capture evidence is PII-free'
+);
+
+$coupon = new WC_Coupon($couponId);
+starfiniti_runtime_assert($coupon->get_usage_count() > 0, 'WooCommerce records native coupon use');
+$partialRefund = wc_create_refund([
+    'amount' => '4.00',
+    'reason' => 'Runtime smoke partial refund',
+    'order_id' => $orderId,
+    'refund_payment' => false,
+    'restock_items' => false,
+]);
+starfiniti_runtime_assert(
+    $partialRefund instanceof WC_Order_Refund,
+    'partial refund is created through WooCommerce CRUD'
+);
+$refreshedOrder = wc_get_order($orderId);
+$remainingRefundAmount = $refreshedOrder instanceof WC_Order
+    ? $refreshedOrder->get_remaining_refund_amount()
+    : 0;
+$finalRefund = wc_create_refund([
+    'amount' => $remainingRefundAmount,
+    'reason' => 'Runtime smoke final refund',
+    'order_id' => $orderId,
+    'refund_payment' => false,
+    'restock_items' => false,
+]);
+starfiniti_runtime_assert(
+    $remainingRefundAmount > 0 && $finalRefund instanceof WC_Order_Refund,
+    'remaining amount is fully refunded through WooCommerce CRUD'
+);
+$refundRows = (int) $wpdb->get_var($wpdb->prepare(
+    "SELECT COUNT(*) FROM {$outboxTable} WHERE event_type = %s AND source_object_id = %s",
+    'commerce.order.refunded',
+    (string) $orderId
+));
+starfiniti_runtime_assert($refundRows === 2, 'partial and final refunds create two source facts');
+$refundPayloads = (string) $wpdb->get_var($wpdb->prepare(
+    "SELECT GROUP_CONCAT(event_payload SEPARATOR '\n') FROM {$outboxTable} WHERE event_type = %s AND source_object_id = %s",
+    'commerce.order.refunded',
+    (string) $orderId
+));
+starfiniti_runtime_assert(
+    ! str_contains($refundPayloads, 'runtime-smoke@example.test'),
+    'refund source facts are PII-free'
+);
+$cancel = $execute->invoke(null, [
+    'version' => '1',
+    'commandId' => '61000000-0000-4000-8000-000000000002',
+    'connectionId' => '62000000-0000-4000-8000-000000000001',
+    'topic' => 'woocommerce.coupon.cancel',
+    'payloadVersion' => 'v1',
+    'deliveredAt' => gmdate('c'),
+    'payload' => [
+        'kind' => 'cancel_coupon',
+        'reservationId' => $reservationId,
+        'code' => $couponCode,
+    ],
+]);
+starfiniti_runtime_assert(
+    is_array($cancel)
+    && ($cancel['outcome'] ?? null) === 'dead_letter'
+    && ($cancel['errorCode'] ?? null) === 'coupon_already_used',
+    'used coupon cannot be cancelled and released'
+);
+
+starfiniti_runtime_assert(Outbox::reconcileOrder($orderId), 'source order reconciliation is available');
+starfiniti_runtime_assert(Outbox::reconcileOrder($orderId), 'source reconciliation retry is accepted');
+$captureRowsAfterRetry = (int) $wpdb->get_var($wpdb->prepare(
+    "SELECT COUNT(*) FROM {$outboxTable} WHERE event_type = %s AND source_object_id = %s",
+    'commerce.coupon.captured',
+    $reservationId
+));
+starfiniti_runtime_assert(
+    $captureRowsAfterRetry === 1,
+    'source reconciliation does not duplicate coupon capture'
+);
+$refundRowsAfterRetry = (int) $wpdb->get_var($wpdb->prepare(
+    "SELECT COUNT(*) FROM {$outboxTable} WHERE event_type = %s AND source_object_id = %s",
+    'commerce.order.refunded',
+    (string) $orderId
+));
+starfiniti_runtime_assert(
+    $refundRowsAfterRetry === 2,
+    'source reconciliation does not duplicate refund facts'
+);
+$retryTable = esc_sql($outboxTable);
+for ($attempt = 0; $attempt < 12; $attempt++) {
+    $wpdb->query(
+        "UPDATE {$retryTable} SET available_gmt = UTC_TIMESTAMP() WHERE state IN ('pending','retryable')"
+    );
+    Outbox::deliverPending();
+}
+$queueDiagnostics = Outbox::diagnostics();
+starfiniti_runtime_assert(
+    ($queueDiagnostics['dead_letter'] ?? 0) === 1,
+    'bounded connector failures move one source event to dead letter'
+);
+starfiniti_runtime_assert(
+    Outbox::retryDeadLetters(1) === 1,
+    'operator recovery returns a dead-letter event to the retry queue'
+);
+$recoveredDiagnostics = Outbox::diagnostics();
+starfiniti_runtime_assert(
+    ($recoveredDiagnostics['dead_letter'] ?? 0) === 0
+    && ($recoveredDiagnostics['retryable'] ?? 0) >= 1,
+    'queue diagnostics expose the recovered retryable event'
+);
+starfiniti_runtime_assert(
+    has_action('woocommerce_before_cart', ['Starfiniti\\Loyalty\\Plugin', 'renderCartNotice']) !== false
+    && has_filter('woocommerce_coupon_is_valid', [Commands::class, 'validateCustomer']) !== false,
+    'storefront and customer-scope hooks are registered'
+);
+
+fwrite(STDOUT, sprintf(
+    "WooCommerce %s runtime smoke passed.\n",
+    $expectedHpos === 'yes' ? 'HPOS' : 'legacy-storage'
+));
