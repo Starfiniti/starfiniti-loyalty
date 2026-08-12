@@ -302,10 +302,10 @@ select ok(
   'authorization returns one short-lived opaque UUID token'
 );
 select ok(
-  (select authorization.token_sha256 = extensions.digest(
+  (select authz.token_sha256 = extensions.digest(
       pg_catalog.convert_to(issued.authorization_token, 'utf8'), 'sha256'
     )
-   from loyalty_private.customer_data_export_authorizations as authorization
+   from loyalty_private.customer_data_export_authorizations as authz
    cross join issued_export_authorization as issued),
   'the database stores only the exact token hash'
 );
@@ -385,10 +385,10 @@ select results_eq(
   'audit evidence binds the exact customer and Auth subject'
 );
 select ok(
-  (select authorization.used_at is not null
-   from loyalty_private.customer_data_export_authorizations as authorization
+  (select authz.used_at is not null
+   from loyalty_private.customer_data_export_authorizations as authz
    cross join issued_export_authorization as issued
-   where authorization.token_sha256 = extensions.digest(
+   where authz.token_sha256 = extensions.digest(
      pg_catalog.convert_to(issued.authorization_token, 'utf8'), 'sha256'
    )),
   'successful export consumption burns the capability'
@@ -441,11 +441,11 @@ select * from loyalty_private.issue_customer_data_export_authorization(
   'a5000000-0000-4000-8000-000000000001',
   'a5000000-0000-4000-8000-000000000203'
 );
-update loyalty_private.customer_data_export_authorizations as authorization
+update loyalty_private.customer_data_export_authorizations as authz
 set created_at = now() - interval '10 minutes',
   expires_at = now() - interval '5 minutes'
 from expired_export_authorization as expired
-where authorization.token_sha256 = extensions.digest(
+where authz.token_sha256 = extensions.digest(
   pg_catalog.convert_to(expired.authorization_token, 'utf8'), 'sha256'
 );
 select throws_ok(
@@ -476,10 +476,10 @@ select throws_ok(
   'link revocation removes export authority immediately'
 );
 select ok(
-  (select authorization.used_at is null
-   from loyalty_private.customer_data_export_authorizations as authorization
+  (select authz.used_at is null
+   from loyalty_private.customer_data_export_authorizations as authz
    cross join revoked_export_authorization as revoked
-   where authorization.token_sha256 = extensions.digest(
+   where authz.token_sha256 = extensions.digest(
      pg_catalog.convert_to(revoked.authorization_token, 'utf8'), 'sha256'
    )),
   'a rejected export does not burn or audit a successful download'

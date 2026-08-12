@@ -5,10 +5,7 @@ import { redirect } from "next/navigation";
 import { safeAppPath } from "@/lib/safe-navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { CUSTOMER_COPY, resolveCustomerLocale } from "@/lib/customer-locale";
-import {
-  customerExportPath,
-  isSupabaseSessionId,
-} from "@/lib/customer-export";
+import { customerExportPath, isSupabaseSessionId } from "@/lib/customer-export";
 import {
   CUSTOMER_EXPORT_COOKIE,
   issueCustomerDataExportAuthorization,

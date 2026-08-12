@@ -74,12 +74,12 @@ begin
     raise exception using errcode = '22023', message = 'invalid export authorization subject';
   end if;
 
-  delete from loyalty_private.customer_data_export_authorizations as authorization
-  where authorization.expires_at < pg_catalog.clock_timestamp() - interval '1 day'
+  delete from loyalty_private.customer_data_export_authorizations as authz
+  where authz.expires_at < pg_catalog.clock_timestamp() - interval '1 day'
      or (
-       authorization.auth_user_id = target_auth_user_id
-       and authorization.session_id = target_session_id
-       and authorization.used_at is null
+       authz.auth_user_id = target_auth_user_id
+       and authz.session_id = target_session_id
+       and authz.used_at is null
      );
 
   insert into loyalty_private.customer_data_export_authorizations (
@@ -121,13 +121,13 @@ begin
     raise exception using errcode = '22023', message = 'invalid customer data export request';
   end if;
 
-  select authorization.* into matched_authorization
-  from loyalty_private.customer_data_export_authorizations as authorization
-  where authorization.token_sha256 = extensions.digest(
+  select authz.* into matched_authorization
+  from loyalty_private.customer_data_export_authorizations as authz
+  where authz.token_sha256 = extensions.digest(
       pg_catalog.convert_to(target_authorization_token, 'utf8'), 'sha256'
     )
-    and authorization.auth_user_id = target_auth_user_id
-    and authorization.session_id = target_session_id
+    and authz.auth_user_id = target_auth_user_id
+    and authz.session_id = target_session_id
   for update;
 
   if not found
