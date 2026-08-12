@@ -60,11 +60,36 @@ final class Commands
     {
         $payload = is_array($command['payload'] ?? null) ? $command['payload'] : [];
         $commandId = sanitize_text_field((string) ($command['commandId'] ?? ''));
+        if (! wp_is_uuid($commandId)) {
+            return self::failure('dead_letter', 'invalid_command_payload');
+        }
+        if ('woocommerce.order.reconcile' === ($command['topic'] ?? null)) {
+            $rawOrderId = (string) ($payload['orderId'] ?? '');
+            if (
+                'reconcile_order' !== ($payload['kind'] ?? null)
+                || ! preg_match('/^[1-9][0-9]{0,18}$/', $rawOrderId)
+                || (string) (int) $rawOrderId !== $rawOrderId
+            ) {
+                return self::failure('dead_letter', 'invalid_reconciliation_payload');
+            }
+            try {
+                return Outbox::reconcileOrder((int) $rawOrderId)
+                    ? [
+                        'outcome' => 'delivered',
+                        'resultReference' => 'woocommerce:order:' . $rawOrderId,
+                        'errorCode' => null,
+                        'retryDelaySeconds' => 0,
+                    ]
+                    : self::failure('dead_letter', 'order_not_found');
+            } catch (\Throwable $error) {
+                return self::failure('retryable', 'reconciliation_execution_failed', 300);
+            }
+        }
         $reservationId = sanitize_text_field((string) ($payload['reservationId'] ?? ''));
         $rawCode = (string) ($payload['code'] ?? '');
         $code = wc_format_coupon_code($rawCode);
         if (
-            ! wp_is_uuid($commandId) || ! wp_is_uuid($reservationId)
+            ! wp_is_uuid($reservationId)
             || ! preg_match('/^SF[A-Z0-9]{20,48}$/', $rawCode)
         ) {
             return self::failure('dead_letter', 'invalid_command_payload');

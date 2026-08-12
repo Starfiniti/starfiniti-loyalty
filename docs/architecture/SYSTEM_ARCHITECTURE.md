@@ -129,6 +129,13 @@ Circular dependencies are forbidden. Platform adapters translate at the edge; do
 3. A replay action validates the versioned command and requires a reviewed reason. PostgreSQL rechecks owner/admin/operator authority, locks the canonical event, and permits only `dead_letter -> retryable` with immutable audit evidence.
 4. Outbound coupon dead letters and quarantined work are not replayable from the generic merchant surface. The former may already be compensated; the latter requires remediation before retry.
 
+### Merchant source reconciliation
+
+1. An owner/admin/operator reviews one canonical WooCommerce order ID and reason; the public command omits tenant and actor authority.
+2. PostgreSQL rechecks live connection membership/status, locks the connection, and atomically writes immutable audit evidence plus one private `woocommerce.order.reconcile` outbox command.
+3. The signed command poll delivers only the command identity, connection, topic, timestamp, and bounded order instruction. The plugin re-reads WooCommerce and appends stable local source facts; it never edits central points.
+4. Existing local event keys and central delivery/effect fences make retries idempotent. Missing orders terminate explicitly, transient plugin failures retry with a bounded delay, and the durable command retains its acknowledgement state.
+
 ### Merchant customer adjustment
 
 1. The customer page requests an owner/admin-only text-form available balance so browser preview retains full `bigint` precision. The UI requires reason, review, confirmation, and future expiry for credits; removals receive a stronger warning.

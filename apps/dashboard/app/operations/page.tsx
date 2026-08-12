@@ -10,6 +10,7 @@ import {
 import { getConnectorOperations } from "@/lib/server/connector-operations";
 import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
 import { RetryEffectForm } from "./retry-effect-form";
+import { ReconciliationForm } from "./reconciliation-form";
 
 function formatDate(value: string | null): string {
   if (!value) return "Never";
@@ -133,6 +134,17 @@ export default async function OperationsPage() {
                   <small>Only canonical effects can be replayed here.</small>
                 </article>
               </div>
+
+              {mayRetry &&
+              (connection.status === "active" ||
+                connection.status === "rotating") ? (
+                <ReconciliationForm connectionId={connection.id} />
+              ) : (
+                <div className="reconciliation-unavailable">
+                  Source reconciliation requires a live connector and an owner,
+                  admin, or operator role.
+                </div>
+              )}
 
               <div className="customer-result-heading">
                 <div>

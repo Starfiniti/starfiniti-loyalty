@@ -1,7 +1,7 @@
 import {
   verifyWooCommerceDelivery,
   wooCommerceCommandRequestV1,
-  wooCommerceCouponCommandEnvelopeV1,
+  wooCommerceConnectorCommandEnvelopeV1,
   type WooCommerceSignatureHeaders,
 } from "@starfiniti/contracts";
 import { getDatabase } from "@/lib/server/database";
@@ -97,7 +97,7 @@ export async function POST(request: Request): Promise<Response> {
     `;
     const commands = [];
     for (const row of rows) {
-      const command = wooCommerceCouponCommandEnvelopeV1.safeParse({
+      const command = wooCommerceConnectorCommandEnvelopeV1.safeParse({
         version: "1",
         commandId: row.command_id,
         connectionId: row.connection_id,

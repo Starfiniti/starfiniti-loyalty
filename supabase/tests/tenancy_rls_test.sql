@@ -105,6 +105,7 @@ select is_empty(
           'get_connector_operation_issues',
           'get_connector_operation_summaries',
           'publish_programme_version_command',
+          'request_connector_reconciliation_command',
           'retry_connector_effect_command',
           'schedule_programme_version_command'
         )

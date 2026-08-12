@@ -268,4 +268,7 @@ tasks:
       - the exposed adjustment command derives the actor from live Auth validates the exact published version and appends one immutable balanced manual-adjustment transaction plus administration audit evidence
       - operator analyst auditor revoked and cross-tenant identities cannot enter the value-changing adjustment boundary and caller-supplied actor/organization authority is absent
       - 36 customer-adjustment pgTAP assertions cover privileges exact balance role and tenant denial positive lots FIFO debit allocation retries conflicts input bounds zero-sum entries audit linkage immutability and projection rebuilds
-      - dashboard and contract suites now contain 22 and 31 tests respectively
+      - source-order reconciliation requires explicit review and queues one audited private command for signed plugin delivery rather than changing points or replaying compensated coupon commands
+      - the plugin re-reads WooCommerce and idempotently re-emits stable order refund and coupon-capture facts; missing orders terminate explicitly
+      - 37 connector-reconciliation pgTAP assertions cover privileges tenant roles revocation inputs disabled connections idempotency claim leases acknowledgements audit immutability and private outbox access
+      - dashboard and contract suites now contain 22 and 33 tests respectively

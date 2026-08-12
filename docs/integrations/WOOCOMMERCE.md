@@ -14,6 +14,7 @@ WooCommerce is a thin connector. It uses HTTPS, least-privilege credentials, sig
 - The hub acknowledges durable receipt quickly and applies value asynchronously through a separately credentialed worker. Order awards, cumulative refunds, and coupon captures are idempotent.
 - The plugin receives no Supabase/database/service-role credential. Hub commands are scoped, signed/authenticated, short-lived, and idempotent.
 - `wp starfiniti loyalty reconcile-order <id>` re-enqueues the stable completion snapshot, all existing refunds, and any Starfiniti coupon capture for one order. Event keys make repeated reconciliation safe.
+- The authenticated hub exposes the same source repair as a reviewed, reason-bound operation. It writes a private transactional-outbox command, delivers that command through the existing signed polling channel, and records the request actor and correlation in immutable administration audit evidence.
 
 ## Checkout and reward execution
 
@@ -32,6 +33,7 @@ WooCommerce is a thin connector. It uses HTTPS, least-privilege credentials, sig
 - `wp starfiniti loyalty status` reports masked connector health.
 - `wp starfiniti loyalty retry-dead-letters [--limit=<n>]` makes selected local events retryable.
 - `wp starfiniti loyalty reconcile-order <id>` repairs missed order, refund, and coupon-use facts from WooCommerce source data.
+- Hub owners, admins, and operators can queue the same repair by WooCommerce order ID. The plugin returns `order_not_found` as a terminal result, while transient execution failures retry with the unchanged command ID.
 - The hub advances `commerce_connections.last_seen_at` only after a verified delivery reaches the durable inbox.
 - The installable artifact is built with `npm run woocommerce:package` as `dist/starfiniti-loyalty.zip`.
 

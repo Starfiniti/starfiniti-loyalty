@@ -45,3 +45,4 @@
 - Added tenant-scoped customer search and detail views with masked channel identifiers, six authoritative wallet buckets, and the latest immutable programme-attributed ledger entries.
 - Added tenant-scoped WooCommerce health and queue operations with bounded payload-free failure metadata, safe role-guarded canonical-effect replay, and immutable reason/correlation audit evidence; compensated outbound coupon dead letters remain inspect-only.
 - Added owner/admin customer point adjustments with exact bigint preview, expiry-bound credits, strong debit confirmation, request-derived actors, immutable double-entry ledger effects, and matching administration audit evidence.
+- Added reviewed owner/admin/operator WooCommerce order reconciliation from the hub through an audited private outbox, signed connector polling, idempotent plugin source-fact re-emission, and explicit missing-order termination.

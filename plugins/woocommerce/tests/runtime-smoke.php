@@ -225,6 +225,36 @@ starfiniti_runtime_assert(
 
 starfiniti_runtime_assert(Outbox::reconcileOrder($orderId), 'source order reconciliation is available');
 starfiniti_runtime_assert(Outbox::reconcileOrder($orderId), 'source reconciliation retry is accepted');
+$reconciliation = $execute->invoke(null, [
+    'version' => '1',
+    'commandId' => '61000000-0000-4000-8000-000000000004',
+    'connectionId' => '62000000-0000-4000-8000-000000000001',
+    'topic' => 'woocommerce.order.reconcile',
+    'payloadVersion' => 'v1',
+    'deliveredAt' => gmdate('c'),
+    'payload' => ['kind' => 'reconcile_order', 'orderId' => (string) $orderId],
+]);
+starfiniti_runtime_assert(
+    is_array($reconciliation)
+    && ($reconciliation['outcome'] ?? null) === 'delivered'
+    && ($reconciliation['resultReference'] ?? null) === 'woocommerce:order:' . $orderId,
+    'signed hub command reconciles a source order through the durable local outbox'
+);
+$missingReconciliation = $execute->invoke(null, [
+    'version' => '1',
+    'commandId' => '61000000-0000-4000-8000-000000000005',
+    'connectionId' => '62000000-0000-4000-8000-000000000001',
+    'topic' => 'woocommerce.order.reconcile',
+    'payloadVersion' => 'v1',
+    'deliveredAt' => gmdate('c'),
+    'payload' => ['kind' => 'reconcile_order', 'orderId' => '999999999'],
+]);
+starfiniti_runtime_assert(
+    is_array($missingReconciliation)
+    && ($missingReconciliation['outcome'] ?? null) === 'dead_letter'
+    && ($missingReconciliation['errorCode'] ?? null) === 'order_not_found',
+    'missing source order reconciliation fails explicitly without retry storm'
+);
 $captureRowsAfterRetry = (int) $wpdb->get_var($wpdb->prepare(
     "SELECT COUNT(*) FROM {$outboxTable} WHERE event_type = %s AND source_object_id = %s",
     'commerce.coupon.captured',

@@ -349,37 +349,83 @@ const wooCommerceCouponCancelPayloadV1 = z
   })
   .strict();
 
-export const wooCommerceCouponCommandEnvelopeV1 = z
+export const wooCommerceReconcileOrderPayloadV1 = z
+  .object({
+    kind: z.literal("reconcile_order"),
+    orderId: z.string().regex(/^[1-9][0-9]{0,18}$/u),
+  })
+  .strict();
+
+export const wooCommerceConnectorCommandEnvelopeV1 = z
   .object({
     version: z.literal("1"),
     commandId: z.uuid(),
     connectionId: z.uuid(),
-    topic: z.enum(["woocommerce.coupon.issue", "woocommerce.coupon.cancel"]),
+    topic: z.enum([
+      "woocommerce.coupon.issue",
+      "woocommerce.coupon.cancel",
+      "woocommerce.order.reconcile",
+    ]),
     payloadVersion: z.literal("v1"),
     deliveredAt: z.iso.datetime({ offset: true }),
     payload: z.discriminatedUnion("kind", [
       wooCommerceCouponIssuePayloadV1,
       wooCommerceCouponCancelPayloadV1,
+      wooCommerceReconcileOrderPayloadV1,
     ]),
   })
   .strict()
   .superRefine((command, context) => {
-    const expectedKind =
-      command.topic === "woocommerce.coupon.issue"
-        ? "issue_coupon"
-        : "cancel_coupon";
+    const expectedKind = {
+      "woocommerce.coupon.issue": "issue_coupon",
+      "woocommerce.coupon.cancel": "cancel_coupon",
+      "woocommerce.order.reconcile": "reconcile_order",
+    }[command.topic];
     if (command.payload.kind !== expectedKind) {
       context.addIssue({
         code: "custom",
-        message: "Coupon command topic and payload kind do not match",
+        message: "Connector command topic and payload kind do not match",
         path: ["payload", "kind"],
       });
     }
   });
 
+/** @deprecated Use the connector-wide command envelope. */
+export const wooCommerceCouponCommandEnvelopeV1 =
+  wooCommerceConnectorCommandEnvelopeV1;
+
 export type WooCommerceCouponCommandEnvelopeV1 = z.infer<
   typeof wooCommerceCouponCommandEnvelopeV1
 >;
+export type WooCommerceConnectorCommandEnvelopeV1 = z.infer<
+  typeof wooCommerceConnectorCommandEnvelopeV1
+>;
+
+export const merchantRequestConnectorReconciliationCommandV1 = z
+  .object({
+    version: z.literal("1"),
+    connectionId: z.uuid(),
+    orderId: z.string().regex(/^[1-9][0-9]{0,18}$/u),
+    reason: merchantReason,
+    idempotencyKey: merchantOperationKey,
+    correlationId: z.uuid(),
+  })
+  .strict();
+
+export const merchantRequestConnectorReconciliationResultV1 = z
+  .object({
+    resourceId: z.uuid(),
+    outcome: z.enum(["created", "duplicate"]),
+    state: z.enum([
+      "pending",
+      "processing",
+      "delivered",
+      "retryable",
+      "dead_letter",
+      "cancelled",
+    ]),
+  })
+  .strict();
 
 export const wooCommerceCommandRequestV1 = z.discriminatedUnion("kind", [
   z

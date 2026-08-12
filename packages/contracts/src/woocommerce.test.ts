@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest";
 import {
   canonicalCommerceEventV1,
   merchantRetryConnectorEffectCommandV1,
+  merchantRequestConnectorReconciliationCommandV1,
   signWooCommerceDelivery,
   verifyWooCommerceDelivery,
   wooCommerceCouponCapturedPayloadV1,
   wooCommerceCouponCommandEnvelopeV1,
+  wooCommerceConnectorCommandEnvelopeV1,
   wooCommerceDecimalToMinor,
   wooCommerceDeliveryEnvelopeV1,
   wooCommerceOrderRefundedPayloadV1,
@@ -114,6 +116,54 @@ describe("merchant connector operation contracts", () => {
         }).success,
       ).toBe(false);
     }
+  });
+
+  it("accepts a bounded source-order reconciliation request", () => {
+    expect(
+      merchantRequestConnectorReconciliationCommandV1.safeParse({
+        version: "1",
+        connectionId,
+        orderId: "42",
+        reason: "Order is missing its completed loyalty effect",
+        idempotencyKey: "connector:reconcile:fixture",
+        correlationId: "5abf9309-a530-489f-a63f-51130c4fc02d",
+      }).success,
+    ).toBe(true);
+    expect(
+      merchantRequestConnectorReconciliationCommandV1.safeParse({
+        version: "1",
+        connectionId,
+        orderId: "-1",
+        reason: "Invalid source order identifier",
+        idempotencyKey: "connector:reconcile:fixture",
+        correlationId: "5abf9309-a530-489f-a63f-51130c4fc02d",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("validates the signed reconciliation command envelope", () => {
+    expect(
+      wooCommerceConnectorCommandEnvelopeV1.safeParse({
+        version: "1",
+        commandId: "5abf9309-a530-489f-a63f-51130c4fc03d",
+        connectionId,
+        topic: "woocommerce.order.reconcile",
+        payloadVersion: "v1",
+        deliveredAt: "2026-08-12T08:00:00Z",
+        payload: { kind: "reconcile_order", orderId: "42" },
+      }).success,
+    ).toBe(true);
+    expect(
+      wooCommerceConnectorCommandEnvelopeV1.safeParse({
+        version: "1",
+        commandId: "5abf9309-a530-489f-a63f-51130c4fc03d",
+        connectionId,
+        topic: "woocommerce.order.reconcile",
+        payloadVersion: "v1",
+        deliveredAt: "2026-08-12T08:00:00Z",
+        payload: { kind: "cancel_coupon", orderId: "42" },
+      }).success,
+    ).toBe(false);
   });
 });
 

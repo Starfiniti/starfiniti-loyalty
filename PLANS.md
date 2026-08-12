@@ -37,17 +37,18 @@ Phase 9 — merchant administration and customer experience. Shopify Phase 8 rem
 - The customer operations read slice now provides bounded reference search, masked channel identity, wallet-bucket truth, and immutable programme-attributed ledger history through explicit tenant filters plus RLS.
 - The connector operations slice now provides private-payload-free queue summaries/issues and an audited, role-guarded replay command limited to canonical dead-letter effects. Coupon command dead letters are deliberately inspect-only after compensation.
 - The customer adjustment slice now provides exact integer balance preview, strong removal warnings, explicit confirmation, expiry-bound credits, and owner/admin-only immutable ledger plus audit commands.
+- The source-reconciliation slice now sends reviewed WooCommerce order requests through an audited private outbox and signed polling route; the plugin re-emits source facts idempotently and reports missing orders without a retry storm.
+- Exact-head run `31584351529` passed the customer-adjustment baseline, nine-migration database state with 448 pgTAP assertions, and all four WooCommerce runtime variants.
 - Exact-head run `31581760825` passed the customer-ledger baseline, database job, and all four WooCommerce runtime variants.
 
 ## Active work
 
-- `P9-MERCHANT-HUB` (in progress): the Auth/RLS shell, audited programme editor, customer wallet/ledger reads, safe connector queue operations, and value-changing customer adjustments are implemented; reconciliation requests and real reporting follow.
+- `P9-MERCHANT-HUB` (in progress): the Auth/RLS shell, audited programme editor, customer wallet/ledger reads, safe connector queue operations, value-changing customer adjustments, and signed source-reconciliation requests are implemented; real reporting follows.
 
 ## Next safe tasks
 
-1. Add a durable connector-to-plugin reconciliation request path rather than a cosmetic dashboard control.
-2. Replace explicitly labelled illustrative Overview analytics with authorized reporting queries.
-3. Complete production deployment and recovery evidence when the final infrastructure inputs are available.
+1. Replace explicitly labelled illustrative Overview analytics with authorized reporting queries.
+2. Complete production deployment and recovery evidence when the final infrastructure inputs are available.
 
 ## Dependencies and blockers
 

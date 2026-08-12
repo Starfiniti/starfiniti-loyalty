@@ -77,6 +77,22 @@ Only a live `owner`, `admin`, or `operator` may replay an effect, and only from 
 
 The command deliberately cannot retry `transactional_outbox` coupon issue/cancel dead letters. A coupon-issue dead letter may already have failed the reservation and released points through compensation; replaying it generically could create native value after that release. Those rows are inspect-only until a reservation-aware recovery workflow can prove a safe state transition.
 
+### `request_connector_reconciliation_command`
+
+Inputs:
+
+- `target_connection_public_id uuid`
+- `target_order_id text` containing one canonical positive WooCommerce integer ID
+- `target_reason text` trimmed, single-line, 8 to 500 characters
+- `target_idempotency_key text`
+- `target_correlation_id uuid`
+
+A live `owner`, `admin`, or `operator` can request source reconciliation only for an active or rotating connection in their organization. PostgreSQL locks that connection, hashes the canonical request, appends a `connector.order.reconcile` audit event, and creates one private `woocommerce.order.reconcile` transactional-outbox command in the same transaction. The public contract accepts neither organization nor actor authority and exposes no signing material or commerce payload.
+
+The signed connector polling route delivers `{ "kind": "reconcile_order", "orderId": "…" }`. The plugin re-reads that local WooCommerce order and writes stable order, refund, and Starfiniti coupon-capture facts to its existing durable outbox. Existing source-revision keys make a repeated command safe. A missing order is acknowledged as a terminal `order_not_found` dead letter; transient execution failures use bounded retry.
+
+Result: `resource_public_id`, `outcome` (`created` or `duplicate`), and the current durable command state.
+
 ### Customer adjustment reads and command
 
 `get_customer_adjustment_context(target_customer_public_id, target_programme_group_public_id)` returns the authoritative available balance as text, preserving PostgreSQL `bigint` precision in JavaScript. Only a live owner/admin receives a row. The browser uses it solely for exact signed-integer preview; the command rechecks all state.
@@ -93,4 +109,4 @@ The UI presents generic safe messages and never treats a network or database err
 
 ## Verification
 
-`merchant_programme_commands_test.sql` exercises exact privileges/search paths, tenant/role/revocation denial, canonical hashing, retries and conflicts, stale publication hashes, future schedules, materialization, immutable version history, and immutable attributable audit evidence. `connector_operations_test.sql` adds private-queue minimization, cross-tenant/role/revocation denial, retry state, quarantine rejection, idempotency conflict, audit immutability, and outbound-command non-mutation. `customer_adjustment_commands_test.sql` proves owner/admin-only entry, exact bigint balance, credit/debit ledger effects, expiry/lot attribution, FIFO allocation, retries/conflicts, actor/audit linkage, immutability, and projection rebuilds. Contract unit tests reject caller-expanded authority and malformed reasons. Browser QA covers responsive structured editing and deliberate adjustment review/confirmation. Customer and connector helper tests cover bounded inputs, exact bigint preview, masking, balances, role authority, labels, and health states.
+`merchant_programme_commands_test.sql` exercises exact privileges/search paths, tenant/role/revocation denial, canonical hashing, retries and conflicts, stale publication hashes, future schedules, materialization, immutable version history, and immutable attributable audit evidence. `connector_operations_test.sql` adds private-queue minimization, cross-tenant/role/revocation denial, retry state, quarantine rejection, idempotency conflict, audit immutability, and outbound-command non-mutation. `connector_reconciliation_commands_test.sql` proves durable source-command creation/claim/acknowledgement, current-state retries, tenant and role denial, disabled-connection rejection, bounded inputs, and immutable actor/reason evidence. `customer_adjustment_commands_test.sql` proves owner/admin-only entry, exact bigint balance, credit/debit ledger effects, expiry/lot attribution, FIFO allocation, retries/conflicts, actor/audit linkage, immutability, and projection rebuilds. Contract unit tests reject caller-expanded authority and malformed reasons. Browser QA covers responsive structured editing and deliberate adjustment review/confirmation. Customer and connector helper tests cover bounded inputs, exact bigint preview, masking, balances, role authority, labels, and health states.
