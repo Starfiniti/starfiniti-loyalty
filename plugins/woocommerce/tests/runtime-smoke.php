@@ -137,7 +137,7 @@ starfiniti_runtime_assert(
 );
 starfiniti_runtime_assert(
     str_contains($accountMarkup, '<h2>')
-    && str_contains($accountMarkup, esc_html($couponCode))
+    && str_contains($accountMarkup, esc_html($coupon->get_code()))
     && substr_count($accountMarkup, '<li>') <= 20
     && strlen($accountMarkup) <= 32768
     && ! str_contains($accountMarkup, '<script')
