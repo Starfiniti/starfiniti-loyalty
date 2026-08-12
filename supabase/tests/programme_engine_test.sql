@@ -316,7 +316,8 @@ select results_eq(
   'first evaluation writes immutable evidence'
 );
 select results_eq(
-  $$ select outcome from loyalty_private.record_programme_evaluation(
+  $$ select evaluation_public_id = (select public_id from programme_results where operation = 'evaluation')
+    and outcome = 'duplicate' from loyalty_private.record_programme_evaluation(
     (select id from loyalty.organizations where slug = 'programme-one'),
     (select id from loyalty.programme_groups where organization_id = (select id from loyalty.organizations where slug = 'programme-one')),
     (select id from loyalty.programme_versions where public_id = (select public_id from programme_refs where name = 'version-two')),
@@ -324,7 +325,7 @@ select results_eq(
     decode(repeat('5', 64), 'hex'), decode(repeat('6', 64), 'hex'),
     '{"points":250}'::jsonb, '{"rules":["base"]}'::jsonb, '2026-12-02T01:00:00Z'
   ) $$,
-  array[(select public_id from programme_results where operation = 'evaluation'), 'duplicate'::text],
+  array[true],
   'evaluation retry returns the same evidence identity'
 );
 select throws_ok(
@@ -372,7 +373,8 @@ select results_eq(
   'first tier decision opens the current membership interval'
 );
 select results_eq(
-  $$ select outcome from loyalty_private.record_tier_decision(
+  $$ select tier_decision_public_id = (select public_id from programme_results where operation = 'tier-decision')
+    and outcome = 'duplicate' from loyalty_private.record_tier_decision(
     (select id from loyalty.organizations where slug = 'programme-one'),
     (select id from loyalty.programme_groups where organization_id = (select id from loyalty.organizations where slug = 'programme-one')),
     (select id from loyalty.programme_versions where public_id = (select public_id from programme_refs where name = 'version-two')),
@@ -380,7 +382,7 @@ select results_eq(
     'bloom', 'bloom', 'upgrade', 25000, null, null, '2026-12-02T02:00:00Z',
     'tier:wallet:1', decode(repeat('8', 64), 'hex'), '{"windowDays":365}'::jsonb
   ) $$,
-  array[(select public_id from programme_results where operation = 'tier-decision'), 'duplicate'::text],
+  array[true],
   'tier decision retry returns the existing evidence'
 );
 select throws_ok(
@@ -479,7 +481,8 @@ select results_eq(
   'reward request creates one reservation'
 );
 select results_eq(
-  $$ select outcome from loyalty_private.create_reward_reservation(
+  $$ select reservation_public_id = (select public_id from programme_results where operation = 'reservation')
+    and outcome = 'duplicate' from loyalty_private.create_reward_reservation(
     (select id from loyalty.organizations where slug = 'programme-one'),
     (select id from loyalty.programme_groups where organization_id = (select id from loyalty.organizations where slug = 'programme-one')),
     (select id from loyalty.programme_versions where public_id = (select public_id from programme_refs where name = 'version-two')),
@@ -488,7 +491,7 @@ select results_eq(
       (select id from loyalty.programme_versions where public_id = (select public_id from programme_refs where name = 'version-two'))),
     100, '2026-12-03T00:00:00Z', 'reward:42', decode(repeat('b', 64), 'hex')
   ) $$,
-  array[(select public_id from programme_results where operation = 'reservation'), 'duplicate'::text],
+  array[true],
   'reward request retry returns the same reservation'
 );
 select throws_ok(
@@ -520,13 +523,15 @@ from loyalty_private.reserve_points(
   100, 'ledger:reward:42:reserve', decode(repeat('d', 64), 'hex'), '2026-12-02T04:00:00Z'
 ) as result;
 select results_eq(
-  $$ select outcome from loyalty_private.transition_reward_reservation(
+  $$ select reservation_public_id = (select public_id from programme_results where operation = 'reservation')
+    and state = 'reserved' and outcome = 'created'
+    from loyalty_private.transition_reward_reservation(
     (select public_id from programme_results where operation = 'reservation'),
     'reserved', 'transition:42:reserved', decode(repeat('e', 64), 'hex'),
     'reward-worker', null,
     (select public_id from programme_results where operation = 'ledger-reserve'), null
   ) $$,
-  array[(select public_id from programme_results where operation = 'reservation'), 'reserved'::text, 'created'::text],
+  array[true],
   'reservation enters reserved state only with matching ledger evidence'
 );
 select results_eq(
