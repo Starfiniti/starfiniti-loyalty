@@ -415,7 +415,7 @@ select throws_ok(
 reset role;
 update loyalty.workspaces set status = 'active'
 where public_id = '91000000-0000-4000-8000-000000000110';
-update loyalty.wallets set status = 'suspended'
+update loyalty.wallets set status = 'blocked'
 where organization_id = (select id from loyalty.organizations where slug = 'redeem-one');
 set local role authenticated;
 select throws_ok(
@@ -424,7 +424,7 @@ select throws_ok(
        '91000000-0000-4000-8000-000000000908'
      ) $$,
   '42501', 'reward redemption not authorized',
-  'a suspended wallet cannot reserve points'
+  'a blocked wallet cannot reserve points'
 );
 reset role;
 update loyalty.wallets set status = 'active'
