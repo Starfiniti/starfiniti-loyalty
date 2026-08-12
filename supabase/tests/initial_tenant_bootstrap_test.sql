@@ -339,7 +339,7 @@ select throws_ok(
     where action = 'tenant.bootstrap'
   $$,
   '55000',
-  'immutable table rows cannot be updated',
+  'immutable loyalty history cannot be changed',
   'bootstrap audit evidence is immutable'
 );
 select is(
