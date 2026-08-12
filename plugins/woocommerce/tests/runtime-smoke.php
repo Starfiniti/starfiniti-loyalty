@@ -142,7 +142,7 @@ starfiniti_runtime_assert(
     ($percentageIssue['outcome'] ?? null) === 'delivered'
     && $percentageCouponId > 0
     && $percentageCoupon->get_discount_type() === 'percent'
-    && (string) $percentageCoupon->get_amount() === '15',
+    && abs((float) $percentageCoupon->get_amount() - 15.0) < 0.000001,
     'uncapped percentage reward creates the matching native coupon'
 );
 $cappedPercentageIssue = $execute->invoke(null, [
