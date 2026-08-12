@@ -69,4 +69,6 @@ The hub verifies the live connection/key and HMAC, preserves the full link only 
 
 Admin actions require WordPress capabilities and nonces. Inputs are validated; outputs escaped. Signing and Woo REST credentials rotate by version/reference and are masked in logs/support bundles. Plugin logs never contain bodies, access keys, signatures, email/phone, coupon plaintext, or loyalty access tokens.
 
+WooCommerce user deletion and its native personal-data eraser enqueue the same opaque, idempotent `commerce.customer.deleted` event. The event contains only the numeric channel customer ID needed for resolution and never email/profile fields. The worker atomically creates a private keyed suppression tombstone, pseudonymizes the channel identity, revokes the hosted Auth link, clears display data, and scrubs the ID from restricted delivery/canonical evidence. Wallets and immutable ledger history remain attributable through the retained pseudonymous customer; a later order for the deleted channel ID is suppressed instead of silently recreating the identity.
+
 See `docs/architecture/EVENT_MODEL.md`, `docs/api/WEBHOOKS.md`, and ADR-0007.

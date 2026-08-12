@@ -34,9 +34,11 @@ Collect the minimum data required to identify commerce facts, operate loyalty va
 6. Propagate connector action or record a documented inability/retry.
 7. Produce a completion report without leaking another subject or tenant.
 
+The implemented WooCommerce-originated erasure path covers steps 2–6 for a verified signed channel event. WordPress writes one opaque deduplicated local event with only the numeric channel subject. The worker requires the event lease and exact tenant/connection/payload, creates an immutable private HMAC tombstone under a separate 256-bit per-connection pepper, revokes hosted access, pseudonymizes the source identity/customer display state, and scrubs the raw and canonical deletion event to an opaque case ID. A tombstone created before identity import also suppresses later resolution.
+
 ## Deletion semantics
 
-Deletion never edits ledger entries or programme versions. Customer/contact rows are detached or pseudonymized, identity links revoked, notification consent removed, exports destroyed, and raw payloads purged. Wallet value handling follows the merchant/legal policy; it is never silently discarded because a contact record was deleted.
+Deletion never edits ledger entries or programme versions. Customer/contact rows are detached or pseudonymized, identity links revoked, notification consent removed, exports destroyed, and raw payloads purged. Wallet value handling follows the merchant/legal policy; it is never silently discarded because a contact record was deleted. The current WooCommerce flow preserves the wallet and ledger, removes the reusable channel ID, and blocks its automatic re-import; hosted export and notification-consent workflows remain separate release slices.
 
 ## Consent and notifications
 
@@ -52,4 +54,4 @@ Backups are encrypted and access-controlled. Individual row deletion is not rewr
 
 ## Privacy verification
 
-Tests cover cross-tenant export, wrong-subject identity, repeat deletion, deleted user with live token, raw-body retention, log redaction, backup restore plus deletion replay, consent withdrawal, and connector outage during a privacy case.
+Implemented tests cover exact grants/search paths, tenant and lease binding, PII-free payloads, immutable private cases and peppers, repeat and pre-import deletion, live-link revocation, channel/customer pseudonymization, raw/canonical event scrubbing, import suppression, and zero ledger effects. Cross-tenant hosted export, backup restore plus deletion replay, consent withdrawal, and prolonged connector outage remain required before their respective release gates close.

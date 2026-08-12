@@ -232,3 +232,11 @@
 - Added strict native coupon configuration contracts and database validation, exact idempotent retry semantics, full rollback on failure, and response minimization that excludes coupon codes, external customer IDs, and private command payloads.
 - Added 45 adversarial pgTAP assertions, bringing the suites to 126 unit tests and 863 database assertions, plus a 390-pixel unauthenticated browser check for safe login continuation and private response headers.
 - Exact-head run `31622879767` passed all six jobs: twenty-one migration replays, all 863 pgTAP assertions, concurrency/property probes, and all four localized WooCommerce runtime variants.
+
+## 2026-08-12 — Phase 9 WooCommerce customer erasure
+
+- Connected WooCommerce user deletion and its native privacy eraser to one opaque, locally deduplicated signed deletion event containing only the numeric channel subject.
+- Added an immutable private privacy-case boundary with separately stored per-connection 256-bit pepper material and keyed subject fingerprints so low-entropy source IDs are not retained as plain digests.
+- Added one leased worker transaction that pseudonymizes the channel/customer display state, revokes hosted access, scrubs raw and canonical deletion-event identifiers, preserves wallets and immutable ledger history, and suppresses repeat or later identity import.
+- Added 47 adversarial pgTAP assertions plus connector runtime and strict contract/worker tests, bringing the suites to 128 unit tests and 910 database assertions.
+- Exact-head run `31625573608` passed all six jobs: twenty-two migration replays, all 910 pgTAP assertions, concurrency/property probes, and all four localized WooCommerce runtime variants.

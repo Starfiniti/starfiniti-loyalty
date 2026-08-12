@@ -79,6 +79,8 @@ Support cannot impersonate by changing a session claim. A support grant requires
 - Ledger entries, transaction IDs, tax/accounting evidence, and fraud-prevention tombstones retain pseudonymous references when deletion would destroy integrity.
 - Commerce deletion events are idempotent and do not silently delete balances.
 
+WooCommerce-originated deletion is implemented as a signed minimized event. Its leased worker effect replaces the reusable registered channel ID with an opaque erasure reference, revokes active hosted links, clears display data, scrubs raw/canonical event identifiers, and retains a private connection-keyed suppression tombstone. Wallet and ledger authority remain unchanged and attributable to the pseudonymous customer.
+
 ## Identity threat controls
 
 | Threat                              | Control                                                           |
