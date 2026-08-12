@@ -257,92 +257,91 @@ join loyalty.programme_versions as version
   on version.organization_id = event.organization_id
 where event.source_event_id like 'report-event-%';
 
--- Create exact current/previous award and current capture flows. The direct
--- fixtures remain balanced; projections are then set to a large exact value to
--- prove browser-facing text does not lose bigint precision.
-insert into loyalty.ledger_transactions (
-  public_id, organization_id, programme_group_id, programme_version_id,
-  transaction_kind, actor_type, actor_id, idempotency_key, request_sha256,
-  effective_at
-)
-select '79500000-0000-4000-8000-000000000001', organization.id,
-  programme_group.id, version.id, 'award', 'worker', 'report-fixture',
-  'report:ledger:award:current', extensions.digest(convert_to('award-current', 'UTF8'), 'sha256'),
-  '2026-08-08T11:00:00Z'
-from loyalty.organizations as organization
-join loyalty.programme_groups as programme_group on programme_group.organization_id = organization.id
-join loyalty.programme_versions as version on version.organization_id = organization.id
-where organization.slug = 'report-one';
-insert into loyalty.ledger_transactions (
-  public_id, organization_id, programme_group_id, programme_version_id,
-  transaction_kind, actor_type, actor_id, idempotency_key, request_sha256,
-  effective_at
-)
-select '79500000-0000-4000-8000-000000000002', organization.id,
-  programme_group.id, version.id, 'award', 'worker', 'report-fixture',
-  'report:ledger:award:previous', extensions.digest(convert_to('award-previous', 'UTF8'), 'sha256'),
-  '2026-08-02T11:00:00Z'
-from loyalty.organizations as organization
-join loyalty.programme_groups as programme_group on programme_group.organization_id = organization.id
-join loyalty.programme_versions as version on version.organization_id = organization.id
-where organization.slug = 'report-one';
-insert into loyalty.ledger_transactions (
-  public_id, organization_id, programme_group_id, programme_version_id,
-  transaction_kind, actor_type, actor_id, idempotency_key, request_sha256,
-  effective_at
-)
-select '79500000-0000-4000-8000-000000000003', organization.id,
-  programme_group.id, version.id, 'capture', 'worker', 'report-fixture',
-  'report:ledger:capture:current', extensions.digest(convert_to('capture-current', 'UTF8'), 'sha256'),
-  '2026-08-10T11:00:00Z'
-from loyalty.organizations as organization
-join loyalty.programme_groups as programme_group on programme_group.organization_id = organization.id
-join loyalty.programme_versions as version on version.organization_id = organization.id
-where organization.slug = 'report-one';
-insert into loyalty.ledger_entries (
-  organization_id, programme_group_id, transaction_id, account_id, ordinal, points
-)
-select transaction.organization_id, transaction.programme_group_id,
-  transaction.id, account.id,
-  case when account.account_kind = 'issuance' then 1 else 2 end,
-  case when account.account_kind = 'issuance' then -100 else 100 end
-from loyalty.ledger_transactions as transaction
-join loyalty.ledger_accounts as account
-  on account.organization_id = transaction.organization_id
- and account.programme_group_id = transaction.programme_group_id
- and (
-   account.account_kind = 'issuance'
-   or (
-     account.account_kind = 'pending'
-     and account.wallet_id = (
-       select wallet.id from loyalty.wallets as wallet
-       join loyalty.customers as customer on customer.id = wallet.customer_id
-       where customer.display_reference = case transaction.idempotency_key
-         when 'report:ledger:award:current' then 'Member 1' else 'Member 3' end
-     )
-   )
- )
-where transaction.idempotency_key in (
-  'report:ledger:award:current', 'report:ledger:award:previous'
+-- Create exact current/previous award and current capture flows through the
+-- same atomic posting primitive used by value commands. Projections are then
+-- set to a large exact value to prove browser-facing text does not lose bigint
+-- precision.
+select * from loyalty_private.post_ledger_transaction(
+  (select id from loyalty.organizations where slug = 'report-one'),
+  (select id from loyalty.programme_groups where public_id = '79000000-0000-4000-8000-000000000110'),
+  (select id from loyalty.programme_versions where public_id = '79000000-0000-4000-8000-000000000130'),
+  'award', 'worker', 'report-fixture', null, null, null,
+  'report:ledger:award:current',
+  extensions.digest(convert_to('award-current', 'UTF8'), 'sha256'),
+  null, '{}'::jsonb, '2026-08-08T11:00:00Z',
+  jsonb_build_array(
+    jsonb_build_object(
+      'account_id', (select id from loyalty.ledger_accounts
+        where programme_group_id = (select id from loyalty.programme_groups where public_id = '79000000-0000-4000-8000-000000000110')
+          and wallet_id is null and account_kind = 'issuance'),
+      'points', -100
+    ),
+    jsonb_build_object(
+      'account_id', (select account.id from loyalty.ledger_accounts as account
+        join loyalty.wallets as wallet on wallet.id = account.wallet_id
+        join loyalty.customers as customer on customer.id = wallet.customer_id
+        where customer.display_reference = 'Member 1' and account.account_kind = 'pending'),
+      'points', 100
+    )
+  )
 );
-insert into loyalty.ledger_entries (
-  organization_id, programme_group_id, transaction_id, account_id, ordinal, points
-)
-select transaction.organization_id, transaction.programme_group_id,
-  transaction.id, account.id,
-  case when account.account_kind = 'reserved' then 1 else 2 end,
-  case when account.account_kind = 'reserved' then -25 else 25 end
-from loyalty.ledger_transactions as transaction
-join loyalty.ledger_accounts as account
-  on account.organization_id = transaction.organization_id
- and account.programme_group_id = transaction.programme_group_id
- and account.account_kind in ('reserved', 'spent')
- and account.wallet_id = (
-   select wallet.id from loyalty.wallets as wallet
-   join loyalty.customers as customer on customer.id = wallet.customer_id
-   where customer.display_reference = 'Member 1'
- )
-where transaction.idempotency_key = 'report:ledger:capture:current';
+select * from loyalty_private.post_ledger_transaction(
+  (select id from loyalty.organizations where slug = 'report-one'),
+  (select id from loyalty.programme_groups where public_id = '79000000-0000-4000-8000-000000000110'),
+  (select id from loyalty.programme_versions where public_id = '79000000-0000-4000-8000-000000000130'),
+  'award', 'worker', 'report-fixture', null, null, null,
+  'report:ledger:award:previous',
+  extensions.digest(convert_to('award-previous', 'UTF8'), 'sha256'),
+  null, '{}'::jsonb, '2026-08-02T11:00:00Z',
+  jsonb_build_array(
+    jsonb_build_object(
+      'account_id', (select id from loyalty.ledger_accounts
+        where programme_group_id = (select id from loyalty.programme_groups where public_id = '79000000-0000-4000-8000-000000000110')
+          and wallet_id is null and account_kind = 'issuance'),
+      'points', -100
+    ),
+    jsonb_build_object(
+      'account_id', (select account.id from loyalty.ledger_accounts as account
+        join loyalty.wallets as wallet on wallet.id = account.wallet_id
+        join loyalty.customers as customer on customer.id = wallet.customer_id
+        where customer.display_reference = 'Member 3' and account.account_kind = 'pending'),
+      'points', 100
+    )
+  )
+);
+update loyalty.wallet_balances as balance
+set points = 25
+from loyalty.ledger_accounts as account
+join loyalty.wallets as wallet on wallet.id = account.wallet_id
+join loyalty.customers as customer on customer.id = wallet.customer_id
+where balance.ledger_account_id = account.id
+  and customer.display_reference = 'Member 1'
+  and account.account_kind = 'reserved';
+select * from loyalty_private.post_ledger_transaction(
+  (select id from loyalty.organizations where slug = 'report-one'),
+  (select id from loyalty.programme_groups where public_id = '79000000-0000-4000-8000-000000000110'),
+  (select id from loyalty.programme_versions where public_id = '79000000-0000-4000-8000-000000000130'),
+  'capture', 'worker', 'report-fixture', null, null, null,
+  'report:ledger:capture:current',
+  extensions.digest(convert_to('capture-current', 'UTF8'), 'sha256'),
+  null, '{}'::jsonb, '2026-08-10T11:00:00Z',
+  jsonb_build_array(
+    jsonb_build_object(
+      'account_id', (select account.id from loyalty.ledger_accounts as account
+        join loyalty.wallets as wallet on wallet.id = account.wallet_id
+        join loyalty.customers as customer on customer.id = wallet.customer_id
+        where customer.display_reference = 'Member 1' and account.account_kind = 'reserved'),
+      'points', -25
+    ),
+    jsonb_build_object(
+      'account_id', (select account.id from loyalty.ledger_accounts as account
+        join loyalty.wallets as wallet on wallet.id = account.wallet_id
+        join loyalty.customers as customer on customer.id = wallet.customer_id
+        where customer.display_reference = 'Member 1' and account.account_kind = 'spent'),
+      'points', 25
+    )
+  )
+);
 
 update loyalty.wallet_balances as balance
 set points = case
