@@ -518,7 +518,7 @@ select ok(
   'private coupon payload excludes hosted-account and Auth identifiers'
 );
 select results_eq(
-  $$ select array_agg(parameter_name order by ordinal_position)
+  $$ select array_agg(parameter_name::text order by ordinal_position)
      from information_schema.parameters
      where specific_schema = 'loyalty'
        and specific_name like 'redeem_my_reward_%'
