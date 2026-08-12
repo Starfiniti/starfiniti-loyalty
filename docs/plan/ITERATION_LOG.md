@@ -308,3 +308,12 @@
 - Replaced server-local parsing of `datetime-local` publication input with explicit Europe/Ljubljana conversion; winter/summer offsets are tested and DST gaps, ambiguous instants, malformed dates, and rolled calendar dates fail closed.
 - Added 390×844 and 1440×1000 Playwright passes over the real Overview, programme, and operations components. Locale switching, add-reward and provisioning-review interactions pass without horizontal overflow, console errors, or failed requests.
 - Exact-head runs `31638672681`, `31640311302`, and `31640919355` passed all seven jobs for the Overview, programme, and operations slices, ending at 154 unit tests, twenty-five migration replays, 1,028 pgTAP assertions, concurrency/property probes, both production images, and all four localized WooCommerce runtimes.
+
+## 2026-08-12 — Customer and experience administration localization
+
+- Localized customer search, detail, tier, wallet, immutable activity filters, individual adjustments, and exact-preview bulk adjustments in English and Slovenian while preserving locale through navigation, review forms, and server-action outcomes.
+- Reused one explicit Europe/Ljubljana wall-time parser for programme publication and customer credit expiries, retaining exact winter/summer conversion and fail-closed DST gap/ambiguity handling independently of the server timezone.
+- Localized the bounded experience-theme and customer-copy editor, role/validation/conflict/revision feedback, and responsive preview shell while keeping the independently selected customer preview locale authoritative for sample wallet copy and formatting.
+- Added a navigation-aware document-language and first-focus skip-link boundary with a server-rendered English accessibility fallback.
+- Playwright exercised the real customer and experience forms at 390×844 and 1440×1000, including adjustment review and customer-locale preview interactions, with no horizontal overflow, console errors, or failed requests. A production login pass verified the Slovenian document language and keyboard skip link.
+- Exact-head runs `31642070490`, `31642918324`, and `31643300533` passed all seven jobs with 154 unit tests, both production images, twenty-five migration replays, all 1,028 pgTAP assertions, concurrency/property probes, and all four localized WooCommerce runtime variants.

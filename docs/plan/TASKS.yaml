@@ -349,6 +349,13 @@ tasks:
       - responsive Playwright evidence covers Slovenian Overview programme editing provisioning reconciliation and retry controls at 390 by 844 and 1440 by 1000 with locale switching interactions no horizontal overflow and no browser errors
       - exact-head runs 31638672681 and 31640311302 passed all seven jobs with 151 then 154 unit tests both production images twenty-five migration replays 1028 pgTAP assertions concurrency and property probes and all four localized WooCommerce runtime variants
       - exact-head run 31640919355 passed all seven jobs for localized connector provisioning and operations with 154 unit tests and the unchanged production image database and WooCommerce runtime gates
+      - customer search detail tier wallet immutable activity individual adjustment and exact-preview bulk adjustment administration preserve English or Slovenian through links filters forms and action results
+      - customer credit expiries use the shared Europe Ljubljana wall-time parser with exact winter and summer conversion plus DST gap and ambiguity rejection independent of the server timezone
+      - the theme and customer-copy editor localizes all bounded controls role validation conflict and revision feedback while its sample member and guest wallet follows the independently selected customer locale
+      - responsive Playwright evidence covers real customer and experience administration at 390 by 844 and 1440 by 1000 with review and preview interactions no horizontal overflow and no browser errors
+      - the client navigation shell updates the document language and first-focus skip-link copy from the exact locale allowlist while retaining a server-rendered English accessibility fallback
+      - exact-head runs 31642070490 and 31642918324 passed all seven jobs for localized customer and experience administration with 154 unit tests both production images twenty-five migration replays 1028 pgTAP assertions concurrency and property probes and all four localized WooCommerce runtime variants
+      - exact-head run 31643300533 passed all seven jobs for the localized document-language and keyboard-bypass shell with the unchanged complete repository production image database and WooCommerce runtime gates
   - id: DEPLOY-PROXMOX
     title: Release and deploy the self-hosted platform on Proxmox
     phase: deployment
