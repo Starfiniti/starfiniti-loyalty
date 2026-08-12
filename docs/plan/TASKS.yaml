@@ -372,4 +372,5 @@ tasks:
       - exact semantic-version tags are configured to rerun baseline and database gates before publishing commit-SHA and version GHCR images plus the checksummed WooCommerce ZIP
       - Proxmox Compose requires distinct dashboard runtime and worker credentials a read-only signing pool and immutable image selectors
       - exact-head run 31634024586 passed seven jobs including both production Docker builds baseline twenty-four migration replays 997 pgTAP assertions concurrency and property probes and all four localized WooCommerce runtime variants
+      - secret-safe offline preflight validates populated Proxmox environment and Compose parity placeholders immutable image selectors canonical HTTPS origins distinct least-privilege database logins signing-pool structure and Linux owner-only permissions
       - first approved release tag package visibility SSH DNS TLS backup target production secrets and initial Auth owner remain deployment inputs

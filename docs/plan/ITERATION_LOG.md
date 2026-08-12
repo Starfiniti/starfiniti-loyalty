@@ -275,3 +275,11 @@
 - Added checksummed WooCommerce ZIP publication to the matching GitHub release and static enforcement for tag trigger, least required workflow permissions, full-SHA actions, digest-pinned bases, both image builds, database cleanup, and Proxmox image variables.
 - Corrected the Proxmox environment template to require the worker image independently from the dashboard image. No release tag or production package has been created yet.
 - Exact-head run `31634024586` passed all seven jobs: real dashboard and worker Docker builds, the baseline, twenty-four migration replays, all 997 pgTAP assertions, concurrency/property probes, and all four localized WooCommerce runtime variants.
+
+## 2026-08-12 — Secret-safe production configuration preflight
+
+- Added a read-only preflight for the real off-repository Proxmox application environment and signing pool; output reports only pass/fail categories and pool-slot count, never supplied values.
+- Enforced exact template/Compose variable parity, no duplicate declarations or placeholder values, commit-SHA image tags or digests, distinct dashboard/worker repositories, canonical path-free HTTPS origins, and a plausible publishable key.
+- Required separate nonadministrative PostgreSQL logins with complete connection coordinates and an absolute 1–1000-entry signing pool containing canonical unique references and at least 256-bit exact-base64 keys.
+- Enforced no group/other access on the signing pool when run on Linux and added adversarial self-tests for floating images, shared credentials, HTTP origin, placeholder key, duplicate env variables, malformed pool, unsafe permissions, and secret-free failures.
+- Added the self-test to the complete repository check while keeping live DNS/TLS/connectivity, database role membership, package visibility, and restore evidence as real-environment gates.

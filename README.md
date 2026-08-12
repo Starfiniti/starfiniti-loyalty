@@ -37,6 +37,14 @@ Pull requests build both pinned Linux container images without publishing them. 
 
 Production Compose must use the commit-SHA image tags (or resolved digests), not a floating tag. A release tag is created only after the target commit is approved and all required checks are green.
 
+Before touching a production host, place its populated environment file and WooCommerce signing pool outside Git, then run:
+
+```sh
+npm run deploy:preflight -- --env /absolute/path/to/starfiniti.env
+```
+
+The preflight reads but never prints configuration values. It verifies environment/Compose parity, immutable image selectors, canonical HTTPS origins, distinct least-privilege database logins, and a valid owner-only signing pool. Network reachability, database role memberships, DNS/TLS, and backup recovery are verified later against the real environment.
+
 ## Safety
 
 - Never place a Supabase secret/service-role key in `NEXT_PUBLIC_*` variables, browser code, WordPress, logs, or committed files.

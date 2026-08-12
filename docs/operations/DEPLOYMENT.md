@@ -43,6 +43,8 @@ Secret files are owner-readable only, excluded from backups unless encrypted esc
 
 Generate the WooCommerce signing-key pool on the application host with `npm run woocommerce:keys -- --output <secret-path> --count <n>` and mount it read-only at the configured dashboard secret path. Use `--append` to preserve assigned references while adding capacity; the generator rejects replacement of existing values and performs an atomic file swap. Recreate the dashboard container after append so the bind mount observes the replacement inode. Back up the pool only through encrypted secret escrow: database rows contain references, not recoverable signing keys.
 
+Before applying Compose, run `npm run deploy:preflight -- --env /absolute/path/to/starfiniti.env` from the matching release source. The command never prints environment or key values. It requires exact environment/Compose parity, populated values, commit-SHA image tags or digests, distinct image repositories, canonical HTTPS origins, separate nonadministrative PostgreSQL logins, and a valid absolute signing-pool file. On Linux it also rejects any group/other permission bit on that file. Passing this offline preflight does not prove DNS, TLS, connectivity, database role membership, package visibility, or backup recovery; those remain live deployment checks.
+
 ## Merchant authentication
 
 - Configure self-hosted Auth `SITE_URL` as the public dashboard origin and allow only the exact dashboard callback origins required by the environment.
