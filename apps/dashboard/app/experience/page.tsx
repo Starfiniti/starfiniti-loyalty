@@ -63,9 +63,14 @@ export default async function ExperiencePage() {
         <ExperienceEditor
           canEdit={canEdit}
           initialTheme={theme.definition}
+          initialTranslations={theme.translations}
           operationId={crypto.randomUUID()}
           programmeGroupId={context.programmeGroup.public_id}
           workspaceId={context.workspace.public_id}
+          translationOperationIds={{
+            en: crypto.randomUUID(),
+            "sl-SI": crypto.randomUUID(),
+          }}
         />
       ) : (
         <section className="customer-panel empty-state">

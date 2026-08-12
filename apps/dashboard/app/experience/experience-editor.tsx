@@ -2,204 +2,345 @@
 
 import {
   contrastAgainstWhite,
+  type ExperienceLocaleV1,
   type ExperienceThemeDefinitionV1,
+  type ExperienceTranslationDefinitionV1,
 } from "@starfiniti/contracts";
 import { useActionState, useMemo, useState } from "react";
 import { experienceFontStack } from "@/lib/experience-theme";
-import { saveExperienceTheme } from "./actions";
+import { saveExperienceTheme, saveExperienceTranslation } from "./actions";
 
 const initialActionState = { kind: "idle", message: "" } as const;
 
 export function ExperienceEditor({
   canEdit,
   initialTheme,
+  initialTranslations,
   operationId,
+  translationOperationIds,
   programmeGroupId,
   workspaceId,
 }: Readonly<{
   canEdit: boolean;
   initialTheme: ExperienceThemeDefinitionV1;
+  initialTranslations: Readonly<
+    Record<
+      ExperienceLocaleV1,
+      Readonly<{
+        definition: ExperienceTranslationDefinitionV1;
+        revision: number;
+      }>
+    >
+  >;
   operationId: string;
+  translationOperationIds: Readonly<Record<ExperienceLocaleV1, string>>;
   programmeGroupId: string;
   workspaceId: string;
 }>) {
   const [theme, setTheme] = useState(initialTheme);
+  const [locale, setLocale] = useState<ExperienceLocaleV1>("en");
+  const [translations, setTranslations] = useState(() => ({
+    en: initialTranslations.en.definition,
+    "sl-SI": initialTranslations["sl-SI"].definition,
+  }));
   const [actionState, formAction, pending] = useActionState(
     saveExperienceTheme,
     initialActionState,
   );
+  const [translationActionState, translationAction, translationPending] =
+    useActionState(saveExperienceTranslation, initialActionState);
+  const translation = translations[locale];
   const contrast = useMemo(
     () => contrastAgainstWhite(theme.brandColor),
     [theme.brandColor],
   );
 
+  const updateTranslation = (
+    field: keyof Omit<ExperienceTranslationDefinitionV1, "version" | "locale">,
+    value: string,
+  ) => {
+    setTranslations({
+      ...translations,
+      [locale]: { ...translation, [field]: value },
+    });
+  };
+
   return (
-    <form className="experience-editor" action={formAction}>
-      <input name="operationId" type="hidden" value={operationId} />
-      <input name="workspaceId" type="hidden" value={workspaceId} />
-      <input name="programmeGroupId" type="hidden" value={programmeGroupId} />
-      <section className="experience-controls" aria-labelledby="theme-title">
-        <div className="section-heading">
-          <div>
-            <p className="login-eyebrow">Controlled design tokens</p>
-            <h2 id="theme-title">Customer theme</h2>
-          </div>
-          <span>{canEdit ? "Owner/admin" : "Read only"}</span>
-        </div>
-
-        <div className="experience-fields">
-          <label>
-            <span>Brand color</span>
-            <div className="color-field">
-              <input
-                aria-label="Brand color picker"
-                disabled={!canEdit}
-                name="brandColor"
-                onChange={(event) =>
-                  setTheme({ ...theme, brandColor: event.target.value })
-                }
-                type="color"
-                value={theme.brandColor}
-              />
-              <code>{theme.brandColor}</code>
+    <div className="experience-editor">
+      <div className="experience-controls-stack">
+        <form
+          className="experience-controls"
+          action={formAction}
+          aria-labelledby="theme-title"
+        >
+          <input name="operationId" type="hidden" value={operationId} />
+          <input name="workspaceId" type="hidden" value={workspaceId} />
+          <input
+            name="programmeGroupId"
+            type="hidden"
+            value={programmeGroupId}
+          />
+          <input name="heroText" type="hidden" value={theme.heroText} />
+          <input name="pointsLabel" type="hidden" value={theme.pointsLabel} />
+          <div className="section-heading">
+            <div>
+              <p className="login-eyebrow">Controlled design tokens</p>
+              <h2 id="theme-title">Customer theme</h2>
             </div>
-            <small
-              className={contrast >= 4.5 ? "contrast-pass" : "contrast-fail"}
-            >
-              White-text contrast {contrast.toFixed(2)}:1 · minimum 4.5:1
-            </small>
-          </label>
-          <label>
-            <span>Display font</span>
-            <select
-              disabled={!canEdit}
-              name="displayFont"
-              onChange={(event) =>
-                setTheme({
-                  ...theme,
-                  displayFont: event.target
-                    .value as ExperienceThemeDefinitionV1["displayFont"],
-                })
-              }
-              value={theme.displayFont}
-            >
-              <option value="system-sans">System sans</option>
-              <option value="editorial-serif">Editorial serif</option>
-              <option value="modern-serif">Modern serif</option>
-            </select>
-            <small>
-              Local stacks only; no remote font or tracking request.
-            </small>
-          </label>
-          <label>
-            <span>Card radius</span>
-            <select
-              disabled={!canEdit}
-              name="cardRadiusPx"
-              onChange={(event) =>
-                setTheme({
-                  ...theme,
-                  cardRadiusPx: Number(
-                    event.target.value,
-                  ) as ExperienceThemeDefinitionV1["cardRadiusPx"],
-                })
-              }
-              value={theme.cardRadiusPx}
-            >
-              <option value="8">Compact · 8px</option>
-              <option value="14">Balanced · 14px</option>
-              <option value="22">Soft · 22px</option>
-            </select>
-          </label>
-          <label>
-            <span>Widget position</span>
-            <select
-              disabled={!canEdit}
-              name="widgetPosition"
-              onChange={(event) =>
-                setTheme({
-                  ...theme,
-                  widgetPosition: event.target.value as "left" | "right",
-                })
-              }
-              value={theme.widgetPosition}
-            >
-              <option value="left">Left</option>
-              <option value="right">Right</option>
-            </select>
-          </label>
-          <label className="wide-field">
-            <span>Guest headline</span>
-            <input
-              disabled={!canEdit}
-              maxLength={120}
-              name="heroText"
-              onChange={(event) =>
-                setTheme({ ...theme, heroText: event.target.value })
-              }
-              required
-              value={theme.heroText}
-            />
-          </label>
-          <label>
-            <span>Points label</span>
-            <input
-              disabled={!canEdit}
-              maxLength={30}
-              name="pointsLabel"
-              onChange={(event) =>
-                setTheme({ ...theme, pointsLabel: event.target.value })
-              }
-              required
-              value={theme.pointsLabel}
-            />
-          </label>
-          <fieldset className="experience-toggles">
-            <legend>Visible sections</legend>
-            <label>
-              <input
-                checked={theme.showTier}
-                disabled={!canEdit}
-                name="showTier"
-                onChange={(event) =>
-                  setTheme({ ...theme, showTier: event.target.checked })
-                }
-                type="checkbox"
-              />
-              Tier progress
-            </label>
-            <label>
-              <input
-                checked={theme.showRewards}
-                disabled={!canEdit}
-                name="showRewards"
-                onChange={(event) =>
-                  setTheme({ ...theme, showRewards: event.target.checked })
-                }
-                type="checkbox"
-              />
-              Available rewards
-            </label>
-          </fieldset>
-        </div>
+            <span>{canEdit ? "Owner/admin" : "Read only"}</span>
+          </div>
 
-        <div className="experience-save">
-          <p>
-            Raw CSS, JavaScript, font URLs, and uploads are excluded from this
-            boundary.
-          </p>
-          <button
-            className="primary"
-            disabled={!canEdit || pending || contrast < 4.5}
-            type="submit"
+          <div className="experience-fields">
+            <label>
+              <span>Brand color</span>
+              <div className="color-field">
+                <input
+                  aria-label="Brand color picker"
+                  disabled={!canEdit}
+                  name="brandColor"
+                  onChange={(event) =>
+                    setTheme({ ...theme, brandColor: event.target.value })
+                  }
+                  type="color"
+                  value={theme.brandColor}
+                />
+                <code>{theme.brandColor}</code>
+              </div>
+              <small
+                className={contrast >= 4.5 ? "contrast-pass" : "contrast-fail"}
+              >
+                White-text contrast {contrast.toFixed(2)}:1 · minimum 4.5:1
+              </small>
+            </label>
+            <label>
+              <span>Display font</span>
+              <select
+                disabled={!canEdit}
+                name="displayFont"
+                onChange={(event) =>
+                  setTheme({
+                    ...theme,
+                    displayFont: event.target
+                      .value as ExperienceThemeDefinitionV1["displayFont"],
+                  })
+                }
+                value={theme.displayFont}
+              >
+                <option value="system-sans">System sans</option>
+                <option value="editorial-serif">Editorial serif</option>
+                <option value="modern-serif">Modern serif</option>
+              </select>
+              <small>
+                Local stacks only; no remote font or tracking request.
+              </small>
+            </label>
+            <label>
+              <span>Card radius</span>
+              <select
+                disabled={!canEdit}
+                name="cardRadiusPx"
+                onChange={(event) =>
+                  setTheme({
+                    ...theme,
+                    cardRadiusPx: Number(
+                      event.target.value,
+                    ) as ExperienceThemeDefinitionV1["cardRadiusPx"],
+                  })
+                }
+                value={theme.cardRadiusPx}
+              >
+                <option value="8">Compact · 8px</option>
+                <option value="14">Balanced · 14px</option>
+                <option value="22">Soft · 22px</option>
+              </select>
+            </label>
+            <label>
+              <span>Widget position</span>
+              <select
+                disabled={!canEdit}
+                name="widgetPosition"
+                onChange={(event) =>
+                  setTheme({
+                    ...theme,
+                    widgetPosition: event.target.value as "left" | "right",
+                  })
+                }
+                value={theme.widgetPosition}
+              >
+                <option value="left">Left</option>
+                <option value="right">Right</option>
+              </select>
+            </label>
+            <fieldset className="experience-toggles">
+              <legend>Visible sections</legend>
+              <label>
+                <input
+                  checked={theme.showTier}
+                  disabled={!canEdit}
+                  name="showTier"
+                  onChange={(event) =>
+                    setTheme({ ...theme, showTier: event.target.checked })
+                  }
+                  type="checkbox"
+                />
+                Tier progress
+              </label>
+              <label>
+                <input
+                  checked={theme.showRewards}
+                  disabled={!canEdit}
+                  name="showRewards"
+                  onChange={(event) =>
+                    setTheme({ ...theme, showRewards: event.target.checked })
+                  }
+                  type="checkbox"
+                />
+                Available rewards
+              </label>
+            </fieldset>
+          </div>
+
+          <div className="experience-save">
+            <p>
+              Raw CSS, JavaScript, font URLs, and uploads are excluded from this
+              boundary.
+            </p>
+            <button
+              className="primary"
+              disabled={!canEdit || pending || contrast < 4.5}
+              type="submit"
+            >
+              {pending ? "Saving…" : "Save theme"}
+            </button>
+          </div>
+          <p
+            aria-live="polite"
+            className={`action-message ${actionState.kind}`}
           >
-            {pending ? "Saving…" : "Save theme"}
-          </button>
-        </div>
-        <p aria-live="polite" className={`action-message ${actionState.kind}`}>
-          {actionState.message}
-        </p>
-      </section>
+            {actionState.message}
+          </p>
+        </form>
+
+        <form
+          action={translationAction}
+          aria-labelledby="translation-title"
+          className="experience-controls translation-controls"
+        >
+          <input
+            name="operationId"
+            type="hidden"
+            value={translationOperationIds[locale]}
+          />
+          <input name="workspaceId" type="hidden" value={workspaceId} />
+          <input
+            name="programmeGroupId"
+            type="hidden"
+            value={programmeGroupId}
+          />
+          <div className="section-heading">
+            <div>
+              <p className="login-eyebrow">Allowlisted locale copy</p>
+              <h2 id="translation-title">Customer translations</h2>
+            </div>
+            <span>Revision {initialTranslations[locale].revision || "—"}</span>
+          </div>
+          <div className="experience-fields">
+            <label>
+              <span>Preview and edit locale</span>
+              <select
+                name="locale"
+                onChange={(event) =>
+                  setLocale(event.target.value as ExperienceLocaleV1)
+                }
+                value={locale}
+              >
+                <option value="en">English</option>
+                <option value="sl-SI">Slovenščina</option>
+              </select>
+            </label>
+            <label>
+              <span>Points label</span>
+              <input
+                disabled={!canEdit}
+                maxLength={30}
+                name="pointsLabel"
+                onChange={(event) =>
+                  updateTranslation("pointsLabel", event.target.value)
+                }
+                required
+                value={translation.pointsLabel}
+              />
+            </label>
+            <label className="wide-field">
+              <span>Guest headline</span>
+              <input
+                disabled={!canEdit}
+                maxLength={120}
+                name="heroText"
+                onChange={(event) =>
+                  updateTranslation("heroText", event.target.value)
+                }
+                required
+                value={translation.heroText}
+              />
+            </label>
+            {(
+              [
+                ["balanceLabel", "Balance label", 40],
+                ["rewardsLabel", "Rewards heading", 40],
+                ["redeemLabel", "Redeem action", 30],
+                ["joinLabel", "Join action", 30],
+              ] as const
+            ).map(([field, label, maxLength]) => (
+              <label key={field}>
+                <span>{label}</span>
+                <input
+                  disabled={!canEdit}
+                  maxLength={maxLength}
+                  name={field}
+                  onChange={(event) =>
+                    updateTranslation(field, event.target.value)
+                  }
+                  required
+                  value={translation[field]}
+                />
+              </label>
+            ))}
+            <label className="wide-field">
+              <span>Guest earning message</span>
+              <input
+                disabled={!canEdit}
+                maxLength={120}
+                name="earnMessage"
+                onChange={(event) =>
+                  updateTranslation("earnMessage", event.target.value)
+                }
+                required
+                value={translation.earnMessage}
+              />
+            </label>
+          </div>
+          <div className="experience-save">
+            <p>
+              English and Slovenian are explicit launch locales. Unsupported
+              locale selectors fail closed instead of silently mixing copy.
+            </p>
+            <button
+              className="primary"
+              disabled={!canEdit || translationPending}
+              type="submit"
+            >
+              {translationPending ? "Saving…" : `Save ${locale} copy`}
+            </button>
+          </div>
+          <p
+            aria-live="polite"
+            className={`action-message ${translationActionState.kind}`}
+          >
+            {translationActionState.message}
+          </p>
+        </form>
+      </div>
 
       <section className="experience-preview" aria-labelledby="preview-title">
         <div className="section-heading">
@@ -231,9 +372,9 @@ export function ExperienceEditor({
                 borderRadius: theme.cardRadiusPx,
               }}
             >
-              <small>Your balance</small>
+              <small>{translation.balanceLabel}</small>
               <strong>
-                2,450 <span>{theme.pointsLabel}</span>
+                2,450 <span>{translation.pointsLabel}</span>
               </strong>
               {theme.showTier ? (
                 <div className="wallet-tier">
@@ -250,27 +391,27 @@ export function ExperienceEditor({
                 <h3
                   style={{ fontFamily: experienceFontStack(theme.displayFont) }}
                 >
-                  Your rewards
+                  {translation.rewardsLabel}
                 </h3>
                 <div>
                   <article style={{ borderRadius: theme.cardRadiusPx }}>
                     <strong>€5 discount</strong>
-                    <span>500 {theme.pointsLabel}</span>
+                    <span>500 {translation.pointsLabel}</span>
                     <span
                       className="wallet-redeem"
                       style={{ backgroundColor: theme.brandColor }}
                     >
-                      Redeem
+                      {translation.redeemLabel}
                     </span>
                   </article>
                   <article style={{ borderRadius: theme.cardRadiusPx }}>
                     <strong>Free shipping</strong>
-                    <span>700 {theme.pointsLabel}</span>
+                    <span>700 {translation.pointsLabel}</span>
                     <span
                       className="wallet-redeem"
                       style={{ backgroundColor: theme.brandColor }}
                     >
-                      Redeem
+                      {translation.redeemLabel}
                     </span>
                   </article>
                 </div>
@@ -290,12 +431,14 @@ export function ExperienceEditor({
           style={{ borderRadius: theme.cardRadiusPx }}
         >
           <h3 style={{ fontFamily: experienceFontStack(theme.displayFont) }}>
-            {theme.heroText}
+            {translation.heroText}
           </h3>
-          <p>Earn {theme.pointsLabel} on every eligible order.</p>
-          <span style={{ backgroundColor: theme.brandColor }}>Join free</span>
+          <p>{translation.earnMessage}</p>
+          <span style={{ backgroundColor: theme.brandColor }}>
+            {translation.joinLabel}
+          </span>
         </div>
       </section>
-    </form>
+    </div>
   );
 }

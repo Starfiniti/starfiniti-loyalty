@@ -1,6 +1,12 @@
 import "server-only";
-import { experienceThemeDefinitionV1 } from "@starfiniti/contracts";
 import {
+  experienceThemeDefinitionV1,
+  experienceTranslationDefinitionV1,
+  type ExperienceLocaleV1,
+  type ExperienceTranslationDefinitionV1,
+} from "@starfiniti/contracts";
+import {
+  DEFAULT_EXPERIENCE_TRANSLATIONS,
   DEFAULT_EXPERIENCE_THEME,
   experienceFontStack,
 } from "@/lib/experience-theme";
@@ -13,6 +19,15 @@ export type MerchantExperienceTheme = Readonly<{
   revision: number;
   updatedAt: string | null;
   definition: typeof DEFAULT_EXPERIENCE_THEME;
+  translations: Readonly<
+    Record<
+      ExperienceLocaleV1,
+      Readonly<{
+        definition: ExperienceTranslationDefinitionV1;
+        revision: number;
+      }>
+    >
+  >;
 }>;
 
 type ThemeRow = Readonly<{
@@ -29,6 +44,36 @@ type ThemeRow = Readonly<{
   updated_at: string;
 }>;
 
+type TranslationRow = Readonly<{
+  locale: string;
+  revision: number;
+  hero_text: string;
+  points_label: string;
+  balance_label: string;
+  rewards_label: string;
+  redeem_label: string;
+  join_label: string;
+  earn_message: string;
+}>;
+
+type TranslationState = Record<
+  ExperienceLocaleV1,
+  {
+    definition: ExperienceTranslationDefinitionV1;
+    revision: number;
+  }
+>;
+
+function defaultTranslations(): TranslationState {
+  return {
+    en: { definition: DEFAULT_EXPERIENCE_TRANSLATIONS.en, revision: 0 },
+    "sl-SI": {
+      definition: DEFAULT_EXPERIENCE_TRANSLATIONS["sl-SI"],
+      revision: 0,
+    },
+  };
+}
+
 export async function getMerchantExperienceTheme(
   context: TenantContext,
 ): Promise<MerchantExperienceTheme> {
@@ -39,11 +84,12 @@ export async function getMerchantExperienceTheme(
       revision: 0,
       updatedAt: null,
       definition: DEFAULT_EXPERIENCE_THEME,
+      translations: defaultTranslations(),
     };
   }
 
   const supabase = await createSupabaseServerClient();
-  const [scopeResult, result] = await Promise.all([
+  const [scopeResult, result, translationResult] = await Promise.all([
     supabase
       .schema("loyalty")
       .from("programme_group_workspaces")
@@ -64,8 +110,17 @@ export async function getMerchantExperienceTheme(
       .eq("programme_group_id", context.programmeGroup.id)
       .limit(1)
       .maybeSingle(),
+    supabase
+      .schema("loyalty")
+      .from("experience_translations")
+      .select(
+        "locale,revision,hero_text,points_label,balance_label,rewards_label,redeem_label,join_label,earn_message",
+      )
+      .eq("organization_id", context.organization.id)
+      .eq("workspace_id", context.workspace.id)
+      .eq("programme_group_id", context.programmeGroup.id),
   ]);
-  if (scopeResult.error || result.error) {
+  if (scopeResult.error || result.error || translationResult.error) {
     throw new Error("experience_theme_read_unavailable");
   }
   if (!scopeResult.data) {
@@ -75,9 +130,31 @@ export async function getMerchantExperienceTheme(
       revision: 0,
       updatedAt: null,
       definition: DEFAULT_EXPERIENCE_THEME,
+      translations: defaultTranslations(),
     };
   }
   const row = result.data as ThemeRow | null;
+  const translations = { ...defaultTranslations() };
+  for (const translationRow of (translationResult.data ??
+    []) as TranslationRow[]) {
+    const definition = experienceTranslationDefinitionV1.safeParse({
+      version: "1",
+      locale: translationRow.locale,
+      heroText: translationRow.hero_text,
+      pointsLabel: translationRow.points_label,
+      balanceLabel: translationRow.balance_label,
+      rewardsLabel: translationRow.rewards_label,
+      redeemLabel: translationRow.redeem_label,
+      joinLabel: translationRow.join_label,
+      earnMessage: translationRow.earn_message,
+    });
+    if (!definition.success)
+      throw new Error("experience_theme_read_unavailable");
+    translations[definition.data.locale] = {
+      definition: definition.data,
+      revision: translationRow.revision,
+    };
+  }
   if (!row) {
     return {
       scopeReady: true,
@@ -85,6 +162,7 @@ export async function getMerchantExperienceTheme(
       revision: 0,
       updatedAt: null,
       definition: DEFAULT_EXPERIENCE_THEME,
+      translations,
     };
   }
 
@@ -100,11 +178,22 @@ export async function getMerchantExperienceTheme(
     widgetPosition: row.widget_position,
   });
   if (!definition.success) throw new Error("experience_theme_read_unavailable");
+  if (translations.en.revision === 0) {
+    translations.en = {
+      revision: 0,
+      definition: {
+        ...translations.en.definition,
+        heroText: definition.data.heroText,
+        pointsLabel: definition.data.pointsLabel,
+      },
+    };
+  }
   return {
     scopeReady: true,
     id: row.public_id,
     revision: row.revision,
     updatedAt: row.updated_at,
     definition: definition.data,
+    translations,
   };
 }

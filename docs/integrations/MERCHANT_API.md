@@ -152,6 +152,12 @@ PostgreSQL locks the active workspace/programme-group link, derives the organiza
 
 The contract accepts no organization or actor authority and no CSS, HTML, JavaScript, asset upload, or URL. Font tokens resolve to local system stacks, so the preview makes no third-party font request. Result fields are `resource_public_id`, `outcome` (`created`, `updated`, or `duplicate`), and positive `revision`.
 
+### `save_experience_translation_command`
+
+Customer copy is stored independently from visual theme tokens in `experience_translations`, keyed by the linked tenant workspace/programme group and an allowlisted launch locale (`en` or `sl-SI`). Each locale has bounded single-line hero, points, balance, rewards, redeem, join, and earning-message fields. Unsupported locale strings, control characters, HTML/script expansion, caller-supplied tenant/actor authority, and direct browser table DML are rejected.
+
+The command derives live owner/admin authority, locks the exact workspace/programme-group link, hashes the complete canonical copy request, and creates or revisions only the selected locale. Its immutable `experience.translation.save` audit event records public scope, locale, and revision but deliberately omits the translated copy. Exact retries return the original revision; changed reuse conflicts. Authenticated members may read only their tenant's locale rows through RLS. The experience editor previews the selected locale immediately and retains prior English theme copy as an unsaved fallback until explicit English translation data exists.
+
 ## Retry and error contract
 
 Idempotency is scoped by organization. Retrying the same key and canonical request returns the original resource with `outcome = duplicate` and creates neither another version nor another audit event. Reusing a key with different input raises SQLSTATE `23514`. Authorization failures use `42501`; invalid/stale configuration or lifecycle inputs use `22023`/`23514`.

@@ -243,7 +243,7 @@ tasks:
       - npm run check
       - npm run db:test
       - browser workflow verification
-    risks: [R-001, R-007, R-010]
+    risks: [R-001, R-007, R-010, R-011]
     docs:
       - docs/product/PRODUCT_REQUIREMENTS.md
       - docs/security/THREAT_MODEL.md
@@ -308,3 +308,5 @@ tasks:
       - exact-head run 31603764054 passed the bulk-adjustment baseline sixteen migrations 693 pgTAP assertions concurrency and property probes and all four localized WooCommerce runtime variants
       - WooCommerce customer rendering has enforced zero connector JavaScript zero connector CSS and zero hub requests with 20-reward and markup-size ceilings checked statically and in every real runtime variant
       - exact-head run 31604654919 passed the storefront-budget baseline including bounded zero-request account and cart rendering in all four localized WooCommerce runtime variants
+      - English and Slovenian hosted customer copy are separate revisioned RLS-scoped locale rows saved only by a live owner or admin command whose immutable audit metadata omits translated text
+      - 33 experience-translation pgTAP assertions cover grants direct DML denial bounded markup-free copy independent locale revisions exact retries conflicts role revocation cross-tenant and mixed-scope denial RLS and audit immutability

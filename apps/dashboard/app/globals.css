@@ -1594,6 +1594,11 @@ h1 {
   margin-right: auto;
   margin-left: auto;
 }
+.experience-controls-stack {
+  min-width: 0;
+  display: grid;
+  gap: 18px;
+}
 .experience-heading {
   padding: 42px 0 28px;
   display: flex;
@@ -1631,6 +1636,9 @@ h1 {
 .experience-controls .section-heading,
 .experience-preview .section-heading {
   margin-bottom: 22px;
+}
+.translation-controls .section-heading {
+  margin-bottom: 18px;
 }
 .experience-fields {
   display: grid;

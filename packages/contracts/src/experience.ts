@@ -44,6 +44,47 @@ export const merchantExperienceThemeResultV1 = z.object({
   revision: z.number().int().positive(),
 });
 
+export const experienceLocaleV1 = z.enum(["en", "sl-SI"]);
+
+const translatedCopy = z
+  .string()
+  .trim()
+  .regex(/^[^\u0000-\u001f\u007f<>]*$/u);
+
+export const experienceTranslationDefinitionV1 = z
+  .object({
+    version: z.literal("1"),
+    locale: experienceLocaleV1,
+    heroText: translatedCopy.min(1).max(120),
+    pointsLabel: translatedCopy.min(1).max(30),
+    balanceLabel: translatedCopy.min(1).max(40),
+    rewardsLabel: translatedCopy.min(1).max(40),
+    redeemLabel: translatedCopy.min(1).max(30),
+    joinLabel: translatedCopy.min(1).max(30),
+    earnMessage: translatedCopy.min(1).max(120),
+  })
+  .strict();
+
+export const merchantSaveExperienceTranslationCommandV1 = z
+  .object({
+    version: z.literal("1"),
+    workspaceId: z.uuid(),
+    programmeGroupId: z.uuid(),
+    translation: experienceTranslationDefinitionV1,
+    idempotencyKey: z.string().min(1).max(255),
+    correlationId: z.uuid(),
+  })
+  .strict();
+
+export const merchantExperienceTranslationResultV1 = z
+  .object({
+    resourceId: z.uuid(),
+    outcome: z.enum(["created", "updated", "duplicate"]),
+    revision: z.number().int().positive(),
+    locale: experienceLocaleV1,
+  })
+  .strict();
+
 function srgbChannel(value: number): number {
   const normalized = value / 255;
   return normalized <= 0.04045
@@ -62,4 +103,8 @@ export function contrastAgainstWhite(color: string): number {
 
 export type ExperienceThemeDefinitionV1 = z.infer<
   typeof experienceThemeDefinitionV1
+>;
+export type ExperienceLocaleV1 = z.infer<typeof experienceLocaleV1>;
+export type ExperienceTranslationDefinitionV1 = z.infer<
+  typeof experienceTranslationDefinitionV1
 >;

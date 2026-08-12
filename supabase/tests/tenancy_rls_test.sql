@@ -114,6 +114,7 @@ select is_empty(
           'preview_bulk_customer_adjustment',
           'request_connector_reconciliation_command',
           'retry_connector_effect_command',
+          'save_experience_translation_command',
           'save_experience_theme_command',
           'schedule_programme_version_command'
         )
