@@ -439,27 +439,11 @@ export function ProgrammeEditor({
                         }
                       />
                     </label>
-                    <label>
-                      {t("Maximum (EUR, optional)")}
-                      <input
-                        min="0.01"
-                        step="0.01"
-                        type="number"
-                        value={minorToMajor(
-                          reward.configuration.maximumDiscountMinor,
-                        )}
-                        onChange={(event) =>
-                          updateReward(index, {
-                            configuration: {
-                              ...reward.configuration,
-                              maximumDiscountMinor: event.target.value
-                                ? majorToMinor(event.target.value)
-                                : null,
-                            },
-                          })
-                        }
-                      />
-                    </label>
+                    <small>
+                      {t(
+                        "Native WooCommerce percentage discounts have no maximum cap.",
+                      )}
+                    </small>
                   </>
                 ) : null}
                 {[

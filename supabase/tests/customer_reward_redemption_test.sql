@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(45);
+select plan(51);
 
 select has_function(
   'loyalty', 'redeem_my_reward', array['uuid', 'text', 'uuid'],
@@ -116,7 +116,9 @@ cross join (values
   ('bad-validity', 'Bad validity', 'free_shipping', 100::bigint,
     '{"validityDays":366}'::jsonb),
   ('bad-maximum', 'Bad maximum', 'percentage_discount', 100::bigint,
-    '{"percentageBasisPoints":1000,"maximumDiscountMinor":"free","currencyMinorUnitDigits":2,"validityDays":30}'::jsonb)
+    '{"percentageBasisPoints":1000,"maximumDiscountMinor":"free","currencyMinorUnitDigits":2,"validityDays":30}'::jsonb),
+  ('capped-maximum', 'Capped maximum', 'percentage_discount', 100::bigint,
+    '{"percentageBasisPoints":1000,"maximumDiscountMinor":"2500","currencyMinorUnitDigits":2,"validityDays":30}'::jsonb)
 ) as definition(code, name, kind, cost, configuration)
 where loyalty.programme_versions.organization_id = (
   select id from loyalty.organizations where slug = 'redeem-one'
@@ -385,8 +387,29 @@ select throws_ok(
   '22023', 'invalid reward coupon configuration',
   'invalid maximum discount is rejected before value moves'
 );
-
+select throws_ok(
+  $$ select * from loyalty.redeem_my_reward(
+       '91000000-0000-4000-8000-000000000160', 'capped-maximum',
+       '91000000-0000-4000-8000-000000000914'
+     ) $$,
+  '22023', 'percentage discount maximum is unsupported',
+  'legacy capped percentages are rejected before native coupon reservation'
+);
 reset role;
+select results_eq(
+  $$ select count(*)::bigint from loyalty.reward_reservations
+     where idempotency_key =
+       'customer-reward:91000000-0000-4000-8000-000000000914' $$,
+  array[0::bigint],
+  'an unsupported cap creates no reservation'
+);
+select results_eq(
+  $$ select count(*)::bigint - (select commands from redemption_before)
+     from loyalty_private.transactional_outbox $$,
+  array[1::bigint],
+  'an unsupported cap creates no additional connector command'
+);
+
 update loyalty.commerce_connections set status = 'disabled'
 where public_id = '91000000-0000-4000-8000-000000000101';
 set local role authenticated;
@@ -544,6 +567,36 @@ select ok(
       'loyalty.redeem_my_reward(uuid,text,uuid)'::regprocedure
     ) !~ 'target_organization_id|target_customer_id|target_wallet_id|target_points'),
   'the command source contains no hidden caller-controlled value authority'
+);
+update loyalty_private.transactional_outbox
+set state = 'retryable', attempt_count = 9, available_at = clock_timestamp()
+where topic = 'woocommerce.coupon.issue';
+create temporary table exhausted_coupon_claim as
+select * from loyalty_private.claim_woocommerce_commands(
+  '91000000-0000-4000-8000-000000000101', 1, 60
+);
+select * from loyalty_private.finish_woocommerce_command(
+  '91000000-0000-4000-8000-000000000101',
+  (select command_id from exhausted_coupon_claim),
+  'retryable', null, 'woocommerce_timeout', 60
+);
+select results_eq(
+  $$ select state from loyalty_private.transactional_outbox
+     where command_id = (select command_id from exhausted_coupon_claim) $$,
+  array['manual_review'::text],
+  'an ambiguous tenth coupon attempt stops for manual review'
+);
+select results_eq(
+  $$ select state from loyalty.reward_reservations
+     where public_id = (select reservation_id from redemption_result) $$,
+  array['reserved'::text],
+  'ambiguous coupon exhaustion does not assume absence or release value'
+);
+select results_eq(
+  $$ select count(*)::bigint - (select transactions from redemption_before)
+     from loyalty.ledger_transactions $$,
+  array[1::bigint],
+  'manual review creates no compensating ledger transaction without proof'
 );
 select * from finish();
 

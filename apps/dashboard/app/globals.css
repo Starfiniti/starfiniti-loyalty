@@ -496,7 +496,7 @@ a {
 }
 .store-switcher {
   display: grid;
-  grid-template-columns: 34px 1fr 16px;
+  grid-template-columns: 34px 1fr;
   align-items: center;
   gap: 10px;
   padding: 0 7px;
@@ -523,10 +523,6 @@ a {
 .store-switcher span {
   color: var(--muted);
   font-size: 11px;
-}
-.switcher-icon {
-  width: 14px;
-  color: var(--muted-light);
 }
 .store-status {
   display: flex;
@@ -601,7 +597,7 @@ a {
   margin: 0 -12px;
   border-top: 1px solid var(--border);
 }
-.demo-label {
+.reporting-label {
   display: block;
   padding: 10px 16px 7px;
   font-size: 10px;
@@ -680,46 +676,11 @@ main::-webkit-scrollbar {
   height: 56px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 24px;
   padding: 0 32px 0 24px;
   background: rgba(255, 255, 255, 0.72);
   border-bottom: 1px solid var(--border);
-}
-.search {
-  width: min(300px, 45vw);
-  height: 36px;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 0 10px;
-  border: 1px solid var(--border);
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-}
-.search svg {
-  width: 15px;
-  color: var(--muted-light);
-}
-.search input {
-  min-width: 0;
-  flex: 1;
-  border: 0;
-  background: transparent;
-  color: var(--text);
-}
-.search input::placeholder {
-  color: var(--muted-light);
-}
-.search kbd {
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  padding: 1px 5px;
-  color: var(--muted-light);
-  background: #fafafa;
-  font: inherit;
-  font-size: 10px;
 }
 .top-actions {
   display: flex;
@@ -749,19 +710,6 @@ main::-webkit-scrollbar {
   color: var(--primary);
   background: var(--primary-soft);
 }
-.top-actions button {
-  width: 34px;
-  height: 34px;
-  display: grid;
-  place-items: center;
-  border: 0;
-  background: transparent;
-  color: #78716c;
-  border-radius: 8px;
-}
-.top-actions button svg {
-  width: 16px;
-}
 .range-select select {
   width: auto;
   min-width: 122px;
@@ -772,18 +720,6 @@ main::-webkit-scrollbar {
   background: white;
   color: #44403c;
   text-align: center;
-}
-.notification {
-  position: relative;
-}
-.notification i {
-  position: absolute;
-  right: 7px;
-  top: 6px;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #7c3aed;
 }
 .content {
   max-width: 1160px;
@@ -1079,11 +1015,6 @@ h1 {
   }
 }
 @media (max-width: 560px) {
-  .search {
-    width: min(210px, 58vw);
-  }
-  .search kbd,
-  .top-actions > button:not(.notification),
   .range-select {
     display: none;
   }
@@ -2923,7 +2854,8 @@ h1 {
   background: #fef2f2;
 }
 .health-badge.stale,
-.issue-state.quarantined {
+.issue-state.quarantined,
+.issue-state.manual_review {
   color: #a16207;
   background: #fefce8;
 }

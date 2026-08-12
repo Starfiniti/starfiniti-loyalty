@@ -114,6 +114,64 @@ starfiniti_runtime_assert(
     'native coupon is one-use and bound to the reservation and customer'
 );
 
+$percentageCouponCode = 'SFPERCENT0123456789ABCDEF0123456789';
+$percentageIssue = $execute->invoke(null, [
+    'version' => '1',
+    'commandId' => '61000000-0000-4000-8000-000000000002',
+    'connectionId' => '62000000-0000-4000-8000-000000000001',
+    'topic' => 'woocommerce.coupon.issue',
+    'payloadVersion' => 'v1',
+    'deliveredAt' => gmdate('c'),
+    'payload' => [
+        'kind' => 'issue_coupon',
+        'reservationId' => '63000000-0000-4000-8000-000000000002',
+        'code' => $percentageCouponCode,
+        'externalCustomerId' => (string) $customerId,
+        'expiresAt' => gmdate('c', time() + DAY_IN_SECONDS),
+        'reward' => [
+            'kind' => 'percentage_discount',
+            'percentageBasisPoints' => 1500,
+            'maximumDiscountMinor' => null,
+            'currencyMinorUnitDigits' => 2,
+        ],
+    ],
+]);
+$percentageCouponId = wc_get_coupon_id_by_code($percentageCouponCode);
+$percentageCoupon = new WC_Coupon($percentageCouponId);
+starfiniti_runtime_assert(
+    ($percentageIssue['outcome'] ?? null) === 'delivered'
+    && $percentageCouponId > 0
+    && $percentageCoupon->get_discount_type() === 'percent'
+    && (string) $percentageCoupon->get_amount() === '15',
+    'uncapped percentage reward creates the matching native coupon'
+);
+$cappedPercentageIssue = $execute->invoke(null, [
+    'version' => '1',
+    'commandId' => '61000000-0000-4000-8000-000000000003',
+    'connectionId' => '62000000-0000-4000-8000-000000000001',
+    'topic' => 'woocommerce.coupon.issue',
+    'payloadVersion' => 'v1',
+    'deliveredAt' => gmdate('c'),
+    'payload' => [
+        'kind' => 'issue_coupon',
+        'reservationId' => '63000000-0000-4000-8000-000000000003',
+        'code' => 'SFCAPPED0123456789ABCDEF01234567890',
+        'externalCustomerId' => (string) $customerId,
+        'expiresAt' => gmdate('c', time() + DAY_IN_SECONDS),
+        'reward' => [
+            'kind' => 'percentage_discount',
+            'percentageBasisPoints' => 1500,
+            'maximumDiscountMinor' => '2500',
+            'currencyMinorUnitDigits' => 2,
+        ],
+    ],
+]);
+starfiniti_runtime_assert(
+    ($cappedPercentageIssue['outcome'] ?? null) === 'dead_letter'
+    && ($cappedPercentageIssue['errorCode'] ?? null) === 'percentage_maximum_unsupported',
+    'defensive connector boundary rejects unsupported percentage caps'
+);
+
 update_option(
     'starfiniti_loyalty_endpoint',
     'https://unreachable.invalid/api/v1/integrations/woocommerce/events',

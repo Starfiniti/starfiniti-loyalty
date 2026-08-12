@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(37);
+select plan(46);
 
 select ok(
   has_function_privilege(
@@ -247,6 +247,123 @@ select results_eq(
        ) $$,
   array[1::bigint],
   'an idempotent retry creates no second connector command'
+);
+
+insert into loyalty_private.transactional_outbox (
+  command_id, organization_id, connection_id, topic, payload_version,
+  payload, state, attempt_count, available_at, last_error_code
+)
+select command.command_id, organization.id, connection.id, command.topic, 'v1',
+  '{}'::jsonb, 'retryable', 9, clock_timestamp(), 'transient_failure'
+from loyalty.organizations as organization
+join loyalty.commerce_connections as connection
+  on connection.organization_id = organization.id
+cross join (values
+  ('77000000-0000-4000-8000-000000000301'::uuid, 'woocommerce.coupon.issue'),
+  ('77000000-0000-4000-8000-000000000302'::uuid, 'woocommerce.coupon.cancel'),
+  ('77000000-0000-4000-8000-000000000303'::uuid, 'woocommerce.order.reconcile')
+) as command(command_id, topic)
+where organization.slug = 'reconcile-one';
+
+create temporary table exhaustion_claim as
+select * from loyalty_private.claim_woocommerce_commands(
+  '77000000-0000-4000-8000-000000000101', 10, 60
+);
+select results_eq(
+  $$ select count(*)::bigint from exhaustion_claim $$,
+  array[3::bigint],
+  'all supported command kinds receive their tenth and final automatic claim'
+);
+select results_eq(
+  $$ select min(attempt_count), max(attempt_count) from exhaustion_claim $$,
+  $$ values (10, 10) $$,
+  'the attempt ceiling is applied consistently at the claim boundary'
+);
+select * from loyalty_private.finish_woocommerce_command(
+  '77000000-0000-4000-8000-000000000101',
+  '77000000-0000-4000-8000-000000000301',
+  'retryable', null, 'transient_failure', 60
+);
+select * from loyalty_private.finish_woocommerce_command(
+  '77000000-0000-4000-8000-000000000101',
+  '77000000-0000-4000-8000-000000000302',
+  'retryable', null, 'transient_failure', 60
+);
+select * from loyalty_private.finish_woocommerce_command(
+  '77000000-0000-4000-8000-000000000101',
+  '77000000-0000-4000-8000-000000000303',
+  'retryable', null, 'transient_failure', 60
+);
+select results_eq(
+  $$ select count(*)::bigint from loyalty_private.transactional_outbox
+     where command_id between
+       '77000000-0000-4000-8000-000000000301'::uuid and
+       '77000000-0000-4000-8000-000000000303'::uuid
+       and state = 'manual_review' $$,
+  array[3::bigint],
+  'retry exhaustion terminalizes issue, cancellation, and reconciliation safely'
+);
+select results_eq(
+  $$ select count(*)::bigint from loyalty_private.transactional_outbox
+     where command_id between
+       '77000000-0000-4000-8000-000000000301'::uuid and
+       '77000000-0000-4000-8000-000000000303'::uuid
+       and lease_owner is null and lease_expires_at is null
+       and last_error_code = 'transient_failure' $$,
+  array[3::bigint],
+  'manual-review commands retain diagnostics and release their leases'
+);
+select is_empty(
+  $$ select * from loyalty_private.claim_woocommerce_commands(
+    '77000000-0000-4000-8000-000000000101', 10, 60
+  ) $$,
+  'manual-review commands cannot be claimed again automatically'
+);
+set local role authenticated;
+set local request.jwt.claim.sub = '77000000-0000-4000-8000-000000000001';
+select results_eq(
+  $$ select commands_failed from loyalty.get_connector_operation_summaries(
+    '77000000-0000-4000-8000-000000000100'
+  ) $$,
+  array[3::bigint],
+  'merchant diagnostics count exhausted commands as failed attention items'
+);
+select results_eq(
+  $$ select count(*)::bigint
+     from loyalty.get_connector_operation_issues(
+       '77000000-0000-4000-8000-000000000101', 25
+     )
+     where item_kind = 'command' and state = 'manual_review'
+       and not retry_allowed $$,
+  array[3::bigint],
+  'merchant diagnostics expose manual review without an unsafe retry action'
+);
+reset role;
+
+insert into loyalty_private.transactional_outbox (
+  command_id, organization_id, connection_id, topic, payload_version,
+  payload, state, attempt_count, lease_owner, lease_expires_at
+)
+select '77000000-0000-4000-8000-000000000304', organization.id,
+  connection.id, 'woocommerce.order.reconcile', 'v1', '{}'::jsonb,
+  'processing', 10, 'woocommerce:77000000-0000-4000-8000-000000000101',
+  clock_timestamp() - interval '1 minute'
+from loyalty.organizations as organization
+join loyalty.commerce_connections as connection
+  on connection.organization_id = organization.id
+where organization.slug = 'reconcile-one';
+select is_empty(
+  $$ select * from loyalty_private.claim_woocommerce_commands(
+    '77000000-0000-4000-8000-000000000101', 10, 60
+  ) $$,
+  'an expired lease at the ceiling is not reclaimed'
+);
+select results_eq(
+  $$ select state, last_error_code, lease_owner
+     from loyalty_private.transactional_outbox
+     where command_id = '77000000-0000-4000-8000-000000000304' $$,
+  $$ values ('manual_review'::text, 'command_attempts_exhausted'::text, null::text) $$,
+  'expired ceiling leases stop with a visible exhaustion diagnostic'
 );
 set local role authenticated;
 set local request.jwt.claim.sub = '77000000-0000-4000-8000-000000000001';

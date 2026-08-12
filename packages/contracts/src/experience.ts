@@ -120,7 +120,7 @@ export const publicLoyaltyExperienceV1 = z
     programmeName: translatedCopy.min(1).max(200),
     requestedLocale: experienceLocaleV1,
     resolvedLocale: experienceLocaleV1,
-    brandColor: z.string().regex(/^#[0-9a-f]{6}$/u),
+    brandColor: accessibleBrandColor,
     displayFont: z.enum(["system-sans", "editorial-serif", "modern-serif"]),
     cardRadiusPx: z.union([z.literal(8), z.literal(14), z.literal(22)]),
     showTier: z.boolean(),

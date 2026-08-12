@@ -151,7 +151,8 @@ const SLOVENIAN_TEXT: Readonly<Record<string, string>> = {
   "Cost (points)": "Cena (točke)",
   "Discount (EUR)": "Popust (EUR)",
   "Discount (%)": "Popust (%)",
-  "Maximum (EUR, optional)": "Največ (EUR, neobvezno)",
+  "Native WooCommerce percentage discounts have no maximum cap.":
+    "Izvorni odstotni popusti WooCommerce nimajo najvišje omejitve.",
   "Valid for (days)": "Velja (dni)",
   "Deterministic preview": "Deterministični predogled",
   "Example order": "Primer naročila",
@@ -223,6 +224,7 @@ const SLOVENIAN_TEXT: Readonly<Record<string, string>> = {
   disabled: "onemogočeno",
   retryable: "ponovljivo",
   quarantined: "v karanteni",
+  "manual review": "ročni pregled",
   "dead letter": "trajno neuspešno",
   "Delivery queue": "Vrsta dostav",
   "Loyalty effects": "Učinki zvestobe",
@@ -249,6 +251,8 @@ const SLOVENIAN_TEXT: Readonly<Record<string, string>> = {
   "Connector operation": "Operacija povezave",
   "Inspect only — compensation may exist":
     "Samo pregled — morda obstaja kompenzacija",
+  "Verify the WooCommerce result before retrying or releasing value":
+    "Pred ponovnim poskusom ali sprostitvijo vrednosti preverite rezultat v WooCommerce",
   "Remediation required": "Potrebna je odprava",
   "Sanitized support diagnostics": "Prečiščena diagnostika za podporo",
   "Download tenant-scoped queue totals and a labelled, bounded sample of grouped error codes for a support request. Payloads, customer and commerce identifiers, actors, store names, and signing material are excluded.":

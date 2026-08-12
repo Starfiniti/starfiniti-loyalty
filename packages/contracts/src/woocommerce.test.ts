@@ -4,6 +4,7 @@ import {
   merchantProvisionWooCommerceConnectionCommandV1,
   merchantRetryConnectorEffectCommandV1,
   merchantRequestConnectorReconciliationCommandV1,
+  merchantRequestConnectorReconciliationResultV1,
   signWooCommerceCustomerClaim,
   signWooCommerceDelivery,
   verifyWooCommerceCustomerClaim,
@@ -206,6 +207,16 @@ describe("merchant connector operation contracts", () => {
         correlationId: "5abf9309-a530-489f-a63f-51130c4fc02d",
       }).success,
     ).toBe(false);
+  });
+
+  it("represents exhausted reconciliation commands as manual review", () => {
+    expect(
+      merchantRequestConnectorReconciliationResultV1.safeParse({
+        resourceId: "5abf9309-a530-489f-a63f-51130c4fc03d",
+        outcome: "duplicate",
+        state: "manual_review",
+      }).success,
+    ).toBe(true);
   });
 
   it("validates the signed reconciliation command envelope", () => {
@@ -565,6 +576,32 @@ describe("WooCommerce coupon commands", () => {
           externalCustomerId: "7",
           expiresAt: "2026-08-13T10:00:00Z",
           reward: { kind: "free_shipping" },
+        },
+      }).success,
+    ).toBe(false);
+  });
+
+  it("rejects percentage caps that the native connector cannot enforce", () => {
+    expect(
+      wooCommerceCouponCommandEnvelopeV1.safeParse({
+        version: "1",
+        commandId: "61000000-0000-4000-8000-000000000001",
+        connectionId: "62000000-0000-4000-8000-000000000001",
+        topic: "woocommerce.coupon.issue",
+        payloadVersion: "v1",
+        deliveredAt: "2026-08-12T10:00:00Z",
+        payload: {
+          kind: "issue_coupon",
+          reservationId: "63000000-0000-4000-8000-000000000001",
+          code: "SF0123456789ABCDEFGHIJ",
+          externalCustomerId: "7",
+          expiresAt: "2026-08-13T10:00:00Z",
+          reward: {
+            kind: "percentage_discount",
+            percentageBasisPoints: 1500,
+            maximumDiscountMinor: "2500",
+            currencyMinorUnitDigits: 2,
+          },
         },
       }).success,
     ).toBe(false);

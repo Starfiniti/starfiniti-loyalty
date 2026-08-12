@@ -143,16 +143,11 @@ export const programmeDefinitionV1 = z
             "percentageBasisPoints",
           );
         }
-        if (
-          configuration.maximumDiscountMinor !== null &&
-          (typeof configuration.maximumDiscountMinor !== "string" ||
-            !positiveBigintString.safeParse(configuration.maximumDiscountMinor)
-              .success)
-        ) {
+        if (configuration.maximumDiscountMinor !== null) {
           addRewardConfigurationIssue(
             context,
             index,
-            "Maximum discount must be empty or a positive minor-unit amount",
+            "Native WooCommerce percentage discounts do not support a maximum",
             "maximumDiscountMinor",
           );
         }

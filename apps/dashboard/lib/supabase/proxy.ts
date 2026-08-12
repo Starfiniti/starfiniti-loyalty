@@ -1,6 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { resolveMerchantLocale } from "../merchant-locale";
 import { readSupabasePublicConfig } from "./config";
+
+const REQUEST_LOCALE_HEADER = "x-starfiniti-locale";
 
 function isPublicPage(pathname: string): boolean {
   return (
@@ -34,18 +37,50 @@ function responseWithAuthState(
   return response;
 }
 
+export function localeRequestHeaders(request: NextRequest): Headers {
+  const headers = new Headers(request.headers);
+  headers.set(
+    REQUEST_LOCALE_HEADER,
+    resolveMerchantLocale(request.nextUrl.searchParams.get("lang")),
+  );
+  return headers;
+}
+
+export function authenticatedHomeTarget(source: URL): URL {
+  const target = new URL(source);
+  const locale = resolveMerchantLocale(target.searchParams.get("lang"));
+  target.pathname = "/";
+  target.search = "";
+  if (locale === "sl-SI") target.searchParams.set("lang", locale);
+  return target;
+}
+
+export function unauthenticatedLoginTarget(source: URL): URL {
+  const target = new URL(source);
+  const locale = resolveMerchantLocale(target.searchParams.get("lang"));
+  const next = `${target.pathname}${target.search}`;
+  target.pathname = "/login";
+  target.search = "";
+  target.searchParams.set("next", next);
+  if (locale === "sl-SI") target.searchParams.set("lang", locale);
+  return target;
+}
+
 export async function updateSupabaseSession(
   request: NextRequest,
 ): Promise<NextResponse> {
+  const requestHeaders = localeRequestHeaders(request);
   if (request.nextUrl.pathname.startsWith("/loyalty/")) {
-    const publicResponse = NextResponse.next({ request });
+    const publicResponse = NextResponse.next({
+      request: { headers: requestHeaders },
+    });
     publicResponse.headers.set(
       "Cache-Control",
       "public, s-maxage=60, stale-while-revalidate=300",
     );
     return publicResponse;
   }
-  let response = NextResponse.next({ request });
+  let response = NextResponse.next({ request: { headers: requestHeaders } });
   const config = readSupabasePublicConfig();
   const supabase = createServerClient(config.url, config.publishableKey, {
     cookies: {
@@ -56,7 +91,9 @@ export async function updateSupabaseSession(
         cookiesToSet.forEach(({ name, value }) =>
           request.cookies.set(name, value),
         );
-        response = NextResponse.next({ request });
+        response = NextResponse.next({
+          request: { headers: localeRequestHeaders(request) },
+        });
         cookiesToSet.forEach(({ name, value, options }) =>
           response.cookies.set(name, value, options),
         );
@@ -72,13 +109,7 @@ export async function updateSupabaseSession(
   const publicPage = isPublicPage(request.nextUrl.pathname);
 
   if (!authenticated && !publicPage) {
-    const target = request.nextUrl.clone();
-    target.pathname = "/login";
-    target.search = "";
-    target.searchParams.set(
-      "next",
-      `${request.nextUrl.pathname}${request.nextUrl.search}`,
-    );
+    const target = unauthenticatedLoginTarget(request.nextUrl);
     return responseWithAuthState(response, target);
   }
 
@@ -92,9 +123,7 @@ export async function updateSupabaseSession(
     request.nextUrl.pathname === "/login" &&
     !customerExportReauthentication
   ) {
-    const target = request.nextUrl.clone();
-    target.pathname = "/";
-    target.search = "";
+    const target = authenticatedHomeTarget(request.nextUrl);
     return responseWithAuthState(response, target);
   }
 

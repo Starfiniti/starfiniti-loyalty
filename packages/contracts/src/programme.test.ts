@@ -82,7 +82,7 @@ describe("programme contracts", () => {
             kind: "percentage_discount",
             configuration: {
               percentageBasisPoints: 1500,
-              maximumDiscountMinor: "2500",
+              maximumDiscountMinor: null,
               currencyMinorUnitDigits: 2,
               validityDays: 14,
             },
@@ -96,6 +96,23 @@ describe("programme contracts", () => {
         ],
       }).success,
     ).toBe(true);
+    expect(
+      programmeDefinitionV1.safeParse({
+        ...definition,
+        rewards: [
+          {
+            ...reward,
+            kind: "percentage_discount",
+            configuration: {
+              percentageBasisPoints: 1500,
+              maximumDiscountMinor: "2500",
+              currencyMinorUnitDigits: 2,
+              validityDays: 14,
+            },
+          },
+        ],
+      }).success,
+    ).toBe(false);
     for (const configuration of [
       { amountMinor: "0", currencyMinorUnitDigits: 2, validityDays: 30 },
       { amountMinor: "500", currencyMinorUnitDigits: 9, validityDays: 30 },

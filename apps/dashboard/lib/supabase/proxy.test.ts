@@ -1,7 +1,10 @@
 import { NextRequest } from "next/server";
 import { describe, expect, it } from "vitest";
 import {
+  authenticatedHomeTarget,
   isCustomerExportReauthentication,
+  localeRequestHeaders,
+  unauthenticatedLoginTarget,
   updateSupabaseSession,
 } from "./proxy";
 
@@ -30,5 +33,46 @@ describe("customer export reauthentication routing", () => {
     expect(
       isCustomerExportReauthentication("/account/loyalty", "customer-export"),
     ).toBe(false);
+  });
+});
+
+describe("merchant locale routing", () => {
+  it("provides an allowlisted locale to server-rendered layouts", () => {
+    const slRequest = new NextRequest(
+      "https://loyalty.example.test/programme?lang=sl-SI",
+    );
+    const invalidRequest = new NextRequest(
+      "https://loyalty.example.test/programme?lang=de-DE",
+    );
+
+    expect(localeRequestHeaders(slRequest).get("x-starfiniti-locale")).toBe(
+      "sl-SI",
+    );
+    expect(
+      localeRequestHeaders(invalidRequest).get("x-starfiniti-locale"),
+    ).toBe("en");
+  });
+
+  it("preserves Slovenian after an authenticated login redirect", () => {
+    expect(
+      authenticatedHomeTarget(
+        new URL("https://loyalty.example.test/login?lang=sl-SI"),
+      ).toString(),
+    ).toBe("https://loyalty.example.test/?lang=sl-SI");
+    expect(
+      authenticatedHomeTarget(
+        new URL("https://loyalty.example.test/login?lang=de-DE"),
+      ).toString(),
+    ).toBe("https://loyalty.example.test/");
+  });
+
+  it("preserves Slovenian while sending a guest to login", () => {
+    expect(
+      unauthenticatedLoginTarget(
+        new URL("https://loyalty.example.test/programme?lang=sl-SI"),
+      ).toString(),
+    ).toBe(
+      "https://loyalty.example.test/login?next=%2Fprogramme%3Flang%3Dsl-SI&lang=sl-SI",
+    );
   });
 });

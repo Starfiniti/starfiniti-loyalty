@@ -1,18 +1,12 @@
 "use client";
 
 import {
-  Bell,
   Activity,
-  ChevronDown,
   Gem,
   HelpCircle,
   LayoutDashboard,
-  Megaphone,
   Menu,
-  Moon,
   Palette,
-  Search,
-  Sparkles,
   Users,
   X,
 } from "lucide-react";
@@ -46,14 +40,11 @@ import {
 const nav = [
   { label: "Overview", icon: LayoutDashboard, active: true, href: "/" },
   { label: "Programme overview", icon: Gem, href: "/programme" },
-  { label: "Earning rules" },
-  { label: "Rewards" },
-  { label: "VIP tiers" },
-  { label: "Points expiry" },
+  { label: "Earning rules", href: "/programme#tiers-title" },
+  { label: "Rewards", href: "/programme#rewards-title" },
+  { label: "VIP tiers", href: "/programme#tiers-title" },
   { label: "Customers", icon: Users, group: "GROW", href: "/customers" },
   { label: "Connector operations", icon: Activity, href: "/operations" },
-  { label: "Campaigns", icon: Megaphone },
-  { label: "Referrals", icon: Sparkles },
   {
     label: "Customer experience",
     icon: Palette,
@@ -132,7 +123,6 @@ export function DashboardOverview({
             <strong>{tenant.organizationName}</strong>
             <span>{tenant.workspaceName}</span>
           </div>
-          <ChevronDown className="switcher-icon" aria-hidden="true" />
         </div>
         <div className="store-status">
           <span className="live">
@@ -150,7 +140,7 @@ export function DashboardOverview({
                 <div className="nav-group">{text("PROGRAMME")}</div>
               ) : null}
               <a
-                href={item.href ? merchantLocalePath(item.href, locale) : "#"}
+                href={merchantLocalePath(item.href, locale)}
                 className={item.active ? "nav-item active" : "nav-item"}
                 onClick={() => setSidebarOpen(false)}
               >
@@ -165,7 +155,7 @@ export function DashboardOverview({
           ))}
         </nav>
         <div className="sidebar-foot">
-          <span className="demo-label">
+          <span className="reporting-label">
             {text("Live tenant context · live reporting")}
           </span>
           <div className="user-card">
@@ -196,14 +186,6 @@ export function DashboardOverview({
 
       <main id="main-content" tabIndex={-1}>
         <header className="topbar">
-          <label className="search">
-            <Search aria-hidden="true" />
-            <input
-              aria-label={text("Search")}
-              placeholder={text("Search customers, rewards, rules…")}
-            />
-            <kbd>⌘K</kbd>
-          </label>
           <div className="top-actions">
             <label className="range-select">
               <span className="sr-only">{text("Date range")}</span>
@@ -225,20 +207,6 @@ export function DashboardOverview({
               </select>
             </label>
             <MerchantLocaleSwitcher locale={locale} />
-            <button type="button" aria-label={text("Toggle dark mode")}>
-              <Moon aria-hidden="true" />
-            </button>
-            <button type="button" aria-label={text("Help")}>
-              <HelpCircle aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              aria-label={text("Notifications")}
-              className="notification"
-            >
-              <Bell aria-hidden="true" />
-              <i />
-            </button>
           </div>
         </header>
 

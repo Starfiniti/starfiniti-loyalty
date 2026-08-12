@@ -426,10 +426,7 @@ const wooCommerceCouponIssuePayloadV1 = z
         .object({
           kind: z.literal("percentage_discount"),
           percentageBasisPoints: z.int().min(1).max(10_000),
-          maximumDiscountMinor: z
-            .string()
-            .regex(/^[1-9][0-9]*$/u)
-            .nullable(),
+          maximumDiscountMinor: z.null(),
           currencyMinorUnitDigits: z.int().min(0).max(6),
         })
         .strict(),
@@ -518,6 +515,7 @@ export const merchantRequestConnectorReconciliationResultV1 = z
       "processing",
       "delivered",
       "retryable",
+      "manual_review",
       "dead_letter",
       "cancelled",
     ]),

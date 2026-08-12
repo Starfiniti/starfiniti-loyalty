@@ -289,9 +289,13 @@ export default async function OperationsPage({
                               />
                             ) : (
                               <span className="inspect-only">
-                                {issue.kind === "command"
-                                  ? t("Inspect only — compensation may exist")
-                                  : t("Remediation required")}
+                                {issue.state === "manual_review"
+                                  ? t(
+                                      "Verify the WooCommerce result before retrying or releasing value",
+                                    )
+                                  : issue.kind === "command"
+                                    ? t("Inspect only — compensation may exist")
+                                    : t("Remediation required")}
                               </span>
                             )}
                           </td>

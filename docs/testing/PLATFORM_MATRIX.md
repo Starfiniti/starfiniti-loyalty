@@ -23,7 +23,7 @@ Before a production release, execute and retain results for:
 | PHP                     | Every declared supported PHP minor                                                                                  |
 | Money                   | Zero-, two-, and three-decimal currencies; taxes, discounts, shipping, fees, partial/full refunds                   |
 | Queues                  | WP-Cron disabled, Action Scheduler backlog, retry exhaustion, dead-letter recovery, delayed command acknowledgement |
-| Rewards                 | Fixed cart, percentage without unsupported maximum, free shipping, customer mismatch, expiry, use/cancel race       |
+| Rewards                 | Fixed cart, uncapped percentage, free shipping, customer mismatch, expiry, use/cancel race                          |
 | Lifecycle               | Activate, deactivate, reinstall, opt-in uninstall cleanup, multisite rejection, key rotation                        |
 | Localization            | Exact POT coverage, placeholder parity, bundled locale loading, fallback, long copy, and RTL presentation           |
 
