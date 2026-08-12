@@ -32,6 +32,7 @@
     "ci:validate": "node scripts/validate-workflows.mjs",
     "architecture:validate": "node scripts/validate-architecture.mjs",
     "woocommerce:validate": "node scripts/validate-woocommerce.mjs",
+    "woocommerce:package": "node scripts/package-woocommerce.mjs",
     "audit:prod": "npm audit --omit=dev --audit-level=high",
     "licenses": "node scripts/validate-licenses.mjs && license-checker-rseidelsohn --production --excludePrivatePackages --summary",
     "secrets:scan": "node scripts/scan-secrets.mjs",
@@ -45,6 +46,7 @@
   },
   "devDependencies": {
     "@types/node": "24.10.3",
+    "archiver": "8.0.0",
     "eslint": "9.39.5",
     "eslint-config-next": "16.3.0",
     "license-checker-rseidelsohn": "5.0.1",

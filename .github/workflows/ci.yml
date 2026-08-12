@@ -24,6 +24,7 @@ jobs:
       - run: npm run secrets:scan
       - run: npm run audit:prod
       - run: npm run licenses
+      - run: npm run woocommerce:package
 
   database:
     runs-on: ubuntu-latest
