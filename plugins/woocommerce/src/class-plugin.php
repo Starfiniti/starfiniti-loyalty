@@ -10,8 +10,13 @@ final class Plugin
     {
         add_action('admin_menu', [self::class, 'registerMenu']);
         add_action('admin_post_starfiniti_loyalty_save_settings', [Settings::class, 'handleSave']);
+        add_action('init', [self::class, 'registerAccountEndpoint']);
+        add_filter('woocommerce_account_menu_items', [self::class, 'accountMenuItems']);
+        add_action('woocommerce_account_loyalty_endpoint', [self::class, 'renderAccount']);
+        add_action('woocommerce_before_cart', [self::class, 'renderCartNotice']);
         Outbox::boot();
         Commands::boot();
+        Privacy::boot();
         Cli::register();
     }
 
@@ -63,6 +68,95 @@ final class Plugin
             echo '<tr><td>' . esc_html($state) . '</td><td>' . esc_html((string) $count) . '</td></tr>';
         }
         echo '</tbody></table></div>';
+    }
+
+    public static function registerAccountEndpoint(): void
+    {
+        add_rewrite_endpoint('loyalty', EP_ROOT | EP_PAGES);
+    }
+
+    public static function accountMenuItems(array $items): array
+    {
+        $logout = $items['customer-logout'] ?? null;
+        unset($items['customer-logout']);
+        $items['loyalty'] = __('Loyalty rewards', 'starfiniti-loyalty');
+        if (null !== $logout) {
+            $items['customer-logout'] = $logout;
+        }
+        return $items;
+    }
+
+    public static function renderAccount(): void
+    {
+        if (! is_user_logged_in()) {
+            return;
+        }
+        $coupons = self::customerCoupons(get_current_user_id());
+        echo '<h2>' . esc_html__('Loyalty rewards', 'starfiniti-loyalty') . '</h2>';
+        if ([] === $coupons) {
+            echo '<p>' . esc_html__('No active loyalty coupons are available yet.', 'starfiniti-loyalty') . '</p>';
+            return;
+        }
+        echo '<ul class="woocommerce-MyAccount-loyalty-coupons">';
+        foreach ($coupons as $coupon) {
+            $expiry = $coupon->get_date_expires();
+            echo '<li><strong><code>' . esc_html($coupon->get_code()) . '</code></strong> &mdash; ';
+            if ($coupon->get_free_shipping()) {
+                echo esc_html__('Free shipping', 'starfiniti-loyalty');
+            } elseif ('percent' === $coupon->get_discount_type()) {
+                echo esc_html($coupon->get_amount() . '%');
+            } else {
+                echo wp_kses_post(wc_price((float) $coupon->get_amount()));
+            }
+            if (null !== $expiry) {
+                echo '<br><small>' . esc_html(sprintf(
+                    /* translators: %s is a localized date. */
+                    __('Expires %s', 'starfiniti-loyalty'),
+                    wc_format_datetime($expiry)
+                )) . '</small>';
+            }
+            echo '</li>';
+        }
+        echo '</ul>';
+        echo '<p>' . esc_html__('Enter a reward code in the native coupon field at cart or checkout.', 'starfiniti-loyalty') . '</p>';
+    }
+
+    public static function renderCartNotice(): void
+    {
+        if (is_user_logged_in() && [] !== self::customerCoupons(get_current_user_id())) {
+            wc_print_notice(sprintf(
+                /* translators: %s is the My Account loyalty URL. */
+                wp_kses(__('You have an active loyalty reward. <a href="%s">View your code</a>.', 'starfiniti-loyalty'), ['a' => ['href' => true]]),
+                esc_url(wc_get_account_endpoint_url('loyalty'))
+            ), 'notice');
+        }
+    }
+
+    /** @return array<int, \WC_Coupon> */
+    private static function customerCoupons(int $customerId): array
+    {
+        $query = new \WP_Query([
+            'post_type' => 'shop_coupon',
+            'post_status' => 'publish',
+            'posts_per_page' => 20,
+            'fields' => 'ids',
+            'no_found_rows' => true,
+            'meta_key' => '_starfiniti_external_customer_id',
+            'meta_value' => (string) $customerId,
+        ]);
+        $coupons = [];
+        foreach ($query->posts as $couponId) {
+            $coupon = new \WC_Coupon((int) $couponId);
+            $expiry = $coupon->get_date_expires();
+            if (
+                (null !== $expiry && $expiry->getTimestamp() <= time())
+                || ($coupon->get_usage_limit() > 0 && $coupon->get_usage_count() >= $coupon->get_usage_limit())
+            ) {
+                continue;
+            }
+            $coupons[] = $coupon;
+        }
+        return $coupons;
     }
 
     private static function textField(

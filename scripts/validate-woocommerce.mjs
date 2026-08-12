@@ -14,6 +14,11 @@ const commands = readFileSync(
   "plugins/woocommerce/src/class-commands.php",
   "utf8",
 );
+const privacy = readFileSync(
+  "plugins/woocommerce/src/class-privacy.php",
+  "utf8",
+);
+const uninstall = readFileSync("plugins/woocommerce/uninstall.php", "utf8");
 const outbox = readFileSync("plugins/woocommerce/src/class-outbox.php", "utf8");
 const receiver = readFileSync(
   "apps/dashboard/app/api/v1/integrations/woocommerce/events/route.ts",
@@ -30,7 +35,17 @@ for (const [label, content, requirements] of [
       "class-outbox.php",
     ],
   ],
-  ["plugin", plugin, ["Outbox::boot()", "manage_woocommerce"]],
+  [
+    "plugin",
+    plugin,
+    [
+      "Outbox::boot()",
+      "manage_woocommerce",
+      "woocommerce_account_loyalty_endpoint",
+      "woocommerce_before_cart",
+      "wc_get_account_endpoint_url('loyalty')",
+    ],
+  ],
   [
     "settings",
     settings,
@@ -59,6 +74,20 @@ for (const [label, content, requirements] of [
       "woocommerce.coupon.issue",
       "woocommerce.coupon.cancel",
     ],
+  ],
+  [
+    "privacy",
+    privacy,
+    [
+      "wp_privacy_personal_data_exporters",
+      "wp_privacy_personal_data_erasers",
+      "Undelivered event evidence is retained",
+    ],
+  ],
+  [
+    "uninstall",
+    uninstall,
+    ["WP_UNINSTALL_PLUGIN", "STARFINITI_LOYALTY_REMOVE_DATA"],
   ],
   [
     "outbox",
@@ -103,7 +132,7 @@ for (const forbidden of [
 ]) {
   if (
     forbidden.test(
-      `${bootstrap}\n${plugin}\n${settings}\n${cli}\n${commands}\n${outbox}\n${receiver}`,
+      `${bootstrap}\n${plugin}\n${settings}\n${cli}\n${commands}\n${privacy}\n${uninstall}\n${outbox}\n${receiver}`,
     )
   ) {
     throw new Error(

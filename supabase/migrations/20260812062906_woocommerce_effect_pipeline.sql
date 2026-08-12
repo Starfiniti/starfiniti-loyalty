@@ -402,7 +402,7 @@ begin
     ) then
     raise exception using errcode = '22023', message = 'invalid percentage discount configuration';
   end if;
-  select pg_catalog.substring(identity.external_customer_id from 12)
+  select pg_catalog.substr(identity.external_customer_id, 12)
   into external_customer_id
   from loyalty.wallets as wallet
   join loyalty.customer_identities as identity
