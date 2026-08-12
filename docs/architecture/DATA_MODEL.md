@@ -136,6 +136,8 @@ An available credit creates an immutable lot linked to its credit entry, program
 
 Raw bodies are restricted and short-lived; canonical facts and hashes retain enough evidence to explain effects after raw-body deletion.
 
+The merchant Data API does not receive privileges on private queue tables. Exact-signature connector operation wrappers aggregate counts and project a bounded issue allowlist after a live membership check. The only merchant queue mutation is a reason-bound `dead_letter -> retryable` transition for a canonical effect, guarded by owner/admin/operator membership and an `admin_audit_events` row. Generic outbound coupon-command retry is absent because reservation compensation may already have occurred.
+
 ## Reward reservation state
 
 `reward_reservations` uses an enforced transition graph:
@@ -157,6 +159,7 @@ The reservation holds programme version, wallet, reward, points, expiry, idempot
 - `programme_evaluations` stores immutable live/simulation/tier-review input and result hashes plus explanation evidence.
 - `audit_events` is append-only and records organization, actor, support grant, action, object type/ID, before/after metadata without secrets/PII, IP classification, correlation ID, and timestamp.
 - `manual_adjustment_requests` requires reason, evidence, requester, approver where policy requires, and the resulting compensating ledger transaction.
+- `admin_audit_events` currently records programme draft/publication/scheduling and connector-effect replay commands with request-derived Auth actor, canonical request hash, idempotency key, correlation ID, resource ID, and minimized metadata. Rows are immutable; owner/admin/auditor reads remain tenant scoped.
 
 ## RLS and privileges
 

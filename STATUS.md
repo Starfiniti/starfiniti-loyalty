@@ -19,11 +19,12 @@
 - The Next.js merchant shell now verifies Supabase Auth claims, refreshes sessions through the Next.js 16 request proxy, derives live organization/workspace/programme scope through the authenticated Data API and RLS, handles unassigned users safely, and provides sign-in/sign-out/PKCE callback paths without exposing a secret key.
 - The merchant programme surface provides structured tier/reward editing, deterministic earning preview, contract validation, new immutable draft versions, exact-fingerprint publish/schedule confirmation, role-aware controls, version history, and tenant-visible administration audit evidence.
 - Customer operations provide bounded display-reference search, masked channel identity, authoritative pending/available/reserved/spent/expired/reversed buckets, and the latest immutable ledger entries with programme-version and correlation attribution.
+- Connector operations provide tenant-authorized health/queue counts, bounded failure metadata without private payloads, and audited owner/admin/operator replay of dead-letter canonical effects. Outbound coupon dead letters remain inspect-only because points compensation may already exist.
 
 ## Partial
 
 - Phases 0 through 7 are complete for the active WooCommerce scope. Shopify Phase 8 is deferred by product-owner direction.
-- Phase 9 is in progress. The authenticated shell, programme editor, and customer wallet/ledger read surfaces exist; reason-bound value adjustments, hub queue operations, real Overview reporting queries, and production deployment remain future slices.
+- Phase 9 is in progress. The authenticated shell, programme editor, customer wallet/ledger reads, and safe hub connector operations exist; reason-bound value adjustments, live reconciliation requests, real Overview reporting queries, and production deployment remain future slices.
 
 ## Broken or unavailable
 
@@ -33,7 +34,7 @@
 
 ## Database migration state
 
-All seven versioned migrations and the seed replay successfully against disposable Supabase/Postgres 17 CI. Foundation, tenancy, commerce, ledger, programme, merchant-command, and WooCommerce suites pass 374 pgTAP assertions plus concurrency/property probes. No persistent or production database has been changed.
+Seven versioned migrations and the seed replay successfully against disposable Supabase/Postgres 17 CI. The eighth connector-operations migration validates locally and awaits exact-head disposable CI. The expanded suite contains 412 pgTAP assertions plus concurrency/property probes. No persistent or production database has been changed.
 
 ## Git state
 
@@ -57,10 +58,11 @@ Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 Wo
 - PR exact-head run `31575751260` passed the full baseline and Docker/Supabase jobs with six migrations, 322 pgTAP assertions, concurrency/property probes, and cleanup.
 - PR exact-head run `31577312529` passed all six jobs: baseline, Docker/Supabase, and minimum/current WooCommerce runtimes in HPOS and legacy modes.
 - PR exact-head run `31580836101` passed all six jobs with seven migration replays, 374 pgTAP assertions, concurrency/property probes, and the complete minimum/current HPOS/legacy WooCommerce matrix.
+- PR exact-head run `31581760825` passed all six jobs for the customer-ledger slice, including the clean Next.js build, seven-migration database verification, and complete WooCommerce matrix.
 
 ## Next recommended task
 
-Build tenant-scoped connector queue, dead-letter retry, and source-reconciliation operations.
+Add audited, reason-bound customer adjustment commands with exact immutable-ledger attribution.
 
 ## Blockers
 

@@ -1,6 +1,14 @@
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 
+const merchantOperationKey = z.string().trim().min(1).max(255);
+const merchantReason = z
+  .string()
+  .trim()
+  .min(8)
+  .max(500)
+  .regex(/^[^\u0000-\u001f\u007f]+$/u);
+
 export const canonicalCommerceEventTypes = [
   "commerce.order.upserted",
   "commerce.order.status_changed",
@@ -56,6 +64,28 @@ export const canonicalCommerceEventV1 = z
   .strict();
 
 export type CanonicalCommerceEventV1 = z.infer<typeof canonicalCommerceEventV1>;
+
+export const merchantRetryConnectorEffectCommandV1 = z
+  .object({
+    version: z.literal("1"),
+    eventId: z.uuid(),
+    reason: merchantReason,
+    idempotencyKey: merchantOperationKey,
+    correlationId: z.uuid(),
+  })
+  .strict();
+
+export const merchantRetryConnectorEffectResultV1 = z
+  .object({
+    resourceId: z.uuid(),
+    outcome: z.enum(["created", "duplicate"]),
+    effectState: z.literal("retryable"),
+  })
+  .strict();
+
+export type MerchantRetryConnectorEffectCommandV1 = z.infer<
+  typeof merchantRetryConnectorEffectCommandV1
+>;
 
 export const wooCommerceDecimal = z
   .string()

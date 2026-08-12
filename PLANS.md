@@ -35,15 +35,17 @@ Phase 9 — merchant administration and customer experience. Shopify Phase 8 rem
 - Phase 9 now includes the authenticated tenant shell and a structured programme editor with deterministic preview, database-canonical drafts, exact-hash publish/schedule commands, immutable audit evidence, and adversarial tenant/role/idempotency tests.
 - Exact-head run `31580836101` passed the baseline, seven-migration database gate with 374 pgTAP assertions plus concurrency/property probes, and all four WooCommerce runtime variants.
 - The customer operations read slice now provides bounded reference search, masked channel identity, wallet-bucket truth, and immutable programme-attributed ledger history through explicit tenant filters plus RLS.
+- The connector operations slice now provides private-payload-free queue summaries/issues and an audited, role-guarded replay command limited to canonical dead-letter effects. Coupon command dead letters are deliberately inspect-only after compensation.
+- Exact-head run `31581760825` passed the customer-ledger baseline, database job, and all four WooCommerce runtime variants.
 
 ## Active work
 
-- `P9-MERCHANT-HUB` (in progress): the Auth/RLS shell, audited programme editor, and customer wallet/ledger reads are implemented; connector operations and value-changing customer commands follow.
+- `P9-MERCHANT-HUB` (in progress): the Auth/RLS shell, audited programme editor, customer wallet/ledger reads, and safe connector queue operations are implemented; value-changing customer commands follow.
 
 ## Next safe tasks
 
-1. Add connector queue, dead-letter retry, and source-reconciliation operations.
-2. Add audited, reason-bound customer adjustment commands with preview and idempotency.
+1. Add audited, reason-bound customer adjustment commands with preview and idempotency.
+2. Add a durable connector-to-plugin reconciliation request path rather than a cosmetic dashboard control.
 3. Replace explicitly labelled illustrative Overview analytics with authorized reporting queries.
 
 ## Dependencies and blockers

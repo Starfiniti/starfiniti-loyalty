@@ -42,6 +42,9 @@ export default async function CustomersPage({
           <Link className="secondary" href="/programme">
             Programme
           </Link>
+          <Link className="secondary" href="/operations">
+            Operations
+          </Link>
           <form action={signOut}>
             <button className="secondary" type="submit">
               Sign out

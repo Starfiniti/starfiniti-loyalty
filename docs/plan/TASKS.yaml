@@ -260,3 +260,8 @@ tasks:
       - exact-head GitHub Actions run 31580836101 passed baseline seven-migration database verification and all four WooCommerce runtime variants
       - customer list and detail reads use explicit organization and programme-group filters plus RLS mask channel IDs and expose bounded immutable wallet history without raw payloads or metadata
       - 17 dashboard tests include adversarial customer search wildcard UUID masking and bucket-projection cases
+      - connector summaries and bounded issue reads expose queue state error codes attempts and watermarks without raw bodies payloads source object IDs signing references or customer data
+      - dead-letter replay is limited to canonical effects and requires live owner admin or operator membership a single-line reason idempotency and immutable actor/correlation audit evidence
+      - coupon issue/cancel outbox dead letters are inspect-only because the reservation may already be failed and compensated; the merchant command cannot mutate them
+      - 38 connector-operation pgTAP assertions cover exact privileges search paths indexed access tenant isolation role revocation audit immutability bounded reads retry conflicts quarantine denial and outbound-command non-mutation
+      - dashboard and contract suites now contain 21 and 29 tests respectively

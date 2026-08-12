@@ -100,7 +100,10 @@ select is_empty(
         namespace.nspname = 'loyalty'
         and routine.proname in (
           'create_programme_draft_command',
+          'get_connector_operation_issues',
+          'get_connector_operation_summaries',
           'publish_programme_version_command',
+          'retry_connector_effect_command',
           'schedule_programme_version_command'
         )
       )

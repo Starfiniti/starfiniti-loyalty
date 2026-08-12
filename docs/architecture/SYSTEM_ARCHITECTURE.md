@@ -122,6 +122,13 @@ Circular dependencies are forbidden. Platform adapters translate at the edge; do
 3. An accepted delivery is inserted once and acknowledged; duplicates return the original receipt result.
 4. Workers normalize and apply effects idempotently. Late facts remain visible and reconciliation repairs controlled gaps.
 
+### Merchant connector operation
+
+1. The server page selects an organization/connection already resolved through Auth and RLS, then calls a bounded security-definer read wrapper because private queues have no Data API grants.
+2. PostgreSQL rechecks live membership and returns only queue counts or minimized issue metadata; raw bodies, payloads, source IDs, coupon data, and signing references remain private.
+3. A replay action validates the versioned command and requires a reviewed reason. PostgreSQL rechecks owner/admin/operator authority, locks the canonical event, and permits only `dead_letter -> retryable` with immutable audit evidence.
+4. Outbound coupon dead letters and quarantined work are not replayable from the generic merchant surface. The former may already be compensated; the latter requires remediation before retry.
+
 ## Availability and failure rules
 
 - Store checkout, order creation, and payment never synchronously depend on Starfiniti.

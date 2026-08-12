@@ -2,6 +2,7 @@
 
 import {
   Bell,
+  Activity,
   ChevronDown,
   Gem,
   HelpCircle,
@@ -40,6 +41,7 @@ const nav = [
   { label: "VIP tiers" },
   { label: "Points expiry" },
   { label: "Customers", icon: Users, group: "GROW", href: "/customers" },
+  { label: "Connector operations", icon: Activity, href: "/operations" },
   { label: "Campaigns", icon: Megaphone },
   { label: "Referrals", icon: Sparkles },
 ];

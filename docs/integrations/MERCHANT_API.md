@@ -22,6 +22,12 @@ RLS remains authoritative even when the Next.js application already resolved a t
 
 `/customers/{public_id}` accepts only a structured UUID and repeats the organization/programme-group filters. It joins wallet accounts to the six authoritative balance projections and returns at most the latest 100 wallet-side ledger entries. Entries expose kind, affected bucket, signed points, effective time, programme version, a bounded source reference, and a shortened correlation reference. Raw commerce payloads, ledger metadata, contact attributes, and unrelated channel identities are not returned.
 
+### Connector operations reads
+
+`get_connector_operation_summaries(target_organization_public_id)` returns one row per authorized WooCommerce connection with connection status, last verified delivery time, and independent ready/failed counts for delivery normalization, loyalty effects, and outbound commands. The organization ID is a selector only: live database membership remains authoritative and another tenant returns no rows.
+
+`get_connector_operation_issues(target_connection_public_id, target_limit)` accepts a limit from 1 to 100 and returns only operation class, public operation ID, state, bounded error code, attempt count, event/topic kind, observation time, and whether replay is permitted. It does not return raw bodies, canonical payloads, source event/object IDs, signing references, coupon codes, or customer attributes.
+
 ## Programme commands
 
 All commands are `SECURITY DEFINER`, owned by the `NOLOGIN` `loyalty_owner` role, use an empty search path, schema-qualify every object, revoke default `PUBLIC` execution, and expose `EXECUTE` only to `authenticated`.
@@ -58,6 +64,19 @@ Adds `target_scheduled_for timestamptz` to the publication inputs. The timestamp
 
 Result: `resource_public_id`, `outcome`, and `scheduled_for`.
 
+### `retry_connector_effect_command`
+
+Inputs:
+
+- `target_event_public_id uuid`
+- `target_reason text` trimmed, single-line, 8 to 500 characters
+- `target_idempotency_key text`
+- `target_correlation_id uuid`
+
+Only a live `owner`, `admin`, or `operator` may replay an effect, and only from `dead_letter` to `retryable`. The command clears the prior lease/error, makes work immediately available, preserves monotonic attempt history, and appends `connector.effect.retry` audit evidence in the same transaction. Analysts, auditors, revoked members, other tenants, quarantined items, pending work, and completed work fail closed.
+
+The command deliberately cannot retry `transactional_outbox` coupon issue/cancel dead letters. A coupon-issue dead letter may already have failed the reservation and released points through compensation; replaying it generically could create native value after that release. Those rows are inspect-only until a reservation-aware recovery workflow can prove a safe state transition.
+
 ## Retry and error contract
 
 Idempotency is scoped by organization. Retrying the same key and canonical request returns the original resource with `outcome = duplicate` and creates neither another version nor another audit event. Reusing a key with different input raises SQLSTATE `23514`. Authorization failures use `42501`; invalid/stale configuration or lifecycle inputs use `22023`/`23514`.
@@ -66,4 +85,4 @@ The UI presents generic safe messages and never treats a network or database err
 
 ## Verification
 
-`merchant_programme_commands_test.sql` exercises exact privileges/search paths, tenant/role/revocation denial, canonical hashing, retries and conflicts, stale publication hashes, future schedules, materialization, immutable version history, and immutable attributable audit evidence. Contract unit tests reject caller-supplied actor authority. Browser QA covers responsive structured editing, add/remove controls, and deterministic Rose/Bloom/Icon preview behavior. Customer helper tests cover bounded search, wildcard escaping, UUID rejection, masking, negative balances, and complete bucket projection.
+`merchant_programme_commands_test.sql` exercises exact privileges/search paths, tenant/role/revocation denial, canonical hashing, retries and conflicts, stale publication hashes, future schedules, materialization, immutable version history, and immutable attributable audit evidence. `connector_operations_test.sql` adds private-queue minimization, cross-tenant/role/revocation denial, retry state, quarantine rejection, idempotency conflict, audit immutability, and outbound-command non-mutation. Contract unit tests reject caller-expanded authority and malformed reasons. Browser QA covers responsive structured editing, add/remove controls, and deterministic Rose/Bloom/Icon preview behavior. Customer and connector helper tests cover bounded inputs, masking, balances, role authority, labels, and health states.

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   canonicalCommerceEventV1,
+  merchantRetryConnectorEffectCommandV1,
   signWooCommerceDelivery,
   verifyWooCommerceDelivery,
   wooCommerceCouponCapturedPayloadV1,
@@ -81,6 +82,38 @@ describe("WooCommerce delivery contracts", () => {
       payload: { refundId: "9" },
     });
     expect(result.success).toBe(true);
+  });
+});
+
+describe("merchant connector operation contracts", () => {
+  it("accepts an attributable dead-letter effect retry", () => {
+    expect(
+      merchantRetryConnectorEffectCommandV1.safeParse({
+        version: "1",
+        eventId: connectionId,
+        reason: "Reviewed the worker failure before replay",
+        idempotencyKey: "connector:effect:retry:fixture",
+        correlationId: "5abf9309-a530-489f-a63f-51130c4fc02d",
+      }).success,
+    ).toBe(true);
+  });
+
+  it("rejects short, multiline, or caller-expanded retry requests", () => {
+    for (const request of [
+      { reason: "retry" },
+      { reason: "reviewed\nthen retried" },
+      { reason: "Reviewed safely", organizationId: "1" },
+    ]) {
+      expect(
+        merchantRetryConnectorEffectCommandV1.safeParse({
+          version: "1",
+          eventId: connectionId,
+          idempotencyKey: "connector:effect:retry:fixture",
+          correlationId: "5abf9309-a530-489f-a63f-51130c4fc02d",
+          ...request,
+        }).success,
+      ).toBe(false);
+    }
   });
 });
 

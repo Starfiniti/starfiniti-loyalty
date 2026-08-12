@@ -43,3 +43,4 @@
 - Added the Phase 9 Supabase Auth merchant shell with verified claim refresh, private cookie responses, live RLS-backed tenant context, safe local redirects, login/logout/callback flows, and honest preview labelling for analytics not yet connected to reporting queries.
 - Added the audited Phase 9 programme editor with structured tier/reward configuration, deterministic preview, database-canonical immutable drafts, exact-hash publish/schedule confirmation, visible version/audit history, and live role/tenant enforcement.
 - Added tenant-scoped customer search and detail views with masked channel identifiers, six authoritative wallet buckets, and the latest immutable programme-attributed ledger entries.
+- Added tenant-scoped WooCommerce health and queue operations with bounded payload-free failure metadata, safe role-guarded canonical-effect replay, and immutable reason/correlation audit evidence; compensated outbound coupon dead letters remain inspect-only.
