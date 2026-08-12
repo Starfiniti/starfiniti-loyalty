@@ -162,6 +162,47 @@ starfiniti_runtime_assert(
 
 $coupon = new WC_Coupon($couponId);
 starfiniti_runtime_assert($coupon->get_usage_count() > 0, 'WooCommerce records native coupon use');
+$partialRefund = wc_create_refund([
+    'amount' => '4.00',
+    'reason' => 'Runtime smoke partial refund',
+    'order_id' => $orderId,
+    'refund_payment' => false,
+    'restock_items' => false,
+]);
+starfiniti_runtime_assert(
+    $partialRefund instanceof WC_Order_Refund,
+    'partial refund is created through WooCommerce CRUD'
+);
+$refreshedOrder = wc_get_order($orderId);
+$remainingRefundAmount = $refreshedOrder instanceof WC_Order
+    ? $refreshedOrder->get_remaining_refund_amount()
+    : 0;
+$finalRefund = wc_create_refund([
+    'amount' => $remainingRefundAmount,
+    'reason' => 'Runtime smoke final refund',
+    'order_id' => $orderId,
+    'refund_payment' => false,
+    'restock_items' => false,
+]);
+starfiniti_runtime_assert(
+    $remainingRefundAmount > 0 && $finalRefund instanceof WC_Order_Refund,
+    'remaining amount is fully refunded through WooCommerce CRUD'
+);
+$refundRows = (int) $wpdb->get_var($wpdb->prepare(
+    "SELECT COUNT(*) FROM {$outboxTable} WHERE event_type = %s AND source_object_id = %s",
+    'commerce.order.refunded',
+    (string) $orderId
+));
+starfiniti_runtime_assert($refundRows === 2, 'partial and final refunds create two source facts');
+$refundPayloads = (string) $wpdb->get_var($wpdb->prepare(
+    "SELECT GROUP_CONCAT(event_payload SEPARATOR '\n') FROM {$outboxTable} WHERE event_type = %s AND source_object_id = %s",
+    'commerce.order.refunded',
+    (string) $orderId
+));
+starfiniti_runtime_assert(
+    ! str_contains($refundPayloads, 'runtime-smoke@example.test'),
+    'refund source facts are PII-free'
+);
 $cancel = $execute->invoke(null, [
     'version' => '1',
     'commandId' => '61000000-0000-4000-8000-000000000002',
@@ -192,6 +233,15 @@ $captureRowsAfterRetry = (int) $wpdb->get_var($wpdb->prepare(
 starfiniti_runtime_assert(
     $captureRowsAfterRetry === 1,
     'source reconciliation does not duplicate coupon capture'
+);
+$refundRowsAfterRetry = (int) $wpdb->get_var($wpdb->prepare(
+    "SELECT COUNT(*) FROM {$outboxTable} WHERE event_type = %s AND source_object_id = %s",
+    'commerce.order.refunded',
+    (string) $orderId
+));
+starfiniti_runtime_assert(
+    $refundRowsAfterRetry === 2,
+    'source reconciliation does not duplicate refund facts'
 );
 starfiniti_runtime_assert(
     has_action('woocommerce_before_cart', ['Starfiniti\\Loyalty\\Plugin', 'renderCartNotice']) !== false
