@@ -90,12 +90,29 @@ starfiniti_runtime_assert(
     'native coupon is one-use and bound to the reservation and customer'
 );
 
+update_option(
+    'starfiniti_loyalty_endpoint',
+    'https://unreachable.invalid/api/v1/integrations/woocommerce/events',
+    false
+);
+$checkoutHttpRequests = 0;
+$rejectCheckoutHttp = static function ($preempt) use (&$checkoutHttpRequests) {
+    $checkoutHttpRequests++;
+    return new WP_Error('starfiniti_runtime_hub_unavailable', 'Hub unavailable in runtime smoke.');
+};
+add_filter('pre_http_request', $rejectCheckoutHttp, 10, 1);
+
 $order = wc_create_order(['customer_id' => $customerId]);
 starfiniti_runtime_assert(! is_wp_error($order), 'order fixture is created through WooCommerce CRUD');
 $order->add_product($product, 1);
 wp_set_current_user((int) $customerId);
 $applyResult = $order->apply_coupon($couponCode);
 starfiniti_runtime_assert(! is_wp_error($applyResult), 'native coupon applies through WooCommerce core');
+starfiniti_runtime_assert(
+    0 === $checkoutHttpRequests,
+    'coupon validation makes no hub request when the configured hub is unavailable'
+);
+remove_filter('pre_http_request', $rejectCheckoutHttp, 10);
 $order->calculate_totals();
 $order->save();
 $order->update_status('completed');
