@@ -243,6 +243,28 @@ starfiniti_runtime_assert(
     $refundRowsAfterRetry === 2,
     'source reconciliation does not duplicate refund facts'
 );
+$retryTable = esc_sql($outboxTable);
+for ($attempt = 0; $attempt < 12; $attempt++) {
+    $wpdb->query(
+        "UPDATE {$retryTable} SET available_gmt = UTC_TIMESTAMP() WHERE state IN ('pending','retryable')"
+    );
+    Outbox::deliverPending();
+}
+$queueDiagnostics = Outbox::diagnostics();
+starfiniti_runtime_assert(
+    ($queueDiagnostics['dead_letter'] ?? 0) === 1,
+    'bounded connector failures move one source event to dead letter'
+);
+starfiniti_runtime_assert(
+    Outbox::retryDeadLetters(1) === 1,
+    'operator recovery returns a dead-letter event to the retry queue'
+);
+$recoveredDiagnostics = Outbox::diagnostics();
+starfiniti_runtime_assert(
+    ($recoveredDiagnostics['dead_letter'] ?? 0) === 0
+    && ($recoveredDiagnostics['retryable'] ?? 0) >= 1,
+    'queue diagnostics expose the recovered retryable event'
+);
 starfiniti_runtime_assert(
     has_action('woocommerce_before_cart', ['Starfiniti\\Loyalty\\Plugin', 'renderCartNotice']) !== false
     && has_filter('woocommerce_coupon_is_valid', [Commands::class, 'validateCustomer']) !== false,
