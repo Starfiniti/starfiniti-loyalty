@@ -56,11 +56,12 @@ Phase 9 — merchant administration and customer experience. Shopify Phase 8 rem
 - Exact-head run `31598618092` passed the localization baseline, fourteen migrations with 613 pgTAP assertions plus concurrency/property probes, and the Slovenian customer-navigation assertion in all four WooCommerce runtime variants.
 - The customer-experience theme foundation persists one revisioned workspace/programme-group token set behind RLS and an audited owner/admin command. It accepts an accessible canonical brand color, three local font stacks, bounded radius/copy, section visibility, and widget side only; raw CSS, font URLs, scripts, and uploads are outside the boundary.
 - Exact-head run `31600742177` passed the controlled-theme baseline, fifteen migrations with 654 pgTAP assertions plus concurrency/property probes, and all four localized WooCommerce runtime variants.
+- The customer activity slice adds safe URL filters and honest filtered counts/empty states for orders/refunds, rewards, release/expiry, and adjustments without expanding the existing 100-entry minimized ledger response.
 - Exact-head run `31581760825` passed the customer-ledger baseline, database job, and all four WooCommerce runtime variants.
 
 ## Active work
 
-- `P9-MERCHANT-HUB` (in progress): the Auth/RLS shell, guided initial-programme creation, audited programme editor, exact customer wallet/ledger reads, safe connector queue operations, value-changing customer adjustments, signed source reconciliation, real Overview reporting, keyboard-bypass accessibility guard, sanitized support diagnostics, localized WooCommerce customer strings, and controlled experience-theme previews are implemented; remaining merchant/customer surfaces follow.
+- `P9-MERCHANT-HUB` (in progress): the Auth/RLS shell, guided initial-programme creation, audited programme editor, exact filtered customer wallet/ledger reads, safe connector queue operations, value-changing customer adjustments, signed source reconciliation, real Overview reporting, keyboard-bypass accessibility guard, sanitized support diagnostics, localized WooCommerce customer strings, and controlled experience-theme previews are implemented; remaining merchant/customer surfaces follow.
 
 ## Next safe tasks
 

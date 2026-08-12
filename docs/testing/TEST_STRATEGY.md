@@ -12,4 +12,6 @@ Support-diagnostic tests serialize adversarial inputs and assert forbidden custo
 
 Experience-theme tests require contract/database agreement on contrast, token allowlists, copy bounds, linked tenant scope, RLS, role revocation, idempotent revisions, and immutable audit evidence. The dashboard preview must remain keyboard reachable and responsive without loading remote fonts or executing merchant CSS.
 
+Customer activity-filter tests require a closed query-value allowlist, total transaction-kind categorization, stable newest-first ordering, and no mutation or expansion of the bounded database result.
+
 The Phase 5 gate adds immutable-ledger pgTAP coverage plus a real two-session overspend race and a deterministic mixed-operation property sequence. Any future value command must join these gates and prove zero sum, attribution, idempotency, tenant isolation, deterministic locks, and wallet/lot projection equality.

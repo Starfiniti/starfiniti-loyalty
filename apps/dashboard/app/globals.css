@@ -1474,6 +1474,30 @@ h1 {
   margin-top: 0;
   border-top: 0;
 }
+.activity-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding: 14px 0;
+  border-bottom: 1px solid #f0eeec;
+}
+.activity-filters a {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 11px;
+  border: 1px solid #e7e5e4;
+  border-radius: 999px;
+  color: #57534e;
+  background: white;
+  font-size: 10px;
+  font-weight: 750;
+}
+.activity-filters a.active {
+  border-color: #a5b4fc;
+  color: #4338ca;
+  background: #eef2ff;
+}
 .ledger-list {
   margin: 0;
   padding: 0;

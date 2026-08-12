@@ -10,7 +10,14 @@ import {
 import { getMerchantProgrammeState } from "@/lib/server/programme";
 import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
 import { CustomerAdjustmentForm } from "./adjustment-form";
-import { formatPointText, pointTextIsCredit } from "@/lib/customers";
+import {
+  CUSTOMER_ACTIVITY_FILTERS,
+  filterCustomerActivity,
+  formatPointText,
+  parseCustomerActivityFilter,
+  pointTextIsCredit,
+  type CustomerActivityFilter,
+} from "@/lib/customers";
 
 function formatDate(value: string): string {
   return new Intl.DateTimeFormat("en-GB", {
@@ -26,11 +33,16 @@ function label(value: string): string {
 
 export default async function CustomerDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ customerId: string }>;
+  searchParams: Promise<{ activity?: string | string[] }>;
 }) {
   const tenant = await getAuthenticatedTenantState();
   const { customerId } = await params;
+  const activityFilter = parseCustomerActivityFilter(
+    (await searchParams).activity,
+  );
   if (tenant.kind === "unauthenticated") {
     redirect(`/login?next=${encodeURIComponent(`/customers/${customerId}`)}`);
   }
@@ -47,6 +59,16 @@ export default async function CustomerDetailPage({
   const publishedVersion = programmeState.versions.find(
     (version) => version.status === "published",
   );
+  const visibleLedger = filterCustomerActivity(detail.ledger, activityFilter);
+
+  const activityLabel = (filter: CustomerActivityFilter): string =>
+    ({
+      all: "All activity",
+      orders: "Orders & refunds",
+      rewards: "Rewards",
+      expiry: "Release & expiry",
+      adjustments: "Adjustments",
+    })[filter];
 
   return (
     <main className="customer-page" id="main-content" tabIndex={-1}>
@@ -184,13 +206,36 @@ export default async function CustomerDetailPage({
           <div>
             <strong>Immutable ledger history</strong>
           </div>
-          <span>Latest 100 wallet entries</span>
+          <span>
+            {visibleLedger.length} of {detail.ledger.length} latest entries
+          </span>
         </div>
+        <nav className="activity-filters" aria-label="Filter customer activity">
+          {CUSTOMER_ACTIVITY_FILTERS.map((filter) => (
+            <Link
+              aria-current={filter === activityFilter ? "page" : undefined}
+              className={filter === activityFilter ? "active" : undefined}
+              href={
+                filter === "all"
+                  ? `/customers/${customerId}`
+                  : `/customers/${customerId}?activity=${filter}`
+              }
+              key={filter}
+            >
+              {activityLabel(filter)}
+            </Link>
+          ))}
+        </nav>
         {detail.ledger.length === 0 ? (
           <p className="empty-state">No ledger entries for this wallet.</p>
+        ) : visibleLedger.length === 0 ? (
+          <p className="empty-state">
+            No {activityLabel(activityFilter).toLowerCase()} entries appear in
+            the latest 100 wallet records.
+          </p>
         ) : (
           <ol className="ledger-list">
-            {detail.ledger.map((item) => (
+            {visibleLedger.map((item) => (
               <li key={`${item.id}-${item.points}`}>
                 <span
                   className={`ledger-points ${pointTextIsCredit(item.points) ? "credit" : "debit"}`}

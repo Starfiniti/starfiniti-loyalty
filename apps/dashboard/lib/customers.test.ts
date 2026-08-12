@@ -1,12 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
+  customerActivityCategory,
   escapePostgrestLike,
+  filterCustomerActivity,
   formatPointText,
   isUuid,
   pointTextIsCredit,
   maskExternalCustomerId,
   normalizeCustomerSearch,
   parseAdjustmentPoints,
+  parseCustomerActivityFilter,
   previewAvailablePoints,
   summarizeWalletBuckets,
 } from "./customers";
@@ -68,5 +71,35 @@ describe("customer read model helpers", () => {
     expect(previewAvailablePoints("9007199254740993", "250")).toBe(
       9007199254741243n,
     );
+  });
+
+  it("allowlists customer activity filters", () => {
+    expect(parseCustomerActivityFilter("orders")).toBe("orders");
+    expect(parseCustomerActivityFilter("../other-tenant")).toBe("all");
+    expect(parseCustomerActivityFilter(["orders"])).toBe("all");
+  });
+
+  it("maps every immutable transaction kind to one customer category", () => {
+    expect(customerActivityCategory("award")).toBe("orders");
+    expect(customerActivityCategory("refund_reversal")).toBe("orders");
+    expect(customerActivityCategory("reserve")).toBe("rewards");
+    expect(customerActivityCategory("capture")).toBe("rewards");
+    expect(customerActivityCategory("cancel")).toBe("rewards");
+    expect(customerActivityCategory("release")).toBe("expiry");
+    expect(customerActivityCategory("expire")).toBe("expiry");
+    expect(customerActivityCategory("manual_adjustment")).toBe("adjustments");
+  });
+
+  it("filters without reordering or mutating bounded ledger items", () => {
+    const items = [
+      { id: "one", kind: "manual_adjustment" },
+      { id: "two", kind: "award" },
+      { id: "three", kind: "refund_reversal" },
+    ] as const;
+    expect(filterCustomerActivity(items, "orders")).toEqual([
+      items[1],
+      items[2],
+    ]);
+    expect(filterCustomerActivity(items, "all")).toBe(items);
   });
 });

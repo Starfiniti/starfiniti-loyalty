@@ -80,3 +80,42 @@ export function previewAvailablePoints(
   const adjustment = parseAdjustmentPoints(adjustmentPoints);
   return adjustment === null ? null : BigInt(availablePoints) + adjustment;
 }
+
+export const CUSTOMER_ACTIVITY_FILTERS = [
+  "all",
+  "orders",
+  "rewards",
+  "expiry",
+  "adjustments",
+] as const;
+
+export type CustomerActivityFilter = (typeof CUSTOMER_ACTIVITY_FILTERS)[number];
+
+export function parseCustomerActivityFilter(
+  value: unknown,
+): CustomerActivityFilter {
+  return typeof value === "string" &&
+    CUSTOMER_ACTIVITY_FILTERS.includes(value as CustomerActivityFilter)
+    ? (value as CustomerActivityFilter)
+    : "all";
+}
+
+export function customerActivityCategory(
+  kind: string,
+): Exclude<CustomerActivityFilter, "all"> {
+  if (kind === "award" || kind === "refund_reversal") return "orders";
+  if (kind === "reserve" || kind === "capture" || kind === "cancel") {
+    return "rewards";
+  }
+  if (kind === "expire" || kind === "release") return "expiry";
+  return "adjustments";
+}
+
+export function filterCustomerActivity<T extends Readonly<{ kind: string }>>(
+  items: readonly T[],
+  filter: CustomerActivityFilter,
+): readonly T[] {
+  return filter === "all"
+    ? items
+    : items.filter((item) => customerActivityCategory(item.kind) === filter);
+}

@@ -24,6 +24,8 @@ RLS remains authoritative even when the Next.js application already resolved a t
 
 `get_customer_read_model(target_customer_public_id, target_programme_group_public_id)` accepts only structured UUID selectors and derives the organization through the customer plus live membership. It joins wallet accounts to the six authoritative balance projections and returns at most the latest 100 wallet-side ledger entries. Balances and signed entry points are text-form exact integers. Entries expose kind, affected bucket, effective time, programme version, a bounded source reference, and correlation reference. Raw commerce payloads, ledger metadata/reasons/request hashes, actor IDs, contact attributes, and unrelated channel identities are not returned.
 
+The customer page may filter that already-bounded array into order/refund, reward, release/expiry, or adjustment views. The URL value is allowlisted and unknown or repeated-array input resolves to `all`; it never becomes a database selector or expands the response.
+
 `get_customer_tier_read_model(target_customer_public_id, target_programme_group_public_id)` derives the active tenant/group through the customer plus live membership and returns one bounded row. The row contains the current effective and qualified tier code/name, transition, rolling eligible spend as exact text-form minor units, and effective/below-threshold/grace timestamps. An authorized unevaluated wallet returns null tier fields instead of an invented default. Immutable decision explanations, request hashes, idempotency keys, actors, and unrelated history remain private.
 
 ### Connector operations reads

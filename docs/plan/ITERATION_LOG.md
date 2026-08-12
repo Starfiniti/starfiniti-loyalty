@@ -177,3 +177,10 @@
 - Added a responsive `/experience` merchant editor with live member-wallet and guest previews, honest unsaved/revision state, role-aware controls, and setup guidance for unlinked scope.
 - Added 41 adversarial pgTAP assertions, six new unit tests across contracts/dashboard, an eighth keyboard-bypass route guard, and a production-build route check.
 - Exact-head run `31600742177` passed the baseline, fifteen migration replays, all 654 pgTAP assertions, concurrency/property probes, and all four localized WooCommerce runtime variants.
+
+## 2026-08-12 — Phase 9 customer activity filters
+
+- Added allowlisted URL filters for order earnings/refunds, reward reservation/capture/cancel, release/expiry, and manual adjustment activity on the customer detail timeline.
+- Kept the existing newest-first, RLS-scoped, 100-entry minimized database response as the only data source; filtering neither queries nor exposes raw commerce, identity, metadata, reason, actor, or request evidence.
+- Added visible filtered/total counts and distinct no-wallet-history versus no-matching-activity states, with keyboard-focusable filter links.
+- Added three adversarial unit tests for unknown/array query fallback, complete transaction-kind categorization, and stable non-mutating filtering; the full unit total is 109.
