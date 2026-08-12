@@ -147,6 +147,7 @@ $$;
 
 alter function loyalty.get_public_loyalty_experience(uuid, uuid, text)
   owner to loyalty_owner;
+grant usage on schema loyalty to anon;
 revoke all on function loyalty.get_public_loyalty_experience(uuid, uuid, text)
   from public, anon, authenticated, loyalty_runtime, loyalty_worker;
 grant execute on function loyalty.get_public_loyalty_experience(uuid, uuid, text)

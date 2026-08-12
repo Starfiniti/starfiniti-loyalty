@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(25);
+select plan(26);
 
 select has_function(
   'loyalty', 'get_public_loyalty_experience', array['uuid', 'uuid', 'text'],
@@ -11,6 +11,10 @@ select has_function(
 select ok(
   has_function_privilege('anon', 'loyalty.get_public_loyalty_experience(uuid,uuid,text)', 'EXECUTE'),
   'anonymous callers can enter only the public read model'
+);
+select ok(
+  has_schema_privilege('anon', 'loyalty', 'USAGE'),
+  'anonymous callers can resolve reviewed functions in the exposed schema'
 );
 select ok(
   has_function_privilege('authenticated', 'loyalty.get_public_loyalty_experience(uuid,uuid,text)', 'EXECUTE'),
