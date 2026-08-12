@@ -185,7 +185,9 @@ select results_eq(
 );
 select results_eq(
   $$
-    select metadata ->> 'workspacePublicId' || '|' || metadata ->> 'programmeGroupPublicId' || '|' || metadata ->> 'revision'
+    select (metadata ->> 'workspacePublicId') || '|' ||
+      (metadata ->> 'programmeGroupPublicId') || '|' ||
+      (metadata ->> 'revision')
     from loyalty.admin_audit_events where idempotency_key = 'theme:save:one'
   $$,
   array['75000000-0000-4000-8000-000000000110|75000000-0000-4000-8000-000000000120|1'::text],
