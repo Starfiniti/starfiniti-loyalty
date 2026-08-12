@@ -117,6 +117,36 @@ create table loyalty.tier_decisions (
 create index tier_decisions_wallet_history_idx
   on loyalty.tier_decisions (organization_id, wallet_id, effective_at desc, id desc);
 
+create table loyalty.tier_memberships (
+  id bigint generated always as identity primary key,
+  public_id uuid not null default gen_random_uuid() unique,
+  organization_id bigint not null,
+  programme_group_id bigint not null,
+  programme_version_id bigint not null,
+  wallet_id bigint not null,
+  tier_code text not null,
+  decision_id bigint not null,
+  effective_from timestamptz not null,
+  effective_until timestamptz,
+  created_at timestamptz not null default now(),
+  unique (organization_id, id),
+  foreign key (organization_id, programme_group_id, programme_version_id)
+    references loyalty.programme_versions(organization_id, programme_group_id, id) on delete restrict,
+  foreign key (organization_id, programme_group_id, wallet_id)
+    references loyalty.wallets(organization_id, programme_group_id, id) on delete restrict,
+  foreign key (organization_id, programme_version_id, tier_code)
+    references loyalty.programme_tiers(organization_id, programme_version_id, code) on delete restrict,
+  foreign key (organization_id, decision_id)
+    references loyalty.tier_decisions(organization_id, id) on delete restrict,
+  check (effective_until is null or effective_until > effective_from)
+);
+
+create unique index tier_memberships_one_current_uidx
+  on loyalty.tier_memberships (organization_id, wallet_id)
+  where effective_until is null;
+create index tier_memberships_wallet_history_idx
+  on loyalty.tier_memberships (organization_id, wallet_id, effective_from desc, id desc);
+
 create table loyalty.reward_reservations (
   id bigint generated always as identity primary key,
   public_id uuid not null default gen_random_uuid() unique,
@@ -175,6 +205,7 @@ create table loyalty.reward_reservation_transitions (
   created_at timestamptz not null default now(),
   unique (organization_id, id),
   unique (organization_id, idempotency_key),
+  unique (organization_id, ledger_transaction_id),
   foreign key (organization_id, reservation_id)
     references loyalty.reward_reservations(organization_id, id) on delete restrict,
   foreign key (organization_id, ledger_transaction_id)
@@ -220,12 +251,38 @@ create index programme_evaluations_subject_idx
     organization_id, programme_version_id, subject_reference, evaluated_at desc, id desc
   );
 
+create table loyalty_private.point_expiry_notifications (
+  id bigint generated always as identity primary key,
+  public_id uuid not null default gen_random_uuid() unique,
+  organization_id bigint not null,
+  wallet_id bigint not null,
+  lot_id bigint not null,
+  notify_before_days smallint not null check (notify_before_days > 0),
+  points_snapshot bigint not null check (points_snapshot > 0),
+  expires_at timestamptz not null,
+  outbox_id bigint,
+  created_at timestamptz not null default now(),
+  unique (organization_id, id),
+  unique (organization_id, lot_id, notify_before_days),
+  foreign key (organization_id, wallet_id)
+    references loyalty.wallets(organization_id, id) on delete restrict,
+  foreign key (organization_id, lot_id)
+    references loyalty.point_lots(organization_id, id) on delete restrict,
+  foreign key (organization_id, outbox_id)
+    references loyalty_private.transactional_outbox(organization_id, id) on delete restrict
+);
+
+create index point_expiry_notifications_wallet_idx
+  on loyalty_private.point_expiry_notifications (organization_id, wallet_id, expires_at, id);
+
 alter table loyalty.programme_tiers owner to loyalty_owner;
 alter table loyalty.programme_rewards owner to loyalty_owner;
 alter table loyalty.tier_decisions owner to loyalty_owner;
+alter table loyalty.tier_memberships owner to loyalty_owner;
 alter table loyalty.reward_reservations owner to loyalty_owner;
 alter table loyalty.reward_reservation_transitions owner to loyalty_owner;
 alter table loyalty_private.programme_evaluations owner to loyalty_owner;
+alter table loyalty_private.point_expiry_notifications owner to loyalty_owner;
 
 create trigger programme_tiers_immutable
 before update or delete on loyalty.programme_tiers
@@ -242,6 +299,64 @@ for each row execute function loyalty_private.reject_immutable_change();
 create trigger programme_evaluations_immutable
 before update or delete on loyalty_private.programme_evaluations
 for each row execute function loyalty_private.reject_immutable_change();
+
+create or replace function loyalty_private.protect_tier_membership()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if tg_op = 'DELETE'
+    or old.effective_until is not null
+    or new.organization_id <> old.organization_id
+    or new.programme_group_id <> old.programme_group_id
+    or new.programme_version_id <> old.programme_version_id
+    or new.wallet_id <> old.wallet_id
+    or new.tier_code <> old.tier_code
+    or new.decision_id <> old.decision_id
+    or new.effective_from <> old.effective_from
+    or new.created_at <> old.created_at
+    or new.effective_until is null then
+    raise exception using errcode = '55000', message = 'tier membership history is immutable';
+  end if;
+  return new;
+end;
+$$;
+alter function loyalty_private.protect_tier_membership() owner to loyalty_owner;
+
+create trigger tier_memberships_protect_history
+before update or delete on loyalty.tier_memberships
+for each row execute function loyalty_private.protect_tier_membership();
+
+create or replace function loyalty_private.protect_reward_reservation()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if tg_op = 'DELETE'
+    or new.organization_id <> old.organization_id
+    or new.programme_group_id <> old.programme_group_id
+    or new.programme_version_id <> old.programme_version_id
+    or new.wallet_id <> old.wallet_id
+    or new.reward_id <> old.reward_id
+    or new.cost_points <> old.cost_points
+    or new.idempotency_key <> old.idempotency_key
+    or new.request_sha256 <> old.request_sha256
+    or new.expires_at <> old.expires_at
+    or new.created_at <> old.created_at then
+    raise exception using errcode = '55000', message = 'reward reservation identity and value are immutable';
+  end if;
+  return new;
+end;
+$$;
+alter function loyalty_private.protect_reward_reservation() owner to loyalty_owner;
+
+create trigger reward_reservations_protect_identity
+before update or delete on loyalty.reward_reservations
+for each row execute function loyalty_private.protect_reward_reservation();
 
 create or replace function loyalty_private.protect_programme_version()
 returns trigger
@@ -595,6 +710,8 @@ set search_path = ''
 as $$
 declare
   existing loyalty.tier_decisions%rowtype;
+  current_membership loyalty.tier_memberships%rowtype;
+  created_decision_id bigint;
   created_public_id uuid;
 begin
   select decision.* into existing from loyalty.tier_decisions as decision
@@ -607,6 +724,15 @@ begin
     return query select existing.public_id, 'duplicate'::text;
     return;
   end if;
+  select membership.* into current_membership
+  from loyalty.tier_memberships as membership
+  where membership.organization_id = target_organization_id
+    and membership.wallet_id = target_wallet_id
+    and membership.effective_until is null
+  for update;
+  if found and target_effective_at <= current_membership.effective_from then
+    raise exception using errcode = '23514', message = 'tier decision must follow current membership start';
+  end if;
   insert into loyalty.tier_decisions (
     organization_id, programme_group_id, programme_version_id, wallet_id,
     tier_code, qualified_tier_code, transition, rolling_eligible_spend_minor,
@@ -618,7 +744,30 @@ begin
     target_transition, target_rolling_eligible_spend_minor,
     target_below_threshold_since, target_grace_until, target_effective_at,
     target_idempotency_key, target_request_sha256, target_explanation
-  ) returning public_id into created_public_id;
+  ) returning id, public_id into created_decision_id, created_public_id;
+  if current_membership.id is null then
+    insert into loyalty.tier_memberships (
+      organization_id, programme_group_id, programme_version_id, wallet_id,
+      tier_code, decision_id, effective_from
+    ) values (
+      target_organization_id, target_programme_group_id,
+      target_programme_version_id, target_wallet_id, target_tier_code,
+      created_decision_id, target_effective_at
+    );
+  elsif current_membership.tier_code <> target_tier_code
+    or current_membership.programme_version_id <> target_programme_version_id then
+    update loyalty.tier_memberships
+    set effective_until = target_effective_at
+    where id = current_membership.id;
+    insert into loyalty.tier_memberships (
+      organization_id, programme_group_id, programme_version_id, wallet_id,
+      tier_code, decision_id, effective_from
+    ) values (
+      target_organization_id, target_programme_group_id,
+      target_programme_version_id, target_wallet_id, target_tier_code,
+      created_decision_id, target_effective_at
+    );
+  end if;
   return query select created_public_id, 'created'::text;
 end;
 $$;
@@ -711,7 +860,7 @@ begin
       or existing_transition.request_sha256 <> target_request_sha256 then
       raise exception using errcode = '23514', message = 'reservation transition idempotency hash conflict';
     end if;
-    return query select target_reservation.public_id, target_reservation.state, 'duplicate'::text;
+    return query select target_reservation.public_id, existing_transition.to_state, 'duplicate'::text;
     return;
   end if;
   if not (
@@ -781,6 +930,70 @@ begin
 end;
 $$;
 
+create or replace function loyalty_private.enqueue_point_expiry_notifications(
+  target_as_of timestamptz default now(),
+  target_notify_before_days smallint default 30
+)
+returns bigint
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  candidate record;
+  notification_id bigint;
+  created_outbox_id bigint;
+  enqueued_count bigint := 0;
+begin
+  if target_notify_before_days <= 0 then
+    raise exception using errcode = '22023', message = 'notification lead time must be positive';
+  end if;
+  for candidate in
+    select lot.organization_id, lot.id as lot_id, lot.public_id as lot_public_id,
+      lot.wallet_id, wallet.public_id as wallet_public_id,
+      balance.remaining_points, lot.expires_at
+    from loyalty.point_lots as lot
+    join loyalty.point_lot_balances as balance
+      on balance.organization_id = lot.organization_id and balance.lot_id = lot.id
+    join loyalty.wallets as wallet
+      on wallet.organization_id = lot.organization_id and wallet.id = lot.wallet_id
+    where balance.remaining_points > 0
+      and lot.expires_at > target_as_of
+      and lot.expires_at <= target_as_of + make_interval(days => target_notify_before_days)
+    order by lot.expires_at, lot.id
+  loop
+    notification_id := null;
+    insert into loyalty_private.point_expiry_notifications (
+      organization_id, wallet_id, lot_id, notify_before_days,
+      points_snapshot, expires_at
+    ) values (
+      candidate.organization_id, candidate.wallet_id, candidate.lot_id,
+      target_notify_before_days, candidate.remaining_points, candidate.expires_at
+    ) on conflict (organization_id, lot_id, notify_before_days) do nothing
+    returning id into notification_id;
+    if notification_id is not null then
+      insert into loyalty_private.transactional_outbox (
+        organization_id, topic, payload_version, payload, available_at
+      ) values (
+        candidate.organization_id, 'loyalty.points.expiring', 'v1',
+        jsonb_build_object(
+          'walletId', candidate.wallet_public_id,
+          'lotId', candidate.lot_public_id,
+          'points', candidate.remaining_points,
+          'expiresAt', candidate.expires_at,
+          'notifyBeforeDays', target_notify_before_days
+        ), target_as_of
+      ) returning id into created_outbox_id;
+      update loyalty_private.point_expiry_notifications
+      set outbox_id = created_outbox_id
+      where id = notification_id;
+      enqueued_count := enqueued_count + 1;
+    end if;
+  end loop;
+  return enqueued_count;
+end;
+$$;
+
 alter function loyalty_private.materialize_programme_definition(bigint) owner to loyalty_owner;
 alter function loyalty_private.create_programme_draft(bigint, bigint, jsonb, bytea, uuid) owner to loyalty_owner;
 alter function loyalty_private.publish_programme_version(uuid, bytea, uuid, timestamptz) owner to loyalty_owner;
@@ -800,6 +1013,9 @@ alter function loyalty_private.create_reward_reservation(
 alter function loyalty_private.transition_reward_reservation(
   uuid, text, text, bytea, text, text, uuid, text
 ) owner to loyalty_owner;
+alter function loyalty_private.enqueue_point_expiry_notifications(
+  timestamptz, smallint
+) owner to loyalty_owner;
 
 revoke all on function loyalty_private.materialize_programme_definition(bigint),
   loyalty_private.create_programme_draft(bigint, bigint, jsonb, bytea, uuid),
@@ -809,7 +1025,8 @@ revoke all on function loyalty_private.materialize_programme_definition(bigint),
   loyalty_private.record_programme_evaluation(bigint, bigint, bigint, bigint, text, text, text, bytea, bytea, jsonb, jsonb, timestamptz),
   loyalty_private.record_tier_decision(bigint, bigint, bigint, bigint, text, text, text, bigint, timestamptz, timestamptz, timestamptz, text, bytea, jsonb),
   loyalty_private.create_reward_reservation(bigint, bigint, bigint, bigint, bigint, bigint, timestamptz, text, bytea),
-  loyalty_private.transition_reward_reservation(uuid, text, text, bytea, text, text, uuid, text)
+  loyalty_private.transition_reward_reservation(uuid, text, text, bytea, text, text, uuid, text),
+  loyalty_private.enqueue_point_expiry_notifications(timestamptz, smallint)
   from public, anon, authenticated, loyalty_runtime, loyalty_worker;
 
 grant execute on function loyalty_private.create_programme_draft(bigint, bigint, jsonb, bytea, uuid),
@@ -822,19 +1039,25 @@ grant execute on function loyalty_private.create_programme_draft(bigint, bigint,
   to loyalty_worker;
 grant execute on function loyalty_private.activate_scheduled_programme_versions(timestamptz)
   to loyalty_worker;
+grant execute on function loyalty_private.enqueue_point_expiry_notifications(timestamptz, smallint)
+  to loyalty_worker;
 
 alter table loyalty.programme_tiers enable row level security;
 alter table loyalty.programme_rewards enable row level security;
 alter table loyalty.tier_decisions enable row level security;
+alter table loyalty.tier_memberships enable row level security;
 alter table loyalty.reward_reservations enable row level security;
 alter table loyalty.reward_reservation_transitions enable row level security;
 alter table loyalty_private.programme_evaluations enable row level security;
+alter table loyalty_private.point_expiry_notifications enable row level security;
 
 create policy programme_tiers_member_select on loyalty.programme_tiers
   for select to authenticated using ((select loyalty_private.is_organization_member(organization_id)));
 create policy programme_rewards_member_select on loyalty.programme_rewards
   for select to authenticated using ((select loyalty_private.is_organization_member(organization_id)));
 create policy tier_decisions_member_select on loyalty.tier_decisions
+  for select to authenticated using ((select loyalty_private.is_organization_member(organization_id)));
+create policy tier_memberships_member_select on loyalty.tier_memberships
   for select to authenticated using ((select loyalty_private.is_organization_member(organization_id)));
 create policy reward_reservations_member_select on loyalty.reward_reservations
   for select to authenticated using ((select loyalty_private.is_organization_member(organization_id)));
@@ -847,24 +1070,32 @@ create policy programme_rewards_worker_select on loyalty.programme_rewards
   for select to loyalty_worker using (true);
 create policy tier_decisions_worker_select on loyalty.tier_decisions
   for select to loyalty_worker using (true);
+create policy tier_memberships_worker_select on loyalty.tier_memberships
+  for select to loyalty_worker using (true);
 create policy reward_reservations_worker_select on loyalty.reward_reservations
   for select to loyalty_worker using (true);
 create policy reward_reservation_transitions_worker_select on loyalty.reward_reservation_transitions
   for select to loyalty_worker using (true);
 create policy programme_evaluations_worker_select on loyalty_private.programme_evaluations
   for select to loyalty_worker using (true);
+create policy point_expiry_notifications_worker_select
+  on loyalty_private.point_expiry_notifications
+  for select to loyalty_worker using (true);
 
 revoke all on loyalty.programme_tiers, loyalty.programme_rewards,
-  loyalty.tier_decisions, loyalty.reward_reservations,
+  loyalty.tier_decisions, loyalty.tier_memberships, loyalty.reward_reservations,
   loyalty.reward_reservation_transitions
   from public, anon, authenticated, loyalty_runtime, loyalty_worker;
 grant select on loyalty.programme_tiers, loyalty.programme_rewards,
-  loyalty.tier_decisions, loyalty.reward_reservations,
+  loyalty.tier_decisions, loyalty.tier_memberships, loyalty.reward_reservations,
   loyalty.reward_reservation_transitions
   to authenticated, loyalty_worker;
 revoke all on loyalty_private.programme_evaluations
   from public, anon, authenticated, loyalty_runtime, loyalty_worker;
 grant select on loyalty_private.programme_evaluations to loyalty_worker;
+revoke all on loyalty_private.point_expiry_notifications
+  from public, anon, authenticated, loyalty_runtime, loyalty_worker;
+grant select on loyalty_private.point_expiry_notifications to loyalty_worker;
 
 comment on table loyalty.programme_tiers is
   'Immutable materialized tier definitions from an approved programme version.';
@@ -874,3 +1105,7 @@ comment on table loyalty_private.programme_evaluations is
   'Immutable live/simulation result and explanation evidence keyed by canonical input hashes.';
 comment on table loyalty.reward_reservations is
   'Reward delivery state; every value-bearing transition references an immutable ledger transaction.';
+comment on table loyalty.tier_memberships is
+  'Effective tier intervals; changes atomically close the current interval and preserve prior programme attribution.';
+comment on table loyalty_private.point_expiry_notifications is
+  'Idempotency fences linking expiring point lots to transactional notification commands.';

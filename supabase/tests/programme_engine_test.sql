@@ -2,14 +2,16 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(64);
+select plan(77);
 
 select has_table('loyalty', 'programme_tiers', 'programme tiers exist');
 select has_table('loyalty', 'programme_rewards', 'programme rewards exist');
 select has_table('loyalty', 'tier_decisions', 'tier decisions exist');
+select has_table('loyalty', 'tier_memberships', 'tier membership intervals exist');
 select has_table('loyalty', 'reward_reservations', 'reward reservations exist');
 select has_table('loyalty', 'reward_reservation_transitions', 'reward transitions exist');
 select has_table('loyalty_private', 'programme_evaluations', 'programme evaluations exist');
+select has_table('loyalty_private', 'point_expiry_notifications', 'point expiry notification fences exist');
 select is_empty(
   $$
     select relation.relname
@@ -17,9 +19,9 @@ select is_empty(
     join pg_namespace as namespace on namespace.oid = relation.relnamespace
     where namespace.nspname in ('loyalty', 'loyalty_private')
       and relation.relname in (
-        'programme_tiers', 'programme_rewards', 'tier_decisions',
+        'programme_tiers', 'programme_rewards', 'tier_decisions', 'tier_memberships',
         'reward_reservations', 'reward_reservation_transitions',
-        'programme_evaluations'
+        'programme_evaluations', 'point_expiry_notifications'
       )
       and not relation.relrowsecurity
   $$,
@@ -48,6 +50,14 @@ select ok(
     'EXECUTE'
   ),
   'worker cannot bypass publication through the materialization primitive'
+);
+select ok(
+  has_function_privilege(
+    'loyalty_worker',
+    'loyalty_private.enqueue_point_expiry_notifications(timestamp with time zone,smallint)',
+    'EXECUTE'
+  ),
+  'worker can schedule idempotent advance expiry notifications'
 );
 
 insert into auth.users (id, email)
@@ -357,6 +367,11 @@ select results_eq(
   'tier review writes an attributable decision'
 );
 select results_eq(
+  $$ select tier_code from loyalty.tier_memberships where effective_until is null $$,
+  array['bloom'::text],
+  'first tier decision opens the current membership interval'
+);
+select results_eq(
   $$ select outcome from loyalty_private.record_tier_decision(
     (select id from loyalty.organizations where slug = 'programme-one'),
     (select id from loyalty.programme_groups where organization_id = (select id from loyalty.organizations where slug = 'programme-one')),
@@ -385,6 +400,32 @@ select throws_ok(
   '55000', 'immutable loyalty history cannot be changed',
   'tier decisions cannot be rewritten'
 );
+select lives_ok(
+  $$ select * from loyalty_private.record_tier_decision(
+    (select id from loyalty.organizations where slug = 'programme-one'),
+    (select id from loyalty.programme_groups where organization_id = (select id from loyalty.organizations where slug = 'programme-one')),
+    (select id from loyalty.programme_versions where public_id = (select public_id from programme_refs where name = 'version-two')),
+    (select id from loyalty.wallets where organization_id = (select id from loyalty.organizations where slug = 'programme-one')),
+    'rose', 'bloom', 'manual', 25000, null, null, '2026-12-03T02:00:00Z',
+    'tier:wallet:manual', decode(repeat('9a', 32), 'hex'), '{"reason":"support override"}'::jsonb
+  ) $$,
+  'manual tier decision atomically changes the effective interval'
+);
+select results_eq(
+  'select count(*)::bigint from loyalty.tier_memberships',
+  array[2::bigint],
+  'tier change preserves both membership intervals'
+);
+select results_eq(
+  $$ select effective_until from loyalty.tier_memberships where tier_code = 'bloom' $$,
+  array['2026-12-03T02:00:00Z'::timestamptz],
+  'prior tier interval closes at the decision instant'
+);
+select results_eq(
+  $$ select tier_code from loyalty.tier_memberships where effective_until is null $$,
+  array['rose'::text],
+  'manual override opens one new current tier interval'
+);
 
 insert into programme_results
 select 'adjust', result.transaction_public_id, result.outcome
@@ -399,6 +440,26 @@ select results_eq(
   $$ select outcome from programme_results where operation = 'adjust' $$,
   array['created'::text],
   'test wallet receives available points through the ledger'
+);
+select results_eq(
+  $$ select loyalty_private.enqueue_point_expiry_notifications('2027-11-15T00:00:00Z', 30::smallint) $$,
+  array[1::bigint],
+  'advance expiry scheduler enqueues a due point lot'
+);
+select results_eq(
+  $$ select loyalty_private.enqueue_point_expiry_notifications('2027-11-15T00:00:00Z', 30::smallint) $$,
+  array[0::bigint],
+  'advance expiry scheduler retry creates no duplicate'
+);
+select results_eq(
+  $$ select count(*)::bigint from loyalty_private.point_expiry_notifications where outbox_id is not null $$,
+  array[1::bigint],
+  'expiry notification fence retains its outbox command link'
+);
+select results_eq(
+  $$ select topic from loyalty_private.transactional_outbox where topic = 'loyalty.points.expiring' $$,
+  array['loyalty.points.expiring'::text],
+  'expiry notification is delivered through the transactional outbox'
 );
 
 insert into programme_results
@@ -593,6 +654,11 @@ select results_eq(
   'select count(*)::bigint from loyalty.reward_reservation_transitions',
   array[0::bigint],
   'another tenant cannot read reward transition evidence'
+);
+select results_eq(
+  'select count(*)::bigint from loyalty.tier_memberships',
+  array[0::bigint],
+  'another tenant cannot read tier membership history'
 );
 
 reset role;
