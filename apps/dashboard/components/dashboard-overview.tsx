@@ -10,6 +10,7 @@ import {
   Megaphone,
   Menu,
   Moon,
+  Palette,
   Search,
   Sparkles,
   Users,
@@ -46,6 +47,12 @@ const nav = [
   { label: "Connector operations", icon: Activity, href: "/operations" },
   { label: "Campaigns", icon: Megaphone },
   { label: "Referrals", icon: Sparkles },
+  {
+    label: "Customer experience",
+    icon: Palette,
+    group: "PLATFORM",
+    href: "/experience",
+  },
 ];
 
 export type DashboardTenant = Readonly<{

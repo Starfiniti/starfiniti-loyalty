@@ -2,7 +2,7 @@
 
 ## Implementation status
 
-The tenancy, WooCommerce event/effect, ledger, programme-engine, and merchant programme-command portions below are implemented in seven versioned migrations. The ledger uses immutable transaction headers/entries, six wallet buckets, programme control accounts, original-attribution lots, signed compensating allocations, same-transaction projections, tenant RLS, and narrow worker commands. Programme publication, materialized tiers/rewards, reward reservations, tier history, evaluation evidence, expiry-notification fences, WooCommerce order/refund effects, native coupon settlement, and audited merchant programme mutations are implemented; broader platform audit and privacy workflows remain later slices.
+The tenancy, WooCommerce event/effect, ledger, programme-engine, merchant command/read-model, and controlled customer-theme portions below are implemented in fifteen versioned migrations. The ledger uses immutable transaction headers/entries, six wallet buckets, programme control accounts, original-attribution lots, signed compensating allocations, same-transaction projections, tenant RLS, and narrow worker commands. Programme publication, materialized tiers/rewards, reward reservations, tier history, evaluation evidence, expiry-notification fences, WooCommerce order/refund effects, native coupon settlement, audited merchant mutations, and revisioned experience tokens are implemented; broader platform audit and privacy workflows remain later slices.
 
 ## Database boundaries
 
@@ -27,6 +27,8 @@ erDiagram
   ORGANIZATION ||--o{ WORKSPACE : owns
   ORGANIZATION ||--o{ PROGRAMME_GROUP : owns
   PROGRAMME_GROUP ||--o{ PROGRAMME : contains
+  PROGRAMME_GROUP ||--o{ EXPERIENCE_THEME : brands
+  WORKSPACE ||--o{ EXPERIENCE_THEME : presents
   PROGRAMME ||--o{ PROGRAMME_VERSION : publishes
   WORKSPACE ||--o{ COMMERCE_CONNECTION : connects
   ORGANIZATION ||--o{ CUSTOMER : scopes
@@ -75,6 +77,10 @@ Time-limited, reason-bound, approved grants for platform support. Stores support
 ### `admin_audit_events`
 
 Immutable tenant-scoped evidence for administration commands: request-derived actor, action, resource public ID, tenant idempotency key, canonical request hash, correlation ID, bounded metadata, and creation time. Only owners, admins, and auditors can read programme administration evidence through RLS. No authenticated role receives direct insert/update/delete privileges.
+
+### `experience_themes`
+
+Unique per `(organization_id, workspace_id, programme_group_id)` and protected by a composite foreign key to the explicit workspace/group link. Each revision stores one accessible canonical brand color, an allowlisted local font token, bounded radius and copy, section visibility, and widget side. It stores no CSS, markup, scripts, URLs, uploads, customer attributes, or secrets. Members can read through RLS; only the guarded owner/admin command can create or revision a row and append matching immutable audit evidence.
 
 ## Customer and identity tables
 
@@ -159,7 +165,7 @@ The reservation holds programme version, wallet, reward, points, expiry, idempot
 - `programme_evaluations` stores immutable live/simulation/tier-review input and result hashes plus explanation evidence.
 - `audit_events` is append-only and records organization, actor, support grant, action, object type/ID, before/after metadata without secrets/PII, IP classification, correlation ID, and timestamp.
 - `manual_adjustment_requests` requires reason, evidence, requester, approver where policy requires, and the resulting compensating ledger transaction.
-- `admin_audit_events` currently records programme draft/publication/scheduling and connector-effect replay commands with request-derived Auth actor, canonical request hash, idempotency key, correlation ID, resource ID, and minimized metadata. Rows are immutable; owner/admin/auditor reads remain tenant scoped.
+- `admin_audit_events` currently records programme creation/draft/publication/scheduling, connector operations, customer adjustments, and experience-theme revisions with request-derived Auth actor, canonical request hash, idempotency key, correlation ID, resource ID, and minimized metadata. Rows are immutable; owner/admin/auditor reads remain tenant scoped.
 - Merchant customer adjustment resolves an active wallet plus exact published programme version under a live owner/admin check, then appends `manual_adjustment` entries between the programme-group adjustment control account and wallet available account. Credits create expiring lots; debits append FIFO adjustment allocations for existing lots and may leave an explicit negative available balance. The matching `admin_audit_events` row links its command correlation to the immutable ledger correlation.
 - Merchant Overview reporting is a read model, not a mutable analytics truth table. It joins one authorized workspace/programme scope to scoped wallets, immutable live evaluation evidence, and wallet-side ledger/projection rows; returns exact text-form aggregates and bounded UTC daily buckets; and withholds private evaluation, commerce, identity, and ledger evidence.
 

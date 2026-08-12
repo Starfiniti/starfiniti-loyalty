@@ -7,6 +7,7 @@ const mainSources = [
   "apps/dashboard/app/customers/page.tsx",
   "apps/dashboard/app/customers/[customerId]/page.tsx",
   "apps/dashboard/app/operations/page.tsx",
+  "apps/dashboard/app/experience/page.tsx",
   "apps/dashboard/components/dashboard-overview.tsx",
 ];
 

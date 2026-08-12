@@ -286,7 +286,7 @@ tasks:
       - customer detail exposes minimized current qualified and grace tier state with exact eligible-spend minor units and honest unevaluated output
       - 27 customer-tier pgTAP assertions cover exact privileges bounds current and qualified semantics large integer precision minimization and revoked suspended cross-tenant denial
       - exact-head run 31592427051 passed baseline fourteen migrations 613 pgTAP assertions concurrency and property probes and all four WooCommerce runtime variants
-      - all seven route surfaces expose a first-focus skip link to one focusable main landmark with visible text-area focus and reduced-motion coverage enforced by npm run accessibility:validate
+      - all eight route surfaces expose a first-focus skip link to one focusable main landmark with visible text-area focus and reduced-motion coverage enforced by npm run accessibility:validate
       - initial desktop and 390-pixel authentication renders plus DOM inspection exposed a narrow-viewport grid overflow and the corrected shrinkable card sizing is now guarded without a runtime dependency
       - exact-head run 31596460783 passed the accessibility baseline fourteen migrations 613 pgTAP assertions concurrency and property probes and all four WooCommerce runtime variants
       - tenant operations can download a versioned aggregate-only support bundle containing queue totals watermarks and an explicit bounded-recent-sample count for grouped canonical error codes while omitting item identities names payloads customer or commerce identifiers actors reasons and signing evidence
@@ -295,3 +295,6 @@ tasks:
       - all 38 WooCommerce strings have exact POT coverage and a bundled Slovenian catalog loaded from the standard init-time WordPress text-domain path
       - every minimum current HPOS and legacy runtime switches to sl_SI and proves the customer Loyalty rewards navigation is translated before continuing checkout outage coupon refund reconciliation and recovery tests
       - exact-head run 31598618092 passed the localization baseline fourteen migrations 613 pgTAP assertions concurrency and property probes and all four localized WooCommerce runtime variants
+      - one RLS-scoped workspace and programme-group experience theme stores only accessible bounded design tokens and revisions through an idempotent owner or admin command with immutable audit evidence
+      - the responsive experience editor previews member and guest states while contracts and database checks reject low-contrast colors arbitrary CSS remote font URLs scripts uploads role escalation and cross-tenant scope
+      - 41 experience-theme pgTAP assertions cover grants search path composite scope RLS roles revocation idempotency revisions validation contrast audit linkage and cross-tenant denial

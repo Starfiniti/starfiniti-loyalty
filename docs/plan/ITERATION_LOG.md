@@ -169,3 +169,10 @@
 - Added a deterministic validator for literal text-domain use, exact/no-stale POT coverage, customer-string coverage, nonempty translations, and placeholder parity; the validator is part of `npm run check` through `woocommerce:validate`.
 - Verified the installable ZIP includes both language artifacts and added a real `sl_SI` locale switch plus localized customer-navigation assertion to every minimum/current HPOS/legacy runtime cell.
 - Exact-head run `31598618092` passed the baseline, fourteen migrations, all 613 pgTAP assertions, concurrency/property probes, and the Slovenian navigation assertion in all four WooCommerce runtime variants.
+
+## 2026-08-12 — Phase 9 controlled customer-experience themes
+
+- Added one revisioned theme per linked tenant workspace/programme group with composite tenant foreign keys, member-read RLS, no direct browser DML, and an owner/admin-only idempotent command that appends immutable audit evidence.
+- Defined a strict v1 token contract for a canonical brand color with 4.5:1 white-text contrast, three local font stacks, bounded radius and copy, tier/reward visibility, and widget side. Raw CSS, font URLs, scripts, and uploads are rejected rather than stored.
+- Added a responsive `/experience` merchant editor with live member-wallet and guest previews, honest unsaved/revision state, role-aware controls, and setup guidance for unlinked scope.
+- Added 41 adversarial pgTAP assertions, six new unit tests across contracts/dashboard, an eighth keyboard-bypass route guard, and a production-build route check.
