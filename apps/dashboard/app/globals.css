@@ -1148,6 +1148,11 @@ h1 {
   display: flex;
   gap: 8px;
 }
+.programme-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 .programme-brand {
   display: inline-flex;
   align-items: center;
@@ -1568,6 +1573,14 @@ h1 {
   }
   .programme-topbar p {
     margin-left: 0;
+  }
+  .programme-topbar-actions,
+  .programme-topbar-actions nav {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .programme-topbar-actions {
+    justify-content: space-between;
   }
   .programme-row,
   .version-grid,

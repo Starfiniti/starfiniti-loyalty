@@ -10,37 +10,60 @@ import {
   merchantScheduleProgrammeVersionCommandV1,
 } from "@starfiniti/contracts";
 import { revalidatePath } from "next/cache";
+import {
+  merchantText,
+  resolveMerchantLocale,
+  type MerchantLocale,
+} from "@/lib/merchant-locale";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  parseMerchantLocalDateTime,
+  programmeDraftResultText,
+  programmeScheduleResultText,
+} from "./programme-action-copy";
 
 export type ProgrammeActionState = Readonly<{
   kind: "idle" | "success" | "error";
   message: string;
 }>;
 
-function actionError(error: { code?: string } | null): ProgrammeActionState {
+function actionError(
+  error: { code?: string } | null,
+  locale: MerchantLocale,
+): ProgrammeActionState {
   if (error?.code === "42501") {
     return {
       kind: "error",
-      message: "Your current organization role cannot perform this action.",
+      message: merchantText(
+        locale,
+        "Your current organization role cannot perform this action.",
+      ),
     };
   }
   if (error?.code === "23514" || error?.code === "23505") {
     return {
       kind: "error",
-      message:
+      message: merchantText(
+        locale,
         "This request conflicts with an existing programme operation. Refresh and review the current state.",
+      ),
     };
   }
   if (error?.code === "22023") {
     return {
       kind: "error",
-      message: "The programme input failed server validation.",
+      message: merchantText(
+        locale,
+        "The programme input failed server validation.",
+      ),
     };
   }
   return {
     kind: "error",
-    message:
+    message: merchantText(
+      locale,
       "The command could not be completed safely. No change was assumed.",
+    ),
   };
 }
 
@@ -48,6 +71,7 @@ export async function createInitialProgramme(
   _previousState: ProgrammeActionState,
   formData: FormData,
 ): Promise<ProgrammeActionState> {
+  const locale = resolveMerchantLocale(formData.get("lang"));
   const operationId = String(formData.get("operationId") ?? "");
   const command = merchantCreateProgrammeCommandV1.safeParse({
     version: "1",
@@ -60,8 +84,10 @@ export async function createInitialProgramme(
   if (!command.success) {
     return {
       kind: "error",
-      message:
+      message: merchantText(
+        locale,
         "Use a name up to 200 characters and a lowercase hyphenated slug.",
+      ),
     };
   }
 
@@ -75,7 +101,7 @@ export async function createInitialProgramme(
       target_idempotency_key: command.data.idempotencyKey,
       target_correlation_id: command.data.correlationId,
     });
-  if (error) return actionError(error);
+  if (error) return actionError(error, locale);
 
   const row = firstResult(data);
   const result = merchantProgrammeCreateResultV1.safeParse(
@@ -86,16 +112,18 @@ export async function createInitialProgramme(
         }
       : null,
   );
-  if (!result.success) return actionError(null);
+  if (!result.success) return actionError(null, locale);
 
   revalidatePath("/");
   revalidatePath("/programme");
   return {
     kind: "success",
-    message:
+    message: merchantText(
+      locale,
       result.data.outcome === "duplicate"
         ? "This programme was already created."
         : "Programme created. Continue by saving and publishing its first draft.",
+    ),
   };
 }
 
@@ -110,11 +138,15 @@ export async function saveProgrammeDraft(
   _previousState: ProgrammeActionState,
   formData: FormData,
 ): Promise<ProgrammeActionState> {
+  const locale = resolveMerchantLocale(formData.get("lang"));
   let configuration: unknown;
   try {
     configuration = JSON.parse(String(formData.get("configuration") ?? ""));
   } catch {
-    return { kind: "error", message: "The draft configuration is not valid." };
+    return {
+      kind: "error",
+      message: merchantText(locale, "The draft configuration is not valid."),
+    };
   }
 
   const operationId = String(formData.get("operationId") ?? "");
@@ -128,7 +160,10 @@ export async function saveProgrammeDraft(
   if (!command.success) {
     return {
       kind: "error",
-      message: "Fix the highlighted programme validation issues before saving.",
+      message: merchantText(
+        locale,
+        "Fix the highlighted programme validation issues before saving.",
+      ),
     };
   }
 
@@ -141,7 +176,7 @@ export async function saveProgrammeDraft(
       target_idempotency_key: command.data.idempotencyKey,
       target_correlation_id: command.data.correlationId,
     });
-  if (error) return actionError(error);
+  if (error) return actionError(error, locale);
 
   const row = firstResult(data);
   const result = merchantProgrammeDraftResultV1.safeParse(
@@ -154,15 +189,16 @@ export async function saveProgrammeDraft(
         }
       : null,
   );
-  if (!result.success) return actionError(null);
+  if (!result.success) return actionError(null, locale);
 
   revalidatePath("/programme");
   return {
     kind: "success",
-    message:
-      result.data.outcome === "duplicate"
-        ? `Draft v${result.data.versionNumber} was already saved.`
-        : `Draft v${result.data.versionNumber} saved with an immutable configuration fingerprint.`,
+    message: programmeDraftResultText(
+      locale,
+      result.data.versionNumber,
+      result.data.outcome === "duplicate",
+    ),
   };
 }
 
@@ -170,10 +206,14 @@ export async function publishProgrammeVersion(
   _previousState: ProgrammeActionState,
   formData: FormData,
 ): Promise<ProgrammeActionState> {
+  const locale = resolveMerchantLocale(formData.get("lang"));
   if (formData.get("confirmation") !== "publish") {
     return {
       kind: "error",
-      message: "Confirm that you reviewed the exact draft before publishing.",
+      message: merchantText(
+        locale,
+        "Confirm that you reviewed the exact draft before publishing.",
+      ),
     };
   }
 
@@ -185,7 +225,7 @@ export async function publishProgrammeVersion(
     idempotencyKey: `programme:publish:${operationId}`,
     correlationId: crypto.randomUUID(),
   });
-  if (!command.success) return actionError(null);
+  if (!command.success) return actionError(null, locale);
 
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
@@ -197,7 +237,7 @@ export async function publishProgrammeVersion(
       target_idempotency_key: command.data.idempotencyKey,
       target_correlation_id: command.data.correlationId,
     });
-  if (error) return actionError(error);
+  if (error) return actionError(error, locale);
 
   const row = firstResult(data);
   const result = merchantProgrammePublishResultV1.safeParse(
@@ -209,16 +249,18 @@ export async function publishProgrammeVersion(
         }
       : null,
   );
-  if (!result.success) return actionError(null);
+  if (!result.success) return actionError(null, locale);
 
   revalidatePath("/");
   revalidatePath("/programme");
   return {
     kind: "success",
-    message:
+    message: merchantText(
+      locale,
       result.data.outcome === "duplicate"
         ? "This exact publication was already completed."
         : "The reviewed programme version is now published.",
+    ),
   };
 }
 
@@ -226,12 +268,13 @@ export async function scheduleProgrammeVersion(
   _previousState: ProgrammeActionState,
   formData: FormData,
 ): Promise<ProgrammeActionState> {
+  const locale = resolveMerchantLocale(formData.get("lang"));
   const scheduledInput = String(formData.get("scheduledFor") ?? "");
-  const scheduledDate = new Date(scheduledInput);
-  if (!scheduledInput || Number.isNaN(scheduledDate.valueOf())) {
+  const scheduledDate = parseMerchantLocalDateTime(scheduledInput);
+  if (!scheduledDate) {
     return {
       kind: "error",
-      message: "Choose a valid future publication time.",
+      message: merchantText(locale, "Choose a valid future publication time."),
     };
   }
 
@@ -244,7 +287,7 @@ export async function scheduleProgrammeVersion(
     idempotencyKey: `programme:schedule:${operationId}`,
     correlationId: crypto.randomUUID(),
   });
-  if (!command.success) return actionError(null);
+  if (!command.success) return actionError(null, locale);
 
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
@@ -257,7 +300,7 @@ export async function scheduleProgrammeVersion(
       target_idempotency_key: command.data.idempotencyKey,
       target_correlation_id: command.data.correlationId,
     });
-  if (error) return actionError(error);
+  if (error) return actionError(error, locale);
 
   const row = firstResult(data);
   const result = merchantProgrammePublishResultV1.safeParse(
@@ -269,14 +312,15 @@ export async function scheduleProgrammeVersion(
         }
       : null,
   );
-  if (!result.success) return actionError(null);
+  if (!result.success) return actionError(null, locale);
 
   revalidatePath("/programme");
   return {
     kind: "success",
-    message:
-      result.data.outcome === "duplicate"
-        ? "This exact schedule was already recorded."
-        : `Publication scheduled for ${new Date(result.data.effectiveAt).toLocaleString("en-GB")}.`,
+    message: programmeScheduleResultText(
+      locale,
+      result.data.effectiveAt,
+      result.data.outcome === "duplicate",
+    ),
   };
 }

@@ -3,6 +3,11 @@
 import { programmeDefinitionV1 } from "@starfiniti/contracts";
 import { Plus, Trash2 } from "lucide-react";
 import { useActionState, useMemo, useState } from "react";
+import {
+  merchantIntlLocale,
+  merchantText,
+  type MerchantLocale,
+} from "@/lib/merchant-locale";
 import { saveProgrammeDraft, type ProgrammeActionState } from "./actions";
 
 type TierDraft = Readonly<{
@@ -87,25 +92,28 @@ function initialDefinition(value: unknown): {
     : { tiers: fallbackTiers, rewards: [] };
 }
 
-function formatMoney(minor: string): string {
+function formatMoney(minor: string, locale: MerchantLocale): string {
   const amount = Number(minor) / 100;
   return Number.isFinite(amount)
-    ? new Intl.NumberFormat("en", {
+    ? new Intl.NumberFormat(merchantIntlLocale(locale), {
         style: "currency",
         currency: "EUR",
       }).format(amount)
-    : "Invalid amount";
+    : merchantText(locale, "Invalid amount");
 }
 
 export function ProgrammeEditor({
   programmeId,
   initialConfiguration,
   operationId,
+  locale,
 }: {
   programmeId: string;
   initialConfiguration: unknown;
   operationId: string;
+  locale: MerchantLocale;
 }) {
+  const t = (source: string) => merchantText(locale, source);
   const initial = useMemo(
     () => initialDefinition(initialConfiguration),
     [initialConfiguration],
@@ -154,6 +162,7 @@ export function ProgrammeEditor({
 
   return (
     <form action={action} className="programme-editor">
+      <input name="lang" type="hidden" value={locale} />
       <input name="programmeId" type="hidden" value={programmeId} />
       <input name="operationId" type="hidden" value={operationId} />
       <input
@@ -165,11 +174,12 @@ export function ProgrammeEditor({
       <section className="programme-panel" aria-labelledby="tiers-title">
         <div className="programme-panel-heading">
           <div>
-            <p className="login-eyebrow">Earning policy</p>
-            <h2 id="tiers-title">Tiers</h2>
+            <p className="login-eyebrow">{t("Earning policy")}</p>
+            <h2 id="tiers-title">{t("Tiers")}</h2>
             <p>
-              Thresholds use eligible lifetime spend. Every tier starts from an
-              exact euro amount and awards integer points per whole euro.
+              {t(
+                "Thresholds use eligible lifetime spend. Every tier starts from an exact euro amount and awards integer points per whole euro.",
+              )}
             </p>
           </div>
           <button
@@ -180,7 +190,7 @@ export function ProgrammeEditor({
                 ...current,
                 {
                   code: `tier-${current.length + 1}`,
-                  name: `Tier ${current.length + 1}`,
+                  name: `${t("Tier")} ${current.length + 1}`,
                   minimumEligibleSpendMinor: String(
                     Math.max(
                       0,
@@ -194,16 +204,18 @@ export function ProgrammeEditor({
               ])
             }
           >
-            <Plus aria-hidden="true" /> Add tier
+            <Plus aria-hidden="true" /> {t("Add tier")}
           </button>
         </div>
 
         <div className="programme-list">
           {tiers.map((tier, index) => (
             <fieldset className="programme-row" key={`tier-${index}`}>
-              <legend>Tier {index + 1}</legend>
+              <legend>
+                {t("Tier")} {index + 1}
+              </legend>
               <label>
-                Name
+                {t("Name")}
                 <input
                   maxLength={200}
                   required
@@ -214,7 +226,7 @@ export function ProgrammeEditor({
                 />
               </label>
               <label>
-                Code
+                {t("Code")}
                 <input
                   pattern="[a-z][a-z0-9_-]{0,79}"
                   required
@@ -225,7 +237,7 @@ export function ProgrammeEditor({
                 />
               </label>
               <label>
-                Spend threshold (EUR)
+                {t("Spend threshold (EUR)")}
                 <input
                   min="0"
                   required
@@ -242,7 +254,7 @@ export function ProgrammeEditor({
                 />
               </label>
               <label>
-                Points per EUR
+                {t("Points per EUR")}
                 <input
                   min="1"
                   required
@@ -257,7 +269,7 @@ export function ProgrammeEditor({
                 />
               </label>
               <button
-                aria-label={`Remove ${tier.name || `tier ${index + 1}`}`}
+                aria-label={`${t("Remove")} ${tier.name || `${t("tier")} ${index + 1}`}`}
                 className="icon-danger"
                 disabled={tiers.length === 1}
                 type="button"
@@ -277,11 +289,12 @@ export function ProgrammeEditor({
       <section className="programme-panel" aria-labelledby="rewards-title">
         <div className="programme-panel-heading">
           <div>
-            <p className="login-eyebrow">Redemption catalogue</p>
-            <h2 id="rewards-title">Rewards</h2>
+            <p className="login-eyebrow">{t("Redemption catalogue")}</p>
+            <h2 id="rewards-title">{t("Rewards")}</h2>
             <p>
-              Rewards remain connector-neutral here. WooCommerce executes the
-              matching native coupon command asynchronously.
+              {t(
+                "Rewards remain connector-neutral here. WooCommerce executes the matching native coupon command asynchronously.",
+              )}
             </p>
           </div>
           <button
@@ -292,7 +305,7 @@ export function ProgrammeEditor({
                 ...current,
                 {
                   code: `reward-${current.length + 1}`,
-                  name: `Reward ${current.length + 1}`,
+                  name: `${t("Reward")} ${current.length + 1}`,
                   kind: "fixed_discount",
                   costPoints: "100",
                   configuration: nativeRewardConfiguration("fixed_discount"),
@@ -300,12 +313,14 @@ export function ProgrammeEditor({
               ])
             }
           >
-            <Plus aria-hidden="true" /> Add reward
+            <Plus aria-hidden="true" /> {t("Add reward")}
           </button>
         </div>
 
         {rewards.length === 0 ? (
-          <p className="empty-state">No redeemable rewards in this draft.</p>
+          <p className="empty-state">
+            {t("No redeemable rewards in this draft.")}
+          </p>
         ) : (
           <div className="programme-list">
             {rewards.map((reward, index) => (
@@ -313,9 +328,11 @@ export function ProgrammeEditor({
                 className="programme-row reward-row"
                 key={`reward-${index}`}
               >
-                <legend>Reward {index + 1}</legend>
+                <legend>
+                  {t("Reward")} {index + 1}
+                </legend>
                 <label>
-                  Name
+                  {t("Name")}
                   <input
                     maxLength={200}
                     required
@@ -326,7 +343,7 @@ export function ProgrammeEditor({
                   />
                 </label>
                 <label>
-                  Code
+                  {t("Code")}
                   <input
                     pattern="[a-z][a-z0-9_-]{0,79}"
                     required
@@ -337,7 +354,7 @@ export function ProgrammeEditor({
                   />
                 </label>
                 <label>
-                  Kind
+                  {t("Kind")}
                   <select
                     value={reward.kind}
                     onChange={(event) => {
@@ -348,19 +365,23 @@ export function ProgrammeEditor({
                       });
                     }}
                   >
-                    <option value="fixed_discount">Fixed discount</option>
-                    <option value="percentage_discount">
-                      Percentage discount
+                    <option value="fixed_discount">
+                      {t("Fixed discount")}
                     </option>
-                    <option value="free_product">Free product</option>
-                    <option value="free_shipping">Free shipping</option>
-                    <option value="store_credit">Store credit</option>
-                    <option value="exclusive_access">Exclusive access</option>
-                    <option value="custom">Custom</option>
+                    <option value="percentage_discount">
+                      {t("Percentage discount")}
+                    </option>
+                    <option value="free_product">{t("Free product")}</option>
+                    <option value="free_shipping">{t("Free shipping")}</option>
+                    <option value="store_credit">{t("Store credit")}</option>
+                    <option value="exclusive_access">
+                      {t("Exclusive access")}
+                    </option>
+                    <option value="custom">{t("Custom")}</option>
                   </select>
                 </label>
                 <label>
-                  Cost (points)
+                  {t("Cost (points)")}
                   <input
                     min="1"
                     required
@@ -374,7 +395,7 @@ export function ProgrammeEditor({
                 </label>
                 {reward.kind === "fixed_discount" ? (
                   <label>
-                    Discount (EUR)
+                    {t("Discount (EUR)")}
                     <input
                       min="0.01"
                       required
@@ -395,7 +416,7 @@ export function ProgrammeEditor({
                 {reward.kind === "percentage_discount" ? (
                   <>
                     <label>
-                      Discount (%)
+                      {t("Discount (%)")}
                       <input
                         max="100"
                         min="0.01"
@@ -419,7 +440,7 @@ export function ProgrammeEditor({
                       />
                     </label>
                     <label>
-                      Maximum (EUR, optional)
+                      {t("Maximum (EUR, optional)")}
                       <input
                         min="0.01"
                         step="0.01"
@@ -447,7 +468,7 @@ export function ProgrammeEditor({
                   "free_shipping",
                 ].includes(reward.kind) ? (
                   <label>
-                    Valid for (days)
+                    {t("Valid for (days)")}
                     <input
                       max="365"
                       min="1"
@@ -467,7 +488,7 @@ export function ProgrammeEditor({
                   </label>
                 ) : null}
                 <button
-                  aria-label={`Remove ${reward.name || `reward ${index + 1}`}`}
+                  aria-label={`${t("Remove")} ${reward.name || `${t("reward")} ${index + 1}`}`}
                   className="icon-danger"
                   type="button"
                   onClick={() =>
@@ -486,10 +507,10 @@ export function ProgrammeEditor({
 
       <aside className="programme-preview" aria-labelledby="preview-title">
         <div>
-          <p className="login-eyebrow">Deterministic preview</p>
-          <h2 id="preview-title">Example order</h2>
+          <p className="login-eyebrow">{t("Deterministic preview")}</p>
+          <h2 id="preview-title">{t("Example order")}</h2>
           <label>
-            Eligible spend (EUR)
+            {t("Eligible spend (EUR)")}
             <input
               min="0"
               step="0.01"
@@ -501,21 +522,25 @@ export function ProgrammeEditor({
         </div>
         <dl>
           <div>
-            <dt>Eligible spend</dt>
-            <dd>{formatMoney(String(previewMinor))}</dd>
+            <dt>{t("Eligible spend")}</dt>
+            <dd>{formatMoney(String(previewMinor), locale)}</dd>
           </div>
           <div>
-            <dt>Qualified tier</dt>
-            <dd>{previewTier?.name ?? "Configuration invalid"}</dd>
+            <dt>{t("Qualified tier")}</dt>
+            <dd>{previewTier?.name ?? t("Configuration invalid")}</dd>
           </div>
           <div>
-            <dt>Pending award</dt>
-            <dd>{previewPoints.toLocaleString("en")} points</dd>
+            <dt>{t("Pending award")}</dt>
+            <dd>
+              {previewPoints.toLocaleString(merchantIntlLocale(locale))}{" "}
+              {t("points")}
+            </dd>
           </div>
         </dl>
         <p>
-          Preview uses the same versioned contract validation. Publication
-          revalidates and materializes the exact configuration in PostgreSQL.
+          {t(
+            "Preview uses the same versioned contract validation. Publication revalidates and materializes the exact configuration in PostgreSQL.",
+          )}
         </p>
       </aside>
 
@@ -523,14 +548,16 @@ export function ProgrammeEditor({
         <div>
           <strong>
             {validation.success
-              ? "Draft passes contract validation"
-              : "Draft needs attention"}
+              ? t("Draft passes contract validation")
+              : t("Draft needs attention")}
           </strong>
           <p aria-live="polite" className={`action-message ${state.kind}`}>
             {state.message ||
               (!validation.success
-                ? validation.error.issues[0]?.message
-                : "Saving creates a new immutable version; it does not change the live programme.")}
+                ? t("Draft contains invalid configuration.")
+                : t(
+                    "Saving creates a new immutable version; it does not change the live programme.",
+                  ))}
           </p>
         </div>
         <button
@@ -538,7 +565,7 @@ export function ProgrammeEditor({
           disabled={pending || !validation.success}
           type="submit"
         >
-          {pending ? "Saving draft..." : "Save new draft version"}
+          {pending ? t("Saving draft...") : t("Save new draft version")}
         </button>
       </div>
     </form>

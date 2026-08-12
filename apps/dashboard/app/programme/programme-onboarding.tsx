@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { merchantText, type MerchantLocale } from "@/lib/merchant-locale";
 import { createInitialProgramme, type ProgrammeActionState } from "./actions";
 
 const initialState: ProgrammeActionState = { kind: "idle", message: "" };
@@ -10,12 +11,15 @@ export function ProgrammeOnboarding({
   programmeGroupName,
   suggestedName,
   operationId,
+  locale,
 }: {
   programmeGroupId: string;
   programmeGroupName: string;
   suggestedName: string;
   operationId: string;
+  locale: MerchantLocale;
 }) {
+  const t = (source: string) => merchantText(locale, source);
   const [state, action, pending] = useActionState(
     createInitialProgramme,
     initialState,
@@ -25,20 +29,22 @@ export function ProgrammeOnboarding({
     <section className="programme-panel onboarding-panel">
       <div className="programme-panel-heading">
         <div>
-          <p className="login-eyebrow">Step 1 of 2</p>
-          <h2>Create your programme</h2>
+          <p className="login-eyebrow">{t("Step 1 of 2")}</p>
+          <h2>{t("Create your programme")}</h2>
           <p>
-            This creates the programme container in {programmeGroupName}. You
-            will define tiers and rewards as a separate immutable draft next.
+            {locale === "sl-SI"
+              ? `S tem ustvarite vsebnik programa v skupini ${programmeGroupName}. Nato boste stopnje in nagrade opredelili v ločenem nespremenljivem osnutku.`
+              : `This creates the programme container in ${programmeGroupName}. You will define tiers and rewards as a separate immutable draft next.`}
           </p>
         </div>
-        <span className="status-pill draft">Not launched</span>
+        <span className="status-pill draft">{t("Not launched")}</span>
       </div>
       <form action={action} className="onboarding-form">
+        <input name="lang" type="hidden" value={locale} />
         <input name="programmeGroupId" type="hidden" value={programmeGroupId} />
         <input name="operationId" type="hidden" value={operationId} />
         <label>
-          Programme name
+          {t("Programme name")}
           <input
             autoComplete="organization-title"
             defaultValue={suggestedName}
@@ -47,10 +53,10 @@ export function ProgrammeOnboarding({
             name="name"
             required
           />
-          <span>Shown to merchant users and in programme history.</span>
+          <span>{t("Shown to merchant users and in programme history.")}</span>
         </label>
         <label>
-          Programme slug
+          {t("Programme slug")}
           <input
             autoCapitalize="none"
             autoComplete="off"
@@ -62,15 +68,18 @@ export function ProgrammeOnboarding({
             required
             spellCheck={false}
           />
-          <span>Lowercase letters, numbers, and single hyphens only.</span>
+          <span>
+            {t("Lowercase letters, numbers, and single hyphens only.")}
+          </span>
         </label>
         <div className="onboarding-submit">
           <p>
-            Creating this container does not award points or publish a value
-            policy.
+            {t(
+              "Creating this container does not award points or publish a value policy.",
+            )}
           </p>
           <button className="primary" disabled={pending} type="submit">
-            {pending ? "Creating programme..." : "Create programme"}
+            {pending ? t("Creating programme...") : t("Create programme")}
           </button>
         </div>
         <p aria-live="polite" className={`action-message ${state.kind}`}>
