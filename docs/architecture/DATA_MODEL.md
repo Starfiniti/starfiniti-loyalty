@@ -2,7 +2,7 @@
 
 ## Implementation status
 
-The tenancy, WooCommerce event/effect, ledger, programme-engine, merchant command/read-model, controlled customer experience, public delivery, authenticated customer link, controlled redemption, customer data export, and WooCommerce customer-erasure portions below are implemented in twenty-three versioned migrations. The ledger uses immutable transaction headers/entries, six wallet buckets, programme control accounts, original-attribution lots, signed compensating allocations, same-transaction projections, tenant RLS, and narrow worker commands. Programme publication, materialized tiers/rewards, reward reservations, tier history, evaluation evidence, expiry-notification fences, WooCommerce order/refund effects, native coupon settlement, audited merchant mutations, revisioned experience tokens/copy, customer self-service reads, Auth-derived native-coupon redemption and export, and source-originated identity erasure are implemented.
+The tenancy, WooCommerce event/effect, ledger, programme-engine, merchant command/read-model, controlled customer experience, public delivery, authenticated customer link, controlled redemption, customer data export, guided connector provisioning, and WooCommerce customer-erasure portions below are implemented in twenty-four versioned migrations. The ledger uses immutable transaction headers/entries, six wallet buckets, programme control accounts, original-attribution lots, signed compensating allocations, same-transaction projections, tenant RLS, and narrow worker commands. Programme publication, materialized tiers/rewards, reward reservations, tier history, evaluation evidence, expiry-notification fences, WooCommerce order/refund effects, native coupon settlement, audited merchant mutations, revisioned experience tokens/copy, customer self-service reads, Auth-derived native-coupon redemption and export, guided WooCommerce provisioning, and source-originated identity erasure are implemented.
 
 ## Database boundaries
 
@@ -99,6 +99,8 @@ Unique per `(organization_id, workspace_id, programme_group_id)` and protected b
 
 `loyalty_private.customer_data_export_authorizations` stores only a SHA-256 capability digest, verified Auth subject, Supabase session ID, five-minute expiry, and one-use timestamp. The trusted Next.js runtime issues the random capability only after password reauthentication. `consume_customer_data_export` locks and consumes it atomically, rechecks the subject/session and every active customer-link/tenant/workspace/connection boundary, and builds one versioned JSON document without accepting organization, customer, or wallet selectors. Export content is returned directly over TLS and is never stored in PostgreSQL or object storage.
 
+`loyalty_private.provision_woocommerce_connection` is executable only by the dedicated application runtime role. It accepts a verified Auth actor plus public workspace/programme selectors and one deployment-selected `pool:<uuid>:v1` reference, then independently rechecks live owner/admin membership, active linked scope, and a published programme before creating an active v1 connection and immutable audit event. A unique index prevents reference reuse. Authenticated Data API clients receive column-level access to safe connection fields only; `signing_material_ref` remains outside browser grants and audit metadata.
+
 `loyalty_private.customer_data_export_events` is immutable per-included-customer audit evidence containing the export ID, customer and organization scope, Auth subject, session, generation time, and document schema version. It contains no exported payload, Auth email, capability, signing reference, actor evidence, request body, or commerce secret. Both export tables and functions are private and executable only by the runtime role.
 
 Identity linking is described in `IDENTITY_MODEL.md`.
@@ -147,7 +149,7 @@ An available credit creates an immutable lot linked to its credit entry, program
 
 ## Commerce and idempotency tables
 
-- `commerce_connections`: workspace-scoped WooCommerce installation, explicit programme binding, status, endpoint metadata, credential reference, signing-key version, health/reconciliation watermark. Secrets live in the deployment secret store, not rows.
+- `commerce_connections`: workspace-scoped WooCommerce installation, explicit programme binding, status, endpoint metadata, unique credential reference, signing-key version, health/reconciliation watermark. Secrets live in the deployment secret store, not rows; browser column privileges exclude the credential reference.
 - `webhook_deliveries` (`loyalty_private`): raw verified body bytes, body hash, headers allowlist, signature-key version, delivery/source IDs, receipt time, processing status, and retention deadline. Unique `(connection_id, source_delivery_id)`.
 - `commerce_events`: canonical versioned fact with source aggregate ID, source version/modified time, occurred time, canonical payload/hash, normalization version, durable effect lease/attempt state, and bounded failure code.
 - `business_effects`: unique `(organization_id, event_id, effect_kind, effect_key)` linking an event to the ledger/audit result.

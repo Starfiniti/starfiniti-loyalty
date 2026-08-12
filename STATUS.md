@@ -3,10 +3,10 @@
 ## What works
 
 - Phase 0's reproducible npm workspace, responsive standalone Next.js Overview, Supabase migration baseline, WooCommerce HPOS scaffold, repository operating system, and pinned CI are verified.
-- The Docker-backed GitHub Actions database job replays migrations/seed and runs 953 transactional pgTAP assertions plus real two-session ledger/programme concurrency and property probes.
+- The Docker-backed GitHub Actions database job replays migrations/seed and runs 997 transactional pgTAP assertions plus real two-session ledger/programme concurrency and property probes.
 - Phase 1 Rosy Rewards semantics are owner-approved and encoded as versioned configuration rather than global merchant assumptions.
 - Pure domain behavior covers integer award calculation, explicit historical tier snapshots, 30-day release, 12-month rolling expiry, earliest-expiry redemption ordering, rolling-spend tiers with grace, cumulative original-attribution refund reversal, and negative balances.
-- Twenty-four domain, fifty-six versioned contract, fifty-two dashboard, and nine worker tests pass.
+- Twenty-four domain, fifty-nine versioned contract, fifty-four dashboard, and nine worker tests pass.
 - The platform carries a full AGPL-3.0 license and package metadata; the WooCommerce connector remains independently GPL-2.0-or-later.
 - Phase 2 architecture is complete and deterministically validated: tenant/Auth trust, identity, double-entry ledger, signed inbox/outbox, reward reservation, privacy, backup/restore, deployment, and SLO models are reviewable.
 - Phase 3 tenancy/RLS is complete: organizations, memberships, workspaces, programme groups, support grants, least-privilege roles, composite tenant keys, and live authorization policies execute successfully in disposable Supabase CI.
@@ -15,7 +15,7 @@
 - Phase 6 programme execution is complete: deterministic conditional earning/exclusions, immutable publication/scheduling, materialized tiers/rewards, live/simulation evidence, effective tier intervals, reward failure compensation, and advance expiry notifications are execution-verified.
 - Phase 7 implements a separately credentialed WooCommerce effect worker, completed-order awards, cumulative original-attribution refund reversal, channel-ID customer resolution, native issue/cancel commands, PII-free coupon capture, expiry compensation, connection health watermarks, source reconciliation, and an installable GPL plugin artifact.
 - The plugin encrypts its signing key at rest, declares HPOS support, keeps checkout independent of the hub, exposes queue/dead-letter diagnostics, and provides customer loyalty, privacy export/erase, and WP-CLI recovery surfaces.
-- All 40 WooCommerce strings use the plugin text domain with exact POT coverage. The package includes a Slovenian catalog, registers its language path at WordPress `init`, and tests the localized customer navigation in each minimum/current HPOS/legacy runtime.
+- All 43 WooCommerce strings use the plugin text domain with exact POT coverage. The package includes a Slovenian catalog, registers its language path at WordPress `init`, and tests the localized customer navigation and setup-package import in each minimum/current HPOS/legacy runtime.
 - The supported WooCommerce smoke matrix passes on WordPress 6.6.5/WooCommerce 9.0.2/PHP 8.1 and WordPress 7.0.2/WooCommerce 10.9.4/PHP 8.3, each with HPOS and legacy storage. It executes classic and Blocks coupon paths under hub outage, order completion/capture, partial/full refunds, reconciliation, activation lifecycle, and dead-letter recovery.
 - WooCommerce account/cart loyalty rendering has an enforced 0-byte connector JavaScript, 0-byte connector CSS, and zero hub-request budget. Account results are capped at 20 rewards, markup sizes are bounded in the real runtime matrix, and checkout continues to use native WooCommerce coupon behavior.
 - The Next.js merchant shell now verifies Supabase Auth claims, refreshes sessions through the Next.js 16 request proxy, derives live organization/workspace/programme scope through the authenticated Data API and RLS, handles unassigned users safely, and provides sign-in/sign-out/PKCE callback paths without exposing a secret key.
@@ -24,6 +24,7 @@
 - Customer operations provide bounded literal display-reference search, database-masked channel identity, exact text-form pending/available/reserved/spent/expired/reversed buckets, and the latest immutable ledger entries with programme-version and correlation attribution.
 - Every rendered merchant route now exposes a first-focus skip link to one focusable main landmark; global visible focus includes text areas, reduced-motion behavior is guarded, and the sign-in card remains within a 390-pixel viewport.
 - The operations view can download a versioned, tenant-scoped support bundle containing only public scope/connection IDs, queue totals, watermarks, and a labelled bounded sample of grouped canonical error codes. Item IDs, display names, payloads, commerce/customer identities, actors, reasons, signing references, and secrets are omitted.
+- A tenant owner/admin can provision the first WooCommerce connector for an active workspace and published programme from the operations view. The server consumes one unique reference from a root-readable deployment key pool, records a secret-free immutable audit event, and returns an exact setup package only in that action result; the plugin validates and encrypts the imported signing key at rest.
 - The customer-experience view reads one RLS-scoped workspace/programme-group theme and previews member/guest states responsively. Owners/admins can revision a contract-validated token set through an idempotent audited command; inaccessible colors, arbitrary CSS, remote fonts, scripts, uploads, and caller-supplied tenant authority are rejected.
 - The customer-experience view also manages separate bounded English and Slovenian customer-copy revisions. Locale selectors are allowlisted, owner/admin saves derive scope and actor from live Auth, member reads remain tenant-RLS scoped, and audit metadata retains locale/revision without duplicating translated copy.
 - A public mobile-first hosted loyalty route renders one active published programme in English or Slovenian using approved theme tokens, tier rates, and reward names/costs. Its bounded anonymous read model omits organization identity, customer/ledger state, raw programme/reward configuration, audit, integration, and commerce evidence; suspended or mixed-scope resources return no document.
@@ -42,7 +43,7 @@
 ## Partial
 
 - Phases 0 through 7 are complete for the active WooCommerce scope. Shopify Phase 8 is deferred by product-owner direction.
-- Phase 9 is in progress. The authenticated shell, initial-programme onboarding, programme editor, customer wallet/ledger reads, safe hub connector operations, reason-bound individual and exact-preview bulk value adjustments, live source-reconciliation requests, real Overview reporting, route-wide keyboard bypass, sanitized support diagnostics, localized WooCommerce and hosted customer journeys, controlled experience themes/translations, guest hosted loyalty delivery, signed authenticated member delivery, controlled native-coupon redemption, direct audited customer export, and WooCommerce-originated customer erasure exist; merchant dashboard translation breadth, broader usability evidence, connector provisioning, and production deployment remain future slices.
+- Phase 9 is in progress. The authenticated shell, initial-programme onboarding, guided WooCommerce provisioning, programme editor, customer wallet/ledger reads, safe hub connector operations, reason-bound individual and exact-preview bulk value adjustments, live source-reconciliation requests, real Overview reporting, route-wide keyboard bypass, sanitized support diagnostics, localized WooCommerce and hosted customer journeys, controlled experience themes/translations, guest hosted loyalty delivery, signed authenticated member delivery, controlled native-coupon redemption, direct audited customer export, and WooCommerce-originated customer erasure exist; merchant dashboard translation breadth, broader usability evidence, and production deployment remain future slices.
 
 ## Broken or unavailable
 
@@ -52,7 +53,7 @@
 
 ## Database migration state
 
-Twenty-three versioned migrations and the seed replay successfully against disposable Supabase/Postgres 17 CI with 953 pgTAP assertions plus concurrency/property probes. No persistent or production database has been changed.
+Twenty-four versioned migrations and the seed replay successfully against disposable Supabase/Postgres 17 CI with 997 pgTAP assertions plus concurrency/property probes. No persistent or production database has been changed.
 
 ## Git state
 
@@ -62,8 +63,8 @@ Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 Wo
 
 - `npm run test --workspace=@starfiniti/domain` — passed with 24 tests.
 - `npm run typecheck --workspace=@starfiniti/domain` — passed.
-- `npm run check` — passed locally and in the latest Phase 7 baseline job: formatting, zero-warning lint, all workspace type checks, 58 unit tests, static validators, standalone Next.js production build, and plugin packaging.
-- `npm run db:validate` — passed for six migrations, Supabase config, and six transactional pgTAP files.
+- `npm run check` — passed locally and in the exact-head CI baseline: formatting, zero-warning lint, all workspace type checks, 146 unit tests, static validators, standalone Next.js production build, and plugin packaging.
+- `npm run db:validate` — passed for twenty-four migrations, Supabase config, and twenty-four transactional pgTAP files.
 - `npm run secrets:scan` — passed with no findings.
 - `npm run audit:prod` — passed with zero production vulnerabilities.
 - `npm run licenses` — passed for six AGPL npm package declarations, the full AGPL text, and both WooCommerce GPL declarations.
@@ -99,6 +100,7 @@ Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 Wo
 - PR exact-head run `31625573608` passed all six jobs for WooCommerce customer erasure, including 128 unit tests, twenty-two migration replays, all 910 pgTAP assertions, concurrency/property probes, and the complete localized WooCommerce matrix.
 - PR exact-head run `31627622779` passed all six jobs for hosted customer localization, including 132 unit tests, twenty-two migration replays, all 910 pgTAP assertions, concurrency/property probes, and active-locale claim links in the complete localized WooCommerce matrix.
 - PR exact-head run `31629852692` passed all six jobs for hosted customer export, including 141 unit tests, twenty-three migration replays, all 953 pgTAP assertions, concurrency/property probes, and the complete localized WooCommerce matrix.
+- PR exact-head run `31633310240` passed all six jobs for guided WooCommerce provisioning, including 146 unit tests, twenty-four migration replays, all 997 pgTAP assertions, concurrency/property probes, and real setup-package import in the complete localized WooCommerce matrix.
 
 ## Next recommended task
 

@@ -256,3 +256,13 @@
 - Returned the document directly over TLS with private/no-store attachment headers and no PostgreSQL, object-storage, queue, or log persistence; immutable per-customer audit records contain no export payload or Auth email.
 - Added 43 adversarial pgTAP assertions, contract/runtime tests, and a 390-pixel Slovenian password-reauthentication browser check, bringing the suites to 141 unit tests and 953 database assertions.
 - Exact-head run `31629852692` passed all six jobs: twenty-three migration replays, all 953 pgTAP assertions, concurrency/property probes, and all four localized WooCommerce runtime variants.
+
+## 2026-08-12 — Phase 9 guided WooCommerce connector provisioning
+
+- Added an owner/admin operations workflow for creating the first active WooCommerce connection only when the selected active workspace has an active programme with a published version.
+- Kept key selection behind the trusted application runtime: a deployment generator creates or atomically appends unique 256-bit keys in a root-readable read-only pool, while PostgreSQL stores only globally unique opaque references.
+- Added a runtime-only security-definer command with independent live role, tenant, workspace/programme, lifecycle, canonical store-origin, idempotency, and reference-reuse checks plus immutable secret-free audit evidence.
+- Added a one-result exact JSON package and a WooCommerce settings importer that validates and saves endpoint, connection UUID, key version, and signing key together through the existing encrypted-at-rest option.
+- Removed `signing_material_ref` from authenticated table-wide reads, added explicit safe-column grants, and proved that browser roles cannot call the provisioning command or observe secret references.
+- Added 44 adversarial pgTAP assertions, three contract tests, two dashboard helper tests, a safe key-pool generator test, 43-message Slovenian catalog coverage, and real package imports in all four minimum/current HPOS/legacy runtime cells, bringing the suites to 146 unit tests and 997 database assertions.
+- Exact-head run `31633310240` passed all six jobs: twenty-four migration replays, all 997 pgTAP assertions, concurrency/property probes, and real setup-package import in all four localized WooCommerce runtime variants.

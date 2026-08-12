@@ -41,12 +41,15 @@ Populate secret-managed environment files on the target hosts; never commit them
 
 Secret files are owner-readable only, excluded from backups unless encrypted escrow is intended, redacted from Compose inspection/support output, and rotated independently. Browser configuration contains only the public URL and publishable key.
 
+Generate the WooCommerce signing-key pool on the application host with `npm run woocommerce:keys -- --output <secret-path> --count <n>` and mount it read-only at the configured dashboard secret path. Use `--append` to preserve assigned references while adding capacity; the generator rejects replacement of existing values and performs an atomic file swap. Recreate the dashboard container after append so the bind mount observes the replacement inode. Back up the pool only through encrypted secret escrow: database rows contain references, not recoverable signing keys.
+
 ## Merchant authentication
 
 - Configure self-hosted Auth `SITE_URL` as the public dashboard origin and allow only the exact dashboard callback origins required by the environment.
 - Keep self-service signup disabled until an approved onboarding flow exists. Provision the first Auth user and live `organization_memberships` row through the audited administration path.
 - `API_EXTERNAL_URL` ends in `/auth/v1`; `SUPABASE_PUBLIC_URL` is the browser/client base URL. Both must resolve through TLS before password reset or OAuth links are enabled.
 - The dashboard receives only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. A Supabase secret/service-role key is not an application runtime dependency.
+- Configure `DASHBOARD_PUBLIC_ORIGIN` as the exact canonical lowercase HTTPS origin with no path. Guided connector setup derives its signed-event endpoint from this server-only value.
 - Reverse proxies and CDNs must preserve `Set-Cookie`, `Cache-Control`, `Expires`, `Pragma`, and `Vary` headers and must never cache authenticated HTML or Auth callback responses.
 
 ## Release process

@@ -243,11 +243,12 @@ tasks:
       - npm run check
       - npm run db:test
       - browser workflow verification
-    risks: [R-001, R-007, R-010, R-011, R-012, R-017]
+    risks: [R-001, R-007, R-010, R-011, R-012, R-017, R-018]
     docs:
       - docs/product/PRODUCT_REQUIREMENTS.md
       - docs/security/THREAT_MODEL.md
       - docs/integrations/MERCHANT_API.md
+      - docs/integrations/WOOCOMMERCE.md
       - docs/api/CUSTOMER_EXPORT.md
     evidence:
       - Next.js 16 proxy refreshes Supabase Auth cookies with private no-store headers and excludes signed commerce API routes
@@ -338,3 +339,8 @@ tasks:
       - the no-selector export transaction rechecks every active link and tenant boundary atomically consumes the capability and returns versioned identities wallets tiers reservations and complete wallet-side ledger history without persisting document content
       - 43 customer-export pgTAP assertions plus 141 unit tests cover private grants expiry replay subject and session binding tenant minimization exact bigint values immutable payload-free audit transaction rollback headers and localized reauthentication
       - exact-head run 31629852692 passed all six jobs with twenty-three migrations 953 pgTAP assertions concurrency and property probes and all four localized WooCommerce runtime variants
+      - owners and admins can provision the first active WooCommerce connector for a published programme from the operations hub without selecting or receiving a signing-material reference through the browser Data API
+      - the runtime consumes one unique deployment-managed pool reference and returns an exact one-result setup package while the immutable audit omits both the reference and signing key
+      - the plugin validates and imports all package fields atomically and stores the signing key through its existing Sodium-backed encrypted option
+      - 44 provisioning pgTAP assertions plus 146 unit tests cover grants column minimization roles tenancy lifecycle idempotency key reuse setup-package validation and dashboard eligibility
+      - exact-head run 31633310240 passed all six jobs with twenty-four migrations 997 pgTAP assertions concurrency and property probes and setup-package import in all four localized WooCommerce runtime variants

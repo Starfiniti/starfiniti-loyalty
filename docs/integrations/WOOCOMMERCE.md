@@ -35,7 +35,7 @@ WooCommerce is a thin connector. It uses HTTPS, least-privilege credentials, sig
 
 - Every customer and administration string uses the literal `starfiniti-loyalty` text domain. `Domain Path: /languages` and an `init`-time `load_plugin_textdomain` registration support the self-distributed ZIP without loading translations too early.
 - `languages/starfiniti-loyalty.pot` is the canonical translator template and must exactly match source strings. `npm run woocommerce:localization:validate` rejects missing/stale messages, missing customer strings, empty translations, and placeholder drift.
-- The package currently bundles `sl_SI` in WordPress's `.l10n.php` format. All 40 customer/admin strings, including the secure account link, follow the active WordPress locale; absent translations fall back to English.
+- The package currently bundles `sl_SI` in WordPress's `.l10n.php` format. All 43 customer/admin strings, including the secure account link and setup-package import, follow the active WordPress locale; absent translations fall back to English.
 
 ## Storefront budgets
 
@@ -48,6 +48,14 @@ The connector's production customer surfaces deliberately use WooCommerce's nati
 - at most 12 KiB for the PHP class containing storefront/admin hook rendering, with any expansion requiring an explicit reviewed budget change.
 
 `scripts/validate-woocommerce-storefront.mjs` fails the complete repository gate if connector scripts/styles, inline executable/style tags, browser/network request calls, unbounded coupon reads, or missing escaping/login guards enter the storefront boundary. Every minimum/current HPOS/legacy runtime renders the account and cart surfaces with the hub forcibly unavailable, checks semantic bounded asset-free markup, and proves zero HTTP calls.
+
+## Guided connection setup
+
+Before the first connector is provisioned, generate a deployment-only signing-key pool with `npm run woocommerce:keys -- --output <owner-readable-json-path> --count <n>`. Add capacity later with the same command plus `--append`; append preserves every prior reference and replaces the file atomically. Never print, commit, attach, or paste the pool file into support systems. After atomic replacement, recreate the dashboard container so its read-only secret mount sees the new inode.
+
+When an active workspace has a published programme and no connector, a live tenant owner/admin can enter the canonical HTTPS WooCommerce origin and display name on the hub Operations page. The browser never supplies the key or its reference. The trusted server selects an unused `pool:<uuid>:v1` reference and calls a private audited database command. On success the page displays one exact JSON setup package containing `version`, `endpoint`, `connectionId`, `keyVersion`, and `signingKey`; it is not placed in a URL or browser storage.
+
+Copy that package directly into **WooCommerce > Settings > Starfiniti Loyalty > Connection setup package**, save once, verify masked connection health, and then clear any clipboard or approved transfer record. The plugin rejects missing, extra, malformed, non-HTTPS, or weak-key fields and saves all four values together; the signing key enters the existing Sodium-backed encrypted option. Reopening the page does not retrieve the key from the hub. If transfer is lost, provision a replacement only through an explicit credential-rotation/recovery procedure rather than inventing or reusing a reference.
 
 ## Hosted customer account claim
 

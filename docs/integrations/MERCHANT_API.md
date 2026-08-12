@@ -176,6 +176,14 @@ The hosted page uses an explicit before/after confirmation. Unsupported custom/s
 
 The function returns no organization identity, customer profile/reference, channel ID, other identity, actor, source reference, reason, metadata, request/idempotency evidence, reward configuration, raw event, or signing material. Browser roles have no direct link/decision table grants. The corresponding WooCommerce claim command is private to `loyalty_runtime`; the browser cannot call it directly or supply an Auth user, organization, or customer authority.
 
+### Private WooCommerce connector provisioning
+
+`loyalty_private.provision_woocommerce_connection(actor_user_id, workspace_public_id, programme_public_id, external_store_id, display_name, signing_material_ref, idempotency_key, correlation_id)` is not a browser Data API. Only the separately credentialed `loyalty_runtime` role can execute it. The Next.js server verifies the Supabase Auth claims, supplies that verified actor, selects one deployment-managed `pool:<uuid>:v1` reference, and calls the command over its private PostgreSQL connection.
+
+PostgreSQL independently requires a live owner/admin membership, active organization/workspace, exact workspace/programme-group linkage, an active programme with a published version, canonical lowercase HTTPS store origin, unused signing reference, and no existing workspace/store connector. It creates one active WooCommerce v1 connection and one `connector.woocommerce.provision` audit event atomically. Exact idempotency retries return the original connection; changed reuse and key-reference reuse conflict.
+
+The database result includes the reference only so the trusted runtime can resolve the matching key and construct the exact one-time plugin package. Authenticated table access is column-scoped to exclude `signing_material_ref`; the audit metadata includes only public scope, store/display inputs, platform, and key version. The server action returns the setup package directly to the authorized page and does not place it in a query string, cookie, local storage, database row, queue, or log.
+
 ## Retry and error contract
 
 Idempotency is scoped by organization. Retrying the same key and canonical request returns the original resource with `outcome = duplicate` and creates neither another version nor another audit event. Reusing a key with different input raises SQLSTATE `23514`. Authorization failures use `42501`; invalid/stale configuration or lifecycle inputs use `22023`/`23514`.
