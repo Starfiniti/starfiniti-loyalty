@@ -252,6 +252,13 @@ export const wooCommerceCouponCapturedPayloadV1 = z
   })
   .strict();
 
+export const wooCommerceCustomerDeletedPayloadV1 = z
+  .object({
+    kind: z.literal("customer_deleted"),
+    externalCustomerId: z.string().regex(/^[1-9][0-9]{0,19}$/u),
+  })
+  .strict();
+
 function scaledBigIntOrNull(
   value: string,
   minorUnitDigits: number,

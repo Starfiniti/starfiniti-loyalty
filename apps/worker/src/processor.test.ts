@@ -103,6 +103,32 @@ describe("WooCommerce effect worker", () => {
     });
   });
 
+  it("classifies strict customer erasure facts without accepting contact data", () => {
+    expect(
+      parseWooCommerceEffect({
+        ...event,
+        event_type: "commerce.customer.deleted",
+        source_object_id: "customer-erasure",
+        payload: { kind: "customer_deleted", externalCustomerId: "7" },
+      }),
+    ).toEqual({ kind: "customer_delete", externalCustomerId: "7" });
+    expect(
+      parseWooCommerceEffect({
+        ...event,
+        event_type: "commerce.customer.deleted",
+        source_object_id: "customer-erasure",
+        payload: {
+          kind: "customer_deleted",
+          externalCustomerId: "7",
+          email: "secret@example.test",
+        },
+      }),
+    ).toEqual({
+      kind: "quarantine",
+      reason: "invalid_customer_deleted_payload",
+    });
+  });
+
   it("hashes equivalent object keys deterministically", () => {
     expect(evidenceSha256({ a: 1, b: { c: 2 } })).toBe(
       evidenceSha256({ b: { c: 2 }, a: 1 }),

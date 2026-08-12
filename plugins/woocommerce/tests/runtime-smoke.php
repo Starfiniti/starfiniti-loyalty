@@ -382,10 +382,30 @@ starfiniti_runtime_assert(
     && ($recoveredDiagnostics['retryable'] ?? 0) >= 1,
     'queue diagnostics expose the recovered retryable event'
 );
+Outbox::captureCustomerDeletion((int) $customerId);
+Outbox::captureCustomerDeletion((int) $customerId);
+$privacyRows = (array) $wpdb->get_results($wpdb->prepare(
+    "SELECT event_key,event_type,source_object_id,event_payload FROM {$outboxTable} WHERE event_type = %s",
+    'commerce.customer.deleted'
+), ARRAY_A);
+$privacyPayload = isset($privacyRows[0]['event_payload'])
+    ? json_decode((string) $privacyRows[0]['event_payload'], true)
+    : null;
+starfiniti_runtime_assert(
+    count($privacyRows) === 1
+    && ($privacyRows[0]['source_object_id'] ?? null) === 'customer-erasure'
+    && 1 === preg_match('/^privacy-erasure:[0-9a-f]{64}$/', (string) ($privacyRows[0]['event_key'] ?? ''))
+    && is_array($privacyPayload)
+    && ($privacyPayload['kind'] ?? null) === 'customer_deleted'
+    && ($privacyPayload['externalCustomerId'] ?? null) === (string) $customerId
+    && ! array_key_exists('email', $privacyPayload),
+    'customer erasure is queued once with an opaque key and the minimum channel subject'
+);
 starfiniti_runtime_assert(
     has_action('woocommerce_before_cart', ['Starfiniti\\Loyalty\\Plugin', 'renderCartNotice']) !== false
-    && has_filter('woocommerce_coupon_is_valid', [Commands::class, 'validateCustomer']) !== false,
-    'storefront and customer-scope hooks are registered'
+    && has_filter('woocommerce_coupon_is_valid', [Commands::class, 'validateCustomer']) !== false
+    && has_action('delete_user', [Outbox::class, 'captureCustomerDeletion']) !== false,
+    'storefront, customer-scope, and privacy lifecycle hooks are registered'
 );
 
 fwrite(STDOUT, sprintf(

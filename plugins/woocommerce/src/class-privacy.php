@@ -63,6 +63,7 @@ final class Privacy
         if (! $user instanceof \WP_User) {
             return ['items_removed' => false, 'items_retained' => false, 'messages' => [], 'done' => true];
         }
+        Outbox::captureCustomerDeletion((int) $user->ID);
         $pattern = '%"externalCustomerId":"' . $wpdb->esc_like((string) $user->ID) . '"%';
         $removed = $wpdb->query($wpdb->prepare(
             'DELETE FROM ' . self::table() . ' WHERE state = %s AND event_payload LIKE %s LIMIT 100',

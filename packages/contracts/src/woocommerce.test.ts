@@ -8,6 +8,7 @@ import {
   verifyWooCommerceCustomerClaim,
   verifyWooCommerceDelivery,
   wooCommerceCustomerClaimV1,
+  wooCommerceCustomerDeletedPayloadV1,
   wooCommerceCouponCapturedPayloadV1,
   wooCommerceCouponCommandEnvelopeV1,
   wooCommerceConnectorCommandEnvelopeV1,
@@ -286,6 +287,28 @@ describe("WooCommerce commerce facts", () => {
       wooCommerceCouponCapturedPayloadV1.safeParse({
         ...fact,
         email: "customer@example.test",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("accepts only a numeric PII-free customer deletion subject", () => {
+    expect(
+      wooCommerceCustomerDeletedPayloadV1.safeParse({
+        kind: "customer_deleted",
+        externalCustomerId: "7",
+      }).success,
+    ).toBe(true);
+    expect(
+      wooCommerceCustomerDeletedPayloadV1.safeParse({
+        kind: "customer_deleted",
+        externalCustomerId: "7",
+        email: "customer@example.test",
+      }).success,
+    ).toBe(false);
+    expect(
+      wooCommerceCustomerDeletedPayloadV1.safeParse({
+        kind: "customer_deleted",
+        externalCustomerId: "guest@example.test",
       }).success,
     ).toBe(false);
   });
