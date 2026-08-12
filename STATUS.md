@@ -38,7 +38,7 @@
 
 ## Database migration state
 
-Twelve versioned migrations and the seed replay successfully against disposable Supabase/Postgres 17 CI with 551 pgTAP assertions plus concurrency/property probes. A thirteenth initial-programme onboarding migration validates locally with 35 declared adversarial assertions. No persistent or production database has been changed.
+Thirteen versioned migrations and the seed replay successfully against disposable Supabase/Postgres 17 CI with 586 pgTAP assertions plus concurrency/property probes. No persistent or production database has been changed.
 
 ## Git state
 
@@ -68,6 +68,7 @@ Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 Wo
 - PR exact-head run `31585681985` passed all six jobs for signed source reconciliation, including ten migration replays, 485 pgTAP assertions, and the complete WooCommerce matrix.
 - PR exact-head run `31588394642` passed all six jobs for live Overview reporting, including eleven migration replays, 518 pgTAP assertions, concurrency/property probes, and the complete WooCommerce matrix.
 - PR exact-head run `31589866616` passed all six jobs for exact customer reads, including twelve migration replays, 551 pgTAP assertions, concurrency/property probes, and the complete WooCommerce matrix; one matrix cell passed on retry after an external Composer TLS certificate mismatch.
+- PR exact-head run `31591151097` passed all six jobs for initial-programme onboarding, including thirteen migration replays, 586 pgTAP assertions, concurrency/property probes, and the complete WooCommerce matrix.
 
 ## Next recommended task
 

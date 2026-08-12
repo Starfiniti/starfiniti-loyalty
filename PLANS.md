@@ -45,6 +45,7 @@ Phase 9 — merchant administration and customer experience. Shopify Phase 8 rem
 - The customer-read hardening slice moves list/detail assembly into live-membership database wrappers, masks channel IDs before they leave PostgreSQL, and preserves every wallet and ledger bigint as text through `BigInt` display formatting.
 - Exact-head run `31589866616` passed the customer-read baseline, twelve migrations with 551 pgTAP assertions plus concurrency/property probes, and all four WooCommerce runtime variants after one external Composer TLS retry.
 - Initial-programme onboarding now lets an existing tenant owner/admin create the first programme inside an active authorized group through an idempotent audited command; public organization/group signup remains disabled.
+- Exact-head run `31591151097` passed the onboarding baseline, thirteen migrations with 586 pgTAP assertions plus concurrency/property probes, and all four WooCommerce runtime variants.
 - Exact-head run `31581760825` passed the customer-ledger baseline, database job, and all four WooCommerce runtime variants.
 
 ## Active work

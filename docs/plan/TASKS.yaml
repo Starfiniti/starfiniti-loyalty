@@ -282,3 +282,4 @@ tasks:
       - exact-head run 31589866616 passed baseline twelve migrations 551 pgTAP assertions concurrency and property probes and all four WooCommerce runtime variants after one external Composer TLS retry
       - existing tenant owners and admins can create the first programme in an active selected group through a live-role idempotent audited command without direct table DML
       - 35 initial-programme onboarding pgTAP assertions cover exact privileges canonical inputs tenant and actor derivation retries conflicts duplicate slugs suspended groups role revocation cross-tenant denial and immutable audit evidence
+      - exact-head run 31591151097 passed baseline thirteen migrations 586 pgTAP assertions concurrency and property probes and all four WooCommerce runtime variants
