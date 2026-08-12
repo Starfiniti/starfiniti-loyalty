@@ -2,6 +2,14 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, Crown, ShieldCheck } from "lucide-react";
 import { signOut } from "@/app/actions";
+import { MerchantLocaleSwitcher } from "@/components/merchant-locale-switcher";
+import {
+  merchantIntlLocale,
+  merchantLocalePath,
+  merchantText,
+  resolveMerchantLocale,
+  type MerchantLocale,
+} from "@/lib/merchant-locale";
 import {
   getCustomerAdjustmentContext,
   getCustomerDetail,
@@ -19,8 +27,8 @@ import {
   type CustomerActivityFilter,
 } from "@/lib/customers";
 
-function formatDate(value: string): string {
-  return new Intl.DateTimeFormat("en-GB", {
+function formatDate(value: string, locale: MerchantLocale): string {
+  return new Intl.DateTimeFormat(merchantIntlLocale(locale), {
     dateStyle: "medium",
     timeStyle: "short",
     timeZone: "Europe/Ljubljana",
@@ -36,17 +44,24 @@ export default async function CustomerDetailPage({
   searchParams,
 }: {
   params: Promise<{ customerId: string }>;
-  searchParams: Promise<{ activity?: string | string[] }>;
+  searchParams: Promise<{
+    activity?: string | string[];
+    lang?: string | string[];
+  }>;
 }) {
   const tenant = await getAuthenticatedTenantState();
   const { customerId } = await params;
-  const activityFilter = parseCustomerActivityFilter(
-    (await searchParams).activity,
-  );
+  const resolvedParams = await searchParams;
+  const locale = resolveMerchantLocale(resolvedParams.lang);
+  const t = (source: string) => merchantText(locale, source);
+  const activityFilter = parseCustomerActivityFilter(resolvedParams.activity);
   if (tenant.kind === "unauthenticated") {
-    redirect(`/login?next=${encodeURIComponent(`/customers/${customerId}`)}`);
+    const target = merchantLocalePath(`/customers/${customerId}`, locale);
+    redirect(
+      merchantLocalePath(`/login?next=${encodeURIComponent(target)}`, locale),
+    );
   }
-  if (tenant.kind === "unassigned") redirect("/");
+  if (tenant.kind === "unassigned") redirect(merchantLocalePath("/", locale));
 
   const [detail, adjustmentContext, programmeState, tierState] =
     await Promise.all([
@@ -71,45 +86,63 @@ export default async function CustomerDetailPage({
     })[filter];
 
   return (
-    <main className="customer-page" id="main-content" tabIndex={-1}>
+    <main
+      className="customer-page"
+      id="main-content"
+      lang={locale}
+      tabIndex={-1}
+    >
       <header className="programme-topbar">
         <div>
-          <Link className="programme-brand" href="/">
+          <Link
+            className="programme-brand"
+            href={merchantLocalePath("/", locale)}
+          >
             <span aria-hidden="true">SF</span>
             Starfiniti Loyalty
           </Link>
           <p>{tenant.context.organization.name}</p>
         </div>
-        <nav aria-label="Account navigation">
-          <Link className="secondary" href="/customers">
-            Customers
-          </Link>
-          <form action={signOut}>
-            <button className="secondary" type="submit">
-              Sign out
-            </button>
-          </form>
-        </nav>
+        <div className="programme-topbar-actions">
+          <MerchantLocaleSwitcher locale={locale} />
+          <nav aria-label={t("Account navigation")}>
+            <Link
+              className="secondary"
+              href={merchantLocalePath("/customers", locale)}
+            >
+              {t("Customers")}
+            </Link>
+            <form action={signOut}>
+              <input name="lang" type="hidden" value={locale} />
+              <button className="secondary" type="submit">
+                {t("Sign out")}
+              </button>
+            </form>
+          </nav>
+        </div>
       </header>
 
       <div className="customer-heading detail-heading">
         <div>
-          <Link className="back-link" href="/customers">
-            <ArrowLeft aria-hidden="true" /> Back to customers
+          <Link
+            className="back-link"
+            href={merchantLocalePath("/customers", locale)}
+          >
+            <ArrowLeft aria-hidden="true" /> {t("Back to customers")}
           </Link>
           <h1>{detail.customer.displayReference}</h1>
           <p>
-            {detail.customer.identityKind ?? "Unlinked"} ·{" "}
-            {detail.customer.maskedExternalId ?? "No channel ID"} ·{" "}
+            {detail.customer.identityKind ?? t("Unlinked")} ·{" "}
+            {detail.customer.maskedExternalId ?? t("No channel ID")} ·{" "}
             {detail.customer.status}
           </p>
         </div>
         <span className="privacy-badge">
-          <ShieldCheck aria-hidden="true" /> Tenant scoped
+          <ShieldCheck aria-hidden="true" /> {t("Tenant scoped")}
         </span>
       </div>
 
-      <section className="balance-grid" aria-label="Wallet balances">
+      <section className="balance-grid" aria-label={t("Wallet balances")}>
         {(
           [
             ["Available", detail.balances.available],
@@ -121,9 +154,9 @@ export default async function CustomerDetailPage({
           ] as const
         ).map(([bucket, points]) => (
           <article className="balance-card" key={bucket}>
-            <span>{bucket}</span>
-            <strong>{formatPointText(points)}</strong>
-            <small>points</small>
+            <span>{t(bucket)}</span>
+            <strong>{formatPointText(points, locale)}</strong>
+            <small>{t("points")}</small>
           </article>
         ))}
       </section>
@@ -135,56 +168,56 @@ export default async function CustomerDetailPage({
         <div className="customer-result-heading">
           <div>
             <Crown aria-hidden="true" />
-            <strong id="tier-title">Tier qualification</strong>
+            <strong id="tier-title">{t("Tier qualification")}</strong>
           </div>
-          <span>Current immutable decision</span>
+          <span>{t("Current immutable decision")}</span>
         </div>
         {tierState?.tierCode ? (
           <dl className="tier-detail-grid">
             <div>
-              <dt>Effective tier</dt>
+              <dt>{t("Effective tier")}</dt>
               <dd>{tierState.tierName ?? tierState.tierCode}</dd>
             </div>
             <div>
-              <dt>Qualified tier</dt>
+              <dt>{t("Qualified tier")}</dt>
               <dd>
                 {tierState.qualifiedTierName ??
                   tierState.qualifiedTierCode ??
-                  "Not recorded"}
+                  t("Not recorded")}
               </dd>
             </div>
             <div>
-              <dt>Decision</dt>
+              <dt>{t("Decision")}</dt>
               <dd>{label(tierState.transition ?? "none")}</dd>
             </div>
             <div>
-              <dt>Rolling eligible spend</dt>
+              <dt>{t("Rolling eligible spend")}</dt>
               <dd>
                 {tierState.rollingEligibleSpendMinor
-                  ? `${formatPointText(tierState.rollingEligibleSpendMinor)} minor units`
-                  : "Not recorded"}
+                  ? `${formatPointText(tierState.rollingEligibleSpendMinor, locale)} ${t("minor units")}`
+                  : t("Not recorded")}
               </dd>
             </div>
             <div>
-              <dt>Effective since</dt>
+              <dt>{t("Effective since")}</dt>
               <dd>
                 {tierState.effectiveFrom
-                  ? formatDate(tierState.effectiveFrom)
-                  : "Not recorded"}
+                  ? formatDate(tierState.effectiveFrom, locale)
+                  : t("Not recorded")}
               </dd>
             </div>
             <div>
-              <dt>Grace until</dt>
+              <dt>{t("Grace until")}</dt>
               <dd>
                 {tierState.graceUntil
-                  ? formatDate(tierState.graceUntil)
-                  : "No active grace period"}
+                  ? formatDate(tierState.graceUntil, locale)
+                  : t("No active grace period")}
               </dd>
             </div>
           </dl>
         ) : (
           <p className="empty-state">
-            No tier decision has been recorded for this wallet yet.
+            {t("No tier decision has been recorded for this wallet yet.")}
           </p>
         )}
       </section>
@@ -195,6 +228,7 @@ export default async function CustomerDetailPage({
         <CustomerAdjustmentForm
           availablePoints={adjustmentContext.availablePoints}
           customerId={customerId}
+          locale={locale}
           programmeGroupId={tenant.context.programmeGroup.public_id}
           programmeVersionId={publishedVersion.id}
           programmeVersionNumber={publishedVersion.versionNumber}
@@ -204,34 +238,44 @@ export default async function CustomerDetailPage({
       <section className="customer-panel ledger-panel">
         <div className="customer-result-heading">
           <div>
-            <strong>Immutable ledger history</strong>
+            <strong>{t("Immutable ledger history")}</strong>
           </div>
           <span>
-            {visibleLedger.length} of {detail.ledger.length} latest entries
+            {visibleLedger.length} {t("of")} {detail.ledger.length}{" "}
+            {t("latest entries")}
           </span>
         </div>
-        <nav className="activity-filters" aria-label="Filter customer activity">
+        <nav
+          className="activity-filters"
+          aria-label={t("Filter customer activity")}
+        >
           {CUSTOMER_ACTIVITY_FILTERS.map((filter) => (
             <Link
               aria-current={filter === activityFilter ? "page" : undefined}
               className={filter === activityFilter ? "active" : undefined}
               href={
                 filter === "all"
-                  ? `/customers/${customerId}`
-                  : `/customers/${customerId}?activity=${filter}`
+                  ? merchantLocalePath(`/customers/${customerId}`, locale)
+                  : merchantLocalePath(
+                      `/customers/${customerId}?activity=${filter}`,
+                      locale,
+                    )
               }
               key={filter}
             >
-              {activityLabel(filter)}
+              {t(activityLabel(filter))}
             </Link>
           ))}
         </nav>
         {detail.ledger.length === 0 ? (
-          <p className="empty-state">No ledger entries for this wallet.</p>
+          <p className="empty-state">
+            {t("No ledger entries for this wallet.")}
+          </p>
         ) : visibleLedger.length === 0 ? (
           <p className="empty-state">
-            No {activityLabel(activityFilter).toLowerCase()} entries appear in
-            the latest 100 wallet records.
+            {locale === "sl-SI"
+              ? `V zadnjih 100 zapisih denarnice ni vnosov za filter »${t(activityLabel(activityFilter))}«.`
+              : `No ${activityLabel(activityFilter).toLowerCase()} entries appear in the latest 100 wallet records.`}
           </p>
         ) : (
           <ol className="ledger-list">
@@ -241,7 +285,7 @@ export default async function CustomerDetailPage({
                   className={`ledger-points ${pointTextIsCredit(item.points) ? "credit" : "debit"}`}
                 >
                   {BigInt(item.points) > 0n ? "+" : ""}
-                  {formatPointText(item.points)}
+                  {formatPointText(item.points, locale)}
                 </span>
                 <div>
                   <strong>{label(item.kind)}</strong>
@@ -250,10 +294,12 @@ export default async function CustomerDetailPage({
                     {item.sourceReference ?? item.actorType} · programme v
                     {item.programmeVersion ?? "?"}
                   </span>
-                  <small>Correlation {item.correlationId.slice(0, 12)}…</small>
+                  <small>
+                    {t("Correlation")} {item.correlationId.slice(0, 12)}…
+                  </small>
                 </div>
                 <time dateTime={item.effectiveAt}>
-                  {formatDate(item.effectiveAt)}
+                  {formatDate(item.effectiveAt, locale)}
                 </time>
               </li>
             ))}

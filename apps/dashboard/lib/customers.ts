@@ -46,9 +46,9 @@ export function isExactPointText(value: unknown): value is string {
   return typeof value === "string" && /^-?(0|[1-9][0-9]*)$/u.test(value);
 }
 
-export function formatPointText(value: string): string {
+export function formatPointText(value: string, locale = "en"): string {
   if (!isExactPointText(value)) throw new Error("invalid_point_value");
-  return BigInt(value).toLocaleString("en");
+  return BigInt(value).toLocaleString(locale === "sl-SI" ? "sl-SI" : "en");
 }
 
 export function pointTextIsCredit(value: string): boolean {

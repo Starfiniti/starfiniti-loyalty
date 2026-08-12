@@ -158,7 +158,6 @@ const SLOVENIAN_TEXT: Readonly<Record<string, string>> = {
   "Example order": "Primer naročila",
   "Eligible spend (EUR)": "Upravičena poraba (EUR)",
   "Eligible spend": "Upravičena poraba",
-  "Qualified tier": "Dosežena stopnja",
   "Configuration invalid": "Neveljavna konfiguracija",
   "Invalid amount": "Neveljaven znesek",
   "Pending award": "Čakajoča dodelitev",
@@ -340,6 +339,151 @@ const SLOVENIAN_TEXT: Readonly<Record<string, string>> = {
     "Ta točna ponovna izvedba je bila že zahtevana.",
   "The effect was returned to the idempotent worker queue.":
     "Učinek je bil vrnjen v idempotentno delovno vrsto.",
+  Operations: "Operacije",
+  "Search pseudonymous customer references and inspect authoritative wallet balances. Channel IDs stay masked in the interface.":
+    "Iščite psevdonimne reference strank in preglejte avtoritativna stanja denarnic. ID-ji kanalov ostanejo v vmesniku prikriti.",
+  "Bulk adjustment": "Množična prilagoditev",
+  "Search customer references": "Išči reference strank",
+  "Search display reference": "Išči prikazno referenco",
+  Clear: "Počisti",
+  customers: "strank",
+  "Newest 50 · RLS protected": "Najnovejših 50 · zaščiteno z RLS",
+  "No matching customers": "Ni ustreznih strank",
+  "Try a different display reference. Email is deliberately not an identity or merge key.":
+    "Poskusite z drugo prikazno referenco. E-pošta namenoma ni identiteta ali ključ za združevanje.",
+  Customer: "Stranka",
+  "Channel identity": "Identiteta kanala",
+  Available: "Razpoložljivo",
+  Pending: "V čakanju",
+  Reserved: "Rezervirano",
+  Created: "Ustvarjeno",
+  Open: "Odpri",
+  wallet: "denarnica",
+  "not created": "ni ustvarjena",
+  "Not linked": "Ni povezano",
+  "No channel identity": "Ni identitete kanala",
+  View: "Prikaži",
+  "Back to customers": "Nazaj na stranke",
+  Unlinked: "Nepovezano",
+  "No channel ID": "Ni ID-ja kanala",
+  "Tenant scoped": "Omejeno na okolje",
+  "Wallet balances": "Stanja denarnice",
+  Spent: "Porabljeno",
+  Expired: "Poteklo",
+  Reversed: "Razveljavljeno",
+  "Tier qualification": "Uvrstitev v stopnjo",
+  "Current immutable decision": "Trenutna nespremenljiva odločitev",
+  "Effective tier": "Veljavna stopnja",
+  "Qualified tier": "Dosežena stopnja",
+  "Not recorded": "Ni zabeleženo",
+  Decision: "Odločitev",
+  "Rolling eligible spend": "Drseča upravičena poraba",
+  "minor units": "manjših enot",
+  "Effective since": "Velja od",
+  "Grace until": "Prehodno obdobje do",
+  "No active grace period": "Ni aktivnega prehodnega obdobja",
+  "No tier decision has been recorded for this wallet yet.":
+    "Za to denarnico še ni bila zabeležena odločitev o stopnji.",
+  "Immutable ledger history": "Nespremenljiva zgodovina glavne knjige",
+  of: "od",
+  "latest entries": "najnovejših vnosov",
+  "Filter customer activity": "Filtriraj dejavnost stranke",
+  "All activity": "Vsa dejavnost",
+  "Orders & refunds": "Naročila in vračila",
+  "Release & expiry": "Sprostitev in potek",
+  Adjustments: "Prilagoditve",
+  "No ledger entries for this wallet.":
+    "Za to denarnico ni vnosov glavne knjige.",
+  "Manual adjustment": "Ročna prilagoditev",
+  "Immutable ledger · programme": "Nespremenljiva glavna knjiga · program",
+  "Points to add or remove": "Točke za dodajanje ali odvzem",
+  Reason: "Razlog",
+  "Approved customer correction": "Odobren popravek stranke",
+  "Internal note (optional)": "Notranja opomba (neobvezno)",
+  "Ticket or approval reference": "Referenca zahtevka ali odobritve",
+  "Added points expire at (Europe/Ljubljana)":
+    "Dodane točke potečejo (Europe/Ljubljana)",
+  "Resulting available balance": "Končno razpoložljivo stanje",
+  "Warning: this appends a compensating debit and may make the available balance negative. It never rewrites prior awards.":
+    "Opozorilo: to doda kompenzacijsko bremenitev in lahko razpoložljivo stanje postane negativno. Preteklih dodelitev nikoli ne prepiše.",
+  "Added points create a new expiry lot attributed to the current published programme version.":
+    "Dodane točke ustvarijo nov paket s potekom, pripisan trenutni objavljeni različici programa.",
+  "Review adjustment": "Preglej prilagoditev",
+  "I reviewed the amount, resulting balance, reason, and expiry.":
+    "Pregledal/-a sem znesek, končno stanje, razlog in potek.",
+  "Recording…": "Beleženje …",
+  "Confirm point removal": "Potrdi odvzem točk",
+  "Confirm point credit": "Potrdi dodajanje točk",
+  "Review and confirm the adjustment.": "Preglejte in potrdite prilagoditev.",
+  "The adjustment identity is invalid. Refresh and try again.":
+    "Identiteta prilagoditve ni veljavna. Osvežite stran in poskusite znova.",
+  "Enter non-zero whole points, a single-line reason, and an expiry for added points.":
+    "Vnesite neničelne cele točke, enovrstični razlog in potek za dodane točke.",
+  "Your current organization role cannot adjust customer value.":
+    "Vaša trenutna vloga v organizaciji ne more prilagajati vrednosti stranke.",
+  "The wallet, programme version, or request changed. No adjustment was assumed.":
+    "Denarnica, različica programa ali zahteva se je spremenila. Prilagoditev se ne šteje za izvedeno.",
+  "The immutable ledger result could not be verified.":
+    "Nespremenljivega rezultata glavne knjige ni bilo mogoče preveriti.",
+  "Bulk point adjustment": "Množična prilagoditev točk",
+  "Exact approval required": "Potrebna je točna odobritev",
+  "Read-only customer access": "Dostop do strank samo za branje",
+  "A published programme is required": "Potreben je objavljen program",
+  "Publish the current loyalty programme before attributing new bulk ledger transactions to it.":
+    "Pred pripisovanjem novih množičnih transakcij glavne knjige objavite trenutni program zvestobe.",
+  "Select customers": "Izberite stranke",
+  "2–50 active wallets · latest 50 customers":
+    "2–50 aktivnih denarnic · zadnjih 50 strank",
+  "At least two active customer wallets are required for a bulk operation.":
+    "Za množično operacijo sta potrebni vsaj dve aktivni denarnici strank.",
+  "available points": "razpoložljivih točk",
+  "Points per customer": "Točke na stranko",
+  "Approved campaign correction": "Odobren popravek kampanje",
+  "Credit expiry (Europe/Ljubljana; required when adding points)":
+    "Potek dobropisa (Europe/Ljubljana; obvezen pri dodajanju točk)",
+  "Dry run first": "Najprej poskusni izračun",
+  "Previewing is read-only. Execution later requires the exact customer set, balances, amount, reason, expiry, and published programme fingerprint shown in that preview.":
+    "Predogled je samo za branje. Izvedba nato zahteva točen prikazan nabor strank, stanja, znesek, razlog, potek in prstni odtis objavljenega programa.",
+  "Building dry run…": "Priprava poskusnega izračuna …",
+  "Preview batch": "Predogled serije",
+  "Each customer": "Vsaka stranka",
+  "Total ledger effect": "Skupni učinek glavne knjige",
+  "Available before": "Razpoložljivo prej",
+  "Projected after": "Predvideno potem",
+  "Credit expiry": "Potek dobropisa",
+  "Not applicable to point removal": "Ne velja za odvzem točk",
+  "Preview fingerprint": "Prstni odtis predogleda",
+  "I approve this exact customer set, amount, projected balances, reason, expiry, and immutable ledger batch.":
+    "Odobravam ta točen nabor strank, znesek, predvidena stanja, razlog, potek in nespremenljivo serijo glavne knjige.",
+  "Recording batch…": "Beleženje serije …",
+  "Execute approved batch": "Izvedi odobreno serijo",
+  "Start a new dry run": "Začni nov poskusni izračun",
+  "Select 2 to 50 unique customers, enter non-zero whole points and a single-line reason, and set an expiry for credits.":
+    "Izberite 2 do 50 enoličnih strank, vnesite neničelne cele točke in enovrstični razlog ter nastavite potek za dobropise.",
+  "Your current organization role cannot preview customer value changes.":
+    "Vaša trenutna vloga v organizaciji ne more pregledovati sprememb vrednosti strank.",
+  "The customer set, wallet balances, or published programme changed. No adjustment was assumed.":
+    "Nabor strank, stanja denarnic ali objavljen program se je spremenil. Prilagoditev se ne šteje za izvedeno.",
+  "The authoritative bulk preview could not be verified.":
+    "Avtoritativnega množičnega predogleda ni bilo mogoče preveriti.",
+  "The authoritative preview did not match the selected customers.":
+    "Avtoritativni predogled se ni ujemal z izbranimi strankami.",
+  "Dry run complete. No balances changed.":
+    "Poskusni izračun je končan. Nobeno stanje se ni spremenilo.",
+  "Review and approve the exact dry run.":
+    "Preglejte in odobrite točen poskusni izračun.",
+  "The batch identity is invalid. Start a new dry run.":
+    "Identiteta serije ni veljavna. Začnite nov poskusni izračun.",
+  "The approved dry run is invalid. Start a new preview.":
+    "Odobren poskusni izračun ni veljaven. Začnite nov predogled.",
+  "Your current organization role cannot change customer value.":
+    "Vaša trenutna vloga v organizaciji ne more spreminjati vrednosti strank.",
+  "The dry run is stale or conflicts with this batch identity. No partial batch was recorded.":
+    "Poskusni izračun je zastarel ali v sporu z identiteto serije. Delna serija ni bila zabeležena.",
+  "The batch could not be verified. No completed batch was assumed.":
+    "Serije ni bilo mogoče preveriti. Serija se ne šteje za dokončano.",
+  "The immutable batch result could not be verified.":
+    "Nespremenljivega rezultata serije ni bilo mogoče preveriti.",
 };
 
 export function merchantText(locale: MerchantLocale, source: string): string {

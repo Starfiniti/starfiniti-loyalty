@@ -9,6 +9,8 @@ import {
   type MerchantBulkAdjustmentPreviewResultV1,
 } from "@starfiniti/contracts";
 import { revalidatePath } from "next/cache";
+import { parseMerchantLocalDateTime } from "@/lib/merchant-date-time";
+import { merchantText, resolveMerchantLocale } from "@/lib/merchant-locale";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type ApprovedPreview = Readonly<{
@@ -36,14 +38,16 @@ const UUID_V4 =
 function expiryFromForm(formData: FormData, points: string): string | null {
   if (!/^[1-9][0-9]*$/u.test(points)) return null;
   const input = String(formData.get("expiresAt") ?? "");
-  const date = input ? new Date(input) : null;
-  return date && !Number.isNaN(date.valueOf()) ? date.toISOString() : null;
+  const date = input ? parseMerchantLocalDateTime(input) : null;
+  return date ? date.toISOString() : null;
 }
 
 export async function previewBulkCustomerAdjustment(
   _previousState: BulkPreviewActionState,
   formData: FormData,
 ): Promise<BulkPreviewActionState> {
+  const locale = resolveMerchantLocale(formData.get("lang"));
+  const message = (source: string) => merchantText(locale, source);
   const pointsPerCustomer = String(formData.get("pointsPerCustomer") ?? "");
   const command = merchantBulkAdjustmentPreviewCommandV1.safeParse({
     version: "1",
@@ -57,8 +61,9 @@ export async function previewBulkCustomerAdjustment(
   if (!command.success) {
     return {
       kind: "error",
-      message:
+      message: message(
         "Select 2 to 50 unique customers, enter non-zero whole points and a single-line reason, and set an expiry for credits.",
+      ),
     };
   }
 
@@ -76,10 +81,11 @@ export async function previewBulkCustomerAdjustment(
   if (error) {
     return {
       kind: "error",
-      message:
+      message: message(
         error.code === "42501"
           ? "Your current organization role cannot preview customer value changes."
           : "The customer set, wallet balances, or published programme changed. No adjustment was assumed.",
+      ),
     };
   }
   const row = (Array.isArray(data) ? data[0] : data) as Record<
@@ -100,7 +106,7 @@ export async function previewBulkCustomerAdjustment(
   if (!result.success) {
     return {
       kind: "error",
-      message: "The authoritative bulk preview could not be verified.",
+      message: message("The authoritative bulk preview could not be verified."),
     };
   }
   const requested = [...command.data.customerIds].sort();
@@ -111,13 +117,14 @@ export async function previewBulkCustomerAdjustment(
   ) {
     return {
       kind: "error",
-      message:
+      message: message(
         "The authoritative preview did not match the selected customers.",
+      ),
     };
   }
   return {
     kind: "success",
-    message: "Dry run complete. No balances changed.",
+    message: message("Dry run complete. No balances changed."),
     preview: { command: command.data, result: result.data },
   };
 }
@@ -126,14 +133,19 @@ export async function executeBulkCustomerAdjustment(
   _previousState: BulkExecuteActionState,
   formData: FormData,
 ): Promise<BulkExecuteActionState> {
+  const locale = resolveMerchantLocale(formData.get("lang"));
+  const message = (source: string) => merchantText(locale, source);
   if (formData.get("confirmation") !== "approved") {
-    return { kind: "error", message: "Review and approve the exact dry run." };
+    return {
+      kind: "error",
+      message: message("Review and approve the exact dry run."),
+    };
   }
   const operationId = String(formData.get("operationId") ?? "");
   if (!UUID_V4.test(operationId)) {
     return {
       kind: "error",
-      message: "The batch identity is invalid. Start a new dry run.",
+      message: message("The batch identity is invalid. Start a new dry run."),
     };
   }
   const pointsPerCustomer = String(formData.get("pointsPerCustomer") ?? "");
@@ -153,7 +165,7 @@ export async function executeBulkCustomerAdjustment(
   if (!command.success) {
     return {
       kind: "error",
-      message: "The approved dry run is invalid. Start a new preview.",
+      message: message("The approved dry run is invalid. Start a new preview."),
     };
   }
 
@@ -174,12 +186,13 @@ export async function executeBulkCustomerAdjustment(
   if (error) {
     return {
       kind: "error",
-      message:
+      message: message(
         error.code === "42501"
           ? "Your current organization role cannot change customer value."
           : error.code === "23514"
             ? "The dry run is stale or conflicts with this batch identity. No partial batch was recorded."
             : "The batch could not be verified. No completed batch was assumed.",
+      ),
     };
   }
   const row = (Array.isArray(data) ? data[0] : data) as Record<
@@ -207,7 +220,7 @@ export async function executeBulkCustomerAdjustment(
   ) {
     return {
       kind: "error",
-      message: "The immutable batch result could not be verified.",
+      message: message("The immutable batch result could not be verified."),
     };
   }
   revalidatePath("/customers");
@@ -218,8 +231,12 @@ export async function executeBulkCustomerAdjustment(
   return {
     kind: "success",
     message:
-      result.data.outcome === "duplicate"
-        ? `This exact batch already exists for ${result.data.customerCount} customers.`
-        : `Batch recorded for ${result.data.customerCount} customers (${result.data.totalPoints} total points).`,
+      locale === "sl-SI"
+        ? result.data.outcome === "duplicate"
+          ? `Ta točna serija že obstaja za ${result.data.customerCount} strank.`
+          : `Serija je zabeležena za ${result.data.customerCount} strank (skupaj ${result.data.totalPoints} točk).`
+        : result.data.outcome === "duplicate"
+          ? `This exact batch already exists for ${result.data.customerCount} customers.`
+          : `Batch recorded for ${result.data.customerCount} customers (${result.data.totalPoints} total points).`,
   };
 }

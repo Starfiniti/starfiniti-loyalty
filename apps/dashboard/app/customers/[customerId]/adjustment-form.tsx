@@ -6,6 +6,11 @@ import {
   type CustomerAdjustmentActionState,
 } from "@/app/customers/adjustment-actions";
 import { parseAdjustmentPoints, previewAvailablePoints } from "@/lib/customers";
+import {
+  merchantIntlLocale,
+  merchantText,
+  type MerchantLocale,
+} from "@/lib/merchant-locale";
 
 const initialState: CustomerAdjustmentActionState = {
   kind: "idle",
@@ -18,13 +23,16 @@ export function CustomerAdjustmentForm({
   programmeVersionId,
   programmeVersionNumber,
   availablePoints,
+  locale,
 }: Readonly<{
   customerId: string;
   programmeGroupId: string;
   programmeVersionId: string;
   programmeVersionNumber: number;
   availablePoints: string;
+  locale: MerchantLocale;
 }>) {
+  const t = (source: string) => merchantText(locale, source);
   const [operationId] = useState(() => crypto.randomUUID());
   const [points, setPoints] = useState("");
   const [expiryLocal, setExpiryLocal] = useState("");
@@ -44,11 +52,14 @@ export function CustomerAdjustmentForm({
     <section className="customer-panel adjustment-panel">
       <div className="customer-result-heading">
         <div>
-          <strong>Manual adjustment</strong>
+          <strong>{t("Manual adjustment")}</strong>
         </div>
-        <span>Immutable ledger · programme v{programmeVersionNumber}</span>
+        <span>
+          {t("Immutable ledger · programme")} v{programmeVersionNumber}
+        </span>
       </div>
       <form action={action} className="adjustment-form">
+        <input name="lang" type="hidden" value={locale} />
         <input name="customerId" type="hidden" value={customerId} />
         <input name="programmeGroupId" type="hidden" value={programmeGroupId} />
         <input
@@ -57,17 +68,10 @@ export function CustomerAdjustmentForm({
           value={programmeVersionId}
         />
         <input name="operationId" type="hidden" value={operationId} />
-        <input
-          name="expiresAt"
-          type="hidden"
-          value={
-            expiryLocal && !removal ? new Date(expiryLocal).toISOString() : ""
-          }
-        />
 
         <div className="adjustment-fields">
           <label>
-            <span>Points to add or remove</span>
+            <span>{t("Points to add or remove")}</span>
             <input
               inputMode="numeric"
               maxLength={19}
@@ -83,30 +87,30 @@ export function CustomerAdjustmentForm({
             />
           </label>
           <label>
-            <span>Reason</span>
+            <span>{t("Reason")}</span>
             <input
               maxLength={500}
               minLength={8}
               name="reason"
               onChange={() => setReviewing(false)}
-              placeholder="Approved customer correction"
+              placeholder={t("Approved customer correction")}
               required
             />
           </label>
           <label>
-            <span>Internal note (optional)</span>
+            <span>{t("Internal note (optional)")}</span>
             <input
               maxLength={500}
               name="internalNote"
               onChange={() => setReviewing(false)}
-              placeholder="Ticket or approval reference"
+              placeholder={t("Ticket or approval reference")}
             />
           </label>
           {!removal ? (
             <label>
-              <span>Added points expire at</span>
+              <span>{t("Added points expire at (Europe/Ljubljana)")}</span>
               <input
-                name="expiryLocal"
+                name="expiresAt"
                 onChange={(event) => {
                   setExpiryLocal(event.target.value);
                   setReviewing(false);
@@ -120,14 +124,21 @@ export function CustomerAdjustmentForm({
         </div>
 
         <div className={`adjustment-preview ${removal ? "danger" : ""}`}>
-          <span>Resulting available balance</span>
+          <span>{t("Resulting available balance")}</span>
           <strong>
-            {preview === null ? "—" : preview.toLocaleString("en")} points
+            {preview === null
+              ? "—"
+              : preview.toLocaleString(merchantIntlLocale(locale))}{" "}
+            {t("points")}
           </strong>
           <p>
             {removal
-              ? "Warning: this appends a compensating debit and may make the available balance negative. It never rewrites prior awards."
-              : "Added points create a new expiry lot attributed to the current published programme version."}
+              ? t(
+                  "Warning: this appends a compensating debit and may make the available balance negative. It never rewrites prior awards.",
+                )
+              : t(
+                  "Added points create a new expiry lot attributed to the current published programme version.",
+                )}
           </p>
         </div>
 
@@ -138,7 +149,7 @@ export function CustomerAdjustmentForm({
             onClick={() => setReviewing(true)}
             type="button"
           >
-            Review adjustment
+            {t("Review adjustment")}
           </button>
         ) : (
           <div className="adjustment-confirmation">
@@ -149,7 +160,9 @@ export function CustomerAdjustmentForm({
                 type="checkbox"
                 value="adjust"
               />
-              I reviewed the amount, resulting balance, reason, and expiry.
+              {t(
+                "I reviewed the amount, resulting balance, reason, and expiry.",
+              )}
             </label>
             <button
               className={removal ? "danger-button" : "primary"}
@@ -157,10 +170,10 @@ export function CustomerAdjustmentForm({
               type="submit"
             >
               {pending
-                ? "Recording…"
+                ? t("Recording…")
                 : removal
-                  ? "Confirm point removal"
-                  : "Confirm point credit"}
+                  ? t("Confirm point removal")
+                  : t("Confirm point credit")}
             </button>
           </div>
         )}

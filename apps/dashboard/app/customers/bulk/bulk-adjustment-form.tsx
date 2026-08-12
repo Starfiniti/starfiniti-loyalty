@@ -2,6 +2,11 @@
 
 import { useActionState, useState } from "react";
 import {
+  merchantLocalePath,
+  merchantText,
+  type MerchantLocale,
+} from "@/lib/merchant-locale";
+import {
   executeBulkCustomerAdjustment,
   previewBulkCustomerAdjustment,
   type BulkExecuteActionState,
@@ -16,6 +21,7 @@ export function BulkAdjustmentForm({
   programmeGroupId,
   programmeVersionId,
   programmeVersionNumber,
+  locale,
 }: Readonly<{
   customers: readonly Readonly<{
     id: string;
@@ -25,7 +31,9 @@ export function BulkAdjustmentForm({
   programmeGroupId: string;
   programmeVersionId: string;
   programmeVersionNumber: number;
+  locale: MerchantLocale;
 }>) {
+  const t = (source: string) => merchantText(locale, source);
   const [operationId] = useState(() => crypto.randomUUID());
   const [previewState, previewAction, previewPending] = useActionState(
     previewBulkCustomerAdjustment,
@@ -39,6 +47,7 @@ export function BulkAdjustmentForm({
   if (previewState.kind !== "success") {
     return (
       <form action={previewAction} className="bulk-adjustment-form">
+        <input name="lang" type="hidden" value={locale} />
         <input name="programmeGroupId" type="hidden" value={programmeGroupId} />
         <input
           name="programmeVersionId"
@@ -48,14 +57,15 @@ export function BulkAdjustmentForm({
         <div className="bulk-customer-picker">
           <div className="customer-result-heading">
             <div>
-              <strong>Select customers</strong>
+              <strong>{t("Select customers")}</strong>
             </div>
-            <span>2–50 active wallets · latest 50 customers</span>
+            <span>{t("2–50 active wallets · latest 50 customers")}</span>
           </div>
           {customers.length < 2 ? (
             <p className="empty-state">
-              At least two active customer wallets are required for a bulk
-              operation.
+              {t(
+                "At least two active customer wallets are required for a bulk operation.",
+              )}
             </p>
           ) : (
             <div className="bulk-customer-grid">
@@ -68,7 +78,9 @@ export function BulkAdjustmentForm({
                   />
                   <span>
                     <strong>{customer.displayReference}</strong>
-                    <small>{customer.availablePoints} available points</small>
+                    <small>
+                      {customer.availablePoints} {t("available points")}
+                    </small>
                   </span>
                 </label>
               ))}
@@ -77,7 +89,7 @@ export function BulkAdjustmentForm({
         </div>
         <div className="adjustment-fields">
           <label>
-            <span>Points per customer</span>
+            <span>{t("Points per customer")}</span>
             <input
               inputMode="numeric"
               maxLength={19}
@@ -88,26 +100,30 @@ export function BulkAdjustmentForm({
             />
           </label>
           <label>
-            <span>Reason</span>
+            <span>{t("Reason")}</span>
             <input
               maxLength={500}
               minLength={8}
               name="reason"
-              placeholder="Approved campaign correction"
+              placeholder={t("Approved campaign correction")}
               required
             />
           </label>
           <label>
-            <span>Credit expiry (required when adding points)</span>
+            <span>
+              {t(
+                "Credit expiry (Europe/Ljubljana; required when adding points)",
+              )}
+            </span>
             <input name="expiresAt" type="datetime-local" />
           </label>
         </div>
         <div className="bulk-safety-note">
-          <strong>Dry run first</strong>
+          <strong>{t("Dry run first")}</strong>
           <p>
-            Previewing is read-only. Execution later requires the exact customer
-            set, balances, amount, reason, expiry, and published programme
-            fingerprint shown in that preview.
+            {t(
+              "Previewing is read-only. Execution later requires the exact customer set, balances, amount, reason, expiry, and published programme fingerprint shown in that preview.",
+            )}
           </p>
         </div>
         <button
@@ -115,7 +131,7 @@ export function BulkAdjustmentForm({
           disabled={previewPending || customers.length < 2}
           type="submit"
         >
-          {previewPending ? "Building dry run…" : "Preview batch"}
+          {previewPending ? t("Building dry run…") : t("Preview batch")}
         </button>
         {previewState.kind === "error" ? (
           <p className="action-message error" role="status">
@@ -130,6 +146,7 @@ export function BulkAdjustmentForm({
   const removal = BigInt(command.pointsPerCustomer) < 0n;
   return (
     <form action={executeAction} className="bulk-adjustment-form">
+      <input name="lang" type="hidden" value={locale} />
       {command.customerIds.map((customerId) => (
         <input
           key={customerId}
@@ -164,19 +181,19 @@ export function BulkAdjustmentForm({
 
       <div className={`bulk-preview-summary ${removal ? "danger" : ""}`}>
         <div>
-          <span>Customers</span>
+          <span>{t("Customers")}</span>
           <strong>{result.customerCount}</strong>
         </div>
         <div>
-          <span>Each customer</span>
+          <span>{t("Each customer")}</span>
           <strong>{result.pointsPerCustomer}</strong>
         </div>
         <div>
-          <span>Total ledger effect</span>
+          <span>{t("Total ledger effect")}</span>
           <strong>{result.totalPoints}</strong>
         </div>
         <div>
-          <span>Programme</span>
+          <span>{t("Programme")}</span>
           <strong>v{programmeVersionNumber}</strong>
         </div>
       </div>
@@ -184,9 +201,9 @@ export function BulkAdjustmentForm({
         <table className="customer-table bulk-preview-table">
           <thead>
             <tr>
-              <th scope="col">Customer</th>
-              <th scope="col">Available before</th>
-              <th scope="col">Projected after</th>
+              <th scope="col">{t("Customer")}</th>
+              <th scope="col">{t("Available before")}</th>
+              <th scope="col">{t("Projected after")}</th>
             </tr>
           </thead>
           <tbody>
@@ -204,15 +221,15 @@ export function BulkAdjustmentForm({
       </div>
       <dl className="bulk-preview-evidence">
         <div>
-          <dt>Reason</dt>
+          <dt>{t("Reason")}</dt>
           <dd>{command.reason}</dd>
         </div>
         <div>
-          <dt>Credit expiry</dt>
-          <dd>{command.expiresAt ?? "Not applicable to point removal"}</dd>
+          <dt>{t("Credit expiry")}</dt>
+          <dd>{command.expiresAt ?? t("Not applicable to point removal")}</dd>
         </div>
         <div>
-          <dt>Preview fingerprint</dt>
+          <dt>{t("Preview fingerprint")}</dt>
           <dd>{result.previewSha256}</dd>
         </div>
       </dl>
@@ -225,21 +242,27 @@ export function BulkAdjustmentForm({
               type="checkbox"
               value="approved"
             />
-            I approve this exact customer set, amount, projected balances,
-            reason, expiry, and immutable ledger batch.
+            {t(
+              "I approve this exact customer set, amount, projected balances, reason, expiry, and immutable ledger batch.",
+            )}
           </label>
           <button
             className={removal ? "danger-button" : "primary"}
             disabled={executePending}
             type="submit"
           >
-            {executePending ? "Recording batch…" : "Execute approved batch"}
+            {executePending
+              ? t("Recording batch…")
+              : t("Execute approved batch")}
           </button>
         </div>
       ) : null}
       <div className="bulk-preview-footer">
-        <a className="secondary" href="/customers/bulk">
-          Start a new dry run
+        <a
+          className="secondary"
+          href={merchantLocalePath("/customers/bulk", locale)}
+        >
+          {t("Start a new dry run")}
         </a>
         <p className="action-message success" role="status">
           {executeState.kind === "idle"

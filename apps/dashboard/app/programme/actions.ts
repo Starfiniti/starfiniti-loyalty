@@ -10,6 +10,7 @@ import {
   merchantScheduleProgrammeVersionCommandV1,
 } from "@starfiniti/contracts";
 import { revalidatePath } from "next/cache";
+import { parseMerchantLocalDateTime } from "@/lib/merchant-date-time";
 import {
   merchantText,
   resolveMerchantLocale,
@@ -17,7 +18,6 @@ import {
 } from "@/lib/merchant-locale";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
-  parseMerchantLocalDateTime,
   programmeDraftResultText,
   programmeScheduleResultText,
 } from "./programme-action-copy";

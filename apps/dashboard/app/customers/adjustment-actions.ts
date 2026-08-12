@@ -5,6 +5,8 @@ import {
   merchantAdjustCustomerPointsResultV1,
 } from "@starfiniti/contracts";
 import { revalidatePath } from "next/cache";
+import { parseMerchantLocalDateTime } from "@/lib/merchant-date-time";
+import { merchantText, resolveMerchantLocale } from "@/lib/merchant-locale";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type CustomerAdjustmentActionState = Readonly<{
@@ -19,20 +21,29 @@ export async function adjustCustomerPoints(
   _previousState: CustomerAdjustmentActionState,
   formData: FormData,
 ): Promise<CustomerAdjustmentActionState> {
+  const locale = resolveMerchantLocale(formData.get("lang"));
+  const message = (source: string) => merchantText(locale, source);
   if (formData.get("confirmation") !== "adjust") {
-    return { kind: "error", message: "Review and confirm the adjustment." };
+    return {
+      kind: "error",
+      message: message("Review and confirm the adjustment."),
+    };
   }
   const operationId = String(formData.get("operationId") ?? "");
   if (!UUID_V4.test(operationId)) {
     return {
       kind: "error",
-      message: "The adjustment identity is invalid. Refresh and try again.",
+      message: message(
+        "The adjustment identity is invalid. Refresh and try again.",
+      ),
     };
   }
   const points = String(formData.get("points") ?? "");
   const positive = /^[1-9][0-9]*$/u.test(points);
   const expiresInput = String(formData.get("expiresAt") ?? "");
-  const expiresDate = expiresInput ? new Date(expiresInput) : null;
+  const expiresDate = expiresInput
+    ? parseMerchantLocalDateTime(expiresInput)
+    : null;
   const expiresAt =
     positive && expiresDate && !Number.isNaN(expiresDate.valueOf())
       ? expiresDate.toISOString()
@@ -54,8 +65,9 @@ export async function adjustCustomerPoints(
   if (!command.success) {
     return {
       kind: "error",
-      message:
+      message: message(
         "Enter non-zero whole points, a single-line reason, and an expiry for added points.",
+      ),
     };
   }
 
@@ -76,10 +88,11 @@ export async function adjustCustomerPoints(
   if (error) {
     return {
       kind: "error",
-      message:
+      message: message(
         error.code === "42501"
           ? "Your current organization role cannot adjust customer value."
           : "The wallet, programme version, or request changed. No adjustment was assumed.",
+      ),
     };
   }
   const row = (Array.isArray(data) ? data[0] : data) as Record<
@@ -98,7 +111,7 @@ export async function adjustCustomerPoints(
   if (!result.success) {
     return {
       kind: "error",
-      message: "The immutable ledger result could not be verified.",
+      message: message("The immutable ledger result could not be verified."),
     };
   }
   revalidatePath("/customers");
@@ -106,8 +119,12 @@ export async function adjustCustomerPoints(
   return {
     kind: "success",
     message:
-      result.data.outcome === "duplicate"
-        ? `This exact adjustment already exists. Available balance: ${result.data.availablePoints} points.`
-        : `Adjustment recorded. Available balance: ${result.data.availablePoints} points.`,
+      locale === "sl-SI"
+        ? result.data.outcome === "duplicate"
+          ? `Ta točna prilagoditev že obstaja. Razpoložljivo stanje: ${result.data.availablePoints} točk.`
+          : `Prilagoditev je zabeležena. Razpoložljivo stanje: ${result.data.availablePoints} točk.`
+        : result.data.outcome === "duplicate"
+          ? `This exact adjustment already exists. Available balance: ${result.data.availablePoints} points.`
+          : `Adjustment recorded. Available balance: ${result.data.availablePoints} points.`,
   };
 }

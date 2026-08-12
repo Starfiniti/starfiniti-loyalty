@@ -48,6 +48,9 @@ describe("customer read model helpers", () => {
 
   it("formats and compares point values beyond JavaScript safe integers", () => {
     expect(formatPointText("9007199254740993")).toBe("9,007,199,254,740,993");
+    expect(formatPointText("9007199254740993", "sl-SI")).toBe(
+      "9.007.199.254.740.993",
+    );
     expect(pointTextIsCredit("9007199254740993")).toBe(true);
     expect(pointTextIsCredit("-1")).toBe(false);
     expect(() => formatPointText("1.5")).toThrow("invalid_point_value");
