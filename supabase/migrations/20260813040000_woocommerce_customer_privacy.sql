@@ -123,7 +123,7 @@ set search_path = ''
 as $$
 declare
   identity_key text;
-  subject_fingerprint bytea;
+  target_subject_fingerprint bytea;
   existing_customer_id bigint;
   existing_customer_public_id uuid;
   created_customer_id bigint;
@@ -147,7 +147,7 @@ begin
   identity_key := case target_identity_kind
     when 'registered' then 'registered:' else 'guest-order:' end
     || target_external_id;
-  subject_fingerprint := extensions.digest(
+  target_subject_fingerprint := extensions.digest(
     target_connection_id::text || ':' || identity_key,
     'sha256'
   );
@@ -162,7 +162,7 @@ begin
     select 1
     from loyalty_private.customer_privacy_cases as privacy_case
     where privacy_case.connection_id = target_connection_id
-      and privacy_case.subject_fingerprint = subject_fingerprint
+      and privacy_case.subject_fingerprint = target_subject_fingerprint
   ) then
     return query select null::bigint, null::uuid, 'suppressed'::text;
     return;

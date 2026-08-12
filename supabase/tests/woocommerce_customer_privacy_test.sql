@@ -71,16 +71,16 @@ select results_eq(
   array['loyalty_owner'::name],
   'privacy cases use the no-login application owner'
 );
-select results_eq(
-  $$
-    select coalesce(array_to_string(routine.proconfig, ','), '')
+select is(
+  (
+    select coalesce(array_to_string(routine.proconfig, ','), '')::text
     from pg_proc as routine
     join pg_namespace as namespace on namespace.oid = routine.pronamespace
     where namespace.nspname = 'loyalty_private'
       and routine.oid::regprocedure::text =
         'loyalty_private.apply_woocommerce_customer_erasure(bigint,bigint,uuid,text,text)'
-  $$,
-  array['search_path=""'::text],
+  ),
+  'search_path=""'::text,
   'the privileged erasure command uses an empty search path'
 );
 
