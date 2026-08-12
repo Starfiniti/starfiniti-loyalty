@@ -195,6 +195,7 @@ select
   (select count(*)::bigint from loyalty.reward_reservations) as reservations,
   (select count(*)::bigint from loyalty.ledger_transactions) as transactions,
   (select count(*)::bigint from loyalty_private.transactional_outbox) as commands;
+grant select on redemption_before to authenticated;
 
 set local role authenticated;
 set local request.jwt.claim.sub = '91000000-0000-4000-8000-000000000001';
