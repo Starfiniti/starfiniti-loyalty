@@ -3,7 +3,10 @@ import {
   canonicalCommerceEventV1,
   signWooCommerceDelivery,
   verifyWooCommerceDelivery,
+  wooCommerceDecimalToMinor,
   wooCommerceDeliveryEnvelopeV1,
+  wooCommerceOrderRefundedPayloadV1,
+  wooCommerceOrderStatusChangedPayloadV1,
 } from "./woocommerce";
 
 const encoder = new TextEncoder();
@@ -76,6 +79,110 @@ describe("WooCommerce delivery contracts", () => {
       payload: { refundId: "9" },
     });
     expect(result.success).toBe(true);
+  });
+});
+
+const order = {
+  kind: "order" as const,
+  orderId: "42",
+  status: "completed",
+  currency: "EUR",
+  currencyMinorUnitDigits: 2,
+  market: "SI",
+  customer: { kind: "registered" as const, externalCustomerId: "7" },
+  paymentKind: "money" as const,
+  lines: [
+    {
+      lineId: "1",
+      productId: "10",
+      variationId: null,
+      quantity: "2",
+      categoryIds: ["3"],
+      collectionIds: [],
+      subtotal: "12.34",
+      total: "10.00",
+      refundedTotal: "2.50",
+    },
+  ],
+  shippingTotal: "4.99",
+  taxTotal: "2.10",
+  feeTotal: "0.00",
+  discountTotal: "2.34",
+  refundedTotal: "2.50",
+};
+
+describe("WooCommerce commerce facts", () => {
+  it("accepts full order and cumulative refund snapshots without PII", () => {
+    expect(
+      wooCommerceOrderStatusChangedPayloadV1.safeParse({
+        kind: "order_status_changed",
+        previousStatus: "processing",
+        order,
+      }).success,
+    ).toBe(true);
+    expect(
+      wooCommerceOrderRefundedPayloadV1.safeParse({
+        kind: "order_refunded",
+        refundId: "9",
+        refundAmount: "2.50",
+        order,
+      }).success,
+    ).toBe(true);
+  });
+
+  it("converts decimal strings to integer minor units without floating point", () => {
+    expect(wooCommerceDecimalToMinor("12.34", 2)).toBe(1234);
+    expect(wooCommerceDecimalToMinor("12", 2)).toBe(1200);
+    expect(wooCommerceDecimalToMinor("12.3", 2)).toBe(1230);
+    expect(() => wooCommerceDecimalToMinor("12.345", 2)).toThrow(
+      "excess fractional precision",
+    );
+    expect(() => wooCommerceDecimalToMinor("1e3", 2)).toThrow("decimal string");
+  });
+
+  it("rejects customer PII and malformed money facts at the strict boundary", () => {
+    expect(
+      wooCommerceOrderStatusChangedPayloadV1.safeParse({
+        kind: "order_status_changed",
+        previousStatus: "processing",
+        order: {
+          ...order,
+          customer: {
+            kind: "registered",
+            externalCustomerId: "7",
+            email: "customer@example.test",
+          },
+        },
+      }).success,
+    ).toBe(false);
+    expect(
+      wooCommerceOrderStatusChangedPayloadV1.safeParse({
+        kind: "order_status_changed",
+        previousStatus: "processing",
+        order: { ...order, shippingTotal: "4,99" },
+      }).success,
+    ).toBe(false);
+  });
+
+  it("rejects internally inconsistent line and refund totals", () => {
+    expect(
+      wooCommerceOrderStatusChangedPayloadV1.safeParse({
+        kind: "order_status_changed",
+        previousStatus: "processing",
+        order: {
+          ...order,
+          lines: [{ ...order.lines[0], refundedTotal: "10.01" }],
+        },
+      }).success,
+    ).toBe(false);
+    expect(
+      wooCommerceOrderRefundedPayloadV1.safeParse({
+        kind: "order_refunded",
+        refundId: "9",
+        refundAmount: "2.51",
+        order,
+      }).success,
+    ).toBe(false);
   });
 });
 

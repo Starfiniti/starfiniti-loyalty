@@ -66,12 +66,9 @@ final class Outbox
             (string) $orderId,
             $revision ? (string) $revision->getTimestamp() : null,
             [
-                'orderId' => (string) $orderId,
-                'fromStatus' => $from,
-                'toStatus' => $to,
-                'currency' => $order->get_currency(),
-                'total' => $order->get_total(),
-                'customerId' => (string) $order->get_customer_id(),
+                'kind' => 'order_status_changed',
+                'previousStatus' => sanitize_key($from),
+                'order' => self::orderFact($order),
             ]
         );
     }
@@ -84,21 +81,25 @@ final class Outbox
         }
 
         $orderId = $refund->get_parent_id();
+        $order = wc_get_order($orderId);
+        if (! $order instanceof \WC_Order) {
+            return;
+        }
         self::enqueue(
             sprintf('refund:%d:order:%d', $refundId, $orderId),
             'commerce.order.refunded',
             (string) $orderId,
             (string) $refundId,
             [
-                'orderId' => (string) $orderId,
+                'kind' => 'order_refunded',
                 'refundId' => (string) $refundId,
-                'amount' => $refund->get_amount(),
-                'currency' => $refund->get_currency(),
+                'refundAmount' => self::money($refund->get_amount(), true),
+                'order' => self::orderFact($order),
             ]
         );
     }
 
-    /** @param array<string, scalar|null> $payload */
+    /** @param array<string, mixed> $payload */
     private static function enqueue(
         string $eventKey,
         string $eventType,
@@ -246,6 +247,106 @@ final class Outbox
                 as_schedule_single_action(time() + $delay, self::ACTION, [], self::GROUP);
             }
         }
+    }
+
+    /** @return array<string, mixed> */
+    private static function orderFact(\WC_Order $order): array
+    {
+        $lines = [];
+        foreach ($order->get_items('line_item') as $itemId => $item) {
+            if (! $item instanceof \WC_Order_Item_Product) {
+                continue;
+            }
+            $productId = $item->get_product_id();
+            $product = wc_get_product($productId);
+            $categoryIds = $product instanceof \WC_Product
+                ? array_map('strval', $product->get_category_ids())
+                : [];
+            $collectionIds = apply_filters(
+                'starfiniti_loyalty_line_collection_ids',
+                [],
+                $item,
+                $order
+            );
+            if (! is_array($collectionIds)) {
+                $collectionIds = [];
+            }
+            $collectionIds = array_values(array_filter(array_map(
+                static fn ($value): string => sanitize_key((string) $value),
+                $collectionIds
+            )));
+            $lines[] = [
+                'lineId' => (string) $itemId,
+                'productId' => (string) $productId,
+                'variationId' => $item->get_variation_id() > 0
+                    ? (string) $item->get_variation_id()
+                    : null,
+                'quantity' => self::quantity($item->get_quantity()),
+                'categoryIds' => $categoryIds,
+                'collectionIds' => $collectionIds,
+                'subtotal' => self::money($item->get_subtotal()),
+                'total' => self::money($item->get_total()),
+                'refundedTotal' => self::money(
+                    $order->get_total_refunded_for_item((int) $itemId),
+                    true
+                ),
+            ];
+        }
+
+        $customerId = $order->get_customer_id();
+        $paymentKind = apply_filters(
+            'starfiniti_loyalty_payment_kind',
+            'money',
+            $order->get_payment_method(),
+            $order
+        );
+        if (! in_array($paymentKind, ['money', 'gift-card', 'store-credit'], true)) {
+            $paymentKind = 'money';
+        }
+        $market = strtoupper((string) $order->get_shipping_country());
+        if ('' === $market) {
+            $market = strtoupper((string) $order->get_billing_country());
+        }
+        if (! preg_match('/^[A-Z]{2}$/', $market)) {
+            $market = 'ZZ';
+        }
+
+        return [
+            'kind' => 'order',
+            'orderId' => (string) $order->get_id(),
+            'status' => sanitize_key($order->get_status()),
+            'currency' => strtoupper((string) $order->get_currency()),
+            'currencyMinorUnitDigits' => wc_get_price_decimals(),
+            'market' => $market,
+            'customer' => $customerId > 0
+                ? ['kind' => 'registered', 'externalCustomerId' => (string) $customerId]
+                : ['kind' => 'guest', 'guestOrderId' => (string) $order->get_id()],
+            'paymentKind' => $paymentKind,
+            'lines' => $lines,
+            'shippingTotal' => self::money($order->get_shipping_total()),
+            'taxTotal' => self::money($order->get_total_tax()),
+            'feeTotal' => self::money($order->get_total_fees(), true),
+            'discountTotal' => self::money($order->get_total_discount(), true),
+            'refundedTotal' => self::money($order->get_total_refunded(), true),
+        ];
+    }
+
+    /** @param mixed $value */
+    private static function money($value, bool $absolute = false): string
+    {
+        $decimal = wc_format_decimal((string) $value, wc_get_price_decimals());
+        if ($absolute && str_starts_with($decimal, '-')) {
+            return substr($decimal, 1);
+        }
+        return $decimal;
+    }
+
+    /** @param mixed $value */
+    private static function quantity($value): string
+    {
+        $decimal = wc_format_decimal((string) $value, 6);
+        $trimmed = rtrim(rtrim($decimal, '0'), '.');
+        return '' === $trimmed ? '0' : $trimmed;
     }
 
     private static function table(): string
