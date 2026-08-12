@@ -22,6 +22,7 @@ export function merchantIntlLocale(locale: MerchantLocale): string {
 }
 
 const SLOVENIAN_TEXT: Readonly<Record<string, string>> = {
+  "Skip to main content": "Preskoči na glavno vsebino",
   Language: "Jezik",
   English: "Angleščina",
   Slovenian: "Slovenščina",

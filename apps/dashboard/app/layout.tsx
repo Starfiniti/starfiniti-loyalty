@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import "geist/font/sans";
+import { LocalizedSkipLink } from "@/components/localized-skip-link";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -13,9 +15,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <a className="skip-link" href="#main-content">
-          Skip to main content
-        </a>
+        <Suspense
+          fallback={
+            <a className="skip-link" href="#main-content">
+              Skip to main content
+            </a>
+          }
+        >
+          <LocalizedSkipLink />
+        </Suspense>
         {children}
       </body>
     </html>
