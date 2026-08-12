@@ -29,7 +29,11 @@ export default async function OperationsPage() {
   const mayRetry = canRetryConnectorEffect(tenant.context.membershipRole);
 
   return (
-    <main className="customer-page operations-page">
+    <main
+      className="customer-page operations-page"
+      id="main-content"
+      tabIndex={-1}
+    >
       <header className="programme-topbar">
         <div>
           <Link className="programme-brand" href="/">

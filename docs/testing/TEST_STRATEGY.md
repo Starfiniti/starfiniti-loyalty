@@ -4,4 +4,6 @@ Use unit and property tests for domain invariants, database integration tests fo
 
 Database migrations, seed replay, schema grants, RLS coverage, and privileged-function placement are exercised with `npm run db:verify`; see `DATABASE_TESTS.md`. Static validation alone cannot close a database task.
 
+`npm run accessibility:validate` statically enforces the shared first-focus skip link, one focusable main target on every route surface, text-area focus visibility, and reduced-motion coverage. It complements, rather than replaces, keyboard and responsive browser inspection of primary workflows.
+
 The Phase 5 gate adds immutable-ledger pgTAP coverage plus a real two-session overspend race and a deterministic mixed-operation property sequence. Any future value command must join these gates and prove zero sum, attribution, idempotency, tenant isolation, deterministic locks, and wallet/lot projection equality.

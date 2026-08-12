@@ -286,3 +286,5 @@ tasks:
       - customer detail exposes minimized current qualified and grace tier state with exact eligible-spend minor units and honest unevaluated output
       - 27 customer-tier pgTAP assertions cover exact privileges bounds current and qualified semantics large integer precision minimization and revoked suspended cross-tenant denial
       - exact-head run 31592427051 passed baseline fourteen migrations 613 pgTAP assertions concurrency and property probes and all four WooCommerce runtime variants
+      - all seven route surfaces expose a first-focus skip link to one focusable main landmark with visible text-area focus and reduced-motion coverage enforced by npm run accessibility:validate
+      - initial desktop and 390-pixel authentication renders plus DOM inspection exposed a narrow-viewport grid overflow and the corrected shrinkable card sizing is now guarded without a runtime dependency

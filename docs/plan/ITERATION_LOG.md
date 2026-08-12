@@ -144,3 +144,11 @@
 - Added responsive merchant customer-detail presentation with an honest unevaluated state and no invented tier default.
 - Added 27 pgTAP assertions for exact privileges/search paths, bounds, grace semantics, large-integer preservation, minimization, live analyst access, and revoked/suspended/cross-tenant denial.
 - Exact-head run `31592427051` passed the clean baseline, fourteen migrations, all 613 pgTAP assertions, concurrency/property probes, and all four real WooCommerce runtime variants.
+
+## 2026-08-12 — Phase 9 keyboard bypass and responsive authentication
+
+- Added a first-focus skip link and one focusable `main` target to all seven route surfaces so keyboard users can bypass repeated merchant navigation.
+- Extended the shared visible-focus treatment to text areas while preserving the existing reduced-motion override and 44-pixel skip-link target.
+- Added a deterministic accessibility validator to the complete repository check for route targets, skip-link wiring, text-area focus, and reduced-motion coverage.
+- Rendered the authentication page at desktop and 390-pixel widths; the mobile capture exposed a CSS Grid intrinsic-size overflow, corrected with a bounded, shrinkable card width.
+- Local accessibility validation, dashboard lint/typecheck, and all 27 dashboard tests pass. The in-app browser could not route to the workstation's localhost, so the successful local Edge DOM/capture evidence is recorded without claiming automated WCAG conformance.

@@ -10,7 +10,7 @@ export default async function LoginPage({
   const nextPath = safeAppPath(next);
 
   return (
-    <main className="login-page">
+    <main className="login-page" id="main-content" tabIndex={-1}>
       <section className="login-card" aria-labelledby="login-title">
         <div className="login-mark" aria-hidden="true">
           SF

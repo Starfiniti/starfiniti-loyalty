@@ -49,7 +49,7 @@ export default async function CustomerDetailPage({
   );
 
   return (
-    <main className="customer-page">
+    <main className="customer-page" id="main-content" tabIndex={-1}>
       <header className="programme-topbar">
         <div>
           <Link className="programme-brand" href="/">

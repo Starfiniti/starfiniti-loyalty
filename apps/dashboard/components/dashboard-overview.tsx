@@ -175,7 +175,7 @@ export function DashboardOverview({
         />
       ) : null}
 
-      <main>
+      <main id="main-content" tabIndex={-1}>
         <header className="topbar">
           <label className="search">
             <Search aria-hidden="true" />

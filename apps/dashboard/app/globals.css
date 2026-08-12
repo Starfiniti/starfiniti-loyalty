@@ -26,7 +26,9 @@
 }
 .login-card,
 .access-card {
-  width: min(100%, 430px);
+  width: 100%;
+  max-width: 430px;
+  min-width: 0;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 18px;
@@ -111,6 +113,24 @@
 * {
   box-sizing: border-box;
 }
+.skip-link {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 1000;
+  min-height: 44px;
+  padding: 11px 14px;
+  border: 2px solid currentColor;
+  border-radius: 9px;
+  color: white;
+  background: var(--primary);
+  font-weight: 750;
+  transform: translateY(calc(-100% - 20px));
+}
+.skip-link:focus-visible {
+  box-shadow: 0 0 0 4px white;
+  transform: translateY(0);
+}
 html,
 body {
   margin: 0;
@@ -121,24 +141,28 @@ body {
 body,
 button,
 input,
-select {
+select,
+textarea {
   font-family: Geist, "Segoe UI", sans-serif;
 }
 button,
 input,
-select {
+select,
+textarea {
   font-size: inherit;
 }
 button,
 a,
 input,
-select {
+select,
+textarea {
   outline: none;
 }
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
-select:focus-visible {
+select:focus-visible,
+textarea:focus-visible {
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.25);
 }
 button {

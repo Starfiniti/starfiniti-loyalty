@@ -17,7 +17,7 @@ export default async function HomePage({
 
   if (state.kind === "unassigned") {
     return (
-      <main className="access-page">
+      <main className="access-page" id="main-content" tabIndex={-1}>
         <section className="access-card">
           <p className="login-eyebrow">Starfiniti Loyalty</p>
           <h1>No organization access</h1>

@@ -41,7 +41,7 @@ export default async function ProgrammePage() {
     state.versions[0];
 
   return (
-    <main className="programme-page">
+    <main className="programme-page" id="main-content" tabIndex={-1}>
       <header className="programme-topbar">
         <div>
           <Link className="programme-brand" href="/">
