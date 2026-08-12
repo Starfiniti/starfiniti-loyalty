@@ -243,7 +243,7 @@ tasks:
       - npm run check
       - npm run db:test
       - browser workflow verification
-    risks: [R-001, R-007, R-010, R-011, R-012, R-017, R-018]
+    risks: [R-001, R-007, R-010, R-011, R-012, R-017, R-018, R-020]
     docs:
       - docs/product/PRODUCT_REQUIREMENTS.md
       - docs/security/THREAT_MODEL.md
@@ -344,6 +344,11 @@ tasks:
       - the plugin validates and imports all package fields atomically and stores the signing key through its existing Sodium-backed encrypted option
       - 44 provisioning pgTAP assertions plus 146 unit tests cover grants column minimization roles tenancy lifecycle idempotency key reuse setup-package validation and dashboard eligibility
       - exact-head run 31633310240 passed all six jobs with twenty-four migrations 997 pgTAP assertions concurrency and property probes and setup-package import in all four localized WooCommerce runtime variants
+      - authenticated Overview programme lifecycle and connector operations preserve one explicit English or Slovenian locale through safe navigation sign-out and every server action
+      - programme scheduling converts explicit Europe Ljubljana wall time independently of the server timezone and rejects nonexistent or ambiguous DST instants
+      - responsive Playwright evidence covers Slovenian Overview programme editing provisioning reconciliation and retry controls at 390 by 844 and 1440 by 1000 with locale switching interactions no horizontal overflow and no browser errors
+      - exact-head runs 31638672681 and 31640311302 passed all seven jobs with 151 then 154 unit tests both production images twenty-five migration replays 1028 pgTAP assertions concurrency and property probes and all four localized WooCommerce runtime variants
+      - exact-head run 31640919355 passed all seven jobs for localized connector provisioning and operations with 154 unit tests and the unchanged production image database and WooCommerce runtime gates
   - id: DEPLOY-PROXMOX
     title: Release and deploy the self-hosted platform on Proxmox
     phase: deployment

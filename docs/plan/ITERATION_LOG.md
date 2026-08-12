@@ -300,3 +300,11 @@
 - Revoked execution from anonymous, authenticated, dashboard-runtime, and worker roles; the operator must connect directly through a trusted administration URL and assume `loyalty_owner` inside the transaction.
 - Added a confirmation-gated repository command, secret-redaction self-tests, a production runbook, and adversarial pgTAP coverage for privileges, atomic scope creation, exact retry, conflicts, minimization, and audit immutability.
 - Exact-head run `31636596218` passed all seven jobs: both production Docker builds, baseline, twenty-five migration replays, all 1,028 pgTAP assertions, concurrency/property probes, and all four localized WooCommerce runtime variants. The first run exposed one stale expected trigger message in the new test; the corrected exact head is green.
+
+## 2026-08-12 — Phase 9 authenticated merchant launch localization
+
+- Added one explicit English/Slovenian locale boundary to the authenticated Overview, programme, and connector-operations launch workflow, preserving it through safe links, sign-out, onboarding, draft saves, publish/schedule commands, provisioning, reconciliation, and effect replay.
+- Localized programme rules/rewards authoring, deterministic preview values, immutable history/audit, guided WooCommerce setup and one-time secret handling, queue health, sanitized diagnostics, and action feedback while retaining English fallback for merchant-supplied names and technical identifiers.
+- Replaced server-local parsing of `datetime-local` publication input with explicit Europe/Ljubljana conversion; winter/summer offsets are tested and DST gaps, ambiguous instants, malformed dates, and rolled calendar dates fail closed.
+- Added 390×844 and 1440×1000 Playwright passes over the real Overview, programme, and operations components. Locale switching, add-reward and provisioning-review interactions pass without horizontal overflow, console errors, or failed requests.
+- Exact-head runs `31638672681`, `31640311302`, and `31640919355` passed all seven jobs for the Overview, programme, and operations slices, ending at 154 unit tests, twenty-five migration replays, 1,028 pgTAP assertions, concurrency/property probes, both production images, and all four localized WooCommerce runtimes.

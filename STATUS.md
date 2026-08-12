@@ -20,6 +20,7 @@
 - WooCommerce account/cart loyalty rendering has an enforced 0-byte connector JavaScript, 0-byte connector CSS, and zero hub-request budget. Account results are capped at 20 rewards, markup sizes are bounded in the real runtime matrix, and checkout continues to use native WooCommerce coupon behavior.
 - The Next.js merchant shell now verifies Supabase Auth claims, refreshes sessions through the Next.js 16 request proxy, derives live organization/workspace/programme scope through the authenticated Data API and RLS, handles unassigned users safely, and provides sign-in/sign-out/PKCE callback paths without exposing a secret key.
 - The merchant programme surface provides structured tier/reward editing, deterministic earning preview, contract validation, new immutable draft versions, exact-fingerprint publish/schedule confirmation, role-aware controls, version history, and tenant-visible administration audit evidence.
+- Overview, programme onboarding/editor/history, and connector operations now render explicit English or Slovenian system copy, preserve the allowlisted locale through navigation and every server-action form, format values/dates in that locale, and keep Europe/Ljubljana publication input deterministic across server time zones. DST gaps and ambiguous wall times fail closed.
 - Existing tenant owners/admins can create the first programme in their selected active programme group through a server-derived, idempotent database command with immutable audit evidence; public tenant provisioning stays disabled.
 - Customer operations provide bounded literal display-reference search, database-masked channel identity, exact text-form pending/available/reserved/spent/expired/reversed buckets, and the latest immutable ledger entries with programme-version and correlation attribution.
 - Every rendered merchant route now exposes a first-focus skip link to one focusable main landmark; global visible focus includes text areas, reduced-motion behavior is guarded, and the sign-in card remains within a 390-pixel viewport.
@@ -47,7 +48,7 @@
 ## Partial
 
 - Phases 0 through 7 are complete for the active WooCommerce scope. Shopify Phase 8 is deferred by product-owner direction.
-- Phase 9 is in progress. The authenticated shell, audited initial-tenant bootstrap, initial-programme onboarding, guided WooCommerce provisioning, programme editor, customer wallet/ledger reads, safe hub connector operations, reason-bound individual and exact-preview bulk value adjustments, live source-reconciliation requests, real Overview reporting, route-wide keyboard bypass, sanitized support diagnostics, localized WooCommerce and hosted customer journeys, controlled experience themes/translations, guest hosted loyalty delivery, signed authenticated member delivery, controlled native-coupon redemption, direct audited customer export, and WooCommerce-originated customer erasure exist; merchant dashboard translation breadth, broader usability evidence, and production deployment remain future slices.
+- Phase 9 is in progress. The authenticated shell, audited initial-tenant bootstrap, localized Overview/programme/connector launch workflow, guided WooCommerce provisioning, customer wallet/ledger reads, safe hub connector operations, reason-bound individual and exact-preview bulk value adjustments, live source-reconciliation requests, real reporting, route-wide keyboard bypass, sanitized support diagnostics, localized WooCommerce and hosted customer journeys, controlled experience themes/translations, guest hosted loyalty delivery, signed authenticated member delivery, controlled native-coupon redemption, direct audited customer export, and WooCommerce-originated customer erasure exist; secondary merchant-surface translation, broader authenticated evidence, and production deployment remain future slices.
 
 ## Broken or unavailable
 
@@ -68,7 +69,7 @@ Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 Wo
 
 - `npm run test --workspace=@starfiniti/domain` — passed with 24 tests.
 - `npm run typecheck --workspace=@starfiniti/domain` — passed.
-- `npm run check` — passed locally and in the exact-head CI baseline: formatting, zero-warning lint, all workspace type checks, 147 unit tests, static validators, standalone Next.js production build, and plugin packaging.
+- The current local gates pass zero-warning lint, all workspace type checks, 154 unit tests, accessibility/architecture/workflow validators, and the standalone Next.js production build. The global Windows format check remains affected only by tracked baseline CRLF normalization; targeted changed-file Prettier checks pass.
 - `npm run db:validate` — passed for twenty-five migrations, Supabase config, and twenty-five transactional pgTAP files.
 - `npm run secrets:scan` — passed with no findings.
 - `npm run audit:prod` — passed with zero production vulnerabilities.
@@ -109,10 +110,13 @@ Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 Wo
 - PR exact-head run `31634024586` passed all seven jobs for deployment artifacts, including real digest-pinned dashboard/worker Docker builds, the baseline, twenty-four migration replays, all 997 pgTAP assertions, concurrency/property probes, and the complete localized WooCommerce matrix.
 - PR exact-head run `31635189128` passed all seven jobs for dependency-aware readiness, including 147 unit tests, real dashboard/worker Docker builds, twenty-four migration replays, all 998 pgTAP assertions, concurrency/property probes, and the complete localized WooCommerce matrix.
 - PR exact-head run `31636596218` passed all seven jobs for audited initial-tenant bootstrap, including 147 unit tests, real dashboard/worker Docker builds, twenty-five migration replays, all 1,028 pgTAP assertions, concurrency/property probes, and the complete localized WooCommerce matrix.
+- PR exact-head run `31638672681` passed all seven jobs for the localized merchant Overview shell, including 151 unit tests, both production images, twenty-five migration replays, all 1,028 pgTAP assertions, concurrency/property probes, and the complete localized WooCommerce matrix.
+- PR exact-head run `31640311302` passed all seven jobs for the localized programme workflow and Europe/Ljubljana scheduling boundary, including 154 unit tests, both production images, twenty-five migration replays, all 1,028 pgTAP assertions, concurrency/property probes, and the complete localized WooCommerce matrix.
+- PR exact-head run `31640919355` passed all seven jobs for localized connector provisioning and operations, including 154 unit tests, both production images, twenty-five migration replays, all 1,028 pgTAP assertions, concurrency/property probes, and the complete localized WooCommerce matrix.
 
 ## Next recommended task
 
-Extend merchant dashboard localization and authenticated launch-workflow browser evidence, then prepare production deployment inputs and recovery evidence.
+Extend localization and authenticated browser evidence across the remaining customer and experience administration surfaces, then prepare production deployment inputs and recovery evidence.
 
 ## Blockers
 
