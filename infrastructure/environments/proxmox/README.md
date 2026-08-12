@@ -8,6 +8,8 @@ Run Starfiniti Loyalty in Linux VMs, not privileged containers.
 4. Use a separate application VM or isolated Compose project for `compose.app.yml`.
 5. Terminate TLS at an explicitly managed reverse proxy, expose only 80/443, and restrict Studio to VPN/admin networks.
 6. Copy `.env.example` to a secret-managed location outside Git and replace every placeholder.
-7. Validate health, RLS, auth redirects, WooCommerce signatures, backup restore, and application rollback in staging before production approval.
+7. Create the root-readable-only WooCommerce signing-material JSON outside Git. Keys are database `signing_material_ref` values and values are base64-encoded random keys of at least 32 bytes; set `WOOCOMMERCE_SIGNING_MATERIAL_PATH` to that file.
+8. Use a dedicated `DATABASE_URL` login that can assume only `loyalty_runtime`; never use a browser, WordPress, or Supabase service credential for ingestion.
+9. Validate health, RLS, auth redirects, WooCommerce signatures, backup restore, and application rollback in staging before production approval.
 
 Current breaking changes reviewed 2026-08-11: Envoy is the self-hosted default gateway; `API_EXTERNAL_URL` includes `/auth/v1` in current stacks. Do not apply old Kong-specific examples without an ADR.

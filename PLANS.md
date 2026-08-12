@@ -6,7 +6,7 @@ Finish Starfiniti Loyalty as an open-source, self-hosted platform on Proxmox usi
 
 ## Current phase
 
-Phase 4 — reliable WooCommerce commerce-event ingestion.
+Phase 5 — immutable double-entry points ledger and wallets.
 
 ## Evidence and completed work
 
@@ -23,16 +23,18 @@ Phase 4 — reliable WooCommerce commerce-event ingestion.
 - `npm run architecture:validate` deterministically checks the Phase 2 gate and is part of `npm run check`.
 - `P3-TENANCY-SCHEMA` is complete: six tenant-owned tables, no-login database roles, composite tenant foreign keys, explicit grants, live membership RLS, and scoped support access are implemented.
 - Exact-head GitHub Actions run `31524730760` passed the baseline and Docker/Supabase jobs, including two migration replays, reset, seed, 49 pgTAP assertions, and cleanup.
+- Phase 4 is complete: strict commerce contracts, raw-body HMAC verification, a Next.js ingestion route, a WooCommerce local outbox with Action Scheduler retries, restricted inbox/canonical/effect/outbox tables, and retry-safe normalization are implemented.
+- Exact-head GitHub Actions run `31527785181` passed the full baseline and Docker/Supabase jobs with 87 pgTAP assertions, including duplicate, nonce-replay, cross-tenant, repeated-normalization, and out-of-order scenarios.
 
 ## Active work
 
-- `P4-WC-INBOX` (in progress): implement signed WooCommerce delivery intake, durable inbox deduplication, canonical event normalization, and transactional outbox processing.
+- `P5-LEDGER-FOUNDATION` (in progress): implement accounts, immutable balanced transactions/entries, lots, projections, compensations, and idempotent event effects.
 
 ## Next safe tasks
 
-1. Add versioned WooCommerce delivery, canonical event, inbox, and outbox contracts.
-2. Implement signature-first intake and idempotent database commands without any checkout dependency.
-3. Prove duplicate, delayed, invalid-signature, retry, and out-of-order paths create one business effect.
+1. Create the Phase 5 ledger migration with tenant/programme/customer account boundaries and zero-sum deferred constraints.
+2. Implement atomic idempotent award, release, refund-reversal, expiry, and redemption-lot commands.
+3. Prove immutability, balancing, lock order, negative balances, original attribution, and projection rebuilds in pgTAP.
 
 ## Dependencies and blockers
 

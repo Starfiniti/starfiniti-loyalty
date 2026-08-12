@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export * from "./woocommerce";
+
 export const commerceEnvelopeV1 = z.object({
   version: z.literal("1"),
   eventId: z.string().min(1).max(255),

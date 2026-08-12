@@ -3,17 +3,18 @@
 ## What works
 
 - Phase 0's reproducible npm workspace, responsive standalone Next.js Overview, Supabase migration baseline, WooCommerce HPOS scaffold, repository operating system, and pinned CI are verified.
-- The Docker-backed GitHub Actions database job replays migrations/seed and passes all 49 transactional pgTAP assertions.
+- The Docker-backed GitHub Actions database job replays migrations/seed and passes all 87 transactional pgTAP assertions.
 - Phase 1 Rosy Rewards semantics are owner-approved and encoded as versioned configuration rather than global merchant assumptions.
 - Pure domain behavior covers integer award calculation, explicit historical tier snapshots, 30-day release, 12-month rolling expiry, earliest-expiry redemption ordering, rolling-spend tiers with grace, cumulative original-attribution refund reversal, and negative balances.
 - Sixteen domain tests and two contract tests pass.
 - The platform carries a full AGPL-3.0 license and package metadata; the WooCommerce connector remains independently GPL-2.0-or-later.
 - Phase 2 architecture is complete and deterministically validated: tenant/Auth trust, identity, double-entry ledger, signed inbox/outbox, reward reservation, privacy, backup/restore, deployment, and SLO models are reviewable.
 - Phase 3 tenancy/RLS is complete: organizations, memberships, workspaces, programme groups, support grants, least-privilege roles, composite tenant keys, and live authorization policies execute successfully in disposable Supabase CI.
+- Phase 4 commerce ingestion is complete: WooCommerce local outbox, Action Scheduler retry/dead-letter behavior, raw-body HMAC receiver, durable inbox, canonical normalization, effect fences, and transactional outbox are execution-verified.
 
 ## Partial
 
-- Phases 0 through 3 are complete for the active WooCommerce scope. Phase 4 signed commerce ingestion is in progress.
+- Phases 0 through 4 are complete for the active WooCommerce scope. Phase 5 immutable ledger implementation is in progress.
 - Only the Overview dashboard route and WooCommerce administrative boundary exist; the API, workers, ledger, programme editor, customer views, and production connector flows are pending.
 
 ## Broken or unavailable
@@ -24,7 +25,7 @@
 
 ## Database migration state
 
-Both versioned migrations and the seed replayed twice successfully against disposable Supabase CI. The tenancy suite passed 41 adversarial assertions in addition to eight foundation assertions. No persistent or production database has been changed.
+All three versioned migrations and the seed replayed twice successfully against disposable Supabase CI. Foundation, tenancy, and commerce suites pass 87 total pgTAP assertions. No persistent or production database has been changed.
 
 ## Git state
 
@@ -42,12 +43,12 @@ Public repository `Starfiniti/starfiniti-loyalty`; PR `#2` contains the Phase 2/
 - `npm run architecture:validate` — passed for eight Phase 2 models and three accepted ADRs; it now runs inside `npm run check`.
 - PR exact-head run `31512548299` passed the baseline and Docker/Supabase database jobs.
 - Public `main` run `31513294330` passed both jobs after merge, including migration replay, seed, pgTAP, and cleanup.
-- PR exact-head run `31524730760` passed both jobs, including two migration replays, reset, seed, all 49 pgTAP assertions, and cleanup.
+- PR exact-head run `31527785181` passed both jobs, including replay/reset/seed, all 87 pgTAP assertions, the dynamic ingestion build, and cleanup.
 
 ## Next recommended task
 
-Implement the signed WooCommerce inbox, canonical event normalization, and layered idempotency boundary.
+Implement the immutable balanced ledger, wallet accounts, lots, allocations, projections, and idempotent value commands.
 
 ## Blockers
 
-Phase 4 work is unblocked. Proxmox deployment requires working SSH authentication, DNS/TLS choices, an off-host backup target, and production credentials; none should be guessed or committed.
+Phase 5 work is unblocked. Proxmox deployment requires working SSH authentication, DNS/TLS choices, an off-host backup target, and production credentials; none should be guessed or committed.

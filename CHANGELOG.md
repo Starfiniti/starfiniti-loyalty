@@ -24,3 +24,6 @@
 - Added a deterministic Phase 2 architecture validator to the complete repository gate.
 - Completed the Phase 3 tenancy foundation with no-login roles, explicit grants, composite tenant keys, live membership RLS, and scoped support access.
 - Added 41 adversarial tenancy assertions; exact-head Docker/Supabase CI now passes 49 total pgTAP checks across migration replay and reset.
+- Completed Phase 4 with strict WooCommerce contracts, raw-body HMAC verification, a server-only Next.js intake route, durable layered idempotency, and canonical normalization.
+- Added a local WooCommerce outbox with HPOS-safe hooks, exact-envelope Action Scheduler retries, bounded dead-letter behavior, and no synchronous hub dependency during checkout.
+- Added 38 commerce pgTAP assertions; exact-head Docker/Supabase CI passes 87 total database assertions including replay and out-of-order delivery paths.
