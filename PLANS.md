@@ -32,15 +32,18 @@ Phase 9 — merchant administration and customer experience. Shopify Phase 8 rem
 - Phase 7 implementation includes the durable WooCommerce worker, completed-order awards, cumulative refund reversals, explicit programme binding, native coupon issue/cancel polling, coupon-use capture, confirmed-unused expiry compensation, customer/privacy surfaces, source reconciliation, queue operations, and an installable plugin ZIP.
 - Exact-head run `31575751260` passed the six-migration baseline with 322 pgTAP assertions plus concurrency/property probes.
 - Phase 7 is complete for the active WooCommerce scope. Exact-head run `31577312529` passed the baseline, database, and four real WordPress/WooCommerce runtime jobs across minimum/current versions, HPOS/legacy storage, classic/Blocks coupon paths, hub outage, partial/full refunds, reconciliation, activation lifecycle, and queue recovery.
+- Phase 9 now includes the authenticated tenant shell and a structured programme editor with deterministic preview, database-canonical drafts, exact-hash publish/schedule commands, immutable audit evidence, and adversarial tenant/role/idempotency tests.
+- Exact-head run `31580836101` passed the baseline, seven-migration database gate with 374 pgTAP assertions plus concurrency/property probes, and all four WooCommerce runtime variants.
+- The customer operations read slice now provides bounded reference search, masked channel identity, wallet-bucket truth, and immutable programme-attributed ledger history through explicit tenant filters plus RLS.
 
 ## Active work
 
-- `P9-MERCHANT-HUB` (in progress): the Supabase Auth/RLS merchant shell and live organization/workspace/programme context are implemented; programme, customer/ledger, and connector operations follow.
+- `P9-MERCHANT-HUB` (in progress): the Auth/RLS shell, audited programme editor, and customer wallet/ledger reads are implemented; connector operations and value-changing customer commands follow.
 
 ## Next safe tasks
 
-1. Build the programme editor and preview against versioned programme contracts and safe publish commands.
-2. Add tenant-scoped customer/ledger and connector queue/reconciliation operations.
+1. Add connector queue, dead-letter retry, and source-reconciliation operations.
+2. Add audited, reason-bound customer adjustment commands with preview and idempotency.
 3. Replace explicitly labelled illustrative Overview analytics with authorized reporting queries.
 
 ## Dependencies and blockers

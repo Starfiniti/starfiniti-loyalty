@@ -33,13 +33,13 @@ const ranges = {
 } as const;
 
 const nav = [
-  { label: "Overview", icon: LayoutDashboard, active: true },
-  { label: "Programme overview", icon: Gem },
+  { label: "Overview", icon: LayoutDashboard, active: true, href: "/" },
+  { label: "Programme overview", icon: Gem, href: "/programme" },
   { label: "Earning rules" },
   { label: "Rewards" },
   { label: "VIP tiers" },
   { label: "Points expiry" },
-  { label: "Customers", icon: Users, group: "GROW" },
+  { label: "Customers", icon: Users, group: "GROW", href: "/customers" },
   { label: "Campaigns", icon: Megaphone },
   { label: "Referrals", icon: Sparkles },
 ];
@@ -156,7 +156,7 @@ export function DashboardOverview({ tenant }: { tenant: DashboardTenant }) {
                 <div className="nav-group">PROGRAMME</div>
               ) : null}
               <a
-                href="#"
+                href={item.href ?? "#"}
                 className={item.active ? "nav-item active" : "nav-item"}
                 onClick={() => setSidebarOpen(false)}
               >

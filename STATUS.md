@@ -17,11 +17,13 @@
 - The plugin encrypts its signing key at rest, declares HPOS support, keeps checkout independent of the hub, exposes queue/dead-letter diagnostics, and provides customer loyalty, privacy export/erase, and WP-CLI recovery surfaces.
 - The supported WooCommerce smoke matrix passes on WordPress 6.6.5/WooCommerce 9.0.2/PHP 8.1 and WordPress 7.0.2/WooCommerce 10.9.4/PHP 8.3, each with HPOS and legacy storage. It executes classic and Blocks coupon paths under hub outage, order completion/capture, partial/full refunds, reconciliation, activation lifecycle, and dead-letter recovery.
 - The Next.js merchant shell now verifies Supabase Auth claims, refreshes sessions through the Next.js 16 request proxy, derives live organization/workspace/programme scope through the authenticated Data API and RLS, handles unassigned users safely, and provides sign-in/sign-out/PKCE callback paths without exposing a secret key.
+- The merchant programme surface provides structured tier/reward editing, deterministic earning preview, contract validation, new immutable draft versions, exact-fingerprint publish/schedule confirmation, role-aware controls, version history, and tenant-visible administration audit evidence.
+- Customer operations provide bounded display-reference search, masked channel identity, authoritative pending/available/reserved/spent/expired/reversed buckets, and the latest immutable ledger entries with programme-version and correlation attribution.
 
 ## Partial
 
 - Phases 0 through 7 are complete for the active WooCommerce scope. Shopify Phase 8 is deferred by product-owner direction.
-- Phase 9 is in progress. The authenticated tenant shell exists; programme editing, customer/ledger operations, hub queue screens, real Overview reporting queries, and production deployment remain future slices.
+- Phase 9 is in progress. The authenticated shell, programme editor, and customer wallet/ledger read surfaces exist; reason-bound value adjustments, hub queue operations, real Overview reporting queries, and production deployment remain future slices.
 
 ## Broken or unavailable
 
@@ -31,11 +33,11 @@
 
 ## Database migration state
 
-All six versioned migrations and the seed replay successfully against disposable Supabase/Postgres 17 CI. Foundation, tenancy, commerce, ledger, programme, and WooCommerce effect suites passed 322 pgTAP assertions plus the concurrency/property probe in exact-head run `31575751260`. No persistent or production database has been changed.
+All seven versioned migrations and the seed replay successfully against disposable Supabase/Postgres 17 CI. Foundation, tenancy, commerce, ledger, programme, merchant-command, and WooCommerce suites pass 374 pgTAP assertions plus concurrency/property probes. No persistent or production database has been changed.
 
 ## Git state
 
-Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 WooCommerce pipeline. Phase 9 work is active on `codex/phase-9-merchant-hub`. GitHub recognizes the repository license as GNU AGPLv3.
+Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 WooCommerce pipeline. Draft PR `#7` contains active Phase 9 work on `codex/phase-9-merchant-hub`. GitHub recognizes the repository license as GNU AGPLv3.
 
 ## Last verification
 
@@ -54,10 +56,11 @@ Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 Wo
 - PR exact-head run `31569179555` passed both jobs, including five migration replays, reset/seed, all 260 pgTAP assertions, ledger overspend, concurrent evaluation idempotency, the property probe, and cleanup.
 - PR exact-head run `31575751260` passed the full baseline and Docker/Supabase jobs with six migrations, 322 pgTAP assertions, concurrency/property probes, and cleanup.
 - PR exact-head run `31577312529` passed all six jobs: baseline, Docker/Supabase, and minimum/current WooCommerce runtimes in HPOS and legacy modes.
+- PR exact-head run `31580836101` passed all six jobs with seven migration replays, 374 pgTAP assertions, concurrency/property probes, and the complete minimum/current HPOS/legacy WooCommerce matrix.
 
 ## Next recommended task
 
-Build the versioned programme editor and safe preview/publish flow inside the authenticated tenant shell.
+Build tenant-scoped connector queue, dead-letter retry, and source-reconciliation operations.
 
 ## Blockers
 

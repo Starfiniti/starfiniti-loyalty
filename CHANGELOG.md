@@ -41,3 +41,5 @@
 - Fixed reservation settlement so capture/release preserves the immutable original reserve-ledger pointer and retries can continue proving their origin.
 - Added a real minimum/current WordPress and WooCommerce runtime matrix across HPOS and legacy storage, classic and Blocks coupon paths, hub outage, partial/full refunds, activation lifecycle, reconciliation, and dead-letter recovery.
 - Added the Phase 9 Supabase Auth merchant shell with verified claim refresh, private cookie responses, live RLS-backed tenant context, safe local redirects, login/logout/callback flows, and honest preview labelling for analytics not yet connected to reporting queries.
+- Added the audited Phase 9 programme editor with structured tier/reward configuration, deterministic preview, database-canonical immutable drafts, exact-hash publish/schedule confirmation, visible version/audit history, and live role/tenant enforcement.
+- Added tenant-scoped customer search and detail views with masked channel identifiers, six authoritative wallet buckets, and the latest immutable programme-attributed ledger entries.

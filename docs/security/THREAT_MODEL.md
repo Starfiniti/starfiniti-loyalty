@@ -75,6 +75,10 @@ Schema validation, origin/CSRF controls for cookie-authenticated mutations, veri
 
 The Next.js request proxy refreshes Supabase Auth through `getAll`/`setAll`, applies the Auth library's private/no-store response headers, and uses `getClaims()` rather than trusting cookie-loaded session objects. It excludes signed WooCommerce API routes from merchant redirects. Server pages verify claims again, query only with the publishable key and user JWT, and derive tenant scope from live membership rows under RLS. Redirect targets must be local absolute application paths.
 
+Merchant programme mutations omit actor and organization IDs from their public contracts. Exact-signature Data API wrappers derive the actor from request claims, recheck live owner/admin membership, canonicalize and hash persisted JSON in PostgreSQL, and append immutable tenant audit evidence in the same transaction. Exact idempotency retries return the original result; changed input, stale hashes, revoked roles, and cross-tenant resource IDs fail closed.
+
+Merchant customer reads validate public UUIDs, bound and escape reference search, repeat explicit organization/programme-group filters underneath RLS, and mask external channel identifiers in server-only code. The customer timeline exposes wallet-side ledger evidence and shortened correlation context but omits raw commerce payloads, ledger metadata, contact attributes, and unrelated identities.
+
 ### Database
 
 Least privilege, RLS, composite tenant FKs, immutable ledger/programme/audit tables, idempotency constraints, short transactions, fixed lock order, empty privileged-function search paths, and audit correlation.

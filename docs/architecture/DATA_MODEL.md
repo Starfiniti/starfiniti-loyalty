@@ -2,7 +2,7 @@
 
 ## Implementation status
 
-The tenancy, WooCommerce event/effect, ledger, and programme-engine portions below are implemented in six versioned migrations. The ledger uses immutable transaction headers/entries, six wallet buckets, programme control accounts, original-attribution lots, signed compensating allocations, same-transaction projections, tenant RLS, and narrow worker commands. Programme publication, materialized tiers/rewards, reward reservations, tier history, evaluation evidence, expiry-notification fences, WooCommerce order/refund effects, and native coupon settlement are implemented; general platform audit and privacy workflows remain later slices.
+The tenancy, WooCommerce event/effect, ledger, programme-engine, and merchant programme-command portions below are implemented in seven versioned migrations. The ledger uses immutable transaction headers/entries, six wallet buckets, programme control accounts, original-attribution lots, signed compensating allocations, same-transaction projections, tenant RLS, and narrow worker commands. Programme publication, materialized tiers/rewards, reward reservations, tier history, evaluation evidence, expiry-notification fences, WooCommerce order/refund effects, native coupon settlement, and audited merchant programme mutations are implemented; broader platform audit and privacy workflows remain later slices.
 
 ## Database boundaries
 
@@ -70,7 +70,11 @@ Time-limited, reason-bound, approved grants for platform support. Stores support
 - `programmes`: mutable identity and lifecycle container within a programme group.
 - `programme_versions`: immutable JSON configuration plus canonical SHA-256 hash, version number, status, publication timestamp, and creator/approver. Only one published interpretation applies to a transaction; updates create a new row.
 - `programme_tiers` and `programme_rewards`: immutable children of a programme version where relational querying is required. They retain the version ID on historical effects.
-- Drafts may be edited. Published versions, tiers, and reward definitions reject update/delete through privilege and trigger guards.
+- Merchant editing creates a new draft version rather than mutating an existing or historical version. Published versions, tiers, and reward definitions reject update/delete through privilege and trigger guards.
+
+### `admin_audit_events`
+
+Immutable tenant-scoped evidence for administration commands: request-derived actor, action, resource public ID, tenant idempotency key, canonical request hash, correlation ID, bounded metadata, and creation time. Only owners, admins, and auditors can read programme administration evidence through RLS. No authenticated role receives direct insert/update/delete privileges.
 
 ## Customer and identity tables
 

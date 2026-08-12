@@ -41,7 +41,7 @@ flowchart LR
   Proxy --> Envoy
   Envoy --> Auth
   Envoy --> Rest
-  Web -->|"user JWT; read-only RLS paths"| Rest
+  Web -->|"user JWT; RLS reads + audited merchant commands"| Rest
   Web -->|"short server transactions"| Pool
   Ingest -->|"verified delivery only"| Pool
   Worker -->|"private operations"| Pool
@@ -107,6 +107,13 @@ Circular dependencies are forbidden. Platform adapters translate at the edge; do
 2. It calls one private database command with the verified actor and correlation context.
 3. The command rechecks membership/permission, locks affected wallets in ascending ID order, validates programme version, inserts a balanced immutable transaction, updates rebuildable projections, writes audit and outbox rows, and commits.
 4. External effects happen only after commit.
+
+### Merchant programme command
+
+1. The server action validates the versioned contract and generates a correlation ID; tenant and actor IDs are deliberately absent from merchant command payloads.
+2. PostgREST executes one exposed, exact-signature command using the user's JWT. The command rechecks a live owner/admin membership, derives the actor from request claims, and locks the target programme.
+3. PostgreSQL canonicalizes and hashes the configuration. Draft, publish, and schedule operations append an immutable tenant audit event in the same transaction; retry keys return the original result or reject changed input.
+4. Publication requires the exact reviewed hash and materializes immutable tier/reward rows. Prior published versions are superseded, never rewritten.
 
 ### WooCommerce delivery
 

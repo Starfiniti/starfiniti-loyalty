@@ -244,10 +244,19 @@ tasks:
       - npm run db:test
       - browser workflow verification
     risks: [R-001, R-007]
-    docs: [docs/product/PRODUCT_REQUIREMENTS.md, docs/security/THREAT_MODEL.md]
+    docs:
+      - docs/product/PRODUCT_REQUIREMENTS.md
+      - docs/security/THREAT_MODEL.md
+      - docs/integrations/MERCHANT_API.md
     evidence:
       - Next.js 16 proxy refreshes Supabase Auth cookies with private no-store headers and excludes signed commerce API routes
       - server pages use verified getClaims identity and authenticated Data API reads protected by live membership RLS
       - pure tenant resolution rejects cross-tenant injected rows and treats organization preference only as a verified selection hint
       - sign-in sign-out PKCE callback unassigned-member and safe local redirect paths are implemented without a browser secret key
       - 12 dashboard tests plus production build lint typecheck and an isolated mobile Playwright smoke pass
+      - structured tier and reward editor validates the versioned contract and previews Rose Bloom Icon qualification and integer awards responsively
+      - exposed merchant commands derive the actor from Auth claims require live owner or admin membership compute the canonical hash in PostgreSQL and append immutable audit evidence
+      - 52 merchant programme pgTAP assertions cover privileges RLS cross-tenant roles revocation retries conflicts publication scheduling materialization and immutable history
+      - exact-head GitHub Actions run 31580836101 passed baseline seven-migration database verification and all four WooCommerce runtime variants
+      - customer list and detail reads use explicit organization and programme-group filters plus RLS mask channel IDs and expose bounded immutable wallet history without raw payloads or metadata
+      - 17 dashboard tests include adversarial customer search wildcard UUID masking and bucket-projection cases
