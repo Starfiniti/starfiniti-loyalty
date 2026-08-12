@@ -55,3 +55,4 @@
 - Added exact WooCommerce POT coverage and a bundled Slovenian catalog loaded through the standard WordPress text-domain path, with customer navigation translation exercised in every supported runtime-matrix cell.
 - Added tenant-scoped, revisioned customer-experience tokens with accessible color validation, local font stacks, responsive member/guest previews, owner/admin-only idempotent saves, and immutable audit evidence; executable CSS and remote assets remain excluded.
 - Added allowlisted customer timeline filters for order earnings/refunds, reward lifecycle, release/expiry, and manual adjustments over the existing bounded immutable ledger read model.
+- Added owner/admin bulk point adjustments for 2–50 customers with an exact read-only dry run, projected balances, explicit fingerprint approval, deterministic balance locking, atomic per-customer immutable ledger effects, idempotent batch evidence, and aggregate audit attribution.

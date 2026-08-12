@@ -86,10 +86,12 @@ select is_empty(
           'loyalty.get_overview_report(uuid,uuid,uuid,integer,timestamp with time zone)',
           'loyalty.list_customer_summaries(uuid,uuid,text)',
           'loyalty.publish_programme_version_command(uuid,text,text,uuid)',
+          'loyalty.preview_bulk_customer_adjustment(uuid[],uuid,uuid,bigint,text,timestamp with time zone)',
           'loyalty.request_connector_reconciliation_command(uuid,text,text,text,uuid)',
           'loyalty.retry_connector_effect_command(uuid,text,text,uuid)',
           'loyalty.schedule_programme_version_command(uuid,text,timestamp with time zone,text,uuid)',
-          'loyalty.save_experience_theme_command(uuid,uuid,text,text,integer,text,text,boolean,boolean,text,text,uuid)'
+          'loyalty.save_experience_theme_command(uuid,uuid,text,text,integer,text,text,boolean,boolean,text,text,uuid)',
+          'loyalty.execute_bulk_customer_adjustment(uuid[],uuid,uuid,bigint,text,timestamp with time zone,text,text,uuid)'
         )
       )
       and not exists (

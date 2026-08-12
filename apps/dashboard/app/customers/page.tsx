@@ -62,7 +62,14 @@ export default async function CustomersPage({
             wallet balances. Channel IDs stay masked in the interface.
           </p>
         </div>
-        <span className="role-badge">{tenant.context.membershipRole}</span>
+        <div className="customer-heading-actions">
+          {["owner", "admin"].includes(tenant.context.membershipRole) ? (
+            <Link className="primary" href="/customers/bulk">
+              Bulk adjustment
+            </Link>
+          ) : null}
+          <span className="role-badge">{tenant.context.membershipRole}</span>
+        </div>
       </div>
 
       <section className="customer-panel">

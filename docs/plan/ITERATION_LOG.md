@@ -185,3 +185,10 @@
 - Added visible filtered/total counts and distinct no-wallet-history versus no-matching-activity states, with keyboard-focusable filter links.
 - Added three adversarial unit tests for unknown/array query fallback, complete transaction-kind categorization, and stable non-mutating filtering; the full unit total is 109.
 - Exact-head run `31601351946` passed the baseline, fifteen migration replays, all 654 pgTAP assertions, concurrency/property probes, and all four localized WooCommerce runtime variants.
+
+## 2026-08-12 — Phase 9 controlled bulk customer adjustments
+
+- Added a responsive owner/admin route for selecting 2–50 active customers and reviewing exact database-derived before/after balances, aggregate effect, reason, expiry, programme version, and SHA-256 preview evidence.
+- Added a bounded preview contract plus atomic execution command that derives tenant/actor authority, locks balance rows in deterministic order, rejects stale approval, and preserves exact retry behavior after the original batch changes balances.
+- Added immutable RLS-scoped batch/item evidence, one zero-sum ledger transaction and credit lot/debit allocation per customer, and one minimized aggregate administration audit event.
+- Added 39 pgTAP assertions for non-mutating preview, canonical arithmetic/order, exact retry, stale/conflicting input, role/revocation/cross-tenant denial, evidence immutability, and projection rebuilds; exact-head Docker verification is pending.

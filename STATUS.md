@@ -28,13 +28,14 @@
 - Customer detail activity can be filtered into orders/refunds, rewards, release/expiry, and adjustments with visible bounded-result counts; unknown or array query input falls back to all activity and never changes the underlying RLS read.
 - Connector operations provide tenant-authorized health/queue counts, bounded failure metadata without private payloads, and audited owner/admin/operator replay of dead-letter canonical effects. Outbound coupon dead letters remain inspect-only because points compensation may already exist.
 - Customer owners/admins can preview and confirm signed whole-point adjustments against an exact text-form balance. Credits require expiry, removals show a strong negative-balance warning, and every result is one reason-bound immutable double-entry transaction plus administration audit evidence.
+- Customer owners/admins can select 2–50 active wallets for one uniform bulk credit/debit, obtain a read-only canonical dry run with exact projected balances, and approve its fingerprint. Execution locks balances deterministically and atomically appends one immutable ledger effect per customer plus immutable batch/item and aggregate audit evidence; exact retries are safe and stale previews fail closed.
 - Connector owners/admins/operators can review and queue one WooCommerce order reconciliation through an audited private outbox and signed polling route. The plugin re-emits stable source facts idempotently, never edits points directly, and terminates missing orders explicitly.
 - The Overview no longer renders illustrative tenant figures. It reads versioned, tenant/workspace/programme-authorized aggregates for members, eligible loyalty spend, repeat-member rate, captured-to-awarded point redemption, point liability, and bounded 7/30/90-day trends without exposing private source evidence.
 
 ## Partial
 
 - Phases 0 through 7 are complete for the active WooCommerce scope. Shopify Phase 8 is deferred by product-owner direction.
-- Phase 9 is in progress. The authenticated shell, initial-programme onboarding, programme editor, customer wallet/ledger reads, safe hub connector operations, reason-bound value adjustments, live source-reconciliation requests, real Overview reporting, route-wide keyboard bypass, sanitized support diagnostics, localized WooCommerce customer strings, and controlled experience-theme previews exist; storefront delivery, dashboard translation breadth, broader customer surfaces, and production deployment remain future slices.
+- Phase 9 is in progress. The authenticated shell, initial-programme onboarding, programme editor, customer wallet/ledger reads, safe hub connector operations, reason-bound individual and exact-preview bulk value adjustments, live source-reconciliation requests, real Overview reporting, route-wide keyboard bypass, sanitized support diagnostics, localized WooCommerce customer strings, and controlled experience-theme previews exist; storefront delivery, dashboard translation breadth, broader customer surfaces, and production deployment remain future slices.
 
 ## Broken or unavailable
 

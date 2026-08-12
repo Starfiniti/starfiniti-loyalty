@@ -243,7 +243,7 @@ tasks:
       - npm run check
       - npm run db:test
       - browser workflow verification
-    risks: [R-001, R-007]
+    risks: [R-001, R-007, R-010]
     docs:
       - docs/product/PRODUCT_REQUIREMENTS.md
       - docs/security/THREAT_MODEL.md
@@ -302,3 +302,6 @@ tasks:
       - customer detail filters the existing bounded immutable timeline into allowlisted order refund reward release expiry and adjustment views with stable order exact counts and honest empty states
       - 109 unit tests include unknown array and cross-category activity-filter inputs without widening the RLS customer read model
       - exact-head run 31601351946 passed the filtered-customer baseline fifteen migrations 654 pgTAP assertions concurrency and property probes and all four localized WooCommerce runtime variants
+      - bulk customer adjustment dry runs canonicalize 2 to 50 active tenant wallets and exact bigint before and projected balances into one approval fingerprint without writing state
+      - execution derives live owner or admin authority locks selected balance rows deterministically rejects stale fingerprints and atomically creates one immutable ledger transaction per customer plus batch item and aggregate audit evidence
+      - 39 bulk-adjustment pgTAP assertions cover grants direct DML denial dry-run arithmetic and order exact retry after changed balances idempotency conflict stale preview partial-set denial role revocation tenant isolation immutability and projection rebuilds
