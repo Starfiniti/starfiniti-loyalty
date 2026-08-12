@@ -508,7 +508,7 @@ select throws_ok(
 set local request.jwt.claim.sub = '71000000-0000-4000-8000-000000000004';
 select results_eq(
   $$ select count(*)::bigint from loyalty.admin_audit_events $$,
-  array[4::bigint],
+  array[6::bigint],
   'auditor can review all tenant programme mutations'
 );
 select throws_ok(
@@ -558,7 +558,7 @@ select results_eq(
     join loyalty.organizations as organization on organization.id = audit.organization_id
     where organization.slug = 'merchant-command-one'
   $$,
-  array[4::bigint],
+  array[6::bigint],
   'every successful mutation is attributable to exactly one tenant'
 );
 
