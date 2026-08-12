@@ -77,6 +77,7 @@ Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 Wo
 - `npm run accessibility:validate`, dashboard lint/typecheck, all 27 dashboard tests, rendered DOM inspection, and initial desktop/mobile authentication captures exercised the accessibility slice locally; the mobile capture exposed a card overflow, and the corrected shrinkable sizing is now guarded statically.
 - PR exact-head run `31596460783` passed all six jobs for the accessibility slice, including fourteen migration replays, 613 pgTAP assertions, concurrency/property probes, and the complete WooCommerce matrix.
 - PR exact-head run `31597255280` passed all six jobs for sanitized support diagnostics, including fourteen migration replays, 613 pgTAP assertions, concurrency/property probes, and the complete WooCommerce matrix.
+- PR exact-head run `31598618092` passed all six jobs for WooCommerce localization, including fourteen migration replays, 613 pgTAP assertions, and real Slovenian catalog loading in every minimum/current HPOS/legacy runtime.
 
 ## Next recommended task
 

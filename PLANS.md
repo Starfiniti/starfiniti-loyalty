@@ -53,6 +53,7 @@ Phase 9 — merchant administration and customer experience. Shopify Phase 8 rem
 - The supportability slice adds a downloadable versioned diagnostic bundle from the tenant operations view. It contains public scope/connection IDs, queue counts, watermarks, and a labelled bounded sample of grouped canonical error codes only; direct minimization tests reject item identities and noncanonical strings.
 - Exact-head run `31597255280` passed the support-diagnostics baseline, fourteen migrations with 613 pgTAP assertions plus concurrency/property probes, and all four WooCommerce runtime variants.
 - The WooCommerce localization slice registers the packaged `/languages` path at `init`, maintains exact POT coverage for all 38 source strings, bundles Slovenian customer/admin translations in WordPress's performant PHP catalog format, and adds an actual locale-switch/customer-navigation assertion to the four-case runtime matrix.
+- Exact-head run `31598618092` passed the localization baseline, fourteen migrations with 613 pgTAP assertions plus concurrency/property probes, and the Slovenian customer-navigation assertion in all four WooCommerce runtime variants.
 - Exact-head run `31581760825` passed the customer-ledger baseline, database job, and all four WooCommerce runtime variants.
 
 ## Active work

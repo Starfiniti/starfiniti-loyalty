@@ -294,3 +294,4 @@ tasks:
       - exact-head run 31597255280 passed the support-diagnostics baseline fourteen migrations 613 pgTAP assertions concurrency and property probes and all four WooCommerce runtime variants
       - all 38 WooCommerce strings have exact POT coverage and a bundled Slovenian catalog loaded from the standard init-time WordPress text-domain path
       - every minimum current HPOS and legacy runtime switches to sl_SI and proves the customer Loyalty rewards navigation is translated before continuing checkout outage coupon refund reconciliation and recovery tests
+      - exact-head run 31598618092 passed the localization baseline fourteen migrations 613 pgTAP assertions concurrency and property probes and all four localized WooCommerce runtime variants
