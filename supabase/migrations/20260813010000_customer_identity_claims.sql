@@ -133,7 +133,7 @@ begin
     or octet_length(target_proof_sha256) <> 32 then
     raise exception using errcode = '22023', message = 'invalid customer claim';
   end if;
-  if pg_catalog.abs(pg_catalog.extract(epoch from (clock_timestamp() - target_issued_at))) > 300 then
+  if pg_catalog.abs(extract(epoch from (clock_timestamp() - target_issued_at))) > 300 then
     raise exception using errcode = '22023', message = 'expired customer claim';
   end if;
   if not exists (select 1 from auth.users as auth_user where auth_user.id = target_auth_user_id) then
