@@ -320,8 +320,8 @@ select throws_ok(
   $$
     select * from loyalty_private.finish_woocommerce_command(
       (select public_id from loyalty.commerce_connections where external_store_id = 'effect-two-store'),
-      '66000000-0000-4000-8000-000000000001', 'cancelled',
-      'woocommerce:coupon:absent', null, 0
+      '66000000-0000-4000-8000-000000000001', 'dead_letter',
+      null, 'invalid_command_payload', 0
     )
   $$,
   '22023', 'unknown connector command',
@@ -331,36 +331,36 @@ select results_eq(
   $$
     select outcome from loyalty_private.finish_woocommerce_command(
       (select public_id from loyalty.commerce_connections where external_store_id = 'effect-one-store'),
-      '66000000-0000-4000-8000-000000000001', 'cancelled',
-      'woocommerce:coupon:absent', null, 0
+      '66000000-0000-4000-8000-000000000001', 'dead_letter',
+      null, 'invalid_command_payload', 0
     )
   $$,
-  array['cancelled'::text],
-  'the owning connector can acknowledge safe cancellation'
+  array['dead_letter'::text],
+  'the owning connector can quarantine an invalid command'
 );
 select results_eq(
   $$
     select state from loyalty_private.transactional_outbox
     where command_id = '66000000-0000-4000-8000-000000000001'
   $$,
-  array['cancelled'::text],
+  array['dead_letter'::text],
   'connector acknowledgement persists a terminal command state'
 );
 select results_eq(
   $$
-    select payload ->> 'connectorExecutionReference'
+    select last_error_code
     from loyalty_private.transactional_outbox
     where command_id = '66000000-0000-4000-8000-000000000001'
   $$,
-  array['woocommerce:coupon:absent'::text],
-  'connector acknowledgement retains its native execution reference'
+  array['invalid_command_payload'::text],
+  'connector acknowledgement retains its bounded error code'
 );
 select throws_ok(
   $$
     select * from loyalty_private.finish_woocommerce_command(
       (select public_id from loyalty.commerce_connections where external_store_id = 'effect-one-store'),
-      '66000000-0000-4000-8000-000000000001', 'cancelled',
-      'woocommerce:coupon:absent', null, 0
+      '66000000-0000-4000-8000-000000000001', 'dead_letter',
+      null, 'invalid_command_payload', 0
     )
   $$,
   '55000', 'connector command lease is not owned',

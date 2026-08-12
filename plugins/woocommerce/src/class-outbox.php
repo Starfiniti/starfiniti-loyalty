@@ -72,6 +72,9 @@ final class Outbox
             ],
             $revision ? gmdate('Y-m-d H:i:s', $revision->getTimestamp()) : null
         );
+        if ('completed' === $to) {
+            self::captureCoupons($order);
+        }
     }
 
     public static function captureRefund(int $refundId, array $args): void
@@ -133,7 +136,44 @@ final class Outbox
                 self::captureRefund($refund->get_id(), []);
             }
         }
+        if ($completed) {
+            self::captureCoupons($order);
+        }
         return true;
+    }
+
+    public static function captureCoupons(\WC_Order $order): void
+    {
+        $orderId = $order->get_id();
+        $occurred = $order->get_date_completed() ?: $order->get_date_modified();
+        foreach ($order->get_coupon_codes() as $rawCode) {
+            $couponId = wc_get_coupon_id_by_code((string) $rawCode);
+            if ($couponId < 1) {
+                continue;
+            }
+            $coupon = new \WC_Coupon($couponId);
+            $reservationId = (string) $coupon->get_meta('_starfiniti_reservation_id', true);
+            $externalCustomerId = (string) $coupon->get_meta('_starfiniti_external_customer_id', true);
+            if (
+                ! wp_is_uuid($reservationId)
+                || '' === $externalCustomerId
+                || (string) $order->get_customer_id() !== $externalCustomerId
+            ) {
+                continue;
+            }
+            self::enqueue(
+                sprintf('coupon:%s:captured:order:%d', $reservationId, $orderId),
+                'commerce.coupon.captured',
+                $reservationId,
+                (string) $orderId,
+                [
+                    'kind' => 'coupon_captured',
+                    'reservationId' => $reservationId,
+                    'orderId' => (string) $orderId,
+                ],
+                $occurred ? gmdate('Y-m-d H:i:s', $occurred->getTimestamp()) : null
+            );
+        }
     }
 
     /** @param array<string, mixed> $payload */

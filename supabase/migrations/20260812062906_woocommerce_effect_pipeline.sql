@@ -110,7 +110,8 @@ begin
     select event.id
     from loyalty_private.canonical_commerce_events as event
     where event.event_type in (
-        'commerce.order.status_changed', 'commerce.order.refunded'
+        'commerce.order.status_changed', 'commerce.order.refunded',
+        'commerce.coupon.captured'
       )
       and (
         (event.effect_state in ('pending', 'retryable')
@@ -493,6 +494,156 @@ begin
 end;
 $$;
 
+create or replace function loyalty_private.capture_woocommerce_coupon_use(
+  target_organization_id bigint,
+  target_connection_id bigint,
+  target_reservation_public_id uuid,
+  target_order_id text,
+  target_effective_at timestamptz default now()
+)
+returns table (transaction_public_id uuid, state text, outcome text)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  target_reservation loyalty.reward_reservations%rowtype;
+  reserve_transaction_public_id uuid;
+  capture_transaction_public_id uuid;
+  capture_outcome text;
+  transition_outcome text;
+  request_hash bytea;
+begin
+  if length(btrim(target_order_id)) not between 1 and 255 then
+    raise exception using errcode = '22023', message = 'invalid WooCommerce order id';
+  end if;
+  select reservation.* into target_reservation
+  from loyalty.reward_reservations as reservation
+  where reservation.organization_id = target_organization_id
+    and reservation.public_id = target_reservation_public_id
+  for update;
+  if not found then
+    raise exception using errcode = '22023', message = 'unknown reward reservation';
+  end if;
+  if target_reservation.state not in ('issued', 'captured') then
+    raise exception using errcode = '23514', message = 'coupon is not issued for capture';
+  end if;
+  if not exists (
+    select 1
+    from loyalty.commerce_connections as connection
+    join loyalty.programmes as programme
+      on programme.organization_id = connection.organization_id
+     and programme.id = connection.programme_id
+     and programme.programme_group_id = target_reservation.programme_group_id
+    where connection.organization_id = target_organization_id
+      and connection.id = target_connection_id
+  ) or not exists (
+    select 1
+    from loyalty_private.transactional_outbox as issue
+    where issue.organization_id = target_organization_id
+      and issue.connection_id = target_connection_id
+      and issue.topic = 'woocommerce.coupon.issue'
+      and issue.payload ->> 'reservationId' = target_reservation_public_id::text
+  ) then
+    raise exception using errcode = '22023', message = 'coupon reservation does not belong to connection';
+  end if;
+  select transaction.public_id into reserve_transaction_public_id
+  from loyalty.ledger_transactions as transaction
+  where transaction.organization_id = target_organization_id
+    and transaction.id = target_reservation.ledger_reservation_transaction_id
+    and transaction.transaction_kind = 'reserve';
+  if not found then
+    raise exception using errcode = '22023', message = 'reservation ledger transaction unavailable';
+  end if;
+  request_hash := extensions.digest(
+    pg_catalog.convert_to(
+      target_reservation_public_id::text || ':' || target_connection_id::text || ':' || target_order_id,
+      'UTF8'
+    ),
+    'sha256'
+  );
+  select captured.transaction_public_id, captured.outcome
+  into capture_transaction_public_id, capture_outcome
+  from loyalty_private.capture_reservation(
+    target_organization_id,
+    reserve_transaction_public_id,
+    'woocommerce:coupon:' || target_reservation_public_id::text || ':capture',
+    request_hash,
+    target_effective_at
+  ) as captured;
+  select transitioned.outcome into transition_outcome
+  from loyalty_private.transition_reward_reservation(
+    target_reservation_public_id,
+    'captured',
+    'woocommerce:coupon:' || target_reservation_public_id::text || ':captured',
+    request_hash,
+    'woocommerce-worker',
+    null,
+    capture_transaction_public_id,
+    'woocommerce:order:' || target_order_id
+  ) as transitioned;
+  return query select capture_transaction_public_id, 'captured'::text,
+    case when capture_outcome = 'created' or transition_outcome = 'created'
+      then 'created'::text else 'duplicate'::text end;
+end;
+$$;
+
+create or replace function loyalty_private.enqueue_expired_woocommerce_coupon_cancellations(
+  target_as_of timestamptz default now(),
+  target_batch_size integer default 100
+)
+returns bigint
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  enqueued_count bigint;
+begin
+  if target_batch_size not between 1 and 1000 then
+    raise exception using errcode = '22023', message = 'invalid batch size';
+  end if;
+  with candidates as (
+    select reservation.organization_id, issue.connection_id,
+      reservation.public_id as reservation_public_id,
+      issue.payload ->> 'code' as coupon_code
+    from loyalty.reward_reservations as reservation
+    join loyalty_private.transactional_outbox as issue
+      on issue.organization_id = reservation.organization_id
+     and issue.topic = 'woocommerce.coupon.issue'
+     and issue.payload ->> 'reservationId' = reservation.public_id::text
+    join loyalty.commerce_connections as connection
+      on connection.organization_id = issue.organization_id
+     and connection.id = issue.connection_id
+     and connection.status in ('active', 'rotating')
+    where reservation.state in ('reserved', 'issued')
+      and reservation.expires_at <= target_as_of
+      and length(issue.payload ->> 'code') between 20 and 50
+    order by reservation.expires_at, reservation.id
+    for update of reservation skip locked
+    limit target_batch_size
+  ), inserted as (
+    insert into loyalty_private.transactional_outbox (
+      organization_id, connection_id, topic, payload_version, payload,
+      available_at
+    )
+    select candidate.organization_id, candidate.connection_id,
+      'woocommerce.coupon.cancel', 'v1',
+      pg_catalog.jsonb_build_object(
+        'kind', 'cancel_coupon',
+        'reservationId', candidate.reservation_public_id,
+        'code', candidate.coupon_code
+      ),
+      target_as_of
+    from candidates as candidate
+    on conflict do nothing
+    returning id
+  )
+  select count(*)::bigint into enqueued_count from inserted;
+  return enqueued_count;
+end;
+$$;
+
 create or replace function loyalty_private.finish_woocommerce_command(
   target_connection_public_id uuid,
   target_command_id uuid,
@@ -509,6 +660,12 @@ as $$
 declare
   target_connection_id bigint;
   target_outbox loyalty_private.transactional_outbox%rowtype;
+  target_reservation loyalty.reward_reservations%rowtype;
+  reserve_transaction_public_id uuid;
+  cancellation_transaction_public_id uuid;
+  command_hash bytea;
+  cancellation_hash bytea;
+  cancellation_state text;
 begin
   if target_outcome not in ('delivered', 'retryable', 'dead_letter', 'cancelled') then
     raise exception using errcode = '22023', message = 'invalid command outcome';
@@ -538,22 +695,105 @@ begin
   end if;
   if target_outcome = 'delivered'
     and target_outbox.topic = 'woocommerce.coupon.issue' then
-    perform * from loyalty_private.transition_reward_reservation(
-      (target_outbox.payload ->> 'reservationId')::uuid,
-      'issued',
-      'woocommerce:command:' || target_command_id::text || ':issued',
-      extensions.digest(
+    select reservation.* into target_reservation
+    from loyalty.reward_reservations as reservation
+    where reservation.organization_id = target_outbox.organization_id
+      and reservation.public_id = (target_outbox.payload ->> 'reservationId')::uuid
+    for update;
+    if not found then
+      raise exception using errcode = '22023', message = 'unknown reward reservation';
+    end if;
+    if target_reservation.state = 'reserved' then
+      perform * from loyalty_private.transition_reward_reservation(
+        target_reservation.public_id,
+        'issued',
+        'woocommerce:command:' || target_command_id::text || ':issued',
+        extensions.digest(
+          pg_catalog.convert_to(
+            target_command_id::text || ':' || coalesce(target_result_reference, ''),
+            'UTF8'
+          ),
+          'sha256'
+        ),
+        'woocommerce-connector',
+        null,
+        null,
+        target_result_reference
+      );
+    elsif target_reservation.state not in (
+      'issued', 'captured', 'cancelled', 'expired', 'failed', 'released'
+    ) then
+      raise exception using errcode = '23514', message = 'invalid reward state for coupon issue acknowledgement';
+    end if;
+  end if;
+  if target_outcome = 'cancelled'
+    and target_outbox.topic = 'woocommerce.coupon.cancel' then
+    select reservation.* into target_reservation
+    from loyalty.reward_reservations as reservation
+    where reservation.organization_id = target_outbox.organization_id
+      and reservation.public_id = (target_outbox.payload ->> 'reservationId')::uuid
+    for update;
+    if not found then
+      raise exception using errcode = '22023', message = 'unknown reward reservation';
+    end if;
+    command_hash := extensions.digest(
+      pg_catalog.convert_to(
+        target_command_id::text || ':' || coalesce(target_result_reference, ''),
+        'UTF8'
+      ),
+      'sha256'
+    );
+    if target_reservation.state in ('reserved', 'issued') then
+      cancellation_state := case target_reservation.state
+        when 'reserved' then 'expired' else 'failed' end;
+      perform * from loyalty_private.transition_reward_reservation(
+        target_reservation.public_id,
+        cancellation_state,
+        'woocommerce:command:' || target_command_id::text || ':cancelled',
+        command_hash,
+        'woocommerce-connector',
+        'native coupon cancelled before capture',
+        null,
+        target_result_reference
+      );
+      target_reservation.state := cancellation_state;
+    end if;
+    if target_reservation.state in ('cancelled', 'expired', 'failed') then
+      select transaction.public_id into reserve_transaction_public_id
+      from loyalty.ledger_transactions as transaction
+      where transaction.organization_id = target_reservation.organization_id
+        and transaction.id = target_reservation.ledger_reservation_transaction_id
+        and transaction.transaction_kind = 'reserve';
+      if not found then
+        raise exception using errcode = '22023', message = 'reservation ledger transaction unavailable';
+      end if;
+      cancellation_hash := extensions.digest(
         pg_catalog.convert_to(
-          target_command_id::text || ':' || coalesce(target_result_reference, ''),
+          target_reservation.public_id::text || ':woocommerce-coupon-release',
           'UTF8'
         ),
         'sha256'
-      ),
-      'woocommerce-connector',
-      null,
-      null,
-      target_result_reference
-    );
+      );
+      select cancelled.transaction_public_id
+      into cancellation_transaction_public_id
+      from loyalty_private.cancel_reservation(
+        target_reservation.organization_id,
+        reserve_transaction_public_id,
+        'woocommerce:coupon:' || target_reservation.public_id::text || ':release-ledger',
+        cancellation_hash,
+        clock_timestamp()
+      ) as cancelled;
+      perform * from loyalty_private.transition_reward_reservation(
+        target_reservation.public_id,
+        'released',
+        'woocommerce:coupon:' || target_reservation.public_id::text || ':released',
+        cancellation_hash,
+        'woocommerce-worker',
+        'unused native coupon cancelled and points released',
+        cancellation_transaction_public_id,
+        target_result_reference
+      );
+    end if;
   end if;
   update loyalty_private.transactional_outbox
   set state = target_outcome,
@@ -568,7 +808,7 @@ begin
       lease_owner = null,
       lease_expires_at = null,
       last_error_code = target_error_code,
-      delivered_at = case when target_outcome = 'delivered'
+      delivered_at = case when target_outcome in ('delivered', 'cancelled')
         then clock_timestamp() else delivered_at end
   where id = target_outbox.id;
   return query select target_command_id, target_outcome;
@@ -587,6 +827,12 @@ alter function loyalty_private.claim_woocommerce_commands(uuid, integer, integer
   owner to loyalty_owner;
 alter function loyalty_private.enqueue_woocommerce_coupon_issue(uuid, uuid, smallint)
   owner to loyalty_owner;
+alter function loyalty_private.capture_woocommerce_coupon_use(
+  bigint, bigint, uuid, text, timestamptz
+) owner to loyalty_owner;
+alter function loyalty_private.enqueue_expired_woocommerce_coupon_cancellations(
+  timestamptz, integer
+) owner to loyalty_owner;
 alter function loyalty_private.finish_woocommerce_command(
   uuid, uuid, text, text, text, integer
 ) owner to loyalty_owner;
@@ -604,6 +850,12 @@ revoke all on function loyalty_private.claim_woocommerce_commands(uuid, integer,
   from public, anon, authenticated;
 revoke all on function loyalty_private.enqueue_woocommerce_coupon_issue(uuid, uuid, smallint)
   from public, anon, authenticated, loyalty_runtime;
+revoke all on function loyalty_private.capture_woocommerce_coupon_use(
+  bigint, bigint, uuid, text, timestamptz
+) from public, anon, authenticated, loyalty_runtime;
+revoke all on function loyalty_private.enqueue_expired_woocommerce_coupon_cancellations(
+  timestamptz, integer
+) from public, anon, authenticated, loyalty_runtime;
 revoke all on function loyalty_private.finish_woocommerce_command(
   uuid, uuid, text, text, text, integer
 ) from public, anon, authenticated;
@@ -618,6 +870,12 @@ grant execute on function loyalty_private.claim_woocommerce_commands(uuid, integ
   to loyalty_runtime;
 grant execute on function loyalty_private.enqueue_woocommerce_coupon_issue(uuid, uuid, smallint)
   to loyalty_worker;
+grant execute on function loyalty_private.capture_woocommerce_coupon_use(
+  bigint, bigint, uuid, text, timestamptz
+) to loyalty_worker;
+grant execute on function loyalty_private.enqueue_expired_woocommerce_coupon_cancellations(
+  timestamptz, integer
+) to loyalty_worker;
 grant execute on function loyalty_private.finish_woocommerce_command(
   uuid, uuid, text, text, text, integer
 ) to loyalty_runtime;
@@ -628,3 +886,9 @@ comment on column loyalty_private.canonical_commerce_events.effect_state is
   'Durable lease/retry state for asynchronous business effects after normalization.';
 comment on function loyalty_private.resolve_commerce_customer(bigint, bigint, text, text) is
   'Resolves signed channel identity without accepting or comparing email or other PII.';
+comment on function loyalty_private.capture_woocommerce_coupon_use(
+  bigint, bigint, uuid, text, timestamptz
+) is 'Captures an issued WooCommerce reward exactly once with immutable ledger and connector evidence.';
+comment on function loyalty_private.enqueue_expired_woocommerce_coupon_cancellations(
+  timestamptz, integer
+) is 'Queues idempotent native coupon cancellation so unused reservations release only after connector acknowledgement.';

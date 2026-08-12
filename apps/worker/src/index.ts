@@ -2,6 +2,7 @@ import { hostname } from "node:os";
 import postgres from "postgres";
 import {
   claimWooCommerceEffects,
+  enqueueExpiredWooCommerceCouponCancellations,
   processWooCommerceEffect,
 } from "./processor.ts";
 
@@ -18,6 +19,7 @@ const sql = postgres(connectionString, {
 });
 const workerId = `${hostname()}:${process.pid}`;
 let stopping = false;
+let nextCancellationSweepAt = 0;
 process.once("SIGINT", () => {
   stopping = true;
 });
@@ -26,6 +28,10 @@ process.once("SIGTERM", () => {
 });
 
 while (!stopping) {
+  if (Date.now() >= nextCancellationSweepAt) {
+    await enqueueExpiredWooCommerceCouponCancellations(sql);
+    nextCancellationSweepAt = Date.now() + 60_000;
+  }
   const events = await claimWooCommerceEffects(sql, workerId);
   for (const event of events) {
     if (stopping) break;

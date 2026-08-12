@@ -214,6 +214,14 @@ export const wooCommerceOrderRefundedPayloadV1 = z
     }
   });
 
+export const wooCommerceCouponCapturedPayloadV1 = z
+  .object({
+    kind: z.literal("coupon_captured"),
+    reservationId: z.uuid(),
+    orderId: z.string().min(1).max(255),
+  })
+  .strict();
+
 function scaledBigIntOrNull(
   value: string,
   minorUnitDigits: number,
@@ -267,6 +275,9 @@ export type WooCommerceOrderStatusChangedPayloadV1 = z.infer<
 >;
 export type WooCommerceOrderRefundedPayloadV1 = z.infer<
   typeof wooCommerceOrderRefundedPayloadV1
+>;
+export type WooCommerceCouponCapturedPayloadV1 = z.infer<
+  typeof wooCommerceCouponCapturedPayloadV1
 >;
 
 const wooCommerceCouponIssuePayloadV1 = z

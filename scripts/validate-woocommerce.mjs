@@ -101,6 +101,8 @@ for (const [label, content, requirements] of [
       "INSERT IGNORE INTO",
       "woocommerce_order_status_changed",
       "woocommerce_refund_created",
+      "commerce.coupon.captured",
+      "captureCoupons",
       "as_schedule_single_action",
       "wp_remote_post",
       "hash_hmac('sha256'",

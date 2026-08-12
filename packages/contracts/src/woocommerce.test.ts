@@ -3,6 +3,7 @@ import {
   canonicalCommerceEventV1,
   signWooCommerceDelivery,
   verifyWooCommerceDelivery,
+  wooCommerceCouponCapturedPayloadV1,
   wooCommerceCouponCommandEnvelopeV1,
   wooCommerceDecimalToMinor,
   wooCommerceDeliveryEnvelopeV1,
@@ -182,6 +183,23 @@ describe("WooCommerce commerce facts", () => {
         refundId: "9",
         refundAmount: "2.51",
         order,
+      }).success,
+    ).toBe(false);
+  });
+
+  it("accepts a PII-free coupon capture fact and rejects extra fields", () => {
+    const fact = {
+      kind: "coupon_captured",
+      reservationId: "63000000-0000-4000-8000-000000000001",
+      orderId: "42",
+    };
+    expect(wooCommerceCouponCapturedPayloadV1.safeParse(fact).success).toBe(
+      true,
+    );
+    expect(
+      wooCommerceCouponCapturedPayloadV1.safeParse({
+        ...fact,
+        email: "customer@example.test",
       }).success,
     ).toBe(false);
   });

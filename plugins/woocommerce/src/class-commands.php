@@ -161,6 +161,9 @@ final class Commands
         if ($reservationId !== (string) $coupon->get_meta('_starfiniti_reservation_id', true)) {
             return self::failure('dead_letter', 'coupon_reservation_mismatch');
         }
+        if ($coupon->get_usage_count() > 0) {
+            return self::failure('dead_letter', 'coupon_already_used');
+        }
         $coupon->set_date_expires(time() - DAY_IN_SECONDS);
         $coupon->set_status('draft');
         $coupon->save();

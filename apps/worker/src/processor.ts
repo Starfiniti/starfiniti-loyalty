@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import {
+  wooCommerceCouponCapturedPayloadV1,
   wooCommerceOrderRefundedPayloadV1,
   wooCommerceOrderStatusChangedPayloadV1,
   type WooCommerceOrderFactV1,
@@ -37,6 +38,11 @@ type ParsedEffect =
       readonly kind: "refund";
       readonly refundId: string;
       readonly order: WooCommerceOrderFactV1;
+    }
+  | {
+      readonly kind: "coupon_capture";
+      readonly reservationId: string;
+      readonly orderId: string;
     }
   | { readonly kind: "skip"; readonly reason: string }
   | { readonly kind: "quarantine"; readonly reason: string };
@@ -86,6 +92,16 @@ export function parseWooCommerceEffect(event: ClaimedEffect): ParsedEffect {
           order: parsed.data.order,
         }
       : { kind: "quarantine", reason: "invalid_order_refund_payload" };
+  }
+  if (event.event_type === "commerce.coupon.captured") {
+    const parsed = wooCommerceCouponCapturedPayloadV1.safeParse(event.payload);
+    return parsed.success
+      ? {
+          kind: "coupon_capture",
+          reservationId: parsed.data.reservationId,
+          orderId: parsed.data.orderId,
+        }
+      : { kind: "quarantine", reason: "invalid_coupon_capture_payload" };
   }
   return { kind: "quarantine", reason: "unsupported_event_type" };
 }
@@ -148,6 +164,10 @@ export async function processWooCommerceEffect(
     return;
   }
   try {
+    if (effect.kind === "coupon_capture") {
+      await processCouponCapture(sql, workerId, event, effect);
+      return;
+    }
     if (effect.kind === "refund") {
       await processRefund(sql, workerId, event, effect);
       return;
@@ -209,6 +229,54 @@ export async function processWooCommerceEffect(
       permanent ? 0 : retryDelay(event.attempt_count),
     );
   }
+}
+
+async function processCouponCapture(
+  sql: Sql,
+  workerId: string,
+  event: ClaimedEffect,
+  effect: Extract<ParsedEffect, { kind: "coupon_capture" }>,
+): Promise<void> {
+  const operation = `connection:${event.connection_id}:reservation:${effect.reservationId}:order:${effect.orderId}`;
+  await sql.begin(async (transaction) => {
+    const captures = await transaction<
+      { transaction_public_id: string; outcome: string }[]
+    >`
+      select transaction_public_id::text, outcome
+      from loyalty_private.capture_woocommerce_coupon_use(
+        ${event.organization_id}::bigint,
+        ${event.connection_id}::bigint,
+        ${effect.reservationId}::uuid,
+        ${effect.orderId},
+        ${event.occurred_at}::timestamptz
+      )
+    `;
+    const capture = captures[0];
+    if (!capture) throw new Error("coupon_capture_record_failed");
+    await transaction`
+      select * from loyalty_private.finish_commerce_effect(
+        ${event.canonical_event_public_id}::uuid,
+        ${workerId},
+        'applied',
+        'loyalty.coupon.capture',
+        ${operation},
+        ${`ledger-transaction:${capture.transaction_public_id}`},
+        null,
+        0
+      )
+    `;
+  });
+}
+
+export async function enqueueExpiredWooCommerceCouponCancellations(
+  sql: Sql,
+): Promise<number> {
+  const rows = await sql<{ enqueued_count: string }[]>`
+    select loyalty_private.enqueue_expired_woocommerce_coupon_cancellations(
+      clock_timestamp(), 100
+    )::text as enqueued_count
+  `;
+  return Number(rows[0]?.enqueued_count ?? "0");
 }
 
 async function processRefund(

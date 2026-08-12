@@ -85,6 +85,24 @@ describe("WooCommerce effect worker", () => {
     ).toMatchObject({ kind: "refund", refundId: "refund-9" });
   });
 
+  it("classifies strict PII-free coupon use facts for ledger capture", () => {
+    expect(
+      parseWooCommerceEffect({
+        ...event,
+        event_type: "commerce.coupon.captured",
+        payload: {
+          kind: "coupon_captured",
+          reservationId: "63000000-0000-4000-8000-000000000001",
+          orderId: "42",
+        },
+      }),
+    ).toEqual({
+      kind: "coupon_capture",
+      reservationId: "63000000-0000-4000-8000-000000000001",
+      orderId: "42",
+    });
+  });
+
   it("hashes equivalent object keys deterministically", () => {
     expect(evidenceSha256({ a: 1, b: { c: 2 } })).toBe(
       evidenceSha256({ b: { c: 2 }, a: 1 }),
