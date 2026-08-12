@@ -154,7 +154,7 @@ where customer.public_id in (
 );
 
 select loyalty_private.ensure_wallet_accounts(
-  wallet.organization_id, wallet.programme_group_id, wallet.id
+  wallet.organization_id, wallet.programme_group_id, wallet.customer_id
 )
 from loyalty.wallets as wallet
 where wallet.public_id in (

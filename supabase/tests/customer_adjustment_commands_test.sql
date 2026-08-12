@@ -145,7 +145,7 @@ join loyalty.customers as customer
   on customer.organization_id = organization.id
 where organization.slug in ('adjust-one', 'adjust-two');
 select loyalty_private.ensure_wallet_accounts(
-  wallet.organization_id, wallet.programme_group_id, wallet.id
+  wallet.organization_id, wallet.programme_group_id, wallet.customer_id
 )
 from loyalty.wallets as wallet;
 select * from loyalty_private.adjust_points(
