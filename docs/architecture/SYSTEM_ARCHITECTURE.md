@@ -129,6 +129,13 @@ Circular dependencies are forbidden. Platform adapters translate at the edge; do
 3. A replay action validates the versioned command and requires a reviewed reason. PostgreSQL rechecks owner/admin/operator authority, locks the canonical event, and permits only `dead_letter -> retryable` with immutable audit evidence.
 4. Outbound coupon dead letters and quarantined work are not replayable from the generic merchant surface. The former may already be compensated; the latter requires remediation before retry.
 
+### Merchant customer adjustment
+
+1. The customer page requests an owner/admin-only text-form available balance so browser preview retains full `bigint` precision. The UI requires reason, review, confirmation, and future expiry for credits; removals receive a stronger warning.
+2. The server action validates the actorless versioned command and submits customer/group/version public IDs, signed points, minimized notes, idempotency, and correlation through the user's JWT.
+3. PostgreSQL rechecks live owner/admin authority, locks the active wallet, validates exact published-version tenancy, hashes the canonical request, and invokes one private immutable-ledger command.
+4. The balanced ledger transaction, entries, credit lot or debit allocations, projection updates, and administration audit evidence commit atomically. Retry returns the prior identity or rejects changed input; no history is edited.
+
 ## Availability and failure rules
 
 - Store checkout, order creation, and payment never synchronously depend on Starfiniti.

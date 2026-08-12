@@ -264,4 +264,8 @@ tasks:
       - dead-letter replay is limited to canonical effects and requires live owner admin or operator membership a single-line reason idempotency and immutable actor/correlation audit evidence
       - coupon issue/cancel outbox dead letters are inspect-only because the reservation may already be failed and compensated; the merchant command cannot mutate them
       - 38 connector-operation pgTAP assertions cover exact privileges search paths indexed access tenant isolation role revocation audit immutability bounded reads retry conflicts quarantine denial and outbound-command non-mutation
-      - dashboard and contract suites now contain 21 and 29 tests respectively
+      - owner/admin customer adjustments preview from a text-form bigint balance require explicit confirmation reason and credit expiry and warn that removal may make available points negative
+      - the exposed adjustment command derives the actor from live Auth validates the exact published version and appends one immutable balanced manual-adjustment transaction plus administration audit evidence
+      - operator analyst auditor revoked and cross-tenant identities cannot enter the value-changing adjustment boundary and caller-supplied actor/organization authority is absent
+      - 36 customer-adjustment pgTAP assertions cover privileges exact balance role and tenant denial positive lots FIFO debit allocation retries conflicts input bounds zero-sum entries audit linkage immutability and projection rebuilds
+      - dashboard and contract suites now contain 22 and 31 tests respectively

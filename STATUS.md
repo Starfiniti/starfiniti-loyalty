@@ -20,11 +20,12 @@
 - The merchant programme surface provides structured tier/reward editing, deterministic earning preview, contract validation, new immutable draft versions, exact-fingerprint publish/schedule confirmation, role-aware controls, version history, and tenant-visible administration audit evidence.
 - Customer operations provide bounded display-reference search, masked channel identity, authoritative pending/available/reserved/spent/expired/reversed buckets, and the latest immutable ledger entries with programme-version and correlation attribution.
 - Connector operations provide tenant-authorized health/queue counts, bounded failure metadata without private payloads, and audited owner/admin/operator replay of dead-letter canonical effects. Outbound coupon dead letters remain inspect-only because points compensation may already exist.
+- Customer owners/admins can preview and confirm signed whole-point adjustments against an exact text-form balance. Credits require expiry, removals show a strong negative-balance warning, and every result is one reason-bound immutable double-entry transaction plus administration audit evidence.
 
 ## Partial
 
 - Phases 0 through 7 are complete for the active WooCommerce scope. Shopify Phase 8 is deferred by product-owner direction.
-- Phase 9 is in progress. The authenticated shell, programme editor, customer wallet/ledger reads, and safe hub connector operations exist; reason-bound value adjustments, live reconciliation requests, real Overview reporting queries, and production deployment remain future slices.
+- Phase 9 is in progress. The authenticated shell, programme editor, customer wallet/ledger reads, safe hub connector operations, and reason-bound value adjustments exist; live reconciliation requests, real Overview reporting queries, and production deployment remain future slices.
 
 ## Broken or unavailable
 
@@ -34,7 +35,7 @@
 
 ## Database migration state
 
-Seven versioned migrations and the seed replay successfully against disposable Supabase/Postgres 17 CI. The eighth connector-operations migration validates locally and awaits exact-head disposable CI. The expanded suite contains 412 pgTAP assertions plus concurrency/property probes. No persistent or production database has been changed.
+Seven versioned migrations and the seed replay successfully against disposable Supabase/Postgres 17 CI. Connector operations are in exact-head disposable CI; the ninth customer-adjustment migration validates locally. The expanded suite contains 448 pgTAP assertions plus concurrency/property probes. No persistent or production database has been changed.
 
 ## Git state
 
@@ -62,7 +63,7 @@ Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 Wo
 
 ## Next recommended task
 
-Add audited, reason-bound customer adjustment commands with exact immutable-ledger attribution.
+Add a durable connector-to-plugin reconciliation request path, then replace illustrative Overview analytics with tenant-authorized reporting.
 
 ## Blockers
 

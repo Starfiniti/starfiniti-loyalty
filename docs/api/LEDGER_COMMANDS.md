@@ -25,6 +25,8 @@ Every command carries an organization scope, tenant-scoped idempotency key, cano
 
 Capture and cancel are mutually exclusive for a reservation. The same resolution idempotency key/hash returns the original result; a conflicting resolution fails without a second effect.
 
+The merchant-facing `adjust_customer_points_command` is narrower than the worker primitive: it derives the actor from Auth, resolves tenant/wallet from customer and programme-group public IDs, requires an exact currently published programme version, and permits only live owners/admins. Positive adjustments require future expiry and create a lot; negative adjustments accept no expiry and consume available lot remainders FIFO before any explicitly warned negative balance. A matching immutable administration audit row links command and ledger correlations.
+
 ## Invariants and conflicts
 
 - A transaction header is inserted only after all of its entries exist under a deferred foreign key.
@@ -39,4 +41,4 @@ Capture and cancel are mutually exclusive for a reservation. The same resolution
 
 `wallet_balances` and `point_lot_balances` are caches, never authority. Difference and rebuild functions derive only from immutable entries/allocations. `export_ledger_entries` emits a tenant-scoped audit export, while `programme_liability_report` totals pending, available, reserved, and outstanding points by programme group.
 
-The database gate includes 91 ledger pgTAP assertions and a two-session concurrency/property probe. The probe proves competing reservations cannot overspend and checks zero-sum/projection equality after deterministic mixed operations and idempotent retries.
+The database gate includes 91 ledger-foundation assertions plus 36 merchant-adjustment assertions and a two-session concurrency/property probe. The probe proves competing reservations cannot overspend and checks zero-sum/projection equality after deterministic mixed operations and idempotent retries.

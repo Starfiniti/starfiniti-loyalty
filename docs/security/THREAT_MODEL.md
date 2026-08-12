@@ -81,6 +81,8 @@ Merchant customer reads validate public UUIDs, bound and escape reference search
 
 Merchant connector reads enter exact-signature security-definer wrappers because queue tables are private. The wrappers recheck live tenant membership and return only bounded state, count, attempt, error-code, event/topic, and watermark fields. They never return queue payloads, raw bodies, source object identifiers, coupon codes, signing references, or customer attributes. Effect replay is restricted to live owner/admin/operator roles, dead-letter canonical effects, a bounded reason, and immutable audit evidence. Quarantined work and compensated coupon commands cannot be replayed through this surface.
 
+Manual point adjustment is treated as a high-risk value command. The public contract omits actor/organization IDs, preserves point values as integer strings, requires deliberate review and a bounded reason, and gives removal a distinct warning/confirmation. PostgreSQL rechecks live owner/admin membership, customer/group/version relationships, and expiry direction before invoking the immutable ledger primitive. Operators, analysts, auditors, revoked users, stale versions, and cross-tenant targets fail closed. The ledger and administration audit rows are committed together and cannot be rewritten.
+
 ### Database
 
 Least privilege, RLS, composite tenant FKs, immutable ledger/programme/audit tables, idempotency constraints, short transactions, fixed lock order, empty privileged-function search paths, and audit correlation.

@@ -1438,6 +1438,114 @@ h1 {
     grid-column: 2;
   }
 }
+
+.adjustment-panel {
+  margin-bottom: 18px;
+}
+.adjustment-panel .customer-result-heading {
+  margin-top: 0;
+  border-top: 0;
+}
+.adjustment-form {
+  display: grid;
+  gap: 16px;
+}
+.adjustment-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.adjustment-fields label {
+  display: grid;
+  gap: 6px;
+}
+.adjustment-fields label > span {
+  color: #57534e;
+  font-size: 11px;
+  font-weight: 700;
+}
+.adjustment-fields input {
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid #d6d3d1;
+  border-radius: 8px;
+  font: inherit;
+}
+.adjustment-fields input:focus {
+  border-color: #6d4ef0;
+  outline: 3px solid rgba(109, 78, 240, 0.13);
+}
+.adjustment-preview {
+  padding: 16px;
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
+  background: #eff6ff;
+}
+.adjustment-preview.danger {
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+.adjustment-preview span,
+.adjustment-preview strong,
+.adjustment-preview p {
+  display: block;
+  margin: 0;
+}
+.adjustment-preview span {
+  color: var(--muted);
+  font-size: 10px;
+  text-transform: uppercase;
+}
+.adjustment-preview strong {
+  margin-top: 7px;
+  font-size: 19px;
+}
+.adjustment-preview p {
+  margin-top: 8px;
+  color: #57534e;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.adjustment-confirmation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #eee;
+}
+.adjustment-confirmation label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #57534e;
+  font-size: 11px;
+}
+.danger-button {
+  min-height: 38px;
+  padding: 8px 13px;
+  border: 0;
+  border-radius: 8px;
+  color: white;
+  background: #b91c1c;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.danger-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+@media (max-width: 640px) {
+  .adjustment-fields {
+    grid-template-columns: 1fr;
+  }
+  .adjustment-confirmation {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

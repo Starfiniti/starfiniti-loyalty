@@ -4,6 +4,8 @@ import {
   isUuid,
   maskExternalCustomerId,
   normalizeCustomerSearch,
+  parseAdjustmentPoints,
+  previewAvailablePoints,
   summarizeWalletBuckets,
 } from "./customers";
 
@@ -48,5 +50,14 @@ describe("customer read model helpers", () => {
     expect(isUuid("71000000-0000-4000-8000-000000000101")).toBe(true);
     expect(isUuid("../another-tenant")).toBe(false);
     expect(isUuid("71000000-0000-0000-0000-000000000101")).toBe(false);
+  });
+
+  it("previews signed adjustments without floating point loss", () => {
+    expect(parseAdjustmentPoints("-250")).toBe(-250n);
+    expect(parseAdjustmentPoints("0")).toBeNull();
+    expect(parseAdjustmentPoints("1.5")).toBeNull();
+    expect(previewAvailablePoints("9007199254740993", "250")).toBe(
+      9007199254741243n,
+    );
   });
 });

@@ -3,6 +3,7 @@ import {
   adjustPointsCommandV1,
   awardPointsCommandV1,
   ledgerCommandV1,
+  merchantAdjustCustomerPointsCommandV1,
   releasePointsCommandV1,
 } from "./ledger";
 
@@ -79,6 +80,58 @@ describe("ledger command contracts", () => {
     expect(
       ledgerCommandV1.safeParse({ ...identity, kind: "rewrite_balance" })
         .success,
+    ).toBe(false);
+  });
+
+  it("accepts an actorless merchant credit with explicit expiry", () => {
+    expect(
+      merchantAdjustCustomerPointsCommandV1.safeParse({
+        version: "1",
+        customerId: "bf2247d8-893e-49ae-8363-8423928e9cc1",
+        programmeGroupId: "bf2247d8-893e-49ae-8363-8423928e9cc2",
+        programmeVersionId: "bf2247d8-893e-49ae-8363-8423928e9cc3",
+        points: "200",
+        reason: "Approved service recovery credit",
+        internalNote: "Ticket CS-1042",
+        expiresAt: "2027-08-12T08:00:00Z",
+        idempotencyKey: "customer:adjust:fixture",
+        correlationId: "bf2247d8-893e-49ae-8363-8423928e9cc4",
+      }).success,
+    ).toBe(true);
+  });
+
+  it("requires expiry only for credits and rejects caller authority", () => {
+    const base = {
+      version: "1",
+      customerId: "bf2247d8-893e-49ae-8363-8423928e9cc1",
+      programmeGroupId: "bf2247d8-893e-49ae-8363-8423928e9cc2",
+      programmeVersionId: "bf2247d8-893e-49ae-8363-8423928e9cc3",
+      reason: "Approved customer correction",
+      internalNote: null,
+      idempotencyKey: "customer:adjust:fixture",
+      correlationId: "bf2247d8-893e-49ae-8363-8423928e9cc4",
+    };
+    expect(
+      merchantAdjustCustomerPointsCommandV1.safeParse({
+        ...base,
+        points: "10",
+        expiresAt: null,
+      }).success,
+    ).toBe(false);
+    expect(
+      merchantAdjustCustomerPointsCommandV1.safeParse({
+        ...base,
+        points: "-10",
+        expiresAt: "2027-08-12T08:00:00Z",
+      }).success,
+    ).toBe(false);
+    expect(
+      merchantAdjustCustomerPointsCommandV1.safeParse({
+        ...base,
+        points: "-10",
+        expiresAt: null,
+        actorId: "forged-admin",
+      }).success,
     ).toBe(false);
   });
 });

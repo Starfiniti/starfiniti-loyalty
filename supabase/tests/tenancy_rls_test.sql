@@ -99,7 +99,9 @@ select is_empty(
       and not (
         namespace.nspname = 'loyalty'
         and routine.proname in (
+          'adjust_customer_points_command',
           'create_programme_draft_command',
+          'get_customer_adjustment_context',
           'get_connector_operation_issues',
           'get_connector_operation_summaries',
           'publish_programme_version_command',

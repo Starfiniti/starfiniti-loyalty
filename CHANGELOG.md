@@ -44,3 +44,4 @@
 - Added the audited Phase 9 programme editor with structured tier/reward configuration, deterministic preview, database-canonical immutable drafts, exact-hash publish/schedule confirmation, visible version/audit history, and live role/tenant enforcement.
 - Added tenant-scoped customer search and detail views with masked channel identifiers, six authoritative wallet buckets, and the latest immutable programme-attributed ledger entries.
 - Added tenant-scoped WooCommerce health and queue operations with bounded payload-free failure metadata, safe role-guarded canonical-effect replay, and immutable reason/correlation audit evidence; compensated outbound coupon dead letters remain inspect-only.
+- Added owner/admin customer point adjustments with exact bigint preview, expiry-bound credits, strong debit confirmation, request-derived actors, immutable double-entry ledger effects, and matching administration audit evidence.

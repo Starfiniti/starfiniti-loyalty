@@ -50,3 +50,15 @@ export function isUuid(value: unknown): value is string {
     )
   );
 }
+
+export function parseAdjustmentPoints(value: string): bigint | null {
+  return /^-?[1-9][0-9]*$/u.test(value) ? BigInt(value) : null;
+}
+
+export function previewAvailablePoints(
+  availablePoints: string,
+  adjustmentPoints: string,
+): bigint | null {
+  const adjustment = parseAdjustmentPoints(adjustmentPoints);
+  return adjustment === null ? null : BigInt(availablePoints) + adjustment;
+}

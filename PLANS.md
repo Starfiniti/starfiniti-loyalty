@@ -36,17 +36,18 @@ Phase 9 — merchant administration and customer experience. Shopify Phase 8 rem
 - Exact-head run `31580836101` passed the baseline, seven-migration database gate with 374 pgTAP assertions plus concurrency/property probes, and all four WooCommerce runtime variants.
 - The customer operations read slice now provides bounded reference search, masked channel identity, wallet-bucket truth, and immutable programme-attributed ledger history through explicit tenant filters plus RLS.
 - The connector operations slice now provides private-payload-free queue summaries/issues and an audited, role-guarded replay command limited to canonical dead-letter effects. Coupon command dead letters are deliberately inspect-only after compensation.
+- The customer adjustment slice now provides exact integer balance preview, strong removal warnings, explicit confirmation, expiry-bound credits, and owner/admin-only immutable ledger plus audit commands.
 - Exact-head run `31581760825` passed the customer-ledger baseline, database job, and all four WooCommerce runtime variants.
 
 ## Active work
 
-- `P9-MERCHANT-HUB` (in progress): the Auth/RLS shell, audited programme editor, customer wallet/ledger reads, and safe connector queue operations are implemented; value-changing customer commands follow.
+- `P9-MERCHANT-HUB` (in progress): the Auth/RLS shell, audited programme editor, customer wallet/ledger reads, safe connector queue operations, and value-changing customer adjustments are implemented; reconciliation requests and real reporting follow.
 
 ## Next safe tasks
 
-1. Add audited, reason-bound customer adjustment commands with preview and idempotency.
-2. Add a durable connector-to-plugin reconciliation request path rather than a cosmetic dashboard control.
-3. Replace explicitly labelled illustrative Overview analytics with authorized reporting queries.
+1. Add a durable connector-to-plugin reconciliation request path rather than a cosmetic dashboard control.
+2. Replace explicitly labelled illustrative Overview analytics with authorized reporting queries.
+3. Complete production deployment and recovery evidence when the final infrastructure inputs are available.
 
 ## Dependencies and blockers
 

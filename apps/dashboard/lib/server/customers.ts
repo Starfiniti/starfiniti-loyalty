@@ -41,6 +41,10 @@ export type CustomerDetail = Readonly<{
   ledger: readonly CustomerLedgerItem[];
 }>;
 
+export type CustomerAdjustmentContext = Readonly<{
+  availablePoints: string;
+}>;
+
 type CustomerRow = Readonly<{
   id: number;
   public_id: string;
@@ -351,4 +355,31 @@ export async function getCustomerDetail(
         : [];
     }),
   };
+}
+
+export async function getCustomerAdjustmentContext(
+  context: TenantContext,
+  customerPublicId: string,
+): Promise<CustomerAdjustmentContext | null> {
+  if (
+    !isUuid(customerPublicId) ||
+    !context.programmeGroup ||
+    (context.membershipRole !== "owner" && context.membershipRole !== "admin")
+  ) {
+    return null;
+  }
+  const supabase = await createSupabaseServerClient();
+  const result = await supabase
+    .schema("loyalty")
+    .rpc("get_customer_adjustment_context", {
+      target_customer_public_id: customerPublicId,
+      target_programme_group_public_id: context.programmeGroup.public_id,
+    });
+  if (result.error) throw new Error("customer_adjustment_context_unavailable");
+  const row = (Array.isArray(result.data) ? result.data[0] : result.data) as {
+    available_points?: unknown;
+  } | null;
+  return row && typeof row.available_points === "string"
+    ? { availablePoints: row.available_points }
+    : null;
 }

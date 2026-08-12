@@ -2,8 +2,13 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { signOut } from "@/app/actions";
-import { getCustomerDetail } from "@/lib/server/customers";
+import {
+  getCustomerAdjustmentContext,
+  getCustomerDetail,
+} from "@/lib/server/customers";
+import { getMerchantProgrammeState } from "@/lib/server/programme";
 import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
+import { CustomerAdjustmentForm } from "./adjustment-form";
 
 function formatDate(value: string): string {
   return new Intl.DateTimeFormat("en-GB", {
@@ -29,8 +34,15 @@ export default async function CustomerDetailPage({
   }
   if (tenant.kind === "unassigned") redirect("/");
 
-  const detail = await getCustomerDetail(tenant.context, customerId);
+  const [detail, adjustmentContext, programmeState] = await Promise.all([
+    getCustomerDetail(tenant.context, customerId),
+    getCustomerAdjustmentContext(tenant.context, customerId),
+    getMerchantProgrammeState(tenant.context),
+  ]);
   if (!detail) notFound();
+  const publishedVersion = programmeState.versions.find(
+    (version) => version.status === "published",
+  );
 
   return (
     <main className="customer-page">
@@ -89,6 +101,18 @@ export default async function CustomerDetailPage({
           </article>
         ))}
       </section>
+
+      {adjustmentContext &&
+      publishedVersion &&
+      tenant.context.programmeGroup ? (
+        <CustomerAdjustmentForm
+          availablePoints={adjustmentContext.availablePoints}
+          customerId={customerId}
+          programmeGroupId={tenant.context.programmeGroup.public_id}
+          programmeVersionId={publishedVersion.id}
+          programmeVersionNumber={publishedVersion.versionNumber}
+        />
+      ) : null}
 
       <section className="customer-panel ledger-panel">
         <div className="customer-result-heading">
