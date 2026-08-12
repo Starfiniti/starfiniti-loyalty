@@ -109,6 +109,7 @@ select is_empty(
           'get_connector_operation_issues',
           'get_connector_operation_summaries',
           'get_overview_report',
+          'get_public_loyalty_experience',
           'list_customer_summaries',
           'publish_programme_version_command',
           'preview_bulk_customer_adjustment',

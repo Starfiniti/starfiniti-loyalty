@@ -1640,6 +1640,191 @@ h1 {
 .translation-controls .section-heading {
   margin-bottom: 18px;
 }
+
+.public-loyalty-page {
+  --loyalty-brand: #7c2d4f;
+  --loyalty-radius: 14px;
+  --loyalty-font: Georgia, serif;
+  min-height: 100vh;
+  padding: 24px clamp(18px, 5vw, 72px) 36px;
+  color: #291b21;
+  background:
+    radial-gradient(
+      circle at 88% 4%,
+      color-mix(in srgb, var(--loyalty-brand) 12%, transparent),
+      transparent 28rem
+    ),
+    #fffaf8;
+}
+.public-loyalty-language {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.public-loyalty-language a {
+  padding: 8px 12px;
+  border-radius: 999px;
+  color: #59444d;
+  text-decoration: none;
+}
+.public-loyalty-language a[aria-current="page"] {
+  color: #fff;
+  background: var(--loyalty-brand);
+}
+.public-loyalty-hero,
+.public-loyalty-section,
+.public-loyalty-account,
+.public-loyalty-footer {
+  max-width: 1180px;
+  margin-right: auto;
+  margin-left: auto;
+}
+.public-loyalty-hero {
+  min-height: min(620px, 72vh);
+  padding: clamp(72px, 13vw, 160px) 0 80px;
+  display: grid;
+  align-content: center;
+  justify-items: start;
+}
+.public-loyalty-hero > p:first-child,
+.public-loyalty-kicker {
+  color: var(--loyalty-brand);
+  font-size: 0.76rem;
+  font-weight: 760;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.public-loyalty-hero h1 {
+  max-width: 850px;
+  margin: 14px 0;
+  color: #291b21;
+  font-family: var(--loyalty-font);
+  font-size: clamp(3rem, 9vw, 7.5rem);
+  font-weight: 560;
+  letter-spacing: -0.055em;
+  line-height: 0.92;
+}
+.public-loyalty-hero > p:nth-of-type(2) {
+  max-width: 620px;
+  color: #725e67;
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  line-height: 1.7;
+}
+.public-loyalty-hero > span {
+  margin-top: 30px;
+  padding: 10px 15px;
+  border: 1px solid color-mix(in srgb, var(--loyalty-brand) 28%, #fff);
+  border-radius: 999px;
+  color: var(--loyalty-brand);
+  font-weight: 700;
+}
+.public-loyalty-section {
+  padding: clamp(54px, 8vw, 100px) 0;
+  border-top: 1px solid #eadfde;
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: clamp(28px, 7vw, 100px);
+}
+.public-loyalty-section h2 {
+  margin: 8px 0 16px;
+  font-family: var(--loyalty-font);
+  font-size: clamp(2rem, 5vw, 4rem);
+  font-weight: 560;
+  letter-spacing: -0.04em;
+}
+.public-loyalty-section p {
+  max-width: 500px;
+  color: #725e67;
+  line-height: 1.7;
+}
+.public-loyalty-section > article,
+.public-loyalty-cards article {
+  padding: clamp(24px, 4vw, 42px);
+  border: 1px solid #eadfde;
+  border-radius: var(--loyalty-radius);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 24px 60px rgba(56, 32, 43, 0.07);
+}
+.public-loyalty-section > article > span {
+  color: var(--loyalty-brand);
+  font-size: 2rem;
+}
+.public-loyalty-section h3 {
+  margin: 18px 0 8px;
+  font-family: var(--loyalty-font);
+  font-size: 1.55rem;
+}
+.public-loyalty-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.public-loyalty-cards small {
+  color: #806d75;
+}
+.public-loyalty-cards strong {
+  color: var(--loyalty-brand);
+  font-size: 0.92rem;
+}
+.public-loyalty-account {
+  margin-top: 50px;
+  padding: clamp(28px, 5vw, 58px);
+  border-radius: var(--loyalty-radius);
+  color: #fff;
+  background: var(--loyalty-brand);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+.public-loyalty-account p {
+  max-width: 680px;
+  margin: 0;
+  font-size: clamp(1.15rem, 3vw, 1.8rem);
+  line-height: 1.45;
+}
+.public-loyalty-account strong {
+  flex: none;
+  padding: 12px 18px;
+  border-radius: 999px;
+  color: var(--loyalty-brand);
+  background: #fff;
+}
+.public-loyalty-footer {
+  padding: 32px 0 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  color: #806d75;
+}
+.public-loyalty-footer small {
+  text-align: right;
+}
+@media (max-width: 720px) {
+  .public-loyalty-page {
+    padding-top: 16px;
+  }
+  .public-loyalty-hero {
+    min-height: 520px;
+    padding-top: 70px;
+  }
+  .public-loyalty-section {
+    grid-template-columns: 1fr;
+  }
+  .public-loyalty-cards {
+    grid-template-columns: 1fr;
+  }
+  .public-loyalty-account,
+  .public-loyalty-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .public-loyalty-footer small {
+    text-align: left;
+  }
+}
 .experience-fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

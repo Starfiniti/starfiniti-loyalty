@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { signOut } from "@/app/actions";
 import { getMerchantExperienceTheme } from "@/lib/server/experience-theme";
+import { getMerchantProgrammeState } from "@/lib/server/programme";
 import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
 import { ExperienceEditor } from "./experience-editor";
 
@@ -12,7 +13,13 @@ export default async function ExperiencePage() {
 
   const { context } = tenant;
   const canEdit = ["owner", "admin"].includes(context.membershipRole);
-  const theme = await getMerchantExperienceTheme(context);
+  const [theme, programme] = await Promise.all([
+    getMerchantExperienceTheme(context),
+    getMerchantProgrammeState(context),
+  ]);
+  const hasPublishedVersion = programme.versions.some(
+    (version) => version.status === "published",
+  );
 
   return (
     <main className="experience-page" id="main-content" tabIndex={-1}>
@@ -57,6 +64,17 @@ export default async function ExperiencePage() {
             ? `Revision ${theme.revision}`
             : "Unsaved default"}
         </span>
+        {hasPublishedVersion && programme.programme && context.workspace ? (
+          <Link
+            className="secondary"
+            href={`/loyalty/${context.workspace.public_id}/${programme.programme.id}?lang=en`}
+            prefetch={false}
+            rel="noreferrer"
+            target="_blank"
+          >
+            Open hosted page
+          </Link>
+        ) : null}
       </div>
 
       {theme.scopeReady && context.workspace && context.programmeGroup ? (

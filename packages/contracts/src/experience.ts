@@ -85,6 +85,52 @@ export const merchantExperienceTranslationResultV1 = z
   })
   .strict();
 
+const publicTierV1 = z
+  .object({
+    code: z.string().regex(/^[a-z][a-z0-9_-]{0,79}$/u),
+    name: translatedCopy.min(1).max(200),
+    minimumEligibleSpendMinor: z.string().regex(/^(?:0|[1-9][0-9]*)$/u),
+    pointsPerMajorUnit: z.string().regex(/^[1-9][0-9]*$/u),
+  })
+  .strict();
+
+const publicRewardV1 = z
+  .object({
+    code: z.string().regex(/^[a-z][a-z0-9_-]{0,79}$/u),
+    name: translatedCopy.min(1).max(200),
+    kind: z.enum([
+      "fixed_discount",
+      "percentage_discount",
+      "free_product",
+      "free_shipping",
+      "store_credit",
+      "exclusive_access",
+      "custom",
+    ]),
+    costPoints: z.string().regex(/^[1-9][0-9]*$/u),
+  })
+  .strict();
+
+export const publicLoyaltyExperienceV1 = z
+  .object({
+    version: z.literal("1"),
+    workspaceId: z.uuid(),
+    programmeId: z.uuid(),
+    programmeGroupId: z.uuid(),
+    programmeName: translatedCopy.min(1).max(200),
+    requestedLocale: experienceLocaleV1,
+    resolvedLocale: experienceLocaleV1,
+    brandColor: z.string().regex(/^#[0-9a-f]{6}$/u),
+    displayFont: z.enum(["system-sans", "editorial-serif", "modern-serif"]),
+    cardRadiusPx: z.union([z.literal(8), z.literal(14), z.literal(22)]),
+    showTier: z.boolean(),
+    showRewards: z.boolean(),
+    copy: experienceTranslationDefinitionV1,
+    tiers: z.array(publicTierV1).max(12),
+    rewards: z.array(publicRewardV1).max(20),
+  })
+  .strict();
+
 function srgbChannel(value: number): number {
   const normalized = value / 255;
   return normalized <= 0.04045
@@ -107,4 +153,7 @@ export type ExperienceThemeDefinitionV1 = z.infer<
 export type ExperienceLocaleV1 = z.infer<typeof experienceLocaleV1>;
 export type ExperienceTranslationDefinitionV1 = z.infer<
   typeof experienceTranslationDefinitionV1
+>;
+export type PublicLoyaltyExperienceV1 = z.infer<
+  typeof publicLoyaltyExperienceV1
 >;

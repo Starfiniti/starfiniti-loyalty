@@ -5,6 +5,7 @@ import {
   experienceThemeDefinitionV1,
   merchantSaveExperienceTranslationCommandV1,
   merchantSaveExperienceThemeCommandV1,
+  publicLoyaltyExperienceV1,
 } from "./experience";
 
 const theme = {
@@ -126,5 +127,51 @@ describe("experience theme contracts", () => {
         actorId: "forged-owner",
       }).success,
     ).toBe(false);
+  });
+
+  it("accepts a bounded minimized public loyalty document", () => {
+    expect(
+      publicLoyaltyExperienceV1.safeParse({
+        version: "1",
+        workspaceId: "a1000000-0000-4000-8000-000000000001",
+        programmeId: "a1000000-0000-4000-8000-000000000002",
+        programmeGroupId: "a1000000-0000-4000-8000-000000000003",
+        programmeName: "Rosy Rewards",
+        requestedLocale: "sl-SI",
+        resolvedLocale: "sl-SI",
+        brandColor: "#7c2d4f",
+        displayFont: "editorial-serif",
+        cardRadiusPx: 14,
+        showTier: true,
+        showRewards: true,
+        copy: {
+          version: "1",
+          locale: "sl-SI",
+          heroText: "Lepota, ki vrača",
+          pointsLabel: "Točke",
+          balanceLabel: "Vaše stanje",
+          rewardsLabel: "Vaše nagrade",
+          redeemLabel: "Unovči",
+          joinLabel: "Pridruži se brezplačno",
+          earnMessage: "Zbirajte točke pri vsakem upravičenem naročilu.",
+        },
+        tiers: [
+          {
+            code: "rose",
+            name: "Rose",
+            minimumEligibleSpendMinor: "0",
+            pointsPerMajorUnit: "5",
+          },
+        ],
+        rewards: [
+          {
+            code: "five-off",
+            name: "€5 discount",
+            kind: "fixed_discount",
+            costPoints: "500",
+          },
+        ],
+      }).success,
+    ).toBe(true);
   });
 });

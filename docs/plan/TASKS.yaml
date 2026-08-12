@@ -243,7 +243,7 @@ tasks:
       - npm run check
       - npm run db:test
       - browser workflow verification
-    risks: [R-001, R-007, R-010, R-011]
+    risks: [R-001, R-007, R-010, R-011, R-012]
     docs:
       - docs/product/PRODUCT_REQUIREMENTS.md
       - docs/security/THREAT_MODEL.md
@@ -311,3 +311,6 @@ tasks:
       - English and Slovenian hosted customer copy are separate revisioned RLS-scoped locale rows saved only by a live owner or admin command whose immutable audit metadata omits translated text
       - 33 experience-translation pgTAP assertions cover grants direct DML denial bounded markup-free copy independent locale revisions exact retries conflicts role revocation cross-tenant and mixed-scope denial RLS and audit immutability
       - exact-head run 31606226276 passed the hosted-translation baseline 114 unit tests seventeen migrations 726 pgTAP assertions concurrency and property probes and all four localized WooCommerce runtime variants
+      - one mobile-first public loyalty route consumes a bounded anonymous projection only when public workspace and programme IDs resolve to one active linked published programme
+      - public delivery supports explicit English and Slovenian locale switching safe theme tokens exact bigint tier and reward values and a merchant launch link while exposing no customer raw programme reward configuration audit integration or commerce evidence
+      - 25 public-experience pgTAP assertions cover exact grants empty search path source-table denial localized and legacy fallback content minimization mixed and unknown scope lifecycle fail-closed behavior and zero mutable customer ledger commerce audit or translation effects

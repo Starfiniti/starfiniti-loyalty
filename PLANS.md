@@ -61,12 +61,13 @@ Phase 9 — merchant administration and customer experience. Shopify Phase 8 rem
 - WooCommerce customer surfaces retain a zero-connector-JavaScript, zero-connector-CSS, zero-render-hub-request budget with bounded native server markup and runtime-matrix enforcement.
 - Hosted customer copy now supports independently revisioned English and Slovenian launch locales through bounded RLS-scoped owner/admin management and a live locale preview; unsupported locales fail closed.
 - Exact-head run `31606226276` passed the hosted-translation baseline, seventeen migrations with 726 pgTAP assertions plus concurrency/property probes, and all four localized WooCommerce runtime variants.
+- Hosted guest delivery now has a mobile-first public route for one active workspace and published programme. Its anonymous database boundary returns only bounded theme/copy/tier/reward presentation data and no customer, raw configuration, audit, integration, or commerce evidence.
 - Exact-head run `31601351946` passed the filtered-customer baseline, fifteen migrations with 654 pgTAP assertions plus concurrency/property probes, and all four localized WooCommerce runtime variants.
 - Exact-head run `31581760825` passed the customer-ledger baseline, database job, and all four WooCommerce runtime variants.
 
 ## Active work
 
-- `P9-MERCHANT-HUB` (in progress): the Auth/RLS shell, guided initial-programme creation, audited programme editor, exact filtered customer wallet/ledger reads, safe connector queue operations, individual and exact-preview bulk value adjustments, signed source reconciliation, real Overview reporting, keyboard-bypass accessibility guard, sanitized support diagnostics, localized WooCommerce customer strings, and controlled experience-theme previews are implemented; remaining merchant/customer surfaces follow.
+- `P9-MERCHANT-HUB` (in progress): the Auth/RLS shell, guided initial-programme creation, audited programme editor, exact filtered customer wallet/ledger reads, safe connector queue operations, individual and exact-preview bulk value adjustments, signed source reconciliation, real Overview reporting, keyboard-bypass accessibility guard, sanitized support diagnostics, localized WooCommerce customer strings, controlled experience themes/translations, and a guest-safe hosted loyalty page are implemented; remaining member and usability surfaces follow.
 
 ## Next safe tasks
 

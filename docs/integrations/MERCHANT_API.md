@@ -158,6 +158,12 @@ Customer copy is stored independently from visual theme tokens in `experience_tr
 
 The command derives live owner/admin authority, locks the exact workspace/programme-group link, hashes the complete canonical copy request, and creates or revisions only the selected locale. Its immutable `experience.translation.save` audit event records public scope, locale, and revision but deliberately omits the translated copy. Exact retries return the original revision; changed reuse conflicts. Authenticated members may read only their tenant's locale rows through RLS. The experience editor previews the selected locale immediately and retains prior English theme copy as an unsaved fallback until explicit English translation data exists.
 
+### `get_public_loyalty_experience`
+
+The hosted guest route calls this stable anonymous projection with a public workspace UUID, public programme UUID, and allowlisted locale (`en` or `sl-SI`). PostgreSQL returns a document only when the organization, workspace, programme group, and programme are active, the workspace/group link is exact, and one current programme version is published. Mixed-tenant, unknown, suspended, unpublished, and unsupported-locale requests return no row.
+
+The response is capped at 12 tiers and 20 rewards. It contains public programme/group/workspace IDs, programme name, resolved locale, bounded theme tokens and copy, tier names/thresholds/rates, and reward names/kinds/costs. All bigint values are text. It deliberately omits organization identity, customer/wallet/ledger state, raw programme JSON and hashes, reward configuration, actors, audit records, connector state, signing data, and commerce evidence. Anonymous callers retain no underlying table grants, and reads create no mutable or audit effect.
+
 ## Retry and error contract
 
 Idempotency is scoped by organization. Retrying the same key and canonical request returns the original resource with `outcome = duplicate` and creates neither another version nor another audit event. Reusing a key with different input raises SQLSTATE `23514`. Authorization failures use `42501`; invalid/stale configuration or lifecycle inputs use `22023`/`23514`.

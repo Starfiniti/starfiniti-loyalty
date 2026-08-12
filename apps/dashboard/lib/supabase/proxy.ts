@@ -3,7 +3,11 @@ import { NextResponse, type NextRequest } from "next/server";
 import { readSupabasePublicConfig } from "./config";
 
 function isPublicPage(pathname: string): boolean {
-  return pathname === "/login" || pathname.startsWith("/auth/");
+  return (
+    pathname === "/login" ||
+    pathname.startsWith("/auth/") ||
+    pathname.startsWith("/loyalty/")
+  );
 }
 
 function responseWithAuthState(
@@ -24,6 +28,14 @@ function responseWithAuthState(
 export async function updateSupabaseSession(
   request: NextRequest,
 ): Promise<NextResponse> {
+  if (request.nextUrl.pathname.startsWith("/loyalty/")) {
+    const publicResponse = NextResponse.next({ request });
+    publicResponse.headers.set(
+      "Cache-Control",
+      "public, s-maxage=60, stale-while-revalidate=300",
+    );
+    return publicResponse;
+  }
   let response = NextResponse.next({ request });
   const config = readSupabasePublicConfig();
   const supabase = createServerClient(config.url, config.publishableKey, {
