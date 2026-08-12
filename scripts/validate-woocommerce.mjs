@@ -24,6 +24,10 @@ const receiver = readFileSync(
   "apps/dashboard/app/api/v1/integrations/woocommerce/events/route.ts",
   "utf8",
 );
+const commandReceiver = readFileSync(
+  "apps/dashboard/app/api/v1/integrations/woocommerce/commands/route.ts",
+  "utf8",
+);
 const keyGenerator = readFileSync(
   "scripts/generate-woocommerce-signing-pool.mjs",
   "utf8",
@@ -123,10 +127,20 @@ for (const [label, content, requirements] of [
     receiver,
     [
       "verifyWooCommerceDelivery",
-      "request.arrayBuffer()",
+      "readBoundedRequestBody(request, MAX_BODY_BYTES)",
       "wooCommerceDeliveryEnvelopeV1.safeParse",
       "accept_commerce_delivery",
       "status: 202",
+    ],
+  ],
+  [
+    "command receiver",
+    commandReceiver,
+    [
+      "verifyWooCommerceDelivery",
+      "readBoundedRequestBody(request, MAX_BODY_BYTES)",
+      "wooCommerceCommandRequestV1.safeParse",
+      "claim_woocommerce_commands",
     ],
   ],
   [

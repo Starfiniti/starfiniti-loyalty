@@ -4,6 +4,10 @@ import {
   type WooCommerceSignatureHeaders,
 } from "@starfiniti/contracts";
 import { getDatabase } from "@/lib/server/database";
+import {
+  BoundedRequestBodyError,
+  readBoundedRequestBody,
+} from "@/lib/server/bounded-request-body";
 import { getWooCommerceSigningKey } from "@/lib/server/signing-material";
 
 export const runtime = "nodejs";
@@ -28,14 +32,19 @@ type NormalizationRow = {
 };
 
 export async function POST(request: Request): Promise<Response> {
-  const contentLength = Number(request.headers.get("content-length") ?? "0");
-  if (Number.isFinite(contentLength) && contentLength > MAX_BODY_BYTES) {
-    return problem(413, "body_too_large");
-  }
-
   const headers = signatureHeaders(request.headers);
   if (!headers || !UUID.test(headers.connectionId)) {
     return problem(401, "invalid_signature_headers");
+  }
+
+  let rawBody: Uint8Array;
+  try {
+    rawBody = await readBoundedRequestBody(request, MAX_BODY_BYTES);
+  } catch (error) {
+    if (error instanceof BoundedRequestBodyError) {
+      return problem(error.code === "body_too_large" ? 413 : 400, error.code);
+    }
+    return problem(400, "body_read_failed");
   }
 
   try {
@@ -52,7 +61,6 @@ export async function POST(request: Request): Promise<Response> {
       return problem(401, "invalid_signature");
     }
 
-    const rawBody = new Uint8Array(await request.arrayBuffer());
     const requestUrl = new URL(request.url);
     const verification = verifyWooCommerceDelivery({
       requestTarget: `${requestUrl.pathname}${requestUrl.search}`,
