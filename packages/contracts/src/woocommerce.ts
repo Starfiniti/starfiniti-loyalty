@@ -8,6 +8,56 @@ const merchantReason = z
   .min(8)
   .max(500)
   .regex(/^[^\u0000-\u001f\u007f]+$/u);
+const merchantDisplayName = z
+  .string()
+  .trim()
+  .min(1)
+  .max(200)
+  .regex(/^[^\u0000-\u001f\u007f]+$/u);
+const wooCommerceStoreOrigin = z
+  .string()
+  .min(12)
+  .max(255)
+  .refine((value) => {
+    try {
+      const parsed = new URL(value);
+      return (
+        parsed.protocol === "https:" &&
+        parsed.username === "" &&
+        parsed.password === "" &&
+        parsed.origin === value &&
+        value === value.toLowerCase()
+      );
+    } catch {
+      return false;
+    }
+  }, "Use a canonical lowercase HTTPS store origin");
+const wooCommerceEventEndpoint = z
+  .string()
+  .max(500)
+  .refine((value) => {
+    try {
+      const parsed = new URL(value);
+      return (
+        parsed.protocol === "https:" &&
+        parsed.username === "" &&
+        parsed.password === "" &&
+        parsed.search === "" &&
+        parsed.hash === "" &&
+        parsed.pathname.endsWith("/api/v1/integrations/woocommerce/events")
+      );
+    } catch {
+      return false;
+    }
+  }, "Use the HTTPS WooCommerce event endpoint");
+const base64SigningKey = z.string().refine((value) => {
+  if (!/^[A-Za-z0-9+/]+={0,2}$/u.test(value)) return false;
+  try {
+    return Buffer.from(value, "base64").byteLength >= 32;
+  } catch {
+    return false;
+  }
+}, "Use a base64 signing key containing at least 32 bytes");
 
 export const canonicalCommerceEventTypes = [
   "commerce.order.upserted",
@@ -85,6 +135,46 @@ export const merchantRetryConnectorEffectResultV1 = z
 
 export type MerchantRetryConnectorEffectCommandV1 = z.infer<
   typeof merchantRetryConnectorEffectCommandV1
+>;
+
+export const merchantProvisionWooCommerceConnectionCommandV1 = z
+  .object({
+    version: z.literal("1"),
+    workspaceId: z.uuid(),
+    programmeId: z.uuid(),
+    externalStoreId: wooCommerceStoreOrigin,
+    displayName: merchantDisplayName,
+    idempotencyKey: merchantOperationKey,
+    correlationId: z.uuid(),
+  })
+  .strict();
+
+export const merchantProvisionWooCommerceConnectionResultV1 = z
+  .object({
+    resourceId: z.uuid(),
+    keyVersion: z.string().regex(/^v[1-9][0-9]*$/u),
+    outcome: z.enum(["created", "duplicate"]),
+  })
+  .strict();
+
+export const wooCommerceConnectionPackageV1 = z
+  .object({
+    version: z.literal("1"),
+    endpoint: wooCommerceEventEndpoint,
+    connectionId: z.uuid(),
+    keyVersion: z.string().regex(/^v[1-9][0-9]*$/u),
+    signingKey: base64SigningKey,
+  })
+  .strict();
+
+export type MerchantProvisionWooCommerceConnectionCommandV1 = z.infer<
+  typeof merchantProvisionWooCommerceConnectionCommandV1
+>;
+export type MerchantProvisionWooCommerceConnectionResultV1 = z.infer<
+  typeof merchantProvisionWooCommerceConnectionResultV1
+>;
+export type WooCommerceConnectionPackageV1 = z.infer<
+  typeof wooCommerceConnectionPackageV1
 >;
 
 export const wooCommerceDecimal = z

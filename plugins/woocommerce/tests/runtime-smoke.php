@@ -122,6 +122,21 @@ update_option(
 $claimConnectionId = '62000000-0000-4000-8000-000000000001';
 $claimKeyVersion = 'v1';
 $claimSigningKey = str_repeat("\x42", 32);
+$decodeConnectionPackage = new ReflectionMethod(Settings::class, 'decodeConnectionPackage');
+$decodeConnectionPackage->setAccessible(true);
+$decodedConnectionPackage = $decodeConnectionPackage->invoke(null, wp_json_encode([
+    'version' => '1',
+    'endpoint' => 'https://unreachable.invalid/api/v1/integrations/woocommerce/events',
+    'connectionId' => $claimConnectionId,
+    'keyVersion' => $claimKeyVersion,
+    'signingKey' => base64_encode($claimSigningKey),
+]));
+starfiniti_runtime_assert(
+    is_array($decodedConnectionPackage)
+    && ($decodedConnectionPackage['connectionId'] ?? null) === $claimConnectionId
+    && null === $decodeConnectionPackage->invoke(null, '{"version":"1","signingKey":"secret"}'),
+    'one-time setup code imports only the exact connection package'
+);
 $encryptSigningKey = new ReflectionMethod(Settings::class, 'encrypt');
 $encryptSigningKey->setAccessible(true);
 $encryptedSigningKey = $encryptSigningKey->invoke(null, base64_encode($claimSigningKey));

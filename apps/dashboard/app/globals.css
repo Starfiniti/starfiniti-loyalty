@@ -2740,6 +2740,105 @@ h1 {
   background: #fff;
   box-shadow: 0 8px 30px rgba(28, 25, 23, 0.04);
 }
+.connector-provisioning,
+.connector-provisioning-result {
+  display: grid;
+  gap: 20px;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 8px 30px rgba(28, 25, 23, 0.04);
+}
+.connector-provisioning h2,
+.connector-provisioning p,
+.connector-provisioning-result p {
+  margin: 0;
+}
+.connector-provisioning > div > p:last-child,
+.connector-provisioning-result > div > p,
+.connector-secret-warning {
+  margin-top: 7px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+.connector-provisioning form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.connector-provisioning form > label {
+  display: grid;
+  gap: 6px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+}
+.connector-provisioning form > label small {
+  color: var(--muted);
+  font-weight: 500;
+  line-height: 1.45;
+}
+.connector-provisioning input:not([type="checkbox"]),
+.connector-provisioning-result textarea {
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #d6d3d1;
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+.connector-provisioning form > button,
+.connector-provisioning form > .action-message,
+.connector-provisioning-confirmation {
+  grid-column: 1 / -1;
+}
+.connector-provisioning form > button {
+  justify-self: start;
+}
+.connector-provisioning-confirmation {
+  display: grid;
+  gap: 12px;
+  padding: 15px;
+  border: 1px solid #c7d2fe;
+  border-radius: 12px;
+  background: #f7f5ff;
+}
+.connector-provisioning-confirmation > label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.connector-provisioning-confirmation .primary {
+  justify-self: start;
+}
+.connector-provisioning-result textarea {
+  width: 100%;
+  resize: vertical;
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.connector-provisioning-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.connector-provisioning-actions .secondary {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+.connector-secret-warning {
+  padding: 12px 14px;
+  border-left: 3px solid #b45309;
+  background: #fffbeb;
+  font-size: 12px;
+}
 .connector-card-heading,
 .connector-card-heading > div {
   display: flex;
@@ -2979,6 +3078,13 @@ h1 {
     flex-direction: column;
   }
   .queue-grid {
+    grid-template-columns: 1fr;
+  }
+  .connector-provisioning,
+  .connector-provisioning-result {
+    padding: 17px;
+  }
+  .connector-provisioning form {
     grid-template-columns: 1fr;
   }
 }

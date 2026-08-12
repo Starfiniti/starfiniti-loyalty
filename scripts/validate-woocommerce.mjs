@@ -24,6 +24,10 @@ const receiver = readFileSync(
   "apps/dashboard/app/api/v1/integrations/woocommerce/events/route.ts",
   "utf8",
 );
+const keyGenerator = readFileSync(
+  "scripts/generate-woocommerce-signing-pool.mjs",
+  "utf8",
+);
 
 for (const [label, content, requirements] of [
   [
@@ -55,6 +59,8 @@ for (const [label, content, requirements] of [
       "sodium_crypto_secretbox_open",
       "base64_decode",
       "update_option",
+      "decodeConnectionPackage",
+      "invalid_setup_code",
     ],
   ],
   [
@@ -121,6 +127,16 @@ for (const [label, content, requirements] of [
       "wooCommerceDeliveryEnvelopeV1.safeParse",
       "accept_commerce_delivery",
       "status: 202",
+    ],
+  ],
+  [
+    "key generator",
+    keyGenerator,
+    [
+      "randomBytes(32)",
+      "randomUUID()",
+      'openSync(writePath, "wx", 0o600)',
+      "renameSync(writePath, outputPath)",
     ],
   ],
 ]) {

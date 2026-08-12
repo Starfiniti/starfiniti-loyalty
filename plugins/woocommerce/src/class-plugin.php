@@ -63,6 +63,9 @@ final class Plugin
         wp_nonce_field('starfiniti_loyalty_save_settings');
         echo '<input type="hidden" name="action" value="starfiniti_loyalty_save_settings">';
         echo '<table class="form-table"><tbody>';
+        echo '<tr><th scope="row"><label for="starfiniti_setup_code">' . esc_html__('One-time setup code', 'starfiniti-loyalty') . '</label></th><td>';
+        echo '<textarea class="large-text code" id="starfiniti_setup_code" name="setup_code" rows="6" spellcheck="false"></textarea>';
+        echo '<p class="description">' . esc_html__('Paste the complete setup code issued by the hub. It configures all connection fields at once.', 'starfiniti-loyalty') . '</p></td></tr>';
         self::textField('endpoint', __('HTTPS event endpoint', 'starfiniti-loyalty'), Settings::endpoint(), 'url');
         self::textField('connection_id', __('Connection UUID', 'starfiniti-loyalty'), Settings::connectionId());
         self::textField('key_version', __('Key version', 'starfiniti-loyalty'), Settings::keyVersion());

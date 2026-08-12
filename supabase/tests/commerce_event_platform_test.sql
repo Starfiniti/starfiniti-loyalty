@@ -32,8 +32,13 @@ select ok(
   'browser clients cannot use the private event schema'
 );
 select ok(
-  has_table_privilege('authenticated', 'loyalty.commerce_connections', 'SELECT'),
-  'authenticated users can read RLS-filtered connection metadata'
+  has_column_privilege(
+    'authenticated', 'loyalty.commerce_connections', 'external_store_id', 'SELECT'
+  )
+  and not has_column_privilege(
+    'authenticated', 'loyalty.commerce_connections', 'signing_material_ref', 'SELECT'
+  ),
+  'authenticated users can read RLS-filtered connection metadata but not signing references'
 );
 select ok(
   not has_table_privilege('authenticated', 'loyalty.commerce_connections', 'INSERT'),

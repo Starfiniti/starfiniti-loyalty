@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   canonicalCommerceEventV1,
+  merchantProvisionWooCommerceConnectionCommandV1,
   merchantRetryConnectorEffectCommandV1,
   merchantRequestConnectorReconciliationCommandV1,
   signWooCommerceCustomerClaim,
@@ -16,6 +17,7 @@ import {
   wooCommerceDeliveryEnvelopeV1,
   wooCommerceOrderRefundedPayloadV1,
   wooCommerceOrderStatusChangedPayloadV1,
+  wooCommerceConnectionPackageV1,
 } from "./woocommerce";
 
 const encoder = new TextEncoder();
@@ -26,6 +28,67 @@ const connectionId = "5abf9309-a530-489f-a63f-51130c4fc01d";
 const deliveryId = "delivery-42";
 const timestamp = "1786471200";
 const nonce = "delivery-42-attempt-1";
+
+describe("WooCommerce connector provisioning contracts", () => {
+  const command = {
+    version: "1",
+    workspaceId: "5abf9309-a530-489f-a63f-51130c4fc021",
+    programmeId: "5abf9309-a530-489f-a63f-51130c4fc022",
+    externalStoreId: "https://shop.example.test",
+    displayName: "Example Store",
+    idempotencyKey: "connector:provision:fixture",
+    correlationId: "5abf9309-a530-489f-a63f-51130c4fc023",
+  } as const;
+
+  it("accepts canonical server-scoped provisioning inputs", () => {
+    expect(
+      merchantProvisionWooCommerceConnectionCommandV1.safeParse(command)
+        .success,
+    ).toBe(true);
+  });
+
+  it("rejects unsafe store scope and caller-supplied secret authority", () => {
+    for (const externalStoreId of [
+      "http://shop.example.test",
+      "https://USER:PASS@shop.example.test",
+      "https://shop.example.test/path",
+      "https://SHOP.example.test",
+    ]) {
+      expect(
+        merchantProvisionWooCommerceConnectionCommandV1.safeParse({
+          ...command,
+          externalStoreId,
+        }).success,
+      ).toBe(false);
+    }
+    expect(
+      merchantProvisionWooCommerceConnectionCommandV1.safeParse({
+        ...command,
+        signingKey: Buffer.alloc(32).toString("base64"),
+      }).success,
+    ).toBe(false);
+  });
+
+  it("accepts only an exact HTTPS one-time connection package", () => {
+    const connectionPackage = {
+      version: "1",
+      endpoint:
+        "https://loyalty.example.test/api/v1/integrations/woocommerce/events",
+      connectionId: "5abf9309-a530-489f-a63f-51130c4fc024",
+      keyVersion: "v1",
+      signingKey: Buffer.alloc(32, 7).toString("base64"),
+    } as const;
+    expect(
+      wooCommerceConnectionPackageV1.safeParse(connectionPackage).success,
+    ).toBe(true);
+    expect(
+      wooCommerceConnectionPackageV1.safeParse({
+        ...connectionPackage,
+        signingKey: Buffer.alloc(16).toString("base64"),
+      }).success,
+    ).toBe(false);
+  });
+});
 
 function signedHeaders() {
   const signed = signWooCommerceDelivery({

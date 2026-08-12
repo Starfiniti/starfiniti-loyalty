@@ -9,9 +9,11 @@ import {
   connectorIssueLabel,
 } from "@/lib/connector-operations";
 import { getConnectorOperations } from "@/lib/server/connector-operations";
+import { getMerchantProgrammeState } from "@/lib/server/programme";
 import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
 import { buildSupportDiagnostics } from "@/lib/support-diagnostics";
 import { RetryEffectForm } from "./retry-effect-form";
+import { ConnectorProvisioningForm } from "./connector-provisioning-form";
 import { ReconciliationForm } from "./reconciliation-form";
 import { SupportDiagnosticsDownload } from "./support-diagnostics-download";
 
@@ -28,8 +30,17 @@ export default async function OperationsPage() {
   const tenant = await getAuthenticatedTenantState();
   if (tenant.kind === "unauthenticated") redirect("/login?next=%2Foperations");
   if (tenant.kind === "unassigned") redirect("/");
-  const connections = await getConnectorOperations(tenant.context);
+  const [connections, programme] = await Promise.all([
+    getConnectorOperations(tenant.context),
+    getMerchantProgrammeState(tenant.context),
+  ]);
   const mayRetry = canRetryConnectorEffect(tenant.context.membershipRole);
+  const mayProvision = ["owner", "admin"].includes(
+    tenant.context.membershipRole,
+  );
+  const hasPublishedProgramme = programme.versions.some(
+    (version) => version.status === "published",
+  );
   const diagnostics = buildSupportDiagnostics({
     generatedAt: new Date().toISOString(),
     organizationId: tenant.context.organization.public_id,
@@ -87,14 +98,27 @@ export default async function OperationsPage() {
       <SupportDiagnosticsDownload diagnostics={diagnostics} />
 
       {connections.length === 0 ? (
-        <section className="customer-panel empty-state">
-          <PlugZap aria-hidden="true" />
-          <h2>No WooCommerce connector</h2>
-          <p>
-            Connector provisioning is not yet complete for this workspace. No
-            signing material is displayed or accepted here.
-          </p>
-        </section>
+        mayProvision &&
+        tenant.context.workspace &&
+        programme.programme &&
+        hasPublishedProgramme ? (
+          <ConnectorProvisioningForm
+            programmeId={programme.programme.id}
+            programmeName={programme.programme.name}
+            workspaceId={tenant.context.workspace.public_id}
+            workspaceName={tenant.context.workspace.name}
+          />
+        ) : (
+          <section className="customer-panel empty-state">
+            <PlugZap aria-hidden="true" />
+            <h2>WooCommerce connection not ready</h2>
+            <p>
+              A live owner or admin, active workspace, and published programme
+              are required before guided provisioning. Signing material remains
+              outside the browser.
+            </p>
+          </section>
+        )
       ) : (
         connections.map((connection) => {
           const failedCount =

@@ -35,6 +35,7 @@
     "woocommerce:validate": "node scripts/validate-woocommerce.mjs && node scripts/validate-woocommerce-localization.mjs && node scripts/validate-woocommerce-storefront.mjs",
     "woocommerce:localization:validate": "node scripts/validate-woocommerce-localization.mjs",
     "woocommerce:package": "node scripts/package-woocommerce.mjs",
+    "woocommerce:keys": "node scripts/generate-woocommerce-signing-pool.mjs",
     "woocommerce:runtime:start": "wp-env start --config .wp-env.woocommerce.json",
     "woocommerce:runtime:test": "wp-env run cli --config .wp-env.woocommerce.json wp plugin activate starfiniti-loyalty && wp-env run cli --config .wp-env.woocommerce.json wp option update woocommerce_custom_orders_table_enabled yes && wp-env run cli --config .wp-env.woocommerce.json wp option update starfiniti_runtime_expected_hpos yes && wp-env run cli --config .wp-env.woocommerce.json wp eval-file wp-content/plugins/starfiniti-loyalty/tests/runtime-smoke.php",
     "woocommerce:runtime:destroy": "wp-env destroy --force --config .wp-env.woocommerce.json",

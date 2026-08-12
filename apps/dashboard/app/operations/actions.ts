@@ -1,12 +1,18 @@
 "use server";
 
 import {
+  merchantProvisionWooCommerceConnectionCommandV1,
   merchantRequestConnectorReconciliationCommandV1,
   merchantRequestConnectorReconciliationResultV1,
   merchantRetryConnectorEffectCommandV1,
   merchantRetryConnectorEffectResultV1,
 } from "@starfiniti/contracts";
 import { revalidatePath } from "next/cache";
+import {
+  serializeWooCommerceConnectionPackage,
+  wooCommerceEventEndpoint,
+} from "@/lib/connector-provisioning";
+import { provisionWooCommerceConnection } from "@/lib/server/connector-provisioning";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type ConnectorActionState = Readonly<{
@@ -14,8 +20,111 @@ export type ConnectorActionState = Readonly<{
   message: string;
 }>;
 
+export type ConnectorProvisioningState = Readonly<{
+  kind: "idle" | "success" | "error";
+  message: string;
+  setupCode: string | null;
+  connectionId: string | null;
+}>;
+
 const UUID_V4 =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
+
+export async function provisionConnector(
+  _previousState: ConnectorProvisioningState,
+  formData: FormData,
+): Promise<ConnectorProvisioningState> {
+  const failure = (message: string): ConnectorProvisioningState => ({
+    kind: "error",
+    message,
+    setupCode: null,
+    connectionId: null,
+  });
+  if (formData.get("confirmation") !== "provision") {
+    return failure("Review and confirm the WooCommerce connection.");
+  }
+  const operationId = String(formData.get("operationId") ?? "");
+  if (!UUID_V4.test(operationId)) {
+    return failure("The provisioning identity is invalid. Refresh and retry.");
+  }
+  const command = merchantProvisionWooCommerceConnectionCommandV1.safeParse({
+    version: "1",
+    workspaceId: formData.get("workspaceId"),
+    programmeId: formData.get("programmeId"),
+    externalStoreId: formData.get("externalStoreId"),
+    displayName: formData.get("displayName"),
+    idempotencyKey: `connector:woocommerce:provision:${operationId}`,
+    correlationId: crypto.randomUUID(),
+  });
+  if (!command.success) {
+    return failure(
+      "Enter the canonical lowercase HTTPS store origin and a single-line store name.",
+    );
+  }
+
+  const publicOrigin = process.env.DASHBOARD_PUBLIC_ORIGIN;
+  if (!publicOrigin) {
+    return failure(
+      "The public hub origin is not configured. No connection was created.",
+    );
+  }
+  let endpoint: string;
+  try {
+    endpoint = wooCommerceEventEndpoint(publicOrigin);
+  } catch {
+    return failure(
+      "The public hub origin is not a canonical HTTPS origin. No connection was created.",
+    );
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const claims = await supabase.auth.getClaims();
+  const actorUserId = claims.data?.claims?.sub;
+  if (claims.error || typeof actorUserId !== "string") {
+    return failure("Your verified session expired. Sign in and retry.");
+  }
+
+  try {
+    const provisioned = await provisionWooCommerceConnection(
+      actorUserId,
+      command.data,
+      endpoint,
+    );
+    return {
+      kind: "success",
+      message:
+        provisioned.result.outcome === "duplicate"
+          ? "This exact connection was already provisioned. Use the recovered setup code below."
+          : "Connection provisioned. Copy the setup code now; it is hidden after leaving this page.",
+      setupCode: serializeWooCommerceConnectionPackage(
+        provisioned.connectionPackage,
+      ),
+      connectionId: provisioned.result.resourceId,
+    };
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message === "signing_material_pool_exhausted"
+    ) {
+      return failure(
+        "No unused connector key is available. An operator must replenish the signing-key pool.",
+      );
+    }
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      error.code === "42501"
+    ) {
+      return failure(
+        "A live owner/admin, active workspace, and published programme are required.",
+      );
+    }
+    return failure(
+      "The store or workspace is already connected, or provisioning changed concurrently. No second connection was assumed.",
+    );
+  }
+}
 
 export async function requestConnectorReconciliation(
   _previousState: ConnectorActionState,
