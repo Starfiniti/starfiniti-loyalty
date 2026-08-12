@@ -10,4 +10,6 @@ Every mutation accepts or derives a stable tenant-scoped idempotency key. The se
 - Unknown external-call outcomes retry with the same connector command ID.
 - A deadlock/serialization retry reuses the same key and canonical input.
 
+The ledger also enforces a separate unique canonical-event/kind/reference fence. Reservation capture/cancel has a mutually exclusive resolution fence, so a different key cannot resolve the same reservation twice. A same-key retry returns the immutable transaction public ID and `duplicate` without reapplying entries or lot allocations.
+
 Canonicalization is versioned. It normalizes object-key ordering and approved numeric/time representations but does not erase semantically meaningful fields. Hashes are diagnostic/integrity values, not authentication secrets.

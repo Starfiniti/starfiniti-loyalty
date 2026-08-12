@@ -39,7 +39,8 @@
     "db:start": "supabase db start",
     "db:reset": "supabase db reset --local",
     "db:test": "supabase test db supabase/tests --local",
-    "db:verify": "node scripts/require-container-runtime.mjs && npm run db:start && npm run db:reset && npm run db:test",
+    "db:concurrency": "node scripts/verify-ledger-concurrency.mjs",
+    "db:verify": "node scripts/require-container-runtime.mjs && npm run db:start && npm run db:reset && npm run db:test && npm run db:concurrency",
     "db:stop": "supabase stop --no-backup"
   },
   "devDependencies": {
@@ -48,6 +49,7 @@
     "eslint-config-next": "16.3.0",
     "license-checker-rseidelsohn": "5.0.1",
     "prettier": "3.9.6",
+    "postgres": "3.4.9",
     "supabase": "2.113.0",
     "typescript": "6.0.3",
     "vitest": "4.1.10",

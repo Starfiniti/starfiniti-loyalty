@@ -20,3 +20,5 @@ Every runbook records incident/change owner, environment, start/end, commands, e
 | Proxmox host loss               | Host/storage monitoring           | Protect surviving replicas/backups, provision isolated replacement, restore; do not rely only on VM snapshot     |
 
 Concrete target commands and screenshots are added only after the real Proxmox/Supabase deployment exists; placeholder commands that could destroy data are forbidden.
+
+For a ledger mismatch, first call the tenant-scoped wallet and lot difference functions and export the affected ledger evidence. Rebuild functions may repair only mutable projections and must run under the worker role with an incident correlation record. A mismatch in immutable entries, attribution, or zero sum is never repaired by SQL update/delete; stop value commands and issue an approved compensating transaction after root-cause review.

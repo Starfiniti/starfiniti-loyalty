@@ -143,7 +143,7 @@ tasks:
   - id: P5-LEDGER-FOUNDATION
     title: Implement immutable double-entry points ledger and wallets
     phase: 5
-    status: in_progress
+    status: complete
     dependencies: [P4-WC-INBOX]
     acceptance:
       - Every value change is an immutable balanced transaction
@@ -156,5 +156,31 @@ tasks:
       [
         docs/architecture/DATA_MODEL.md,
         docs/architecture/ADR/0006-double-entry-points-ledger.md,
+      ]
+    evidence:
+      - migration 20260812045847 implements programme versions customers identities wallets accounts immutable balanced transactions entries lots allocations and projections
+      - eight narrow worker commands cover award release reserve capture cancel expiry refund reversal and attributable manual adjustment
+      - generic posting and direct table DML remain unavailable to browser runtime and worker roles
+      - 91 ledger pgTAP assertions prove RLS tenant keys zero sum immutability idempotency FIFO negative balances attribution projection rebuild export and liability reporting
+      - two-session concurrency probe proves competing 80-point reservations against 100 points cannot both commit
+      - deterministic 20-round property sequence preserves balance projection and retry invariants
+      - exact-head GitHub Actions run 31566530867 passed baseline migration replay reset seed 178 total pgTAP assertions concurrency property checks and cleanup
+  - id: P6-PROGRAMME-ENGINE
+    title: Implement versioned programme rules rewards expiry and tiers
+    phase: 6
+    status: in_progress
+    dependencies: [P5-LEDGER-FOUNDATION]
+    acceptance:
+      - Rosy Rewards runs through immutable published configuration
+      - Rule evaluation and simulation produce identical explanation traces
+      - Reward reservation and expiry failure paths compensate safely
+      - Tier transitions preserve historical programme versions and grace decisions
+    verification: [npm run test, npm run db:test]
+    risks: [R-002, R-005, R-007]
+    docs:
+      [
+        docs/product/PROGRAMME_EXAMPLES.md,
+        docs/architecture/DATA_MODEL.md,
+        docs/api/LEDGER_COMMANDS.md,
       ]
     evidence: []
