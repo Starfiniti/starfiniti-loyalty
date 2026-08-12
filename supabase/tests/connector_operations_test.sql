@@ -398,10 +398,10 @@ select throws_ok(
   'quarantined effects cannot bypass remediation'
 );
 select throws_ok(
-  E$$ select * from loyalty.retry_connector_effect_command(
+  $query$ select * from loyalty.retry_connector_effect_command(
     '73100000-0000-4000-8000-000000000003', E'Unsafe\nreason text',
     'connector:effect:retry:control', '73000000-0000-4000-8000-000000000211'
-  ) $$,
+  ) $query$,
   '22023', 'invalid connector retry command',
   'control characters are rejected from audit reasons'
 );
