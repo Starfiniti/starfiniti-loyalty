@@ -37,6 +37,19 @@ export const programmeRewardDefinitionV1 = z.object({
   configuration: z.record(z.string(), z.unknown()).default({}),
 });
 
+function addRewardConfigurationIssue(
+  context: z.RefinementCtx,
+  index: number,
+  message: string,
+  field: string,
+) {
+  context.addIssue({
+    code: "custom",
+    message,
+    path: ["rewards", index, "configuration", field],
+  });
+}
+
 export const programmeDefinitionV1 = z
   .object({
     version: z.literal("1"),
@@ -75,6 +88,87 @@ export const programmeDefinitionV1 = z
         });
       }
       rewardCodes.add(reward.code);
+      const configuration = reward.configuration;
+      const validityDays = configuration.validityDays;
+      if (
+        ["fixed_discount", "percentage_discount", "free_shipping"].includes(
+          reward.kind,
+        ) &&
+        (!Number.isInteger(validityDays) ||
+          Number(validityDays) < 1 ||
+          Number(validityDays) > 365)
+      ) {
+        addRewardConfigurationIssue(
+          context,
+          index,
+          "Native coupon validity must be between 1 and 365 days",
+          "validityDays",
+        );
+      }
+      if (reward.kind === "fixed_discount") {
+        if (
+          typeof configuration.amountMinor !== "string" ||
+          !positiveBigintString.safeParse(configuration.amountMinor).success
+        ) {
+          addRewardConfigurationIssue(
+            context,
+            index,
+            "Fixed discounts require a positive minor-unit amount",
+            "amountMinor",
+          );
+        }
+        if (
+          !Number.isInteger(configuration.currencyMinorUnitDigits) ||
+          Number(configuration.currencyMinorUnitDigits) < 0 ||
+          Number(configuration.currencyMinorUnitDigits) > 6
+        ) {
+          addRewardConfigurationIssue(
+            context,
+            index,
+            "Currency precision must be between 0 and 6",
+            "currencyMinorUnitDigits",
+          );
+        }
+      }
+      if (reward.kind === "percentage_discount") {
+        if (
+          !Number.isInteger(configuration.percentageBasisPoints) ||
+          Number(configuration.percentageBasisPoints) < 1 ||
+          Number(configuration.percentageBasisPoints) > 10_000
+        ) {
+          addRewardConfigurationIssue(
+            context,
+            index,
+            "Percentage discounts must be between 0.01% and 100%",
+            "percentageBasisPoints",
+          );
+        }
+        if (
+          configuration.maximumDiscountMinor !== null &&
+          (typeof configuration.maximumDiscountMinor !== "string" ||
+            !positiveBigintString.safeParse(configuration.maximumDiscountMinor)
+              .success)
+        ) {
+          addRewardConfigurationIssue(
+            context,
+            index,
+            "Maximum discount must be empty or a positive minor-unit amount",
+            "maximumDiscountMinor",
+          );
+        }
+        if (
+          !Number.isInteger(configuration.currencyMinorUnitDigits) ||
+          Number(configuration.currencyMinorUnitDigits) < 0 ||
+          Number(configuration.currencyMinorUnitDigits) > 6
+        ) {
+          addRewardConfigurationIssue(
+            context,
+            index,
+            "Currency precision must be between 0 and 6",
+            "currencyMinorUnitDigits",
+          );
+        }
+      }
     });
   });
 
@@ -204,6 +298,21 @@ export const rewardTransitionCommandV1 = z.object({
   reason: z.string().trim().min(8).max(1000).nullable(),
   ledgerTransactionId: z.uuid().nullable(),
   connectorExecutionReference: z.string().min(1).max(500).nullable(),
+});
+
+export const customerRewardRedemptionRequestV1 = z
+  .object({
+    version: z.literal("1"),
+    accountId: z.uuid(),
+    rewardCode: code,
+    requestId: z.uuid(),
+  })
+  .strict();
+
+export const customerRewardRedemptionResultV1 = z.object({
+  reservationId: z.uuid(),
+  state: rewardReservationState,
+  outcome: z.enum(["created", "duplicate"]),
 });
 
 export const programmeCommandResultV1 = z.object({

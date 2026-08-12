@@ -114,6 +114,7 @@ select is_empty(
           'list_customer_summaries',
           'publish_programme_version_command',
           'preview_bulk_customer_adjustment',
+          'redeem_my_reward',
           'request_connector_reconciliation_command',
           'retry_connector_effect_command',
           'save_experience_translation_command',

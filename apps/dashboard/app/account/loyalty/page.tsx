@@ -10,9 +10,13 @@ import {
 export default async function CustomerLoyaltyPage({
   searchParams,
 }: {
-  searchParams: Promise<{ linked?: string }>;
+  searchParams: Promise<{
+    linked?: string;
+    redeemed?: string;
+    redemption?: string;
+  }>;
 }) {
-  const [{ linked }, state] = await Promise.all([
+  const [{ linked, redeemed, redemption }, state] = await Promise.all([
     searchParams,
     getCustomerLoyaltyAccounts(),
   ]);
@@ -37,6 +41,17 @@ export default async function CustomerLoyaltyPage({
         {linked === "1" ? (
           <p className="member-success" role="status">
             Your verified store account is now connected.
+          </p>
+        ) : null}
+        {redeemed === "1" ? (
+          <p className="member-success" role="status">
+            Reward reserved. Your customer-only WooCommerce coupon is being
+            created now.
+          </p>
+        ) : null}
+        {redemption ? (
+          <p className="member-error" role="alert">
+            {redemptionMessage(redemption)}
           </p>
         ) : null}
         <div className="member-heading">
@@ -117,15 +132,24 @@ function AccountCard({ account }: { account: CustomerLoyaltyAccount }) {
                     <strong>{reward.name}</strong>
                     <span>{formatPoints(reward.costPoints)} points</span>
                   </div>
-                  <span
-                    className={
-                      reward.affordable
-                        ? "member-affordable"
-                        : "member-unavailable"
-                    }
-                  >
-                    {reward.affordable ? "Available" : "Keep earning"}
-                  </span>
+                  {ready && reward.affordable && isNativeReward(reward.kind) ? (
+                    <Link
+                      className="member-redeem"
+                      href={`/account/loyalty/redeem?account=${account.account_id}&reward=${encodeURIComponent(reward.code)}`}
+                    >
+                      Redeem
+                    </Link>
+                  ) : (
+                    <span
+                      className={
+                        reward.affordable
+                          ? "member-affordable"
+                          : "member-unavailable"
+                      }
+                    >
+                      {reward.affordable ? "Ask store" : "Keep earning"}
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>
@@ -200,4 +224,20 @@ function activityLabel(item: CustomerActivity): string {
     manual_adjustment: "Account adjustment",
   };
   return labels[item.kind] ?? "Loyalty activity";
+}
+
+function isNativeReward(kind: string): boolean {
+  return ["fixed_discount", "percentage_discount", "free_shipping"].includes(
+    kind,
+  );
+}
+
+function redemptionMessage(status: string): string {
+  if (status === "insufficient") {
+    return "Your available points changed before confirmation. No reward was reserved.";
+  }
+  if (status === "invalid") {
+    return "That redemption request was invalid. No reward was reserved.";
+  }
+  return "This reward cannot be redeemed right now. No points were changed.";
 }

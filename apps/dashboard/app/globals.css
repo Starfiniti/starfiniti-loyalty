@@ -172,6 +172,15 @@
   color: #065f46;
   background: #ecfdf5;
 }
+.member-error {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  color: #991b1b;
+  background: #fff7f7;
+  font-size: 13px;
+}
 .member-heading > p:first-child {
   margin: 0 0 8px;
   color: var(--primary);
@@ -313,6 +322,18 @@
   color: #047857 !important;
   font-weight: 650;
 }
+.member-redeem {
+  min-height: 32px;
+  padding: 7px 11px;
+  border-radius: 8px;
+  color: white;
+  background: var(--primary);
+  font-size: 12px;
+  font-weight: 700;
+}
+.member-redeem:hover {
+  background: #4338ca;
+}
 .member-unavailable {
   color: var(--muted) !important;
 }
@@ -330,6 +351,44 @@
   color: var(--primary);
   font-size: 12px;
   font-weight: 650;
+}
+.redemption-card {
+  max-width: 540px;
+}
+.redemption-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 20px 0;
+}
+.redemption-summary div {
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fafafa;
+}
+.redemption-summary dt {
+  color: var(--muted);
+  font-size: 11px;
+}
+.redemption-summary dd {
+  margin: 4px 0 0;
+  font-size: 20px;
+  font-weight: 750;
+}
+.redemption-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+.redemption-actions .secondary,
+.redemption-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 9px 14px;
 }
 @media (max-width: 780px) {
   .member-balance-grid {
@@ -1175,6 +1234,9 @@ h1 {
   border: 1px solid #e7e5e4;
   border-radius: 12px;
 }
+.reward-row {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) 0.8fr 1fr 36px;
+}
 .programme-row legend {
   padding: 0 5px;
   color: var(--muted);
@@ -1453,6 +1515,9 @@ h1 {
     position: static;
   }
   .programme-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) 36px;
+  }
+  .reward-row {
     grid-template-columns: repeat(2, minmax(0, 1fr)) 36px;
   }
   .programme-row .icon-danger {

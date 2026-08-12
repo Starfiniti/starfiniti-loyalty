@@ -38,6 +38,42 @@ const fallbackTiers: TierDraft[] = [
   },
 ];
 
+function nativeRewardConfiguration(
+  kind: RewardDraft["kind"],
+): Record<string, unknown> {
+  if (kind === "fixed_discount") {
+    return {
+      amountMinor: "500",
+      currencyMinorUnitDigits: 2,
+      validityDays: 30,
+    };
+  }
+  if (kind === "percentage_discount") {
+    return {
+      percentageBasisPoints: 1000,
+      maximumDiscountMinor: null,
+      currencyMinorUnitDigits: 2,
+      validityDays: 30,
+    };
+  }
+  if (kind === "free_shipping") return { validityDays: 30 };
+  return {};
+}
+
+function minorToMajor(value: unknown): string {
+  if (typeof value !== "string" || !/^\d+$/u.test(value)) return "";
+  const padded = value.padStart(3, "0");
+  return `${padded.slice(0, -2)}.${padded.slice(-2)}`;
+}
+
+function majorToMinor(value: string): string {
+  const match = /^(\d+)(?:\.(\d{0,2}))?$/u.exec(value);
+  if (!match) return "0";
+  const minor =
+    BigInt(match[1]!) * 100n + BigInt((match[2] ?? "").padEnd(2, "0"));
+  return minor > 0n ? minor.toString() : "0";
+}
+
 function initialDefinition(value: unknown): {
   tiers: TierDraft[];
   rewards: RewardDraft[];
@@ -259,7 +295,7 @@ export function ProgrammeEditor({
                   name: `Reward ${current.length + 1}`,
                   kind: "fixed_discount",
                   costPoints: "100",
-                  configuration: {},
+                  configuration: nativeRewardConfiguration("fixed_discount"),
                 },
               ])
             }
@@ -304,11 +340,13 @@ export function ProgrammeEditor({
                   Kind
                   <select
                     value={reward.kind}
-                    onChange={(event) =>
+                    onChange={(event) => {
+                      const kind = event.target.value as RewardDraft["kind"];
                       updateReward(index, {
-                        kind: event.target.value as RewardDraft["kind"],
-                      })
-                    }
+                        kind,
+                        configuration: nativeRewardConfiguration(kind),
+                      });
+                    }}
                   >
                     <option value="fixed_discount">Fixed discount</option>
                     <option value="percentage_discount">
@@ -334,6 +372,100 @@ export function ProgrammeEditor({
                     }
                   />
                 </label>
+                {reward.kind === "fixed_discount" ? (
+                  <label>
+                    Discount (EUR)
+                    <input
+                      min="0.01"
+                      required
+                      step="0.01"
+                      type="number"
+                      value={minorToMajor(reward.configuration.amountMinor)}
+                      onChange={(event) =>
+                        updateReward(index, {
+                          configuration: {
+                            ...reward.configuration,
+                            amountMinor: majorToMinor(event.target.value),
+                          },
+                        })
+                      }
+                    />
+                  </label>
+                ) : null}
+                {reward.kind === "percentage_discount" ? (
+                  <>
+                    <label>
+                      Discount (%)
+                      <input
+                        max="100"
+                        min="0.01"
+                        required
+                        step="0.01"
+                        type="number"
+                        value={
+                          Number(reward.configuration.percentageBasisPoints) /
+                          100
+                        }
+                        onChange={(event) =>
+                          updateReward(index, {
+                            configuration: {
+                              ...reward.configuration,
+                              percentageBasisPoints: Math.round(
+                                Number(event.target.value) * 100,
+                              ),
+                            },
+                          })
+                        }
+                      />
+                    </label>
+                    <label>
+                      Maximum (EUR, optional)
+                      <input
+                        min="0.01"
+                        step="0.01"
+                        type="number"
+                        value={minorToMajor(
+                          reward.configuration.maximumDiscountMinor,
+                        )}
+                        onChange={(event) =>
+                          updateReward(index, {
+                            configuration: {
+                              ...reward.configuration,
+                              maximumDiscountMinor: event.target.value
+                                ? majorToMinor(event.target.value)
+                                : null,
+                            },
+                          })
+                        }
+                      />
+                    </label>
+                  </>
+                ) : null}
+                {[
+                  "fixed_discount",
+                  "percentage_discount",
+                  "free_shipping",
+                ].includes(reward.kind) ? (
+                  <label>
+                    Valid for (days)
+                    <input
+                      max="365"
+                      min="1"
+                      required
+                      step="1"
+                      type="number"
+                      value={String(reward.configuration.validityDays ?? "")}
+                      onChange={(event) =>
+                        updateReward(index, {
+                          configuration: {
+                            ...reward.configuration,
+                            validityDays: Number(event.target.value),
+                          },
+                        })
+                      }
+                    />
+                  </label>
+                ) : null}
                 <button
                   aria-label={`Remove ${reward.name || `reward ${index + 1}`}`}
                   className="icon-danger"

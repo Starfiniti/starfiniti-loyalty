@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   createProgrammeDraftCommandV1,
+  customerRewardRedemptionRequestV1,
+  customerRewardRedemptionResultV1,
   merchantCreateProgrammeCommandV1,
   merchantCreateProgrammeDraftCommandV1,
   merchantPublishProgrammeVersionCommandV1,
@@ -31,7 +33,11 @@ const definition = {
       name: "Ten euro off",
       kind: "fixed_discount" as const,
       costPoints: "1000",
-      configuration: { amountMinor: "1000" },
+      configuration: {
+        amountMinor: "1000",
+        currencyMinorUnitDigits: 2,
+        validityDays: 30,
+      },
     },
   ],
 };
@@ -61,6 +67,45 @@ describe("programme contracts", () => {
     ]) {
       expect(
         programmeDefinitionV1.safeParse({ ...definition, tiers }).success,
+      ).toBe(false);
+    }
+  });
+
+  it("validates native WooCommerce coupon configuration before publication", () => {
+    const reward = definition.rewards[0];
+    expect(
+      programmeDefinitionV1.safeParse({
+        ...definition,
+        rewards: [
+          {
+            ...reward,
+            kind: "percentage_discount",
+            configuration: {
+              percentageBasisPoints: 1500,
+              maximumDiscountMinor: "2500",
+              currencyMinorUnitDigits: 2,
+              validityDays: 14,
+            },
+          },
+          {
+            ...reward,
+            code: "shipping",
+            kind: "free_shipping",
+            configuration: { validityDays: 7 },
+          },
+        ],
+      }).success,
+    ).toBe(true);
+    for (const configuration of [
+      { amountMinor: "0", currencyMinorUnitDigits: 2, validityDays: 30 },
+      { amountMinor: "500", currencyMinorUnitDigits: 9, validityDays: 30 },
+      { amountMinor: "500", currencyMinorUnitDigits: 2, validityDays: 366 },
+    ]) {
+      expect(
+        programmeDefinitionV1.safeParse({
+          ...definition,
+          rewards: [{ ...reward, configuration }],
+        }).success,
       ).toBe(false);
     }
   });
@@ -156,6 +201,34 @@ describe("programme contracts", () => {
         inputSha256: "bad",
       }).success,
     ).toBe(false);
+  });
+
+  it("keeps customer redemption authority on an account, reward code, and request UUID", () => {
+    expect(
+      customerRewardRedemptionRequestV1.safeParse({
+        version: "1",
+        accountId: "91000000-0000-4000-8000-000000000160",
+        rewardCode: "five-off",
+        requestId: "91000000-0000-4000-8000-000000000900",
+      }).success,
+    ).toBe(true);
+    expect(
+      customerRewardRedemptionRequestV1.safeParse({
+        version: "1",
+        accountId: "91000000-0000-4000-8000-000000000160",
+        rewardCode: "five-off",
+        requestId: "91000000-0000-4000-8000-000000000900",
+        organizationId: "1",
+        points: "1",
+      }).success,
+    ).toBe(false);
+    expect(
+      customerRewardRedemptionResultV1.safeParse({
+        reservationId: "91000000-0000-4000-8000-000000000990",
+        state: "reserved",
+        outcome: "created",
+      }).success,
+    ).toBe(true);
   });
 
   it("accepts connector and ledger evidence on reward transitions", () => {

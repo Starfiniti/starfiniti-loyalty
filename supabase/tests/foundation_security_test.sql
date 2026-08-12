@@ -88,6 +88,7 @@ select is_empty(
           'loyalty.list_customer_summaries(uuid,uuid,text)',
           'loyalty.publish_programme_version_command(uuid,text,text,uuid)',
           'loyalty.preview_bulk_customer_adjustment(uuid[],uuid,uuid,bigint,text,timestamp with time zone)',
+          'loyalty.redeem_my_reward(uuid,text,uuid)',
           'loyalty.request_connector_reconciliation_command(uuid,text,text,text,uuid)',
           'loyalty.get_public_loyalty_experience(uuid,uuid,text)',
           'loyalty.retry_connector_effect_command(uuid,text,text,uuid)',
