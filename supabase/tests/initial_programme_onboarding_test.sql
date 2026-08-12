@@ -46,7 +46,7 @@ select results_eq(
       and routine.proname = 'create_programme_command'
       and exists (
         select 1 from unnest(routine.proconfig) as setting
-        where setting = 'search_path='
+        where setting like 'search_path=%'
       )
   $$,
   array[1::bigint],
