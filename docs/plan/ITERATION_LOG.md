@@ -143,3 +143,4 @@
 - Exposed current and qualified tier labels, transition, exact text-form eligible-spend minor units, and effective/below-threshold/grace timestamps while omitting explanations, hashes, idempotency keys, actors, and unrelated history.
 - Added responsive merchant customer-detail presentation with an honest unevaluated state and no invented tier default.
 - Added 27 pgTAP assertions for exact privileges/search paths, bounds, grace semantics, large-integer preservation, minimization, live analyst access, and revoked/suspended/cross-tenant denial.
+- Exact-head run `31592427051` passed the clean baseline, fourteen migrations, all 613 pgTAP assertions, concurrency/property probes, and all four real WooCommerce runtime variants.
