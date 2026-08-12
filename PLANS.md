@@ -41,11 +41,13 @@ Phase 9 — merchant administration and customer experience. Shopify Phase 8 rem
 - Exact-head run `31584351529` passed the customer-adjustment baseline, nine-migration database state with 448 pgTAP assertions, and all four WooCommerce runtime variants.
 - Exact-head run `31585681985` passed the signed source-reconciliation baseline, ten migrations with 485 pgTAP assertions, and all four WooCommerce runtime variants.
 - The Overview-reporting slice removes demo values and supplies bounded tenant/workspace/programme aggregates from immutable evaluation and ledger evidence through exact integer contracts; private source data stays server-only.
+- Exact-head run `31588394642` passed the live-reporting baseline, eleven migrations with 518 pgTAP assertions plus concurrency/property probes, and all four WooCommerce runtime variants.
+- The customer-read hardening slice moves list/detail assembly into live-membership database wrappers, masks channel IDs before they leave PostgreSQL, and preserves every wallet and ledger bigint as text through `BigInt` display formatting.
 - Exact-head run `31581760825` passed the customer-ledger baseline, database job, and all four WooCommerce runtime variants.
 
 ## Active work
 
-- `P9-MERCHANT-HUB` (in progress): the Auth/RLS shell, audited programme editor, customer wallet/ledger reads, safe connector queue operations, value-changing customer adjustments, signed source reconciliation, and real Overview reporting are implemented; remaining merchant/customer surfaces follow.
+- `P9-MERCHANT-HUB` (in progress): the Auth/RLS shell, audited programme editor, exact customer wallet/ledger reads, safe connector queue operations, value-changing customer adjustments, signed source reconciliation, and real Overview reporting are implemented; remaining merchant/customer surfaces follow.
 
 ## Next safe tasks
 

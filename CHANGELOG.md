@@ -47,3 +47,4 @@
 - Added owner/admin customer point adjustments with exact bigint preview, expiry-bound credits, strong debit confirmation, request-derived actors, immutable double-entry ledger effects, and matching administration audit evidence.
 - Added reviewed owner/admin/operator WooCommerce order reconciliation from the hub through an audited private outbox, signed connector polling, idempotent plugin source-fact re-emission, and explicit missing-order termination.
 - Replaced illustrative Overview figures with tenant/workspace/programme-authorized reporting for members, eligible loyalty spend, repeat-member rate, point redemption, liability, and aligned daily trends using exact integer contracts and private-source aggregation.
+- Hardened customer list/detail reads with live-membership database wrappers, literal bounded search, database-side channel-ID masking, fixed result ceilings, and text-form wallet/ledger integers that remain exact beyond JavaScript's safe range.

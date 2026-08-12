@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Search, Users } from "lucide-react";
 import { signOut } from "@/app/actions";
-import { normalizeCustomerSearch } from "@/lib/customers";
+import { formatPointText, normalizeCustomerSearch } from "@/lib/customers";
 import { listCustomers } from "@/lib/server/customers";
 import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
 
@@ -139,13 +139,13 @@ export default async function CustomersPage({
                       </span>
                     </td>
                     <td className="points-cell">
-                      {customer.availablePoints.toLocaleString("en")}
+                      {formatPointText(customer.availablePoints)}
                     </td>
                     <td className="points-cell">
-                      {customer.pendingPoints.toLocaleString("en")}
+                      {formatPointText(customer.pendingPoints)}
                     </td>
                     <td className="points-cell">
-                      {customer.reservedPoints.toLocaleString("en")}
+                      {formatPointText(customer.reservedPoints)}
                     </td>
                     <td>{formatDate(customer.createdAt)}</td>
                     <td>

@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   escapePostgrestLike,
+  formatPointText,
   isUuid,
+  pointTextIsCredit,
   maskExternalCustomerId,
   normalizeCustomerSearch,
   parseAdjustmentPoints,
@@ -27,18 +29,25 @@ describe("customer read model helpers", () => {
   it("builds all wallet buckets without inventing missing balances", () => {
     expect(
       summarizeWalletBuckets([
-        { account_kind: "available", points: 125 },
-        { account_kind: "pending", points: 75 },
-        { account_kind: "available", points: -25 },
+        { account_kind: "available", points: "125" },
+        { account_kind: "pending", points: "75" },
+        { account_kind: "available", points: "-25" },
       ]),
     ).toEqual({
-      pending: 75,
-      available: 100,
-      reserved: 0,
-      spent: 0,
-      expired: 0,
-      reversed: 0,
+      pending: "75",
+      available: "100",
+      reserved: "0",
+      spent: "0",
+      expired: "0",
+      reversed: "0",
     });
+  });
+
+  it("formats and compares point values beyond JavaScript safe integers", () => {
+    expect(formatPointText("9007199254740993")).toBe("9,007,199,254,740,993");
+    expect(pointTextIsCredit("9007199254740993")).toBe(true);
+    expect(pointTextIsCredit("-1")).toBe(false);
+    expect(() => formatPointText("1.5")).toThrow("invalid_point_value");
   });
 
   it("masks channel identifiers while retaining a support suffix", () => {

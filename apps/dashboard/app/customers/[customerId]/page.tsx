@@ -9,6 +9,7 @@ import {
 import { getMerchantProgrammeState } from "@/lib/server/programme";
 import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
 import { CustomerAdjustmentForm } from "./adjustment-form";
+import { formatPointText, pointTextIsCredit } from "@/lib/customers";
 
 function formatDate(value: string): string {
   return new Intl.DateTimeFormat("en-GB", {
@@ -96,7 +97,7 @@ export default async function CustomerDetailPage({
         ).map(([bucket, points]) => (
           <article className="balance-card" key={bucket}>
             <span>{bucket}</span>
-            <strong>{points.toLocaleString("en")}</strong>
+            <strong>{formatPointText(points)}</strong>
             <small>points</small>
           </article>
         ))}
@@ -128,10 +129,10 @@ export default async function CustomerDetailPage({
             {detail.ledger.map((item) => (
               <li key={`${item.id}-${item.points}`}>
                 <span
-                  className={`ledger-points ${item.points >= 0 ? "credit" : "debit"}`}
+                  className={`ledger-points ${pointTextIsCredit(item.points) ? "credit" : "debit"}`}
                 >
-                  {item.points > 0 ? "+" : ""}
-                  {item.points.toLocaleString("en")}
+                  {BigInt(item.points) > 0n ? "+" : ""}
+                  {formatPointText(item.points)}
                 </span>
                 <div>
                   <strong>{label(item.kind)}</strong>

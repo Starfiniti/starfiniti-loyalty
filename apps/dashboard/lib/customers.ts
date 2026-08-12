@@ -17,24 +17,42 @@ export type WalletBucket =
 
 export type WalletBucketRow = Readonly<{
   account_kind: WalletBucket;
-  points: number;
+  points: string;
 }>;
 
 export function summarizeWalletBuckets(
   rows: readonly WalletBucketRow[],
-): Readonly<Record<WalletBucket, number>> {
-  const result: Record<WalletBucket, number> = {
-    pending: 0,
-    available: 0,
-    reserved: 0,
-    spent: 0,
-    expired: 0,
-    reversed: 0,
+): Readonly<Record<WalletBucket, string>> {
+  const result: Record<WalletBucket, bigint> = {
+    pending: 0n,
+    available: 0n,
+    reserved: 0n,
+    spent: 0n,
+    expired: 0n,
+    reversed: 0n,
   };
   rows.forEach((row) => {
-    result[row.account_kind] += Number(row.points);
+    result[row.account_kind] += BigInt(row.points);
   });
-  return result;
+  return Object.fromEntries(
+    Object.entries(result).map(([bucket, points]) => [
+      bucket,
+      points.toString(),
+    ]),
+  ) as Record<WalletBucket, string>;
+}
+
+export function isExactPointText(value: unknown): value is string {
+  return typeof value === "string" && /^-?(0|[1-9][0-9]*)$/u.test(value);
+}
+
+export function formatPointText(value: string): string {
+  if (!isExactPointText(value)) throw new Error("invalid_point_value");
+  return BigInt(value).toLocaleString("en");
+}
+
+export function pointTextIsCredit(value: string): boolean {
+  return isExactPointText(value) && BigInt(value) >= 0n;
 }
 
 export function maskExternalCustomerId(value: string): string {

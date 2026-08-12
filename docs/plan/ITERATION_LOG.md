@@ -119,3 +119,11 @@
 - Defined loyalty members/new members, eligible loyalty spend, repeat-member rate, captured-to-awarded point redemption, and pending/available/reserved point liability from immutable evaluation, ledger, and projection evidence.
 - Kept raw canonical payloads, channel identities, evaluation inputs/explanations, ledger rows/metadata, actors, reasons, and signing material outside the browser response.
 - Added exact text-form reporting contracts, `BigInt` formatting, aligned current/previous chart series, honest empty scope, and 33 pgTAP plus seven unit assertions for precision, boundaries, definitions, minimization, and tenant isolation.
+- Exact-head run `31588394642` passed the clean baseline, eleven migrations, all 518 pgTAP assertions, concurrency/property probes, and all four real WooCommerce runtime variants.
+
+## 2026-08-12 — Phase 9 exact customer read models
+
+- Replaced multi-query JavaScript assembly with stable, live-membership database wrappers for the bounded customer list and 100-entry customer ledger detail.
+- Cast every wallet balance and ledger point value to text before the Data API and format it with `BigInt`, removing IEEE-754 precision loss from customer screens.
+- Moved channel-ID masking into PostgreSQL, made search literal and capped at 100 characters/50 results, and kept actor IDs, reasons, metadata, request hashes, and raw commerce evidence out of the response.
+- Added 33 pgTAP assertions for privileges, search paths, indexed access, exact large integers, masking/minimization, fixed bounds, empty wallet scope, group mismatch, revocation, and cross-tenant isolation plus one dashboard precision test.

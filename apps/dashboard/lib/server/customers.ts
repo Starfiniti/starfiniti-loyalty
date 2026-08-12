@@ -1,11 +1,9 @@
 import "server-only";
 import {
-  escapePostgrestLike,
+  isExactPointText,
   isUuid,
-  maskExternalCustomerId,
   normalizeCustomerSearch,
-  summarizeWalletBuckets,
-  type WalletBucketRow,
+  type WalletBucket,
 } from "@/lib/customers";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { TenantContext } from "@/lib/tenant-context";
@@ -18,9 +16,9 @@ export type CustomerSummary = Readonly<{
   identityKind: string | null;
   maskedExternalId: string | null;
   walletStatus: string | null;
-  pendingPoints: number;
-  availablePoints: number;
-  reservedPoints: number;
+  pendingPoints: string;
+  availablePoints: string;
+  reservedPoints: string;
 }>;
 
 export type CustomerLedgerItem = Readonly<{
@@ -29,7 +27,7 @@ export type CustomerLedgerItem = Readonly<{
   actorType: string;
   sourceReference: string | null;
   bucket: string;
-  points: number;
+  points: string;
   effectiveAt: string;
   correlationId: string;
   programmeVersion: number | null;
@@ -37,7 +35,7 @@ export type CustomerLedgerItem = Readonly<{
 
 export type CustomerDetail = Readonly<{
   customer: CustomerSummary;
-  balances: ReturnType<typeof summarizeWalletBuckets>;
+  balances: Readonly<Record<WalletBucket, string>>;
   ledger: readonly CustomerLedgerItem[];
 }>;
 
@@ -45,48 +43,87 @@ export type CustomerAdjustmentContext = Readonly<{
   availablePoints: string;
 }>;
 
-type CustomerRow = Readonly<{
-  id: number;
-  public_id: string;
-  display_reference: string | null;
-  status: string;
-  created_at: string;
-}>;
-type IdentityRow = Readonly<{
-  customer_id: number;
-  external_customer_id: string;
-  identity_kind: string;
-}>;
-type WalletRow = Readonly<{
-  id: number;
-  public_id: string;
-  customer_id: number;
-  status: string;
-}>;
-type BalanceRow = WalletBucketRow & Readonly<{ wallet_id: number }>;
-type AccountRow = Readonly<{ id: number; account_kind: string }>;
-type EntryRow = Readonly<{
-  transaction_id: number;
-  account_id: number;
-  points: number;
-}>;
-type TransactionRow = Readonly<{
-  id: number;
-  public_id: string;
-  programme_version_id: number;
-  transaction_kind: string;
-  actor_type: string;
-  source_reference: string | null;
-  correlation_id: string;
-  effective_at: string;
-}>;
-type VersionRow = Readonly<{ id: number; version_number: number }>;
+type UnknownRecord = Readonly<Record<string, unknown>>;
 
-function displayReference(customer: CustomerRow): string {
-  return (
-    customer.display_reference?.trim() ||
-    `Customer ${customer.public_id.slice(0, 8)}`
-  );
+function asRecord(value: unknown): UnknownRecord {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error("customer_read_unavailable");
+  }
+  return value as UnknownRecord;
+}
+
+function requiredString(row: UnknownRecord, key: string): string {
+  const value = row[key];
+  if (typeof value !== "string") throw new Error("customer_read_unavailable");
+  return value;
+}
+
+function nullableString(row: UnknownRecord, key: string): string | null {
+  const value = row[key];
+  if (value !== null && typeof value !== "string") {
+    throw new Error("customer_read_unavailable");
+  }
+  return value;
+}
+
+function exactPoint(row: UnknownRecord, key: string): string {
+  const value = row[key];
+  if (!isExactPointText(value)) throw new Error("customer_read_unavailable");
+  return value;
+}
+
+function parseSummary(rowValue: unknown): CustomerSummary {
+  const row = asRecord(rowValue);
+  const id = requiredString(row, "customer_id");
+  if (!isUuid(id)) throw new Error("customer_read_unavailable");
+  return {
+    id,
+    displayReference: requiredString(row, "display_reference"),
+    status: requiredString(row, "customer_status"),
+    createdAt: requiredString(row, "created_at"),
+    identityKind: nullableString(row, "identity_kind"),
+    maskedExternalId: nullableString(row, "masked_external_id"),
+    walletStatus: nullableString(row, "wallet_status"),
+    pendingPoints: exactPoint(row, "pending_points"),
+    availablePoints: exactPoint(row, "available_points"),
+    reservedPoints: exactPoint(row, "reserved_points"),
+  };
+}
+
+function parseLedger(value: unknown): readonly CustomerLedgerItem[] {
+  if (!Array.isArray(value)) throw new Error("customer_read_unavailable");
+  return value.map((itemValue) => {
+    const item = asRecord(itemValue);
+    const id = requiredString(item, "id");
+    const correlationId = requiredString(item, "correlationId");
+    const programmeVersion = item.programmeVersion;
+    if (
+      !isUuid(id) ||
+      !isUuid(correlationId) ||
+      (programmeVersion !== null &&
+        (typeof programmeVersion !== "number" ||
+          !Number.isSafeInteger(programmeVersion) ||
+          programmeVersion < 1))
+    ) {
+      throw new Error("customer_read_unavailable");
+    }
+    return {
+      id,
+      kind: requiredString(item, "kind"),
+      actorType: requiredString(item, "actorType"),
+      sourceReference: nullableString(item, "sourceReference"),
+      bucket: requiredString(item, "bucket"),
+      points: exactPoint(item, "points"),
+      effectiveAt: requiredString(item, "effectiveAt"),
+      correlationId,
+      programmeVersion: programmeVersion as number | null,
+    };
+  });
+}
+
+function firstRow(data: unknown): unknown | null {
+  if (Array.isArray(data)) return data[0] ?? null;
+  return data ?? null;
 }
 
 export async function listCustomers(
@@ -94,87 +131,18 @@ export async function listCustomers(
   rawSearch?: unknown,
 ): Promise<readonly CustomerSummary[]> {
   const supabase = await createSupabaseServerClient();
-  const search = normalizeCustomerSearch(rawSearch);
-  let customerQuery = supabase
+  const result = await supabase
     .schema("loyalty")
-    .from("customers")
-    .select("id,public_id,display_reference,status,created_at")
-    .eq("organization_id", context.organization.id)
-    .order("created_at", { ascending: false })
-    .limit(50);
-  if (search) {
-    customerQuery = customerQuery.ilike(
-      "display_reference",
-      `%${escapePostgrestLike(search)}%`,
-    );
-  }
-  const customerResult = await customerQuery;
-  if (customerResult.error) throw new Error("customer_read_unavailable");
-  const customers = (customerResult.data ?? []) as CustomerRow[];
-  if (customers.length === 0) return [];
-
-  const customerIds = customers.map(({ id }) => id);
-  const [identityResult, walletResult] = await Promise.all([
-    supabase
-      .schema("loyalty")
-      .from("customer_identities")
-      .select("customer_id,external_customer_id,identity_kind")
-      .eq("organization_id", context.organization.id)
-      .in("customer_id", customerIds)
-      .order("id", { ascending: true }),
-    context.programmeGroup
-      ? supabase
-          .schema("loyalty")
-          .from("wallets")
-          .select("id,public_id,customer_id,status")
-          .eq("organization_id", context.organization.id)
-          .eq("programme_group_id", context.programmeGroup.id)
-          .in("customer_id", customerIds)
-      : Promise.resolve({ data: [], error: null }),
-  ]);
-  if (identityResult.error || walletResult.error) {
+    .rpc("list_customer_summaries", {
+      target_organization_public_id: context.organization.public_id,
+      target_programme_group_public_id:
+        context.programmeGroup?.public_id ?? null,
+      target_search: normalizeCustomerSearch(rawSearch) || null,
+    });
+  if (result.error || !Array.isArray(result.data)) {
     throw new Error("customer_read_unavailable");
   }
-  const identities = (identityResult.data ?? []) as IdentityRow[];
-  const wallets = (walletResult.data ?? []) as WalletRow[];
-  const walletIds = wallets.map(({ id }) => id);
-  const balanceResult =
-    walletIds.length > 0
-      ? await supabase
-          .schema("loyalty")
-          .from("wallet_balances")
-          .select("wallet_id,account_kind,points")
-          .eq("organization_id", context.organization.id)
-          .in("wallet_id", walletIds)
-      : { data: [], error: null };
-  if (balanceResult.error) throw new Error("customer_read_unavailable");
-  const balances = (balanceResult.data ?? []) as BalanceRow[];
-
-  return customers.map((customer) => {
-    const identity = identities.find(
-      ({ customer_id }) => customer_id === customer.id,
-    );
-    const wallet = wallets.find(
-      ({ customer_id }) => customer_id === customer.id,
-    );
-    const buckets = summarizeWalletBuckets(
-      balances.filter(({ wallet_id }) => wallet_id === wallet?.id),
-    );
-    return {
-      id: customer.public_id,
-      displayReference: displayReference(customer),
-      status: customer.status,
-      createdAt: customer.created_at,
-      identityKind: identity?.identity_kind ?? null,
-      maskedExternalId: identity
-        ? maskExternalCustomerId(identity.external_customer_id)
-        : null,
-      walletStatus: wallet?.status ?? null,
-      pendingPoints: buckets.pending,
-      availablePoints: buckets.available,
-      reservedPoints: buckets.reserved,
-    };
-  });
+  return result.data.map(parseSummary);
 }
 
 export async function getCustomerDetail(
@@ -183,177 +151,29 @@ export async function getCustomerDetail(
 ): Promise<CustomerDetail | null> {
   if (!isUuid(customerPublicId)) return null;
   const supabase = await createSupabaseServerClient();
-  const customerResult = await supabase
+  const result = await supabase
     .schema("loyalty")
-    .from("customers")
-    .select("id,public_id,display_reference,status,created_at")
-    .eq("organization_id", context.organization.id)
-    .eq("public_id", customerPublicId)
-    .maybeSingle();
-  if (customerResult.error) throw new Error("customer_read_unavailable");
-  const customerRow = customerResult.data as CustomerRow | null;
-  if (!customerRow) return null;
-
-  const identityResult = await supabase
-    .schema("loyalty")
-    .from("customer_identities")
-    .select("customer_id,external_customer_id,identity_kind")
-    .eq("organization_id", context.organization.id)
-    .eq("customer_id", customerRow.id)
-    .order("id", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  if (identityResult.error) throw new Error("customer_read_unavailable");
-  const identity = identityResult.data as IdentityRow | null;
-
-  const baseCustomer: CustomerSummary = {
-    id: customerRow.public_id,
-    displayReference: displayReference(customerRow),
-    status: customerRow.status,
-    createdAt: customerRow.created_at,
-    identityKind: identity?.identity_kind ?? null,
-    maskedExternalId: identity
-      ? maskExternalCustomerId(identity.external_customer_id)
-      : null,
-    walletStatus: null,
-    pendingPoints: 0,
-    availablePoints: 0,
-    reservedPoints: 0,
-  };
-  if (!context.programmeGroup) {
-    return {
-      customer: baseCustomer,
-      balances: summarizeWalletBuckets([]),
-      ledger: [],
-    };
-  }
-
-  const walletResult = await supabase
-    .schema("loyalty")
-    .from("wallets")
-    .select("id,status")
-    .eq("organization_id", context.organization.id)
-    .eq("programme_group_id", context.programmeGroup.id)
-    .eq("customer_id", customerRow.id)
-    .maybeSingle();
-  if (walletResult.error) throw new Error("customer_read_unavailable");
-  const wallet = walletResult.data as { id: number; status: string } | null;
-  const walletId = wallet?.id;
-  if (!walletId) {
-    return {
-      customer: baseCustomer,
-      balances: summarizeWalletBuckets([]),
-      ledger: [],
-    };
-  }
-
-  const [balanceResult, accountResult] = await Promise.all([
-    supabase
-      .schema("loyalty")
-      .from("wallet_balances")
-      .select("account_kind,points")
-      .eq("organization_id", context.organization.id)
-      .eq("wallet_id", walletId),
-    supabase
-      .schema("loyalty")
-      .from("ledger_accounts")
-      .select("id,account_kind")
-      .eq("organization_id", context.organization.id)
-      .eq("wallet_id", walletId),
-  ]);
-  if (balanceResult.error || accountResult.error) {
-    throw new Error("customer_read_unavailable");
-  }
-  const balances = summarizeWalletBuckets(
-    (balanceResult.data ?? []) as WalletBucketRow[],
-  );
-  const customer: CustomerSummary = {
-    ...baseCustomer,
-    walletStatus: wallet?.status ?? null,
-    pendingPoints: balances.pending,
-    availablePoints: balances.available,
-    reservedPoints: balances.reserved,
-  };
-  const accountIds = ((accountResult.data ?? []) as AccountRow[]).map(
-    ({ id }) => id,
-  );
-  if (accountIds.length === 0) return { customer, balances, ledger: [] };
-
-  const entryResult = await supabase
-    .schema("loyalty")
-    .from("ledger_entries")
-    .select("transaction_id,account_id,points")
-    .eq("organization_id", context.organization.id)
-    .in("account_id", accountIds)
-    .order("id", { ascending: false })
-    .limit(100);
-  if (entryResult.error) throw new Error("customer_read_unavailable");
-  const entries = (entryResult.data ?? []) as EntryRow[];
-  if (entries.length === 0) return { customer, balances, ledger: [] };
-
-  const transactionIds = [
-    ...new Set(entries.map(({ transaction_id }) => transaction_id)),
-  ];
-  const transactionResult = await supabase
-    .schema("loyalty")
-    .from("ledger_transactions")
-    .select(
-      "id,public_id,programme_version_id,transaction_kind,actor_type,source_reference,correlation_id,effective_at",
-    )
-    .eq("organization_id", context.organization.id)
-    .in("id", transactionIds);
-  if (transactionResult.error) throw new Error("customer_read_unavailable");
-  const transactions = (transactionResult.data ?? []) as TransactionRow[];
-  const versionIds = [
-    ...new Set(
-      transactions.map(({ programme_version_id }) => programme_version_id),
-    ),
-  ];
-  const versionResult = await supabase
-    .schema("loyalty")
-    .from("programme_versions")
-    .select("id,version_number")
-    .eq("organization_id", context.organization.id)
-    .in("id", versionIds);
-  if (versionResult.error) throw new Error("customer_read_unavailable");
-  const versionById = new Map(
-    ((versionResult.data ?? []) as VersionRow[]).map((version) => [
-      version.id,
-      version.version_number,
-    ]),
-  );
-  const transactionById = new Map(
-    transactions.map((transaction) => [transaction.id, transaction]),
-  );
-  const accountKindById = new Map(
-    ((accountResult.data ?? []) as AccountRow[]).map((account) => [
-      account.id,
-      account.account_kind,
-    ]),
-  );
-
+    .rpc("get_customer_read_model", {
+      target_customer_public_id: customerPublicId,
+      target_programme_group_public_id:
+        context.programmeGroup?.public_id ?? null,
+    });
+  if (result.error) throw new Error("customer_read_unavailable");
+  const rowValue = firstRow(result.data);
+  if (!rowValue) return null;
+  const row = asRecord(rowValue);
+  const customer = parseSummary(row);
   return {
     customer,
-    balances,
-    ledger: entries.flatMap((entry) => {
-      const transaction = transactionById.get(entry.transaction_id);
-      return transaction
-        ? [
-            {
-              id: transaction.public_id,
-              kind: transaction.transaction_kind,
-              actorType: transaction.actor_type,
-              sourceReference: transaction.source_reference,
-              bucket: accountKindById.get(entry.account_id) ?? "wallet",
-              points: Number(entry.points),
-              effectiveAt: transaction.effective_at,
-              correlationId: transaction.correlation_id,
-              programmeVersion:
-                versionById.get(transaction.programme_version_id) ?? null,
-            },
-          ]
-        : [];
-    }),
+    balances: {
+      pending: customer.pendingPoints,
+      available: customer.availablePoints,
+      reserved: customer.reservedPoints,
+      spent: exactPoint(row, "spent_points"),
+      expired: exactPoint(row, "expired_points"),
+      reversed: exactPoint(row, "reversed_points"),
+    },
+    ledger: parseLedger(row.ledger_items),
   };
 }
 
@@ -376,10 +196,8 @@ export async function getCustomerAdjustmentContext(
       target_programme_group_public_id: context.programmeGroup.public_id,
     });
   if (result.error) throw new Error("customer_adjustment_context_unavailable");
-  const row = (Array.isArray(result.data) ? result.data[0] : result.data) as {
-    available_points?: unknown;
-  } | null;
-  return row && typeof row.available_points === "string"
+  const row = firstRow(result.data) as { available_points?: unknown } | null;
+  return row && isExactPointText(row.available_points)
     ? { availablePoints: row.available_points }
     : null;
 }

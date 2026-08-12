@@ -276,3 +276,6 @@ tasks:
       - current and previous periods are equal UTC windows and 7 30 90 day trends reconcile to new-member totals; spend redemption repeat and liability definitions are explicit
       - 33 Overview-reporting pgTAP assertions cover privileges tenant roles revocation workspace scope exact bigint values aligned periods source minimization and empty-tenant isolation
       - dashboard and contract suites now contain 26 and 36 tests respectively
+      - exact-head run 31588394642 passed baseline eleven migrations 518 pgTAP assertions concurrency and property probes and all four WooCommerce runtime variants
+      - customer list and detail wrappers recheck live membership mask channel identifiers in PostgreSQL cap rows and preserve all wallet and ledger bigint values as text
+      - 33 customer-read pgTAP assertions cover exact values literal and bounded search indexed access privileges minimization group scope tenant isolation revocation and honest empty wallets
