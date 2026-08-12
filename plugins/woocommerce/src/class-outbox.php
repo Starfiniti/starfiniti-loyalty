@@ -144,10 +144,10 @@ final class Outbox
             return;
         }
 
-        $endpoint = (string) get_option('starfiniti_loyalty_endpoint', '');
-        $connectionId = (string) get_option('starfiniti_loyalty_connection_id', '');
-        $keyVersion = (string) get_option('starfiniti_loyalty_key_version', '');
-        $signingKey = (string) get_option('starfiniti_loyalty_signing_key', '');
+        $endpoint = Settings::endpoint();
+        $connectionId = Settings::connectionId();
+        $keyVersion = Settings::keyVersion();
+        $signingKey = Settings::signingKey();
         if ('' === $endpoint || '' === $connectionId || '' === $keyVersion || '' === $signingKey) {
             self::retry((int) $row['id'], (int) $row['attempts'], 'connector_not_configured');
             return;
@@ -247,6 +247,51 @@ final class Outbox
                 as_schedule_single_action(time() + $delay, self::ACTION, [], self::GROUP);
             }
         }
+    }
+
+    /** @return array<string, int> */
+    public static function diagnostics(): array
+    {
+        global $wpdb;
+        $counts = [
+            'pending' => 0,
+            'retryable' => 0,
+            'delivered' => 0,
+            'dead_letter' => 0,
+        ];
+        $rows = $wpdb->get_results(
+            'SELECT state, COUNT(*) AS event_count FROM ' . self::table() . ' GROUP BY state',
+            ARRAY_A
+        );
+        foreach ($rows as $row) {
+            $state = (string) ($row['state'] ?? '');
+            if (array_key_exists($state, $counts)) {
+                $counts[$state] = (int) ($row['event_count'] ?? 0);
+            }
+        }
+        return $counts;
+    }
+
+    public static function retryDeadLetters(int $limit): int
+    {
+        global $wpdb;
+        $limit = max(1, min(500, $limit));
+        $now = gmdate('Y-m-d H:i:s');
+        $updated = $wpdb->query($wpdb->prepare(
+            'UPDATE ' . self::table() .
+            ' SET state = %s, attempts = 0, available_gmt = %s, updated_gmt = %s, last_error_code = NULL' .
+            ' WHERE state = %s ORDER BY id ASC LIMIT %d',
+            'retryable',
+            $now,
+            $now,
+            'dead_letter',
+            $limit
+        ));
+        if (is_int($updated) && $updated > 0) {
+            self::schedule(0);
+            return $updated;
+        }
+        return 0;
     }
 
     /** @return array<string, mixed> */

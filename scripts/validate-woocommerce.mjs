@@ -5,6 +5,11 @@ const bootstrap = readFileSync(
   "utf8",
 );
 const plugin = readFileSync("plugins/woocommerce/src/class-plugin.php", "utf8");
+const settings = readFileSync(
+  "plugins/woocommerce/src/class-settings.php",
+  "utf8",
+);
+const cli = readFileSync("plugins/woocommerce/src/class-cli.php", "utf8");
 const outbox = readFileSync("plugins/woocommerce/src/class-outbox.php", "utf8");
 const receiver = readFileSync(
   "apps/dashboard/app/api/v1/integrations/woocommerce/events/route.ts",
@@ -22,6 +27,22 @@ for (const [label, content, requirements] of [
     ],
   ],
   ["plugin", plugin, ["Outbox::boot()", "manage_woocommerce"]],
+  [
+    "settings",
+    settings,
+    [
+      "check_admin_referer",
+      "sodium_crypto_secretbox",
+      "sodium_crypto_secretbox_open",
+      "base64_decode",
+      "update_option",
+    ],
+  ],
+  [
+    "cli",
+    cli,
+    ["WP_CLI::add_command", "retry-dead-letters", "Outbox::diagnostics"],
+  ],
   [
     "outbox",
     outbox,
@@ -63,7 +84,11 @@ for (const forbidden of [
   /get_billing_(?:email|phone|address)/iu,
   /error_log\s*\(/iu,
 ]) {
-  if (forbidden.test(`${bootstrap}\n${plugin}\n${outbox}\n${receiver}`)) {
+  if (
+    forbidden.test(
+      `${bootstrap}\n${plugin}\n${settings}\n${cli}\n${outbox}\n${receiver}`,
+    )
+  ) {
     throw new Error(
       `WooCommerce connector contains forbidden pattern ${forbidden}`,
     );
