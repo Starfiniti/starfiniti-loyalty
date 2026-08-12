@@ -429,20 +429,6 @@ select throws_ok(
 reset role;
 update loyalty.wallets set status = 'active'
 where organization_id = (select id from loyalty.organizations where slug = 'redeem-one');
-update loyalty.customer_user_links set revoked_at = now()
-where public_id = '91000000-0000-4000-8000-000000000160';
-set local role authenticated;
-select throws_ok(
-  $$ select * from loyalty.redeem_my_reward(
-       '91000000-0000-4000-8000-000000000160', 'shipping',
-       '91000000-0000-4000-8000-000000000909'
-     ) $$,
-  '42501', 'reward redemption not authorized',
-  'a revoked customer link loses redemption authority immediately'
-);
-reset role;
-update loyalty.customer_user_links set revoked_at = null
-where public_id = '91000000-0000-4000-8000-000000000160';
 set local role authenticated;
 set local request.jwt.claim.sub = '';
 select throws_ok(
@@ -475,6 +461,18 @@ select throws_ok(
      ) $$,
   '22023', 'invalid reward redemption request',
   'missing request identity is rejected'
+);
+reset role;
+update loyalty.customer_user_links set revoked_at = now()
+where public_id = '91000000-0000-4000-8000-000000000160';
+set local role authenticated;
+select throws_ok(
+  $$ select * from loyalty.redeem_my_reward(
+       '91000000-0000-4000-8000-000000000160', 'shipping',
+       '91000000-0000-4000-8000-000000000909'
+     ) $$,
+  '42501', 'reward redemption not authorized',
+  'a revoked customer link loses redemption authority immediately'
 );
 reset role;
 select results_eq(
