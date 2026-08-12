@@ -135,6 +135,51 @@ try {
     );
   }
 
+  let allowEvaluationCommit;
+  let markEvaluationInserted;
+  const evaluationInserted = new Promise((resolve) => {
+    markEvaluationInserted = resolve;
+  });
+  const evaluationCommitGate = new Promise((resolve) => {
+    allowEvaluationCommit = resolve;
+  });
+  const evaluationKey = `concurrency-evaluation:${suffix}`;
+  const firstEvaluation = first.begin(async (sql) => {
+    const rows = await sql`
+      select * from loyalty_private.record_programme_evaluation(
+        ${fixture.organizationId}, ${fixture.programmeGroupId},
+        ${fixture.programmeVersionId}, null, 'simulation', 'probe:order',
+        ${evaluationKey}, ${hash("5")}, ${hash("6")},
+        ${{ awardedPoints: 10 }}, ${{ ruleIds: ["base"] }}, now()
+      )
+    `;
+    markEvaluationInserted();
+    await evaluationCommitGate;
+    return rows;
+  });
+  await evaluationInserted;
+  const duplicateEvaluation = second`
+    select * from loyalty_private.record_programme_evaluation(
+      ${fixture.organizationId}, ${fixture.programmeGroupId},
+      ${fixture.programmeVersionId}, null, 'simulation', 'probe:order',
+      ${evaluationKey}, ${hash("5")}, ${hash("6")},
+      ${{ awardedPoints: 10 }}, ${{ ruleIds: ["base"] }}, now()
+    )
+  `;
+  setTimeout(allowEvaluationCommit, 100);
+  const [createdEvaluation, retriedEvaluation] = await Promise.all([
+    firstEvaluation,
+    duplicateEvaluation,
+  ]);
+  if (
+    createdEvaluation[0]?.outcome !== "created" ||
+    retriedEvaluation[0]?.outcome !== "duplicate" ||
+    createdEvaluation[0]?.evaluation_public_id !==
+      retriedEvaluation[0]?.evaluation_public_id
+  ) {
+    throw new Error("concurrent evaluation retry did not return one identity");
+  }
+
   let sequenceSeed = 0x5f3759df;
   for (let round = 1; round <= 20; round += 1) {
     sequenceSeed = (Math.imul(sequenceSeed, 1664525) + 1013904223) >>> 0;
@@ -221,7 +266,7 @@ try {
   }
 
   console.log(
-    "Ledger concurrency/property probe passed: one competing reservation failed safely, 20 deterministic operation sequences stayed balanced, retries were idempotent, and projections remain exact.",
+    "Ledger/programme concurrency and property probe passed: one competing reservation failed safely, a concurrent evaluation retry returned one identity, 20 deterministic operation sequences stayed balanced, retries were idempotent, and projections remain exact.",
   );
 } finally {
   await Promise.allSettled([admin.end(), first.end(), second.end()]);

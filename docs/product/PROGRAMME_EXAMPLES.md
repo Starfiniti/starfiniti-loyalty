@@ -23,3 +23,9 @@ ADR-0004 resolves the source conflict in favor of the prototype's three live tie
 - If an attributable reversal exceeds the available balance, the loyalty balance becomes negative and future earnings offset it; commerce checkout remains independent.
 
 The tests require an explicit tier snapshot for each order award so threshold-crossing event order is never guessed.
+
+## Configured execution example
+
+The Phase 6 evaluator accepts connector-neutral line facts. A product/category/collection accelerator may override the historical tier rate; explicit exclusions win according to stable priority. Shipping, tax, fees, gift-card/store-credit payment, discounts, and refunded amounts contribute zero eligible spend. All included line numerators are summed before one final order-level floor.
+
+Live execution and simulation call the same function. The platform persists the immutable programme version, canonical input/result hashes, and per-line explanation. Reward definitions are materialized from the approved version and connector execution can only move a reservation through the audited state graph with matching ledger evidence.

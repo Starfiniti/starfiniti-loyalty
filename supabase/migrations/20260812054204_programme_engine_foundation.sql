@@ -661,6 +661,9 @@ declare
   existing loyalty_private.programme_evaluations%rowtype;
   created_public_id uuid;
 begin
+  perform pg_catalog.pg_advisory_xact_lock(
+    pg_catalog.hashtextextended(target_idempotency_key, target_organization_id)
+  );
   select evaluation.* into existing
   from loyalty_private.programme_evaluations as evaluation
   where evaluation.organization_id = target_organization_id
@@ -714,6 +717,9 @@ declare
   created_decision_id bigint;
   created_public_id uuid;
 begin
+  perform pg_catalog.pg_advisory_xact_lock(
+    pg_catalog.hashtextextended(target_idempotency_key, target_organization_id)
+  );
   select decision.* into existing from loyalty.tier_decisions as decision
   where decision.organization_id = target_organization_id
     and decision.idempotency_key = target_idempotency_key;
@@ -792,6 +798,9 @@ declare
   existing loyalty.reward_reservations%rowtype;
   created_public_id uuid;
 begin
+  perform pg_catalog.pg_advisory_xact_lock(
+    pg_catalog.hashtextextended(target_idempotency_key, target_organization_id)
+  );
   select reservation.* into existing from loyalty.reward_reservations as reservation
   where reservation.organization_id = target_organization_id
     and reservation.idempotency_key = target_idempotency_key;
@@ -851,6 +860,11 @@ begin
   if not found then
     raise exception using errcode = '22023', message = 'unknown reward reservation';
   end if;
+  perform pg_catalog.pg_advisory_xact_lock(
+    pg_catalog.hashtextextended(
+      target_idempotency_key, target_reservation.organization_id
+    )
+  );
   select transition.* into existing_transition
   from loyalty.reward_reservation_transitions as transition
   where transition.organization_id = target_reservation.organization_id

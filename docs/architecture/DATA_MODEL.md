@@ -2,7 +2,7 @@
 
 ## Implementation status
 
-The tenancy, WooCommerce event, and Phase 5 ledger portions below are implemented in four versioned migrations. The ledger uses immutable transaction headers/entries, six wallet buckets, programme control accounts, original-attribution lots, signed compensating allocations, same-transaction projections, tenant RLS, and narrow worker commands. Reward reservations, tier history, audit, and privacy workflows remain later phases.
+The tenancy, WooCommerce event, ledger, and Phase 6 programme-engine portions below are implemented in five versioned migrations. The ledger uses immutable transaction headers/entries, six wallet buckets, programme control accounts, original-attribution lots, signed compensating allocations, same-transaction projections, tenant RLS, and narrow worker commands. Programme publication, materialized tiers/rewards, reward reservations, tier history, evaluation evidence, and expiry-notification fences are implemented; general audit and privacy workflows remain later phases.
 
 ## Database boundaries
 
@@ -69,7 +69,7 @@ Time-limited, reason-bound, approved grants for platform support. Stores support
 
 - `programmes`: mutable identity and lifecycle container within a programme group.
 - `programme_versions`: immutable JSON configuration plus canonical SHA-256 hash, version number, status, publication timestamp, and creator/approver. Only one published interpretation applies to a transaction; updates create a new row.
-- `tiers` and `rewards`: immutable children of a programme version where relational querying is required. They retain the version ID on historical effects.
+- `programme_tiers` and `programme_rewards`: immutable children of a programme version where relational querying is required. They retain the version ID on historical effects.
 - Drafts may be edited. Published versions, tiers, and reward definitions reject update/delete through privilege and trigger guards.
 
 ## Customer and identity tables
@@ -144,11 +144,13 @@ requested -> reserved -> issued -> captured
                             +-> released (compensating ledger transaction)
 ```
 
-The reservation holds programme version, wallet, reward, points, expiry, idempotency key, and connector execution reference. Coupon plaintext is transmitted only where required; the platform stores a keyed hash and masked suffix. Capture and release are mutually exclusive business effects enforced by unique constraints and row locks.
+The reservation holds programme version, wallet, reward, points, expiry, idempotency key, and an opaque connector execution reference. `reward_reservation_transitions` preserves every state change and binds each value-bearing change to one unique same-wallet ledger transaction. Coupon plaintext is transmitted only where required and is not persisted in the reservation boundary. Capture and release remain mutually exclusive ledger effects under row locks.
 
 ## Tier history and audit
 
-- `tier_memberships` stores effective tier intervals, qualifying spend, programme version, grace start/end, and source calculation. Closing an interval and opening the next is atomic.
+- `tier_decisions` stores append-only qualification, transition, grace, programme-version, idempotency, and explanation evidence.
+- `tier_memberships` stores effective tier intervals and the decision that opened each interval. Closing the current interval and opening the next is atomic.
+- `programme_evaluations` stores immutable live/simulation/tier-review input and result hashes plus explanation evidence.
 - `audit_events` is append-only and records organization, actor, support grant, action, object type/ID, before/after metadata without secrets/PII, IP classification, correlation ID, and timestamp.
 - `manual_adjustment_requests` requires reason, evidence, requester, approver where policy requires, and the resulting compensating ledger transaction.
 

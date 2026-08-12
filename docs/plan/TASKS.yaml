@@ -168,7 +168,7 @@ tasks:
   - id: P6-PROGRAMME-ENGINE
     title: Implement versioned programme rules rewards expiry and tiers
     phase: 6
-    status: in_progress
+    status: complete
     dependencies: [P5-LEDGER-FOUNDATION]
     acceptance:
       - Rosy Rewards runs through immutable published configuration
@@ -182,5 +182,38 @@ tasks:
         docs/product/PROGRAMME_EXAMPLES.md,
         docs/architecture/DATA_MODEL.md,
         docs/api/LEDGER_COMMANDS.md,
+        docs/api/PROGRAMME_ENGINE.md,
+      ]
+    evidence:
+      - pure order evaluator covers product category collection currency market channel segment and date conditions with explicit exclusions and one final integer rounding step
+      - live and simulation paths are identical and store immutable input result hashes and explanation evidence
+      - migration 20260812054204 implements approved draft publish schedule activation supersession materialized tiers and rewards
+      - rolling calendar and lifetime qualification support spend points and order metrics with upgrade downgrade grace and manual decisions
+      - tier decisions are append-only and atomically maintain effective membership intervals under wallet locks
+      - reward reservations retain immutable state transitions and unique same-wallet ledger evidence for reserve capture and compensating release
+      - advance expiry notification scheduling writes one fence and transactional outbox command per lot and lead time
+      - 82 programme pgTAP assertions cover lifecycle hashes immutability RLS idempotency tier history reward capture failure compensation and notification retries
+      - two-session advisory-lock probe proves concurrent identical evaluation attempts return one evidence identity
+      - exact-head GitHub Actions run 31568749748 passed the full baseline and Docker Supabase gate with 260 total pgTAP assertions plus concurrency and property checks
+  - id: P7-WOOCOMMERCE-CONNECTOR
+    title: Complete the production WooCommerce connector and plugin
+    phase: 7
+    status: in_progress
+    dependencies: [P6-PROGRAMME-ENGINE]
+    acceptance:
+      - Completed orders and refunds create exactly one explainable loyalty effect
+      - Reward commands create cancel and reconcile native WooCommerce artifacts idempotently
+      - Blocks and classic checkout degrade safely when the hub is unavailable
+      - Queue dead letters and source reconciliation are operator-visible and recoverable
+    verification:
+      - npm run test
+      - npm run woocommerce:validate
+      - npm run db:test
+    risks: [R-002, R-005]
+    docs:
+      [
+        docs/integrations/WOOCOMMERCE.md,
+        docs/api/WEBHOOKS.md,
+        docs/api/PROGRAMME_ENGINE.md,
       ]
     evidence: []
