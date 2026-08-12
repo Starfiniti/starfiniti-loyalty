@@ -471,6 +471,7 @@ select is_empty(
   ) $$,
   'another tenant owner cannot read the populated report'
 );
+reset role;
 select ok(
   not has_table_privilege(
     'authenticated', 'loyalty_private.programme_evaluations', 'SELECT'
@@ -483,7 +484,6 @@ select ok(
   ),
   'browser users cannot read raw canonical commerce payloads directly'
 );
-reset role;
 select results_eq(
   $$ select count(*)::bigint from loyalty.admin_audit_events
      where organization_id = (
