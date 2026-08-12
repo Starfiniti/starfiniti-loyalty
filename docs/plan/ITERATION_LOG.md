@@ -110,3 +110,12 @@
 - Added a reviewed owner/admin/operator source-order repair that atomically records actor/reason audit evidence and one private `woocommerce.order.reconcile` command.
 - Extended the signed connector envelope and polling route. The plugin reuses its stable local reconciliation primitive to append order, refund, and coupon-capture facts without a central ledger mutation; missing orders dead-letter explicitly.
 - Added 37 pgTAP assertions for privilege, tenant, role, revocation, input, live-connection, idempotency, claim-lease, acknowledgement, private-outbox, and immutable-audit boundaries, plus signed plugin runtime cases.
+- Exact-head run `31585681985` passed that reconciliation slice with a clean Next.js build, ten migrations and 485 pgTAP assertions, and all four real WooCommerce runtime variants.
+
+## 2026-08-12 — Phase 9 tenant-authorized Overview reporting
+
+- Removed hard-coded Overview figures and the preview analytics disclaimer; no synthetic tenant value is rendered as truth.
+- Added a stable, live-membership reporting wrapper scoped to one active organization/workspace/programme assignment and allowlisted 7/30/90-day UTC windows.
+- Defined loyalty members/new members, eligible loyalty spend, repeat-member rate, captured-to-awarded point redemption, and pending/available/reserved point liability from immutable evaluation, ledger, and projection evidence.
+- Kept raw canonical payloads, channel identities, evaluation inputs/explanations, ledger rows/metadata, actors, reasons, and signing material outside the browser response.
+- Added exact text-form reporting contracts, `BigInt` formatting, aligned current/previous chart series, honest empty scope, and 33 pgTAP plus seven unit assertions for precision, boundaries, definitions, minimization, and tenant isolation.

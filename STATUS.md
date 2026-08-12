@@ -22,11 +22,12 @@
 - Connector operations provide tenant-authorized health/queue counts, bounded failure metadata without private payloads, and audited owner/admin/operator replay of dead-letter canonical effects. Outbound coupon dead letters remain inspect-only because points compensation may already exist.
 - Customer owners/admins can preview and confirm signed whole-point adjustments against an exact text-form balance. Credits require expiry, removals show a strong negative-balance warning, and every result is one reason-bound immutable double-entry transaction plus administration audit evidence.
 - Connector owners/admins/operators can review and queue one WooCommerce order reconciliation through an audited private outbox and signed polling route. The plugin re-emits stable source facts idempotently, never edits points directly, and terminates missing orders explicitly.
+- The Overview no longer renders illustrative tenant figures. It reads versioned, tenant/workspace/programme-authorized aggregates for members, eligible loyalty spend, repeat-member rate, captured-to-awarded point redemption, point liability, and bounded 7/30/90-day trends without exposing private source evidence.
 
 ## Partial
 
 - Phases 0 through 7 are complete for the active WooCommerce scope. Shopify Phase 8 is deferred by product-owner direction.
-- Phase 9 is in progress. The authenticated shell, programme editor, customer wallet/ledger reads, safe hub connector operations, reason-bound value adjustments, and live source-reconciliation requests exist; real Overview reporting queries and production deployment remain future slices.
+- Phase 9 is in progress. The authenticated shell, programme editor, customer wallet/ledger reads, safe hub connector operations, reason-bound value adjustments, live source-reconciliation requests, and real Overview reporting exist; wider merchant/customer surfaces and production deployment remain future slices.
 
 ## Broken or unavailable
 
@@ -36,7 +37,7 @@
 
 ## Database migration state
 
-Nine versioned migrations and the seed replay successfully against disposable Supabase/Postgres 17 CI. The tenth source-reconciliation migration validates locally and the expanded suite declares 485 pgTAP assertions plus concurrency/property probes. No persistent or production database has been changed.
+Ten versioned migrations and the seed replay successfully against disposable Supabase/Postgres 17 CI with 485 pgTAP assertions plus concurrency/property probes. The eleventh Overview-reporting migration validates locally and adds 33 declared assertions. No persistent or production database has been changed.
 
 ## Git state
 
@@ -63,10 +64,11 @@ Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 Wo
 - PR exact-head run `31581760825` passed all six jobs for the customer-ledger slice, including the clean Next.js build, seven-migration database verification, and complete WooCommerce matrix.
 - PR exact-head run `31584171545` passed all six jobs for connector operations, including 412 pgTAP assertions and the complete WooCommerce matrix.
 - PR exact-head run `31584351529` passed all six jobs for customer adjustments, including nine migration replays, 448 pgTAP assertions, and the complete WooCommerce matrix.
+- PR exact-head run `31585681985` passed all six jobs for signed source reconciliation, including ten migration replays, 485 pgTAP assertions, and the complete WooCommerce matrix.
 
 ## Next recommended task
 
-Replace illustrative Overview analytics with tenant-authorized reporting queries.
+Complete the next highest-value Phase 9 merchant/customer surface, then prepare production deployment inputs and recovery evidence.
 
 ## Blockers
 

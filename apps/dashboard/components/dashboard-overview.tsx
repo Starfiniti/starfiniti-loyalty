@@ -15,8 +15,16 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import type { MerchantOverviewReportV1 } from "@starfiniti/contracts";
+import { useMemo, useState, useTransition } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { signOut } from "@/app/actions";
+import {
+  formatExactInteger,
+  overviewChartData,
+  overviewMetrics,
+  type OverviewRange,
+} from "@/lib/overview";
 import {
   Area,
   AreaChart,
@@ -26,12 +34,6 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-
-const ranges = {
-  "7": [214, 238, 245, 276, 268, 302, 321],
-  "30": [540, 610, 595, 670, 720, 684, 765, 820, 802, 870],
-  "90": [1420, 1550, 1670, 1620, 1780, 1890, 2010, 2180, 2240, 2390],
-} as const;
 
 const nav = [
   { label: "Overview", icon: LayoutDashboard, active: true, href: "/" },
@@ -45,43 +47,6 @@ const nav = [
   { label: "Campaigns", icon: Megaphone },
   { label: "Referrals", icon: Sparkles },
 ];
-
-const metrics = [
-  {
-    label: "Loyalty members",
-    value: "12,842",
-    delta: "↑ 5.6%",
-    tone: "positive",
-    suffix: "vs prev. 30 days",
-  },
-  {
-    label: "Member revenue",
-    value: "€184,320",
-    delta: "↑ 8.2%",
-    tone: "positive",
-    suffix: "vs prev. 30 days",
-  },
-  {
-    label: "Repeat-purchase rate",
-    value: "38.6%",
-    delta: "↑ 2.1 pts",
-    tone: "positive",
-    suffix: "vs prev. 30 days",
-  },
-  {
-    label: "Redemption rate",
-    value: "14.8%",
-    delta: "↓ 0.4 pts",
-    tone: "negative",
-    suffix: "vs prev. 30 days",
-  },
-  {
-    label: "Points liability",
-    value: "€8,462.70",
-    note: "846,270 pts outstanding",
-    info: true,
-  },
-] as const;
 
 export type DashboardTenant = Readonly<{
   organizationName: string;
@@ -99,18 +64,27 @@ function initials(value: string): string {
     .join("");
 }
 
-export function DashboardOverview({ tenant }: { tenant: DashboardTenant }) {
+export function DashboardOverview({
+  tenant,
+  report,
+  range,
+}: Readonly<{
+  tenant: DashboardTenant;
+  report: MerchantOverviewReportV1 | null;
+  range: OverviewRange;
+}>) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [range, setRange] = useState<keyof typeof ranges>("30");
-
+  const [rangePending, startRangeTransition] = useTransition();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const chartData = useMemo(
-    () =>
-      ranges[range].map((members, index) => ({
-        day: `${index + 1}`,
-        members,
-        previous: Math.round(members * 0.86),
-      })),
-    [range],
+    () => (report ? overviewChartData(report) : []),
+    [report],
+  );
+  const metrics = useMemo(
+    () => (report ? overviewMetrics(report) : []),
+    [report],
   );
 
   return (
@@ -174,7 +148,7 @@ export function DashboardOverview({ tenant }: { tenant: DashboardTenant }) {
         </nav>
         <div className="sidebar-foot">
           <span className="demo-label">
-            Live tenant context · preview analytics
+            Live tenant context · live reporting
           </span>
           <div className="user-card">
             <span className="user-avatar">
@@ -215,10 +189,16 @@ export function DashboardOverview({ tenant }: { tenant: DashboardTenant }) {
             <label className="range-select">
               <span className="sr-only">Date range</span>
               <select
-                value={range}
-                onChange={(event) =>
-                  setRange(event.target.value as keyof typeof ranges)
-                }
+                aria-busy={rangePending}
+                disabled={rangePending}
+                value={String(range)}
+                onChange={(event) => {
+                  const parameters = new URLSearchParams(searchParams);
+                  parameters.set("range", event.target.value);
+                  startRangeTransition(() => {
+                    router.replace(`${pathname}?${parameters.toString()}`);
+                  });
+                }}
               >
                 <option value="7">Last 7 days</option>
                 <option value="30">Last 30 days</option>
@@ -258,92 +238,115 @@ export function DashboardOverview({ tenant }: { tenant: DashboardTenant }) {
             </div>
           </div>
 
-          <div className="preview-banner" role="note">
-            Analytics below are an illustrative preview until the reporting
-            queries are connected. Tenant, workspace, role, and programme scope
-            above are live and RLS-protected.
-          </div>
-
-          <div className="metrics-grid">
-            {metrics.map((metric) => (
-              <article className="metric-card" key={metric.label}>
-                <p>
-                  {metric.label}
-                  {"info" in metric && metric.info ? (
-                    <HelpCircle className="metric-info" aria-hidden="true" />
-                  ) : null}
-                </p>
-                <strong>{metric.value}</strong>
-                {"note" in metric && metric.note ? (
-                  <span className="metric-note">{metric.note}</span>
-                ) : null}
-                {"delta" in metric ? (
-                  <span className={`metric-delta ${metric.tone}`}>
-                    {metric.delta} <em>{metric.suffix}</em>
-                  </span>
-                ) : null}
-              </article>
-            ))}
-          </div>
-
-          <article className="chart-card">
-            <div className="chart-header">
-              <div>
-                <strong>New members</strong>
-                <span>
-                  {range === "30" ? "684" : chartData.at(-1)?.members} this
-                  period · daily
-                </span>
-              </div>
-              <div className="legend">
-                <span>
-                  <i className="current" />
-                  This period
-                </span>
-                <span>
-                  <i />
-                  Previous
-                </span>
-              </div>
+          {report ? (
+            <div className="live-report-banner" role="status">
+              Live tenant, workspace, and programme aggregates as of{" "}
+              {new Intl.DateTimeFormat("en-GB", {
+                dateStyle: "medium",
+                timeStyle: "short",
+                timeZone: "Europe/Ljubljana",
+              }).format(new Date(report.asOf))}
+              . Raw orders, customer identifiers, and ledger rows remain
+              server-only.
             </div>
-            <div className="chart-wrap" aria-label="New members trend chart">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart
-                  data={chartData}
-                  margin={{ top: 8, right: 8, bottom: 0, left: -24 }}
+          ) : (
+            <div className="preview-banner" role="note">
+              Reporting will activate after this organization has an active
+              workspace and programme-group assignment. No illustrative values
+              are shown.
+            </div>
+          )}
+
+          {report ? (
+            <>
+              <div className="metrics-grid">
+                {metrics.map((metric) => (
+                  <article className="metric-card" key={metric.label}>
+                    <p>
+                      {metric.label}
+                      {metric.info ? (
+                        <HelpCircle
+                          className="metric-info"
+                          aria-hidden="true"
+                        />
+                      ) : null}
+                    </p>
+                    <strong>{metric.value}</strong>
+                    {metric.note ? (
+                      <span className="metric-note">{metric.note}</span>
+                    ) : null}
+                    {metric.delta ? (
+                      <span className={`metric-delta ${metric.tone}`}>
+                        {metric.delta} <em>{metric.suffix}</em>
+                      </span>
+                    ) : null}
+                  </article>
+                ))}
+              </div>
+
+              <article className="chart-card">
+                <div className="chart-header">
+                  <div>
+                    <strong>New members</strong>
+                    <span>
+                      {formatExactInteger(report.membersNew)} this period ·
+                      daily UTC buckets
+                    </span>
+                  </div>
+                  <div className="legend">
+                    <span>
+                      <i className="current" />
+                      This period
+                    </span>
+                    <span>
+                      <i />
+                      Previous
+                    </span>
+                  </div>
+                </div>
+                <div
+                  className="chart-wrap"
+                  aria-label="New members trend chart"
                 >
-                  <CartesianGrid vertical={false} stroke="#f1f0ee" />
-                  <XAxis
-                    dataKey="day"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "#a8a29e", fontSize: 11 }}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: "#a8a29e", fontSize: 11 }}
-                  />
-                  <Tooltip />
-                  <Area
-                    type="monotone"
-                    dataKey="previous"
-                    stroke="#d6d3d1"
-                    fill="none"
-                    strokeWidth={2}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="members"
-                    stroke="#4f46e5"
-                    fill="#4f46e5"
-                    fillOpacity={0.08}
-                    strokeWidth={2}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </article>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart
+                      data={chartData}
+                      margin={{ top: 8, right: 8, bottom: 0, left: -24 }}
+                    >
+                      <CartesianGrid vertical={false} stroke="#f1f0ee" />
+                      <XAxis
+                        dataKey="day"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: "#a8a29e", fontSize: 11 }}
+                      />
+                      <YAxis
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: "#a8a29e", fontSize: 11 }}
+                      />
+                      <Tooltip />
+                      <Area
+                        type="monotone"
+                        dataKey="previous"
+                        stroke="#d6d3d1"
+                        fill="none"
+                        strokeWidth={2}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="members"
+                        stroke="#4f46e5"
+                        fill="#4f46e5"
+                        fillOpacity={0.08}
+                        strokeWidth={2}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </article>
+            </>
+          ) : null}
         </section>
       </main>
     </div>

@@ -80,6 +80,7 @@ select is_empty(
           'loyalty.get_customer_adjustment_context(uuid,uuid)',
           'loyalty.get_connector_operation_issues(uuid,integer)',
           'loyalty.get_connector_operation_summaries(uuid)',
+          'loyalty.get_overview_report(uuid,uuid,uuid,integer,timestamp with time zone)',
           'loyalty.publish_programme_version_command(uuid,text,text,uuid)',
           'loyalty.request_connector_reconciliation_command(uuid,text,text,text,uuid)',
           'loyalty.retry_connector_effect_command(uuid,text,text,uuid)',

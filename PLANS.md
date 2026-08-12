@@ -39,15 +39,17 @@ Phase 9 — merchant administration and customer experience. Shopify Phase 8 rem
 - The customer adjustment slice now provides exact integer balance preview, strong removal warnings, explicit confirmation, expiry-bound credits, and owner/admin-only immutable ledger plus audit commands.
 - The source-reconciliation slice now sends reviewed WooCommerce order requests through an audited private outbox and signed polling route; the plugin re-emits source facts idempotently and reports missing orders without a retry storm.
 - Exact-head run `31584351529` passed the customer-adjustment baseline, nine-migration database state with 448 pgTAP assertions, and all four WooCommerce runtime variants.
+- Exact-head run `31585681985` passed the signed source-reconciliation baseline, ten migrations with 485 pgTAP assertions, and all four WooCommerce runtime variants.
+- The Overview-reporting slice removes demo values and supplies bounded tenant/workspace/programme aggregates from immutable evaluation and ledger evidence through exact integer contracts; private source data stays server-only.
 - Exact-head run `31581760825` passed the customer-ledger baseline, database job, and all four WooCommerce runtime variants.
 
 ## Active work
 
-- `P9-MERCHANT-HUB` (in progress): the Auth/RLS shell, audited programme editor, customer wallet/ledger reads, safe connector queue operations, value-changing customer adjustments, and signed source-reconciliation requests are implemented; real reporting follows.
+- `P9-MERCHANT-HUB` (in progress): the Auth/RLS shell, audited programme editor, customer wallet/ledger reads, safe connector queue operations, value-changing customer adjustments, signed source reconciliation, and real Overview reporting are implemented; remaining merchant/customer surfaces follow.
 
 ## Next safe tasks
 
-1. Replace explicitly labelled illustrative Overview analytics with authorized reporting queries.
+1. Audit remaining Phase 9 acceptance gaps and implement the next highest-value merchant/customer surface.
 2. Complete production deployment and recovery evidence when the final infrastructure inputs are available.
 
 ## Dependencies and blockers

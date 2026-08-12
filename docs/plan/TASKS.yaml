@@ -271,4 +271,8 @@ tasks:
       - source-order reconciliation requires explicit review and queues one audited private command for signed plugin delivery rather than changing points or replaying compensated coupon commands
       - the plugin re-reads WooCommerce and idempotently re-emits stable order refund and coupon-capture facts; missing orders terminate explicitly
       - 37 connector-reconciliation pgTAP assertions cover privileges tenant roles revocation inputs disabled connections idempotency claim leases acknowledgements audit immutability and private outbox access
-      - dashboard and contract suites now contain 22 and 33 tests respectively
+      - exact-head run 31585681985 passed the reconciliation baseline ten migrations 485 pgTAP assertions and all four WooCommerce runtime variants
+      - Overview reporting removes illustrative values and exposes exact tenant workspace programme aggregates without private commerce identity evaluation or ledger evidence
+      - current and previous periods are equal UTC windows and 7 30 90 day trends reconcile to new-member totals; spend redemption repeat and liability definitions are explicit
+      - 33 Overview-reporting pgTAP assertions cover privileges tenant roles revocation workspace scope exact bigint values aligned periods source minimization and empty-tenant isolation
+      - dashboard and contract suites now contain 26 and 36 tests respectively

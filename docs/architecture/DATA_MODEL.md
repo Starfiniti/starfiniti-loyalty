@@ -161,6 +161,7 @@ The reservation holds programme version, wallet, reward, points, expiry, idempot
 - `manual_adjustment_requests` requires reason, evidence, requester, approver where policy requires, and the resulting compensating ledger transaction.
 - `admin_audit_events` currently records programme draft/publication/scheduling and connector-effect replay commands with request-derived Auth actor, canonical request hash, idempotency key, correlation ID, resource ID, and minimized metadata. Rows are immutable; owner/admin/auditor reads remain tenant scoped.
 - Merchant customer adjustment resolves an active wallet plus exact published programme version under a live owner/admin check, then appends `manual_adjustment` entries between the programme-group adjustment control account and wallet available account. Credits create expiring lots; debits append FIFO adjustment allocations for existing lots and may leave an explicit negative available balance. The matching `admin_audit_events` row links its command correlation to the immutable ledger correlation.
+- Merchant Overview reporting is a read model, not a mutable analytics truth table. It joins one authorized workspace/programme scope to scoped wallets, immutable live evaluation evidence, and wallet-side ledger/projection rows; returns exact text-form aggregates and bounded UTC daily buckets; and withholds private evaluation, commerce, identity, and ledger evidence.
 
 ## RLS and privileges
 

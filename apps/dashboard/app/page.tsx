@@ -1,9 +1,17 @@
 import { DashboardOverview } from "@/components/dashboard-overview";
 import { redirect } from "next/navigation";
 import { signOut } from "./actions";
+import { parseOverviewRange } from "@/lib/overview";
+import { getOverviewReport } from "@/lib/server/overview";
 import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: Readonly<{
+  searchParams: Promise<{ range?: string | string[] }>;
+}>) {
+  const parameters = await searchParams;
+  const range = parseOverviewRange(parameters.range);
   const state = await getAuthenticatedTenantState();
   if (state.kind === "unauthenticated") redirect("/login");
 
@@ -29,8 +37,11 @@ export default async function HomePage() {
   }
 
   const { context } = state;
+  const report = await getOverviewReport(context, range);
   return (
     <DashboardOverview
+      range={range}
+      report={report}
       tenant={{
         organizationName: context.organization.name,
         workspaceName: context.workspace?.name ?? "No active workspace",

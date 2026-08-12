@@ -136,6 +136,13 @@ Circular dependencies are forbidden. Platform adapters translate at the edge; do
 3. The signed command poll delivers only the command identity, connection, topic, timestamp, and bounded order instruction. The plugin re-reads WooCommerce and appends stable local source facts; it never edits central points.
 4. Existing local event keys and central delivery/effect fences make retries idempotent. Missing orders terminate explicitly, transient plugin failures retry with a bounded delay, and the durable command retains its acknowledgement state.
 
+### Merchant Overview reporting
+
+1. The server component resolves a live tenant/workspace/programme group and accepts only a bounded 7/30/90-day URL range.
+2. A stable security-definer read wrapper rechecks membership plus active workspace/group scope, then aggregates private programme evaluations, canonical source linkage, wallet projections, and immutable ledger entries.
+3. Only exact text-form totals, basis-point rates, currency metadata, and a bounded daily series cross the Data API. Raw orders, identities, evaluations, entries, actors, reasons, and signing references remain private.
+4. The client formats integers with `BigInt` and labels definitions precisely: eligible loyalty spend, repeat members with two or more eligible orders, captured divided by awarded points, and point liability. Missing scope produces an honest empty setup state rather than demo data.
+
 ### Merchant customer adjustment
 
 1. The customer page requests an owner/admin-only text-form available balance so browser preview retains full `bigint` precision. The UI requires reason, review, confirmation, and future expiry for credits; removals receive a stronger warning.

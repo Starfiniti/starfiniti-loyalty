@@ -104,6 +104,7 @@ select is_empty(
           'get_customer_adjustment_context',
           'get_connector_operation_issues',
           'get_connector_operation_summaries',
+          'get_overview_report',
           'publish_programme_version_command',
           'request_connector_reconciliation_command',
           'retry_connector_effect_command',
