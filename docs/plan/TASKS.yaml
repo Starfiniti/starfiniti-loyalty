@@ -310,3 +310,4 @@ tasks:
       - exact-head run 31604654919 passed the storefront-budget baseline including bounded zero-request account and cart rendering in all four localized WooCommerce runtime variants
       - English and Slovenian hosted customer copy are separate revisioned RLS-scoped locale rows saved only by a live owner or admin command whose immutable audit metadata omits translated text
       - 33 experience-translation pgTAP assertions cover grants direct DML denial bounded markup-free copy independent locale revisions exact retries conflicts role revocation cross-tenant and mixed-scope denial RLS and audit immutability
+      - exact-head run 31606226276 passed the hosted-translation baseline 114 unit tests seventeen migrations 726 pgTAP assertions concurrency and property probes and all four localized WooCommerce runtime variants

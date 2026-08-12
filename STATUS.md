@@ -47,7 +47,7 @@
 
 ## Database migration state
 
-Sixteen versioned migrations and the seed replay successfully against disposable Supabase/Postgres 17 CI with 693 pgTAP assertions plus concurrency/property probes. No persistent or production database has been changed.
+Seventeen versioned migrations and the seed replay successfully against disposable Supabase/Postgres 17 CI with 726 pgTAP assertions plus concurrency/property probes. No persistent or production database has been changed.
 
 ## Git state
 
@@ -87,6 +87,7 @@ Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 Wo
 - PR exact-head run `31601351946` passed all six jobs for filtered customer activity, including 109 unit tests, fifteen migration replays, 654 pgTAP assertions, and the complete localized WooCommerce matrix.
 - PR exact-head run `31603764054` passed all six jobs for controlled bulk customer adjustments, including sixteen migration replays, 693 pgTAP assertions, concurrency/property probes, and the complete localized WooCommerce matrix.
 - PR exact-head run `31604654919` passed all six jobs for enforced storefront budgets, including zero-request bounded account/cart rendering in all four localized WooCommerce runtime variants plus the unchanged sixteen-migration, 693-assertion database gate.
+- PR exact-head run `31606226276` passed all six jobs for hosted customer translations, including 114 unit tests, seventeen migration replays, 726 pgTAP assertions, concurrency/property probes, and the complete localized WooCommerce matrix.
 
 ## Next recommended task
 

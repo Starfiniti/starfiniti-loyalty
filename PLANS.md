@@ -60,6 +60,7 @@ Phase 9 — merchant administration and customer experience. Shopify Phase 8 rem
 - The bulk customer-adjustment slice caps uniform owner/admin operations at 50 customers and requires a read-only exact balance fingerprint plus explicit approval before an atomic, idempotent batch of per-customer immutable ledger transactions and aggregate audit evidence.
 - WooCommerce customer surfaces retain a zero-connector-JavaScript, zero-connector-CSS, zero-render-hub-request budget with bounded native server markup and runtime-matrix enforcement.
 - Hosted customer copy now supports independently revisioned English and Slovenian launch locales through bounded RLS-scoped owner/admin management and a live locale preview; unsupported locales fail closed.
+- Exact-head run `31606226276` passed the hosted-translation baseline, seventeen migrations with 726 pgTAP assertions plus concurrency/property probes, and all four localized WooCommerce runtime variants.
 - Exact-head run `31601351946` passed the filtered-customer baseline, fifteen migrations with 654 pgTAP assertions plus concurrency/property probes, and all four localized WooCommerce runtime variants.
 - Exact-head run `31581760825` passed the customer-ledger baseline, database job, and all four WooCommerce runtime variants.
 
