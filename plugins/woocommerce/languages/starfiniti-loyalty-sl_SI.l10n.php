@@ -6,6 +6,8 @@ return [
     'language' => 'sl_SI',
     'plural-forms' => 'nplurals=4; plural=(n%100==1 ? 1 : n%100==2 ? 2 : n%100==3 || n%100==4 ? 3 : 0);',
     'messages' => [
+        'Open loyalty account' => 'Odpri račun zvestobe',
+        'View your live points, tier, and available rewards in the secure loyalty hub.' => 'Oglejte si trenutne točke, stopnjo in razpoložljive nagrade v varnem središču zvestobe.',
         'A signing key is required for the initial connection.' => 'Za začetno povezavo je potreben ključ za podpisovanje.',
         'Activate Starfiniti Loyalty separately on each WooCommerce site.' => 'Vtičnik Starfiniti Loyalty aktivirajte ločeno na vsakem spletnem mestu WooCommerce.',
         'Base64 signing key' => 'Ključ za podpisovanje Base64',

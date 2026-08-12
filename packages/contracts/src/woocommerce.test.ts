@@ -3,8 +3,11 @@ import {
   canonicalCommerceEventV1,
   merchantRetryConnectorEffectCommandV1,
   merchantRequestConnectorReconciliationCommandV1,
+  signWooCommerceCustomerClaim,
   signWooCommerceDelivery,
+  verifyWooCommerceCustomerClaim,
   verifyWooCommerceDelivery,
+  wooCommerceCustomerClaimV1,
   wooCommerceCouponCapturedPayloadV1,
   wooCommerceCouponCommandEnvelopeV1,
   wooCommerceConnectorCommandEnvelopeV1,
@@ -352,6 +355,85 @@ describe("WooCommerce raw-body signatures", () => {
         maxBodyBytes: 8,
       }),
     ).toEqual({ ok: false, reason: "body_too_large" });
+  });
+});
+
+describe("WooCommerce customer claims", () => {
+  const claim = {
+    connectionId,
+    externalCustomerId: "42",
+    issuedAt: timestamp,
+    nonce: "1cedd847-79f1-4393-a141-92d20efb7a0c",
+    keyVersion: "v1",
+  } as const;
+
+  function signedClaim() {
+    return {
+      ...claim,
+      signature: signWooCommerceCustomerClaim({ claim, secret }),
+    };
+  }
+
+  it("accepts only a bounded registered-customer capability", () => {
+    expect(wooCommerceCustomerClaimV1.safeParse(signedClaim()).success).toBe(
+      true,
+    );
+    expect(
+      wooCommerceCustomerClaimV1.safeParse({
+        ...signedClaim(),
+        externalCustomerId: "customer@example.test",
+      }).success,
+    ).toBe(false);
+    expect(
+      wooCommerceCustomerClaimV1.safeParse({
+        ...signedClaim(),
+        email: "customer@example.test",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("verifies the exact current claim", () => {
+    expect(
+      verifyWooCommerceCustomerClaim({
+        claim: signedClaim(),
+        secret,
+        nowMs: Number(timestamp) * 1000,
+      }),
+    ).toEqual({ ok: true, issuedAt: Number(timestamp) });
+  });
+
+  it("binds the signature to customer, connection, nonce, and key version", () => {
+    for (const changed of [
+      { externalCustomerId: "43" },
+      { connectionId: "5abf9309-a530-489f-a63f-51130c4fc02d" },
+      { nonce: "7b812fe2-fe36-4d28-bb69-a4106759843e" },
+      { keyVersion: "v2" },
+    ]) {
+      expect(
+        verifyWooCommerceCustomerClaim({
+          claim: { ...signedClaim(), ...changed },
+          secret,
+          nowMs: Number(timestamp) * 1000,
+        }),
+      ).toEqual({ ok: false, reason: "invalid_signature" });
+    }
+  });
+
+  it("expires after five minutes in either clock direction", () => {
+    expect(
+      verifyWooCommerceCustomerClaim({
+        claim: signedClaim(),
+        secret,
+        nowMs: (Number(timestamp) + 301) * 1000,
+      }),
+    ).toEqual({ ok: false, reason: "stale_timestamp" });
+    expect(
+      verifyWooCommerceCustomerClaim({
+        claim: signedClaim(),
+        secret,
+        nowMs: (Number(timestamp) - 301) * 1000,
+      }),
+    ).toEqual({ ok: false, reason: "stale_timestamp" });
   });
 });
 

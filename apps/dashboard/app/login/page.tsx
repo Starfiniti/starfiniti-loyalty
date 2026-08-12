@@ -16,10 +16,10 @@ export default async function LoginPage({
           SF
         </div>
         <p className="login-eyebrow">Starfiniti Loyalty</p>
-        <h1 id="login-title">Merchant sign in</h1>
+        <h1 id="login-title">Account sign in</h1>
         <p className="login-intro">
-          Use the account provisioned for your organization. Self-service
-          sign-up is disabled on this private hub.
+          Use the account provisioned for your organization or customer loyalty
+          access. Self-service sign-up is disabled on this private hub.
         </p>
         <LoginForm
           initialMessage={
@@ -30,8 +30,9 @@ export default async function LoginPage({
           nextPath={nextPath}
         />
         <p className="login-footnote">
-          Sessions are verified by self-hosted Supabase Auth. Organization
-          access is checked against live database membership on every request.
+          Sessions are verified by self-hosted Supabase Auth. Merchant and
+          customer access are checked against live database links on every
+          request.
         </p>
       </section>
     </main>

@@ -103,6 +103,17 @@ final class Plugin
         }
         $coupons = self::customerCoupons(get_current_user_id());
         echo '<h2>' . esc_html__('Loyalty rewards', 'starfiniti-loyalty') . '</h2>';
+        $accountLink = CustomerClaim::linkForUser(get_current_user_id());
+        if ('' !== $accountLink) {
+            echo '<p>' . esc_html__(
+                'View your live points, tier, and available rewards in the secure loyalty hub.',
+                'starfiniti-loyalty'
+            ) . '</p>';
+            echo '<p><a class="button" rel="noreferrer" href="' . esc_url($accountLink) . '">' . esc_html__(
+                'Open loyalty account',
+                'starfiniti-loyalty'
+            ) . '</a></p>';
+        }
         if ([] === $coupons) {
             echo '<p>' . esc_html__('No active loyalty coupons are available yet.', 'starfiniti-loyalty') . '</p>';
             return;

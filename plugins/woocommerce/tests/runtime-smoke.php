@@ -3,8 +3,10 @@
 use Automattic\WooCommerce\Utilities\OrderUtil;
 use Automattic\WooCommerce\StoreApi\Utilities\CartController;
 use Starfiniti\Loyalty\Commands;
+use Starfiniti\Loyalty\CustomerClaim;
 use Starfiniti\Loyalty\Outbox;
 use Starfiniti\Loyalty\Plugin;
+use Starfiniti\Loyalty\Settings;
 
 defined('ABSPATH') || exit(1);
 
@@ -117,6 +119,41 @@ update_option(
     'https://unreachable.invalid/api/v1/integrations/woocommerce/events',
     false
 );
+$claimConnectionId = '62000000-0000-4000-8000-000000000001';
+$claimKeyVersion = 'v1';
+$claimSigningKey = str_repeat("\x42", 32);
+$encryptSigningKey = new ReflectionMethod(Settings::class, 'encrypt');
+$encryptSigningKey->setAccessible(true);
+$encryptedSigningKey = $encryptSigningKey->invoke(null, base64_encode($claimSigningKey));
+starfiniti_runtime_assert(is_string($encryptedSigningKey), 'runtime can protect claim signing material');
+update_option('starfiniti_loyalty_connection_id', $claimConnectionId, false);
+update_option('starfiniti_loyalty_key_version', $claimKeyVersion, false);
+update_option('starfiniti_loyalty_signing_key_encrypted', $encryptedSigningKey, false);
+$claimLink = CustomerClaim::linkForUser((int) $customerId);
+$claimQuery = [];
+parse_str((string) wp_parse_url($claimLink, PHP_URL_QUERY), $claimQuery);
+$claimMessage = implode("\n", [
+    'starfiniti-woocommerce-customer-claim-v1',
+    $claimConnectionId,
+    (string) $customerId,
+    (string) ($claimQuery['issuedAt'] ?? ''),
+    (string) ($claimQuery['nonce'] ?? ''),
+    $claimKeyVersion,
+]);
+starfiniti_runtime_assert(
+    str_starts_with($claimLink, 'https://unreachable.invalid/claim/woocommerce?')
+    && ($claimQuery['connectionId'] ?? null) === $claimConnectionId
+    && ($claimQuery['externalCustomerId'] ?? null) === (string) $customerId
+    && ($claimQuery['keyVersion'] ?? null) === $claimKeyVersion
+    && 1 === preg_match('/^\d{10}$/', (string) ($claimQuery['issuedAt'] ?? ''))
+    && 1 === preg_match('/^[0-9a-f-]{36}$/', (string) ($claimQuery['nonce'] ?? ''))
+    && hash_equals(
+        hash_hmac('sha256', $claimMessage, $claimSigningKey),
+        (string) ($claimQuery['signature'] ?? '')
+    )
+    && ! array_key_exists('email', $claimQuery),
+    'customer claim is short-lived, channel-bound, PII-free, and signed locally'
+);
 $checkoutHttpRequests = 0;
 $rejectCheckoutHttp = static function ($preempt) use (&$checkoutHttpRequests) {
     $checkoutHttpRequests++;
@@ -137,6 +174,8 @@ starfiniti_runtime_assert(
 );
 starfiniti_runtime_assert(
     str_contains($accountMarkup, '<h2>')
+    && str_contains($accountMarkup, '/claim/woocommerce?')
+    && str_contains($accountMarkup, 'rel="noreferrer"')
     && str_contains($accountMarkup, esc_html($coupon->get_code()))
     && substr_count($accountMarkup, '<li>') <= 20
     && strlen($accountMarkup) <= 32768

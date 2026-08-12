@@ -480,6 +480,28 @@ export type WooCommerceSignatureResult =
   | { ok: true; bodySha256: string; timestamp: number }
   | { ok: false; reason: WooCommerceSignatureFailure };
 
+export const wooCommerceCustomerClaimV1 = z
+  .object({
+    connectionId: z.uuid(),
+    externalCustomerId: z.string().regex(/^[1-9][0-9]{0,19}$/u),
+    issuedAt: z.string().regex(/^\d{10}$/u),
+    nonce: z.uuid(),
+    keyVersion: z.string().regex(/^v[1-9][0-9]*$/u),
+    signature: z.string().regex(/^[a-f0-9]{64}$/u),
+  })
+  .strict();
+
+export type WooCommerceCustomerClaimV1 = z.infer<
+  typeof wooCommerceCustomerClaimV1
+>;
+
+export type WooCommerceCustomerClaimResult =
+  | { ok: true; issuedAt: number }
+  | {
+      ok: false;
+      reason: "invalid_claim" | "invalid_signature" | "stale_timestamp";
+    };
+
 const HEX_SHA256 = /^[a-f0-9]{64}$/u;
 const SAFE_TOKEN = /^[A-Za-z0-9._:-]{1,255}$/u;
 
@@ -524,6 +546,56 @@ export function signWooCommerceDelivery(input: {
     .update(message)
     .digest("hex");
   return { bodySha256, signature };
+}
+
+export function buildWooCommerceCustomerClaimMessage(
+  claim: Omit<WooCommerceCustomerClaimV1, "signature">,
+): string {
+  return [
+    "starfiniti-woocommerce-customer-claim-v1",
+    claim.connectionId,
+    claim.externalCustomerId,
+    claim.issuedAt,
+    claim.nonce,
+    claim.keyVersion,
+  ].join("\n");
+}
+
+export function signWooCommerceCustomerClaim(input: {
+  claim: Omit<WooCommerceCustomerClaimV1, "signature">;
+  secret: Uint8Array;
+}): string {
+  return createHmac("sha256", input.secret)
+    .update(buildWooCommerceCustomerClaimMessage(input.claim))
+    .digest("hex");
+}
+
+export function verifyWooCommerceCustomerClaim(input: {
+  claim: WooCommerceCustomerClaimV1;
+  secret: Uint8Array;
+  nowMs?: number;
+  maxClockSkewSeconds?: number;
+}): WooCommerceCustomerClaimResult {
+  const parsed = wooCommerceCustomerClaimV1.safeParse(input.claim);
+  if (!parsed.success) return { ok: false, reason: "invalid_claim" };
+
+  const issuedAt = Number(parsed.data.issuedAt);
+  const maxClockSkewSeconds = input.maxClockSkewSeconds ?? 300;
+  const nowSeconds = Math.floor((input.nowMs ?? Date.now()) / 1000);
+  if (Math.abs(nowSeconds - issuedAt) > maxClockSkewSeconds) {
+    return { ok: false, reason: "stale_timestamp" };
+  }
+
+  const { signature, ...claim } = parsed.data;
+  const expectedSignature = signWooCommerceCustomerClaim({
+    claim,
+    secret: input.secret,
+  });
+  if (!safeHexEqual(signature, expectedSignature)) {
+    return { ok: false, reason: "invalid_signature" };
+  }
+
+  return { ok: true, issuedAt };
 }
 
 export function verifyWooCommerceDelivery(input: {

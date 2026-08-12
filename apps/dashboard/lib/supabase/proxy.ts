@@ -6,6 +6,7 @@ function isPublicPage(pathname: string): boolean {
   return (
     pathname === "/login" ||
     pathname.startsWith("/auth/") ||
+    pathname.startsWith("/claim/") ||
     pathname.startsWith("/loyalty/")
   );
 }
@@ -22,6 +23,7 @@ function responseWithAuthState(
   });
   response.headers.set("Cache-Control", "private, no-store");
   response.headers.set("Vary", "Cookie");
+  response.headers.set("Referrer-Policy", "no-referrer");
   return response;
 }
 
@@ -82,5 +84,14 @@ export async function updateSupabaseSession(
 
   response.headers.set("Cache-Control", "private, no-store");
   response.headers.set("Vary", "Cookie");
+  if (
+    request.nextUrl.pathname === "/login" ||
+    request.nextUrl.pathname.startsWith("/claim/")
+  ) {
+    response.headers.set("Referrer-Policy", "no-referrer");
+  }
+  if (request.nextUrl.pathname.startsWith("/claim/")) {
+    response.headers.set("X-Robots-Tag", "noindex, nofollow");
+  }
   return response;
 }

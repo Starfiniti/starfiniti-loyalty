@@ -13,6 +13,7 @@ describe("safe application navigation", () => {
     "//attacker.example/path",
     "/\\attacker.example/path",
     "/login?next=/login",
+    `/${"a".repeat(4096)}`,
     null,
   ])("rejects redirect input %s", (value) => {
     expect(safeAppPath(value)).toBe("/");

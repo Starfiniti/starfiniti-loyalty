@@ -72,6 +72,9 @@ msgstr ""
 msgid "No active loyalty coupons are available yet."
 msgstr ""
 
+msgid "Open loyalty account"
+msgstr ""
+
 msgid "Occurred (UTC)"
 msgstr ""
 
@@ -115,6 +118,9 @@ msgid "Undelivered event evidence is retained until delivery or operator resolut
 msgstr ""
 
 msgid "Use a valid HTTPS hub endpoint."
+msgstr ""
+
+msgid "View your live points, tier, and available rewards in the secure loyalty hub."
 msgstr ""
 
 msgid "You do not have permission to manage loyalty settings."
