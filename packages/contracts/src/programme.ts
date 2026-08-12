@@ -95,6 +95,47 @@ export const scheduleProgrammeVersionCommandV1 =
     scheduledFor: timestamp,
   });
 
+const merchantCommandIdentityV1 = z.object({
+  version: z.literal("1"),
+  idempotencyKey: operationKey,
+  correlationId: z.uuid(),
+});
+
+export const merchantCreateProgrammeDraftCommandV1 = merchantCommandIdentityV1
+  .extend({
+    programmeId: z.uuid(),
+    configuration: programmeDefinitionV1,
+  })
+  .strict();
+
+export const merchantPublishProgrammeVersionCommandV1 =
+  merchantCommandIdentityV1
+    .extend({
+      programmeVersionId: z.uuid(),
+      expectedConfigurationSha256: sha256Hex,
+    })
+    .strict();
+
+export const merchantScheduleProgrammeVersionCommandV1 =
+  merchantPublishProgrammeVersionCommandV1
+    .extend({
+      scheduledFor: timestamp,
+    })
+    .strict();
+
+export const merchantProgrammeDraftResultV1 = z.object({
+  resourceId: z.uuid(),
+  outcome: z.enum(["created", "duplicate"]),
+  configurationSha256: sha256Hex,
+  versionNumber: z.number().int().positive(),
+});
+
+export const merchantProgrammePublishResultV1 = z.object({
+  resourceId: z.uuid(),
+  outcome: z.enum(["created", "duplicate"]),
+  effectiveAt: timestamp,
+});
+
 export const programmeEvaluationEvidenceV1 = z.object({
   version: z.literal("1"),
   organizationId: positiveBigintString,
@@ -154,6 +195,15 @@ export const programmeCommandResultV1 = z.object({
 });
 
 export type ProgrammeDefinitionV1 = z.infer<typeof programmeDefinitionV1>;
+export type MerchantCreateProgrammeDraftCommandV1 = z.infer<
+  typeof merchantCreateProgrammeDraftCommandV1
+>;
+export type MerchantPublishProgrammeVersionCommandV1 = z.infer<
+  typeof merchantPublishProgrammeVersionCommandV1
+>;
+export type MerchantScheduleProgrammeVersionCommandV1 = z.infer<
+  typeof merchantScheduleProgrammeVersionCommandV1
+>;
 export type ProgrammeEvaluationEvidenceV1 = z.infer<
   typeof programmeEvaluationEvidenceV1
 >;

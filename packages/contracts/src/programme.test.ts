@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   createProgrammeDraftCommandV1,
+  merchantCreateProgrammeDraftCommandV1,
+  merchantPublishProgrammeVersionCommandV1,
   programmeDefinitionV1,
   programmeEvaluationEvidenceV1,
   rewardTransitionCommandV1,
@@ -60,6 +62,46 @@ describe("programme contracts", () => {
         programmeDefinitionV1.safeParse({ ...definition, tiers }).success,
       ).toBe(false);
     }
+  });
+
+  it("keeps merchant commands on public IDs with server-derived authority", () => {
+    expect(
+      merchantCreateProgrammeDraftCommandV1.safeParse({
+        version: "1",
+        programmeId: "71000000-0000-4000-8000-000000000101",
+        configuration: definition,
+        idempotencyKey: "programme:draft:71000000",
+        correlationId: "71000000-0000-4000-8000-000000000201",
+      }).success,
+    ).toBe(true);
+    expect(
+      merchantPublishProgrammeVersionCommandV1.safeParse({
+        version: "1",
+        programmeVersionId: "71000000-0000-4000-8000-000000000102",
+        expectedConfigurationSha256: "a".repeat(64),
+        idempotencyKey: "programme:publish:71000000",
+        correlationId: "71000000-0000-4000-8000-000000000202",
+      }).success,
+    ).toBe(true);
+    expect(
+      merchantPublishProgrammeVersionCommandV1.safeParse({
+        version: "1",
+        programmeVersionId: "71000000-0000-4000-8000-000000000102",
+        expectedConfigurationSha256: "a".repeat(64),
+        idempotencyKey: "programme:publish:forged",
+        correlationId: "71000000-0000-4000-8000-000000000202",
+        approvedByUserId: "71000000-0000-4000-8000-000000000001",
+      }).success,
+    ).toBe(false);
+    expect(
+      merchantCreateProgrammeDraftCommandV1.safeParse({
+        version: "1",
+        programmeId: "3",
+        configuration: definition,
+        idempotencyKey: "programme:draft:bad",
+        correlationId: "71000000-0000-4000-8000-000000000201",
+      }).success,
+    ).toBe(false);
   });
 
   it("requires stable hashes around evaluation evidence", () => {

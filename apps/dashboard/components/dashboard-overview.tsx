@@ -250,14 +250,9 @@ export function DashboardOverview({ tenant }: { tenant: DashboardTenant }) {
               </p>
             </div>
             <div className="heading-actions">
-              <button
-                className="primary"
-                type="button"
-                disabled
-                title="The programme editor is the next implementation slice"
-              >
-                Programme editor next
-              </button>
+              <a className="primary" href="/programme">
+                Manage programme
+              </a>
             </div>
           </div>
 
