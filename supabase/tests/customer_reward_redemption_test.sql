@@ -216,6 +216,7 @@ select results_eq(
   array['reserved'::text],
   'the customer request reaches reserved only after ledger evidence exists'
 );
+reset role;
 select results_eq(
   $$ select count(*)::bigint - (select reservations from redemption_before)
      from loyalty.reward_reservations $$,
@@ -290,6 +291,7 @@ select ok(
     !~* 'coupon|external|customer_id|organization',
   'the browser result exposes no coupon, external identity, or tenant authority'
 );
+set local role authenticated;
 select results_eq(
   $$ select outcome from loyalty.redeem_my_reward(
        '91000000-0000-4000-8000-000000000160', 'five-off',
@@ -306,6 +308,7 @@ select results_eq(
   $$ select reservation_id from redemption_result $$,
   'an exact retry returns the same reservation identity'
 );
+reset role;
 select results_eq(
   $$ select count(*)::bigint - (select reservations from redemption_before),
             (select count(*)::bigint - (select transactions from redemption_before)
@@ -316,6 +319,7 @@ select results_eq(
   $$ values (1::bigint, 1::bigint, 1::bigint) $$,
   'retries create no duplicate reservation, ledger effect, or connector command'
 );
+set local role authenticated;
 select throws_ok(
   $$ select * from loyalty.redeem_my_reward(
        '91000000-0000-4000-8000-000000000160', 'shipping',
@@ -340,6 +344,7 @@ select throws_ok(
   '23514', 'insufficient available points',
   'insufficient points reject the entire redemption transaction'
 );
+reset role;
 select results_eq(
   $$ select count(*)::bigint from loyalty.reward_reservations
      where idempotency_key =
@@ -347,6 +352,7 @@ select results_eq(
   array[0::bigint],
   'an insufficient-balance failure leaves no requested reservation behind'
 );
+set local role authenticated;
 select throws_ok(
   $$ select * from loyalty.redeem_my_reward(
        '91000000-0000-4000-8000-000000000160', 'custom-only',
@@ -470,6 +476,7 @@ select throws_ok(
   '22023', 'invalid reward redemption request',
   'missing request identity is rejected'
 );
+reset role;
 select results_eq(
   $$ select count(*)::bigint from loyalty.reward_reservations
      where idempotency_key like 'customer-reward:%' $$,
