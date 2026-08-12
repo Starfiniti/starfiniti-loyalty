@@ -56,3 +56,4 @@
 - Added tenant-scoped, revisioned customer-experience tokens with accessible color validation, local font stacks, responsive member/guest previews, owner/admin-only idempotent saves, and immutable audit evidence; executable CSS and remote assets remain excluded.
 - Added allowlisted customer timeline filters for order earnings/refunds, reward lifecycle, release/expiry, and manual adjustments over the existing bounded immutable ledger read model.
 - Added owner/admin bulk point adjustments for 2–50 customers with an exact read-only dry run, projected balances, explicit fingerprint approval, deterministic balance locking, atomic per-customer immutable ledger effects, idempotent batch evidence, and aggregate audit attribution.
+- Enforced zero-JavaScript, zero-CSS, zero-render-request WooCommerce storefront budgets with bounded server-rendered account/cart markup and real hub-outage assertions in every supported runtime cell.

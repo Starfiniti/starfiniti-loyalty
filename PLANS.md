@@ -58,6 +58,7 @@ Phase 9 — merchant administration and customer experience. Shopify Phase 8 rem
 - Exact-head run `31600742177` passed the controlled-theme baseline, fifteen migrations with 654 pgTAP assertions plus concurrency/property probes, and all four localized WooCommerce runtime variants.
 - The customer activity slice adds safe URL filters and honest filtered counts/empty states for orders/refunds, rewards, release/expiry, and adjustments without expanding the existing 100-entry minimized ledger response.
 - The bulk customer-adjustment slice caps uniform owner/admin operations at 50 customers and requires a read-only exact balance fingerprint plus explicit approval before an atomic, idempotent batch of per-customer immutable ledger transactions and aggregate audit evidence.
+- WooCommerce customer surfaces retain a zero-connector-JavaScript, zero-connector-CSS, zero-render-hub-request budget with bounded native server markup and runtime-matrix enforcement.
 - Exact-head run `31601351946` passed the filtered-customer baseline, fifteen migrations with 654 pgTAP assertions plus concurrency/property probes, and all four localized WooCommerce runtime variants.
 - Exact-head run `31581760825` passed the customer-ledger baseline, database job, and all four WooCommerce runtime variants.
 

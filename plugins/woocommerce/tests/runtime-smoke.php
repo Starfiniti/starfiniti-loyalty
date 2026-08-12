@@ -125,6 +125,33 @@ $rejectCheckoutHttp = static function ($preempt) use (&$checkoutHttpRequests) {
 add_filter('pre_http_request', $rejectCheckoutHttp, 10, 1);
 
 wp_set_current_user((int) $customerId);
+ob_start();
+Plugin::renderAccount();
+$accountMarkup = (string) ob_get_clean();
+ob_start();
+Plugin::renderCartNotice();
+$cartMarkup = (string) ob_get_clean();
+starfiniti_runtime_assert(
+    0 === $checkoutHttpRequests,
+    'customer account and cart loyalty rendering make no hub request during outage'
+);
+starfiniti_runtime_assert(
+    str_contains($accountMarkup, '<h2>')
+    && str_contains($accountMarkup, esc_html($couponCode))
+    && substr_count($accountMarkup, '<li>') <= 20
+    && strlen($accountMarkup) <= 32768
+    && ! str_contains($accountMarkup, '<script')
+    && ! str_contains($accountMarkup, '<style'),
+    'customer account loyalty markup is semantic, bounded, and asset-free'
+);
+starfiniti_runtime_assert(
+    str_contains($cartMarkup, wc_get_account_endpoint_url('loyalty'))
+    && strlen($cartMarkup) <= 4096
+    && ! str_contains($cartMarkup, '<script')
+    && ! str_contains($cartMarkup, '<style'),
+    'cart loyalty notice is bounded, linked, and asset-free'
+);
+
 $cartController = new CartController();
 $cartController->load_cart();
 $cart = $cartController->get_cart_instance();

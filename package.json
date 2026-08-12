@@ -32,7 +32,7 @@
     "ci:validate": "node scripts/validate-workflows.mjs",
     "architecture:validate": "node scripts/validate-architecture.mjs",
     "accessibility:validate": "node scripts/validate-accessibility.mjs",
-    "woocommerce:validate": "node scripts/validate-woocommerce.mjs && node scripts/validate-woocommerce-localization.mjs",
+    "woocommerce:validate": "node scripts/validate-woocommerce.mjs && node scripts/validate-woocommerce-localization.mjs && node scripts/validate-woocommerce-storefront.mjs",
     "woocommerce:localization:validate": "node scripts/validate-woocommerce-localization.mjs",
     "woocommerce:package": "node scripts/package-woocommerce.mjs",
     "woocommerce:runtime:start": "wp-env start --config .wp-env.woocommerce.json",

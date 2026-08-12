@@ -33,6 +33,18 @@ WooCommerce is a thin connector. It uses HTTPS, least-privilege credentials, sig
 - `languages/starfiniti-loyalty.pot` is the canonical translator template and must exactly match source strings. `npm run woocommerce:localization:validate` rejects missing/stale messages, missing customer strings, empty translations, and placeholder drift.
 - The package currently bundles `sl_SI` in WordPress's `.l10n.php` format. The customer My Account navigation, reward/coupon copy, and connector administration follow the active WordPress locale; absent translations fall back to English.
 
+## Storefront budgets
+
+The connector's production customer surfaces deliberately use WooCommerce's native server-rendered markup and coupon field. The enforced Phase 9 budgets are:
+
+- 0 bytes of connector storefront JavaScript and 0 bytes of connector CSS;
+- 0 hub requests while rendering My Account or cart loyalty surfaces, validating coupons, or completing checkout;
+- at most 20 active reward coupons in one account response;
+- at most 32 KiB of account loyalty markup and 4 KiB for the cart notice in the real runtime smoke; and
+- at most 12 KiB for the PHP class containing storefront/admin hook rendering, with any expansion requiring an explicit reviewed budget change.
+
+`scripts/validate-woocommerce-storefront.mjs` fails the complete repository gate if connector scripts/styles, inline executable/style tags, browser/network request calls, unbounded coupon reads, or missing escaping/login guards enter the storefront boundary. Every minimum/current HPOS/legacy runtime renders the account and cart surfaces with the hub forcibly unavailable, checks semantic bounded asset-free markup, and proves zero HTTP calls.
+
 ## Operations
 
 - The settings screen reports pending, retryable, delivered, and dead-letter event counts without bodies, signatures, coupon codes, or customer data.

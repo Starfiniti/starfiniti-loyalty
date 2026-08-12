@@ -193,3 +193,9 @@
 - Added immutable RLS-scoped batch/item evidence, one zero-sum ledger transaction and credit lot/debit allocation per customer, and one minimized aggregate administration audit event.
 - Added 39 pgTAP assertions for non-mutating preview, canonical arithmetic/order, exact retry, stale/conflicting input, role/revocation/cross-tenant denial, evidence immutability, and projection rebuilds.
 - Exact-head run `31603764054` passed all six jobs: sixteen migration replays, all 693 pgTAP assertions, concurrency/property probes, and all four localized WooCommerce runtime variants.
+
+## 2026-08-12 — Phase 9 WooCommerce storefront budgets
+
+- Documented and enforced a zero-byte connector JavaScript, zero-byte connector CSS, and zero hub-request budget for customer account/cart rendering and checkout behavior.
+- Retained native WooCommerce markup and coupon application, capped one account response at 20 active rewards, and set explicit source/markup ceilings so future expansion requires review.
+- Extended all minimum/current HPOS/legacy runtime cells to render account/cart loyalty surfaces during forced hub outage and assert bounded semantic asset-free output with no HTTP request; exact-head runtime verification is pending.
