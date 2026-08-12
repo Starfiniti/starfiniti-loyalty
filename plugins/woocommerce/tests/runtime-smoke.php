@@ -4,6 +4,7 @@ use Automattic\WooCommerce\Utilities\OrderUtil;
 use Automattic\WooCommerce\StoreApi\Utilities\CartController;
 use Starfiniti\Loyalty\Commands;
 use Starfiniti\Loyalty\Outbox;
+use Starfiniti\Loyalty\Plugin;
 
 defined('ABSPATH') || exit(1);
 
@@ -19,6 +20,23 @@ function starfiniti_runtime_assert($condition, string $message): void
 
 starfiniti_runtime_assert(class_exists('WooCommerce'), 'WooCommerce is active');
 starfiniti_runtime_assert(class_exists(Outbox::class), 'Starfiniti Loyalty is active');
+starfiniti_runtime_assert(
+    switch_to_locale('sl_SI'),
+    'runtime can switch to the bundled Slovenian locale'
+);
+unload_textdomain('starfiniti-loyalty', true);
+Plugin::loadTextDomain();
+$localizedMenu = Plugin::accountMenuItems([
+    'dashboard' => 'Dashboard',
+    'customer-logout' => 'Logout',
+]);
+starfiniti_runtime_assert(
+    ($localizedMenu['loyalty'] ?? null) === 'Nagrade za zvestobo',
+    'bundled Slovenian customer navigation translation loads at runtime'
+);
+restore_previous_locale();
+unload_textdomain('starfiniti-loyalty', true);
+Plugin::loadTextDomain();
 $expectedHpos = get_option('starfiniti_runtime_expected_hpos');
 starfiniti_runtime_assert(
     in_array($expectedHpos, ['yes', 'no'], true),

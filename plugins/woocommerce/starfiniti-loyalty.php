@@ -9,6 +9,7 @@
  * WC tested up to: 10.9
  * License: GPL-2.0-or-later
  * Text Domain: starfiniti-loyalty
+ * Domain Path: /languages
  */
 
 defined('ABSPATH') || exit;

@@ -1,0 +1,125 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Starfiniti Loyalty 0.1.0-dev\n"
+"Report-Msgid-Bugs-To: https://github.com/Starfiniti/starfiniti-loyalty/issues\n"
+"POT-Creation-Date: 2026-08-12 00:00+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Domain: starfiniti-loyalty\n"
+
+msgid "A signing key is required for the initial connection."
+msgstr ""
+
+msgid "Activate Starfiniti Loyalty separately on each WooCommerce site."
+msgstr ""
+
+msgid "Base64 signing key"
+msgstr ""
+
+msgid "Connection settings saved."
+msgstr ""
+
+msgid "Connection UUID"
+msgstr ""
+
+msgid "Delivery queue"
+msgstr ""
+
+msgid "Delivery state"
+msgstr ""
+
+msgid "Enter a reward code in the native coupon field at cart or checkout."
+msgstr ""
+
+msgid "Enter the connection UUID issued by the hub."
+msgstr ""
+
+msgid "Event type"
+msgstr ""
+
+msgid "Events"
+msgstr ""
+
+#. translators: %s is a localized date.
+msgid "Expires %s"
+msgstr ""
+
+msgid "Free shipping"
+msgstr ""
+
+msgid "HTTPS event endpoint"
+msgstr ""
+
+msgid "Hub connection"
+msgstr ""
+
+msgid "Key version"
+msgstr ""
+
+msgid "Key version must look like v1, v2, and so on."
+msgstr ""
+
+msgid "Leave blank to keep the encrypted key already stored."
+msgstr ""
+
+msgid "Loyalty"
+msgstr ""
+
+msgid "Loyalty rewards"
+msgstr ""
+
+msgid "No active loyalty coupons are available yet."
+msgstr ""
+
+msgid "Occurred (UTC)"
+msgstr ""
+
+msgid "Paste the one-time key issued by the hub."
+msgstr ""
+
+msgid "PHP Sodium is required to protect the connector signing key."
+msgstr ""
+
+msgid "Programme rules and balances remain in the central loyalty platform. Commerce events use a local durable outbox and never wait on the hub during checkout."
+msgstr ""
+
+msgid "Save connection"
+msgstr ""
+
+msgid "Signing key must be valid base64 containing at least 32 random bytes."
+msgstr ""
+
+msgid "Source object"
+msgstr ""
+
+msgid "Starfiniti Loyalty"
+msgstr ""
+
+msgid "Starfiniti Loyalty connector"
+msgstr ""
+
+msgid "Starfiniti Loyalty delivery events"
+msgstr ""
+
+msgid "Starfiniti Loyalty requires WooCommerce."
+msgstr ""
+
+msgid "Starfiniti Loyalty reward"
+msgstr ""
+
+msgid "State"
+msgstr ""
+
+msgid "Undelivered event evidence is retained until delivery or operator resolution; authoritative loyalty records follow the hub retention policy."
+msgstr ""
+
+msgid "Use a valid HTTPS hub endpoint."
+msgstr ""
+
+msgid "You do not have permission to manage loyalty settings."
+msgstr ""
+
+#. translators: %s is the My Account loyalty URL.
+msgid "You have an active loyalty reward. <a href=\"%s\">View your code</a>."
+msgstr ""

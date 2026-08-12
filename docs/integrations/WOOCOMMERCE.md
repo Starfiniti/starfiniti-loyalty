@@ -2,7 +2,7 @@
 
 - Documentation reviewed: 2026-08-12
 - REST API: `wc/v3` (current official integration)
-- References: https://developer.woocommerce.com/docs/apis/rest-api/ and https://developer.woocommerce.com/docs/extensions/best-practices-extensions/compatibility/
+- References: https://developer.woocommerce.com/docs/apis/rest-api/, https://developer.woocommerce.com/docs/extensions/best-practices-extensions/compatibility/, https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/, and https://developer.wordpress.org/reference/functions/load_plugin_textdomain/
 
 WooCommerce is a thin connector. It uses HTTPS, least-privilege credentials, signed outbound events, Action Scheduler retries, local queue diagnostics, HPOS declarations, and tested Cart/Checkout Blocks plus documented classic-checkout compatibility. Monetary API values arrive as decimal strings and must be converted to integer minor units without floating-point arithmetic. Central failure must never block checkout.
 
@@ -26,6 +26,12 @@ WooCommerce is a thin connector. It uses HTTPS, least-privilege credentials, sig
 - The worker sweeps expired coupons only after native issuance is confirmed, then queues one cancellation command. Points remain reserved until WooCommerce confirms an unused coupon is disabled; that acknowledgement writes a compensating `cancel` ledger transaction and moves the reservation to `released`.
 - A coupon with a non-zero native usage count is never cancelled/released. The connector dead-letters that command so delayed capture/reconciliation can settle the spend instead.
 - Unknown command outcomes retry with the same command ID and bounded error codes.
+
+## Localization
+
+- Every customer and administration string uses the literal `starfiniti-loyalty` text domain. `Domain Path: /languages` and an `init`-time `load_plugin_textdomain` registration support the self-distributed ZIP without loading translations too early.
+- `languages/starfiniti-loyalty.pot` is the canonical translator template and must exactly match source strings. `npm run woocommerce:localization:validate` rejects missing/stale messages, missing customer strings, empty translations, and placeholder drift.
+- The package currently bundles `sl_SI` in WordPress's `.l10n.php` format. The customer My Account navigation, reward/coupon copy, and connector administration follow the active WordPress locale; absent translations fall back to English.
 
 ## Operations
 

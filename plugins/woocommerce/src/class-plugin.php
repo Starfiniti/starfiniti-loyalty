@@ -8,6 +8,7 @@ final class Plugin
 {
     public static function boot(): void
     {
+        add_action('init', [self::class, 'loadTextDomain'], 0);
         add_action('admin_menu', [self::class, 'registerMenu']);
         add_action('admin_post_starfiniti_loyalty_save_settings', [Settings::class, 'handleSave']);
         add_action('init', [self::class, 'registerAccountEndpoint']);
@@ -18,6 +19,15 @@ final class Plugin
         Commands::boot();
         Privacy::boot();
         Cli::register();
+    }
+
+    public static function loadTextDomain(): void
+    {
+        load_plugin_textdomain(
+            'starfiniti-loyalty',
+            false,
+            dirname(plugin_basename(STARFINITI_LOYALTY_FILE)) . '/languages'
+        );
     }
 
     public static function registerMenu(): void

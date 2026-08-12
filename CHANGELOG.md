@@ -52,3 +52,4 @@
 - Added minimized customer tier visibility with current/qualified/grace state, exact eligible-spend minor units, and no private decision evidence in the merchant response.
 - Added a keyboard bypass link and focusable main landmark across every merchant route, extended visible focus styling to text areas, retained reduced-motion safeguards, and fixed the sign-in card's narrow-viewport overflow.
 - Added a tenant-scoped support-diagnostics download that aggregates queue totals and a labelled bounded sample of canonical error codes while excluding payloads, commerce/customer identities, store names, actors, reasons, signing references, and secrets.
+- Added exact WooCommerce POT coverage and a bundled Slovenian catalog loaded through the standard WordPress text-domain path, with customer navigation translation exercised in every supported runtime-matrix cell.

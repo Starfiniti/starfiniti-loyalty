@@ -15,6 +15,7 @@
 - Phase 6 programme execution is complete: deterministic conditional earning/exclusions, immutable publication/scheduling, materialized tiers/rewards, live/simulation evidence, effective tier intervals, reward failure compensation, and advance expiry notifications are execution-verified.
 - Phase 7 implements a separately credentialed WooCommerce effect worker, completed-order awards, cumulative original-attribution refund reversal, channel-ID customer resolution, native issue/cancel commands, PII-free coupon capture, expiry compensation, connection health watermarks, source reconciliation, and an installable GPL plugin artifact.
 - The plugin encrypts its signing key at rest, declares HPOS support, keeps checkout independent of the hub, exposes queue/dead-letter diagnostics, and provides customer loyalty, privacy export/erase, and WP-CLI recovery surfaces.
+- All 38 WooCommerce strings use the plugin text domain with exact POT coverage. The package includes a Slovenian catalog, registers its language path at WordPress `init`, and tests the localized customer navigation in each minimum/current HPOS/legacy runtime.
 - The supported WooCommerce smoke matrix passes on WordPress 6.6.5/WooCommerce 9.0.2/PHP 8.1 and WordPress 7.0.2/WooCommerce 10.9.4/PHP 8.3, each with HPOS and legacy storage. It executes classic and Blocks coupon paths under hub outage, order completion/capture, partial/full refunds, reconciliation, activation lifecycle, and dead-letter recovery.
 - The Next.js merchant shell now verifies Supabase Auth claims, refreshes sessions through the Next.js 16 request proxy, derives live organization/workspace/programme scope through the authenticated Data API and RLS, handles unassigned users safely, and provides sign-in/sign-out/PKCE callback paths without exposing a secret key.
 - The merchant programme surface provides structured tier/reward editing, deterministic earning preview, contract validation, new immutable draft versions, exact-fingerprint publish/schedule confirmation, role-aware controls, version history, and tenant-visible administration audit evidence.
@@ -31,7 +32,7 @@
 ## Partial
 
 - Phases 0 through 7 are complete for the active WooCommerce scope. Shopify Phase 8 is deferred by product-owner direction.
-- Phase 9 is in progress. The authenticated shell, initial-programme onboarding, programme editor, customer wallet/ledger reads, safe hub connector operations, reason-bound value adjustments, live source-reconciliation requests, real Overview reporting, route-wide keyboard bypass, and sanitized support diagnostics exist; localization, broader customer surfaces, and production deployment remain future slices.
+- Phase 9 is in progress. The authenticated shell, initial-programme onboarding, programme editor, customer wallet/ledger reads, safe hub connector operations, reason-bound value adjustments, live source-reconciliation requests, real Overview reporting, route-wide keyboard bypass, sanitized support diagnostics, and localized WooCommerce customer strings exist; dashboard/storefront translation breadth, broader customer surfaces, and production deployment remain future slices.
 
 ## Broken or unavailable
 
@@ -75,6 +76,7 @@ Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 Wo
 - PR exact-head run `31592427051` passed all six jobs for customer tier visibility, including fourteen migration replays, 613 pgTAP assertions, concurrency/property probes, and the complete WooCommerce matrix.
 - `npm run accessibility:validate`, dashboard lint/typecheck, all 27 dashboard tests, rendered DOM inspection, and initial desktop/mobile authentication captures exercised the accessibility slice locally; the mobile capture exposed a card overflow, and the corrected shrinkable sizing is now guarded statically.
 - PR exact-head run `31596460783` passed all six jobs for the accessibility slice, including fourteen migration replays, 613 pgTAP assertions, concurrency/property probes, and the complete WooCommerce matrix.
+- PR exact-head run `31597255280` passed all six jobs for sanitized support diagnostics, including fourteen migration replays, 613 pgTAP assertions, concurrency/property probes, and the complete WooCommerce matrix.
 
 ## Next recommended task
 

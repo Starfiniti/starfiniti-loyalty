@@ -51,11 +51,13 @@ Phase 9 — merchant administration and customer experience. Shopify Phase 8 rem
 - The accessibility slice adds a first-focus keyboard bypass to a focusable main landmark on all seven route surfaces, consistent text-area focus treatment, reduced-motion validation, and a narrow-viewport-safe authentication card; the deterministic guard is part of `npm run check`.
 - Exact-head run `31596460783` passed the accessibility baseline, fourteen migrations with 613 pgTAP assertions plus concurrency/property probes, and all four WooCommerce runtime variants.
 - The supportability slice adds a downloadable versioned diagnostic bundle from the tenant operations view. It contains public scope/connection IDs, queue counts, watermarks, and a labelled bounded sample of grouped canonical error codes only; direct minimization tests reject item identities and noncanonical strings.
+- Exact-head run `31597255280` passed the support-diagnostics baseline, fourteen migrations with 613 pgTAP assertions plus concurrency/property probes, and all four WooCommerce runtime variants.
+- The WooCommerce localization slice registers the packaged `/languages` path at `init`, maintains exact POT coverage for all 38 source strings, bundles Slovenian customer/admin translations in WordPress's performant PHP catalog format, and adds an actual locale-switch/customer-navigation assertion to the four-case runtime matrix.
 - Exact-head run `31581760825` passed the customer-ledger baseline, database job, and all four WooCommerce runtime variants.
 
 ## Active work
 
-- `P9-MERCHANT-HUB` (in progress): the Auth/RLS shell, guided initial-programme creation, audited programme editor, exact customer wallet/ledger reads, safe connector queue operations, value-changing customer adjustments, signed source reconciliation, real Overview reporting, keyboard-bypass accessibility guard, and sanitized support diagnostics are implemented; remaining merchant/customer surfaces follow.
+- `P9-MERCHANT-HUB` (in progress): the Auth/RLS shell, guided initial-programme creation, audited programme editor, exact customer wallet/ledger reads, safe connector queue operations, value-changing customer adjustments, signed source reconciliation, real Overview reporting, keyboard-bypass accessibility guard, sanitized support diagnostics, and localized WooCommerce customer strings are implemented; remaining merchant/customer surfaces follow.
 
 ## Next safe tasks
 

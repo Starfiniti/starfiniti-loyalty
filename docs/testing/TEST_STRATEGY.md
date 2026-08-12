@@ -8,4 +8,6 @@ Database migrations, seed replay, schema grants, RLS coverage, and privileged-fu
 
 Support-diagnostic tests serialize adversarial inputs and assert forbidden customer, payload, store-name, item-identity, and signing values are absent. Noncanonical error/operation strings are redacted rather than trusted as safe codes.
 
+`woocommerce:validate` also enforces literal text-domain use, exact POT source coverage, no stale catalog entries, required customer translations, and placeholder parity. The container matrix switches to the bundled Slovenian locale and proves a translated customer My Account label on all four supported runtime combinations.
+
 The Phase 5 gate adds immutable-ledger pgTAP coverage plus a real two-session overspend race and a deterministic mixed-operation property sequence. Any future value command must join these gates and prove zero sum, attribution, idempotency, tenant isolation, deterministic locks, and wallet/lot projection equality.
