@@ -36,7 +36,8 @@ export default async function OperationsPage() {
             Starfiniti Loyalty
           </Link>
           <p>
-            {tenant.context.organization.name} · {tenant.context.workspace?.name}
+            {tenant.context.organization.name} ·{" "}
+            {tenant.context.workspace?.name}
           </p>
         </div>
         <nav aria-label="Account navigation">
@@ -94,7 +95,10 @@ export default async function OperationsPage() {
                   <PlugZap aria-hidden="true" />
                   <div>
                     <h2>{connection.displayName}</h2>
-                    <p>Last verified delivery: {formatDate(connection.lastSeenAt)}</p>
+                    <p>
+                      Last verified delivery:{" "}
+                      {formatDate(connection.lastSeenAt)}
+                    </p>
                   </div>
                 </div>
                 <span className={`health-badge ${health}`}>
@@ -133,7 +137,9 @@ export default async function OperationsPage() {
               <div className="customer-result-heading">
                 <div>
                   <TriangleAlert aria-hidden="true" />
-                  <strong>{connection.issues.length} recent queue issues</strong>
+                  <strong>
+                    {connection.issues.length} recent queue issues
+                  </strong>
                 </div>
                 <span>Newest 25 · payloads withheld</span>
               </div>

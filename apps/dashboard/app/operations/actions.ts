@@ -62,9 +62,10 @@ export async function retryConnectorEffect(
           : "The effect state changed or the replay could not be authorized safely.",
     };
   }
-  const row = (Array.isArray(data) ? data[0] : data) as
-    | Record<string, unknown>
-    | null;
+  const row = (Array.isArray(data) ? data[0] : data) as Record<
+    string,
+    unknown
+  > | null;
   const result = merchantRetryConnectorEffectResultV1.safeParse(
     row
       ? {
@@ -75,7 +76,10 @@ export async function retryConnectorEffect(
       : null,
   );
   if (!result.success) {
-    return { kind: "error", message: "The replay result could not be verified." };
+    return {
+      kind: "error",
+      message: "The replay result could not be verified.",
+    };
   }
   revalidatePath("/operations");
   return {

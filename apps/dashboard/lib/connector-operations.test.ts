@@ -18,7 +18,11 @@ describe("connector operation presentation", () => {
     const now = Date.parse("2026-08-12T10:00:00Z");
     expect(
       connectorHealth(
-        { status: "active", lastSeenAt: "2026-08-12T09:59:00Z", failedCount: 1 },
+        {
+          status: "active",
+          lastSeenAt: "2026-08-12T09:59:00Z",
+          failedCount: 1,
+        },
         now,
       ),
     ).toBe("attention");
@@ -33,11 +37,18 @@ describe("connector operation presentation", () => {
   it("marks missing or old heartbeats stale", () => {
     const now = Date.parse("2026-08-12T10:00:00Z");
     expect(
-      connectorHealth({ status: "active", lastSeenAt: null, failedCount: 0 }, now),
+      connectorHealth(
+        { status: "active", lastSeenAt: null, failedCount: 0 },
+        now,
+      ),
     ).toBe("stale");
     expect(
       connectorHealth(
-        { status: "active", lastSeenAt: "2026-08-12T09:40:00Z", failedCount: 0 },
+        {
+          status: "active",
+          lastSeenAt: "2026-08-12T09:40:00Z",
+          failedCount: 0,
+        },
         now,
       ),
     ).toBe("stale");

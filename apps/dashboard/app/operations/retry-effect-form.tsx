@@ -1,10 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import {
-  retryConnectorEffect,
-  type ConnectorActionState,
-} from "./actions";
+import { retryConnectorEffect, type ConnectorActionState } from "./actions";
 
 const initialState: ConnectorActionState = { kind: "idle", message: "" };
 

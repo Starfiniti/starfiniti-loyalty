@@ -134,7 +134,7 @@ begin
     issue.observed_at, issue.retry_allowed
   from (
     select 'delivery'::text, inbox.receipt_id, inbox.state,
-      pg_catalog.substring(inbox.last_error_code from 1 for 120),
+      pg_catalog.substring(inbox.last_error_code, 1, 120),
       inbox.attempt_count, inbox.event_type,
       inbox.accepted_at, false
     from loyalty_private.commerce_delivery_inbox as inbox
@@ -143,7 +143,7 @@ begin
       and inbox.state in ('retryable', 'quarantined', 'dead_letter')
     union all
     select 'effect'::text, event.public_id, event.effect_state,
-      pg_catalog.substring(event.effect_last_error_code from 1 for 120),
+      pg_catalog.substring(event.effect_last_error_code, 1, 120),
       event.effect_attempt_count,
       event.event_type, event.created_at,
       event.effect_state = 'dead_letter'
@@ -153,7 +153,7 @@ begin
       and event.effect_state in ('retryable', 'quarantined', 'dead_letter')
     union all
     select 'command'::text, outbox.command_id, outbox.state,
-      pg_catalog.substring(outbox.last_error_code from 1 for 120),
+      pg_catalog.substring(outbox.last_error_code, 1, 120),
       outbox.attempt_count, outbox.topic,
       outbox.created_at, false
     from loyalty_private.transactional_outbox as outbox
