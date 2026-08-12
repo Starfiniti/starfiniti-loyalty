@@ -2,7 +2,12 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(43);
+select plan(47);
+
+select has_table(
+  'loyalty_private', 'privacy_subject_peppers',
+  'restricted per-connection privacy peppers exist'
+);
 
 select has_table(
   'loyalty_private', 'customer_privacy_cases',
@@ -42,6 +47,12 @@ select ok(
     'loyalty_worker', 'loyalty_private.customer_privacy_cases', 'SELECT'
   ),
   'the worker cannot enumerate privacy cases outside the command'
+);
+select ok(
+  not has_table_privilege(
+    'loyalty_worker', 'loyalty_private.privacy_subject_peppers', 'SELECT'
+  ),
+  'the worker cannot enumerate privacy fingerprint peppers'
 );
 select ok(
   not has_table_privilege(
@@ -185,6 +196,18 @@ select is_empty(
   $$ select id from loyalty_private.customer_privacy_cases
      where octet_length(subject_fingerprint) <> 32 $$,
   'privacy cases contain a fixed one-way subject fingerprint'
+);
+select results_eq(
+  $$ select octet_length(pepper)::integer
+     from loyalty_private.privacy_subject_peppers $$,
+  array[32::integer],
+  'the connection pepper has 256 bits of random material'
+);
+select throws_ok(
+  $$ update loyalty_private.privacy_subject_peppers
+     set pepper = extensions.gen_random_bytes(32) $$,
+  '55000', 'immutable loyalty history cannot be changed',
+  'privacy fingerprint peppers cannot be silently rotated'
 );
 select is_empty(
   $$ select column_name from information_schema.columns
@@ -407,11 +430,14 @@ select results_eq(
 );
 select results_eq(
   $$ select count(*)::bigint from loyalty_private.customer_privacy_cases
-     where subject_fingerprint = extensions.digest(
-       connection_id::text || ':registered:7', 'sha256'
+     where subject_fingerprint = extensions.hmac(
+       pg_catalog.convert_to(connection_id::text || ':registered:7', 'UTF8'),
+       (select pepper from loyalty_private.privacy_subject_peppers
+        where privacy_subject_peppers.connection_id = customer_privacy_cases.connection_id),
+       'sha256'
      ) $$,
   array[1::bigint],
-  'the tombstone fingerprint is connection-bound and deterministic'
+  'the tombstone fingerprint is keyed connection-bound and deterministic'
 );
 
 select * from finish();

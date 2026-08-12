@@ -2,6 +2,21 @@
 -- deletion subject; the worker pseudonymizes the channel identity, revokes
 -- hosted access, retains immutable value history, and suppresses re-import.
 
+create table loyalty_private.privacy_subject_peppers (
+  connection_id bigint primary key,
+  organization_id bigint not null,
+  pepper bytea not null default extensions.gen_random_bytes(32)
+    check (octet_length(pepper) = 32),
+  created_at timestamptz not null default now(),
+  unique (organization_id, connection_id),
+  foreign key (organization_id, connection_id)
+    references loyalty.commerce_connections(organization_id, id) on delete restrict
+);
+
+create trigger privacy_subject_peppers_immutable
+before update or delete on loyalty_private.privacy_subject_peppers
+for each row execute function loyalty_private.reject_immutable_change();
+
 create table loyalty_private.customer_privacy_cases (
   id bigint generated always as identity primary key,
   public_id uuid not null default gen_random_uuid() unique,
@@ -33,7 +48,9 @@ create trigger customer_privacy_cases_immutable
 before update or delete on loyalty_private.customer_privacy_cases
 for each row execute function loyalty_private.reject_immutable_change();
 
+alter table loyalty_private.privacy_subject_peppers owner to loyalty_owner;
 alter table loyalty_private.customer_privacy_cases owner to loyalty_owner;
+alter table loyalty_private.privacy_subject_peppers enable row level security;
 alter table loyalty_private.customer_privacy_cases enable row level security;
 
 create or replace function loyalty_private.claim_woocommerce_effects(
@@ -124,6 +141,7 @@ as $$
 declare
   identity_key text;
   target_subject_fingerprint bytea;
+  target_subject_pepper bytea;
   existing_customer_id bigint;
   existing_customer_public_id uuid;
   created_customer_id bigint;
@@ -147,15 +165,27 @@ begin
   identity_key := case target_identity_kind
     when 'registered' then 'registered:' else 'guest-order:' end
     || target_external_id;
-  target_subject_fingerprint := extensions.digest(
-    target_connection_id::text || ':' || identity_key,
-    'sha256'
-  );
   perform pg_catalog.pg_advisory_xact_lock(
     pg_catalog.hashtextextended(
       target_connection_id::text || ':' || identity_key,
       target_organization_id
     )
+  );
+  insert into loyalty_private.privacy_subject_peppers (
+    organization_id, connection_id
+  ) values (target_organization_id, target_connection_id)
+  on conflict (connection_id) do nothing;
+  select subject_pepper.pepper into target_subject_pepper
+  from loyalty_private.privacy_subject_peppers as subject_pepper
+  where subject_pepper.organization_id = target_organization_id
+    and subject_pepper.connection_id = target_connection_id;
+  if target_subject_pepper is null then
+    raise exception using errcode = '22023', message = 'invalid privacy subject key';
+  end if;
+  target_subject_fingerprint := extensions.hmac(
+    pg_catalog.convert_to(target_connection_id::text || ':' || identity_key, 'UTF8'),
+    target_subject_pepper,
+    'sha256'
   );
 
   if exists (
@@ -216,6 +246,7 @@ declare
   target_customer_id bigint;
   target_customer_public_id uuid;
   target_fingerprint bytea;
+  target_subject_pepper bytea;
   existing_case loyalty_private.customer_privacy_cases%rowtype;
   created_case loyalty_private.customer_privacy_cases%rowtype;
   result_outcome text;
@@ -251,15 +282,30 @@ begin
     raise exception using errcode = '22023', message = 'invalid customer erasure connection';
   end if;
 
-  target_fingerprint := extensions.digest(
-    target_connection_id::text || ':registered:' || target_external_customer_id,
-    'sha256'
-  );
   perform pg_catalog.pg_advisory_xact_lock(
     pg_catalog.hashtextextended(
       target_connection_id::text || ':registered:' || target_external_customer_id,
       target_organization_id
     )
+  );
+  insert into loyalty_private.privacy_subject_peppers (
+    organization_id, connection_id
+  ) values (target_organization_id, target_connection_id)
+  on conflict (connection_id) do nothing;
+  select subject_pepper.pepper into target_subject_pepper
+  from loyalty_private.privacy_subject_peppers as subject_pepper
+  where subject_pepper.organization_id = target_organization_id
+    and subject_pepper.connection_id = target_connection_id;
+  if target_subject_pepper is null then
+    raise exception using errcode = '22023', message = 'invalid privacy subject key';
+  end if;
+  target_fingerprint := extensions.hmac(
+    pg_catalog.convert_to(
+      target_connection_id::text || ':registered:' || target_external_customer_id,
+      'UTF8'
+    ),
+    target_subject_pepper,
+    'sha256'
   );
 
   select privacy_case.* into existing_case
@@ -359,7 +405,8 @@ alter function loyalty_private.claim_woocommerce_effects(text, integer, integer)
 alter function loyalty_private.apply_woocommerce_customer_erasure(bigint, bigint, uuid, text, text)
   owner to loyalty_owner;
 
-revoke all on loyalty_private.customer_privacy_cases
+revoke all on loyalty_private.privacy_subject_peppers,
+  loyalty_private.customer_privacy_cases
   from public, anon, authenticated, loyalty_runtime, loyalty_worker;
 revoke all on function loyalty_private.claim_woocommerce_effects(text, integer, integer)
   from public, anon, authenticated, loyalty_runtime;
@@ -376,7 +423,9 @@ grant execute on function loyalty_private.apply_woocommerce_customer_erasure(big
   to loyalty_worker;
 
 comment on table loyalty_private.customer_privacy_cases is
-  'Immutable channel-subject erasure tombstones; identifiers are one-way fingerprints and never browser-readable.';
+  'Immutable channel-subject erasure tombstones; identifiers are private keyed fingerprints and never browser-readable.';
+comment on table loyalty_private.privacy_subject_peppers is
+  'Restricted per-connection random material for non-enumerable privacy subject fingerprints.';
 comment on function loyalty_private.resolve_commerce_customer(bigint, bigint, text, text) is
   'Resolves signed channel identity without email and suppresses identities covered by an erasure tombstone.';
 comment on function loyalty_private.apply_woocommerce_customer_erasure(bigint, bigint, uuid, text, text) is
