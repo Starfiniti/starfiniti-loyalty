@@ -16,7 +16,14 @@ await new Promise((resolveArchive, rejectArchive) => {
   output.on("error", rejectArchive);
   archive.on("error", rejectArchive);
   archive.pipe(output);
-  archive.directory(resolve(root, "plugins/woocommerce"), "starfiniti-loyalty");
+  archive.glob(
+    "**/*",
+    {
+      cwd: resolve(root, "plugins/woocommerce"),
+      ignore: ["tests/**"],
+    },
+    { prefix: "starfiniti-loyalty" },
+  );
   void archive.finalize();
 });
 
