@@ -238,6 +238,11 @@ export function validateDeploymentAssets() {
       fail(`Proxmox Compose does not require ${name}`);
     }
   }
+  if (!compose.includes("http://127.0.0.1:3000/api/healthz")) {
+    fail(
+      "Proxmox dashboard healthcheck must use the runtime readiness endpoint",
+    );
+  }
 }
 
 function expectFailure(callback) {

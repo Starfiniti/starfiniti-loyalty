@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(44);
+select plan(45);
 
 -- pg_prove connects with the migration/test administration login. Granting
 -- membership inside this rolled-back test transaction lets the suite exercise
@@ -96,6 +96,35 @@ select results_eq(
   array[1::bigint],
   'provisioning has a bounded statement timeout'
 );
+set local role loyalty_runtime;
+select results_eq(
+  $$
+    select
+      pg_catalog.coalesce(
+        pg_catalog.has_function_privilege(
+          current_user,
+          pg_catalog.to_regprocedure(
+            'loyalty_private.accept_commerce_delivery(bigint,bigint,text,text,text,text,text,text,timestamp with time zone,timestamp with time zone,text,text,text,jsonb)'
+          ),
+          'EXECUTE'
+        ),
+        false
+      )
+      and pg_catalog.coalesce(
+        pg_catalog.has_function_privilege(
+          current_user,
+          pg_catalog.to_regprocedure(
+            'loyalty_private.provision_woocommerce_connection(uuid,uuid,uuid,text,text,text,text,uuid)'
+          ),
+          'EXECUTE'
+        ),
+        false
+      )
+  $$,
+  array[true],
+  'dashboard readiness probe confirms exact runtime functions and privileges'
+);
+reset role;
 select ok(
   not has_table_privilege('authenticated', 'loyalty.commerce_connections', 'INSERT'),
   'browser sessions cannot insert connections directly'
