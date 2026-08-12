@@ -513,7 +513,7 @@ select throws_ok(
       'capture:after-cancel', decode(repeat('b', 64), 'hex')
     )
   $$,
-  '23505', null,
+  '23514', 'reservation is already resolved',
   'a cancelled reservation cannot also be captured'
 );
 

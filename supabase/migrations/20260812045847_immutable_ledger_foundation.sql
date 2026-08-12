@@ -905,6 +905,7 @@ set search_path = ''
 as $$
 declare
   reservation loyalty.ledger_transactions%rowtype;
+  resolution loyalty.ledger_transactions%rowtype;
   reserved_account_id bigint;
   spent_account_id bigint;
   reserved_points bigint;
@@ -917,6 +918,20 @@ begin
     and transaction.transaction_kind = 'reserve';
   if not found then
     raise exception using errcode = '22023', message = 'unknown reservation transaction';
+  end if;
+  select transaction.* into resolution from loyalty.ledger_transactions as transaction
+  where transaction.organization_id = target_organization_id
+    and transaction.related_transaction_id = reservation.id
+    and transaction.transaction_kind in ('capture', 'cancel');
+  if found then
+    if resolution.idempotency_key = target_idempotency_key then
+      if resolution.request_sha256 <> target_request_sha256 then
+        raise exception using errcode = '23514', message = 'idempotency key reused with different request hash';
+      end if;
+      return query select resolution.public_id, 'duplicate'::text;
+      return;
+    end if;
+    raise exception using errcode = '23514', message = 'reservation is already resolved';
   end if;
   select entry.account_id, entry.points, account.wallet_id
   into reserved_account_id, reserved_points, target_wallet_id
@@ -959,6 +974,7 @@ set search_path = ''
 as $$
 declare
   reservation loyalty.ledger_transactions%rowtype;
+  resolution loyalty.ledger_transactions%rowtype;
   reserved_account_id bigint;
   available_account_id bigint;
   reserved_points bigint;
@@ -972,6 +988,20 @@ begin
     and transaction.transaction_kind = 'reserve';
   if not found then
     raise exception using errcode = '22023', message = 'unknown reservation transaction';
+  end if;
+  select transaction.* into resolution from loyalty.ledger_transactions as transaction
+  where transaction.organization_id = target_organization_id
+    and transaction.related_transaction_id = reservation.id
+    and transaction.transaction_kind in ('capture', 'cancel');
+  if found then
+    if resolution.idempotency_key = target_idempotency_key then
+      if resolution.request_sha256 <> target_request_sha256 then
+        raise exception using errcode = '23514', message = 'idempotency key reused with different request hash';
+      end if;
+      return query select resolution.public_id, 'duplicate'::text;
+      return;
+    end if;
+    raise exception using errcode = '23514', message = 'reservation is already resolved';
   end if;
   select entry.account_id, entry.points, account.wallet_id
   into reserved_account_id, reserved_points, target_wallet_id
