@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(83);
+select plan(89);
 
 select has_table('loyalty', 'programme_tiers', 'programme tiers exist');
 select has_table('loyalty', 'programme_rewards', 'programme rewards exist');
@@ -82,9 +82,33 @@ select organization.id, programme_group.id, 'rosy', 'Rosy Rewards'
 from loyalty.organizations as organization
 join loyalty.programme_groups as programme_group on programme_group.organization_id = organization.id;
 
+insert into loyalty.workspaces (organization_id, slug, name)
+select id, 'store', name || ' Store'
+from loyalty.organizations where slug in ('programme-one', 'programme-two');
+insert into loyalty.commerce_connections (
+  organization_id, workspace_id, programme_id, external_store_id,
+  display_name, current_key_version, signing_material_ref
+)
+select organization.id, workspace.id, programme.id,
+  organization.slug || '-store', organization.name || ' Store',
+  'v1', 'vault://' || organization.slug
+from loyalty.organizations as organization
+join loyalty.workspaces as workspace on workspace.organization_id = organization.id
+join loyalty.programmes as programme on programme.organization_id = organization.id
+where organization.slug in ('programme-one', 'programme-two');
+
 insert into loyalty.customers (organization_id, display_reference)
 select id, slug || '-customer'
 from loyalty.organizations where slug in ('programme-one', 'programme-two');
+insert into loyalty.customer_identities (
+  organization_id, customer_id, commerce_connection_id,
+  external_customer_id, identity_kind, verified_at
+)
+select customer.organization_id, customer.id, connection.id,
+  'registered:7', 'registered', now()
+from loyalty.customers as customer
+join loyalty.commerce_connections as connection
+  on connection.organization_id = customer.organization_id;
 
 create temporary table programme_refs (
   name text primary key,
@@ -578,13 +602,67 @@ select throws_ok(
   '23514', 'invalid reward reservation transition',
   'state machine rejects reserved-to-captured shortcut'
 );
-select lives_ok(
-  $$ select * from loyalty_private.transition_reward_reservation(
-    (select public_id from programme_results where operation = 'reservation'),
-    'issued', 'transition:42:issued', decode(repeat('0', 64), 'hex'),
-    'reward-worker', null, null, 'woocommerce:coupon:ROSY42'
-  ) $$,
-  'connector execution can mark a reserved reward issued'
+select ok(
+  has_function_privilege(
+    'loyalty_worker',
+    'loyalty_private.enqueue_woocommerce_coupon_issue(uuid,uuid,smallint)',
+    'EXECUTE'
+  ),
+  'the worker can enqueue a native coupon from a reserved reward'
+);
+create temporary table coupon_command as
+select * from loyalty_private.enqueue_woocommerce_coupon_issue(
+  (select public_id from programme_results where operation = 'reservation'),
+  (select public_id from loyalty.commerce_connections where external_store_id = 'programme-one-store'),
+  2::smallint
+);
+select results_eq(
+  $$ select outcome from coupon_command $$,
+  array['created'::text],
+  'a reserved fixed reward creates one native coupon command'
+);
+select matches(
+  (select coupon_code from coupon_command),
+  '^SF[A-F0-9]{32}$',
+  'generated coupon codes have high-entropy connector-safe form'
+);
+select results_eq(
+  $$
+    select coupon_code, outcome
+    from loyalty_private.enqueue_woocommerce_coupon_issue(
+      (select public_id from programme_results where operation = 'reservation'),
+      (select public_id from loyalty.commerce_connections where external_store_id = 'programme-one-store'),
+      2::smallint
+    )
+  $$,
+  $$ select coupon_code, 'duplicate'::text from coupon_command $$,
+  'coupon enqueue retry returns the original command and code'
+);
+create temporary table claimed_coupon_command as
+select * from loyalty_private.claim_woocommerce_commands(
+  (select public_id from loyalty.commerce_connections where external_store_id = 'programme-one-store'),
+  10, 60
+);
+select results_eq(
+  $$ select command_id from claimed_coupon_command $$,
+  $$ select command_id from coupon_command $$,
+  'the connector claims the exact persisted reward command'
+);
+select results_eq(
+  $$
+    select outcome from loyalty_private.finish_woocommerce_command(
+      (select public_id from loyalty.commerce_connections where external_store_id = 'programme-one-store'),
+      (select command_id from coupon_command),
+      'delivered', 'woocommerce:coupon:42', null, 0
+    )
+  $$,
+  array['delivered'::text],
+  'native coupon acknowledgement completes the connector command'
+);
+select results_eq(
+  $$ select state from loyalty.reward_reservations where public_id = (select public_id from programme_results where operation = 'reservation') $$,
+  array['issued'::text],
+  'successful coupon acknowledgement marks the reserved reward issued'
 );
 
 insert into programme_results
@@ -620,7 +698,7 @@ select results_eq(
   'captured reward reaches its terminal state'
 );
 select throws_ok(
-  $$ delete from loyalty.reward_reservation_transitions where idempotency_key = 'transition:42:issued' $$,
+  $$ delete from loyalty.reward_reservation_transitions where connector_execution_reference = 'woocommerce:coupon:42' $$,
   '55000', 'immutable loyalty history cannot be changed',
   'reward transition history cannot be deleted'
 );

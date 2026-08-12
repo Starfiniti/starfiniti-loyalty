@@ -10,6 +10,10 @@ const settings = readFileSync(
   "utf8",
 );
 const cli = readFileSync("plugins/woocommerce/src/class-cli.php", "utf8");
+const commands = readFileSync(
+  "plugins/woocommerce/src/class-commands.php",
+  "utf8",
+);
 const outbox = readFileSync("plugins/woocommerce/src/class-outbox.php", "utf8");
 const receiver = readFileSync(
   "apps/dashboard/app/api/v1/integrations/woocommerce/events/route.ts",
@@ -42,6 +46,19 @@ for (const [label, content, requirements] of [
     "cli",
     cli,
     ["WP_CLI::add_command", "retry-dead-letters", "Outbox::diagnostics"],
+  ],
+  [
+    "commands",
+    commands,
+    [
+      "as_schedule_recurring_action",
+      "woocommerce_coupon_is_valid",
+      "set_usage_limit(1)",
+      "_starfiniti_command_id",
+      "_starfiniti_external_customer_id",
+      "woocommerce.coupon.issue",
+      "woocommerce.coupon.cancel",
+    ],
   ],
   [
     "outbox",
@@ -86,7 +103,7 @@ for (const forbidden of [
 ]) {
   if (
     forbidden.test(
-      `${bootstrap}\n${plugin}\n${settings}\n${cli}\n${outbox}\n${receiver}`,
+      `${bootstrap}\n${plugin}\n${settings}\n${cli}\n${commands}\n${outbox}\n${receiver}`,
     )
   ) {
     throw new Error(

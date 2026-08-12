@@ -16,6 +16,11 @@ final class Settings
         return (string) get_option(self::ENDPOINT, '');
     }
 
+    public static function commandsEndpoint(): string
+    {
+        return preg_replace('#/events$#', '/commands', self::endpoint()) ?: '';
+    }
+
     public static function connectionId(): string
     {
         return (string) get_option(self::CONNECTION_ID, '');
@@ -105,7 +110,12 @@ final class Settings
         string $encodedSigningKey
     ): ?string {
         $scheme = strtolower((string) wp_parse_url($endpoint, PHP_URL_SCHEME));
-        if ('' === $endpoint || false === wp_http_validate_url($endpoint) || 'https' !== $scheme) {
+        $path = (string) wp_parse_url($endpoint, PHP_URL_PATH);
+        if (
+            '' === $endpoint || false === wp_http_validate_url($endpoint)
+            || 'https' !== $scheme
+            || ! str_ends_with(untrailingslashit($path), '/api/v1/integrations/woocommerce/events')
+        ) {
             return 'invalid_endpoint';
         }
         if (! preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i', $connectionId)) {

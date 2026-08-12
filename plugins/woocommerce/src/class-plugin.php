@@ -11,6 +11,7 @@ final class Plugin
         add_action('admin_menu', [self::class, 'registerMenu']);
         add_action('admin_post_starfiniti_loyalty_save_settings', [Settings::class, 'handleSave']);
         Outbox::boot();
+        Commands::boot();
         Cli::register();
     }
 

@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(28);
+select plan(39);
 
 select has_column(
   'loyalty', 'commerce_connections', 'programme_id',
@@ -254,6 +254,113 @@ select results_eq(
      where display_reference is not null $$,
   array[0::bigint],
   'channel identity resolution stores no email or display PII'
+);
+
+select ok(
+  has_function_privilege(
+    'loyalty_runtime',
+    'loyalty_private.claim_woocommerce_commands(uuid,integer,integer)',
+    'EXECUTE'
+  ),
+  'the authenticated connector route can claim commands'
+);
+select ok(
+  not has_function_privilege(
+    'authenticated',
+    'loyalty_private.claim_woocommerce_commands(uuid,integer,integer)',
+    'EXECUTE'
+  ),
+  'browser users cannot claim connector commands'
+);
+insert into loyalty_private.transactional_outbox (
+  command_id, organization_id, connection_id, topic, payload_version, payload
+)
+select '66000000-0000-4000-8000-000000000001', connection.organization_id,
+  connection.id, 'woocommerce.coupon.cancel', 'v1',
+  '{"kind":"cancel_coupon","reservationId":"67000000-0000-4000-8000-000000000001","code":"SF0123456789ABCDEFGHIJ"}'::jsonb
+from loyalty.commerce_connections as connection
+where connection.external_store_id = 'effect-one-store';
+create temporary table command_claim as
+select * from loyalty_private.claim_woocommerce_commands(
+  (select public_id from loyalty.commerce_connections where external_store_id = 'effect-one-store'),
+  10, 60
+);
+select is(
+  (select count(*)::integer from command_claim), 1,
+  'the connector claims one ready native coupon command'
+);
+select results_eq(
+  $$ select topic from command_claim $$,
+  array['woocommerce.coupon.cancel'::text],
+  'the claimed command retains its versioned topic'
+);
+select is_empty(
+  $$
+    select * from loyalty_private.claim_woocommerce_commands(
+      (select public_id from loyalty.commerce_connections where external_store_id = 'effect-one-store'),
+      10, 60
+    )
+  $$,
+  'the command lease prevents a duplicate concurrent delivery'
+);
+select is_empty(
+  $$
+    select * from loyalty_private.claim_woocommerce_commands(
+      (select public_id from loyalty.commerce_connections where external_store_id = 'effect-two-store'),
+      10, 60
+    )
+  $$,
+  'another tenant cannot claim the first tenant command'
+);
+select throws_ok(
+  $$
+    select * from loyalty_private.finish_woocommerce_command(
+      (select public_id from loyalty.commerce_connections where external_store_id = 'effect-two-store'),
+      '66000000-0000-4000-8000-000000000001', 'cancelled',
+      'woocommerce:coupon:absent', null, 0
+    )
+  $$,
+  '22023', 'unknown connector command',
+  'another tenant cannot acknowledge a command'
+);
+select results_eq(
+  $$
+    select outcome from loyalty_private.finish_woocommerce_command(
+      (select public_id from loyalty.commerce_connections where external_store_id = 'effect-one-store'),
+      '66000000-0000-4000-8000-000000000001', 'cancelled',
+      'woocommerce:coupon:absent', null, 0
+    )
+  $$,
+  array['cancelled'::text],
+  'the owning connector can acknowledge safe cancellation'
+);
+select results_eq(
+  $$
+    select state from loyalty_private.transactional_outbox
+    where command_id = '66000000-0000-4000-8000-000000000001'
+  $$,
+  array['cancelled'::text],
+  'connector acknowledgement persists a terminal command state'
+);
+select results_eq(
+  $$
+    select payload ->> 'connectorExecutionReference'
+    from loyalty_private.transactional_outbox
+    where command_id = '66000000-0000-4000-8000-000000000001'
+  $$,
+  array['woocommerce:coupon:absent'::text],
+  'connector acknowledgement retains its native execution reference'
+);
+select throws_ok(
+  $$
+    select * from loyalty_private.finish_woocommerce_command(
+      (select public_id from loyalty.commerce_connections where external_store_id = 'effect-one-store'),
+      '66000000-0000-4000-8000-000000000001', 'cancelled',
+      'woocommerce:coupon:absent', null, 0
+    )
+  $$,
+  '55000', 'connector command lease is not owned',
+  'a terminal connector command cannot be acknowledged twice'
 );
 
 select * from finish();

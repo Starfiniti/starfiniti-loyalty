@@ -269,6 +269,109 @@ export type WooCommerceOrderRefundedPayloadV1 = z.infer<
   typeof wooCommerceOrderRefundedPayloadV1
 >;
 
+const wooCommerceCouponIssuePayloadV1 = z
+  .object({
+    kind: z.literal("issue_coupon"),
+    reservationId: z.uuid(),
+    code: z.string().regex(/^SF[A-Z0-9]{20,48}$/u),
+    externalCustomerId: z.string().min(1).max(255),
+    expiresAt: z.iso.datetime({ offset: true }),
+    reward: z.discriminatedUnion("kind", [
+      z
+        .object({
+          kind: z.literal("fixed_discount"),
+          amountMinor: z.string().regex(/^[1-9][0-9]*$/u),
+          currencyMinorUnitDigits: z.int().min(0).max(6),
+        })
+        .strict(),
+      z
+        .object({
+          kind: z.literal("percentage_discount"),
+          percentageBasisPoints: z.int().min(1).max(10_000),
+          maximumDiscountMinor: z
+            .string()
+            .regex(/^[1-9][0-9]*$/u)
+            .nullable(),
+          currencyMinorUnitDigits: z.int().min(0).max(6),
+        })
+        .strict(),
+      z.object({ kind: z.literal("free_shipping") }).strict(),
+    ]),
+  })
+  .strict();
+
+const wooCommerceCouponCancelPayloadV1 = z
+  .object({
+    kind: z.literal("cancel_coupon"),
+    reservationId: z.uuid(),
+    code: z.string().regex(/^SF[A-Z0-9]{20,48}$/u),
+  })
+  .strict();
+
+export const wooCommerceCouponCommandEnvelopeV1 = z
+  .object({
+    version: z.literal("1"),
+    commandId: z.uuid(),
+    connectionId: z.uuid(),
+    topic: z.enum(["woocommerce.coupon.issue", "woocommerce.coupon.cancel"]),
+    payloadVersion: z.literal("v1"),
+    deliveredAt: z.iso.datetime({ offset: true }),
+    payload: z.discriminatedUnion("kind", [
+      wooCommerceCouponIssuePayloadV1,
+      wooCommerceCouponCancelPayloadV1,
+    ]),
+  })
+  .strict()
+  .superRefine((command, context) => {
+    const expectedKind =
+      command.topic === "woocommerce.coupon.issue"
+        ? "issue_coupon"
+        : "cancel_coupon";
+    if (command.payload.kind !== expectedKind) {
+      context.addIssue({
+        code: "custom",
+        message: "Coupon command topic and payload kind do not match",
+        path: ["payload", "kind"],
+      });
+    }
+  });
+
+export type WooCommerceCouponCommandEnvelopeV1 = z.infer<
+  typeof wooCommerceCouponCommandEnvelopeV1
+>;
+
+export const wooCommerceCommandRequestV1 = z.discriminatedUnion("kind", [
+  z
+    .object({
+      version: z.literal("1"),
+      kind: z.literal("poll"),
+      connectionId: z.uuid(),
+      requestId: z.uuid(),
+      batchSize: z.int().min(1).max(25).default(10),
+    })
+    .strict(),
+  z
+    .object({
+      version: z.literal("1"),
+      kind: z.literal("acknowledge"),
+      connectionId: z.uuid(),
+      requestId: z.uuid(),
+      commandId: z.uuid(),
+      outcome: z.enum(["delivered", "retryable", "dead_letter", "cancelled"]),
+      resultReference: z.string().min(1).max(500).nullable(),
+      errorCode: z
+        .string()
+        .regex(/^[a-z0-9_.-]{1,100}$/u)
+        .nullable(),
+      retryDelaySeconds: z.int().min(0).max(86_400),
+    })
+    .strict(),
+]);
+
+export type WooCommerceCommandRequestV1 = z.infer<
+  typeof wooCommerceCommandRequestV1
+>;
+
 export type WooCommerceSignatureHeaders = Readonly<{
   connectionId: string;
   deliveryId: string;

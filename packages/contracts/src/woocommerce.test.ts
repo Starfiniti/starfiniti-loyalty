@@ -3,6 +3,7 @@ import {
   canonicalCommerceEventV1,
   signWooCommerceDelivery,
   verifyWooCommerceDelivery,
+  wooCommerceCouponCommandEnvelopeV1,
   wooCommerceDecimalToMinor,
   wooCommerceDeliveryEnvelopeV1,
   wooCommerceOrderRefundedPayloadV1,
@@ -250,5 +251,53 @@ describe("WooCommerce raw-body signatures", () => {
         maxBodyBytes: 8,
       }),
     ).toEqual({ ok: false, reason: "body_too_large" });
+  });
+});
+
+describe("WooCommerce coupon commands", () => {
+  it("accepts a customer-scoped one-use native coupon command", () => {
+    expect(
+      wooCommerceCouponCommandEnvelopeV1.safeParse({
+        version: "1",
+        commandId: "61000000-0000-4000-8000-000000000001",
+        connectionId: "62000000-0000-4000-8000-000000000001",
+        topic: "woocommerce.coupon.issue",
+        payloadVersion: "v1",
+        deliveredAt: "2026-08-12T10:00:00Z",
+        payload: {
+          kind: "issue_coupon",
+          reservationId: "63000000-0000-4000-8000-000000000001",
+          code: "SF0123456789ABCDEFGHIJ",
+          externalCustomerId: "7",
+          expiresAt: "2026-08-13T10:00:00Z",
+          reward: {
+            kind: "fixed_discount",
+            amountMinor: "1000",
+            currencyMinorUnitDigits: 2,
+          },
+        },
+      }).success,
+    ).toBe(true);
+  });
+
+  it("rejects mismatched topics and weak coupon codes", () => {
+    expect(
+      wooCommerceCouponCommandEnvelopeV1.safeParse({
+        version: "1",
+        commandId: "61000000-0000-4000-8000-000000000001",
+        connectionId: "62000000-0000-4000-8000-000000000001",
+        topic: "woocommerce.coupon.cancel",
+        payloadVersion: "v1",
+        deliveredAt: "2026-08-12T10:00:00Z",
+        payload: {
+          kind: "issue_coupon",
+          reservationId: "63000000-0000-4000-8000-000000000001",
+          code: "SHORT",
+          externalCustomerId: "7",
+          expiresAt: "2026-08-13T10:00:00Z",
+          reward: { kind: "free_shipping" },
+        },
+      }).success,
+    ).toBe(false);
   });
 });
