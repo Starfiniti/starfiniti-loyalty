@@ -20,8 +20,9 @@ function starfiniti_runtime_assert($condition, string $message): void
 
 starfiniti_runtime_assert(class_exists('WooCommerce'), 'WooCommerce is active');
 starfiniti_runtime_assert(class_exists(Outbox::class), 'Starfiniti Loyalty is active');
+$originalLocale = determine_locale();
 starfiniti_runtime_assert(
-    switch_to_locale('sl_SI'),
+    $originalLocale === 'sl_SI' || switch_to_locale('sl_SI'),
     'runtime can switch to the bundled Slovenian locale'
 );
 unload_textdomain('starfiniti-loyalty', true);
@@ -34,7 +35,9 @@ starfiniti_runtime_assert(
     ($localizedMenu['loyalty'] ?? null) === 'Nagrade za zvestobo',
     'bundled Slovenian customer navigation translation loads at runtime'
 );
-restore_previous_locale();
+if ($originalLocale !== 'sl_SI') {
+    restore_previous_locale();
+}
 unload_textdomain('starfiniti-loyalty', true);
 Plugin::loadTextDomain();
 $expectedHpos = get_option('starfiniti_runtime_expected_hpos');

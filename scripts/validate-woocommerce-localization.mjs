@@ -4,6 +4,7 @@ import { join } from "node:path";
 const pluginRoot = "plugins/woocommerce";
 const bootstrap = readFileSync(`${pluginRoot}/starfiniti-loyalty.php`, "utf8");
 const plugin = readFileSync(`${pluginRoot}/src/class-plugin.php`, "utf8");
+const workflow = readFileSync(".github/workflows/ci.yml", "utf8");
 const pot = readFileSync(
   `${pluginRoot}/languages/starfiniti-loyalty.pot`,
   "utf8",
@@ -27,6 +28,11 @@ for (const required of [
   if (!plugin.includes(required)) {
     throw new Error(`WooCommerce translation bootstrap is missing ${required}`);
   }
+}
+if (!workflow.includes("wp language core install sl_SI")) {
+  throw new Error(
+    "WooCommerce runtime matrix must install the Slovenian core locale before switching languages.",
+  );
 }
 
 function phpFiles(directory) {
