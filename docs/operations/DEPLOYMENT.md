@@ -54,7 +54,7 @@ Generate the WooCommerce signing-key pool on the application host with `npm run 
 
 ## Release process
 
-1. Build immutable application/plugin artifacts and generate dependency/container/plugin evidence.
+1. After all required checks pass on an approved commit, push one exact `vMAJOR.MINOR.PATCH` tag. The release workflow reruns the baseline and disposable database gate, publishes dashboard/worker GHCR images under the commit SHA and version, and attaches the WooCommerce ZIP plus `SHA256SUMS` to the GitHub release. Deploy the commit-SHA image tags or resolved digests, never a floating version tag.
 2. Back up and confirm WAL archive health before database migrations.
 3. Apply forward-compatible migrations with the old application still safe.
 4. Deploy one application/worker version with health checks and migrations disabled at runtime.

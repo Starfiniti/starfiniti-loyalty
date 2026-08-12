@@ -344,3 +344,32 @@ tasks:
       - the plugin validates and imports all package fields atomically and stores the signing key through its existing Sodium-backed encrypted option
       - 44 provisioning pgTAP assertions plus 146 unit tests cover grants column minimization roles tenancy lifecycle idempotency key reuse setup-package validation and dashboard eligibility
       - exact-head run 31633310240 passed all six jobs with twenty-four migrations 997 pgTAP assertions concurrency and property probes and setup-package import in all four localized WooCommerce runtime variants
+  - id: DEPLOY-PROXMOX
+    title: Release and deploy the self-hosted platform on Proxmox
+    phase: deployment
+    status: pending
+    dependencies: [P9-MERCHANT-HUB]
+    acceptance:
+      - Approved commit produces immutable dashboard worker and WooCommerce artifacts
+      - Pinned Supabase and application services run behind production TLS with private administration paths
+      - Initial Auth owner and tenant membership can launch a published programme and connect WooCommerce
+      - Encrypted off-host PITR backup and clean-room restore meet recorded RPO and RTO
+      - Application database and connector rollback or forward-fix evidence is retained
+    verification:
+      - exact-head GitHub Actions release run
+      - production deployment preflight and health checks
+      - authenticated tenant and forbidden cross-tenant smoke tests
+      - signed WooCommerce delivery command and outage recovery smoke tests
+      - clean-room restore drill
+    risks: [R-003, R-004, R-005, R-008, R-015, R-018]
+    docs:
+      - docs/operations/DEPLOYMENT.md
+      - docs/operations/BACKUP_RESTORE.md
+      - infrastructure/environments/proxmox/README.md
+    evidence:
+      - digest-pinned dashboard and worker Dockerfiles have a constrained build context
+      - pull-request CI builds both application images without publishing them
+      - exact semantic-version tags are configured to rerun baseline and database gates before publishing commit-SHA and version GHCR images plus the checksummed WooCommerce ZIP
+      - Proxmox Compose requires distinct dashboard runtime and worker credentials a read-only signing pool and immutable image selectors
+      - exact-head run 31634024586 passed seven jobs including both production Docker builds baseline twenty-four migration replays 997 pgTAP assertions concurrency and property probes and all four localized WooCommerce runtime variants
+      - first approved release tag package visibility SSH DNS TLS backup target production secrets and initial Auth owner remain deployment inputs

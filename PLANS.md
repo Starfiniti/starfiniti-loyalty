@@ -77,6 +77,8 @@ Phase 9 — merchant administration and customer experience. Shopify Phase 8 rem
 - Exact-head run `31629852692` passed the hosted customer-export baseline, twenty-three migrations with 953 pgTAP assertions plus concurrency/property probes, 141 unit tests, and all four localized WooCommerce runtime variants.
 - Guided WooCommerce provisioning now lets a live tenant owner/admin create the first active connection for a published programme and copy one exact setup package into WordPress. The server consumes a unique deployment-managed signing-key reference; the browser Data API, audit trail, and plugin diagnostics never expose that reference.
 - Exact-head run `31633310240` passed the guided-provisioning baseline, twenty-four migrations with 997 pgTAP assertions plus concurrency/property probes, 146 unit tests, and package import in all four localized WooCommerce runtime variants.
+- The deployment-artifact slice now builds both digest-pinned dashboard and worker Dockerfiles on every pull request. An exact semantic-version tag reruns the baseline and disposable database gate before publishing commit-SHA/version GHCR images and a checksummed WooCommerce plugin release; no release tag has been created yet.
+- Exact-head run `31634024586` passed all seven jobs, including real dashboard/worker Docker builds, the 24-migration/997-assertion database gate, and all four localized WooCommerce runtime variants.
 - Exact-head run `31601351946` passed the filtered-customer baseline, fifteen migrations with 654 pgTAP assertions plus concurrency/property probes, and all four localized WooCommerce runtime variants.
 - Exact-head run `31581760825` passed the customer-ledger baseline, database job, and all four WooCommerce runtime variants.
 
@@ -87,7 +89,7 @@ Phase 9 — merchant administration and customer experience. Shopify Phase 8 rem
 ## Next safe tasks
 
 1. Audit remaining Phase 9 acceptance gaps and implement the next highest-value merchant/customer surface.
-2. Complete production deployment and recovery evidence when the final infrastructure inputs are available.
+2. Create the first approved semantic-version release after merge, then complete production deployment and recovery evidence when the final infrastructure inputs are available.
 
 ## Dependencies and blockers
 

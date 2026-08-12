@@ -25,6 +25,7 @@
 - Every rendered merchant route now exposes a first-focus skip link to one focusable main landmark; global visible focus includes text areas, reduced-motion behavior is guarded, and the sign-in card remains within a 390-pixel viewport.
 - The operations view can download a versioned, tenant-scoped support bundle containing only public scope/connection IDs, queue totals, watermarks, and a labelled bounded sample of grouped canonical error codes. Item IDs, display names, payloads, commerce/customer identities, actors, reasons, signing references, and secrets are omitted.
 - A tenant owner/admin can provision the first WooCommerce connector for an active workspace and published programme from the operations view. The server consumes one unique reference from a root-readable deployment key pool, records a secret-free immutable audit event, and returns an exact setup package only in that action result; the plugin validates and encrypts the imported signing key at rest.
+- Pull-request CI builds the dashboard and worker Dockerfiles from a constrained context using a digest-pinned Node base. Exact semantic-version tags are configured to rerun baseline/database gates, publish GHCR images under commit-SHA and version tags, and attach the WooCommerce ZIP plus SHA-256 checksum to a GitHub release; no production release has been tagged yet.
 - The customer-experience view reads one RLS-scoped workspace/programme-group theme and previews member/guest states responsively. Owners/admins can revision a contract-validated token set through an idempotent audited command; inaccessible colors, arbitrary CSS, remote fonts, scripts, uploads, and caller-supplied tenant authority are rejected.
 - The customer-experience view also manages separate bounded English and Slovenian customer-copy revisions. Locale selectors are allowlisted, owner/admin saves derive scope and actor from live Auth, member reads remain tenant-RLS scoped, and audit metadata retains locale/revision without duplicating translated copy.
 - A public mobile-first hosted loyalty route renders one active published programme in English or Slovenian using approved theme tokens, tier rates, and reward names/costs. Its bounded anonymous read model omits organization identity, customer/ledger state, raw programme/reward configuration, audit, integration, and commerce evidence; suspended or mixed-scope resources return no document.
@@ -49,6 +50,7 @@
 
 - Docker, Podman, and WSL remain unavailable on this workstation; GitHub Actions is the verified database runner.
 - Direct Proxmox SSH is not usable with the available aliases and keys. No persistent Supabase or WooCommerce environment has been mutated.
+- GHCR images and the GitHub release do not exist until an approved version tag is created after the Phase 9 branch is merged.
 - The globally configured `pnpm` shim is broken; npm is the supported package manager.
 
 ## Database migration state
@@ -101,6 +103,7 @@ Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 Wo
 - PR exact-head run `31627622779` passed all six jobs for hosted customer localization, including 132 unit tests, twenty-two migration replays, all 910 pgTAP assertions, concurrency/property probes, and active-locale claim links in the complete localized WooCommerce matrix.
 - PR exact-head run `31629852692` passed all six jobs for hosted customer export, including 141 unit tests, twenty-three migration replays, all 953 pgTAP assertions, concurrency/property probes, and the complete localized WooCommerce matrix.
 - PR exact-head run `31633310240` passed all six jobs for guided WooCommerce provisioning, including 146 unit tests, twenty-four migration replays, all 997 pgTAP assertions, concurrency/property probes, and real setup-package import in the complete localized WooCommerce matrix.
+- PR exact-head run `31634024586` passed all seven jobs for deployment artifacts, including real digest-pinned dashboard/worker Docker builds, the baseline, twenty-four migration replays, all 997 pgTAP assertions, concurrency/property probes, and the complete localized WooCommerce matrix.
 
 ## Next recommended task
 

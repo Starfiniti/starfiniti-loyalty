@@ -266,3 +266,12 @@
 - Removed `signing_material_ref` from authenticated table-wide reads, added explicit safe-column grants, and proved that browser roles cannot call the provisioning command or observe secret references.
 - Added 44 adversarial pgTAP assertions, three contract tests, two dashboard helper tests, a safe key-pool generator test, 43-message Slovenian catalog coverage, and real package imports in all four minimum/current HPOS/legacy runtime cells, bringing the suites to 146 unit tests and 997 database assertions.
 - Exact-head run `31633310240` passed all six jobs: twenty-four migration replays, all 997 pgTAP assertions, concurrency/property probes, and real setup-package import in all four localized WooCommerce runtime variants.
+
+## 2026-08-12 — Reproducible deployment artifacts
+
+- Pinned every external dashboard/worker Docker stage to the same exact Node 24 Alpine manifest digest and added a build context that excludes Git state, dependencies, build output, coverage, logs, local environment files, and Supabase temporary state.
+- Added a pull-request container job that performs real dashboard and worker image builds on the Linux/Docker runner.
+- Added an exact `vMAJOR.MINOR.PATCH` release workflow that reruns the baseline and disposable migration/pgTAP gate before publishing dashboard and worker images under both commit-SHA and version tags.
+- Added checksummed WooCommerce ZIP publication to the matching GitHub release and static enforcement for tag trigger, least required workflow permissions, full-SHA actions, digest-pinned bases, both image builds, database cleanup, and Proxmox image variables.
+- Corrected the Proxmox environment template to require the worker image independently from the dashboard image. No release tag or production package has been created yet.
+- Exact-head run `31634024586` passed all seven jobs: real dashboard and worker Docker builds, the baseline, twenty-four migration replays, all 997 pgTAP assertions, concurrency/property probes, and all four localized WooCommerce runtime variants.

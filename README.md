@@ -4,7 +4,7 @@ Open-source, self-hosted loyalty infrastructure for WooCommerce, built with Next
 
 ## Current status
 
-Phases 0 through 7 are complete for the active WooCommerce scope: the tenant/RLS platform, immutable double-entry ledger, versioned programme engine, signed asynchronous connector, recovery tooling, and supported WordPress/WooCommerce runtime matrix are execution-verified. Phase 9's authenticated merchant hub is in progress with programme, customer, reporting, connector-operation, accessibility, and sanitized support surfaces. Real Proxmox deployment still requires the final production access and infrastructure inputs; see `STATUS.md` and `docs/plan/TASKS.yaml` for exact evidence.
+Phases 0 through 7 are complete for the active WooCommerce scope: the tenant/RLS platform, immutable double-entry ledger, versioned programme engine, signed asynchronous connector, recovery tooling, and supported WordPress/WooCommerce runtime matrix are execution-verified. Phase 9's authenticated merchant hub includes programme, customer, reporting, connector-operation, guided WooCommerce setup, hosted customer, accessibility, localization, and sanitized support surfaces. Real Proxmox deployment still requires the final production access and infrastructure inputs; see `STATUS.md` and `docs/plan/TASKS.yaml` for exact evidence.
 
 ## Prerequisites
 
@@ -30,6 +30,12 @@ npm run db:stop
 ```
 
 Start the dashboard with `npm run dev` and open `http://127.0.0.1:3000`.
+
+## Release artifacts
+
+Pull requests build both pinned Linux container images without publishing them. Pushing an exact `vMAJOR.MINOR.PATCH` tag runs the full baseline and disposable database gate, then publishes dashboard and worker images to GitHub Container Registry under both the version and commit-SHA tags. It also creates a GitHub release containing `starfiniti-loyalty.zip` and `SHA256SUMS`.
+
+Production Compose must use the commit-SHA image tags (or resolved digests), not a floating tag. A release tag is created only after the target commit is approved and all required checks are green.
 
 ## Safety
 
