@@ -1,6 +1,7 @@
 <?php
 
 use Automattic\WooCommerce\Utilities\OrderUtil;
+use Automattic\WooCommerce\StoreApi\Utilities\CartController;
 use Starfiniti\Loyalty\Commands;
 use Starfiniti\Loyalty\Outbox;
 
@@ -102,10 +103,28 @@ $rejectCheckoutHttp = static function ($preempt) use (&$checkoutHttpRequests) {
 };
 add_filter('pre_http_request', $rejectCheckoutHttp, 10, 1);
 
+wp_set_current_user((int) $customerId);
+$cartController = new CartController();
+$cartController->load_cart();
+$cart = $cartController->get_cart_instance();
+$cart->empty_cart();
+$cartItemKey = $cart->add_to_cart($productId, 1);
+starfiniti_runtime_assert(false !== $cartItemKey, 'classic cart fixture contains the product');
+starfiniti_runtime_assert(
+    $cart->apply_coupon($couponCode) && $cart->has_discount($couponCode),
+    'classic cart applies the native loyalty coupon'
+);
+$cart->remove_coupon($couponCode);
+$cartController->apply_coupon($couponCode);
+starfiniti_runtime_assert(
+    $cartController->has_coupon($couponCode),
+    'Cart and Checkout Blocks Store API controller applies the native loyalty coupon'
+);
+$cart->empty_cart();
+
 $order = wc_create_order(['customer_id' => $customerId]);
 starfiniti_runtime_assert(! is_wp_error($order), 'order fixture is created through WooCommerce CRUD');
 $order->add_product($product, 1);
-wp_set_current_user((int) $customerId);
 $applyResult = $order->apply_coupon($couponCode);
 starfiniti_runtime_assert(! is_wp_error($applyResult), 'native coupon applies through WooCommerce core');
 starfiniti_runtime_assert(
