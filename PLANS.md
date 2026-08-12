@@ -28,7 +28,7 @@ Phase 7 — production WooCommerce connector and plugin.
 - Phase 5 is complete: immutable double-entry transactions/entries, wallet/control accounts, FIFO lots, compensating allocations, six balance projections, eight value commands, export/liability reporting, and rebuild tooling are implemented.
 - Exact-head run `31566530867` passed the full gate with 178 pgTAP assertions plus a two-session overspend test and deterministic 20-round property sequence.
 - Phase 6 is complete: immutable publication/scheduling, deterministic award/simulation parity, tier qualification/history, reward reservation compensation, and advance expiry notifications are implemented.
-- Exact-head run `31568749748` passed the full baseline and Docker database gate with five migrations, 260 pgTAP assertions, and the concurrency/property probe.
+- Exact-head run `31569179555` passed the full baseline and Docker database gate with five migrations, 260 pgTAP assertions, ledger overspend, concurrent evaluation idempotency, and property probes.
 
 ## Active work
 

@@ -194,7 +194,7 @@ tasks:
       - advance expiry notification scheduling writes one fence and transactional outbox command per lot and lead time
       - 82 programme pgTAP assertions cover lifecycle hashes immutability RLS idempotency tier history reward capture failure compensation and notification retries
       - two-session advisory-lock probe proves concurrent identical evaluation attempts return one evidence identity
-      - exact-head GitHub Actions run 31568749748 passed the full baseline and Docker Supabase gate with 260 total pgTAP assertions plus concurrency and property checks
+      - exact-head GitHub Actions run 31569179555 passed the full baseline and Docker Supabase gate with 260 pgTAP assertions plus ledger overspend concurrent evaluation idempotency and property checks
   - id: P7-WOOCOMMERCE-CONNECTOR
     title: Complete the production WooCommerce connector and plugin
     phase: 7

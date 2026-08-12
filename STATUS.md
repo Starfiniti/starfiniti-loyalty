@@ -47,7 +47,7 @@ Public repository `Starfiniti/starfiniti-loyalty`; draft PR `#5` contains the Ph
 - Public `main` run `31513294330` passed both jobs after merge, including migration replay, seed, pgTAP, and cleanup.
 - PR exact-head run `31527785181` passed both jobs, including replay/reset/seed, all 87 pgTAP assertions, the dynamic ingestion build, and cleanup.
 - PR exact-head run `31566530867` passed both jobs, including four migration replays, reset/seed, all 178 pgTAP assertions, a competing-reservation test, 20 deterministic operation sequences, and cleanup.
-- PR exact-head run `31568749748` passed both jobs, including five migration replays, reset/seed, all 260 pgTAP assertions, the concurrency/property probe, and cleanup.
+- PR exact-head run `31569179555` passed both jobs, including five migration replays, reset/seed, all 260 pgTAP assertions, ledger overspend, concurrent evaluation idempotency, the property probe, and cleanup.
 
 ## Next recommended task
 
