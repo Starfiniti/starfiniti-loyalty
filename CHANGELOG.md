@@ -49,3 +49,4 @@
 - Replaced illustrative Overview figures with tenant/workspace/programme-authorized reporting for members, eligible loyalty spend, repeat-member rate, point redemption, liability, and aligned daily trends using exact integer contracts and private-source aggregation.
 - Hardened customer list/detail reads with live-membership database wrappers, literal bounded search, database-side channel-ID masking, fixed result ceilings, and text-form wallet/ledger integers that remain exact beyond JavaScript's safe range.
 - Added guided first-programme onboarding for existing tenant owners/admins through an idempotent, audited, server-authorized database command; public tenant provisioning remains disabled.
+- Added minimized customer tier visibility with current/qualified/grace state, exact eligible-spend minor units, and no private decision evidence in the merchant response.

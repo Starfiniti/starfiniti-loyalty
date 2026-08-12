@@ -104,6 +104,7 @@ select is_empty(
           'create_programme_draft_command',
           'get_customer_adjustment_context',
           'get_customer_read_model',
+          'get_customer_tier_read_model',
           'get_connector_operation_issues',
           'get_connector_operation_summaries',
           'get_overview_report',

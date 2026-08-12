@@ -136,3 +136,10 @@
 - Kept direct programme inserts unavailable to authenticated clients and left public organization/group provisioning disabled until abuse, billing, and lifecycle controls exist.
 - Added 35 pgTAP assertions for exact privileges/search paths, canonical inputs, owner/admin authority, tenant/group derivation, retry/conflict behavior, role revocation, suspended groups, cross-tenant denial, RLS-filtered audit reads, and audit immutability.
 - Exact-head run `31591151097` passed the clean baseline, thirteen migrations, all 586 pgTAP assertions, concurrency/property probes, and all four real WooCommerce runtime variants.
+
+## 2026-08-12 — Phase 9 customer tier visibility
+
+- Added a tenant-authorized one-row tier read model over the current membership interval and its immutable qualification decision.
+- Exposed current and qualified tier labels, transition, exact text-form eligible-spend minor units, and effective/below-threshold/grace timestamps while omitting explanations, hashes, idempotency keys, actors, and unrelated history.
+- Added responsive merchant customer-detail presentation with an honest unevaluated state and no invented tier default.
+- Added 27 pgTAP assertions for exact privileges/search paths, bounds, grace semantics, large-integer preservation, minimization, live analyst access, and revoked/suspended/cross-tenant denial.

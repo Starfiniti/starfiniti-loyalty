@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Crown, ShieldCheck } from "lucide-react";
 import { signOut } from "@/app/actions";
 import {
   getCustomerAdjustmentContext,
   getCustomerDetail,
+  getCustomerTierState,
 } from "@/lib/server/customers";
 import { getMerchantProgrammeState } from "@/lib/server/programme";
 import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
@@ -35,11 +36,13 @@ export default async function CustomerDetailPage({
   }
   if (tenant.kind === "unassigned") redirect("/");
 
-  const [detail, adjustmentContext, programmeState] = await Promise.all([
-    getCustomerDetail(tenant.context, customerId),
-    getCustomerAdjustmentContext(tenant.context, customerId),
-    getMerchantProgrammeState(tenant.context),
-  ]);
+  const [detail, adjustmentContext, programmeState, tierState] =
+    await Promise.all([
+      getCustomerDetail(tenant.context, customerId),
+      getCustomerAdjustmentContext(tenant.context, customerId),
+      getMerchantProgrammeState(tenant.context),
+      getCustomerTierState(tenant.context, customerId),
+    ]);
   if (!detail) notFound();
   const publishedVersion = programmeState.versions.find(
     (version) => version.status === "published",
@@ -101,6 +104,67 @@ export default async function CustomerDetailPage({
             <small>points</small>
           </article>
         ))}
+      </section>
+
+      <section
+        className="customer-panel tier-panel"
+        aria-labelledby="tier-title"
+      >
+        <div className="customer-result-heading">
+          <div>
+            <Crown aria-hidden="true" />
+            <strong id="tier-title">Tier qualification</strong>
+          </div>
+          <span>Current immutable decision</span>
+        </div>
+        {tierState?.tierCode ? (
+          <dl className="tier-detail-grid">
+            <div>
+              <dt>Effective tier</dt>
+              <dd>{tierState.tierName ?? tierState.tierCode}</dd>
+            </div>
+            <div>
+              <dt>Qualified tier</dt>
+              <dd>
+                {tierState.qualifiedTierName ??
+                  tierState.qualifiedTierCode ??
+                  "Not recorded"}
+              </dd>
+            </div>
+            <div>
+              <dt>Decision</dt>
+              <dd>{label(tierState.transition ?? "none")}</dd>
+            </div>
+            <div>
+              <dt>Rolling eligible spend</dt>
+              <dd>
+                {tierState.rollingEligibleSpendMinor
+                  ? `${formatPointText(tierState.rollingEligibleSpendMinor)} minor units`
+                  : "Not recorded"}
+              </dd>
+            </div>
+            <div>
+              <dt>Effective since</dt>
+              <dd>
+                {tierState.effectiveFrom
+                  ? formatDate(tierState.effectiveFrom)
+                  : "Not recorded"}
+              </dd>
+            </div>
+            <div>
+              <dt>Grace until</dt>
+              <dd>
+                {tierState.graceUntil
+                  ? formatDate(tierState.graceUntil)
+                  : "No active grace period"}
+              </dd>
+            </div>
+          </dl>
+        ) : (
+          <p className="empty-state">
+            No tier decision has been recorded for this wallet yet.
+          </p>
+        )}
       </section>
 
       {adjustmentContext &&

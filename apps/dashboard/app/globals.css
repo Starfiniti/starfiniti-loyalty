@@ -1416,6 +1416,36 @@ h1 {
   font-size: 22px;
   font-variant-numeric: tabular-nums;
 }
+.tier-panel {
+  margin-bottom: 18px;
+}
+.tier-panel .customer-result-heading {
+  margin-top: 0;
+  border-top: 0;
+}
+.tier-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0 22px;
+  margin: 16px 0 0;
+}
+.tier-detail-grid > div {
+  min-width: 0;
+  padding: 14px 0;
+  border-bottom: 1px solid #f0eeec;
+}
+.tier-detail-grid dt {
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.tier-detail-grid dd {
+  margin: 6px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
 .ledger-panel .customer-result-heading {
   margin-top: 0;
   border-top: 0;
@@ -1465,6 +1495,9 @@ h1 {
   .balance-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+  .tier-detail-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 @media (max-width: 640px) {
   .customer-page {
@@ -1483,6 +1516,9 @@ h1 {
   }
   .balance-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .tier-detail-grid {
+    grid-template-columns: 1fr;
   }
   .ledger-list li {
     grid-template-columns: 80px 1fr;

@@ -20,6 +20,7 @@
 - The merchant programme surface provides structured tier/reward editing, deterministic earning preview, contract validation, new immutable draft versions, exact-fingerprint publish/schedule confirmation, role-aware controls, version history, and tenant-visible administration audit evidence.
 - Existing tenant owners/admins can create the first programme in their selected active programme group through a server-derived, idempotent database command with immutable audit evidence; public tenant provisioning stays disabled.
 - Customer operations provide bounded literal display-reference search, database-masked channel identity, exact text-form pending/available/reserved/spent/expired/reversed buckets, and the latest immutable ledger entries with programme-version and correlation attribution.
+- Customer detail now includes minimized current versus qualified tier, transition, exact eligible-spend minor units, and effective/grace timestamps without exposing private decision explanations or command evidence.
 - Connector operations provide tenant-authorized health/queue counts, bounded failure metadata without private payloads, and audited owner/admin/operator replay of dead-letter canonical effects. Outbound coupon dead letters remain inspect-only because points compensation may already exist.
 - Customer owners/admins can preview and confirm signed whole-point adjustments against an exact text-form balance. Credits require expiry, removals show a strong negative-balance warning, and every result is one reason-bound immutable double-entry transaction plus administration audit evidence.
 - Connector owners/admins/operators can review and queue one WooCommerce order reconciliation through an audited private outbox and signed polling route. The plugin re-emits stable source facts idempotently, never edits points directly, and terminates missing orders explicitly.
@@ -38,7 +39,7 @@
 
 ## Database migration state
 
-Thirteen versioned migrations and the seed replay successfully against disposable Supabase/Postgres 17 CI with 586 pgTAP assertions plus concurrency/property probes. No persistent or production database has been changed.
+Thirteen versioned migrations and the seed replay successfully against disposable Supabase/Postgres 17 CI with 586 pgTAP assertions plus concurrency/property probes. A fourteenth customer-tier read migration validates locally with 27 declared adversarial assertions. No persistent or production database has been changed.
 
 ## Git state
 

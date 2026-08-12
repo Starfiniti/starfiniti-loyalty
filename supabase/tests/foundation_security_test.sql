@@ -80,6 +80,7 @@ select is_empty(
           'loyalty.create_programme_draft_command(uuid,jsonb,text,uuid)',
           'loyalty.get_customer_adjustment_context(uuid,uuid)',
           'loyalty.get_customer_read_model(uuid,uuid)',
+          'loyalty.get_customer_tier_read_model(uuid,uuid)',
           'loyalty.get_connector_operation_issues(uuid,integer)',
           'loyalty.get_connector_operation_summaries(uuid)',
           'loyalty.get_overview_report(uuid,uuid,uuid,integer,timestamp with time zone)',

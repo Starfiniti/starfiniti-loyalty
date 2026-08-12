@@ -43,6 +43,20 @@ export type CustomerAdjustmentContext = Readonly<{
   availablePoints: string;
 }>;
 
+export type CustomerTierState = Readonly<{
+  customerId: string;
+  tierCode: string | null;
+  tierName: string | null;
+  qualifiedTierCode: string | null;
+  qualifiedTierName: string | null;
+  transition: string | null;
+  rollingEligibleSpendMinor: string | null;
+  belowThresholdSince: string | null;
+  graceUntil: string | null;
+  effectiveFrom: string | null;
+  decidedAt: string | null;
+}>;
+
 type UnknownRecord = Readonly<Record<string, unknown>>;
 
 function asRecord(value: unknown): UnknownRecord {
@@ -69,6 +83,14 @@ function nullableString(row: UnknownRecord, key: string): string | null {
 function exactPoint(row: UnknownRecord, key: string): string {
   const value = row[key];
   if (!isExactPointText(value)) throw new Error("customer_read_unavailable");
+  return value;
+}
+
+function nullableExactPoint(row: UnknownRecord, key: string): string | null {
+  const value = row[key];
+  if (value !== null && !isExactPointText(value)) {
+    throw new Error("customer_read_unavailable");
+  }
   return value;
 }
 
@@ -200,4 +222,40 @@ export async function getCustomerAdjustmentContext(
   return row && isExactPointText(row.available_points)
     ? { availablePoints: row.available_points }
     : null;
+}
+
+export async function getCustomerTierState(
+  context: TenantContext,
+  customerPublicId: string,
+): Promise<CustomerTierState | null> {
+  if (!isUuid(customerPublicId) || !context.programmeGroup) return null;
+  const supabase = await createSupabaseServerClient();
+  const result = await supabase
+    .schema("loyalty")
+    .rpc("get_customer_tier_read_model", {
+      target_customer_public_id: customerPublicId,
+      target_programme_group_public_id: context.programmeGroup.public_id,
+    });
+  if (result.error) throw new Error("customer_tier_read_unavailable");
+  const rowValue = firstRow(result.data);
+  if (!rowValue) return null;
+  const row = asRecord(rowValue);
+  const customerId = requiredString(row, "customer_id");
+  if (!isUuid(customerId)) throw new Error("customer_tier_read_unavailable");
+  return {
+    customerId,
+    tierCode: nullableString(row, "tier_code"),
+    tierName: nullableString(row, "tier_name"),
+    qualifiedTierCode: nullableString(row, "qualified_tier_code"),
+    qualifiedTierName: nullableString(row, "qualified_tier_name"),
+    transition: nullableString(row, "transition"),
+    rollingEligibleSpendMinor: nullableExactPoint(
+      row,
+      "rolling_eligible_spend_minor",
+    ),
+    belowThresholdSince: nullableString(row, "below_threshold_since"),
+    graceUntil: nullableString(row, "grace_until"),
+    effectiveFrom: nullableString(row, "effective_from"),
+    decidedAt: nullableString(row, "decided_at"),
+  };
 }
