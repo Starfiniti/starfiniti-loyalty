@@ -4,7 +4,7 @@ Use unit and property tests for domain invariants, database integration tests fo
 
 Database migrations, seed replay, schema grants, RLS coverage, and privileged-function placement are exercised with `npm run db:verify`; see `DATABASE_TESTS.md`. Static validation alone cannot close a database task.
 
-`npm run accessibility:validate` statically enforces the shared first-focus skip link, one focusable main target on every route surface, text-area focus visibility, and reduced-motion coverage. It complements, rather than replaces, keyboard and responsive browser inspection of primary workflows.
+`npm run accessibility:validate` statically enforces the shared first-focus skip link, one focusable main target on all 13 route surfaces, text-area focus visibility, and reduced-motion coverage. It complements, rather than replaces, keyboard and responsive browser inspection of primary workflows. The authenticated redemption route is also checked at a 390-pixel viewport for safe login continuation, private/no-store and no-referrer handling, and a bounded confirmation layout.
 
 Support-diagnostic tests serialize adversarial inputs and assert forbidden customer, payload, store-name, item-identity, and signing values are absent. Noncanonical error/operation strings are redacted rather than trusted as safe codes.
 
@@ -15,3 +15,5 @@ Experience-theme tests require contract/database agreement on contrast, token al
 Customer activity-filter tests require a closed query-value allowlist, total transaction-kind categorization, stable newest-first ordering, and no mutation or expansion of the bounded database result.
 
 The Phase 5 gate adds immutable-ledger pgTAP coverage plus a real two-session overspend race and a deterministic mixed-operation property sequence. Any future value command must join these gates and prove zero sum, attribution, idempotency, tenant isolation, deterministic locks, and wallet/lot projection equality.
+
+The controlled customer redemption gate adds 45 pgTAP assertions for exact grants, Auth-derived active-link authority, tenant isolation, native-reward configuration bounds, atomic reservation/ledger/transition/private-outbox effects, exact retry/conflict behavior, insufficient-balance and lifecycle rollback, coupon minimization, actor attribution, and revocation. The complete database suite remains the authority for those transactional claims; the browser check covers only navigation and presentation boundaries.

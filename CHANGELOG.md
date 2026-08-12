@@ -61,3 +61,5 @@
 - Added a guest-safe hosted loyalty page that renders published tiers and rewards with controlled merchant styling and English/Slovenian copy through one bounded anonymous PostgreSQL projection.
 - Added a one-use five-minute WooCommerce customer claim with explicit Auth confirmation, immutable hashed decision evidence, revocable conflict-safe customer links, and no email matching or render-time hub request.
 - Added an authenticated hosted member account with exact balances, tier/expiry, safe rewards/reservations, and redacted activity through a no-argument Auth-derived PostgreSQL projection.
+- Added explicit hosted-member reward confirmation and one narrow Auth-derived redemption command that atomically reserves exact points, records immutable reservation evidence, and queues one private customer-scoped WooCommerce coupon command without browser-supplied tenant/value authority.
+- Added validated native coupon amount, percentage, currency precision, and 1–365 day validity fields to structured programme authoring, plus automatic point release through the existing connector failure/unused-expiry compensation paths.

@@ -20,12 +20,16 @@ WooCommerce is a thin connector. It uses HTTPS, least-privilege credentials, sig
 
 - Product/cart/checkout loyalty UI is optional and cached with explicit staleness.
 - When the hub is unavailable, earning information may degrade but add-to-cart, checkout, payment, and order creation continue.
-- Reward points are reserved centrally before a coupon command is issued. The plugin creates/cancels the native coupon idempotently and reports capture/use.
+- The hosted member page requires an authenticated explicit confirmation before redeeming a native fixed-discount, percentage-discount, or free-shipping reward. The browser submits only its linked account public ID, the published reward code, and a request UUID; PostgreSQL derives the live customer, tenant, connector, programme, version, and wallet.
+- Native reward configuration is validated when programme versions are authored: fixed discounts use a positive integer minor-unit amount, percentage discounts use 1–10,000 basis points with an optional positive minor-unit cap, and every native coupon may specify 1–365 validity days. Currency precision is bounded to 0–6 digits.
+- Reward points are reserved centrally before a coupon command is issued. Reservation, immutable ledger entries, transition evidence, and the private WooCommerce issue command commit atomically. The plugin creates/cancels the customer-only native coupon idempotently and reports capture/use.
+- Coupon codes and external WooCommerce customer identifiers never enter the hosted redemption response. Exact request retries return the original reservation result; reuse with changed inputs is rejected.
 - Coupon codes are high entropy, one-use, short-lived, and restricted to the intended customer/order/cart conditions where WooCommerce supports them.
 - A completed order containing a customer-matched Starfiniti coupon writes a PII-free `commerce.coupon.captured` event to the local outbox. The worker atomically moves the reservation from `issued` to `captured` and the points from `reserved` to `spent` exactly once.
 - The worker sweeps expired coupons only after native issuance is confirmed, then queues one cancellation command. Points remain reserved until WooCommerce confirms an unused coupon is disabled; that acknowledgement writes a compensating `cancel` ledger transaction and moves the reservation to `released`.
 - A coupon with a non-zero native usage count is never cancelled/released. The connector dead-letters that command so delayed capture/reconciliation can settle the spend instead.
 - Unknown command outcomes retry with the same command ID and bounded error codes.
+- Definitive issue failure, dead-letter exhaustion, and confirmed-unused expiry compensate through the existing immutable cancel/release path; history is never rewritten.
 
 ## Localization
 

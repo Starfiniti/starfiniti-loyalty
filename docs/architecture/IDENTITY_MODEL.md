@@ -65,7 +65,7 @@ Email possession alone is insufficient. The implemented registered-customer proo
 
 Hosted customer views use `customer_user_links` plus programme-group policy. They may read their own wallet, tier, expiry, reward, and redacted history. They cannot see internal fraud flags, other channel identities, merchant notes, raw events, or unrelated brands.
 
-Customer-facing commands such as reward reservation use the same private, idempotent command path as merchant/API actions; a browser never writes ledger rows.
+Customer-facing commands such as reward redemption accept only the linked account public ID, published reward code, and request UUID after explicit confirmation. PostgreSQL derives the Auth-linked customer and all tenant, connector, programme-version, and wallet authority, then atomically writes the reservation, immutable ledger effect, transition, and private connector command. A browser never supplies an external customer ID, receives a coupon code, or writes ledger rows.
 
 ## Support access
 
@@ -91,4 +91,4 @@ Support cannot impersonate by changing a session claim. A support grant requires
 | Account-link race                   | Unique active links, row locks, idempotent claim token            |
 | Erasure destroys ledger explanation | Pseudonymize identity attributes; retain immutable value evidence |
 
-Phase 9 tests prove channel/tenant isolation, one-use replay conflict, active-link races, revocation, no-email authority, minimized customer self-access, and absent Auth subject all fail closed.
+Phase 9 tests prove channel/tenant isolation, one-use replay conflict, active-link races, revocation, no-email authority, minimized customer self-access, and absent Auth subject all fail closed. Redemption tests additionally prove live-link derivation, exact retry identity, changed-request conflict, native-config bounds, insufficient-balance rollback, private outbox visibility, immutable ledger attribution, and coupon/result minimization.

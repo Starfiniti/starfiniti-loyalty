@@ -2,7 +2,7 @@
 
 ## Implementation status
 
-The tenancy, WooCommerce event/effect, ledger, programme-engine, merchant command/read-model, controlled customer experience, public delivery, and authenticated customer-link portions below are implemented in twenty versioned migrations. The ledger uses immutable transaction headers/entries, six wallet buckets, programme control accounts, original-attribution lots, signed compensating allocations, same-transaction projections, tenant RLS, and narrow worker commands. Programme publication, materialized tiers/rewards, reward reservations, tier history, evaluation evidence, expiry-notification fences, WooCommerce order/refund effects, native coupon settlement, audited merchant mutations, revisioned experience tokens/copy, and customer self-service reads are implemented; broader privacy workflows and customer value commands remain later slices.
+The tenancy, WooCommerce event/effect, ledger, programme-engine, merchant command/read-model, controlled customer experience, public delivery, authenticated customer link, and controlled redemption portions below are implemented in twenty-one versioned migrations. The ledger uses immutable transaction headers/entries, six wallet buckets, programme control accounts, original-attribution lots, signed compensating allocations, same-transaction projections, tenant RLS, and narrow worker commands. Programme publication, materialized tiers/rewards, reward reservations, tier history, evaluation evidence, expiry-notification fences, WooCommerce order/refund effects, native coupon settlement, audited merchant mutations, revisioned experience tokens/copy, customer self-service reads, and Auth-derived native-coupon redemption are implemented; broader privacy workflows remain later slices.
 
 ## Database boundaries
 
@@ -93,6 +93,8 @@ Unique per `(organization_id, workspace_id, programme_group_id)` and protected b
 - `identity_link_decisions`: append-only claim evidence keyed by connection and one-use nonce/proof hashes. It stores the Auth subject, optional resolved customer, key version, issue time, outcome, and SHA-256 references—not raw nonce, signature, email, or external customer ID.
 
 `get_my_loyalty_accounts()` derives the Auth subject from the live request and accepts no input arguments. It returns at most 20 active linked accounts with exact text-form wallet balances, minimized tier/expiry state, up to 20 safe published rewards, ten active reservations, and ten redacted ledger activities. Underlying link, identity, ledger, and decision tables remain unavailable to browser roles.
+
+`redeem_my_reward(account_public_id, reward_code, request_id)` accepts only one linked-account public ID, a published reward code, and a request UUID. It derives the Auth subject, organization, customer, active programme version, wallet, exact points cost, coupon validity, and source WooCommerce connection inside one security-definer transaction. Creation, FIFO-backed ledger reserve, reserved transition, and private coupon outbox enqueue either all commit or all roll back. Exact retries return the original reservation; changed reuse, insufficient balance, cross-tenant scope, revoked links, blocked wallets, inactive workspaces/connections, and unsupported reward kinds fail closed. Coupon code and external WooCommerce customer ID never enter the browser result.
 
 Identity linking is described in `IDENTITY_MODEL.md`.
 

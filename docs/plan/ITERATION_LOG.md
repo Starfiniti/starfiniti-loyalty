@@ -224,3 +224,11 @@
 - Added a no-argument Auth-derived self-service projection and responsive member page for exact pending/available/reserved points, current tier, nearest expiry, bounded safe rewards/reservations, and redacted recent activity.
 - Added 39 claim and 27 self-service pgTAP assertions plus four claim contract tests, a safe-navigation bound, two new accessibility route guards, 40-string English/Slovenian plugin coverage, and real link-signature assertions in every WooCommerce runtime cell.
 - Exact-head run `31618909782` passed all six jobs: 124 unit tests, twenty migration replays, all 818 pgTAP assertions, concurrency/property probes, and all four localized WooCommerce runtime variants.
+
+## 2026-08-12 — Phase 9 controlled customer reward redemption
+
+- Added an authenticated explicit-confirmation flow for native fixed-discount, percentage-discount, and free-shipping rewards; the browser submits only its linked account public ID, published reward code, and request UUID.
+- Added one private Auth-derived database command that resolves the active customer, tenant, connector, programme version, and wallet, then atomically creates the reservation, immutable FIFO ledger effect, transition evidence, and private WooCommerce coupon-issue command.
+- Added strict native coupon configuration contracts and database validation, exact idempotent retry semantics, full rollback on failure, and response minimization that excludes coupon codes, external customer IDs, and private command payloads.
+- Added 45 adversarial pgTAP assertions, bringing the suites to 126 unit tests and 863 database assertions, plus a 390-pixel unauthenticated browser check for safe login continuation and private response headers.
+- Exact-head run `31622879767` passed all six jobs: twenty-one migration replays, all 863 pgTAP assertions, concurrency/property probes, and all four localized WooCommerce runtime variants.

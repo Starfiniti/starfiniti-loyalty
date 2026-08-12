@@ -3,10 +3,10 @@
 ## What works
 
 - Phase 0's reproducible npm workspace, responsive standalone Next.js Overview, Supabase migration baseline, WooCommerce HPOS scaffold, repository operating system, and pinned CI are verified.
-- The Docker-backed GitHub Actions database job replays migrations/seed and runs 322 transactional pgTAP assertions plus real two-session ledger/programme concurrency and property probes.
+- The Docker-backed GitHub Actions database job replays migrations/seed and runs 863 transactional pgTAP assertions plus real two-session ledger/programme concurrency and property probes.
 - Phase 1 Rosy Rewards semantics are owner-approved and encoded as versioned configuration rather than global merchant assumptions.
 - Pure domain behavior covers integer award calculation, explicit historical tier snapshots, 30-day release, 12-month rolling expiry, earliest-expiry redemption ordering, rolling-spend tiers with grace, cumulative original-attribution refund reversal, and negative balances.
-- Twenty-four domain, twenty-six versioned contract, and eight worker tests pass.
+- Twenty-four domain, fifty-two versioned contract, forty-two dashboard, and eight worker tests pass.
 - The platform carries a full AGPL-3.0 license and package metadata; the WooCommerce connector remains independently GPL-2.0-or-later.
 - Phase 2 architecture is complete and deterministically validated: tenant/Auth trust, identity, double-entry ledger, signed inbox/outbox, reward reservation, privacy, backup/restore, deployment, and SLO models are reviewable.
 - Phase 3 tenancy/RLS is complete: organizations, memberships, workspaces, programme groups, support grants, least-privilege roles, composite tenant keys, and live authorization policies execute successfully in disposable Supabase CI.
@@ -40,7 +40,7 @@
 ## Partial
 
 - Phases 0 through 7 are complete for the active WooCommerce scope. Shopify Phase 8 is deferred by product-owner direction.
-- Phase 9 is in progress. The authenticated shell, initial-programme onboarding, programme editor, customer wallet/ledger reads, safe hub connector operations, reason-bound individual and exact-preview bulk value adjustments, live source-reconciliation requests, real Overview reporting, route-wide keyboard bypass, sanitized support diagnostics, localized WooCommerce strings, controlled experience themes/translations, guest hosted loyalty delivery, and signed authenticated member delivery exist; controlled redemption, dashboard translation breadth, usability evidence, and production deployment remain future slices.
+- Phase 9 is in progress. The authenticated shell, initial-programme onboarding, programme editor, customer wallet/ledger reads, safe hub connector operations, reason-bound individual and exact-preview bulk value adjustments, live source-reconciliation requests, real Overview reporting, route-wide keyboard bypass, sanitized support diagnostics, localized WooCommerce strings, controlled experience themes/translations, guest hosted loyalty delivery, signed authenticated member delivery, and controlled native-coupon redemption exist; dashboard translation breadth, privacy workflows, usability evidence, and production deployment remain future slices.
 
 ## Broken or unavailable
 
@@ -50,7 +50,7 @@
 
 ## Database migration state
 
-Twenty versioned migrations and the seed replay successfully against disposable Supabase/Postgres 17 CI with 818 pgTAP assertions plus concurrency/property probes. No persistent or production database has been changed.
+Twenty-one versioned migrations and the seed replay successfully against disposable Supabase/Postgres 17 CI with 863 pgTAP assertions plus concurrency/property probes. No persistent or production database has been changed.
 
 ## Git state
 
@@ -93,6 +93,7 @@ Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 Wo
 - PR exact-head run `31606226276` passed all six jobs for hosted customer translations, including 114 unit tests, seventeen migration replays, 726 pgTAP assertions, concurrency/property probes, and the complete localized WooCommerce matrix.
 - PR exact-head run `31608392260` passed all six jobs for hosted guest loyalty delivery, including 119 unit tests, eighteen migration replays, 752 pgTAP assertions, concurrency/property probes, and the complete localized WooCommerce matrix.
 - PR exact-head run `31618909782` passed all six jobs for signed authenticated customer delivery, including 124 unit tests, twenty migration replays, 818 pgTAP assertions, concurrency/property probes, and locally signed PII-free claim links in the complete localized WooCommerce matrix.
+- PR exact-head run `31622879767` passed all six jobs for controlled customer reward redemption, including 126 unit tests, twenty-one migration replays, all 863 pgTAP assertions, concurrency/property probes, and the complete localized WooCommerce matrix.
 
 ## Next recommended task
 
