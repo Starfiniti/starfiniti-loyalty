@@ -4,15 +4,25 @@ import {
   CUSTOMER_COPY,
   resolveCustomerNavigationLocale,
 } from "@/lib/customer-locale";
+import { customerExportPath } from "@/lib/customer-export";
 
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; error?: string; lang?: string }>;
+  searchParams: Promise<{
+    next?: string;
+    error?: string;
+    lang?: string;
+    reauth?: string;
+  }>;
 }) {
-  const { next, error, lang } = await searchParams;
-  const nextPath = safeAppPath(next);
-  const locale = resolveCustomerNavigationLocale(lang, nextPath);
+  const { next, error, lang, reauth } = await searchParams;
+  const customerExportReauthentication = reauth === "customer-export";
+  const requestedNextPath = safeAppPath(next);
+  const locale = resolveCustomerNavigationLocale(lang, requestedNextPath);
+  const nextPath = customerExportReauthentication
+    ? customerExportPath(locale)
+    : requestedNextPath;
   const copy = CUSTOMER_COPY[locale];
 
   return (
@@ -22,14 +32,25 @@ export default async function LoginPage({
           SF
         </div>
         <p className="login-eyebrow">Starfiniti Loyalty</p>
-        <h1 id="login-title">{copy.signInTitle}</h1>
-        <p className="login-intro">{copy.signInIntro}</p>
+        <h1 id="login-title">
+          {customerExportReauthentication
+            ? copy.exportReauthTitle
+            : copy.signInTitle}
+        </h1>
+        <p className="login-intro">
+          {customerExportReauthentication
+            ? copy.exportReauthIntro
+            : copy.signInIntro}
+        </p>
         <LoginForm
           initialMessage={
             error === "authentication_failed" ? copy.authLinkFailed : ""
           }
           locale={locale}
           nextPath={nextPath}
+          {...(customerExportReauthentication
+            ? { reauthentication: "customer-export" as const }
+            : {})}
         />
         <p className="login-footnote">{copy.signInFootnote}</p>
       </section>

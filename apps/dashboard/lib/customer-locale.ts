@@ -112,6 +112,16 @@ export const CUSTOMER_COPY = {
     sessionFailed: "A secure session could not be established.",
     signInFootnote:
       "Sessions are verified by self-hosted Supabase Auth. Merchant and customer access are checked against live database links on every request.",
+    exportData: "Download my data",
+    exportDataIntro:
+      "Download your linked store identities, wallets, tiers, reservations, and complete loyalty ledger as JSON.",
+    exportReauthTitle: "Confirm your identity",
+    exportReauthIntro:
+      "Enter your password again. The download authorization is valid once for five minutes and is tied to this session.",
+    exportAuthorizing: "Confirming...",
+    exportAuthorize: "Confirm and download",
+    exportAuthorizationFailed:
+      "The secure download could not be authorized. Try again.",
     confirmReward: "Confirm reward",
     redeemBeforeReward: "Redeem",
     redeemFor: "for",
@@ -204,6 +214,16 @@ export const CUSTOMER_COPY = {
     sessionFailed: "Varne seje ni bilo mogoče vzpostaviti.",
     signInFootnote:
       "Seje preverja samostojno gostovani Supabase Auth. Dostop trgovcev in kupcev se ob vsaki zahtevi preveri glede na aktivne povezave v podatkovni zbirki.",
+    exportData: "Prenesi moje podatke",
+    exportDataIntro:
+      "Prenesite povezane identitete trgovin, denarnice, stopnje, rezervacije in celotno evidenco zvestobe v obliki JSON.",
+    exportReauthTitle: "Potrdite svojo identiteto",
+    exportReauthIntro:
+      "Znova vnesite geslo. Dovoljenje za prenos velja enkrat, pet minut in je vezano na to sejo.",
+    exportAuthorizing: "Potrjevanje ...",
+    exportAuthorize: "Potrdi in prenesi",
+    exportAuthorizationFailed:
+      "Varnega prenosa ni bilo mogoÄŤe odobriti. Poskusite znova.",
     confirmReward: "Potrdite nagrado",
     redeemBeforeReward: "Unovčite",
     redeemFor: "za",

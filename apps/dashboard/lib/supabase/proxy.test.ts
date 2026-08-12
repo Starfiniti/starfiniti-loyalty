@@ -1,6 +1,9 @@
 import { NextRequest } from "next/server";
 import { describe, expect, it } from "vitest";
-import { updateSupabaseSession } from "./proxy";
+import {
+  isCustomerExportReauthentication,
+  updateSupabaseSession,
+} from "./proxy";
 
 describe("public loyalty routing", () => {
   it("serves hosted loyalty without Auth refresh and with bounded shared caching", async () => {
@@ -15,5 +18,17 @@ describe("public loyalty routing", () => {
       "public, s-maxage=60, stale-while-revalidate=300",
     );
     expect(response.headers.get("location")).toBeNull();
+  });
+});
+
+describe("customer export reauthentication routing", () => {
+  it("permits only the exact password reauthentication purpose on login", () => {
+    expect(isCustomerExportReauthentication("/login", "customer-export")).toBe(
+      true,
+    );
+    expect(isCustomerExportReauthentication("/login", "export")).toBe(false);
+    expect(
+      isCustomerExportReauthentication("/account/loyalty", "customer-export"),
+    ).toBe(false);
   });
 });

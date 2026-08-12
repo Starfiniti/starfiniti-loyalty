@@ -5,6 +5,7 @@ export * from "./ledger";
 export * from "./programme";
 export * from "./reporting";
 export * from "./experience";
+export * from "./customer-export";
 
 export const commerceEnvelopeV1 = z.object({
   version: z.literal("1"),

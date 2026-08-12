@@ -11,6 +11,13 @@ function isPublicPage(pathname: string): boolean {
   );
 }
 
+export function isCustomerExportReauthentication(
+  pathname: string,
+  value: string | null,
+): boolean {
+  return pathname === "/login" && value === "customer-export";
+}
+
 function responseWithAuthState(
   source: NextResponse,
   target: URL,
@@ -75,7 +82,16 @@ export async function updateSupabaseSession(
     return responseWithAuthState(response, target);
   }
 
-  if (authenticated && request.nextUrl.pathname === "/login") {
+  const customerExportReauthentication = isCustomerExportReauthentication(
+    request.nextUrl.pathname,
+    request.nextUrl.searchParams.get("reauth"),
+  );
+
+  if (
+    authenticated &&
+    request.nextUrl.pathname === "/login" &&
+    !customerExportReauthentication
+  ) {
     const target = request.nextUrl.clone();
     target.pathname = "/";
     target.search = "";

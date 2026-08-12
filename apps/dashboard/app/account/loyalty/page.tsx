@@ -12,6 +12,7 @@ import {
   resolveCustomerLocale,
   type CustomerLocale,
 } from "@/lib/customer-locale";
+import { customerExportReauthenticationPath } from "@/lib/customer-export";
 
 export default async function CustomerLoyaltyPage({
   searchParams,
@@ -98,6 +99,18 @@ export default async function CustomerLoyaltyPage({
             ))}
           </div>
         )}
+        {state.accounts.length > 0 ? (
+          <section className="member-empty">
+            <h2>{copy.exportData}</h2>
+            <p>{copy.exportDataIntro}</p>
+            <Link
+              className="member-public-link"
+              href={customerExportReauthenticationPath(locale)}
+            >
+              {copy.exportData}
+            </Link>
+          </section>
+        ) : null}
       </section>
     </main>
   );

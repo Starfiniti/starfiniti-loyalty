@@ -8,10 +8,12 @@ export function LoginForm({
   nextPath,
   initialMessage = "",
   locale,
+  reauthentication,
 }: {
   nextPath: string;
   initialMessage?: string;
   locale: CustomerLocale;
+  reauthentication?: "customer-export";
 }) {
   const copy = CUSTOMER_COPY[locale];
   const [state, action, pending] = useActionState(signIn, {
@@ -22,6 +24,9 @@ export function LoginForm({
     <form action={action} className="login-form">
       <input name="next" type="hidden" value={nextPath} />
       <input name="lang" type="hidden" value={locale} />
+      {reauthentication ? (
+        <input name="reauth" type="hidden" value={reauthentication} />
+      ) : null}
       <label htmlFor="email">{copy.email}</label>
       <input
         autoComplete="email"
@@ -43,7 +48,13 @@ export function LoginForm({
         {state.message}
       </p>
       <button className="primary" disabled={pending} type="submit">
-        {pending ? copy.signingIn : copy.signIn}
+        {reauthentication
+          ? pending
+            ? copy.exportAuthorizing
+            : copy.exportAuthorize
+          : pending
+            ? copy.signingIn
+            : copy.signIn}
       </button>
     </form>
   );
