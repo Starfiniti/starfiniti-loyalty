@@ -58,3 +58,13 @@
 - Used disposable GitHub Actions runs to correct Supabase migration-role ownership requirements and keep helper functions independent of the Auth schema.
 - Exact-head run `31524730760` passed the baseline and database jobs: migrations replayed twice, reset and seed succeeded, all 49 pgTAP assertions passed, and containers were removed.
 - Closed `P3-TENANCY-SCHEMA` and started `P4-WC-INBOX`.
+
+## 2026-08-11 — Phase 4 signed WooCommerce ingestion gate
+
+- Added strict delivery/canonical schemas and raw-byte signature helpers with bounded input, SHA-256, HMAC-SHA-256, constant-time comparison, timestamp policy, and connection/delivery binding.
+- Added a WooCommerce local outbox using idempotent event keys and Action Scheduler retries. Checkout hooks perform no hub network call.
+- Added the Next.js ingestion route with pre-parse connection/key lookup, secret-file material, signature verification, durable receipt, and retry-safe canonical normalization.
+- Added commerce connection, inbox, canonical event, business effect, and transactional outbox tables with RLS, explicit runtime/worker grants, composite tenant foreign keys, and claim indexes.
+- Added 38 commerce pgTAP assertions for privileges, replay, body conflicts, disabled connections, cross-tenant links, effect/command uniqueness, repeated normalization, and late/out-of-order history.
+- Exact-head run `31527785181` passed the full baseline and Docker database gate with 87 total pgTAP assertions and cleanup.
+- Closed `P4-WC-INBOX` and started `P5-LEDGER-FOUNDATION`.

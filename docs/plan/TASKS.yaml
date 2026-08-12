@@ -124,7 +124,7 @@ tasks:
   - id: P4-WC-INBOX
     title: Implement signed WooCommerce inbox and idempotent normalization
     phase: 4
-    status: in_progress
+    status: complete
     dependencies: [P3-TENANCY-SCHEMA]
     acceptance:
       - Duplicate, delayed, and out-of-order events are safe
@@ -133,4 +133,28 @@ tasks:
     verification: [npm run test]
     risks: [R-002, R-005]
     docs: [docs/integrations/WOOCOMMERCE.md, docs/api/WEBHOOKS.md]
+    evidence:
+      - strict versioned delivery and canonical event schemas plus raw-byte SHA-256 HMAC verification have ten contract tests
+      - WooCommerce writes an idempotent local outbox and Action Scheduler retries the exact persisted envelope without blocking checkout
+      - Next.js verifies connection delivery timestamp nonce key version body hash and signature before JSON parsing
+      - migration 20260811185731 implements restricted inbox canonical facts business-effect fences transactional outbox and retry-safe normalization
+      - 38 commerce pgTAP assertions cover grants RLS duplicate bodies nonce replay disabled connections cross-tenant forgery repeated normalization and late ordering
+      - exact-head GitHub Actions run 31527785181 passed baseline and Docker Supabase replay reset seed 87 total pgTAP assertions and cleanup
+  - id: P5-LEDGER-FOUNDATION
+    title: Implement immutable double-entry points ledger and wallets
+    phase: 5
+    status: in_progress
+    dependencies: [P4-WC-INBOX]
+    acceptance:
+      - Every value change is an immutable balanced transaction
+      - Duplicate effects create exactly one ledger transaction
+      - Pending available spent expired and adjustment balances rebuild from entries
+      - Refund release expiry and negative-balance paths preserve original attribution
+    verification: [npm run test, npm run db:test]
+    risks: [R-003, R-004]
+    docs:
+      [
+        docs/architecture/DATA_MODEL.md,
+        docs/architecture/ADR/0006-double-entry-points-ledger.md,
+      ]
     evidence: []
