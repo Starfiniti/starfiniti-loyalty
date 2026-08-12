@@ -2,7 +2,7 @@
 
 ## Implementation status
 
-The tenancy, WooCommerce event/effect, ledger, programme-engine, merchant command/read-model, controlled customer experience, public delivery, authenticated customer link, controlled redemption, and WooCommerce customer-erasure portions below are implemented in twenty-two versioned migrations. The ledger uses immutable transaction headers/entries, six wallet buckets, programme control accounts, original-attribution lots, signed compensating allocations, same-transaction projections, tenant RLS, and narrow worker commands. Programme publication, materialized tiers/rewards, reward reservations, tier history, evaluation evidence, expiry-notification fences, WooCommerce order/refund effects, native coupon settlement, audited merchant mutations, revisioned experience tokens/copy, customer self-service reads, Auth-derived native-coupon redemption, and source-originated identity erasure are implemented; hosted privacy export remains a later slice.
+The tenancy, WooCommerce event/effect, ledger, programme-engine, merchant command/read-model, controlled customer experience, public delivery, authenticated customer link, controlled redemption, customer data export, and WooCommerce customer-erasure portions below are implemented in twenty-three versioned migrations. The ledger uses immutable transaction headers/entries, six wallet buckets, programme control accounts, original-attribution lots, signed compensating allocations, same-transaction projections, tenant RLS, and narrow worker commands. Programme publication, materialized tiers/rewards, reward reservations, tier history, evaluation evidence, expiry-notification fences, WooCommerce order/refund effects, native coupon settlement, audited merchant mutations, revisioned experience tokens/copy, customer self-service reads, Auth-derived native-coupon redemption and export, and source-originated identity erasure are implemented.
 
 ## Database boundaries
 
@@ -34,6 +34,7 @@ erDiagram
   ORGANIZATION ||--o{ CUSTOMER : scopes
   CUSTOMER ||--o{ CUSTOMER_IDENTITY : links
   CUSTOMER ||--o{ CUSTOMER_USER_LINK : authorizes
+  CUSTOMER ||--o{ CUSTOMER_DATA_EXPORT_EVENT : audits
   COMMERCE_CONNECTION ||--o{ CUSTOMER_USER_LINK : proves
   CUSTOMER_USER_LINK ||--o{ IDENTITY_LINK_DECISION : evidences
   PROGRAMME_GROUP ||--o{ WALLET : denominates
@@ -95,6 +96,10 @@ Unique per `(organization_id, workspace_id, programme_group_id)` and protected b
 `get_my_loyalty_accounts()` derives the Auth subject from the live request and accepts no input arguments. It returns at most 20 active linked accounts with exact text-form wallet balances, minimized tier/expiry state, up to 20 safe published rewards, ten active reservations, and ten redacted ledger activities. Underlying link, identity, ledger, and decision tables remain unavailable to browser roles.
 
 `redeem_my_reward(account_public_id, reward_code, request_id)` accepts only one linked-account public ID, a published reward code, and a request UUID. It derives the Auth subject, organization, customer, active programme version, wallet, exact points cost, coupon validity, and source WooCommerce connection inside one security-definer transaction. Creation, FIFO-backed ledger reserve, reserved transition, and private coupon outbox enqueue either all commit or all roll back. Exact retries return the original reservation; changed reuse, insufficient balance, cross-tenant scope, revoked links, blocked wallets, inactive workspaces/connections, and unsupported reward kinds fail closed. Coupon code and external WooCommerce customer ID never enter the browser result.
+
+`loyalty_private.customer_data_export_authorizations` stores only a SHA-256 capability digest, verified Auth subject, Supabase session ID, five-minute expiry, and one-use timestamp. The trusted Next.js runtime issues the random capability only after password reauthentication. `consume_customer_data_export` locks and consumes it atomically, rechecks the subject/session and every active customer-link/tenant/workspace/connection boundary, and builds one versioned JSON document without accepting organization, customer, or wallet selectors. Export content is returned directly over TLS and is never stored in PostgreSQL or object storage.
+
+`loyalty_private.customer_data_export_events` is immutable per-included-customer audit evidence containing the export ID, customer and organization scope, Auth subject, session, generation time, and document schema version. It contains no exported payload, Auth email, capability, signing reference, actor evidence, request body, or commerce secret. Both export tables and functions are private and executable only by the runtime role.
 
 Identity linking is described in `IDENTITY_MODEL.md`.
 

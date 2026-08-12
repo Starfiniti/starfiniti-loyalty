@@ -243,11 +243,12 @@ tasks:
       - npm run check
       - npm run db:test
       - browser workflow verification
-    risks: [R-001, R-007, R-010, R-011, R-012]
+    risks: [R-001, R-007, R-010, R-011, R-012, R-017]
     docs:
       - docs/product/PRODUCT_REQUIREMENTS.md
       - docs/security/THREAT_MODEL.md
       - docs/integrations/MERCHANT_API.md
+      - docs/api/CUSTOMER_EXPORT.md
     evidence:
       - Next.js 16 proxy refreshes Supabase Auth cookies with private no-store headers and excludes signed commerce API routes
       - server pages use verified getClaims identity and authenticated Data API reads protected by live membership RLS
@@ -333,3 +334,7 @@ tasks:
       - the WooCommerce claim link carries its active locale outside the purpose-bound HMAC identity fields and all four runtime variants prove the resulting Slovenian continuation
       - four locale unit tests plus a 390-pixel browser pass cover explicit fallback unsafe continuations complete dictionaries Slovenian authentication and redemption login continuation without horizontal overflow
       - exact-head run 31627622779 passed all six jobs with 132 unit tests twenty-two migrations 910 pgTAP assertions concurrency and property probes and all four localized WooCommerce runtime variants
+      - hosted customer export requires password reauthentication then issues one random five-minute capability stored only as a SHA-256 digest and bound to the verified Auth subject and Supabase session
+      - the no-selector export transaction rechecks every active link and tenant boundary atomically consumes the capability and returns versioned identities wallets tiers reservations and complete wallet-side ledger history without persisting document content
+      - 43 customer-export pgTAP assertions plus 141 unit tests cover private grants expiry replay subject and session binding tenant minimization exact bigint values immutable payload-free audit transaction rollback headers and localized reauthentication
+      - exact-head run 31629852692 passed all six jobs with twenty-three migrations 953 pgTAP assertions concurrency and property probes and all four localized WooCommerce runtime variants

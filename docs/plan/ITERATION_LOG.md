@@ -248,3 +248,11 @@
 - Added the active WordPress locale to locally generated customer claim links outside the purpose-bound HMAC message, retaining the existing connection/customer/nonce authority and zero-render-request behavior.
 - Added four locale unit tests and a 390-pixel Playwright check for Slovenian login, safe unauthenticated redemption continuation, and horizontal overflow, bringing the unit suite to 132 tests.
 - Exact-head run `31627622779` passed all six jobs: twenty-two migration replays, all 910 pgTAP assertions, concurrency/property probes, and active-locale claim assertions in all four localized WooCommerce runtime variants.
+
+## 2026-08-12 — Phase 9 one-time hosted customer data export
+
+- Added password reauthentication before export and a random five-minute, one-use capability stored only as a SHA-256 digest and bound to the verified Auth subject and Supabase session.
+- Added one no-selector private transaction that rechecks every active customer-link/tenant boundary, consumes the capability atomically, and returns a versioned document containing active linked identities, wallets, tiers, reservations, and complete wallet-side ledger history.
+- Returned the document directly over TLS with private/no-store attachment headers and no PostgreSQL, object-storage, queue, or log persistence; immutable per-customer audit records contain no export payload or Auth email.
+- Added 43 adversarial pgTAP assertions, contract/runtime tests, and a 390-pixel Slovenian password-reauthentication browser check, bringing the suites to 141 unit tests and 953 database assertions.
+- Exact-head run `31629852692` passed all six jobs: twenty-three migration replays, all 953 pgTAP assertions, concurrency/property probes, and all four localized WooCommerce runtime variants.
