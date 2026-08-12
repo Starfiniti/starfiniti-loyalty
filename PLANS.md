@@ -55,6 +55,7 @@ Phase 9 — merchant administration and customer experience. Shopify Phase 8 rem
 - The WooCommerce localization slice registers the packaged `/languages` path at `init`, maintains exact POT coverage for all 38 source strings, bundles Slovenian customer/admin translations in WordPress's performant PHP catalog format, and adds an actual locale-switch/customer-navigation assertion to the four-case runtime matrix.
 - Exact-head run `31598618092` passed the localization baseline, fourteen migrations with 613 pgTAP assertions plus concurrency/property probes, and the Slovenian customer-navigation assertion in all four WooCommerce runtime variants.
 - The customer-experience theme foundation persists one revisioned workspace/programme-group token set behind RLS and an audited owner/admin command. It accepts an accessible canonical brand color, three local font stacks, bounded radius/copy, section visibility, and widget side only; raw CSS, font URLs, scripts, and uploads are outside the boundary.
+- Exact-head run `31600742177` passed the controlled-theme baseline, fifteen migrations with 654 pgTAP assertions plus concurrency/property probes, and all four localized WooCommerce runtime variants.
 - Exact-head run `31581760825` passed the customer-ledger baseline, database job, and all four WooCommerce runtime variants.
 
 ## Active work

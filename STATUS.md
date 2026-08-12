@@ -79,6 +79,7 @@ Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 Wo
 - PR exact-head run `31596460783` passed all six jobs for the accessibility slice, including fourteen migration replays, 613 pgTAP assertions, concurrency/property probes, and the complete WooCommerce matrix.
 - PR exact-head run `31597255280` passed all six jobs for sanitized support diagnostics, including fourteen migration replays, 613 pgTAP assertions, concurrency/property probes, and the complete WooCommerce matrix.
 - PR exact-head run `31598618092` passed all six jobs for WooCommerce localization, including fourteen migration replays, 613 pgTAP assertions, and real Slovenian catalog loading in every minimum/current HPOS/legacy runtime.
+- PR exact-head run `31600742177` passed all six jobs for controlled experience themes, including fifteen migration replays, 654 pgTAP assertions, concurrency/property probes, and the complete localized WooCommerce matrix.
 
 ## Next recommended task
 

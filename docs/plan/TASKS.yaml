@@ -298,3 +298,4 @@ tasks:
       - one RLS-scoped workspace and programme-group experience theme stores only accessible bounded design tokens and revisions through an idempotent owner or admin command with immutable audit evidence
       - the responsive experience editor previews member and guest states while contracts and database checks reject low-contrast colors arbitrary CSS remote font URLs scripts uploads role escalation and cross-tenant scope
       - 41 experience-theme pgTAP assertions cover grants search path composite scope RLS roles revocation idempotency revisions validation contrast audit linkage and cross-tenant denial
+      - exact-head run 31600742177 passed the controlled-theme baseline fifteen migrations 654 pgTAP assertions concurrency and property probes and all four localized WooCommerce runtime variants
