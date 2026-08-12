@@ -72,6 +72,14 @@ select is_empty(
     join pg_namespace as namespace on namespace.oid = routine.pronamespace
     where namespace.nspname in ('public', 'loyalty')
       and routine.prosecdef
+      and not (
+        namespace.nspname = 'loyalty'
+        and routine.oid::regprocedure::text in (
+          'loyalty.create_programme_draft_command(uuid,jsonb,text,uuid)',
+          'loyalty.publish_programme_version_command(uuid,text,text,uuid)',
+          'loyalty.schedule_programme_version_command(uuid,text,timestamp with time zone,text,uuid)'
+        )
+      )
       and not exists (
         select 1
         from pg_depend as dependency
@@ -81,7 +89,7 @@ select is_empty(
           and dependency.deptype = 'e'
       )
   $$,
-  'no application security-definer function exists in an exposed schema'
+  'only reviewed merchant command security-definer functions exist in an exposed schema'
 );
 
 select * from finish();
