@@ -238,6 +238,7 @@ select results_eq(
   array[1::bigint],
   'an idempotent retry creates no second audit event'
 );
+reset role;
 select results_eq(
   $$ select count(*)::bigint from loyalty_private.transactional_outbox
      where topic = 'woocommerce.order.reconcile'
@@ -247,6 +248,8 @@ select results_eq(
   array[1::bigint],
   'an idempotent retry creates no second connector command'
 );
+set local role authenticated;
+set local request.jwt.claim.sub = '77000000-0000-4000-8000-000000000001';
 select throws_ok(
   $$ select * from loyalty.request_connector_reconciliation_command(
     '77000000-0000-4000-8000-000000000101', '43',
