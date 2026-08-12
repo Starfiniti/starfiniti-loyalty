@@ -107,6 +107,7 @@ export const wooCommerceOrderFactV1 = z
   })
   .strict()
   .superRefine((order, context) => {
+    let lineRefundTotal = 0n;
     const orderAmounts = [
       "shippingTotal",
       "taxTotal",
@@ -146,6 +147,7 @@ export const wooCommerceOrderFactV1 = z
         });
         return;
       }
+      lineRefundTotal += refunded;
       if (total > subtotal) {
         context.addIssue({
           code: "custom",
@@ -161,6 +163,17 @@ export const wooCommerceOrderFactV1 = z
         });
       }
     });
+    const orderRefundTotal = scaledBigIntOrNull(
+      order.refundedTotal,
+      order.currencyMinorUnitDigits,
+    );
+    if (orderRefundTotal !== null && lineRefundTotal > orderRefundTotal) {
+      context.addIssue({
+        code: "custom",
+        message: "Line refunds cannot exceed the cumulative order refund",
+        path: ["refundedTotal"],
+      });
+    }
   });
 
 export const wooCommerceOrderStatusChangedPayloadV1 = z

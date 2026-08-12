@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  calculateCumulativeRefundPlan,
   evidenceSha256,
   parseWooCommerceEffect,
   type ClaimedEffect,
@@ -67,9 +68,58 @@ describe("WooCommerce effect worker", () => {
     });
   });
 
+  it("preserves the stable refund id for cumulative reversal idempotency", () => {
+    const order = (event.payload as { order: Record<string, unknown> }).order;
+    expect(
+      parseWooCommerceEffect({
+        ...event,
+        event_type: "commerce.order.refunded",
+        payload: {
+          kind: "order_refunded",
+          refundId: "refund-9",
+          refundAmount: "0.00",
+          order,
+        },
+      }),
+    ).toMatchObject({ kind: "refund", refundId: "refund-9" });
+  });
+
   it("hashes equivalent object keys deterministically", () => {
     expect(evidenceSha256({ a: 1, b: { c: 2 } })).toBe(
       evidenceSha256({ b: { c: 2 }, a: 1 }),
     );
+  });
+
+  it("rounds partial refunds cumulatively and caps a full refund", () => {
+    expect(
+      calculateCumulativeRefundPlan({
+        originalEligibleSpend: 1_000,
+        originalAwardedPoints: 333,
+        currentEligibleSpend: 667,
+        alreadyReversedPoints: 0,
+      }),
+    ).toEqual({
+      cumulativeRefundedEligibleSpend: 333,
+      reversalPoints: 110,
+    });
+    expect(
+      calculateCumulativeRefundPlan({
+        originalEligibleSpend: 1_000,
+        originalAwardedPoints: 333,
+        currentEligibleSpend: 0,
+        alreadyReversedPoints: 110,
+      }).reversalPoints,
+    ).toBe(223);
+  });
+
+  it("rejects a cumulative refund snapshot that moves backwards", () => {
+    expect(() =>
+      calculateCumulativeRefundPlan({
+        originalEligibleSpend: 1_000,
+        originalAwardedPoints: 333,
+        currentEligibleSpend: 1_001,
+        alreadyReversedPoints: 0,
+      }),
+    ).toThrow("cumulative_refund_moved_backwards");
   });
 });

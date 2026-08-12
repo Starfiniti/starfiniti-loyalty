@@ -5,6 +5,7 @@ import {
   type WooCommerceOrderFactV1,
 } from "@starfiniti/contracts";
 import {
+  calculateRefundReversal,
   evaluateOrderAward,
   minorUnit,
   points,
@@ -32,7 +33,11 @@ export type ClaimedEffect = Readonly<{
 
 type ParsedEffect =
   | { readonly kind: "award"; readonly order: WooCommerceOrderFactV1 }
-  | { readonly kind: "refund"; readonly order: WooCommerceOrderFactV1 }
+  | {
+      readonly kind: "refund";
+      readonly refundId: string;
+      readonly order: WooCommerceOrderFactV1;
+    }
   | { readonly kind: "skip"; readonly reason: string }
   | { readonly kind: "quarantine"; readonly reason: string };
 
@@ -51,6 +56,13 @@ type ProgrammeRow = {
 type TierMembershipRow = { tier_code: string };
 type EvaluationRow = { evaluation_public_id: string };
 type AwardRow = { transaction_public_id: string };
+type OriginalAwardRow = {
+  programme_group_id: string;
+  programme_version_id: string;
+  result: Record<string, unknown>;
+  origin_entry_public_id: string | null;
+  already_reversed_points: string;
+};
 
 export function parseWooCommerceEffect(event: ClaimedEffect): ParsedEffect {
   if (event.event_type === "commerce.order.status_changed") {
@@ -68,7 +80,11 @@ export function parseWooCommerceEffect(event: ClaimedEffect): ParsedEffect {
   if (event.event_type === "commerce.order.refunded") {
     const parsed = wooCommerceOrderRefundedPayloadV1.safeParse(event.payload);
     return parsed.success
-      ? { kind: "refund", order: parsed.data.order }
+      ? {
+          kind: "refund",
+          refundId: parsed.data.refundId,
+          order: parsed.data.order,
+        }
       : { kind: "quarantine", reason: "invalid_order_refund_payload" };
   }
   return { kind: "quarantine", reason: "unsupported_event_type" };
@@ -76,6 +92,31 @@ export function parseWooCommerceEffect(event: ClaimedEffect): ParsedEffect {
 
 export function evidenceSha256(value: unknown): string {
   return createHash("sha256").update(stableJson(value)).digest("hex");
+}
+
+export function calculateCumulativeRefundPlan(input: {
+  originalEligibleSpend: number;
+  originalAwardedPoints: number;
+  currentEligibleSpend: number;
+  alreadyReversedPoints: number;
+}): { cumulativeRefundedEligibleSpend: number; reversalPoints: number } {
+  if (input.currentEligibleSpend > input.originalEligibleSpend) {
+    throw new PermanentEffectError("cumulative_refund_moved_backwards");
+  }
+  const cumulativeRefundedEligibleSpend =
+    input.originalEligibleSpend - input.currentEligibleSpend;
+  const reversalPoints =
+    input.originalEligibleSpend === 0
+      ? points(0)
+      : calculateRefundReversal({
+          originalEligibleSpendMinor: minorUnit(input.originalEligibleSpend),
+          originalAwardedPoints: points(input.originalAwardedPoints),
+          cumulativeRefundedEligibleSpendMinor: minorUnit(
+            cumulativeRefundedEligibleSpend,
+          ),
+          alreadyReversedPoints: points(input.alreadyReversedPoints),
+        });
+  return { cumulativeRefundedEligibleSpend, reversalPoints };
 }
 
 export async function claimWooCommerceEffects(
@@ -106,30 +147,14 @@ export async function processWooCommerceEffect(
     );
     return;
   }
-  if (effect.kind === "refund") {
-    await finishEffect(
-      sql,
-      workerId,
-      event,
-      "retryable",
-      "refund_effect_not_ready",
-      retryDelay(event.attempt_count),
-    );
-    return;
-  }
-  if (event.programme_id === null) {
-    await finishEffect(
-      sql,
-      workerId,
-      event,
-      "retryable",
-      "programme_not_configured",
-      retryDelay(event.attempt_count),
-    );
-    return;
-  }
-
   try {
+    if (effect.kind === "refund") {
+      await processRefund(sql, workerId, event, effect);
+      return;
+    }
+    if (event.programme_id === null) {
+      throw new RetryableEffectError("programme_not_configured");
+    }
     const identity = identityFromOrder(effect.order);
     const identities = await sql<IdentityRow[]>`
       select customer_id::text
@@ -183,6 +208,99 @@ export async function processWooCommerceEffect(
       permanent ? 0 : retryDelay(event.attempt_count),
     );
   }
+}
+
+async function processRefund(
+  sql: Sql,
+  workerId: string,
+  event: ClaimedEffect,
+  effect: Extract<ParsedEffect, { kind: "refund" }>,
+): Promise<void> {
+  const operation = `connection:${event.connection_id}:order:${effect.order.orderId}`;
+  const awardEvaluationKey = `woo:evaluation:award:${operation}`;
+  const awardLedgerKey = `woo:ledger:award:${operation}`;
+  const originals = await sql<OriginalAwardRow[]>`
+    select evaluation.programme_group_id::text,
+      evaluation.programme_version_id::text,
+      evaluation.result,
+      origin_entry.public_id::text as origin_entry_public_id,
+      coalesce((
+        select sum(reversal_entry.points)::bigint
+        from loyalty.ledger_entries as reversal_entry
+        join loyalty.ledger_accounts as reversal_account
+          on reversal_account.id = reversal_entry.account_id
+        join loyalty.ledger_transactions as reversal_transaction
+          on reversal_transaction.id = reversal_entry.transaction_id
+        where reversal_entry.organization_id = evaluation.organization_id
+          and reversal_entry.origin_entry_id = origin_entry.id
+          and reversal_account.account_kind = 'reversed'
+          and reversal_transaction.transaction_kind = 'refund_reversal'
+      ), 0)::text as already_reversed_points
+    from loyalty_private.programme_evaluations as evaluation
+    left join loyalty.ledger_transactions as award_transaction
+      on award_transaction.organization_id = evaluation.organization_id
+     and award_transaction.idempotency_key = ${awardLedgerKey}
+     and award_transaction.transaction_kind = 'award'
+    left join loyalty.ledger_entries as origin_entry
+      on origin_entry.organization_id = award_transaction.organization_id
+     and origin_entry.transaction_id = award_transaction.id
+     and origin_entry.points > 0
+    left join loyalty.ledger_accounts as origin_account
+      on origin_account.id = origin_entry.account_id
+     and origin_account.account_kind = 'pending'
+    where evaluation.organization_id = ${event.organization_id}::bigint
+      and evaluation.idempotency_key = ${awardEvaluationKey}
+      and (origin_entry.id is null or origin_account.id is not null)
+    limit 1
+  `;
+  const original = originals[0];
+  if (!original) throw new RetryableEffectError("original_award_not_found");
+  const originalEligibleSpend = evidenceInteger(
+    original.result,
+    "eligibleSpendMinor",
+  );
+  const originalAwardedPoints = evidenceInteger(
+    original.result,
+    "awardedPoints",
+  );
+  const originalTierCode = evidenceString(original.result, "tierCodeSnapshot");
+  if (originalAwardedPoints > 0 && original.origin_entry_public_id === null) {
+    throw new RetryableEffectError("original_award_entry_not_found");
+  }
+  const programme = await loadProgrammeVersion(
+    sql,
+    event.organization_id,
+    original.programme_version_id,
+  );
+  if (effect.order.currency !== programme.currencyCode) {
+    throw new PermanentEffectError("programme_currency_mismatch");
+  }
+  const orderFact = toOrderAwardFact(
+    effect.order,
+    event.occurred_at,
+    originalTierCode,
+  );
+  const currentEvaluation = evaluateOrderAward(programme, [], orderFact);
+  const alreadyReversedPoints = toSafeInteger(original.already_reversed_points);
+  const { cumulativeRefundedEligibleSpend, reversalPoints } =
+    calculateCumulativeRefundPlan({
+      originalEligibleSpend,
+      originalAwardedPoints,
+      currentEligibleSpend: currentEvaluation.eligibleSpendMinor,
+      alreadyReversedPoints,
+    });
+  await commitRefund(sql, workerId, event, effect.refundId, {
+    programmeGroupId: original.programme_group_id,
+    programmeVersionId: original.programme_version_id,
+    originEntryPublicId: original.origin_entry_public_id,
+    orderFact,
+    currentEvaluation,
+    originalEligibleSpend,
+    originalAwardedPoints,
+    cumulativeRefundedEligibleSpend,
+    alreadyReversedPoints,
+    reversalPoints,
+  });
 }
 
 function identityFromOrder(order: WooCommerceOrderFactV1): {
@@ -261,6 +379,50 @@ async function loadProgrammeContext(
     programmeVersionId: first.programme_version_id,
     tierCode: memberships[0]?.tier_code ?? first.tier_code,
     programme,
+  };
+}
+
+async function loadProgrammeVersion(
+  sql: Sql,
+  organizationId: string,
+  programmeVersionIdValue: string,
+): Promise<ProgrammeVersion> {
+  const rows = await sql<ProgrammeRow[]>`
+    select programme.programme_group_id::text,
+      version.id::text as programme_version_id,
+      version.public_id::text as programme_version_public_id,
+      version.version_number,
+      tier.code as tier_code,
+      tier.name as tier_name,
+      tier.minimum_eligible_spend_minor::text,
+      tier.points_per_major_unit::text,
+      tier.ordinal
+    from loyalty.programme_versions as version
+    join loyalty.programmes as programme
+      on programme.organization_id = version.organization_id
+     and programme.id = version.programme_id
+    join loyalty.programme_tiers as tier
+      on tier.organization_id = version.organization_id
+     and tier.programme_version_id = version.id
+    where version.organization_id = ${organizationId}::bigint
+      and version.id = ${programmeVersionIdValue}::bigint
+      and version.status in ('published', 'superseded', 'retired')
+    order by tier.ordinal
+  `;
+  const first = rows[0];
+  if (!first) throw new RetryableEffectError("original_programme_unavailable");
+  return {
+    ...rosyRewardsV1,
+    id: programmeVersionId(first.programme_version_public_id),
+    version: first.version_number,
+    tiers: rows.map((row) => ({
+      code: tierCode(row.tier_code),
+      name: row.tier_name,
+      minimumEligibleSpendMinor: minorUnit(
+        toSafeInteger(row.minimum_eligible_spend_minor),
+      ),
+      pointsPerMajorUnit: points(toSafeInteger(row.points_per_major_unit)),
+    })),
   };
 }
 
@@ -395,6 +557,100 @@ async function commitAward(
   });
 }
 
+async function commitRefund(
+  sql: Sql,
+  workerId: string,
+  event: ClaimedEffect,
+  refundId: string,
+  context: Readonly<{
+    programmeGroupId: string;
+    programmeVersionId: string;
+    originEntryPublicId: string | null;
+    orderFact: ReturnType<typeof toOrderAwardFact>;
+    currentEvaluation: OrderAwardEvaluation;
+    originalEligibleSpend: number;
+    originalAwardedPoints: number;
+    cumulativeRefundedEligibleSpend: number;
+    alreadyReversedPoints: number;
+    reversalPoints: number;
+  }>,
+): Promise<void> {
+  const operation = `connection:${event.connection_id}:order:${context.orderFact.orderId}:refund:${refundId}`;
+  const evaluationKey = `woo:evaluation:refund:${operation}`;
+  const reversalKey = `woo:ledger:refund:${operation}`;
+  const result = {
+    programmeVersionId: context.currentEvaluation.programmeVersionId,
+    orderId: context.orderFact.orderId,
+    refundId,
+    originalEligibleSpendMinor: context.originalEligibleSpend,
+    originalAwardedPoints: context.originalAwardedPoints,
+    cumulativeRefundedEligibleSpendMinor:
+      context.cumulativeRefundedEligibleSpend,
+    alreadyReversedPoints: context.alreadyReversedPoints,
+    reversalPoints: context.reversalPoints,
+  };
+  const inputHash = evidenceSha256({
+    version: "1",
+    order: context.orderFact,
+    refundId,
+  });
+  const resultHash = evidenceSha256(result);
+  await sql.begin(async (transaction) => {
+    const evaluations = await transaction<EvaluationRow[]>`
+      select evaluation_public_id::text
+      from loyalty_private.record_programme_evaluation(
+        ${event.organization_id}::bigint,
+        ${context.programmeGroupId}::bigint,
+        ${context.programmeVersionId}::bigint,
+        ${event.canonical_event_id}::bigint,
+        'live_refund',
+        ${`woocommerce:order:${context.orderFact.orderId}:refund:${refundId}`},
+        ${evaluationKey},
+        ${Buffer.from(inputHash, "hex")},
+        ${Buffer.from(resultHash, "hex")},
+        ${JSON.stringify(result)}::jsonb,
+        ${JSON.stringify({ lines: context.currentEvaluation.explanation })}::jsonb,
+        ${new Date().toISOString()}::timestamptz
+      )
+    `;
+    const evaluationId = evaluations[0]?.evaluation_public_id;
+    if (!evaluationId) throw new Error("refund_evaluation_record_failed");
+    let resultReference = `evaluation:${evaluationId}`;
+    if (context.reversalPoints > 0) {
+      if (context.originEntryPublicId === null) {
+        throw new RetryableEffectError("original_award_entry_not_found");
+      }
+      const reversals = await transaction<AwardRow[]>`
+        select transaction_public_id::text
+        from loyalty_private.reverse_award_points(
+          ${event.organization_id}::bigint,
+          ${context.originEntryPublicId}::uuid,
+          ${context.reversalPoints}::bigint,
+          ${reversalKey},
+          ${Buffer.from(resultHash, "hex")},
+          'Cumulative WooCommerce order refund reversal',
+          ${event.occurred_at}::timestamptz
+        )
+      `;
+      const transactionId = reversals[0]?.transaction_public_id;
+      if (!transactionId) throw new Error("refund_reversal_record_failed");
+      resultReference = `ledger-transaction:${transactionId}`;
+    }
+    await transaction`
+      select * from loyalty_private.finish_commerce_effect(
+        ${event.canonical_event_public_id}::uuid,
+        ${workerId},
+        'applied',
+        'loyalty.order.refund_reversal',
+        ${operation},
+        ${resultReference},
+        null,
+        0
+      )
+    `;
+  });
+}
+
 async function finishEffect(
   sql: Sql,
   workerId: string,
@@ -435,6 +691,28 @@ function toSafeInteger(value: string): number {
   return Number(parsed);
 }
 
+function evidenceInteger(
+  evidence: Record<string, unknown>,
+  field: string,
+): number {
+  const value = evidence[field];
+  if (!Number.isSafeInteger(value) || (value as number) < 0) {
+    throw new PermanentEffectError("invalid_original_award_evidence");
+  }
+  return value as number;
+}
+
+function evidenceString(
+  evidence: Record<string, unknown>,
+  field: string,
+): string {
+  const value = evidence[field];
+  if (typeof value !== "string" || value.length === 0) {
+    throw new PermanentEffectError("invalid_original_award_evidence");
+  }
+  return value;
+}
+
 function retryDelay(attempt: number): number {
   return Math.min(3600, 2 ** Math.min(Math.max(attempt, 1), 11));
 }
@@ -459,3 +737,4 @@ function safeErrorCode(error: unknown): string {
 }
 
 class PermanentEffectError extends Error {}
+class RetryableEffectError extends Error {}

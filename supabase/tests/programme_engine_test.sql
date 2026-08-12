@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(82);
+select plan(83);
 
 select has_table('loyalty', 'programme_tiers', 'programme tiers exist');
 select has_table('loyalty', 'programme_rewards', 'programme rewards exist');
@@ -339,6 +339,21 @@ select throws_ok(
   ) $$,
   '23514', 'evaluation idempotency hash conflict',
   'evaluation idempotency key rejects changed input'
+);
+select results_eq(
+  $$
+    select outcome from loyalty_private.record_programme_evaluation(
+      (select id from loyalty.organizations where slug = 'programme-one'),
+      (select id from loyalty.programme_groups where organization_id = (select id from loyalty.organizations where slug = 'programme-one')),
+      (select id from loyalty.programme_versions where public_id = (select public_id from programme_refs where name = 'version-two')),
+      null, 'live_refund', 'order:42:refund:9', 'evaluation:42:refund:9',
+      decode(repeat('8', 64), 'hex'), decode(repeat('9', 64), 'hex'),
+      '{"reversalPoints":25}'::jsonb, '{"rules":["original-award"]}'::jsonb,
+      '2026-12-02T01:05:00Z'
+    )
+  $$,
+  array['created'::text],
+  'refund evaluation stores immutable original-award evidence'
 );
 select throws_ok(
   $$ delete from loyalty_private.programme_evaluations where idempotency_key = 'evaluation:42' $$,

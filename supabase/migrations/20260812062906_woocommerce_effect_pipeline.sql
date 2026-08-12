@@ -11,6 +11,13 @@ create index commerce_connections_programme_idx
   on loyalty.commerce_connections (organization_id, programme_id, id)
   where programme_id is not null;
 
+alter table loyalty_private.programme_evaluations
+  drop constraint programme_evaluations_evaluation_kind_check,
+  add constraint programme_evaluations_evaluation_kind_check
+    check (evaluation_kind in (
+      'live_award', 'live_refund', 'simulation', 'tier_review'
+    ));
+
 alter table loyalty_private.canonical_commerce_events
   add column effect_state text not null default 'pending'
     check (effect_state in (
