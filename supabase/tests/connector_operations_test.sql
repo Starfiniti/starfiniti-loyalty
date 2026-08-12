@@ -416,7 +416,7 @@ select results_eq(
 select throws_ok(
   $$ update loyalty.admin_audit_events set metadata = '{}'::jsonb
      where idempotency_key = 'connector:effect:retry:one' $$,
-  '55000', 'immutable table rows cannot be updated or deleted',
+  '55000', 'immutable loyalty history cannot be changed',
   'connector audit evidence cannot be rewritten'
 );
 
