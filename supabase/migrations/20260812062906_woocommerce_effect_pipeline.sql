@@ -553,6 +553,9 @@ begin
   if not found then
     raise exception using errcode = '22023', message = 'unknown reward reservation';
   end if;
+  if target_reservation.state = 'reserved' then
+    raise exception using errcode = '55000', message = 'coupon issuance not yet acknowledged';
+  end if;
   if target_reservation.state not in ('issued', 'captured') then
     raise exception using errcode = '23514', message = 'coupon is not issued for capture';
   end if;

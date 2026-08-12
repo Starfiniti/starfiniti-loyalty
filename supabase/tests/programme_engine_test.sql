@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(103);
+select plan(104);
 
 select has_table('loyalty', 'programme_tiers', 'programme tiers exist');
 select has_table('loyalty', 'programme_rewards', 'programme rewards exist');
@@ -912,6 +912,18 @@ select * from loyalty_private.enqueue_woocommerce_coupon_issue(
   (select public_id from programme_results where operation = 'reservation-three'),
   (select public_id from loyalty.commerce_connections where external_store_id = 'programme-one-store'),
   2::smallint
+);
+select throws_ok(
+  $$
+    select * from loyalty_private.capture_woocommerce_coupon_use(
+      (select id from loyalty.organizations where slug = 'programme-one'),
+      (select id from loyalty.commerce_connections where external_store_id = 'programme-one-store'),
+      (select public_id from programme_results where operation = 'reservation-three'),
+      '44', '2026-12-02T07:01:00Z'
+    )
+  $$,
+  '55000', 'coupon issuance not yet acknowledged',
+  'coupon use arriving before issue acknowledgement remains retryable'
 );
 select results_eq(
   $$ select loyalty_private.enqueue_expired_woocommerce_coupon_cancellations('2026-12-04T00:00:00Z', 100) $$,
