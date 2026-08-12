@@ -305,3 +305,4 @@ tasks:
       - bulk customer adjustment dry runs canonicalize 2 to 50 active tenant wallets and exact bigint before and projected balances into one approval fingerprint without writing state
       - execution derives live owner or admin authority locks selected balance rows deterministically rejects stale fingerprints and atomically creates one immutable ledger transaction per customer plus batch item and aggregate audit evidence
       - 39 bulk-adjustment pgTAP assertions cover grants direct DML denial dry-run arithmetic and order exact retry after changed balances idempotency conflict stale preview partial-set denial role revocation tenant isolation immutability and projection rebuilds
+      - exact-head run 31603764054 passed the bulk-adjustment baseline sixteen migrations 693 pgTAP assertions concurrency and property probes and all four localized WooCommerce runtime variants
