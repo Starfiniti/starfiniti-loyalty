@@ -11,6 +11,7 @@ final class Cli
         if (defined('WP_CLI') && WP_CLI && class_exists('\WP_CLI')) {
             \WP_CLI::add_command('starfiniti loyalty status', [self::class, 'status']);
             \WP_CLI::add_command('starfiniti loyalty retry-dead-letters', [self::class, 'retryDeadLetters']);
+            \WP_CLI::add_command('starfiniti loyalty reconcile-order', [self::class, 'reconcileOrder']);
         }
     }
 
@@ -38,5 +39,15 @@ final class Cli
         }
         $retried = Outbox::retryDeadLetters($limit);
         \WP_CLI::success(sprintf('Queued %d dead-letter event(s) for retry.', $retried));
+    }
+
+    /** @param array<int, string> $args @param array<string, mixed> $assocArgs */
+    public static function reconcileOrder(array $args, array $assocArgs): void
+    {
+        $orderId = absint($args[0] ?? 0);
+        if ($orderId < 1 || ! Outbox::reconcileOrder($orderId)) {
+            \WP_CLI::error('A valid parent WooCommerce order ID is required.');
+        }
+        \WP_CLI::success(sprintf('Queued order %d and its refunds for reconciliation.', $orderId));
     }
 }

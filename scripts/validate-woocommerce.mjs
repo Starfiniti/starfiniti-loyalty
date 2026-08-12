@@ -60,7 +60,12 @@ for (const [label, content, requirements] of [
   [
     "cli",
     cli,
-    ["WP_CLI::add_command", "retry-dead-letters", "Outbox::diagnostics"],
+    [
+      "WP_CLI::add_command",
+      "retry-dead-letters",
+      "reconcile-order",
+      "Outbox::diagnostics",
+    ],
   ],
   [
     "commands",

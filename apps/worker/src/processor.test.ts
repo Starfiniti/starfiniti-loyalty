@@ -3,6 +3,7 @@ import {
   calculateCumulativeRefundPlan,
   evidenceSha256,
   parseWooCommerceEffect,
+  toOrderAwardFact,
   type ClaimedEffect,
 } from "./processor";
 
@@ -121,5 +122,31 @@ describe("WooCommerce effect worker", () => {
         alreadyReversedPoints: 0,
       }),
     ).toThrow("cumulative_refund_moved_backwards");
+  });
+
+  it("keeps original award spend separate from cumulative refund evidence", () => {
+    const parsed = parseWooCommerceEffect(event);
+    if (parsed.kind !== "award") throw new Error("expected award fixture");
+    const order = {
+      ...parsed.order,
+      lines: [
+        {
+          lineId: "1",
+          productId: "10",
+          variationId: null,
+          quantity: "1",
+          categoryIds: [],
+          collectionIds: [],
+          subtotal: "10.00",
+          total: "10.00",
+          refundedTotal: "4.00",
+        },
+      ],
+      refundedTotal: "4.00",
+    };
+    const award = toOrderAwardFact(order, event.occurred_at, "rose", false);
+    const refund = toOrderAwardFact(order, event.occurred_at, "rose", true);
+    expect(award.lines[0]?.refundedMinor).toBe(0);
+    expect(refund.lines[0]?.refundedMinor).toBe(400);
   });
 });

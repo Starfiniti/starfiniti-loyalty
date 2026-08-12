@@ -50,6 +50,26 @@ create unique index transactional_outbox_coupon_reservation_uidx
   )
   where topic in ('woocommerce.coupon.issue', 'woocommerce.coupon.cancel');
 
+create or replace function loyalty_private.touch_commerce_connection()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  update loyalty.commerce_connections
+  set last_seen_at = greatest(coalesce(last_seen_at, new.last_received_at), new.last_received_at),
+      updated_at = clock_timestamp()
+  where id = new.connection_id and organization_id = new.organization_id;
+  return new;
+end;
+$$;
+
+create trigger commerce_delivery_inbox_touch_connection
+after insert or update of last_received_at
+on loyalty_private.commerce_delivery_inbox
+for each row execute function loyalty_private.touch_commerce_connection();
+
 create or replace function loyalty_private.claim_woocommerce_effects(
   target_worker_id text,
   target_batch_size integer default 25,
@@ -555,6 +575,7 @@ $$;
 
 alter function loyalty_private.claim_woocommerce_effects(text, integer, integer)
   owner to loyalty_owner;
+alter function loyalty_private.touch_commerce_connection() owner to loyalty_owner;
 alter function loyalty_private.resolve_commerce_customer(bigint, bigint, text, text)
   owner to loyalty_owner;
 alter function loyalty_private.finish_commerce_effect(
@@ -570,6 +591,8 @@ alter function loyalty_private.finish_woocommerce_command(
 
 revoke all on function loyalty_private.claim_woocommerce_effects(text, integer, integer)
   from public, anon, authenticated, loyalty_runtime;
+revoke all on function loyalty_private.touch_commerce_connection()
+  from public, anon, authenticated, loyalty_runtime, loyalty_worker;
 revoke all on function loyalty_private.resolve_commerce_customer(bigint, bigint, text, text)
   from public, anon, authenticated, loyalty_runtime;
 revoke all on function loyalty_private.finish_commerce_effect(

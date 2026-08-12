@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(39);
+select plan(40);
 
 select has_column(
   'loyalty', 'commerce_connections', 'programme_id',
@@ -81,6 +81,10 @@ from loyalty_private.accept_commerce_delivery(
 ) as accepted;
 select * from loyalty_private.normalize_commerce_delivery(
   (select receipt_id from effect_receipts where event_number = 1), 'v1'
+);
+select ok(
+  (select last_seen_at is not null from loyalty.commerce_connections where external_store_id = 'effect-one-store'),
+  'verified connector delivery advances the connection health watermark'
 );
 
 create temporary table first_claim as

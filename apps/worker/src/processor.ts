@@ -181,6 +181,7 @@ export async function processWooCommerceEffect(
       effect.order,
       event.occurred_at,
       context.tierCode,
+      false,
     );
     const evaluation = evaluateOrderAward(context.programme, [], orderFact);
     await commitAward(
@@ -279,6 +280,7 @@ async function processRefund(
     effect.order,
     event.occurred_at,
     originalTierCode,
+    true,
   );
   const currentEvaluation = evaluateOrderAward(programme, [], orderFact);
   const alreadyReversedPoints = toSafeInteger(original.already_reversed_points);
@@ -426,10 +428,11 @@ async function loadProgrammeVersion(
   };
 }
 
-function toOrderAwardFact(
+export function toOrderAwardFact(
   order: WooCommerceOrderFactV1,
   occurredAt: string,
   tierSnapshot: string,
+  includeRefunds: boolean,
 ) {
   const toMinor = (value: string) => {
     const [major, fraction = ""] = value.split(".");
@@ -458,7 +461,9 @@ function toOrderAwardFact(
           collectionIds: line.collectionIds,
           grossMinor,
           discountMinor: minorUnit(grossMinor - paidMinor),
-          refundedMinor: toMinor(line.refundedTotal),
+          refundedMinor: includeRefunds
+            ? toMinor(line.refundedTotal)
+            : minorUnit(0),
           paymentKind: order.paymentKind,
         };
       }),

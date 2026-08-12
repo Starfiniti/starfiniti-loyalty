@@ -226,7 +226,7 @@ from loyalty_private.create_programme_draft(
       {"code":"rose","name":"Rose","minimumEligibleSpendMinor":0,"pointsPerMajorUnit":6},
       {"code":"bloom","name":"Bloom","minimumEligibleSpendMinor":20000,"pointsPerMajorUnit":7}
     ],
-    "rewards": [{"code":"ten-euro","name":"Ten euro off","kind":"fixed_discount","costPoints":100}]
+    "rewards": [{"code":"ten-euro","name":"Ten euro off","kind":"fixed_discount","costPoints":100,"configuration":{"amountMinor":1000}}]
   }'::jsonb,
   decode(repeat('3', 64), 'hex'),
   '61000000-0000-4000-8000-000000000001'

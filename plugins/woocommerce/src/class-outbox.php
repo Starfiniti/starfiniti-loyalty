@@ -69,7 +69,8 @@ final class Outbox
                 'kind' => 'order_status_changed',
                 'previousStatus' => sanitize_key($from),
                 'order' => self::orderFact($order),
-            ]
+            ],
+            $revision ? gmdate('Y-m-d H:i:s', $revision->getTimestamp()) : null
         );
     }
 
@@ -95,8 +96,44 @@ final class Outbox
                 'refundId' => (string) $refundId,
                 'refundAmount' => self::money($refund->get_amount(), true),
                 'order' => self::orderFact($order),
-            ]
+            ],
+            $refund->get_date_created()
+                ? gmdate('Y-m-d H:i:s', $refund->get_date_created()->getTimestamp())
+                : null
         );
+    }
+
+    public static function reconcileOrder(int $orderId): bool
+    {
+        $order = wc_get_order($orderId);
+        if (! $order instanceof \WC_Order || $order instanceof \WC_Order_Refund) {
+            return false;
+        }
+        $revision = $order->get_date_modified();
+        $completed = $order->get_date_completed();
+        $occurred = $completed ?: $revision;
+        $orderFact = self::orderFact($order);
+        if ($completed) {
+            $orderFact['status'] = 'completed';
+        }
+        self::enqueue(
+            sprintf('order:%d:reconcile:%s', $orderId, $revision ? $revision->getTimestamp() : '0'),
+            'commerce.order.status_changed',
+            (string) $orderId,
+            $revision ? (string) $revision->getTimestamp() : null,
+            [
+                'kind' => 'order_status_changed',
+                'previousStatus' => sanitize_key($order->get_status()),
+                'order' => $orderFact,
+            ],
+            $occurred ? gmdate('Y-m-d H:i:s', $occurred->getTimestamp()) : null
+        );
+        foreach ($order->get_refunds() as $refund) {
+            if ($refund instanceof \WC_Order_Refund) {
+                self::captureRefund($refund->get_id(), []);
+            }
+        }
+        return true;
     }
 
     /** @param array<string, mixed> $payload */
@@ -105,7 +142,8 @@ final class Outbox
         string $eventType,
         string $sourceObjectId,
         ?string $sourceRevision,
-        array $payload
+        array $payload,
+        ?string $occurredGmt = null
     ): void {
         global $wpdb;
         $now = gmdate('Y-m-d H:i:s');
@@ -118,7 +156,7 @@ final class Outbox
             $eventType,
             $sourceObjectId,
             $sourceRevision,
-            $now,
+            $occurredGmt ?? $now,
             wp_json_encode($payload, JSON_UNESCAPED_SLASHES),
             'pending',
             $now,
