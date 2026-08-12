@@ -32,6 +32,15 @@ describe("merchant locale", () => {
     expect(
       merchantText("sl-SI", "Review and confirm the WooCommerce connection."),
     ).toBe("Preglejte in potrdite povezavo WooCommerce.");
+    expect(merchantText("sl-SI", "Customer theme")).toBe("Tema za stranke");
+    expect(
+      merchantText(
+        "sl-SI",
+        "The theme could not be saved safely. No change was assumed.",
+      ),
+    ).toBe(
+      "Teme ni bilo mogoče varno shraniti. Sprememba se ne šteje za izvedeno.",
+    );
     expect(merchantText("en", "Overview")).toBe("Overview");
     expect(merchantText("sl-SI", "Tenant supplied name")).toBe(
       "Tenant supplied name",

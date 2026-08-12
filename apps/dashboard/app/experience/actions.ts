@@ -7,6 +7,7 @@ import {
   merchantSaveExperienceThemeCommandV1,
 } from "@starfiniti/contracts";
 import { revalidatePath } from "next/cache";
+import { merchantText, resolveMerchantLocale } from "@/lib/merchant-locale";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type ExperienceActionState = Readonly<{
@@ -25,6 +26,8 @@ export async function saveExperienceTheme(
   _previousState: ExperienceActionState,
   formData: FormData,
 ): Promise<ExperienceActionState> {
+  const locale = resolveMerchantLocale(formData.get("lang"));
+  const message = (source: string) => merchantText(locale, source);
   const operationId = String(formData.get("operationId") ?? "");
   const command = merchantSaveExperienceThemeCommandV1.safeParse({
     version: "1",
@@ -47,8 +50,9 @@ export async function saveExperienceTheme(
   if (!command.success) {
     return {
       kind: "error",
-      message:
+      message: message(
         "Use an accessible dark brand color and keep all customer copy within the displayed limits.",
+      ),
     };
   }
 
@@ -73,20 +77,25 @@ export async function saveExperienceTheme(
   if (error?.code === "42501") {
     return {
       kind: "error",
-      message: "Your current organization role cannot change this theme.",
+      message: message(
+        "Your current organization role cannot change this theme.",
+      ),
     };
   }
   if (error?.code === "23514") {
     return {
       kind: "error",
-      message:
+      message: message(
         "This save conflicts with a completed request. Refresh and retry.",
+      ),
     };
   }
   if (error) {
     return {
       kind: "error",
-      message: "The theme could not be saved safely. No change was assumed.",
+      message: message(
+        "The theme could not be saved safely. No change was assumed.",
+      ),
     };
   }
 
@@ -103,7 +112,7 @@ export async function saveExperienceTheme(
   if (!result.success) {
     return {
       kind: "error",
-      message: "The theme response could not be verified.",
+      message: message("The theme response could not be verified."),
     };
   }
 
@@ -112,8 +121,12 @@ export async function saveExperienceTheme(
     kind: "success",
     message:
       result.data.outcome === "duplicate"
-        ? `Theme revision ${result.data.revision} was already saved.`
-        : `Theme revision ${result.data.revision} saved with an immutable audit record.`,
+        ? locale === "sl-SI"
+          ? `Različica teme ${result.data.revision} je bila že shranjena.`
+          : `Theme revision ${result.data.revision} was already saved.`
+        : locale === "sl-SI"
+          ? `Različica teme ${result.data.revision} je shranjena z nespremenljivim revizijskim zapisom.`
+          : `Theme revision ${result.data.revision} saved with an immutable audit record.`,
   };
 }
 
@@ -121,6 +134,8 @@ export async function saveExperienceTranslation(
   _previousState: ExperienceActionState,
   formData: FormData,
 ): Promise<ExperienceActionState> {
+  const locale = resolveMerchantLocale(formData.get("lang"));
+  const message = (source: string) => merchantText(locale, source);
   const operationId = String(formData.get("operationId") ?? "");
   const command = merchantSaveExperienceTranslationCommandV1.safeParse({
     version: "1",
@@ -143,8 +158,9 @@ export async function saveExperienceTranslation(
   if (!command.success) {
     return {
       kind: "error",
-      message:
+      message: message(
         "Use a supported locale and keep each customer-facing label single-line and within its displayed limit.",
+      ),
     };
   }
 
@@ -169,21 +185,25 @@ export async function saveExperienceTranslation(
   if (error?.code === "42501") {
     return {
       kind: "error",
-      message: "Your current organization role cannot change customer copy.",
+      message: message(
+        "Your current organization role cannot change customer copy.",
+      ),
     };
   }
   if (error?.code === "23514") {
     return {
       kind: "error",
-      message:
+      message: message(
         "This locale save conflicts with a completed request. Refresh and retry.",
+      ),
     };
   }
   if (error) {
     return {
       kind: "error",
-      message:
+      message: message(
         "The customer copy could not be saved safely. No change was assumed.",
+      ),
     };
   }
 
@@ -201,7 +221,7 @@ export async function saveExperienceTranslation(
   if (!result.success || result.data.locale !== translation.locale) {
     return {
       kind: "error",
-      message: "The translation response could not be verified.",
+      message: message("The translation response could not be verified."),
     };
   }
 
@@ -210,7 +230,11 @@ export async function saveExperienceTranslation(
     kind: "success",
     message:
       result.data.outcome === "duplicate"
-        ? `${result.data.locale} revision ${result.data.revision} was already saved.`
-        : `${result.data.locale} revision ${result.data.revision} saved with immutable audit evidence.`,
+        ? locale === "sl-SI"
+          ? `${result.data.locale} revizija ${result.data.revision} je bila že shranjena.`
+          : `${result.data.locale} revision ${result.data.revision} was already saved.`
+        : locale === "sl-SI"
+          ? `${result.data.locale} revizija ${result.data.revision} je shranjena z nespremenljivim revizijskim dokazom.`
+          : `${result.data.locale} revision ${result.data.revision} saved with immutable audit evidence.`,
   };
 }

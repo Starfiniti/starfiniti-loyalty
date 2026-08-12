@@ -1,15 +1,30 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { signOut } from "@/app/actions";
+import { MerchantLocaleSwitcher } from "@/components/merchant-locale-switcher";
+import {
+  merchantLocalePath,
+  merchantText,
+  resolveMerchantLocale,
+} from "@/lib/merchant-locale";
 import { getMerchantExperienceTheme } from "@/lib/server/experience-theme";
 import { getMerchantProgrammeState } from "@/lib/server/programme";
 import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
 import { ExperienceEditor } from "./experience-editor";
 
-export default async function ExperiencePage() {
+export default async function ExperiencePage({
+  searchParams,
+}: Readonly<{ searchParams: Promise<{ lang?: string | string[] }> }>) {
+  const locale = resolveMerchantLocale((await searchParams).lang);
+  const t = (source: string) => merchantText(locale, source);
   const tenant = await getAuthenticatedTenantState();
-  if (tenant.kind === "unauthenticated") redirect("/login?next=%2Fexperience");
-  if (tenant.kind === "unassigned") redirect("/");
+  if (tenant.kind === "unauthenticated") {
+    const target = merchantLocalePath("/experience", locale);
+    redirect(
+      merchantLocalePath(`/login?next=${encodeURIComponent(target)}`, locale),
+    );
+  }
+  if (tenant.kind === "unassigned") redirect(merchantLocalePath("/", locale));
 
   const { context } = tenant;
   const canEdit = ["owner", "admin"].includes(context.membershipRole);
@@ -22,57 +37,72 @@ export default async function ExperiencePage() {
   );
 
   return (
-    <main className="experience-page" id="main-content" tabIndex={-1}>
+    <main
+      className="experience-page"
+      id="main-content"
+      lang={locale}
+      tabIndex={-1}
+    >
       <header className="programme-topbar">
         <div>
-          <Link className="programme-brand" href="/">
+          <Link
+            className="programme-brand"
+            href={merchantLocalePath("/", locale)}
+          >
             <span aria-hidden="true">SF</span>
             Starfiniti Loyalty
           </Link>
           <p>
             {context.organization.name} ·{" "}
-            {context.workspace?.name ?? "No workspace"}
+            {context.workspace?.name ?? t("No workspace")}
           </p>
         </div>
-        <nav aria-label="Account navigation">
-          <Link className="secondary" href="/programme">
-            Programme
-          </Link>
-          <Link className="secondary" href="/">
-            Overview
-          </Link>
-          <form action={signOut}>
-            <button className="secondary" type="submit">
-              Sign out
-            </button>
-          </form>
-        </nav>
+        <div className="programme-topbar-actions">
+          <MerchantLocaleSwitcher locale={locale} />
+          <nav aria-label={t("Account navigation")}>
+            <Link
+              className="secondary"
+              href={merchantLocalePath("/programme", locale)}
+            >
+              {t("Programme")}
+            </Link>
+            <Link className="secondary" href={merchantLocalePath("/", locale)}>
+              {t("Overview")}
+            </Link>
+            <form action={signOut}>
+              <input name="lang" type="hidden" value={locale} />
+              <button className="secondary" type="submit">
+                {t("Sign out")}
+              </button>
+            </form>
+          </nav>
+        </div>
       </header>
 
       <div className="experience-heading">
         <div>
-          <p className="login-eyebrow">Customer experience</p>
-          <h1>Brand the loyalty wallet</h1>
+          <p className="login-eyebrow">{t("Customer experience")}</p>
+          <h1>{t("Brand the loyalty wallet")}</h1>
           <p>
-            Preview a bounded token set before it reaches hosted or WooCommerce
-            customer surfaces. Value rules remain in immutable programme
-            versions.
+            {t(
+              "Preview a bounded token set before it reaches hosted or WooCommerce customer surfaces. Value rules remain in immutable programme versions.",
+            )}
           </p>
         </div>
         <span className="role-badge">
           {theme.revision > 0
-            ? `Revision ${theme.revision}`
-            : "Unsaved default"}
+            ? `${t("Revision")} ${theme.revision}`
+            : t("Unsaved default")}
         </span>
         {hasPublishedVersion && programme.programme && context.workspace ? (
           <Link
             className="secondary"
-            href={`/loyalty/${context.workspace.public_id}/${programme.programme.id}?lang=en`}
+            href={`/loyalty/${context.workspace.public_id}/${programme.programme.id}?lang=${locale}`}
             prefetch={false}
             rel="noreferrer"
             target="_blank"
           >
-            Open hosted page
+            {t("Open hosted page")}
           </Link>
         ) : null}
       </div>
@@ -82,6 +112,7 @@ export default async function ExperiencePage() {
           canEdit={canEdit}
           initialTheme={theme.definition}
           initialTranslations={theme.translations}
+          merchantLocale={locale}
           operationId={crypto.randomUUID()}
           programmeGroupId={context.programmeGroup.public_id}
           workspaceId={context.workspace.public_id}
@@ -92,8 +123,9 @@ export default async function ExperiencePage() {
         />
       ) : (
         <section className="customer-panel empty-state">
-          Link an active workspace to an active programme group before saving a
-          customer theme.
+          {t(
+            "Link an active workspace to an active programme group before saving a customer theme.",
+          )}
         </section>
       )}
     </main>

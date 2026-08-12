@@ -8,6 +8,7 @@ import {
 } from "@starfiniti/contracts";
 import { useActionState, useMemo, useState } from "react";
 import { experienceFontStack } from "@/lib/experience-theme";
+import { merchantText, type MerchantLocale } from "@/lib/merchant-locale";
 import { saveExperienceTheme, saveExperienceTranslation } from "./actions";
 
 const initialActionState = { kind: "idle", message: "" } as const;
@@ -20,6 +21,7 @@ export function ExperienceEditor({
   translationOperationIds,
   programmeGroupId,
   workspaceId,
+  merchantLocale,
 }: Readonly<{
   canEdit: boolean;
   initialTheme: ExperienceThemeDefinitionV1;
@@ -36,7 +38,9 @@ export function ExperienceEditor({
   translationOperationIds: Readonly<Record<ExperienceLocaleV1, string>>;
   programmeGroupId: string;
   workspaceId: string;
+  merchantLocale: MerchantLocale;
 }>) {
+  const t = (source: string) => merchantText(merchantLocale, source);
   const [theme, setTheme] = useState(initialTheme);
   const [locale, setLocale] = useState<ExperienceLocaleV1>("en");
   const [translations, setTranslations] = useState(() => ({
@@ -50,6 +54,11 @@ export function ExperienceEditor({
   const [translationActionState, translationAction, translationPending] =
     useActionState(saveExperienceTranslation, initialActionState);
   const translation = translations[locale];
+  const previewText = (english: string, slovenian: string) =>
+    locale === "sl-SI" ? slovenian : english;
+  const previewBalance = new Intl.NumberFormat(
+    locale === "sl-SI" ? "sl-SI" : "en-GB",
+  ).format(2450);
   const contrast = useMemo(
     () => contrastAgainstWhite(theme.brandColor),
     [theme.brandColor],
@@ -73,6 +82,7 @@ export function ExperienceEditor({
           action={formAction}
           aria-labelledby="theme-title"
         >
+          <input name="lang" type="hidden" value={merchantLocale} />
           <input name="operationId" type="hidden" value={operationId} />
           <input name="workspaceId" type="hidden" value={workspaceId} />
           <input
@@ -84,18 +94,18 @@ export function ExperienceEditor({
           <input name="pointsLabel" type="hidden" value={theme.pointsLabel} />
           <div className="section-heading">
             <div>
-              <p className="login-eyebrow">Controlled design tokens</p>
-              <h2 id="theme-title">Customer theme</h2>
+              <p className="login-eyebrow">{t("Controlled design tokens")}</p>
+              <h2 id="theme-title">{t("Customer theme")}</h2>
             </div>
-            <span>{canEdit ? "Owner/admin" : "Read only"}</span>
+            <span>{canEdit ? t("Owner/admin") : t("Read only")}</span>
           </div>
 
           <div className="experience-fields">
             <label>
-              <span>Brand color</span>
+              <span>{t("Brand color")}</span>
               <div className="color-field">
                 <input
-                  aria-label="Brand color picker"
+                  aria-label={t("Brand color picker")}
                   disabled={!canEdit}
                   name="brandColor"
                   onChange={(event) =>
@@ -109,11 +119,12 @@ export function ExperienceEditor({
               <small
                 className={contrast >= 4.5 ? "contrast-pass" : "contrast-fail"}
               >
-                White-text contrast {contrast.toFixed(2)}:1 · minimum 4.5:1
+                {t("White-text contrast")} {contrast.toFixed(2)}:1 ·{" "}
+                {t("minimum")} 4.5:1
               </small>
             </label>
             <label>
-              <span>Display font</span>
+              <span>{t("Display font")}</span>
               <select
                 disabled={!canEdit}
                 name="displayFont"
@@ -126,16 +137,16 @@ export function ExperienceEditor({
                 }
                 value={theme.displayFont}
               >
-                <option value="system-sans">System sans</option>
-                <option value="editorial-serif">Editorial serif</option>
-                <option value="modern-serif">Modern serif</option>
+                <option value="system-sans">{t("System sans")}</option>
+                <option value="editorial-serif">{t("Editorial serif")}</option>
+                <option value="modern-serif">{t("Modern serif")}</option>
               </select>
               <small>
-                Local stacks only; no remote font or tracking request.
+                {t("Local stacks only; no remote font or tracking request.")}
               </small>
             </label>
             <label>
-              <span>Card radius</span>
+              <span>{t("Card radius")}</span>
               <select
                 disabled={!canEdit}
                 name="cardRadiusPx"
@@ -149,13 +160,13 @@ export function ExperienceEditor({
                 }
                 value={theme.cardRadiusPx}
               >
-                <option value="8">Compact · 8px</option>
-                <option value="14">Balanced · 14px</option>
-                <option value="22">Soft · 22px</option>
+                <option value="8">{t("Compact")} · 8px</option>
+                <option value="14">{t("Balanced")} · 14px</option>
+                <option value="22">{t("Soft")} · 22px</option>
               </select>
             </label>
             <label>
-              <span>Widget position</span>
+              <span>{t("Widget position")}</span>
               <select
                 disabled={!canEdit}
                 name="widgetPosition"
@@ -167,12 +178,12 @@ export function ExperienceEditor({
                 }
                 value={theme.widgetPosition}
               >
-                <option value="left">Left</option>
-                <option value="right">Right</option>
+                <option value="left">{t("Left")}</option>
+                <option value="right">{t("Right")}</option>
               </select>
             </label>
             <fieldset className="experience-toggles">
-              <legend>Visible sections</legend>
+              <legend>{t("Visible sections")}</legend>
               <label>
                 <input
                   checked={theme.showTier}
@@ -183,7 +194,7 @@ export function ExperienceEditor({
                   }
                   type="checkbox"
                 />
-                Tier progress
+                {t("Tier progress")}
               </label>
               <label>
                 <input
@@ -195,22 +206,23 @@ export function ExperienceEditor({
                   }
                   type="checkbox"
                 />
-                Available rewards
+                {t("Available rewards")}
               </label>
             </fieldset>
           </div>
 
           <div className="experience-save">
             <p>
-              Raw CSS, JavaScript, font URLs, and uploads are excluded from this
-              boundary.
+              {t(
+                "Raw CSS, JavaScript, font URLs, and uploads are excluded from this boundary.",
+              )}
             </p>
             <button
               className="primary"
               disabled={!canEdit || pending || contrast < 4.5}
               type="submit"
             >
-              {pending ? "Saving…" : "Save theme"}
+              {pending ? t("Saving…") : t("Save theme")}
             </button>
           </div>
           <p
@@ -226,6 +238,7 @@ export function ExperienceEditor({
           aria-labelledby="translation-title"
           className="experience-controls translation-controls"
         >
+          <input name="lang" type="hidden" value={merchantLocale} />
           <input
             name="operationId"
             type="hidden"
@@ -239,14 +252,16 @@ export function ExperienceEditor({
           />
           <div className="section-heading">
             <div>
-              <p className="login-eyebrow">Allowlisted locale copy</p>
-              <h2 id="translation-title">Customer translations</h2>
+              <p className="login-eyebrow">{t("Allowlisted locale copy")}</p>
+              <h2 id="translation-title">{t("Customer translations")}</h2>
             </div>
-            <span>Revision {initialTranslations[locale].revision || "—"}</span>
+            <span>
+              {t("Revision")} {initialTranslations[locale].revision || "—"}
+            </span>
           </div>
           <div className="experience-fields">
             <label>
-              <span>Preview and edit locale</span>
+              <span>{t("Preview and edit locale")}</span>
               <select
                 name="locale"
                 onChange={(event) =>
@@ -254,12 +269,12 @@ export function ExperienceEditor({
                 }
                 value={locale}
               >
-                <option value="en">English</option>
+                <option value="en">{t("English")}</option>
                 <option value="sl-SI">Slovenščina</option>
               </select>
             </label>
             <label>
-              <span>Points label</span>
+              <span>{t("Points label")}</span>
               <input
                 disabled={!canEdit}
                 maxLength={30}
@@ -272,7 +287,7 @@ export function ExperienceEditor({
               />
             </label>
             <label className="wide-field">
-              <span>Guest headline</span>
+              <span>{t("Guest headline")}</span>
               <input
                 disabled={!canEdit}
                 maxLength={120}
@@ -293,7 +308,7 @@ export function ExperienceEditor({
               ] as const
             ).map(([field, label, maxLength]) => (
               <label key={field}>
-                <span>{label}</span>
+                <span>{t(label)}</span>
                 <input
                   disabled={!canEdit}
                   maxLength={maxLength}
@@ -307,7 +322,7 @@ export function ExperienceEditor({
               </label>
             ))}
             <label className="wide-field">
-              <span>Guest earning message</span>
+              <span>{t("Guest earning message")}</span>
               <input
                 disabled={!canEdit}
                 maxLength={120}
@@ -322,15 +337,18 @@ export function ExperienceEditor({
           </div>
           <div className="experience-save">
             <p>
-              English and Slovenian are explicit launch locales. Unsupported
-              locale selectors fail closed instead of silently mixing copy.
+              {t(
+                "English and Slovenian are explicit launch locales. Unsupported locale selectors fail closed instead of silently mixing copy.",
+              )}
             </p>
             <button
               className="primary"
               disabled={!canEdit || translationPending}
               type="submit"
             >
-              {translationPending ? "Saving…" : `Save ${locale} copy`}
+              {translationPending
+                ? t("Saving…")
+                : `${t("Save copy")} (${locale})`}
             </button>
           </div>
           <p
@@ -345,10 +363,10 @@ export function ExperienceEditor({
       <section className="experience-preview" aria-labelledby="preview-title">
         <div className="section-heading">
           <div>
-            <p className="login-eyebrow">Responsive preview</p>
-            <h2 id="preview-title">Member wallet</h2>
+            <p className="login-eyebrow">{t("Responsive preview")}</p>
+            <h2 id="preview-title">{t("Member wallet")}</h2>
           </div>
-          <span>Sample data</span>
+          <span>{t("Sample data")}</span>
         </div>
         <div className="wallet-preview">
           <div className="wallet-preview-header">
@@ -361,7 +379,7 @@ export function ExperienceEditor({
             <strong
               style={{ fontFamily: experienceFontStack(theme.displayFont) }}
             >
-              Rewards
+              {previewText("Rewards", "Nagrade")}
             </strong>
           </div>
           <div className="wallet-preview-body">
@@ -374,12 +392,12 @@ export function ExperienceEditor({
             >
               <small>{translation.balanceLabel}</small>
               <strong>
-                2,450 <span>{translation.pointsLabel}</span>
+                {previewBalance} <span>{translation.pointsLabel}</span>
               </strong>
               {theme.showTier ? (
                 <div className="wallet-tier">
                   <span>Bloom</span>
-                  <span>€182 to Icon</span>
+                  <span>{previewText("€182 to Icon", "Še 182 € do Icon")}</span>
                   <i>
                     <b />
                   </i>
@@ -395,7 +413,7 @@ export function ExperienceEditor({
                 </h3>
                 <div>
                   <article style={{ borderRadius: theme.cardRadiusPx }}>
-                    <strong>€5 discount</strong>
+                    <strong>{previewText("€5 discount", "5 € popusta")}</strong>
                     <span>500 {translation.pointsLabel}</span>
                     <span
                       className="wallet-redeem"
@@ -405,7 +423,9 @@ export function ExperienceEditor({
                     </span>
                   </article>
                   <article style={{ borderRadius: theme.cardRadiusPx }}>
-                    <strong>Free shipping</strong>
+                    <strong>
+                      {previewText("Free shipping", "Brezplačna dostava")}
+                    </strong>
                     <span>700 {translation.pointsLabel}</span>
                     <span
                       className="wallet-redeem"
@@ -419,7 +439,7 @@ export function ExperienceEditor({
             ) : null}
           </div>
           <span
-            aria-label={`Widget preview on the ${theme.widgetPosition}`}
+            aria-label={`${t("Widget preview on the")} ${t(theme.widgetPosition === "left" ? "Left" : "Right")}`}
             className={`wallet-widget ${theme.widgetPosition}`}
             style={{ backgroundColor: theme.brandColor }}
           >

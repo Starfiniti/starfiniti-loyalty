@@ -35,7 +35,6 @@ const SLOVENIAN_TEXT: Readonly<Record<string, string>> = {
   "Connector operations": "Operacije povezave",
   Campaigns: "Kampanje",
   Referrals: "Priporočila",
-  "Customer experience": "Uporabniška izkušnja",
   GROW: "RAST",
   PROGRAMME: "PROGRAM",
   PLATFORM: "PLATFORMA",
@@ -145,7 +144,6 @@ const SLOVENIAN_TEXT: Readonly<Record<string, string>> = {
   "Fixed discount": "Fiksni popust",
   "Percentage discount": "Odstotni popust",
   "Free product": "Brezplačen izdelek",
-  "Free shipping": "Brezplačna dostava",
   "Store credit": "Dobroimetje v trgovini",
   "Exclusive access": "Ekskluziven dostop",
   Custom: "Po meri",
@@ -484,6 +482,82 @@ const SLOVENIAN_TEXT: Readonly<Record<string, string>> = {
     "Serije ni bilo mogoče preveriti. Serija se ne šteje za dokončano.",
   "The immutable batch result could not be verified.":
     "Nespremenljivega rezultata serije ni bilo mogoče preveriti.",
+  "No workspace": "Ni delovnega prostora",
+  "Customer experience": "Uporabniška izkušnja",
+  "Brand the loyalty wallet": "Oblikujte denarnico zvestobe",
+  "Preview a bounded token set before it reaches hosted or WooCommerce customer surfaces. Value rules remain in immutable programme versions.":
+    "Predoglejte si omejen nabor oblikovnih žetonov, preden doseže gostovane ali WooCommerce površine za stranke. Pravila vrednosti ostanejo v nespremenljivih različicah programa.",
+  Revision: "Revizija",
+  "Unsaved default": "Neshranjena privzeta nastavitev",
+  "Open hosted page": "Odpri gostovano stran",
+  "Link an active workspace to an active programme group before saving a customer theme.":
+    "Pred shranjevanjem teme za stranke povežite aktiven delovni prostor z aktivno skupino programov.",
+  "Controlled design tokens": "Nadzorovani oblikovni žetoni",
+  "Customer theme": "Tema za stranke",
+  "Owner/admin": "Lastnik/skrbnik",
+  "Read only": "Samo za branje",
+  "Brand color": "Barva znamke",
+  "Brand color picker": "Izbirnik barve znamke",
+  "White-text contrast": "Kontrast belega besedila",
+  minimum: "najmanj",
+  "Display font": "Prikazna pisava",
+  "System sans": "Sistemska brez serifov",
+  "Editorial serif": "Uredniška serifna",
+  "Modern serif": "Sodobna serifna",
+  "Local stacks only; no remote font or tracking request.":
+    "Samo lokalni skladi; brez oddaljene pisave ali sledilne zahteve.",
+  "Card radius": "Polmer kartice",
+  Compact: "Kompaktno",
+  Balanced: "Uravnoteženo",
+  Soft: "Mehko",
+  "Widget position": "Položaj gradnika",
+  Left: "Levo",
+  Right: "Desno",
+  "Visible sections": "Vidni razdelki",
+  "Tier progress": "Napredek stopnje",
+  "Available rewards": "Razpoložljive nagrade",
+  "Raw CSS, JavaScript, font URLs, and uploads are excluded from this boundary.":
+    "Surovi CSS, JavaScript, URL-ji pisav in nalaganja so izključeni iz te meje.",
+  "Saving…": "Shranjevanje …",
+  "Save theme": "Shrani temo",
+  "Allowlisted locale copy": "Besedilo dovoljenih jezikov",
+  "Customer translations": "Prevodi za stranke",
+  "Preview and edit locale": "Jezik predogleda in urejanja",
+  "Points label": "Oznaka točk",
+  "Guest headline": "Naslov za gosta",
+  "Balance label": "Oznaka stanja",
+  "Rewards heading": "Naslov nagrad",
+  "Redeem action": "Dejanje unovčenja",
+  "Join action": "Dejanje pridružitve",
+  "Guest earning message": "Sporočilo za pridobivanje točk gosta",
+  "English and Slovenian are explicit launch locales. Unsupported locale selectors fail closed instead of silently mixing copy.":
+    "Angleščina in slovenščina sta izrecna začetna jezika. Nepodprti izbirniki jezika odpovejo varno, namesto da bi neopazno mešali besedilo.",
+  "Save copy": "Shrani besedilo",
+  "Responsive preview": "Odzivni predogled",
+  "Member wallet": "Denarnica člana",
+  "Sample data": "Vzorčni podatki",
+  "Free shipping": "Brezplačna dostava",
+  "Widget preview on the": "Predogled gradnika na",
+  "Use an accessible dark brand color and keep all customer copy within the displayed limits.":
+    "Uporabite dostopno temno barvo znamke in ohranite vse besedilo za stranke znotraj prikazanih omejitev.",
+  "Your current organization role cannot change this theme.":
+    "Vaša trenutna vloga v organizaciji ne more spreminjati te teme.",
+  "This save conflicts with a completed request. Refresh and retry.":
+    "To shranjevanje je v sporu z dokončano zahtevo. Osvežite stran in poskusite znova.",
+  "The theme could not be saved safely. No change was assumed.":
+    "Teme ni bilo mogoče varno shraniti. Sprememba se ne šteje za izvedeno.",
+  "The theme response could not be verified.":
+    "Odgovora teme ni bilo mogoče preveriti.",
+  "Use a supported locale and keep each customer-facing label single-line and within its displayed limit.":
+    "Uporabite podprt jezik in ohranite vsako oznako za stranke enovrstično ter znotraj prikazane omejitve.",
+  "Your current organization role cannot change customer copy.":
+    "Vaša trenutna vloga v organizaciji ne more spreminjati besedila za stranke.",
+  "This locale save conflicts with a completed request. Refresh and retry.":
+    "Shranjevanje tega jezika je v sporu z dokončano zahtevo. Osvežite stran in poskusite znova.",
+  "The customer copy could not be saved safely. No change was assumed.":
+    "Besedila za stranke ni bilo mogoče varno shraniti. Sprememba se ne šteje za izvedeno.",
+  "The translation response could not be verified.":
+    "Odgovora prevoda ni bilo mogoče preveriti.",
 };
 
 export function merchantText(locale: MerchantLocale, source: string): string {
