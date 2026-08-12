@@ -4,6 +4,11 @@ create extension if not exists pgtap with schema extensions;
 
 select plan(44);
 
+-- pg_prove connects with the migration/test administration login. Granting
+-- membership inside this rolled-back test transaction lets the suite exercise
+-- the exact NOINHERIT runtime role without changing deployed role membership.
+grant loyalty_runtime to current_user;
+
 select has_index(
   'loyalty', 'commerce_connections',
   'commerce_connections_signing_material_ref_uidx',
