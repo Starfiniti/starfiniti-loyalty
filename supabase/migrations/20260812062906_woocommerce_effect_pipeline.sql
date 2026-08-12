@@ -644,7 +644,7 @@ begin
       on connection.organization_id = issue.organization_id
      and connection.id = issue.connection_id
      and connection.status in ('active', 'rotating')
-    where reservation.state in ('reserved', 'issued')
+    where reservation.state = 'issued'
       and reservation.expires_at <= target_as_of
       and length(issue.payload ->> 'code') between 20 and 50
     order by reservation.expires_at, reservation.id
@@ -820,6 +820,70 @@ begin
         'unused native coupon cancelled and points released',
         cancellation_transaction_public_id,
         target_result_reference
+      );
+    end if;
+  end if;
+  if target_outcome = 'dead_letter'
+    and target_outbox.topic = 'woocommerce.coupon.issue' then
+    select reservation.* into target_reservation
+    from loyalty.reward_reservations as reservation
+    where reservation.organization_id = target_outbox.organization_id
+      and reservation.public_id = (target_outbox.payload ->> 'reservationId')::uuid
+    for update;
+    if not found then
+      raise exception using errcode = '22023', message = 'unknown reward reservation';
+    end if;
+    if target_reservation.state = 'reserved' then
+      command_hash := extensions.digest(
+        pg_catalog.convert_to(
+          target_command_id::text || ':' || coalesce(target_error_code, 'issue_dead_letter'),
+          'UTF8'
+        ),
+        'sha256'
+      );
+      perform * from loyalty_private.transition_reward_reservation(
+        target_reservation.public_id,
+        'failed',
+        'woocommerce:command:' || target_command_id::text || ':failed',
+        command_hash,
+        'woocommerce-connector',
+        'native coupon issuance rejected before creation',
+        null,
+        null
+      );
+      select transaction.public_id into reserve_transaction_public_id
+      from loyalty.ledger_transactions as transaction
+      where transaction.organization_id = target_reservation.organization_id
+        and transaction.id = target_reservation.ledger_reservation_transaction_id
+        and transaction.transaction_kind = 'reserve';
+      if not found then
+        raise exception using errcode = '22023', message = 'reservation ledger transaction unavailable';
+      end if;
+      cancellation_hash := extensions.digest(
+        pg_catalog.convert_to(
+          target_reservation.public_id::text || ':woocommerce-issue-failure-release',
+          'UTF8'
+        ),
+        'sha256'
+      );
+      select cancelled.transaction_public_id
+      into cancellation_transaction_public_id
+      from loyalty_private.cancel_reservation(
+        target_reservation.organization_id,
+        reserve_transaction_public_id,
+        'woocommerce:coupon:' || target_reservation.public_id::text || ':issue-failure-ledger',
+        cancellation_hash,
+        clock_timestamp()
+      ) as cancelled;
+      perform * from loyalty_private.transition_reward_reservation(
+        target_reservation.public_id,
+        'released',
+        'woocommerce:coupon:' || target_reservation.public_id::text || ':issue-failure-released',
+        cancellation_hash,
+        'woocommerce-worker',
+        'native coupon issuance failed and points were released',
+        cancellation_transaction_public_id,
+        null
       );
     end if;
   end if;

@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(99);
+select plan(103);
 
 select has_table('loyalty', 'programme_tiers', 'programme tiers exist');
 select has_table('loyalty', 'programme_rewards', 'programme rewards exist');
@@ -876,6 +876,69 @@ select results_eq(
   array[1::bigint],
   'cancellation creates exactly one compensating ledger transaction'
 );
+
+insert into programme_results
+select 'reservation-three', result.reservation_public_id, result.outcome
+from loyalty_private.create_reward_reservation(
+  (select id from loyalty.organizations where slug = 'programme-one'),
+  (select id from loyalty.programme_groups where organization_id = (select id from loyalty.organizations where slug = 'programme-one')),
+  (select id from loyalty.programme_versions where public_id = (select public_id from programme_refs where name = 'version-two')),
+  (select id from loyalty.wallets where organization_id = (select id from loyalty.organizations where slug = 'programme-one')),
+  (select id from loyalty.programme_rewards where code = 'ten-euro' and programme_version_id =
+    (select id from loyalty.programme_versions where public_id = (select public_id from programme_refs where name = 'version-two'))),
+  100, '2026-12-03T00:00:00Z', 'reward:44', decode(repeat('aa', 32), 'hex')
+) as result;
+insert into programme_results
+select 'ledger-reserve-three', result.transaction_public_id, result.outcome
+from loyalty_private.reserve_points(
+  (select id from loyalty.organizations where slug = 'programme-one'),
+  (select id from loyalty.programme_groups where organization_id = (select id from loyalty.organizations where slug = 'programme-one')),
+  (select id from loyalty.programme_versions where public_id = (select public_id from programme_refs where name = 'version-two')),
+  (select public_id from loyalty.wallets where organization_id = (select id from loyalty.organizations where slug = 'programme-one')),
+  100, 'ledger:reward:44:reserve', decode(repeat('ab', 32), 'hex'), '2026-12-02T07:00:00Z'
+) as result;
+select results_eq(
+  $$ select outcome from loyalty_private.transition_reward_reservation(
+    (select public_id from programme_results where operation = 'reservation-three'),
+    'reserved', 'transition:44:reserved', decode(repeat('ac', 32), 'hex'),
+    'reward-worker', null,
+    (select public_id from programme_results where operation = 'ledger-reserve-three'), null
+  ) $$,
+  array['created'::text],
+  'a third reward reserves points before native issuance'
+);
+create temporary table coupon_command_three as
+select * from loyalty_private.enqueue_woocommerce_coupon_issue(
+  (select public_id from programme_results where operation = 'reservation-three'),
+  (select public_id from loyalty.commerce_connections where external_store_id = 'programme-one-store'),
+  2::smallint
+);
+select results_eq(
+  $$ select loyalty_private.enqueue_expired_woocommerce_coupon_cancellations('2026-12-04T00:00:00Z', 100) $$,
+  array[0::bigint],
+  'expiry never races a native issue command whose outcome is still uncertain'
+);
+create temporary table claimed_coupon_command_three as
+select * from loyalty_private.claim_woocommerce_commands(
+  (select public_id from loyalty.commerce_connections where external_store_id = 'programme-one-store'),
+  10, 60
+);
+select results_eq(
+  $$
+    select outcome from loyalty_private.finish_woocommerce_command(
+      (select public_id from loyalty.commerce_connections where external_store_id = 'programme-one-store'),
+      (select command_id from coupon_command_three),
+      'dead_letter', null, 'invalid_fixed_discount', 0
+    )
+  $$,
+  array['dead_letter'::text],
+  'definitive pre-creation issue rejection triggers compensation'
+);
+select results_eq(
+  $$ select state from loyalty.reward_reservations where public_id = (select public_id from programme_results where operation = 'reservation-three') $$,
+  array['released'::text],
+  'definitive issue rejection releases its reserved points'
+);
 select results_eq(
   $$ select points from loyalty.wallet_balances where account_kind = 'available' $$,
   array[400::bigint],
@@ -891,7 +954,7 @@ select results_eq(
 );
 select results_eq(
   'select count(*)::bigint from loyalty.reward_reservations',
-  array[2::bigint],
+  array[3::bigint],
   'member can read their reward reservations'
 );
 set local request.jwt.claim.sub = '62000000-0000-4000-8000-000000000002';

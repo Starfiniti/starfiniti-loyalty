@@ -155,7 +155,7 @@ final class Commands
     {
         $couponId = wc_get_coupon_id_by_code($code);
         if ($couponId <= 0) {
-            return ['outcome' => 'cancelled', 'resultReference' => 'woocommerce:coupon:absent', 'errorCode' => null, 'retryDelaySeconds' => 0];
+            return self::failure('dead_letter', 'coupon_absent_unknown');
         }
         $coupon = new \WC_Coupon($couponId);
         if ($reservationId !== (string) $coupon->get_meta('_starfiniti_reservation_id', true)) {
