@@ -1,6 +1,7 @@
 node_modules/
 .npm-cache/
 .runtime/
+.wp-env-home/
 *.tsbuildinfo
 .next/
 dist/
