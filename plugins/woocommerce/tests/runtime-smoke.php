@@ -115,9 +115,10 @@ starfiniti_runtime_assert(
     'classic cart applies the native loyalty coupon'
 );
 $cart->remove_coupon($couponCode);
-$cartController->apply_coupon($couponCode);
+$storeApiCouponCode = wc_format_coupon_code($couponCode);
+$cartController->apply_coupon($storeApiCouponCode);
 starfiniti_runtime_assert(
-    $cartController->has_coupon($couponCode),
+    $cartController->has_coupon($storeApiCouponCode),
     'Cart and Checkout Blocks Store API controller applies the native loyalty coupon'
 );
 $cart->empty_cart();
