@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(84);
+select plan(91);
 
 select has_table('loyalty', 'programmes', 'programmes exist');
 select has_table('loyalty', 'programme_versions', 'programme versions exist');
@@ -793,6 +793,67 @@ select results_eq(
 select is_empty(
   $$ select * from loyalty_private.wallet_projection_differences() $$,
   'projection rebuild restores exact equality'
+);
+select ok(
+  has_function_privilege(
+    'loyalty_worker',
+    'loyalty_private.export_ledger_entries(bigint,timestamp with time zone,timestamp with time zone)',
+    'EXECUTE'
+  ),
+  'worker can execute the tenant-scoped ledger export'
+);
+select results_eq(
+  $$
+    select outstanding_points
+    from loyalty_private.programme_liability_report(
+      (select id from loyalty.organizations where slug = 'ledger-one'), null
+    )
+  $$,
+  array[50::bigint],
+  'liability report totals pending available and reserved balances'
+);
+select results_eq(
+  $$
+    select count(*)::bigint
+    from loyalty_private.export_ledger_entries(
+      (select id from loyalty.organizations where slug = 'ledger-one'), null, null
+    )
+  $$,
+  $$
+    select count(*)::bigint from loyalty.ledger_entries
+    where organization_id = (select id from loyalty.organizations where slug = 'ledger-one')
+  $$,
+  'ledger export contains every tenant entry'
+);
+select is_empty(
+  $$ select * from loyalty_private.point_lot_projection_differences() $$,
+  'stored lot projections exactly rebuild from immutable allocations'
+);
+update loyalty.point_lot_balances
+set remaining_points = remaining_points + 1
+where lot_id = (
+  select lot.id from loyalty.point_lots as lot
+  join loyalty.ledger_entries as entry on entry.id = lot.credit_entry_id
+  join loyalty.ledger_transactions as transaction on transaction.id = entry.transaction_id
+  where transaction.idempotency_key = 'adjust:positive'
+);
+select results_eq(
+  $$ select count(*)::bigint from loyalty_private.point_lot_projection_differences() $$,
+  array[1::bigint],
+  'lot consistency checker detects projection drift'
+);
+select results_eq(
+  $$
+    select loyalty_private.rebuild_point_lot_projections(
+      (select id from loyalty.organizations where slug = 'ledger-one'), null
+    )
+  $$,
+  array[4::bigint],
+  'lot projection rebuild rewrites all lots from immutable allocations'
+);
+select is_empty(
+  $$ select * from loyalty_private.point_lot_projection_differences() $$,
+  'lot projection rebuild restores exact equality'
 );
 select is_empty(
   $$

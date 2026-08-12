@@ -1381,6 +1381,146 @@ begin
 end;
 $$;
 
+create or replace function loyalty_private.point_lot_projection_differences(
+  target_organization_id bigint default null
+)
+returns table (
+  organization_id bigint, wallet_id bigint, lot_id bigint,
+  stored_remaining_points bigint, rebuilt_remaining_points bigint
+)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select balance.organization_id, balance.wallet_id, balance.lot_id,
+    balance.remaining_points as stored_remaining_points,
+    (lot.initial_points - coalesce(sum(allocation.points), 0))::bigint as rebuilt_remaining_points
+  from loyalty.point_lot_balances as balance
+  join loyalty.point_lots as lot
+    on lot.organization_id = balance.organization_id and lot.id = balance.lot_id
+  left join loyalty.redemption_allocations as allocation
+    on allocation.organization_id = lot.organization_id and allocation.lot_id = lot.id
+  where target_organization_id is null or balance.organization_id = target_organization_id
+  group by balance.organization_id, balance.wallet_id, balance.lot_id,
+    balance.remaining_points, lot.initial_points
+  having balance.remaining_points <>
+    (lot.initial_points - coalesce(sum(allocation.points), 0))::bigint;
+$$;
+
+create or replace function loyalty_private.rebuild_point_lot_projections(
+  target_organization_id bigint,
+  target_wallet_id bigint default null
+)
+returns bigint
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  rebuilt_count bigint;
+begin
+  perform 1 from loyalty.point_lot_balances as balance
+  where balance.organization_id = target_organization_id
+    and (target_wallet_id is null or balance.wallet_id = target_wallet_id)
+  order by balance.wallet_id, balance.lot_id for update;
+
+  update loyalty.point_lot_balances as balance
+  set remaining_points = lot.initial_points - coalesce((
+        select sum(allocation.points)::bigint
+        from loyalty.redemption_allocations as allocation
+        where allocation.organization_id = balance.organization_id
+          and allocation.lot_id = balance.lot_id
+      ), 0),
+      updated_at = clock_timestamp()
+  from loyalty.point_lots as lot
+  where lot.organization_id = balance.organization_id
+    and lot.id = balance.lot_id
+    and balance.organization_id = target_organization_id
+    and (target_wallet_id is null or balance.wallet_id = target_wallet_id);
+  get diagnostics rebuilt_count = row_count;
+  return rebuilt_count;
+end;
+$$;
+
+create or replace function loyalty_private.export_ledger_entries(
+  target_organization_id bigint,
+  target_from timestamptz default null,
+  target_to timestamptz default null
+)
+returns table (
+  transaction_public_id uuid,
+  entry_public_id uuid,
+  programme_group_public_id uuid,
+  programme_version_public_id uuid,
+  wallet_public_id uuid,
+  transaction_kind text,
+  account_kind text,
+  points bigint,
+  idempotency_key text,
+  source_reference text,
+  effective_at timestamptz,
+  created_at timestamptz
+)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select transaction.public_id, entry.public_id, programme_group.public_id,
+    version.public_id, wallet.public_id, transaction.transaction_kind,
+    account.account_kind, entry.points, transaction.idempotency_key,
+    transaction.source_reference, transaction.effective_at, transaction.created_at
+  from loyalty.ledger_transactions as transaction
+  join loyalty.ledger_entries as entry
+    on entry.organization_id = transaction.organization_id
+    and entry.transaction_id = transaction.id
+  join loyalty.ledger_accounts as account
+    on account.organization_id = entry.organization_id and account.id = entry.account_id
+  join loyalty.programme_groups as programme_group
+    on programme_group.organization_id = transaction.organization_id
+    and programme_group.id = transaction.programme_group_id
+  join loyalty.programme_versions as version
+    on version.organization_id = transaction.organization_id
+    and version.id = transaction.programme_version_id
+  left join loyalty.wallets as wallet
+    on wallet.organization_id = account.organization_id and wallet.id = account.wallet_id
+  where transaction.organization_id = target_organization_id
+    and (target_from is null or transaction.effective_at >= target_from)
+    and (target_to is null or transaction.effective_at < target_to)
+  order by transaction.effective_at, transaction.id, entry.ordinal;
+$$;
+
+create or replace function loyalty_private.programme_liability_report(
+  target_organization_id bigint,
+  target_programme_group_id bigint default null
+)
+returns table (
+  programme_group_id bigint,
+  pending_points bigint,
+  available_points bigint,
+  reserved_points bigint,
+  outstanding_points bigint
+)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select balance.programme_group_id,
+    coalesce(sum(balance.points) filter (where balance.account_kind = 'pending'), 0)::bigint,
+    coalesce(sum(balance.points) filter (where balance.account_kind = 'available'), 0)::bigint,
+    coalesce(sum(balance.points) filter (where balance.account_kind = 'reserved'), 0)::bigint,
+    coalesce(sum(balance.points) filter (
+      where balance.account_kind in ('pending', 'available', 'reserved')
+    ), 0)::bigint
+  from loyalty.wallet_balances as balance
+  where balance.organization_id = target_organization_id
+    and (target_programme_group_id is null or balance.programme_group_id = target_programme_group_id)
+  group by balance.programme_group_id
+  order by balance.programme_group_id;
+$$;
+
 alter function loyalty_private.reject_immutable_change() owner to loyalty_owner;
 alter function loyalty_private.protect_programme_version() owner to loyalty_owner;
 alter function loyalty_private.apply_ledger_entry_projection() owner to loyalty_owner;
@@ -1417,6 +1557,10 @@ alter function loyalty_private.adjust_points(
 ) owner to loyalty_owner;
 alter function loyalty_private.wallet_projection_differences(bigint) owner to loyalty_owner;
 alter function loyalty_private.rebuild_wallet_projections(bigint, bigint) owner to loyalty_owner;
+alter function loyalty_private.point_lot_projection_differences(bigint) owner to loyalty_owner;
+alter function loyalty_private.rebuild_point_lot_projections(bigint, bigint) owner to loyalty_owner;
+alter function loyalty_private.export_ledger_entries(bigint, timestamptz, timestamptz) owner to loyalty_owner;
+alter function loyalty_private.programme_liability_report(bigint, bigint) owner to loyalty_owner;
 
 revoke all on function loyalty_private.ensure_wallet_accounts(bigint, bigint, bigint)
   from public, anon, authenticated, loyalty_runtime, loyalty_worker;
@@ -1439,7 +1583,11 @@ revoke all on function loyalty_private.reject_immutable_change(),
   loyalty_private.reverse_award_points(bigint, uuid, bigint, text, bytea, text, timestamptz),
   loyalty_private.adjust_points(bigint, uuid, bigint, bigint, text, text, text, bytea, timestamptz, timestamptz),
   loyalty_private.wallet_projection_differences(bigint),
-  loyalty_private.rebuild_wallet_projections(bigint, bigint)
+  loyalty_private.rebuild_wallet_projections(bigint, bigint),
+  loyalty_private.point_lot_projection_differences(bigint),
+  loyalty_private.rebuild_point_lot_projections(bigint, bigint),
+  loyalty_private.export_ledger_entries(bigint, timestamptz, timestamptz),
+  loyalty_private.programme_liability_report(bigint, bigint)
   from public, anon, authenticated, loyalty_runtime, loyalty_worker;
 grant execute on function loyalty_private.award_points(
   bigint, bigint, bigint, bigint, bigint, text, bytea, bigint, text, timestamptz
@@ -1468,6 +1616,14 @@ grant execute on function loyalty_private.adjust_points(
 grant execute on function loyalty_private.wallet_projection_differences(bigint)
   to loyalty_worker;
 grant execute on function loyalty_private.rebuild_wallet_projections(bigint, bigint)
+  to loyalty_worker;
+grant execute on function loyalty_private.point_lot_projection_differences(bigint)
+  to loyalty_worker;
+grant execute on function loyalty_private.rebuild_point_lot_projections(bigint, bigint)
+  to loyalty_worker;
+grant execute on function loyalty_private.export_ledger_entries(bigint, timestamptz, timestamptz)
+  to loyalty_worker;
+grant execute on function loyalty_private.programme_liability_report(bigint, bigint)
   to loyalty_worker;
 
 alter table loyalty.programmes enable row level security;

@@ -135,10 +135,72 @@ try {
     );
   }
 
+  let sequenceSeed = 0x5f3759df;
+  for (let round = 1; round <= 20; round += 1) {
+    sequenceSeed = (Math.imul(sequenceSeed, 1664525) + 1013904223) >>> 0;
+    const points = (sequenceSeed % 25) + 1;
+    const adjustmentKey = `property-adjust:${suffix}:${round}`;
+    const adjustmentHash = hash(((round % 14) + 1).toString(16));
+    const [adjustment] = await admin`
+      select * from loyalty_private.adjust_points(
+        ${fixture.organizationId}, ${fixture.walletPublicId},
+        ${fixture.programmeVersionId}, ${points},
+        'Deterministic invariant probe credit', 'system:property-probe',
+        ${adjustmentKey}, ${adjustmentHash}, now() + interval '2 years', now()
+      )
+    `;
+    if (adjustment.outcome !== "created") {
+      throw new Error(`property adjustment ${round} was not created`);
+    }
+
+    if (round % 5 === 0) {
+      const [duplicate] = await admin`
+        select * from loyalty_private.adjust_points(
+          ${fixture.organizationId}, ${fixture.walletPublicId},
+          ${fixture.programmeVersionId}, ${points},
+          'Deterministic invariant probe credit', 'system:property-probe',
+          ${adjustmentKey}, ${adjustmentHash}, now() + interval '2 years', now()
+        )
+      `;
+      if (duplicate.outcome !== "duplicate") {
+        throw new Error(
+          `property adjustment retry ${round} was not idempotent`,
+        );
+      }
+    }
+
+    const [reservation] = await admin`
+      select * from loyalty_private.reserve_points(
+        ${fixture.organizationId}, ${fixture.programmeGroupId},
+        ${fixture.programmeVersionId}, ${fixture.walletPublicId}, ${points},
+        ${`property-reserve:${suffix}:${round}`},
+        ${hash((((round + 3) % 14) + 1).toString(16))}, now()
+      )
+    `;
+    if (round % 2 === 0) {
+      await admin`
+        select * from loyalty_private.cancel_reservation(
+          ${fixture.organizationId}, ${reservation.transaction_public_id},
+          ${`property-cancel:${suffix}:${round}`},
+          ${hash((((round + 6) % 14) + 1).toString(16))}, now()
+        )
+      `;
+    } else {
+      await admin`
+        select * from loyalty_private.capture_reservation(
+          ${fixture.organizationId}, ${reservation.transaction_public_id},
+          ${`property-capture:${suffix}:${round}`},
+          ${hash((((round + 9) % 14) + 1).toString(16))}, now()
+        )
+      `;
+    }
+  }
+
   const [integrity] = await admin`
     select
       count(*) filter (where entry_count < 2 or entry_total <> 0)::integer as unbalanced,
-      (select count(*)::integer from loyalty_private.wallet_projection_differences(${fixture.organizationId})) as projection_differences
+      (select count(*)::integer from loyalty_private.wallet_projection_differences(${fixture.organizationId})) as projection_differences,
+      (select count(*)::integer from loyalty_private.point_lot_projection_differences(${fixture.organizationId})) as lot_projection_differences
     from (
       select transaction.id, count(entry.id) as entry_count,
         coalesce(sum(entry.points::numeric), 0) as entry_total
@@ -148,14 +210,18 @@ try {
       group by transaction.id
     ) as totals
   `;
-  if (integrity.unbalanced !== 0 || integrity.projection_differences !== 0) {
+  if (
+    integrity.unbalanced !== 0 ||
+    integrity.projection_differences !== 0 ||
+    integrity.lot_projection_differences !== 0
+  ) {
     throw new Error(
-      `post-race integrity failed: unbalanced=${integrity.unbalanced}, projection_differences=${integrity.projection_differences}`,
+      `post-race integrity failed: unbalanced=${integrity.unbalanced}, projection_differences=${integrity.projection_differences}, lot_projection_differences=${integrity.lot_projection_differences}`,
     );
   }
 
   console.log(
-    "Ledger concurrency probe passed: one 80-point reservation committed, the competing reservation failed, and projections remain exact.",
+    "Ledger concurrency/property probe passed: one competing reservation failed safely, 20 deterministic operation sequences stayed balanced, retries were idempotent, and projections remain exact.",
   );
 } finally {
   await Promise.allSettled([admin.end(), first.end(), second.end()]);
