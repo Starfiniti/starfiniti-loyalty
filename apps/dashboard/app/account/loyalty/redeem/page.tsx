@@ -2,6 +2,12 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getCustomerLoyaltyAccounts } from "@/lib/server/customer-account";
 import { redeemCustomerReward } from "./actions";
+import {
+  CUSTOMER_COPY,
+  customerLocalePath,
+  resolveCustomerLocale,
+  type CustomerLocale,
+} from "@/lib/customer-locale";
 
 type Search = Record<string, string | string[] | undefined>;
 
@@ -20,8 +26,10 @@ export default async function CustomerRewardConfirmationPage({
     searchParams,
     getCustomerLoyaltyAccounts(),
   ]);
+  const locale = resolveCustomerLocale(search.lang);
+  const copy = CUSTOMER_COPY[locale];
   if (state.kind === "unauthenticated") {
-    redirect("/login?next=%2Faccount%2Floyalty");
+    redirect(customerLocalePath("/login?next=%2Faccount%2Floyalty", locale));
   }
   const accountId = typeof search.account === "string" ? search.account : "";
   const rewardCode = typeof search.reward === "string" ? search.reward : "";
@@ -36,7 +44,7 @@ export default async function CustomerRewardConfirmationPage({
   const resultingBalance = canRedeem
     ? (
         BigInt(account.available_points) - BigInt(reward.costPoints)
-      ).toLocaleString("en-US")
+      ).toLocaleString(locale)
     : null;
 
   return (
@@ -46,28 +54,27 @@ export default async function CustomerRewardConfirmationPage({
         aria-labelledby="redeem-title"
       >
         <p className="login-eyebrow">{account.store_name}</p>
-        <h1 id="redeem-title">Confirm reward</h1>
+        <h1 id="redeem-title">{copy.confirmReward}</h1>
         <p>
-          Redeem <strong>{reward.name}</strong> for{" "}
-          <strong>{formatPoints(reward.costPoints)} points</strong>?
+          {copy.redeemBeforeReward} <strong>{reward.name}</strong>{" "}
+          {copy.redeemFor}{" "}
+          <strong>
+            {formatPoints(reward.costPoints, locale)} {copy.pointsQuestion}
+          </strong>
         </p>
         {canRedeem ? (
           <>
             <dl className="redemption-summary">
               <div>
-                <dt>Current balance</dt>
-                <dd>{formatPoints(account.available_points)}</dd>
+                <dt>{copy.currentBalance}</dt>
+                <dd>{formatPoints(account.available_points, locale)}</dd>
               </div>
               <div>
-                <dt>After reservation</dt>
+                <dt>{copy.afterReservation}</dt>
                 <dd>{resultingBalance}</dd>
               </div>
             </dl>
-            <p className="claim-safety-note">
-              Your points will be reserved now. WooCommerce creates a
-              customer-only coupon asynchronously; if issuance fails, the ledger
-              releases the points automatically.
-            </p>
+            <p className="claim-safety-note">{copy.reservationSafety}</p>
             <form action={redeemCustomerReward} className="redemption-actions">
               <input
                 name="accountId"
@@ -75,28 +82,33 @@ export default async function CustomerRewardConfirmationPage({
                 value={account.account_id}
               />
               <input name="rewardCode" type="hidden" value={reward.code} />
+              <input name="lang" type="hidden" value={locale} />
               <input
                 name="requestId"
                 type="hidden"
                 value={crypto.randomUUID()}
               />
               <button className="primary" type="submit">
-                Confirm redemption
+                {copy.confirmRedemption}
               </button>
-              <Link className="secondary" href="/account/loyalty">
-                Cancel
+              <Link
+                className="secondary"
+                href={customerLocalePath("/account/loyalty", locale)}
+              >
+                {copy.cancel}
               </Link>
             </form>
           </>
         ) : (
           <>
             <p className="claim-safety-note">
-              {reward.affordable
-                ? "This reward is fulfilled directly by the store and is not available as an automatic coupon."
-                : "You do not currently have enough available points for this reward."}
+              {reward.affordable ? copy.manualReward : copy.notEnoughPoints}
             </p>
-            <Link className="secondary redemption-back" href="/account/loyalty">
-              Back to loyalty account
+            <Link
+              className="secondary redemption-back"
+              href={customerLocalePath("/account/loyalty", locale)}
+            >
+              {copy.backToAccount}
             </Link>
           </>
         )}
@@ -105,9 +117,9 @@ export default async function CustomerRewardConfirmationPage({
   );
 }
 
-function formatPoints(value: string): string {
+function formatPoints(value: string, locale: CustomerLocale): string {
   try {
-    return BigInt(value).toLocaleString("en-US");
+    return BigInt(value).toLocaleString(locale);
   } catch {
     return "0";
   }

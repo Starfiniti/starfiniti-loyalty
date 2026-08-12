@@ -7,20 +7,26 @@ import {
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  customerLocalePath,
+  resolveCustomerLocale,
+} from "@/lib/customer-locale";
 
 export async function redeemCustomerReward(formData: FormData): Promise<void> {
+  const locale = resolveCustomerLocale(formData.get("lang"));
   const command = customerRewardRedemptionRequestV1.safeParse({
     version: "1",
     accountId: formData.get("accountId"),
     rewardCode: formData.get("rewardCode"),
     requestId: formData.get("requestId"),
   });
-  if (!command.success) redirect("/account/loyalty?redemption=invalid");
+  if (!command.success)
+    redirect(customerLocalePath("/account/loyalty?redemption=invalid", locale));
 
   const supabase = await createSupabaseServerClient();
   const claims = await supabase.auth.getClaims();
   if (claims.error || typeof claims.data?.claims?.sub !== "string") {
-    redirect("/login?next=%2Faccount%2Floyalty");
+    redirect(customerLocalePath("/login?next=%2Faccount%2Floyalty", locale));
   }
 
   const { data, error } = await supabase
@@ -32,12 +38,15 @@ export async function redeemCustomerReward(formData: FormData): Promise<void> {
     });
   if (error) {
     redirect(
-      `/account/loyalty?redemption=${
-        error.code === "23514" &&
-        error.message === "insufficient available points"
-          ? "insufficient"
-          : "unavailable"
-      }`,
+      customerLocalePath(
+        `/account/loyalty?redemption=${
+          error.code === "23514" &&
+          error.message === "insufficient available points"
+            ? "insufficient"
+            : "unavailable"
+        }`,
+        locale,
+      ),
     );
   }
   const row = (Array.isArray(data) ? data[0] : data) as Record<
@@ -53,8 +62,11 @@ export async function redeemCustomerReward(formData: FormData): Promise<void> {
         }
       : null,
   );
-  if (!result.success) redirect("/account/loyalty?redemption=unavailable");
+  if (!result.success)
+    redirect(
+      customerLocalePath("/account/loyalty?redemption=unavailable", locale),
+    );
 
   revalidatePath("/account/loyalty");
-  redirect("/account/loyalty?redeemed=1");
+  redirect(customerLocalePath("/account/loyalty?redeemed=1", locale));
 }

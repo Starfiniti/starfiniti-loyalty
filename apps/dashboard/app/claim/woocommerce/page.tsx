@@ -6,6 +6,11 @@ import {
   verifyCustomerClaim,
 } from "@/lib/server/woocommerce-customer-claim";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  CUSTOMER_COPY,
+  customerLocalePath,
+  resolveCustomerLocale,
+} from "@/lib/customer-locale";
 
 type Search = Record<string, string | string[] | undefined>;
 
@@ -16,41 +21,45 @@ export default async function WooCommerceClaimPage({
 }) {
   const search = await searchParams;
   const status = typeof search.status === "string" ? search.status : "";
+  const locale = resolveCustomerLocale(search.lang);
+  const copy = CUSTOMER_COPY[locale];
   const claim = parseWooCommerceCustomerClaim(search);
-  if (!claim) return <ClaimFailure status={status} />;
+  if (!claim) return <ClaimFailure locale={locale} status={status} />;
 
   const supabase = await createSupabaseServerClient();
   const claims = await supabase.auth.getClaims();
   if (claims.error || typeof claims.data?.claims?.sub !== "string") {
-    redirect(`/login?next=${encodeURIComponent(customerClaimPath(claim))}`);
+    redirect(
+      customerLocalePath(
+        `/login?next=${encodeURIComponent(customerClaimPath(claim, locale))}`,
+        locale,
+      ),
+    );
   }
 
   let storeName: string;
   try {
     storeName = (await verifyCustomerClaim(claim)).display_name;
   } catch {
-    return <ClaimFailure status="invalid" />;
+    return <ClaimFailure locale={locale} status="invalid" />;
   }
 
   return (
     <main className="access-page" id="main-content" tabIndex={-1}>
       <section className="access-card" aria-labelledby="claim-title">
         <p className="login-eyebrow">Starfiniti Loyalty</p>
-        <h1 id="claim-title">Connect your loyalty account</h1>
+        <h1 id="claim-title">{copy.connectTitle}</h1>
         <p>
-          Confirm that you want to connect this signed-in account to your
-          verified customer record at <strong>{storeName}</strong>.
+          {copy.connectBeforeStore} <strong>{storeName}</strong>.
         </p>
-        <p className="claim-safety-note">
-          This one-time link came from your WooCommerce account. We do not use
-          an email address to match customers.
-        </p>
+        <p className="claim-safety-note">{copy.claimSafety}</p>
         <form action={confirmWooCommerceCustomerClaim}>
           {Object.entries(claim).map(([name, value]) => (
             <input key={name} name={name} type="hidden" value={value} />
           ))}
+          <input name="lang" type="hidden" value={locale} />
           <button className="primary claim-button" type="submit">
-            Connect account
+            {copy.connectAccount}
           </button>
         </form>
       </section>
@@ -58,20 +67,23 @@ export default async function WooCommerceClaimPage({
   );
 }
 
-function ClaimFailure({ status }: { status: string }) {
+function ClaimFailure({
+  status,
+  locale,
+}: {
+  status: string;
+  locale: "en" | "sl-SI";
+}) {
   const conflict = status === "conflict";
+  const copy = CUSTOMER_COPY[locale];
   return (
     <main className="access-page" id="main-content" tabIndex={-1}>
       <section className="access-card" aria-labelledby="claim-title">
         <p className="login-eyebrow">Starfiniti Loyalty</p>
         <h1 id="claim-title">
-          {conflict ? "Account already connected" : "Link unavailable"}
+          {conflict ? copy.accountConnectedTitle : copy.linkUnavailableTitle}
         </h1>
-        <p>
-          {conflict
-            ? "This store customer or signed-in account is already connected differently. No account was changed."
-            : "This secure link is invalid or has expired. Return to your store account and open Loyalty rewards again."}
-        </p>
+        <p>{conflict ? copy.accountConflict : copy.invalidLink}</p>
       </section>
     </main>
   );

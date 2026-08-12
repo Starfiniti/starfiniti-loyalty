@@ -2,14 +2,18 @@
 
 import { useActionState } from "react";
 import { signIn, type LoginState } from "./actions";
+import { CUSTOMER_COPY, type CustomerLocale } from "@/lib/customer-locale";
 
 export function LoginForm({
   nextPath,
   initialMessage = "",
+  locale,
 }: {
   nextPath: string;
   initialMessage?: string;
+  locale: CustomerLocale;
 }) {
+  const copy = CUSTOMER_COPY[locale];
   const [state, action, pending] = useActionState(signIn, {
     message: initialMessage,
   } satisfies LoginState);
@@ -17,7 +21,8 @@ export function LoginForm({
   return (
     <form action={action} className="login-form">
       <input name="next" type="hidden" value={nextPath} />
-      <label htmlFor="email">Email address</label>
+      <input name="lang" type="hidden" value={locale} />
+      <label htmlFor="email">{copy.email}</label>
       <input
         autoComplete="email"
         id="email"
@@ -25,7 +30,7 @@ export function LoginForm({
         required
         type="email"
       />
-      <label htmlFor="password">Password</label>
+      <label htmlFor="password">{copy.password}</label>
       <input
         autoComplete="current-password"
         id="password"
@@ -38,7 +43,7 @@ export function LoginForm({
         {state.message}
       </p>
       <button className="primary" disabled={pending} type="submit">
-        {pending ? "Signing in..." : "Sign in"}
+        {pending ? copy.signingIn : copy.signIn}
       </button>
     </form>
   );

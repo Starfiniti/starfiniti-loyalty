@@ -6,6 +6,12 @@ import {
   type CustomerActivity,
   type CustomerLoyaltyAccount,
 } from "@/lib/server/customer-account";
+import {
+  CUSTOMER_COPY,
+  customerLocalePath,
+  resolveCustomerLocale,
+  type CustomerLocale,
+} from "@/lib/customer-locale";
 
 export default async function CustomerLoyaltyPage({
   searchParams,
@@ -14,15 +20,19 @@ export default async function CustomerLoyaltyPage({
     linked?: string;
     redeemed?: string;
     redemption?: string;
+    lang?: string;
   }>;
 }) {
-  const [{ linked, redeemed, redemption }, state] = await Promise.all([
+  const [{ linked, redeemed, redemption, lang }, state] = await Promise.all([
     searchParams,
     getCustomerLoyaltyAccounts(),
   ]);
   if (state.kind === "unauthenticated") {
-    redirect("/login?next=%2Faccount%2Floyalty");
+    const locale = resolveCustomerLocale(lang);
+    redirect(customerLocalePath("/login?next=%2Faccount%2Floyalty", locale));
   }
+  const locale = resolveCustomerLocale(lang);
+  const copy = CUSTOMER_COPY[locale];
 
   return (
     <main className="member-page" id="main-content" tabIndex={-1}>
@@ -33,47 +43,58 @@ export default async function CustomerLoyaltyPage({
         </Link>
         <form action={signOut}>
           <button className="secondary member-signout" type="submit">
-            Sign out
+            {copy.signOut}
           </button>
         </form>
       </header>
       <section className="member-content">
         {linked === "1" ? (
           <p className="member-success" role="status">
-            Your verified store account is now connected.
+            {copy.connected}
           </p>
         ) : null}
         {redeemed === "1" ? (
           <p className="member-success" role="status">
-            Reward reserved. Your customer-only WooCommerce coupon is being
-            created now.
+            {copy.rewardReserved}
           </p>
         ) : null}
         {redemption ? (
           <p className="member-error" role="alert">
-            {redemptionMessage(redemption)}
+            {redemptionMessage(redemption, locale)}
           </p>
         ) : null}
         <div className="member-heading">
-          <p>Your loyalty account</p>
-          <h1>Points, tier, and rewards</h1>
-          <p>
-            Live values from the self-hosted loyalty ledger. Store checkout
-            continues to work even if this page is temporarily unavailable.
-          </p>
+          <p>{copy.accountEyebrow}</p>
+          <h1>{copy.accountTitle}</h1>
+          <p>{copy.accountIntro}</p>
+          <nav aria-label={copy.language} className="public-locale-nav">
+            <Link
+              href="/account/loyalty"
+              aria-current={locale === "en" ? "page" : undefined}
+            >
+              {copy.english}
+            </Link>
+            <Link
+              href="/account/loyalty?lang=sl-SI"
+              aria-current={locale === "sl-SI" ? "page" : undefined}
+            >
+              {copy.slovenian}
+            </Link>
+          </nav>
         </div>
         {state.accounts.length === 0 ? (
           <section className="member-empty">
-            <h2>No store account connected</h2>
-            <p>
-              Sign in to your WooCommerce store, open My account, then choose
-              Loyalty rewards and Open loyalty account.
-            </p>
+            <h2>{copy.noAccountTitle}</h2>
+            <p>{copy.noAccountBody}</p>
           </section>
         ) : (
           <div className="member-accounts">
             {state.accounts.map((account) => (
-              <AccountCard account={account} key={account.account_id} />
+              <AccountCard
+                account={account}
+                key={account.account_id}
+                locale={locale}
+              />
             ))}
           </div>
         )}
@@ -82,62 +103,75 @@ export default async function CustomerLoyaltyPage({
   );
 }
 
-function AccountCard({ account }: { account: CustomerLoyaltyAccount }) {
+function AccountCard({
+  account,
+  locale,
+}: {
+  account: CustomerLoyaltyAccount;
+  locale: CustomerLocale;
+}) {
+  const copy = CUSTOMER_COPY[locale];
   const ready = account.account_status === "ready";
   return (
     <article className="member-account-card">
       <div className="member-account-heading">
         <div>
           <p>{account.store_name}</p>
-          <h2>{account.programme_name ?? "Loyalty programme"}</h2>
+          <h2>{account.programme_name ?? copy.defaultProgramme}</h2>
         </div>
         <span className={ready ? "member-live" : "member-pending"}>
-          {statusLabel(account.account_status)}
+          {statusLabel(account.account_status, locale)}
         </span>
       </div>
       <div className="member-balance-grid">
         <section className="member-balance-primary">
-          <span>Available points</span>
-          <strong>{formatPoints(account.available_points)}</strong>
+          <span>{copy.availablePoints}</span>
+          <strong>{formatPoints(account.available_points, locale)}</strong>
         </section>
         <section>
-          <span>Pending</span>
-          <strong>{formatPoints(account.pending_points)}</strong>
+          <span>{copy.pending}</span>
+          <strong>{formatPoints(account.pending_points, locale)}</strong>
         </section>
         <section>
-          <span>Reserved</span>
-          <strong>{formatPoints(account.reserved_points)}</strong>
+          <span>{copy.reserved}</span>
+          <strong>{formatPoints(account.reserved_points, locale)}</strong>
         </section>
         <section>
-          <span>Current tier</span>
-          <strong>{account.tier_name ?? "Not evaluated yet"}</strong>
+          <span>{copy.currentTier}</span>
+          <strong>{account.tier_name ?? copy.notEvaluated}</strong>
         </section>
       </div>
       {account.next_expiry_at && account.next_expiry_points ? (
         <p className="member-expiry">
-          {formatPoints(account.next_expiry_points)} points expire on{" "}
-          {formatDate(account.next_expiry_at)}.
+          {formatPoints(account.next_expiry_points, locale)} {copy.pointsExpire}{" "}
+          {formatDate(account.next_expiry_at, locale)}.
         </p>
       ) : null}
       <div className="member-columns">
         <section>
-          <h3>Available rewards</h3>
+          <h3>{copy.availableRewards}</h3>
           {account.rewards.length === 0 ? (
-            <p className="member-muted">No published rewards are available.</p>
+            <p className="member-muted">{copy.noRewards}</p>
           ) : (
             <ul className="member-list">
               {account.rewards.map((reward) => (
                 <li key={reward.code}>
                   <div>
                     <strong>{reward.name}</strong>
-                    <span>{formatPoints(reward.costPoints)} points</span>
+                    <span>
+                      {formatPoints(reward.costPoints, locale)}{" "}
+                      {locale === "sl-SI" ? "točk" : "points"}
+                    </span>
                   </div>
                   {ready && reward.affordable && isNativeReward(reward.kind) ? (
                     <Link
                       className="member-redeem"
-                      href={`/account/loyalty/redeem?account=${account.account_id}&reward=${encodeURIComponent(reward.code)}`}
+                      href={customerLocalePath(
+                        `/account/loyalty/redeem?account=${account.account_id}&reward=${encodeURIComponent(reward.code)}`,
+                        locale,
+                      )}
                     >
-                      Redeem
+                      {copy.redeem}
                     </Link>
                   ) : (
                     <span
@@ -147,7 +181,7 @@ function AccountCard({ account }: { account: CustomerLoyaltyAccount }) {
                           : "member-unavailable"
                       }
                     >
-                      {reward.affordable ? "Ask store" : "Keep earning"}
+                      {reward.affordable ? copy.askStore : copy.keepEarning}
                     </span>
                   )}
                 </li>
@@ -156,18 +190,18 @@ function AccountCard({ account }: { account: CustomerLoyaltyAccount }) {
           )}
         </section>
         <section>
-          <h3>Recent activity</h3>
+          <h3>{copy.recentActivity}</h3>
           {account.activity.length === 0 ? (
-            <p className="member-muted">No points activity yet.</p>
+            <p className="member-muted">{copy.noActivity}</p>
           ) : (
             <ul className="member-list member-activity">
               {account.activity.map((item) => (
                 <li key={item.id}>
                   <div>
-                    <strong>{activityLabel(item)}</strong>
-                    <span>{formatDate(item.effectiveAt)}</span>
+                    <strong>{activityLabel(item, locale)}</strong>
+                    <span>{formatDate(item.effectiveAt, locale)}</span>
                   </div>
-                  <b>{formatPoints(item.points)}</b>
+                  <b>{formatPoints(item.points, locale)}</b>
                 </li>
               ))}
             </ul>
@@ -177,53 +211,58 @@ function AccountCard({ account }: { account: CustomerLoyaltyAccount }) {
       {account.programme_id ? (
         <Link
           className="member-public-link"
-          href={`/loyalty/${account.workspace_id}/${account.programme_id}`}
+          href={customerLocalePath(
+            `/loyalty/${account.workspace_id}/${account.programme_id}`,
+            locale,
+          )}
         >
-          View public programme details
+          {copy.publicDetails}
         </Link>
       ) : null}
     </article>
   );
 }
 
-function formatPoints(value: string): string {
+function formatPoints(value: string, locale: CustomerLocale): string {
   try {
-    return BigInt(value).toLocaleString("en-US");
+    return BigInt(value).toLocaleString(locale);
   } catch {
     return "0";
   }
 }
 
-function formatDate(value: string): string {
+function formatDate(value: string, locale: CustomerLocale): string {
   const date = new Date(value);
   return Number.isNaN(date.getTime())
-    ? "an unknown date"
-    : new Intl.DateTimeFormat("en", {
+    ? CUSTOMER_COPY[locale].unknownDate
+    : new Intl.DateTimeFormat(locale, {
         day: "numeric",
         month: "short",
         year: "numeric",
       }).format(date);
 }
 
-function statusLabel(status: string): string {
-  if (status === "ready") return "Live";
-  if (status === "ready_without_activity") return "Ready";
-  if (status.startsWith("wallet_")) return "Wallet unavailable";
-  return "Programme unavailable";
+function statusLabel(status: string, locale: CustomerLocale): string {
+  const copy = CUSTOMER_COPY[locale];
+  if (status === "ready") return copy.live;
+  if (status === "ready_without_activity") return copy.ready;
+  if (status.startsWith("wallet_")) return copy.walletUnavailable;
+  return copy.programmeUnavailable;
 }
 
-function activityLabel(item: CustomerActivity): string {
+function activityLabel(item: CustomerActivity, locale: CustomerLocale): string {
+  const copy = CUSTOMER_COPY[locale];
   const labels: Record<string, string> = {
-    award: "Points earned",
-    release: "Points available",
-    reserve: "Reward reserved",
-    capture: "Reward used",
-    cancel: "Reservation released",
-    expire: "Points expired",
-    refund_reversal: "Refund adjustment",
-    manual_adjustment: "Account adjustment",
+    award: copy.earned,
+    release: copy.available,
+    reserve: copy.rewardReservedActivity,
+    capture: copy.rewardUsed,
+    cancel: copy.reservationReleased,
+    expire: copy.pointsExpired,
+    refund_reversal: copy.refundAdjustment,
+    manual_adjustment: copy.accountAdjustment,
   };
-  return labels[item.kind] ?? "Loyalty activity";
+  return labels[item.kind] ?? copy.loyaltyActivity;
 }
 
 function isNativeReward(kind: string): boolean {
@@ -232,12 +271,13 @@ function isNativeReward(kind: string): boolean {
   );
 }
 
-function redemptionMessage(status: string): string {
+function redemptionMessage(status: string, locale: CustomerLocale): string {
+  const copy = CUSTOMER_COPY[locale];
   if (status === "insufficient") {
-    return "Your available points changed before confirmation. No reward was reserved.";
+    return copy.insufficient;
   }
   if (status === "invalid") {
-    return "That redemption request was invalid. No reward was reserved.";
+    return copy.invalidRedemption;
   }
-  return "This reward cannot be redeemed right now. No points were changed.";
+  return copy.unavailableRedemption;
 }

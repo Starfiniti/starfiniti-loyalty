@@ -7,6 +7,7 @@ import {
 } from "@starfiniti/contracts";
 import { getDatabase } from "./database";
 import { getWooCommerceSigningKey } from "./signing-material";
+import { customerLocalePath, type CustomerLocale } from "@/lib/customer-locale";
 
 type ClaimSource = Record<string, string | string[] | undefined> | FormData;
 
@@ -49,9 +50,12 @@ export function parseWooCommerceCustomerClaim(
   return parsed.success ? parsed.data : null;
 }
 
-export function customerClaimPath(claim: WooCommerceCustomerClaimV1): string {
+export function customerClaimPath(
+  claim: WooCommerceCustomerClaimV1,
+  locale: CustomerLocale = "en",
+): string {
   const query = new URLSearchParams(claim);
-  return `/claim/woocommerce?${query.toString()}`;
+  return customerLocalePath(`/claim/woocommerce?${query.toString()}`, locale);
 }
 
 export async function verifyCustomerClaim(

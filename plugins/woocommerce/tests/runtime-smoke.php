@@ -145,6 +145,7 @@ starfiniti_runtime_assert(
     && ($claimQuery['connectionId'] ?? null) === $claimConnectionId
     && ($claimQuery['externalCustomerId'] ?? null) === (string) $customerId
     && ($claimQuery['keyVersion'] ?? null) === $claimKeyVersion
+    && ($claimQuery['lang'] ?? null) === 'sl-SI'
     && 1 === preg_match('/^\d{10}$/', (string) ($claimQuery['issuedAt'] ?? ''))
     && 1 === preg_match('/^[0-9a-f-]{36}$/', (string) ($claimQuery['nonce'] ?? ''))
     && hash_equals(
@@ -152,7 +153,7 @@ starfiniti_runtime_assert(
         (string) ($claimQuery['signature'] ?? '')
     )
     && ! array_key_exists('email', $claimQuery),
-    'customer claim is short-lived, channel-bound, PII-free, and signed locally'
+    'customer claim is short-lived, channel-bound, PII-free, signed locally, and preserves the active locale'
 );
 $checkoutHttpRequests = 0;
 $rejectCheckoutHttp = static function ($preempt) use (&$checkoutHttpRequests) {

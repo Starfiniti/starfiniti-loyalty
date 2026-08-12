@@ -1,13 +1,19 @@
 import { LoginForm } from "./login-form";
 import { safeAppPath } from "@/lib/safe-navigation";
+import {
+  CUSTOMER_COPY,
+  resolveCustomerNavigationLocale,
+} from "@/lib/customer-locale";
 
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string; error?: string }>;
+  searchParams: Promise<{ next?: string; error?: string; lang?: string }>;
 }) {
-  const { next, error } = await searchParams;
+  const { next, error, lang } = await searchParams;
   const nextPath = safeAppPath(next);
+  const locale = resolveCustomerNavigationLocale(lang, nextPath);
+  const copy = CUSTOMER_COPY[locale];
 
   return (
     <main className="login-page" id="main-content" tabIndex={-1}>
@@ -16,24 +22,16 @@ export default async function LoginPage({
           SF
         </div>
         <p className="login-eyebrow">Starfiniti Loyalty</p>
-        <h1 id="login-title">Account sign in</h1>
-        <p className="login-intro">
-          Use the account provisioned for your organization or customer loyalty
-          access. Self-service sign-up is disabled on this private hub.
-        </p>
+        <h1 id="login-title">{copy.signInTitle}</h1>
+        <p className="login-intro">{copy.signInIntro}</p>
         <LoginForm
           initialMessage={
-            error === "authentication_failed"
-              ? "The authentication link could not be verified."
-              : ""
+            error === "authentication_failed" ? copy.authLinkFailed : ""
           }
+          locale={locale}
           nextPath={nextPath}
         />
-        <p className="login-footnote">
-          Sessions are verified by self-hosted Supabase Auth. Merchant and
-          customer access are checked against live database links on every
-          request.
-        </p>
+        <p className="login-footnote">{copy.signInFootnote}</p>
       </section>
     </main>
   );

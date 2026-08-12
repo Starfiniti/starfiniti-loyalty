@@ -55,6 +55,7 @@ final class CustomerClaim
             'nonce' => $nonce,
             'keyVersion' => $keyVersion,
             'signature' => $signature,
+            'lang' => str_starts_with(determine_locale(), 'sl_') ? 'sl-SI' : 'en',
         ], $origin . '/claim/woocommerce');
     }
 }

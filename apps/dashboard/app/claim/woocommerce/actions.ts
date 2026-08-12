@@ -7,18 +7,29 @@ import {
   parseWooCommerceCustomerClaim,
 } from "@/lib/server/woocommerce-customer-claim";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import {
+  customerLocalePath,
+  resolveCustomerLocale,
+} from "@/lib/customer-locale";
 
 export async function confirmWooCommerceCustomerClaim(
   formData: FormData,
 ): Promise<void> {
   const claim = parseWooCommerceCustomerClaim(formData);
-  if (!claim) redirect("/claim/woocommerce?status=invalid");
+  const locale = resolveCustomerLocale(formData.get("lang"));
+  if (!claim)
+    redirect(customerLocalePath("/claim/woocommerce?status=invalid", locale));
 
   const supabase = await createSupabaseServerClient();
   const claims = await supabase.auth.getClaims();
   const authUserId = claims.data?.claims?.sub;
   if (claims.error || typeof authUserId !== "string") {
-    redirect(`/login?next=${encodeURIComponent(customerClaimPath(claim))}`);
+    redirect(
+      customerLocalePath(
+        `/login?next=${encodeURIComponent(customerClaimPath(claim, locale))}`,
+        locale,
+      ),
+    );
   }
 
   try {
@@ -28,12 +39,12 @@ export async function confirmWooCommerceCustomerClaim(
       result.link_public_id &&
       result.customer_public_id
     ) {
-      redirect("/account/loyalty?linked=1");
+      redirect(customerLocalePath("/account/loyalty?linked=1", locale));
     }
-    redirect("/claim/woocommerce?status=conflict");
+    redirect(customerLocalePath("/claim/woocommerce?status=conflict", locale));
   } catch (error) {
     if (isRedirect(error)) throw error;
-    redirect("/claim/woocommerce?status=invalid");
+    redirect(customerLocalePath("/claim/woocommerce?status=invalid", locale));
   }
 }
 
