@@ -30,3 +30,7 @@
 - Completed Phase 5 with programme/customer/wallet foundations, immutable zero-sum ledger transactions/entries, FIFO lots, compensating allocations, six balance projections, and eight atomic value commands.
 - Added tenant ledger export, programme liability reporting, wallet/lot drift detection and rebuild tools, plus strict versioned ledger command contracts.
 - Added 91 ledger pgTAP assertions and a two-session concurrency/property probe; exact-head CI passes 178 total database assertions and prevents concurrent overspend.
+- Completed Phase 6 with deterministic connector-neutral earning/exclusion rules, one-step order rounding, identical live/simulation evaluation, and human-readable line evidence.
+- Added immutable programme draft/publish/schedule/supersede lifecycle, materialized tier/reward definitions, effective tier intervals, approval attribution, and versioned programme contracts.
+- Added idempotent reward reservations with audited state transitions bound to exact ledger effects, safe connector-failure compensation, and transactional advance expiry notifications.
+- Added 82 programme pgTAP assertions; the five-migration database gate now exercises 260 assertions plus ledger concurrency/property checks.

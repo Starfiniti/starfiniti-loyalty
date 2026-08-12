@@ -95,7 +95,7 @@ export interface TierReview {
   readonly currentTierCode: TierCode;
   readonly qualifiedTierCode: TierCode;
   readonly effectiveTierCode: TierCode;
-  readonly transition: "none" | "upgrade" | "grace" | "downgrade";
+  readonly transition: "none" | "upgrade" | "grace" | "downgrade" | "manual";
   readonly belowThresholdSince: string | null;
   readonly graceUntil: string | null;
 }
@@ -360,6 +360,7 @@ export function reviewTier(
     readonly rollingEligibleSpendMinor: MinorUnit;
     readonly evaluatedAt: string;
     readonly belowThresholdSince: string | null;
+    readonly manualTierCode?: TierCode;
   },
 ): TierReview {
   const currentIndex = programme.tiers.findIndex(
@@ -375,6 +376,22 @@ export function reviewTier(
     (tier) => tier.code === qualified.code,
   );
   const evaluatedAt = parseInstant(input.evaluatedAt, "Evaluation instant");
+
+  if (input.manualTierCode !== undefined) {
+    const manual = programme.tiers.find(
+      (tier) => tier.code === input.manualTierCode,
+    );
+    if (!manual)
+      throw new TypeError(`Unknown manual tier: ${input.manualTierCode}`);
+    return {
+      currentTierCode: input.currentTierCode,
+      qualifiedTierCode: qualified.code,
+      effectiveTierCode: manual.code,
+      transition: "manual",
+      belowThresholdSince: null,
+      graceUntil: null,
+    };
+  }
 
   if (qualifiedIndex > currentIndex) {
     return {

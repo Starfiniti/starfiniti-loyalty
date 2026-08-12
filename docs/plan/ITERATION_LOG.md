@@ -79,3 +79,13 @@
 - Added a two-session overspend test and a deterministic 20-round property sequence to the standard database gate.
 - Exact-head run `31566530867` passed baseline and Docker/Supabase verification with four migration replays, reset/seed, 178 pgTAP assertions, the concurrency/property probe, and cleanup.
 - Closed `P5-LEDGER-FOUNDATION` and started `P6-PROGRAMME-ENGINE`.
+
+## 2026-08-12 — Phase 6 programme engine gate
+
+- Added stable connector-neutral order rules for products, categories, collections, currency, market, channel, segments, dates, and explicit value-component exclusions.
+- Kept live evaluation and simulation on one pure integer evaluator with immutable version attribution and human-readable per-line explanation evidence.
+- Added approved draft/publication/scheduling commands, immutable materialized tiers/rewards, rolling/calendar/lifetime qualification helpers, and atomic effective tier intervals.
+- Added reward reservations and audited transition history tied to unique same-wallet ledger transactions; connector failure restores points through an attributable cancel transaction.
+- Added idempotent advance point-expiry notification fences and transactional outbox commands.
+- Added 82 programme pgTAP assertions and versioned programme contracts, bringing the database suite to 260 assertions plus the ledger concurrency/property probe.
+- Closed `P6-PROGRAMME-ENGINE` and started `P7-WOOCOMMERCE-CONNECTOR`.

@@ -6,7 +6,7 @@ Finish Starfiniti Loyalty as an open-source, self-hosted platform on Proxmox usi
 
 ## Current phase
 
-Phase 6 — versioned programme rules, rewards, expiry, and tiers.
+Phase 7 — production WooCommerce connector and plugin.
 
 ## Evidence and completed work
 
@@ -27,16 +27,18 @@ Phase 6 — versioned programme rules, rewards, expiry, and tiers.
 - Exact-head GitHub Actions run `31527785181` passed the full baseline and Docker/Supabase jobs with 87 pgTAP assertions, including duplicate, nonce-replay, cross-tenant, repeated-normalization, and out-of-order scenarios.
 - Phase 5 is complete: immutable double-entry transactions/entries, wallet/control accounts, FIFO lots, compensating allocations, six balance projections, eight value commands, export/liability reporting, and rebuild tooling are implemented.
 - Exact-head run `31566530867` passed the full gate with 178 pgTAP assertions plus a two-session overspend test and deterministic 20-round property sequence.
+- Phase 6 is complete: immutable publication/scheduling, deterministic award/simulation parity, tier qualification/history, reward reservation compensation, and advance expiry notifications are implemented.
+- Exact-head run `31569179555` passed the full baseline and Docker database gate with five migrations, 260 pgTAP assertions, ledger overspend, concurrent evaluation idempotency, and property probes.
 
 ## Active work
 
-- `P6-PROGRAMME-ENGINE` (in progress): persist and execute immutable programme rules, reward reservations, expiry scheduling, tier history, and explanation traces.
+- `P7-WOOCOMMERCE-CONNECTOR` (in progress): complete order/refund normalization effects, reward command execution, storefront/customer surfaces, and reconciliation without making checkout depend on the hub.
 
 ## Next safe tasks
 
-1. Add authorized draft/publish/schedule commands for immutable programme versions.
-2. Execute Rosy earning/exclusion/reward rules with stored explanation traces and historical tier snapshots.
-3. Add reward reservation state, expiry scheduling, tier intervals, simulation parity, and failure compensation tests.
+1. Connect canonical WooCommerce order/refund facts to programme evaluation and idempotent ledger effects.
+2. Implement idempotent native reward/coupon command execution and status callbacks in the plugin.
+3. Add reconciliation, queue recovery, Blocks/classic compatibility tests, and customer-safe cached loyalty reads.
 
 ## Dependencies and blockers
 
