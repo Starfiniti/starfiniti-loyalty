@@ -129,7 +129,14 @@ starfiniti_runtime_assert(is_string($encryptedSigningKey), 'runtime can protect 
 update_option('starfiniti_loyalty_connection_id', $claimConnectionId, false);
 update_option('starfiniti_loyalty_key_version', $claimKeyVersion, false);
 update_option('starfiniti_loyalty_signing_key_encrypted', $encryptedSigningKey, false);
+$claimLocaleChanged = get_locale() !== 'sl_SI';
+if ($claimLocaleChanged) {
+    switch_to_locale('sl_SI');
+}
 $claimLink = CustomerClaim::linkForUser((int) $customerId);
+if ($claimLocaleChanged) {
+    restore_previous_locale();
+}
 $claimQuery = [];
 parse_str((string) wp_parse_url($claimLink, PHP_URL_QUERY), $claimQuery);
 $claimMessage = implode("\n", [
