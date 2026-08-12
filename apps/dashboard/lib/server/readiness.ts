@@ -7,7 +7,7 @@ export async function runtimeIsReady(): Promise<boolean> {
   const sql = getDatabase();
   const rows = await sql<RuntimeReadinessRow[]>`
     select
-      pg_catalog.coalesce(
+      coalesce(
         pg_catalog.has_function_privilege(
           current_user,
           pg_catalog.to_regprocedure(
@@ -17,7 +17,7 @@ export async function runtimeIsReady(): Promise<boolean> {
         ),
         false
       )
-      and pg_catalog.coalesce(
+      and coalesce(
         pg_catalog.has_function_privilege(
           current_user,
           pg_catalog.to_regprocedure(

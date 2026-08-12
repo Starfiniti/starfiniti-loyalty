@@ -100,7 +100,7 @@ set local role loyalty_runtime;
 select results_eq(
   $$
     select
-      pg_catalog.coalesce(
+      coalesce(
         pg_catalog.has_function_privilege(
           current_user,
           pg_catalog.to_regprocedure(
@@ -110,7 +110,7 @@ select results_eq(
         ),
         false
       )
-      and pg_catalog.coalesce(
+      and coalesce(
         pg_catalog.has_function_privilege(
           current_user,
           pg_catalog.to_regprocedure(
