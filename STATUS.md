@@ -21,6 +21,7 @@
 - Existing tenant owners/admins can create the first programme in their selected active programme group through a server-derived, idempotent database command with immutable audit evidence; public tenant provisioning stays disabled.
 - Customer operations provide bounded literal display-reference search, database-masked channel identity, exact text-form pending/available/reserved/spent/expired/reversed buckets, and the latest immutable ledger entries with programme-version and correlation attribution.
 - Every rendered merchant route now exposes a first-focus skip link to one focusable main landmark; global visible focus includes text areas, reduced-motion behavior is guarded, and the sign-in card remains within a 390-pixel viewport.
+- The operations view can download a versioned, tenant-scoped support bundle containing only public scope/connection IDs, queue totals, watermarks, and a labelled bounded sample of grouped canonical error codes. Item IDs, display names, payloads, commerce/customer identities, actors, reasons, signing references, and secrets are omitted.
 - Customer detail now includes minimized current versus qualified tier, transition, exact eligible-spend minor units, and effective/grace timestamps without exposing private decision explanations or command evidence.
 - Connector operations provide tenant-authorized health/queue counts, bounded failure metadata without private payloads, and audited owner/admin/operator replay of dead-letter canonical effects. Outbound coupon dead letters remain inspect-only because points compensation may already exist.
 - Customer owners/admins can preview and confirm signed whole-point adjustments against an exact text-form balance. Credits require expiry, removals show a strong negative-balance warning, and every result is one reason-bound immutable double-entry transaction plus administration audit evidence.
@@ -30,7 +31,7 @@
 ## Partial
 
 - Phases 0 through 7 are complete for the active WooCommerce scope. Shopify Phase 8 is deferred by product-owner direction.
-- Phase 9 is in progress. The authenticated shell, initial-programme onboarding, programme editor, customer wallet/ledger reads, safe hub connector operations, reason-bound value adjustments, live source-reconciliation requests, real Overview reporting, and route-wide keyboard bypass exist; localization, broader support/customer surfaces, and production deployment remain future slices.
+- Phase 9 is in progress. The authenticated shell, initial-programme onboarding, programme editor, customer wallet/ledger reads, safe hub connector operations, reason-bound value adjustments, live source-reconciliation requests, real Overview reporting, route-wide keyboard bypass, and sanitized support diagnostics exist; localization, broader customer surfaces, and production deployment remain future slices.
 
 ## Broken or unavailable
 
@@ -73,6 +74,7 @@ Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 Wo
 - PR exact-head run `31591151097` passed all six jobs for initial-programme onboarding, including thirteen migration replays, 586 pgTAP assertions, concurrency/property probes, and the complete WooCommerce matrix.
 - PR exact-head run `31592427051` passed all six jobs for customer tier visibility, including fourteen migration replays, 613 pgTAP assertions, concurrency/property probes, and the complete WooCommerce matrix.
 - `npm run accessibility:validate`, dashboard lint/typecheck, all 27 dashboard tests, rendered DOM inspection, and initial desktop/mobile authentication captures exercised the accessibility slice locally; the mobile capture exposed a card overflow, and the corrected shrinkable sizing is now guarded statically.
+- PR exact-head run `31596460783` passed all six jobs for the accessibility slice, including fourteen migration replays, 613 pgTAP assertions, concurrency/property probes, and the complete WooCommerce matrix.
 
 ## Next recommended task
 

@@ -49,11 +49,13 @@ Phase 9 — merchant administration and customer experience. Shopify Phase 8 rem
 - The customer-tier slice adds a minimized, exact one-row current/qualified/grace read model and responsive merchant detail surface without exposing private decision evidence.
 - Exact-head run `31592427051` passed the customer-tier baseline, fourteen migrations with 613 pgTAP assertions plus concurrency/property probes, and all four WooCommerce runtime variants.
 - The accessibility slice adds a first-focus keyboard bypass to a focusable main landmark on all seven route surfaces, consistent text-area focus treatment, reduced-motion validation, and a narrow-viewport-safe authentication card; the deterministic guard is part of `npm run check`.
+- Exact-head run `31596460783` passed the accessibility baseline, fourteen migrations with 613 pgTAP assertions plus concurrency/property probes, and all four WooCommerce runtime variants.
+- The supportability slice adds a downloadable versioned diagnostic bundle from the tenant operations view. It contains public scope/connection IDs, queue counts, watermarks, and a labelled bounded sample of grouped canonical error codes only; direct minimization tests reject item identities and noncanonical strings.
 - Exact-head run `31581760825` passed the customer-ledger baseline, database job, and all four WooCommerce runtime variants.
 
 ## Active work
 
-- `P9-MERCHANT-HUB` (in progress): the Auth/RLS shell, guided initial-programme creation, audited programme editor, exact customer wallet/ledger reads, safe connector queue operations, value-changing customer adjustments, signed source reconciliation, real Overview reporting, and keyboard-bypass accessibility guard are implemented; remaining merchant/customer surfaces follow.
+- `P9-MERCHANT-HUB` (in progress): the Auth/RLS shell, guided initial-programme creation, audited programme editor, exact customer wallet/ledger reads, safe connector queue operations, value-changing customer adjustments, signed source reconciliation, real Overview reporting, keyboard-bypass accessibility guard, and sanitized support diagnostics are implemented; remaining merchant/customer surfaces follow.
 
 ## Next safe tasks
 

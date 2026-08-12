@@ -152,3 +152,11 @@
 - Added a deterministic accessibility validator to the complete repository check for route targets, skip-link wiring, text-area focus, and reduced-motion coverage.
 - Rendered the authentication page at desktop and 390-pixel widths; the mobile capture exposed a CSS Grid intrinsic-size overflow, corrected with a bounded, shrinkable card width.
 - Local accessibility validation, dashboard lint/typecheck, and all 27 dashboard tests pass. The in-app browser could not route to the workstation's localhost, so the successful local Edge DOM/capture evidence is recorded without claiming automated WCAG conformance.
+- Exact-head run `31596460783` passed the baseline, fourteen migrations, all 613 pgTAP assertions, concurrency/property probes, and all four WooCommerce runtime variants.
+
+## 2026-08-12 — Phase 9 sanitized support diagnostics
+
+- Added a versioned JSON diagnostic download to the tenant operations view using the same live-membership/RLS-scoped connector read model already visible to the merchant.
+- Aggregated the newest bounded issue sample by canonical kind, state, operation, error code, and retryability; the bundle labels both returned and maximum sample counts, and individual queue item IDs never enter it.
+- Omitted display names, raw payloads, source/customer identifiers, actors, reasons, signing references, and secrets, and fail-closed redacted any noncanonical diagnostic string that could carry private text.
+- Added direct unit evidence for deterministic scope, queue aggregation, issue grouping, impossible-counter normalization, and forbidden-value absence.

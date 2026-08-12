@@ -288,3 +288,6 @@ tasks:
       - exact-head run 31592427051 passed baseline fourteen migrations 613 pgTAP assertions concurrency and property probes and all four WooCommerce runtime variants
       - all seven route surfaces expose a first-focus skip link to one focusable main landmark with visible text-area focus and reduced-motion coverage enforced by npm run accessibility:validate
       - initial desktop and 390-pixel authentication renders plus DOM inspection exposed a narrow-viewport grid overflow and the corrected shrinkable card sizing is now guarded without a runtime dependency
+      - exact-head run 31596460783 passed the accessibility baseline fourteen migrations 613 pgTAP assertions concurrency and property probes and all four WooCommerce runtime variants
+      - tenant operations can download a versioned aggregate-only support bundle containing queue totals watermarks and an explicit bounded-recent-sample count for grouped canonical error codes while omitting item identities names payloads customer or commerce identifiers actors reasons and signing evidence
+      - support-diagnostic unit tests prove aggregation deterministic scope nonnegative counters and redaction of noncanonical strings that could contain private data

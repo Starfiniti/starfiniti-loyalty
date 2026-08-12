@@ -4,7 +4,7 @@ Open-source, self-hosted loyalty infrastructure for WooCommerce, built with Next
 
 ## Current status
 
-Phases 0 through 5 are implemented: the verified dashboard foundation, approved Rosy Rewards domain fixture, tenant/RLS model, signed WooCommerce ingestion/outbox, and immutable double-entry ledger all exist. Programme execution, the full merchant/customer product, production connector recovery, and real Proxmox deployment remain; see `STATUS.md` and `docs/plan/TASKS.yaml` for evidence.
+Phases 0 through 7 are complete for the active WooCommerce scope: the tenant/RLS platform, immutable double-entry ledger, versioned programme engine, signed asynchronous connector, recovery tooling, and supported WordPress/WooCommerce runtime matrix are execution-verified. Phase 9's authenticated merchant hub is in progress with programme, customer, reporting, connector-operation, accessibility, and sanitized support surfaces. Real Proxmox deployment still requires the final production access and infrastructure inputs; see `STATUS.md` and `docs/plan/TASKS.yaml` for exact evidence.
 
 ## Prerequisites
 

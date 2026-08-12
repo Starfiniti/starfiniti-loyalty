@@ -10,6 +10,7 @@
 ## Handling rules
 
 - Classification follows the most sensitive field in a combined artifact.
+- The downloadable support diagnostic is allowlisted Internal data: public tenant/connection scope, queue aggregates, watermarks, and canonical codes only. Any noncanonical diagnostic text is redacted, and adding a Confidential or Restricted field changes the classification and is forbidden without a separate approved export design.
 - IDs may remain Confidential even without names because linkage can re-identify a subject.
 - Hashes of low-entropy secrets/identifiers remain sensitive; use keyed hashes where guessing is realistic.
 - Restricted values use independent environment credentials and rotation. They never use `NEXT_PUBLIC_` names.

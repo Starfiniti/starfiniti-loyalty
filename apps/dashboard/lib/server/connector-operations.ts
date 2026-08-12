@@ -1,4 +1,5 @@
 import "server-only";
+import { CONNECTOR_OPERATION_ISSUE_LIMIT } from "@/lib/connector-operations";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { TenantContext } from "@/lib/tenant-context";
 
@@ -65,7 +66,7 @@ export async function getConnectorOperations(
     summaries.map((summary) =>
       supabase.schema("loyalty").rpc("get_connector_operation_issues", {
         target_connection_public_id: summary.connection_public_id,
-        target_limit: 25,
+        target_limit: CONNECTOR_OPERATION_ISSUE_LIMIT,
       }),
     ),
   );

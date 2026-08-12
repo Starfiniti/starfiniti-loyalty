@@ -17,8 +17,11 @@ Every runbook records incident/change owner, environment, start/end, commands, e
 | Privacy request                 | Verified case                     | Freeze scope/identity evidence, run idempotent export/deletion workflow, audit completion                        |
 | Suspected tenant exposure       | Security signal/report            | Revoke affected credentials/sessions, preserve logs, contain route, notify incident owner, do not alter evidence |
 | Ledger mismatch                 | Projection/reconciliation failure | Stop affected value commands, snapshot evidence, rebuild comparison, compensate—never edit ledger                |
+| Support diagnostic collection   | Merchant support case             | Download sanitized bundle, verify schema/scope, and use separate approval for restricted evidence                |
 | Proxmox host loss               | Host/storage monitoring           | Protect surviving replicas/backups, provision isolated replacement, restore; do not rely only on VM snapshot     |
 
 Concrete target commands and screenshots are added only after the real Proxmox/Supabase deployment exists; placeholder commands that could destroy data are forbidden.
+
+The merchant support bundle is aggregate operational evidence, not an authorization token or unrestricted export. Support must confirm `starfiniti.support-diagnostics.v1`, the intended public organization/workspace/connection scope, and the generation time. Never ask a merchant to add raw webhook bodies, customer/order identifiers, session data, signing material, or secrets to the bundle; any restricted evidence requires a separately authorized, audited process.
 
 For a ledger mismatch, first call the tenant-scoped wallet and lot difference functions and export the affected ledger evidence. Rebuild functions may repair only mutable projections and must run under the worker role with an incident correlation record. A mismatch in immutable entries, attribution, or zero sum is never repaired by SQL update/delete; stop value commands and issue an approved compensating transaction after root-cause review.

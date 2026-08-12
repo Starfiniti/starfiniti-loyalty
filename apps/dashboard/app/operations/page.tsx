@@ -4,13 +4,16 @@ import { Activity, PlugZap, ShieldCheck, TriangleAlert } from "lucide-react";
 import { signOut } from "@/app/actions";
 import {
   canRetryConnectorEffect,
+  CONNECTOR_OPERATION_ISSUE_LIMIT,
   connectorHealth,
   connectorIssueLabel,
 } from "@/lib/connector-operations";
 import { getConnectorOperations } from "@/lib/server/connector-operations";
 import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
+import { buildSupportDiagnostics } from "@/lib/support-diagnostics";
 import { RetryEffectForm } from "./retry-effect-form";
 import { ReconciliationForm } from "./reconciliation-form";
+import { SupportDiagnosticsDownload } from "./support-diagnostics-download";
 
 function formatDate(value: string | null): string {
   if (!value) return "Never";
@@ -27,6 +30,14 @@ export default async function OperationsPage() {
   if (tenant.kind === "unassigned") redirect("/");
   const connections = await getConnectorOperations(tenant.context);
   const mayRetry = canRetryConnectorEffect(tenant.context.membershipRole);
+  const diagnostics = buildSupportDiagnostics({
+    generatedAt: new Date().toISOString(),
+    organizationId: tenant.context.organization.public_id,
+    workspaceId: tenant.context.workspace?.public_id ?? null,
+    programmeGroupId: tenant.context.programmeGroup?.public_id ?? null,
+    issueSampleLimit: CONNECTOR_OPERATION_ISSUE_LIMIT,
+    connections,
+  });
 
   return (
     <main
@@ -72,6 +83,8 @@ export default async function OperationsPage() {
         </div>
         <span className="role-badge">{tenant.context.membershipRole}</span>
       </div>
+
+      <SupportDiagnosticsDownload diagnostics={diagnostics} />
 
       {connections.length === 0 ? (
         <section className="customer-panel empty-state">

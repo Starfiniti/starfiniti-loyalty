@@ -1672,6 +1672,52 @@ h1 {
 .operations-page {
   display: block;
 }
+.support-diagnostics {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 22px;
+  padding: 18px 20px;
+  border: 1px solid #c7d2fe;
+  border-radius: 15px;
+  background: #f5f7ff;
+}
+.support-diagnostics > div {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.support-diagnostics svg {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  color: var(--primary);
+}
+.support-diagnostics h2,
+.support-diagnostics p {
+  margin: 0;
+}
+.support-diagnostics h2 {
+  font-size: 15px;
+}
+.support-diagnostics p {
+  max-width: 760px;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+.support-diagnostics button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 7px;
+}
+.support-diagnostics button svg {
+  width: 15px;
+  height: 15px;
+}
 .connector-card {
   margin-bottom: 22px;
   padding: 24px;
@@ -1904,6 +1950,13 @@ h1 {
   }
 }
 @media (max-width: 640px) {
+  .support-diagnostics {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .support-diagnostics button {
+    justify-content: center;
+  }
   .connector-card {
     padding: 17px;
   }

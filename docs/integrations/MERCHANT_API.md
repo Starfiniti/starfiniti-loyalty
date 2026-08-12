@@ -30,6 +30,8 @@ RLS remains authoritative even when the Next.js application already resolved a t
 
 `get_connector_operation_issues(target_connection_public_id, target_limit)` accepts a limit from 1 to 100 and returns only operation class, public operation ID, state, bounded error code, attempt count, event/topic kind, observation time, and whether replay is permitted. It does not return raw bodies, canonical payloads, source event/object IDs, signing references, coupon codes, or customer attributes.
 
+The dashboard's versioned support-diagnostics bundle further minimizes these authorized rows before download: it removes individual operation IDs and connection display names, labels the returned and maximum counts for the bounded recent-issue sample, groups only canonical error/operation codes, normalizes queue counters, and includes an explicit omission manifest. The bundle is generated locally from the already-authorized operations view and creates no separate public or service-role API.
+
 ### Overview reporting read
 
 `get_overview_report(target_organization_public_id, target_workspace_public_id, target_programme_group_public_id, target_days, target_as_of)` accepts only 7, 30, or 90 aligned UTC days. Organization/workspace/programme-group IDs are selectors; the wrapper rechecks live membership and the active workspace/group assignment. Unknown, revoked, cross-tenant, suspended, or mismatched scope returns no row. `target_as_of` exists for deterministic verification; the dashboard omits it and uses database time.

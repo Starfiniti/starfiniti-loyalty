@@ -2,6 +2,8 @@ import type { MembershipRole } from "@/lib/tenant-context";
 
 export type ConnectorHealth = "healthy" | "stale" | "attention" | "disabled";
 
+export const CONNECTOR_OPERATION_ISSUE_LIMIT = 25;
+
 export function canRetryConnectorEffect(role: MembershipRole): boolean {
   return role === "owner" || role === "admin" || role === "operator";
 }
