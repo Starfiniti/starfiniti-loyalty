@@ -264,7 +264,7 @@ where event.source_event_id like 'report-event-%';
 select * from loyalty_private.post_ledger_transaction(
   (select id from loyalty.organizations where slug = 'report-one'),
   (select id from loyalty.programme_groups where public_id = '79000000-0000-4000-8000-000000000110'),
-  (select id from loyalty.programme_versions where public_id = '79000000-0000-4000-8000-000000000130'),
+  (select id from loyalty.programme_versions where public_id = '79000000-0000-4000-8000-000000000140'),
   'award', 'worker', 'report-fixture', null, null, null,
   'report:ledger:award:current',
   extensions.digest(convert_to('award-current', 'UTF8'), 'sha256'),
@@ -288,7 +288,7 @@ select * from loyalty_private.post_ledger_transaction(
 select * from loyalty_private.post_ledger_transaction(
   (select id from loyalty.organizations where slug = 'report-one'),
   (select id from loyalty.programme_groups where public_id = '79000000-0000-4000-8000-000000000110'),
-  (select id from loyalty.programme_versions where public_id = '79000000-0000-4000-8000-000000000130'),
+  (select id from loyalty.programme_versions where public_id = '79000000-0000-4000-8000-000000000140'),
   'award', 'worker', 'report-fixture', null, null, null,
   'report:ledger:award:previous',
   extensions.digest(convert_to('award-previous', 'UTF8'), 'sha256'),
@@ -320,7 +320,7 @@ where balance.ledger_account_id = account.id
 select * from loyalty_private.post_ledger_transaction(
   (select id from loyalty.organizations where slug = 'report-one'),
   (select id from loyalty.programme_groups where public_id = '79000000-0000-4000-8000-000000000110'),
-  (select id from loyalty.programme_versions where public_id = '79000000-0000-4000-8000-000000000130'),
+  (select id from loyalty.programme_versions where public_id = '79000000-0000-4000-8000-000000000140'),
   'capture', 'worker', 'report-fixture', null, null, null,
   'report:ledger:capture:current',
   extensions.digest(convert_to('capture-current', 'UTF8'), 'sha256'),
