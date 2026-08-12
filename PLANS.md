@@ -57,6 +57,7 @@ Phase 9 — merchant administration and customer experience. Shopify Phase 8 rem
 - The customer-experience theme foundation persists one revisioned workspace/programme-group token set behind RLS and an audited owner/admin command. It accepts an accessible canonical brand color, three local font stacks, bounded radius/copy, section visibility, and widget side only; raw CSS, font URLs, scripts, and uploads are outside the boundary.
 - Exact-head run `31600742177` passed the controlled-theme baseline, fifteen migrations with 654 pgTAP assertions plus concurrency/property probes, and all four localized WooCommerce runtime variants.
 - The customer activity slice adds safe URL filters and honest filtered counts/empty states for orders/refunds, rewards, release/expiry, and adjustments without expanding the existing 100-entry minimized ledger response.
+- Exact-head run `31601351946` passed the filtered-customer baseline, fifteen migrations with 654 pgTAP assertions plus concurrency/property probes, and all four localized WooCommerce runtime variants.
 - Exact-head run `31581760825` passed the customer-ledger baseline, database job, and all four WooCommerce runtime variants.
 
 ## Active work

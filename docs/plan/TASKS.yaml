@@ -301,3 +301,4 @@ tasks:
       - exact-head run 31600742177 passed the controlled-theme baseline fifteen migrations 654 pgTAP assertions concurrency and property probes and all four localized WooCommerce runtime variants
       - customer detail filters the existing bounded immutable timeline into allowlisted order refund reward release expiry and adjustment views with stable order exact counts and honest empty states
       - 109 unit tests include unknown array and cross-category activity-filter inputs without widening the RLS customer read model
+      - exact-head run 31601351946 passed the filtered-customer baseline fifteen migrations 654 pgTAP assertions concurrency and property probes and all four localized WooCommerce runtime variants
