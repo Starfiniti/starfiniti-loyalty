@@ -72,6 +72,34 @@ after insert or update of last_received_at
 on loyalty_private.commerce_delivery_inbox
 for each row execute function loyalty_private.touch_commerce_connection();
 
+update loyalty.reward_reservations as reservation
+set ledger_reservation_transaction_id = reserved_transition.ledger_transaction_id
+from loyalty.reward_reservation_transitions as reserved_transition
+where reserved_transition.organization_id = reservation.organization_id
+  and reserved_transition.reservation_id = reservation.id
+  and reserved_transition.to_state = 'reserved'
+  and reserved_transition.ledger_transaction_id is not null
+  and reservation.ledger_reservation_transaction_id is distinct from reserved_transition.ledger_transaction_id;
+
+create or replace function loyalty_private.preserve_reward_reservation_ledger_origin()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if old.ledger_reservation_transaction_id is not null
+    and new.ledger_reservation_transaction_id is distinct from old.ledger_reservation_transaction_id then
+    new.ledger_reservation_transaction_id := old.ledger_reservation_transaction_id;
+  end if;
+  return new;
+end;
+$$;
+
+create trigger reward_reservations_preserve_ledger_origin
+before update on loyalty.reward_reservations
+for each row execute function loyalty_private.preserve_reward_reservation_ledger_origin();
+
 create or replace function loyalty_private.claim_woocommerce_effects(
   target_worker_id text,
   target_batch_size integer default 25,
@@ -818,6 +846,8 @@ $$;
 alter function loyalty_private.claim_woocommerce_effects(text, integer, integer)
   owner to loyalty_owner;
 alter function loyalty_private.touch_commerce_connection() owner to loyalty_owner;
+alter function loyalty_private.preserve_reward_reservation_ledger_origin()
+  owner to loyalty_owner;
 alter function loyalty_private.resolve_commerce_customer(bigint, bigint, text, text)
   owner to loyalty_owner;
 alter function loyalty_private.finish_commerce_effect(
@@ -840,6 +870,8 @@ alter function loyalty_private.finish_woocommerce_command(
 revoke all on function loyalty_private.claim_woocommerce_effects(text, integer, integer)
   from public, anon, authenticated, loyalty_runtime;
 revoke all on function loyalty_private.touch_commerce_connection()
+  from public, anon, authenticated, loyalty_runtime, loyalty_worker;
+revoke all on function loyalty_private.preserve_reward_reservation_ledger_origin()
   from public, anon, authenticated, loyalty_runtime, loyalty_worker;
 revoke all on function loyalty_private.resolve_commerce_customer(bigint, bigint, text, text)
   from public, anon, authenticated, loyalty_runtime;

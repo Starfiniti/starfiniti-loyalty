@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(98);
+select plan(99);
 
 select has_table('loyalty', 'programme_tiers', 'programme tiers exist');
 select has_table('loyalty', 'programme_rewards', 'programme rewards exist');
@@ -714,6 +714,17 @@ select results_eq(
   $$,
   array['capture'::text],
   'coupon capture transition retains immutable spend-ledger evidence'
+);
+select results_eq(
+  $$
+    select transaction.transaction_kind
+    from loyalty.reward_reservations as reservation
+    join loyalty.ledger_transactions as transaction
+      on transaction.id = reservation.ledger_reservation_transaction_id
+    where reservation.public_id = (select public_id from programme_results where operation = 'reservation')
+  $$,
+  array['reserve'::text],
+  'capture preserves the immutable original reservation-ledger pointer'
 );
 select results_eq(
   $$
