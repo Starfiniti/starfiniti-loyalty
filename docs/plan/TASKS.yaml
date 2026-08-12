@@ -373,4 +373,6 @@ tasks:
       - Proxmox Compose requires distinct dashboard runtime and worker credentials a read-only signing pool and immutable image selectors
       - exact-head run 31634024586 passed seven jobs including both production Docker builds baseline twenty-four migration replays 997 pgTAP assertions concurrency and property probes and all four localized WooCommerce runtime variants
       - secret-safe offline preflight validates populated Proxmox environment and Compose parity placeholders immutable image selectors canonical HTTPS origins distinct least-privilege database logins signing-pool structure and Linux owner-only permissions
+      - public-minimal dashboard readiness checks exact runtime ingestion and provisioning privileges plus mounted signing-pool validity without creating effects or exposing failure detail
+      - exact-head run 31635189128 passed seven jobs with 147 unit tests both production Docker builds twenty-four migration replays 998 pgTAP assertions concurrency and property probes and all four localized WooCommerce runtime variants
       - first approved release tag package visibility SSH DNS TLS backup target production secrets and initial Auth owner remain deployment inputs

@@ -71,6 +71,7 @@ Supabase upgrades are separate change windows: restore rehearsal, release-note/b
 - Liveness proves a process event loop is responsive.
 - Readiness proves required configuration, database transaction, migration compatibility, and queue access without mutating customer value.
 - Public health responses expose no versions, topology, credentials, or tenant data.
+- Dashboard readiness at `/api/healthz` checks one database query for the exact runtime ingestion/provisioning privileges plus the locally mounted signing-pool schema. It returns only `ok` or `unavailable` with no-store headers and creates no business effect.
 - Workers stop claiming new work before shutdown and finish/expire leases safely.
 
 ## Rollback

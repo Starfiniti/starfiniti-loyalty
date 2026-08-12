@@ -3,10 +3,10 @@
 ## What works
 
 - Phase 0's reproducible npm workspace, responsive standalone Next.js Overview, Supabase migration baseline, WooCommerce HPOS scaffold, repository operating system, and pinned CI are verified.
-- The Docker-backed GitHub Actions database job replays migrations/seed and runs 997 transactional pgTAP assertions plus real two-session ledger/programme concurrency and property probes.
+- The Docker-backed GitHub Actions database job replays migrations/seed and runs 998 transactional pgTAP assertions plus real two-session ledger/programme concurrency and property probes.
 - Phase 1 Rosy Rewards semantics are owner-approved and encoded as versioned configuration rather than global merchant assumptions.
 - Pure domain behavior covers integer award calculation, explicit historical tier snapshots, 30-day release, 12-month rolling expiry, earliest-expiry redemption ordering, rolling-spend tiers with grace, cumulative original-attribution refund reversal, and negative balances.
-- Twenty-four domain, fifty-nine versioned contract, fifty-four dashboard, and nine worker tests pass.
+- Twenty-four domain, fifty-nine versioned contract, fifty-five dashboard, and nine worker tests pass.
 - The platform carries a full AGPL-3.0 license and package metadata; the WooCommerce connector remains independently GPL-2.0-or-later.
 - Phase 2 architecture is complete and deterministically validated: tenant/Auth trust, identity, double-entry ledger, signed inbox/outbox, reward reservation, privacy, backup/restore, deployment, and SLO models are reviewable.
 - Phase 3 tenancy/RLS is complete: organizations, memberships, workspaces, programme groups, support grants, least-privilege roles, composite tenant keys, and live authorization policies execute successfully in disposable Supabase CI.
@@ -27,6 +27,7 @@
 - A tenant owner/admin can provision the first WooCommerce connector for an active workspace and published programme from the operations view. The server consumes one unique reference from a root-readable deployment key pool, records a secret-free immutable audit event, and returns an exact setup package only in that action result; the plugin validates and encrypts the imported signing key at rest.
 - Pull-request CI builds the dashboard and worker Dockerfiles from a constrained context using a digest-pinned Node base. Exact semantic-version tags are configured to rerun baseline/database gates, publish GHCR images under commit-SHA and version tags, and attach the WooCommerce ZIP plus SHA-256 checksum to a GitHub release; no production release has been tagged yet.
 - `npm run deploy:preflight -- --env <absolute-secret-env-file>` validates the populated Proxmox application configuration and signing-key pool without printing values. It covers Compose parity, placeholders, immutable image selectors, HTTPS origins, dedicated database logins, pool schema, and Linux owner-only permissions; network and live-role checks remain deployment-time gates.
+- `/api/healthz` returns only `ok` or `unavailable` with no-store headers and fails closed unless the runtime login can execute the exact commerce-ingestion and connector-provisioning functions and the mounted signing pool has at least one valid entry. Proxmox Compose uses this dependency-aware route for dashboard readiness.
 - The customer-experience view reads one RLS-scoped workspace/programme-group theme and previews member/guest states responsively. Owners/admins can revision a contract-validated token set through an idempotent audited command; inaccessible colors, arbitrary CSS, remote fonts, scripts, uploads, and caller-supplied tenant authority are rejected.
 - The customer-experience view also manages separate bounded English and Slovenian customer-copy revisions. Locale selectors are allowlisted, owner/admin saves derive scope and actor from live Auth, member reads remain tenant-RLS scoped, and audit metadata retains locale/revision without duplicating translated copy.
 - A public mobile-first hosted loyalty route renders one active published programme in English or Slovenian using approved theme tokens, tier rates, and reward names/costs. Its bounded anonymous read model omits organization identity, customer/ledger state, raw programme/reward configuration, audit, integration, and commerce evidence; suspended or mixed-scope resources return no document.
@@ -56,7 +57,7 @@
 
 ## Database migration state
 
-Twenty-four versioned migrations and the seed replay successfully against disposable Supabase/Postgres 17 CI with 997 pgTAP assertions plus concurrency/property probes. No persistent or production database has been changed.
+Twenty-four versioned migrations and the seed replay successfully against disposable Supabase/Postgres 17 CI with 998 pgTAP assertions plus concurrency/property probes. No persistent or production database has been changed.
 
 ## Git state
 
@@ -66,7 +67,7 @@ Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 Wo
 
 - `npm run test --workspace=@starfiniti/domain` — passed with 24 tests.
 - `npm run typecheck --workspace=@starfiniti/domain` — passed.
-- `npm run check` — passed locally and in the exact-head CI baseline: formatting, zero-warning lint, all workspace type checks, 146 unit tests, static validators, standalone Next.js production build, and plugin packaging.
+- `npm run check` — passed locally and in the exact-head CI baseline: formatting, zero-warning lint, all workspace type checks, 147 unit tests, static validators, standalone Next.js production build, and plugin packaging.
 - `npm run db:validate` — passed for twenty-four migrations, Supabase config, and twenty-four transactional pgTAP files.
 - `npm run secrets:scan` — passed with no findings.
 - `npm run audit:prod` — passed with zero production vulnerabilities.
@@ -105,6 +106,7 @@ Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 Wo
 - PR exact-head run `31629852692` passed all six jobs for hosted customer export, including 141 unit tests, twenty-three migration replays, all 953 pgTAP assertions, concurrency/property probes, and the complete localized WooCommerce matrix.
 - PR exact-head run `31633310240` passed all six jobs for guided WooCommerce provisioning, including 146 unit tests, twenty-four migration replays, all 997 pgTAP assertions, concurrency/property probes, and real setup-package import in the complete localized WooCommerce matrix.
 - PR exact-head run `31634024586` passed all seven jobs for deployment artifacts, including real digest-pinned dashboard/worker Docker builds, the baseline, twenty-four migration replays, all 997 pgTAP assertions, concurrency/property probes, and the complete localized WooCommerce matrix.
+- PR exact-head run `31635189128` passed all seven jobs for dependency-aware readiness, including 147 unit tests, real dashboard/worker Docker builds, twenty-four migration replays, all 998 pgTAP assertions, concurrency/property probes, and the complete localized WooCommerce matrix.
 
 ## Next recommended task
 

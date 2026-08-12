@@ -283,3 +283,11 @@
 - Required separate nonadministrative PostgreSQL logins with complete connection coordinates and an absolute 1–1000-entry signing pool containing canonical unique references and at least 256-bit exact-base64 keys.
 - Enforced no group/other access on the signing pool when run on Linux and added adversarial self-tests for floating images, shared credentials, HTTP origin, placeholder key, duplicate env variables, malformed pool, unsafe permissions, and secret-free failures.
 - Added the self-test to the complete repository check while keeping live DNS/TLS/connectivity, database role membership, package visibility, and restore evidence as real-environment gates.
+
+## 2026-08-12 — Dependency-aware dashboard readiness
+
+- Replaced the Proxmox dashboard root-page healthcheck with `/api/healthz`, a dynamic no-store route that exposes only `ok` or `unavailable` and catches all internal detail.
+- Added one read-only catalog query that requires the configured database login to possess the exact signed-ingestion and guided-provisioning function privileges, plus validation that the mounted key pool contains at least one canonical entry.
+- Added fail-closed pure tests for missing, null, duplicate, denied, and empty-pool states and made the deployment preflight require the readiness route in Compose.
+- Added a pgTAP assertion that executes the same production catalog probe under `loyalty_runtime`, bringing the suites to 147 unit tests and 998 database assertions.
+- Exact-head run `31635189128` passed all seven jobs: both production Docker builds, baseline, twenty-four migration replays, all 998 pgTAP assertions, concurrency/property probes, and all four localized WooCommerce runtime variants.

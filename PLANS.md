@@ -80,6 +80,7 @@ Phase 9 — merchant administration and customer experience. Shopify Phase 8 rem
 - The deployment-artifact slice now builds both digest-pinned dashboard and worker Dockerfiles on every pull request. An exact semantic-version tag reruns the baseline and disposable database gate before publishing commit-SHA/version GHCR images and a checksummed WooCommerce plugin release; no release tag has been created yet.
 - Exact-head run `31634024586` passed all seven jobs, including real dashboard/worker Docker builds, the 24-migration/997-assertion database gate, and all four localized WooCommerce runtime variants.
 - The deployment preflight now validates a real off-repository environment and signing pool without printing values. It fails on template placeholders, floating/non-SHA images, invalid or shared database credentials, noncanonical HTTPS origins, malformed pool entries, and group/other-readable key files on Linux.
+- Dashboard readiness now fails closed unless the configured runtime login has both exact ingestion and provisioning privileges and the read-only signing pool contains at least one valid entry. Exact-head run `31635189128` passed all seven jobs with 147 unit tests and 998 pgTAP assertions.
 - Exact-head run `31601351946` passed the filtered-customer baseline, fifteen migrations with 654 pgTAP assertions plus concurrency/property probes, and all four localized WooCommerce runtime variants.
 - Exact-head run `31581760825` passed the customer-ledger baseline, database job, and all four WooCommerce runtime variants.
 
