@@ -57,6 +57,10 @@ select has_index(
   'bounded newest-customer reads have a tenant/order index'
 );
 
+insert into auth.users (id, email) values
+  ('7b000000-0000-4000-8000-000000000001', 'customer-read-owner@example.test'),
+  ('7b000000-0000-4000-8000-000000000002', 'customer-read-revoked@example.test'),
+  ('7c000000-0000-4000-8000-000000000001', 'customer-read-other@example.test');
 insert into loyalty.organizations (public_id, slug, name) values
   ('7b000000-0000-4000-8000-000000000100', 'customer-read-one', 'Customer Read One'),
   ('7c000000-0000-4000-8000-000000000100', 'customer-read-two', 'Customer Read Two');
