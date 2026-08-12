@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(77);
+select plan(82);
 
 select has_table('loyalty', 'programme_tiers', 'programme tiers exist');
 select has_table('loyalty', 'programme_rewards', 'programme rewards exist');
@@ -630,6 +630,63 @@ select throws_ok(
   ) $$,
   '23514', 'reservation transition idempotency hash conflict',
   'one transition key cannot be replayed against another reservation'
+);
+
+insert into programme_results
+select 'ledger-reserve-two', result.transaction_public_id, result.outcome
+from loyalty_private.reserve_points(
+  (select id from loyalty.organizations where slug = 'programme-one'),
+  (select id from loyalty.programme_groups where organization_id = (select id from loyalty.organizations where slug = 'programme-one')),
+  (select id from loyalty.programme_versions where public_id = (select public_id from programme_refs where name = 'version-two')),
+  (select public_id from loyalty.wallets where organization_id = (select id from loyalty.organizations where slug = 'programme-one')),
+  100, 'ledger:reward:43:reserve', decode(repeat('5a', 32), 'hex'), '2026-12-02T06:00:00Z'
+) as result;
+select results_eq(
+  $$ select outcome from loyalty_private.transition_reward_reservation(
+    (select public_id from programme_results where operation = 'reservation-two'),
+    'reserved', 'transition:43:reserved', decode(repeat('6a', 32), 'hex'),
+    'reward-worker', null,
+    (select public_id from programme_results where operation = 'ledger-reserve-two'), null
+  ) $$,
+  array['created'::text],
+  'second reward reserves its own points and ledger transaction'
+);
+select results_eq(
+  $$ select outcome from loyalty_private.transition_reward_reservation(
+    (select public_id from programme_results where operation = 'reservation-two'),
+    'cancelled', 'transition:43:cancelled', decode(repeat('7a', 32), 'hex'),
+    'woocommerce-worker', 'coupon creation failed'
+  ) $$,
+  array['created'::text],
+  'connector failure records cancellation before compensation'
+);
+
+insert into programme_results
+select 'ledger-cancel-two', result.transaction_public_id, result.outcome
+from loyalty_private.cancel_reservation(
+  (select id from loyalty.organizations where slug = 'programme-one'),
+  (select public_id from programme_results where operation = 'ledger-reserve-two'),
+  'ledger:reward:43:cancel', decode(repeat('8a', 32), 'hex'), '2026-12-02T06:01:00Z'
+) as result;
+select results_eq(
+  $$ select outcome from loyalty_private.transition_reward_reservation(
+    (select public_id from programme_results where operation = 'reservation-two'),
+    'released', 'transition:43:released', decode(repeat('9a', 32), 'hex'),
+    'reward-worker', 'connector failure compensated',
+    (select public_id from programme_results where operation = 'ledger-cancel-two'), null
+  ) $$,
+  array['created'::text],
+  'cancelled reward releases through its related compensating transaction'
+);
+select results_eq(
+  $$ select state from loyalty.reward_reservations where public_id = (select public_id from programme_results where operation = 'reservation-two') $$,
+  array['released'::text],
+  'compensated reward reaches released state'
+);
+select results_eq(
+  $$ select points from loyalty.wallet_balances where account_kind = 'available' $$,
+  array[400::bigint],
+  'connector failure restores every reserved point exactly once'
 );
 
 set local role authenticated;
