@@ -9,6 +9,16 @@ permissions:
   contents: read
 
 jobs:
+  containers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - name: Build pinned dashboard image
+        run: docker build --file apps/dashboard/Dockerfile --tag starfiniti-dashboard:ci .
+      - name: Build pinned worker image
+        run: docker build --file apps/worker/Dockerfile --tag starfiniti-worker:ci .
+
   baseline:
     runs-on: ubuntu-latest
     timeout-minutes: 20
