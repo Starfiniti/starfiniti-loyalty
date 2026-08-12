@@ -46,6 +46,13 @@ describe("Overview presentation", () => {
     );
     expect(formatExactMinorAmount("123456", "EUR", 100)).toBe("EUR 1,234.56");
     expect(formatBasisPoints("1480")).toBe("14.80%");
+    expect(formatExactInteger("9007199254740993", "sl-SI")).toBe(
+      "9.007.199.254.740.993",
+    );
+    expect(formatExactMinorAmount("123456", "EUR", 100, "sl-SI")).toBe(
+      "EUR 1234,56",
+    );
+    expect(formatBasisPoints("1480", "sl-SI")).toBe("14,80%");
   });
 
   it("builds honest metric labels and period comparisons", () => {
@@ -59,6 +66,10 @@ describe("Overview presentation", () => {
     ]);
     expect(metrics[0]).toMatchObject({ delta: "+2", tone: "positive" });
     expect(metrics[3]).toMatchObject({ delta: "−0.40 pts", tone: "negative" });
+    expect(overviewMetrics(report, "sl-SI")[3]).toMatchObject({
+      delta: "−0,40 odst. t.",
+      tone: "negative",
+    });
   });
 
   it("maps the bounded daily series without exposing source evidence", () => {

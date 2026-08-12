@@ -20,6 +20,13 @@ import type { MerchantOverviewReportV1 } from "@starfiniti/contracts";
 import { useMemo, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { signOut } from "@/app/actions";
+import { MerchantLocaleSwitcher } from "@/components/merchant-locale-switcher";
+import {
+  merchantIntlLocale,
+  merchantLocalePath,
+  merchantText,
+  type MerchantLocale,
+} from "@/lib/merchant-locale";
 import {
   formatExactInteger,
   overviewChartData,
@@ -75,31 +82,35 @@ export function DashboardOverview({
   tenant,
   report,
   range,
+  locale,
 }: Readonly<{
   tenant: DashboardTenant;
   report: MerchantOverviewReportV1 | null;
   range: OverviewRange;
+  locale: MerchantLocale;
 }>) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [rangePending, startRangeTransition] = useTransition();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const text = (source: string) => merchantText(locale, source);
+  const intlLocale = merchantIntlLocale(locale);
   const chartData = useMemo(
     () => (report ? overviewChartData(report) : []),
     [report],
   );
   const metrics = useMemo(
-    () => (report ? overviewMetrics(report) : []),
-    [report],
+    () => (report ? overviewMetrics(report, intlLocale) : []),
+    [intlLocale, report],
   );
 
   return (
-    <div className="app-shell">
+    <div className="app-shell" lang={locale}>
       <button
         className="mobile-menu"
         type="button"
-        aria-label="Open navigation"
+        aria-label={text("Open navigation")}
         onClick={() => setSidebarOpen(true)}
       >
         <Menu aria-hidden="true" />
@@ -108,7 +119,7 @@ export function DashboardOverview({
         <button
           className="sidebar-close"
           type="button"
-          aria-label="Close navigation"
+          aria-label={text("Close navigation")}
           onClick={() => setSidebarOpen(false)}
         >
           <X aria-hidden="true" />
@@ -126,20 +137,20 @@ export function DashboardOverview({
         <div className="store-status">
           <span className="live">
             <i />
-            Live
+            {text("Live")}
           </span>
-          <span className="draft-count">Authenticated</span>
+          <span className="draft-count">{text("Authenticated")}</span>
         </div>
-        <nav aria-label="Main navigation">
+        <nav aria-label={text("Main navigation")}>
           {nav.map((item, index) => (
             <div key={item.label}>
               {item.group ? (
-                <div className="nav-group">{item.group}</div>
+                <div className="nav-group">{text(item.group)}</div>
               ) : index === 1 ? (
-                <div className="nav-group">PROGRAMME</div>
+                <div className="nav-group">{text("PROGRAMME")}</div>
               ) : null}
               <a
-                href={item.href ?? "#"}
+                href={item.href ? merchantLocalePath(item.href, locale) : "#"}
                 className={item.active ? "nav-item active" : "nav-item"}
                 onClick={() => setSidebarOpen(false)}
               >
@@ -148,26 +159,27 @@ export function DashboardOverview({
                 ) : (
                   <span className="nav-indent" />
                 )}
-                <span>{item.label}</span>
+                <span>{text(item.label)}</span>
               </a>
             </div>
           ))}
         </nav>
         <div className="sidebar-foot">
           <span className="demo-label">
-            Live tenant context · live reporting
+            {text("Live tenant context · live reporting")}
           </span>
           <div className="user-card">
             <span className="user-avatar">
               {initials(tenant.organizationName) || "SF"}
             </span>
             <span>
-              <strong>Merchant member</strong>
+              <strong>{text("Merchant member")}</strong>
               <small>{tenant.role}</small>
             </span>
             <form action={signOut}>
+              <input name="lang" type="hidden" value={locale} />
               <button className="sign-out" type="submit">
-                Sign out
+                {text("Sign out")}
               </button>
             </form>
           </div>
@@ -177,7 +189,7 @@ export function DashboardOverview({
       {sidebarOpen ? (
         <button
           className="scrim"
-          aria-label="Close navigation"
+          aria-label={text("Close navigation")}
           onClick={() => setSidebarOpen(false)}
         />
       ) : null}
@@ -187,14 +199,14 @@ export function DashboardOverview({
           <label className="search">
             <Search aria-hidden="true" />
             <input
-              aria-label="Search"
-              placeholder="Search customers, rewards, rules…"
+              aria-label={text("Search")}
+              placeholder={text("Search customers, rewards, rules…")}
             />
             <kbd>⌘K</kbd>
           </label>
           <div className="top-actions">
             <label className="range-select">
-              <span className="sr-only">Date range</span>
+              <span className="sr-only">{text("Date range")}</span>
               <select
                 aria-busy={rangePending}
                 disabled={rangePending}
@@ -207,20 +219,21 @@ export function DashboardOverview({
                   });
                 }}
               >
-                <option value="7">Last 7 days</option>
-                <option value="30">Last 30 days</option>
-                <option value="90">Last 90 days</option>
+                <option value="7">{text("Last 7 days")}</option>
+                <option value="30">{text("Last 30 days")}</option>
+                <option value="90">{text("Last 90 days")}</option>
               </select>
             </label>
-            <button type="button" aria-label="Toggle dark mode">
+            <MerchantLocaleSwitcher locale={locale} />
+            <button type="button" aria-label={text("Toggle dark mode")}>
               <Moon aria-hidden="true" />
             </button>
-            <button type="button" aria-label="Help">
+            <button type="button" aria-label={text("Help")}>
               <HelpCircle aria-hidden="true" />
             </button>
             <button
               type="button"
-              aria-label="Notifications"
+              aria-label={text("Notifications")}
               className="notification"
             >
               <Bell aria-hidden="true" />
@@ -232,35 +245,41 @@ export function DashboardOverview({
         <section className="content">
           <div className="page-heading">
             <div>
-              <h1>Overview</h1>
+              <h1>{text("Overview")}</h1>
               <p>
                 {tenant.programmeName} · {tenant.workspaceName} ·
                 Europe/Ljubljana
               </p>
             </div>
             <div className="heading-actions">
-              <a className="primary" href="/programme">
-                Manage programme
+              <a
+                className="primary"
+                href={merchantLocalePath("/programme", locale)}
+              >
+                {text("Manage programme")}
               </a>
             </div>
           </div>
 
           {report ? (
             <div className="live-report-banner" role="status">
-              Live tenant, workspace, and programme aggregates as of{" "}
-              {new Intl.DateTimeFormat("en-GB", {
+              {locale === "sl-SI"
+                ? "Agregati organizacije, delovnega prostora in programa v živo na dan "
+                : "Live tenant, workspace, and programme aggregates as of "}
+              {new Intl.DateTimeFormat(intlLocale, {
                 dateStyle: "medium",
                 timeStyle: "short",
                 timeZone: "Europe/Ljubljana",
               }).format(new Date(report.asOf))}
-              . Raw orders, customer identifiers, and ledger rows remain
-              server-only.
+              {locale === "sl-SI"
+                ? ". Neobdelana naročila, identifikatorji strank in vrstice glavne knjige ostanejo samo na strežniku."
+                : ". Raw orders, customer identifiers, and ledger rows remain server-only."}
             </div>
           ) : (
             <div className="preview-banner" role="note">
-              Reporting will activate after this organization has an active
-              workspace and programme-group assignment. No illustrative values
-              are shown.
+              {locale === "sl-SI"
+                ? "Poročanje se bo aktiviralo, ko bo organizacija imela aktiven delovni prostor in dodeljeno skupino programa. Ponazoritvene vrednosti niso prikazane."
+                : "Reporting will activate after this organization has an active workspace and programme-group assignment. No illustrative values are shown."}
             </div>
           )}
 
@@ -270,7 +289,7 @@ export function DashboardOverview({
                 {metrics.map((metric) => (
                   <article className="metric-card" key={metric.label}>
                     <p>
-                      {metric.label}
+                      {text(metric.label)}
                       {metric.info ? (
                         <HelpCircle
                           className="metric-info"
@@ -280,11 +299,11 @@ export function DashboardOverview({
                     </p>
                     <strong>{metric.value}</strong>
                     {metric.note ? (
-                      <span className="metric-note">{metric.note}</span>
+                      <span className="metric-note">{text(metric.note)}</span>
                     ) : null}
                     {metric.delta ? (
                       <span className={`metric-delta ${metric.tone}`}>
-                        {metric.delta} <em>{metric.suffix}</em>
+                        {metric.delta} <em>{text(metric.suffix ?? "")}</em>
                       </span>
                     ) : null}
                   </article>
@@ -294,26 +313,28 @@ export function DashboardOverview({
               <article className="chart-card">
                 <div className="chart-header">
                   <div>
-                    <strong>New members</strong>
+                    <strong>{text("New members")}</strong>
                     <span>
-                      {formatExactInteger(report.membersNew)} this period ·
-                      daily UTC buckets
+                      {formatExactInteger(report.membersNew, intlLocale)}{" "}
+                      {locale === "sl-SI"
+                        ? "v tem obdobju · dnevni UTC intervali"
+                        : "this period · daily UTC buckets"}
                     </span>
                   </div>
                   <div className="legend">
                     <span>
                       <i className="current" />
-                      This period
+                      {text("This period")}
                     </span>
                     <span>
                       <i />
-                      Previous
+                      {text("Previous")}
                     </span>
                   </div>
                 </div>
                 <div
                   className="chart-wrap"
-                  aria-label="New members trend chart"
+                  aria-label={text("New members trend chart")}
                 >
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart

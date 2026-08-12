@@ -2,9 +2,11 @@ import { LoginForm } from "./login-form";
 import { safeAppPath } from "@/lib/safe-navigation";
 import {
   CUSTOMER_COPY,
+  customerLocalePath,
   resolveCustomerNavigationLocale,
 } from "@/lib/customer-locale";
 import { customerExportPath } from "@/lib/customer-export";
+import { MerchantLocaleSwitcher } from "@/components/merchant-locale-switcher";
 
 export default async function LoginPage({
   searchParams,
@@ -22,12 +24,13 @@ export default async function LoginPage({
   const locale = resolveCustomerNavigationLocale(lang, requestedNextPath);
   const nextPath = customerExportReauthentication
     ? customerExportPath(locale)
-    : requestedNextPath;
+    : customerLocalePath(requestedNextPath, locale);
   const copy = CUSTOMER_COPY[locale];
 
   return (
-    <main className="login-page" id="main-content" tabIndex={-1}>
+    <main className="login-page" id="main-content" lang={locale} tabIndex={-1}>
       <section className="login-card" aria-labelledby="login-title">
+        <MerchantLocaleSwitcher locale={locale} />
         <div className="login-mark" aria-hidden="true">
           SF
         </div>

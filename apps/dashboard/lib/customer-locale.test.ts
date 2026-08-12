@@ -20,6 +20,9 @@ describe("hosted customer locale", () => {
     expect(customerLocalePath("/account/loyalty?linked=1", "sl-SI")).toBe(
       "/account/loyalty?linked=1&lang=sl-SI",
     );
+    expect(customerLocalePath("/account/loyalty?lang=sl-SI", "sl-SI")).toBe(
+      "/account/loyalty?lang=sl-SI",
+    );
     expect(customerLocalePath("/account/loyalty", "en")).toBe(
       "/account/loyalty",
     );

@@ -32,8 +32,9 @@ export function customerLocalePath(
   locale: CustomerLocale,
 ): string {
   if (locale === "en") return path;
-  const separator = path.includes("?") ? "&" : "?";
-  return `${path}${separator}lang=sl-SI`;
+  const target = new URL(path, "https://local.invalid");
+  target.searchParams.set("lang", "sl-SI");
+  return `${target.pathname}${target.search}${target.hash}`;
 }
 
 export const CUSTOMER_COPY = {

@@ -21,38 +21,47 @@ export function parseOverviewRange(
   return 30;
 }
 
-export function formatExactInteger(value: string): string {
-  return new Intl.NumberFormat("en-GB").format(BigInt(value));
+export function formatExactInteger(
+  value: string,
+  locale: string = "en-GB",
+): string {
+  return new Intl.NumberFormat(locale).format(BigInt(value));
 }
 
 export function formatExactMinorAmount(
   value: string,
   currencyCode: string | null,
   minorUnitsPerMajor: number | null,
+  locale: string = "en-GB",
 ): string {
   if (!currencyCode || !minorUnitsPerMajor) {
-    return `${formatExactInteger(value)} minor units`;
+    return `${formatExactInteger(value, locale)} minor units`;
   }
   const amount = BigInt(value);
   const sign = amount < 0n ? "−" : "";
   const absolute = amount < 0n ? -amount : amount;
   const units = BigInt(minorUnitsPerMajor);
   const digits = String(minorUnitsPerMajor).length - 1;
-  const major = new Intl.NumberFormat("en-GB").format(absolute / units);
+  const major = new Intl.NumberFormat(locale).format(absolute / units);
   const fraction = (absolute % units).toString().padStart(digits, "0");
-  return `${currencyCode} ${sign}${major}${digits > 0 ? `.${fraction}` : ""}`;
+  const separator = locale === "sl-SI" ? "," : ".";
+  return `${currencyCode} ${sign}${major}${digits > 0 ? `${separator}${fraction}` : ""}`;
 }
 
-export function formatBasisPoints(value: string): string {
+export function formatBasisPoints(
+  value: string,
+  locale: string = "en-GB",
+): string {
   const basisPoints = BigInt(value);
   const whole = basisPoints / 100n;
   const fraction = (basisPoints % 100n).toString().padStart(2, "0");
-  return `${whole}.${fraction}%`;
+  return `${whole}${locale === "sl-SI" ? "," : "."}${fraction}%`;
 }
 
 function signedIntegerDelta(
   current: string,
   previous: string,
+  locale: string,
 ): {
   label: string;
   tone: "positive" | "negative" | "neutral";
@@ -61,6 +70,7 @@ function signedIntegerDelta(
   return {
     label: `${delta > 0n ? "+" : delta < 0n ? "−" : "±"}${formatExactInteger(
       (delta < 0n ? -delta : delta).toString(),
+      locale,
     )}`,
     tone: delta > 0n ? "positive" : delta < 0n ? "negative" : "neutral",
   };
@@ -69,6 +79,7 @@ function signedIntegerDelta(
 function signedRateDelta(
   current: string,
   previous: string,
+  locale: string,
 ): {
   label: string;
   tone: "positive" | "negative" | "neutral";
@@ -78,7 +89,9 @@ function signedRateDelta(
   const whole = absolute / 100n;
   const fraction = (absolute % 100n).toString().padStart(2, "0");
   return {
-    label: `${delta > 0n ? "+" : delta < 0n ? "−" : "±"}${whole}.${fraction} pts`,
+    label: `${delta > 0n ? "+" : delta < 0n ? "−" : "±"}${whole}${
+      locale === "sl-SI" ? "," : "."
+    }${fraction} ${locale === "sl-SI" ? "odst. t." : "pts"}`,
     tone: delta > 0n ? "positive" : delta < 0n ? "negative" : "neutral",
   };
 }
@@ -86,6 +99,7 @@ function signedRateDelta(
 function signedPercentDelta(
   current: string,
   previous: string,
+  locale: string,
 ): {
   label: string;
   tone: "positive" | "negative" | "neutral";
@@ -94,7 +108,14 @@ function signedPercentDelta(
   const previousValue = BigInt(previous);
   if (previousValue === 0n) {
     return {
-      label: currentValue === 0n ? "±0.00%" : "+new",
+      label:
+        currentValue === 0n
+          ? locale === "sl-SI"
+            ? "±0,00%"
+            : "±0.00%"
+          : locale === "sl-SI"
+            ? "+novo"
+            : "+new",
       tone: currentValue === 0n ? "neutral" : "positive",
     };
   }
@@ -104,7 +125,9 @@ function signedPercentDelta(
   return {
     label: `${deltaBasisPoints > 0n ? "+" : deltaBasisPoints < 0n ? "−" : "±"}${
       absolute / 100n
-    }.${(absolute % 100n).toString().padStart(2, "0")}%`,
+    }${locale === "sl-SI" ? "," : "."}${(absolute % 100n)
+      .toString()
+      .padStart(2, "0")}%`,
     tone:
       deltaBasisPoints > 0n
         ? "positive"
@@ -116,27 +139,32 @@ function signedPercentDelta(
 
 export function overviewMetrics(
   report: MerchantOverviewReportV1,
+  locale: string = "en-GB",
 ): readonly OverviewMetric[] {
   const members = signedIntegerDelta(
     report.membersNew,
     report.membersNewPrevious,
+    locale,
   );
   const spend = signedPercentDelta(
     report.eligibleSpendMinor,
     report.eligibleSpendMinorPrevious,
+    locale,
   );
   const repeat = signedRateDelta(
     report.repeatRateBasisPoints,
     report.repeatRateBasisPointsPrevious,
+    locale,
   );
   const redemption = signedRateDelta(
     report.redemptionRateBasisPoints,
     report.redemptionRateBasisPointsPrevious,
+    locale,
   );
   return [
     {
       label: "Loyalty members",
-      value: formatExactInteger(report.membersTotal),
+      value: formatExactInteger(report.membersTotal, locale),
       delta: members.label,
       tone: members.tone,
       suffix: "new-member change vs previous period",
@@ -147,6 +175,7 @@ export function overviewMetrics(
         report.eligibleSpendMinor,
         report.currencyCode,
         report.minorUnitsPerMajor,
+        locale,
       ),
       delta: spend.label,
       tone: spend.tone,
@@ -154,21 +183,23 @@ export function overviewMetrics(
     },
     {
       label: "Repeat-member rate",
-      value: formatBasisPoints(report.repeatRateBasisPoints),
+      value: formatBasisPoints(report.repeatRateBasisPoints, locale),
       delta: repeat.label,
       tone: repeat.tone,
       suffix: "members with 2+ eligible orders",
     },
     {
       label: "Points redemption rate",
-      value: formatBasisPoints(report.redemptionRateBasisPoints),
+      value: formatBasisPoints(report.redemptionRateBasisPoints, locale),
       delta: redemption.label,
       tone: redemption.tone,
       suffix: "captured ÷ awarded points",
     },
     {
       label: "Points liability",
-      value: `${formatExactInteger(report.outstandingPoints)} pts`,
+      value: `${formatExactInteger(report.outstandingPoints, locale)} ${
+        locale === "sl-SI" ? "točk" : "pts"
+      }`,
       note: "pending + available + reserved",
       info: true,
     },
