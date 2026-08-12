@@ -8,6 +8,10 @@ select plan(44);
 -- membership inside this rolled-back test transaction lets the suite exercise
 -- the exact NOINHERIT runtime role without changing deployed role membership.
 grant loyalty_runtime to current_user;
+-- The runtime role deliberately has no pgTAP privileges in production. Test-
+-- local access keeps assertions callable while that role is active.
+grant usage on schema extensions to loyalty_runtime;
+grant execute on all functions in schema extensions to loyalty_runtime;
 
 select has_index(
   'loyalty', 'commerce_connections',
