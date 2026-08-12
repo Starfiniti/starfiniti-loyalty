@@ -76,7 +76,8 @@ insert into loyalty.programmes (
 select
   case organization.slug when 'redeem-one' then '91000000-0000-4000-8000-000000000130'::uuid
     else '92000000-0000-4000-8000-000000000130'::uuid end,
-  organization.id, programme_group.id, 'rewards', name || ' Rewards', 'active'
+  organization.id, programme_group.id, 'rewards',
+  organization.name || ' Rewards', 'active'
 from loyalty.organizations as organization
 join loyalty.programme_groups as programme_group
   on programme_group.organization_id = organization.id;
