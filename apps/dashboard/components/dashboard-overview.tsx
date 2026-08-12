@@ -3,7 +3,6 @@
 import {
   Bell,
   ChevronDown,
-  Eye,
   Gem,
   HelpCircle,
   LayoutDashboard,
@@ -16,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { signOut } from "@/app/actions";
 import {
   Area,
   AreaChart,
@@ -81,11 +81,25 @@ const metrics = [
   },
 ] as const;
 
-export function DashboardOverview() {
+export type DashboardTenant = Readonly<{
+  organizationName: string;
+  workspaceName: string;
+  programmeName: string;
+  role: string;
+}>;
+
+function initials(value: string): string {
+  return value
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
+}
+
+export function DashboardOverview({ tenant }: { tenant: DashboardTenant }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [range, setRange] = useState<keyof typeof ranges>("30");
-  const [publishOpen, setPublishOpen] = useState(false);
-  const [published, setPublished] = useState(false);
 
   const chartData = useMemo(
     () =>
@@ -117,10 +131,12 @@ export function DashboardOverview() {
           <X aria-hidden="true" />
         </button>
         <div className="store-switcher">
-          <div className="store-avatar">NV</div>
+          <div className="store-avatar">
+            {initials(tenant.organizationName) || "SF"}
+          </div>
           <div>
-            <strong>Nina &amp; Valentin</strong>
-            <span>Slovenia Store</span>
+            <strong>{tenant.organizationName}</strong>
+            <span>{tenant.workspaceName}</span>
           </div>
           <ChevronDown className="switcher-icon" aria-hidden="true" />
         </div>
@@ -129,7 +145,7 @@ export function DashboardOverview() {
             <i />
             Live
           </span>
-          <span className="draft-count">2 drafts</span>
+          <span className="draft-count">Authenticated</span>
         </div>
         <nav aria-label="Main navigation">
           {nav.map((item, index) => (
@@ -155,14 +171,22 @@ export function DashboardOverview() {
           ))}
         </nav>
         <div className="sidebar-foot">
-          <span className="demo-label">Demo environment · seeded data</span>
+          <span className="demo-label">
+            Live tenant context · preview analytics
+          </span>
           <div className="user-card">
-            <span className="user-avatar">NR</span>
-            <span>
-              <strong>Nina Rozman</strong>
-              <small>nina@ninavalentin.si</small>
+            <span className="user-avatar">
+              {initials(tenant.organizationName) || "SF"}
             </span>
-            <ChevronDown aria-hidden="true" />
+            <span>
+              <strong>Merchant member</strong>
+              <small>{tenant.role}</small>
+            </span>
+            <form action={signOut}>
+              <button className="sign-out" type="submit">
+                Sign out
+              </button>
+            </form>
           </div>
         </div>
       </aside>
@@ -220,25 +244,27 @@ export function DashboardOverview() {
           <div className="page-heading">
             <div>
               <h1>Overview</h1>
-              <p>Rosy Rewards · WooCommerce · Europe/Ljubljana</p>
+              <p>
+                {tenant.programmeName} · {tenant.workspaceName} ·
+                Europe/Ljubljana
+              </p>
             </div>
             <div className="heading-actions">
-              <button className="secondary" type="button">
-                <Eye aria-hidden="true" />
-                Preview as customer
+              <button
+                className="primary"
+                type="button"
+                disabled
+                title="The programme editor is the next implementation slice"
+              >
+                Programme editor next
               </button>
-              {!published ? (
-                <button
-                  className="primary"
-                  type="button"
-                  onClick={() => setPublishOpen(true)}
-                >
-                  Publish 2 draft changes
-                </button>
-              ) : (
-                <span className="published-badge">Published</span>
-              )}
             </div>
+          </div>
+
+          <div className="preview-banner" role="note">
+            Analytics below are an illustrative preview until the reporting
+            queries are connected. Tenant, workspace, role, and programme scope
+            above are live and RLS-protected.
           </div>
 
           <div className="metrics-grid">
@@ -323,51 +349,6 @@ export function DashboardOverview() {
           </article>
         </section>
       </main>
-
-      {publishOpen ? (
-        <div
-          className="dialog-backdrop"
-          role="presentation"
-          onMouseDown={() => setPublishOpen(false)}
-        >
-          <section
-            className="dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="publish-title"
-            onMouseDown={(event) => event.stopPropagation()}
-          >
-            <h2 id="publish-title">Publish programme changes?</h2>
-            <p>
-              Customers will start earning with the updated rules immediately.
-              Historical transactions keep their original programme version.
-            </p>
-            <ul>
-              <li>Birthday bonus increased to 500 points</li>
-              <li>Gold tier multiplier updated to 1.4×</li>
-            </ul>
-            <div>
-              <button
-                className="secondary"
-                type="button"
-                onClick={() => setPublishOpen(false)}
-              >
-                Keep as draft
-              </button>
-              <button
-                className="primary"
-                type="button"
-                onClick={() => {
-                  setPublished(true);
-                  setPublishOpen(false);
-                }}
-              >
-                Publish changes
-              </button>
-            </div>
-          </section>
-        </div>
-      ) : null}
     </div>
   );
 }

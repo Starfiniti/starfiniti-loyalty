@@ -12,5 +12,6 @@ Run Starfiniti Loyalty in Linux VMs, not privileged containers.
 8. Use a dedicated `DATABASE_URL` login that can assume only `loyalty_runtime`; never use a browser, WordPress, or Supabase service credential for ingestion.
 9. Use a different `LOYALTY_WORKER_DATABASE_URL` login that can assume only `loyalty_worker`. Run the immutable worker image beside the dashboard; never reuse its credential in the browser-facing service.
 10. Validate health, RLS, auth redirects, WooCommerce signatures, effect lease recovery, backup restore, and application rollback in staging before production approval.
+11. In the pinned Supabase environment, set `SITE_URL` to the dashboard HTTPS origin, add only required dashboard callback origins to `ADDITIONAL_REDIRECT_URLS`, retain disabled public signup, and provision the first Auth user plus organization membership through an audited admin session.
 
 Current breaking changes reviewed 2026-08-11: Envoy is the self-hosted default gateway; `API_EXTERNAL_URL` includes `/auth/v1` in current stacks. Do not apply old Kong-specific examples without an ADR.

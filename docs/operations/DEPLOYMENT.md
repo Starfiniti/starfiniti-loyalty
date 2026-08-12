@@ -41,6 +41,14 @@ Populate secret-managed environment files on the target hosts; never commit them
 
 Secret files are owner-readable only, excluded from backups unless encrypted escrow is intended, redacted from Compose inspection/support output, and rotated independently. Browser configuration contains only the public URL and publishable key.
 
+## Merchant authentication
+
+- Configure self-hosted Auth `SITE_URL` as the public dashboard origin and allow only the exact dashboard callback origins required by the environment.
+- Keep self-service signup disabled until an approved onboarding flow exists. Provision the first Auth user and live `organization_memberships` row through the audited administration path.
+- `API_EXTERNAL_URL` ends in `/auth/v1`; `SUPABASE_PUBLIC_URL` is the browser/client base URL. Both must resolve through TLS before password reset or OAuth links are enabled.
+- The dashboard receives only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. A Supabase secret/service-role key is not an application runtime dependency.
+- Reverse proxies and CDNs must preserve `Set-Cookie`, `Cache-Control`, `Expires`, `Pragma`, and `Vary` headers and must never cache authenticated HTML or Auth callback responses.
+
 ## Release process
 
 1. Build immutable application/plugin artifacts and generate dependency/container/plugin evidence.

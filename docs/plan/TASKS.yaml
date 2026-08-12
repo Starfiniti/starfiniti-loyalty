@@ -232,7 +232,7 @@ tasks:
   - id: P9-MERCHANT-HUB
     title: Build authenticated merchant programme customer and operations surfaces
     phase: 9
-    status: ready
+    status: in_progress
     dependencies: [P7-WOOCOMMERCE-CONNECTOR]
     acceptance:
       - Merchant routes derive organization and workspace context from authenticated membership
@@ -245,4 +245,9 @@ tasks:
       - browser workflow verification
     risks: [R-001, R-007]
     docs: [docs/product/PRODUCT_REQUIREMENTS.md, docs/security/THREAT_MODEL.md]
-    evidence: []
+    evidence:
+      - Next.js 16 proxy refreshes Supabase Auth cookies with private no-store headers and excludes signed commerce API routes
+      - server pages use verified getClaims identity and authenticated Data API reads protected by live membership RLS
+      - pure tenant resolution rejects cross-tenant injected rows and treats organization preference only as a verified selection hint
+      - sign-in sign-out PKCE callback unassigned-member and safe local redirect paths are implemented without a browser secret key
+      - 12 dashboard tests plus production build lint typecheck and an isolated mobile Playwright smoke pass

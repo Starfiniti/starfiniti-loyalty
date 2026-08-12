@@ -16,11 +16,12 @@
 - Phase 7 implements a separately credentialed WooCommerce effect worker, completed-order awards, cumulative original-attribution refund reversal, channel-ID customer resolution, native issue/cancel commands, PII-free coupon capture, expiry compensation, connection health watermarks, source reconciliation, and an installable GPL plugin artifact.
 - The plugin encrypts its signing key at rest, declares HPOS support, keeps checkout independent of the hub, exposes queue/dead-letter diagnostics, and provides customer loyalty, privacy export/erase, and WP-CLI recovery surfaces.
 - The supported WooCommerce smoke matrix passes on WordPress 6.6.5/WooCommerce 9.0.2/PHP 8.1 and WordPress 7.0.2/WooCommerce 10.9.4/PHP 8.3, each with HPOS and legacy storage. It executes classic and Blocks coupon paths under hub outage, order completion/capture, partial/full refunds, reconciliation, activation lifecycle, and dead-letter recovery.
+- The Next.js merchant shell now verifies Supabase Auth claims, refreshes sessions through the Next.js 16 request proxy, derives live organization/workspace/programme scope through the authenticated Data API and RLS, handles unassigned users safely, and provides sign-in/sign-out/PKCE callback paths without exposing a secret key.
 
 ## Partial
 
 - Phases 0 through 7 are complete for the active WooCommerce scope. Shopify Phase 8 is deferred by product-owner direction.
-- The merchant dashboard still has only the Overview experience; programme editing, customer/ledger operations, hub queue screens, and production deployment remain future slices.
+- Phase 9 is in progress. The authenticated tenant shell exists; programme editing, customer/ledger operations, hub queue screens, real Overview reporting queries, and production deployment remain future slices.
 
 ## Broken or unavailable
 
@@ -34,7 +35,7 @@ All six versioned migrations and the seed replay successfully against disposable
 
 ## Git state
 
-Public repository `Starfiniti/starfiniti-loyalty`; draft PR `#6` contains the Phase 7 WooCommerce pipeline. GitHub recognizes the repository license as GNU AGPLv3.
+Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 WooCommerce pipeline. Phase 9 work is active on `codex/phase-9-merchant-hub`. GitHub recognizes the repository license as GNU AGPLv3.
 
 ## Last verification
 
@@ -56,7 +57,7 @@ Public repository `Starfiniti/starfiniti-loyalty`; draft PR `#6` contains the Ph
 
 ## Next recommended task
 
-Build the missing authenticated merchant programme, customer/ledger, and connector operations surfaces.
+Build the versioned programme editor and safe preview/publish flow inside the authenticated tenant shell.
 
 ## Blockers
 

@@ -35,13 +35,13 @@ Phase 9 — merchant administration and customer experience. Shopify Phase 8 rem
 
 ## Active work
 
-- `P9-MERCHANT-HUB` (ready): build the missing merchant programme, customer/ledger, and connector operations surfaces on the proven database commands.
+- `P9-MERCHANT-HUB` (in progress): the Supabase Auth/RLS merchant shell and live organization/workspace/programme context are implemented; programme, customer/ledger, and connector operations follow.
 
 ## Next safe tasks
 
-1. Add authenticated merchant shell and organization/workspace context without exposing trusted database credentials to the browser.
-2. Build the programme editor and preview against versioned programme contracts and safe publish commands.
-3. Add tenant-scoped customer/ledger and connector queue/reconciliation operations.
+1. Build the programme editor and preview against versioned programme contracts and safe publish commands.
+2. Add tenant-scoped customer/ledger and connector queue/reconciliation operations.
+3. Replace explicitly labelled illustrative Overview analytics with authorized reporting queries.
 
 ## Dependencies and blockers
 

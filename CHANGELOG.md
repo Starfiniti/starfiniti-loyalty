@@ -40,3 +40,4 @@
 - Added a separate Proxmox worker service/credential, connection health watermarks, installable plugin ZIP packaging, and Phase 7 contract/worker/pgTAP coverage.
 - Fixed reservation settlement so capture/release preserves the immutable original reserve-ledger pointer and retries can continue proving their origin.
 - Added a real minimum/current WordPress and WooCommerce runtime matrix across HPOS and legacy storage, classic and Blocks coupon paths, hub outage, partial/full refunds, activation lifecycle, reconciliation, and dead-letter recovery.
+- Added the Phase 9 Supabase Auth merchant shell with verified claim refresh, private cookie responses, live RLS-backed tenant context, safe local redirects, login/logout/callback flows, and honest preview labelling for analytics not yet connected to reporting queries.
