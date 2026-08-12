@@ -1,5 +1,9 @@
 # Data Model
 
+## Implementation status
+
+The tenancy, WooCommerce event, and Phase 5 ledger portions below are implemented in four versioned migrations. The ledger uses immutable transaction headers/entries, six wallet buckets, programme control accounts, original-attribution lots, signed compensating allocations, same-transaction projections, tenant RLS, and narrow worker commands. Reward reservations, tier history, audit, and privacy workflows remain later phases.
+
 ## Database boundaries
 
 - `loyalty` is the candidate Data API schema. It is not exposed or granted by default. Every table has RLS enabled and forced where ownership permits.
@@ -93,6 +97,8 @@ Immutable operation header containing organization, programme group/version, kin
 
 Unique `(organization_id, idempotency_key)` guarantees one operation result. Reusing a key with a different request hash raises a conflict. There is no update/delete grant.
 
+The posting primitive reserves an identity value, inserts entries under a deferred composite transaction foreign key, then inserts the header. An immediate constraint trigger validates entry count and zero sum, so no mutable draft/post transition is required.
+
 ### `ledger_entries`
 
 Immutable signed point quantity against one account. Each transaction has at least two entries and the sum of all entries is exactly zero before commit. Entry organization/programme group must match both transaction and account through composite foreign keys. Zero entries are rejected.
@@ -108,6 +114,8 @@ Examples:
 ### `wallet_balances`
 
 Mutable, rebuildable projection keyed by wallet/account bucket. It is updated in the same transaction as ledger entries and checked against integer bounds. It is never accepted as independent evidence; a rebuild from entries must reproduce it exactly.
+
+Implemented wallet buckets are `pending`, `available`, `reserved`, `spent`, `expired`, and `reversed`. Programme-group control accounts are `issuance` and `adjustment`.
 
 ### `expiry_lots` and `redemption_allocations`
 

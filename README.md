@@ -4,7 +4,7 @@ Open-source, self-hosted loyalty infrastructure for WooCommerce, built with Next
 
 ## Current status
 
-Phase 0 and Phase 1 are implemented: the verified dashboard foundation, approved policy-driven Rosy Rewards domain fixture, Supabase migration/test harness, WooCommerce plugin boundary, and Proxmox deployment contract exist. This is not yet a production loyalty system; see `STATUS.md` and `docs/plan/TASKS.yaml` for evidence and remaining gates.
+Phases 0 through 5 are implemented: the verified dashboard foundation, approved Rosy Rewards domain fixture, tenant/RLS model, signed WooCommerce ingestion/outbox, and immutable double-entry ledger all exist. Programme execution, the full merchant/customer product, production connector recovery, and real Proxmox deployment remain; see `STATUS.md` and `docs/plan/TASKS.yaml` for evidence.
 
 ## Prerequisites
 
@@ -23,7 +23,7 @@ npm run db:validate
 npm run db:verify
 ```
 
-`npm run db:verify` starts the Supabase PostgreSQL container, replays all migrations and `seed.sql`, executes pgTAP security tests, and leaves the local instance running for inspection. Clean it up with:
+`npm run db:verify` starts Supabase PostgreSQL, replays all migrations and `seed.sql`, executes pgTAP suites, and runs the two-session ledger concurrency/property probe. It leaves the local instance running for inspection. Clean it up with:
 
 ```sh
 npm run db:stop
@@ -37,7 +37,7 @@ Start the dashboard with `npm run dev` and open `http://127.0.0.1:3000`.
 - Local Supabase uses development credentials and must not be exposed to public traffic.
 - Do not run linked database reset commands against production.
 - Every tenant table exposed through the Data API must have RLS and adversarial tests.
-- Every points movement must eventually be represented by an immutable ledger transaction.
+- Every points movement is represented by an immutable, attributable, zero-sum ledger transaction.
 
 Read `AGENTS.md`, `docs/product/MASTER_PLAN.md`, `PLANS.md`, and `STATUS.md` before changing behavior.
 

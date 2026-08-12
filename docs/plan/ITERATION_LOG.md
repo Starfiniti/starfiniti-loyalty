@@ -68,3 +68,14 @@
 - Added 38 commerce pgTAP assertions for privileges, replay, body conflicts, disabled connections, cross-tenant links, effect/command uniqueness, repeated normalization, and late/out-of-order history.
 - Exact-head run `31527785181` passed the full baseline and Docker database gate with 87 total pgTAP assertions and cleanup.
 - Closed `P4-WC-INBOX` and started `P5-LEDGER-FOUNDATION`.
+
+## 2026-08-12 — Phase 5 immutable ledger gate
+
+- Added programmes, immutable programme versions, customers/channel identities, wallets, six wallet accounts, and programme control accounts with composite tenant keys and RLS.
+- Added an immutable header/entry posting design that inserts entries under a deferred foreign key and validates at least two non-zero entries summing exactly to zero before accepting the header.
+- Added atomic idempotent award, release, reserve, capture, cancel, expiry, original-attribution refund reversal, and attributable manual-adjustment commands.
+- Added earliest-expiry lots, immutable compensating allocations, wallet/lot projections, drift detectors, rebuild commands, tenant ledger export, and programme liability reporting.
+- Added five ledger contract tests and 91 ledger pgTAP assertions covering privileges, tenancy, balance, immutability, retries, event effects, FIFO, resolution conflicts, negative balances, attribution, reports, and rebuilds.
+- Added a two-session overspend test and a deterministic 20-round property sequence to the standard database gate.
+- Exact-head run `31566530867` passed baseline and Docker/Supabase verification with four migration replays, reset/seed, 178 pgTAP assertions, the concurrency/property probe, and cleanup.
+- Closed `P5-LEDGER-FOUNDATION` and started `P6-PROGRAMME-ENGINE`.

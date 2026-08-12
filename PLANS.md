@@ -6,7 +6,7 @@ Finish Starfiniti Loyalty as an open-source, self-hosted platform on Proxmox usi
 
 ## Current phase
 
-Phase 5 — immutable double-entry points ledger and wallets.
+Phase 6 — versioned programme rules, rewards, expiry, and tiers.
 
 ## Evidence and completed work
 
@@ -25,22 +25,24 @@ Phase 5 — immutable double-entry points ledger and wallets.
 - Exact-head GitHub Actions run `31524730760` passed the baseline and Docker/Supabase jobs, including two migration replays, reset, seed, 49 pgTAP assertions, and cleanup.
 - Phase 4 is complete: strict commerce contracts, raw-body HMAC verification, a Next.js ingestion route, a WooCommerce local outbox with Action Scheduler retries, restricted inbox/canonical/effect/outbox tables, and retry-safe normalization are implemented.
 - Exact-head GitHub Actions run `31527785181` passed the full baseline and Docker/Supabase jobs with 87 pgTAP assertions, including duplicate, nonce-replay, cross-tenant, repeated-normalization, and out-of-order scenarios.
+- Phase 5 is complete: immutable double-entry transactions/entries, wallet/control accounts, FIFO lots, compensating allocations, six balance projections, eight value commands, export/liability reporting, and rebuild tooling are implemented.
+- Exact-head run `31566530867` passed the full gate with 178 pgTAP assertions plus a two-session overspend test and deterministic 20-round property sequence.
 
 ## Active work
 
-- `P5-LEDGER-FOUNDATION` (in progress): implement accounts, immutable balanced transactions/entries, lots, projections, compensations, and idempotent event effects.
+- `P6-PROGRAMME-ENGINE` (in progress): persist and execute immutable programme rules, reward reservations, expiry scheduling, tier history, and explanation traces.
 
 ## Next safe tasks
 
-1. Create the Phase 5 ledger migration with tenant/programme/customer account boundaries and zero-sum deferred constraints.
-2. Implement atomic idempotent award, release, refund-reversal, expiry, and redemption-lot commands.
-3. Prove immutability, balancing, lock order, negative balances, original attribution, and projection rebuilds in pgTAP.
+1. Add authorized draft/publish/schedule commands for immutable programme versions.
+2. Execute Rosy earning/exclusion/reward rules with stored explanation traces and historical tier snapshots.
+3. Add reward reservation state, expiry scheduling, tier intervals, simulation parity, and failure compensation tests.
 
 ## Dependencies and blockers
 
 - Docker is not installed on this Windows workstation; GitHub Actions is the verified Linux/Docker database runner.
 - Direct Proxmox SSH is unavailable: the public alias rejects the configured keys, the VPN alias times out, and the tested jump-host route cannot reach the private alias.
-- Proxmox deployment ultimately needs a working SSH route plus host addresses, DNS, TLS issuer, off-host backup target, and production credentials. These inputs do not block Phase 4 implementation.
+- Proxmox deployment ultimately needs a working SSH route plus host addresses, DNS, TLS issuer, off-host backup target, and production credentials. These inputs do not block Phase 6 implementation.
 
 ## Decisions awaiting approval
 
