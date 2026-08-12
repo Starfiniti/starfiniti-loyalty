@@ -180,7 +180,7 @@ join loyalty.programme_groups as programme_group
   on programme_group.organization_id = customer.organization_id
 where customer.display_reference like 'Member %';
 select loyalty_private.ensure_wallet_accounts(
-  wallet.organization_id, wallet.programme_group_id, wallet.id
+  wallet.organization_id, wallet.programme_group_id, wallet.customer_id
 )
 from loyalty.wallets as wallet
 join loyalty.organizations as organization on organization.id = wallet.organization_id
