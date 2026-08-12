@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(52);
+select plan(58);
 
 select has_table('loyalty', 'admin_audit_events', 'merchant audit table exists');
 select ok(
@@ -393,6 +393,76 @@ select results_eq(
   $$,
   array['duplicate'::text],
   'schedule retry returns the existing schedule'
+);
+
+select results_eq(
+  $$ select outcome from loyalty.create_programme_draft_command(
+    '71000000-0000-4000-8000-000000000101',
+    '{
+      "version":"1",
+      "tiers":[{"code":"rose","name":"Rose","minimumEligibleSpendMinor":"0","pointsPerMajorUnit":"5"}],
+      "rewards":[{
+        "code":"capped","name":"Capped","kind":"percentage_discount","costPoints":"100",
+        "configuration":{"percentageBasisPoints":1000,"maximumDiscountMinor":"2500","currencyMinorUnitDigits":2,"validityDays":30}
+      }]
+    }'::jsonb,
+    'merchant:draft:capped-publish',
+    '71000000-0000-4000-8000-000000000220'
+  ) $$,
+  array['created'::text],
+  'the database boundary accepts an inspectable draft before publication review'
+);
+select throws_ok(
+  $$ select * from loyalty.publish_programme_version_command(
+    (select public_id from loyalty.programme_versions where version_number = 3),
+    (select encode(configuration_sha256, 'hex') from loyalty.programme_versions where version_number = 3),
+    'merchant:publish:capped',
+    '71000000-0000-4000-8000-000000000221'
+  ) $$,
+  '22023', 'percentage discount maximum is unsupported',
+  'direct authenticated RPC cannot publish an unsupported capped percentage'
+);
+select results_eq(
+  $$ select outcome from loyalty.create_programme_draft_command(
+    '71000000-0000-4000-8000-000000000101',
+    '{
+      "version":"1",
+      "tiers":[{"code":"rose","name":"Rose","minimumEligibleSpendMinor":"0","pointsPerMajorUnit":"5"}],
+      "rewards":[{
+        "code":"capped-later","name":"Capped later","kind":"percentage_discount","costPoints":"100",
+        "configuration":{"percentageBasisPoints":1000,"maximumDiscountMinor":"2500","currencyMinorUnitDigits":2,"validityDays":30}
+      }]
+    }'::jsonb,
+    'merchant:draft:capped-schedule',
+    '71000000-0000-4000-8000-000000000222'
+  ) $$,
+  array['created'::text],
+  'a second capped draft exercises the independent schedule boundary'
+);
+select throws_ok(
+  $$ select * from loyalty.schedule_programme_version_command(
+    (select public_id from loyalty.programme_versions where version_number = 4),
+    (select encode(configuration_sha256, 'hex') from loyalty.programme_versions where version_number = 4),
+    now() + interval '1 day',
+    'merchant:schedule:capped',
+    '71000000-0000-4000-8000-000000000223'
+  ) $$,
+  '22023', 'percentage discount maximum is unsupported',
+  'direct authenticated RPC cannot schedule an unsupported capped percentage'
+);
+select results_eq(
+  $$ select version_number, status from loyalty.programme_versions
+     where version_number in (3, 4) order by version_number $$,
+  $$ values (3, 'draft'::text), (4, 'draft'::text) $$,
+  'failed publish and schedule attempts leave both definitions as drafts'
+);
+select results_eq(
+  $$ select count(*)::bigint from loyalty.programme_rewards
+     where programme_version_id in (
+       select id from loyalty.programme_versions where version_number in (3, 4)
+     ) $$,
+  array[0::bigint],
+  'failed capped definitions leave no materialized reward rows'
 );
 
 set local request.jwt.claim.sub = '71000000-0000-4000-8000-000000000002';

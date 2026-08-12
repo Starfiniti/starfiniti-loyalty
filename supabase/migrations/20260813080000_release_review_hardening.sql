@@ -180,6 +180,35 @@ create trigger reward_reservation_native_cap_guard
 before insert on loyalty.reward_reservations
 for each row execute function loyalty_private.reject_unsupported_reward_cap();
 
+create or replace function loyalty_private.reject_unsupported_programme_reward_cap()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if old.status = 'draft'
+    and new.status in ('published', 'scheduled')
+    and pg_catalog.jsonb_typeof(new.configuration -> 'rewards') = 'array'
+    and exists (
+      select 1
+      from pg_catalog.jsonb_array_elements(
+        new.configuration -> 'rewards'
+      ) as reward(value)
+      where reward.value ->> 'kind' = 'percentage_discount'
+        and reward.value -> 'configuration'
+          ->> 'maximumDiscountMinor' is not null
+    ) then
+    raise exception using errcode = '22023',
+      message = 'percentage discount maximum is unsupported';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger programme_version_native_cap_guard
+before update of status on loyalty.programme_versions
+for each row execute function loyalty_private.reject_unsupported_programme_reward_cap();
+
 create or replace function loyalty.get_connector_operation_summaries(
   target_organization_public_id uuid
 )
@@ -336,6 +365,8 @@ alter function loyalty_private.bound_woocommerce_command_retry()
   owner to loyalty_owner;
 alter function loyalty_private.reject_unsupported_reward_cap()
   owner to loyalty_owner;
+alter function loyalty_private.reject_unsupported_programme_reward_cap()
+  owner to loyalty_owner;
 alter function loyalty_private.claim_woocommerce_commands(uuid, integer, integer)
   owner to loyalty_owner;
 alter function loyalty.get_connector_operation_summaries(uuid)
@@ -347,8 +378,12 @@ revoke all on function loyalty_private.bound_woocommerce_command_retry()
   from public, anon, authenticated, loyalty_runtime, loyalty_worker;
 revoke all on function loyalty_private.reject_unsupported_reward_cap()
   from public, anon, authenticated, loyalty_runtime, loyalty_worker;
+revoke all on function loyalty_private.reject_unsupported_programme_reward_cap()
+  from public, anon, authenticated, loyalty_runtime, loyalty_worker;
 
 comment on function loyalty_private.bound_woocommerce_command_retry() is
   'Stops ambiguous WooCommerce command retries at ten attempts for manual review without assuming a coupon was absent or releasing reserved value.';
 comment on function loyalty_private.reject_unsupported_reward_cap() is
   'Rejects percentage reward reservations whose maximum cannot be represented by the native WooCommerce coupon boundary.';
+comment on function loyalty_private.reject_unsupported_programme_reward_cap() is
+  'Prevents publication or scheduling of a percentage reward maximum that the native WooCommerce coupon boundary cannot enforce.';
