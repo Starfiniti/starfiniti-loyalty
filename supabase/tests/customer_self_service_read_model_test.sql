@@ -201,6 +201,9 @@ join loyalty.programme_rewards as reward
  and reward.programme_version_id = version.id
  and reward.code = 'five-off';
 
+create temporary table member_ledger_before as
+select count(*)::bigint as transaction_count from loyalty.ledger_transactions;
+
 set local role authenticated;
 set local request.jwt.claim.sub = '8c000000-0000-4000-8000-000000000001';
 
@@ -266,11 +269,14 @@ select ok(
    from loyalty.get_my_loyalty_accounts()),
   'organization identity and private customer profile text are omitted'
 );
+reset role;
 select results_eq(
   $$ select count(*)::bigint from loyalty.ledger_transactions $$,
-  array[2::bigint],
+  $$ select transaction_count from member_ledger_before $$,
   'reading the account creates no ledger transaction'
 );
+set local role authenticated;
+set local request.jwt.claim.sub = '8c000000-0000-4000-8000-000000000001';
 
 set local request.jwt.claim.sub = '8c000000-0000-4000-8000-000000000002';
 select results_eq(
