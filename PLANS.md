@@ -81,23 +81,25 @@ Phase 9 — merchant administration and customer experience. Shopify Phase 8 rem
 - Exact-head run `31634024586` passed all seven jobs, including real dashboard/worker Docker builds, the 24-migration/997-assertion database gate, and all four localized WooCommerce runtime variants.
 - The deployment preflight now validates a real off-repository environment and signing pool without printing values. It fails on template placeholders, floating/non-SHA images, invalid or shared database credentials, noncanonical HTTPS origins, malformed pool entries, and group/other-readable key files on Linux.
 - Dashboard readiness now fails closed unless the configured runtime login has both exact ingestion and provisioning privileges and the read-only signing pool contains at least one valid entry. Exact-head run `31635189128` passed all seven jobs with 147 unit tests and 998 pgTAP assertions.
+- Initial production tenancy no longer requires improvised SQL. A deployment-only transaction accepts an existing Auth UUID, creates the organization, owner membership, workspace, programme group, and link, and appends minimized immutable audit evidence. Its operator command takes the administration URL only from a named environment variable, requires exact slug confirmation, and is unavailable to browser, runtime, and worker roles.
+- Exact-head run `31636596218` passed all seven jobs for audited tenant bootstrap with 147 unit tests, twenty-five migration replays, 1,028 pgTAP assertions, concurrency/property probes, both production image builds, and all four localized WooCommerce runtime variants.
 - Exact-head run `31601351946` passed the filtered-customer baseline, fifteen migrations with 654 pgTAP assertions plus concurrency/property probes, and all four localized WooCommerce runtime variants.
 - Exact-head run `31581760825` passed the customer-ledger baseline, database job, and all four WooCommerce runtime variants.
 
 ## Active work
 
-- `P9-MERCHANT-HUB` (in progress): the Auth/RLS shell, guided initial-programme and WooCommerce-connector provisioning, audited programme editor, exact filtered customer wallet/ledger reads, safe connector queue operations, individual and exact-preview bulk value adjustments, signed source reconciliation, real Overview reporting, keyboard-bypass accessibility guard, sanitized support diagnostics, localized WooCommerce and hosted customer journeys, controlled experience themes/translations, guest-safe hosted loyalty, signed authenticated member delivery, controlled native-coupon redemption, direct audited customer export, and WooCommerce-originated customer erasure are implemented; remaining merchant usability and operational surfaces follow.
+- `P9-MERCHANT-HUB` (in progress): the Auth/RLS shell, guided initial-programme and WooCommerce-connector provisioning, audited programme editor, exact filtered customer wallet/ledger reads, safe connector queue operations, individual and exact-preview bulk value adjustments, signed source reconciliation, real Overview reporting, keyboard-bypass accessibility guard, sanitized support diagnostics, localized WooCommerce and hosted customer journeys, controlled experience themes/translations, guest-safe hosted loyalty, signed authenticated member delivery, controlled native-coupon redemption, direct audited customer export, WooCommerce-originated customer erasure, dependency-aware readiness, and audited initial-tenant bootstrap are implemented; remaining merchant usability and live operational evidence follow.
 
 ## Next safe tasks
 
-1. Audit remaining Phase 9 acceptance gaps and implement the next highest-value merchant/customer surface.
+1. Extend merchant dashboard localization and browser usability evidence across the authenticated launch workflow.
 2. Create the first approved semantic-version release after merge, then complete production deployment and recovery evidence when the final infrastructure inputs are available.
 
 ## Dependencies and blockers
 
 - Docker is not installed on this Windows workstation; GitHub Actions is the verified Linux/Docker database runner.
 - Direct Proxmox SSH is unavailable: the public alias rejects the configured keys, the VPN alias times out, and the tested jump-host route cannot reach the private alias.
-- Proxmox deployment ultimately needs a working SSH route plus host addresses, DNS, TLS issuer, off-host backup target, and production credentials. These inputs do not block repository implementation or disposable CI verification.
+- Proxmox deployment ultimately needs a working SSH route plus host addresses, DNS, TLS issuer, off-host backup target, production credentials, and the approved first Auth user UUID. Tenant membership itself is now handled by the audited bootstrap command. These inputs do not block repository implementation or disposable CI verification.
 
 ## Decisions awaiting approval
 

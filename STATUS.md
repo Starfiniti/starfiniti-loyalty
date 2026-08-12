@@ -3,7 +3,7 @@
 ## What works
 
 - Phase 0's reproducible npm workspace, responsive standalone Next.js Overview, Supabase migration baseline, WooCommerce HPOS scaffold, repository operating system, and pinned CI are verified.
-- The Docker-backed GitHub Actions database job replays migrations/seed and runs 998 transactional pgTAP assertions plus real two-session ledger/programme concurrency and property probes.
+- The Docker-backed GitHub Actions database job replays migrations/seed and runs 1,028 transactional pgTAP assertions plus real two-session ledger/programme concurrency and property probes.
 - Phase 1 Rosy Rewards semantics are owner-approved and encoded as versioned configuration rather than global merchant assumptions.
 - Pure domain behavior covers integer award calculation, explicit historical tier snapshots, 30-day release, 12-month rolling expiry, earliest-expiry redemption ordering, rolling-spend tiers with grace, cumulative original-attribution refund reversal, and negative balances.
 - Twenty-four domain, fifty-nine versioned contract, fifty-five dashboard, and nine worker tests pass.
@@ -25,6 +25,7 @@
 - Every rendered merchant route now exposes a first-focus skip link to one focusable main landmark; global visible focus includes text areas, reduced-motion behavior is guarded, and the sign-in card remains within a 390-pixel viewport.
 - The operations view can download a versioned, tenant-scoped support bundle containing only public scope/connection IDs, queue totals, watermarks, and a labelled bounded sample of grouped canonical error codes. Item IDs, display names, payloads, commerce/customer identities, actors, reasons, signing references, and secrets are omitted.
 - A tenant owner/admin can provision the first WooCommerce connector for an active workspace and published programme from the operations view. The server consumes one unique reference from a root-readable deployment key pool, records a secret-free immutable audit event, and returns an exact setup package only in that action result; the plugin validates and encrypts the imported signing key at rest.
+- A deployment operator can create the initial organization, live owner membership, workspace, programme group, and link for an existing Auth UUID through one atomic repository command. Exact retries are stable, changed retries fail closed, audit metadata is minimized, and browser, dashboard-runtime, and worker roles cannot execute the boundary.
 - Pull-request CI builds the dashboard and worker Dockerfiles from a constrained context using a digest-pinned Node base. Exact semantic-version tags are configured to rerun baseline/database gates, publish GHCR images under commit-SHA and version tags, and attach the WooCommerce ZIP plus SHA-256 checksum to a GitHub release; no production release has been tagged yet.
 - `npm run deploy:preflight -- --env <absolute-secret-env-file>` validates the populated Proxmox application configuration and signing-key pool without printing values. It covers Compose parity, placeholders, immutable image selectors, HTTPS origins, dedicated database logins, pool schema, and Linux owner-only permissions; network and live-role checks remain deployment-time gates.
 - `/api/healthz` returns only `ok` or `unavailable` with no-store headers and fails closed unless the runtime login can execute the exact commerce-ingestion and connector-provisioning functions and the mounted signing pool has at least one valid entry. Proxmox Compose uses this dependency-aware route for dashboard readiness.
@@ -46,7 +47,7 @@
 ## Partial
 
 - Phases 0 through 7 are complete for the active WooCommerce scope. Shopify Phase 8 is deferred by product-owner direction.
-- Phase 9 is in progress. The authenticated shell, initial-programme onboarding, guided WooCommerce provisioning, programme editor, customer wallet/ledger reads, safe hub connector operations, reason-bound individual and exact-preview bulk value adjustments, live source-reconciliation requests, real Overview reporting, route-wide keyboard bypass, sanitized support diagnostics, localized WooCommerce and hosted customer journeys, controlled experience themes/translations, guest hosted loyalty delivery, signed authenticated member delivery, controlled native-coupon redemption, direct audited customer export, and WooCommerce-originated customer erasure exist; merchant dashboard translation breadth, broader usability evidence, and production deployment remain future slices.
+- Phase 9 is in progress. The authenticated shell, audited initial-tenant bootstrap, initial-programme onboarding, guided WooCommerce provisioning, programme editor, customer wallet/ledger reads, safe hub connector operations, reason-bound individual and exact-preview bulk value adjustments, live source-reconciliation requests, real Overview reporting, route-wide keyboard bypass, sanitized support diagnostics, localized WooCommerce and hosted customer journeys, controlled experience themes/translations, guest hosted loyalty delivery, signed authenticated member delivery, controlled native-coupon redemption, direct audited customer export, and WooCommerce-originated customer erasure exist; merchant dashboard translation breadth, broader usability evidence, and production deployment remain future slices.
 
 ## Broken or unavailable
 
@@ -57,7 +58,7 @@
 
 ## Database migration state
 
-Twenty-four versioned migrations and the seed replay successfully against disposable Supabase/Postgres 17 CI with 998 pgTAP assertions plus concurrency/property probes. No persistent or production database has been changed.
+Twenty-five versioned migrations and the seed replay successfully against disposable Supabase/Postgres 17 CI with 1,028 pgTAP assertions plus concurrency/property probes. No persistent or production database has been changed.
 
 ## Git state
 
@@ -68,7 +69,7 @@ Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 Wo
 - `npm run test --workspace=@starfiniti/domain` — passed with 24 tests.
 - `npm run typecheck --workspace=@starfiniti/domain` — passed.
 - `npm run check` — passed locally and in the exact-head CI baseline: formatting, zero-warning lint, all workspace type checks, 147 unit tests, static validators, standalone Next.js production build, and plugin packaging.
-- `npm run db:validate` — passed for twenty-four migrations, Supabase config, and twenty-four transactional pgTAP files.
+- `npm run db:validate` — passed for twenty-five migrations, Supabase config, and twenty-five transactional pgTAP files.
 - `npm run secrets:scan` — passed with no findings.
 - `npm run audit:prod` — passed with zero production vulnerabilities.
 - `npm run licenses` — passed for six AGPL npm package declarations, the full AGPL text, and both WooCommerce GPL declarations.
@@ -107,11 +108,12 @@ Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 Wo
 - PR exact-head run `31633310240` passed all six jobs for guided WooCommerce provisioning, including 146 unit tests, twenty-four migration replays, all 997 pgTAP assertions, concurrency/property probes, and real setup-package import in the complete localized WooCommerce matrix.
 - PR exact-head run `31634024586` passed all seven jobs for deployment artifacts, including real digest-pinned dashboard/worker Docker builds, the baseline, twenty-four migration replays, all 997 pgTAP assertions, concurrency/property probes, and the complete localized WooCommerce matrix.
 - PR exact-head run `31635189128` passed all seven jobs for dependency-aware readiness, including 147 unit tests, real dashboard/worker Docker builds, twenty-four migration replays, all 998 pgTAP assertions, concurrency/property probes, and the complete localized WooCommerce matrix.
+- PR exact-head run `31636596218` passed all seven jobs for audited initial-tenant bootstrap, including 147 unit tests, real dashboard/worker Docker builds, twenty-five migration replays, all 1,028 pgTAP assertions, concurrency/property probes, and the complete localized WooCommerce matrix.
 
 ## Next recommended task
 
-Complete the next highest-value Phase 9 merchant/customer surface, then prepare production deployment inputs and recovery evidence.
+Extend merchant dashboard localization and authenticated launch-workflow browser evidence, then prepare production deployment inputs and recovery evidence.
 
 ## Blockers
 
-Phase 7 work is unblocked. Proxmox deployment requires working SSH authentication, DNS/TLS choices, an off-host backup target, and production credentials; none should be guessed or committed.
+Phase 7 work is unblocked. Proxmox deployment requires working SSH authentication, DNS/TLS choices, an off-host backup target, production credentials, and an approved first Auth user UUID; none should be guessed or committed. Initial tenant membership and scope no longer require manual SQL.

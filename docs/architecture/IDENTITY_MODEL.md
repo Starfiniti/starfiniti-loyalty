@@ -15,6 +15,7 @@ Email, phone, name, cookie, IP address, and shipping/billing details are attribu
 
 - Supabase Auth establishes the user ID and session.
 - Organization roles come from `organization_memberships`, not `raw_user_meta_data`, email domain, or client-supplied organization ID.
+- The first production membership is created only after the Auth principal exists, through the deployment-only `loyalty_private.bootstrap_initial_tenant` boundary. Its direct PostgreSQL operator must assume `loyalty_owner`; browser, authenticated Data API, dashboard runtime, and worker roles have no execute privilege.
 - RLS helpers query live membership rows. Sensitive writes recheck membership inside the database command.
 - Revocation sets `revoked_at` immediately. Because access tokens may remain valid after Auth deletion/revocation, live membership checks fail closed; high-risk operations may additionally validate the Auth session ID.
 - `app_metadata` may carry non-authoritative UI hints, never the sole tenant authorization decision.

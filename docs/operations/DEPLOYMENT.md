@@ -48,7 +48,7 @@ Before applying Compose, run `npm run deploy:preflight -- --env /absolute/path/t
 ## Merchant authentication
 
 - Configure self-hosted Auth `SITE_URL` as the public dashboard origin and allow only the exact dashboard callback origins required by the environment.
-- Keep self-service signup disabled until an approved onboarding flow exists. Provision the first Auth user and live `organization_memberships` row through the audited administration path.
+- Keep self-service signup disabled until an approved onboarding flow exists. Create the first Auth user through the approved Supabase administration path, then use `npm run tenant:bootstrap` from the matching release source to atomically create its owner membership and initial tenant scope. Follow `INITIAL_TENANT_BOOTSTRAP.md`; do not improvise direct membership inserts.
 - `API_EXTERNAL_URL` ends in `/auth/v1`; `SUPABASE_PUBLIC_URL` is the browser/client base URL. Both must resolve through TLS before password reset or OAuth links are enabled.
 - The dashboard receives only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. A Supabase secret/service-role key is not an application runtime dependency.
 - Configure `DASHBOARD_PUBLIC_ORIGIN` as the exact canonical lowercase HTTPS origin with no path. Guided connector setup derives its signed-event endpoint from this server-only value.

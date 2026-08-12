@@ -291,3 +291,12 @@
 - Added fail-closed pure tests for missing, null, duplicate, denied, and empty-pool states and made the deployment preflight require the readiness route in Compose.
 - Added a pgTAP assertion that executes the same production catalog probe under `loyalty_runtime`, bringing the suites to 147 unit tests and 998 database assertions.
 - Exact-head run `31635189128` passed all seven jobs: both production Docker builds, baseline, twenty-four migration replays, all 998 pgTAP assertions, concurrency/property probes, and all four localized WooCommerce runtime variants.
+
+## 2026-08-12 — Audited initial tenant bootstrap
+
+- Added one deployment-only PostgreSQL boundary that atomically creates an organization, first live owner membership, workspace, programme group, and workspace/group link for an existing Supabase Auth UUID.
+- Bound exact retries to a canonical request hash and stable organization-scoped idempotency key; changed retries, existing slugs, missing Auth users, noncanonical inputs, and partial state fail closed and roll back.
+- Appended one minimized immutable `tenant.bootstrap` administration event while excluding email and tenant display names from audit metadata.
+- Revoked execution from anonymous, authenticated, dashboard-runtime, and worker roles; the operator must connect directly through a trusted administration URL and assume `loyalty_owner` inside the transaction.
+- Added a confirmation-gated repository command, secret-redaction self-tests, a production runbook, and adversarial pgTAP coverage for privileges, atomic scope creation, exact retry, conflicts, minimization, and audit immutability.
+- Exact-head run `31636596218` passed all seven jobs: both production Docker builds, baseline, twenty-five migration replays, all 1,028 pgTAP assertions, concurrency/property probes, and all four localized WooCommerce runtime variants. The first run exposed one stale expected trigger message in the new test; the corrected exact head is green.

@@ -361,7 +361,7 @@ tasks:
       - authenticated tenant and forbidden cross-tenant smoke tests
       - signed WooCommerce delivery command and outage recovery smoke tests
       - clean-room restore drill
-    risks: [R-003, R-004, R-005, R-008, R-015, R-018]
+    risks: [R-003, R-004, R-005, R-008, R-015, R-018, R-019]
     docs:
       - docs/operations/DEPLOYMENT.md
       - docs/operations/BACKUP_RESTORE.md
@@ -375,4 +375,7 @@ tasks:
       - secret-safe offline preflight validates populated Proxmox environment and Compose parity placeholders immutable image selectors canonical HTTPS origins distinct least-privilege database logins signing-pool structure and Linux owner-only permissions
       - public-minimal dashboard readiness checks exact runtime ingestion and provisioning privileges plus mounted signing-pool validity without creating effects or exposing failure detail
       - exact-head run 31635189128 passed seven jobs with 147 unit tests both production Docker builds twenty-four migration replays 998 pgTAP assertions concurrency and property probes and all four localized WooCommerce runtime variants
-      - first approved release tag package visibility SSH DNS TLS backup target production secrets and initial Auth owner remain deployment inputs
+      - a deployment-only atomic bootstrap creates the initial organization owner membership workspace programme group and link for an existing Auth UUID with deterministic retries minimized immutable audit evidence and no browser runtime or worker execute privilege
+      - the operator command reads its administration URL only from a named environment variable requires exact organization-slug confirmation and returns only public resource identifiers
+      - exact-head run 31636596218 passed seven jobs with 147 unit tests both production Docker builds twenty-five migration replays 1028 pgTAP assertions concurrency and property probes and all four localized WooCommerce runtime variants
+      - first approved release tag package visibility SSH DNS TLS backup target production secrets and an approved initial Auth user UUID remain deployment inputs

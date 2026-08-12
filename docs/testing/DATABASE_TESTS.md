@@ -40,6 +40,8 @@ The last two checks are durable guards: they fail automatically when future migr
 
 `customer_tier_read_model_test.sql` adds 27 assertions for exact privileges/search paths, one-row bounds, current versus qualified tier and grace semantics, exact eligible-spend values beyond JavaScript's safe range, honest unevaluated state, response minimization, live analyst access, and revoked/suspended/cross-tenant denial.
 
+`initial_tenant_bootstrap_test.sql` adds 30 assertions for the deployment-only function boundary, absent browser/runtime/worker privileges, atomic tenant scope and owner creation, exact idempotent retry, changed-request and existing-slug denial, existing Auth identity, canonical inputs, minimized immutable audit evidence, and separation from authenticated programme launch.
+
 `scripts/verify-ledger-concurrency.mjs` opens two independent PostgreSQL sessions. One holds an 80-point reservation on a 100-point wallet while the other competes for the same 80 points. Exactly one commits. It then runs 20 deterministic adjust/reserve/capture/cancel sequences with retry probes and verifies every transaction remains balanced and every projection remains exact.
 
 ## CI

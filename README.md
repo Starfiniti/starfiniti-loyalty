@@ -45,6 +45,8 @@ npm run deploy:preflight -- --env /absolute/path/to/starfiniti.env
 
 The preflight reads but never prints configuration values. It verifies environment/Compose parity, immutable image selectors, canonical HTTPS origins, distinct least-privilege database logins, and a valid owner-only signing pool. Network reachability, database role memberships, DNS/TLS, and backup recovery are verified later against the real environment.
 
+After migrations and creation of the first Supabase Auth user, the deployment operator can atomically create the initial tenant scope and owner membership with `npm run tenant:bootstrap`. The command reads its administration database URL only from a named environment variable, requires exact organization-slug confirmation, and is unavailable to browser/application roles. Follow [the initial tenant bootstrap runbook](docs/operations/INITIAL_TENANT_BOOTSTRAP.md); do not improvise membership SQL.
+
 ## Safety
 
 - Never place a Supabase secret/service-role key in `NEXT_PUBLIC_*` variables, browser code, WordPress, logs, or committed files.
