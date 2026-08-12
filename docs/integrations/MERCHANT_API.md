@@ -40,6 +40,20 @@ The wrapper does not return customer or channel identifiers, raw commerce payloa
 
 All commands are `SECURITY DEFINER`, owned by the `NOLOGIN` `loyalty_owner` role, use an empty search path, schema-qualify every object, revoke default `PUBLIC` execution, and expose `EXECUTE` only to `authenticated`.
 
+### `create_programme_command`
+
+Inputs:
+
+- `target_programme_group_public_id uuid`
+- `target_slug text` matching the lowercase hyphenated programme-slug contract
+- `target_name text` trimmed, control-character-free, and at most 200 characters
+- `target_idempotency_key text`
+- `target_correlation_id uuid`
+
+The database locks one active programme group, derives its organization and the actor from live Auth state, and allows only an unrevoked owner/admin. It inserts the active programme without granting browser table DML and appends `programme.create` audit evidence in the same transaction. The command accepts no organization or actor ID, returns no internal numeric key, and exact retries return the original public programme ID.
+
+Result: `resource_public_id` and `outcome` (`created` or `duplicate`). The merchant UI exposes this command only when the selected group has no visible active/draft programme; public organization/group provisioning remains disabled.
+
 ### `create_programme_draft_command`
 
 Inputs:
@@ -117,4 +131,4 @@ The UI presents generic safe messages and never treats a network or database err
 
 ## Verification
 
-`merchant_programme_commands_test.sql` exercises exact privileges/search paths, tenant/role/revocation denial, canonical hashing, retries and conflicts, stale publication hashes, future schedules, materialization, immutable version history, and immutable attributable audit evidence. `customer_read_models_test.sql` proves exact values beyond JavaScript's safe range, database-side masking, literal bounded search, result ceilings, minimized ledger fields, empty wallet scope, group mismatch, revocation, and cross-tenant isolation. `connector_operations_test.sql` adds private-queue minimization, cross-tenant/role/revocation denial, retry state, quarantine rejection, idempotency conflict, audit immutability, and outbound-command non-mutation. `connector_reconciliation_commands_test.sql` proves durable source-command creation/claim/acknowledgement, current-state retries, tenant and role denial, disabled-connection rejection, bounded inputs, and immutable actor/reason evidence. `merchant_overview_reporting_test.sql` proves exact aggregate definitions, equal periods, UTC buckets, workspace/programme scope, bigint preservation, private-source denial, live role/revocation behavior, and empty-tenant isolation. `customer_adjustment_commands_test.sql` proves owner/admin-only entry, exact bigint balance, credit/debit ledger effects, expiry/lot attribution, FIFO allocation, retries/conflicts, actor/audit linkage, immutability, and projection rebuilds. Contract unit tests reject caller-expanded authority and malformed reasons. Browser QA covers responsive structured editing and deliberate adjustment review/confirmation. Customer, Overview, and connector helper tests cover bounded inputs, exact bigint formatting/preview, masking, balances, role authority, labels, and health states.
+`initial_programme_onboarding_test.sql` exercises exact privileges/search paths, direct-DML denial, canonical inputs, owner/admin authorization, tenant/group derivation, retries/conflicts, duplicate slugs, suspended groups, role revocation, cross-tenant denial, RLS-filtered audit reads, and immutable actor/correlation evidence. `merchant_programme_commands_test.sql` covers canonical drafting, publication, and scheduling. `customer_read_models_test.sql` proves exact values beyond JavaScript's safe range, database-side masking, literal bounded search, result ceilings, minimized ledger fields, empty wallet scope, group mismatch, revocation, and cross-tenant isolation. `connector_operations_test.sql` adds private-queue minimization, cross-tenant/role/revocation denial, retry state, quarantine rejection, idempotency conflict, audit immutability, and outbound-command non-mutation. `connector_reconciliation_commands_test.sql` proves durable source-command creation/claim/acknowledgement, current-state retries, tenant and role denial, disabled-connection rejection, bounded inputs, and immutable actor/reason evidence. `merchant_overview_reporting_test.sql` proves exact aggregate definitions, equal periods, UTC buckets, workspace/programme scope, bigint preservation, private-source denial, live role/revocation behavior, and empty-tenant isolation. `customer_adjustment_commands_test.sql` proves owner/admin-only entry, exact bigint balance, credit/debit ledger effects, expiry/lot attribution, FIFO allocation, retries/conflicts, actor/audit linkage, immutability, and projection rebuilds. Contract unit tests reject caller-expanded authority and malformed reasons. Browser QA covers responsive structured editing and deliberate adjustment review/confirmation. Customer, Overview, and connector helper tests cover bounded inputs, exact bigint formatting/preview, masking, balances, role authority, labels, and health states.

@@ -127,3 +127,11 @@
 - Cast every wallet balance and ledger point value to text before the Data API and format it with `BigInt`, removing IEEE-754 precision loss from customer screens.
 - Moved channel-ID masking into PostgreSQL, made search literal and capped at 100 characters/50 results, and kept actor IDs, reasons, metadata, request hashes, and raw commerce evidence out of the response.
 - Added 33 pgTAP assertions for privileges, search paths, indexed access, exact large integers, masking/minimization, fixed bounds, empty wallet scope, group mismatch, revocation, and cross-tenant isolation plus one dashboard precision test.
+- Exact-head run `31589866616` passed the clean baseline, twelve migrations, all 551 pgTAP assertions, concurrency/property probes, and all four real WooCommerce runtime variants after one external Composer TLS retry.
+
+## 2026-08-12 — Phase 9 initial programme onboarding
+
+- Replaced the developer-dependent empty programme state with a guided owner/admin form for creating the first programme inside the selected active programme group.
+- Added a narrow `create_programme_command` that derives actor and organization from live database state, locks the group, validates canonical name/slug inputs, preserves exact retry identity, and commits `programme.create` audit evidence atomically.
+- Kept direct programme inserts unavailable to authenticated clients and left public organization/group provisioning disabled until abuse, billing, and lifecycle controls exist.
+- Added 35 pgTAP assertions for exact privileges/search paths, canonical inputs, owner/admin authority, tenant/group derivation, retry/conflict behavior, role revocation, suspended groups, cross-tenant denial, RLS-filtered audit reads, and audit immutability.

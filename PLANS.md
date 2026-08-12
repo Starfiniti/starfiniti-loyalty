@@ -43,11 +43,13 @@ Phase 9 — merchant administration and customer experience. Shopify Phase 8 rem
 - The Overview-reporting slice removes demo values and supplies bounded tenant/workspace/programme aggregates from immutable evaluation and ledger evidence through exact integer contracts; private source data stays server-only.
 - Exact-head run `31588394642` passed the live-reporting baseline, eleven migrations with 518 pgTAP assertions plus concurrency/property probes, and all four WooCommerce runtime variants.
 - The customer-read hardening slice moves list/detail assembly into live-membership database wrappers, masks channel IDs before they leave PostgreSQL, and preserves every wallet and ledger bigint as text through `BigInt` display formatting.
+- Exact-head run `31589866616` passed the customer-read baseline, twelve migrations with 551 pgTAP assertions plus concurrency/property probes, and all four WooCommerce runtime variants after one external Composer TLS retry.
+- Initial-programme onboarding now lets an existing tenant owner/admin create the first programme inside an active authorized group through an idempotent audited command; public organization/group signup remains disabled.
 - Exact-head run `31581760825` passed the customer-ledger baseline, database job, and all four WooCommerce runtime variants.
 
 ## Active work
 
-- `P9-MERCHANT-HUB` (in progress): the Auth/RLS shell, audited programme editor, exact customer wallet/ledger reads, safe connector queue operations, value-changing customer adjustments, signed source reconciliation, and real Overview reporting are implemented; remaining merchant/customer surfaces follow.
+- `P9-MERCHANT-HUB` (in progress): the Auth/RLS shell, guided initial-programme creation, audited programme editor, exact customer wallet/ledger reads, safe connector queue operations, value-changing customer adjustments, signed source reconciliation, and real Overview reporting are implemented; remaining merchant/customer surfaces follow.
 
 ## Next safe tasks
 

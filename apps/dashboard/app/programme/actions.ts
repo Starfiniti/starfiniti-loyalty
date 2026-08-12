@@ -1,7 +1,9 @@
 "use server";
 
 import {
+  merchantCreateProgrammeCommandV1,
   merchantCreateProgrammeDraftCommandV1,
+  merchantProgrammeCreateResultV1,
   merchantProgrammeDraftResultV1,
   merchantProgrammePublishResultV1,
   merchantPublishProgrammeVersionCommandV1,
@@ -22,17 +24,78 @@ function actionError(error: { code?: string } | null): ProgrammeActionState {
       message: "Your current organization role cannot perform this action.",
     };
   }
-  if (error?.code === "23514" || error?.code === "22023") {
+  if (error?.code === "23514" || error?.code === "23505") {
     return {
       kind: "error",
       message:
-        "The programme changed or failed validation. Refresh and review the draft before trying again.",
+        "This request conflicts with an existing programme operation. Refresh and review the current state.",
+    };
+  }
+  if (error?.code === "22023") {
+    return {
+      kind: "error",
+      message: "The programme input failed server validation.",
     };
   }
   return {
     kind: "error",
     message:
       "The command could not be completed safely. No change was assumed.",
+  };
+}
+
+export async function createInitialProgramme(
+  _previousState: ProgrammeActionState,
+  formData: FormData,
+): Promise<ProgrammeActionState> {
+  const operationId = String(formData.get("operationId") ?? "");
+  const command = merchantCreateProgrammeCommandV1.safeParse({
+    version: "1",
+    programmeGroupId: formData.get("programmeGroupId"),
+    slug: formData.get("slug"),
+    name: formData.get("name"),
+    idempotencyKey: `programme:create:${operationId}`,
+    correlationId: crypto.randomUUID(),
+  });
+  if (!command.success) {
+    return {
+      kind: "error",
+      message:
+        "Use a name up to 200 characters and a lowercase hyphenated slug.",
+    };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .schema("loyalty")
+    .rpc("create_programme_command", {
+      target_programme_group_public_id: command.data.programmeGroupId,
+      target_slug: command.data.slug,
+      target_name: command.data.name,
+      target_idempotency_key: command.data.idempotencyKey,
+      target_correlation_id: command.data.correlationId,
+    });
+  if (error) return actionError(error);
+
+  const row = firstResult(data);
+  const result = merchantProgrammeCreateResultV1.safeParse(
+    row
+      ? {
+          resourceId: row.resource_public_id,
+          outcome: row.outcome,
+        }
+      : null,
+  );
+  if (!result.success) return actionError(null);
+
+  revalidatePath("/");
+  revalidatePath("/programme");
+  return {
+    kind: "success",
+    message:
+      result.data.outcome === "duplicate"
+        ? "This programme was already created."
+        : "Programme created. Continue by saving and publishing its first draft.",
   };
 }
 

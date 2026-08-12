@@ -103,7 +103,7 @@ export async function getMerchantProgrammeState(
         "public_id,action,actor_user_id,resource_public_id,correlation_id,created_at",
       )
       .eq("organization_id", context.organization.id)
-      .eq("resource_type", "programme_version")
+      .in("resource_type", ["programme", "programme_version"])
       .order("created_at", { ascending: false })
       .limit(20),
   ]);

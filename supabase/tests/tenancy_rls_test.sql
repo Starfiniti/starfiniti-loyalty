@@ -100,6 +100,7 @@ select is_empty(
         namespace.nspname = 'loyalty'
         and routine.proname in (
           'adjust_customer_points_command',
+          'create_programme_command',
           'create_programme_draft_command',
           'get_customer_adjustment_context',
           'get_customer_read_model',

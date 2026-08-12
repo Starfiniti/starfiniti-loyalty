@@ -48,3 +48,4 @@
 - Added reviewed owner/admin/operator WooCommerce order reconciliation from the hub through an audited private outbox, signed connector polling, idempotent plugin source-fact re-emission, and explicit missing-order termination.
 - Replaced illustrative Overview figures with tenant/workspace/programme-authorized reporting for members, eligible loyalty spend, repeat-member rate, point redemption, liability, and aligned daily trends using exact integer contracts and private-source aggregation.
 - Hardened customer list/detail reads with live-membership database wrappers, literal bounded search, database-side channel-ID masking, fixed result ceilings, and text-form wallet/ledger integers that remain exact beyond JavaScript's safe range.
+- Added guided first-programme onboarding for existing tenant owners/admins through an idempotent, audited, server-authorized database command; public tenant provisioning remains disabled.

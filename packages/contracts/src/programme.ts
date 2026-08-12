@@ -6,6 +6,11 @@ const sha256Hex = z.string().regex(/^[a-f0-9]{64}$/u);
 const timestamp = z.iso.datetime({ offset: true });
 const operationKey = z.string().min(1).max(255);
 const code = z.string().regex(/^[a-z][a-z0-9_-]{0,79}$/u);
+const programmeSlug = z
+  .string()
+  .min(2)
+  .max(80)
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/u);
 
 export const programmeTierDefinitionV1 = z.object({
   code,
@@ -101,6 +106,14 @@ const merchantCommandIdentityV1 = z.object({
   correlationId: z.uuid(),
 });
 
+export const merchantCreateProgrammeCommandV1 = merchantCommandIdentityV1
+  .extend({
+    programmeGroupId: z.uuid(),
+    slug: programmeSlug,
+    name: z.string().trim().min(1).max(200),
+  })
+  .strict();
+
 export const merchantCreateProgrammeDraftCommandV1 = merchantCommandIdentityV1
   .extend({
     programmeId: z.uuid(),
@@ -128,6 +141,11 @@ export const merchantProgrammeDraftResultV1 = z.object({
   outcome: z.enum(["created", "duplicate"]),
   configurationSha256: sha256Hex,
   versionNumber: z.number().int().positive(),
+});
+
+export const merchantProgrammeCreateResultV1 = z.object({
+  resourceId: z.uuid(),
+  outcome: z.enum(["created", "duplicate"]),
 });
 
 export const merchantProgrammePublishResultV1 = z.object({
@@ -197,6 +215,9 @@ export const programmeCommandResultV1 = z.object({
 export type ProgrammeDefinitionV1 = z.infer<typeof programmeDefinitionV1>;
 export type MerchantCreateProgrammeDraftCommandV1 = z.infer<
   typeof merchantCreateProgrammeDraftCommandV1
+>;
+export type MerchantCreateProgrammeCommandV1 = z.infer<
+  typeof merchantCreateProgrammeCommandV1
 >;
 export type MerchantPublishProgrammeVersionCommandV1 = z.infer<
   typeof merchantPublishProgrammeVersionCommandV1

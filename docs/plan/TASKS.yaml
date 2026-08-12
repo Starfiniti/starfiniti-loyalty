@@ -279,3 +279,6 @@ tasks:
       - exact-head run 31588394642 passed baseline eleven migrations 518 pgTAP assertions concurrency and property probes and all four WooCommerce runtime variants
       - customer list and detail wrappers recheck live membership mask channel identifiers in PostgreSQL cap rows and preserve all wallet and ledger bigint values as text
       - 33 customer-read pgTAP assertions cover exact values literal and bounded search indexed access privileges minimization group scope tenant isolation revocation and honest empty wallets
+      - exact-head run 31589866616 passed baseline twelve migrations 551 pgTAP assertions concurrency and property probes and all four WooCommerce runtime variants after one external Composer TLS retry
+      - existing tenant owners and admins can create the first programme in an active selected group through a live-role idempotent audited command without direct table DML
+      - 35 initial-programme onboarding pgTAP assertions cover exact privileges canonical inputs tenant and actor derivation retries conflicts duplicate slugs suspended groups role revocation cross-tenant denial and immutable audit evidence

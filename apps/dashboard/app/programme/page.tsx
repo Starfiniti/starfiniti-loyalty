@@ -4,6 +4,7 @@ import { signOut } from "@/app/actions";
 import { getMerchantProgrammeState } from "@/lib/server/programme";
 import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
 import { ProgrammeEditor } from "./programme-editor";
+import { ProgrammeOnboarding } from "./programme-onboarding";
 import { VersionActions } from "./version-actions";
 
 function formatDate(value: string | null): string {
@@ -20,6 +21,7 @@ function actionLabel(action: string): string {
   return (
     {
       "programme.draft.create": "Draft created",
+      "programme.create": "Programme created",
       "programme.version.publish": "Version published",
       "programme.version.schedule": "Publication scheduled",
     }[action] ?? action
@@ -76,14 +78,25 @@ export default async function ProgrammePage() {
       </div>
 
       {!state.programme ? (
-        <section className="programme-panel empty-programme">
-          <h2>No active programme</h2>
-          <p>
-            The organization needs an approved programme container before
-            versions can be drafted. This is an onboarding operation, not a
-            browser-side shortcut.
-          </p>
-        </section>
+        canEdit && tenant.context.programmeGroup ? (
+          <ProgrammeOnboarding
+            operationId={crypto.randomUUID()}
+            programmeGroupId={tenant.context.programmeGroup.public_id}
+            programmeGroupName={tenant.context.programmeGroup.name}
+            suggestedName={`${tenant.context.organization.name} Loyalty`.slice(
+              0,
+              200,
+            )}
+          />
+        ) : (
+          <section className="programme-panel empty-programme">
+            <h2>Programme setup requires an owner or admin</h2>
+            <p>
+              An active programme group and a live owner or admin membership are
+              required before the first programme can be created.
+            </p>
+          </section>
+        )
       ) : (
         <>
           {canEdit ? (

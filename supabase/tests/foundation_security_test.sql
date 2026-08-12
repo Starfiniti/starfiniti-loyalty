@@ -76,6 +76,7 @@ select is_empty(
         namespace.nspname = 'loyalty'
         and routine.oid::regprocedure::text in (
           'loyalty.adjust_customer_points_command(uuid,uuid,uuid,bigint,text,text,timestamp with time zone,text,uuid)',
+          'loyalty.create_programme_command(uuid,text,text,text,uuid)',
           'loyalty.create_programme_draft_command(uuid,jsonb,text,uuid)',
           'loyalty.get_customer_adjustment_context(uuid,uuid)',
           'loyalty.get_customer_read_model(uuid,uuid)',

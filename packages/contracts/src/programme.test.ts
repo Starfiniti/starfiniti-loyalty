@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   createProgrammeDraftCommandV1,
+  merchantCreateProgrammeCommandV1,
   merchantCreateProgrammeDraftCommandV1,
   merchantPublishProgrammeVersionCommandV1,
   programmeDefinitionV1,
@@ -66,6 +67,16 @@ describe("programme contracts", () => {
 
   it("keeps merchant commands on public IDs with server-derived authority", () => {
     expect(
+      merchantCreateProgrammeCommandV1.safeParse({
+        version: "1",
+        programmeGroupId: "71000000-0000-4000-8000-000000000100",
+        slug: "rosy-rewards",
+        name: "Rosy Rewards",
+        idempotencyKey: "programme:create:71000000",
+        correlationId: "71000000-0000-4000-8000-000000000200",
+      }).success,
+    ).toBe(true);
+    expect(
       merchantCreateProgrammeDraftCommandV1.safeParse({
         version: "1",
         programmeId: "71000000-0000-4000-8000-000000000101",
@@ -100,6 +111,16 @@ describe("programme contracts", () => {
         configuration: definition,
         idempotencyKey: "programme:draft:bad",
         correlationId: "71000000-0000-4000-8000-000000000201",
+      }).success,
+    ).toBe(false);
+    expect(
+      merchantCreateProgrammeCommandV1.safeParse({
+        version: "1",
+        programmeGroupId: "71000000-0000-4000-8000-000000000100",
+        slug: "Rosy Rewards",
+        name: " Rosy Rewards ",
+        idempotencyKey: "programme:create:bad",
+        correlationId: "71000000-0000-4000-8000-000000000200",
       }).success,
     ).toBe(false);
   });

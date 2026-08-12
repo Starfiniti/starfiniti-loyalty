@@ -18,6 +18,7 @@
 - The supported WooCommerce smoke matrix passes on WordPress 6.6.5/WooCommerce 9.0.2/PHP 8.1 and WordPress 7.0.2/WooCommerce 10.9.4/PHP 8.3, each with HPOS and legacy storage. It executes classic and Blocks coupon paths under hub outage, order completion/capture, partial/full refunds, reconciliation, activation lifecycle, and dead-letter recovery.
 - The Next.js merchant shell now verifies Supabase Auth claims, refreshes sessions through the Next.js 16 request proxy, derives live organization/workspace/programme scope through the authenticated Data API and RLS, handles unassigned users safely, and provides sign-in/sign-out/PKCE callback paths without exposing a secret key.
 - The merchant programme surface provides structured tier/reward editing, deterministic earning preview, contract validation, new immutable draft versions, exact-fingerprint publish/schedule confirmation, role-aware controls, version history, and tenant-visible administration audit evidence.
+- Existing tenant owners/admins can create the first programme in their selected active programme group through a server-derived, idempotent database command with immutable audit evidence; public tenant provisioning stays disabled.
 - Customer operations provide bounded literal display-reference search, database-masked channel identity, exact text-form pending/available/reserved/spent/expired/reversed buckets, and the latest immutable ledger entries with programme-version and correlation attribution.
 - Connector operations provide tenant-authorized health/queue counts, bounded failure metadata without private payloads, and audited owner/admin/operator replay of dead-letter canonical effects. Outbound coupon dead letters remain inspect-only because points compensation may already exist.
 - Customer owners/admins can preview and confirm signed whole-point adjustments against an exact text-form balance. Credits require expiry, removals show a strong negative-balance warning, and every result is one reason-bound immutable double-entry transaction plus administration audit evidence.
@@ -27,7 +28,7 @@
 ## Partial
 
 - Phases 0 through 7 are complete for the active WooCommerce scope. Shopify Phase 8 is deferred by product-owner direction.
-- Phase 9 is in progress. The authenticated shell, programme editor, customer wallet/ledger reads, safe hub connector operations, reason-bound value adjustments, live source-reconciliation requests, and real Overview reporting exist; wider merchant/customer surfaces and production deployment remain future slices.
+- Phase 9 is in progress. The authenticated shell, initial-programme onboarding, programme editor, customer wallet/ledger reads, safe hub connector operations, reason-bound value adjustments, live source-reconciliation requests, and real Overview reporting exist; wider merchant/customer surfaces and production deployment remain future slices.
 
 ## Broken or unavailable
 
@@ -37,7 +38,7 @@
 
 ## Database migration state
 
-Eleven versioned migrations and the seed replay successfully against disposable Supabase/Postgres 17 CI with 518 pgTAP assertions plus concurrency/property probes. A twelfth exact customer-read migration validates locally with 33 declared adversarial assertions. No persistent or production database has been changed.
+Twelve versioned migrations and the seed replay successfully against disposable Supabase/Postgres 17 CI with 551 pgTAP assertions plus concurrency/property probes. A thirteenth initial-programme onboarding migration validates locally with 35 declared adversarial assertions. No persistent or production database has been changed.
 
 ## Git state
 
@@ -66,6 +67,7 @@ Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 Wo
 - PR exact-head run `31584351529` passed all six jobs for customer adjustments, including nine migration replays, 448 pgTAP assertions, and the complete WooCommerce matrix.
 - PR exact-head run `31585681985` passed all six jobs for signed source reconciliation, including ten migration replays, 485 pgTAP assertions, and the complete WooCommerce matrix.
 - PR exact-head run `31588394642` passed all six jobs for live Overview reporting, including eleven migration replays, 518 pgTAP assertions, concurrency/property probes, and the complete WooCommerce matrix.
+- PR exact-head run `31589866616` passed all six jobs for exact customer reads, including twelve migration replays, 551 pgTAP assertions, concurrency/property probes, and the complete WooCommerce matrix; one matrix cell passed on retry after an external Composer TLS certificate mismatch.
 
 ## Next recommended task
 
