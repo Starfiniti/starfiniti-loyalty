@@ -266,6 +266,15 @@ begin
   if old.status = 'draft' then
     return new;
   end if;
+  if old.status = 'scheduled' and new.status = 'published'
+    and new.published_at is not null
+    and new.configuration is not distinct from old.configuration
+    and new.configuration_sha256 is not distinct from old.configuration_sha256
+    and new.created_by_user_id is not distinct from old.created_by_user_id
+    and new.approved_by_user_id is not distinct from old.approved_by_user_id
+    and new.scheduled_for is not distinct from old.scheduled_for then
+    return new;
+  end if;
   if new.configuration is distinct from old.configuration
     or new.configuration_sha256 is distinct from old.configuration_sha256
     or new.created_by_user_id is distinct from old.created_by_user_id
@@ -273,9 +282,6 @@ begin
     or new.supersedes_version_id is distinct from old.supersedes_version_id
     or new.scheduled_for is distinct from old.scheduled_for then
     raise exception using errcode = '55000', message = 'published programme version is immutable';
-  end if;
-  if old.status = 'scheduled' and new.status = 'published' and new.published_at is not null then
-    return new;
   end if;
   if old.status = 'published' and new.status in ('retired', 'superseded') and new.retired_at is not null then
     return new;

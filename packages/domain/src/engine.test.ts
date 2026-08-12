@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   evaluateOrderAward,
+  evaluateTierQualification,
   minorUnit,
   points,
   quoteReward,
@@ -35,6 +36,14 @@ const rules: readonly AwardRule[] = [
     },
     pointsPerMajorUnit: points(10),
     reason: "August VIP skincare accelerator",
+  },
+  {
+    id: "triple-summer-collection",
+    priority: 40,
+    kind: "rate",
+    condition: { collectionIds: ["summer"] },
+    pointsPerMajorUnit: points(15),
+    reason: "Summer collection accelerator",
   },
 ];
 
@@ -78,7 +87,18 @@ const order: OrderAwardFact = {
       lineId: "4",
       productId: "bag",
       categoryIds: ["accessories"],
+      collectionIds: ["summer"],
       grossMinor: minorUnit(12_34),
+      discountMinor: minorUnit(0),
+      refundedMinor: minorUnit(0),
+      paymentKind: "money",
+    },
+    {
+      lineId: "5",
+      lineKind: "shipping",
+      productId: "shipping",
+      categoryIds: [],
+      grossMinor: minorUnit(4_99),
       discountMinor: minorUnit(0),
       refundedMinor: minorUnit(0),
       paymentKind: "money",
@@ -94,7 +114,7 @@ describe("programme order engine", () => {
       orderId: "wc:42",
       tierCodeSnapshot: "rose",
       eligibleSpendMinor: 2134,
-      awardedPoints: 151,
+      awardedPoints: 275,
       pendingAt: "2026-08-12T10:00:00.000Z",
       availableAt: "2026-09-11T10:00:00.000Z",
       expiresAt: "2027-09-11T10:00:00.000Z",
@@ -117,8 +137,13 @@ describe("programme order engine", () => {
       }),
       expect.objectContaining({
         lineId: "4",
-        appliedRuleId: "tier:rose",
+        appliedRuleId: "triple-summer-collection",
         eligibleSpendMinor: 1234,
+      }),
+      expect.objectContaining({
+        lineId: "5",
+        appliedRuleId: "component:shipping",
+        outcome: "excluded",
       }),
     ]);
   });
@@ -246,5 +271,52 @@ describe("reward definitions", () => {
         maximumDiscountMinor: null,
       }),
     ).toThrow("basis points");
+  });
+});
+
+describe("tier qualification evidence", () => {
+  const facts = [
+    {
+      occurredAt: "2026-06-30T23:59:59Z",
+      eligibleSpendMinor: minorUnit(10_000),
+      earnedPoints: points(500),
+      orderCount: 1,
+    },
+    {
+      occurredAt: "2026-08-01T00:00:00Z",
+      eligibleSpendMinor: minorUnit(15_000),
+      earnedPoints: points(900),
+      orderCount: 2,
+    },
+    {
+      occurredAt: "2026-08-12T00:00:00Z",
+      eligibleSpendMinor: minorUnit(5_000),
+      earnedPoints: points(300),
+      orderCount: 1,
+    },
+  ];
+
+  it("evaluates rolling, calendar, and lifetime periods for every metric", () => {
+    expect(
+      evaluateTierQualification(
+        facts,
+        { period: "rolling", metric: "spend", days: 30 },
+        "2026-08-12T00:00:00Z",
+      ).value,
+    ).toBe(20_000);
+    expect(
+      evaluateTierQualification(
+        facts,
+        { period: "calendar", metric: "orders", unit: "month" },
+        "2026-08-12T00:00:00Z",
+      ).value,
+    ).toBe(3);
+    expect(
+      evaluateTierQualification(
+        facts,
+        { period: "lifetime", metric: "points" },
+        "2026-08-12T00:00:00Z",
+      ).value,
+    ).toBe(1_700);
   });
 });

@@ -8,8 +8,10 @@ import { minorUnit, points, type MinorUnit, type Points } from "./values";
 
 export interface OrderLineFact {
   readonly lineId: string;
+  readonly lineKind?: "product" | "shipping" | "tax" | "fee";
   readonly productId: string;
   readonly categoryIds: readonly string[];
+  readonly collectionIds?: readonly string[];
   readonly grossMinor: MinorUnit;
   readonly discountMinor: MinorUnit;
   readonly refundedMinor: MinorUnit;
@@ -30,6 +32,7 @@ export interface OrderAwardFact {
 export interface RuleCondition {
   readonly productIds?: readonly string[];
   readonly categoryIds?: readonly string[];
+  readonly collectionIds?: readonly string[];
   readonly currencyCodes?: readonly string[];
   readonly markets?: readonly string[];
   readonly channels?: readonly string[];
@@ -57,6 +60,9 @@ export type AwardRule =
 
 export interface OrderLineExplanation {
   readonly lineId: string;
+  readonly grossMinor: MinorUnit;
+  readonly discountMinor: MinorUnit;
+  readonly refundedMinor: MinorUnit;
   readonly eligibleSpendMinor: MinorUnit;
   readonly pointsPerMajorUnit: Points;
   readonly appliedRuleId: string;
@@ -111,6 +117,37 @@ export interface RewardQuote {
   readonly configuration: Readonly<Record<string, unknown>>;
 }
 
+export interface TierActivityFact {
+  readonly occurredAt: string;
+  readonly eligibleSpendMinor: MinorUnit;
+  readonly earnedPoints: Points;
+  readonly orderCount: number;
+}
+
+export type TierQualificationPolicy =
+  | {
+      readonly period: "lifetime";
+      readonly metric: "spend" | "points" | "orders";
+    }
+  | {
+      readonly period: "rolling";
+      readonly metric: "spend" | "points" | "orders";
+      readonly days: number;
+    }
+  | {
+      readonly period: "calendar";
+      readonly metric: "spend" | "points" | "orders";
+      readonly unit: "month" | "quarter" | "year";
+    };
+
+export interface TierQualificationResult {
+  readonly metric: TierQualificationPolicy["metric"];
+  readonly period: TierQualificationPolicy["period"];
+  readonly value: number;
+  readonly windowStartsAt: string | null;
+  readonly windowEndsAt: string;
+}
+
 function requireNonEmpty(value: string, name: string): void {
   if (value.trim().length === 0) throw new TypeError(`${name} cannot be empty`);
 }
@@ -131,6 +168,19 @@ function parseInstant(value: string, name: string): Date {
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) throw new TypeError(`${name} is invalid`);
   return parsed;
+}
+
+function calendarWindowStart(
+  asOf: Date,
+  unit: "month" | "quarter" | "year",
+): Date {
+  const month =
+    unit === "year"
+      ? 0
+      : unit === "quarter"
+        ? Math.floor(asOf.getUTCMonth() / 3) * 3
+        : asOf.getUTCMonth();
+  return new Date(Date.UTC(asOf.getUTCFullYear(), month, 1));
 }
 
 function matchesAny(
@@ -160,6 +210,7 @@ function conditionMatches(
   return (
     matchesAny(condition.productIds, [line.productId]) &&
     matchesAny(condition.categoryIds, line.categoryIds) &&
+    matchesAny(condition.collectionIds, line.collectionIds ?? []) &&
     matchesAny(condition.currencyCodes, [order.currencyCode]) &&
     matchesAny(condition.markets, [order.market]) &&
     matchesAny(condition.channels, [order.channel]) &&
@@ -246,18 +297,27 @@ export function evaluateOrderAward(
     );
     const exclusionRule = matched?.kind === "exclude" ? matched : null;
     const paymentExcluded = line.paymentKind !== "money";
-    if (paymentExcluded || exclusionRule) {
+    const lineKind = line.lineKind ?? "product";
+    const componentExcluded = lineKind !== "product";
+    if (paymentExcluded || componentExcluded || exclusionRule) {
       explanation.push({
         lineId: line.lineId,
+        grossMinor: line.grossMinor,
+        discountMinor: line.discountMinor,
+        refundedMinor: line.refundedMinor,
         eligibleSpendMinor: minorUnit(0),
         pointsPerMajorUnit: points(0),
         appliedRuleId: paymentExcluded
           ? `payment:${line.paymentKind}`
-          : exclusionRule!.id,
+          : componentExcluded
+            ? `component:${lineKind}`
+            : exclusionRule!.id,
         outcome: "excluded",
         reason: paymentExcluded
           ? `${line.paymentKind} payments are excluded`
-          : exclusionRule!.reason,
+          : componentExcluded
+            ? `${lineKind} components are excluded`
+            : exclusionRule!.reason,
       });
       continue;
     }
@@ -270,6 +330,9 @@ export function evaluateOrderAward(
     awardNumerator += BigInt(netMinor) * BigInt(rate);
     explanation.push({
       lineId: line.lineId,
+      grossMinor: line.grossMinor,
+      discountMinor: line.discountMinor,
+      refundedMinor: line.refundedMinor,
       eligibleSpendMinor: netMinor,
       pointsPerMajorUnit: rate,
       appliedRuleId: matched?.id ?? `tier:${tier.code}`,
@@ -307,6 +370,46 @@ export function simulateOrderAward(
   order: OrderAwardFact,
 ): OrderAwardEvaluation {
   return evaluateOrderAward(programme, rules, order);
+}
+
+export function evaluateTierQualification(
+  facts: readonly TierActivityFact[],
+  policy: TierQualificationPolicy,
+  asOfValue: string,
+): TierQualificationResult {
+  const asOf = parseInstant(asOfValue, "Tier evaluation instant");
+  let startsAt: Date | null = null;
+  if (policy.period === "rolling") {
+    requirePositiveInteger(policy.days, "Rolling tier days");
+    startsAt = new Date(asOf);
+    startsAt.setUTCDate(startsAt.getUTCDate() - policy.days);
+  } else if (policy.period === "calendar") {
+    startsAt = calendarWindowStart(asOf, policy.unit);
+  }
+  let value = 0;
+  for (const fact of facts) {
+    const occurredAt = parseInstant(fact.occurredAt, "Tier activity instant");
+    requireNonNegativeInteger(fact.eligibleSpendMinor, "Tier activity spend");
+    requireNonNegativeInteger(fact.earnedPoints, "Tier activity points");
+    requireNonNegativeInteger(fact.orderCount, "Tier activity order count");
+    if (occurredAt > asOf || (startsAt && occurredAt < startsAt)) continue;
+    value +=
+      policy.metric === "spend"
+        ? fact.eligibleSpendMinor
+        : policy.metric === "points"
+          ? fact.earnedPoints
+          : fact.orderCount;
+    if (!Number.isSafeInteger(value)) {
+      throw new RangeError("Tier qualification value exceeds safe range");
+    }
+  }
+  return {
+    metric: policy.metric,
+    period: policy.period,
+    value,
+    windowStartsAt: startsAt?.toISOString() ?? null,
+    windowEndsAt: asOf.toISOString(),
+  };
 }
 
 export function quoteReward(definition: RewardDefinition): RewardQuote {

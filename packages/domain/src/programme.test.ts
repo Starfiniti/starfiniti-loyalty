@@ -142,6 +142,20 @@ describe("tier qualification", () => {
       effectiveTierCode: "rose",
       transition: "downgrade",
     });
+
+    expect(
+      reviewTier(rosyRewardsV1, {
+        currentTierCode: tierCode("rose"),
+        rollingEligibleSpendMinor: minorUnit(0),
+        evaluatedAt: "2026-07-31T00:00:00.000Z",
+        belowThresholdSince: null,
+        manualTierCode: tierCode("icon"),
+      }),
+    ).toMatchObject({
+      qualifiedTierCode: "rose",
+      effectiveTierCode: "icon",
+      transition: "manual",
+    });
   });
 
   it("rejects a future below-threshold instant", () => {
