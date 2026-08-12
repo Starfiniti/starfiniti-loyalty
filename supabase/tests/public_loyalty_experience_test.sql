@@ -276,7 +276,7 @@ select results_eq(
   'guest reads create no ledger effect'
 );
 select results_eq(
-  $$ select count(*)::bigint from loyalty.commerce_event_inbox $$,
+  $$ select count(*)::bigint from loyalty_private.canonical_commerce_events $$,
   array[0::bigint],
   'guest reads create no commerce event effect'
 );

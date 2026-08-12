@@ -66,8 +66,8 @@ select ok(
   'authenticated cannot use the private schema'
 );
 select ok(
-  not has_schema_privilege('anon', 'loyalty', 'USAGE'),
-  'anonymous clients cannot use the loyalty schema'
+  has_schema_privilege('anon', 'loyalty', 'USAGE'),
+  'anonymous clients can resolve only explicitly granted loyalty functions'
 );
 select ok(
   has_schema_privilege('authenticated', 'loyalty', 'USAGE'),
