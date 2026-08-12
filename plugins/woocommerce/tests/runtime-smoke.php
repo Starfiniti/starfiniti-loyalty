@@ -18,9 +18,16 @@ function starfiniti_runtime_assert($condition, string $message): void
 
 starfiniti_runtime_assert(class_exists('WooCommerce'), 'WooCommerce is active');
 starfiniti_runtime_assert(class_exists(Outbox::class), 'Starfiniti Loyalty is active');
+$expectedHpos = get_option('starfiniti_runtime_expected_hpos');
 starfiniti_runtime_assert(
-    OrderUtil::custom_orders_table_usage_is_enabled(),
-    'HPOS is enabled for the runtime smoke test'
+    in_array($expectedHpos, ['yes', 'no'], true),
+    'runtime smoke declares the expected order storage mode'
+);
+starfiniti_runtime_assert(
+    OrderUtil::custom_orders_table_usage_is_enabled() === ($expectedHpos === 'yes'),
+    $expectedHpos === 'yes'
+        ? 'HPOS is enabled for the runtime smoke test'
+        : 'legacy order storage is enabled for the runtime smoke test'
 );
 
 Outbox::install();
@@ -84,7 +91,7 @@ starfiniti_runtime_assert(
 );
 
 $order = wc_create_order(['customer_id' => $customerId]);
-starfiniti_runtime_assert(! is_wp_error($order), 'HPOS order fixture is created');
+starfiniti_runtime_assert(! is_wp_error($order), 'order fixture is created through WooCommerce CRUD');
 $order->add_product($product, 1);
 wp_set_current_user((int) $customerId);
 $applyResult = $order->apply_coupon($couponCode);
@@ -95,7 +102,7 @@ $order->update_status('completed');
 $orderId = $order->get_id();
 starfiniti_runtime_assert(
     wc_get_order($orderId) instanceof WC_Order,
-    'completed order round-trips through HPOS getters'
+    'completed order round-trips through WooCommerce CRUD getters'
 );
 
 $captureRows = (int) $wpdb->get_var($wpdb->prepare(
@@ -155,4 +162,7 @@ starfiniti_runtime_assert(
     'storefront and customer-scope hooks are registered'
 );
 
-fwrite(STDOUT, "WooCommerce HPOS runtime smoke passed.\n");
+fwrite(STDOUT, sprintf(
+    "WooCommerce %s runtime smoke passed.\n",
+    $expectedHpos === 'yes' ? 'HPOS' : 'legacy-storage'
+));

@@ -45,6 +45,23 @@ jobs:
   woocommerce-runtime:
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        runtime:
+          - name: minimum-hpos
+            config: .wp-env.woocommerce-min.json
+            hpos: yes
+          - name: minimum-legacy
+            config: .wp-env.woocommerce-min.json
+            hpos: no
+          - name: current-hpos
+            config: .wp-env.woocommerce.json
+            hpos: yes
+          - name: current-legacy
+            config: .wp-env.woocommerce.json
+            hpos: no
+    name: woocommerce-runtime (${{ matrix.runtime.name }})
     env:
       WP_ENV_HOME: ${{ github.workspace }}/.wp-env-home
     steps:
@@ -55,9 +72,14 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Start pinned WordPress and WooCommerce runtime
-        run: npm run woocommerce:runtime:start
-      - name: Exercise HPOS native coupon order and reconciliation paths
-        run: npm run woocommerce:runtime:test
+        run: npx wp-env start --config "${{ matrix.runtime.config }}"
+      - name: Activate connector and configure order storage
+        run: |
+          npx wp-env run cli --config "${{ matrix.runtime.config }}" wp plugin activate starfiniti-loyalty
+          npx wp-env run cli --config "${{ matrix.runtime.config }}" wp option update woocommerce_custom_orders_table_enabled "${{ matrix.runtime.hpos }}"
+          npx wp-env run cli --config "${{ matrix.runtime.config }}" wp option update starfiniti_runtime_expected_hpos "${{ matrix.runtime.hpos }}"
+      - name: Exercise native coupon order and reconciliation paths
+        run: npx wp-env run cli --config "${{ matrix.runtime.config }}" wp eval-file wp-content/plugins/starfiniti-loyalty/tests/runtime-smoke.php
       - name: Remove WordPress runtime containers and volumes
         if: always()
-        run: npm run woocommerce:runtime:destroy
+        run: npx wp-env destroy --force --config "${{ matrix.runtime.config }}"
