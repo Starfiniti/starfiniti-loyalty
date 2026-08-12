@@ -71,12 +71,14 @@ Phase 9 — merchant administration and customer experience. Shopify Phase 8 rem
 - Exact-head run `31622879767` passed the customer-redemption baseline, twenty-one migrations with 863 pgTAP assertions plus concurrency/property probes, 126 unit tests, and all four localized WooCommerce runtime variants.
 - WooCommerce customer erasure now emits one opaque locally deduplicated event and atomically creates a private keyed tombstone, revokes hosted access, pseudonymizes the channel identity and restricted raw event, preserves immutable value history, and suppresses later re-import.
 - Exact-head run `31625573608` passed the customer-erasure baseline, twenty-two migrations with 910 pgTAP assertions plus concurrency/property probes, 128 unit tests, and all four localized WooCommerce runtime variants.
+- Hosted login, WooCommerce claim, member-account, and reward-redemption routes now preserve one explicit English or Slovenian locale through safe local navigation. WooCommerce appends its active locale outside the signed claim payload, so display preference cannot alter customer identity authority.
+- Exact-head run `31627622779` passed the hosted-customer localization baseline, twenty-two migrations with 910 pgTAP assertions plus concurrency/property probes, 132 unit tests, and active-locale claim links in all four localized WooCommerce runtime variants.
 - Exact-head run `31601351946` passed the filtered-customer baseline, fifteen migrations with 654 pgTAP assertions plus concurrency/property probes, and all four localized WooCommerce runtime variants.
 - Exact-head run `31581760825` passed the customer-ledger baseline, database job, and all four WooCommerce runtime variants.
 
 ## Active work
 
-- `P9-MERCHANT-HUB` (in progress): the Auth/RLS shell, guided initial-programme creation, audited programme editor, exact filtered customer wallet/ledger reads, safe connector queue operations, individual and exact-preview bulk value adjustments, signed source reconciliation, real Overview reporting, keyboard-bypass accessibility guard, sanitized support diagnostics, localized WooCommerce customer strings, controlled experience themes/translations, guest-safe hosted loyalty, signed authenticated member delivery, controlled native-coupon redemption, and WooCommerce-originated customer erasure are implemented; remaining usability, export, and operational surfaces follow.
+- `P9-MERCHANT-HUB` (in progress): the Auth/RLS shell, guided initial-programme creation, audited programme editor, exact filtered customer wallet/ledger reads, safe connector queue operations, individual and exact-preview bulk value adjustments, signed source reconciliation, real Overview reporting, keyboard-bypass accessibility guard, sanitized support diagnostics, localized WooCommerce and hosted customer journeys, controlled experience themes/translations, guest-safe hosted loyalty, signed authenticated member delivery, controlled native-coupon redemption, and WooCommerce-originated customer erasure are implemented; remaining merchant usability, export, and operational surfaces follow.
 
 ## Next safe tasks
 

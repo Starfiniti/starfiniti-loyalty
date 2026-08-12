@@ -53,6 +53,8 @@ The connector's production customer surfaces deliberately use WooCommerce's nati
 
 The My Account loyalty endpoint creates a local five-minute link only for the logged-in WooCommerce user and only when the connector has a valid HTTPS hub endpoint, connection UUID, key version, and decrypted signing key. It performs no HTTP request. The purpose-specific HMAC covers the connection UUID, numeric WooCommerce customer ID, ten-digit issue time, UUID nonce, and current key version.
 
+The connector also appends the active WordPress locale as `en` or `sl-SI`. That display-only parameter is deliberately outside the HMAC message: it can select hosted copy, but it cannot change the signed connection/customer identity. The hub allowlists the locale and preserves it only through safe local authentication and redemption navigation.
+
 The hub verifies the live connection/key and HMAC, preserves the full link only through private no-store/no-referrer authentication navigation, displays the store name, and requires explicit POST confirmation. PostgreSQL resolves only `registered:<Woo customer ID>` on that exact connection, consumes hashed proof/nonce evidence once, and rejects cross-account conflicts. Email/profile fields are never sent or used. A successful link opens the hosted member page; checkout and local coupon behavior remain independent of this optional flow.
 
 ## Operations

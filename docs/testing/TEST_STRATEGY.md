@@ -10,6 +10,8 @@ Support-diagnostic tests serialize adversarial inputs and assert forbidden custo
 
 `woocommerce:validate` also enforces literal text-domain use, exact POT source coverage, no stale catalog entries, required customer translations, and placeholder parity. The container matrix switches to the bundled Slovenian locale and proves a translated customer My Account label on all four supported runtime combinations.
 
+Hosted customer-locale tests cover the exact English/Slovenian allowlist, safe-local-path propagation, rejection of protocol-relative and backslash continuations, locale recovery from a validated authentication target, and complete distinct system-copy dictionaries. A 390-pixel browser pass verifies Slovenian login copy, no horizontal overflow, and preservation of the full Slovenian redemption target through the unauthenticated login redirect. Every WooCommerce runtime cell also proves its active Slovenian locale is appended to the signed claim link without joining the HMAC identity fields.
+
 Experience-theme tests require contract/database agreement on contrast, token allowlists, copy bounds, linked tenant scope, RLS, role revocation, idempotent revisions, and immutable audit evidence. The dashboard preview must remain keyboard reachable and responsive without loading remote fonts or executing merchant CSS.
 
 Customer activity-filter tests require a closed query-value allowlist, total transaction-kind categorization, stable newest-first ordering, and no mutation or expansion of the bounded database result.

@@ -52,6 +52,8 @@ sequenceDiagram
 
 Email possession alone is insufficient. The implemented registered-customer proof binds the WooCommerce connection UUID, numeric customer ID, issue time, nonce, and active key version into a purpose-specific HMAC. It expires after five minutes, is consumed only by explicit POST confirmation under a verified Supabase Auth session, and stores SHA-256 evidence rather than the raw nonce/signature. Guest-order claim remains a later extension and must use a separately purpose-bound proof.
 
+Locale is presentation and navigation state only. WooCommerce may append the allowlisted active locale to the claim URL, but locale is excluded from the signed identity message and never participates in connection, customer, nonce, Auth-subject, or tenant resolution. Hosted authentication may recover locale only from an explicit supported value or a validated local continuation path.
+
 ## Link, merge, and split rules
 
 - Deterministic same-channel IDs link automatically only within the same connection and organization.

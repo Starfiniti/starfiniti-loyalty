@@ -240,3 +240,11 @@
 - Added one leased worker transaction that pseudonymizes the channel/customer display state, revokes hosted access, scrubs raw and canonical deletion-event identifiers, preserves wallets and immutable ledger history, and suppresses repeat or later identity import.
 - Added 47 adversarial pgTAP assertions plus connector runtime and strict contract/worker tests, bringing the suites to 128 unit tests and 910 database assertions.
 - Exact-head run `31625573608` passed all six jobs: twenty-two migration replays, all 910 pgTAP assertions, concurrency/property probes, and all four localized WooCommerce runtime variants.
+
+## 2026-08-12 — Phase 9 hosted customer language continuity
+
+- Added one exact English/Slovenian locale boundary and complete system-copy dictionaries for login, WooCommerce claim, authenticated member-account, and native-reward redemption routes.
+- Preserved the selected locale through validated local authentication, confirmation, success, error, public-programme, and redemption navigation; unsafe protocol-relative, backslash, unsupported, and oversized inputs fall back to English.
+- Added the active WordPress locale to locally generated customer claim links outside the purpose-bound HMAC message, retaining the existing connection/customer/nonce authority and zero-render-request behavior.
+- Added four locale unit tests and a 390-pixel Playwright check for Slovenian login, safe unauthenticated redemption continuation, and horizontal overflow, bringing the unit suite to 132 tests.
+- Exact-head run `31627622779` passed all six jobs: twenty-two migration replays, all 910 pgTAP assertions, concurrency/property probes, and active-locale claim assertions in all four localized WooCommerce runtime variants.
