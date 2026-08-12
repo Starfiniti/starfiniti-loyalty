@@ -157,13 +157,13 @@ cross join (
 ) as tier(code, name, ordinal, minimum_spend, rate);
 
 insert into loyalty.customers (public_id, organization_id, display_reference)
-select '75000000-0000-4000-8000-000000000201', id, 'Tier Member'
+select '75000000-0000-4000-8000-000000000201'::uuid, id, 'Tier Member'
 from loyalty.organizations where slug = 'tier-read-one'
 union all
-select '75000000-0000-4000-8000-000000000202', id, 'Unevaluated Member'
+select '75000000-0000-4000-8000-000000000202'::uuid, id, 'Unevaluated Member'
 from loyalty.organizations where slug = 'tier-read-one'
 union all
-select '76000000-0000-4000-8000-000000000201', id, 'Other Tier Member'
+select '76000000-0000-4000-8000-000000000201'::uuid, id, 'Other Tier Member'
 from loyalty.organizations where slug = 'tier-read-two';
 
 insert into loyalty.wallets (
