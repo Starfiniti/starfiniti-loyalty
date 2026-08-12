@@ -1,11 +1,14 @@
 "use client";
 
 import { Download, ShieldCheck } from "lucide-react";
+import { merchantText, type MerchantLocale } from "@/lib/merchant-locale";
 import type { SupportDiagnostics } from "@/lib/support-diagnostics";
 
 export function SupportDiagnosticsDownload({
   diagnostics,
-}: Readonly<{ diagnostics: SupportDiagnostics }>) {
+  locale,
+}: Readonly<{ diagnostics: SupportDiagnostics; locale: MerchantLocale }>) {
+  const t = (source: string) => merchantText(locale, source);
   function download() {
     const body = `${JSON.stringify(diagnostics, null, 2)}\n`;
     const url = URL.createObjectURL(
@@ -26,12 +29,11 @@ export function SupportDiagnosticsDownload({
       <div>
         <ShieldCheck aria-hidden="true" />
         <div>
-          <h2 id="support-title">Sanitized support diagnostics</h2>
+          <h2 id="support-title">{t("Sanitized support diagnostics")}</h2>
           <p id="support-description">
-            Download tenant-scoped queue totals and a labelled, bounded sample
-            of grouped error codes for a support request. Payloads, customer and
-            commerce identifiers, actors, store names, and signing material are
-            excluded.
+            {t(
+              "Download tenant-scoped queue totals and a labelled, bounded sample of grouped error codes for a support request. Payloads, customer and commerce identifiers, actors, store names, and signing material are excluded.",
+            )}
           </p>
         </div>
       </div>
@@ -42,7 +44,7 @@ export function SupportDiagnosticsDownload({
         aria-describedby="support-description"
       >
         <Download aria-hidden="true" />
-        Download JSON
+        {t("Download JSON")}
       </button>
     </section>
   );

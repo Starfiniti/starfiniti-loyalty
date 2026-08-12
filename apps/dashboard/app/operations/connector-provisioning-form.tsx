@@ -1,6 +1,11 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import {
+  merchantLocalePath,
+  merchantText,
+  type MerchantLocale,
+} from "@/lib/merchant-locale";
 import { provisionConnector, type ConnectorProvisioningState } from "./actions";
 
 const initialState: ConnectorProvisioningState = {
@@ -15,12 +20,15 @@ export function ConnectorProvisioningForm({
   workspaceName,
   programmeId,
   programmeName,
+  locale,
 }: Readonly<{
   workspaceId: string;
   workspaceName: string;
   programmeId: string;
   programmeName: string;
+  locale: MerchantLocale;
 }>) {
+  const t = (source: string) => merchantText(locale, source);
   const [operationId] = useState(() => crypto.randomUUID());
   const [storeOrigin, setStoreOrigin] = useState("");
   const [displayName, setDisplayName] = useState(workspaceName);
@@ -44,11 +52,11 @@ export function ConnectorProvisioningForm({
     return (
       <section className="connector-provisioning-result" aria-live="polite">
         <div>
-          <strong>One-time WooCommerce setup code</strong>
+          <strong>{t("One-time WooCommerce setup code")}</strong>
           <p>{state.message}</p>
         </div>
         <textarea
-          aria-label="One-time WooCommerce setup code"
+          aria-label={t("One-time WooCommerce setup code")}
           readOnly
           rows={7}
           spellCheck={false}
@@ -63,16 +71,19 @@ export function ConnectorProvisioningForm({
             }}
             type="button"
           >
-            {copied ? "Copied" : "Copy setup code"}
+            {copied ? t("Copied") : t("Copy setup code")}
           </button>
-          <a className="secondary" href="/operations">
-            I saved it — show connector health
+          <a
+            className="secondary"
+            href={merchantLocalePath("/operations", locale)}
+          >
+            {t("I saved it — show connector health")}
           </a>
         </div>
         <p className="connector-secret-warning">
-          In WordPress, open WooCommerce → Loyalty, paste this into the setup
-          code field, and save. Clear the clipboard afterwards. Starfiniti does
-          not put this code in a URL, log, or browser storage.
+          {locale === "sl-SI"
+            ? "V WordPressu odprite WooCommerce → Loyalty, kodo prilepite v polje za nastavitveno kodo in shranite. Nato počistite odložišče. Starfiniti te kode ne vstavi v URL, dnevnik ali shrambo brskalnika."
+            : "In WordPress, open WooCommerce → Loyalty, paste this into the setup code field, and save. Clear the clipboard afterwards. Starfiniti does not put this code in a URL, log, or browser storage."}
         </p>
       </section>
     );
@@ -81,20 +92,21 @@ export function ConnectorProvisioningForm({
   return (
     <section className="connector-provisioning">
       <div>
-        <p className="login-eyebrow">Guided connection</p>
-        <h2>Connect WooCommerce</h2>
+        <p className="login-eyebrow">{t("Guided connection")}</p>
+        <h2>{t("Connect WooCommerce")}</h2>
         <p>
-          Provision {programmeName} for {workspaceName}. The hub consumes one
-          pre-generated signing key and reveals it only in the setup code after
-          confirmation.
+          {locale === "sl-SI"
+            ? `Vzpostavite ${programmeName} za ${workspaceName}. Središče porabi en vnaprej ustvarjen podpisni ključ in ga po potrditvi razkrije samo v nastavitveni kodi.`
+            : `Provision ${programmeName} for ${workspaceName}. The hub consumes one pre-generated signing key and reveals it only in the setup code after confirmation.`}
         </p>
       </div>
       <form action={action} autoComplete="off">
+        <input name="lang" type="hidden" value={locale} />
         <input name="operationId" type="hidden" value={operationId} />
         <input name="workspaceId" type="hidden" value={workspaceId} />
         <input name="programmeId" type="hidden" value={programmeId} />
         <label>
-          <span>WooCommerce store origin</span>
+          <span>{t("WooCommerce store origin")}</span>
           <input
             autoCapitalize="none"
             maxLength={255}
@@ -110,11 +122,11 @@ export function ConnectorProvisioningForm({
             value={storeOrigin}
           />
           <small>
-            Lowercase HTTPS origin only; no path, query, or password.
+            {t("Lowercase HTTPS origin only; no path, query, or password.")}
           </small>
         </label>
         <label>
-          <span>Store display name</span>
+          <span>{t("Store display name")}</span>
           <input
             maxLength={200}
             name="displayName"
@@ -133,13 +145,19 @@ export function ConnectorProvisioningForm({
             onClick={() => setReviewing(true)}
             type="button"
           >
-            Review connection
+            {t("Review connection")}
           </button>
         ) : (
           <div className="connector-provisioning-confirmation">
             <p>
-              Connect <strong>{storeOrigin}</strong> to {programmeName}. This
-              creates tenant audit evidence and consumes one signing key.
+              {locale === "sl-SI" ? "Povežite" : "Connect"}{" "}
+              <strong>{storeOrigin}</strong>{" "}
+              {locale === "sl-SI"
+                ? `s programom ${programmeName}.`
+                : `to ${programmeName}.`}{" "}
+              {locale === "sl-SI"
+                ? "To ustvari revizijski dokaz okolja in porabi en podpisni ključ."
+                : "This creates tenant audit evidence and consumes one signing key."}
             </p>
             <label>
               <input
@@ -148,10 +166,12 @@ export function ConnectorProvisioningForm({
                 type="checkbox"
                 value="provision"
               />
-              I reviewed the store and programme.
+              {t("I reviewed the store and programme.")}
             </label>
             <button className="primary" disabled={pending} type="submit">
-              {pending ? "Provisioning…" : "Provision and show setup code"}
+              {pending
+                ? t("Provisioning…")
+                : t("Provision and show setup code")}
             </button>
           </div>
         )}

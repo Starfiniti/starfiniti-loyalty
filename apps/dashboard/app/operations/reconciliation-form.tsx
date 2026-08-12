@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { merchantText, type MerchantLocale } from "@/lib/merchant-locale";
 import {
   requestConnectorReconciliation,
   type ConnectorActionState,
@@ -10,7 +11,9 @@ const initialState: ConnectorActionState = { kind: "idle", message: "" };
 
 export function ReconciliationForm({
   connectionId,
-}: Readonly<{ connectionId: string }>) {
+  locale,
+}: Readonly<{ connectionId: string; locale: MerchantLocale }>) {
+  const t = (source: string) => merchantText(locale, source);
   const [operationId] = useState(() => crypto.randomUUID());
   const [orderId, setOrderId] = useState("");
   const [reason, setReason] = useState("");
@@ -29,18 +32,19 @@ export function ReconciliationForm({
   return (
     <div className="reconciliation-control">
       <div>
-        <strong>Reconcile a WooCommerce order</strong>
+        <strong>{t("Reconcile a WooCommerce order")}</strong>
         <p>
-          Ask the connector to re-read one source order and idempotently re-emit
-          its order, refund, and coupon facts. This does not edit points
-          directly.
+          {t(
+            "Ask the connector to re-read one source order and idempotently re-emit its order, refund, and coupon facts. This does not edit points directly.",
+          )}
         </p>
       </div>
       <form action={action} className="reconciliation-form">
+        <input name="lang" type="hidden" value={locale} />
         <input name="connectionId" type="hidden" value={connectionId} />
         <input name="operationId" type="hidden" value={operationId} />
         <label>
-          <span>WooCommerce order ID</span>
+          <span>{t("WooCommerce order ID")}</span>
           <input
             inputMode="numeric"
             maxLength={19}
@@ -56,7 +60,7 @@ export function ReconciliationForm({
           />
         </label>
         <label>
-          <span>Review reason</span>
+          <span>{t("Review reason")}</span>
           <input
             maxLength={500}
             minLength={8}
@@ -65,7 +69,7 @@ export function ReconciliationForm({
               setReason(event.target.value);
               setReviewing(false);
             }}
-            placeholder="Missing completed-order loyalty effect"
+            placeholder={t("Missing completed-order loyalty effect")}
             required
             value={reason}
           />
@@ -77,13 +81,18 @@ export function ReconciliationForm({
             onClick={() => setReviewing(true)}
             type="button"
           >
-            Review request
+            {t("Review request")}
           </button>
         ) : (
           <div className="reconciliation-confirmation">
             <p>
-              Reconcile source order <strong>#{orderId}</strong>. Duplicate
-              facts remain fenced by their source revision.
+              {locale === "sl-SI"
+                ? "Uskladi izvorno naročilo"
+                : "Reconcile source order"}{" "}
+              <strong>#{orderId}</strong>.{" "}
+              {locale === "sl-SI"
+                ? "Podvojeni podatki ostanejo zamejeni z revizijo vira."
+                : "Duplicate facts remain fenced by their source revision."}
             </p>
             <label>
               <input
@@ -92,14 +101,14 @@ export function ReconciliationForm({
                 type="checkbox"
                 value="reconcile"
               />
-              I reviewed the order ID and reason.
+              {t("I reviewed the order ID and reason.")}
             </label>
             <button
               className="primary"
               disabled={pending || state.kind === "success"}
               type="submit"
             >
-              {pending ? "Queuing…" : "Queue reconciliation"}
+              {pending ? t("Queuing…") : t("Queue reconciliation")}
             </button>
           </div>
         )}

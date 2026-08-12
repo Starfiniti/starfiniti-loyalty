@@ -28,6 +28,10 @@ describe("merchant locale", () => {
     expect(merchantIntlLocale("sl-SI")).toBe("sl-SI");
     expect(merchantIntlLocale("en")).toBe("en-GB");
     expect(merchantText("sl-SI", "Overview")).toBe("Pregled");
+    expect(merchantText("sl-SI", "Connector health")).toBe("Stanje povezave");
+    expect(
+      merchantText("sl-SI", "Review and confirm the WooCommerce connection."),
+    ).toBe("Preglejte in potrdite povezavo WooCommerce.");
     expect(merchantText("en", "Overview")).toBe("Overview");
     expect(merchantText("sl-SI", "Tenant supplied name")).toBe(
       "Tenant supplied name",

@@ -12,6 +12,7 @@ import {
   serializeWooCommerceConnectionPackage,
   wooCommerceEventEndpoint,
 } from "@/lib/connector-provisioning";
+import { merchantText, resolveMerchantLocale } from "@/lib/merchant-locale";
 import { provisionWooCommerceConnection } from "@/lib/server/connector-provisioning";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -34,9 +35,10 @@ export async function provisionConnector(
   _previousState: ConnectorProvisioningState,
   formData: FormData,
 ): Promise<ConnectorProvisioningState> {
+  const locale = resolveMerchantLocale(formData.get("lang"));
   const failure = (message: string): ConnectorProvisioningState => ({
     kind: "error",
-    message,
+    message: merchantText(locale, message),
     setupCode: null,
     connectionId: null,
   });
@@ -92,10 +94,12 @@ export async function provisionConnector(
     );
     return {
       kind: "success",
-      message:
+      message: merchantText(
+        locale,
         provisioned.result.outcome === "duplicate"
           ? "This exact connection was already provisioned. Use the recovered setup code below."
           : "Connection provisioned. Copy the setup code now; it is hidden after leaving this page.",
+      ),
       setupCode: serializeWooCommerceConnectionPackage(
         provisioned.connectionPackage,
       ),
@@ -130,17 +134,21 @@ export async function requestConnectorReconciliation(
   _previousState: ConnectorActionState,
   formData: FormData,
 ): Promise<ConnectorActionState> {
+  const locale = resolveMerchantLocale(formData.get("lang"));
+  const message = (source: string) => merchantText(locale, source);
   if (formData.get("confirmation") !== "reconcile") {
     return {
       kind: "error",
-      message: "Review and confirm the source-order reconciliation.",
+      message: message("Review and confirm the source-order reconciliation."),
     };
   }
   const operationId = String(formData.get("operationId") ?? "");
   if (!UUID_V4.test(operationId)) {
     return {
       kind: "error",
-      message: "The reconciliation identity is invalid. Refresh and try again.",
+      message: message(
+        "The reconciliation identity is invalid. Refresh and try again.",
+      ),
     };
   }
   const command = merchantRequestConnectorReconciliationCommandV1.safeParse({
@@ -154,8 +162,9 @@ export async function requestConnectorReconciliation(
   if (!command.success) {
     return {
       kind: "error",
-      message:
+      message: message(
         "Enter a positive WooCommerce order ID and a single-line review reason of at least 8 characters.",
+      ),
     };
   }
 
@@ -172,10 +181,11 @@ export async function requestConnectorReconciliation(
   if (error) {
     return {
       kind: "error",
-      message:
+      message: message(
         error.code === "42501"
           ? "Your role cannot reconcile this live connector."
           : "The connector or request changed. No reconciliation was assumed.",
+      ),
     };
   }
   const row = (Array.isArray(data) ? data[0] : data) as Record<
@@ -194,7 +204,9 @@ export async function requestConnectorReconciliation(
   if (!result.success) {
     return {
       kind: "error",
-      message: "The durable reconciliation result could not be verified.",
+      message: message(
+        "The durable reconciliation result could not be verified.",
+      ),
     };
   }
   revalidatePath("/operations");
@@ -202,8 +214,12 @@ export async function requestConnectorReconciliation(
     kind: "success",
     message:
       result.data.outcome === "duplicate"
-        ? `This exact reconciliation already exists (${result.data.state.replaceAll("_", " ")}).`
-        : "Reconciliation queued. The signed plugin command will re-emit the source order facts.",
+        ? locale === "sl-SI"
+          ? `Ta točna uskladitev že obstaja (${message(result.data.state.replaceAll("_", " "))}).`
+          : `This exact reconciliation already exists (${result.data.state.replaceAll("_", " ")}).`
+        : message(
+            "Reconciliation queued. The signed plugin command will re-emit the source order facts.",
+          ),
   };
 }
 
@@ -211,14 +227,21 @@ export async function retryConnectorEffect(
   _previousState: ConnectorActionState,
   formData: FormData,
 ): Promise<ConnectorActionState> {
+  const locale = resolveMerchantLocale(formData.get("lang"));
+  const message = (source: string) => merchantText(locale, source);
   if (formData.get("confirmation") !== "retry") {
-    return { kind: "error", message: "Confirm the reviewed effect replay." };
+    return {
+      kind: "error",
+      message: message("Confirm the reviewed effect replay."),
+    };
   }
   const operationId = String(formData.get("operationId") ?? "");
   if (!UUID_V4.test(operationId)) {
     return {
       kind: "error",
-      message: "The replay identity is invalid. Refresh and try again.",
+      message: message(
+        "The replay identity is invalid. Refresh and try again.",
+      ),
     };
   }
   const command = merchantRetryConnectorEffectCommandV1.safeParse({
@@ -231,7 +254,9 @@ export async function retryConnectorEffect(
   if (!command.success) {
     return {
       kind: "error",
-      message: "Provide a single-line review reason of at least 8 characters.",
+      message: message(
+        "Provide a single-line review reason of at least 8 characters.",
+      ),
     };
   }
 
@@ -247,10 +272,11 @@ export async function retryConnectorEffect(
   if (error) {
     return {
       kind: "error",
-      message:
+      message: message(
         error.code === "42501"
           ? "Your current organization role cannot replay connector effects."
           : "The effect state changed or the replay could not be authorized safely.",
+      ),
     };
   }
   const row = (Array.isArray(data) ? data[0] : data) as Record<
@@ -269,15 +295,16 @@ export async function retryConnectorEffect(
   if (!result.success) {
     return {
       kind: "error",
-      message: "The replay result could not be verified.",
+      message: message("The replay result could not be verified."),
     };
   }
   revalidatePath("/operations");
   return {
     kind: "success",
-    message:
+    message: message(
       result.data.outcome === "duplicate"
         ? "This exact replay was already requested."
         : "The effect was returned to the idempotent worker queue.",
+    ),
   };
 }
