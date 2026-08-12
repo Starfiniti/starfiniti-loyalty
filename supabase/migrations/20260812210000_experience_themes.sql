@@ -85,7 +85,7 @@ create or replace function loyalty.save_experience_theme_command(
   target_programme_group_public_id uuid,
   target_brand_color text,
   target_display_font text,
-  target_card_radius_px smallint,
+  target_card_radius_px integer,
   target_hero_text text,
   target_points_label text,
   target_show_tier boolean,
@@ -257,17 +257,17 @@ end;
 $$;
 
 alter function loyalty.save_experience_theme_command(
-  uuid, uuid, text, text, smallint, text, text, boolean, boolean, text, text, uuid
+  uuid, uuid, text, text, integer, text, text, boolean, boolean, text, text, uuid
 ) owner to loyalty_owner;
 revoke all on function loyalty.save_experience_theme_command(
-  uuid, uuid, text, text, smallint, text, text, boolean, boolean, text, text, uuid
+  uuid, uuid, text, text, integer, text, text, boolean, boolean, text, text, uuid
 ) from public, anon, authenticated, loyalty_runtime, loyalty_worker;
 grant execute on function loyalty.save_experience_theme_command(
-  uuid, uuid, text, text, smallint, text, text, boolean, boolean, text, text, uuid
+  uuid, uuid, text, text, integer, text, text, boolean, boolean, text, text, uuid
 ) to authenticated;
 
 comment on table loyalty.experience_themes is
   'Tenant-scoped, revisioned customer-experience design tokens; no executable CSS or remote assets.';
 comment on function loyalty.save_experience_theme_command(
-  uuid, uuid, text, text, smallint, text, text, boolean, boolean, text, text, uuid
+  uuid, uuid, text, text, integer, text, text, boolean, boolean, text, text, uuid
 ) is 'Creates or revisions one authorized workspace/programme-group theme and appends immutable audit evidence.';

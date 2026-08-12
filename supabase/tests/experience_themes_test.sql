@@ -8,13 +8,13 @@ select has_table('loyalty', 'experience_themes', 'experience theme table exists'
 select has_function(
   'loyalty',
   'save_experience_theme_command',
-  array['uuid', 'uuid', 'text', 'text', 'smallint', 'text', 'text', 'boolean', 'boolean', 'text', 'text', 'uuid'],
+  array['uuid', 'uuid', 'text', 'text', 'integer', 'text', 'text', 'boolean', 'boolean', 'text', 'text', 'uuid'],
   'guarded theme command exists'
 );
 select ok(
   has_function_privilege(
     'authenticated',
-    'loyalty.save_experience_theme_command(uuid,uuid,text,text,smallint,text,text,boolean,boolean,text,text,uuid)',
+    'loyalty.save_experience_theme_command(uuid,uuid,text,text,integer,text,text,boolean,boolean,text,text,uuid)',
     'EXECUTE'
   ),
   'authenticated users can enter the guarded command'
@@ -22,7 +22,7 @@ select ok(
 select ok(
   not has_function_privilege(
     'anon',
-    'loyalty.save_experience_theme_command(uuid,uuid,text,text,smallint,text,text,boolean,boolean,text,text,uuid)',
+    'loyalty.save_experience_theme_command(uuid,uuid,text,text,integer,text,text,boolean,boolean,text,text,uuid)',
     'EXECUTE'
   ),
   'anonymous users cannot enter the theme command'

@@ -112,6 +112,7 @@ select is_empty(
           'publish_programme_version_command',
           'request_connector_reconciliation_command',
           'retry_connector_effect_command',
+          'save_experience_theme_command',
           'schedule_programme_version_command'
         )
       )

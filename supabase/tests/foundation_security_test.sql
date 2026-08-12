@@ -88,7 +88,8 @@ select is_empty(
           'loyalty.publish_programme_version_command(uuid,text,text,uuid)',
           'loyalty.request_connector_reconciliation_command(uuid,text,text,text,uuid)',
           'loyalty.retry_connector_effect_command(uuid,text,text,uuid)',
-          'loyalty.schedule_programme_version_command(uuid,text,timestamp with time zone,text,uuid)'
+          'loyalty.schedule_programme_version_command(uuid,text,timestamp with time zone,text,uuid)',
+          'loyalty.save_experience_theme_command(uuid,uuid,text,text,integer,text,text,boolean,boolean,text,text,uuid)'
         )
       )
       and not exists (
