@@ -25,7 +25,7 @@ const required = new Map([
     "docs/architecture/IDENTITY_MODEL.md",
     [
       "## Merchant authorization",
-      "## Guest claim flow",
+      "## Channel claim flow",
       "## Link, merge, and split",
     ],
   ],

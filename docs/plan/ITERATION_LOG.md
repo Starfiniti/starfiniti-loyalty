@@ -215,3 +215,12 @@
 - Added one stable anonymous PostgreSQL projection capped at 12 tiers and 20 rewards. The response omits organization identity, customers, ledgers, raw programme/reward configuration, actors, audits, connectors, signing data, and commerce evidence; underlying tables remain unavailable to `anon`.
 - Added malformed-ID rejection before PostgreSQL, mixed/unknown/suspended/unpublished fail-closed cases, a merchant launch link, exact bigint formatting tests, and 26 pgTAP assertions proving the narrow schema/function grants, minimization, and zero read-side effects.
 - Exact-head run `31608392260` passed all six jobs: 119 unit tests, eighteen migration replays, all 752 pgTAP assertions, concurrency/property probes, and all four localized WooCommerce runtime variants.
+
+## 2026-08-12 — Phase 9 signed authenticated customer delivery
+
+- Added a locally generated five-minute WooCommerce customer capability binding connection, numeric customer ID, issue time, UUID nonce, and current key version under the encrypted connector HMAC key; account rendering still makes zero hub requests.
+- Added verified-Auth login continuation and an explicit store-labelled confirmation page with private/no-store/no-referrer handling so opening a link alone never changes identity state.
+- Added revocable `customer_user_links`, immutable hashed `identity_link_decisions`, unique active user/customer fences, serialized conflict checks, exact replay behavior, and a private runtime-only claim command that never matches email.
+- Added a no-argument Auth-derived self-service projection and responsive member page for exact pending/available/reserved points, current tier, nearest expiry, bounded safe rewards/reservations, and redacted recent activity.
+- Added 39 claim and 27 self-service pgTAP assertions plus four claim contract tests, a safe-navigation bound, two new accessibility route guards, 40-string English/Slovenian plugin coverage, and real link-signature assertions in every WooCommerce runtime cell.
+- Exact-head run `31618909782` passed all six jobs: 124 unit tests, twenty migration replays, all 818 pgTAP assertions, concurrency/property probes, and all four localized WooCommerce runtime variants.

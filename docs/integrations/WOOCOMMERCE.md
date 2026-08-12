@@ -31,7 +31,7 @@ WooCommerce is a thin connector. It uses HTTPS, least-privilege credentials, sig
 
 - Every customer and administration string uses the literal `starfiniti-loyalty` text domain. `Domain Path: /languages` and an `init`-time `load_plugin_textdomain` registration support the self-distributed ZIP without loading translations too early.
 - `languages/starfiniti-loyalty.pot` is the canonical translator template and must exactly match source strings. `npm run woocommerce:localization:validate` rejects missing/stale messages, missing customer strings, empty translations, and placeholder drift.
-- The package currently bundles `sl_SI` in WordPress's `.l10n.php` format. The customer My Account navigation, reward/coupon copy, and connector administration follow the active WordPress locale; absent translations fall back to English.
+- The package currently bundles `sl_SI` in WordPress's `.l10n.php` format. All 40 customer/admin strings, including the secure account link, follow the active WordPress locale; absent translations fall back to English.
 
 ## Storefront budgets
 
@@ -44,6 +44,12 @@ The connector's production customer surfaces deliberately use WooCommerce's nati
 - at most 12 KiB for the PHP class containing storefront/admin hook rendering, with any expansion requiring an explicit reviewed budget change.
 
 `scripts/validate-woocommerce-storefront.mjs` fails the complete repository gate if connector scripts/styles, inline executable/style tags, browser/network request calls, unbounded coupon reads, or missing escaping/login guards enter the storefront boundary. Every minimum/current HPOS/legacy runtime renders the account and cart surfaces with the hub forcibly unavailable, checks semantic bounded asset-free markup, and proves zero HTTP calls.
+
+## Hosted customer account claim
+
+The My Account loyalty endpoint creates a local five-minute link only for the logged-in WooCommerce user and only when the connector has a valid HTTPS hub endpoint, connection UUID, key version, and decrypted signing key. It performs no HTTP request. The purpose-specific HMAC covers the connection UUID, numeric WooCommerce customer ID, ten-digit issue time, UUID nonce, and current key version.
+
+The hub verifies the live connection/key and HMAC, preserves the full link only through private no-store/no-referrer authentication navigation, displays the store name, and requires explicit POST confirmation. PostgreSQL resolves only `registered:<Woo customer ID>` on that exact connection, consumes hashed proof/nonce evidence once, and rejects cross-account conflicts. Email/profile fields are never sent or used. A successful link opens the hosted member page; checkout and local coupon behavior remain independent of this optional flow.
 
 ## Operations
 

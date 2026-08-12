@@ -29,7 +29,7 @@ Email, phone, name, cookie, IP address, and shipping/billing details are attribu
 
 An external ID can be re-used only if the source platform contract proves reuse semantics and the original identity is explicitly retired; otherwise conflicts quarantine for review.
 
-## Guest claim flow
+## Channel claim flow
 
 ```mermaid
 sequenceDiagram
@@ -39,16 +39,18 @@ sequenceDiagram
   participant DB as Loyalty database
   participant WC as WooCommerce
 
-  G->>H: Request order/wallet claim
-  H->>A: Authenticate or create verified account
-  H->>WC: Send/verify channel-bound claim challenge
-  WC-->>H: Signed proof for scoped order/customer identity
-  H->>DB: Create claim decision with proof reference
+  G->>WC: Open Loyalty rewards while signed in
+  WC-->>G: Five-minute signed customer capability
+  G->>H: Open capability and authenticate
+  H->>A: Verify existing Auth session
+  H->>G: Show exact store and request confirmation
+  G->>H: Explicitly confirm link
+  H->>DB: Consume hashed nonce/proof and create decision
   DB->>DB: Check no conflicting active link; append audit; link identity
   DB-->>H: Claimed wallet/customer result
 ```
 
-Email possession alone is insufficient. The proof is channel-bound, short-lived, single-use, purpose-bound, and stored as a hash/reference rather than a reusable token.
+Email possession alone is insufficient. The implemented registered-customer proof binds the WooCommerce connection UUID, numeric customer ID, issue time, nonce, and active key version into a purpose-specific HMAC. It expires after five minutes, is consumed only by explicit POST confirmation under a verified Supabase Auth session, and stores SHA-256 evidence rather than the raw nonce/signature. Guest-order claim remains a later extension and must use a separately purpose-bound proof.
 
 ## Link, merge, and split rules
 
@@ -89,4 +91,4 @@ Support cannot impersonate by changing a session claim. A support grant requires
 | Account-link race                   | Unique active links, row locks, idempotent claim token            |
 | Erasure destroys ledger explanation | Pseudonymize identity attributes; retain immutable value evidence |
 
-Phase 3 must prove two-tenant isolation, revoked membership, forged IDs, customer self-access, and absent membership all fail closed.
+Phase 9 tests prove channel/tenant isolation, one-use replay conflict, active-link races, revocation, no-email authority, minimized customer self-access, and absent Auth subject all fail closed.

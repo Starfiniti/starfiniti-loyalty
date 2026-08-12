@@ -2,7 +2,7 @@
 
 ## Implementation status
 
-The tenancy, WooCommerce event/effect, ledger, programme-engine, merchant command/read-model, and controlled customer-theme portions below are implemented in fifteen versioned migrations. The ledger uses immutable transaction headers/entries, six wallet buckets, programme control accounts, original-attribution lots, signed compensating allocations, same-transaction projections, tenant RLS, and narrow worker commands. Programme publication, materialized tiers/rewards, reward reservations, tier history, evaluation evidence, expiry-notification fences, WooCommerce order/refund effects, native coupon settlement, audited merchant mutations, and revisioned experience tokens are implemented; broader platform audit and privacy workflows remain later slices.
+The tenancy, WooCommerce event/effect, ledger, programme-engine, merchant command/read-model, controlled customer experience, public delivery, and authenticated customer-link portions below are implemented in twenty versioned migrations. The ledger uses immutable transaction headers/entries, six wallet buckets, programme control accounts, original-attribution lots, signed compensating allocations, same-transaction projections, tenant RLS, and narrow worker commands. Programme publication, materialized tiers/rewards, reward reservations, tier history, evaluation evidence, expiry-notification fences, WooCommerce order/refund effects, native coupon settlement, audited merchant mutations, revisioned experience tokens/copy, and customer self-service reads are implemented; broader privacy workflows and customer value commands remain later slices.
 
 ## Database boundaries
 
@@ -33,6 +33,9 @@ erDiagram
   WORKSPACE ||--o{ COMMERCE_CONNECTION : connects
   ORGANIZATION ||--o{ CUSTOMER : scopes
   CUSTOMER ||--o{ CUSTOMER_IDENTITY : links
+  CUSTOMER ||--o{ CUSTOMER_USER_LINK : authorizes
+  COMMERCE_CONNECTION ||--o{ CUSTOMER_USER_LINK : proves
+  CUSTOMER_USER_LINK ||--o{ IDENTITY_LINK_DECISION : evidences
   PROGRAMME_GROUP ||--o{ WALLET : denominates
   CUSTOMER ||--o{ WALLET : owns
   WALLET ||--o{ LEDGER_ACCOUNT : partitions
@@ -86,8 +89,10 @@ Unique per `(organization_id, workspace_id, programme_group_id)` and protected b
 
 - `customers`: organization-scoped person/pseudonymous subject record; it is not keyed by email.
 - `customer_identities`: unique `(commerce_connection_id, external_customer_id)`, with verified channel facts and optional guest-order identity. Email/phone are encrypted or separately protected attributes, never unique merge keys.
-- `customer_user_links`: verified link from an Auth user to a customer with method, evidence reference, verifier, and timestamps.
-- `identity_link_decisions`: append-only merge/link/split decisions with actor, reason, evidence, and compensation reference.
+- `customer_user_links`: revocable verified link from one Auth user to one customer inside an organization. Partial unique indexes enforce one active customer per Auth user and one active Auth user per customer; identity fields cannot be rewritten and revocation cannot be undone in place.
+- `identity_link_decisions`: append-only claim evidence keyed by connection and one-use nonce/proof hashes. It stores the Auth subject, optional resolved customer, key version, issue time, outcome, and SHA-256 references—not raw nonce, signature, email, or external customer ID.
+
+`get_my_loyalty_accounts()` derives the Auth subject from the live request and accepts no input arguments. It returns at most 20 active linked accounts with exact text-form wallet balances, minimized tier/expiry state, up to 20 safe published rewards, ten active reservations, and ten redacted ledger activities. Underlying link, identity, ledger, and decision tables remain unavailable to browser roles.
 
 Identity linking is described in `IDENTITY_MODEL.md`.
 

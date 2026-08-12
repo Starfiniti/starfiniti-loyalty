@@ -63,12 +63,15 @@ Phase 9 — merchant administration and customer experience. Shopify Phase 8 rem
 - Exact-head run `31606226276` passed the hosted-translation baseline, seventeen migrations with 726 pgTAP assertions plus concurrency/property probes, and all four localized WooCommerce runtime variants.
 - Hosted guest delivery now has a mobile-first public route for one active workspace and published programme. Its anonymous database boundary returns only bounded theme/copy/tier/reward presentation data and no customer, raw configuration, audit, integration, or commerce evidence.
 - Exact-head run `31608392260` passed the hosted guest-delivery baseline, eighteen migrations with 752 pgTAP assertions plus concurrency/property probes, and all four localized WooCommerce runtime variants.
+- Authenticated customer delivery now starts from a five-minute, one-use WooCommerce HMAC capability, requires explicit confirmation under a verified Supabase Auth session, and creates one revocable Auth/customer link plus immutable hashed decision evidence without email matching.
+- The hosted member account derives the customer only from that live link and returns exact balances, current tier, next expiry, bounded safe rewards/reservations, and redacted recent ledger activity; it accepts no tenant, customer, workspace, or programme authority from the browser.
+- Exact-head run `31618909782` passed the secure member-delivery baseline, twenty migrations with 818 pgTAP assertions plus concurrency/property probes, 124 unit tests, and all four localized WooCommerce runtime variants.
 - Exact-head run `31601351946` passed the filtered-customer baseline, fifteen migrations with 654 pgTAP assertions plus concurrency/property probes, and all four localized WooCommerce runtime variants.
 - Exact-head run `31581760825` passed the customer-ledger baseline, database job, and all four WooCommerce runtime variants.
 
 ## Active work
 
-- `P9-MERCHANT-HUB` (in progress): the Auth/RLS shell, guided initial-programme creation, audited programme editor, exact filtered customer wallet/ledger reads, safe connector queue operations, individual and exact-preview bulk value adjustments, signed source reconciliation, real Overview reporting, keyboard-bypass accessibility guard, sanitized support diagnostics, localized WooCommerce customer strings, controlled experience themes/translations, and a guest-safe hosted loyalty page are implemented; remaining member and usability surfaces follow.
+- `P9-MERCHANT-HUB` (in progress): the Auth/RLS shell, guided initial-programme creation, audited programme editor, exact filtered customer wallet/ledger reads, safe connector queue operations, individual and exact-preview bulk value adjustments, signed source reconciliation, real Overview reporting, keyboard-bypass accessibility guard, sanitized support diagnostics, localized WooCommerce customer strings, controlled experience themes/translations, guest-safe hosted loyalty, and signed authenticated member delivery are implemented; remaining usability and controlled customer-command surfaces follow.
 
 ## Next safe tasks
 

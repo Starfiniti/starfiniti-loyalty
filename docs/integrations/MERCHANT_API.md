@@ -164,6 +164,12 @@ The hosted guest route calls this stable anonymous projection with a public work
 
 The response is capped at 12 tiers and 20 rewards. It contains public programme/group/workspace IDs, programme name, resolved locale, bounded theme tokens and copy, tier names/thresholds/rates, and reward names/kinds/costs. All bigint values are text. It deliberately omits organization identity, customer/wallet/ledger state, raw programme JSON and hashes, reward configuration, actors, audit records, connector state, signing data, and commerce evidence. Anonymous callers retain no underlying table grants, and reads create no mutable or audit effect.
 
+### Authenticated customer account
+
+`get_my_loyalty_accounts()` accepts no arguments and derives the Auth user from PostgreSQL request claims. It follows only active `customer_user_links` into an active customer, organization, and workspace, caps accounts and rewards at 20, reservations/activity at 10, and returns all bigint balances/costs as text. The result contains public account/customer/workspace/programme IDs, public-facing store/programme names, wallet readiness, pending/available/reserved points, minimized current tier, next expiry, safe current rewards with bigint affordability, active reservation summaries, and redacted transaction kind/points/time.
+
+The function returns no organization identity, customer profile/reference, channel ID, other identity, actor, source reference, reason, metadata, request/idempotency evidence, reward configuration, raw event, or signing material. Browser roles have no direct link/decision table grants. The corresponding WooCommerce claim command is private to `loyalty_runtime`; the browser cannot call it directly or supply an Auth user, organization, or customer authority.
+
 ## Retry and error contract
 
 Idempotency is scoped by organization. Retrying the same key and canonical request returns the original resource with `outcome = duplicate` and creates neither another version nor another audit event. Reusing a key with different input raises SQLSTATE `23514`. Authorization failures use `42501`; invalid/stale configuration or lifecycle inputs use `22023`/`23514`.

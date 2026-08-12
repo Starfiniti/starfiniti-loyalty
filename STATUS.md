@@ -15,7 +15,7 @@
 - Phase 6 programme execution is complete: deterministic conditional earning/exclusions, immutable publication/scheduling, materialized tiers/rewards, live/simulation evidence, effective tier intervals, reward failure compensation, and advance expiry notifications are execution-verified.
 - Phase 7 implements a separately credentialed WooCommerce effect worker, completed-order awards, cumulative original-attribution refund reversal, channel-ID customer resolution, native issue/cancel commands, PII-free coupon capture, expiry compensation, connection health watermarks, source reconciliation, and an installable GPL plugin artifact.
 - The plugin encrypts its signing key at rest, declares HPOS support, keeps checkout independent of the hub, exposes queue/dead-letter diagnostics, and provides customer loyalty, privacy export/erase, and WP-CLI recovery surfaces.
-- All 38 WooCommerce strings use the plugin text domain with exact POT coverage. The package includes a Slovenian catalog, registers its language path at WordPress `init`, and tests the localized customer navigation in each minimum/current HPOS/legacy runtime.
+- All 40 WooCommerce strings use the plugin text domain with exact POT coverage. The package includes a Slovenian catalog, registers its language path at WordPress `init`, and tests the localized customer navigation in each minimum/current HPOS/legacy runtime.
 - The supported WooCommerce smoke matrix passes on WordPress 6.6.5/WooCommerce 9.0.2/PHP 8.1 and WordPress 7.0.2/WooCommerce 10.9.4/PHP 8.3, each with HPOS and legacy storage. It executes classic and Blocks coupon paths under hub outage, order completion/capture, partial/full refunds, reconciliation, activation lifecycle, and dead-letter recovery.
 - WooCommerce account/cart loyalty rendering has an enforced 0-byte connector JavaScript, 0-byte connector CSS, and zero hub-request budget. Account results are capped at 20 rewards, markup sizes are bounded in the real runtime matrix, and checkout continues to use native WooCommerce coupon behavior.
 - The Next.js merchant shell now verifies Supabase Auth claims, refreshes sessions through the Next.js 16 request proxy, derives live organization/workspace/programme scope through the authenticated Data API and RLS, handles unassigned users safely, and provides sign-in/sign-out/PKCE callback paths without exposing a secret key.
@@ -27,6 +27,8 @@
 - The customer-experience view reads one RLS-scoped workspace/programme-group theme and previews member/guest states responsively. Owners/admins can revision a contract-validated token set through an idempotent audited command; inaccessible colors, arbitrary CSS, remote fonts, scripts, uploads, and caller-supplied tenant authority are rejected.
 - The customer-experience view also manages separate bounded English and Slovenian customer-copy revisions. Locale selectors are allowlisted, owner/admin saves derive scope and actor from live Auth, member reads remain tenant-RLS scoped, and audit metadata retains locale/revision without duplicating translated copy.
 - A public mobile-first hosted loyalty route renders one active published programme in English or Slovenian using approved theme tokens, tier rates, and reward names/costs. Its bounded anonymous read model omits organization identity, customer/ledger state, raw programme/reward configuration, audit, integration, and commerce evidence; suspended or mixed-scope resources return no document.
+- A logged-in WooCommerce customer can open a locally generated five-minute HMAC link, authenticate to the hub, review the exact store, and explicitly confirm one Auth/customer link. Nonces and proofs are one-use and retained only as hashes; customer IDs are channel-bound, conflicts fail closed, and email is never a merge key.
+- The authenticated `/account/loyalty` route derives every account from the live Auth/customer link and exposes exact text-form balances, current tier, next expiry, up to 20 safe rewards, active reservations, and ten redacted ledger activities. It accepts no caller-supplied tenant/customer scope and exposes no actors, source references, request evidence, metadata, private profile text, or other identities.
 - Customer detail now includes minimized current versus qualified tier, transition, exact eligible-spend minor units, and effective/grace timestamps without exposing private decision explanations or command evidence.
 - Customer detail activity can be filtered into orders/refunds, rewards, release/expiry, and adjustments with visible bounded-result counts; unknown or array query input falls back to all activity and never changes the underlying RLS read.
 - Connector operations provide tenant-authorized health/queue counts, bounded failure metadata without private payloads, and audited owner/admin/operator replay of dead-letter canonical effects. Outbound coupon dead letters remain inspect-only because points compensation may already exist.
@@ -38,7 +40,7 @@
 ## Partial
 
 - Phases 0 through 7 are complete for the active WooCommerce scope. Shopify Phase 8 is deferred by product-owner direction.
-- Phase 9 is in progress. The authenticated shell, initial-programme onboarding, programme editor, customer wallet/ledger reads, safe hub connector operations, reason-bound individual and exact-preview bulk value adjustments, live source-reconciliation requests, real Overview reporting, route-wide keyboard bypass, sanitized support diagnostics, localized WooCommerce strings, controlled experience themes/translations, and guest hosted loyalty delivery exist; authenticated customer/member delivery, dashboard translation breadth, usability evidence, and production deployment remain future slices.
+- Phase 9 is in progress. The authenticated shell, initial-programme onboarding, programme editor, customer wallet/ledger reads, safe hub connector operations, reason-bound individual and exact-preview bulk value adjustments, live source-reconciliation requests, real Overview reporting, route-wide keyboard bypass, sanitized support diagnostics, localized WooCommerce strings, controlled experience themes/translations, guest hosted loyalty delivery, and signed authenticated member delivery exist; controlled redemption, dashboard translation breadth, usability evidence, and production deployment remain future slices.
 
 ## Broken or unavailable
 
@@ -48,7 +50,7 @@
 
 ## Database migration state
 
-Eighteen versioned migrations and the seed replay successfully against disposable Supabase/Postgres 17 CI with 752 pgTAP assertions plus concurrency/property probes. No persistent or production database has been changed.
+Twenty versioned migrations and the seed replay successfully against disposable Supabase/Postgres 17 CI with 818 pgTAP assertions plus concurrency/property probes. No persistent or production database has been changed.
 
 ## Git state
 
@@ -90,6 +92,7 @@ Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 Wo
 - PR exact-head run `31604654919` passed all six jobs for enforced storefront budgets, including zero-request bounded account/cart rendering in all four localized WooCommerce runtime variants plus the unchanged sixteen-migration, 693-assertion database gate.
 - PR exact-head run `31606226276` passed all six jobs for hosted customer translations, including 114 unit tests, seventeen migration replays, 726 pgTAP assertions, concurrency/property probes, and the complete localized WooCommerce matrix.
 - PR exact-head run `31608392260` passed all six jobs for hosted guest loyalty delivery, including 119 unit tests, eighteen migration replays, 752 pgTAP assertions, concurrency/property probes, and the complete localized WooCommerce matrix.
+- PR exact-head run `31618909782` passed all six jobs for signed authenticated customer delivery, including 124 unit tests, twenty migration replays, 818 pgTAP assertions, concurrency/property probes, and locally signed PII-free claim links in the complete localized WooCommerce matrix.
 
 ## Next recommended task
 

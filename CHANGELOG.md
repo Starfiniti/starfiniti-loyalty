@@ -59,3 +59,5 @@
 - Enforced zero-JavaScript, zero-CSS, zero-render-request WooCommerce storefront budgets with bounded server-rendered account/cart markup and real hub-outage assertions in every supported runtime cell.
 - Added tenant-scoped English and Slovenian hosted customer-copy management with independent locale revisions, bounded translation contracts, live localized previews, owner/admin-only idempotent saves, RLS reads, and copy-free immutable audit metadata.
 - Added a guest-safe hosted loyalty page that renders published tiers and rewards with controlled merchant styling and English/Slovenian copy through one bounded anonymous PostgreSQL projection.
+- Added a one-use five-minute WooCommerce customer claim with explicit Auth confirmation, immutable hashed decision evidence, revocable conflict-safe customer links, and no email matching or render-time hub request.
+- Added an authenticated hosted member account with exact balances, tier/expiry, safe rewards/reservations, and redacted activity through a no-argument Auth-derived PostgreSQL projection.
