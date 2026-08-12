@@ -86,7 +86,9 @@ Phase 9 — merchant administration and customer experience. Shopify Phase 8 rem
 - The authenticated Overview, programme lifecycle, and connector-operations launch path now preserves one explicit English or Slovenian locale through safe navigation, sign-out, onboarding, draft authoring, exact publish/schedule review, guided WooCommerce provisioning, diagnostics, reconciliation, and safe effect replay. Server-action results use the selected language and programme scheduling interprets wall time explicitly in Europe/Ljubljana while rejecting DST gaps and ambiguous instants.
 - Responsive Playwright evidence covers the Slovenian Overview, full programme editor, and connector operations at 390×844 and 1440×1000 with locale switching, form-review interactions, no horizontal overflow, and no console/network errors. Exact-head runs `31638672681`, `31640311302`, and `31640919355` passed all seven jobs for the Overview, programme, and operations slices; the suite now contains 154 unit tests.
 - Customer search, detail, tier, wallet, immutable activity, individual adjustment, and exact-preview bulk adjustment administration now preserve English or Slovenian through navigation, filters, review forms, and mutation results. Credit-expiry input uses the same explicit Europe/Ljubljana wall-time conversion and DST rejection as programme scheduling.
-- Experience-theme and customer-copy administration now localize the complete bounded editor, role and validation feedback, revision results, and responsive customer-locale preview. The global document language and first-focus skip link follow the allowlisted locale on client navigation. Responsive Playwright evidence covers the real customer and experience forms at 390×844 and 1440×1000 without overflow or browser errors; exact-head runs `31642070490`, `31642918324`, and `31643300533` passed all seven jobs.
+- Experience-theme and customer-copy administration now localize the complete bounded editor, role and validation feedback, revision results, and responsive customer-locale preview. The request proxy carries only an allowlisted locale into the server-rendered document language and first-focus skip-link fallback, including authenticated and guest redirects. Responsive Playwright evidence covers the real customer and experience forms at 390×844 and 1440×1000 without overflow or browser errors; exact-head runs `31642070490`, `31642918324`, and `31643300533` passed all seven jobs.
+- Release review hardened both signed connector routes with streaming request-body limits, stopped all WooCommerce command kinds after ten ambiguous attempts for manual review, and removed unsupported percentage caps from authoring. PostgreSQL independently rejects direct-RPC publication/scheduling and legacy redemption before value moves; the plugin matrix covers the supported uncapped percentage behavior.
+- Exact-head run `31645976689` passed all seven jobs with 164 unit tests, both production images, twenty-six migration replays, 1,049 pgTAP assertions, concurrency/property probes, and all four minimum/current HPOS/legacy WooCommerce runtimes.
 - Exact-head run `31601351946` passed the filtered-customer baseline, fifteen migrations with 654 pgTAP assertions plus concurrency/property probes, and all four localized WooCommerce runtime variants.
 - Exact-head run `31581760825` passed the customer-ledger baseline, database job, and all four WooCommerce runtime variants.
 
@@ -96,7 +98,7 @@ Phase 9 — merchant administration and customer experience. Shopify Phase 8 rem
 
 ## Next safe tasks
 
-1. Complete adversarial branch review and merge the verified Phase 9 repository work.
+1. Complete final human review and merge the adversarially verified Phase 9 repository work.
 2. Create the first approved semantic-version release, then complete production deployment and recovery evidence when the final infrastructure inputs are available.
 
 ## Dependencies and blockers

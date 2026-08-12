@@ -317,3 +317,12 @@
 - Added a navigation-aware document-language and first-focus skip-link boundary with a server-rendered English accessibility fallback.
 - Playwright exercised the real customer and experience forms at 390×844 and 1440×1000, including adjustment review and customer-locale preview interactions, with no horizontal overflow, console errors, or failed requests. A production login pass verified the Slovenian document language and keyboard skip link.
 - Exact-head runs `31642070490`, `31642918324`, and `31643300533` passed all seven jobs with 154 unit tests, both production images, twenty-five migration replays, all 1,028 pgTAP assertions, concurrency/property probes, and all four localized WooCommerce runtime variants.
+
+## 2026-08-13 — Phase 9 adversarial release hardening
+
+- Replaced pre-buffer `Content-Length` checks on both public signed WooCommerce routes with a shared streaming 64 KiB reader that validates declared lengths, cancels overflow, and completes before database or signing-material access.
+- Added a ten-claim ceiling for issue, cancellation, and reconciliation commands. Exhausted and expired-ceiling commands enter an inspect-only `manual_review` state with bounded diagnostics; ambiguous coupon issuance keeps its reservation and creates no speculative release ledger transaction.
+- Removed unsupported maximum caps from native percentage rewards. Contracts and authoring reject them, PostgreSQL independently blocks direct authenticated publication/scheduling and legacy capped redemption before any durable effect, and the real plugin matrix now covers uncapped percentage coupons.
+- Moved allowlisted document language to the server-rendered root layout, preserved Slovenian across authenticated and guest redirects, strengthened the public experience color contract, and removed inert Overview search/preferences/notification and placeholder navigation affordances.
+- Parallel adversarial reviews covered complexity, security, value flows, project idioms, and prototype cruft; all verified blocker and should-fix findings were fixed and independently re-reviewed with no unresolved release-level finding.
+- Exact-head run `31645976689` passed all seven jobs with 164 unit tests, both production images, twenty-six migration replays, all 1,049 pgTAP assertions, concurrency/property probes, and uncapped percentage issuance in all four minimum/current HPOS/legacy WooCommerce runtimes.

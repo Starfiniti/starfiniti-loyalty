@@ -356,6 +356,12 @@ tasks:
       - the client navigation shell updates the document language and first-focus skip-link copy from the exact locale allowlist while retaining a server-rendered English accessibility fallback
       - exact-head runs 31642070490 and 31642918324 passed all seven jobs for localized customer and experience administration with 154 unit tests both production images twenty-five migration replays 1028 pgTAP assertions concurrency and property probes and all four localized WooCommerce runtime variants
       - exact-head run 31643300533 passed all seven jobs for the localized document-language and keyboard-bypass shell with the unchanged complete repository production image database and WooCommerce runtime gates
+      - both public signed WooCommerce routes stream at most 65536 bytes before database or signing-material access and unit/static checks cover declared omitted-length multi-chunk single-chunk empty and malformed-length cases
+      - issue cancellation and reconciliation commands receive at most ten claims then become inspect-only manual-review diagnostics while ambiguous coupon reservations and immutable ledger value remain untouched pending native verification
+      - percentage rewards support uncapped native WooCommerce coupons only; contract and editor reject caps while PostgreSQL independently rejects direct authenticated publish schedule and legacy redemption before materialization or value movement
+      - the request proxy supplies only an allowlisted locale to server-render the document language and preserves Slovenian across both authenticated-home and guest-login redirects
+      - adversarial complexity security value-flow project-idiom and cruft reviews completed with every verified blocker or should-fix finding resolved and independently rechecked
+      - exact-head run 31645976689 passed all seven release-hardening jobs with 164 unit tests both production images twenty-six migration replays 1049 pgTAP assertions concurrency and property probes and all four uncapped-percentage WooCommerce runtime variants
   - id: DEPLOY-PROXMOX
     title: Release and deploy the self-hosted platform on Proxmox
     phase: deployment

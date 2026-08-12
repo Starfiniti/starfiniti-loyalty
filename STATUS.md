@@ -3,10 +3,10 @@
 ## What works
 
 - Phase 0's reproducible npm workspace, responsive standalone Next.js Overview, Supabase migration baseline, WooCommerce HPOS scaffold, repository operating system, and pinned CI are verified.
-- The Docker-backed GitHub Actions database job replays migrations/seed and runs 1,028 transactional pgTAP assertions plus real two-session ledger/programme concurrency and property probes.
+- The Docker-backed GitHub Actions database job replays migrations/seed and runs 1,049 transactional pgTAP assertions plus real two-session ledger/programme concurrency and property probes.
 - Phase 1 Rosy Rewards semantics are owner-approved and encoded as versioned configuration rather than global merchant assumptions.
 - Pure domain behavior covers integer award calculation, explicit historical tier snapshots, 30-day release, 12-month rolling expiry, earliest-expiry redemption ordering, rolling-spend tiers with grace, cumulative original-attribution refund reversal, and negative balances.
-- Twenty-four domain, fifty-nine versioned contract, sixty-two dashboard, and nine worker tests pass.
+- Twenty-four domain, sixty-one versioned contract, seventy dashboard, and nine worker tests pass.
 - The platform carries a full AGPL-3.0 license and package metadata; the WooCommerce connector remains independently GPL-2.0-or-later.
 - Phase 2 architecture is complete and deterministically validated: tenant/Auth trust, identity, double-entry ledger, signed inbox/outbox, reward reservation, privacy, backup/restore, deployment, and SLO models are reviewable.
 - Phase 3 tenancy/RLS is complete: organizations, memberships, workspaces, programme groups, support grants, least-privilege roles, composite tenant keys, and live authorization policies execute successfully in disposable Supabase CI.
@@ -43,12 +43,15 @@
 - Customer owners/admins can preview and confirm signed whole-point adjustments against an exact text-form balance. Credits require expiry, removals show a strong negative-balance warning, and every result is one reason-bound immutable double-entry transaction plus administration audit evidence.
 - Customer owners/admins can select 2–50 active wallets for one uniform bulk credit/debit, obtain a read-only canonical dry run with exact projected balances, and approve its fingerprint. Execution locks balances deterministically and atomically appends one immutable ledger effect per customer plus immutable batch/item and aggregate audit evidence; exact retries are safe and stale previews fail closed.
 - Connector owners/admins/operators can review and queue one WooCommerce order reconciliation through an audited private outbox and signed polling route. The plugin re-emits stable source facts idempotently, never edits points directly, and terminates missing orders explicitly.
+- Public WooCommerce event and command routes enforce their 64 KiB limit while streaming before any database or signing-material access, so omitted or chunked `Content-Length` cannot force unbounded unauthenticated buffering.
+- WooCommerce issue, cancellation, and reconciliation commands stop after ten claims in a visible inspect-only manual-review state. Ambiguous coupon outcomes retain the reservation and ledger state until the native result is verified; they never trigger speculative compensation.
+- Native percentage rewards support 0.01–100% without a maximum cap. The contract/editor reject caps, PostgreSQL independently blocks direct-RPC publication/scheduling and legacy capped redemption before value moves, and the plugin retains a defensive rejection boundary.
 - The Overview no longer renders illustrative tenant figures. It reads versioned, tenant/workspace/programme-authorized aggregates for members, eligible loyalty spend, repeat-member rate, captured-to-awarded point redemption, point liability, and bounded 7/30/90-day trends without exposing private source evidence.
 
 ## Partial
 
 - Phases 0 through 7 are complete for the active WooCommerce scope. Shopify Phase 8 is deferred by product-owner direction.
-- Phase 9 is in progress. The authenticated shell, audited initial-tenant bootstrap, complete English/Slovenian launch administration, guided WooCommerce provisioning, customer wallet/ledger reads, safe hub connector operations, reason-bound individual and exact-preview bulk value adjustments, live source-reconciliation requests, real reporting, localized route-wide keyboard bypass, sanitized support diagnostics, localized WooCommerce and hosted customer journeys, controlled experience themes/translations, guest hosted loyalty delivery, signed authenticated member delivery, controlled native-coupon redemption, direct audited customer export, and WooCommerce-originated customer erasure exist; final branch review, release, broader live authenticated evidence, and production deployment remain.
+- Phase 9 is in progress. The authenticated shell, audited initial-tenant bootstrap, complete English/Slovenian launch administration, guided WooCommerce provisioning, customer wallet/ledger reads, safe hub connector operations, reason-bound individual and exact-preview bulk value adjustments, live source-reconciliation requests, real reporting, localized route-wide keyboard bypass, sanitized support diagnostics, localized WooCommerce and hosted customer journeys, controlled experience themes/translations, guest hosted loyalty delivery, signed authenticated member delivery, controlled native-coupon redemption, direct audited customer export, and WooCommerce-originated customer erasure exist; merge, release, broader live authenticated evidence, and production deployment remain after adversarial branch review completed without unresolved blocker or should-fix findings.
 
 ## Broken or unavailable
 
@@ -59,7 +62,7 @@
 
 ## Database migration state
 
-Twenty-five versioned migrations and the seed replay successfully against disposable Supabase/Postgres 17 CI with 1,028 pgTAP assertions plus concurrency/property probes. No persistent or production database has been changed.
+Twenty-six versioned migrations and the seed replay successfully against disposable Supabase/Postgres 17 CI with 1,049 pgTAP assertions plus concurrency/property probes. No persistent or production database has been changed.
 
 ## Git state
 
@@ -69,12 +72,13 @@ Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 Wo
 
 - `npm run test --workspace=@starfiniti/domain` — passed with 24 tests.
 - `npm run typecheck --workspace=@starfiniti/domain` — passed.
-- The current local gates pass zero-warning lint, all workspace type checks, 154 unit tests, accessibility/architecture/workflow validators, and the standalone Next.js production build. The global Windows format check remains affected only by tracked baseline CRLF normalization; targeted changed-file Prettier checks pass.
-- `npm run db:validate` — passed for twenty-five migrations, Supabase config, and twenty-five transactional pgTAP files.
+- The current local gates pass zero-warning lint, all workspace type checks, 164 unit tests, accessibility/architecture/workflow validators, and the standalone Next.js production build. The global Windows format check remains affected only by tracked baseline CRLF normalization; targeted changed-file Prettier checks pass.
+- `npm run db:validate` — passed for twenty-six migrations, Supabase config, and twenty-five transactional pgTAP files.
 - `npm run secrets:scan` — passed with no findings.
 - `npm run audit:prod` — passed with zero production vulnerabilities.
 - `npm run licenses` — passed for six AGPL npm package declarations, the full AGPL text, and both WooCommerce GPL declarations.
 - `npm run architecture:validate` — passed for eight Phase 2 models and three accepted ADRs; it now runs inside `npm run check`.
+- PR exact-head run `31645976689` passed all seven release-hardening jobs with 164 unit tests, twenty-six migration replays, all 1,049 pgTAP assertions, concurrency/property probes, both production images, and all four uncapped-percentage WooCommerce runtime variants.
 - PR exact-head run `31512548299` passed the baseline and Docker/Supabase database jobs.
 - Public `main` run `31513294330` passed both jobs after merge, including migration replay, seed, pgTAP, and cleanup.
 - PR exact-head run `31527785181` passed both jobs, including replay/reset/seed, all 87 pgTAP assertions, the dynamic ingestion build, and cleanup.
