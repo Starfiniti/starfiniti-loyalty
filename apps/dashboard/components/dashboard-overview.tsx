@@ -1,19 +1,29 @@
 "use client";
 
-import {
-  Activity,
-  Gem,
-  HelpCircle,
-  LayoutDashboard,
-  Menu,
-  Palette,
-  Users,
-  X,
-} from "lucide-react";
 import type { MerchantOverviewReportV1 } from "@starfiniti/contracts";
-import { useMemo, useState, useTransition } from "react";
+import {
+  Ban,
+  CheckCircle2,
+  ChevronDown,
+  Clock3,
+  ExternalLink,
+  FileText,
+  Flower2,
+  Gift,
+  Percent,
+  PlugZap,
+  Rocket,
+  Shield,
+  Sparkles,
+  Star,
+  UsersRound,
+  WalletCards,
+  Workflow,
+} from "lucide-react";
+import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { signOut } from "@/app/actions";
+import { useTransition } from "react";
+import { MerchantShell } from "@/components/merchant-shell";
 import {
   merchantIntlLocale,
   merchantLocalePath,
@@ -21,36 +31,11 @@ import {
   type MerchantLocale,
 } from "@/lib/merchant-locale";
 import {
+  formatBasisPoints,
   formatExactInteger,
-  overviewChartData,
-  overviewMetrics,
+  formatExactMinorAmount,
   type OverviewRange,
 } from "@/lib/overview";
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-
-const nav = [
-  { label: "Overview", icon: LayoutDashboard, active: true, href: "/" },
-  { label: "Programme overview", icon: Gem, href: "/programme" },
-  { label: "Earning rules", href: "/programme#tiers-title" },
-  { label: "Rewards", href: "/programme#rewards-title" },
-  { label: "VIP tiers", href: "/programme#tiers-title" },
-  { label: "Customers", icon: Users, group: "GROW", href: "/customers" },
-  { label: "Connector operations", icon: Activity, href: "/operations" },
-  {
-    label: "Customer experience",
-    icon: Palette,
-    group: "PLATFORM",
-    href: "/experience",
-  },
-];
 
 export type DashboardTenant = Readonly<{
   organizationName: string;
@@ -59,290 +44,512 @@ export type DashboardTenant = Readonly<{
   role: string;
 }>;
 
-function initials(value: string): string {
+export type DashboardProgrammeSummary = Readonly<{
+  audit: readonly Readonly<{
+    action: string;
+    createdAt: string;
+    id: string;
+  }>[];
+  hasPublishedVersion: boolean;
+  id: string | null;
+  name: string;
+  reward: Readonly<{
+    costPoints: string;
+    kind: string;
+    name: string;
+  }> | null;
+  tiers: readonly Readonly<{ code: string; name: string }>[];
+  versionNumber: number | null;
+  versionStatus: string | null;
+}>;
+
+export type DashboardConnectorSummary = Readonly<{
+  connected: boolean;
+  displayName: string | null;
+  healthy: boolean;
+}>;
+
+function auditLabel(action: string): string {
+  return (
+    {
+      "programme.create": "Programme created",
+      "programme.draft.create": "Draft saved",
+      "programme.version.publish": "Programme published",
+      "programme.version.schedule": "Publication scheduled",
+    }[action] ?? action.replaceAll(".", " ")
+  );
+}
+
+function rewardKind(value: string): string {
   return value
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("");
+    .replaceAll("_", " ")
+    .replace(/\b\w/gu, (character) => character.toUpperCase());
+}
+
+function compactCurrency(value: string): string {
+  return value.startsWith("EUR ") ? `€${value.slice(4)}` : value;
 }
 
 export function DashboardOverview({
-  tenant,
-  report,
-  range,
+  connector,
+  greeting,
   locale,
+  programme,
+  range,
+  report,
+  tenant,
 }: Readonly<{
-  tenant: DashboardTenant;
-  report: MerchantOverviewReportV1 | null;
-  range: OverviewRange;
+  connector: DashboardConnectorSummary;
+  greeting: string;
   locale: MerchantLocale;
+  programme: DashboardProgrammeSummary;
+  range: OverviewRange;
+  report: MerchantOverviewReportV1 | null;
+  tenant: DashboardTenant;
 }>) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [rangePending, startRangeTransition] = useTransition();
-  const router = useRouter();
   const pathname = usePathname();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const text = (source: string) => merchantText(locale, source);
   const intlLocale = merchantIntlLocale(locale);
-  const chartData = useMemo(
-    () => (report ? overviewChartData(report) : []),
-    [report],
-  );
-  const metrics = useMemo(
-    () => (report ? overviewMetrics(report, intlLocale) : []),
-    [intlLocale, report],
-  );
+  const structureComplete = programme.id !== null && programme.tiers.length > 0;
+  const rewardComplete = programme.reward !== null;
+  const connectionComplete = connector.connected;
+  const publishComplete = programme.hasPublishedVersion;
+  const completedCount = [
+    structureComplete,
+    rewardComplete,
+    connectionComplete,
+    publishComplete,
+  ].filter(Boolean).length;
+
+  const performance = [
+    {
+      icon: UsersRound,
+      label: "Members",
+      tone: "violet",
+      value: report ? formatExactInteger(report.membersTotal, intlLocale) : "—",
+    },
+    {
+      icon: WalletCards,
+      label: "Eligible spend",
+      tone: "green",
+      value: report
+        ? compactCurrency(
+            formatExactMinorAmount(
+              report.eligibleSpendMinor,
+              report.currencyCode,
+              report.minorUnitsPerMajor,
+              intlLocale,
+            ),
+          )
+        : "—",
+    },
+    {
+      icon: Percent,
+      label: "Redemption",
+      tone: "violet",
+      value: report
+        ? formatBasisPoints(report.redemptionRateBasisPoints, intlLocale)
+        : "—",
+    },
+    {
+      icon: Shield,
+      label: "Liability",
+      tone: "amber",
+      value: report
+        ? `${formatExactInteger(report.outstandingPoints, intlLocale)} pts`
+        : "—",
+    },
+  ] as const;
 
   return (
-    <div className="app-shell" lang={locale}>
-      <button
-        className="mobile-menu"
-        type="button"
-        aria-label={text("Open navigation")}
-        onClick={() => setSidebarOpen(true)}
+    <MerchantShell
+      activePath="/"
+      locale={locale}
+      pageTitle="Overview"
+      primaryAction={{ href: "/programme", label: "Manage programme" }}
+      tenant={tenant}
+    >
+      <main
+        className="merchant-main overview-command-center"
+        id="main-content"
+        tabIndex={-1}
       >
-        <Menu aria-hidden="true" />
-      </button>
-      <aside className={`sidebar ${sidebarOpen ? "sidebar-open" : ""}`}>
-        <button
-          className="sidebar-close"
-          type="button"
-          aria-label={text("Close navigation")}
-          onClick={() => setSidebarOpen(false)}
+        <section className="overview-intro">
+          <h1>{text(greeting)}</h1>
+          <p>
+            {text("Here’s what needs your attention in Starfiniti Loyalty.")}
+          </p>
+        </section>
+
+        <section
+          className="programme-context-strip"
+          aria-label={text("Programme context")}
         >
-          <X aria-hidden="true" />
-        </button>
-        <div className="store-switcher">
-          <div className="store-avatar">
-            {initials(tenant.organizationName) || "SF"}
-          </div>
-          <div>
-            <strong>{tenant.organizationName}</strong>
-            <span>{tenant.workspaceName}</span>
-          </div>
-        </div>
-        <div className="store-status">
-          <span className="live">
-            <i />
-            {text("Live")}
+          <strong>{programme.name}</strong>
+          <span>{tenant.workspaceName}</span>
+          <span className="ui-badge ui-badge-neutral">
+            {programme.versionNumber
+              ? `${text(programme.versionStatus === "draft" ? "Draft" : "Version")} v${programme.versionNumber}`
+              : text("No version")}
           </span>
-          <span className="draft-count">{text("Authenticated")}</span>
-        </div>
-        <nav aria-label={text("Main navigation")}>
-          {nav.map((item, index) => (
-            <div key={item.label}>
-              {item.group ? (
-                <div className="nav-group">{text(item.group)}</div>
-              ) : index === 1 ? (
-                <div className="nav-group">{text("PROGRAMME")}</div>
-              ) : null}
-              <a
-                href={merchantLocalePath(item.href, locale)}
-                className={item.active ? "nav-item active" : "nav-item"}
-                onClick={() => setSidebarOpen(false)}
-              >
-                {item.icon ? (
-                  <item.icon aria-hidden="true" />
-                ) : (
-                  <span className="nav-indent" />
-                )}
-                <span>{text(item.label)}</span>
-              </a>
-            </div>
-          ))}
-        </nav>
-        <div className="sidebar-foot">
-          <span className="reporting-label">
-            {text("Live tenant context · live reporting")}
+          <span className="programme-tier-summary">
+            {programme.tiers.slice(0, 3).map((tier, index) => {
+              const TierIcon = index === 2 ? Star : Flower2;
+              return (
+                <span key={tier.code}>
+                  <TierIcon aria-hidden="true" />
+                  {tier.name}
+                </span>
+              );
+            })}
           </span>
-          <div className="user-card">
-            <span className="user-avatar">
-              {initials(tenant.organizationName) || "SF"}
-            </span>
-            <span>
-              <strong>{text("Merchant member")}</strong>
-              <small>{tenant.role}</small>
-            </span>
-            <form action={signOut}>
-              <input name="lang" type="hidden" value={locale} />
-              <button className="sign-out" type="submit">
-                {text("Sign out")}
-              </button>
-            </form>
-          </div>
+          <Link
+            className="context-link"
+            href={merchantLocalePath("/programme", locale)}
+          >
+            {text("Open programme")} <ExternalLink aria-hidden="true" />
+          </Link>
+        </section>
+
+        <div className="launch-layout">
+          <section
+            className="ui-card launch-checklist"
+            aria-labelledby="launch-checklist-title"
+          >
+            <header className="surface-header checklist-heading">
+              <h2 id="launch-checklist-title">{text("Launch checklist")}</h2>
+              <span>
+                {completedCount} {text("of 4 complete")}
+              </span>
+            </header>
+
+            <details className="checklist-item">
+              <summary>
+                <span
+                  className={`checklist-icon ${structureComplete ? "success" : "violet"}`}
+                >
+                  {structureComplete ? (
+                    <CheckCircle2 aria-hidden="true" />
+                  ) : (
+                    <Workflow aria-hidden="true" />
+                  )}
+                </span>
+                <span className="checklist-number">1</span>
+                <span className="checklist-copy">
+                  <strong>{text("Programme structure")}</strong>
+                  <small>
+                    {text("Set up the core of your loyalty programme.")}
+                  </small>
+                </span>
+                <span
+                  className={`ui-badge ${structureComplete ? "ui-badge-success" : "ui-badge-warning"}`}
+                >
+                  {text(structureComplete ? "Complete" : "Required")}
+                </span>
+                <ChevronDown aria-hidden="true" className="checklist-chevron" />
+              </summary>
+              <div className="checklist-detail compact-detail">
+                <p>
+                  {programme.tiers.length > 0
+                    ? `${programme.tiers.length} ${text("tiers configured")}: ${programme.tiers.map((tier) => tier.name).join(", ")}.`
+                    : text(
+                        "Add at least one tier to define how members earn points.",
+                      )}
+                </p>
+                <Link
+                  className="ui-button ui-button-secondary"
+                  href={merchantLocalePath("/programme#tiers-title", locale)}
+                >
+                  {text("Review structure")}
+                </Link>
+              </div>
+            </details>
+
+            <details className="checklist-item" open={!rewardComplete}>
+              <summary>
+                <span
+                  className={`checklist-icon ${rewardComplete ? "success" : "violet"}`}
+                >
+                  {rewardComplete ? (
+                    <CheckCircle2 aria-hidden="true" />
+                  ) : (
+                    <Gift aria-hidden="true" />
+                  )}
+                </span>
+                <span className="checklist-number">2</span>
+                <span className="checklist-copy">
+                  <strong>{text("First reward")}</strong>
+                  <small>
+                    {text("Create your first reward for members to redeem.")}
+                  </small>
+                </span>
+                <span
+                  className={`ui-badge ${rewardComplete ? "ui-badge-success" : "ui-badge-warning"}`}
+                >
+                  {text(rewardComplete ? "Complete" : "Required")}
+                </span>
+                <ChevronDown aria-hidden="true" className="checklist-chevron" />
+              </summary>
+              <div className="checklist-detail reward-detail">
+                <dl>
+                  <div>
+                    <dt>{text("Reward name")}</dt>
+                    <dd>{programme.reward?.name ?? text("Not set")}</dd>
+                  </div>
+                  <div>
+                    <dt>{text("Reward type")}</dt>
+                    <dd>
+                      {programme.reward
+                        ? rewardKind(programme.reward.kind)
+                        : text("No reward added")}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>{text("Cost")}</dt>
+                    <dd>
+                      {programme.reward
+                        ? `${formatExactInteger(programme.reward.costPoints, intlLocale)} pts`
+                        : text("Not set")}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>{text("Availability")}</dt>
+                    <dd>
+                      {programme.reward
+                        ? text("Current version")
+                        : text("Not set")}
+                    </dd>
+                  </div>
+                </dl>
+                <div className="reward-callout">
+                  <p>
+                    {text(
+                      programme.reward
+                        ? "Your first reward is configured. Review its value before publishing."
+                        : "Add your first reward to give members something to redeem.",
+                    )}
+                  </p>
+                  <Link
+                    className="ui-button ui-button-primary"
+                    href={merchantLocalePath(
+                      "/programme#rewards-title",
+                      locale,
+                    )}
+                  >
+                    {text(programme.reward ? "Review reward" : "Add reward")}
+                  </Link>
+                </div>
+              </div>
+            </details>
+
+            <details className="checklist-item">
+              <summary>
+                <span
+                  className={`checklist-icon ${connectionComplete ? "success" : "violet"}`}
+                >
+                  {connectionComplete ? (
+                    <CheckCircle2 aria-hidden="true" />
+                  ) : (
+                    <Clock3 aria-hidden="true" />
+                  )}
+                </span>
+                <span className="checklist-number">3</span>
+                <span className="checklist-copy">
+                  <strong>{text("WooCommerce connection")}</strong>
+                  <small>
+                    {text("Connect your store to sync orders and customers.")}
+                  </small>
+                </span>
+                <span
+                  className={`ui-badge ${connectionComplete ? "ui-badge-success" : "ui-badge-violet"}`}
+                >
+                  {text(
+                    connectionComplete
+                      ? connector.healthy
+                        ? "Healthy"
+                        : "Attention"
+                      : "Waiting",
+                  )}
+                </span>
+                <ChevronDown aria-hidden="true" className="checklist-chevron" />
+              </summary>
+              <div className="checklist-detail compact-detail">
+                <p>
+                  {connector.displayName
+                    ? `${connector.displayName} ${text("is connected to this workspace.")}`
+                    : text("No WooCommerce store is connected yet.")}
+                </p>
+                <Link
+                  className="ui-button ui-button-secondary"
+                  href={merchantLocalePath("/operations", locale)}
+                >
+                  <PlugZap aria-hidden="true" />{" "}
+                  {text(
+                    connectionComplete ? "Open operations" : "Connect store",
+                  )}
+                </Link>
+              </div>
+            </details>
+
+            <details className="checklist-item">
+              <summary>
+                <span
+                  className={`checklist-icon ${publishComplete ? "success" : "danger"}`}
+                >
+                  {publishComplete ? (
+                    <Rocket aria-hidden="true" />
+                  ) : (
+                    <Ban aria-hidden="true" />
+                  )}
+                </span>
+                <span className="checklist-number">4</span>
+                <span className="checklist-copy">
+                  <strong>{text("Publish programme")}</strong>
+                  <small>{text("Review and publish your programme.")}</small>
+                </span>
+                <span
+                  className={`ui-badge ${publishComplete ? "ui-badge-success" : "ui-badge-danger"}`}
+                >
+                  {text(
+                    publishComplete
+                      ? "Published"
+                      : rewardComplete
+                        ? "Ready to review"
+                        : "Blocked",
+                  )}
+                </span>
+                <ChevronDown aria-hidden="true" className="checklist-chevron" />
+              </summary>
+              <div className="checklist-detail compact-detail">
+                <p>
+                  {text(
+                    publishComplete
+                      ? "A published version is live. Future edits create a new immutable draft."
+                      : "Review the current draft and its immutable fingerprint before publishing.",
+                  )}
+                </p>
+                <Link
+                  className="ui-button ui-button-secondary"
+                  href={merchantLocalePath("/programme", locale)}
+                >
+                  {text("Review programme")}
+                </Link>
+              </div>
+            </details>
+          </section>
+
+          <aside
+            className="ui-card performance-rail"
+            aria-labelledby="performance-title"
+          >
+            <header className="surface-header performance-heading">
+              <div>
+                <h2 id="performance-title">{text("Performance")}</h2>
+                <span>{text("Authoritative reporting")}</span>
+              </div>
+              <label className="compact-range-select">
+                <span className="sr-only">{text("Date range")}</span>
+                <select
+                  aria-busy={rangePending}
+                  disabled={rangePending}
+                  value={String(range)}
+                  onChange={(event) => {
+                    const parameters = new URLSearchParams(searchParams);
+                    parameters.set("range", event.target.value);
+                    startRangeTransition(() => {
+                      router.replace(`${pathname}?${parameters.toString()}`);
+                    });
+                  }}
+                >
+                  <option value="7">7d</option>
+                  <option value="30">30d</option>
+                  <option value="90">90d</option>
+                </select>
+              </label>
+            </header>
+            <div className="performance-list">
+              {performance.map((metric) => (
+                <article key={metric.label}>
+                  <span className={`performance-icon ${metric.tone}`}>
+                    <metric.icon aria-hidden="true" />
+                  </span>
+                  <span>
+                    <small>{text(metric.label)}</small>
+                    <strong>{metric.value}</strong>
+                  </span>
+                </article>
+              ))}
+            </div>
+          </aside>
         </div>
-      </aside>
 
-      {sidebarOpen ? (
-        <button
-          className="scrim"
-          aria-label={text("Close navigation")}
-          onClick={() => setSidebarOpen(false)}
-        />
-      ) : null}
-
-      <main id="main-content" tabIndex={-1}>
-        <header className="topbar">
-          <div className="top-actions">
-            <label className="range-select">
-              <span className="sr-only">{text("Date range")}</span>
-              <select
-                aria-busy={rangePending}
-                disabled={rangePending}
-                value={String(range)}
-                onChange={(event) => {
-                  const parameters = new URLSearchParams(searchParams);
-                  parameters.set("range", event.target.value);
-                  startRangeTransition(() => {
-                    router.replace(`${pathname}?${parameters.toString()}`);
-                  });
-                }}
-              >
-                <option value="7">{text("Last 7 days")}</option>
-                <option value="30">{text("Last 30 days")}</option>
-                <option value="90">{text("Last 90 days")}</option>
-              </select>
-            </label>
-          </div>
-        </header>
-
-        <section className="content">
-          <div className="page-heading">
-            <div>
-              <h1>{text("Overview")}</h1>
-              <p>
-                {tenant.programmeName} · {tenant.workspaceName} ·
-                Europe/Ljubljana
-              </p>
-            </div>
-            <div className="heading-actions">
-              <a
-                className="primary"
-                href={merchantLocalePath("/programme", locale)}
-              >
-                {text("Manage programme")}
-              </a>
-            </div>
-          </div>
-
-          {report ? (
-            <div className="live-report-banner" role="status">
-              {locale === "sl-SI"
-                ? "Agregati organizacije, delovnega prostora in programa v živo na dan "
-                : "Live tenant, workspace, and programme aggregates as of "}
-              {new Intl.DateTimeFormat(intlLocale, {
-                dateStyle: "medium",
-                timeStyle: "short",
-                timeZone: "Europe/Ljubljana",
-              }).format(new Date(report.asOf))}
-              {locale === "sl-SI"
-                ? ". Neobdelana naročila, identifikatorji strank in vrstice glavne knjige ostanejo samo na strežniku."
-                : ". Raw orders, customer identifiers, and ledger rows remain server-only."}
-            </div>
+        <section
+          className="ui-card recent-activity"
+          aria-labelledby="recent-activity-title"
+        >
+          <header className="surface-header">
+            <h2 id="recent-activity-title">{text("Recent activity")}</h2>
+          </header>
+          {programme.audit.length > 0 ? (
+            <ol>
+              {programme.audit.slice(0, 3).map((event, index) => (
+                <li key={event.id}>
+                  <span
+                    className={`activity-icon ${index === 0 ? "blue" : "green"}`}
+                  >
+                    {index === 0 ? (
+                      <FileText aria-hidden="true" />
+                    ) : (
+                      <Sparkles aria-hidden="true" />
+                    )}
+                  </span>
+                  <span className="activity-copy">
+                    <strong>
+                      {event.action === "programme.draft.create" &&
+                      programme.versionNumber
+                        ? `${text("Draft")} v${programme.versionNumber} ${text("saved")}`
+                        : text(auditLabel(event.action))}
+                    </strong>
+                    <small>
+                      {event.action === "programme.create" &&
+                      programme.versionNumber
+                        ? `${text("Draft")} v${programme.versionNumber} ${text("created")}.`
+                        : text(
+                            index === 0
+                              ? "Programme settings updated."
+                              : "Programme activity recorded.",
+                          )}
+                    </small>
+                  </span>
+                  <time dateTime={event.createdAt}>
+                    {new Intl.DateTimeFormat(intlLocale, {
+                      dateStyle: "medium",
+                      timeZone: "Europe/Ljubljana",
+                    }).format(new Date(event.createdAt))}
+                  </time>
+                  <span className="activity-actor">
+                    {text("Merchant member")}
+                  </span>
+                </li>
+              ))}
+            </ol>
           ) : (
-            <div className="preview-banner" role="note">
-              {locale === "sl-SI"
-                ? "Poročanje se bo aktiviralo, ko bo organizacija imela aktiven delovni prostor in dodeljeno skupino programa. Ponazoritvene vrednosti niso prikazane."
-                : "Reporting will activate after this organization has an active workspace and programme-group assignment. No illustrative values are shown."}
+            <div className="activity-empty">
+              <Sparkles aria-hidden="true" />
+              <span>{text("Programme activity will appear here.")}</span>
             </div>
           )}
-
-          {report ? (
-            <>
-              <div className="metrics-grid">
-                {metrics.map((metric) => (
-                  <article className="metric-card" key={metric.label}>
-                    <p>
-                      {text(metric.label)}
-                      {metric.info ? (
-                        <HelpCircle
-                          className="metric-info"
-                          aria-hidden="true"
-                        />
-                      ) : null}
-                    </p>
-                    <strong>{metric.value}</strong>
-                    {metric.note ? (
-                      <span className="metric-note">{text(metric.note)}</span>
-                    ) : null}
-                    {metric.delta ? (
-                      <span className={`metric-delta ${metric.tone}`}>
-                        {metric.delta} <em>{text(metric.suffix ?? "")}</em>
-                      </span>
-                    ) : null}
-                  </article>
-                ))}
-              </div>
-
-              <article className="chart-card">
-                <div className="chart-header">
-                  <div>
-                    <strong>{text("New members")}</strong>
-                    <span>
-                      {formatExactInteger(report.membersNew, intlLocale)}{" "}
-                      {locale === "sl-SI"
-                        ? "v tem obdobju · dnevni UTC intervali"
-                        : "this period · daily UTC buckets"}
-                    </span>
-                  </div>
-                  <div className="legend">
-                    <span>
-                      <i className="current" />
-                      {text("This period")}
-                    </span>
-                    <span>
-                      <i />
-                      {text("Previous")}
-                    </span>
-                  </div>
-                </div>
-                <div
-                  className="chart-wrap"
-                  aria-label={text("New members trend chart")}
-                >
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart
-                      data={chartData}
-                      margin={{ top: 8, right: 8, bottom: 0, left: -24 }}
-                    >
-                      <CartesianGrid vertical={false} stroke="#f1f0ee" />
-                      <XAxis
-                        dataKey="day"
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fill: "#a8a29e", fontSize: 11 }}
-                      />
-                      <YAxis
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fill: "#a8a29e", fontSize: 11 }}
-                      />
-                      <Tooltip />
-                      <Area
-                        type="monotone"
-                        dataKey="previous"
-                        stroke="#d6d3d1"
-                        fill="none"
-                        strokeWidth={2}
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="members"
-                        stroke="#4f46e5"
-                        fill="#4f46e5"
-                        fillOpacity={0.08}
-                        strokeWidth={2}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </article>
-            </>
-          ) : null}
+          <Link
+            className="activity-link"
+            href={merchantLocalePath("/programme#audit-title", locale)}
+          >
+            {text("View all activity")}
+          </Link>
         </section>
       </main>
-    </div>
+    </MerchantShell>
   );
 }
