@@ -75,6 +75,15 @@ export async function updateSupabaseSession(
   request: NextRequest,
 ): Promise<NextResponse> {
   const requestHeaders = localeRequestHeaders(request);
+  if (request.nextUrl.pathname === "/auth/callback") {
+    const callbackResponse = NextResponse.next({
+      request: { headers: requestHeaders },
+    });
+    callbackResponse.headers.set("Cache-Control", "private, no-store");
+    callbackResponse.headers.set("Vary", "Cookie");
+    callbackResponse.headers.set("Referrer-Policy", "no-referrer");
+    return callbackResponse;
+  }
   if (request.nextUrl.pathname.startsWith("/loyalty/")) {
     const publicResponse = NextResponse.next({
       request: { headers: requestHeaders },

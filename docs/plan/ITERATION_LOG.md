@@ -356,3 +356,4 @@
 - A real owner login reached Authentik and Supabase successfully but the Next.js PKCE exchange failed, then its error redirect exposed the internal `0.0.0.0:3000` bind address.
 - Enabled flow-specific verifier correlation through the reserved `sb_flow_id`, passed only bounded flow identifiers into the one-time code exchange, and hardened production server auth cookies as HTTP-only, Secure, SameSite=Lax.
 - Anchored every callback success and failure to `DASHBOARD_PUBLIC_ORIGIN`, rejected unspecified bind-address origins, and added route/unit coverage proving internal request origins cannot escape into browser navigation.
+- The first deployed correction eliminated the bind-address redirect but live browser verification proved the exchange still stopped before Supabase's token endpoint. Excluded the one-time callback route from proxy session refresh so its pending verifier cookies reach the route unchanged.

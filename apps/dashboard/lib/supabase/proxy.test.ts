@@ -24,6 +24,27 @@ describe("public loyalty routing", () => {
   });
 });
 
+describe("workforce authentication callback routing", () => {
+  it("preserves pending PKCE cookies for the callback route", async () => {
+    const request = new NextRequest(
+      "https://loyalty.example.test/auth/callback?code=one-time-code&sb_flow_id=bc0f26282e6abeac61d7b21c49683e6a",
+      {
+        headers: {
+          cookie:
+            "sb-api-auth-token-flow-bc0f26282e6abeac61d7b21c49683e6a-code-verifier=base64-verifier",
+        },
+      },
+    );
+    const response = await updateSupabaseSession(request);
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
+    expect(response.headers.get("vary")).toBe("Cookie");
+    expect(response.headers.get("referrer-policy")).toBe("no-referrer");
+    expect(response.cookies.getAll()).toEqual([]);
+  });
+});
+
 describe("customer export reauthentication routing", () => {
   it("permits only the exact password reauthentication purpose on login", () => {
     expect(isCustomerExportReauthentication("/login", "customer-export")).toBe(
