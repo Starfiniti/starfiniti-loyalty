@@ -7,6 +7,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
+import { isIP } from "node:net";
 import { isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -17,6 +18,7 @@ const requiredVariables = [
   "NEXT_PUBLIC_SUPABASE_URL",
   "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
   "DASHBOARD_PUBLIC_ORIGIN",
+  "DASHBOARD_BIND_ADDRESS",
   "DATABASE_URL",
   "LOYALTY_WORKER_DATABASE_URL",
   "WOOCOMMERCE_SIGNING_MATERIAL_PATH",
@@ -26,6 +28,7 @@ const referencePattern =
   /^pool:[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}:v1$/u;
 const immutableImagePattern =
   /^(?:[a-z0-9.-]+(?::[0-9]+)?\/)?[a-z0-9._/-]+(?:@sha256:[0-9a-f]{64}|:[0-9a-f]{40})$/u;
+const dashboardRuntimeUid = 1001;
 
 function fail(message) {
   throw new Error(`Deployment preflight failed: ${message}`);
@@ -120,6 +123,11 @@ function validateSigningPool(path, enforcePermissions) {
   if (enforcePermissions && (fileStatus.mode & 0o077) !== 0) {
     fail("WooCommerce signing-key pool must not grant group or other access");
   }
+  if (enforcePermissions && fileStatus.uid !== dashboardRuntimeUid) {
+    fail(
+      `WooCommerce signing-key pool must be owned by dashboard runtime UID ${dashboardRuntimeUid}`,
+    );
+  }
   let parsed;
   try {
     parsed = JSON.parse(raw);
@@ -166,6 +174,14 @@ export function validateDeploymentConfiguration(
   }
   if (environment.COMPOSE_PROJECT_NAME !== "starfiniti-loyalty") {
     fail("COMPOSE_PROJECT_NAME must remain starfiniti-loyalty");
+  }
+  if (
+    isIP(environment.DASHBOARD_BIND_ADDRESS) !== 4 ||
+    environment.DASHBOARD_BIND_ADDRESS === "0.0.0.0"
+  ) {
+    fail(
+      "DASHBOARD_BIND_ADDRESS must be one explicit non-wildcard IPv4 address",
+    );
   }
   for (const name of ["DASHBOARD_IMAGE", "WORKER_IMAGE"]) {
     if (!immutableImagePattern.test(environment[name])) {
@@ -279,6 +295,7 @@ function runSelfTest() {
     NEXT_PUBLIC_SUPABASE_URL: "https://api.loyalty.invalid",
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: `sb_publishable_${"p".repeat(32)}`,
     DASHBOARD_PUBLIC_ORIGIN: "https://loyalty.invalid",
+    DASHBOARD_BIND_ADDRESS: "127.0.0.1",
     DATABASE_URL:
       "postgresql://loyalty_app:runtime-password@10.0.0.2:5432/postgres",
     LOYALTY_WORKER_DATABASE_URL:
@@ -363,7 +380,7 @@ function runSelfTest() {
     rmSync(directory, { recursive: true, force: true });
   }
   console.log(
-    "Validated deployment asset parity, immutable selectors, credential separation, HTTPS origins, signing-pool structure, and redacted failures.",
+    "Validated deployment asset parity, immutable selectors, credential separation, HTTPS origins, explicit dashboard binding, signing-pool structure/ownership, and redacted failures.",
   );
 }
 

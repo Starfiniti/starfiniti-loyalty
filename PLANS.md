@@ -77,7 +77,7 @@ Phase 9 — merchant administration and customer experience. Shopify Phase 8 rem
 - Exact-head run `31629852692` passed the hosted customer-export baseline, twenty-three migrations with 953 pgTAP assertions plus concurrency/property probes, 141 unit tests, and all four localized WooCommerce runtime variants.
 - Guided WooCommerce provisioning now lets a live tenant owner/admin create the first active connection for a published programme and copy one exact setup package into WordPress. The server consumes a unique deployment-managed signing-key reference; the browser Data API, audit trail, and plugin diagnostics never expose that reference.
 - Exact-head run `31633310240` passed the guided-provisioning baseline, twenty-four migrations with 997 pgTAP assertions plus concurrency/property probes, 146 unit tests, and package import in all four localized WooCommerce runtime variants.
-- The deployment-artifact slice now builds both digest-pinned dashboard and worker Dockerfiles on every pull request. An exact semantic-version tag reruns the baseline and disposable database gate before publishing commit-SHA/version GHCR images and a checksummed WooCommerce plugin release; no release tag has been created yet.
+- The deployment-artifact slice builds both digest-pinned dashboard and worker Dockerfiles on every pull request. Release `v0.1.0` reran the baseline and disposable database gate before publishing commit-SHA/version GHCR images and a checksummed WooCommerce plugin archive.
 - Exact-head run `31634024586` passed all seven jobs, including real dashboard/worker Docker builds, the 24-migration/997-assertion database gate, and all four localized WooCommerce runtime variants.
 - The deployment preflight now validates a real off-repository environment and signing pool without printing values. It fails on template placeholders, floating/non-SHA images, invalid or shared database credentials, noncanonical HTTPS origins, malformed pool entries, and group/other-readable key files on Linux.
 - Dashboard readiness now fails closed unless the configured runtime login has both exact ingestion and provisioning privileges and the read-only signing pool contains at least one valid entry. Exact-head run `31635189128` passed all seven jobs with 147 unit tests and 998 pgTAP assertions.
@@ -94,18 +94,18 @@ Phase 9 — merchant administration and customer experience. Shopify Phase 8 rem
 
 ## Active work
 
-- `P9-MERCHANT-HUB` (in progress): the Auth/RLS shell, guided initial-programme and WooCommerce-connector provisioning, audited programme editor, exact filtered customer wallet/ledger reads, safe connector queue operations, individual and exact-preview bulk value adjustments, signed source reconciliation, real Overview reporting, localized route-wide keyboard bypass, sanitized support diagnostics, complete English/Slovenian launch administration, localized WooCommerce and hosted customer journeys, controlled experience themes/translations, guest-safe hosted loyalty, signed authenticated member delivery, controlled native-coupon redemption, direct audited customer export, WooCommerce-originated customer erasure, dependency-aware readiness, and audited initial-tenant bootstrap are implemented; final review/release and live operational evidence follow.
+- `P9-MERCHANT-HUB` (in progress): repository implementation and release hardening are complete and `v0.1.0` is live on Proxmox. The remaining launch work is to create the approved first Auth owner, bootstrap the tenant/programme, connect the real WooCommerce store, and execute authenticated and outage-recovery smoke tests.
 
 ## Next safe tasks
 
-1. Complete final human review and merge the adversarially verified Phase 9 repository work.
-2. Create the first approved semantic-version release, then complete production deployment and recovery evidence when the final infrastructure inputs are available.
+1. Create the approved first Auth owner and bootstrap the initial tenant/programme.
+2. Connect the real WooCommerce store, then execute authenticated connector and outage-recovery smoke tests.
+3. Complete a clean-room PostgreSQL start plus WAL replay rehearsal and record measured RPO/RTO.
 
 ## Dependencies and blockers
 
-- Docker is not installed on this Windows workstation; GitHub Actions is the verified Linux/Docker database runner.
-- Direct Proxmox SSH is unavailable: the public alias rejects the configured keys, the VPN alias times out, and the tested jump-host route cannot reach the private alias.
-- Proxmox deployment ultimately needs a working SSH route plus host addresses, DNS, TLS issuer, off-host backup target, production credentials, and the approved first Auth user UUID. Tenant membership itself is now handled by the audited bootstrap command. These inputs do not block repository implementation or disposable CI verification.
+- Production SSH, DNS, TLS, isolated VMs, pinned services, secrets, and encrypted off-host backup targets are configured and verified.
+- The approved first Auth owner email and the real WooCommerce store access remain product-owner inputs. Tenant membership itself is handled by the audited bootstrap command.
 
 ## Decisions awaiting approval
 

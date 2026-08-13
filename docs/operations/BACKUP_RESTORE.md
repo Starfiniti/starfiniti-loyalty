@@ -59,3 +59,15 @@ VM snapshots are useful recovery aids but are not authoritative database backups
 ## Owner inputs deferred to deployment
 
 The off-host provider/bucket, encryption-key custodian, retention/legal policy, and Proxmox storage layout require real infrastructure access. Templates and tests can be completed without those values; fabricated production destinations are forbidden.
+
+## Production evidence — 2026-08-13
+
+The first `v0.1.0` deployment uses the following live recovery layers:
+
+- PostgreSQL `archive_mode=on`, `archive_timeout=60s`, and an owner-only WAL archive outside `PGDATA`.
+- A daily physical `pg_basebackup` timer with compressed-backup validation and three-day local staging retention.
+- An encrypted off-host Borg archive of the current base/WAL set every three minutes. Access uses a forced-command, forwarding-disabled pull key; the database VM does not hold the Borg repository credential.
+- Borg retention timers keep 48 hourly, 35 daily, and 12 monthly PostgreSQL recovery points.
+- A separate nightly encrypted Borg VM archive includes both application and Supabase VMs; it is supplementary to database-native PITR.
+
+The initial base backup was recovered from the off-host archive and passed `pg_verifybackup` with the exact pinned `supabase/postgres:17.6.1.136` tooling. This proves archive readability, nested-stream recovery, and physical-backup integrity. It is not yet the full 60-minute clean-room service drill: starting the isolated restored stack, replaying WAL to a chosen timestamp, reattaching encrypted secret escrow, and running Auth/RLS/ledger/application smoke remain required before closing R-004.

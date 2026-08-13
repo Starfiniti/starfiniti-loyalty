@@ -41,9 +41,9 @@ Populate secret-managed environment files on the target hosts; never commit them
 
 Secret files are owner-readable only, excluded from backups unless encrypted escrow is intended, redacted from Compose inspection/support output, and rotated independently. Browser configuration contains only the public URL and publishable key.
 
-Generate the WooCommerce signing-key pool on the application host with `npm run woocommerce:keys -- --output <secret-path> --count <n>` and mount it read-only at the configured dashboard secret path. Use `--append` to preserve assigned references while adding capacity; the generator rejects replacement of existing values and performs an atomic file swap. Recreate the dashboard container after append so the bind mount observes the replacement inode. Back up the pool only through encrypted secret escrow: database rows contain references, not recoverable signing keys.
+Generate the WooCommerce signing-key pool on the application host with `npm run woocommerce:keys -- --output <secret-path> --count <n>` and mount it read-only at the configured dashboard secret path. The hardened dashboard image runs as UID/GID `1001`, so the host file must be owned by `1001:1001` with mode `0400`; root retains administrative access while every other non-root identity remains denied. Use `--append` to preserve assigned references while adding capacity; the generator rejects replacement of existing values and performs an atomic file swap. Restore owner `1001:1001` and mode `0400`, then recreate the dashboard container after append so the bind mount observes the replacement inode. Back up the pool only through encrypted secret escrow: database rows contain references, not recoverable signing keys.
 
-Before applying Compose, run `npm run deploy:preflight -- --env /absolute/path/to/starfiniti.env` from the matching release source. The command never prints environment or key values. It requires exact environment/Compose parity, populated values, commit-SHA image tags or digests, distinct image repositories, canonical HTTPS origins, separate nonadministrative PostgreSQL logins, and a valid absolute signing-pool file. On Linux it also rejects any group/other permission bit on that file. Passing this offline preflight does not prove DNS, TLS, connectivity, database role membership, package visibility, or backup recovery; those remain live deployment checks.
+Before applying Compose, run `npm run deploy:preflight -- --env /absolute/path/to/starfiniti.env` from the matching release source. The command never prints environment or key values. It requires exact environment/Compose parity, populated values, commit-SHA image tags or digests, distinct image repositories, canonical HTTPS origins, one explicit non-wildcard dashboard IPv4 binding, separate nonadministrative PostgreSQL logins, and a valid absolute signing-pool file. On Linux it also rejects any group/other permission bit or an owner other than dashboard UID `1001`. Passing this offline preflight does not prove DNS, TLS, connectivity, database role membership, package visibility, or backup recovery; those remain live deployment checks.
 
 ## Merchant authentication
 
@@ -65,6 +65,10 @@ Before applying Compose, run `npm run deploy:preflight -- --env /absolute/path/t
 7. Retain prior images/configuration for rollback. Contract/destructive schema cleanup occurs only in a later release.
 
 Supabase upgrades are separate change windows: restore rehearsal, release-note/breaking-change review, staged Compose diff, data backup, upgrade, routing/Auth/database tests, and documented rollback/forward-fix.
+
+After an in-place `db` container recreation, wait for PostgreSQL health and recreate `supavisor` before resuming application traffic. Supavisor can otherwise retain a stale Docker DNS result for the replaced database container and return `:nxdomain` until it restarts.
+
+The pinned PostgreSQL 17.6 self-hosted image can terminate a session on `GRANT <role> TO current_user`, matching [Supabase CLI issue 5912](https://github.com/supabase/cli/issues/5912). Do not repeatedly retry a crashing production migration. For a fresh deployment that reproduces the issue, use a reviewed deployment copy that substitutes the known explicit migration administrator (`postgres` in this stack), record source/deployed hashes and the upstream issue, and retain the release source unchanged. Rehearse the same path before any upgrade or non-empty deployment.
 
 ## Health and readiness
 

@@ -15,7 +15,7 @@ services:
     secrets:
       - woocommerce_signing_material
     ports:
-      - "127.0.0.1:3000:3000"
+      - "${DASHBOARD_BIND_ADDRESS:?set a loopback or private IPv4 address}:3000:3000"
     security_opt:
       - no-new-privileges:true
     cap_drop:
