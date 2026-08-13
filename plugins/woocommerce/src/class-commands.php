@@ -38,6 +38,7 @@ final class Commands
             'connectionId' => Settings::connectionId(),
             'requestId' => wp_generate_uuid4(),
             'batchSize' => 10,
+            'capabilities' => ['coupon.issue.v2'],
         ]);
         if (is_wp_error($response) || 200 !== wp_remote_retrieve_response_code($response)) {
             return;
@@ -60,13 +61,19 @@ final class Commands
     {
         $payload = is_array($command['payload'] ?? null) ? $command['payload'] : [];
         $commandId = sanitize_text_field((string) ($command['commandId'] ?? ''));
-        if (! wp_is_uuid($commandId)) {
+        $payloadVersion = (string) ($command['payloadVersion'] ?? '');
+        if (
+            '1' !== ($command['version'] ?? null)
+            || ! wp_is_uuid($commandId)
+            || ! in_array($payloadVersion, ['v1', 'v2'], true)
+        ) {
             return self::failure('dead_letter', 'invalid_command_payload');
         }
         if ('woocommerce.order.reconcile' === ($command['topic'] ?? null)) {
             $rawOrderId = (string) ($payload['orderId'] ?? '');
             if (
-                'reconcile_order' !== ($payload['kind'] ?? null)
+                'v1' !== $payloadVersion
+                || 'reconcile_order' !== ($payload['kind'] ?? null)
                 || ! preg_match('/^[1-9][0-9]{0,18}$/', $rawOrderId)
                 || (string) (int) $rawOrderId !== $rawOrderId
             ) {
@@ -96,9 +103,12 @@ final class Commands
         }
         try {
             if ('woocommerce.coupon.issue' === ($command['topic'] ?? null)) {
-                return self::issue($commandId, $reservationId, $code, $payload);
+                return self::issue($commandId, $reservationId, $code, $payloadVersion, $payload);
             }
             if ('woocommerce.coupon.cancel' === ($command['topic'] ?? null)) {
+                if ('v1' !== $payloadVersion) {
+                    return self::failure('dead_letter', 'unsupported_payload_version');
+                }
                 return self::cancel($reservationId, $code);
             }
             return self::failure('dead_letter', 'unsupported_command_topic');
@@ -112,6 +122,7 @@ final class Commands
         string $commandId,
         string $reservationId,
         string $code,
+        string $payloadVersion,
         array $payload
     ): array {
         $existingId = wc_get_coupon_id_by_code($code);
@@ -128,7 +139,11 @@ final class Commands
         $externalCustomerId = sanitize_text_field((string) ($payload['externalCustomerId'] ?? ''));
         $expiresAt = strtotime((string) ($payload['expiresAt'] ?? ''));
         $reward = is_array($payload['reward'] ?? null) ? $payload['reward'] : [];
-        if ('' === $externalCustomerId || false === $expiresAt || $expiresAt <= time()) {
+        if (
+            null === self::numericId($externalCustomerId)
+            || false === $expiresAt
+            || $expiresAt <= time()
+        ) {
             return self::failure('dead_letter', 'invalid_coupon_constraints');
         }
         $coupon = new \WC_Coupon();
@@ -163,8 +178,24 @@ final class Commands
             $coupon->set_discount_type('fixed_cart');
             $coupon->set_amount('0');
             $coupon->set_free_shipping(true);
+        } elseif ('free_product' === $kind && 'v2' === $payloadVersion) {
+            $productId = self::numericId((string) ($reward['productId'] ?? ''));
+            $quantity = (int) ($reward['quantity'] ?? 0);
+            if (null === $productId || $quantity < 1 || $quantity > 10 || ! wc_get_product($productId)) {
+                return self::failure('dead_letter', 'invalid_free_product');
+            }
+            $coupon->set_discount_type('percent');
+            $coupon->set_amount('100');
+            $coupon->set_product_ids([$productId]);
+            $coupon->set_limit_usage_to_x_items($quantity);
         } else {
             return self::failure('dead_letter', 'unsupported_reward_kind');
+        }
+        if ('v2' === $payloadVersion) {
+            $restrictionError = self::applyRestrictions($coupon, $reward, $kind);
+            if (null !== $restrictionError) {
+                return self::failure('dead_letter', $restrictionError);
+            }
         }
         $coupon->update_meta_data('_starfiniti_command_id', $commandId);
         $coupon->update_meta_data('_starfiniti_reservation_id', $reservationId);
@@ -252,9 +283,10 @@ final class Commands
         ]);
     }
 
-    private static function minorToDecimal(string $minor, int $digits): ?string
+    private static function minorToDecimal(string $minor, int $digits, bool $allowZero = false): ?string
     {
-        if (! preg_match('/^[1-9][0-9]*$/', $minor) || $digits < 0 || $digits > 6) {
+        $pattern = $allowZero ? '/^(?:0|[1-9][0-9]*)$/' : '/^[1-9][0-9]*$/';
+        if (! preg_match($pattern, $minor) || $digits < 0 || $digits > 6) {
             return null;
         }
         if (0 === $digits) {
@@ -267,6 +299,116 @@ final class Commands
     private static function basisPointsToPercent(int $basisPoints): string
     {
         return intdiv($basisPoints, 100) . '.' . str_pad((string) ($basisPoints % 100), 2, '0', STR_PAD_LEFT);
+    }
+
+    private static function applyRestrictions(\WC_Coupon $coupon, array $reward, string $kind): ?string
+    {
+        $restrictions = is_array($reward['restrictions'] ?? null)
+            ? $reward['restrictions']
+            : null;
+        if (null === $restrictions) {
+            return 'invalid_coupon_restrictions';
+        }
+        foreach ([
+            'minimumSpendMinor', 'currencyMinorUnitDigits', 'productIds',
+            'excludedProductIds', 'categoryIds', 'excludedCategoryIds',
+            'excludeSaleItems', 'stacking',
+        ] as $field) {
+            if (! array_key_exists($field, $restrictions)) {
+                return 'invalid_coupon_restrictions';
+            }
+        }
+        if (! is_int($restrictions['currencyMinorUnitDigits'])) {
+            return 'invalid_coupon_restrictions';
+        }
+        $digits = $restrictions['currencyMinorUnitDigits'];
+        if (
+            $digits < 0
+            || $digits > 6
+            || (
+                in_array($kind, ['fixed_discount', 'percentage_discount'], true)
+                && (int) ($reward['currencyMinorUnitDigits'] ?? -1) !== $digits
+            )
+        ) {
+            return 'invalid_coupon_restrictions';
+        }
+        $minimumMinor = $restrictions['minimumSpendMinor'];
+        if (null !== $minimumMinor) {
+            $minimum = self::minorToDecimal((string) $minimumMinor, $digits, true);
+            if (null === $minimum) {
+                return 'invalid_coupon_restrictions';
+            }
+            $coupon->set_minimum_amount($minimum);
+        }
+        $productIds = self::numericIds($restrictions['productIds']);
+        $excludedProductIds = self::numericIds($restrictions['excludedProductIds']);
+        $categoryIds = self::numericIds($restrictions['categoryIds']);
+        $excludedCategoryIds = self::numericIds($restrictions['excludedCategoryIds']);
+        if (
+            null === $productIds
+            || null === $excludedProductIds
+            || null === $categoryIds
+            || null === $excludedCategoryIds
+            || array_intersect($productIds, $excludedProductIds)
+            || array_intersect($categoryIds, $excludedCategoryIds)
+        ) {
+            return 'invalid_coupon_restrictions';
+        }
+        if (
+            'free_product' === $kind
+            && (
+                [] !== $productIds
+                || [] !== $excludedProductIds
+                || [] !== $categoryIds
+                || [] !== $excludedCategoryIds
+            )
+        ) {
+            return 'invalid_free_product_restrictions';
+        }
+        if ('free_product' !== $kind) {
+            $coupon->set_product_ids($productIds);
+            $coupon->set_excluded_product_ids($excludedProductIds);
+            $coupon->set_product_categories($categoryIds);
+            $coupon->set_excluded_product_categories($excludedCategoryIds);
+        }
+        if (! is_bool($restrictions['excludeSaleItems'])) {
+            return 'invalid_coupon_restrictions';
+        }
+        $coupon->set_exclude_sale_items($restrictions['excludeSaleItems']);
+        if (! in_array($restrictions['stacking'], ['exclusive', 'combinable'], true)) {
+            return 'invalid_coupon_restrictions';
+        }
+        $coupon->set_individual_use('exclusive' === $restrictions['stacking']);
+        return null;
+    }
+
+    /** @param mixed $values @return ?array<int,int> */
+    private static function numericIds($values): ?array
+    {
+        if (! is_array($values) || count($values) > 100) {
+            return null;
+        }
+        $ids = [];
+        foreach ($values as $value) {
+            if (! is_string($value)) {
+                return null;
+            }
+            $id = self::numericId($value);
+            if (null === $id) {
+                return null;
+            }
+            $ids[] = $id;
+        }
+        return array_values(array_unique($ids));
+    }
+
+    private static function numericId(string $value): ?int
+    {
+        if (! preg_match('/^[1-9][0-9]{0,19}$/', $value)) {
+            return null;
+        }
+        $id = (int) $value;
+        return $id > 0 && (string) $id === $value ? $id : null;
     }
 
     /** @return array{outcome:string,resultReference:?string,errorCode:?string,retryDelaySeconds:int} */

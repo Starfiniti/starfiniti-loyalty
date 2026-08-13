@@ -14,7 +14,7 @@
 npm run db:verify
 ```
 
-This requires Docker or Podman. It starts only the Supabase PostgreSQL service, applies migrations and seed, performs a destructive local reset to replay the chain from scratch, runs every SQL file in `supabase/tests` through pgTAP, and executes the two-session ledger concurrency/property probe. It never links to or mutates a remote project.
+This requires Docker or Podman. It starts only the Supabase PostgreSQL service, applies migrations and seed, performs a destructive local reset to replay the chain from scratch, runs every SQL file in `supabase/tests` through pgTAP, and executes the two-session ledger plus reward-capacity concurrency/property probes. It never links to or mutates a remote project.
 
 Clean up local containers and their test volumes with:
 
@@ -42,7 +42,11 @@ The last two checks are durable guards: they fail automatically when future migr
 
 `initial_tenant_bootstrap_test.sql` adds 30 assertions for the deployment-only function boundary, absent browser/runtime/worker privileges, atomic tenant scope and owner creation, exact idempotent retry, changed-request and existing-slug denial, existing Auth identity, canonical inputs, minimized immutable audit evidence, and separation from authenticated programme launch.
 
+`expanded_reward_fulfilment_test.sql` adds 90 assertions for V2 reward publication, entitlement denial, WooCommerce capability negotiation, atomic points/quantity/budget reservation, per-customer limits, native capture, manual-case role separation, exactly-once fulfilment capture, definitive-rejection compensation, uncertainty preservation, private source tables, immutable transitions, and tenant isolation.
+
 `scripts/verify-ledger-concurrency.mjs` opens two independent PostgreSQL sessions. One holds an 80-point reservation on a 100-point wallet while the other competes for the same 80 points. Exactly one commits. It then runs 20 deterministic adjust/reserve/capture/cancel sequences with retry probes and verifies every transaction remains balanced and every projection remains exact.
+
+`scripts/verify-reward-capacity-concurrency.mjs` opens two independent PostgreSQL sessions against one published V2 reward with one remaining global unit. Exactly one reservation commits, the losing transaction has no ledger/reservation/outbox residue, an exact retry remains idempotent, and the allocation counters reconcile to the accepted reservation.
 
 ## CI
 

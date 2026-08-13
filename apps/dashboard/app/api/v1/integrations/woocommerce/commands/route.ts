@@ -1,7 +1,7 @@
 import {
   verifyWooCommerceDelivery,
   wooCommerceCommandRequestV1,
-  wooCommerceConnectorCommandEnvelopeV1,
+  wooCommerceConnectorCommandEnvelope,
   type WooCommerceSignatureHeaders,
 } from "@starfiniti/contracts";
 import { getDatabase } from "@/lib/server/database";
@@ -101,12 +101,13 @@ export async function POST(request: Request): Promise<Response> {
       from loyalty_private.claim_woocommerce_commands(
         ${connection.public_id}::uuid,
         ${parsed.data.batchSize},
-        60
+        60,
+        ${sql.array(parsed.data.capabilities)}::text[]
       )
     `;
     const commands = [];
     for (const row of rows) {
-      const command = wooCommerceConnectorCommandEnvelopeV1.safeParse({
+      const command = wooCommerceConnectorCommandEnvelope.safeParse({
         version: "1",
         commandId: row.command_id,
         connectionId: row.connection_id,

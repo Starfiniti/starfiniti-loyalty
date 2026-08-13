@@ -10,6 +10,7 @@
 - M02 defaults upgrades to locally controlled `self_hosted`, keeps managed billing off, and makes PostgreSQL—not Auth claims, the browser, Stripe, or a licence server—the entitlement authority. Six protected value paths cannot be commercially disabled.
 - M03 is complete at 93/100: the strict V2 contract, shared exact evaluator, WooCommerce and signed activity inputs, database-authoritative publication/cap/ledger boundaries, and Hub-style rule builder/simulator passed PR #26 exact-head run `31736396618`, release run `31738294379`, additive production migration, explicit Starfiniti tenant canary, and authenticated desktop/mobile production smoke.
 - M04 expanded rewards and audited fulfilment is now the active dependency-safe implementation module while M01 continues waiting only for an approved real WooCommerce store.
+- M04-S01 through S03 are implemented: strict V2 authoring, independent publication/redemption checks, atomic quantity/budget/customer capacity, capability-negotiated WooCommerce execution, audited manual-perk fulfil/reject accounting, and six-template merchant/customer workflows passed PR #29 exact-head run `31747964152`. That run passed the full repository gate, both production images, a clean 30-migration replay, all 30 pgTAP files with 1,302 assertions including 102 focused reward assertions, both concurrency probes, and all four minimum/current HPOS/legacy WooCommerce runtimes. Release hardening keeps accepted manual cases visible and operable after rollout disablement, compares availability by timestamp instant, and rejects unsupported or disguised legacy rewards independently at the authenticated database command boundary. Browser/accessibility review, disabled deployment, Starfiniti canary, reconciliation, and scoring remain.
 - M01 live read-only reconstruction confirms zero commerce connections, customers, wallets, ledger transactions, reservations, events, effects, or commands. The real-store pilot cannot accidentally overlap existing accepted value.
 - `npm run pilot:validate` enforces 22 M01 checks. Database WAL recovery is proven; the live recursive-export race was repaired with a snapshot-safe exporter, retained-base WAL cleanup, a fresh physical base, a forced-WAL concurrency test, two manual encrypted archives, and one timer-triggered archive. Twenty-one store/application/alert/reconciliation checks remain pending; application/Auth/signing recovery is not claimed.
 
@@ -20,7 +21,7 @@
 - The Docker-backed GitHub Actions database job replays migrations/seed and runs 1,095 transactional pgTAP assertions plus real two-session ledger/programme concurrency and property probes.
 - Phase 1 Rosy Rewards semantics are owner-approved and encoded as versioned configuration rather than global merchant assumptions.
 - Pure domain behavior covers integer award calculation, explicit historical tier snapshots, 30-day release, 12-month rolling expiry, earliest-expiry redemption ordering, rolling-spend tiers with grace, cumulative original-attribution refund reversal, and negative balances.
-- Twenty-four domain, sixty-six versioned contract, eighty-six dashboard, and nine worker tests pass.
+- Thirty-three domain, ninety-five versioned contract, one hundred seven dashboard, and fourteen worker tests pass.
 - The platform carries a full AGPL-3.0 license and package metadata; the WooCommerce connector remains independently GPL-2.0-or-later.
 - Phase 2 architecture is complete and deterministically validated: tenant/Auth trust, identity, double-entry ledger, signed inbox/outbox, reward reservation, privacy, backup/restore, deployment, and SLO models are reviewable.
 - Phase 3 tenancy/RLS is complete: organizations, memberships, workspaces, programme groups, support grants, least-privilege roles, composite tenant keys, and live authorization policies execute successfully in disposable Supabase CI.
@@ -158,7 +159,7 @@ The enterprise roadmap work is isolated on `codex/enterprise-roadmap`. Stale Pha
 
 ## Next recommended task
 
-Build M04 expanded rewards and audited fulfilment as the next vertical slice while M01 waits for an explicitly approved real WooCommerce store and full-service clean-room recovery evidence.
+Finish M04 exact-head CI, the full WooCommerce runtime matrix, browser/accessibility/recovery evidence, disabled deployment, Starfiniti canary reconciliation, and module scoring while M01 waits for an explicitly approved real WooCommerce store and full-service clean-room recovery evidence.
 
 ## Blockers
 

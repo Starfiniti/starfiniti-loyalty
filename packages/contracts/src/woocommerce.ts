@@ -475,7 +475,7 @@ const wooCommerceCouponIssuePayloadV1 = z
     kind: z.literal("issue_coupon"),
     reservationId: z.uuid(),
     code: z.string().regex(/^SF[A-Z0-9]{20,48}$/u),
-    externalCustomerId: z.string().min(1).max(255),
+    externalCustomerId: wooCommerceNumericId,
     expiresAt: z.iso.datetime({ offset: true }),
     reward: z.discriminatedUnion("kind", [
       z
@@ -494,6 +494,84 @@ const wooCommerceCouponIssuePayloadV1 = z
         })
         .strict(),
       z.object({ kind: z.literal("free_shipping") }).strict(),
+    ]),
+  })
+  .strict();
+
+export const wooCommerceConnectorCapability = z.enum(["coupon.issue.v2"]);
+
+const wooCommerceCouponRestrictionsCommandV2 = z
+  .object({
+    minimumSpendMinor: z
+      .string()
+      .regex(/^(?:0|[1-9][0-9]*)$/u)
+      .nullable(),
+    currencyMinorUnitDigits: z.int().min(0).max(6),
+    productIds: z.array(wooCommerceNumericId).max(100),
+    excludedProductIds: z.array(wooCommerceNumericId).max(100),
+    categoryIds: z.array(wooCommerceNumericId).max(100),
+    excludedCategoryIds: z.array(wooCommerceNumericId).max(100),
+    excludeSaleItems: z.boolean(),
+    stacking: z.enum(["exclusive", "combinable"]),
+  })
+  .strict()
+  .superRefine((restrictions, context) => {
+    for (const [includedField, excludedField] of [
+      ["productIds", "excludedProductIds"],
+      ["categoryIds", "excludedCategoryIds"],
+    ] as const) {
+      const excluded = new Set(restrictions[excludedField]);
+      restrictions[includedField].forEach((value, index) => {
+        if (excluded.has(value)) {
+          context.addIssue({
+            code: "custom",
+            message: "A selector cannot be both included and excluded",
+            path: [includedField, index],
+          });
+        }
+      });
+    }
+  });
+
+const wooCommerceCouponIssuePayloadV2 = z
+  .object({
+    kind: z.literal("issue_coupon"),
+    reservationId: z.uuid(),
+    code: z.string().regex(/^SF[A-Z0-9]{20,48}$/u),
+    externalCustomerId: wooCommerceNumericId,
+    expiresAt: z.iso.datetime({ offset: true }),
+    reward: z.discriminatedUnion("kind", [
+      z
+        .object({
+          kind: z.literal("fixed_discount"),
+          amountMinor: z.string().regex(/^[1-9][0-9]*$/u),
+          currencyMinorUnitDigits: z.int().min(0).max(6),
+          restrictions: wooCommerceCouponRestrictionsCommandV2,
+        })
+        .strict(),
+      z
+        .object({
+          kind: z.literal("percentage_discount"),
+          percentageBasisPoints: z.int().min(1).max(10_000),
+          maximumDiscountMinor: z.null(),
+          currencyMinorUnitDigits: z.int().min(0).max(6),
+          restrictions: wooCommerceCouponRestrictionsCommandV2,
+        })
+        .strict(),
+      z
+        .object({
+          kind: z.literal("free_shipping"),
+          restrictions: wooCommerceCouponRestrictionsCommandV2,
+        })
+        .strict(),
+      z
+        .object({
+          kind: z.literal("free_product"),
+          productId: wooCommerceNumericId,
+          quantity: z.int().min(1).max(10),
+          restrictions: wooCommerceCouponRestrictionsCommandV2,
+        })
+        .strict(),
     ]),
   })
   .strict();
@@ -547,6 +625,23 @@ export const wooCommerceConnectorCommandEnvelopeV1 = z
     }
   });
 
+export const wooCommerceConnectorCommandEnvelopeV2 = z
+  .object({
+    version: z.literal("1"),
+    commandId: z.uuid(),
+    connectionId: z.uuid(),
+    topic: z.literal("woocommerce.coupon.issue"),
+    payloadVersion: z.literal("v2"),
+    deliveredAt: z.iso.datetime({ offset: true }),
+    payload: wooCommerceCouponIssuePayloadV2,
+  })
+  .strict();
+
+export const wooCommerceConnectorCommandEnvelope = z.union([
+  wooCommerceConnectorCommandEnvelopeV2,
+  wooCommerceConnectorCommandEnvelopeV1,
+]);
+
 /** @deprecated Use the connector-wide command envelope. */
 export const wooCommerceCouponCommandEnvelopeV1 =
   wooCommerceConnectorCommandEnvelopeV1;
@@ -556,6 +651,12 @@ export type WooCommerceCouponCommandEnvelopeV1 = z.infer<
 >;
 export type WooCommerceConnectorCommandEnvelopeV1 = z.infer<
   typeof wooCommerceConnectorCommandEnvelopeV1
+>;
+export type WooCommerceConnectorCommandEnvelopeV2 = z.infer<
+  typeof wooCommerceConnectorCommandEnvelopeV2
+>;
+export type WooCommerceConnectorCommandEnvelope = z.infer<
+  typeof wooCommerceConnectorCommandEnvelope
 >;
 
 export const merchantRequestConnectorReconciliationCommandV1 = z
@@ -593,6 +694,7 @@ export const wooCommerceCommandRequestV1 = z.discriminatedUnion("kind", [
       connectionId: z.uuid(),
       requestId: z.uuid(),
       batchSize: z.int().min(1).max(25).default(10),
+      capabilities: z.array(wooCommerceConnectorCapability).max(16).default([]),
     })
     .strict(),
   z

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added strict V2 native rewards with WooCommerce restrictions, product-specific free products, date/tier/customer limits, atomic global quantity and points-budget reservations, capability-negotiated mixed-version connector rollout, and a two-session last-unit concurrency gate. Segment availability remains fail-closed until M07 provides authoritative audiences.
+- Added exclusive-access and custom-perk rewards with a private audited manual-fulfilment queue, role-separated inspection and operations, exactly-once capture or definitive-rejection compensation, and reservation preservation for uncertain outcomes.
+- Rebuilt Rewards as a six-template merchant workflow with restrictions, availability, capacity controls, readiness guidance, operational summaries, and hosted customer confirmation for every supported native and manual type.
+- Hardened reward rollout and compatibility: accepted manual cases remain visible and resolvable after expanded rewards are disabled, offset-bearing availability windows compare by instant, and public programme RPCs preserve only validated legacy fixed, percentage, and free-shipping rewards while rejecting unsupported or disguised legacy definitions before publication.
+
 - Released and deployed `v0.1.11`: applied the additive V2 migration after a fresh recovery point, retained zero production value, enabled only the Starfiniti database-authoritative canary, and passed authenticated desktop/mobile earning-builder simulation with no browser diagnostics.
 
 - Repaired the live PostgreSQL off-host backup race with a snapshot-safe forced exporter, incomplete-base exclusion, retained-base-aware WAL cleanup, deterministic deployment validation, and successful forced-WAL/manual/timer-driven production archives.
