@@ -151,7 +151,7 @@ starfiniti_runtime_assert(
     && $percentageCouponId > 0
     && $percentageCoupon->get_discount_type() === 'percent'
     && abs((float) $percentageCoupon->get_amount() - 15.0) < 0.000001
-    && $percentageCoupon->get_minimum_amount() === '25'
+    && abs((float) $percentageCoupon->get_minimum_amount() - 25.0) < 0.000001
     && $percentageCoupon->get_product_ids() === [$productId]
     && $percentageCoupon->get_exclude_sale_items()
     && ! $percentageCoupon->get_individual_use(),
