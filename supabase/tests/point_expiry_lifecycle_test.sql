@@ -204,11 +204,17 @@ create temporary table expiry_origins (
   origin_entry_public_id uuid not null,
   wallet_public_id uuid not null
 );
+create temporary table expiry_awards (
+  operation text primary key,
+  transaction_public_id uuid not null,
+  wallet_public_id uuid not null
+);
 
 -- Reserve one due lot before creating the other lots so FIFO binds the
 -- reservation to this exact original V2 lot.
-with awarded as (
-  select result.* from loyalty_private.award_points(
+insert into expiry_awards
+select 'v2-reserved', result.transaction_public_id, result.wallet_public_id
+from loyalty_private.award_points(
     (select id from loyalty.organizations where slug = 'expiry-one'),
     (select programme_group_id from loyalty.programmes where public_id =
       '87000000-0000-4000-8000-000000000101'),
@@ -217,16 +223,16 @@ with awarded as (
     (select id from loyalty.customers where display_reference = 'Expiry test member'),
     400, 'expiry:award:reserved', decode(repeat('9a', 32), 'hex'),
     null, 'v2-reserved', '2026-01-15T00:00:00Z'
-  ) as result
-)
+  ) as result;
 insert into expiry_origins
 select 'v2-reserved', entry.public_id, awarded.wallet_public_id
-from awarded
+from expiry_awards as awarded
 join loyalty.ledger_transactions as transaction
   on transaction.public_id = awarded.transaction_public_id
 join loyalty.ledger_entries as entry on entry.transaction_id = transaction.id
 join loyalty.ledger_accounts as account on account.id = entry.account_id
-where account.account_kind = 'pending' and entry.points > 0;
+where awarded.operation = 'v2-reserved'
+  and account.account_kind = 'pending' and entry.points > 0;
 select * from loyalty_private.release_points(
   (select id from loyalty.organizations where slug = 'expiry-one'),
   (select programme_group_id from loyalty.programmes where public_id =
@@ -250,8 +256,9 @@ from loyalty_private.reserve_points(
   '2026-08-01T00:00:00Z'
 );
 
-with awarded as (
-  select result.* from loyalty_private.award_points(
+insert into expiry_awards
+select 'legacy-due', result.transaction_public_id, result.wallet_public_id
+from loyalty_private.award_points(
     (select id from loyalty.organizations where slug = 'expiry-one'),
     (select programme_group_id from loyalty.programmes where public_id =
       '87000000-0000-4000-8000-000000000101'),
@@ -260,16 +267,16 @@ with awarded as (
     (select id from loyalty.customers where display_reference = 'Expiry test member'),
     100, 'expiry:award:legacy', decode(repeat('3a', 32), 'hex'),
     null, 'legacy-due', '2026-01-01T00:00:00Z'
-  ) as result
-)
+  ) as result;
 insert into expiry_origins
 select 'legacy-due', entry.public_id, awarded.wallet_public_id
-from awarded
+from expiry_awards as awarded
 join loyalty.ledger_transactions as transaction
   on transaction.public_id = awarded.transaction_public_id
 join loyalty.ledger_entries as entry on entry.transaction_id = transaction.id
 join loyalty.ledger_accounts as account on account.id = entry.account_id
-where account.account_kind = 'pending' and entry.points > 0;
+where awarded.operation = 'legacy-due'
+  and account.account_kind = 'pending' and entry.points > 0;
 select * from loyalty_private.release_points(
   (select id from loyalty.organizations where slug = 'expiry-one'),
   (select programme_group_id from loyalty.programmes where public_id =
@@ -281,8 +288,9 @@ select * from loyalty_private.release_points(
   decode(repeat('4a', 32), 'hex'), '2026-01-01T00:00:00Z'
 );
 
-with awarded as (
-  select result.* from loyalty_private.award_points(
+insert into expiry_awards
+select 'v2-due', result.transaction_public_id, result.wallet_public_id
+from loyalty_private.award_points(
     (select id from loyalty.organizations where slug = 'expiry-one'),
     (select programme_group_id from loyalty.programmes where public_id =
       '87000000-0000-4000-8000-000000000101'),
@@ -291,16 +299,16 @@ with awarded as (
     (select id from loyalty.customers where display_reference = 'Expiry test member'),
     200, 'expiry:award:v2-due', decode(repeat('5a', 32), 'hex'),
     null, 'v2-due', '2026-02-01T00:00:00Z'
-  ) as result
-)
+  ) as result;
 insert into expiry_origins
 select 'v2-due', entry.public_id, awarded.wallet_public_id
-from awarded
+from expiry_awards as awarded
 join loyalty.ledger_transactions as transaction
   on transaction.public_id = awarded.transaction_public_id
 join loyalty.ledger_entries as entry on entry.transaction_id = transaction.id
 join loyalty.ledger_accounts as account on account.id = entry.account_id
-where account.account_kind = 'pending' and entry.points > 0;
+where awarded.operation = 'v2-due'
+  and account.account_kind = 'pending' and entry.points > 0;
 select * from loyalty_private.release_points(
   (select id from loyalty.organizations where slug = 'expiry-one'),
   (select programme_group_id from loyalty.programmes where public_id =
@@ -312,8 +320,9 @@ select * from loyalty_private.release_points(
   decode(repeat('6a', 32), 'hex'), '2026-02-01T00:00:00Z'
 );
 
-with awarded as (
-  select result.* from loyalty_private.award_points(
+insert into expiry_awards
+select 'v2-future', result.transaction_public_id, result.wallet_public_id
+from loyalty_private.award_points(
     (select id from loyalty.organizations where slug = 'expiry-one'),
     (select programme_group_id from loyalty.programmes where public_id =
       '87000000-0000-4000-8000-000000000101'),
@@ -322,16 +331,16 @@ with awarded as (
     (select id from loyalty.customers where display_reference = 'Expiry test member'),
     300, 'expiry:award:v2-future', decode(repeat('7a', 32), 'hex'),
     null, 'v2-future', '2026-03-01T00:00:00Z'
-  ) as result
-)
+  ) as result;
 insert into expiry_origins
 select 'v2-future', entry.public_id, awarded.wallet_public_id
-from awarded
+from expiry_awards as awarded
 join loyalty.ledger_transactions as transaction
   on transaction.public_id = awarded.transaction_public_id
 join loyalty.ledger_entries as entry on entry.transaction_id = transaction.id
 join loyalty.ledger_accounts as account on account.id = entry.account_id
-where account.account_kind = 'pending' and entry.points > 0;
+where awarded.operation = 'v2-future'
+  and account.account_kind = 'pending' and entry.points > 0;
 select * from loyalty_private.release_points(
   (select id from loyalty.organizations where slug = 'expiry-one'),
   (select programme_group_id from loyalty.programmes where public_id =
