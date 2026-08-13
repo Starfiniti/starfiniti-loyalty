@@ -370,6 +370,9 @@ tasks:
       - the Programme area now uses four exact routes for overview earning rules rewards and VIP tiers instead of duplicate fragment links into one monolithic editor
       - focused earning reward and tier workflows preserve one complete immutable configuration while exposing exact order qualification reward readiness overlap validation and member movement previews
       - 1440 by 1024 and 390 by 844 Chrome QA passed reward creation earning simulation tier validation mobile drawer and no-overflow checks; the dashboard suite contains regression coverage for unique exact programme navigation
+      - PR 20 exact-head run 31713151458 passed all seven CI jobs with 177 unit tests both production images twenty-six migration replays 1049 pgTAP assertions and all four WooCommerce runtime variants
+      - release run 31713458344 published v0.1.10 and Proxmox now runs both immutable 4713c65e4ca47c0a97264854afea46f6a8730a3a application images with healthy readiness
+      - authenticated production Chrome verification passed all four live Programme workflows at desktop and mobile sizes including exact active navigation first-reward setup dynamic earning simulation overlap blocking mobile drawer and zero horizontal overflow or browser diagnostics
   - id: DEPLOY-PROXMOX
     title: Release and deploy the self-hosted platform on Proxmox
     phase: deployment
