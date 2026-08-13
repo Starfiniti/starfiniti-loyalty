@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "evaluatedAt": "2026-08-13",
+  "release": "v0.1.10",
+  "sourceCommit": "ff7978dd8faa4519a378f5bb538c7956905b2125",
+  "score": 49,
+  "target": 90,
+  "minimumCategoryRatio": 0.8,
+  "categories": [
+    {
+      "id": "activation",
+      "weight": 10,
+      "score": 3,
+      "evidence": "No real WooCommerce store or production-value customer is connected."
+    },
+    {
+      "id": "feature_breadth",
+      "weight": 25,
+      "score": 8,
+      "evidence": "Purchase earning and three reward types exist; referrals, campaigns, communications, migration, advanced VIP, and enterprise breadth do not."
+    },
+    {
+      "id": "merchant_usability",
+      "weight": 15,
+      "score": 10,
+      "evidence": "Hub shell and focused programme workflows pass responsive QA; advanced builders, previews, approvals, and operations are incomplete."
+    },
+    {
+      "id": "customer_value",
+      "weight": 15,
+      "score": 5,
+      "evidence": "Hosted balances, history, and redemption exist; discovery, referrals, progress, communications, and broad store placements are incomplete."
+    },
+    {
+      "id": "reliability",
+      "weight": 15,
+      "score": 13,
+      "evidence": "Immutable ledger, idempotency, RLS, bounded queues, compensation, and runtime matrix pass; real-store outage and full recovery proof remain."
+    },
+    {
+      "id": "operations",
+      "weight": 10,
+      "score": 8,
+      "evidence": "Queue health, support bundle, WAL/base backup, worker leases, and production deployment exist; full clean-room application/Auth/secret recovery and load evidence remain."
+    },
+    {
+      "id": "enterprise_commercial",
+      "weight": 10,
+      "score": 2,
+      "evidence": "Authentik workforce SSO foundation exists; tenant SSO/SCIM, agency controls, entitlements, metering, and managed billing do not."
+    }
+  ],
+  "automaticFails": [
+    "unexplained ledger, balance, liability, coupon, referral, campaign, usage, or invoice difference",
+    "cross-tenant access or authority derived from browser, email, domain, mutable identity claims, or upstream groups",
+    "duplicate value effect, overspend, budget overrun, or unrecoverable accepted event",
+    "checkout synchronously depends on the hub",
+    "critical or high security, privacy, recovery, or data-loss finding remains unresolved",
+    "required clean-room recovery or real-store canary evidence is absent"
+  ]
+}

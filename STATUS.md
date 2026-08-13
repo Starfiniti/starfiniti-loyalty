@@ -1,5 +1,12 @@
 # Status
 
+## Enterprise roadmap status
+
+- Production baseline remains `v0.1.10`; M00 is complete and defines M01–M16 as the authoritative unfinished enterprise graph without claiming those modules are implemented.
+- Released engineering foundations score 95/100, while evidence-based whole-product readiness is 49/100 because the real-store pilot and major competitive, enterprise, and commercial modules remain incomplete.
+- The old local Phase 4 branch and six modified planning files are preserved in a named stash. Active work uses clean branch `codex/enterprise-roadmap` from `origin/main` commit `ff7978dd8faa4519a378f5bb538c7956905b2125`.
+- M01 is active for an approved real WooCommerce store and recovery proof. M02 is the next dependency-safe build slice if store access is unavailable.
+
 ## What works
 
 - The dashboard can initiate PKCE sign-in through the exact Supabase provider `custom:starfiniti-sso`, accepts only the configured Supabase `/auth/v1/authorize` destination, and returns through the existing private no-store callback to the same Supabase Auth/RLS session model. Customer password flows remain separate.
@@ -71,7 +78,13 @@ Twenty-six versioned migrations are applied to the pinned production Supabase/Po
 
 Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 WooCommerce pipeline, PR `#7` merged Phase 9, PR `#9` merged Authentik workforce SSO, PR `#10` merged the English-only launch presentation, PR `#17` merged the Hub-style redesign, PR `#18` merged its live-reporting polish, and PR `#20` merged the focused Programme workflows. Releases through `v0.1.10` include the hardened workforce PKCE callback, bounded production diagnostics, and the owner-approved merchant command center. GitHub recognizes the repository license as GNU AGPLv3.
 
+The enterprise roadmap work is isolated on `codex/enterprise-roadmap`. Stale Phase 4 local planning changes are preserved as `preserve stale phase-4 planning state before enterprise roadmap 2026-08-13` and are not part of this branch.
+
 ## Last verification
+
+- Clean `origin/main` baseline on Windows reached `npm run format:check` and reproduced the tracked CRLF checkout warning across 180 files; no project lint, type, test, or build step ran in that invocation. Targeted changed-file formatting and independent gates are required for M00 rather than rewriting unrelated history.
+- M00 clean `npm ci` passed with 962 installed packages. Lint, all workspace typechecks, 177 unit tests, dashboard and worker production builds, four workflow jobs, deployment self-tests, eight architecture models/five ADRs, fourteen accessibility surfaces, WooCommerce source/localization/storefront budgets, twenty-six migration files, secret scan, zero-vulnerability production audit, and licence validation passed.
+- M00 changed-file Prettier, YAML/JSON parse, unique dependency graph, one-active-module invariant, product-score reconciliation, and `git diff --check` passed. The full development audit retains R-032 for the pinned WordPress runtime ZIP library; production dependencies remain clean.
 
 - `npm run test --workspace=@starfiniti/domain` — passed with 24 tests.
 - `npm run typecheck --workspace=@starfiniti/domain` — passed.
