@@ -255,6 +255,48 @@ select results_eq(
 );
 reset role;
 
+create temporary table activity_worker_refs (
+  name text primary key,
+  value bigint not null
+);
+insert into activity_worker_refs
+select 'organization-one', id from loyalty.organizations where slug = 'activity-one'
+union all
+select 'organization-two', id from loyalty.organizations where slug = 'activity-two'
+union all
+select 'group-one', id from loyalty.programme_groups where organization_id = (
+  select id from loyalty.organizations where slug = 'activity-one'
+)
+union all
+select 'group-two', id from loyalty.programme_groups where organization_id = (
+  select id from loyalty.organizations where slug = 'activity-two'
+)
+union all
+select 'version-one', id from loyalty.programme_versions where organization_id = (
+  select id from loyalty.organizations where slug = 'activity-one'
+)
+union all
+select 'version-two', id from loyalty.programme_versions where organization_id = (
+  select id from loyalty.organizations where slug = 'activity-two'
+)
+union all
+select 'programme-one', id from loyalty.programmes
+where public_id = 'b1000000-0000-4000-8000-000000000130'
+union all
+select 'customer-one', id from loyalty.customers
+where public_id = 'b1000000-0000-4000-8000-000000000501';
+create function pg_temp.activity_worker_ref(target_name text)
+returns bigint
+language sql
+stable
+security definer
+set search_path = pg_catalog, pg_temp
+as $$
+  select value from pg_temp.activity_worker_refs where name = target_name;
+$$;
+revoke all on function pg_temp.activity_worker_ref(text) from public;
+grant execute on function pg_temp.activity_worker_ref(text) to loyalty_worker;
+
 set local role loyalty_worker;
 create temporary table activity_effect_claim as
 select * from loyalty_private.claim_woocommerce_effects('activity-worker', 10, 60);
@@ -265,20 +307,16 @@ select results_eq(
 );
 select results_eq(
   $$ select programme_id from activity_effect_claim $$,
-  array[(select id from loyalty.programmes where public_id = 'b1000000-0000-4000-8000-000000000130')],
+  array[pg_temp.activity_worker_ref('programme-one')],
   'claimed activity derives its programme from the provisioned source'
 );
 create temporary table committed_activity_award as
 select * from loyalty_private.commit_programme_v2_award(
-  (select id from loyalty.organizations where slug = 'activity-one'),
-  (select id from loyalty.programme_groups where organization_id = (
-    select id from loyalty.organizations where slug = 'activity-one'
-  )),
-  (select id from loyalty.programme_versions where organization_id = (
-    select id from loyalty.organizations where slug = 'activity-one'
-  )),
+  pg_temp.activity_worker_ref('organization-one'),
+  pg_temp.activity_worker_ref('group-one'),
+  pg_temp.activity_worker_ref('version-one'),
   (select canonical_event_id from activity_effect_claim),
-  (select id from loyalty.customers where public_id = 'b1000000-0000-4000-8000-000000000501'),
+  pg_temp.activity_worker_ref('customer-one'),
   'merchant-activity:crm:consultation:42',
   'activity:evaluation:crm:consultation:42',
   'activity:ledger:crm:consultation:42',
@@ -304,13 +342,11 @@ select results_eq(
 );
 select results_eq(
   $$ select outcome from loyalty_private.commit_programme_v2_award(
-    (select id from loyalty.organizations where slug = 'activity-one'),
-    (select id from loyalty.programme_groups where organization_id = (
-      select id from loyalty.organizations where slug = 'activity-one')),
-    (select id from loyalty.programme_versions where organization_id = (
-      select id from loyalty.organizations where slug = 'activity-one')),
+    pg_temp.activity_worker_ref('organization-one'),
+    pg_temp.activity_worker_ref('group-one'),
+    pg_temp.activity_worker_ref('version-one'),
     (select canonical_event_id from activity_effect_claim),
-    (select id from loyalty.customers where public_id = 'b1000000-0000-4000-8000-000000000501'),
+    pg_temp.activity_worker_ref('customer-one'),
     'merchant-activity:crm:consultation:42',
     'activity:evaluation:crm:consultation:42', 'activity:ledger:crm:consultation:42',
     decode(repeat('1', 64), 'hex'), decode(repeat('2', 64), 'hex'),
@@ -328,13 +364,11 @@ select results_eq(
 );
 select throws_ok(
   $$ select * from loyalty_private.commit_programme_v2_award(
-    (select id from loyalty.organizations where slug = 'activity-two'),
-    (select id from loyalty.programme_groups where organization_id = (
-      select id from loyalty.organizations where slug = 'activity-two')),
-    (select id from loyalty.programme_versions where organization_id = (
-      select id from loyalty.organizations where slug = 'activity-two')),
+    pg_temp.activity_worker_ref('organization-two'),
+    pg_temp.activity_worker_ref('group-two'),
+    pg_temp.activity_worker_ref('version-two'),
     (select canonical_event_id from activity_effect_claim),
-    (select id from loyalty.customers where public_id = 'b1000000-0000-4000-8000-000000000501'),
+    pg_temp.activity_worker_ref('customer-one'),
     'forged', 'forged:evaluation', 'forged:ledger',
     decode(repeat('1', 64), 'hex'), decode(repeat('2', 64), 'hex'),
     '{}'::jsonb, '{}'::jsonb, now(), now()) $$,
