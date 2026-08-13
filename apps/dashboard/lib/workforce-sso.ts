@@ -21,8 +21,11 @@ function parseCanonicalOrigin(value: string): URL {
   const localDevelopmentOrigin =
     parsed.protocol === "http:" &&
     (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1");
+  const unspecifiedBindAddress =
+    parsed.hostname === "0.0.0.0" || parsed.hostname === "[::]";
   if (
     (parsed.protocol !== "https:" && !localDevelopmentOrigin) ||
+    unspecifiedBindAddress ||
     parsed.username ||
     parsed.password ||
     parsed.pathname !== "/" ||
@@ -36,14 +39,21 @@ function parseCanonicalOrigin(value: string): URL {
   return parsed;
 }
 
+export function dashboardPublicUrl(publicOrigin: string, path: string): URL {
+  return new URL(path, parseCanonicalOrigin(publicOrigin));
+}
+
+export function workforceSsoFlowId(value: unknown): string | null {
+  return typeof value === "string" && /^[A-Za-z0-9_-]{8,64}$/.test(value)
+    ? value
+    : null;
+}
+
 export function workforceSsoCallbackUrl(
   publicOrigin: string,
   nextPath: unknown,
 ): string {
-  const callback = new URL(
-    "/auth/callback",
-    parseCanonicalOrigin(publicOrigin),
-  );
+  const callback = dashboardPublicUrl(publicOrigin, "/auth/callback");
   callback.searchParams.set("next", safeAppPath(nextPath));
   return callback.toString();
 }
