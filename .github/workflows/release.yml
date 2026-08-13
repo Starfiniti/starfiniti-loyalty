@@ -1,0 +1,64 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 24
+          cache: npm
+      - name: Validate version tag
+        shell: bash
+        run: |
+          if [[ ! "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Release tags must use vMAJOR.MINOR.PATCH." >&2
+            exit 1
+          fi
+      - run: npm ci
+      - run: npm run check
+      - run: npm run db:validate
+      - run: npm run secrets:scan
+      - run: npm run audit:prod
+      - run: npm run licenses
+      - name: Replay migrations, seed, and run pgTAP
+        run: npm run db:verify
+      - name: Remove local database containers and volumes
+        if: always()
+        run: npm run db:stop
+      - name: Build WooCommerce release artifact
+        run: |
+          npm run woocommerce:package
+          sha256sum dist/starfiniti-loyalty.zip > dist/SHA256SUMS
+      - name: Authenticate to GitHub Container Registry
+        shell: bash
+        run: echo "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and publish immutable application images
+        shell: bash
+        run: |
+          dashboard="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/loyalty-dashboard"
+          worker="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/loyalty-worker"
+          docker build --file apps/dashboard/Dockerfile --tag "$dashboard:$GITHUB_SHA" --tag "$dashboard:$GITHUB_REF_NAME" .
+          docker build --file apps/worker/Dockerfile --tag "$worker:$GITHUB_SHA" --tag "$worker:$GITHUB_REF_NAME" .
+          docker push "$dashboard:$GITHUB_SHA"
+          docker push "$dashboard:$GITHUB_REF_NAME"
+          docker push "$worker:$GITHUB_SHA"
+          docker push "$worker:$GITHUB_REF_NAME"
+      - name: Publish GitHub release
+        shell: bash
+        run: gh release create "$GITHUB_REF_NAME" dist/starfiniti-loyalty.zip dist/SHA256SUMS --verify-tag --generate-notes --title "Starfiniti Loyalty $GITHUB_REF_NAME"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

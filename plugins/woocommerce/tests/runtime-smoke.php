@@ -3,7 +3,10 @@
 use Automattic\WooCommerce\Utilities\OrderUtil;
 use Automattic\WooCommerce\StoreApi\Utilities\CartController;
 use Starfiniti\Loyalty\Commands;
+use Starfiniti\Loyalty\CustomerClaim;
 use Starfiniti\Loyalty\Outbox;
+use Starfiniti\Loyalty\Plugin;
+use Starfiniti\Loyalty\Settings;
 
 defined('ABSPATH') || exit(1);
 
@@ -19,6 +22,26 @@ function starfiniti_runtime_assert($condition, string $message): void
 
 starfiniti_runtime_assert(class_exists('WooCommerce'), 'WooCommerce is active');
 starfiniti_runtime_assert(class_exists(Outbox::class), 'Starfiniti Loyalty is active');
+$originalLocale = determine_locale();
+starfiniti_runtime_assert(
+    $originalLocale === 'sl_SI' || switch_to_locale('sl_SI'),
+    'runtime can switch to the bundled Slovenian locale'
+);
+unload_textdomain('starfiniti-loyalty', true);
+Plugin::loadTextDomain();
+$localizedMenu = Plugin::accountMenuItems([
+    'dashboard' => 'Dashboard',
+    'customer-logout' => 'Logout',
+]);
+starfiniti_runtime_assert(
+    ($localizedMenu['loyalty'] ?? null) === 'Nagrade za zvestobo',
+    'bundled Slovenian customer navigation translation loads at runtime'
+);
+if ($originalLocale !== 'sl_SI') {
+    restore_previous_locale();
+}
+unload_textdomain('starfiniti-loyalty', true);
+Plugin::loadTextDomain();
 $expectedHpos = get_option('starfiniti_runtime_expected_hpos');
 starfiniti_runtime_assert(
     in_array($expectedHpos, ['yes', 'no'], true),
@@ -91,10 +114,126 @@ starfiniti_runtime_assert(
     'native coupon is one-use and bound to the reservation and customer'
 );
 
+$percentageCouponCode = 'SFPERCENT0123456789ABCDEF0123456789';
+$percentageIssue = $execute->invoke(null, [
+    'version' => '1',
+    'commandId' => '61000000-0000-4000-8000-000000000002',
+    'connectionId' => '62000000-0000-4000-8000-000000000001',
+    'topic' => 'woocommerce.coupon.issue',
+    'payloadVersion' => 'v1',
+    'deliveredAt' => gmdate('c'),
+    'payload' => [
+        'kind' => 'issue_coupon',
+        'reservationId' => '63000000-0000-4000-8000-000000000002',
+        'code' => $percentageCouponCode,
+        'externalCustomerId' => (string) $customerId,
+        'expiresAt' => gmdate('c', time() + DAY_IN_SECONDS),
+        'reward' => [
+            'kind' => 'percentage_discount',
+            'percentageBasisPoints' => 1500,
+            'maximumDiscountMinor' => null,
+            'currencyMinorUnitDigits' => 2,
+        ],
+    ],
+]);
+$percentageCouponId = wc_get_coupon_id_by_code($percentageCouponCode);
+$percentageCoupon = new WC_Coupon($percentageCouponId);
+starfiniti_runtime_assert(
+    ($percentageIssue['outcome'] ?? null) === 'delivered'
+    && $percentageCouponId > 0
+    && $percentageCoupon->get_discount_type() === 'percent'
+    && abs((float) $percentageCoupon->get_amount() - 15.0) < 0.000001,
+    'uncapped percentage reward creates the matching native coupon'
+);
+$cappedPercentageIssue = $execute->invoke(null, [
+    'version' => '1',
+    'commandId' => '61000000-0000-4000-8000-000000000003',
+    'connectionId' => '62000000-0000-4000-8000-000000000001',
+    'topic' => 'woocommerce.coupon.issue',
+    'payloadVersion' => 'v1',
+    'deliveredAt' => gmdate('c'),
+    'payload' => [
+        'kind' => 'issue_coupon',
+        'reservationId' => '63000000-0000-4000-8000-000000000003',
+        'code' => 'SFCAPPED0123456789ABCDEF01234567890',
+        'externalCustomerId' => (string) $customerId,
+        'expiresAt' => gmdate('c', time() + DAY_IN_SECONDS),
+        'reward' => [
+            'kind' => 'percentage_discount',
+            'percentageBasisPoints' => 1500,
+            'maximumDiscountMinor' => '2500',
+            'currencyMinorUnitDigits' => 2,
+        ],
+    ],
+]);
+starfiniti_runtime_assert(
+    ($cappedPercentageIssue['outcome'] ?? null) === 'dead_letter'
+    && ($cappedPercentageIssue['errorCode'] ?? null) === 'percentage_maximum_unsupported',
+    'defensive connector boundary rejects unsupported percentage caps'
+);
+
 update_option(
     'starfiniti_loyalty_endpoint',
     'https://unreachable.invalid/api/v1/integrations/woocommerce/events',
     false
+);
+$claimConnectionId = '62000000-0000-4000-8000-000000000001';
+$claimKeyVersion = 'v1';
+$claimSigningKey = str_repeat("\x42", 32);
+$decodeConnectionPackage = new ReflectionMethod(Settings::class, 'decodeConnectionPackage');
+$decodeConnectionPackage->setAccessible(true);
+$decodedConnectionPackage = $decodeConnectionPackage->invoke(null, wp_json_encode([
+    'version' => '1',
+    'endpoint' => 'https://unreachable.invalid/api/v1/integrations/woocommerce/events',
+    'connectionId' => $claimConnectionId,
+    'keyVersion' => $claimKeyVersion,
+    'signingKey' => base64_encode($claimSigningKey),
+]));
+starfiniti_runtime_assert(
+    is_array($decodedConnectionPackage)
+    && ($decodedConnectionPackage['connectionId'] ?? null) === $claimConnectionId
+    && null === $decodeConnectionPackage->invoke(null, '{"version":"1","signingKey":"secret"}'),
+    'one-time setup code imports only the exact connection package'
+);
+$encryptSigningKey = new ReflectionMethod(Settings::class, 'encrypt');
+$encryptSigningKey->setAccessible(true);
+$encryptedSigningKey = $encryptSigningKey->invoke(null, base64_encode($claimSigningKey));
+starfiniti_runtime_assert(is_string($encryptedSigningKey), 'runtime can protect claim signing material');
+update_option('starfiniti_loyalty_connection_id', $claimConnectionId, false);
+update_option('starfiniti_loyalty_key_version', $claimKeyVersion, false);
+update_option('starfiniti_loyalty_signing_key_encrypted', $encryptedSigningKey, false);
+$claimLocaleChanged = get_locale() !== 'sl_SI';
+if ($claimLocaleChanged) {
+    switch_to_locale('sl_SI');
+}
+$claimLink = CustomerClaim::linkForUser((int) $customerId);
+if ($claimLocaleChanged) {
+    restore_previous_locale();
+}
+$claimQuery = [];
+parse_str((string) wp_parse_url($claimLink, PHP_URL_QUERY), $claimQuery);
+$claimMessage = implode("\n", [
+    'starfiniti-woocommerce-customer-claim-v1',
+    $claimConnectionId,
+    (string) $customerId,
+    (string) ($claimQuery['issuedAt'] ?? ''),
+    (string) ($claimQuery['nonce'] ?? ''),
+    $claimKeyVersion,
+]);
+starfiniti_runtime_assert(
+    str_starts_with($claimLink, 'https://unreachable.invalid/claim/woocommerce?')
+    && ($claimQuery['connectionId'] ?? null) === $claimConnectionId
+    && ($claimQuery['externalCustomerId'] ?? null) === (string) $customerId
+    && ($claimQuery['keyVersion'] ?? null) === $claimKeyVersion
+    && ($claimQuery['lang'] ?? null) === 'sl-SI'
+    && 1 === preg_match('/^\d{10}$/', (string) ($claimQuery['issuedAt'] ?? ''))
+    && 1 === preg_match('/^[0-9a-f-]{36}$/', (string) ($claimQuery['nonce'] ?? ''))
+    && hash_equals(
+        hash_hmac('sha256', $claimMessage, $claimSigningKey),
+        (string) ($claimQuery['signature'] ?? '')
+    )
+    && ! array_key_exists('email', $claimQuery),
+    'customer claim is short-lived, channel-bound, PII-free, signed locally, and preserves the active locale'
 );
 $checkoutHttpRequests = 0;
 $rejectCheckoutHttp = static function ($preempt) use (&$checkoutHttpRequests) {
@@ -104,6 +243,35 @@ $rejectCheckoutHttp = static function ($preempt) use (&$checkoutHttpRequests) {
 add_filter('pre_http_request', $rejectCheckoutHttp, 10, 1);
 
 wp_set_current_user((int) $customerId);
+ob_start();
+Plugin::renderAccount();
+$accountMarkup = (string) ob_get_clean();
+ob_start();
+Plugin::renderCartNotice();
+$cartMarkup = (string) ob_get_clean();
+starfiniti_runtime_assert(
+    0 === $checkoutHttpRequests,
+    'customer account and cart loyalty rendering make no hub request during outage'
+);
+starfiniti_runtime_assert(
+    str_contains($accountMarkup, '<h2>')
+    && str_contains($accountMarkup, '/claim/woocommerce?')
+    && str_contains($accountMarkup, 'rel="noreferrer"')
+    && str_contains($accountMarkup, esc_html($coupon->get_code()))
+    && substr_count($accountMarkup, '<li>') <= 20
+    && strlen($accountMarkup) <= 32768
+    && ! str_contains($accountMarkup, '<script')
+    && ! str_contains($accountMarkup, '<style'),
+    'customer account loyalty markup is semantic, bounded, and asset-free'
+);
+starfiniti_runtime_assert(
+    str_contains($cartMarkup, wc_get_account_endpoint_url('loyalty'))
+    && strlen($cartMarkup) <= 4096
+    && ! str_contains($cartMarkup, '<script')
+    && ! str_contains($cartMarkup, '<style'),
+    'cart loyalty notice is bounded, linked, and asset-free'
+);
+
 $cartController = new CartController();
 $cartController->load_cart();
 $cart = $cartController->get_cart_instance();
@@ -225,6 +393,36 @@ starfiniti_runtime_assert(
 
 starfiniti_runtime_assert(Outbox::reconcileOrder($orderId), 'source order reconciliation is available');
 starfiniti_runtime_assert(Outbox::reconcileOrder($orderId), 'source reconciliation retry is accepted');
+$reconciliation = $execute->invoke(null, [
+    'version' => '1',
+    'commandId' => '61000000-0000-4000-8000-000000000004',
+    'connectionId' => '62000000-0000-4000-8000-000000000001',
+    'topic' => 'woocommerce.order.reconcile',
+    'payloadVersion' => 'v1',
+    'deliveredAt' => gmdate('c'),
+    'payload' => ['kind' => 'reconcile_order', 'orderId' => (string) $orderId],
+]);
+starfiniti_runtime_assert(
+    is_array($reconciliation)
+    && ($reconciliation['outcome'] ?? null) === 'delivered'
+    && ($reconciliation['resultReference'] ?? null) === 'woocommerce:order:' . $orderId,
+    'signed hub command reconciles a source order through the durable local outbox'
+);
+$missingReconciliation = $execute->invoke(null, [
+    'version' => '1',
+    'commandId' => '61000000-0000-4000-8000-000000000005',
+    'connectionId' => '62000000-0000-4000-8000-000000000001',
+    'topic' => 'woocommerce.order.reconcile',
+    'payloadVersion' => 'v1',
+    'deliveredAt' => gmdate('c'),
+    'payload' => ['kind' => 'reconcile_order', 'orderId' => '999999999'],
+]);
+starfiniti_runtime_assert(
+    is_array($missingReconciliation)
+    && ($missingReconciliation['outcome'] ?? null) === 'dead_letter'
+    && ($missingReconciliation['errorCode'] ?? null) === 'order_not_found',
+    'missing source order reconciliation fails explicitly without retry storm'
+);
 $captureRowsAfterRetry = (int) $wpdb->get_var($wpdb->prepare(
     "SELECT COUNT(*) FROM {$outboxTable} WHERE event_type = %s AND source_object_id = %s",
     'commerce.coupon.captured',
@@ -265,10 +463,30 @@ starfiniti_runtime_assert(
     && ($recoveredDiagnostics['retryable'] ?? 0) >= 1,
     'queue diagnostics expose the recovered retryable event'
 );
+Outbox::captureCustomerDeletion((int) $customerId);
+Outbox::captureCustomerDeletion((int) $customerId);
+$privacyRows = (array) $wpdb->get_results($wpdb->prepare(
+    "SELECT event_key,event_type,source_object_id,event_payload FROM {$outboxTable} WHERE event_type = %s",
+    'commerce.customer.deleted'
+), ARRAY_A);
+$privacyPayload = isset($privacyRows[0]['event_payload'])
+    ? json_decode((string) $privacyRows[0]['event_payload'], true)
+    : null;
+starfiniti_runtime_assert(
+    count($privacyRows) === 1
+    && ($privacyRows[0]['source_object_id'] ?? null) === 'customer-erasure'
+    && 1 === preg_match('/^privacy-erasure:[0-9a-f]{64}$/', (string) ($privacyRows[0]['event_key'] ?? ''))
+    && is_array($privacyPayload)
+    && ($privacyPayload['kind'] ?? null) === 'customer_deleted'
+    && ($privacyPayload['externalCustomerId'] ?? null) === (string) $customerId
+    && ! array_key_exists('email', $privacyPayload),
+    'customer erasure is queued once with an opaque key and the minimum channel subject'
+);
 starfiniti_runtime_assert(
     has_action('woocommerce_before_cart', ['Starfiniti\\Loyalty\\Plugin', 'renderCartNotice']) !== false
-    && has_filter('woocommerce_coupon_is_valid', [Commands::class, 'validateCustomer']) !== false,
-    'storefront and customer-scope hooks are registered'
+    && has_filter('woocommerce_coupon_is_valid', [Commands::class, 'validateCustomer']) !== false
+    && has_action('delete_user', [Outbox::class, 'captureCustomerDeletion']) !== false,
+    'storefront, customer-scope, and privacy lifecycle hooks are registered'
 );
 
 fwrite(STDOUT, sprintf(

@@ -2,7 +2,7 @@
 
 ## Implementation status
 
-The tenancy, WooCommerce event/effect, ledger, and programme-engine portions below are implemented in six versioned migrations. The ledger uses immutable transaction headers/entries, six wallet buckets, programme control accounts, original-attribution lots, signed compensating allocations, same-transaction projections, tenant RLS, and narrow worker commands. Programme publication, materialized tiers/rewards, reward reservations, tier history, evaluation evidence, expiry-notification fences, WooCommerce order/refund effects, and native coupon settlement are implemented; general platform audit and privacy workflows remain later slices.
+The tenancy, WooCommerce event/effect, ledger, programme-engine, merchant command/read-model, controlled customer experience, public delivery, authenticated customer link, controlled redemption, customer data export, guided connector provisioning, initial tenant bootstrap, and WooCommerce customer-erasure portions below are implemented in twenty-five versioned migrations. The ledger uses immutable transaction headers/entries, six wallet buckets, programme control accounts, original-attribution lots, signed compensating allocations, same-transaction projections, tenant RLS, and narrow worker commands. Programme publication, materialized tiers/rewards, reward reservations, tier history, evaluation evidence, expiry-notification fences, WooCommerce order/refund effects, native coupon settlement, audited merchant mutations, revisioned experience tokens/copy, customer self-service reads, Auth-derived native-coupon redemption and export, guided WooCommerce provisioning, deployment-only tenant bootstrap, and source-originated identity erasure are implemented.
 
 ## Database boundaries
 
@@ -27,10 +27,16 @@ erDiagram
   ORGANIZATION ||--o{ WORKSPACE : owns
   ORGANIZATION ||--o{ PROGRAMME_GROUP : owns
   PROGRAMME_GROUP ||--o{ PROGRAMME : contains
+  PROGRAMME_GROUP ||--o{ EXPERIENCE_THEME : brands
+  WORKSPACE ||--o{ EXPERIENCE_THEME : presents
   PROGRAMME ||--o{ PROGRAMME_VERSION : publishes
   WORKSPACE ||--o{ COMMERCE_CONNECTION : connects
   ORGANIZATION ||--o{ CUSTOMER : scopes
   CUSTOMER ||--o{ CUSTOMER_IDENTITY : links
+  CUSTOMER ||--o{ CUSTOMER_USER_LINK : authorizes
+  CUSTOMER ||--o{ CUSTOMER_DATA_EXPORT_EVENT : audits
+  COMMERCE_CONNECTION ||--o{ CUSTOMER_USER_LINK : proves
+  CUSTOMER_USER_LINK ||--o{ IDENTITY_LINK_DECISION : evidences
   PROGRAMME_GROUP ||--o{ WALLET : denominates
   CUSTOMER ||--o{ WALLET : owns
   WALLET ||--o{ LEDGER_ACCOUNT : partitions
@@ -70,16 +76,36 @@ Time-limited, reason-bound, approved grants for platform support. Stores support
 - `programmes`: mutable identity and lifecycle container within a programme group.
 - `programme_versions`: immutable JSON configuration plus canonical SHA-256 hash, version number, status, publication timestamp, and creator/approver. Only one published interpretation applies to a transaction; updates create a new row.
 - `programme_tiers` and `programme_rewards`: immutable children of a programme version where relational querying is required. They retain the version ID on historical effects.
-- Drafts may be edited. Published versions, tiers, and reward definitions reject update/delete through privilege and trigger guards.
+- Merchant editing creates a new draft version rather than mutating an existing or historical version. Published versions, tiers, and reward definitions reject update/delete through privilege and trigger guards.
+
+### `admin_audit_events`
+
+Immutable tenant-scoped evidence for administration commands: request-derived actor, action, resource public ID, tenant idempotency key, canonical request hash, correlation ID, bounded metadata, and creation time. Only owners, admins, and auditors can read programme administration evidence through RLS. No authenticated role receives direct insert/update/delete privileges.
+
+### `experience_themes`
+
+Unique per `(organization_id, workspace_id, programme_group_id)` and protected by a composite foreign key to the explicit workspace/group link. Each revision stores one accessible canonical brand color, an allowlisted local font token, bounded radius and copy, section visibility, and widget side. It stores no CSS, markup, scripts, URLs, uploads, customer attributes, or secrets. Members can read through RLS; only the guarded owner/admin command can create or revision a row and append matching immutable audit evidence.
 
 ## Customer and identity tables
 
 - `customers`: organization-scoped person/pseudonymous subject record; it is not keyed by email.
 - `customer_identities`: unique `(commerce_connection_id, external_customer_id)`, with verified channel facts and optional guest-order identity. Email/phone are encrypted or separately protected attributes, never unique merge keys.
-- `customer_user_links`: verified link from an Auth user to a customer with method, evidence reference, verifier, and timestamps.
-- `identity_link_decisions`: append-only merge/link/split decisions with actor, reason, evidence, and compensation reference.
+- `customer_user_links`: revocable verified link from one Auth user to one customer inside an organization. Partial unique indexes enforce one active customer per Auth user and one active Auth user per customer; identity fields cannot be rewritten and revocation cannot be undone in place.
+- `identity_link_decisions`: append-only claim evidence keyed by connection and one-use nonce/proof hashes. It stores the Auth subject, optional resolved customer, key version, issue time, outcome, and SHA-256 references—not raw nonce, signature, email, or external customer ID.
+
+`get_my_loyalty_accounts()` derives the Auth subject from the live request and accepts no input arguments. It returns at most 20 active linked accounts with exact text-form wallet balances, minimized tier/expiry state, up to 20 safe published rewards, ten active reservations, and ten redacted ledger activities. Underlying link, identity, ledger, and decision tables remain unavailable to browser roles.
+
+`redeem_my_reward(account_public_id, reward_code, request_id)` accepts only one linked-account public ID, a published reward code, and a request UUID. It derives the Auth subject, organization, customer, active programme version, wallet, exact points cost, coupon validity, and source WooCommerce connection inside one security-definer transaction. Creation, FIFO-backed ledger reserve, reserved transition, and private coupon outbox enqueue either all commit or all roll back. Exact retries return the original reservation; changed reuse, insufficient balance, cross-tenant scope, revoked links, blocked wallets, inactive workspaces/connections, and unsupported reward kinds fail closed. Coupon code and external WooCommerce customer ID never enter the browser result.
+
+`loyalty_private.customer_data_export_authorizations` stores only a SHA-256 capability digest, verified Auth subject, Supabase session ID, five-minute expiry, and one-use timestamp. The trusted Next.js runtime issues the random capability only after password reauthentication. `consume_customer_data_export` locks and consumes it atomically, rechecks the subject/session and every active customer-link/tenant/workspace/connection boundary, and builds one versioned JSON document without accepting organization, customer, or wallet selectors. Export content is returned directly over TLS and is never stored in PostgreSQL or object storage.
+
+`loyalty_private.provision_woocommerce_connection` is executable only by the dedicated application runtime role. It accepts a verified Auth actor plus public workspace/programme selectors and one deployment-selected `pool:<uuid>:v1` reference, then independently rechecks live owner/admin membership, active linked scope, and a published programme before creating an active v1 connection and immutable audit event. A unique index prevents reference reuse. Authenticated Data API clients receive column-level access to safe connection fields only; `signing_material_ref` remains outside browser grants and audit metadata.
+
+`loyalty_private.customer_data_export_events` is immutable per-included-customer audit evidence containing the export ID, customer and organization scope, Auth subject, session, generation time, and document schema version. It contains no exported payload, Auth email, capability, signing reference, actor evidence, request body, or commerce secret. Both export tables and functions are private and executable only by the runtime role.
 
 Identity linking is described in `IDENTITY_MODEL.md`.
+
+`loyalty_private.customer_privacy_cases` stores immutable connection-bound HMAC fingerprints and opaque case references only. Per-connection 256-bit peppers are isolated in a separate no-grant private table. `apply_woocommerce_customer_erasure` accepts only the leased canonical deletion event, pseudonymizes the matching channel identity, revokes active hosted links, clears the display reference, scrubs the restricted canonical/raw event to its case ID, and leaves wallets and immutable ledger history intact. The same keyed tombstone makes later channel resolution return `suppressed` without creating another customer.
 
 ## Wallet and double-entry ledger
 
@@ -123,7 +149,7 @@ An available credit creates an immutable lot linked to its credit entry, program
 
 ## Commerce and idempotency tables
 
-- `commerce_connections`: workspace-scoped WooCommerce installation, explicit programme binding, status, endpoint metadata, credential reference, signing-key version, health/reconciliation watermark. Secrets live in the deployment secret store, not rows.
+- `commerce_connections`: workspace-scoped WooCommerce installation, explicit programme binding, status, endpoint metadata, unique credential reference, signing-key version, health/reconciliation watermark. Secrets live in the deployment secret store, not rows; browser column privileges exclude the credential reference.
 - `webhook_deliveries` (`loyalty_private`): raw verified body bytes, body hash, headers allowlist, signature-key version, delivery/source IDs, receipt time, processing status, and retention deadline. Unique `(connection_id, source_delivery_id)`.
 - `commerce_events`: canonical versioned fact with source aggregate ID, source version/modified time, occurred time, canonical payload/hash, normalization version, durable effect lease/attempt state, and bounded failure code.
 - `business_effects`: unique `(organization_id, event_id, effect_kind, effect_key)` linking an event to the ledger/audit result.
@@ -131,6 +157,8 @@ An available credit creates an immutable lot linked to its credit entry, program
 - `reconciliation_runs/items`: source range, counts, mismatches, repairs, operator, and evidence.
 
 Raw bodies are restricted and short-lived; canonical facts and hashes retain enough evidence to explain effects after raw-body deletion.
+
+The merchant Data API does not receive privileges on private queue tables. Exact-signature connector operation wrappers aggregate counts and project a bounded issue allowlist after a live membership check. The only merchant queue mutation is a reason-bound `dead_letter -> retryable` transition for a canonical effect, guarded by owner/admin/operator membership and an `admin_audit_events` row. Generic outbound coupon-command retry is absent because reservation compensation may already have occurred.
 
 ## Reward reservation state
 
@@ -153,6 +181,12 @@ The reservation holds programme version, wallet, reward, points, expiry, idempot
 - `programme_evaluations` stores immutable live/simulation/tier-review input and result hashes plus explanation evidence.
 - `audit_events` is append-only and records organization, actor, support grant, action, object type/ID, before/after metadata without secrets/PII, IP classification, correlation ID, and timestamp.
 - `manual_adjustment_requests` requires reason, evidence, requester, approver where policy requires, and the resulting compensating ledger transaction.
+- `admin_audit_events` currently records initial tenant bootstrap, programme creation/draft/publication/scheduling, connector operations, customer adjustments, and experience-theme revisions with an attributable Auth principal, canonical request hash, idempotency key, correlation ID, resource ID, and minimized metadata. Bootstrap identifies the newly approved owner under deployment-owner authority; normal merchant commands derive their actor from the live Auth request. Rows are immutable; owner/admin/auditor reads remain tenant scoped.
+- Merchant customer adjustment resolves an active wallet plus exact published programme version under a live owner/admin check, then appends `manual_adjustment` entries between the programme-group adjustment control account and wallet available account. Credits create expiring lots; debits append FIFO adjustment allocations for existing lots and may leave an explicit negative available balance. The matching `admin_audit_events` row links its command correlation to the immutable ledger correlation.
+- `bulk_adjustment_batches` retains the immutable owner/admin request, exact preview and request hashes, uniform signed amount, aggregate count/total, published programme attribution, actor, idempotency key, and correlation ID. `bulk_adjustment_items` links each batch customer/wallet to exactly one immutable ledger transaction plus the locked before/after available projection. Both tables use composite tenant foreign keys, RLS-scoped privileged reads, no browser DML, and immutable triggers.
+- `experience_translations` stores one current revision of bounded customer-facing copy per linked workspace/programme group and allowlisted locale (`en`, `sl-SI`). It is separate from theme tokens and customer identity, uses composite tenant keys plus member-read RLS, allows no direct browser DML, and appends minimized immutable locale/revision audit evidence for every owner/admin save.
+- `get_public_loyalty_experience` is a read-only anonymous projection, not a public table policy. It resolves one active workspace/programme-group link and current published programme, caps tiers at 12 and rewards at 20, emits exact bigint values as text plus approved theme/copy fields, and excludes organization identity, customers, ledgers, raw configuration, reward configuration, audit, integrations, and commerce evidence.
+- Merchant Overview reporting is a read model, not a mutable analytics truth table. It joins one authorized workspace/programme scope to scoped wallets, immutable live evaluation evidence, and wallet-side ledger/projection rows; returns exact text-form aggregates and bounded UTC daily buckets; and withholds private evaluation, commerce, identity, and ledger evidence.
 
 ## RLS and privileges
 

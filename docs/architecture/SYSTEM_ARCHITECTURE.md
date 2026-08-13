@@ -41,7 +41,7 @@ flowchart LR
   Proxy --> Envoy
   Envoy --> Auth
   Envoy --> Rest
-  Web -->|"user JWT; read-only RLS paths"| Rest
+  Web -->|"user JWT; RLS reads + audited merchant commands"| Rest
   Web -->|"short server transactions"| Pool
   Ingest -->|"verified delivery only"| Pool
   Worker -->|"private operations"| Pool
@@ -108,12 +108,47 @@ Circular dependencies are forbidden. Platform adapters translate at the edge; do
 3. The command rechecks membership/permission, locks affected wallets in ascending ID order, validates programme version, inserts a balanced immutable transaction, updates rebuildable projections, writes audit and outbox rows, and commits.
 4. External effects happen only after commit.
 
+### Merchant programme command
+
+1. The server action validates the versioned contract and generates a correlation ID; tenant and actor IDs are deliberately absent from merchant command payloads.
+2. PostgREST executes one exposed, exact-signature command using the user's JWT. The command rechecks a live owner/admin membership, derives the actor from request claims, and locks the target programme.
+3. PostgreSQL canonicalizes and hashes the configuration. Draft, publish, and schedule operations append an immutable tenant audit event in the same transaction; retry keys return the original result or reject changed input.
+4. Publication requires the exact reviewed hash and materializes immutable tier/reward rows. Prior published versions are superseded, never rewritten.
+
 ### WooCommerce delivery
 
 1. Plugin writes a local outbox row before attempting delivery.
 2. Ingestion verifies connection status, timestamp/nonce policy, and HMAC over raw bytes before JSON processing.
 3. An accepted delivery is inserted once and acknowledged; duplicates return the original receipt result.
 4. Workers normalize and apply effects idempotently. Late facts remain visible and reconciliation repairs controlled gaps.
+
+### Merchant connector operation
+
+1. The server page selects an organization/connection already resolved through Auth and RLS, then calls a bounded security-definer read wrapper because private queues have no Data API grants.
+2. PostgreSQL rechecks live membership and returns only queue counts or minimized issue metadata; raw bodies, payloads, source IDs, coupon data, and signing references remain private.
+3. A replay action validates the versioned command and requires a reviewed reason. PostgreSQL rechecks owner/admin/operator authority, locks the canonical event, and permits only `dead_letter -> retryable` with immutable audit evidence.
+4. Outbound coupon dead letters and quarantined work are not replayable from the generic merchant surface. The former may already be compensated; the latter requires remediation before retry.
+
+### Merchant source reconciliation
+
+1. An owner/admin/operator reviews one canonical WooCommerce order ID and reason; the public command omits tenant and actor authority.
+2. PostgreSQL rechecks live connection membership/status, locks the connection, and atomically writes immutable audit evidence plus one private `woocommerce.order.reconcile` outbox command.
+3. The signed command poll delivers only the command identity, connection, topic, timestamp, and bounded order instruction. The plugin re-reads WooCommerce and appends stable local source facts; it never edits central points.
+4. Existing local event keys and central delivery/effect fences make retries idempotent. Missing orders terminate explicitly, transient plugin failures retry with a bounded delay, and the durable command retains its acknowledgement state.
+
+### Merchant Overview reporting
+
+1. The server component resolves a live tenant/workspace/programme group and accepts only a bounded 7/30/90-day URL range.
+2. A stable security-definer read wrapper rechecks membership plus active workspace/group scope, then aggregates private programme evaluations, canonical source linkage, wallet projections, and immutable ledger entries.
+3. Only exact text-form totals, basis-point rates, currency metadata, and a bounded daily series cross the Data API. Raw orders, identities, evaluations, entries, actors, reasons, and signing references remain private.
+4. The client formats integers with `BigInt` and labels definitions precisely: eligible loyalty spend, repeat members with two or more eligible orders, captured divided by awarded points, and point liability. Missing scope produces an honest empty setup state rather than demo data.
+
+### Merchant customer adjustment
+
+1. The customer page requests an owner/admin-only text-form available balance so browser preview retains full `bigint` precision. The UI requires reason, review, confirmation, and future expiry for credits; removals receive a stronger warning.
+2. The server action validates the actorless versioned command and submits customer/group/version public IDs, signed points, minimized notes, idempotency, and correlation through the user's JWT.
+3. PostgreSQL rechecks live owner/admin authority, locks the active wallet, validates exact published-version tenancy, hashes the canonical request, and invokes one private immutable-ledger command.
+4. The balanced ledger transaction, entries, credit lot or debit allocations, projection updates, and administration audit evidence commit atomically. Retry returns the prior identity or rejects changed input; no history is edited.
 
 ## Availability and failure rules
 

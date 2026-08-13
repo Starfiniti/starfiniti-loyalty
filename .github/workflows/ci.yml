@@ -9,6 +9,16 @@ permissions:
   contents: read
 
 jobs:
+  containers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - name: Build pinned dashboard image
+        run: docker build --file apps/dashboard/Dockerfile --tag starfiniti-dashboard:ci .
+      - name: Build pinned worker image
+        run: docker build --file apps/worker/Dockerfile --tag starfiniti-worker:ci .
+
   baseline:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -80,6 +90,8 @@ jobs:
           npx wp-env run cli --config "${{ matrix.runtime.config }}" wp plugin activate starfiniti-loyalty
           npx wp-env run cli --config "${{ matrix.runtime.config }}" wp option update woocommerce_custom_orders_table_enabled "${{ matrix.runtime.hpos }}"
           npx wp-env run cli --config "${{ matrix.runtime.config }}" wp option update starfiniti_runtime_expected_hpos "${{ matrix.runtime.hpos }}"
+      - name: Install Slovenian runtime language
+        run: npx wp-env run cli --config "${{ matrix.runtime.config }}" wp language core install sl_SI
       - name: Exercise native coupon order and reconciliation paths
         run: npx wp-env run cli --config "${{ matrix.runtime.config }}" wp eval-file wp-content/plugins/starfiniti-loyalty/tests/runtime-smoke.php
       - name: Remove WordPress runtime containers and volumes

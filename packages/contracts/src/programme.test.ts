@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   createProgrammeDraftCommandV1,
+  customerRewardRedemptionRequestV1,
+  customerRewardRedemptionResultV1,
+  merchantCreateProgrammeCommandV1,
+  merchantCreateProgrammeDraftCommandV1,
+  merchantPublishProgrammeVersionCommandV1,
   programmeDefinitionV1,
   programmeEvaluationEvidenceV1,
   rewardTransitionCommandV1,
@@ -28,7 +33,11 @@ const definition = {
       name: "Ten euro off",
       kind: "fixed_discount" as const,
       costPoints: "1000",
-      configuration: { amountMinor: "1000" },
+      configuration: {
+        amountMinor: "1000",
+        currencyMinorUnitDigits: 2,
+        validityDays: 30,
+      },
     },
   ],
 };
@@ -62,6 +71,122 @@ describe("programme contracts", () => {
     }
   });
 
+  it("validates native WooCommerce coupon configuration before publication", () => {
+    const reward = definition.rewards[0];
+    expect(
+      programmeDefinitionV1.safeParse({
+        ...definition,
+        rewards: [
+          {
+            ...reward,
+            kind: "percentage_discount",
+            configuration: {
+              percentageBasisPoints: 1500,
+              maximumDiscountMinor: null,
+              currencyMinorUnitDigits: 2,
+              validityDays: 14,
+            },
+          },
+          {
+            ...reward,
+            code: "shipping",
+            kind: "free_shipping",
+            configuration: { validityDays: 7 },
+          },
+        ],
+      }).success,
+    ).toBe(true);
+    expect(
+      programmeDefinitionV1.safeParse({
+        ...definition,
+        rewards: [
+          {
+            ...reward,
+            kind: "percentage_discount",
+            configuration: {
+              percentageBasisPoints: 1500,
+              maximumDiscountMinor: "2500",
+              currencyMinorUnitDigits: 2,
+              validityDays: 14,
+            },
+          },
+        ],
+      }).success,
+    ).toBe(false);
+    for (const configuration of [
+      { amountMinor: "0", currencyMinorUnitDigits: 2, validityDays: 30 },
+      { amountMinor: "500", currencyMinorUnitDigits: 9, validityDays: 30 },
+      { amountMinor: "500", currencyMinorUnitDigits: 2, validityDays: 366 },
+    ]) {
+      expect(
+        programmeDefinitionV1.safeParse({
+          ...definition,
+          rewards: [{ ...reward, configuration }],
+        }).success,
+      ).toBe(false);
+    }
+  });
+
+  it("keeps merchant commands on public IDs with server-derived authority", () => {
+    expect(
+      merchantCreateProgrammeCommandV1.safeParse({
+        version: "1",
+        programmeGroupId: "71000000-0000-4000-8000-000000000100",
+        slug: "rosy-rewards",
+        name: "Rosy Rewards",
+        idempotencyKey: "programme:create:71000000",
+        correlationId: "71000000-0000-4000-8000-000000000200",
+      }).success,
+    ).toBe(true);
+    expect(
+      merchantCreateProgrammeDraftCommandV1.safeParse({
+        version: "1",
+        programmeId: "71000000-0000-4000-8000-000000000101",
+        configuration: definition,
+        idempotencyKey: "programme:draft:71000000",
+        correlationId: "71000000-0000-4000-8000-000000000201",
+      }).success,
+    ).toBe(true);
+    expect(
+      merchantPublishProgrammeVersionCommandV1.safeParse({
+        version: "1",
+        programmeVersionId: "71000000-0000-4000-8000-000000000102",
+        expectedConfigurationSha256: "a".repeat(64),
+        idempotencyKey: "programme:publish:71000000",
+        correlationId: "71000000-0000-4000-8000-000000000202",
+      }).success,
+    ).toBe(true);
+    expect(
+      merchantPublishProgrammeVersionCommandV1.safeParse({
+        version: "1",
+        programmeVersionId: "71000000-0000-4000-8000-000000000102",
+        expectedConfigurationSha256: "a".repeat(64),
+        idempotencyKey: "programme:publish:forged",
+        correlationId: "71000000-0000-4000-8000-000000000202",
+        approvedByUserId: "71000000-0000-4000-8000-000000000001",
+      }).success,
+    ).toBe(false);
+    expect(
+      merchantCreateProgrammeDraftCommandV1.safeParse({
+        version: "1",
+        programmeId: "3",
+        configuration: definition,
+        idempotencyKey: "programme:draft:bad",
+        correlationId: "71000000-0000-4000-8000-000000000201",
+      }).success,
+    ).toBe(false);
+    expect(
+      merchantCreateProgrammeCommandV1.safeParse({
+        version: "1",
+        programmeGroupId: "71000000-0000-4000-8000-000000000100",
+        slug: "Rosy Rewards",
+        name: " Rosy Rewards ",
+        idempotencyKey: "programme:create:bad",
+        correlationId: "71000000-0000-4000-8000-000000000200",
+      }).success,
+    ).toBe(false);
+  });
+
   it("requires stable hashes around evaluation evidence", () => {
     const evidence = {
       version: "1",
@@ -93,6 +218,34 @@ describe("programme contracts", () => {
         inputSha256: "bad",
       }).success,
     ).toBe(false);
+  });
+
+  it("keeps customer redemption authority on an account, reward code, and request UUID", () => {
+    expect(
+      customerRewardRedemptionRequestV1.safeParse({
+        version: "1",
+        accountId: "91000000-0000-4000-8000-000000000160",
+        rewardCode: "five-off",
+        requestId: "91000000-0000-4000-8000-000000000900",
+      }).success,
+    ).toBe(true);
+    expect(
+      customerRewardRedemptionRequestV1.safeParse({
+        version: "1",
+        accountId: "91000000-0000-4000-8000-000000000160",
+        rewardCode: "five-off",
+        requestId: "91000000-0000-4000-8000-000000000900",
+        organizationId: "1",
+        points: "1",
+      }).success,
+    ).toBe(false);
+    expect(
+      customerRewardRedemptionResultV1.safeParse({
+        reservationId: "91000000-0000-4000-8000-000000000990",
+        state: "reserved",
+        outcome: "created",
+      }).success,
+    ).toBe(true);
   });
 
   it("accepts connector and ledger evidence on reward transitions", () => {

@@ -102,3 +102,227 @@
 - Added a four-case Docker-backed matrix for WordPress 6.6.5/WooCommerce 9.0.2/PHP 8.1 and WordPress 7.0.2/WooCommerce 10.9.4/PHP 8.3 in HPOS and legacy modes.
 - Exact-head run `31577312529` passed classic and Blocks-native coupon use with a configured unreachable hub and zero checkout HTTP calls, PII-free capture, partial/full refunds, reconciliation idempotency, activate/deactivate/reactivate, bounded dead-letter exhaustion, and operator retry.
 - Closed `P7-WOOCOMMERCE-CONNECTOR`; the broader PHP, money, cache, and lifecycle release matrix remains tracked by R-008 rather than overstated.
+
+## 2026-08-12 — Phase 9 merchant operations and source reconciliation
+
+- Added tenant-scoped customer wallet/ledger reads, payload-free connector queue summaries/issues, guarded canonical-effect replay, and owner/admin immutable point adjustments with exact bigint preview.
+- Exact-head runs `31581760825`, `31584171545`, and `31584351529` passed the clean baseline, disposable Supabase verification, and all minimum/current HPOS/legacy WooCommerce runtime variants for those slices.
+- Added a reviewed owner/admin/operator source-order repair that atomically records actor/reason audit evidence and one private `woocommerce.order.reconcile` command.
+- Extended the signed connector envelope and polling route. The plugin reuses its stable local reconciliation primitive to append order, refund, and coupon-capture facts without a central ledger mutation; missing orders dead-letter explicitly.
+- Added 37 pgTAP assertions for privilege, tenant, role, revocation, input, live-connection, idempotency, claim-lease, acknowledgement, private-outbox, and immutable-audit boundaries, plus signed plugin runtime cases.
+- Exact-head run `31585681985` passed that reconciliation slice with a clean Next.js build, ten migrations and 485 pgTAP assertions, and all four real WooCommerce runtime variants.
+
+## 2026-08-12 — Phase 9 tenant-authorized Overview reporting
+
+- Removed hard-coded Overview figures and the preview analytics disclaimer; no synthetic tenant value is rendered as truth.
+- Added a stable, live-membership reporting wrapper scoped to one active organization/workspace/programme assignment and allowlisted 7/30/90-day UTC windows.
+- Defined loyalty members/new members, eligible loyalty spend, repeat-member rate, captured-to-awarded point redemption, and pending/available/reserved point liability from immutable evaluation, ledger, and projection evidence.
+- Kept raw canonical payloads, channel identities, evaluation inputs/explanations, ledger rows/metadata, actors, reasons, and signing material outside the browser response.
+- Added exact text-form reporting contracts, `BigInt` formatting, aligned current/previous chart series, honest empty scope, and 33 pgTAP plus seven unit assertions for precision, boundaries, definitions, minimization, and tenant isolation.
+- Exact-head run `31588394642` passed the clean baseline, eleven migrations, all 518 pgTAP assertions, concurrency/property probes, and all four real WooCommerce runtime variants.
+
+## 2026-08-12 — Phase 9 exact customer read models
+
+- Replaced multi-query JavaScript assembly with stable, live-membership database wrappers for the bounded customer list and 100-entry customer ledger detail.
+- Cast every wallet balance and ledger point value to text before the Data API and format it with `BigInt`, removing IEEE-754 precision loss from customer screens.
+- Moved channel-ID masking into PostgreSQL, made search literal and capped at 100 characters/50 results, and kept actor IDs, reasons, metadata, request hashes, and raw commerce evidence out of the response.
+- Added 33 pgTAP assertions for privileges, search paths, indexed access, exact large integers, masking/minimization, fixed bounds, empty wallet scope, group mismatch, revocation, and cross-tenant isolation plus one dashboard precision test.
+- Exact-head run `31589866616` passed the clean baseline, twelve migrations, all 551 pgTAP assertions, concurrency/property probes, and all four real WooCommerce runtime variants after one external Composer TLS retry.
+
+## 2026-08-12 — Phase 9 initial programme onboarding
+
+- Replaced the developer-dependent empty programme state with a guided owner/admin form for creating the first programme inside the selected active programme group.
+- Added a narrow `create_programme_command` that derives actor and organization from live database state, locks the group, validates canonical name/slug inputs, preserves exact retry identity, and commits `programme.create` audit evidence atomically.
+- Kept direct programme inserts unavailable to authenticated clients and left public organization/group provisioning disabled until abuse, billing, and lifecycle controls exist.
+- Added 35 pgTAP assertions for exact privileges/search paths, canonical inputs, owner/admin authority, tenant/group derivation, retry/conflict behavior, role revocation, suspended groups, cross-tenant denial, RLS-filtered audit reads, and audit immutability.
+- Exact-head run `31591151097` passed the clean baseline, thirteen migrations, all 586 pgTAP assertions, concurrency/property probes, and all four real WooCommerce runtime variants.
+
+## 2026-08-12 — Phase 9 customer tier visibility
+
+- Added a tenant-authorized one-row tier read model over the current membership interval and its immutable qualification decision.
+- Exposed current and qualified tier labels, transition, exact text-form eligible-spend minor units, and effective/below-threshold/grace timestamps while omitting explanations, hashes, idempotency keys, actors, and unrelated history.
+- Added responsive merchant customer-detail presentation with an honest unevaluated state and no invented tier default.
+- Added 27 pgTAP assertions for exact privileges/search paths, bounds, grace semantics, large-integer preservation, minimization, live analyst access, and revoked/suspended/cross-tenant denial.
+- Exact-head run `31592427051` passed the clean baseline, fourteen migrations, all 613 pgTAP assertions, concurrency/property probes, and all four real WooCommerce runtime variants.
+
+## 2026-08-12 — Phase 9 keyboard bypass and responsive authentication
+
+- Added a first-focus skip link and one focusable `main` target to all seven route surfaces so keyboard users can bypass repeated merchant navigation.
+- Extended the shared visible-focus treatment to text areas while preserving the existing reduced-motion override and 44-pixel skip-link target.
+- Added a deterministic accessibility validator to the complete repository check for route targets, skip-link wiring, text-area focus, and reduced-motion coverage.
+- Rendered the authentication page at desktop and 390-pixel widths; the mobile capture exposed a CSS Grid intrinsic-size overflow, corrected with a bounded, shrinkable card width.
+- Local accessibility validation, dashboard lint/typecheck, and all 27 dashboard tests pass. The in-app browser could not route to the workstation's localhost, so the successful local Edge DOM/capture evidence is recorded without claiming automated WCAG conformance.
+- Exact-head run `31596460783` passed the baseline, fourteen migrations, all 613 pgTAP assertions, concurrency/property probes, and all four WooCommerce runtime variants.
+
+## 2026-08-12 — Phase 9 sanitized support diagnostics
+
+- Added a versioned JSON diagnostic download to the tenant operations view using the same live-membership/RLS-scoped connector read model already visible to the merchant.
+- Aggregated the newest bounded issue sample by canonical kind, state, operation, error code, and retryability; the bundle labels both returned and maximum sample counts, and individual queue item IDs never enter it.
+- Omitted display names, raw payloads, source/customer identifiers, actors, reasons, signing references, and secrets, and fail-closed redacted any noncanonical diagnostic string that could carry private text.
+- Added direct unit evidence for deterministic scope, queue aggregation, issue grouping, impossible-counter normalization, and forbidden-value absence.
+- Exact-head run `31597255280` passed the baseline, fourteen migrations, all 613 pgTAP assertions, concurrency/property probes, and all four WooCommerce runtime variants.
+
+## 2026-08-12 — Phase 9 WooCommerce localization foundation
+
+- Registered the self-distributed plugin's `/languages` directory at WordPress `init`, avoiding the too-early translation loading rejected by current WordPress behavior.
+- Added an exact POT template for all 38 connector strings and a bundled Slovenian catalog using the performant `.l10n.php` format supported by every declared WordPress version.
+- Added a deterministic validator for literal text-domain use, exact/no-stale POT coverage, customer-string coverage, nonempty translations, and placeholder parity; the validator is part of `npm run check` through `woocommerce:validate`.
+- Verified the installable ZIP includes both language artifacts and added a real `sl_SI` locale switch plus localized customer-navigation assertion to every minimum/current HPOS/legacy runtime cell.
+- Exact-head run `31598618092` passed the baseline, fourteen migrations, all 613 pgTAP assertions, concurrency/property probes, and the Slovenian navigation assertion in all four WooCommerce runtime variants.
+
+## 2026-08-12 — Phase 9 controlled customer-experience themes
+
+- Added one revisioned theme per linked tenant workspace/programme group with composite tenant foreign keys, member-read RLS, no direct browser DML, and an owner/admin-only idempotent command that appends immutable audit evidence.
+- Defined a strict v1 token contract for a canonical brand color with 4.5:1 white-text contrast, three local font stacks, bounded radius and copy, tier/reward visibility, and widget side. Raw CSS, font URLs, scripts, and uploads are rejected rather than stored.
+- Added a responsive `/experience` merchant editor with live member-wallet and guest previews, honest unsaved/revision state, role-aware controls, and setup guidance for unlinked scope.
+- Added 41 adversarial pgTAP assertions, six new unit tests across contracts/dashboard, an eighth keyboard-bypass route guard, and a production-build route check.
+- Exact-head run `31600742177` passed the baseline, fifteen migration replays, all 654 pgTAP assertions, concurrency/property probes, and all four localized WooCommerce runtime variants.
+
+## 2026-08-12 — Phase 9 customer activity filters
+
+- Added allowlisted URL filters for order earnings/refunds, reward reservation/capture/cancel, release/expiry, and manual adjustment activity on the customer detail timeline.
+- Kept the existing newest-first, RLS-scoped, 100-entry minimized database response as the only data source; filtering neither queries nor exposes raw commerce, identity, metadata, reason, actor, or request evidence.
+- Added visible filtered/total counts and distinct no-wallet-history versus no-matching-activity states, with keyboard-focusable filter links.
+- Added three adversarial unit tests for unknown/array query fallback, complete transaction-kind categorization, and stable non-mutating filtering; the full unit total is 109.
+- Exact-head run `31601351946` passed the baseline, fifteen migration replays, all 654 pgTAP assertions, concurrency/property probes, and all four localized WooCommerce runtime variants.
+
+## 2026-08-12 — Phase 9 controlled bulk customer adjustments
+
+- Added a responsive owner/admin route for selecting 2–50 active customers and reviewing exact database-derived before/after balances, aggregate effect, reason, expiry, programme version, and SHA-256 preview evidence.
+- Added a bounded preview contract plus atomic execution command that derives tenant/actor authority, locks balance rows in deterministic order, rejects stale approval, and preserves exact retry behavior after the original batch changes balances.
+- Added immutable RLS-scoped batch/item evidence, one zero-sum ledger transaction and credit lot/debit allocation per customer, and one minimized aggregate administration audit event.
+- Added 39 pgTAP assertions for non-mutating preview, canonical arithmetic/order, exact retry, stale/conflicting input, role/revocation/cross-tenant denial, evidence immutability, and projection rebuilds.
+- Exact-head run `31603764054` passed all six jobs: sixteen migration replays, all 693 pgTAP assertions, concurrency/property probes, and all four localized WooCommerce runtime variants.
+
+## 2026-08-12 — Phase 9 WooCommerce storefront budgets
+
+- Documented and enforced a zero-byte connector JavaScript, zero-byte connector CSS, and zero hub-request budget for customer account/cart rendering and checkout behavior.
+- Retained native WooCommerce markup and coupon application, capped one account response at 20 active rewards, and set explicit source/markup ceilings so future expansion requires review.
+- Extended all minimum/current HPOS/legacy runtime cells to render account/cart loyalty surfaces during forced hub outage and assert bounded semantic asset-free output with no HTTP request.
+- Exact-head run `31604654919` passed all six jobs, including every storefront assertion in all four localized WooCommerce runtime variants and the unchanged 693-assertion database gate.
+
+## 2026-08-12 — Phase 9 hosted customer translations
+
+- Added separate RLS-scoped, revisioned customer-copy rows for the explicit English and Slovenian launch locales, keyed by the existing linked tenant workspace/programme scope.
+- Added an owner/admin-only idempotent save command with canonical request hashing and immutable audit evidence containing scope, locale, and revision but no translated text.
+- Refactored the experience editor into independent design-token and translation forms with a live locale selector; existing saved English theme copy remains the fallback until explicitly translated.
+- Added strict contracts and 33 pgTAP assertions for supported locales, input/markup bounds, direct-DML denial, independent revisions, retries/conflicts, role/revocation/tenant/mixed-scope denial, RLS, and audit immutability.
+- Exact-head run `31606226276` passed all six jobs: 114 unit tests, seventeen migration replays, all 726 pgTAP assertions, concurrency/property probes, and all four localized WooCommerce runtime variants.
+
+## 2026-08-12 — Phase 9 hosted guest loyalty delivery
+
+- Added a responsive public route for one active workspace and published programme with explicit English/Slovenian switching, merchant-controlled safe theme tokens, localized approved copy, exact tier rates, and bounded reward presentation.
+- Added one stable anonymous PostgreSQL projection capped at 12 tiers and 20 rewards. The response omits organization identity, customers, ledgers, raw programme/reward configuration, actors, audits, connectors, signing data, and commerce evidence; underlying tables remain unavailable to `anon`.
+- Added malformed-ID rejection before PostgreSQL, mixed/unknown/suspended/unpublished fail-closed cases, a merchant launch link, exact bigint formatting tests, and 26 pgTAP assertions proving the narrow schema/function grants, minimization, and zero read-side effects.
+- Exact-head run `31608392260` passed all six jobs: 119 unit tests, eighteen migration replays, all 752 pgTAP assertions, concurrency/property probes, and all four localized WooCommerce runtime variants.
+
+## 2026-08-12 — Phase 9 signed authenticated customer delivery
+
+- Added a locally generated five-minute WooCommerce customer capability binding connection, numeric customer ID, issue time, UUID nonce, and current key version under the encrypted connector HMAC key; account rendering still makes zero hub requests.
+- Added verified-Auth login continuation and an explicit store-labelled confirmation page with private/no-store/no-referrer handling so opening a link alone never changes identity state.
+- Added revocable `customer_user_links`, immutable hashed `identity_link_decisions`, unique active user/customer fences, serialized conflict checks, exact replay behavior, and a private runtime-only claim command that never matches email.
+- Added a no-argument Auth-derived self-service projection and responsive member page for exact pending/available/reserved points, current tier, nearest expiry, bounded safe rewards/reservations, and redacted recent activity.
+- Added 39 claim and 27 self-service pgTAP assertions plus four claim contract tests, a safe-navigation bound, two new accessibility route guards, 40-string English/Slovenian plugin coverage, and real link-signature assertions in every WooCommerce runtime cell.
+- Exact-head run `31618909782` passed all six jobs: 124 unit tests, twenty migration replays, all 818 pgTAP assertions, concurrency/property probes, and all four localized WooCommerce runtime variants.
+
+## 2026-08-12 — Phase 9 controlled customer reward redemption
+
+- Added an authenticated explicit-confirmation flow for native fixed-discount, percentage-discount, and free-shipping rewards; the browser submits only its linked account public ID, published reward code, and request UUID.
+- Added one private Auth-derived database command that resolves the active customer, tenant, connector, programme version, and wallet, then atomically creates the reservation, immutable FIFO ledger effect, transition evidence, and private WooCommerce coupon-issue command.
+- Added strict native coupon configuration contracts and database validation, exact idempotent retry semantics, full rollback on failure, and response minimization that excludes coupon codes, external customer IDs, and private command payloads.
+- Added 45 adversarial pgTAP assertions, bringing the suites to 126 unit tests and 863 database assertions, plus a 390-pixel unauthenticated browser check for safe login continuation and private response headers.
+- Exact-head run `31622879767` passed all six jobs: twenty-one migration replays, all 863 pgTAP assertions, concurrency/property probes, and all four localized WooCommerce runtime variants.
+
+## 2026-08-12 — Phase 9 WooCommerce customer erasure
+
+- Connected WooCommerce user deletion and its native privacy eraser to one opaque, locally deduplicated signed deletion event containing only the numeric channel subject.
+- Added an immutable private privacy-case boundary with separately stored per-connection 256-bit pepper material and keyed subject fingerprints so low-entropy source IDs are not retained as plain digests.
+- Added one leased worker transaction that pseudonymizes the channel/customer display state, revokes hosted access, scrubs raw and canonical deletion-event identifiers, preserves wallets and immutable ledger history, and suppresses repeat or later identity import.
+- Added 47 adversarial pgTAP assertions plus connector runtime and strict contract/worker tests, bringing the suites to 128 unit tests and 910 database assertions.
+- Exact-head run `31625573608` passed all six jobs: twenty-two migration replays, all 910 pgTAP assertions, concurrency/property probes, and all four localized WooCommerce runtime variants.
+
+## 2026-08-12 — Phase 9 hosted customer language continuity
+
+- Added one exact English/Slovenian locale boundary and complete system-copy dictionaries for login, WooCommerce claim, authenticated member-account, and native-reward redemption routes.
+- Preserved the selected locale through validated local authentication, confirmation, success, error, public-programme, and redemption navigation; unsafe protocol-relative, backslash, unsupported, and oversized inputs fall back to English.
+- Added the active WordPress locale to locally generated customer claim links outside the purpose-bound HMAC message, retaining the existing connection/customer/nonce authority and zero-render-request behavior.
+- Added four locale unit tests and a 390-pixel Playwright check for Slovenian login, safe unauthenticated redemption continuation, and horizontal overflow, bringing the unit suite to 132 tests.
+- Exact-head run `31627622779` passed all six jobs: twenty-two migration replays, all 910 pgTAP assertions, concurrency/property probes, and active-locale claim assertions in all four localized WooCommerce runtime variants.
+
+## 2026-08-12 — Phase 9 one-time hosted customer data export
+
+- Added password reauthentication before export and a random five-minute, one-use capability stored only as a SHA-256 digest and bound to the verified Auth subject and Supabase session.
+- Added one no-selector private transaction that rechecks every active customer-link/tenant boundary, consumes the capability atomically, and returns a versioned document containing active linked identities, wallets, tiers, reservations, and complete wallet-side ledger history.
+- Returned the document directly over TLS with private/no-store attachment headers and no PostgreSQL, object-storage, queue, or log persistence; immutable per-customer audit records contain no export payload or Auth email.
+- Added 43 adversarial pgTAP assertions, contract/runtime tests, and a 390-pixel Slovenian password-reauthentication browser check, bringing the suites to 141 unit tests and 953 database assertions.
+- Exact-head run `31629852692` passed all six jobs: twenty-three migration replays, all 953 pgTAP assertions, concurrency/property probes, and all four localized WooCommerce runtime variants.
+
+## 2026-08-12 — Phase 9 guided WooCommerce connector provisioning
+
+- Added an owner/admin operations workflow for creating the first active WooCommerce connection only when the selected active workspace has an active programme with a published version.
+- Kept key selection behind the trusted application runtime: a deployment generator creates or atomically appends unique 256-bit keys in a root-readable read-only pool, while PostgreSQL stores only globally unique opaque references.
+- Added a runtime-only security-definer command with independent live role, tenant, workspace/programme, lifecycle, canonical store-origin, idempotency, and reference-reuse checks plus immutable secret-free audit evidence.
+- Added a one-result exact JSON package and a WooCommerce settings importer that validates and saves endpoint, connection UUID, key version, and signing key together through the existing encrypted-at-rest option.
+- Removed `signing_material_ref` from authenticated table-wide reads, added explicit safe-column grants, and proved that browser roles cannot call the provisioning command or observe secret references.
+- Added 44 adversarial pgTAP assertions, three contract tests, two dashboard helper tests, a safe key-pool generator test, 43-message Slovenian catalog coverage, and real package imports in all four minimum/current HPOS/legacy runtime cells, bringing the suites to 146 unit tests and 997 database assertions.
+- Exact-head run `31633310240` passed all six jobs: twenty-four migration replays, all 997 pgTAP assertions, concurrency/property probes, and real setup-package import in all four localized WooCommerce runtime variants.
+
+## 2026-08-12 — Reproducible deployment artifacts
+
+- Pinned every external dashboard/worker Docker stage to the same exact Node 24 Alpine manifest digest and added a build context that excludes Git state, dependencies, build output, coverage, logs, local environment files, and Supabase temporary state.
+- Added a pull-request container job that performs real dashboard and worker image builds on the Linux/Docker runner.
+- Added an exact `vMAJOR.MINOR.PATCH` release workflow that reruns the baseline and disposable migration/pgTAP gate before publishing dashboard and worker images under both commit-SHA and version tags.
+- Added checksummed WooCommerce ZIP publication to the matching GitHub release and static enforcement for tag trigger, least required workflow permissions, full-SHA actions, digest-pinned bases, both image builds, database cleanup, and Proxmox image variables.
+- Corrected the Proxmox environment template to require the worker image independently from the dashboard image. No release tag or production package has been created yet.
+- Exact-head run `31634024586` passed all seven jobs: real dashboard and worker Docker builds, the baseline, twenty-four migration replays, all 997 pgTAP assertions, concurrency/property probes, and all four localized WooCommerce runtime variants.
+
+## 2026-08-12 — Secret-safe production configuration preflight
+
+- Added a read-only preflight for the real off-repository Proxmox application environment and signing pool; output reports only pass/fail categories and pool-slot count, never supplied values.
+- Enforced exact template/Compose variable parity, no duplicate declarations or placeholder values, commit-SHA image tags or digests, distinct dashboard/worker repositories, canonical path-free HTTPS origins, and a plausible publishable key.
+- Required separate nonadministrative PostgreSQL logins with complete connection coordinates and an absolute 1–1000-entry signing pool containing canonical unique references and at least 256-bit exact-base64 keys.
+- Enforced no group/other access on the signing pool when run on Linux and added adversarial self-tests for floating images, shared credentials, HTTP origin, placeholder key, duplicate env variables, malformed pool, unsafe permissions, and secret-free failures.
+- Added the self-test to the complete repository check while keeping live DNS/TLS/connectivity, database role membership, package visibility, and restore evidence as real-environment gates.
+
+## 2026-08-12 — Dependency-aware dashboard readiness
+
+- Replaced the Proxmox dashboard root-page healthcheck with `/api/healthz`, a dynamic no-store route that exposes only `ok` or `unavailable` and catches all internal detail.
+- Added one read-only catalog query that requires the configured database login to possess the exact signed-ingestion and guided-provisioning function privileges, plus validation that the mounted key pool contains at least one canonical entry.
+- Added fail-closed pure tests for missing, null, duplicate, denied, and empty-pool states and made the deployment preflight require the readiness route in Compose.
+- Added a pgTAP assertion that executes the same production catalog probe under `loyalty_runtime`, bringing the suites to 147 unit tests and 998 database assertions.
+- Exact-head run `31635189128` passed all seven jobs: both production Docker builds, baseline, twenty-four migration replays, all 998 pgTAP assertions, concurrency/property probes, and all four localized WooCommerce runtime variants.
+
+## 2026-08-12 — Audited initial tenant bootstrap
+
+- Added one deployment-only PostgreSQL boundary that atomically creates an organization, first live owner membership, workspace, programme group, and workspace/group link for an existing Supabase Auth UUID.
+- Bound exact retries to a canonical request hash and stable organization-scoped idempotency key; changed retries, existing slugs, missing Auth users, noncanonical inputs, and partial state fail closed and roll back.
+- Appended one minimized immutable `tenant.bootstrap` administration event while excluding email and tenant display names from audit metadata.
+- Revoked execution from anonymous, authenticated, dashboard-runtime, and worker roles; the operator must connect directly through a trusted administration URL and assume `loyalty_owner` inside the transaction.
+- Added a confirmation-gated repository command, secret-redaction self-tests, a production runbook, and adversarial pgTAP coverage for privileges, atomic scope creation, exact retry, conflicts, minimization, and audit immutability.
+- Exact-head run `31636596218` passed all seven jobs: both production Docker builds, baseline, twenty-five migration replays, all 1,028 pgTAP assertions, concurrency/property probes, and all four localized WooCommerce runtime variants. The first run exposed one stale expected trigger message in the new test; the corrected exact head is green.
+
+## 2026-08-12 — Phase 9 authenticated merchant launch localization
+
+- Added one explicit English/Slovenian locale boundary to the authenticated Overview, programme, and connector-operations launch workflow, preserving it through safe links, sign-out, onboarding, draft saves, publish/schedule commands, provisioning, reconciliation, and effect replay.
+- Localized programme rules/rewards authoring, deterministic preview values, immutable history/audit, guided WooCommerce setup and one-time secret handling, queue health, sanitized diagnostics, and action feedback while retaining English fallback for merchant-supplied names and technical identifiers.
+- Replaced server-local parsing of `datetime-local` publication input with explicit Europe/Ljubljana conversion; winter/summer offsets are tested and DST gaps, ambiguous instants, malformed dates, and rolled calendar dates fail closed.
+- Added 390×844 and 1440×1000 Playwright passes over the real Overview, programme, and operations components. Locale switching, add-reward and provisioning-review interactions pass without horizontal overflow, console errors, or failed requests.
+- Exact-head runs `31638672681`, `31640311302`, and `31640919355` passed all seven jobs for the Overview, programme, and operations slices, ending at 154 unit tests, twenty-five migration replays, 1,028 pgTAP assertions, concurrency/property probes, both production images, and all four localized WooCommerce runtimes.
+
+## 2026-08-12 — Customer and experience administration localization
+
+- Localized customer search, detail, tier, wallet, immutable activity filters, individual adjustments, and exact-preview bulk adjustments in English and Slovenian while preserving locale through navigation, review forms, and server-action outcomes.
+- Reused one explicit Europe/Ljubljana wall-time parser for programme publication and customer credit expiries, retaining exact winter/summer conversion and fail-closed DST gap/ambiguity handling independently of the server timezone.
+- Localized the bounded experience-theme and customer-copy editor, role/validation/conflict/revision feedback, and responsive preview shell while keeping the independently selected customer preview locale authoritative for sample wallet copy and formatting.
+- Added a navigation-aware document-language and first-focus skip-link boundary with a server-rendered English accessibility fallback.
+- Playwright exercised the real customer and experience forms at 390×844 and 1440×1000, including adjustment review and customer-locale preview interactions, with no horizontal overflow, console errors, or failed requests. A production login pass verified the Slovenian document language and keyboard skip link.
+- Exact-head runs `31642070490`, `31642918324`, and `31643300533` passed all seven jobs with 154 unit tests, both production images, twenty-five migration replays, all 1,028 pgTAP assertions, concurrency/property probes, and all four localized WooCommerce runtime variants.
+
+## 2026-08-13 — Phase 9 adversarial release hardening
+
+- Replaced pre-buffer `Content-Length` checks on both public signed WooCommerce routes with a shared streaming 64 KiB reader that validates declared lengths, cancels overflow, and completes before database or signing-material access.
+- Added a ten-claim ceiling for issue, cancellation, and reconciliation commands. Exhausted and expired-ceiling commands enter an inspect-only `manual_review` state with bounded diagnostics; ambiguous coupon issuance keeps its reservation and creates no speculative release ledger transaction.
+- Removed unsupported maximum caps from native percentage rewards. Contracts and authoring reject them, PostgreSQL independently blocks direct authenticated publication/scheduling and legacy capped redemption before any durable effect, and the real plugin matrix now covers uncapped percentage coupons.
+- Moved allowlisted document language to the server-rendered root layout, preserved Slovenian across authenticated and guest redirects, strengthened the public experience color contract, and removed inert Overview search/preferences/notification and placeholder navigation affordances.
+- Parallel adversarial reviews covered complexity, security, value flows, project idioms, and prototype cruft; all verified blocker and should-fix findings were fixed and independently re-reviewed with no unresolved release-level finding.
+- Exact-head run `31645976689` passed all seven jobs with 164 unit tests, both production images, twenty-six migration replays, all 1,049 pgTAP assertions, concurrency/property probes, and uncapped percentage issuance in all four minimum/current HPOS/legacy WooCommerce runtimes.

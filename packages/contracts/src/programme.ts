@@ -6,6 +6,11 @@ const sha256Hex = z.string().regex(/^[a-f0-9]{64}$/u);
 const timestamp = z.iso.datetime({ offset: true });
 const operationKey = z.string().min(1).max(255);
 const code = z.string().regex(/^[a-z][a-z0-9_-]{0,79}$/u);
+const programmeSlug = z
+  .string()
+  .min(2)
+  .max(80)
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/u);
 
 export const programmeTierDefinitionV1 = z.object({
   code,
@@ -31,6 +36,19 @@ export const programmeRewardDefinitionV1 = z.object({
   costPoints: positiveBigintString,
   configuration: z.record(z.string(), z.unknown()).default({}),
 });
+
+function addRewardConfigurationIssue(
+  context: z.RefinementCtx,
+  index: number,
+  message: string,
+  field: string,
+) {
+  context.addIssue({
+    code: "custom",
+    message,
+    path: ["rewards", index, "configuration", field],
+  });
+}
 
 export const programmeDefinitionV1 = z
   .object({
@@ -70,6 +88,82 @@ export const programmeDefinitionV1 = z
         });
       }
       rewardCodes.add(reward.code);
+      const configuration = reward.configuration;
+      const validityDays = configuration.validityDays;
+      if (
+        ["fixed_discount", "percentage_discount", "free_shipping"].includes(
+          reward.kind,
+        ) &&
+        (!Number.isInteger(validityDays) ||
+          Number(validityDays) < 1 ||
+          Number(validityDays) > 365)
+      ) {
+        addRewardConfigurationIssue(
+          context,
+          index,
+          "Native coupon validity must be between 1 and 365 days",
+          "validityDays",
+        );
+      }
+      if (reward.kind === "fixed_discount") {
+        if (
+          typeof configuration.amountMinor !== "string" ||
+          !positiveBigintString.safeParse(configuration.amountMinor).success
+        ) {
+          addRewardConfigurationIssue(
+            context,
+            index,
+            "Fixed discounts require a positive minor-unit amount",
+            "amountMinor",
+          );
+        }
+        if (
+          !Number.isInteger(configuration.currencyMinorUnitDigits) ||
+          Number(configuration.currencyMinorUnitDigits) < 0 ||
+          Number(configuration.currencyMinorUnitDigits) > 6
+        ) {
+          addRewardConfigurationIssue(
+            context,
+            index,
+            "Currency precision must be between 0 and 6",
+            "currencyMinorUnitDigits",
+          );
+        }
+      }
+      if (reward.kind === "percentage_discount") {
+        if (
+          !Number.isInteger(configuration.percentageBasisPoints) ||
+          Number(configuration.percentageBasisPoints) < 1 ||
+          Number(configuration.percentageBasisPoints) > 10_000
+        ) {
+          addRewardConfigurationIssue(
+            context,
+            index,
+            "Percentage discounts must be between 0.01% and 100%",
+            "percentageBasisPoints",
+          );
+        }
+        if (configuration.maximumDiscountMinor !== null) {
+          addRewardConfigurationIssue(
+            context,
+            index,
+            "Native WooCommerce percentage discounts do not support a maximum",
+            "maximumDiscountMinor",
+          );
+        }
+        if (
+          !Number.isInteger(configuration.currencyMinorUnitDigits) ||
+          Number(configuration.currencyMinorUnitDigits) < 0 ||
+          Number(configuration.currencyMinorUnitDigits) > 6
+        ) {
+          addRewardConfigurationIssue(
+            context,
+            index,
+            "Currency precision must be between 0 and 6",
+            "currencyMinorUnitDigits",
+          );
+        }
+      }
     });
   });
 
@@ -94,6 +188,60 @@ export const scheduleProgrammeVersionCommandV1 =
   publishProgrammeVersionCommandV1.omit({ publishAt: true }).extend({
     scheduledFor: timestamp,
   });
+
+const merchantCommandIdentityV1 = z.object({
+  version: z.literal("1"),
+  idempotencyKey: operationKey,
+  correlationId: z.uuid(),
+});
+
+export const merchantCreateProgrammeCommandV1 = merchantCommandIdentityV1
+  .extend({
+    programmeGroupId: z.uuid(),
+    slug: programmeSlug,
+    name: z.string().trim().min(1).max(200),
+  })
+  .strict();
+
+export const merchantCreateProgrammeDraftCommandV1 = merchantCommandIdentityV1
+  .extend({
+    programmeId: z.uuid(),
+    configuration: programmeDefinitionV1,
+  })
+  .strict();
+
+export const merchantPublishProgrammeVersionCommandV1 =
+  merchantCommandIdentityV1
+    .extend({
+      programmeVersionId: z.uuid(),
+      expectedConfigurationSha256: sha256Hex,
+    })
+    .strict();
+
+export const merchantScheduleProgrammeVersionCommandV1 =
+  merchantPublishProgrammeVersionCommandV1
+    .extend({
+      scheduledFor: timestamp,
+    })
+    .strict();
+
+export const merchantProgrammeDraftResultV1 = z.object({
+  resourceId: z.uuid(),
+  outcome: z.enum(["created", "duplicate"]),
+  configurationSha256: sha256Hex,
+  versionNumber: z.number().int().positive(),
+});
+
+export const merchantProgrammeCreateResultV1 = z.object({
+  resourceId: z.uuid(),
+  outcome: z.enum(["created", "duplicate"]),
+});
+
+export const merchantProgrammePublishResultV1 = z.object({
+  resourceId: z.uuid(),
+  outcome: z.enum(["created", "duplicate"]),
+  effectiveAt: timestamp,
+});
 
 export const programmeEvaluationEvidenceV1 = z.object({
   version: z.literal("1"),
@@ -147,6 +295,21 @@ export const rewardTransitionCommandV1 = z.object({
   connectorExecutionReference: z.string().min(1).max(500).nullable(),
 });
 
+export const customerRewardRedemptionRequestV1 = z
+  .object({
+    version: z.literal("1"),
+    accountId: z.uuid(),
+    rewardCode: code,
+    requestId: z.uuid(),
+  })
+  .strict();
+
+export const customerRewardRedemptionResultV1 = z.object({
+  reservationId: z.uuid(),
+  state: rewardReservationState,
+  outcome: z.enum(["created", "duplicate"]),
+});
+
 export const programmeCommandResultV1 = z.object({
   version: z.literal("1"),
   resourceId: z.uuid(),
@@ -154,6 +317,18 @@ export const programmeCommandResultV1 = z.object({
 });
 
 export type ProgrammeDefinitionV1 = z.infer<typeof programmeDefinitionV1>;
+export type MerchantCreateProgrammeDraftCommandV1 = z.infer<
+  typeof merchantCreateProgrammeDraftCommandV1
+>;
+export type MerchantCreateProgrammeCommandV1 = z.infer<
+  typeof merchantCreateProgrammeCommandV1
+>;
+export type MerchantPublishProgrammeVersionCommandV1 = z.infer<
+  typeof merchantPublishProgrammeVersionCommandV1
+>;
+export type MerchantScheduleProgrammeVersionCommandV1 = z.infer<
+  typeof merchantScheduleProgrammeVersionCommandV1
+>;
 export type ProgrammeEvaluationEvidenceV1 = z.infer<
   typeof programmeEvaluationEvidenceV1
 >;

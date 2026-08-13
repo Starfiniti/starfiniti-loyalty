@@ -12,6 +12,7 @@ export default defineConfig([
   },
   globalIgnores([
     "**/.next/**",
+    ".artifacts/**",
     "**/dist/**",
     "**/coverage/**",
     "docs/design/prototype-source/**",

@@ -75,7 +75,7 @@ Initial versioned types are:
 - `commerce.coupon.captured`
 - `commerce.coupon.cancelled`
 
-Platform payloads are preserved only in the restricted delivery record. Canonical payloads contain integer minor units, ISO currency, stable source IDs, line/refund attribution, and the minimum customer attributes required by policy.
+Platform payloads are preserved only in the restricted delivery record. Canonical payloads contain integer minor units, ISO currency, stable source IDs, line/refund attribution, and the minimum customer attributes required by policy. Once a `commerce.customer.deleted` effect is applied, both the restricted delivery body and canonical event are reduced to an opaque privacy-case reference; a private keyed tombstone retains only what is needed to suppress re-import.
 
 ## Processing states
 

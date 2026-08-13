@@ -4,7 +4,7 @@ Open-source, self-hosted loyalty infrastructure for WooCommerce, built with Next
 
 ## Current status
 
-Phases 0 through 5 are implemented: the verified dashboard foundation, approved Rosy Rewards domain fixture, tenant/RLS model, signed WooCommerce ingestion/outbox, and immutable double-entry ledger all exist. Programme execution, the full merchant/customer product, production connector recovery, and real Proxmox deployment remain; see `STATUS.md` and `docs/plan/TASKS.yaml` for evidence.
+Phases 0 through 7 are complete for the active WooCommerce scope: the tenant/RLS platform, immutable double-entry ledger, versioned programme engine, signed asynchronous connector, recovery tooling, and supported WordPress/WooCommerce runtime matrix are execution-verified. Phase 9's authenticated merchant hub includes programme, customer, reporting, connector-operation, guided WooCommerce setup, hosted customer, accessibility, localization, and sanitized support surfaces. Real Proxmox deployment still requires the final production access and infrastructure inputs; see `STATUS.md` and `docs/plan/TASKS.yaml` for exact evidence.
 
 ## Prerequisites
 
@@ -30,6 +30,22 @@ npm run db:stop
 ```
 
 Start the dashboard with `npm run dev` and open `http://127.0.0.1:3000`.
+
+## Release artifacts
+
+Pull requests build both pinned Linux container images without publishing them. Pushing an exact `vMAJOR.MINOR.PATCH` tag runs the full baseline and disposable database gate, then publishes dashboard and worker images to GitHub Container Registry under both the version and commit-SHA tags. It also creates a GitHub release containing `starfiniti-loyalty.zip` and `SHA256SUMS`.
+
+Production Compose must use the commit-SHA image tags (or resolved digests), not a floating tag. A release tag is created only after the target commit is approved and all required checks are green.
+
+Before touching a production host, place its populated environment file and WooCommerce signing pool outside Git, then run:
+
+```sh
+npm run deploy:preflight -- --env /absolute/path/to/starfiniti.env
+```
+
+The preflight reads but never prints configuration values. It verifies environment/Compose parity, immutable image selectors, canonical HTTPS origins, distinct least-privilege database logins, and a valid owner-only signing pool. Network reachability, database role memberships, DNS/TLS, and backup recovery are verified later against the real environment.
+
+After migrations and creation of the first Supabase Auth user, the deployment operator can atomically create the initial tenant scope and owner membership with `npm run tenant:bootstrap`. The command reads its administration database URL only from a named environment variable, requires exact organization-slug confirmation, and is unavailable to browser/application roles. Follow [the initial tenant bootstrap runbook](docs/operations/INITIAL_TENANT_BOOTSTRAP.md); do not improvise membership SQL.
 
 ## Safety
 

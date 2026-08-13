@@ -41,9 +41,22 @@ Populate secret-managed environment files on the target hosts; never commit them
 
 Secret files are owner-readable only, excluded from backups unless encrypted escrow is intended, redacted from Compose inspection/support output, and rotated independently. Browser configuration contains only the public URL and publishable key.
 
+Generate the WooCommerce signing-key pool on the application host with `npm run woocommerce:keys -- --output <secret-path> --count <n>` and mount it read-only at the configured dashboard secret path. Use `--append` to preserve assigned references while adding capacity; the generator rejects replacement of existing values and performs an atomic file swap. Recreate the dashboard container after append so the bind mount observes the replacement inode. Back up the pool only through encrypted secret escrow: database rows contain references, not recoverable signing keys.
+
+Before applying Compose, run `npm run deploy:preflight -- --env /absolute/path/to/starfiniti.env` from the matching release source. The command never prints environment or key values. It requires exact environment/Compose parity, populated values, commit-SHA image tags or digests, distinct image repositories, canonical HTTPS origins, separate nonadministrative PostgreSQL logins, and a valid absolute signing-pool file. On Linux it also rejects any group/other permission bit on that file. Passing this offline preflight does not prove DNS, TLS, connectivity, database role membership, package visibility, or backup recovery; those remain live deployment checks.
+
+## Merchant authentication
+
+- Configure self-hosted Auth `SITE_URL` as the public dashboard origin and allow only the exact dashboard callback origins required by the environment.
+- Keep self-service signup disabled until an approved onboarding flow exists. Create the first Auth user through the approved Supabase administration path, then use `npm run tenant:bootstrap` from the matching release source to atomically create its owner membership and initial tenant scope. Follow `INITIAL_TENANT_BOOTSTRAP.md`; do not improvise direct membership inserts.
+- `API_EXTERNAL_URL` ends in `/auth/v1`; `SUPABASE_PUBLIC_URL` is the browser/client base URL. Both must resolve through TLS before password reset or OAuth links are enabled.
+- The dashboard receives only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. A Supabase secret/service-role key is not an application runtime dependency.
+- Configure `DASHBOARD_PUBLIC_ORIGIN` as the exact canonical lowercase HTTPS origin with no path. Guided connector setup derives its signed-event endpoint from this server-only value.
+- Reverse proxies and CDNs must preserve `Set-Cookie`, `Cache-Control`, `Expires`, `Pragma`, and `Vary` headers and must never cache authenticated HTML or Auth callback responses.
+
 ## Release process
 
-1. Build immutable application/plugin artifacts and generate dependency/container/plugin evidence.
+1. After all required checks pass on an approved commit, push one exact `vMAJOR.MINOR.PATCH` tag. The release workflow reruns the baseline and disposable database gate, publishes dashboard/worker GHCR images under the commit SHA and version, and attaches the WooCommerce ZIP plus `SHA256SUMS` to the GitHub release. Deploy the commit-SHA image tags or resolved digests, never a floating version tag.
 2. Back up and confirm WAL archive health before database migrations.
 3. Apply forward-compatible migrations with the old application still safe.
 4. Deploy one application/worker version with health checks and migrations disabled at runtime.
@@ -58,6 +71,7 @@ Supabase upgrades are separate change windows: restore rehearsal, release-note/b
 - Liveness proves a process event loop is responsive.
 - Readiness proves required configuration, database transaction, migration compatibility, and queue access without mutating customer value.
 - Public health responses expose no versions, topology, credentials, or tenant data.
+- Dashboard readiness at `/api/healthz` checks one database query for the exact runtime ingestion/provisioning privileges plus the locally mounted signing-pool schema. It returns only `ok` or `unavailable` with no-store headers and creates no business effect.
 - Workers stop claiming new work before shutdown and finish/expire leases safely.
 
 ## Rollback

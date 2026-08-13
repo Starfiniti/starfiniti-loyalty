@@ -67,6 +67,17 @@ final class Settings
         $connectionId = sanitize_text_field((string) wp_unslash($_POST['connection_id'] ?? ''));
         $keyVersion = sanitize_key((string) wp_unslash($_POST['key_version'] ?? ''));
         $encodedSigningKey = trim((string) wp_unslash($_POST['signing_key'] ?? ''));
+        $setupCode = trim((string) wp_unslash($_POST['setup_code'] ?? ''));
+        if ('' !== $setupCode) {
+            $connectionPackage = self::decodeConnectionPackage($setupCode);
+            if (null === $connectionPackage) {
+                self::redirect('invalid_setup_code');
+            }
+            $endpoint = $connectionPackage['endpoint'];
+            $connectionId = $connectionPackage['connectionId'];
+            $keyVersion = $connectionPackage['keyVersion'];
+            $encodedSigningKey = $connectionPackage['signingKey'];
+        }
         $error = self::validate($endpoint, $connectionId, $keyVersion, $encodedSigningKey);
         if (null !== $error) {
             self::redirect($error);
@@ -97,6 +108,7 @@ final class Settings
             'invalid_connection_id' => ['error', __('Enter the connection UUID issued by the hub.', 'starfiniti-loyalty')],
             'invalid_key_version' => ['error', __('Key version must look like v1, v2, and so on.', 'starfiniti-loyalty')],
             'invalid_signing_key' => ['error', __('Signing key must be valid base64 containing at least 32 random bytes.', 'starfiniti-loyalty')],
+            'invalid_setup_code' => ['error', __('The setup code is invalid or incomplete.', 'starfiniti-loyalty')],
             'signing_key_required' => ['error', __('A signing key is required for the initial connection.', 'starfiniti-loyalty')],
             'encryption_unavailable' => ['error', __('PHP Sodium is required to protect the connector signing key.', 'starfiniti-loyalty')],
         ];
@@ -141,6 +153,32 @@ final class Settings
         $nonce = random_bytes(SODIUM_CRYPTO_SECRETBOX_NONCEBYTES);
         $ciphertext = sodium_crypto_secretbox($encodedSigningKey, $nonce, self::encryptionKey());
         return base64_encode($nonce . $ciphertext);
+    }
+
+    /** @return array{endpoint:string,connectionId:string,keyVersion:string,signingKey:string}|null */
+    private static function decodeConnectionPackage(string $setupCode): ?array
+    {
+        $decoded = json_decode($setupCode, true, 8);
+        if (! is_array($decoded)) {
+            return null;
+        }
+        $expectedKeys = ['connectionId', 'endpoint', 'keyVersion', 'signingKey', 'version'];
+        $actualKeys = array_keys($decoded);
+        sort($actualKeys);
+        if ($actualKeys !== $expectedKeys || '1' !== ($decoded['version'] ?? null)) {
+            return null;
+        }
+        foreach (['endpoint', 'connectionId', 'keyVersion', 'signingKey'] as $key) {
+            if (! is_string($decoded[$key] ?? null)) {
+                return null;
+            }
+        }
+        return [
+            'endpoint' => $decoded['endpoint'],
+            'connectionId' => $decoded['connectionId'],
+            'keyVersion' => $decoded['keyVersion'],
+            'signingKey' => $decoded['signingKey'],
+        ];
     }
 
     private static function encryptionKey(): string

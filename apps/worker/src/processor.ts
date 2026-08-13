@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import {
   wooCommerceCouponCapturedPayloadV1,
+  wooCommerceCustomerDeletedPayloadV1,
   wooCommerceOrderRefundedPayloadV1,
   wooCommerceOrderStatusChangedPayloadV1,
   type WooCommerceOrderFactV1,
@@ -44,6 +45,7 @@ type ParsedEffect =
       readonly reservationId: string;
       readonly orderId: string;
     }
+  | { readonly kind: "customer_delete"; readonly externalCustomerId: string }
   | { readonly kind: "skip"; readonly reason: string }
   | { readonly kind: "quarantine"; readonly reason: string };
 
@@ -102,6 +104,15 @@ export function parseWooCommerceEffect(event: ClaimedEffect): ParsedEffect {
           orderId: parsed.data.orderId,
         }
       : { kind: "quarantine", reason: "invalid_coupon_capture_payload" };
+  }
+  if (event.event_type === "commerce.customer.deleted") {
+    const parsed = wooCommerceCustomerDeletedPayloadV1.safeParse(event.payload);
+    return parsed.success
+      ? {
+          kind: "customer_delete",
+          externalCustomerId: parsed.data.externalCustomerId,
+        }
+      : { kind: "quarantine", reason: "invalid_customer_deleted_payload" };
   }
   return { kind: "quarantine", reason: "unsupported_event_type" };
 }
@@ -168,6 +179,10 @@ export async function processWooCommerceEffect(
       await processCouponCapture(sql, workerId, event, effect);
       return;
     }
+    if (effect.kind === "customer_delete") {
+      await processCustomerDeletion(sql, workerId, event, effect);
+      return;
+    }
     if (effect.kind === "refund") {
       await processRefund(sql, workerId, event, effect);
       return;
@@ -229,6 +244,42 @@ export async function processWooCommerceEffect(
       permanent ? 0 : retryDelay(event.attempt_count),
     );
   }
+}
+
+async function processCustomerDeletion(
+  sql: Sql,
+  workerId: string,
+  event: ClaimedEffect,
+  effect: Extract<ParsedEffect, { kind: "customer_delete" }>,
+): Promise<void> {
+  await sql.begin(async (transaction) => {
+    const cases = await transaction<
+      { privacy_case_public_id: string; outcome: string }[]
+    >`
+      select privacy_case_public_id::text, outcome
+      from loyalty_private.apply_woocommerce_customer_erasure(
+        ${event.organization_id}::bigint,
+        ${event.connection_id}::bigint,
+        ${event.canonical_event_public_id}::uuid,
+        ${workerId},
+        ${effect.externalCustomerId}
+      )
+    `;
+    const privacyCase = cases[0];
+    if (!privacyCase) throw new Error("customer_erasure_record_failed");
+    await transaction`
+      select * from loyalty_private.finish_commerce_effect(
+        ${event.canonical_event_public_id}::uuid,
+        ${workerId},
+        'applied',
+        'privacy.customer.erasure',
+        ${`privacy-case:${privacyCase.privacy_case_public_id}`},
+        ${`privacy-case:${privacyCase.privacy_case_public_id}`},
+        null,
+        0
+      )
+    `;
+  });
 }
 
 async function processCouponCapture(

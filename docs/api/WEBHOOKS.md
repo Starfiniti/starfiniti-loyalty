@@ -32,6 +32,7 @@ The strict v1 worker boundary accepts these value-bearing payloads:
 - `commerce.order.status_changed`: a PII-free HPOS order snapshot. Only `completed` creates an award; other statuses are recorded as skipped.
 - `commerce.order.refunded`: a refund ID plus the cumulative order/refund snapshot. Reversal uses the original immutable award evidence, cumulative rounding, and a full-refund cap.
 - `commerce.coupon.captured`: `{ kind, reservationId, orderId }`. No email, coupon plaintext, or customer profile is accepted.
+- `commerce.customer.deleted`: `{ kind: "customer_deleted", externalCustomerId }` with one canonical numeric WooCommerce user ID and no email/profile fields. The local outbox key and source object are opaque; after application, the hub scrubs the ID from raw/canonical event evidence and retains a private keyed suppression tombstone.
 
 Malformed value facts are quarantined without logging their bodies. Retryable dependency failures use durable leases and bounded backoff; repeated failures become dead letters.
 

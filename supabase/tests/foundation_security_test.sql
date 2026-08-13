@@ -22,8 +22,8 @@ select ok(
 );
 
 select ok(
-  not has_schema_privilege('anon', 'loyalty', 'USAGE'),
-  'anonymous clients cannot use the loyalty schema'
+  has_schema_privilege('anon', 'loyalty', 'USAGE'),
+  'anonymous clients can resolve only explicitly granted loyalty functions'
 );
 
 select ok(
@@ -72,6 +72,32 @@ select is_empty(
     join pg_namespace as namespace on namespace.oid = routine.pronamespace
     where namespace.nspname in ('public', 'loyalty')
       and routine.prosecdef
+      and not (
+        namespace.nspname = 'loyalty'
+        and routine.oid::regprocedure::text in (
+          'loyalty.adjust_customer_points_command(uuid,uuid,uuid,bigint,text,text,timestamp with time zone,text,uuid)',
+          'loyalty.create_programme_command(uuid,text,text,text,uuid)',
+          'loyalty.create_programme_draft_command(uuid,jsonb,text,uuid)',
+          'loyalty.get_customer_adjustment_context(uuid,uuid)',
+          'loyalty.get_customer_read_model(uuid,uuid)',
+          'loyalty.get_customer_tier_read_model(uuid,uuid)',
+          'loyalty.get_my_loyalty_accounts()',
+          'loyalty.get_connector_operation_issues(uuid,integer)',
+          'loyalty.get_connector_operation_summaries(uuid)',
+          'loyalty.get_overview_report(uuid,uuid,uuid,integer,timestamp with time zone)',
+          'loyalty.list_customer_summaries(uuid,uuid,text)',
+          'loyalty.publish_programme_version_command(uuid,text,text,uuid)',
+          'loyalty.preview_bulk_customer_adjustment(uuid[],uuid,uuid,bigint,text,timestamp with time zone)',
+          'loyalty.redeem_my_reward(uuid,text,uuid)',
+          'loyalty.request_connector_reconciliation_command(uuid,text,text,text,uuid)',
+          'loyalty.get_public_loyalty_experience(uuid,uuid,text)',
+          'loyalty.retry_connector_effect_command(uuid,text,text,uuid)',
+          'loyalty.schedule_programme_version_command(uuid,text,timestamp with time zone,text,uuid)',
+          'loyalty.save_experience_translation_command(uuid,uuid,text,text,text,text,text,text,text,text,text,uuid)',
+          'loyalty.save_experience_theme_command(uuid,uuid,text,text,integer,text,text,boolean,boolean,text,text,uuid)',
+          'loyalty.execute_bulk_customer_adjustment(uuid[],uuid,uuid,bigint,text,timestamp with time zone,text,text,uuid)'
+        )
+      )
       and not exists (
         select 1
         from pg_depend as dependency
@@ -81,7 +107,7 @@ select is_empty(
           and dependency.deptype = 'e'
       )
   $$,
-  'no application security-definer function exists in an exposed schema'
+  'only reviewed merchant command security-definer functions exist in an exposed schema'
 );
 
 select * from finish();

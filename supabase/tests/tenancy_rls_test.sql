@@ -66,8 +66,8 @@ select ok(
   'authenticated cannot use the private schema'
 );
 select ok(
-  not has_schema_privilege('anon', 'loyalty', 'USAGE'),
-  'anonymous clients cannot use the loyalty schema'
+  has_schema_privilege('anon', 'loyalty', 'USAGE'),
+  'anonymous clients can resolve only explicitly granted loyalty functions'
 );
 select ok(
   has_schema_privilege('authenticated', 'loyalty', 'USAGE'),
@@ -96,6 +96,32 @@ select is_empty(
     join pg_namespace as namespace on namespace.oid = routine.pronamespace
     where namespace.nspname in ('public', 'loyalty')
       and routine.prosecdef
+      and not (
+        namespace.nspname = 'loyalty'
+        and routine.proname in (
+          'adjust_customer_points_command',
+          'create_programme_command',
+          'create_programme_draft_command',
+          'execute_bulk_customer_adjustment',
+          'get_customer_adjustment_context',
+          'get_customer_read_model',
+          'get_customer_tier_read_model',
+          'get_my_loyalty_accounts',
+          'get_connector_operation_issues',
+          'get_connector_operation_summaries',
+          'get_overview_report',
+          'get_public_loyalty_experience',
+          'list_customer_summaries',
+          'publish_programme_version_command',
+          'preview_bulk_customer_adjustment',
+          'redeem_my_reward',
+          'request_connector_reconciliation_command',
+          'retry_connector_effect_command',
+          'save_experience_translation_command',
+          'save_experience_theme_command',
+          'schedule_programme_version_command'
+        )
+      )
       and not exists (
         select 1
         from pg_depend as dependency
@@ -105,7 +131,7 @@ select is_empty(
           and dependency.deptype = 'e'
       )
   $$,
-  'no application security-definer function is exposed'
+  'only reviewed merchant command security-definer functions are exposed'
 );
 select results_eq(
   $$

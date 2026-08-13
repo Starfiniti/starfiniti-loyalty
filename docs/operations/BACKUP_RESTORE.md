@@ -14,6 +14,7 @@ VM snapshots are useful recovery aids but are not authoritative database backups
 2. Daily logical schema/global-object export for portability and inspection.
 3. Supabase/application pinned-version manifests and non-secret configuration.
 4. Encrypted secret escrow with separate access controls and rotation records.
+   The escrow must include the complete WooCommerce signing-key pool with stable references; PostgreSQL stores only those references, so restoring the database without the matching pool prevents signature verification and connector recovery.
 5. Storage-object backend backup/versioning when Storage becomes authoritative for user artifacts.
 6. WooCommerce plugin configuration/outbox recovery documentation; WordPress remains the commerce source for source facts.
 
@@ -33,6 +34,7 @@ VM snapshots are useful recovery aids but are not authoritative database backups
 3. Restore pinned Supabase/Postgres configuration and required secret escrow.
 4. Restore the latest valid base backup and replay WAL to the target point.
 5. Run database integrity, migration history, RLS/grant, ledger balance/projection, queue, Auth, and object-reference checks.
+   Confirm every active `commerce_connections.signing_material_ref` resolves to exactly one escrow-restored key without printing key material, and no pool reference backs more than one connection.
 6. Deploy the matching application image and run smoke/reconciliation tests.
 7. Replay privacy deletions/pseudonymizations newer than any restored copy before exposure.
 8. Record actual RPO/RTO, data gaps, checksums, versions, failures, and corrective actions.

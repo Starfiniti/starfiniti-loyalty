@@ -27,6 +27,8 @@ The decision command serializes by wallet. When the effective tier changes, it c
 
 Approved definitions support fixed or percentage discounts, free products, free shipping, store credit, exclusive access, and custom connector-neutral rewards. A reward request snapshots the version, reward, wallet, cost, expiry, idempotency key, and request hash.
 
+Native WooCommerce fixed discounts require a positive minor-unit amount, percentage discounts require 1–10,000 basis points and an optional positive maximum, currency precision is 0–6 digits, and fixed/percentage/free-shipping coupons require a 1–365 day validity. These fields are validated before a programme draft can be saved and rechecked before customer value moves.
+
 The state graph is:
 
 ```text
@@ -40,6 +42,8 @@ Value-bearing transitions must reference a unique ledger transaction for the sam
 Connector execution references must be opaque object IDs. Coupon plaintext is not persisted in this boundary.
 
 For WooCommerce native rewards, a reserved reward queues one high-entropy, customer-scoped coupon issue command. Successful connector acknowledgement records `issued`. A signed completed-order coupon fact then calls the narrow capture command, which locks the reservation and creates both the related `capture` ledger transaction and `captured` transition atomically. A retry returns the original transaction; the same reservation against another order conflicts.
+
+Authenticated hosted customers use `redeem_my_reward(account_public_id, reward_code, request_id)`. The account must be an active non-revoked link for the live Auth subject; tenant, customer, wallet, programme version, points, validity, and WooCommerce connection are never caller inputs. One transaction creates the reservation, reserves exact FIFO-funded points, records the transition, and queues the private coupon command. The response contains only reservation ID, state, and created/duplicate outcome.
 
 Expired unused coupons follow the inverse sequence: the worker queues one cancellation, WooCommerce refuses cancellation when native usage is already non-zero, and only a confirmed unused cancellation creates the related `cancel` ledger transaction and `released` transition. Capture and release serialize on the reservation row and remain mutually exclusive.
 

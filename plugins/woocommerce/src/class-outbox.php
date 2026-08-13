@@ -44,6 +44,7 @@ final class Outbox
     {
         add_action('woocommerce_order_status_changed', [self::class, 'captureOrderStatus'], 10, 4);
         add_action('woocommerce_refund_created', [self::class, 'captureRefund'], 10, 2);
+        add_action('delete_user', [self::class, 'captureCustomerDeletion'], 10, 1);
         add_action(self::ACTION, [self::class, 'deliverPending']);
     }
 
@@ -103,6 +104,24 @@ final class Outbox
             $refund->get_date_created()
                 ? gmdate('Y-m-d H:i:s', $refund->get_date_created()->getTimestamp())
                 : null
+        );
+    }
+
+    public static function captureCustomerDeletion(int $customerId): void
+    {
+        if ($customerId <= 0) {
+            return;
+        }
+        $externalCustomerId = (string) $customerId;
+        self::enqueue(
+            'privacy-erasure:' . hash_hmac('sha256', $externalCustomerId, wp_salt('auth')),
+            'commerce.customer.deleted',
+            'customer-erasure',
+            null,
+            [
+                'kind' => 'customer_deleted',
+                'externalCustomerId' => $externalCustomerId,
+            ]
         );
     }
 

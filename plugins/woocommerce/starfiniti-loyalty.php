@@ -9,6 +9,7 @@
  * WC tested up to: 10.9
  * License: GPL-2.0-or-later
  * Text Domain: starfiniti-loyalty
+ * Domain Path: /languages
  */
 
 defined('ABSPATH') || exit;
@@ -49,6 +50,7 @@ add_action('plugins_loaded', static function (): void {
 
     require_once __DIR__ . '/src/class-plugin.php';
     require_once __DIR__ . '/src/class-settings.php';
+    require_once __DIR__ . '/src/class-customer-claim.php';
     require_once __DIR__ . '/src/class-outbox.php';
     require_once __DIR__ . '/src/class-commands.php';
     require_once __DIR__ . '/src/class-privacy.php';

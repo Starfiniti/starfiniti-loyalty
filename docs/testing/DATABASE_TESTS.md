@@ -36,6 +36,12 @@ The last two checks are durable guards: they fail automatically when future migr
 
 `immutable_ledger_test.sql` adds 91 assertions for tenant keys, RLS/grants, immutable zero-sum entries, idempotency conflicts, canonical-event effects, release/expiry/original attribution, FIFO allocation, mutually exclusive reservation resolution, negative refund balances, manual adjustments, export/liability reports, and wallet/lot projection rebuilds.
 
+`merchant_overview_reporting_test.sql` adds 33 assertions for exact aggregate definitions, equal UTC periods, workspace/programme scope, large-integer preservation, private-source minimization, live role/revocation checks, and empty-tenant isolation. `customer_read_models_test.sql` adds 33 assertions for exact wallet/ledger values, database-side identifier masking, literal bounded search, indexed access, response minimization, group scope, revocation, and cross-tenant isolation. `initial_programme_onboarding_test.sql` adds 35 assertions for exact grants/search paths, owner/admin-only creation, server-derived tenant and actor, canonical bounds, retry/conflict behavior, duplicate slugs, suspended groups, revoked/cross-tenant denial, RLS-filtered audit visibility, and immutable audit evidence.
+
+`customer_tier_read_model_test.sql` adds 27 assertions for exact privileges/search paths, one-row bounds, current versus qualified tier and grace semantics, exact eligible-spend values beyond JavaScript's safe range, honest unevaluated state, response minimization, live analyst access, and revoked/suspended/cross-tenant denial.
+
+`initial_tenant_bootstrap_test.sql` adds 30 assertions for the deployment-only function boundary, absent browser/runtime/worker privileges, atomic tenant scope and owner creation, exact idempotent retry, changed-request and existing-slug denial, existing Auth identity, canonical inputs, minimized immutable audit evidence, and separation from authenticated programme launch.
+
 `scripts/verify-ledger-concurrency.mjs` opens two independent PostgreSQL sessions. One holds an 80-point reservation on a 100-point wallet while the other competes for the same 80 points. Exactly one commits. It then runs 20 deterministic adjust/reserve/capture/cancel sequences with retry probes and verifies every transaction remains balanced and every projection remains exact.
 
 ## CI

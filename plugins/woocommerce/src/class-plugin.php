@@ -8,6 +8,7 @@ final class Plugin
 {
     public static function boot(): void
     {
+        add_action('init', [self::class, 'loadTextDomain'], 0);
         add_action('admin_menu', [self::class, 'registerMenu']);
         add_action('admin_post_starfiniti_loyalty_save_settings', [Settings::class, 'handleSave']);
         add_action('init', [self::class, 'registerAccountEndpoint']);
@@ -18,6 +19,15 @@ final class Plugin
         Commands::boot();
         Privacy::boot();
         Cli::register();
+    }
+
+    public static function loadTextDomain(): void
+    {
+        load_plugin_textdomain(
+            'starfiniti-loyalty',
+            false,
+            dirname(plugin_basename(STARFINITI_LOYALTY_FILE)) . '/languages'
+        );
     }
 
     public static function registerMenu(): void
@@ -53,6 +63,9 @@ final class Plugin
         wp_nonce_field('starfiniti_loyalty_save_settings');
         echo '<input type="hidden" name="action" value="starfiniti_loyalty_save_settings">';
         echo '<table class="form-table"><tbody>';
+        echo '<tr><th scope="row"><label for="starfiniti_setup_code">' . esc_html__('One-time setup code', 'starfiniti-loyalty') . '</label></th><td>';
+        echo '<textarea class="large-text code" id="starfiniti_setup_code" name="setup_code" rows="6" spellcheck="false"></textarea>';
+        echo '<p class="description">' . esc_html__('Paste the complete setup code issued by the hub. It configures all connection fields at once.', 'starfiniti-loyalty') . '</p></td></tr>';
         self::textField('endpoint', __('HTTPS event endpoint', 'starfiniti-loyalty'), Settings::endpoint(), 'url');
         self::textField('connection_id', __('Connection UUID', 'starfiniti-loyalty'), Settings::connectionId());
         self::textField('key_version', __('Key version', 'starfiniti-loyalty'), Settings::keyVersion());
@@ -93,6 +106,17 @@ final class Plugin
         }
         $coupons = self::customerCoupons(get_current_user_id());
         echo '<h2>' . esc_html__('Loyalty rewards', 'starfiniti-loyalty') . '</h2>';
+        $accountLink = CustomerClaim::linkForUser(get_current_user_id());
+        if ('' !== $accountLink) {
+            echo '<p>' . esc_html__(
+                'View your live points, tier, and available rewards in the secure loyalty hub.',
+                'starfiniti-loyalty'
+            ) . '</p>';
+            echo '<p><a class="button" rel="noreferrer" href="' . esc_url($accountLink) . '">' . esc_html__(
+                'Open loyalty account',
+                'starfiniti-loyalty'
+            ) . '</a></p>';
+        }
         if ([] === $coupons) {
             echo '<p>' . esc_html__('No active loyalty coupons are available yet.', 'starfiniti-loyalty') . '</p>';
             return;

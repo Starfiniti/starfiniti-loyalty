@@ -15,6 +15,7 @@ Email, phone, name, cookie, IP address, and shipping/billing details are attribu
 
 - Supabase Auth establishes the user ID and session.
 - Organization roles come from `organization_memberships`, not `raw_user_meta_data`, email domain, or client-supplied organization ID.
+- The first production membership is created only after the Auth principal exists, through the deployment-only `loyalty_private.bootstrap_initial_tenant` boundary. Its direct PostgreSQL operator must assume `loyalty_owner`; browser, authenticated Data API, dashboard runtime, and worker roles have no execute privilege.
 - RLS helpers query live membership rows. Sensitive writes recheck membership inside the database command.
 - Revocation sets `revoked_at` immediately. Because access tokens may remain valid after Auth deletion/revocation, live membership checks fail closed; high-risk operations may additionally validate the Auth session ID.
 - `app_metadata` may carry non-authoritative UI hints, never the sole tenant authorization decision.
@@ -29,7 +30,7 @@ Email, phone, name, cookie, IP address, and shipping/billing details are attribu
 
 An external ID can be re-used only if the source platform contract proves reuse semantics and the original identity is explicitly retired; otherwise conflicts quarantine for review.
 
-## Guest claim flow
+## Channel claim flow
 
 ```mermaid
 sequenceDiagram
@@ -39,16 +40,20 @@ sequenceDiagram
   participant DB as Loyalty database
   participant WC as WooCommerce
 
-  G->>H: Request order/wallet claim
-  H->>A: Authenticate or create verified account
-  H->>WC: Send/verify channel-bound claim challenge
-  WC-->>H: Signed proof for scoped order/customer identity
-  H->>DB: Create claim decision with proof reference
+  G->>WC: Open Loyalty rewards while signed in
+  WC-->>G: Five-minute signed customer capability
+  G->>H: Open capability and authenticate
+  H->>A: Verify existing Auth session
+  H->>G: Show exact store and request confirmation
+  G->>H: Explicitly confirm link
+  H->>DB: Consume hashed nonce/proof and create decision
   DB->>DB: Check no conflicting active link; append audit; link identity
   DB-->>H: Claimed wallet/customer result
 ```
 
-Email possession alone is insufficient. The proof is channel-bound, short-lived, single-use, purpose-bound, and stored as a hash/reference rather than a reusable token.
+Email possession alone is insufficient. The implemented registered-customer proof binds the WooCommerce connection UUID, numeric customer ID, issue time, nonce, and active key version into a purpose-specific HMAC. It expires after five minutes, is consumed only by explicit POST confirmation under a verified Supabase Auth session, and stores SHA-256 evidence rather than the raw nonce/signature. Guest-order claim remains a later extension and must use a separately purpose-bound proof.
+
+Locale is presentation and navigation state only. WooCommerce may append the allowlisted active locale to the claim URL, but locale is excluded from the signed identity message and never participates in connection, customer, nonce, Auth-subject, or tenant resolution. Hosted authentication may recover locale only from an explicit supported value or a validated local continuation path.
 
 ## Link, merge, and split rules
 
@@ -63,7 +68,7 @@ Email possession alone is insufficient. The proof is channel-bound, short-lived,
 
 Hosted customer views use `customer_user_links` plus programme-group policy. They may read their own wallet, tier, expiry, reward, and redacted history. They cannot see internal fraud flags, other channel identities, merchant notes, raw events, or unrelated brands.
 
-Customer-facing commands such as reward reservation use the same private, idempotent command path as merchant/API actions; a browser never writes ledger rows.
+Customer-facing commands such as reward redemption accept only the linked account public ID, published reward code, and request UUID after explicit confirmation. PostgreSQL derives the Auth-linked customer and all tenant, connector, programme-version, and wallet authority, then atomically writes the reservation, immutable ledger effect, transition, and private connector command. A browser never supplies an external customer ID, receives a coupon code, or writes ledger rows.
 
 ## Support access
 
@@ -77,6 +82,8 @@ Support cannot impersonate by changing a session claim. A support grant requires
 - Ledger entries, transaction IDs, tax/accounting evidence, and fraud-prevention tombstones retain pseudonymous references when deletion would destroy integrity.
 - Commerce deletion events are idempotent and do not silently delete balances.
 
+WooCommerce-originated deletion is implemented as a signed minimized event. Its leased worker effect replaces the reusable registered channel ID with an opaque erasure reference, revokes active hosted links, clears display data, scrubs raw/canonical event identifiers, and retains a private connection-keyed suppression tombstone. Wallet and ledger authority remain unchanged and attributable to the pseudonymous customer.
+
 ## Identity threat controls
 
 | Threat                              | Control                                                           |
@@ -89,4 +96,4 @@ Support cannot impersonate by changing a session claim. A support grant requires
 | Account-link race                   | Unique active links, row locks, idempotent claim token            |
 | Erasure destroys ledger explanation | Pseudonymize identity attributes; retain immutable value evidence |
 
-Phase 3 must prove two-tenant isolation, revoked membership, forged IDs, customer self-access, and absent membership all fail closed.
+Phase 9 tests prove channel/tenant isolation, one-use replay conflict, active-link races, revocation, no-email authority, minimized customer self-access, and absent Auth subject all fail closed. Redemption tests additionally prove live-link derivation, exact retry identity, changed-request conflict, native-config bounds, insufficient-balance rollback, private outbox visibility, immutable ledger attribution, and coupon/result minimization.

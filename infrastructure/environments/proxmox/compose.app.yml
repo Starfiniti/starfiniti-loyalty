@@ -9,6 +9,7 @@ services:
       NODE_ENV: production
       NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?required}
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:?required}
+      DASHBOARD_PUBLIC_ORIGIN: ${DASHBOARD_PUBLIC_ORIGIN:?required}
       DATABASE_URL: ${DATABASE_URL:?required}
       WOOCOMMERCE_SIGNING_MATERIAL_FILE: /run/secrets/woocommerce_signing_material
     secrets:
@@ -20,7 +21,14 @@ services:
     cap_drop:
       - ALL
     healthcheck:
-      test: ["CMD", "wget", "--spider", "--quiet", "http://127.0.0.1:3000/"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--spider",
+          "--quiet",
+          "http://127.0.0.1:3000/api/healthz",
+        ]
       interval: 30s
       timeout: 5s
       retries: 3
