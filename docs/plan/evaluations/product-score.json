@@ -2,8 +2,8 @@
   "schemaVersion": 1,
   "evaluatedAt": "2026-08-13",
   "release": "v0.1.10",
-  "sourceCommit": "ff7978dd8faa4519a378f5bb538c7956905b2125",
-  "score": 49,
+  "sourceCommit": "b761bce9398b4752c9bdc33db9f91357e8187dc9",
+  "score": 51,
   "target": 90,
   "minimumCategoryRatio": 0.8,
   "categories": [
@@ -46,8 +46,8 @@
     {
       "id": "enterprise_commercial",
       "weight": 10,
-      "score": 2,
-      "evidence": "Authentik workforce SSO foundation exists; tenant SSO/SCIM, agency controls, entitlements, metering, and managed billing do not."
+      "score": 4,
+      "evidence": "Authentik workforce SSO plus database-authoritative deployment modes, entitlements, protected paths, exact limits, and tenant rollout exist; tenant SSO/SCIM, agency controls, metering, and managed billing do not."
     }
   ],
   "automaticFails": [

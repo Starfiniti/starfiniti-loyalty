@@ -540,6 +540,7 @@ tasks:
     title: Add deployment modes, entitlements, limits, and tenant rollout controls
     module: M02
     status: in_progress
+    module_score: 93
     dependencies: [M00-REALITY-AND-EVIDENCE]
     hypothesis: Database-authoritative entitlements allow safe managed rollout without remote enforcement in self-hosted installations or interference with loyalty value.
     baseline: One self-hosted deployment mode exists with no versioned capability catalogue or tenant canary controls.
@@ -587,7 +588,8 @@ tasks:
       - docs/plan/evidence/M02/README.md
       - 66 contract and 86 dashboard tests pass with exact bigint and fail-closed snapshot coverage
       - migration 20260813190000 adds immutable deployment catalogue rollout provider and tenant evidence
-      - 46 pgTAP assertions await exact-head Docker execution in GitHub Actions
+      - exact-head GitHub Actions run 31722665940 replayed 27 migrations and passed all 1,095 pgTAP assertions plus concurrency and property probes
+      - repository score is 93/100; production migration, managed mode, and Starfiniti tenant canary evidence remain before closure
 
   - id: M03-EARNING-RULES
     title: Deliver ProgrammeDefinitionV2 and competitive earning rules

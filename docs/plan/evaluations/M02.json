@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "module": "M02",
+  "evaluatedAt": "2026-08-13",
+  "sourceCommit": "b761bce9398b4752c9bdc33db9f91357e8187dc9",
+  "score": 93,
+  "target": 90,
+  "minimumCategoryRatio": 0.8,
+  "gateStatus": "repository_verified_production_rollout_pending",
+  "categories": [
+    {
+      "id": "correctness",
+      "weight": 20,
+      "score": 19,
+      "evidence": "Versioned mode, catalogue, exact limits, precedence, effective dates, tenant canaries, and deterministic rollout execute in PostgreSQL."
+    },
+    {
+      "id": "security",
+      "weight": 20,
+      "score": 19,
+      "evidence": "Explicit grants, RLS, live membership, private mutation functions, forged-claim denial, cross-tenant denial, and private provider mappings pass."
+    },
+    {
+      "id": "ledger_reliability",
+      "weight": 15,
+      "score": 15,
+      "evidence": "Six protected paths cannot be disabled or partially rolled out; the full ledger concurrency and projection property probe remains exact."
+    },
+    {
+      "id": "tests",
+      "weight": 15,
+      "score": 14,
+      "evidence": "46 focused pgTAP assertions plus contract/parser tests pass inside the 1,095-assertion exact-head database gate."
+    },
+    {
+      "id": "performance",
+      "weight": 10,
+      "score": 8,
+      "evidence": "Effective lookups use composite effective-time indexes and one stable digest bucket; production latency sampling remains part of rollout."
+    },
+    {
+      "id": "operability",
+      "weight": 10,
+      "score": 9,
+      "evidence": "Append-only actor/reason/effective-time changes, zero-percent start, named canary, staged basis points, and forward-fix rollback are documented."
+    },
+    {
+      "id": "maintainability",
+      "weight": 10,
+      "score": 9,
+      "evidence": "Contracts, migration, server adapter, ADR, API, threat, data, deployment, runbook, task, evidence, and deterministic validator stay synchronized."
+    }
+  ],
+  "automaticFails": [],
+  "remainingGate": "Merge and apply the additive migration, select managed mode for the Starfiniti-operated tenant, append its programme.v2 canary, and capture the effective production read."
+}

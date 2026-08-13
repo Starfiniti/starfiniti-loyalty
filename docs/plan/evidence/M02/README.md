@@ -1,6 +1,6 @@
 # M02 Evidence — Entitlements and Feature Flags
 
-Status: implementation verification in progress.
+Status: repository verified; production rollout pending.
 
 ## Implemented evidence
 
@@ -19,4 +19,6 @@ Status: implementation verification in progress.
 - Dashboard tests: 86 passed.
 - Contract and dashboard typechecks: passed.
 - Migration/static validator: passed for 27 migrations and 26 pgTAP files.
-- Local Docker replay: unavailable because this Windows host has no running Docker or Podman engine; the exact `npm run db:verify` gate remains required in GitHub Actions before module completion.
+- Exact-head GitHub Actions run `31722665940`: baseline, containers, all four WooCommerce runtime cells, migration replay, 1,095 pgTAP assertions, and concurrency/property probes passed.
+- Module score: 93/100, with every category at or above 80% of its weight. See `docs/plan/evaluations/M02.json`.
+- Remaining gate: merge, apply the additive migration, select `managed` for the Starfiniti-operated production tenant, append its `programme.v2` canary, and capture the effective production read. No owner credential or pricing input is required.
