@@ -140,21 +140,21 @@ select lives_ok(
 select lives_ok(
   $$ select loyalty_private.set_organization_entitlement(
     '85000000-0000-4000-8000-000000000100', 'programme.v2', 'enabled', null,
-    'm05', 'test:m05', 'Enable V2 for M05 canary', now() - interval '30 seconds', null
+    'canary', 'test:m05', 'Enable V2 for M05 canary', now() - interval '30 seconds', null
   ) $$,
   'test enables ProgrammeDefinitionV2 for the canary'
 );
 select lives_ok(
   $$ select loyalty_private.set_organization_entitlement(
     '85000000-0000-4000-8000-000000000100', 'vip.advanced', 'enabled', null,
-    'm05', 'test:m05', 'Enable advanced VIP for M05 canary', now() - interval '30 seconds', null
+    'canary', 'test:m05', 'Enable advanced VIP for M05 canary', now() - interval '30 seconds', null
   ) $$,
   'test enables advanced VIP for the canary'
 );
 select lives_ok(
   $$ select loyalty_private.set_organization_entitlement(
     '86000000-0000-4000-8000-000000000100', 'programme.v2', 'enabled', null,
-    'm05', 'test:m05', 'Enable only V2 for control tenant', now() - interval '30 seconds', null
+    'canary', 'test:m05', 'Enable only V2 for control tenant', now() - interval '30 seconds', null
   ) $$,
   'test enables only V2 for the control tenant'
 );
