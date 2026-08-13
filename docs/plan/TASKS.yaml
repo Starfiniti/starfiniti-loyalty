@@ -699,7 +699,7 @@ tasks:
     risks: [R-014, R-025]
     slices:
       - id: M04-S01-NATIVE-REWARDS
-        status: implemented_pending_ci
+        status: completed
         acceptance:
           - strict V2 native reward contracts and independent database validation pass
           - quantity budget and per-customer capacity cannot oversubscribe or partially reserve value
@@ -709,7 +709,7 @@ tasks:
         evidence:
           - docs/plan/evidence/M04/native-rewards-2026-08-13.md
       - id: M04-S02-MANUAL-FULFILMENT
-        status: implemented_pending_ci
+        status: completed
         acceptance:
           - exclusive-access and custom perks enter an audited tenant-scoped queue
           - fulfilment captures points exactly once and definitive rejection releases exactly once

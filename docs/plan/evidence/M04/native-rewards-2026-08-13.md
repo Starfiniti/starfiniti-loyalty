@@ -1,6 +1,6 @@
 # M04 native reward slice evidence — 2026-08-13
 
-Status: native, manual, merchant, and customer slices are implemented locally; exact-head CI, full WooCommerce runtime matrix, browser review, deployment, and tenant canary remain required.
+Status: native and manual slices passed exact-head CI and the full WooCommerce runtime matrix. Browser review, disabled deployment, and tenant canary remain required.
 
 ## Implemented evidence
 
@@ -19,13 +19,12 @@ Status: native, manual, merchant, and customer slices are implemented locally; e
 ## Executed verification
 
 - A clean PostgreSQL 17 database replayed all 30 migrations.
-- All 30 pgTAP files passed before release hardening. The focused file now contains 102 assertions, adding direct authenticated-RPC rejection for unsupported, disguised, and malformed legacy definitions; valid three-kind legacy publication/materialization; and accepted-case operation while rollout is disabled. Exact-head CI must replay this updated database suite.
+- PR #29 exact-head run `31747964152` passed a clean PostgreSQL 17 replay of all 30 migrations and all 30 pgTAP files: 1,302 assertions total, including 102 focused reward assertions. The focused suite includes direct authenticated-RPC rejection for unsupported, disguised, and malformed legacy definitions; valid three-kind legacy publication/materialization; and accepted-case operation while rollout is disabled.
 - `scripts/verify-reward-capacity-concurrency.mjs` raced two independent sessions for the last global reward unit. Exactly one committed, retry stayed idempotent, and counters reconciled.
 - The PHP runtime smoke covers restricted percentage, free shipping, free product, and invalid topic/version inputs.
-- Contracts pass 105 tests and the dashboard passes 110 tests, including offset ordering and rollback queue visibility. Repository lint, all workspace typechecks/tests, architecture/deployment/entitlement/accessibility/WooCommerce validators, and the production build pass serially on Windows. Docker-backed replay is delegated to exact-head CI because the local container engine is unavailable.
+- Contracts pass 105 tests and the dashboard passes 110 tests, including offset ordering and rollback queue visibility. Exact-head CI passed the full repository check, secret/audit/licence/package gates, both production images, ledger/programme and reward-capacity concurrency, and every minimum/current HPOS/legacy WooCommerce runtime.
 
 ## Remaining M04 evidence
 
-- Complete PHP/WooCommerce minimum/current, HPOS/legacy, Blocks/classic matrix.
 - Desktop/mobile browser, keyboard, accessibility, slow/offline, and recovery review.
-- Exact-head CI, disabled production deployment, Starfiniti canary, reconciliation, and module score.
+- Disabled production deployment, Starfiniti canary, reconciliation, and module score.
