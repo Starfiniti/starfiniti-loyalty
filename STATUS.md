@@ -7,7 +7,7 @@
 - The Docker-backed GitHub Actions database job replays migrations/seed and runs 1,049 transactional pgTAP assertions plus real two-session ledger/programme concurrency and property probes.
 - Phase 1 Rosy Rewards semantics are owner-approved and encoded as versioned configuration rather than global merchant assumptions.
 - Pure domain behavior covers integer award calculation, explicit historical tier snapshots, 30-day release, 12-month rolling expiry, earliest-expiry redemption ordering, rolling-spend tiers with grace, cumulative original-attribution refund reversal, and negative balances.
-- Twenty-four domain, sixty-one versioned contract, seventy dashboard, and nine worker tests pass.
+- Twenty-four domain, sixty-one versioned contract, seventy-two dashboard, and nine worker tests pass.
 - The platform carries a full AGPL-3.0 license and package metadata; the WooCommerce connector remains independently GPL-2.0-or-later.
 - Phase 2 architecture is complete and deterministically validated: tenant/Auth trust, identity, double-entry ledger, signed inbox/outbox, reward reservation, privacy, backup/restore, deployment, and SLO models are reviewable.
 - Phase 3 tenancy/RLS is complete: organizations, memberships, workspaces, programme groups, support grants, least-privilege roles, composite tenant keys, and live authorization policies execute successfully in disposable Supabase CI.
@@ -51,7 +51,7 @@
 ## Partial
 
 - Phases 0 through 7 are complete for the active WooCommerce scope. Shopify Phase 8 is deferred by product-owner direction.
-- Phase 9 code, merge, `v0.1.1`, self-hosted production infrastructure, and Authentik-to-Supabase SSO are live. Public signup remains disabled; owner-interactive SSO verification/bootstrap and one real WooCommerce store connection are intentionally pending before tenant value is accepted.
+- Phase 9 code, merge, English-only release `v0.1.2`, self-hosted production infrastructure, and Authentik-to-Supabase SSO are live. Public signup remains disabled; owner-interactive SSO verification/bootstrap and one real WooCommerce store connection are intentionally pending before tenant value is accepted.
 
 ## Broken or unavailable
 
@@ -66,21 +66,23 @@ Twenty-six versioned migrations are applied to the pinned production Supabase/Po
 
 ## Git state
 
-Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 WooCommerce pipeline, PR `#7` merged Phase 9, PR `#9` merged Authentik workforce SSO, and release `v0.1.1` points at merge commit `55b8adb`. GitHub recognizes the repository license as GNU AGPLv3.
+Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 WooCommerce pipeline, PR `#7` merged Phase 9, PR `#9` merged Authentik workforce SSO, and PR `#10` merged the English-only launch presentation. Release `v0.1.2` points at merge commit `3d1a7cb`. GitHub recognizes the repository license as GNU AGPLv3.
 
 ## Last verification
 
 - `npm run test --workspace=@starfiniti/domain` — passed with 24 tests.
 - `npm run typecheck --workspace=@starfiniti/domain` — passed.
-- The current local gates pass zero-warning lint, all workspace type checks, 164 unit tests, accessibility/architecture/workflow validators, and the standalone Next.js production build. The global Windows format check remains affected only by tracked baseline CRLF normalization; targeted changed-file Prettier checks pass.
+- The current local gates pass zero-warning lint, all workspace type checks, 166 unit tests, accessibility/architecture/workflow validators, and the standalone Next.js production build. The global Windows format check remains affected only by tracked baseline CRLF normalization; targeted changed-file Prettier checks pass.
 - `npm run db:validate` — passed for twenty-six migrations, Supabase config, and twenty-five transactional pgTAP files.
 - `npm run secrets:scan` — passed with no findings.
 - `npm run audit:prod` — passed with zero production vulnerabilities.
 - `npm run licenses` — passed for six AGPL npm package declarations, the full AGPL text, and both WooCommerce GPL declarations.
-- `npm run architecture:validate` — passed for eight Phase 2 models and three accepted ADRs; it now runs inside `npm run check`.
+- `npm run architecture:validate` — passed for eight Phase 2 models and four accepted ADRs; it now runs inside `npm run check`.
 - PR exact-head run `31645976689` passed all seven release-hardening jobs with 164 unit tests, twenty-six migration replays, all 1,049 pgTAP assertions, concurrency/property probes, both production images, and all four uncapped-percentage WooCommerce runtime variants.
 - Release run `31681490618` passed the full baseline, twenty-six-migration/1,049-pgTAP database gate, image publication, WooCommerce packaging, and GitHub release publication for `v0.1.0`.
-- Live production smoke on 2026-08-13 passed TLS, dashboard readiness/login/Slovenian locale, unsigned Woo endpoint rejection, public database-port isolation, all eleven Supabase services, both immutable application images, WAL/base backup timers, and off-host physical-backup verification.
+- PR `#10` exact-head run `31691207685` passed all seven jobs with 166 unit tests, twenty-six migration replays, all 1,049 pgTAP assertions, both production images, and all four minimum/current HPOS/legacy WooCommerce runtimes.
+- Release run `31691454507` published the checksummed English-only WooCommerce ZIP and immutable dashboard/worker images for `v0.1.2` after the full release and database gate passed.
+- Live production smoke on 2026-08-13 passed TLS, dashboard readiness, English-only login and legacy-locale fallback with no switcher, Starfiniti SSO entry, unsigned Woo endpoint rejection, public database-port isolation, all eleven Supabase services, both immutable application images, WAL/base backup timers, and off-host physical-backup verification.
 - PR exact-head run `31512548299` passed the baseline and Docker/Supabase database jobs.
 - Public `main` run `31513294330` passed both jobs after merge, including migration replay, seed, pgTAP, and cleanup.
 - PR exact-head run `31527785181` passed both jobs, including replay/reset/seed, all 87 pgTAP assertions, the dynamic ingestion build, and cleanup.

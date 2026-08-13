@@ -92,7 +92,7 @@ Phase 9 — merchant administration and customer experience. Shopify Phase 8 rem
 
 ## Active work
 
-- `P9-MERCHANT-HUB` (in progress): repository implementation, release hardening, and Authentik-to-Supabase workforce SSO are live as `v0.1.1` on Proxmox. The product-owner-approved presentation is now English-only. The remaining launch work is owner-interactive SSO verification, same-UUID membership/RLS bootstrap, real WooCommerce connection, and authenticated/outage-recovery smoke tests.
+- `P9-MERCHANT-HUB` (in progress): repository implementation, release hardening, Authentik-to-Supabase workforce SSO, and the English-only presentation are live as `v0.1.2` on Proxmox. The remaining launch work is owner-interactive SSO verification, same-UUID membership/RLS bootstrap, real WooCommerce connection, and authenticated/outage-recovery smoke tests.
 
 ## Next safe tasks
 
