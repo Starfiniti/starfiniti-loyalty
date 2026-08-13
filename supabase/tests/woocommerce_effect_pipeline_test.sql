@@ -261,28 +261,28 @@ select results_eq(
 );
 
 insert into effect_receipts
-select 2, accepted.receipt_id
-from loyalty_private.accept_commerce_delivery(
-  (select id from loyalty.organizations where slug = 'effect-one'),
-  (select id from loyalty.commerce_connections where external_store_id = 'effect-one-store'),
-  'effect-delivery-2', '1', 'customer:7:created', 'commerce.customer.created',
-  '7', '1', now(), now(), 'v1', 'effect-nonce-2', repeat('b', 64),
-  '{"version":"1","payload":{"kind":"customer_created","externalCustomerId":"7"}}'::jsonb
-) as accepted;
-insert into effect_receipts
 select 3, accepted.receipt_id
 from loyalty_private.accept_commerce_delivery(
   (select id from loyalty.organizations where slug = 'effect-one'),
   (select id from loyalty.commerce_connections where external_store_id = 'effect-one-store'),
-  'effect-delivery-3', '1', 'review:101:verified', 'commerce.review.verified',
-  '101', '1', now(), now(), 'v1', 'effect-nonce-3', repeat('c', 64),
+  'effect-delivery-3', '1', 'customer:7:created', 'commerce.customer.created',
+  '7', '1', now(), now(), 'v1', 'effect-nonce-3', repeat('c', 64),
+  '{"version":"1","payload":{"kind":"customer_created","externalCustomerId":"7"}}'::jsonb
+) as accepted;
+insert into effect_receipts
+select 4, accepted.receipt_id
+from loyalty_private.accept_commerce_delivery(
+  (select id from loyalty.organizations where slug = 'effect-one'),
+  (select id from loyalty.commerce_connections where external_store_id = 'effect-one-store'),
+  'effect-delivery-4', '1', 'review:101:verified', 'commerce.review.verified',
+  '101', '1', now(), now(), 'v1', 'effect-nonce-4', repeat('d', 64),
   '{"version":"1","payload":{"kind":"verified_product_review","externalCustomerId":"7","reviewId":"101","productId":"42","categoryIds":["8"]}}'::jsonb
 ) as accepted;
 select * from loyalty_private.normalize_commerce_delivery(
-  (select receipt_id from effect_receipts where event_number = 2), 'v1'
+  (select receipt_id from effect_receipts where event_number = 3), 'v1'
 );
 select * from loyalty_private.normalize_commerce_delivery(
-  (select receipt_id from effect_receipts where event_number = 3), 'v1'
+  (select receipt_id from effect_receipts where event_number = 4), 'v1'
 );
 create temporary table activity_claim as
 select * from loyalty_private.claim_woocommerce_effects('activity-worker', 10, 60);

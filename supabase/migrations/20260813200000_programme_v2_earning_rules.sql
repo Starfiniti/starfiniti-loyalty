@@ -986,6 +986,11 @@ alter table loyalty.commerce_connections
   add constraint commerce_connections_platform_check
   check (platform in ('woocommerce', 'merchant_activity'));
 
+-- These roles already have explicit per-object grants and RLS policies in the
+-- released migrations. Schema USAGE is required before PostgreSQL can honor
+-- those narrower grants; it does not grant table access by itself.
+grant usage on schema loyalty to loyalty_runtime, loyalty_worker;
+
 create or replace function loyalty_private.provision_merchant_activity_source(
   target_actor_user_id uuid,
   target_workspace_public_id uuid,
