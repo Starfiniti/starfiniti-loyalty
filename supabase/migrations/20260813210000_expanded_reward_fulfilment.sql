@@ -283,8 +283,42 @@ begin
   target_cost_points := (target_reward ->> 'costPoints')::bigint;
   target_configuration := target_reward -> 'configuration';
   target_availability := target_configuration -> 'availability';
-  if target_configuration ->> 'version' <> '2' then
+  if not (target_configuration ? 'version') then
+    if target_kind not in (
+      'fixed_discount', 'percentage_discount', 'free_shipping'
+    )
+      or coalesce(target_configuration ->> 'validityDays', '') !~ '^[1-9][0-9]{0,2}$'
+      or (target_configuration ->> 'validityDays')::integer > 365 then
+      raise exception using errcode = '22023',
+        message = 'unsupported or invalid legacy reward configuration';
+    end if;
+    if target_kind = 'fixed_discount' then
+      if not loyalty_private.is_bounded_bigint_text(
+        target_configuration ->> 'amountMinor'
+      )
+        or coalesce(target_configuration ->> 'currencyMinorUnitDigits', '') !~ '^[0-6]$'
+        or (target_configuration ->> 'currencyMinorUnitDigits')::smallint
+          <> target_programme_currency_minor_unit_digits then
+        raise exception using errcode = '22023',
+          message = 'invalid legacy fixed-discount reward configuration';
+      end if;
+    elsif target_kind = 'percentage_discount' then
+      if coalesce(target_configuration ->> 'percentageBasisPoints', '') !~ '^[1-9][0-9]*$'
+        or (target_configuration ->> 'percentageBasisPoints')::integer > 10000
+        or not (target_configuration ? 'maximumDiscountMinor')
+        or target_configuration -> 'maximumDiscountMinor' <> 'null'::jsonb
+        or coalesce(target_configuration ->> 'currencyMinorUnitDigits', '') !~ '^[0-6]$'
+        or (target_configuration ->> 'currencyMinorUnitDigits')::smallint
+          <> target_programme_currency_minor_unit_digits then
+        raise exception using errcode = '22023',
+          message = 'invalid legacy percentage-discount reward configuration';
+      end if;
+    end if;
     return;
+  end if;
+  if target_configuration -> 'version' <> '"2"'::jsonb then
+    raise exception using errcode = '22023',
+      message = 'invalid reward configuration version';
   end if;
   if target_kind not in (
     'fixed_discount', 'percentage_discount', 'free_shipping',
@@ -418,11 +452,11 @@ begin
     select value
     from pg_catalog.jsonb_array_elements(new.configuration -> 'rewards')
   loop
+    perform loyalty_private.validate_reward_definition_v2(
+      target_reward, target_minor_unit_digits
+    );
     if target_reward -> 'configuration' ->> 'version' = '2' then
       expanded_reward_present := true;
-      perform loyalty_private.validate_reward_definition_v2(
-        target_reward, target_minor_unit_digits
-      );
     end if;
   end loop;
   if expanded_reward_present then

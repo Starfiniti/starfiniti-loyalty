@@ -159,6 +159,113 @@ describe("ProgrammeDefinitionV2", () => {
     expect(result.rewards).toHaveLength(2);
   });
 
+  it("retains only the three fulfilable legacy native reward kinds", () => {
+    expect(() =>
+      programmeDefinitionV2.parse({
+        ...definition,
+        rewards: [
+          {
+            code: "legacy-fixed",
+            name: "Legacy fixed discount",
+            kind: "fixed_discount",
+            costPoints: "500",
+            configuration: {
+              amountMinor: "500",
+              currencyMinorUnitDigits: 2,
+              validityDays: 30,
+            },
+          },
+          {
+            code: "legacy-percent",
+            name: "Legacy percentage discount",
+            kind: "percentage_discount",
+            costPoints: "500",
+            configuration: {
+              percentageBasisPoints: 1000,
+              maximumDiscountMinor: null,
+              currencyMinorUnitDigits: 2,
+              validityDays: 30,
+            },
+          },
+          {
+            code: "legacy-shipping",
+            name: "Legacy free shipping",
+            kind: "free_shipping",
+            costPoints: "500",
+            configuration: { validityDays: 30 },
+          },
+        ],
+      }),
+    ).not.toThrow();
+  });
+
+  it.each([
+    "free_product",
+    "store_credit",
+    "exclusive_access",
+    "custom",
+  ] as const)("rejects unsupported legacy %s rewards", (kind) => {
+    expect(() =>
+      programmeDefinitionV2.parse({
+        ...definition,
+        rewards: [
+          {
+            code: `legacy-${kind.replace("_", "-")}`,
+            name: "Unsupported legacy reward",
+            kind,
+            costPoints: "500",
+            configuration: {},
+          },
+        ],
+      }),
+    ).toThrow("Unsupported legacy reward kind");
+  });
+
+  it("rejects disguised version markers on legacy rewards", () => {
+    for (const version of ["1", "legacy"]) {
+      expect(() =>
+        programmeDefinitionV2.parse({
+          ...definition,
+          rewards: [
+            {
+              code: "legacy-fixed",
+              name: "Legacy fixed discount",
+              kind: "fixed_discount",
+              costPoints: "500",
+              configuration: {
+                version,
+                amountMinor: "500",
+                currencyMinorUnitDigits: 2,
+                validityDays: 30,
+              },
+            },
+          ],
+        }),
+      ).toThrow("Versioned reward configuration");
+    }
+  });
+
+  it("requires legacy native precision to match the V2 programme", () => {
+    expect(() =>
+      programmeDefinitionV2.parse({
+        ...definition,
+        rewards: [
+          {
+            code: "legacy-fixed",
+            name: "Legacy fixed discount",
+            kind: "fixed_discount",
+            costPoints: "500",
+            configuration: {
+              amountMinor: "500",
+              currencyMinorUnitDigits: 0,
+              validityDays: 30,
+            },
+          },
+        ],
+      }),
+    ).toThrow("Legacy reward precision must match programme precision");
+  });
+
   it("requires exactly one enabled purchase base rate", () => {
     expect(() =>
       programmeDefinitionV2.parse({
@@ -276,6 +383,39 @@ describe("ProgrammeDefinitionV2", () => {
               ...noConditions,
               startsAt: "2026-09-01T00:00:00Z",
               endsAt: "2026-08-01T00:00:00Z",
+            },
+          },
+        ],
+      }),
+    ).toThrow("Rule end must follow rule start");
+  });
+
+  it("orders earning-rule windows by instant across offsets", () => {
+    expect(() =>
+      programmeDefinitionV2.parse({
+        ...definition,
+        earningRules: [
+          {
+            ...definition.earningRules[0]!,
+            conditions: {
+              ...noConditions,
+              startsAt: "2026-09-01T10:00:00+02:00",
+              endsAt: "2026-09-01T09:30:00Z",
+            },
+          },
+        ],
+      }),
+    ).not.toThrow();
+    expect(() =>
+      programmeDefinitionV2.parse({
+        ...definition,
+        earningRules: [
+          {
+            ...definition.earningRules[0]!,
+            conditions: {
+              ...noConditions,
+              startsAt: "2026-09-01T09:00:00Z",
+              endsAt: "2026-09-01T10:00:00+02:00",
             },
           },
         ],

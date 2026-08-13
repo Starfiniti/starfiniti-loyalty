@@ -19,6 +19,8 @@ The plugin advertises the versioned capability `coupon.issue.v2` on every poll. 
 
 The V2 authoring contract supports tier availability now. Segment availability must remain empty until M07 provides an authoritative, snapshot-backed audience evaluator. A merchant cannot author a segment selector that execution would ignore.
 
+Unversioned V1 reward carry-forward inside a V2 programme is limited to the three legacy kinds the original editor could create and the native connector can still fulfil: fixed discount, uncapped percentage discount, and free shipping. TypeScript and PostgreSQL validate this boundary independently. Unsupported legacy shapes and any nested non-V2 version marker fail before a draft can be stored or published through the authenticated RPC.
+
 Exclusive-access and custom perks use an audited manual state machine instead of pretending to be WooCommerce coupons. PostgreSQL creates a private fulfilment case atomically with the customer reservation. An owner, admin, or operator explicitly moves `pending` to `in_progress`, then records either a bounded external result reference for confirmed fulfilment or a bounded reason for definitive rejection. Fulfilment captures the reserved points exactly once; rejection compensates them exactly once. Uncertain outcomes are deliberately not a terminal resolution.
 
 ## Alternatives considered
@@ -36,6 +38,7 @@ Exclusive-access and custom perks use an audited manual state machine instead of
 - Accepted reservations remain visible and recoverable while connector outcomes are ambiguous; they are never speculatively released.
 - Connector upgrades can be rolled out before the tenant feature flag without sending unsupported commands to older plugins.
 - Reward segments stay unavailable until M07 rather than becoming an unverified placeholder.
+- Offset-bearing availability timestamps are compared as instants in both the TypeScript contract and PostgreSQL, preventing authoring/runtime disagreement.
 - Manual-case source rows and transitions remain private; merchant reads return only the programme-scoped customer reference, reward snapshot, instructions, due date, status, and bounded result reference needed to operate the queue.
 - Analysts and auditors can inspect queue state but cannot start or resolve cases. Mutation stays with owner, admin, and operator roles and appends minimized administration audit evidence.
 
@@ -49,4 +52,4 @@ Connector diagnostics continue to distinguish retryable, terminal, and manual-re
 
 Deploy the additive database migration and compatible command API first, then upgrade the plugin. Keep `rewards.expanded` disabled by default. Enable one pilot tenant only after the supported runtime matrix passes.
 
-Rollback stops new V2 reservations by disabling the tenant flag. Existing reservations, allocations, commands, ledger transactions, and audit evidence remain; operators finish or manually reconcile accepted work before removing execution capacity. The V1 command wrapper and evaluation path remain compatible throughout.
+Rollback stops new V2 reservations by disabling the tenant flag. Existing reservations, allocations, commands, ledger transactions, audit evidence, and manual-case reads/commands remain; the merchant route continues to show accepted cases so operators can finish or manually reconcile them before removing execution capacity. The V1 command wrapper and the three validated native legacy reward kinds remain compatible throughout.

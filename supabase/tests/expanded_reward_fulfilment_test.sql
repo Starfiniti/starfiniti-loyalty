@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(90);
+select plan(102);
 
 select has_table(
   'loyalty_private', 'reward_capacity_counters',
@@ -268,6 +268,62 @@ as $$
   }'::jsonb;
 $$;
 
+create function pg_temp.legacy_programme(
+  target_kind text,
+  target_configuration jsonb
+)
+returns jsonb
+language sql
+immutable
+as $$
+  select pg_catalog.jsonb_set(
+    pg_temp.expanded_programme(),
+    '{rewards}',
+    pg_catalog.jsonb_build_array(
+      pg_catalog.jsonb_build_object(
+        'code', 'legacy-reward',
+        'name', 'Legacy reward',
+        'kind', target_kind,
+        'costPoints', '500',
+        'configuration', target_configuration
+      )
+    )
+  );
+$$;
+
+create function pg_temp.legacy_native_programme()
+returns jsonb
+language sql
+immutable
+as $$
+  select pg_catalog.jsonb_set(
+    pg_temp.expanded_programme(),
+    '{rewards}',
+    '[
+      {
+        "code":"legacy-fixed","name":"Legacy fixed discount",
+        "kind":"fixed_discount","costPoints":"500",
+        "configuration":{
+          "validityDays":30,"amountMinor":"500","currencyMinorUnitDigits":2
+        }
+      },
+      {
+        "code":"legacy-percent","name":"Legacy percentage discount",
+        "kind":"percentage_discount","costPoints":"500",
+        "configuration":{
+          "validityDays":30,"percentageBasisPoints":1000,
+          "maximumDiscountMinor":null,"currencyMinorUnitDigits":2
+        }
+      },
+      {
+        "code":"legacy-shipping","name":"Legacy free shipping",
+        "kind":"free_shipping","costPoints":"500",
+        "configuration":{"validityDays":30}
+      }
+    ]'::jsonb
+  );
+$$;
+
 select lives_ok(
   $$ select loyalty_private.set_deployment_mode(
     'managed', 1, 'test:m04', 'Exercise managed expanded reward gating',
@@ -286,6 +342,66 @@ select lives_ok(
 
 set local role authenticated;
 set local request.jwt.claim.sub = '84000000-0000-4000-8000-000000000001';
+select throws_ok(
+  $$ select * from loyalty.create_programme_draft_command(
+    '84000000-0000-4000-8000-000000000120',
+    pg_temp.legacy_programme('free_product', '{}'::jsonb),
+    'legacy:free-product', '84000000-0000-4000-8000-000000000211'
+  ) $$,
+  '22023', 'unsupported or invalid legacy reward configuration',
+  'legacy free-product definitions cannot bypass the V2 contract or entitlement'
+);
+select throws_ok(
+  $$ select * from loyalty.create_programme_draft_command(
+    '84000000-0000-4000-8000-000000000120',
+    pg_temp.legacy_programme('store_credit', '{}'::jsonb),
+    'legacy:store-credit', '84000000-0000-4000-8000-000000000212'
+  ) $$,
+  '22023', 'unsupported or invalid legacy reward configuration',
+  'legacy store credit remains outside the V2 authoring surface'
+);
+select throws_ok(
+  $$ select * from loyalty.create_programme_draft_command(
+    '84000000-0000-4000-8000-000000000120',
+    pg_temp.legacy_programme('exclusive_access', '{}'::jsonb),
+    'legacy:exclusive-access', '84000000-0000-4000-8000-000000000213'
+  ) $$,
+  '22023', 'unsupported or invalid legacy reward configuration',
+  'legacy exclusive access cannot bypass the audited manual V2 state machine'
+);
+select throws_ok(
+  $$ select * from loyalty.create_programme_draft_command(
+    '84000000-0000-4000-8000-000000000120',
+    pg_temp.legacy_programme('custom', '{}'::jsonb),
+    'legacy:custom', '84000000-0000-4000-8000-000000000214'
+  ) $$,
+  '22023', 'unsupported or invalid legacy reward configuration',
+  'legacy custom rewards cannot bypass the audited manual V2 state machine'
+);
+select throws_ok(
+  $$ select * from loyalty.create_programme_draft_command(
+    '84000000-0000-4000-8000-000000000120',
+    pg_temp.legacy_programme(
+      'fixed_discount',
+      '{"version":"1","validityDays":30,"amountMinor":"500","currencyMinorUnitDigits":2}'::jsonb
+    ),
+    'legacy:disguised-version', '84000000-0000-4000-8000-000000000215'
+  ) $$,
+  '22023', 'invalid reward configuration version',
+  'a disguised legacy version marker cannot bypass RewardDefinitionV2'
+);
+select throws_ok(
+  $$ select * from loyalty.create_programme_draft_command(
+    '84000000-0000-4000-8000-000000000120',
+    pg_temp.legacy_programme(
+      'fixed_discount',
+      '{"validityDays":30,"amountMinor":"0","currencyMinorUnitDigits":2}'::jsonb
+    ),
+    'legacy:malformed-fixed', '84000000-0000-4000-8000-000000000216'
+  ) $$,
+  '22023', 'invalid legacy fixed-discount reward configuration',
+  'a malformed allowed legacy reward fails at the database command boundary'
+);
 select throws_ok(
   $$ select * from loyalty.create_programme_draft_command(
     '84000000-0000-4000-8000-000000000120', pg_temp.expanded_programme(),
@@ -705,6 +821,15 @@ where reservation_id = (
 );
 grant select on manual_tour_case to authenticated;
 
+select lives_ok(
+  $$ select loyalty_private.set_organization_entitlement(
+    '84000000-0000-4000-8000-000000000100', 'rewards.expanded', 'disabled', null,
+    'canary', 'test:m04', 'Prove accepted manual cases survive rollback',
+    now(), null
+  ) $$,
+  'disabling new expanded rewards keeps accepted manual cases operational'
+);
+
 set local role authenticated;
 set local request.jwt.claim.sub = '84000000-0000-4000-8000-000000000004';
 select results_eq(
@@ -828,6 +953,15 @@ select results_eq(
      where fulfilment_case.public_id = (select case_id from manual_tour_start) $$,
   array[3::bigint],
   'manual case retains created started and fulfilled transitions'
+);
+
+select lives_ok(
+  $$ select loyalty_private.set_organization_entitlement(
+    '84000000-0000-4000-8000-000000000100', 'rewards.expanded', 'enabled', null,
+    'canary', 'test:m04', 'Resume expanded rewards after rollback evidence',
+    now(), null
+  ) $$,
+  'expanded rewards resume after accepted-case rollback verification'
 );
 
 set local role authenticated;
@@ -962,6 +1096,80 @@ select results_eq(
        and action like 'reward.fulfilment.%' $$,
   array[4::bigint],
   'start and resolution commands retain one audit event each'
+);
+
+insert into loyalty.programmes (
+  public_id, organization_id, programme_group_id, slug, name
+)
+select '84000000-0000-4000-8000-000000000121',
+  organization.id, programme_group.id, 'legacy-native', 'Legacy Native'
+from loyalty.organizations as organization
+join loyalty.programme_groups as programme_group
+  on programme_group.organization_id = organization.id
+where organization.slug = 'expanded-rewards';
+
+set local role authenticated;
+set local request.jwt.claim.sub = '84000000-0000-4000-8000-000000000001';
+select results_eq(
+  $$ select outcome from loyalty.create_programme_draft_command(
+    '84000000-0000-4000-8000-000000000121',
+    pg_temp.legacy_native_programme(),
+    'legacy:valid', '84000000-0000-4000-8000-000000000217'
+  ) $$,
+  array['created'::text],
+  'owner can preserve the three fulfilable legacy native reward kinds'
+);
+select results_eq(
+  $$ select outcome from loyalty.publish_programme_version_command(
+    (
+      select version.public_id
+      from loyalty.programme_versions as version
+      join loyalty.programmes as programme
+        on programme.organization_id = version.organization_id
+       and programme.id = version.programme_id
+      where programme.public_id = '84000000-0000-4000-8000-000000000121'
+        and version.status = 'draft'
+    ),
+    (
+      select encode(version.configuration_sha256, 'hex')
+      from loyalty.programme_versions as version
+      join loyalty.programmes as programme
+        on programme.organization_id = version.organization_id
+       and programme.id = version.programme_id
+      where programme.public_id = '84000000-0000-4000-8000-000000000121'
+        and version.status = 'draft'
+    ),
+    'legacy:publish', '84000000-0000-4000-8000-000000000218'
+  ) $$,
+  array['created'::text],
+  'valid legacy native rewards publish through the authenticated command'
+);
+reset role;
+select results_eq(
+  $$ select count(*)::bigint
+     from loyalty.programme_rewards as reward
+     join loyalty.programmes as programme
+       on programme.organization_id = reward.organization_id
+      and programme.id = reward.programme_id
+     where programme.public_id = '84000000-0000-4000-8000-000000000121' $$,
+  array[3::bigint],
+  'legacy native publication materializes exactly three rewards'
+);
+select results_eq(
+  $$ select reward.reward_kind
+     from loyalty.programme_rewards as reward
+     join loyalty.programmes as programme
+       on programme.organization_id = reward.organization_id
+      and programme.id = reward.programme_id
+     where programme.public_id = '84000000-0000-4000-8000-000000000121'
+       and not (reward.configuration ? 'version')
+     order by reward.reward_kind $$,
+  array[
+    'fixed_discount'::text,
+    'free_shipping'::text,
+    'percentage_discount'::text
+  ],
+  'legacy native materialization remains explicitly unversioned and allowlisted'
 );
 
 select * from finish();

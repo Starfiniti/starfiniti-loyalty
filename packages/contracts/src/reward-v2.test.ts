@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { programmeRewardDefinitionV2 } from "./reward-v2";
+import { programmeRewardDefinitionV2, rewardAvailabilityV2 } from "./reward-v2";
 
 const availability = {
   startsAt: null,
@@ -149,5 +149,32 @@ describe("ProgrammeRewardDefinitionV2", () => {
     });
 
     expect(result.success).toBe(false);
+  });
+});
+
+describe("RewardAvailabilityV2 time ordering", () => {
+  it("compares offset timestamps by instant", () => {
+    expect(
+      rewardAvailabilityV2.safeParse({
+        ...availability,
+        startsAt: "2026-01-01T10:00:00+02:00",
+        endsAt: "2026-01-01T09:30:00Z",
+      }).success,
+    ).toBe(true);
+  });
+
+  it("rejects a lexically later end that is chronologically earlier", () => {
+    const result = rewardAvailabilityV2.safeParse({
+      ...availability,
+      startsAt: "2026-01-01T09:00:00Z",
+      endsAt: "2026-01-01T10:00:00+02:00",
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues).toContainEqual(
+        expect.objectContaining({ path: ["endsAt"] }),
+      );
+    }
   });
 });

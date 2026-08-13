@@ -41,7 +41,7 @@ export const rewardAvailabilityV2 = z
     if (
       availability.startsAt !== null &&
       availability.endsAt !== null &&
-      availability.startsAt >= availability.endsAt
+      Date.parse(availability.startsAt) >= Date.parse(availability.endsAt)
     ) {
       context.addIssue({
         code: "custom",

@@ -16,6 +16,7 @@ import { EarningRulesEditor } from "./earning-rules-editor";
 import { ExpandedRewardsEditor } from "./expanded-rewards-editor";
 import { ProgrammeEditor, type ProgrammeEditorMode } from "./programme-editor";
 import { RewardFulfilmentQueue } from "./reward-fulfilment-queue";
+import { shouldShowRewardFulfilmentQueue } from "./reward-fulfilment-visibility";
 
 const sectionCopy: Record<
   ProgrammeEditorMode,
@@ -92,11 +93,16 @@ export async function ProgrammeSectionPage({
     state.versions.find((version) => version.status === "published") ??
     state.versions[0];
   const copy = sectionCopy[mode];
-  const fulfilment = expandedRewardsEnabled
-    ? await getRewardFulfilmentState(state.programme.id)
-    : null;
+  const fulfilment =
+    mode === "rewards"
+      ? await getRewardFulfilmentState(state.programme.id)
+      : null;
   const canOperate = ["owner", "admin", "operator"].includes(
     tenant.context.membershipRole,
+  );
+  const showFulfilmentQueue = shouldShowRewardFulfilmentQueue(
+    expandedRewardsEnabled,
+    fulfilment?.cases.length ?? 0,
   );
 
   return (
@@ -150,27 +156,12 @@ export async function ProgrammeSectionPage({
             simulationOccurredAt={new Date().toISOString()}
           />
         ) : mode === "rewards" && expandedRewardsEnabled ? (
-          <>
-            <ExpandedRewardsEditor
-              canEdit={canEdit}
-              initialConfiguration={baseline?.configuration}
-              operationId={crypto.randomUUID()}
-              programmeId={state.programme.id}
-            />
-            {fulfilment ? (
-              <RewardFulfilmentQueue
-                asOf={new Date().toISOString()}
-                canOperate={canOperate}
-                cases={fulfilment.cases}
-                operations={fulfilment.cases.map((item) => ({
-                  caseId: item.caseId,
-                  startOperationId: crypto.randomUUID(),
-                  resolveOperationId: crypto.randomUUID(),
-                }))}
-                summary={fulfilment.summary}
-              />
-            ) : null}
-          </>
+          <ExpandedRewardsEditor
+            canEdit={canEdit}
+            initialConfiguration={baseline?.configuration}
+            operationId={crypto.randomUUID()}
+            programmeId={state.programme.id}
+          />
         ) : (
           <ProgrammeEditor
             canEdit={canEdit}
@@ -181,7 +172,32 @@ export async function ProgrammeSectionPage({
             programmeId={state.programme.id}
           />
         )}
+        {showFulfilmentQueue && fulfilment ? (
+          <FulfilmentQueue canOperate={canOperate} fulfilment={fulfilment} />
+        ) : null}
       </main>
     </MerchantShell>
+  );
+}
+
+function FulfilmentQueue({
+  canOperate,
+  fulfilment,
+}: Readonly<{
+  canOperate: boolean;
+  fulfilment: Awaited<ReturnType<typeof getRewardFulfilmentState>>;
+}>) {
+  return (
+    <RewardFulfilmentQueue
+      asOf={new Date().toISOString()}
+      canOperate={canOperate}
+      cases={fulfilment.cases}
+      operations={fulfilment.cases.map((item) => ({
+        caseId: item.caseId,
+        startOperationId: crypto.randomUUID(),
+        resolveOperationId: crypto.randomUUID(),
+      }))}
+      summary={fulfilment.summary}
+    />
   );
 }

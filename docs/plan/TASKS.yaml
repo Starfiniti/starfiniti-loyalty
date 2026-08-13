@@ -705,6 +705,7 @@ tasks:
           - quantity budget and per-customer capacity cannot oversubscribe or partially reserve value
           - only a connector advertising coupon.issue.v2 can claim a V2 command
           - fixed percentage free-shipping and free-product execution use WooCommerce core without checkout hub calls
+          - V2 carry-forward accepts only independently validated legacy fixed percentage and free-shipping rewards; unsupported or disguised legacy rewards fail at the authenticated database command boundary
         evidence:
           - docs/plan/evidence/M04/native-rewards-2026-08-13.md
       - id: M04-S02-MANUAL-FULFILMENT
@@ -713,6 +714,7 @@ tasks:
           - exclusive-access and custom perks enter an audited tenant-scoped queue
           - fulfilment captures points exactly once and definitive rejection releases exactly once
           - ambiguous outcomes retain the reservation and capacity allocation
+          - disabling expanded rewards blocks new value but accepted cases remain inspectable startable and resolvable
         evidence:
           - docs/plan/evidence/M04/native-rewards-2026-08-13.md
       - id: M04-S03-MERCHANT-WORKFLOWS
