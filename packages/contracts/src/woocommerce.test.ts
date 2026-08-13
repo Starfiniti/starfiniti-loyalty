@@ -14,6 +14,8 @@ import {
   wooCommerceCustomerDeletedPayloadV1,
   wooCommerceCouponCapturedPayloadV1,
   wooCommerceCouponCommandEnvelopeV1,
+  wooCommerceCommandRequestV1,
+  wooCommerceConnectorCommandEnvelope,
   wooCommerceConnectorCommandEnvelopeV1,
   wooCommerceDecimalToMinor,
   wooCommerceDeliveryEnvelopeV1,
@@ -645,6 +647,100 @@ describe("WooCommerce coupon commands", () => {
             currencyMinorUnitDigits: 2,
           },
         },
+      }).success,
+    ).toBe(false);
+  });
+
+  it("accepts a capability-negotiated restricted free-product command", () => {
+    expect(
+      wooCommerceConnectorCommandEnvelope.safeParse({
+        version: "1",
+        commandId: "61000000-0000-4000-8000-000000000001",
+        connectionId: "62000000-0000-4000-8000-000000000001",
+        topic: "woocommerce.coupon.issue",
+        payloadVersion: "v2",
+        deliveredAt: "2026-08-12T10:00:00Z",
+        payload: {
+          kind: "issue_coupon",
+          reservationId: "63000000-0000-4000-8000-000000000001",
+          code: "SF0123456789ABCDEFGHIJ",
+          externalCustomerId: "7",
+          expiresAt: "2026-08-13T10:00:00Z",
+          reward: {
+            kind: "free_product",
+            productId: "42",
+            quantity: 2,
+            restrictions: {
+              minimumSpendMinor: "5000",
+              currencyMinorUnitDigits: 2,
+              productIds: [],
+              excludedProductIds: [],
+              categoryIds: [],
+              excludedCategoryIds: [],
+              excludeSaleItems: true,
+              stacking: "exclusive",
+            },
+          },
+        },
+      }).success,
+    ).toBe(true);
+  });
+
+  it("rejects v2 restrictions with non-numeric WooCommerce selectors", () => {
+    expect(
+      wooCommerceConnectorCommandEnvelope.safeParse({
+        version: "1",
+        commandId: "61000000-0000-4000-8000-000000000001",
+        connectionId: "62000000-0000-4000-8000-000000000001",
+        topic: "woocommerce.coupon.issue",
+        payloadVersion: "v2",
+        deliveredAt: "2026-08-12T10:00:00Z",
+        payload: {
+          kind: "issue_coupon",
+          reservationId: "63000000-0000-4000-8000-000000000001",
+          code: "SF0123456789ABCDEFGHIJ",
+          externalCustomerId: "7",
+          expiresAt: "2026-08-13T10:00:00Z",
+          reward: {
+            kind: "fixed_discount",
+            amountMinor: "1000",
+            currencyMinorUnitDigits: 2,
+            restrictions: {
+              minimumSpendMinor: null,
+              currencyMinorUnitDigits: 2,
+              productIds: ["sku:unsafe"],
+              excludedProductIds: [],
+              categoryIds: [],
+              excludedCategoryIds: [],
+              excludeSaleItems: false,
+              stacking: "combinable",
+            },
+          },
+        },
+      }).success,
+    ).toBe(false);
+  });
+
+  it("defaults old pollers to no capabilities and rejects unknown claims", () => {
+    const oldPoller = wooCommerceCommandRequestV1.safeParse({
+      version: "1",
+      kind: "poll",
+      connectionId: "62000000-0000-4000-8000-000000000001",
+      requestId: "64000000-0000-4000-8000-000000000001",
+      batchSize: 10,
+    });
+    expect(
+      oldPoller.success && oldPoller.data.kind === "poll"
+        ? oldPoller.data.capabilities
+        : null,
+    ).toEqual([]);
+    expect(
+      wooCommerceCommandRequestV1.safeParse({
+        version: "1",
+        kind: "poll",
+        connectionId: "62000000-0000-4000-8000-000000000001",
+        requestId: "64000000-0000-4000-8000-000000000001",
+        capabilities: ["coupon.issue.v3"],
       }).success,
     ).toBe(false);
   });

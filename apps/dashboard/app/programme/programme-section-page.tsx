@@ -10,9 +10,12 @@ import {
 import { hasEntitlement } from "@/lib/entitlements";
 import { getEntitlementSnapshot } from "@/lib/server/entitlements";
 import { getMerchantProgrammeState } from "@/lib/server/programme";
+import { getRewardFulfilmentState } from "@/lib/server/reward-fulfilment";
 import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
 import { EarningRulesEditor } from "./earning-rules-editor";
+import { ExpandedRewardsEditor } from "./expanded-rewards-editor";
 import { ProgrammeEditor, type ProgrammeEditorMode } from "./programme-editor";
+import { RewardFulfilmentQueue } from "./reward-fulfilment-queue";
 
 const sectionCopy: Record<
   ProgrammeEditorMode,
@@ -65,12 +68,20 @@ export async function ProgrammeSectionPage({
   }
   if (tenant.kind === "unassigned") redirect(merchantLocalePath("/", locale));
 
+  const entitlements =
+    mode === "earning" || mode === "rewards"
+      ? await getEntitlementSnapshot(tenant.context)
+      : null;
   if (mode === "earning") {
-    const entitlements = await getEntitlementSnapshot(tenant.context);
+    if (!entitlements) redirect(merchantLocalePath("/programme", locale));
     if (!hasEntitlement(entitlements, "programme.v2")) {
       redirect(merchantLocalePath("/programme", locale));
     }
   }
+  const expandedRewardsEnabled =
+    mode === "rewards" &&
+    entitlements !== null &&
+    hasEntitlement(entitlements, "rewards.expanded");
 
   const state = await getMerchantProgrammeState(tenant.context);
   if (!state.programme) redirect(merchantLocalePath("/programme", locale));
@@ -81,6 +92,12 @@ export async function ProgrammeSectionPage({
     state.versions.find((version) => version.status === "published") ??
     state.versions[0];
   const copy = sectionCopy[mode];
+  const fulfilment = expandedRewardsEnabled
+    ? await getRewardFulfilmentState(state.programme.id)
+    : null;
+  const canOperate = ["owner", "admin", "operator"].includes(
+    tenant.context.membershipRole,
+  );
 
   return (
     <MerchantShell
@@ -132,6 +149,28 @@ export async function ProgrammeSectionPage({
             programmeId={state.programme.id}
             simulationOccurredAt={new Date().toISOString()}
           />
+        ) : mode === "rewards" && expandedRewardsEnabled ? (
+          <>
+            <ExpandedRewardsEditor
+              canEdit={canEdit}
+              initialConfiguration={baseline?.configuration}
+              operationId={crypto.randomUUID()}
+              programmeId={state.programme.id}
+            />
+            {fulfilment ? (
+              <RewardFulfilmentQueue
+                asOf={new Date().toISOString()}
+                canOperate={canOperate}
+                cases={fulfilment.cases}
+                operations={fulfilment.cases.map((item) => ({
+                  caseId: item.caseId,
+                  startOperationId: crypto.randomUUID(),
+                  resolveOperationId: crypto.randomUUID(),
+                }))}
+                summary={fulfilment.summary}
+              />
+            ) : null}
+          </>
         ) : (
           <ProgrammeEditor
             canEdit={canEdit}

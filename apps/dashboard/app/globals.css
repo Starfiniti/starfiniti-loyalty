@@ -2573,6 +2573,580 @@ h1 {
   }
 }
 
+/* M04 expanded rewards and audited manual fulfilment */
+.expanded-rewards-workflow,
+.programme-fulfilment-section {
+  margin-top: 18px;
+}
+
+.expanded-reward-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 306px;
+  align-items: start;
+  gap: 14px;
+}
+
+.expanded-reward-builder,
+.expanded-reward-summary {
+  min-width: 0;
+}
+
+.expanded-reward-summary {
+  position: sticky;
+  top: 82px;
+  padding: 22px;
+}
+
+.expanded-reward-summary h2 {
+  margin: 7px 0;
+  font-size: 18px;
+}
+
+.expanded-reward-summary > p,
+.expanded-reward-card > p {
+  color: var(--merchant-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.expanded-reward-templates {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 18px 24px 22px;
+  border-bottom: 1px solid var(--merchant-border);
+}
+
+.expanded-reward-templates button {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) 16px;
+  align-items: center;
+  gap: 9px;
+  padding: 12px;
+  color: var(--merchant-text);
+  text-align: left;
+  background: var(--programme-soft);
+  border: 1px solid var(--merchant-border);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.expanded-reward-templates button:hover {
+  border-color: var(--merchant-purple);
+}
+
+.expanded-reward-templates button > svg:first-child {
+  width: 18px;
+  color: var(--merchant-purple);
+}
+
+.expanded-reward-templates button > svg:last-child {
+  width: 14px;
+  color: var(--merchant-muted);
+}
+
+.expanded-reward-templates button span,
+.expanded-reward-templates button strong,
+.expanded-reward-templates button small {
+  min-width: 0;
+  display: block;
+}
+
+.expanded-reward-templates button strong {
+  font-size: 11px;
+}
+
+.expanded-reward-templates button small {
+  margin-top: 3px;
+  color: var(--merchant-muted);
+  font-size: 9px;
+  line-height: 1.35;
+}
+
+.expanded-reward-list {
+  display: grid;
+  gap: 14px;
+  padding: 18px 24px 24px;
+}
+
+.expanded-reward-card {
+  min-width: 0;
+  margin: 0;
+  padding: 0 16px 16px;
+  border: 1px solid var(--merchant-border);
+  border-radius: 12px;
+}
+
+.expanded-reward-card.legacy {
+  padding: 16px;
+  background: var(--programme-soft);
+}
+
+.expanded-reward-card legend {
+  padding: 0 7px;
+  color: var(--merchant-muted);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.expanded-reward-card-heading {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto 32px;
+  align-items: center;
+  gap: 10px;
+  margin: 4px -6px 14px;
+  padding: 10px;
+  background: var(--programme-soft);
+  border-radius: 9px;
+}
+
+.expanded-reward-card.legacy .expanded-reward-card-heading {
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  margin: 0 0 10px;
+  padding: 0;
+}
+
+.expanded-reward-card-heading > div:nth-child(2),
+.expanded-reward-card-heading strong,
+.expanded-reward-card-heading span {
+  min-width: 0;
+}
+
+.expanded-reward-card-heading strong,
+.expanded-reward-card-heading span {
+  display: block;
+}
+
+.expanded-reward-card-heading strong {
+  font-size: 12px;
+}
+
+.expanded-reward-card-heading div > span {
+  margin-top: 3px;
+  color: var(--merchant-muted);
+  font-size: 9px;
+}
+
+.expanded-reward-inline-field,
+.expanded-reward-instructions {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.expanded-reward-inline-field > span,
+.expanded-reward-instructions > span {
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.expanded-reward-inline-field small,
+.expanded-reward-instructions small {
+  color: var(--merchant-muted);
+  font-size: 9px;
+}
+
+.expanded-reward-details {
+  margin-top: 14px;
+  border-top: 1px solid var(--merchant-border);
+}
+
+.expanded-reward-details summary {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 13px 0 10px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.expanded-reward-details summary svg {
+  width: 14px;
+  color: var(--merchant-purple);
+}
+
+.expanded-reward-segment-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 10px;
+  color: var(--merchant-muted);
+  font-size: 9px;
+  line-height: 1.5;
+  background: var(--programme-soft);
+  border-radius: 8px;
+}
+
+.expanded-reward-segment-note svg {
+  width: 14px;
+  flex: 0 0 auto;
+}
+
+.programme-check-row {
+  min-height: 38px;
+  display: flex !important;
+  align-items: center;
+  flex-direction: row !important;
+  gap: 8px !important;
+  align-self: end;
+}
+
+.programme-check-row input {
+  width: 16px;
+  height: 16px;
+}
+
+.programme-fulfilment-section {
+  padding: 0;
+  overflow: hidden;
+  background: var(--merchant-surface);
+  border: 1px solid var(--merchant-border);
+  border-radius: 12px;
+  box-shadow: var(--merchant-shadow);
+}
+
+.fulfilment-section-heading {
+  border-bottom: 0;
+}
+
+.fulfilment-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0 24px 20px;
+  overflow: hidden;
+  background: var(--merchant-border);
+  border: 1px solid var(--merchant-border);
+  border-radius: 10px;
+}
+
+.fulfilment-summary-grid > div {
+  min-width: 0;
+  padding: 13px;
+  background: var(--merchant-surface);
+}
+
+.fulfilment-summary-grid span,
+.fulfilment-summary-grid strong {
+  display: block;
+}
+
+.fulfilment-summary-grid span {
+  color: var(--merchant-muted);
+  font-size: 9px;
+}
+
+.fulfilment-summary-grid strong {
+  margin-top: 5px;
+  font-size: 18px;
+}
+
+.fulfilment-summary-grid .has-alert strong,
+.is-overdue {
+  color: #dc2626;
+}
+
+.fulfilment-case-list {
+  display: grid;
+  gap: 12px;
+  padding: 0 24px 24px;
+}
+
+.fulfilment-case-card {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--merchant-border);
+  border-radius: 12px;
+}
+
+.fulfilment-case-card > header {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.fulfilment-case-icon {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  color: var(--merchant-purple);
+  background: var(--merchant-purple-soft);
+  border-radius: 10px;
+}
+
+.fulfilment-case-icon svg {
+  width: 17px;
+}
+
+.fulfilment-case-heading {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.fulfilment-case-heading strong,
+.fulfilment-case-heading span {
+  display: block;
+}
+
+.fulfilment-case-heading strong {
+  font-size: 12px;
+}
+
+.fulfilment-case-heading div > span {
+  margin-top: 3px;
+  color: var(--merchant-muted);
+  font-size: 9px;
+}
+
+.fulfilment-status.fulfilled {
+  color: var(--success);
+}
+
+.fulfilment-status.rejected {
+  color: var(--merchant-muted);
+}
+
+.fulfilment-case-meta {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 0.8fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.fulfilment-case-meta > div {
+  min-width: 0;
+  padding: 10px;
+  background: var(--programme-soft);
+  border-radius: 8px;
+}
+
+.fulfilment-case-meta span,
+.fulfilment-case-meta strong,
+.fulfilment-case-meta a,
+.fulfilment-case-meta code {
+  min-width: 0;
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.fulfilment-case-meta span {
+  color: var(--merchant-muted);
+  font-size: 9px;
+}
+
+.fulfilment-case-meta strong,
+.fulfilment-case-meta a,
+.fulfilment-case-meta code {
+  margin-top: 4px;
+  color: var(--merchant-text);
+  font-size: 10px;
+}
+
+.fulfilment-case-meta a svg {
+  width: 11px;
+  vertical-align: middle;
+}
+
+.fulfilment-instructions,
+.fulfilment-terminal-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-top: 12px;
+  padding: 11px;
+  background: var(--programme-soft);
+  border-radius: 8px;
+}
+
+.fulfilment-instructions > svg,
+.fulfilment-terminal-note > svg {
+  width: 15px;
+  flex: 0 0 auto;
+  color: var(--merchant-purple);
+}
+
+.fulfilment-instructions span,
+.fulfilment-terminal-note strong,
+.fulfilment-terminal-note span {
+  display: block;
+  font-size: 9px;
+}
+
+.fulfilment-instructions span,
+.fulfilment-terminal-note span {
+  color: var(--merchant-muted);
+}
+
+.fulfilment-instructions p {
+  margin: 4px 0 0;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.fulfilment-case-actions,
+.fulfilment-resolution-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--merchant-border);
+}
+
+.fulfilment-case-actions {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.fulfilment-case-actions > p {
+  margin: 0;
+  color: var(--merchant-muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.fulfilment-case-actions .action-message {
+  grid-column: 1 / -1;
+}
+
+.fulfilment-resolution-form {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.fulfilment-resolution-form label {
+  display: grid;
+  gap: 5px;
+}
+
+.fulfilment-resolution-form label > span {
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.fulfilment-resolution-form label > small {
+  color: var(--merchant-muted);
+  font-size: 9px;
+}
+
+.fulfilment-resolution-buttons,
+.fulfilment-resolution-warning,
+.fulfilment-resolution-form .action-message {
+  grid-column: 1 / -1;
+}
+
+.fulfilment-resolution-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ui-button-danger {
+  color: #b91c1c;
+  background: transparent;
+  border-color: #fecaca;
+}
+
+.ui-button-danger:hover {
+  background: #fef2f2;
+}
+
+.fulfilment-resolution-warning {
+  margin: 0;
+  color: var(--warning);
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.fulfilment-terminal-note.success > svg {
+  color: var(--success);
+}
+
+.fulfilment-empty-state {
+  margin: 0 24px 24px;
+}
+
+@media (max-width: 1060px) {
+  .expanded-reward-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .expanded-reward-summary {
+    position: static;
+  }
+
+  .expanded-reward-templates {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .expanded-reward-templates,
+  .expanded-reward-list,
+  .fulfilment-case-list {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+
+  .expanded-reward-templates,
+  .reward-form-grid,
+  .fulfilment-resolution-form,
+  .fulfilment-case-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .fulfilment-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-right: 16px;
+    margin-left: 16px;
+  }
+
+  .fulfilment-case-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .fulfilment-resolution-buttons {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .fulfilment-resolution-buttons .ui-button,
+  .fulfilment-case-actions .ui-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .fulfilment-case-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 460px) {
+  .expanded-reward-templates,
+  .fulfilment-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .expanded-reward-card-heading {
+    grid-template-columns: 34px minmax(0, 1fr) 30px;
+  }
+
+  .expanded-reward-card-heading > .ui-badge {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
 /* ProgrammeDefinitionV2 earning-rule administration */
 .earning-migration-notice,
 .earning-policy-settings,

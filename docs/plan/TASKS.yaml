@@ -664,7 +664,7 @@ tasks:
   - id: M04-REWARDS-AND-FULFILMENT
     title: Expand native rewards and audited manual fulfilment
     module: M04
-    status: planned
+    status: in_progress
     dependencies: [M03-EARNING-RULES]
     hypothesis: Fulfilment-complete reward types increase redemption without stranding or speculatively releasing points.
     baseline: Fixed, uncapped percentage, and free-shipping coupons exist; broader restrictions, inventory, free product, and manual perks do not.
@@ -697,7 +697,41 @@ tasks:
         browser fulfilment and recovery,
       ]
     risks: [R-014, R-025]
-    docs: [docs/integrations/WOOCOMMERCE.md]
+    slices:
+      - id: M04-S01-NATIVE-REWARDS
+        status: implemented_pending_ci
+        acceptance:
+          - strict V2 native reward contracts and independent database validation pass
+          - quantity budget and per-customer capacity cannot oversubscribe or partially reserve value
+          - only a connector advertising coupon.issue.v2 can claim a V2 command
+          - fixed percentage free-shipping and free-product execution use WooCommerce core without checkout hub calls
+        evidence:
+          - docs/plan/evidence/M04/native-rewards-2026-08-13.md
+      - id: M04-S02-MANUAL-FULFILMENT
+        status: implemented_pending_ci
+        acceptance:
+          - exclusive-access and custom perks enter an audited tenant-scoped queue
+          - fulfilment captures points exactly once and definitive rejection releases exactly once
+          - ambiguous outcomes retain the reservation and capacity allocation
+        evidence:
+          - docs/plan/evidence/M04/native-rewards-2026-08-13.md
+      - id: M04-S03-MERCHANT-WORKFLOWS
+        status: implemented_pending_browser
+        acceptance:
+          - templates restrictions availability preview fulfilment operations and summaries pass responsive accessibility review
+        evidence:
+          - docs/plan/evidence/M04/native-rewards-2026-08-13.md
+      - id: M04-S04-CANARY-AND-CLOSE
+        status: planned
+        acceptance:
+          - exact-head CI runtime matrix disabled deployment Starfiniti canary reconciliation and score at least 90 pass
+    docs:
+      [
+        docs/architecture/ADR/0013-capability-negotiated-native-reward-fulfilment.md,
+        docs/api/PROGRAMME_ENGINE.md,
+        docs/api/REWARD_FULFILMENT.md,
+        docs/integrations/WOOCOMMERCE.md,
+      ]
     evidence: [docs/plan/evidence/M04/README.md]
 
   - id: M05-VIP-AND-EXPIRY

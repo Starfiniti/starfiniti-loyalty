@@ -77,6 +77,7 @@ for (const adr of [
   "0010-database-authoritative-entitlements.md",
   "0011-versioned-earning-rules-and-authoritative-cap-accounting.md",
   "0012-purpose-bound-merchant-activity-ingestion.md",
+  "0013-capability-negotiated-native-reward-fulfilment.md",
 ]) {
   const relativePath = `docs/architecture/ADR/${adr}`;
   const content = readFileSync(join(root, relativePath), "utf8");
@@ -98,5 +99,5 @@ for (const adr of [
 }
 
 console.log(
-  `Validated ${required.size} architecture models and 8 accepted architecture decisions.`,
+  `Validated ${required.size} architecture models and 9 accepted architecture decisions.`,
 );

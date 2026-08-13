@@ -4,6 +4,8 @@ export * from "./woocommerce";
 export * from "./ledger";
 export * from "./programme";
 export * from "./programme-v2";
+export * from "./reward-v2";
+export * from "./reward-fulfilment";
 export * from "./reporting";
 export * from "./experience";
 export * from "./customer-export";

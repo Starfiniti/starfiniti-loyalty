@@ -8,14 +8,9 @@ import {
   resolveCustomerLocale,
   type CustomerLocale,
 } from "@/lib/customer-locale";
+import { isSelfServiceRewardKind } from "@/lib/customer-rewards";
 
 type Search = Record<string, string | string[] | undefined>;
-
-const NATIVE_REWARD_KINDS = new Set([
-  "fixed_discount",
-  "percentage_discount",
-  "free_shipping",
-]);
 
 export default async function CustomerRewardConfirmationPage({
   searchParams,
@@ -40,7 +35,7 @@ export default async function CustomerRewardConfirmationPage({
   const canRedeem =
     account.account_status === "ready" &&
     reward.affordable &&
-    NATIVE_REWARD_KINDS.has(reward.kind);
+    isSelfServiceRewardKind(reward.kind);
   const resultingBalance = canRedeem
     ? (
         BigInt(account.available_points) - BigInt(reward.costPoints)

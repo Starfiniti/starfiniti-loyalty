@@ -13,6 +13,7 @@ import {
   type CustomerLocale,
 } from "@/lib/customer-locale";
 import { customerExportReauthenticationPath } from "@/lib/customer-export";
+import { isSelfServiceRewardKind } from "@/lib/customer-rewards";
 
 export default async function CustomerLoyaltyPage({
   searchParams,
@@ -162,7 +163,9 @@ function AccountCard({
                       {locale === "sl-SI" ? "točk" : "points"}
                     </span>
                   </div>
-                  {ready && reward.affordable && isNativeReward(reward.kind) ? (
+                  {ready &&
+                  reward.affordable &&
+                  isSelfServiceRewardKind(reward.kind) ? (
                     <Link
                       className="member-redeem"
                       href={customerLocalePath(
@@ -262,12 +265,6 @@ function activityLabel(item: CustomerActivity, locale: CustomerLocale): string {
     manual_adjustment: copy.accountAdjustment,
   };
   return labels[item.kind] ?? copy.loyaltyActivity;
-}
-
-function isNativeReward(kind: string): boolean {
-  return ["fixed_discount", "percentage_discount", "free_shipping"].includes(
-    kind,
-  );
 }
 
 function redemptionMessage(status: string, locale: CustomerLocale): string {

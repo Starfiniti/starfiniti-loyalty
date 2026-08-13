@@ -112,7 +112,9 @@ select is_empty(
           'get_connector_operation_summaries',
           'get_overview_report',
           'get_public_loyalty_experience',
+          'get_reward_fulfilment_summary',
           'list_customer_summaries',
+          'list_reward_fulfilment_cases',
           'publish_programme_version_command',
           'preview_bulk_customer_adjustment',
           'redeem_my_reward',
@@ -120,7 +122,9 @@ select is_empty(
           'retry_connector_effect_command',
           'save_experience_translation_command',
           'save_experience_theme_command',
-          'schedule_programme_version_command'
+          'schedule_programme_version_command',
+          'start_reward_fulfilment_command',
+          'resolve_reward_fulfilment_command'
         )
       )
       and not exists (

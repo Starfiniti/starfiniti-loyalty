@@ -112,12 +112,22 @@ starfiniti_runtime_assert(
 );
 
 $percentageCouponCode = 'SFPERCENT0123456789ABCDEF0123456789';
+$v2Restrictions = [
+    'minimumSpendMinor' => '2500',
+    'currencyMinorUnitDigits' => 2,
+    'productIds' => [(string) $productId],
+    'excludedProductIds' => [],
+    'categoryIds' => [],
+    'excludedCategoryIds' => [],
+    'excludeSaleItems' => true,
+    'stacking' => 'combinable',
+];
 $percentageIssue = $execute->invoke(null, [
     'version' => '1',
     'commandId' => '61000000-0000-4000-8000-000000000002',
     'connectionId' => '62000000-0000-4000-8000-000000000001',
     'topic' => 'woocommerce.coupon.issue',
-    'payloadVersion' => 'v1',
+    'payloadVersion' => 'v2',
     'deliveredAt' => gmdate('c'),
     'payload' => [
         'kind' => 'issue_coupon',
@@ -130,6 +140,7 @@ $percentageIssue = $execute->invoke(null, [
             'percentageBasisPoints' => 1500,
             'maximumDiscountMinor' => null,
             'currencyMinorUnitDigits' => 2,
+            'restrictions' => $v2Restrictions,
         ],
     ],
 ]);
@@ -139,8 +150,12 @@ starfiniti_runtime_assert(
     ($percentageIssue['outcome'] ?? null) === 'delivered'
     && $percentageCouponId > 0
     && $percentageCoupon->get_discount_type() === 'percent'
-    && abs((float) $percentageCoupon->get_amount() - 15.0) < 0.000001,
-    'uncapped percentage reward creates the matching native coupon'
+    && abs((float) $percentageCoupon->get_amount() - 15.0) < 0.000001
+    && $percentageCoupon->get_minimum_amount() === '25'
+    && $percentageCoupon->get_product_ids() === [$productId]
+    && $percentageCoupon->get_exclude_sale_items()
+    && ! $percentageCoupon->get_individual_use(),
+    'v2 percentage reward creates a restricted, combinable native coupon'
 );
 $cappedPercentageIssue = $execute->invoke(null, [
     'version' => '1',
@@ -167,6 +182,93 @@ starfiniti_runtime_assert(
     ($cappedPercentageIssue['outcome'] ?? null) === 'dead_letter'
     && ($cappedPercentageIssue['errorCode'] ?? null) === 'percentage_maximum_unsupported',
     'defensive connector boundary rejects unsupported percentage caps'
+);
+
+$shippingCode = 'SFSHIPPING0123456789ABCDEF0123456789';
+$shippingIssue = $execute->invoke(null, [
+    'version' => '1',
+    'commandId' => '61000000-0000-4000-8000-000000000006',
+    'connectionId' => '62000000-0000-4000-8000-000000000001',
+    'topic' => 'woocommerce.coupon.issue',
+    'payloadVersion' => 'v2',
+    'deliveredAt' => gmdate('c'),
+    'payload' => [
+        'kind' => 'issue_coupon',
+        'reservationId' => '63000000-0000-4000-8000-000000000006',
+        'code' => $shippingCode,
+        'externalCustomerId' => (string) $customerId,
+        'expiresAt' => gmdate('c', time() + DAY_IN_SECONDS),
+        'reward' => [
+            'kind' => 'free_shipping',
+            'restrictions' => [
+                ...$v2Restrictions,
+                'productIds' => [],
+                'stacking' => 'exclusive',
+            ],
+        ],
+    ],
+]);
+$shippingCoupon = new WC_Coupon(wc_get_coupon_id_by_code($shippingCode));
+starfiniti_runtime_assert(
+    ($shippingIssue['outcome'] ?? null) === 'delivered'
+    && $shippingCoupon->get_free_shipping()
+    && $shippingCoupon->get_individual_use(),
+    'v2 free-shipping reward creates an exclusive native coupon'
+);
+
+$freeProductCode = 'SFFREEPRODUCT0123456789ABCDEF01234567';
+$freeProductIssue = $execute->invoke(null, [
+    'version' => '1',
+    'commandId' => '61000000-0000-4000-8000-000000000007',
+    'connectionId' => '62000000-0000-4000-8000-000000000001',
+    'topic' => 'woocommerce.coupon.issue',
+    'payloadVersion' => 'v2',
+    'deliveredAt' => gmdate('c'),
+    'payload' => [
+        'kind' => 'issue_coupon',
+        'reservationId' => '63000000-0000-4000-8000-000000000007',
+        'code' => $freeProductCode,
+        'externalCustomerId' => (string) $customerId,
+        'expiresAt' => gmdate('c', time() + DAY_IN_SECONDS),
+        'reward' => [
+            'kind' => 'free_product',
+            'productId' => (string) $productId,
+            'quantity' => 2,
+            'restrictions' => [
+                ...$v2Restrictions,
+                'productIds' => [],
+                'stacking' => 'exclusive',
+            ],
+        ],
+    ],
+]);
+$freeProductCoupon = new WC_Coupon(wc_get_coupon_id_by_code($freeProductCode));
+starfiniti_runtime_assert(
+    ($freeProductIssue['outcome'] ?? null) === 'delivered'
+    && $freeProductCoupon->get_discount_type() === 'percent'
+    && (float) $freeProductCoupon->get_amount() === 100.0
+    && $freeProductCoupon->get_product_ids() === [$productId]
+    && $freeProductCoupon->get_limit_usage_to_x_items() === 2,
+    'v2 free-product reward creates a product-bound native coupon'
+);
+
+$invalidVersion = $execute->invoke(null, [
+    'version' => '1',
+    'commandId' => '61000000-0000-4000-8000-000000000008',
+    'connectionId' => '62000000-0000-4000-8000-000000000001',
+    'topic' => 'woocommerce.coupon.cancel',
+    'payloadVersion' => 'v2',
+    'deliveredAt' => gmdate('c'),
+    'payload' => [
+        'kind' => 'cancel_coupon',
+        'reservationId' => '63000000-0000-4000-8000-000000000008',
+        'code' => 'SFINVALID0123456789ABCDEF0123456789',
+    ],
+]);
+starfiniti_runtime_assert(
+    ($invalidVersion['outcome'] ?? null) === 'dead_letter'
+    && ($invalidVersion['errorCode'] ?? null) === 'unsupported_payload_version',
+    'connector rejects a payload version that is not valid for its topic'
 );
 
 update_option(

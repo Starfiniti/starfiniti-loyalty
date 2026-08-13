@@ -107,6 +107,58 @@ describe("ProgrammeDefinitionV2", () => {
     expect(programmeDefinitionV2.parse(definition)).toEqual(definition);
   });
 
+  it("accepts expanded reward definitions without invalidating legacy rewards", () => {
+    const result = programmeDefinitionV2.parse({
+      ...definition,
+      rewards: [
+        {
+          code: "legacy-fixed",
+          name: "Legacy fixed discount",
+          kind: "fixed_discount",
+          costPoints: "500",
+          configuration: {
+            amountMinor: "500",
+            currencyMinorUnitDigits: 2,
+            validityDays: 30,
+          },
+        },
+        {
+          code: "free-mug",
+          name: "Free mug",
+          kind: "free_product",
+          costPoints: "800",
+          configuration: {
+            version: "2",
+            fulfilmentMode: "woocommerce_coupon",
+            validityDays: 14,
+            productId: "42",
+            quantity: 1,
+            availability: {
+              startsAt: null,
+              endsAt: null,
+              tierCodes: [],
+              segmentCodes: [],
+              perCustomerLimit: 1,
+              globalQuantity: "50",
+              pointsBudget: "40000",
+            },
+            restrictions: {
+              minimumSpendMinor: "2000",
+              productIds: [],
+              excludedProductIds: [],
+              categoryIds: [],
+              excludedCategoryIds: [],
+              excludeSaleItems: false,
+              stacking: "exclusive",
+            },
+          },
+        },
+      ],
+    });
+
+    expect(result.rewards).toHaveLength(2);
+  });
+
   it("requires exactly one enabled purchase base rate", () => {
     expect(() =>
       programmeDefinitionV2.parse({
