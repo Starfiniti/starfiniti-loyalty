@@ -74,6 +74,7 @@ for (const adr of [
   "0007-transactional-inbox-outbox.md",
   "0008-broker-workforce-authentik-through-supabase-auth.md",
   "0009-sequential-evidence-gated-enterprise-modules.md",
+  "0010-database-authoritative-entitlements.md",
 ]) {
   const relativePath = `docs/architecture/ADR/${adr}`;
   const content = readFileSync(join(root, relativePath), "utf8");
@@ -95,5 +96,5 @@ for (const adr of [
 }
 
 console.log(
-  `Validated ${required.size} architecture models and 5 accepted architecture decisions.`,
+  `Validated ${required.size} architecture models and 6 accepted architecture decisions.`,
 );
