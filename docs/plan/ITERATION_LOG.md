@@ -357,3 +357,11 @@
 - Enabled flow-specific verifier correlation through the reserved `sb_flow_id`, passed only bounded flow identifiers into the one-time code exchange, and hardened production server auth cookies as HTTP-only, Secure, SameSite=Lax.
 - Anchored every callback success and failure to `DASHBOARD_PUBLIC_ORIGIN`, rejected unspecified bind-address origins, and added route/unit coverage proving internal request origins cannot escape into browser navigation.
 - The first deployed correction eliminated the bind-address redirect but live browser verification proved the exchange still stopped before Supabase's token endpoint. Excluded the one-time callback route from proxy session refresh so its pending verifier cookies reach the route unchanged.
+
+## 2026-08-13 — Focused Programme workflows
+
+- Audited the authenticated production Programme experience after owner feedback and confirmed a structural defect: Earning rules and VIP tiers shared one fragment URL, Rewards was only another fragment, Programme overview contained the complete editor, and same-page navigation could accumulate hashes.
+- Reused the approved Programme, Earning, Rewards, and Tiers prototypes and the owner-selected Hub tokens to create four honest routes without changing the database or programme value contract.
+- Kept each focused editor contract-complete: earning changes preserve tiers/rewards, reward changes preserve all tiers, and tier changes preserve earning rates/rewards before one immutable draft command is submitted.
+- Added guided WooCommerce-ready reward creation, exact order simulation, tier qualification preview, overlap validation, unique active navigation, route-wide cache revalidation, and accessibility coverage.
+- Dashboard typecheck, 83 dashboard tests, the 14-surface accessibility guard, and the standalone production build pass. Chrome interaction QA at 1440 × 1024 and 390 × 844 found no horizontal overflow or console error.

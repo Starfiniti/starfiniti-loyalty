@@ -2,23 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import {
-  Activity,
-  Coins,
-  Gem,
-  Gift,
-  LayoutDashboard,
-  LogOut,
-  Menu,
-  Moon,
-  Palette,
-  RefreshCw,
-  Sparkles,
-  Star,
-  Sun,
-  Users,
-  X,
-} from "lucide-react";
+import { LogOut, Menu, Moon, RefreshCw, Sparkles, Sun, X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   useEffect,
@@ -28,6 +12,7 @@ import {
   type ReactNode,
 } from "react";
 import { signOut } from "@/app/actions";
+import { merchantNavigation } from "@/components/merchant-navigation";
 import {
   merchantLocalePath,
   merchantText,
@@ -41,68 +26,6 @@ type MerchantShellTenant = Readonly<{
   programmeName: string;
   role: string;
 }>;
-
-type NavigationItem = Readonly<{
-  label: string;
-  href: string;
-  icon: typeof LayoutDashboard;
-  group?: "PROGRAMME" | "GROW" | "PLATFORM";
-  match: (pathname: string) => boolean;
-}>;
-
-const navigation: readonly NavigationItem[] = [
-  {
-    label: "Overview",
-    href: "/",
-    icon: LayoutDashboard,
-    match: (pathname) => pathname === "/",
-  },
-  {
-    label: "Programme overview",
-    href: "/programme",
-    icon: Gem,
-    group: "PROGRAMME",
-    match: (pathname) => pathname.startsWith("/programme"),
-  },
-  {
-    label: "Earning rules",
-    href: "/programme#tiers-title",
-    icon: Coins,
-    match: () => false,
-  },
-  {
-    label: "Rewards",
-    href: "/programme#rewards-title",
-    icon: Gift,
-    match: () => false,
-  },
-  {
-    label: "VIP tiers",
-    href: "/programme#tiers-title",
-    icon: Star,
-    match: () => false,
-  },
-  {
-    label: "Customers",
-    href: "/customers",
-    icon: Users,
-    group: "GROW",
-    match: (pathname) => pathname.startsWith("/customers"),
-  },
-  {
-    label: "Connector operations",
-    href: "/operations",
-    icon: Activity,
-    match: (pathname) => pathname.startsWith("/operations"),
-  },
-  {
-    label: "Customer experience",
-    href: "/experience",
-    icon: Palette,
-    group: "PLATFORM",
-    match: (pathname) => pathname.startsWith("/experience"),
-  },
-];
 
 const themeStorageKey = "starfiniti-loyalty-theme";
 const themeChangeEvent = "starfiniti-loyalty-theme-change";
@@ -190,8 +113,8 @@ export function MerchantShell({
         </div>
 
         <nav className="merchant-nav" aria-label={text("Main navigation")}>
-          {navigation.map((item, index) => {
-            const previous = navigation[index - 1];
+          {merchantNavigation.map((item, index) => {
+            const previous = merchantNavigation[index - 1];
             const showGroup = item.group && previous?.group !== item.group;
             const active = item.match(activePath ?? pathname);
             return (
