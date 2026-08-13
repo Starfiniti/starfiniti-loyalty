@@ -789,10 +789,10 @@ alter table loyalty.tier_manual_overrides enable row level security;
 alter table loyalty.tier_manual_override_resolutions enable row level security;
 create policy tier_manual_overrides_member_select
   on loyalty.tier_manual_overrides for select to authenticated
-  using (loyalty_private.is_live_organization_member(organization_id));
+  using ((select loyalty_private.is_organization_member(organization_id)));
 create policy tier_manual_override_resolutions_member_select
   on loyalty.tier_manual_override_resolutions for select to authenticated
-  using (loyalty_private.is_live_organization_member(organization_id));
+  using ((select loyalty_private.is_organization_member(organization_id)));
 grant select on loyalty.tier_manual_overrides,
   loyalty.tier_manual_override_resolutions to authenticated;
 
