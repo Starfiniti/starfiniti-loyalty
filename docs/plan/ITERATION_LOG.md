@@ -1,5 +1,13 @@
 # Iteration Log
 
+## 2026-08-13 — M01 production and pilot reconstruction
+
+- Connected read-only through the approved Proxmox host to application VM 970 and Supabase VM 971. Exact `v0.1.10` dashboard/worker images and all eleven Supabase containers are healthy; public health/login pass TLS and unsigned WooCommerce ingress fails with 401.
+- Aggregate-only PostgreSQL evidence found one owner tenant/workspace/programme and one draft version, with zero connections, customers, wallets, ledger transactions, reservations, deliveries, canonical events, effects, or commands.
+- WAL archiving, the physical base backup, three-minute off-host PostgreSQL Borg archive, and prior isolated WAL promotion are healthy/proven. The nightly whole-VM Borg timer is configured but has no completed run for the new loyalty VMs; corrected documentation instead of overstating application/Auth/signing recovery.
+- Reviewed current official WooCommerce HPOS, Blocks, webhook, order, refund, and coupon guidance. Compared an existing merchant production store with a dedicated Starfiniti-controlled store; prefer the controlled store, and never treat SSH reachability as merchant approval.
+- Added an exact 22-check pilot runbook and machine validator. Only database WAL restore currently passes; no store was selected or modified, and no customer or loyalty value was accepted.
+
 ## 2026-08-13 — M00 enterprise roadmap reconstruction
 
 - Preserved the stale `agent/phase-4-woocommerce-inbox` worktree changes in a named stash, fetched repository truth, and created `codex/enterprise-roadmap` from clean `origin/main` commit `ff7978dd8faa4519a378f5bb538c7956905b2125`.

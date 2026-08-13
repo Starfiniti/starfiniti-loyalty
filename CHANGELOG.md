@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added the M01 real-WooCommerce pilot runbook and a machine-validated 22-check evidence gate covering store approval, value lifecycle, refunds, expiry, reconciliation, key rotation, outages, recovery, alerts, and exact final reconciliation.
+- Recorded the zero-value production baseline and corrected the recovery claim: database PITR is proven, while the configured nightly whole-VM Borg job has not completed its first loyalty-VM run and application/Auth/signing recovery remains pending.
+
 - Replaced broad unfinished phases with the evidence-gated M00–M16 enterprise roadmap, stable dependencies, owner-input fields, rollout/rollback requirements, and deterministic finish rules while preserving completed historical evidence.
 - Added an official-source Smile/LoyaltyLion/Yotpo capability matrix, a machine-readable 49/100 whole-product baseline distinct from the 95/100 engineering score, a module evidence standard, and ADR-0009 for sequential vertical delivery.
 - Kept Shopify, localization, store credit, gift cards, and cash redemption deferred; self-hosted AGPL installations remain independent of Stripe or remote licence enforcement.

@@ -35,6 +35,7 @@ Shopify is deliberately deferred. Do not add Shopify runtime dependencies or imp
 - Secret scan: `npm run secrets:scan`
 - Production dependency audit: `npm run audit:prod`
 - License inventory: `npm run licenses`
+- M01 pilot evidence: `npm run pilot:validate`
 
 Docker/Supabase integration tests require Docker on Linux or CI. Discover Supabase CLI commands with `supabase --help`; never guess flags.
 
