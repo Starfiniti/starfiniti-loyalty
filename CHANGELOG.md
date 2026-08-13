@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added self-hosted and managed deployment modes, a versioned 18-capability entitlement catalogue, exact tenant limits, deterministic percentage rollout, explicit tenant canaries, and private externally configured provider-price mappings.
+- Kept entitlement authority in PostgreSQL with membership-derived RLS reads, append-only configuration evidence, fail-closed dashboard parsing, no Stripe dependency for self-hosted installations, and non-disableable balance/refund/reconciliation/checkout/export/promised-redemption paths.
+
 - Added the M01 real-WooCommerce pilot runbook and a machine-validated 22-check evidence gate covering store approval, value lifecycle, refunds, expiry, reconciliation, key rotation, outages, recovery, alerts, and exact final reconciliation.
 - Recorded the zero-value production baseline and corrected the recovery claim: database PITR is proven, while the configured nightly whole-VM Borg job has not completed its first loyalty-VM run and application/Auth/signing recovery remains pending.
 

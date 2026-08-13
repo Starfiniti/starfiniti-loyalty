@@ -188,6 +188,14 @@ The reservation holds programme version, wallet, reward, points, expiry, idempot
 - `get_public_loyalty_experience` is a read-only anonymous projection, not a public table policy. It resolves one active workspace/programme-group link and current published programme, caps tiers at 12 and rewards at 20, emits exact bigint values as text plus approved theme/copy fields, and excludes organization identity, customers, ledgers, raw configuration, reward configuration, audit, integrations, and commerce evidence.
 - Merchant Overview reporting is a read model, not a mutable analytics truth table. It joins one authorized workspace/programme scope to scoped wallets, immutable live evaluation evidence, and wallet-side ledger/projection rows; returns exact text-form aggregates and bounded UTC daily buckets; and withholds private evaluation, commerce, identity, and ledger evidence.
 
+## Deployment and entitlement authority
+
+- `entitlement_catalogue` is immutable, versioned capability metadata with separate self-hosted/managed defaults, optional exact limits, and a structural protected-value flag.
+- `deployment_configuration_versions`, `capability_rollout_versions`, and `entitlement_provider_price_versions` are private append-only operational evidence. Provider IDs never grant capability access and never leave the private schema.
+- `organization_entitlements` is append-only tenant evidence for local control, contracts, billing, manual overrides, and named canaries. RLS exposes only rows for a live member's tenant and grants no browser DML.
+- Effective resolution orders protected value paths first, an explicit tenant decision second, deployment default third, and a deterministic stable-subject percentage rollout last. Balance reads, refunds, reconciliation, checkout independence, exports, and promised redemption always resolve enabled.
+- Deployment administration writes through private functions unavailable to browser, runtime, and worker roles. The merchant read model accepts a public selector but independently derives access from live membership; exact bigint limits cross the API as text.
+
 ## RLS and privileges
 
 - All `loyalty` tables enable RLS. Tenant policies specify `TO authenticated`, wrap stable helpers such as `(select auth.uid())`, and use indexed organization/customer link lookups.

@@ -56,6 +56,12 @@ Before applying Compose, run `npm run deploy:preflight -- --env /absolute/path/t
 - Configure `DASHBOARD_PUBLIC_ORIGIN` as the exact canonical lowercase HTTPS origin with no path. Guided connector setup derives its signed-event endpoint from this server-only value.
 - Reverse proxies and CDNs must preserve `Set-Cookie`, `Cache-Control`, `Expires`, `Pragma`, and `Vary` headers and must never cache authenticated HTML or Auth callback responses.
 
+## Deployment mode and capability rollout
+
+Fresh and upgraded installations start in database mode `self_hosted`. This mode has no Stripe package, remote licence check, or external entitlement request; locally controlled feature defaults come from the versioned catalogue. Switching to `managed`, setting external provider Price IDs, granting a tenant canary, or changing rollout percentage is a deployment-administration database change with append-only actor/reason/effective-time evidence. Follow `ENTITLEMENTS.md`.
+
+Deploy entitlement migrations before application code that reads a new capability. Managed capabilities start closed, then use an explicit Starfiniti tenant canary and audited basis-point expansion. Commercial rollback may stop new growth behavior but never disables balances, refunds, reconciliation, checkout independence, exports, or already-promised reward redemption.
+
 ## Release process
 
 1. After all required checks pass on an approved commit, push one exact `vMAJOR.MINOR.PATCH` tag. The release workflow reruns the baseline and disposable database gate, publishes dashboard/worker GHCR images under the commit SHA and version, and attaches the WooCommerce ZIP plus `SHA256SUMS` to the GitHub release. Deploy the commit-SHA image tags or resolved digests, never a floating version tag.

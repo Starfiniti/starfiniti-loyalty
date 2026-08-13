@@ -539,7 +539,7 @@ tasks:
   - id: M02-ENTITLEMENTS-AND-FLAGS
     title: Add deployment modes, entitlements, limits, and tenant rollout controls
     module: M02
-    status: ready
+    status: in_progress
     dependencies: [M00-REALITY-AND-EVIDENCE]
     hypothesis: Database-authoritative entitlements allow safe managed rollout without remote enforcement in self-hosted installations or interference with loyalty value.
     baseline: One self-hosted deployment mode exists with no versioned capability catalogue or tenant canary controls.
@@ -574,8 +574,20 @@ tasks:
         rollback smoke,
       ]
     risks: [R-025, R-031]
-    docs: [docs/plan/ENTERPRISE_ROADMAP.md]
-    evidence: [docs/plan/evidence/M02/README.md]
+    docs:
+      [
+        docs/plan/ENTERPRISE_ROADMAP.md,
+        docs/architecture/ADR/0010-database-authoritative-entitlements.md,
+        docs/architecture/DATA_MODEL.md,
+        docs/security/THREAT_MODEL.md,
+        docs/api/ENTITLEMENTS.md,
+        docs/operations/ENTITLEMENTS.md,
+      ]
+    evidence:
+      - docs/plan/evidence/M02/README.md
+      - 66 contract and 86 dashboard tests pass with exact bigint and fail-closed snapshot coverage
+      - migration 20260813190000 adds immutable deployment catalogue rollout provider and tenant evidence
+      - 46 pgTAP assertions await exact-head Docker execution in GitHub Actions
 
   - id: M03-EARNING-RULES
     title: Deliver ProgrammeDefinitionV2 and competitive earning rules
