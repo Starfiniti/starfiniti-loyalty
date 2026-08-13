@@ -48,6 +48,7 @@
 - WooCommerce issue, cancellation, and reconciliation commands stop after ten claims in a visible inspect-only manual-review state. Ambiguous coupon outcomes retain the reservation and ledger state until the native result is verified; they never trigger speculative compensation.
 - Native percentage rewards support 0.01–100% without a maximum cap. The contract/editor reject caps, PostgreSQL independently blocks direct-RPC publication/scheduling and legacy capped redemption before value moves, and the plugin retains a defensive rejection boundary.
 - The Overview no longer renders illustrative tenant figures. It reads versioned, tenant/workspace/programme-authorized aggregates for members, eligible loyalty spend, repeat-member rate, captured-to-awarded point redemption, point liability, and bounded 7/30/90-day trends without exposing private source evidence.
+- Merchant Overview, programme, customer, connector, and experience routes now share the owner-selected Hub-style application shell with the real Starfiniti mark, grouped Lucide navigation, working mobile drawer, persistent theme and refresh controls, and no tenant or language switcher. Overview is a data-backed launch command center whose checklist, performance rail, and activity rows derive from live programme, connector, reporting, and audit state.
 
 ## Partial
 
@@ -73,11 +74,12 @@ Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 Wo
 
 - `npm run test --workspace=@starfiniti/domain` — passed with 24 tests.
 - `npm run typecheck --workspace=@starfiniti/domain` — passed.
-- The current local gates pass zero-warning lint, all workspace type checks, 166 unit tests, accessibility/architecture/workflow validators, and the standalone Next.js production build. The global Windows format check remains affected only by tracked baseline CRLF normalization; targeted changed-file Prettier checks pass.
+- The current local gates pass zero-warning lint, all workspace type checks, 175 unit tests, accessibility/architecture/workflow/deployment/WooCommerce validators, and the standalone Next.js production build. The global Windows format check remains affected only by tracked baseline CRLF normalization; targeted changed-file Prettier checks pass.
 - `npm run db:validate` — passed for twenty-six migrations, Supabase config, and twenty-five transactional pgTAP files.
 - `npm run secrets:scan` — passed with no findings.
 - `npm run audit:prod` — passed with zero production vulnerabilities.
 - `npm run licenses` — passed for six AGPL npm package declarations, the full AGPL text, and both WooCommerce GPL declarations.
+- Hub-style design verification passed at 1440 × 1024 and 390 × 844 with working drawer/disclosure/theme interactions, no horizontal mobile overflow, and `design-qa.md` final result `passed`.
 - `npm run architecture:validate` — passed for eight Phase 2 models and four accepted ADRs; it now runs inside `npm run check`.
 - PR exact-head run `31645976689` passed all seven release-hardening jobs with 164 unit tests, twenty-six migration replays, all 1,049 pgTAP assertions, concurrency/property probes, both production images, and all four uncapped-percentage WooCommerce runtime variants.
 - Release run `31681490618` passed the full baseline, twenty-six-migration/1,049-pgTAP database gate, image publication, WooCommerce packaging, and GitHub release publication for `v0.1.0`.

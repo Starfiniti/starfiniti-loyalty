@@ -87,12 +87,13 @@ Phase 9 — merchant administration and customer experience. Shopify Phase 8 rem
 - Prior responsive evidence covered both launch locales; the English-only release retains the same real 390×844 and 1440×1000 layouts, forms, keyboard bypass, and no-overflow/error gates without exposing the retired selector.
 - Release review hardened both signed connector routes with streaming request-body limits, stopped all WooCommerce command kinds after ten ambiguous attempts for manual review, and removed unsupported percentage caps from authoring. PostgreSQL independently rejects direct-RPC publication/scheduling and legacy redemption before value moves; the plugin matrix covers the supported uncapped percentage behavior.
 - Exact-head run `31645976689` passed all seven jobs with 164 unit tests, both production images, twenty-six migration replays, 1,049 pgTAP assertions, concurrency/property probes, and all four minimum/current HPOS/legacy WooCommerce runtimes.
+- The owner-selected Hub-style command center now provides one coherent merchant shell across Overview, programme, customers, connector operations, and experience. Its launch checklist, performance rail, audit activity, responsive drawer, real Starfiniti mark, Lucide icons, and persistent theme controls remain bound to authoritative tenant/programme/reporting state; `design-qa.md` records the passed 1440 × 1024 and 390 × 844 comparison evidence.
 - Exact-head run `31601351946` passed the filtered-customer baseline, fifteen migrations with 654 pgTAP assertions plus concurrency/property probes, and all four localized WooCommerce runtime variants.
 - Exact-head run `31581760825` passed the customer-ledger baseline, database job, and all four WooCommerce runtime variants.
 
 ## Active work
 
-- `P9-MERCHANT-HUB` (in progress): repository implementation, release hardening, Authentik-to-Supabase workforce SSO, and the English-only presentation are live as `v0.1.2` on Proxmox. The remaining launch work is owner-interactive SSO verification, same-UUID membership/RLS bootstrap, real WooCommerce connection, and authenticated/outage-recovery smoke tests.
+- `P9-MERCHANT-HUB` (in progress): repository implementation, release hardening, Authentik-to-Supabase workforce SSO, English-only presentation, verified owner tenant, and the approved Hub-style shell are implemented. The remaining launch work is release/deployment of the redesign, a real WooCommerce connection, and authenticated/outage-recovery smoke tests.
 
 ## Next safe tasks
 

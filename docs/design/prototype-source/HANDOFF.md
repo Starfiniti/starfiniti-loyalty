@@ -1,5 +1,7 @@
 # Starfiniti Loyalty — Developer Handoff
 
+> Production design decision (2026-08-13): the product owner selected the Hub-style launch command center documented in root `design-qa.md`. It supersedes the original Overview composition while retaining the bounded production behaviors below. Merchant routes use one fixed Starfiniti/Lucide sidebar, compact command bar, data-backed launch checklist/performance/activity surfaces, and responsive drawer. There is no tenant or language switcher.
+
 Design prototype → production (Next.js + TypeScript + Tailwind + Supabase). The prototype is the spec: every screen, state, and flow below exists as a working `.dc.html` page in this project. This doc maps them to the production architecture from the brief.
 
 ## 1. Route map (prototype file → production route)
