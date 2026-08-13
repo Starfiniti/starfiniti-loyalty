@@ -2,12 +2,13 @@
 
 ## Enterprise roadmap status
 
-- Production baseline remains `v0.1.10`; M00 is complete and defines M01–M16 as the authoritative unfinished enterprise graph without claiming those modules are implemented.
+- Production application images remain `v0.1.10`; M00 and M02 are complete, and M01 plus M03–M16 remain the authoritative unfinished enterprise graph.
 - Released engineering foundations score 95/100, while evidence-based whole-product readiness is 51/100 because the real-store pilot and major competitive, enterprise, and commercial modules remain incomplete.
-- The old local Phase 4 branch and six modified planning files are preserved in a named stash. Active work uses clean branch `codex/enterprise-roadmap` from `origin/main` commit `ff7978dd8faa4519a378f5bb538c7956905b2125`.
-- M01 is active for an approved real WooCommerce store and recovery proof. Its external gate does not block M02, whose deployment-mode, entitlement, limit, and rollout implementation is now awaiting exact-head Docker/pgTAP verification.
-- M02 repository implementation scores 93/100 after exact-head migration replay, 1,095 pgTAP assertions, concurrency/property probes, containers, and four WooCommerce runtime cells passed. Production migration/mode/canary evidence remains before closure.
+- The old local Phase 4 branch and six modified planning files are preserved in a named stash. M00, the M01 evidence gate, and M02 merged through PRs #22–#24; active work proceeds from integrated `main`.
+- M01 is active for an approved real WooCommerce store and recovery proof. Its external gate does not block the dependency-safe M03 implementation.
+- M02 is complete at 93/100 after exact-head migration replay, 1,095 pgTAP assertions, concurrency/property probes, containers, four WooCommerce runtime cells, a fresh production physical backup, additive v27 migration, managed-mode transition, and the single Starfiniti `programme.v2` canary passed.
 - M02 defaults upgrades to locally controlled `self_hosted`, keeps managed billing off, and makes PostgreSQL—not Auth claims, the browser, Stripe, or a licence server—the entitlement authority. Six protected value paths cannot be commercially disabled.
+- M03 competitive earning rules are now the active dependency-safe implementation module while M01 continues waiting only for an approved real WooCommerce store.
 - M01 live read-only reconstruction confirms zero commerce connections, customers, wallets, ledger transactions, reservations, events, effects, or commands. The real-store pilot cannot accidentally overlap existing accepted value.
 - `npm run pilot:validate` enforces 22 M01 checks. Database WAL recovery is proven; 21 store/application/alert/reconciliation checks remain pending. The configured whole-VM Borg timer has not completed its first loyalty-VM run, so application/Auth/signing recovery is not claimed.
 
@@ -15,10 +16,10 @@
 
 - The dashboard can initiate PKCE sign-in through the exact Supabase provider `custom:starfiniti-sso`, accepts only the configured Supabase `/auth/v1/authorize` destination, and returns through the existing private no-store callback to the same Supabase Auth/RLS session model. Customer password flows remain separate.
 - Phase 0's reproducible npm workspace, responsive standalone Next.js Overview, Supabase migration baseline, WooCommerce HPOS scaffold, repository operating system, and pinned CI are verified.
-- The Docker-backed GitHub Actions database job replays migrations/seed and runs 1,049 transactional pgTAP assertions plus real two-session ledger/programme concurrency and property probes.
+- The Docker-backed GitHub Actions database job replays migrations/seed and runs 1,095 transactional pgTAP assertions plus real two-session ledger/programme concurrency and property probes.
 - Phase 1 Rosy Rewards semantics are owner-approved and encoded as versioned configuration rather than global merchant assumptions.
 - Pure domain behavior covers integer award calculation, explicit historical tier snapshots, 30-day release, 12-month rolling expiry, earliest-expiry redemption ordering, rolling-spend tiers with grace, cumulative original-attribution refund reversal, and negative balances.
-- Twenty-four domain, sixty-one versioned contract, eighty-three dashboard, and nine worker tests pass.
+- Twenty-four domain, sixty-six versioned contract, eighty-six dashboard, and nine worker tests pass.
 - The platform carries a full AGPL-3.0 license and package metadata; the WooCommerce connector remains independently GPL-2.0-or-later.
 - Phase 2 architecture is complete and deterministically validated: tenant/Auth trust, identity, double-entry ledger, signed inbox/outbox, reward reservation, privacy, backup/restore, deployment, and SLO models are reviewable.
 - Phase 3 tenancy/RLS is complete: organizations, memberships, workspaces, programme groups, support grants, least-privilege roles, composite tenant keys, and live authorization policies execute successfully in disposable Supabase CI.

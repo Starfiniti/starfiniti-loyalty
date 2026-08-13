@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "module": "M02",
   "evaluatedAt": "2026-08-13",
-  "sourceCommit": "b761bce9398b4752c9bdc33db9f91357e8187dc9",
+  "sourceCommit": "3e26165376d6bd1b135c5236887452314a2d58aa",
   "score": 93,
   "target": 90,
   "minimumCategoryRatio": 0.8,
-  "gateStatus": "repository_verified_production_rollout_pending",
+  "gateStatus": "complete",
   "categories": [
     {
       "id": "correctness",
@@ -52,5 +52,5 @@
     }
   ],
   "automaticFails": [],
-  "remainingGate": "Merge and apply the additive migration, select managed mode for the Starfiniti-operated tenant, append its programme.v2 canary, and capture the effective production read."
+  "remainingGate": null
 }
