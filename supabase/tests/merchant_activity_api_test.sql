@@ -404,7 +404,7 @@ select results_eq(
     'activity-worker', 'applied', 'loyalty.activity.award',
     'merchant-activity:crm:consultation:42',
     'ledger-transaction:' || (select transaction_public_id from committed_activity_award),
-    null, null, 0) $$,
+    null, 0) $$,
   array['applied'::text],
   'the lease owner closes the value effect with its ledger reference'
 );
