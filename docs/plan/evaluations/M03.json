@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "module": "M03",
+  "evaluatedAt": "2026-08-13",
+  "sourceCommit": "0ced4b666a55d836bd3d4927337fe057a71bb4ba",
+  "score": 93,
+  "target": 90,
+  "minimumCategoryRatio": 0.8,
+  "gateStatus": "complete",
+  "categories": [
+    {
+      "id": "correctness",
+      "weight": 20,
+      "score": 19,
+      "evidence": "One strict V2 contract and exact bigint evaluator drive simulation and live worker behavior; precedence, caps, explanations, refunds, and V1 compatibility pass."
+    },
+    {
+      "id": "security",
+      "weight": 20,
+      "score": 19,
+      "evidence": "Database entitlement and publication guards, tenant RLS, narrow grants, bounded signed ingestion, replay protection, and public-selector authority derivation pass adversarial tests."
+    },
+    {
+      "id": "ledger_reliability",
+      "weight": 15,
+      "score": 15,
+      "evidence": "Serialized cap accounting, idempotency, evaluation evidence, per-rule usage, and balanced ledger commit are atomic; V1 immutable replay is unchanged."
+    },
+    {
+      "id": "tests",
+      "weight": 15,
+      "score": 14,
+      "evidence": "The release gate passed 221 workspace tests, 29 pgTAP files with 1200 assertions, concurrency/property probes, both images, and all four WooCommerce runtime cells."
+    },
+    {
+      "id": "performance",
+      "weight": 10,
+      "score": 8,
+      "evidence": "Evaluation is bounded, exact, indexed, and free of per-rule database round trips; production load-envelope measurement remains an M15 gate."
+    },
+    {
+      "id": "operability",
+      "weight": 10,
+      "score": 9,
+      "evidence": "Tenant canary, source health, immutable evidence, guarded deployment rollback, recovery prerequisite, and value-preserving disable path are documented and production-smoked."
+    },
+    {
+      "id": "maintainability",
+      "weight": 10,
+      "score": 9,
+      "evidence": "Contracts, shared evaluator, migrations, worker, plugin, UI, ADRs, API/security docs, tests, score, tasks, and production evidence remain versioned and synchronized."
+    }
+  ],
+  "automaticFails": [],
+  "remainingGate": null
+}

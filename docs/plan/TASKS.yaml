@@ -598,7 +598,8 @@ tasks:
   - id: M03-EARNING-RULES
     title: Deliver ProgrammeDefinitionV2 and competitive earning rules
     module: M03
-    status: in_progress
+    status: complete
+    module_score: 93
     dependencies: [M02-ENTITLEMENTS-AND-FLAGS]
     hypothesis: Versioned conditional earning with explicit precedence and traces expands merchant value without changing historical V1 results.
     baseline: V1 supports tier-based eligible purchase earning only.
@@ -654,6 +655,11 @@ tasks:
       - the browser simulator imports the exact worker evaluator; desktop and mobile Playwright added a birthday rule and reproduced 250 points with no overflow or console error
       - V1 migration copies tiers and rewards but explicitly warns when different legacy tier rates would become one programme-wide V2 base rate before publication
       - exact-head CI run 31735847075 passed baseline, images, four WooCommerce runtimes, 29 pgTAP files with 1200 assertions, and the ledger/programme concurrency-property probe
+      - release v0.1.11 run 31738294379 passed the full gate and published immutable dashboard worker and WooCommerce artifacts from commit 0ced4b666a55d836bd3d4927337fe057a71bb4ba
+      - production applied additive migration 20260813200000 after a fresh recovery point; RLS, the explicit Starfiniti programme.v2 canary, zero value counts, WAL archive, public health, and unsigned-ingress denial passed
+      - authenticated production Chrome rendered the V2 builder and exact 150 EUR to 750 point simulation at 1744 and 390 pixel widths with no overflow or console diagnostics
+      - module score is 93/100 with every category at or above 80 percent
+      - docs/plan/evidence/M03/production-rollout-2026-08-13.md
 
   - id: M04-REWARDS-AND-FULFILMENT
     title: Expand native rewards and audited manual fulfilment

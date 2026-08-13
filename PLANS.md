@@ -6,9 +6,9 @@ Deliver the enterprise WooCommerce roadmap in `docs/plan/ENTERPRISE_ROADMAP.md` 
 
 ## Current module
 
-M03 — competitive earning rules through `ProgrammeDefinitionV2`. M00 and M02 are complete; M01 remains active at its approved-real-store external gate.
+M04 — expanded native rewards and audited manual fulfilment. M00, M02, and M03 are complete; M01 remains active at its approved-real-store and full-service-recovery external gates.
 
-The active integrated baseline is merged `main` commit `3e26165376d6bd1b135c5236887452314a2d58aa`. The previous local Phase 4 branch and its six modified planning files remain preserved in a named git stash and have not been mixed into this work.
+The active integrated baseline is released production commit `0ced4b666a55d836bd3d4927337fe057a71bb4ba` (`v0.1.11`). The previous local Phase 4 branch and its six modified planning files remain preserved in a named git stash and have not been mixed into this work.
 
 ## Completed M00 slice
 
@@ -19,7 +19,7 @@ The active integrated baseline is merged `main` commit `3e26165376d6bd1b135c5236
 
 ## Active M01 external gate
 
-- Production/store/recovery state is inventoried without secrets: exact `v0.1.10` images and all Supabase containers are healthy, value/event aggregates are zero, and no reachable customer store was treated as approved.
+- Production/store/recovery state is inventoried without secrets: exact `v0.1.11` images and all Supabase containers are healthy, value/event aggregates are zero, database PITR is proven and repaired, and no reachable customer store was treated as approved.
 - The 22-case machine-readable pilot gate and exact operational runbook define provisioning, value, refund, expiry, reconciliation, rotation, outage, recovery, alert, and final-reconciliation evidence.
 - Complete every recovery/outage/reconciliation step that does not require interactive store-owner access. Leave only explicit store selection and owner-controlled checkout/order actions for the end if credentials remain unavailable.
 
@@ -33,9 +33,9 @@ The active integrated baseline is merged `main` commit `3e26165376d6bd1b135c5236
 
 ## Next safe work
 
-1. M03: implement versioned earning sources, conditions, precedence, caps, traces, simulator/live parity, signed custom activity, WooCommerce event expansion, merchant rule builder, and canary evidence.
+1. M04: implement fulfilment-complete fixed, percentage, free-shipping, free-product, exclusive-access, and manual-perk rewards with restrictions, atomic inventory/budget reservations, ambiguity-safe recovery, merchant operations, and runtime evidence.
 2. M01: connect an approved real WooCommerce store when access is supplied and complete its value, outage, rotation, alert, and clean-room recovery gate.
-3. Deliver M04–M16 sequentially in versioned vertical slices and close each measured module gate before beginning its dependent module.
+3. Deliver M05–M16 sequentially in versioned vertical slices and close each measured module gate before beginning its dependent module.
 
 ## External inputs
 

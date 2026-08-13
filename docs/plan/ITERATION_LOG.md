@@ -1,5 +1,13 @@
 # Iteration Log
 
+## 2026-08-13 — M03 production canary and closure
+
+- Release run `31738294379` passed the complete `v0.1.11` gate and published immutable artifacts from commit `0ced4b666a55d836bd3d4927337fe057a71bb4ba`.
+- After the repaired recovery gate produced a fresh base and timer-driven encrypted archive, production transactionally applied migration `20260813200000`; its ledger entry, RLS, Starfiniti `programme.v2` override, zero-value baseline, and WAL archiver passed.
+- A guarded application-selector error restored `v0.1.10` without replacing healthy containers; the corrected rollout then moved dashboard and worker to the exact `v0.1.11` SHA and passed readiness, public health/login, unsigned-ingress denial, and clean recent logs.
+- Authenticated production Chrome rendered the V2 rule catalogue and exact `EUR 150.00 → 750 points` simulation at 1744 and 390 pixel widths with no overflow or browser diagnostics. No draft was saved or published because M05 must preserve the existing tier-specific V1 rates.
+- M03 closes at 93/100 with every category at or above 80%. Evidence-based whole-product readiness rises to 54/100; M04 expanded rewards is next while M01 remains externally gated by an approved real store.
+
 ## 2026-08-13 — M01 live backup-export repair
 
 - Stopped production migration work after the three-minute off-host PostgreSQL job failed closed: its recursive `tar` rewalk observed the live `wal/` directory changing during export.
