@@ -365,6 +365,8 @@ tasks:
       - owner-selected option 3 replaces the fragmented merchant presentation with one Hub-style shell across Overview programme customers operations and experience using the real Starfiniti mark grouped Lucide navigation and no tenant or language switcher
       - the launch checklist performance rail and recent activity use live programme connector reporting and audit contracts rather than mock values while responsive disclosure drawer theme and refresh controls remain interactive
       - design-qa.md records normalized full-view and focused comparisons at 1440 by 1024 plus a no-overflow 390 by 844 mobile pass with final result passed
+      - PR 17 run 31703869751 and reporting-polish PR 18 run 31704901506 passed all seven CI jobs before release run 31705154056 published and Proxmox deployed v0.1.9 at immutable commit 8d27d091d7a48094dbbb1a45bd37925a092d88b3
+      - authenticated production Chrome verification rendered the live Starfiniti and Main Store Hub command center with zero browser warnings or errors while both application containers and the public dependency health route remained healthy
   - id: DEPLOY-PROXMOX
     title: Release and deploy the self-hosted platform on Proxmox
     phase: deployment
