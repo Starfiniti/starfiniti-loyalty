@@ -165,12 +165,12 @@ reset role;
 
 insert into loyalty.programme_versions (
   organization_id, programme_group_id, programme_id, version_number, status,
-  configuration, configuration_sha256, published_at
+  configuration, configuration_sha256, published_at, retired_at
 )
 select programme.organization_id, programme.programme_group_id, programme.id,
-  1, 'published',
+  1, 'superseded',
   '{"version":"1","tiers":[{"code":"rose","name":"Rose","minimumEligibleSpendMinor":"0","pointsPerMajorUnit":"5"}],"rewards":[]}'::jsonb,
-  decode(repeat('1a', 32), 'hex'), '2026-01-01T00:00:00Z'
+  decode(repeat('1a', 32), 'hex'), '2026-01-01T00:00:00Z', '2026-02-01T00:00:00Z'
 from loyalty.programmes as programme
 join loyalty.organizations as organization on organization.id = programme.organization_id
 where organization.slug = 'expiry-one';

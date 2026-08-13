@@ -130,7 +130,7 @@ declare
 begin
   if new.status not in ('published', 'scheduled')
     or (tg_op = 'UPDATE' and old.status <> 'draft')
-    or new.configuration ->> 'version' <> '2' then
+    or coalesce(new.configuration ->> 'version', '') <> '2' then
     return new;
   end if;
   perform loyalty_private.validate_point_expiry_policy_v2(new.configuration);
