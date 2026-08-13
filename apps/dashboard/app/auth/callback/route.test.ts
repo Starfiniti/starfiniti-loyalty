@@ -1,6 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const exchangeCodeForSession = vi.hoisted(() => vi.fn());
+const hasCookie = vi.hoisted(() => vi.fn());
+
+vi.mock("next/headers", () => ({
+  cookies: async () => ({ has: hasCookie }),
+}));
 
 vi.mock("@/lib/safe-navigation", () => ({
   safeAppPath: (value: unknown) =>
@@ -29,6 +34,8 @@ describe("workforce SSO callback", () => {
   beforeEach(() => {
     process.env.DASHBOARD_PUBLIC_ORIGIN = "https://loyalty.starfiniti.com";
     exchangeCodeForSession.mockReset();
+    hasCookie.mockReset();
+    hasCookie.mockReturnValue(true);
   });
 
   afterEach(() => {
@@ -62,7 +69,21 @@ describe("workforce SSO callback", () => {
     );
 
     expect(response.headers.get("location")).toBe(
-      "https://loyalty.starfiniti.com/login?error=authentication_failed",
+      "https://loyalty.starfiniti.com/login?error=authentication_failed&reason=flow_id_missing",
+    );
+  });
+
+  it("reports a missing verifier without exposing its value", async () => {
+    hasCookie.mockReturnValue(false);
+    exchangeCodeForSession.mockResolvedValue({ error: new Error("failed") });
+    const response = await GET(
+      new Request(
+        "https://0.0.0.0:3000/auth/callback?code=used-code&sb_flow_id=bc0f26282e6abeac61d7b21c49683e6a",
+      ),
+    );
+
+    expect(response.headers.get("location")).toBe(
+      "https://loyalty.starfiniti.com/login?error=authentication_failed&reason=verifier_cookie_missing",
     );
   });
 
