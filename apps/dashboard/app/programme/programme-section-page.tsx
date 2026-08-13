@@ -7,6 +7,8 @@ import {
   merchantText,
   resolveMerchantLocale,
 } from "@/lib/merchant-locale";
+import { hasEntitlement } from "@/lib/entitlements";
+import { getEntitlementSnapshot } from "@/lib/server/entitlements";
 import { getMerchantProgrammeState } from "@/lib/server/programme";
 import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
 import { EarningRulesEditor } from "./earning-rules-editor";
@@ -62,6 +64,13 @@ export async function ProgrammeSectionPage({
     );
   }
   if (tenant.kind === "unassigned") redirect(merchantLocalePath("/", locale));
+
+  if (mode === "earning") {
+    const entitlements = await getEntitlementSnapshot(tenant.context);
+    if (!hasEntitlement(entitlements, "programme.v2")) {
+      redirect(merchantLocalePath("/programme", locale));
+    }
+  }
 
   const state = await getMerchantProgrammeState(tenant.context);
   if (!state.programme) redirect(merchantLocalePath("/programme", locale));
