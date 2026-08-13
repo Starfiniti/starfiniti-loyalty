@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+umask 077
+
+readonly backup_root="${STARFINITI_POSTGRES_BACKUP_ROOT:-/opt/starfiniti/supabase-prod/backups}"
+readonly base_dir="$backup_root/base"
+readonly wal_dir="$backup_root/wal"
+readonly database_container="${STARFINITI_POSTGRES_CONTAINER:-supabase-db}"
+
+install -d -m 0700 "$base_dir" "$wal_dir"
+
+stamp=$(date -u +%Y%m%dT%H%M%SZ)
+partial="$base_dir/base-$stamp.tar.gz.partial"
+final="$base_dir/base-$stamp.tar.gz"
+trap 'rm -f "$partial"' EXIT
+
+docker exec -u postgres "$database_container" \
+  pg_basebackup -U postgres -D - -Ft -X fetch -c fast \
+  | gzip -1 > "$partial"
+gzip -t "$partial"
+tar -tzf "$partial" backup_label backup_manifest >/dev/null
+mv "$partial" "$final"
+trap - EXIT
+
+find "$base_dir" -xdev -type f -name 'base-*.tar.gz' -mtime +3 -delete
+
+oldest_base=$(
+  find "$base_dir" -xdev -type f -name 'base-*.tar.gz' -printf '%T@ %p\n' \
+    | LC_ALL=C sort -n \
+    | head -n 1 \
+    | cut -d' ' -f2-
+)
+if [[ -z "$oldest_base" ]]; then
+  printf 'starfiniti-postgres-basebackup: retained base backup unavailable\n' >&2
+  exit 1
+fi
+
+oldest_wal=$(
+  tar -xOzf "$oldest_base" backup_label \
+    | sed -n 's/^START WAL LOCATION:.*(file \([0-9A-F]\{24\}\)).*/\1/p' \
+    | head -n 1
+)
+if [[ ! "$oldest_wal" =~ ^[0-9A-F]{24}$ ]]; then
+  printf 'starfiniti-postgres-basebackup: retained WAL boundary unavailable\n' >&2
+  exit 1
+fi
+
+# Delete only segments older than the start WAL of the oldest retained base.
+# The boundary segment itself and every later PITR segment remain available.
+docker exec -u postgres "$database_container" \
+  pg_archivecleanup /var/lib/postgresql/wal-archive "$oldest_wal"
+
+printf 'starfiniti-postgres-basebackup: created %s; retained WAL from %s\n' \
+  "$(basename "$final")" "$oldest_wal"

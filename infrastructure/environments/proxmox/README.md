@@ -15,6 +15,15 @@ Run Starfiniti Loyalty in Linux VMs, not privileged containers.
 11. In the pinned Supabase environment, set `SITE_URL` to the dashboard HTTPS origin, add only required dashboard callback origins to `ADDITIONAL_REDIRECT_URLS`, retain disabled public signup, and create the first Auth user through an approved administration path.
 12. From the matching release source, follow `docs/operations/INITIAL_TENANT_BOOTSTRAP.md` and run `npm run tenant:bootstrap` with a temporary administration database URL held only in a named environment variable. The atomic deployment-only command creates the initial organization, owner membership, workspace, programme group, link, and immutable audit evidence; browser, dashboard runtime, and worker roles cannot execute it.
 
+## PostgreSQL recovery scripts
+
+Install the reviewed scripts from `scripts/` as root-owned mode `0755` files in `/usr/local/sbin`:
+
+- `starfiniti-postgres-basebackup` is the daily physical-backup command. It stages a `.partial` file, verifies its compression and recovery metadata, publishes it atomically, retains three days of bases, and removes WAL only before the oldest retained base's start segment.
+- `starfiniti-postgres-backup-export` is the forced SSH command used by the off-host Borg pull identity. It snapshots only completed regular files below `base/` and `wal/`; it does not recursively rewalk the live WAL directory while PostgreSQL is archiving.
+
+Keep the export identity restricted to that exact forced command with PTY, forwarding, and user-supplied command execution disabled. After every script change, run `npm run deployment:validate`, create a fresh verified base, force a WAL switch during a full export, and require both a manual and a timer-triggered encrypted off-host archive to finish with exit code zero before applying a production migration. Never delete WAL by age alone: a retained base backup defines the oldest safe cleanup boundary.
+
 If the Supabase database container is recreated, recreate Supavisor after PostgreSQL is healthy so it resolves the current private `db` container address before application traffic resumes. A normal host boot starts both projects from stable service names; this extra step applies to an in-place database-container recreation.
 
 Current breaking changes reviewed 2026-08-11: Envoy is the self-hosted default gateway; `API_EXTERNAL_URL` includes `/auth/v1` in current stacks. Do not apply old Kong-specific examples without an ADR.

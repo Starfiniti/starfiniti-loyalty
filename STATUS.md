@@ -4,14 +4,14 @@
 
 - Production application images remain `v0.1.10`; M00 and M02 are complete, and M01 plus M03–M16 remain the authoritative unfinished enterprise graph.
 - Released engineering foundations score 95/100, while evidence-based whole-product readiness is 51/100 because the real-store pilot and major competitive, enterprise, and commercial modules remain incomplete.
-- The old local Phase 4 branch and six modified planning files are preserved in a named stash. M00, the M01 evidence gate, and M02 merged through PRs #22–#24; active work proceeds from integrated `main`.
+- The old local Phase 4 branch and six modified planning files are preserved in a named stash. M00, the M01 evidence gate, M02, and M03 repository implementation merged through PRs #22–#26; active work proceeds from integrated `main`.
 - M01 is active for an approved real WooCommerce store and recovery proof. Its external gate does not block the dependency-safe M03 implementation.
 - M02 is complete at 93/100 after exact-head migration replay, 1,095 pgTAP assertions, concurrency/property probes, containers, four WooCommerce runtime cells, a fresh production physical backup, additive v27 migration, managed-mode transition, and the single Starfiniti `programme.v2` canary passed.
 - M02 defaults upgrades to locally controlled `self_hosted`, keeps managed billing off, and makes PostgreSQL—not Auth claims, the browser, Stripe, or a licence server—the entitlement authority. Six protected value paths cannot be commercially disabled.
 - M03 competitive earning rules are now the active dependency-safe implementation module while M01 continues waiting only for an approved real WooCommerce store.
-- M03 is repository-complete: the strict V2 contract, shared exact evaluator, WooCommerce and signed activity inputs, database-authoritative publication/cap/ledger boundaries, and Hub-style rule builder/simulator pass exact-head CI with 1,200 pgTAP assertions and four WooCommerce runtimes. Production deployment/canary and scoring remain before closure.
+- M03 is repository-complete: the strict V2 contract, shared exact evaluator, WooCommerce and signed activity inputs, database-authoritative publication/cap/ledger boundaries, and Hub-style rule builder/simulator passed PR #26 exact-head run `31736396618` with 1,200 pgTAP assertions and four WooCommerce runtimes. Production deployment/canary and scoring remain before closure.
 - M01 live read-only reconstruction confirms zero commerce connections, customers, wallets, ledger transactions, reservations, events, effects, or commands. The real-store pilot cannot accidentally overlap existing accepted value.
-- `npm run pilot:validate` enforces 22 M01 checks. Database WAL recovery is proven; 21 store/application/alert/reconciliation checks remain pending. The configured whole-VM Borg timer has not completed its first loyalty-VM run, so application/Auth/signing recovery is not claimed.
+- `npm run pilot:validate` enforces 22 M01 checks. Database WAL recovery is proven; the live recursive-export race was repaired with a snapshot-safe exporter, retained-base WAL cleanup, a fresh physical base, a forced-WAL concurrency test, two manual encrypted archives, and one timer-triggered archive. Twenty-one store/application/alert/reconciliation checks remain pending; application/Auth/signing recovery is not claimed.
 
 ## What works
 
@@ -158,8 +158,8 @@ The enterprise roadmap work is isolated on `codex/enterprise-roadmap`. Stale Pha
 
 ## Next recommended task
 
-Complete adversarial branch review and prepare the first semantic release, then execute production deployment and recovery evidence when the required external inputs are available.
+Release and deploy the merged M03 earning-rules slice, run the disabled-to-Starfiniti-canary production smoke, score M03, and then begin M04 expanded rewards while M01 waits for an explicitly approved real WooCommerce store.
 
 ## Blockers
 
-Phase 7 work is unblocked. Proxmox deployment requires working SSH authentication, DNS/TLS choices, an off-host backup target, production credentials, and an approved first Auth user UUID; none should be guessed or committed. Initial tenant membership and scope no longer require manual SQL.
+Repository and Proxmox access, DNS/TLS, off-host PostgreSQL backup, production credentials, Authentik SSO, and the initial owner tenant are available. M01 still requires an explicitly approved real WooCommerce store, and full application/Auth/signing clean-room recovery remains unproved. Exact Stripe/Klaviyo/enterprise-IdP credentials and independent penetration testing remain deferred to their module gates.

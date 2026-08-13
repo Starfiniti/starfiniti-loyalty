@@ -1,5 +1,12 @@
 # Iteration Log
 
+## 2026-08-13 — M01 live backup-export repair
+
+- Stopped production migration work after the three-minute off-host PostgreSQL job failed closed: its recursive `tar` rewalk observed the live `wal/` directory changing during export.
+- Added a versioned forced exporter that snapshots completed regular-file names and excludes partial bases, plus a versioned base-backup command that verifies recovery metadata and deletes WAL only before the oldest retained base boundary.
+- Installed the reviewed scripts with prior versions retained, created and validated a fresh physical base, forced a WAL switch during a full 11.3 GB export, and completed two manual encrypted Borg archives.
+- The next timer-triggered archive `loyalty-postgres-20260813T194657Z` completed in 51 seconds with exit code zero. Database-native PITR is healthy again; whole-VM application/Auth/signing recovery remains open.
+
 ## 2026-08-13 — M03 authoritative activity sources
 
 - Extended the strict V2 rule contract with activity-code selectors and verified-review product/category conditions; the shared pure evaluator now proves source-specific matching and exact member caps.

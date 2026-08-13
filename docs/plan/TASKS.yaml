@@ -535,6 +535,7 @@ tasks:
       - docs/plan/evidence/M01/README.md
       - docs/plan/evidence/M01/pilot.yaml
       - docs/plan/evidence/M01/production-baseline-2026-08-13.md
+      - docs/plan/evidence/M01/backup-export-repair-2026-08-13.md
 
   - id: M02-ENTITLEMENTS-AND-FLAGS
     title: Add deployment modes, entitlements, limits, and tenant rollout controls
