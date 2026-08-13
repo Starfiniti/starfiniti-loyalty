@@ -88,18 +88,19 @@ Phase 9 — merchant administration and customer experience. Shopify Phase 8 rem
 - Release review hardened both signed connector routes with streaming request-body limits, stopped all WooCommerce command kinds after ten ambiguous attempts for manual review, and removed unsupported percentage caps from authoring. PostgreSQL independently rejects direct-RPC publication/scheduling and legacy redemption before value moves; the plugin matrix covers the supported uncapped percentage behavior.
 - Exact-head run `31645976689` passed all seven jobs with 164 unit tests, both production images, twenty-six migration replays, 1,049 pgTAP assertions, concurrency/property probes, and all four minimum/current HPOS/legacy WooCommerce runtimes.
 - The owner-selected Hub-style command center now provides one coherent merchant shell across Overview, programme, customers, connector operations, and experience. Its launch checklist, performance rail, audit activity, responsive drawer, real Starfiniti mark, Lucide icons, and persistent theme controls remain bound to authoritative tenant/programme/reporting state; `design-qa.md` records the passed 1440 × 1024 and 390 × 844 comparison evidence.
+- Programme administration now follows the approved four-screen information architecture instead of fragment links into one monolithic form: `/programme` is a readiness/version overview, `/programme/earning-rules` has tier-based purchase rates and simulation, `/programme/rewards` has guided WooCommerce-ready catalogue authoring, and `/programme/vip-tiers` has threshold validation and qualification preview. All focused edits preserve and submit one complete immutable programme definition.
 - Exact-head run `31601351946` passed the filtered-customer baseline, fifteen migrations with 654 pgTAP assertions plus concurrency/property probes, and all four localized WooCommerce runtime variants.
 - Exact-head run `31581760825` passed the customer-ledger baseline, database job, and all four WooCommerce runtime variants.
 
 ## Active work
 
-- `P9-MERCHANT-HUB` (in progress): repository implementation, release hardening, Authentik-to-Supabase workforce SSO, English-only presentation, verified owner tenant, and the approved Hub-style shell are live on Proxmox as `v0.1.9`. The remaining launch work is a real WooCommerce connection and authenticated/outage-recovery smoke tests.
+- `P9-MERCHANT-HUB` (in progress): repository implementation, release hardening, Authentik-to-Supabase workforce SSO, English-only presentation, verified owner tenant, and the approved Hub-style shell are live on Proxmox as `v0.1.9`. Focused Programme workflows are implemented and locally verified on the current branch; the remaining launch work after their release is a real WooCommerce connection and authenticated/outage-recovery smoke tests.
 
 ## Next safe tasks
 
-1. Complete the approved owner's real Authentik SSO flow and verify the linked Supabase identity/session while it still has no tenant membership.
-2. Bootstrap the initial tenant/programme only for that verified UUID, then prove same-tenant and forbidden cross-tenant RLS behavior.
-3. Connect the real WooCommerce store and execute authenticated connector/outage-recovery smoke tests. The encrypted off-host database/WAL replay rehearsal has passed; full application/Auth recovery remains an operations follow-up.
+1. Release and production-verify the four focused Programme workflows under the authenticated owner session.
+2. Connect the real WooCommerce store and execute authenticated connector/outage-recovery smoke tests.
+3. Complete the full application/Auth/secret-escrow recovery smoke; the encrypted off-host database/WAL replay rehearsal already passes.
 
 ## Dependencies and blockers
 

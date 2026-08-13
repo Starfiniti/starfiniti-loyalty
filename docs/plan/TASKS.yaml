@@ -367,6 +367,9 @@ tasks:
       - design-qa.md records normalized full-view and focused comparisons at 1440 by 1024 plus a no-overflow 390 by 844 mobile pass with final result passed
       - PR 17 run 31703869751 and reporting-polish PR 18 run 31704901506 passed all seven CI jobs before release run 31705154056 published and Proxmox deployed v0.1.9 at immutable commit 8d27d091d7a48094dbbb1a45bd37925a092d88b3
       - authenticated production Chrome verification rendered the live Starfiniti and Main Store Hub command center with zero browser warnings or errors while both application containers and the public dependency health route remained healthy
+      - the Programme area now uses four exact routes for overview earning rules rewards and VIP tiers instead of duplicate fragment links into one monolithic editor
+      - focused earning reward and tier workflows preserve one complete immutable configuration while exposing exact order qualification reward readiness overlap validation and member movement previews
+      - 1440 by 1024 and 390 by 844 Chrome QA passed reward creation earning simulation tier validation mobile drawer and no-overflow checks; the dashboard suite contains regression coverage for unique exact programme navigation
   - id: DEPLOY-PROXMOX
     title: Release and deploy the self-hosted platform on Proxmox
     phase: deployment

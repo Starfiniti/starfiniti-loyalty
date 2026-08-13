@@ -4,6 +4,7 @@ const mainSources = [
   "apps/dashboard/app/page.tsx",
   "apps/dashboard/app/login/page.tsx",
   "apps/dashboard/app/programme/page.tsx",
+  "apps/dashboard/app/programme/programme-section-page.tsx",
   "apps/dashboard/app/customers/page.tsx",
   "apps/dashboard/app/customers/bulk/page.tsx",
   "apps/dashboard/app/customers/[customerId]/page.tsx",

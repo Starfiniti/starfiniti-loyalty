@@ -49,11 +49,12 @@
 - Native percentage rewards support 0.01–100% without a maximum cap. The contract/editor reject caps, PostgreSQL independently blocks direct-RPC publication/scheduling and legacy capped redemption before value moves, and the plugin retains a defensive rejection boundary.
 - The Overview no longer renders illustrative tenant figures. It reads versioned, tenant/workspace/programme-authorized aggregates for members, eligible loyalty spend, repeat-member rate, captured-to-awarded point redemption, point liability, and bounded 7/30/90-day trends without exposing private source evidence.
 - Merchant Overview, programme, customer, connector, and experience routes now share the owner-selected Hub-style application shell with the real Starfiniti mark, grouped Lucide navigation, working mobile drawer, persistent theme and refresh controls, and no tenant or language switcher. Overview is a data-backed launch command center whose checklist, performance rail, and activity rows derive from live programme, connector, reporting, and audit state. The exact `v0.1.9` images are live on Proxmox.
+- The current branch completes Programme administration as four distinct merchant workflows. Overview shows readiness, configuration summaries, immutable version actions, and recent audit evidence; Earning rules provides exact tier-rate simulation; Rewards provides a guided WooCommerce-ready catalogue; VIP tiers provides a separate ladder with overlap blocking and qualification preview. Focused edits keep the other programme fields intact in the same immutable draft contract.
 
 ## Partial
 
 - Phases 0 through 7 are complete for the active WooCommerce scope. Shopify Phase 8 is deferred by product-owner direction.
-- Phase 9 code, English-only releases, self-hosted production infrastructure, Authentik-to-Supabase SSO, verified owner login, and atomic Starfiniti tenant bootstrap are live. Public signup remains disabled; one real WooCommerce store connection is pending before tenant value is accepted.
+- Phase 9 code, English-only releases, self-hosted production infrastructure, Authentik-to-Supabase SSO, verified owner login, and atomic Starfiniti tenant bootstrap are live. The focused Programme workflow correction is release-ready on the current branch. Public signup remains disabled; one real WooCommerce store connection is pending before tenant value is accepted.
 
 ## Broken or unavailable
 
@@ -74,12 +75,13 @@ Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 Wo
 
 - `npm run test --workspace=@starfiniti/domain` — passed with 24 tests.
 - `npm run typecheck --workspace=@starfiniti/domain` — passed.
-- The current local gates pass zero-warning lint, all workspace type checks, 175 unit tests, accessibility/architecture/workflow/deployment/WooCommerce validators, and the standalone Next.js production build. The global Windows format check remains affected only by tracked baseline CRLF normalization; targeted changed-file Prettier checks pass.
+- Exact-head Programme verification passes repository lint/typecheck/build, all 177 tests, the 14-surface accessibility guard, CI/deployment/architecture/database/WooCommerce validators, secret scan, production dependency audit, and license validation. Hosted CI remains to run on the pushed commit.
 - `npm run db:validate` — passed for twenty-six migrations, Supabase config, and twenty-five transactional pgTAP files.
 - `npm run secrets:scan` — passed with no findings.
 - `npm run audit:prod` — passed with zero production vulnerabilities.
 - `npm run licenses` — passed for six AGPL npm package declarations, the full AGPL text, and both WooCommerce GPL declarations.
 - Hub-style design verification passed at 1440 × 1024 and 390 × 844 with working drawer/disclosure/theme interactions, no horizontal mobile overflow, and `design-qa.md` final result `passed`.
+- Focused Programme Chrome QA passed at 1440 × 1024 and 390 × 844 with no horizontal overflow; first-reward creation, populated reward editing, dynamic `€200 → Bloom → 1,200 points` simulation, threshold-overlap blocking, exact active navigation, and mobile drawer behavior all passed without console warnings or errors.
 - PR `#17` exact-head run `31703869751` and PR `#18` exact-head run `31704901506` each passed all seven jobs, including the 1,049-assertion database gate, both production containers, and all four minimum/current HPOS/legacy WooCommerce runtimes.
 - Release run `31705154056` published `v0.1.9`, the checksummed WooCommerce ZIP, and immutable commit `8d27d091d7a48094dbbb1a45bd37925a092d88b3` dashboard/worker images after the full release gate passed.
 - `npm run architecture:validate` — passed for eight Phase 2 models and four accepted ADRs; it now runs inside `npm run check`.

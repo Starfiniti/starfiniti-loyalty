@@ -53,3 +53,18 @@ No actionable P0, P1, or P2 fidelity finding remains.
 - P3: evaluate a user-specific display name/avatar when the Auth profile contract safely exposes one; the current role-only identity row avoids inventing or leaking profile data.
 
 final result: passed
+
+## Programme workflow completion — 2026-08-13
+
+The follow-up product audit found that the original production Programme navigation was structurally incomplete despite using the approved shell. `Programme overview`, `Earning rules`, `Rewards`, and `VIP tiers` all resolved to the same monolithic editor; Earning rules and VIP tiers shared an identical fragment URL, Rewards was only a scroll target, and repeated fragment navigation could accumulate hashes. The approved `programme.dc.html`, `earning.dc.html`, `rewards.dc.html`, `tiers.dc.html`, and `HANDOFF.md` already specify distinct workflows, so the fix preserves that information architecture without changing the authoritative programme contract.
+
+The completed implementation uses four real routes and one immutable draft model:
+
+- `/programme` presents launch readiness, separate earning/reward/tier summaries, immutable version review/publication, and bounded administration activity.
+- `/programme/earning-rules` focuses on per-tier purchase earning rates and an exact interactive order preview.
+- `/programme/rewards` provides a guided first-reward state and editable WooCommerce-ready fixed, percentage, and free-shipping rewards.
+- `/programme/vip-tiers` provides a distinct tier ladder, non-overlapping spend thresholds, earning-rate context, and member qualification preview.
+
+Chrome QA at 1440 × 1024 and 390 × 844 verified the selected Hub shell, grouped Lucide navigation, active route state, desktop two-column composition, mobile single-column reflow, and zero horizontal overflow. Interaction checks proved first-reward creation, the populated reward editor, dynamic earning simulation (`€200` → Bloom → `1,200 points`), threshold-overlap blocking, responsive navigation opening/closing, and visible validation. No console warning or error was present in the final local interaction pass. The production build contains all four dynamic routes and the accessibility guard now covers the shared focused-workflow main landmark.
+
+final programme workflow result: passed

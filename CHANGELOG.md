@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Replaced the monolithic Programme editor and duplicate fragment links with four honest merchant workflows: a launch/readiness overview, tier-based earning rules with live order simulation, a WooCommerce-ready rewards catalogue with guided empty state, and a distinct VIP-tier ladder with overlap validation and member qualification preview.
 - Rebuilt merchant administration around the owner-selected Hub-style launch command center: one fixed Lucide sidebar, real Starfiniti identity, data-backed programme checklist, compact performance rail, audit activity, responsive drawer, and persistent light/dark theme now frame Overview, programme, customer, connector, and experience workflows without a tenant or language switcher.
 - Show eligible spend as unavailable until an authoritative published-programme currency exists instead of exposing an implementation-level minor-unit fallback in the merchant command center.
 - Fixed production server-side Supabase reachability with a validated container-only split-DNS mapping that retains the public HTTPS hostname, and documented the required RLS-protected `loyalty` PostgREST schema allowlist.

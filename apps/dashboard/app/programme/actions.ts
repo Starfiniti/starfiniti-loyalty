@@ -27,6 +27,17 @@ export type ProgrammeActionState = Readonly<{
   message: string;
 }>;
 
+const programmePaths = [
+  "/programme",
+  "/programme/earning-rules",
+  "/programme/rewards",
+  "/programme/vip-tiers",
+] as const;
+
+function revalidateProgrammePaths(): void {
+  programmePaths.forEach((path) => revalidatePath(path));
+}
+
 function actionError(
   error: { code?: string } | null,
   locale: MerchantLocale,
@@ -115,7 +126,7 @@ export async function createInitialProgramme(
   if (!result.success) return actionError(null, locale);
 
   revalidatePath("/");
-  revalidatePath("/programme");
+  revalidateProgrammePaths();
   return {
     kind: "success",
     message: merchantText(
@@ -191,7 +202,7 @@ export async function saveProgrammeDraft(
   );
   if (!result.success) return actionError(null, locale);
 
-  revalidatePath("/programme");
+  revalidateProgrammePaths();
   return {
     kind: "success",
     message: programmeDraftResultText(
@@ -252,7 +263,7 @@ export async function publishProgrammeVersion(
   if (!result.success) return actionError(null, locale);
 
   revalidatePath("/");
-  revalidatePath("/programme");
+  revalidateProgrammePaths();
   return {
     kind: "success",
     message: merchantText(
@@ -314,7 +325,7 @@ export async function scheduleProgrammeVersion(
   );
   if (!result.success) return actionError(null, locale);
 
-  revalidatePath("/programme");
+  revalidateProgrammePaths();
   return {
     kind: "success",
     message: programmeScheduleResultText(
