@@ -34,6 +34,7 @@ Forwarded client IP headers are accepted only from the trusted proxy. Host firew
 - Analytics/Vector are opt-in. They are not a correctness dependency.
 - Prefer generated publishable/secret API keys and asymmetric signing keys. Retain legacy keys only during an explicit migration/rotation window.
 - New table Data API access is opt-in; Starfiniti also keeps explicit schema/grant/RLS validation.
+- Set `PGRST_DB_SCHEMAS=public,graphql_public,loyalty` in the self-hosted environment. Omitting `loyalty` makes authenticated dashboard queries fail with HTTP 406; adding it does not bypass the schema's explicit grants or tenant RLS policies.
 
 ## Secrets
 
@@ -43,7 +44,7 @@ Secret files are owner-readable only, excluded from backups unless encrypted esc
 
 Generate the WooCommerce signing-key pool on the application host with `npm run woocommerce:keys -- --output <secret-path> --count <n>` and mount it read-only at the configured dashboard secret path. The hardened dashboard image runs as UID/GID `1001`, so the host file must be owned by `1001:1001` with mode `0400`; root retains administrative access while every other non-root identity remains denied. Use `--append` to preserve assigned references while adding capacity; the generator rejects replacement of existing values and performs an atomic file swap. Restore owner `1001:1001` and mode `0400`, then recreate the dashboard container after append so the bind mount observes the replacement inode. Back up the pool only through encrypted secret escrow: database rows contain references, not recoverable signing keys.
 
-Before applying Compose, run `npm run deploy:preflight -- --env /absolute/path/to/starfiniti.env` from the matching release source. The command never prints environment or key values. It requires exact environment/Compose parity, populated values, commit-SHA image tags or digests, distinct image repositories, canonical HTTPS origins, one explicit non-wildcard dashboard IPv4 binding, separate nonadministrative PostgreSQL logins, and a valid absolute signing-pool file. On Linux it also rejects any group/other permission bit or an owner other than dashboard UID `1001`. Passing this offline preflight does not prove DNS, TLS, connectivity, database role membership, package visibility, or backup recovery; those remain live deployment checks.
+Before applying Compose, run `npm run deploy:preflight -- --env /absolute/path/to/starfiniti.env` from the matching release source. The command never prints environment or key values. It requires exact environment/Compose parity, populated values, commit-SHA image tags or digests, distinct image repositories, canonical HTTPS origins, one explicit non-wildcard dashboard IPv4 binding, a Supabase public-host mapping to an explicit internal TLS-proxy IPv4 address, separate nonadministrative PostgreSQL logins, and a valid absolute signing-pool file. The dashboard container uses that mapping to avoid public-NAT hairpin failures without changing the public Supabase URL, TLS hostname, or browser cookie namespace. On Linux the preflight also rejects any group/other permission bit or an owner other than dashboard UID `1001`. Passing this offline preflight does not prove DNS, TLS, connectivity, database role membership, package visibility, or backup recovery; those remain live deployment checks.
 
 ## Merchant authentication
 

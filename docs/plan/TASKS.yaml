@@ -402,3 +402,5 @@ tasks:
       - all twenty-six migrations are applied; dashboard readiness is healthy and public unsigned WooCommerce event and command requests fail closed
       - encrypted off-host Borg archives include daily physical PostgreSQL base backups and WAL; the first off-host archive passed pg_verifybackup with the exact production PostgreSQL image
       - a complete clean-room start plus WAL replay and authenticated tenant WooCommerce outage-recovery drill still require the approved first Auth owner and store
+      - production Chrome completed Authentik custom OIDC and Supabase PKCE for the approved owner UUID then rendered its atomically bootstrapped Starfiniti tenant through live RLS
+      - application Compose preserves the public Supabase TLS hostname while routing server-side requests to the private proxy and the pinned PostgREST allowlist exposes the RLS-protected loyalty schema

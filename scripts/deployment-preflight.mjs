@@ -16,6 +16,8 @@ const requiredVariables = [
   "DASHBOARD_IMAGE",
   "WORKER_IMAGE",
   "NEXT_PUBLIC_SUPABASE_URL",
+  "SUPABASE_PUBLIC_HOST",
+  "SUPABASE_INTERNAL_PROXY_IP",
   "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
   "DASHBOARD_PUBLIC_ORIGIN",
   "DASHBOARD_BIND_ADDRESS",
@@ -80,6 +82,7 @@ function validateHttpsOrigin(name, value) {
   ) {
     fail(`${name} must be one exact canonical HTTPS origin with no path`);
   }
+  return parsed;
 }
 
 function validateDatabaseUrl(name, value) {
@@ -106,6 +109,16 @@ function validateDatabaseUrl(name, value) {
     fail(`${name} must use a dedicated least-privilege login`);
   }
   return parsed;
+}
+
+function isPrivateIpv4(value) {
+  if (isIP(value) !== 4) return false;
+  const [first, second] = value.split(".").map(Number);
+  return (
+    first === 10 ||
+    (first === 172 && second >= 16 && second <= 31) ||
+    (first === 192 && second === 168)
+  );
 }
 
 function validateSigningPool(path, enforcePermissions) {
@@ -194,7 +207,7 @@ export function validateDeploymentConfiguration(
   ) {
     fail("dashboard and worker images must be distinct repositories");
   }
-  validateHttpsOrigin(
+  const supabaseOrigin = validateHttpsOrigin(
     "NEXT_PUBLIC_SUPABASE_URL",
     environment.NEXT_PUBLIC_SUPABASE_URL,
   );
@@ -206,6 +219,12 @@ export function validateDeploymentConfiguration(
     environment.NEXT_PUBLIC_SUPABASE_URL === environment.DASHBOARD_PUBLIC_ORIGIN
   ) {
     fail("Supabase and dashboard public origins must be distinct");
+  }
+  if (environment.SUPABASE_PUBLIC_HOST !== supabaseOrigin.hostname) {
+    fail("SUPABASE_PUBLIC_HOST must match NEXT_PUBLIC_SUPABASE_URL");
+  }
+  if (!isPrivateIpv4(environment.SUPABASE_INTERNAL_PROXY_IP)) {
+    fail("SUPABASE_INTERNAL_PROXY_IP must be one private RFC1918 IPv4 address");
   }
   if (
     environment.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.length < 20 ||
@@ -293,6 +312,8 @@ function runSelfTest() {
     DASHBOARD_IMAGE: `ghcr.io/starfiniti/loyalty-dashboard:${"a".repeat(40)}`,
     WORKER_IMAGE: `ghcr.io/starfiniti/loyalty-worker:${"b".repeat(40)}`,
     NEXT_PUBLIC_SUPABASE_URL: "https://api.loyalty.invalid",
+    SUPABASE_PUBLIC_HOST: "api.loyalty.invalid",
+    SUPABASE_INTERNAL_PROXY_IP: "10.10.10.30",
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: `sb_publishable_${"p".repeat(32)}`,
     DASHBOARD_PUBLIC_ORIGIN: "https://loyalty.invalid",
     DASHBOARD_BIND_ADDRESS: "127.0.0.1",
@@ -330,6 +351,18 @@ function runSelfTest() {
       expectFailure(() =>
         validateDeploymentConfiguration(
           { ...valid, DASHBOARD_PUBLIC_ORIGIN: "http://loyalty.invalid" },
+          { enforcePermissions: false },
+        ),
+      ),
+      expectFailure(() =>
+        validateDeploymentConfiguration(
+          { ...valid, SUPABASE_PUBLIC_HOST: "other.loyalty.invalid" },
+          { enforcePermissions: false },
+        ),
+      ),
+      expectFailure(() =>
+        validateDeploymentConfiguration(
+          { ...valid, SUPABASE_INTERNAL_PROXY_IP: "8.8.8.8" },
           { enforcePermissions: false },
         ),
       ),
@@ -380,7 +413,7 @@ function runSelfTest() {
     rmSync(directory, { recursive: true, force: true });
   }
   console.log(
-    "Validated deployment asset parity, immutable selectors, credential separation, HTTPS origins, explicit dashboard binding, signing-pool structure/ownership, and redacted failures.",
+    "Validated deployment asset parity, immutable selectors, credential separation, HTTPS origins, explicit dashboard binding, internal Supabase proxy mapping, signing-pool structure/ownership, and redacted failures.",
   );
 }
 

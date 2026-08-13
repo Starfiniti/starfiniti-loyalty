@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fixed production server-side Supabase reachability with a validated container-only split-DNS mapping that retains the public HTTPS hostname, and documented the required RLS-protected `loyalty` PostgREST schema allowlist.
+- Verified the real Authentik-to-Supabase PKCE exchange, atomically bootstrapped the approved Starfiniti owner UUID, and rendered the live English-only tenant dashboard without a language or tenant switcher.
 - Fixed workforce PKCE callbacks by preserving pending verifier cookies through the callback proxy, correlating each OAuth exchange to its exact verifier, anchoring every success/failure redirect to the configured public dashboard origin, rejecting bind-address origins, and hardening server-side auth cookies in production.
 - Made the launch experience English-only: removed merchant/customer/public language switchers, canonicalized legacy locale URLs to English, limited customer-copy editing to English, removed the bundled Slovenian WooCommerce catalog, and stopped propagating locale through signed claim links while retaining legacy database compatibility.
 - Added Starfiniti workforce sign-in through Authentik as Supabase custom OIDC, preserving the Supabase Auth UUID/RLS subject, customer password login, and customer-export password reauthentication.
