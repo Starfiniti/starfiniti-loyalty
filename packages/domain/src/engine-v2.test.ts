@@ -171,8 +171,11 @@ const purchase: PurchaseEarningFactV2 = {
     },
   ],
   shippingMinor: "499",
+  shippingRefundedMinor: "0",
   taxMinor: "100",
+  taxRefundedMinor: "0",
   feeMinor: "75",
+  feeRefundedMinor: "0",
 };
 
 describe("ProgrammeDefinitionV2 earning engine", () => {
@@ -184,6 +187,7 @@ describe("ProgrammeDefinitionV2 earning engine", () => {
       source: "purchase",
       eligibleSpendMinor: "1000",
       awardedPoints: "120",
+      tierCodeSnapshot: "rose",
       pendingAt: "2026-08-13T10:00:00.000Z",
       availableAt: "2026-09-12T10:00:00.000Z",
       expiresAt: "2027-09-12T10:00:00.000Z",
@@ -239,6 +243,24 @@ describe("ProgrammeDefinitionV2 earning engine", () => {
           outcome: "excluded",
           reason: "gift_card_payment_excluded",
         },
+        {
+          lineId: "component:shipping",
+          eligibleSpendMinor: "0",
+          outcome: "excluded",
+          reason: "shipping_excluded",
+        },
+        {
+          lineId: "component:tax",
+          eligibleSpendMinor: "100",
+          outcome: "included",
+          reason: "component_eligible",
+        },
+        {
+          lineId: "component:fee",
+          eligibleSpendMinor: "0",
+          outcome: "excluded",
+          reason: "fees_excluded",
+        },
       ],
     });
   });
@@ -279,8 +301,11 @@ describe("ProgrammeDefinitionV2 earning engine", () => {
         },
       ],
       shippingMinor: "0",
+      shippingRefundedMinor: "0",
       taxMinor: "0",
+      taxRefundedMinor: "0",
       feeMinor: "0",
+      feeRefundedMinor: "0",
     };
 
     const result = evaluateEarningV2(fractionalProgramme, fractionalPurchase);
@@ -301,6 +326,60 @@ describe("ProgrammeDefinitionV2 earning engine", () => {
         0n,
       ),
     ).toBe(BigInt(result.awardedPoints));
+  });
+
+  it("subtracts cumulative shipping, tax, and fee refunds when those components earn", () => {
+    const componentProgramme = {
+      ...programme,
+      earningRules: [
+        {
+          ...baseRule,
+          purchaseExclusions: {
+            ...exclusions,
+            productIds: [],
+            categoryIds: [],
+            shipping: false,
+            tax: false,
+            fees: false,
+          },
+        },
+      ],
+    } satisfies ProgrammeDefinitionV2;
+    const componentFact = {
+      ...purchase,
+      lines: [],
+      shippingMinor: "499",
+      shippingRefundedMinor: "99",
+      taxMinor: "100",
+      taxRefundedMinor: "25",
+      feeMinor: "75",
+      feeRefundedMinor: "75",
+    };
+
+    const result = evaluateEarningV2(componentProgramme, componentFact);
+
+    expect(result.eligibleSpendMinor).toBe("475");
+    expect(result.awardedPoints).toBe("23");
+    expect(result.lines).toEqual([
+      {
+        lineId: "component:shipping",
+        eligibleSpendMinor: "400",
+        outcome: "included",
+        reason: "component_eligible",
+      },
+      {
+        lineId: "component:tax",
+        eligibleSpendMinor: "75",
+        outcome: "included",
+        reason: "component_eligible",
+      },
+      {
+        lineId: "component:fee",
+        eligibleSpendMinor: "0",
+        outcome: "included",
+        reason: "component_eligible",
+      },
+    ]);
   });
 
   it("applies per-event and remaining per-member caps without negative awards", () => {

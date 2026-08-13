@@ -395,6 +395,7 @@ final class Outbox
     private static function orderFact(\WC_Order $order): array
     {
         $lines = [];
+        $feeRefundedTotal = 0.0;
         foreach ($order->get_items('line_item') as $itemId => $item) {
             if (! $item instanceof \WC_Order_Item_Product) {
                 continue;
@@ -434,6 +435,11 @@ final class Outbox
                 ),
             ];
         }
+        foreach ($order->get_items('fee') as $itemId => $item) {
+            if ($item instanceof \WC_Order_Item_Fee) {
+                $feeRefundedTotal += abs($order->get_total_refunded_for_item((int) $itemId, 'fee'));
+            }
+        }
 
         $customerId = $order->get_customer_id();
         $paymentKind = apply_filters(
@@ -466,8 +472,11 @@ final class Outbox
             'paymentKind' => $paymentKind,
             'lines' => $lines,
             'shippingTotal' => self::money($order->get_shipping_total()),
+            'shippingRefundedTotal' => self::money($order->get_total_shipping_refunded(), true),
             'taxTotal' => self::money($order->get_total_tax()),
+            'taxRefundedTotal' => self::money($order->get_total_tax_refunded(), true),
             'feeTotal' => self::money($order->get_total_fees(), true),
+            'feeRefundedTotal' => self::money($feeRefundedTotal, true),
             'discountTotal' => self::money($order->get_total_discount(), true),
             'refundedTotal' => self::money($order->get_total_refunded(), true),
         ];

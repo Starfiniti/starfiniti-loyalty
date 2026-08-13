@@ -21,11 +21,13 @@ Purchase evaluation is deterministic:
 2. Apply exactly one enabled base purchase rate.
 3. Apply only the highest-priority eligible multiplier; stable rule code breaks an equal-priority tie and the editor reports that conflict.
 4. Add only fixed bonuses that explicitly opt in to stacking.
-5. Apply exact event and member-period caps, then retain the contribution and line explanation.
+5. Apply exact event and member-period caps, allocate any shared fractional point deterministically by remainder and rule code, then retain contribution and product/component explanations whose integer points reconcile exactly to the ledger award.
 
 Rules accept only allowlisted product/category, currency, market, channel, segment, tier, and half-open UTC date selectors. Non-purchase activities cannot smuggle commerce-line selectors or purchase exclusions. The live path rejects unverified activity facts; browser events are never proof.
 
 PostgreSQL checks the V2 entitlement and independently validates the strict definition before a draft is stored, then validates again while publication/scheduling materializes immutable `programme_earning_rules`. Managed deployments default V2 off; self-hosted installations remain locally enabled. No Auth or browser claim grants the capability.
+
+The live worker reads authoritative member usage and commits the V2 evaluation, per-rule usage fences, and award through one transaction-scoped advisory-lock boundary. The database rechecks published rule identity, event/programme ownership, exact contribution totals, per-event caps, per-member caps, idempotency hashes, and bigint bounds before value moves. Exact retries exclude their own prior usage and return the original evaluation/ledger references.
 
 ## Publication lifecycle
 
@@ -43,7 +45,7 @@ The decision command serializes by wallet. When the effective tier changes, it c
 
 Approved definitions support fixed or percentage discounts, free products, free shipping, store credit, exclusive access, and custom connector-neutral rewards. A reward request snapshots the version, reward, wallet, cost, expiry, idempotency key, and request hash.
 
-Native WooCommerce fixed discounts require a positive minor-unit amount, percentage discounts require 1–10,000 basis points and an optional positive maximum, currency precision is 0–6 digits, and fixed/percentage/free-shipping coupons require a 1–365 day validity. These fields are validated before a programme draft can be saved and rechecked before customer value moves.
+Native WooCommerce fixed discounts require a positive minor-unit amount, percentage discounts require 1–10,000 basis points with no maximum cap, currency precision is 0–6 digits, and fixed/percentage/free-shipping coupons require a 1–365 day validity. These fields are validated before a programme draft can be saved and rechecked before customer value moves.
 
 The state graph is:
 

@@ -11,4 +11,12 @@ Status: in progress.
 - `programme_v2_earning_rules_test.sql` covers grants, RLS, cross-tenant denial, canary gating, direct-RPC bypass attempts, strict validation, publication, normalized evidence, and immutability.
 - ADR-0011 records the alternatives, concurrent-cap boundary, authority model, UTC window decision, and forward-fix rollback.
 
-Pending before module closure: atomic member-cap usage/award boundary, live V2 WooCommerce evaluation/refunds, signed activity API and connector facts, merchant builder/simulator/publish review, browser/accessibility evidence, exact-head CI/database matrix, canary, and 90/100 score.
+## Slice 2 — live WooCommerce value path
+
+- PostgreSQL serializes member usage by organization/programme group/customer, excludes the current idempotency key on exact retry, and atomically appends evaluation, integer per-rule usage, and ledger evidence. It independently rejects stale cap reads, forged rules, event/programme mismatch, irreconcilable totals, and bigint overflow.
+- Contribution allocation now uses deterministic largest-remainder rounding so immutable contribution points exactly sum to the final award even when multiple rules share fractional value.
+- The worker reads immutable V2 configuration, carries authoritative member usage into the shared evaluator, and calls only the atomic V2 database command. V1 remains on its unchanged evaluator and command path.
+- V2 cumulative refund planning uses exact bigint arithmetic and the original immutable programme. Current Woo facts include cumulative line, shipping, tax, and fee refund evidence; older senders default new component fields to zero.
+- Targeted contract, domain, worker, PHP syntax, architecture, and WooCommerce validators pass locally. Database replay/pgTAP is awaiting the next exact-head Linux runner after correcting two transaction-local test-fixture defects found by the first run.
+
+Pending before module closure: signed activity API and connector facts, merchant builder/simulator/publish review, browser/accessibility evidence, exact-head database/concurrency matrix, canary, and 90/100 score.

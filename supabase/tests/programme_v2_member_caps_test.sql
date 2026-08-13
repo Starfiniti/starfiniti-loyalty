@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(31);
+select plan(33);
 
 select has_table(
   'loyalty_private', 'member_earning_rule_effects',
@@ -25,7 +25,7 @@ select has_trigger(
 select ok(
   has_function_privilege(
     'loyalty_worker',
-    'loyalty_private.get_member_earning_rule_usage(bigint,bigint,bigint,bigint,timestamp with time zone)',
+    'loyalty_private.get_member_earning_rule_usage(bigint,bigint,bigint,bigint,timestamp with time zone,text)',
     'EXECUTE'
   ),
   'worker can enter the serialized usage boundary'
@@ -106,9 +106,10 @@ select lives_ok(
 );
 
 create temporary table v2_cap_refs (name text primary key, value bigint not null);
+create temporary table v2_cap_draft_refs (public_id uuid primary key);
 
-insert into v2_cap_refs
-select 'version', version.id
+insert into v2_cap_draft_refs
+select draft.programme_version_public_id
 from loyalty_private.create_programme_draft(
   (select id from loyalty.organizations where slug = 'v2-cap'),
   (select id from loyalty.programmes where public_id = '75000000-0000-4000-8000-000000000101'),
@@ -128,9 +129,12 @@ from loyalty_private.create_programme_draft(
   }'::jsonb,
   decode(repeat('a', 64), 'hex'),
   '75000000-0000-4000-8000-000000000001'
-) as draft
-join loyalty.programme_versions as version
-  on version.public_id = draft.programme_version_public_id;
+) as draft;
+
+insert into v2_cap_refs
+select 'version', version.id
+from loyalty.programme_versions as version
+join v2_cap_draft_refs as draft on draft.public_id = version.public_id;
 
 select lives_ok(
   $$ select loyalty_private.publish_programme_version(
@@ -190,6 +194,7 @@ insert into v2_cap_refs values
   ('event-3', pg_temp.add_v2_cap_event(3, '2026-08-13T12:00:00Z')),
   ('event-4', pg_temp.add_v2_cap_event(4, '2026-08-14T10:00:00Z'));
 
+grant loyalty_worker to current_user;
 set local role loyalty_worker;
 
 select results_eq(
@@ -200,7 +205,7 @@ select results_eq(
     )),
     (select value from v2_cap_refs where name = 'version'),
     (select id from loyalty.customers where public_id = '75000000-0000-4000-8000-000000000103'),
-    '2026-08-13T10:00:00Z'
+    '2026-08-13T10:00:00Z', 'v2:eval:1'
   ) $$,
   $$ values ('purchase-base'::text, 0::bigint) $$,
   'serialized cap read starts at zero'
@@ -217,7 +222,7 @@ select results_eq(
     (select id from loyalty.customers where public_id = '75000000-0000-4000-8000-000000000103'),
     'woocommerce:order:1', 'v2:eval:1', 'v2:award:1',
     decode(repeat('1',64),'hex'), decode(repeat('2',64),'hex'),
-    '{"version":"2","source":"purchase","awardedPoints":"80","contributions":[{"ruleCode":"purchase-base","effectKind":"base_rate","uncappedPoints":"80","awardedPoints":"80","uncappedNumerator":"80","awardedNumerator":"80","denominator":"1","capApplied":"none"}]}'::jsonb,
+    '{"version":"2","eventId":"woo:event:1","source":"purchase","eligibleSpendMinor":"1600","awardedPoints":"80","tierCodeSnapshot":"rose","pendingAt":"2026-08-13T10:00:00Z","availableAt":"2026-09-12T10:00:00Z","expiresAt":"2027-09-12T10:00:00Z","selectedMultiplierRuleCode":null,"contributions":[{"ruleCode":"purchase-base","effectKind":"base_rate","uncappedPoints":"80","awardedPoints":"80","uncappedNumerator":"80","awardedNumerator":"80","denominator":"1","capApplied":"none"}],"lines":[]}'::jsonb,
     '{}'::jsonb, '2026-08-13T10:00:00Z', '2026-08-13T10:00:01Z'
   ) $$,
   array['created'::text],
@@ -231,7 +236,7 @@ select results_eq(
     )),
     (select value from v2_cap_refs where name = 'version'),
     (select id from loyalty.customers where public_id = '75000000-0000-4000-8000-000000000103'),
-    '2026-08-13T11:00:00Z'
+    '2026-08-13T11:00:00Z', 'v2:eval:2'
   ) $$,
   array[80::bigint],
   'second event sees committed member usage while holding the same cap lock'
@@ -246,7 +251,7 @@ select throws_ok(
     (select id from loyalty.customers where public_id = '75000000-0000-4000-8000-000000000103'),
     'woocommerce:order:2', 'v2:eval:2-over', 'v2:award:2-over',
     decode(repeat('3',64),'hex'), decode(repeat('4',64),'hex'),
-    '{"version":"2","source":"purchase","awardedPoints":"30","contributions":[{"ruleCode":"purchase-base","effectKind":"base_rate","uncappedPoints":"30","awardedPoints":"30","uncappedNumerator":"30","awardedNumerator":"30","denominator":"1","capApplied":"none"}]}'::jsonb,
+    '{"version":"2","eventId":"woo:event:2","source":"purchase","eligibleSpendMinor":"600","awardedPoints":"30","tierCodeSnapshot":"rose","pendingAt":"2026-08-13T11:00:00Z","availableAt":"2026-09-12T11:00:00Z","expiresAt":"2027-09-12T11:00:00Z","selectedMultiplierRuleCode":null,"contributions":[{"ruleCode":"purchase-base","effectKind":"base_rate","uncappedPoints":"30","awardedPoints":"30","uncappedNumerator":"30","awardedNumerator":"30","denominator":"1","capApplied":"none"}],"lines":[]}'::jsonb,
     '{}'::jsonb, '2026-08-13T11:00:00Z', '2026-08-13T11:00:01Z'
   ) $$,
   '23514', 'V2 per-member cap exceeded',
@@ -262,11 +267,23 @@ select results_eq(
     (select id from loyalty.customers where public_id = '75000000-0000-4000-8000-000000000103'),
     'woocommerce:order:2', 'v2:eval:2', 'v2:award:2',
     decode(repeat('5',64),'hex'), decode(repeat('6',64),'hex'),
-    '{"version":"2","source":"purchase","awardedPoints":"20","contributions":[{"ruleCode":"purchase-base","effectKind":"base_rate","uncappedPoints":"30","awardedPoints":"20","uncappedNumerator":"30","awardedNumerator":"20","denominator":"1","capApplied":"per_member"}]}'::jsonb,
+    '{"version":"2","eventId":"woo:event:2","source":"purchase","eligibleSpendMinor":"600","awardedPoints":"20","tierCodeSnapshot":"rose","pendingAt":"2026-08-13T11:00:00Z","availableAt":"2026-09-12T11:00:00Z","expiresAt":"2027-09-12T11:00:00Z","selectedMultiplierRuleCode":null,"contributions":[{"ruleCode":"purchase-base","effectKind":"base_rate","uncappedPoints":"30","awardedPoints":"20","uncappedNumerator":"30","awardedNumerator":"20","denominator":"1","capApplied":"per_member"}],"lines":[]}'::jsonb,
     '{}'::jsonb, '2026-08-13T11:00:00Z', '2026-08-13T11:00:01Z'
   ) $$,
   array['created'::text],
   'recomputed award consumes only the remaining 20 points'
+);
+select results_eq(
+  $$ select consumed_points from loyalty_private.get_member_earning_rule_usage(
+    (select id from loyalty.organizations where slug = 'v2-cap'),
+    (select id from loyalty.programme_groups where organization_id = (
+      select id from loyalty.organizations where slug = 'v2-cap'
+    )), (select value from v2_cap_refs where name = 'version'),
+    (select id from loyalty.customers where public_id = '75000000-0000-4000-8000-000000000103'),
+    '2026-08-13T11:00:00Z', 'v2:eval:2'
+  ) $$,
+  array[80::bigint],
+  'exact retry usage excludes its own prior effect and reproduces the original result'
 );
 select results_eq(
   $$ select outcome from loyalty_private.commit_programme_v2_award(
@@ -278,7 +295,7 @@ select results_eq(
     (select id from loyalty.customers where public_id = '75000000-0000-4000-8000-000000000103'),
     'woocommerce:order:2', 'v2:eval:2', 'v2:award:2',
     decode(repeat('5',64),'hex'), decode(repeat('6',64),'hex'),
-    '{"version":"2","source":"purchase","awardedPoints":"20","contributions":[{"ruleCode":"purchase-base","effectKind":"base_rate","uncappedPoints":"30","awardedPoints":"20","uncappedNumerator":"30","awardedNumerator":"20","denominator":"1","capApplied":"per_member"}]}'::jsonb,
+    '{"version":"2","eventId":"woo:event:2","source":"purchase","eligibleSpendMinor":"600","awardedPoints":"20","tierCodeSnapshot":"rose","pendingAt":"2026-08-13T11:00:00Z","availableAt":"2026-09-12T11:00:00Z","expiresAt":"2027-09-12T11:00:00Z","selectedMultiplierRuleCode":null,"contributions":[{"ruleCode":"purchase-base","effectKind":"base_rate","uncappedPoints":"30","awardedPoints":"20","uncappedNumerator":"30","awardedNumerator":"20","denominator":"1","capApplied":"per_member"}],"lines":[]}'::jsonb,
     '{}'::jsonb, '2026-08-13T11:00:00Z', '2026-08-13T11:00:01Z'
   ) $$,
   array['duplicate'::text],
@@ -307,7 +324,7 @@ select results_eq(
       select id from loyalty.organizations where slug = 'v2-cap'
     )), (select value from v2_cap_refs where name = 'version'),
     (select id from loyalty.customers where public_id = '75000000-0000-4000-8000-000000000103'),
-    '2026-08-14T10:00:00Z'
+    '2026-08-14T10:00:00Z', 'v2:eval:4'
   ) $$,
   array[0::bigint],
   'UTC calendar-day cap resets on the next day'
@@ -322,7 +339,7 @@ select throws_ok(
     (select id from loyalty.customers where public_id = '75000000-0000-4000-8000-000000000103'),
     'woocommerce:order:3', 'v2:eval:3-event-cap', 'v2:award:3-event-cap',
     decode(repeat('7',64),'hex'), decode(repeat('8',64),'hex'),
-    '{"version":"2","source":"purchase","awardedPoints":"91","contributions":[{"ruleCode":"purchase-base","effectKind":"base_rate","uncappedPoints":"91","awardedPoints":"91","uncappedNumerator":"91","awardedNumerator":"91","denominator":"1","capApplied":"none"}]}'::jsonb,
+    '{"version":"2","eventId":"woo:event:3","source":"purchase","eligibleSpendMinor":"1820","awardedPoints":"91","tierCodeSnapshot":"rose","pendingAt":"2026-08-13T12:00:00Z","availableAt":"2026-09-12T12:00:00Z","expiresAt":"2027-09-12T12:00:00Z","selectedMultiplierRuleCode":null,"contributions":[{"ruleCode":"purchase-base","effectKind":"base_rate","uncappedPoints":"91","awardedPoints":"91","uncappedNumerator":"91","awardedNumerator":"91","denominator":"1","capApplied":"none"}],"lines":[]}'::jsonb,
     '{}'::jsonb, '2026-08-13T12:00:00Z', '2026-08-13T12:00:01Z'
   ) $$,
   '23514', 'V2 per-event cap exceeded',
@@ -338,7 +355,7 @@ select throws_ok(
     (select id from loyalty.customers where public_id = '75000000-0000-4000-8000-000000000103'),
     'woocommerce:order:4', 'v2:eval:4-total', 'v2:award:4-total',
     decode(repeat('9',64),'hex'), decode(repeat('a',64),'hex'),
-    '{"version":"2","source":"purchase","awardedPoints":"21","contributions":[{"ruleCode":"purchase-base","effectKind":"base_rate","uncappedPoints":"20","awardedPoints":"20","uncappedNumerator":"20","awardedNumerator":"20","denominator":"1","capApplied":"none"}]}'::jsonb,
+    '{"version":"2","eventId":"woo:event:4","source":"purchase","eligibleSpendMinor":"400","awardedPoints":"21","tierCodeSnapshot":"rose","pendingAt":"2026-08-14T10:00:00Z","availableAt":"2026-09-13T10:00:00Z","expiresAt":"2027-09-13T10:00:00Z","selectedMultiplierRuleCode":null,"contributions":[{"ruleCode":"purchase-base","effectKind":"base_rate","uncappedPoints":"20","awardedPoints":"20","uncappedNumerator":"20","awardedNumerator":"20","denominator":"1","capApplied":"none"}],"lines":[]}'::jsonb,
     '{}'::jsonb, '2026-08-14T10:00:00Z', '2026-08-14T10:00:01Z'
   ) $$,
   '23514', 'V2 award total does not match contributions',
@@ -354,7 +371,7 @@ select throws_ok(
     (select id from loyalty.customers where public_id = '75000000-0000-4000-8000-000000000103'),
     'woocommerce:order:4', 'v2:eval:4-rule', 'v2:award:4-rule',
     decode(repeat('b',64),'hex'), decode(repeat('c',64),'hex'),
-    '{"version":"2","source":"purchase","awardedPoints":"1","contributions":[{"ruleCode":"forged-rule","effectKind":"base_rate","uncappedPoints":"1","awardedPoints":"1","uncappedNumerator":"1","awardedNumerator":"1","denominator":"1","capApplied":"none"}]}'::jsonb,
+    '{"version":"2","eventId":"woo:event:4","source":"purchase","eligibleSpendMinor":"20","awardedPoints":"1","tierCodeSnapshot":"rose","pendingAt":"2026-08-14T10:00:00Z","availableAt":"2026-09-13T10:00:00Z","expiresAt":"2027-09-13T10:00:00Z","selectedMultiplierRuleCode":null,"contributions":[{"ruleCode":"forged-rule","effectKind":"base_rate","uncappedPoints":"1","awardedPoints":"1","uncappedNumerator":"1","awardedNumerator":"1","denominator":"1","capApplied":"none"}],"lines":[]}'::jsonb,
     '{}'::jsonb, '2026-08-14T10:00:00Z', '2026-08-14T10:00:01Z'
   ) $$,
   '23514', 'V2 award contribution does not match published rule',
@@ -370,13 +387,47 @@ select throws_ok(
     (select id from loyalty.customers where public_id = '75000000-0000-4000-8000-000000000103'),
     'woocommerce:order:4', 'v2:eval:4-duplicate', 'v2:award:4-duplicate',
     decode(repeat('d',64),'hex'), decode(repeat('e',64),'hex'),
-    '{"version":"2","source":"purchase","awardedPoints":"2","contributions":[{"ruleCode":"purchase-base","effectKind":"base_rate","uncappedPoints":"1","awardedPoints":"1","uncappedNumerator":"1","awardedNumerator":"1","denominator":"1","capApplied":"none"},{"ruleCode":"purchase-base","effectKind":"base_rate","uncappedPoints":"1","awardedPoints":"1","uncappedNumerator":"1","awardedNumerator":"1","denominator":"1","capApplied":"none"}]}'::jsonb,
+    '{"version":"2","eventId":"woo:event:4","source":"purchase","eligibleSpendMinor":"40","awardedPoints":"2","tierCodeSnapshot":"rose","pendingAt":"2026-08-14T10:00:00Z","availableAt":"2026-09-13T10:00:00Z","expiresAt":"2027-09-13T10:00:00Z","selectedMultiplierRuleCode":null,"contributions":[{"ruleCode":"purchase-base","effectKind":"base_rate","uncappedPoints":"1","awardedPoints":"1","uncappedNumerator":"1","awardedNumerator":"1","denominator":"1","capApplied":"none"},{"ruleCode":"purchase-base","effectKind":"base_rate","uncappedPoints":"1","awardedPoints":"1","uncappedNumerator":"1","awardedNumerator":"1","denominator":"1","capApplied":"none"}],"lines":[]}'::jsonb,
     '{}'::jsonb, '2026-08-14T10:00:00Z', '2026-08-14T10:00:01Z'
   ) $$,
   '23514', 'duplicate V2 award contribution',
   'one event cannot consume the same rule twice'
 );
 
+reset role;
+
+insert into loyalty.programmes (
+  public_id, organization_id, programme_group_id, slug, name, status
+)
+select '75000000-0000-4000-8000-000000000104', organization.id,
+  programme_group.id, 'other-rewards', 'Other rewards', 'active'
+from loyalty.organizations as organization
+join loyalty.programme_groups as programme_group
+  on programme_group.organization_id = organization.id
+where organization.slug = 'v2-cap';
+update loyalty.commerce_connections as connection
+set programme_id = programme.id
+from loyalty.programmes as programme
+where connection.organization_id = programme.organization_id
+  and programme.public_id = '75000000-0000-4000-8000-000000000104';
+
+set local role loyalty_worker;
+select throws_ok(
+  $$ select * from loyalty_private.commit_programme_v2_award(
+    (select id from loyalty.organizations where slug = 'v2-cap'),
+    (select id from loyalty.programme_groups where organization_id = (
+      select id from loyalty.organizations where slug = 'v2-cap'
+    )), (select value from v2_cap_refs where name = 'version'),
+    (select value from v2_cap_refs where name = 'event-4'),
+    (select id from loyalty.customers where public_id = '75000000-0000-4000-8000-000000000103'),
+    'woocommerce:order:4', 'v2:eval:4-programme', 'v2:award:4-programme',
+    decode(repeat('1',64),'hex'), decode(repeat('2',64),'hex'),
+    '{"version":"2","eventId":"woo:event:4","source":"purchase","eligibleSpendMinor":"400","awardedPoints":"20","tierCodeSnapshot":"rose","pendingAt":"2026-08-14T10:00:00Z","availableAt":"2026-09-13T10:00:00Z","expiresAt":"2027-09-13T10:00:00Z","selectedMultiplierRuleCode":null,"contributions":[{"ruleCode":"purchase-base","effectKind":"base_rate","uncappedPoints":"20","awardedPoints":"20","uncappedNumerator":"20","awardedNumerator":"20","denominator":"1","capApplied":"none"}],"lines":[]}'::jsonb,
+    '{}'::jsonb, '2026-08-14T10:00:00Z', '2026-08-14T10:00:01Z'
+  ) $$,
+  '22023', 'unknown V2 award context',
+  'an event from another programme cannot fund this programme version'
+);
 reset role;
 
 select throws_ok(

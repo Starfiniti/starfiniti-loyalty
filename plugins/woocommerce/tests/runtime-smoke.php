@@ -341,8 +341,11 @@ $refundPayloads = (string) $wpdb->get_var($wpdb->prepare(
     (string) $orderId
 ));
 starfiniti_runtime_assert(
-    ! str_contains($refundPayloads, 'runtime-smoke@example.test'),
-    'refund source facts are PII-free'
+    ! str_contains($refundPayloads, 'runtime-smoke@example.test')
+    && str_contains($refundPayloads, 'shippingRefundedTotal')
+    && str_contains($refundPayloads, 'taxRefundedTotal')
+    && str_contains($refundPayloads, 'feeRefundedTotal'),
+    'refund source facts are PII-free and retain cumulative component evidence'
 );
 $cancel = $execute->invoke(null, [
     'version' => '1',

@@ -346,6 +346,18 @@ describe("WooCommerce commerce facts", () => {
         order,
       }).success,
     ).toBe(false);
+    expect(
+      wooCommerceOrderRefundedPayloadV1.safeParse({
+        kind: "order_refunded",
+        refundId: "9",
+        refundAmount: "6.00",
+        order: {
+          ...order,
+          shippingRefundedTotal: "5.00",
+          refundedTotal: "7.50",
+        },
+      }).success,
+    ).toBe(false);
   });
 
   it("accepts a PII-free coupon capture fact and rejects extra fields", () => {

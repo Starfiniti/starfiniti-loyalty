@@ -351,6 +351,7 @@ select throws_ok(
 );
 reset role;
 
+grant loyalty_worker to current_user;
 set local role loyalty_worker;
 select results_eq(
   $$ select count(*)::bigint from loyalty.programme_earning_rules $$,

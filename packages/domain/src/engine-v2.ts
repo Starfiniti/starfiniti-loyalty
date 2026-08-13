@@ -33,8 +33,11 @@ export interface PurchaseEarningFactV2 extends EarningFactBaseV2 {
   readonly market: string;
   readonly lines: readonly PurchaseLineFactV2[];
   readonly shippingMinor: string;
+  readonly shippingRefundedMinor: string;
   readonly taxMinor: string;
+  readonly taxRefundedMinor: string;
   readonly feeMinor: string;
+  readonly feeRefundedMinor: string;
 }
 
 export interface ActivityEarningFactV2 extends EarningFactBaseV2 {
@@ -69,6 +72,7 @@ export interface EarningEvaluationV2 {
   readonly source: EarningSourceV2;
   readonly eligibleSpendMinor: string;
   readonly awardedPoints: string;
+  readonly tierCodeSnapshot: string;
   readonly pendingAt: string;
   readonly availableAt: string;
   readonly expiresAt: string;
@@ -187,13 +191,91 @@ function componentMinor(
   exclusions: PurchaseExclusionsV2,
   fact: PurchaseEarningFactV2,
 ): bigint {
+  const eligibleComponent = (
+    totalValue: string,
+    refundedValue: string,
+    name: string,
+  ) => {
+    const total = parseNonNegative(totalValue, name);
+    const refunded = parseNonNegative(refundedValue, `${name} refund`);
+    if (refunded > total) {
+      throw new RangeError(`${name} refund exceeds original value`);
+    }
+    return total - refunded;
+  };
   return (
     (exclusions.shipping
       ? 0n
-      : parseNonNegative(fact.shippingMinor, "Shipping")) +
-    (exclusions.tax ? 0n : parseNonNegative(fact.taxMinor, "Tax")) +
-    (exclusions.fees ? 0n : parseNonNegative(fact.feeMinor, "Fees"))
+      : eligibleComponent(
+          fact.shippingMinor,
+          fact.shippingRefundedMinor,
+          "Shipping",
+        )) +
+    (exclusions.tax
+      ? 0n
+      : eligibleComponent(fact.taxMinor, fact.taxRefundedMinor, "Tax")) +
+    (exclusions.fees
+      ? 0n
+      : eligibleComponent(fact.feeMinor, fact.feeRefundedMinor, "Fees"))
   );
+}
+
+function componentExplanations(
+  exclusions: PurchaseExclusionsV2,
+  fact: PurchaseEarningFactV2,
+): readonly PurchaseLineExplanationV2[] {
+  const components = [
+    {
+      lineId: "component:shipping",
+      excluded: exclusions.shipping,
+      total: fact.shippingMinor,
+      refunded: fact.shippingRefundedMinor,
+      reason: "shipping_excluded",
+    },
+    {
+      lineId: "component:tax",
+      excluded: exclusions.tax,
+      total: fact.taxMinor,
+      refunded: fact.taxRefundedMinor,
+      reason: "tax_excluded",
+    },
+    {
+      lineId: "component:fee",
+      excluded: exclusions.fees,
+      total: fact.feeMinor,
+      refunded: fact.feeRefundedMinor,
+      reason: "fees_excluded",
+    },
+  ];
+  return components
+    .filter(
+      (component) => component.total !== "0" || component.refunded !== "0",
+    )
+    .map((component) => {
+      const total = parseNonNegative(component.total, component.lineId);
+      const refunded = parseNonNegative(
+        component.refunded,
+        `${component.lineId} refund`,
+      );
+      if (refunded > total) {
+        throw new RangeError(
+          `${component.lineId} refund exceeds original value`,
+        );
+      }
+      return component.excluded
+        ? {
+            lineId: component.lineId,
+            eligibleSpendMinor: "0",
+            outcome: "excluded" as const,
+            reason: component.reason,
+          }
+        : {
+            lineId: component.lineId,
+            eligibleSpendMinor: (total - refunded).toString(),
+            outcome: "included" as const,
+            reason: "component_eligible",
+          };
+    });
 }
 
 function matchingPurchaseSpend(
@@ -443,24 +525,27 @@ function evaluatePurchase(
   const sortedLines = [...fact.lines].sort((left, right) =>
     left.lineId.localeCompare(right.lineId),
   );
-  const lines = sortedLines.map((line): PurchaseLineExplanationV2 => {
-    const eligible = baseEligible.lines.get(line.lineId);
-    if (eligible !== undefined) {
+  const lines = [
+    ...sortedLines.map((line): PurchaseLineExplanationV2 => {
+      const eligible = baseEligible.lines.get(line.lineId);
+      if (eligible !== undefined) {
+        return {
+          lineId: line.lineId,
+          eligibleSpendMinor: eligible.toString(),
+          outcome: "included",
+          reason: "base_rule_eligible",
+        };
+      }
+      const excluded = isExplicitlyExcluded(base.purchaseExclusions!, line);
       return {
         lineId: line.lineId,
-        eligibleSpendMinor: eligible.toString(),
-        outcome: "included",
-        reason: "base_rule_eligible",
+        eligibleSpendMinor: "0",
+        outcome: "excluded",
+        reason: excluded ?? "base_rule_conditions_not_met",
       };
-    }
-    const excluded = isExplicitlyExcluded(base.purchaseExclusions!, line);
-    return {
-      lineId: line.lineId,
-      eligibleSpendMinor: "0",
-      outcome: "excluded",
-      reason: excluded ?? "base_rule_conditions_not_met",
-    };
-  });
+    }),
+    ...componentExplanations(base.purchaseExclusions!, fact),
+  ];
 
   const awardedPoints = allocateContributionPoints(contributions);
   return {
@@ -469,6 +554,7 @@ function evaluatePurchase(
     source: fact.source,
     eligibleSpendMinor: baseEligible.spend.toString(),
     awardedPoints: awardedPoints.toString(),
+    tierCodeSnapshot: fact.tierCode,
     ...lifecycle(programme, fact.occurredAt),
     selectedMultiplierRuleCode: selectedMultiplier?.code ?? null,
     contributions,
@@ -513,6 +599,7 @@ function evaluateActivity(
     source: fact.source,
     eligibleSpendMinor: "0",
     awardedPoints: awardedPoints.toString(),
+    tierCodeSnapshot: fact.tierCode,
     ...lifecycle(programme, fact.occurredAt),
     selectedMultiplierRuleCode: null,
     contributions,

@@ -220,8 +220,11 @@ export const wooCommerceOrderFactV1 = z
     paymentKind: z.enum(["money", "gift-card", "store-credit"]),
     lines: z.array(wooCommerceOrderLineV1),
     shippingTotal: wooCommerceDecimal,
+    shippingRefundedTotal: wooCommerceDecimal.default("0"),
     taxTotal: wooCommerceDecimal,
+    taxRefundedTotal: wooCommerceDecimal.default("0"),
     feeTotal: wooCommerceDecimal,
+    feeRefundedTotal: wooCommerceDecimal.default("0"),
     discountTotal: wooCommerceDecimal,
     refundedTotal: wooCommerceDecimal,
   })
@@ -230,8 +233,11 @@ export const wooCommerceOrderFactV1 = z
     let lineRefundTotal = 0n;
     const orderAmounts = [
       "shippingTotal",
+      "shippingRefundedTotal",
       "taxTotal",
+      "taxRefundedTotal",
       "feeTotal",
+      "feeRefundedTotal",
       "discountTotal",
       "refundedTotal",
     ] as const;
@@ -287,10 +293,40 @@ export const wooCommerceOrderFactV1 = z
       order.refundedTotal,
       order.currencyMinorUnitDigits,
     );
-    if (orderRefundTotal !== null && lineRefundTotal > orderRefundTotal) {
+    const componentPairs = [
+      ["shippingTotal", "shippingRefundedTotal"],
+      ["taxTotal", "taxRefundedTotal"],
+      ["feeTotal", "feeRefundedTotal"],
+    ] as const;
+    let componentRefundTotal = 0n;
+    for (const [totalField, refundedField] of componentPairs) {
+      const total = scaledBigIntOrNull(
+        order[totalField],
+        order.currencyMinorUnitDigits,
+      );
+      const refunded = scaledBigIntOrNull(
+        order[refundedField],
+        order.currencyMinorUnitDigits,
+      );
+      if (total !== null && refunded !== null) {
+        componentRefundTotal += refunded;
+        if (refunded > total) {
+          context.addIssue({
+            code: "custom",
+            message: "Component refund cannot exceed its original amount",
+            path: [refundedField],
+          });
+        }
+      }
+    }
+    if (
+      orderRefundTotal !== null &&
+      lineRefundTotal + componentRefundTotal > orderRefundTotal
+    ) {
       context.addIssue({
         code: "custom",
-        message: "Line refunds cannot exceed the cumulative order refund",
+        message:
+          "Line and component refunds cannot exceed the cumulative order refund",
         path: ["refundedTotal"],
       });
     }

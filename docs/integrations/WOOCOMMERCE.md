@@ -1,8 +1,8 @@
 # WooCommerce Integration
 
-- Documentation reviewed: 2026-08-12
+- Documentation reviewed: 2026-08-13
 - REST API: `wc/v3` (current official integration)
-- References: https://developer.woocommerce.com/docs/apis/rest-api/, https://developer.woocommerce.com/docs/extensions/best-practices-extensions/compatibility/, https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/, and https://developer.wordpress.org/reference/functions/load_plugin_textdomain/
+- References: https://developer.woocommerce.com/docs/apis/rest-api/, https://developer.woocommerce.com/docs/extensions/best-practices-extensions/compatibility/, https://woocommerce.github.io/code-reference/classes/WC-Order.html, https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/, and https://developer.wordpress.org/reference/functions/load_plugin_textdomain/
 
 WooCommerce is a thin connector. It uses HTTPS, least-privilege credentials, signed outbound events, Action Scheduler retries, local queue diagnostics, HPOS declarations, and tested Cart/Checkout Blocks plus documented classic-checkout compatibility. Monetary API values arrive as decimal strings and must be converted to integer minor units without floating-point arithmetic. Central failure must never block checkout.
 
@@ -12,6 +12,8 @@ WooCommerce is a thin connector. It uses HTTPS, least-privilege credentials, sig
 - Starfiniti is authoritative for programme versions, identities/links, wallets, ledger, reservations, tiers, and loyalty audit.
 - The plugin writes an outbox row before delivery, signs exact raw bodies, reuses immutable delivery IDs, retries with Action Scheduler, and exposes masked queue health.
 - The hub acknowledges durable receipt quickly and applies value asynchronously through a separately credentialed worker. Order awards, cumulative refunds, and coupon captures are idempotent.
+- Current order facts retain cumulative product-line plus shipping, tax, and fee refund amounts as decimal strings. Older V1 senders that omit the three component-refund fields remain readable as zero; the current plugin always sends them. V2 converts them to exact integer minor units and subtracts included components during cumulative reversal.
+- A published V2 programme is evaluated only after the worker enters the database-serialized member-cap boundary. The same pure evaluator powers simulation and live processing; PostgreSQL atomically records the evaluation, immutable per-rule cap usage, and ledger award, then an exact retry returns the original effect.
 - The plugin receives no Supabase/database/service-role credential. Hub commands are scoped, signed/authenticated, short-lived, and idempotent.
 - `wp starfiniti loyalty reconcile-order <id>` re-enqueues the stable completion snapshot, all existing refunds, and any Starfiniti coupon capture for one order. Event keys make repeated reconciliation safe.
 - The authenticated hub exposes the same source repair as a reviewed, reason-bound operation. It writes a private transactional-outbox command, delivers that command through the existing signed polling channel, and records the request actor and correlation in immutable administration audit evidence.

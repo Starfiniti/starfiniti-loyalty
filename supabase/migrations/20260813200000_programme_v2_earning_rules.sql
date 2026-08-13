@@ -419,7 +419,8 @@ create or replace function loyalty_private.get_member_earning_rule_usage(
   target_programme_group_id bigint,
   target_programme_version_id bigint,
   target_customer_id bigint,
-  target_occurred_at timestamptz
+  target_occurred_at timestamptz,
+  target_evaluation_idempotency_key text
 )
 returns table (rule_code text, consumed_points bigint)
 language plpgsql
@@ -441,6 +442,9 @@ begin
   ) then
     raise exception using errcode = '22023', message = 'unknown V2 member earning context';
   end if;
+  if length(target_evaluation_idempotency_key) not between 1 and 255 then
+    raise exception using errcode = '22023', message = 'invalid V2 evaluation idempotency key';
+  end if;
   perform pg_catalog.pg_advisory_xact_lock(
     pg_catalog.hashtextextended(
       'earning-cap|' || target_organization_id::text || '|' ||
@@ -461,6 +465,13 @@ begin
    and effect.programme_group_id = rule.programme_group_id
    and effect.customer_id = target_customer_id
    and effect.rule_code = rule.code
+   and not exists (
+     select 1
+     from loyalty_private.programme_evaluations as evaluation
+     where evaluation.organization_id = effect.organization_id
+       and evaluation.id = effect.evaluation_id
+       and evaluation.idempotency_key = target_evaluation_idempotency_key
+   )
   where rule.organization_id = target_organization_id
     and rule.programme_group_id = target_programme_group_id
     and rule.programme_version_id = target_programme_version_id
@@ -546,6 +557,25 @@ begin
     or octet_length(target_result_sha256) <> 32
     or jsonb_typeof(target_result) <> 'object'
     or target_result ->> 'version' <> '2'
+    or not (target_result ?& array[
+      'version', 'eventId', 'source', 'eligibleSpendMinor', 'awardedPoints',
+      'tierCodeSnapshot', 'pendingAt', 'availableAt', 'expiresAt',
+      'selectedMultiplierRuleCode', 'contributions', 'lines'
+    ])
+    or target_result - array[
+      'version', 'eventId', 'source', 'eligibleSpendMinor', 'awardedPoints',
+      'tierCodeSnapshot', 'pendingAt', 'availableAt', 'expiresAt',
+      'selectedMultiplierRuleCode', 'contributions', 'lines'
+    ] <> '{}'::jsonb
+    or length(coalesce(target_result ->> 'eventId', '')) not between 1 and 500
+    or coalesce(target_result ->> 'source', '') not in (
+      'purchase', 'account_created', 'birthday', 'verified_product_review',
+      'referral', 'custom_activity'
+    )
+    or coalesce(target_result ->> 'eligibleSpendMinor', '') !~ '^(0|[1-9][0-9]{0,18})$'
+    or coalesce(target_result ->> 'tierCodeSnapshot', '') !~ '^[a-z][a-z0-9_-]{0,79}$'
+    or jsonb_typeof(target_result -> 'lines') <> 'array'
+    or jsonb_array_length(target_result -> 'lines') > 1000
     or not (
       coalesce(target_result ->> 'awardedPoints', '') ~ '^(0|[1-9][0-9]{0,18})$'
       and (
@@ -810,7 +840,7 @@ $$;
 alter function loyalty_private.validate_programme_definition_v2(jsonb) owner to loyalty_owner;
 alter function loyalty_private.enforce_programme_v2_entitlement() owner to loyalty_owner;
 alter function loyalty_private.member_earning_period_matches(jsonb, timestamptz, timestamptz) owner to loyalty_owner;
-alter function loyalty_private.get_member_earning_rule_usage(bigint, bigint, bigint, bigint, timestamptz) owner to loyalty_owner;
+alter function loyalty_private.get_member_earning_rule_usage(bigint, bigint, bigint, bigint, timestamptz, text) owner to loyalty_owner;
 alter function loyalty_private.commit_programme_v2_award(
   bigint, bigint, bigint, bigint, bigint, text, text, text, bytea, bytea,
   jsonb, jsonb, timestamptz, timestamptz
@@ -838,7 +868,7 @@ grant select on loyalty_private.member_earning_rule_effects to loyalty_worker;
 revoke all on function loyalty_private.validate_programme_definition_v2(jsonb),
   loyalty_private.enforce_programme_v2_entitlement(),
   loyalty_private.member_earning_period_matches(jsonb, timestamptz, timestamptz),
-  loyalty_private.get_member_earning_rule_usage(bigint, bigint, bigint, bigint, timestamptz),
+  loyalty_private.get_member_earning_rule_usage(bigint, bigint, bigint, bigint, timestamptz, text),
   loyalty_private.commit_programme_v2_award(
     bigint, bigint, bigint, bigint, bigint, text, text, text, bytea, bytea,
     jsonb, jsonb, timestamptz, timestamptz
@@ -846,7 +876,7 @@ revoke all on function loyalty_private.validate_programme_definition_v2(jsonb),
   loyalty_private.materialize_programme_definition(bigint)
   from public, anon, authenticated, loyalty_runtime, loyalty_worker;
 grant execute on function
-  loyalty_private.get_member_earning_rule_usage(bigint, bigint, bigint, bigint, timestamptz),
+  loyalty_private.get_member_earning_rule_usage(bigint, bigint, bigint, bigint, timestamptz, text),
   loyalty_private.commit_programme_v2_award(
     bigint, bigint, bigint, bigint, bigint, text, text, text, bytea, bytea,
     jsonb, jsonb, timestamptz, timestamptz
@@ -858,7 +888,7 @@ comment on function loyalty_private.validate_programme_definition_v2(jsonb) is
   'Fail-closed database validation for the normalized V2 contract before value-affecting publication.';
 comment on table loyalty_private.member_earning_rule_effects is
   'Immutable integer attribution of accepted V2 points to member/rule identity for serialized cap accounting.';
-comment on function loyalty_private.get_member_earning_rule_usage(bigint, bigint, bigint, bigint, timestamptz) is
+comment on function loyalty_private.get_member_earning_rule_usage(bigint, bigint, bigint, bigint, timestamptz, text) is
   'Acquires the transaction-scoped member cap lock and returns authoritative usage for the published V2 rules.';
 comment on function loyalty_private.commit_programme_v2_award(
   bigint, bigint, bigint, bigint, bigint, text, text, text, bytea, bytea,

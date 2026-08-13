@@ -637,6 +637,8 @@ tasks:
       - docs/plan/evidence/M03/README.md
       - ProgrammeDefinitionV2 contract and exact bigint pure evaluator tests pass
       - additive V2 entitlement publication and immutable materialization migration is under exact-head database verification
+      - serialized member-cap accounting atomically appends evaluation per-rule usage and ledger evidence with exact-retry exclusion
+      - the WooCommerce worker evaluates V2 through the shared engine and preserves exact cumulative line and component refund evidence while V1 remains unchanged
 
   - id: M04-REWARDS-AND-FULFILMENT
     title: Expand native rewards and audited manual fulfilment
