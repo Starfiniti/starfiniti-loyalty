@@ -334,3 +334,11 @@
 - Applied all twenty-six migrations, created distinct least-privilege runtime and worker logins, disabled public signup, validated dashboard readiness, and confirmed unsigned WooCommerce ingress and command requests fail closed.
 - Enabled PostgreSQL WAL archiving, daily physical base backups, restricted off-host export, and encrypted Borg retention. The first off-host archive passed `pg_verifybackup` with the exact production PostgreSQL image; a complete start-and-WAL-replay RTO rehearsal remains open.
 - Recorded two rollout safeguards: the signing pool must be owner-readable by the container UID `1001`, and Supavisor must be recreated after a database-container address change so it does not retain stale Docker DNS state.
+
+## 2026-08-13 — Authentik workforce SSO
+
+- Added a Starfiniti workforce button to the hosted login while retaining password login for customers and omitting workforce SSO from purpose-bound customer-export password reauthentication.
+- Supabase Auth remains the broker and durable RLS subject. The server starts `custom:starfiniti-sso` with PKCE and exact scopes, validates the canonical dashboard callback, and rejects authorize URLs outside the configured Supabase origin, `/auth/v1/authorize` path, or provider.
+- Accepted ADR-0008: Authentik application entitlement is authentication-only; live Loyalty memberships and RLS remain tenant authority, and mutable OIDC/user metadata grants no role.
+- Production recovery points and a secret-free Authentik blueprint exist. Public signup remains disabled, and tenant bootstrap is explicitly blocked until the owner completes a real SSO flow and the linked custom identity, session, and Supabase UUID are verified.
+- Zero-warning lint, all workspace typechecks, 167 tests, workflow/deployment/architecture/accessibility/WooCommerce validators, both application builds, secret scan, zero-production-vulnerability audit, and licenses pass. Changed parseable files pass targeted Prettier; the repository-wide Windows check retains only the tracked CRLF baseline.

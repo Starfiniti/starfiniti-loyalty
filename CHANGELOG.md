@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added Starfiniti workforce sign-in through Authentik as Supabase custom OIDC, preserving the Supabase Auth UUID/RLS subject, customer password login, and customer-export password reauthentication.
+- Added exact callback/provider redirect validation, English/Slovenian login copy, ADR-0008, and an explicit real-SSO-identity gate before initial tenant bootstrap.
 - Parameterized the dashboard's non-wildcard IPv4 bind for separate trusted reverse proxies, and made preflight enforce the production container's UID-1001 owner-only WooCommerce signing pool.
 - Recorded the first self-hosted production recovery implementation: one-minute WAL archive, daily physical base backups, encrypted off-host copies every three minutes, nightly VM backup, retention timers, and a successful `pg_verifybackup` rehearsal.
 - Documented the pinned PostgreSQL `GRANT ... TO current_user` crash workaround and the required Supavisor recreation after an in-place database-container replacement.
