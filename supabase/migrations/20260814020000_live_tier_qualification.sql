@@ -523,7 +523,7 @@ declare
   level_record loyalty.programme_tier_policy_levels%rowtype;
   target_event_public_id uuid;
   target_wallet_id bigint;
-  threshold_kind text;
+  target_threshold_kind text;
   expression_operator text;
   threshold_total integer;
   threshold_matched integer;
@@ -627,13 +627,13 @@ begin
       continue;
     end if;
     if context.current_tier_code = level_record.tier_code then
-      threshold_kind := 'retention';
+      target_threshold_kind := 'retention';
       expression_operator := level_record.retention_operator;
     elsif level_record.tier_code = any(context.previously_held_tier_codes) then
-      threshold_kind := 'reentry';
+      target_threshold_kind := 'reentry';
       expression_operator := level_record.reentry_operator;
     else
-      threshold_kind := 'entry';
+      target_threshold_kind := 'entry';
       expression_operator := level_record.entry_operator;
     end if;
     select count(*)::integer,
@@ -647,7 +647,7 @@ begin
     where threshold.organization_id = target_organization_id
       and threshold.programme_version_id = target_programme_version_id
       and threshold.tier_code = level_record.tier_code
-      and threshold.threshold_kind = threshold_kind;
+      and threshold.threshold_kind = target_threshold_kind;
     level_matches := case expression_operator
       when 'all' then threshold_total > 0 and threshold_matched = threshold_total
       when 'any' then threshold_matched > 0
@@ -656,7 +656,7 @@ begin
     if level_matches then
       qualified_tier_code := level_record.tier_code;
       qualified_ordinal := level_record.ordinal;
-      qualified_threshold_kind := threshold_kind;
+      qualified_threshold_kind := target_threshold_kind;
     end if;
   end loop;
 
