@@ -194,6 +194,9 @@ describe("ProgrammeDefinitionV2 earning engine", () => {
           effectKind: "base_rate",
           uncappedPoints: "50",
           awardedPoints: "50",
+          uncappedNumerator: "50000000",
+          awardedNumerator: "50000000",
+          denominator: "1000000",
           capApplied: "none",
         },
         {
@@ -201,6 +204,9 @@ describe("ProgrammeDefinitionV2 earning engine", () => {
           effectKind: "multiplier",
           uncappedPoints: "45",
           awardedPoints: "45",
+          uncappedNumerator: "45000000",
+          awardedNumerator: "45000000",
+          denominator: "1000000",
           capApplied: "none",
         },
         {
@@ -208,6 +214,9 @@ describe("ProgrammeDefinitionV2 earning engine", () => {
           effectKind: "fixed_bonus",
           uncappedPoints: "25",
           awardedPoints: "25",
+          uncappedNumerator: "25000000",
+          awardedNumerator: "25000000",
+          denominator: "1000000",
           capApplied: "none",
         },
       ],
@@ -243,6 +252,55 @@ describe("ProgrammeDefinitionV2 earning engine", () => {
         { ...purchase, lines: [...purchase.lines].reverse() },
       ),
     ).toEqual(expected);
+  });
+
+  it("allocates a shared fractional point deterministically without losing value", () => {
+    const fractionalProgramme = {
+      ...programme,
+      earningRules: [
+        {
+          ...baseRule,
+          effect: { kind: "base_rate" as const, pointsPerMajorUnit: "1" },
+        },
+        programme.earningRules.find((rule) => rule.code === "vip-double")!,
+      ],
+    } satisfies ProgrammeDefinitionV2;
+    const fractionalPurchase = {
+      ...purchase,
+      lines: [
+        {
+          lineId: "fractional-line",
+          productId: "serum",
+          categoryIds: ["skincare"],
+          grossMinor: "50",
+          discountMinor: "0",
+          refundedMinor: "0",
+          paymentKind: "money" as const,
+        },
+      ],
+      shippingMinor: "0",
+      taxMinor: "0",
+      feeMinor: "0",
+    };
+
+    const result = evaluateEarningV2(fractionalProgramme, fractionalPurchase);
+
+    expect(result.awardedPoints).toBe("1");
+    expect(
+      result.contributions.map(({ ruleCode, awardedPoints }) => ({
+        ruleCode,
+        awardedPoints,
+      })),
+    ).toEqual([
+      { ruleCode: "purchase-base", awardedPoints: "1" },
+      { ruleCode: "vip-double", awardedPoints: "0" },
+    ]);
+    expect(
+      result.contributions.reduce(
+        (total, contribution) => total + BigInt(contribution.awardedPoints),
+        0n,
+      ),
+    ).toBe(BigInt(result.awardedPoints));
   });
 
   it("applies per-event and remaining per-member caps without negative awards", () => {

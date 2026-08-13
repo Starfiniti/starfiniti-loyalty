@@ -251,4 +251,23 @@ describe("ProgrammeDefinitionV2", () => {
       }),
     ).toThrow("Currency precision");
   });
+
+  it("rejects earning amounts that cannot be represented by PostgreSQL", () => {
+    expect(() =>
+      programmeDefinitionV2.parse({
+        ...definition,
+        earningRules: definition.earningRules.map((rule) =>
+          rule.code === "purchase-base"
+            ? {
+                ...rule,
+                effect: {
+                  kind: "base_rate" as const,
+                  pointsPerMajorUnit: "9223372036854775808",
+                },
+              }
+            : rule,
+        ),
+      }),
+    ).toThrow("PostgreSQL bigint capacity");
+  });
 });

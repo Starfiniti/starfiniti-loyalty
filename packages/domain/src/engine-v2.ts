@@ -50,6 +50,9 @@ export interface EarningRuleContributionV2 {
   readonly effectKind: EarningRuleV2["effect"]["kind"];
   readonly uncappedPoints: string;
   readonly awardedPoints: string;
+  readonly uncappedNumerator: string;
+  readonly awardedNumerator: string;
+  readonly denominator: string;
   readonly capApplied: "none" | "per_event" | "per_member";
 }
 
@@ -271,9 +274,69 @@ function ruleContribution(
       effectKind: rule.effect.kind,
       uncappedPoints: (numerator / denominator).toString(),
       awardedPoints: (capped.numerator / denominator).toString(),
+      uncappedNumerator: numerator.toString(),
+      awardedNumerator: capped.numerator.toString(),
+      denominator: denominator.toString(),
       capApplied: capped.capApplied,
     },
   };
+}
+
+function allocateContributionPoints(
+  contributions: EarningRuleContributionV2[],
+): bigint {
+  if (contributions.length === 0) return 0n;
+  const denominator = parsePositive(
+    contributions[0]!.denominator,
+    "Contribution denominator",
+  );
+  const allocations = contributions.map((contribution, index) => {
+    const candidateDenominator = parsePositive(
+      contribution.denominator,
+      "Contribution denominator",
+    );
+    if (candidateDenominator !== denominator) {
+      throw new TypeError("Contribution denominators must match");
+    }
+    const numerator = parseNonNegative(
+      contribution.awardedNumerator,
+      "Contribution numerator",
+    );
+    return {
+      index,
+      floor: numerator / denominator,
+      remainder: numerator % denominator,
+      ruleCode: contribution.ruleCode,
+    };
+  });
+  const totalNumerator = contributions.reduce(
+    (total, contribution) =>
+      total +
+      parseNonNegative(contribution.awardedNumerator, "Contribution numerator"),
+    0n,
+  );
+  const totalPoints = totalNumerator / denominator;
+  let remaining =
+    totalPoints -
+    allocations.reduce((total, allocation) => total + allocation.floor, 0n);
+  for (const allocation of [...allocations].sort((left, right) => {
+    if (left.remainder !== right.remainder) {
+      return left.remainder > right.remainder ? -1 : 1;
+    }
+    return left.ruleCode.localeCompare(right.ruleCode);
+  })) {
+    if (remaining === 0n || allocation.remainder === 0n) break;
+    allocation.floor += 1n;
+    remaining -= 1n;
+  }
+  for (const allocation of allocations) {
+    const current = contributions[allocation.index]!;
+    contributions[allocation.index] = {
+      ...current,
+      awardedPoints: allocation.floor.toString(),
+    };
+  }
+  return totalPoints;
 }
 
 function lifecycle(
@@ -338,7 +401,6 @@ function evaluatePurchase(
     fact.memberRuleUsage,
   );
   contributions.push(baseContribution.contribution);
-  let totalNumerator = baseContribution.numerator;
 
   const baseLineIds = new Set(baseEligible.lines.keys());
   const selectedMultiplier = rules.find((rule) => {
@@ -362,7 +424,6 @@ function evaluatePurchase(
       fact.memberRuleUsage,
     );
     contributions.push(contribution.contribution);
-    totalNumerator += contribution.numerator;
   }
 
   for (const rule of rules) {
@@ -377,7 +438,6 @@ function evaluatePurchase(
       fact.memberRuleUsage,
     );
     contributions.push(contribution.contribution);
-    totalNumerator += contribution.numerator;
   }
 
   const sortedLines = [...fact.lines].sort((left, right) =>
@@ -402,12 +462,13 @@ function evaluatePurchase(
     };
   });
 
+  const awardedPoints = allocateContributionPoints(contributions);
   return {
     version: "2",
     eventId: fact.eventId,
     source: fact.source,
     eligibleSpendMinor: baseEligible.spend.toString(),
-    awardedPoints: (totalNumerator / denominator).toString(),
+    awardedPoints: awardedPoints.toString(),
     ...lifecycle(programme, fact.occurredAt),
     selectedMultiplierRuleCode: selectedMultiplier?.code ?? null,
     contributions,
@@ -428,7 +489,6 @@ function evaluateActivity(
   }
   const denominator = 1n;
   const contributions: EarningRuleContributionV2[] = [];
-  let total = 0n;
   for (const rule of orderRules(programme.earningRules)) {
     if (
       !rule.enabled ||
@@ -445,14 +505,14 @@ function evaluateActivity(
       fact.memberRuleUsage,
     );
     contributions.push(contribution.contribution);
-    total += contribution.numerator;
   }
+  const awardedPoints = allocateContributionPoints(contributions);
   return {
     version: "2",
     eventId: fact.eventId,
     source: fact.source,
     eligibleSpendMinor: "0",
-    awardedPoints: total.toString(),
+    awardedPoints: awardedPoints.toString(),
     ...lifecycle(programme, fact.occurredAt),
     selectedMultiplierRuleCode: null,
     contributions,

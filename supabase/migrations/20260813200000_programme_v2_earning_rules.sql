@@ -47,6 +47,43 @@ create trigger programme_earning_rules_immutable
 before update or delete on loyalty.programme_earning_rules
 for each row execute function loyalty_private.reject_immutable_change();
 
+create table loyalty_private.member_earning_rule_effects (
+  id bigint generated always as identity primary key,
+  public_id uuid not null default gen_random_uuid() unique,
+  organization_id bigint not null,
+  programme_group_id bigint not null,
+  programme_version_id bigint not null,
+  customer_id bigint not null,
+  evaluation_id bigint not null,
+  rule_id bigint not null,
+  rule_code text not null,
+  awarded_points bigint not null check (awarded_points > 0),
+  occurred_at timestamptz not null,
+  created_at timestamptz not null default now(),
+  unique (organization_id, id),
+  unique (organization_id, evaluation_id, rule_id),
+  foreign key (organization_id, programme_group_id, programme_version_id)
+    references loyalty.programme_versions(organization_id, programme_group_id, id) on delete restrict,
+  foreign key (organization_id, customer_id)
+    references loyalty.customers(organization_id, id) on delete restrict,
+  foreign key (organization_id, evaluation_id)
+    references loyalty_private.programme_evaluations(organization_id, id) on delete restrict,
+  foreign key (organization_id, rule_id)
+    references loyalty.programme_earning_rules(organization_id, id) on delete restrict,
+  check (rule_code ~ '^[a-z][a-z0-9_-]{0,79}$')
+);
+
+create index member_earning_rule_effects_usage_idx
+  on loyalty_private.member_earning_rule_effects (
+    organization_id, programme_group_id, customer_id, rule_code, occurred_at, id
+  );
+
+alter table loyalty_private.member_earning_rule_effects owner to loyalty_owner;
+
+create trigger member_earning_rule_effects_immutable
+before update or delete on loyalty_private.member_earning_rule_effects
+for each row execute function loyalty_private.reject_immutable_change();
+
 create or replace function loyalty_private.validate_programme_definition_v2(
   target_configuration jsonb
 )
@@ -188,9 +225,21 @@ begin
       or jsonb_typeof(cap_value -> 'memberPeriod') not in ('string', 'null')
       or jsonb_typeof(cap_value -> 'rollingDays') not in ('number', 'null')
       or (cap_value -> 'perEventPoints' <> 'null'::jsonb
-        and (cap_value ->> 'perEventPoints') !~ '^[1-9][0-9]*$')
+        and not (
+          (cap_value ->> 'perEventPoints') ~ '^[1-9][0-9]{0,18}$'
+          and (
+            length(cap_value ->> 'perEventPoints') < 19
+            or cap_value ->> 'perEventPoints' <= '9223372036854775807'
+          )
+        ))
       or (cap_value -> 'perMemberPoints' <> 'null'::jsonb
-        and (cap_value ->> 'perMemberPoints') !~ '^[1-9][0-9]*$') then
+        and not (
+          (cap_value ->> 'perMemberPoints') ~ '^[1-9][0-9]{0,18}$'
+          and (
+            length(cap_value ->> 'perMemberPoints') < 19
+            or cap_value ->> 'perMemberPoints' <= '9223372036854775807'
+          )
+        )) then
       raise exception using errcode = '22023', message = 'invalid ProgrammeDefinitionV2 rule cap';
     end if;
     member_period := case when cap_value -> 'memberPeriod' = 'null'::jsonb
@@ -216,7 +265,13 @@ begin
     if effect_value ->> 'kind' = 'base_rate' then
       if not (effect_value ?& array['kind', 'pointsPerMajorUnit'])
         or effect_value - array['kind', 'pointsPerMajorUnit'] <> '{}'::jsonb
-        or coalesce(effect_value ->> 'pointsPerMajorUnit', '') !~ '^[1-9][0-9]*$'
+        or not (
+          coalesce(effect_value ->> 'pointsPerMajorUnit', '') ~ '^[1-9][0-9]{0,18}$'
+          and (
+            length(effect_value ->> 'pointsPerMajorUnit') < 19
+            or effect_value ->> 'pointsPerMajorUnit' <= '9223372036854775807'
+          )
+        )
         or rule_value ->> 'source' <> 'purchase'
         or (rule_value ->> 'stackable')::boolean then
         raise exception using errcode = '22023', message = 'invalid ProgrammeDefinitionV2 base rate';
@@ -236,7 +291,13 @@ begin
     else
       if not (effect_value ?& array['kind', 'points'])
         or effect_value - array['kind', 'points'] <> '{}'::jsonb
-        or coalesce(effect_value ->> 'points', '') !~ '^[1-9][0-9]*$'
+        or not (
+          coalesce(effect_value ->> 'points', '') ~ '^[1-9][0-9]{0,18}$'
+          and (
+            length(effect_value ->> 'points') < 19
+            or effect_value ->> 'points' <= '9223372036854775807'
+          )
+        )
         or not (rule_value ->> 'stackable')::boolean then
         raise exception using errcode = '22023', message = 'invalid ProgrammeDefinitionV2 fixed bonus';
       end if;
@@ -317,6 +378,341 @@ begin
     perform loyalty_private.validate_programme_definition_v2(new.configuration);
   end if;
   return new;
+end;
+$$;
+
+create or replace function loyalty_private.member_earning_period_matches(
+  target_cap jsonb,
+  existing_occurred_at timestamptz,
+  target_occurred_at timestamptz
+)
+returns boolean
+language sql
+immutable
+security definer
+set search_path = ''
+as $$
+  select case target_cap ->> 'memberPeriod'
+    when 'lifetime' then true
+    when 'calendar_day' then
+      date_trunc('day', existing_occurred_at at time zone 'UTC') =
+      date_trunc('day', target_occurred_at at time zone 'UTC')
+    when 'calendar_month' then
+      date_trunc('month', existing_occurred_at at time zone 'UTC') =
+      date_trunc('month', target_occurred_at at time zone 'UTC')
+    when 'calendar_year' then
+      date_trunc('year', existing_occurred_at at time zone 'UTC') =
+      date_trunc('year', target_occurred_at at time zone 'UTC')
+    when 'rolling' then
+      existing_occurred_at > target_occurred_at - pg_catalog.make_interval(
+        days => (target_cap ->> 'rollingDays')::integer
+      )
+      and existing_occurred_at < target_occurred_at + pg_catalog.make_interval(
+        days => (target_cap ->> 'rollingDays')::integer
+      )
+    else false
+  end;
+$$;
+
+create or replace function loyalty_private.get_member_earning_rule_usage(
+  target_organization_id bigint,
+  target_programme_group_id bigint,
+  target_programme_version_id bigint,
+  target_customer_id bigint,
+  target_occurred_at timestamptz
+)
+returns table (rule_code text, consumed_points bigint)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if not exists (
+    select 1 from loyalty.programme_versions as version
+    where version.organization_id = target_organization_id
+      and version.programme_group_id = target_programme_group_id
+      and version.id = target_programme_version_id
+      and version.status = 'published'
+      and version.configuration ->> 'version' = '2'
+  ) or not exists (
+    select 1 from loyalty.customers as customer
+    where customer.organization_id = target_organization_id
+      and customer.id = target_customer_id
+  ) then
+    raise exception using errcode = '22023', message = 'unknown V2 member earning context';
+  end if;
+  perform pg_catalog.pg_advisory_xact_lock(
+    pg_catalog.hashtextextended(
+      'earning-cap|' || target_organization_id::text || '|' ||
+      target_programme_group_id::text || '|' || target_customer_id::text,
+      0
+    )
+  );
+  return query
+  select rule.code,
+    coalesce(sum(effect.awarded_points) filter (
+      where loyalty_private.member_earning_period_matches(
+        rule.cap, effect.occurred_at, target_occurred_at
+      )
+    ), 0)::bigint
+  from loyalty.programme_earning_rules as rule
+  left join loyalty_private.member_earning_rule_effects as effect
+    on effect.organization_id = rule.organization_id
+   and effect.programme_group_id = rule.programme_group_id
+   and effect.customer_id = target_customer_id
+   and effect.rule_code = rule.code
+  where rule.organization_id = target_organization_id
+    and rule.programme_group_id = target_programme_group_id
+    and rule.programme_version_id = target_programme_version_id
+    and rule.enabled
+    and rule.cap -> 'perMemberPoints' <> 'null'::jsonb
+  group by rule.id, rule.code
+  order by rule.code;
+end;
+$$;
+
+create or replace function loyalty_private.commit_programme_v2_award(
+  target_organization_id bigint,
+  target_programme_group_id bigint,
+  target_programme_version_id bigint,
+  target_canonical_event_id bigint,
+  target_customer_id bigint,
+  target_subject_reference text,
+  target_evaluation_idempotency_key text,
+  target_award_idempotency_key text,
+  target_input_sha256 bytea,
+  target_result_sha256 bytea,
+  target_result jsonb,
+  target_explanation jsonb,
+  target_occurred_at timestamptz,
+  target_evaluated_at timestamptz default now()
+)
+returns table (
+  evaluation_public_id uuid,
+  transaction_public_id uuid,
+  outcome text
+)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  existing_evaluation loyalty_private.programme_evaluations%rowtype;
+  target_evaluation loyalty_private.programme_evaluations%rowtype;
+  contribution jsonb;
+  target_rule loyalty.programme_earning_rules%rowtype;
+  contribution_points bigint;
+  contribution_numerator numeric;
+  contribution_denominator numeric;
+  common_denominator numeric;
+  total_numerator numeric := 0;
+  allocated_points bigint := 0;
+  target_points bigint;
+  consumed_points bigint;
+  seen_rule_codes text[] := array[]::text[];
+  recorded record;
+  posted record;
+begin
+  if not exists (
+    select 1 from loyalty.programme_versions as version
+    where version.organization_id = target_organization_id
+      and version.programme_group_id = target_programme_group_id
+      and version.id = target_programme_version_id
+      and version.status = 'published'
+      and version.configuration ->> 'version' = '2'
+  ) or not exists (
+    select 1 from loyalty.customers as customer
+    where customer.organization_id = target_organization_id
+      and customer.id = target_customer_id
+  ) or not exists (
+    select 1
+    from loyalty_private.canonical_commerce_events as event
+    join loyalty.commerce_connections as connection
+      on connection.organization_id = event.organization_id
+     and connection.id = event.connection_id
+    join loyalty.programme_versions as version
+      on version.organization_id = event.organization_id
+     and version.id = target_programme_version_id
+     and version.programme_id = connection.programme_id
+    where event.organization_id = target_organization_id
+      and event.id = target_canonical_event_id
+  ) then
+    raise exception using errcode = '22023', message = 'unknown V2 award context';
+  end if;
+  if length(target_subject_reference) not between 1 and 500
+    or length(target_evaluation_idempotency_key) not between 1 and 255
+    or length(target_award_idempotency_key) not between 1 and 255
+    or octet_length(target_input_sha256) <> 32
+    or octet_length(target_result_sha256) <> 32
+    or jsonb_typeof(target_result) <> 'object'
+    or target_result ->> 'version' <> '2'
+    or not (
+      coalesce(target_result ->> 'awardedPoints', '') ~ '^(0|[1-9][0-9]{0,18})$'
+      and (
+        length(target_result ->> 'awardedPoints') < 19
+        or target_result ->> 'awardedPoints' <= '9223372036854775807'
+      )
+    )
+    or jsonb_typeof(target_result -> 'contributions') <> 'array'
+    or jsonb_array_length(target_result -> 'contributions') > 200
+    or jsonb_typeof(target_explanation) <> 'object' then
+    raise exception using errcode = '22023', message = 'invalid V2 award evidence';
+  end if;
+  target_points := (target_result ->> 'awardedPoints')::bigint;
+
+  perform pg_catalog.pg_advisory_xact_lock(
+    pg_catalog.hashtextextended(
+      'earning-cap|' || target_organization_id::text || '|' ||
+      target_programme_group_id::text || '|' || target_customer_id::text,
+      0
+    )
+  );
+
+  select evaluation.* into existing_evaluation
+  from loyalty_private.programme_evaluations as evaluation
+  where evaluation.organization_id = target_organization_id
+    and evaluation.idempotency_key = target_evaluation_idempotency_key;
+  if found then
+    if existing_evaluation.input_sha256 <> target_input_sha256
+      or existing_evaluation.result_sha256 <> target_result_sha256 then
+      raise exception using errcode = '23514', message = 'evaluation idempotency hash conflict';
+    end if;
+    select transaction.public_id into transaction_public_id
+    from loyalty.ledger_transactions as transaction
+    where transaction.organization_id = target_organization_id
+      and transaction.idempotency_key = target_award_idempotency_key;
+    evaluation_public_id := existing_evaluation.public_id;
+    outcome := 'duplicate';
+    return next;
+    return;
+  end if;
+
+  for contribution in
+    select value from jsonb_array_elements(target_result -> 'contributions')
+  loop
+    if jsonb_typeof(contribution) <> 'object'
+      or not (contribution ?& array[
+        'ruleCode', 'effectKind', 'uncappedPoints', 'awardedPoints',
+        'uncappedNumerator', 'awardedNumerator', 'denominator', 'capApplied'
+      ])
+      or contribution - array[
+        'ruleCode', 'effectKind', 'uncappedPoints', 'awardedPoints',
+        'uncappedNumerator', 'awardedNumerator', 'denominator', 'capApplied'
+      ] <> '{}'::jsonb
+      or coalesce(contribution ->> 'ruleCode', '') !~ '^[a-z][a-z0-9_-]{0,79}$'
+      or not (
+        coalesce(contribution ->> 'awardedPoints', '') ~ '^(0|[1-9][0-9]{0,18})$'
+        and (
+          length(contribution ->> 'awardedPoints') < 19
+          or contribution ->> 'awardedPoints' <= '9223372036854775807'
+        )
+      )
+      or coalesce(contribution ->> 'uncappedNumerator', '') !~ '^(0|[1-9][0-9]{0,99})$'
+      or coalesce(contribution ->> 'awardedNumerator', '') !~ '^(0|[1-9][0-9]{0,99})$'
+      or coalesce(contribution ->> 'denominator', '') !~ '^[1-9][0-9]{0,18}$' then
+      raise exception using errcode = '22023', message = 'invalid V2 award contribution';
+    end if;
+    if contribution ->> 'ruleCode' = any(seen_rule_codes) then
+      raise exception using errcode = '23514', message = 'duplicate V2 award contribution';
+    end if;
+    seen_rule_codes := array_append(seen_rule_codes, contribution ->> 'ruleCode');
+    select rule.* into target_rule
+    from loyalty.programme_earning_rules as rule
+    where rule.organization_id = target_organization_id
+      and rule.programme_version_id = target_programme_version_id
+      and rule.code = contribution ->> 'ruleCode'
+      and rule.enabled;
+    if not found or target_rule.effect_kind <> contribution ->> 'effectKind'
+      or target_rule.source <> target_result ->> 'source' then
+      raise exception using errcode = '23514', message = 'V2 award contribution does not match published rule';
+    end if;
+    contribution_points := (contribution ->> 'awardedPoints')::bigint;
+    contribution_numerator := (contribution ->> 'awardedNumerator')::numeric;
+    contribution_denominator := (contribution ->> 'denominator')::numeric;
+    if contribution_numerator > (contribution ->> 'uncappedNumerator')::numeric then
+      raise exception using errcode = '23514', message = 'V2 award exceeds uncapped contribution';
+    end if;
+    if common_denominator is null then
+      common_denominator := contribution_denominator;
+    elsif common_denominator <> contribution_denominator then
+      raise exception using errcode = '23514', message = 'V2 contribution denominators differ';
+    end if;
+    total_numerator := total_numerator + contribution_numerator;
+    allocated_points := allocated_points + contribution_points;
+    if target_rule.cap -> 'perEventPoints' <> 'null'::jsonb
+      and contribution_points > (target_rule.cap ->> 'perEventPoints')::bigint then
+      raise exception using errcode = '23514', message = 'V2 per-event cap exceeded';
+    end if;
+    if target_rule.cap -> 'perMemberPoints' <> 'null'::jsonb then
+      select coalesce(sum(effect.awarded_points), 0)::bigint into consumed_points
+      from loyalty_private.member_earning_rule_effects as effect
+      where effect.organization_id = target_organization_id
+        and effect.programme_group_id = target_programme_group_id
+        and effect.customer_id = target_customer_id
+        and effect.rule_code = target_rule.code
+        and loyalty_private.member_earning_period_matches(
+          target_rule.cap, effect.occurred_at, target_occurred_at
+        );
+      if consumed_points + contribution_points >
+        (target_rule.cap ->> 'perMemberPoints')::bigint then
+        raise exception using errcode = '23514', message = 'V2 per-member cap exceeded';
+      end if;
+    end if;
+  end loop;
+  if allocated_points <> target_points
+    or (common_denominator is null and target_points <> 0)
+    or (common_denominator is not null
+      and floor(total_numerator / common_denominator) <> target_points::numeric) then
+    raise exception using errcode = '23514', message = 'V2 award total does not match contributions';
+  end if;
+
+  select * into recorded
+  from loyalty_private.record_programme_evaluation(
+    target_organization_id, target_programme_group_id, target_programme_version_id,
+    target_canonical_event_id, 'live_award', target_subject_reference,
+    target_evaluation_idempotency_key, target_input_sha256, target_result_sha256,
+    target_result, target_explanation, target_evaluated_at
+  );
+  select evaluation.* into strict target_evaluation
+  from loyalty_private.programme_evaluations as evaluation
+  where evaluation.organization_id = target_organization_id
+    and evaluation.public_id = recorded.evaluation_public_id;
+
+  for contribution in
+    select value from jsonb_array_elements(target_result -> 'contributions')
+  loop
+    contribution_points := (contribution ->> 'awardedPoints')::bigint;
+    if contribution_points = 0 then
+      continue;
+    end if;
+    select rule.* into strict target_rule
+    from loyalty.programme_earning_rules as rule
+    where rule.organization_id = target_organization_id
+      and rule.programme_version_id = target_programme_version_id
+      and rule.code = contribution ->> 'ruleCode';
+    insert into loyalty_private.member_earning_rule_effects (
+      organization_id, programme_group_id, programme_version_id, customer_id,
+      evaluation_id, rule_id, rule_code, awarded_points, occurred_at
+    ) values (
+      target_organization_id, target_programme_group_id, target_programme_version_id,
+      target_customer_id, target_evaluation.id, target_rule.id, target_rule.code,
+      contribution_points, target_occurred_at
+    );
+  end loop;
+
+  transaction_public_id := null;
+  if target_points > 0 then
+    select * into posted from loyalty_private.award_points(
+      target_organization_id, target_programme_group_id, target_programme_version_id,
+      target_customer_id, target_points, target_award_idempotency_key,
+      target_result_sha256, target_canonical_event_id, target_subject_reference,
+      target_occurred_at
+    );
+    transaction_public_id := posted.transaction_public_id;
+  end if;
+  evaluation_public_id := target_evaluation.public_id;
+  outcome := 'created';
+  return next;
 end;
 $$;
 
@@ -413,25 +809,58 @@ $$;
 
 alter function loyalty_private.validate_programme_definition_v2(jsonb) owner to loyalty_owner;
 alter function loyalty_private.enforce_programme_v2_entitlement() owner to loyalty_owner;
+alter function loyalty_private.member_earning_period_matches(jsonb, timestamptz, timestamptz) owner to loyalty_owner;
+alter function loyalty_private.get_member_earning_rule_usage(bigint, bigint, bigint, bigint, timestamptz) owner to loyalty_owner;
+alter function loyalty_private.commit_programme_v2_award(
+  bigint, bigint, bigint, bigint, bigint, text, text, text, bytea, bytea,
+  jsonb, jsonb, timestamptz, timestamptz
+) owner to loyalty_owner;
 alter function loyalty_private.materialize_programme_definition(bigint) owner to loyalty_owner;
 
 alter table loyalty.programme_earning_rules enable row level security;
+alter table loyalty_private.member_earning_rule_effects enable row level security;
 create policy programme_earning_rules_member_select on loyalty.programme_earning_rules
   for select to authenticated
   using ((select loyalty_private.is_organization_member(organization_id)));
 create policy programme_earning_rules_worker_select on loyalty.programme_earning_rules
   for select to loyalty_worker using (true);
+create policy member_earning_rule_effects_worker_select
+  on loyalty_private.member_earning_rule_effects
+  for select to loyalty_worker using (true);
 
 revoke all on loyalty.programme_earning_rules
   from public, anon, authenticated, loyalty_runtime, loyalty_worker;
 grant select on loyalty.programme_earning_rules to authenticated, loyalty_worker;
+revoke all on loyalty_private.member_earning_rule_effects
+  from public, anon, authenticated, loyalty_runtime, loyalty_worker;
+grant select on loyalty_private.member_earning_rule_effects to loyalty_worker;
 
 revoke all on function loyalty_private.validate_programme_definition_v2(jsonb),
   loyalty_private.enforce_programme_v2_entitlement(),
+  loyalty_private.member_earning_period_matches(jsonb, timestamptz, timestamptz),
+  loyalty_private.get_member_earning_rule_usage(bigint, bigint, bigint, bigint, timestamptz),
+  loyalty_private.commit_programme_v2_award(
+    bigint, bigint, bigint, bigint, bigint, text, text, text, bytea, bytea,
+    jsonb, jsonb, timestamptz, timestamptz
+  ),
   loyalty_private.materialize_programme_definition(bigint)
   from public, anon, authenticated, loyalty_runtime, loyalty_worker;
+grant execute on function
+  loyalty_private.get_member_earning_rule_usage(bigint, bigint, bigint, bigint, timestamptz),
+  loyalty_private.commit_programme_v2_award(
+    bigint, bigint, bigint, bigint, bigint, text, text, text, bytea, bytea,
+    jsonb, jsonb, timestamptz, timestamptz
+  ) to loyalty_worker;
 
 comment on table loyalty.programme_earning_rules is
   'Immutable normalized ProgrammeDefinitionV2 earning rules materialized only by approved publication or scheduling.';
 comment on function loyalty_private.validate_programme_definition_v2(jsonb) is
   'Fail-closed database validation for the normalized V2 contract before value-affecting publication.';
+comment on table loyalty_private.member_earning_rule_effects is
+  'Immutable integer attribution of accepted V2 points to member/rule identity for serialized cap accounting.';
+comment on function loyalty_private.get_member_earning_rule_usage(bigint, bigint, bigint, bigint, timestamptz) is
+  'Acquires the transaction-scoped member cap lock and returns authoritative usage for the published V2 rules.';
+comment on function loyalty_private.commit_programme_v2_award(
+  bigint, bigint, bigint, bigint, bigint, text, text, text, bytea, bytea,
+  jsonb, jsonb, timestamptz, timestamptz
+) is 'Rechecks V2 contribution totals and caps, then atomically appends evaluation, usage, and ledger evidence.';

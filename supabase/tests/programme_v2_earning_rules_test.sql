@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(39);
+select plan(40);
 
 select has_table('loyalty', 'programme_earning_rules', 'V2 earning rules table exists');
 select ok(
@@ -126,7 +126,7 @@ select lives_ok(
 select lives_ok(
   $$ select loyalty_private.set_organization_entitlement(
     '73000000-0000-4000-8000-000000000100', 'programme.v2', 'enabled', null,
-    'tenant', 'test:m03', 'Enable only the V2 canary organization',
+    'canary', 'test:m03', 'Enable only the V2 canary organization',
     now() - interval '30 seconds', null
   ) $$,
   'test enables V2 for only the canary organization'
@@ -254,6 +254,19 @@ select throws_ok(
   ) $$,
   '22023', 'invalid ProgrammeDefinitionV2 multiplier',
   'excessive multiplier fails closed'
+);
+select throws_ok(
+  $$ select * from loyalty.create_programme_draft_command(
+    '73000000-0000-4000-8000-000000000101',
+    jsonb_set(
+      pg_temp.valid_v2(),
+      '{earningRules,0,effect,pointsPerMajorUnit}',
+      '"9223372036854775808"'::jsonb
+    ),
+    'v2:invalid:bigint', '73000000-0000-4000-8000-000000000211'
+  ) $$,
+  '22023', 'invalid ProgrammeDefinitionV2 base rate',
+  'direct RPC rejects earning amounts that cannot be materialized as bigint'
 );
 select results_eq(
   $$ select count(*)::bigint from loyalty.programme_versions

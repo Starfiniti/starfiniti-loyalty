@@ -6,7 +6,13 @@ import {
 } from "./programme";
 
 const code = z.string().regex(/^[a-z][a-z0-9_-]{0,79}$/u);
-const positiveBigintString = z.string().regex(/^[1-9][0-9]*$/u);
+const POSTGRES_BIGINT_MAX = 9_223_372_036_854_775_807n;
+const positiveBigintString = z
+  .string()
+  .regex(/^[1-9][0-9]*$/u)
+  .refine((value) => BigInt(value) <= POSTGRES_BIGINT_MAX, {
+    message: "Value exceeds PostgreSQL bigint capacity",
+  });
 const timestamp = z.iso.datetime({ offset: true });
 const selector = z.string().trim().min(1).max(255);
 const selectorList = z.array(selector).max(100).default([]);
