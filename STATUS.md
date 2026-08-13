@@ -7,7 +7,7 @@
 - The Docker-backed GitHub Actions database job replays migrations/seed and runs 1,049 transactional pgTAP assertions plus real two-session ledger/programme concurrency and property probes.
 - Phase 1 Rosy Rewards semantics are owner-approved and encoded as versioned configuration rather than global merchant assumptions.
 - Pure domain behavior covers integer award calculation, explicit historical tier snapshots, 30-day release, 12-month rolling expiry, earliest-expiry redemption ordering, rolling-spend tiers with grace, cumulative original-attribution refund reversal, and negative balances.
-- Twenty-four domain, sixty-one versioned contract, seventy-two dashboard, and nine worker tests pass.
+- Twenty-four domain, sixty-one versioned contract, eighty-one dashboard, and nine worker tests pass.
 - The platform carries a full AGPL-3.0 license and package metadata; the WooCommerce connector remains independently GPL-2.0-or-later.
 - Phase 2 architecture is complete and deterministically validated: tenant/Auth trust, identity, double-entry ledger, signed inbox/outbox, reward reservation, privacy, backup/restore, deployment, and SLO models are reviewable.
 - Phase 3 tenancy/RLS is complete: organizations, memberships, workspaces, programme groups, support grants, least-privilege roles, composite tenant keys, and live authorization policies execute successfully in disposable Supabase CI.
@@ -28,7 +28,7 @@
 - The operations view can download a versioned, tenant-scoped support bundle containing only public scope/connection IDs, queue totals, watermarks, and a labelled bounded sample of grouped canonical error codes. Item IDs, display names, payloads, commerce/customer identities, actors, reasons, signing references, and secrets are omitted.
 - A tenant owner/admin can provision the first WooCommerce connector for an active workspace and published programme from the operations view. The server consumes one unique reference from a root-readable deployment key pool, records a secret-free immutable audit event, and returns an exact setup package only in that action result; the plugin validates and encrypts the imported signing key at rest.
 - A deployment operator can create the initial organization, live owner membership, workspace, programme group, and link for an existing Auth UUID through one atomic repository command. Exact retries are stable, changed retries fail closed, audit metadata is minimized, and browser, dashboard-runtime, and worker roles cannot execute the boundary.
-- Pull-request CI builds the dashboard and worker Dockerfiles from a constrained context using a digest-pinned Node base. Release `v0.1.0` published commit-addressed GHCR dashboard/worker images and the checksummed WooCommerce ZIP after the full release/database gate passed.
+- Pull-request CI builds the dashboard and worker Dockerfiles from a constrained context using a digest-pinned Node base. Release `v0.1.9` publishes commit-addressed GHCR dashboard/worker images and the checksummed WooCommerce ZIP after the full release/database gate passed.
 - `npm run deploy:preflight -- --env <absolute-secret-env-file>` validates the populated Proxmox application configuration and signing-key pool without printing values. It covers Compose parity, placeholders, immutable image selectors, HTTPS origins, dedicated database logins, pool schema, and Linux owner-only permissions; network and live-role checks remain deployment-time gates.
 - The application Compose contract maps the public Supabase TLS hostname to the private reverse-proxy address inside the dashboard container, avoiding public-NAT hairpin failures without changing browser URLs or certificate validation. Production PostgREST exposes `public,graphql_public,loyalty`; explicit grants and tenant RLS remain authoritative.
 - `/api/healthz` returns only `ok` or `unavailable` with no-store headers and fails closed unless the runtime login can execute the exact commerce-ingestion and connector-provisioning functions and the mounted signing pool has at least one valid entry. Proxmox Compose uses this dependency-aware route for dashboard readiness.
@@ -48,7 +48,7 @@
 - WooCommerce issue, cancellation, and reconciliation commands stop after ten claims in a visible inspect-only manual-review state. Ambiguous coupon outcomes retain the reservation and ledger state until the native result is verified; they never trigger speculative compensation.
 - Native percentage rewards support 0.01–100% without a maximum cap. The contract/editor reject caps, PostgreSQL independently blocks direct-RPC publication/scheduling and legacy capped redemption before value moves, and the plugin retains a defensive rejection boundary.
 - The Overview no longer renders illustrative tenant figures. It reads versioned, tenant/workspace/programme-authorized aggregates for members, eligible loyalty spend, repeat-member rate, captured-to-awarded point redemption, point liability, and bounded 7/30/90-day trends without exposing private source evidence.
-- Merchant Overview, programme, customer, connector, and experience routes now share the owner-selected Hub-style application shell with the real Starfiniti mark, grouped Lucide navigation, working mobile drawer, persistent theme and refresh controls, and no tenant or language switcher. Overview is a data-backed launch command center whose checklist, performance rail, and activity rows derive from live programme, connector, reporting, and audit state.
+- Merchant Overview, programme, customer, connector, and experience routes now share the owner-selected Hub-style application shell with the real Starfiniti mark, grouped Lucide navigation, working mobile drawer, persistent theme and refresh controls, and no tenant or language switcher. Overview is a data-backed launch command center whose checklist, performance rail, and activity rows derive from live programme, connector, reporting, and audit state. The exact `v0.1.9` images are live on Proxmox.
 
 ## Partial
 
@@ -68,7 +68,7 @@ Twenty-six versioned migrations are applied to the pinned production Supabase/Po
 
 ## Git state
 
-Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 WooCommerce pipeline, PR `#7` merged Phase 9, PR `#9` merged Authentik workforce SSO, and PR `#10` merged the English-only launch presentation. Releases through `v0.1.6` include the hardened workforce PKCE callback and bounded production diagnostics. GitHub recognizes the repository license as GNU AGPLv3.
+Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 WooCommerce pipeline, PR `#7` merged Phase 9, PR `#9` merged Authentik workforce SSO, PR `#10` merged the English-only launch presentation, PR `#17` merged the Hub-style redesign, and PR `#18` merged its live-reporting polish. Releases through `v0.1.9` include the hardened workforce PKCE callback, bounded production diagnostics, and the owner-approved merchant command center. GitHub recognizes the repository license as GNU AGPLv3.
 
 ## Last verification
 
@@ -80,6 +80,8 @@ Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 Wo
 - `npm run audit:prod` — passed with zero production vulnerabilities.
 - `npm run licenses` — passed for six AGPL npm package declarations, the full AGPL text, and both WooCommerce GPL declarations.
 - Hub-style design verification passed at 1440 × 1024 and 390 × 844 with working drawer/disclosure/theme interactions, no horizontal mobile overflow, and `design-qa.md` final result `passed`.
+- PR `#17` exact-head run `31703869751` and PR `#18` exact-head run `31704901506` each passed all seven jobs, including the 1,049-assertion database gate, both production containers, and all four minimum/current HPOS/legacy WooCommerce runtimes.
+- Release run `31705154056` published `v0.1.9`, the checksummed WooCommerce ZIP, and immutable commit `8d27d091d7a48094dbbb1a45bd37925a092d88b3` dashboard/worker images after the full release gate passed.
 - `npm run architecture:validate` — passed for eight Phase 2 models and four accepted ADRs; it now runs inside `npm run check`.
 - PR exact-head run `31645976689` passed all seven release-hardening jobs with 164 unit tests, twenty-six migration replays, all 1,049 pgTAP assertions, concurrency/property probes, both production images, and all four uncapped-percentage WooCommerce runtime variants.
 - Release run `31681490618` passed the full baseline, twenty-six-migration/1,049-pgTAP database gate, image publication, WooCommerce packaging, and GitHub release publication for `v0.1.0`.
@@ -87,6 +89,7 @@ Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 Wo
 - Release run `31691454507` published the checksummed English-only WooCommerce ZIP and immutable dashboard/worker images for `v0.1.2` after the full release and database gate passed.
 - Live production smoke on 2026-08-13 passed TLS, dashboard readiness, English-only login and legacy-locale fallback with no switcher, Starfiniti SSO entry, unsigned Woo endpoint rejection, public database-port isolation, all eleven Supabase services, both immutable application images, WAL/base backup timers, and off-host physical-backup verification.
 - Live Chrome verification on 2026-08-13 completed Authentik custom OIDC and Supabase PKCE with `/token` HTTP 200, preserved the exact Auth UUID, bootstrapped its audited owner membership, and rendered the Starfiniti / Main Store dashboard through RLS. The dashboard container's split-DNS route and PostgREST `loyalty` schema allowlist were verified live.
+- Final authenticated Chrome verification on 2026-08-13 rendered the deployed Hub-style `v0.1.9` command center from live Starfiniti / Main Store programme, reporting, connector, and audit state with zero browser warnings/errors; both exact-SHA application containers and the public dependency health route were healthy.
 - PR exact-head run `31512548299` passed the baseline and Docker/Supabase database jobs.
 - Public `main` run `31513294330` passed both jobs after merge, including migration replay, seed, pgTAP, and cleanup.
 - PR exact-head run `31527785181` passed both jobs, including replay/reset/seed, all 87 pgTAP assertions, the dynamic ingestion build, and cleanup.
