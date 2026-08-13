@@ -4,13 +4,8 @@ import { join } from "node:path";
 const pluginRoot = "plugins/woocommerce";
 const bootstrap = readFileSync(`${pluginRoot}/starfiniti-loyalty.php`, "utf8");
 const plugin = readFileSync(`${pluginRoot}/src/class-plugin.php`, "utf8");
-const workflow = readFileSync(".github/workflows/ci.yml", "utf8");
 const pot = readFileSync(
   `${pluginRoot}/languages/starfiniti-loyalty.pot`,
-  "utf8",
-);
-const slovenian = readFileSync(
-  `${pluginRoot}/languages/starfiniti-loyalty-sl_SI.l10n.php`,
   "utf8",
 );
 
@@ -28,11 +23,6 @@ for (const required of [
   if (!plugin.includes(required)) {
     throw new Error(`WooCommerce translation bootstrap is missing ${required}`);
   }
-}
-if (!workflow.includes("wp language core install sl_SI")) {
-  throw new Error(
-    "WooCommerce runtime matrix must install the Slovenian core locale before switching languages.",
-  );
 }
 
 function phpFiles(directory) {
@@ -87,57 +77,6 @@ for (const message of potMessages) {
   }
 }
 
-const messagesStart = slovenian.indexOf("    'messages' => [");
-const messagesEnd = slovenian.lastIndexOf("    ],");
-if (messagesStart < 0 || messagesEnd <= messagesStart) {
-  throw new Error("Slovenian PHP translation file has no messages map.");
-}
-const slovenianMessages = new Map();
-const translationEntry =
-  /^\s*'((?:\\.|[^'\\])*)'\s*=>\s*'((?:\\.|[^'\\])*)',\s*$/gmu;
-for (const match of slovenian
-  .slice(messagesStart, messagesEnd)
-  .matchAll(translationEntry)) {
-  slovenianMessages.set(
-    decodePhpSingleQuoted(match[1] ?? ""),
-    decodePhpSingleQuoted(match[2] ?? ""),
-  );
-}
-for (const [message, translation] of slovenianMessages) {
-  if (!sourceMessages.has(message)) {
-    throw new Error(`Slovenian catalog contains stale source text: ${message}`);
-  }
-  if (!translation) {
-    throw new Error(`Slovenian catalog has an empty translation: ${message}`);
-  }
-  const sourcePlaceholders = message.match(/%(?:\d+\$)?[a-z]/giu) ?? [];
-  const translatedPlaceholders = translation.match(/%(?:\d+\$)?[a-z]/giu) ?? [];
-  if (sourcePlaceholders.join("|") !== translatedPlaceholders.join("|")) {
-    throw new Error(`Slovenian placeholders differ for: ${message}`);
-  }
-}
-for (const message of sourceMessages) {
-  if (!slovenianMessages.has(message)) {
-    throw new Error(`Slovenian catalog is missing source text: ${message}`);
-  }
-}
-
-for (const customerMessage of [
-  "Loyalty",
-  "Loyalty rewards",
-  "No active loyalty coupons are available yet.",
-  "Free shipping",
-  "Expires %s",
-  "Enter a reward code in the native coupon field at cart or checkout.",
-  'You have an active loyalty reward. <a href="%s">View your code</a>.',
-]) {
-  if (!slovenianMessages.has(customerMessage)) {
-    throw new Error(
-      `Slovenian catalog is missing customer text: ${customerMessage}`,
-    );
-  }
-}
-
 console.log(
-  `Validated ${sourceMessages.size} WooCommerce source messages, exact POT coverage, and ${slovenianMessages.size} Slovenian translations.`,
+  `Validated ${sourceMessages.size} WooCommerce source messages and exact POT coverage for the English-only launch.`,
 );

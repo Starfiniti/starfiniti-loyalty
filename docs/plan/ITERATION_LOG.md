@@ -342,3 +342,9 @@
 - Accepted ADR-0008: Authentik application entitlement is authentication-only; live Loyalty memberships and RLS remain tenant authority, and mutable OIDC/user metadata grants no role.
 - Production recovery points and a secret-free Authentik blueprint exist. Public signup remains disabled, and tenant bootstrap is explicitly blocked until the owner completes a real SSO flow and the linked custom identity, session, and Supabase UUID are verified.
 - Zero-warning lint, all workspace typechecks, 167 tests, workflow/deployment/architecture/accessibility/WooCommerce validators, both application builds, secret scan, zero-production-vulnerability audit, and licenses pass. Changed parseable files pass targeted Prettier; the repository-wide Windows check retains only the tracked CRLF baseline.
+
+## 2026-08-13 — English-only launch presentation
+
+- Product-owner direction superseded the original bilingual launch requirement. Removed language switchers from merchant, login, customer account, public programme, and experience-editor surfaces; legacy locale queries now canonicalize to English.
+- Limited active customer-copy authoring and rendering to English while retaining historical locale-keyed database rows and contracts for migration compatibility rather than rewriting released migrations.
+- Removed the bundled Slovenian WooCommerce catalog and stopped adding language to signed customer-claim navigation. The standard WordPress text domain and exact source POT remain available for a future explicitly approved localization phase.

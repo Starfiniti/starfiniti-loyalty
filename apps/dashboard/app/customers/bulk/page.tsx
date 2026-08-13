@@ -2,7 +2,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { signOut } from "@/app/actions";
-import { MerchantLocaleSwitcher } from "@/components/merchant-locale-switcher";
 import {
   merchantLocalePath,
   merchantText,
@@ -55,7 +54,6 @@ export default async function BulkCustomerAdjustmentPage({
           <p>{tenant.context.organization.name}</p>
         </div>
         <div className="programme-topbar-actions">
-          <MerchantLocaleSwitcher locale={locale} />
           <nav aria-label={t("Account navigation")}>
             <Link
               className="secondary"

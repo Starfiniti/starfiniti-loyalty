@@ -8,11 +8,6 @@ export const WORKFORCE_SSO_COPY = {
     divider: "Starfiniti team",
     failed: "Starfiniti SSO could not be started. Please try again.",
   },
-  "sl-SI": {
-    button: "Nadaljuj s Starfiniti SSO",
-    divider: "Ekipa Starfiniti",
-    failed: "Prijave Starfiniti SSO ni bilo mogoče začeti. Poskusite znova.",
-  },
 } as const;
 
 function parseCanonicalOrigin(value: string): URL {

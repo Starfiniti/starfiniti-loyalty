@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { signOut } from "@/app/actions";
-import { MerchantLocaleSwitcher } from "@/components/merchant-locale-switcher";
 import {
   merchantLocalePath,
   merchantText,
@@ -58,7 +57,6 @@ export default async function ExperiencePage({
           </p>
         </div>
         <div className="programme-topbar-actions">
-          <MerchantLocaleSwitcher locale={locale} />
           <nav aria-label={t("Account navigation")}>
             <Link
               className="secondary"
@@ -97,7 +95,7 @@ export default async function ExperiencePage({
         {hasPublishedVersion && programme.programme && context.workspace ? (
           <Link
             className="secondary"
-            href={`/loyalty/${context.workspace.public_id}/${programme.programme.id}?lang=${locale}`}
+            href={`/loyalty/${context.workspace.public_id}/${programme.programme.id}`}
             prefetch={false}
             rel="noreferrer"
             target="_blank"

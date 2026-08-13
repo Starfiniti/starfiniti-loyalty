@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { experienceFontStack } from "@/lib/experience-theme";
 import {
@@ -22,38 +21,17 @@ type PageProps = Readonly<{
 }>;
 
 const language = {
-  en: {
-    programme: "Loyalty programme",
-    how: "How it works",
-    howText: "Shop with your store account and eligible orders earn points.",
-    earn: "Ways to earn",
-    earnText: "Complete an eligible purchase",
-    tiers: "Member tiers",
-    from: "From",
-    perEuro: "points per €1",
-    rewardCost: "points",
-    account: "Use your store account to join, see your balance, and redeem.",
-    privacy: "This public page contains no customer or order information.",
-    english: "English",
-    slovenian: "Slovenščina",
-  },
-  "sl-SI": {
-    programme: "Program zvestobe",
-    how: "Kako deluje",
-    howText:
-      "Nakupujte s svojim računom trgovine in za upravičena naročila zbirajte točke.",
-    earn: "Kako zbirate",
-    earnText: "Opravite upravičen nakup",
-    tiers: "Članske stopnje",
-    from: "Od",
-    perEuro: "točk za vsak €1",
-    rewardCost: "točk",
-    account:
-      "Za včlanitev, ogled stanja in unovčenje uporabite račun trgovine.",
-    privacy: "Ta javna stran ne vsebuje podatkov o kupcih ali naročilih.",
-    english: "English",
-    slovenian: "Slovenščina",
-  },
+  programme: "Loyalty programme",
+  how: "How it works",
+  howText: "Shop with your store account and eligible orders earn points.",
+  earn: "Ways to earn",
+  earnText: "Complete an eligible purchase",
+  tiers: "Member tiers",
+  from: "From",
+  perEuro: "points per €1",
+  rewardCost: "points",
+  account: "Use your store account to join, see your balance, and redeem.",
+  privacy: "This public page contains no customer or order information.",
 } as const;
 
 export default async function PublicLoyaltyPage({
@@ -73,14 +51,12 @@ export default async function PublicLoyaltyPage({
   );
   if (!experience) notFound();
 
-  const labels = language[experience.resolvedLocale];
+  const labels = language;
   const style = {
     "--loyalty-brand": experience.brandColor,
     "--loyalty-radius": `${experience.cardRadiusPx}px`,
     "--loyalty-font": experienceFontStack(experience.displayFont),
   } as CSSProperties;
-  const basePath = `/loyalty/${workspaceId}/${programmeId}`;
-
   return (
     <main
       className="public-loyalty-page"
@@ -89,23 +65,6 @@ export default async function PublicLoyaltyPage({
       style={style}
       tabIndex={-1}
     >
-      <nav aria-label="Language" className="public-loyalty-language">
-        <Link
-          aria-current={locale === "en" ? "page" : undefined}
-          href={`${basePath}?lang=en`}
-          prefetch={false}
-        >
-          {labels.english}
-        </Link>
-        <Link
-          aria-current={locale === "sl-SI" ? "page" : undefined}
-          href={`${basePath}?lang=sl-SI`}
-          prefetch={false}
-        >
-          {labels.slovenian}
-        </Link>
-      </nav>
-
       <header className="public-loyalty-hero">
         <p>{labels.programme}</p>
         <h1>{experience.copy.heroText}</h1>

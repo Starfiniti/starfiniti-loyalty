@@ -14,7 +14,6 @@ import type { MerchantOverviewReportV1 } from "@starfiniti/contracts";
 import { useMemo, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { signOut } from "@/app/actions";
-import { MerchantLocaleSwitcher } from "@/components/merchant-locale-switcher";
 import {
   merchantIntlLocale,
   merchantLocalePath,
@@ -206,7 +205,6 @@ export function DashboardOverview({
                 <option value="90">{text("Last 90 days")}</option>
               </select>
             </label>
-            <MerchantLocaleSwitcher locale={locale} />
           </div>
         </header>
 

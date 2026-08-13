@@ -2,9 +2,9 @@
 
 ## Endpoint
 
-`GET /account/loyalty/export?lang=<locale>` returns one versioned JSON attachment for the currently authenticated customer. It is a hosted Next.js route, not a public Supabase Data API endpoint.
+`GET /account/loyalty/export` returns one versioned JSON attachment for the currently authenticated customer. It is a hosted Next.js route, not a public Supabase Data API endpoint.
 
-The route accepts no organization, customer, connection, programme, or wallet selector. Unsupported locale input falls back to English and changes presentation only, never authorization or document scope.
+The route accepts no organization, customer, connection, programme, wallet, or locale selector. Legacy locale input is discarded and never changes authorization or document scope.
 
 ## Authorization flow
 

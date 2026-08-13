@@ -15,11 +15,11 @@ describe("customer export navigation", () => {
     );
   });
 
-  it("preserves Slovenian only in the safe local target", () => {
+  it("drops legacy language selectors from the safe local target", () => {
     const path = customerExportReauthenticationPath("sl-SI");
     expect(path).toContain("reauth=customer-export");
-    expect(path).toContain("next=%2Faccount%2Floyalty%2Fexport%3Flang%3Dsl-SI");
-    expect(path).toContain("lang=sl-SI");
+    expect(path).toContain("next=%2Faccount%2Floyalty%2Fexport");
+    expect(path).not.toContain("lang=");
   });
 
   it("creates a bounded content-disposition filename", () => {

@@ -1,39 +1,26 @@
 export type CustomerLocale = "en" | "sl-SI";
 
 export function resolveCustomerLocale(value: unknown): CustomerLocale {
-  return value === "sl-SI" ? "sl-SI" : "en";
+  void value;
+  return "en";
 }
 
 export function resolveCustomerNavigationLocale(
   explicitLocale: unknown,
   nextPath: unknown,
 ): CustomerLocale {
-  if (resolveCustomerLocale(explicitLocale) === "sl-SI") return "sl-SI";
-  if (
-    typeof nextPath !== "string" ||
-    !nextPath.startsWith("/") ||
-    nextPath.startsWith("//") ||
-    nextPath.includes("\\") ||
-    nextPath.length > 4096
-  ) {
-    return "en";
-  }
-  try {
-    return resolveCustomerLocale(
-      new URL(nextPath, "https://local.invalid").searchParams.get("lang"),
-    );
-  } catch {
-    return "en";
-  }
+  void explicitLocale;
+  void nextPath;
+  return "en";
 }
 
 export function customerLocalePath(
   path: string,
   locale: CustomerLocale,
 ): string {
-  if (locale === "en") return path;
+  void locale;
   const target = new URL(path, "https://local.invalid");
-  target.searchParams.set("lang", "sl-SI");
+  target.searchParams.delete("lang");
   return `${target.pathname}${target.search}${target.hash}`;
 }
 

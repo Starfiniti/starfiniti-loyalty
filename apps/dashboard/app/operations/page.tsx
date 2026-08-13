@@ -2,7 +2,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Activity, PlugZap, ShieldCheck, TriangleAlert } from "lucide-react";
 import { signOut } from "@/app/actions";
-import { MerchantLocaleSwitcher } from "@/components/merchant-locale-switcher";
 import {
   canRetryConnectorEffect,
   CONNECTOR_OPERATION_ISSUE_LIMIT,
@@ -94,7 +93,6 @@ export default async function OperationsPage({
           </p>
         </div>
         <div className="programme-topbar-actions">
-          <MerchantLocaleSwitcher locale={locale} />
           <nav aria-label={t("Account navigation")}>
             <Link
               className="secondary"
