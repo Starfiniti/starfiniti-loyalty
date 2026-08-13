@@ -785,14 +785,14 @@ tasks:
           - automatic upgrade grace downgrade and re-entry preserve one current membership and append-only history
           - direct database calls cannot forge tenant customer wallet metric or tier authority
       - id: M05-S03-BENEFITS-AND-OVERRIDES
-        status: in_progress
+        status: completed
         acceptance:
           - tier earning multipliers reward access free shipping early access and custom perks have executable or explicitly manual fulfilment paths
           - expiring manual overrides require owner or admin authority reason and immutable audit evidence
           - automatic qualification retains its independently verified underlying tier while an active override pins only effective membership
           - browser and worker roles cannot bypass benefit publication award multiplier or raw membership decision boundaries
       - id: M05-S04-EXPIRY-POLICY
-        status: planned
+        status: in_progress
         acceptance:
           - expiry policy authoring preview notification schedule and liability impact use immutable lots and exact dates
           - expiry refund restoration and notification retries preserve original attribution and create one effect

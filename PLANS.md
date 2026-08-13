@@ -8,7 +8,7 @@ Deliver the enterprise WooCommerce roadmap in `docs/plan/ENTERPRISE_ROADMAP.md` 
 
 M05 — advanced VIP qualification, benefits, expiry, and member progression. M00, M02, and M03 are complete; M01 remains active at its approved-real-store and full-service-recovery external gates, while M04-S04 remains at browser/deployment/canary/reconciliation closeout.
 
-M05-S01 and S02 are exact-head green: strict policy contracts, event-time qualification, immutable facts, original-time refund compensation, worker integration, and independently verified automatic membership history passed clean replay and the complete runtime matrix. M05-S03 locally adds executable tier multipliers, fulfilment-bound benefit rewards, expiring reason-bound owner/admin overrides, continued underlying automatic qualification, and exactly-once expiry; exact-head database CI is the next gate.
+M05-S01 through S03 are exact-head green: strict policy contracts, event-time qualification, immutable facts, original-time refund compensation, executable tier multipliers, fulfilment-bound benefit rewards, expiring reason-bound owner/admin overrides, continued underlying automatic qualification, and exactly-once override expiry passed clean replay and the complete runtime matrix. M05-S04 point-expiry policy and lifecycle automation are now active.
 
 The active integrated baseline is released production commit `0ced4b666a55d836bd3d4927337fe057a71bb4ba` (`v0.1.11`). The previous local Phase 4 branch and its six modified planning files remain preserved in a named git stash and have not been mixed into this work.
 
@@ -35,7 +35,7 @@ The active integrated baseline is released production commit `0ced4b666a55d836bd
 
 ## Next safe work
 
-1. M05: finish exact-head benefits/override verification, then deliver expiry policy, progression experiences, shadow comparison, disabled deployment, canary reconciliation, and score.
+1. M05: deliver expiry policy/lifecycle automation, progression experiences, shadow comparison, disabled deployment, canary reconciliation, and score.
 2. M01: connect an approved real WooCommerce store when access is supplied and complete its value, outage, rotation, alert, and clean-room recovery gate.
 3. Close M04 browser/deployment/canary evidence without weakening accepted manual fulfilment, then deliver M06–M16 sequentially in versioned vertical slices.
 
