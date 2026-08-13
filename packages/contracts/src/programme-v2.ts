@@ -5,6 +5,7 @@ import {
   programmeTierDefinitionV1,
 } from "./programme";
 import { programmeRewardDefinitionV2 } from "./reward-v2";
+import { tierPolicyV2 } from "./tier-policy-v2";
 
 const code = z.string().regex(/^[a-z][a-z0-9_-]{0,79}$/u);
 const POSTGRES_BIGINT_MAX = 9_223_372_036_854_775_807n;
@@ -257,6 +258,7 @@ export const programmeDefinitionV2 = z
     pendingDays: z.number().int().min(0).max(365),
     pointsExpireAfterDays: z.number().int().min(1).max(3650),
     tiers: z.array(programmeTierDefinitionV1).min(1),
+    tierPolicy: tierPolicyV2.optional(),
     rewards: z
       .array(
         z.union([
@@ -319,6 +321,42 @@ export const programmeDefinitionV2 = z
         });
       }
     });
+
+    if (definition.tierPolicy) {
+      const policyCodes = definition.tierPolicy.levels.map(
+        (level) => level.tierCode,
+      );
+      const tierCodes = definition.tiers.map((tier) => tier.code);
+      if (
+        policyCodes.length !== tierCodes.length ||
+        policyCodes.some((policyCode, index) => policyCode !== tierCodes[index])
+      ) {
+        context.addIssue({
+          code: "custom",
+          message:
+            "Advanced tier policy levels must match the ordered programme tiers",
+          path: ["tierPolicy", "levels"],
+        });
+      }
+      definition.tierPolicy.levels.forEach((level, levelIndex) => {
+        level.benefits.rewardCodes.forEach((rewardCode, rewardIndex) => {
+          if (!rewardCodes.has(rewardCode)) {
+            context.addIssue({
+              code: "custom",
+              message: `Unknown tier benefit reward code: ${rewardCode}`,
+              path: [
+                "tierPolicy",
+                "levels",
+                levelIndex,
+                "benefits",
+                "rewardCodes",
+                rewardIndex,
+              ],
+            });
+          }
+        });
+      });
+    }
 
     const legacyTierSurface = programmeDefinitionV1.safeParse({
       version: "1",

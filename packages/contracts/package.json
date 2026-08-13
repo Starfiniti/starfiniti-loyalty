@@ -6,7 +6,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./programme-v2": "./src/programme-v2.ts"
+    "./programme-v2": "./src/programme-v2.ts",
+    "./tier-policy-v2": "./src/tier-policy-v2.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

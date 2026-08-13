@@ -739,7 +739,7 @@ tasks:
   - id: M05-VIP-AND-EXPIRY
     title: Deliver advanced VIP qualification, expiry, and member progression
     module: M05
-    status: planned
+    status: in_progress
     dependencies: [M04-REWARDS-AND-FULFILMENT]
     hypothesis: Auditable qualification periods and progress increase retention while preserving equivalent Rose/Bloom/Icon outcomes.
     baseline: Lifetime eligible spend, basic tiers/grace/history, and expiry primitives exist.
@@ -770,8 +770,45 @@ tasks:
         migration comparison,
         browser previews,
       ]
+    slices:
+      - id: M05-S01-TIER-POLICY
+        status: in_progress
+        acceptance:
+          - ProgrammeDefinitionV2 optionally carries a strict versioned advanced tier policy without reinterpreting existing V1 or V2 definitions
+          - lifetime rolling-day and IANA-timezone calendar-year windows evaluate spend points orders referrals and verified actions using exact integer facts
+          - AND and OR entry retention and re-entry thresholds produce deterministic explanation and progress evidence
+          - Rose Bloom and Icon migrate to an outcome-identical rolling policy with the retained 30-day downgrade grace
+      - id: M05-S02-LIVE-QUALIFICATION
+        status: planned
+        acceptance:
+          - immutable event-time qualification facts and serialized decisions cover awards refunds late events and verified activities
+          - automatic upgrade grace downgrade and re-entry preserve one current membership and append-only history
+          - direct database calls cannot forge tenant customer wallet metric or tier authority
+      - id: M05-S03-BENEFITS-AND-OVERRIDES
+        status: planned
+        acceptance:
+          - tier earning multipliers reward access free shipping early access and custom perks have executable or explicitly manual fulfilment paths
+          - expiring manual overrides require owner or admin authority reason and immutable audit evidence
+      - id: M05-S04-EXPIRY-POLICY
+        status: planned
+        acceptance:
+          - expiry policy authoring preview notification schedule and liability impact use immutable lots and exact dates
+          - expiry refund restoration and notification retries preserve original attribution and create one effect
+      - id: M05-S05-PROGRESSION-EXPERIENCE
+        status: planned
+        acceptance:
+          - merchant policy builder simulator member progress history next milestone and tier performance pass responsive accessibility review
+          - customer progress distinguishes qualification metrics available points retention and expiry
+      - id: M05-S06-CANARY-AND-CLOSE
+        status: planned
+        acceptance:
+          - shadow comparison exact-head CI disabled deployment Starfiniti canary reconciliation and score at least 90 pass
     risks: [R-002, R-020]
-    docs: [docs/api/PROGRAMME_ENGINE.md]
+    docs:
+      [
+        docs/api/PROGRAMME_ENGINE.md,
+        docs/architecture/ADR/0014-event-time-tier-qualification.md,
+      ]
     evidence: [docs/plan/evidence/M05/README.md]
 
   - id: M06-REFERRALS
