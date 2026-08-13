@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(40);
+select plan(42);
 
 select has_column(
   'loyalty', 'commerce_connections', 'programme_id',
@@ -258,6 +258,43 @@ select results_eq(
      where display_reference is not null $$,
   array[0::bigint],
   'channel identity resolution stores no email or display PII'
+);
+
+insert into effect_receipts
+select 3, accepted.receipt_id
+from loyalty_private.accept_commerce_delivery(
+  (select id from loyalty.organizations where slug = 'effect-one'),
+  (select id from loyalty.commerce_connections where external_store_id = 'effect-one-store'),
+  'effect-delivery-3', '1', 'customer:7:created', 'commerce.customer.created',
+  '7', '1', now(), now(), 'v1', 'effect-nonce-3', repeat('c', 64),
+  '{"version":"1","payload":{"kind":"customer_created","externalCustomerId":"7"}}'::jsonb
+) as accepted;
+insert into effect_receipts
+select 4, accepted.receipt_id
+from loyalty_private.accept_commerce_delivery(
+  (select id from loyalty.organizations where slug = 'effect-one'),
+  (select id from loyalty.commerce_connections where external_store_id = 'effect-one-store'),
+  'effect-delivery-4', '1', 'review:101:verified', 'commerce.review.verified',
+  '101', '1', now(), now(), 'v1', 'effect-nonce-4', repeat('d', 64),
+  '{"version":"1","payload":{"kind":"verified_product_review","externalCustomerId":"7","reviewId":"101","productId":"42","categoryIds":["8"]}}'::jsonb
+) as accepted;
+select * from loyalty_private.normalize_commerce_delivery(
+  (select receipt_id from effect_receipts where event_number = 3), 'v1'
+);
+select * from loyalty_private.normalize_commerce_delivery(
+  (select receipt_id from effect_receipts where event_number = 4), 'v1'
+);
+create temporary table activity_claim as
+select * from loyalty_private.claim_woocommerce_effects('activity-worker', 10, 60);
+select results_eq(
+  $$ select event_type from activity_claim order by canonical_event_id $$,
+  array['commerce.customer.created'::text, 'commerce.review.verified'::text],
+  'account and verified-review activity events enter the effect queue'
+);
+select results_eq(
+  $$ select count(*)::bigint from activity_claim where payload ? 'email' or payload ? 'content' $$,
+  array[0::bigint],
+  'claimed activity facts contain no customer contact or review content'
 );
 
 select ok(

@@ -3,10 +3,12 @@ import { z } from "zod";
 export * from "./woocommerce";
 export * from "./ledger";
 export * from "./programme";
+export * from "./programme-v2";
 export * from "./reporting";
 export * from "./experience";
 export * from "./customer-export";
 export * from "./entitlements";
+export * from "./activity";
 
 export const commerceEnvelopeV1 = z.object({
   version: z.literal("1"),

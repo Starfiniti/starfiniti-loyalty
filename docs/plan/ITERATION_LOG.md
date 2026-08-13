@@ -1,5 +1,13 @@
 # Iteration Log
 
+## 2026-08-13 — M03 authoritative activity sources
+
+- Extended the strict V2 rule contract with activity-code selectors and verified-review product/category conditions; the shared pure evaluator now proves source-specific matching and exact member caps.
+- Added PII-free WooCommerce account-created and verified product-review events, queue claiming, public worker evaluation, connector validation, and real runtime smoke assertions without introducing a synchronous hub dependency.
+- Added a separate-purpose signed Merchant Activity API with a streaming 64 KiB cap, exact raw-body HMAC, timestamp/nonce/key-version replay controls, public customer selectors, one audited source per workspace, and one-time secret packaging.
+- Reused the canonical delivery/effect pipeline instead of creating a parallel value path. PostgreSQL derives tenant/programme scope and the worker commits evaluation, cap usage, and immutable ledger value atomically.
+- Reviewed current official Supabase database-function/RLS, PostgreSQL locking, and WooCommerce webhook/review verification guidance; ADR-0012 records alternatives, security effects, rollout, and rollback.
+
 ## 2026-08-13 — M01 production and pilot reconstruction
 
 - Connected read-only through the approved Proxmox host to application VM 970 and Supabase VM 971. Exact `v0.1.10` dashboard/worker images and all eleven Supabase containers are healthy; public health/login pass TLS and unsigned WooCommerce ingress fails with 401.
@@ -396,3 +404,11 @@
 - Exact-head run `31723413178` passed baseline, both containers, migration replay, all 1,095 pgTAP assertions, concurrency/property probes, and all four WooCommerce runtime cells.
 - PRs #22–#24 merged sequentially. Production took a new physical base backup, applied the exact v27 migration, entered managed mode, enabled only the Starfiniti `programme.v2` canary, retained all 6/6 protected paths, kept billing/provider mapping inactive, and passed WAL/readiness/unauthorized-ingress smoke.
 - M02 closes at 93/100 with every category at or above 80%. Product readiness rises from 49/100 to 51/100; M03 is next while the M01 real-store gate remains externally pending.
+
+## 2026-08-13 — M03 competitive earning rules
+
+- Added the strict `ProgrammeDefinitionV2` contract and shared exact-bigint evaluator with explicit exclusions, base/multiplier/bonus precedence, per-event/member caps, immutable explanations, and V1 compatibility.
+- Extended WooCommerce with PII-free account-created and verified-review facts, then added a purpose-bound signed Merchant Activity API for birthday, referral, and custom authoritative activity without browser-supplied value authority.
+- Added database-authoritative entitlement, publication validation, immutable rule materialization, serialized cap accounting, atomic evaluation/ledger commit, exact retries, and source provisioning with one-time external signing material.
+- Replaced the old tier-rate-only Earning Rules view with a Hub-style V2 rule catalogue, allowlisted condition/exclusion/cap builder, conflict warnings, migration review, and the exact shared live simulator.
+- Local lint, typechecks, focused/full tests, validators, production build, and desktop/mobile browser interactions pass. Exact-head Docker database replay and the managed pilot canary remain the closure gates.

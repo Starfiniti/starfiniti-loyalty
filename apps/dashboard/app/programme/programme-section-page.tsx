@@ -7,8 +7,11 @@ import {
   merchantText,
   resolveMerchantLocale,
 } from "@/lib/merchant-locale";
+import { hasEntitlement } from "@/lib/entitlements";
+import { getEntitlementSnapshot } from "@/lib/server/entitlements";
 import { getMerchantProgrammeState } from "@/lib/server/programme";
 import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
+import { EarningRulesEditor } from "./earning-rules-editor";
 import { ProgrammeEditor, type ProgrammeEditorMode } from "./programme-editor";
 
 const sectionCopy: Record<
@@ -19,7 +22,7 @@ const sectionCopy: Record<
     title: "Earning rules",
     eyebrow: "How members earn",
     description:
-      "Set clear purchase earning rates for every VIP tier and preview the exact points awarded on an example order.",
+      "Build purchase rates, multipliers, fixed bonuses, lifecycle activities, eligibility conditions, exclusions, and hard value caps.",
   },
   rewards: {
     title: "Rewards catalogue",
@@ -61,6 +64,13 @@ export async function ProgrammeSectionPage({
     );
   }
   if (tenant.kind === "unassigned") redirect(merchantLocalePath("/", locale));
+
+  if (mode === "earning") {
+    const entitlements = await getEntitlementSnapshot(tenant.context);
+    if (!hasEntitlement(entitlements, "programme.v2")) {
+      redirect(merchantLocalePath("/programme", locale));
+    }
+  }
 
   const state = await getMerchantProgrammeState(tenant.context);
   if (!state.programme) redirect(merchantLocalePath("/programme", locale));
@@ -114,14 +124,24 @@ export async function ProgrammeSectionPage({
           </div>
         </div>
 
-        <ProgrammeEditor
-          canEdit={canEdit}
-          initialConfiguration={baseline?.configuration}
-          locale={locale}
-          mode={mode}
-          operationId={crypto.randomUUID()}
-          programmeId={state.programme.id}
-        />
+        {mode === "earning" ? (
+          <EarningRulesEditor
+            canEdit={canEdit}
+            initialConfiguration={baseline?.configuration}
+            operationId={crypto.randomUUID()}
+            programmeId={state.programme.id}
+            simulationOccurredAt={new Date().toISOString()}
+          />
+        ) : (
+          <ProgrammeEditor
+            canEdit={canEdit}
+            initialConfiguration={baseline?.configuration}
+            locale={locale}
+            mode={mode}
+            operationId={crypto.randomUUID()}
+            programmeId={state.programme.id}
+          />
+        )}
       </main>
     </MerchantShell>
   );

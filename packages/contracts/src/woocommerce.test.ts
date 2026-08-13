@@ -10,6 +10,7 @@ import {
   verifyWooCommerceCustomerClaim,
   verifyWooCommerceDelivery,
   wooCommerceCustomerClaimV1,
+  wooCommerceCustomerCreatedPayloadV1,
   wooCommerceCustomerDeletedPayloadV1,
   wooCommerceCouponCapturedPayloadV1,
   wooCommerceCouponCommandEnvelopeV1,
@@ -18,6 +19,7 @@ import {
   wooCommerceDeliveryEnvelopeV1,
   wooCommerceOrderRefundedPayloadV1,
   wooCommerceOrderStatusChangedPayloadV1,
+  wooCommerceVerifiedProductReviewPayloadV1,
   wooCommerceConnectionPackageV1,
 } from "./woocommerce";
 
@@ -346,6 +348,18 @@ describe("WooCommerce commerce facts", () => {
         order,
       }).success,
     ).toBe(false);
+    expect(
+      wooCommerceOrderRefundedPayloadV1.safeParse({
+        kind: "order_refunded",
+        refundId: "9",
+        refundAmount: "6.00",
+        order: {
+          ...order,
+          shippingRefundedTotal: "5.00",
+          refundedTotal: "7.50",
+        },
+      }).success,
+    ).toBe(false);
   });
 
   it("accepts a PII-free coupon capture fact and rejects extra fields", () => {
@@ -383,6 +397,34 @@ describe("WooCommerce commerce facts", () => {
       wooCommerceCustomerDeletedPayloadV1.safeParse({
         kind: "customer_deleted",
         externalCustomerId: "guest@example.test",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("accepts PII-free authoritative account and verified-review facts", () => {
+    expect(
+      wooCommerceCustomerCreatedPayloadV1.safeParse({
+        kind: "customer_created",
+        externalCustomerId: "7",
+      }).success,
+    ).toBe(true);
+    expect(
+      wooCommerceVerifiedProductReviewPayloadV1.safeParse({
+        kind: "verified_product_review",
+        externalCustomerId: "7",
+        reviewId: "91",
+        productId: "10",
+        categoryIds: ["3"],
+      }).success,
+    ).toBe(true);
+    expect(
+      wooCommerceVerifiedProductReviewPayloadV1.safeParse({
+        kind: "verified_product_review",
+        externalCustomerId: "7",
+        reviewId: "91",
+        productId: "10",
+        categoryIds: ["3"],
+        email: "customer@example.test",
       }).success,
     ).toBe(false);
   });

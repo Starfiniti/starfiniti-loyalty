@@ -48,6 +48,23 @@ $customerId = wc_create_new_customer(
     wp_generate_password(24, true)
 );
 starfiniti_runtime_assert(! is_wp_error($customerId), 'WooCommerce customer fixture is created');
+$customerCreatedRows = (array) $wpdb->get_results($wpdb->prepare(
+    "SELECT event_key,event_payload FROM {$outboxTable} WHERE event_type = %s AND source_object_id = %s",
+    'commerce.customer.created',
+    (string) $customerId
+), ARRAY_A);
+$customerCreatedPayload = isset($customerCreatedRows[0]['event_payload'])
+    ? json_decode((string) $customerCreatedRows[0]['event_payload'], true)
+    : null;
+starfiniti_runtime_assert(
+    count($customerCreatedRows) === 1
+    && ($customerCreatedRows[0]['event_key'] ?? null) === 'customer:' . $customerId . ':created'
+    && is_array($customerCreatedPayload)
+    && ($customerCreatedPayload['kind'] ?? null) === 'customer_created'
+    && ($customerCreatedPayload['externalCustomerId'] ?? null) === (string) $customerId
+    && ! array_key_exists('email', $customerCreatedPayload),
+    'account creation queues one PII-free authoritative earning fact'
+);
 
 $product = new WC_Product_Simple();
 $product->set_name('Starfiniti runtime smoke product');
@@ -283,6 +300,39 @@ starfiniti_runtime_assert(
     'completed order round-trips through WooCommerce CRUD getters'
 );
 
+$reviewId = wp_insert_comment([
+    'comment_post_ID' => $productId,
+    'comment_author' => 'Runtime customer',
+    'comment_author_email' => 'runtime-smoke@example.test',
+    'comment_content' => 'Runtime verified review content must remain local.',
+    'comment_type' => 'review',
+    'comment_approved' => 0,
+    'user_id' => $customerId,
+]);
+starfiniti_runtime_assert($reviewId > 0, 'pending product review fixture is created');
+add_comment_meta($reviewId, 'verified', '1', true);
+wp_set_comment_status($reviewId, 'approve');
+$reviewRows = (array) $wpdb->get_results($wpdb->prepare(
+    "SELECT event_key,event_payload FROM {$outboxTable} WHERE event_type = %s AND source_object_id = %s",
+    'commerce.review.verified',
+    (string) $reviewId
+), ARRAY_A);
+$reviewPayload = isset($reviewRows[0]['event_payload'])
+    ? json_decode((string) $reviewRows[0]['event_payload'], true)
+    : null;
+starfiniti_runtime_assert(
+    count($reviewRows) === 1
+    && ($reviewRows[0]['event_key'] ?? null) === 'review:' . $reviewId . ':verified'
+    && is_array($reviewPayload)
+    && ($reviewPayload['kind'] ?? null) === 'verified_product_review'
+    && ($reviewPayload['externalCustomerId'] ?? null) === (string) $customerId
+    && ($reviewPayload['reviewId'] ?? null) === (string) $reviewId
+    && ($reviewPayload['productId'] ?? null) === (string) $productId
+    && ! array_key_exists('email', $reviewPayload)
+    && ! array_key_exists('content', $reviewPayload),
+    'verified review queues one PII-free product-scoped earning fact'
+);
+
 $captureRows = (int) $wpdb->get_var($wpdb->prepare(
     "SELECT COUNT(*) FROM {$outboxTable} WHERE event_type = %s AND source_object_id = %s",
     'commerce.coupon.captured',
@@ -341,8 +391,11 @@ $refundPayloads = (string) $wpdb->get_var($wpdb->prepare(
     (string) $orderId
 ));
 starfiniti_runtime_assert(
-    ! str_contains($refundPayloads, 'runtime-smoke@example.test'),
-    'refund source facts are PII-free'
+    ! str_contains($refundPayloads, 'runtime-smoke@example.test')
+    && str_contains($refundPayloads, 'shippingRefundedTotal')
+    && str_contains($refundPayloads, 'taxRefundedTotal')
+    && str_contains($refundPayloads, 'feeRefundedTotal'),
+    'refund source facts are PII-free and retain cumulative component evidence'
 );
 $cancel = $execute->invoke(null, [
     'version' => '1',
@@ -458,8 +511,10 @@ starfiniti_runtime_assert(
 starfiniti_runtime_assert(
     has_action('woocommerce_before_cart', ['Starfiniti\\Loyalty\\Plugin', 'renderCartNotice']) !== false
     && has_filter('woocommerce_coupon_is_valid', [Commands::class, 'validateCustomer']) !== false
+    && has_action('woocommerce_created_customer', [Outbox::class, 'captureCustomerCreation']) !== false
+    && has_action('transition_comment_status', [Outbox::class, 'captureReviewVerification']) !== false
     && has_action('delete_user', [Outbox::class, 'captureCustomerDeletion']) !== false,
-    'storefront, customer-scope, and privacy lifecycle hooks are registered'
+    'storefront, customer-scope, activity, and privacy lifecycle hooks are registered'
 );
 
 fwrite(STDOUT, sprintf(

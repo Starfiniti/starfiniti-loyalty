@@ -1,6 +1,7 @@
 "use server";
 
 import {
+  merchantProvisionActivitySourceCommandV1,
   merchantProvisionWooCommerceConnectionCommandV1,
   merchantRequestConnectorReconciliationCommandV1,
   merchantRequestConnectorReconciliationResultV1,
@@ -9,11 +10,16 @@ import {
 } from "@starfiniti/contracts";
 import { revalidatePath } from "next/cache";
 import {
+  merchantActivityEventEndpoint,
+  serializeMerchantActivitySourcePackage,
+} from "@/lib/activity-source-provisioning";
+import {
   serializeWooCommerceConnectionPackage,
   wooCommerceEventEndpoint,
 } from "@/lib/connector-provisioning";
 import { merchantText, resolveMerchantLocale } from "@/lib/merchant-locale";
 import { provisionWooCommerceConnection } from "@/lib/server/connector-provisioning";
+import { provisionMerchantActivitySource } from "@/lib/server/activity-source-provisioning";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type ConnectorActionState = Readonly<{
@@ -28,8 +34,109 @@ export type ConnectorProvisioningState = Readonly<{
   connectionId: string | null;
 }>;
 
+export type ActivitySourceProvisioningState = Readonly<{
+  kind: "idle" | "success" | "error";
+  message: string;
+  setupCode: string | null;
+  sourceId: string | null;
+}>;
+
 const UUID_V4 =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
+
+export async function provisionActivitySource(
+  _previousState: ActivitySourceProvisioningState,
+  formData: FormData,
+): Promise<ActivitySourceProvisioningState> {
+  const locale = resolveMerchantLocale(formData.get("lang"));
+  const failure = (message: string): ActivitySourceProvisioningState => ({
+    kind: "error",
+    message: merchantText(locale, message),
+    setupCode: null,
+    sourceId: null,
+  });
+  if (formData.get("confirmation") !== "provision") {
+    return failure("Review and confirm the Merchant Activity source.");
+  }
+  const operationId = String(formData.get("operationId") ?? "");
+  if (!UUID_V4.test(operationId)) {
+    return failure("The provisioning identity is invalid. Refresh and retry.");
+  }
+  const command = merchantProvisionActivitySourceCommandV1.safeParse({
+    version: "1",
+    workspaceId: formData.get("workspaceId"),
+    programmeId: formData.get("programmeId"),
+    displayName: formData.get("displayName"),
+    idempotencyKey: `source:merchant-activity:provision:${operationId}`,
+    correlationId: crypto.randomUUID(),
+  });
+  if (!command.success) {
+    return failure("Enter a single-line source name.");
+  }
+  const publicOrigin = process.env.DASHBOARD_PUBLIC_ORIGIN;
+  if (!publicOrigin) {
+    return failure(
+      "The public hub origin is not configured. No source was created.",
+    );
+  }
+  let endpoint: string;
+  try {
+    endpoint = merchantActivityEventEndpoint(publicOrigin);
+  } catch {
+    return failure(
+      "The public hub origin is not a canonical HTTPS origin. No source was created.",
+    );
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const claims = await supabase.auth.getClaims();
+  const actorUserId = claims.data?.claims?.sub;
+  if (claims.error || typeof actorUserId !== "string") {
+    return failure("Your verified session expired. Sign in and retry.");
+  }
+  try {
+    const provisioned = await provisionMerchantActivitySource(
+      actorUserId,
+      command.data,
+      endpoint,
+    );
+    return {
+      kind: "success",
+      message: merchantText(
+        locale,
+        provisioned.result.outcome === "duplicate"
+          ? "This exact activity source was already provisioned. Use the recovered setup code below."
+          : "Activity source provisioned. Copy the setup code now; it is hidden after leaving this page.",
+      ),
+      setupCode: serializeMerchantActivitySourcePackage(
+        provisioned.sourcePackage,
+      ),
+      sourceId: provisioned.result.resourceId,
+    };
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message === "signing_material_pool_exhausted"
+    ) {
+      return failure(
+        "No unused signing key is available. An operator must replenish the signing-key pool.",
+      );
+    }
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      error.code === "42501"
+    ) {
+      return failure(
+        "A live owner/admin, active workspace, and published V2 programme are required.",
+      );
+    }
+    return failure(
+      "This workspace already has an activity source, or provisioning changed concurrently.",
+    );
+  }
+}
 
 export async function provisionConnector(
   _previousState: ConnectorProvisioningState,

@@ -597,7 +597,7 @@ tasks:
   - id: M03-EARNING-RULES
     title: Deliver ProgrammeDefinitionV2 and competitive earning rules
     module: M03
-    status: planned
+    status: in_progress
     dependencies: [M02-ENTITLEMENTS-AND-FLAGS]
     hypothesis: Versioned conditional earning with explicit precedence and traces expands merchant value without changing historical V1 results.
     baseline: V1 supports tier-based eligible purchase earning only.
@@ -632,8 +632,27 @@ tasks:
         compatibility replay,
       ]
     risks: [R-001, R-002, R-030]
-    docs: [docs/api/PROGRAMME_ENGINE.md, docs/integrations/MERCHANT_API.md]
-    evidence: [docs/plan/evidence/M03/README.md]
+    docs:
+      [
+        docs/api/PROGRAMME_ENGINE.md,
+        docs/integrations/MERCHANT_API.md,
+        docs/architecture/ADR/0011-versioned-earning-rules-and-authoritative-cap-accounting.md,
+        docs/architecture/ADR/0012-purpose-bound-merchant-activity-ingestion.md,
+      ]
+    evidence:
+      - docs/plan/evidence/M03/README.md
+      - ProgrammeDefinitionV2 contract and exact bigint pure evaluator tests pass
+      - additive V2 entitlement publication and immutable materialization migration is under exact-head database verification
+      - serialized member-cap accounting atomically appends evaluation per-rule usage and ledger evidence with exact-retry exclusion
+      - the WooCommerce worker evaluates V2 through the shared engine and preserves exact cumulative line and component refund evidence while V1 remains unchanged
+      - WooCommerce account creation and verified product review hooks emit strict PII-free facts and all four minimum/current HPOS/legacy runtime gates exercise the connector lifecycle
+      - the purpose-bound Merchant Activity API streams at most 65536 bytes, accepts only strict signed server facts, derives customer and programme authority, and reuses canonical replay/effect evidence
+      - tenant owner/admin source provisioning consumes one unique external signing reference and exposes one exact nonrecoverable setup package while browser grants omit secrets and raw deliveries
+      - ADR-0012 records the shared canonical-ingestion decision, rejected browser authority, canary rollout, and value-preserving rollback
+      - the Hub-style Earning Rules route directly authors the strict V2 contract through seven reviewed templates source-safe conditions and exclusions hard caps conflict diagnostics and immutable save review
+      - the browser simulator imports the exact worker evaluator; desktop and mobile Playwright added a birthday rule and reproduced 250 points with no overflow or console error
+      - V1 migration copies tiers and rewards but explicitly warns when different legacy tier rates would become one programme-wide V2 base rate before publication
+      - exact-head CI run 31735847075 passed baseline, images, four WooCommerce runtimes, 29 pgTAP files with 1200 assertions, and the ledger/programme concurrency-property probe
 
   - id: M04-REWARDS-AND-FULFILMENT
     title: Expand native rewards and audited manual fulfilment

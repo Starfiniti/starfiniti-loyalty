@@ -64,8 +64,10 @@ export const canonicalCommerceEventTypes = [
   "commerce.order.status_changed",
   "commerce.order.refunded",
   "commerce.customer.upserted",
+  "commerce.customer.created",
   "commerce.customer.deleted",
   "commerce.product.upserted",
+  "commerce.review.verified",
   "commerce.connection.rotated",
   "commerce.connection.disabled",
   "commerce.coupon.issued",
@@ -220,8 +222,11 @@ export const wooCommerceOrderFactV1 = z
     paymentKind: z.enum(["money", "gift-card", "store-credit"]),
     lines: z.array(wooCommerceOrderLineV1),
     shippingTotal: wooCommerceDecimal,
+    shippingRefundedTotal: wooCommerceDecimal.default("0"),
     taxTotal: wooCommerceDecimal,
+    taxRefundedTotal: wooCommerceDecimal.default("0"),
     feeTotal: wooCommerceDecimal,
+    feeRefundedTotal: wooCommerceDecimal.default("0"),
     discountTotal: wooCommerceDecimal,
     refundedTotal: wooCommerceDecimal,
   })
@@ -230,8 +235,11 @@ export const wooCommerceOrderFactV1 = z
     let lineRefundTotal = 0n;
     const orderAmounts = [
       "shippingTotal",
+      "shippingRefundedTotal",
       "taxTotal",
+      "taxRefundedTotal",
       "feeTotal",
+      "feeRefundedTotal",
       "discountTotal",
       "refundedTotal",
     ] as const;
@@ -287,10 +295,40 @@ export const wooCommerceOrderFactV1 = z
       order.refundedTotal,
       order.currencyMinorUnitDigits,
     );
-    if (orderRefundTotal !== null && lineRefundTotal > orderRefundTotal) {
+    const componentPairs = [
+      ["shippingTotal", "shippingRefundedTotal"],
+      ["taxTotal", "taxRefundedTotal"],
+      ["feeTotal", "feeRefundedTotal"],
+    ] as const;
+    let componentRefundTotal = 0n;
+    for (const [totalField, refundedField] of componentPairs) {
+      const total = scaledBigIntOrNull(
+        order[totalField],
+        order.currencyMinorUnitDigits,
+      );
+      const refunded = scaledBigIntOrNull(
+        order[refundedField],
+        order.currencyMinorUnitDigits,
+      );
+      if (total !== null && refunded !== null) {
+        componentRefundTotal += refunded;
+        if (refunded > total) {
+          context.addIssue({
+            code: "custom",
+            message: "Component refund cannot exceed its original amount",
+            path: [refundedField],
+          });
+        }
+      }
+    }
+    if (
+      orderRefundTotal !== null &&
+      lineRefundTotal + componentRefundTotal > orderRefundTotal
+    ) {
       context.addIssue({
         code: "custom",
-        message: "Line refunds cannot exceed the cumulative order refund",
+        message:
+          "Line and component refunds cannot exceed the cumulative order refund",
         path: ["refundedTotal"],
       });
     }
@@ -342,10 +380,29 @@ export const wooCommerceCouponCapturedPayloadV1 = z
   })
   .strict();
 
+const wooCommerceNumericId = z.string().regex(/^[1-9][0-9]{0,19}$/u);
+
+export const wooCommerceCustomerCreatedPayloadV1 = z
+  .object({
+    kind: z.literal("customer_created"),
+    externalCustomerId: wooCommerceNumericId,
+  })
+  .strict();
+
+export const wooCommerceVerifiedProductReviewPayloadV1 = z
+  .object({
+    kind: z.literal("verified_product_review"),
+    externalCustomerId: wooCommerceNumericId,
+    reviewId: wooCommerceNumericId,
+    productId: wooCommerceNumericId,
+    categoryIds: z.array(wooCommerceNumericId).max(100),
+  })
+  .strict();
+
 export const wooCommerceCustomerDeletedPayloadV1 = z
   .object({
     kind: z.literal("customer_deleted"),
-    externalCustomerId: z.string().regex(/^[1-9][0-9]{0,19}$/u),
+    externalCustomerId: wooCommerceNumericId,
   })
   .strict();
 
@@ -405,6 +462,12 @@ export type WooCommerceOrderRefundedPayloadV1 = z.infer<
 >;
 export type WooCommerceCouponCapturedPayloadV1 = z.infer<
   typeof wooCommerceCouponCapturedPayloadV1
+>;
+export type WooCommerceCustomerCreatedPayloadV1 = z.infer<
+  typeof wooCommerceCustomerCreatedPayloadV1
+>;
+export type WooCommerceVerifiedProductReviewPayloadV1 = z.infer<
+  typeof wooCommerceVerifiedProductReviewPayloadV1
 >;
 
 const wooCommerceCouponIssuePayloadV1 = z

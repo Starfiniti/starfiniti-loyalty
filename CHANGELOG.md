@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added `ProgrammeDefinitionV2` competitive earning rules with six sources, explicit precedence/exclusions, exact event/member caps, immutable explanation evidence, signed WooCommerce/Merchant Activity ingestion, and atomic ledger commit while retaining V1 evaluation.
+- Rebuilt Earning Rules as a Hub-style rule catalogue and source-safe condition/cap builder with deterministic conflict diagnostics, V1 migration review, and the same evaluator for merchant simulation and worker execution.
+
 - Added self-hosted and managed deployment modes, a versioned 18-capability entitlement catalogue, exact tenant limits, deterministic percentage rollout, explicit tenant canaries, and private externally configured provider-price mappings.
 - Kept entitlement authority in PostgreSQL with membership-derived RLS reads, append-only configuration evidence, fail-closed dashboard parsing, no Stripe dependency for self-hosted installations, and non-disableable balance/refund/reconciliation/checkout/export/promised-redemption paths.
 

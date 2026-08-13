@@ -3,6 +3,7 @@
 import {
   merchantCreateProgrammeCommandV1,
   merchantCreateProgrammeDraftCommandV1,
+  merchantCreateProgrammeDraftCommandV2,
   merchantProgrammeCreateResultV1,
   merchantProgrammeDraftResultV1,
   merchantProgrammePublishResultV1,
@@ -161,8 +162,16 @@ export async function saveProgrammeDraft(
   }
 
   const operationId = String(formData.get("operationId") ?? "");
-  const command = merchantCreateProgrammeDraftCommandV1.safeParse({
-    version: "1",
+  const commandSchema =
+    configuration &&
+    typeof configuration === "object" &&
+    "version" in configuration &&
+    configuration.version === "2"
+      ? merchantCreateProgrammeDraftCommandV2
+      : merchantCreateProgrammeDraftCommandV1;
+  const command = commandSchema.safeParse({
+    version:
+      commandSchema === merchantCreateProgrammeDraftCommandV2 ? "2" : "1",
     programmeId: formData.get("programmeId"),
     configuration,
     idempotencyKey: `programme:draft:${operationId}`,
