@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { programmeDefinitionV2, type ProgrammeDefinitionV2 } from "./index";
+import {
+  merchantCreateProgrammeDraftCommandV2,
+  programmeDefinitionV2,
+  type ProgrammeDefinitionV2,
+} from "./index";
 
 const explicitPurchaseExclusions = {
   productIds: [],
@@ -317,5 +321,26 @@ describe("ProgrammeDefinitionV2", () => {
         ),
       }),
     ).toThrow("PostgreSQL bigint capacity");
+  });
+
+  it("versions the merchant draft command independently from V1", () => {
+    expect(
+      merchantCreateProgrammeDraftCommandV2.parse({
+        version: "2",
+        programmeId: "10000000-0000-4000-8000-000000000001",
+        configuration: definition,
+        idempotencyKey: "programme:draft:10000000-0000-4000-8000-000000000002",
+        correlationId: "10000000-0000-4000-8000-000000000003",
+      }).configuration.version,
+    ).toBe("2");
+    expect(() =>
+      merchantCreateProgrammeDraftCommandV2.parse({
+        version: "2",
+        programmeId: "10000000-0000-4000-8000-000000000001",
+        configuration: { ...definition, version: "1" },
+        idempotencyKey: "programme:draft:test",
+        correlationId: "10000000-0000-4000-8000-000000000003",
+      }),
+    ).toThrow();
   });
 });

@@ -47,6 +47,16 @@ describe("Merchant Activity API v1", () => {
         },
       }),
     ).toBeTruthy();
+    expect(
+      merchantActivityPayloadV1.parse({
+        kind: "activity",
+        source: "referral",
+        customerId: "20000000-0000-4000-8000-000000000001",
+        activityCode: "referral",
+        productId: null,
+        categoryIds: [],
+      }),
+    ).toBeTruthy();
   });
 
   it("rejects browser-like PII and invalid source-specific selectors", () => {

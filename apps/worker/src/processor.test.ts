@@ -219,6 +219,26 @@ describe("WooCommerce effect worker", () => {
       productId: null,
       categoryIds: [],
     });
+
+    expect(
+      parseWooCommerceEffect({
+        ...event,
+        event_type: "commerce.activity.recorded",
+        source_event_id: "referral:qualification:42",
+        payload: {
+          kind: "activity",
+          source: "referral",
+          customerId: "20000000-0000-4000-8000-000000000001",
+          activityCode: "referral",
+          productId: null,
+          categoryIds: [],
+        },
+      }),
+    ).toMatchObject({
+      kind: "activity",
+      source: "referral",
+      activityCode: "referral",
+    });
   });
 
   it("hashes equivalent object keys deterministically", () => {

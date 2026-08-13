@@ -17,6 +17,15 @@ Status: in progress.
 - Contribution allocation now uses deterministic largest-remainder rounding so immutable contribution points exactly sum to the final award even when multiple rules share fractional value.
 - The worker reads immutable V2 configuration, carries authoritative member usage into the shared evaluator, and calls only the atomic V2 database command. V1 remains on its unchanged evaluator and command path.
 - V2 cumulative refund planning uses exact bigint arithmetic and the original immutable programme. Current Woo facts include cumulative line, shipping, tax, and fee refund evidence; older senders default new component fields to zero.
-- Targeted contract, domain, worker, PHP syntax, architecture, and WooCommerce validators pass locally. Database replay/pgTAP is awaiting the next exact-head Linux runner after correcting two transaction-local test-fixture defects found by the first run.
+- Targeted contract, domain, worker, PHP syntax, architecture, and WooCommerce validators pass locally. Exact-head database replay remains authoritative because Docker is unavailable on the workstation.
 
-Pending before module closure: signed activity API and connector facts, merchant builder/simulator/publish review, browser/accessibility evidence, exact-head database/concurrency matrix, canary, and 90/100 score.
+## Slice 3 — competitive merchant builder and simulator
+
+- The Earning Rules route now edits `ProgrammeDefinitionV2` directly through an independently versioned V2 merchant draft command while V1 draft behavior remains compatible.
+- Seven reviewed templates cover the six sources and distinct purchase multiplier/bonus behavior. Each rule exposes source-safe effects, priority, allowlisted selectors, half-open UTC dates, explicit purchase exclusions, per-event caps, and lifetime/calendar/rolling member caps.
+- Equal-priority overlapping multipliers use the shared domain conflict inspector. The live preview calls `simulateEarningV2` from the same package and configuration used by the worker, including exact minor-unit conversion without floating-point arithmetic.
+- A V1 baseline copies existing tiers and rewards into the new draft, preserves the published version, and warns when tier-specific V1 rates would become one programme-wide V2 base rate.
+- A temporary real Next.js/Playwright harness exercised the Hub shell at 1440×1000 and 390×844. Adding a birthday template changed one rule to two, the shared evaluator returned exactly 250 points, both widths had zero horizontal overflow, and the browser reported no console error. The temporary public fixture and automation script were removed after the run.
+- Dashboard/contract typechecks, focused model/contract tests, zero-warning lint, and the standalone production build pass locally.
+
+Pending before module closure: exact-head database/concurrency matrix, final adversarial review, managed-tenant canary, and the evidence-based 90/100 score.

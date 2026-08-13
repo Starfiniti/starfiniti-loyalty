@@ -649,6 +649,9 @@ tasks:
       - the purpose-bound Merchant Activity API streams at most 65536 bytes, accepts only strict signed server facts, derives customer and programme authority, and reuses canonical replay/effect evidence
       - tenant owner/admin source provisioning consumes one unique external signing reference and exposes one exact nonrecoverable setup package while browser grants omit secrets and raw deliveries
       - ADR-0012 records the shared canonical-ingestion decision, rejected browser authority, canary rollout, and value-preserving rollback
+      - the Hub-style Earning Rules route directly authors the strict V2 contract through seven reviewed templates source-safe conditions and exclusions hard caps conflict diagnostics and immutable save review
+      - the browser simulator imports the exact worker evaluator; desktop and mobile Playwright added a birthday rule and reproduced 250 points with no overflow or console error
+      - V1 migration copies tiers and rewards but explicitly warns when different legacy tier rates would become one programme-wide V2 base rate before publication
 
   - id: M04-REWARDS-AND-FULFILMENT
     title: Expand native rewards and audited manual fulfilment

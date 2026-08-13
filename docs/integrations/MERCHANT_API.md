@@ -12,7 +12,7 @@ Tenant and actor authority are not command inputs. Each command derives the Auth
 
 The sender serializes the exact JSON body and sends `X-Starfiniti-Activity-Source-ID`, `X-Starfiniti-Delivery-ID`, `X-Starfiniti-Timestamp`, `X-Starfiniti-Nonce`, `X-Starfiniti-Key-Version`, `X-Starfiniti-Body-SHA256`, and `X-Starfiniti-Signature`. The lowercase hex signature is HMAC-SHA256 over newline-joined `starfiniti-merchant-activity-delivery-v1`, request target, source ID, delivery ID, ten-digit Unix timestamp, nonce, key version, and body hash. The timestamp window is five minutes and the maximum body is 65,536 bytes; repeated delivery/event identities must retain the exact body.
 
-The strict v1 envelope contains `version`, `deliveryId`, `sourceId`, `eventId`, `occurredAt`, `deliveredAt`, optional `correlationId`, and `payload`. Payload fields are exactly `kind: activity`, `source`, public `customerId`, `activityCode`, nullable `productId`, and bounded `categoryIds`. Sources are `account_created`, `birthday`, `verified_product_review`, and `custom_activity`. Built-in sources require their canonical code; only verified reviews may carry product selectors. Email, name, address, review content, tenant ID, points, rule ID, programme ID, wallet ID, and any unknown field are rejected.
+The strict v1 envelope contains `version`, `deliveryId`, `sourceId`, `eventId`, `occurredAt`, `deliveredAt`, optional `correlationId`, and `payload`. Payload fields are exactly `kind: activity`, `source`, public `customerId`, `activityCode`, nullable `productId`, and bounded `categoryIds`. Sources are `account_created`, `birthday`, `verified_product_review`, `referral`, and `custom_activity`. Built-in sources require their canonical code; only verified reviews may carry product selectors. Email, name, address, review content, referral identity, tenant ID, points, rule ID, programme ID, wallet ID, and any unknown field are rejected. The signed referral fact is an authoritative M03 input only; M06 still owns first-party attribution, cooling, fraud review, and reversible referral decisions.
 
 The public customer ID remains only a selector. PostgreSQL derives tenant and programme from the active source; the worker resolves that customer inside the same organization, evaluates the immutable published V2 version, enters serialized cap accounting, and appends evaluation plus ledger effects atomically. Duplicate events create one effect. Signature/provider outage does not affect WooCommerce checkout or previously accepted value.
 
@@ -77,7 +77,7 @@ Result: `resource_public_id` and `outcome` (`created` or `duplicate`). The merch
 Inputs:
 
 - `target_programme_public_id uuid`
-- `target_configuration jsonb` matching `merchantCreateProgrammeDraftCommandV1`
+- `target_configuration jsonb` matching either the V1 command's `ProgrammeDefinitionV1` or the independently versioned `merchantCreateProgrammeDraftCommandV2`
 - `target_idempotency_key text`
 - `target_correlation_id uuid`
 

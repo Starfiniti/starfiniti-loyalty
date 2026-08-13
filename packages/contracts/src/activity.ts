@@ -18,6 +18,7 @@ export const merchantActivitySourceV1 = z.enum([
   "account_created",
   "birthday",
   "verified_product_review",
+  "referral",
   "custom_activity",
 ]);
 

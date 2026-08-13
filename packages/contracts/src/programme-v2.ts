@@ -16,6 +16,7 @@ const positiveBigintString = z
 const timestamp = z.iso.datetime({ offset: true });
 const selector = z.string().trim().min(1).max(255);
 const selectorList = z.array(selector).max(100).default([]);
+const operationKey = z.string().min(1).max(255);
 
 export const earningSourceV2 = z.enum([
   "purchase",
@@ -272,6 +273,16 @@ export const programmeDefinitionV2 = z
     }
   });
 
+export const merchantCreateProgrammeDraftCommandV2 = z
+  .object({
+    version: z.literal("2"),
+    programmeId: z.uuid(),
+    configuration: programmeDefinitionV2,
+    idempotencyKey: operationKey,
+    correlationId: z.uuid(),
+  })
+  .strict();
+
 export type EarningSourceV2 = z.infer<typeof earningSourceV2>;
 export type EarningRuleConditionsV2 = z.infer<typeof earningRuleConditionsV2>;
 export type PurchaseExclusionsV2 = z.infer<typeof purchaseExclusionsV2>;
@@ -279,3 +290,6 @@ export type EarningRuleCapV2 = z.infer<typeof earningRuleCapV2>;
 export type EarningRuleEffectV2 = z.infer<typeof earningRuleEffectV2>;
 export type EarningRuleV2 = z.infer<typeof earningRuleV2>;
 export type ProgrammeDefinitionV2 = z.infer<typeof programmeDefinitionV2>;
+export type MerchantCreateProgrammeDraftCommandV2 = z.infer<
+  typeof merchantCreateProgrammeDraftCommandV2
+>;

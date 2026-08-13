@@ -74,6 +74,7 @@ type ParsedEffect =
         | "account_created"
         | "birthday"
         | "verified_product_review"
+        | "referral"
         | "custom_activity";
       readonly customerSelector: Readonly<{
         kind: "public";

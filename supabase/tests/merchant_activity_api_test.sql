@@ -229,13 +229,36 @@ select throws_ok(
   '42501', 'activity source provisioning not authorized',
   'another tenant owner cannot provision against this workspace'
 );
+reset role;
+
+create temporary table activity_runtime_refs (
+  name text primary key,
+  value bigint not null
+);
+insert into activity_runtime_refs
+select 'organization', id from loyalty.organizations where slug = 'activity-one'
+union all
+select 'connection', id from loyalty.commerce_connections where public_id = (
+  select source_public_id from provisioned_activity_source
+);
+create function pg_temp.activity_runtime_ref(target_name text)
+returns bigint
+language sql
+stable
+security definer
+set search_path = pg_catalog, pg_temp
+as $$
+  select value from pg_temp.activity_runtime_refs where name = target_name;
+$$;
+revoke all on function pg_temp.activity_runtime_ref(text) from public;
+grant execute on function pg_temp.activity_runtime_ref(text) to loyalty_runtime;
+
+set local role loyalty_runtime;
 
 create temporary table activity_receipt as
 select * from loyalty_private.accept_commerce_delivery(
-  (select id from loyalty.organizations where slug = 'activity-one'),
-  (select id from loyalty.commerce_connections where public_id = (
-    select source_public_id from provisioned_activity_source
-  )),
+  pg_temp.activity_runtime_ref('organization'),
+  pg_temp.activity_runtime_ref('connection'),
   'delivery-1', '1', 'crm:consultation:42', 'commerce.activity.recorded',
   'b1000000-0000-4000-8000-000000000501', null,
   '2026-08-13T12:00:00Z', '2026-08-13T12:00:01Z',

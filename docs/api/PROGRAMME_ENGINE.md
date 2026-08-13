@@ -29,6 +29,8 @@ PostgreSQL checks the V2 entitlement and independently validates the strict defi
 
 The live worker reads authoritative member usage and commits the V2 evaluation, per-rule usage fences, and award through one transaction-scoped advisory-lock boundary. The database rechecks published rule identity, event/programme ownership, exact contribution totals, per-event caps, per-member caps, idempotency hashes, and bigint bounds before value moves. Exact retries exclude their own prior usage and return the original evaluation/ledger references.
 
+The merchant Earning Rules route edits this same contract rather than a UI-only approximation. It offers reviewed templates for purchase base/multiplier/bonus, account creation, birthday, verified review, referral, and signed custom activity; allowlisted selector/date fields; explicit purchase exclusions; event/member-period caps; priority conflict warnings; and a deterministic event simulator imported from the same domain package as the worker. Moving from a V1 baseline copies tiers and rewards but clearly identifies the programme-wide V2 base rate as a behavior change when legacy tier rates differ. Saving creates a new immutable draft and never changes the published programme.
+
 ## Publication lifecycle
 
 `create_programme_draft` allocates the next version under a programme lock. `publish_programme_version` and `schedule_programme_version` require the caller's expected SHA-256 configuration hash and an approver. Publication materializes immutable relational tier and reward definitions. A due scheduled version atomically supersedes the prior published version; exactly one published version can exist per programme.
