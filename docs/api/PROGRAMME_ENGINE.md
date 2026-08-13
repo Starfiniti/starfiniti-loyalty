@@ -1,15 +1,31 @@
 # Programme Engine Boundary
 
-- Contract version: `1`
-- Database migration: `20260812054204_programme_engine_foundation.sql`
-- TypeScript schemas: `packages/contracts/src/programme.ts`
-- Pure evaluator: `packages/domain/src/engine.ts`
+- Contract versions: `1` and `2`
+- Database migrations: `20260812054204_programme_engine_foundation.sql` and `20260813200000_programme_v2_earning_rules.sql`
+- TypeScript schemas: `packages/contracts/src/programme.ts` and `packages/contracts/src/programme-v2.ts`
+- Pure evaluators: `packages/domain/src/engine.ts` and `packages/domain/src/engine-v2.ts`
 
 ## Evaluation
 
 The engine consumes connector-neutral order facts and an immutable programme version. Product, category, collection, currency, market, channel, customer-segment, and half-open date conditions are deterministic. Tax, shipping, fees, gift-card/store-credit payments, discounts, refunds, and configured exclusions do not silently become eligible spend.
 
 Rules are sorted by descending priority and stable rule ID. Points are calculated with integer minor units and rounded down once per order. Every line records gross, discount, refund, eligible value, selected rule, rate, outcome, and human-readable reason. Live award and simulation call the same evaluator; their stored input/result hashes and explanation JSON make later drift detectable.
+
+## ProgrammeDefinitionV2 earning precedence
+
+V2 exists beside V1; V1 definitions and stored evaluations are never upgraded or reinterpreted. A V2 programme retains the compatible tier and reward surface and adds strict `earningRules` for six sources: purchase, account creation, birthday, verified product review, referral, and signed custom activity.
+
+Purchase evaluation is deterministic:
+
+1. Apply explicit product, category, payment, discount, shipping, tax, and fee exclusions.
+2. Apply exactly one enabled base purchase rate.
+3. Apply only the highest-priority eligible multiplier; stable rule code breaks an equal-priority tie and the editor reports that conflict.
+4. Add only fixed bonuses that explicitly opt in to stacking.
+5. Apply exact event and member-period caps, then retain the contribution and line explanation.
+
+Rules accept only allowlisted product/category, currency, market, channel, segment, tier, and half-open UTC date selectors. Non-purchase activities cannot smuggle commerce-line selectors or purchase exclusions. The live path rejects unverified activity facts; browser events are never proof.
+
+PostgreSQL checks the V2 entitlement and independently validates the strict definition before a draft is stored, then validates again while publication/scheduling materializes immutable `programme_earning_rules`. Managed deployments default V2 off; self-hosted installations remain locally enabled. No Auth or browser claim grants the capability.
 
 ## Publication lifecycle
 

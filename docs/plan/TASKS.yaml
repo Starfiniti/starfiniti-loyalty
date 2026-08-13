@@ -597,7 +597,7 @@ tasks:
   - id: M03-EARNING-RULES
     title: Deliver ProgrammeDefinitionV2 and competitive earning rules
     module: M03
-    status: planned
+    status: in_progress
     dependencies: [M02-ENTITLEMENTS-AND-FLAGS]
     hypothesis: Versioned conditional earning with explicit precedence and traces expands merchant value without changing historical V1 results.
     baseline: V1 supports tier-based eligible purchase earning only.
@@ -633,7 +633,10 @@ tasks:
       ]
     risks: [R-001, R-002, R-030]
     docs: [docs/api/PROGRAMME_ENGINE.md, docs/integrations/MERCHANT_API.md]
-    evidence: [docs/plan/evidence/M03/README.md]
+    evidence:
+      - docs/plan/evidence/M03/README.md
+      - ProgrammeDefinitionV2 contract and exact bigint pure evaluator tests pass
+      - additive V2 entitlement publication and immutable materialization migration is under exact-head database verification
 
   - id: M04-REWARDS-AND-FULFILMENT
     title: Expand native rewards and audited manual fulfilment

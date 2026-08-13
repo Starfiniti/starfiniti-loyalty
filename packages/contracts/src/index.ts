@@ -3,6 +3,7 @@ import { z } from "zod";
 export * from "./woocommerce";
 export * from "./ledger";
 export * from "./programme";
+export * from "./programme-v2";
 export * from "./reporting";
 export * from "./experience";
 export * from "./customer-export";
