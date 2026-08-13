@@ -30,6 +30,7 @@
 - A deployment operator can create the initial organization, live owner membership, workspace, programme group, and link for an existing Auth UUID through one atomic repository command. Exact retries are stable, changed retries fail closed, audit metadata is minimized, and browser, dashboard-runtime, and worker roles cannot execute the boundary.
 - Pull-request CI builds the dashboard and worker Dockerfiles from a constrained context using a digest-pinned Node base. Release `v0.1.0` published commit-addressed GHCR dashboard/worker images and the checksummed WooCommerce ZIP after the full release/database gate passed.
 - `npm run deploy:preflight -- --env <absolute-secret-env-file>` validates the populated Proxmox application configuration and signing-key pool without printing values. It covers Compose parity, placeholders, immutable image selectors, HTTPS origins, dedicated database logins, pool schema, and Linux owner-only permissions; network and live-role checks remain deployment-time gates.
+- The application Compose contract maps the public Supabase TLS hostname to the private reverse-proxy address inside the dashboard container, avoiding public-NAT hairpin failures without changing browser URLs or certificate validation. Production PostgREST exposes `public,graphql_public,loyalty`; explicit grants and tenant RLS remain authoritative.
 - `/api/healthz` returns only `ok` or `unavailable` with no-store headers and fails closed unless the runtime login can execute the exact commerce-ingestion and connector-provisioning functions and the mounted signing pool has at least one valid entry. Proxmox Compose uses this dependency-aware route for dashboard readiness.
 - The customer-experience view reads one RLS-scoped workspace/programme-group theme and previews English member/guest states responsively. Owners/admins can revision a contract-validated token set and bounded English customer copy through idempotent audited commands; inaccessible colors, arbitrary CSS, remote fonts, scripts, uploads, and caller-supplied tenant authority are rejected. Legacy translation rows remain isolated and non-selectable.
 - A public mobile-first hosted loyalty route renders one active published programme in English using approved theme tokens, tier rates, and reward names/costs. Its bounded anonymous read model omits organization identity, customer/ledger state, raw programme/reward configuration, audit, integration, and commerce evidence; suspended or mixed-scope resources return no document.
@@ -51,22 +52,22 @@
 ## Partial
 
 - Phases 0 through 7 are complete for the active WooCommerce scope. Shopify Phase 8 is deferred by product-owner direction.
-- Phase 9 code, merge, English-only release `v0.1.2`, self-hosted production infrastructure, and Authentik-to-Supabase SSO are live. Public signup remains disabled; owner-interactive SSO verification/bootstrap and one real WooCommerce store connection are intentionally pending before tenant value is accepted.
+- Phase 9 code, English-only releases, self-hosted production infrastructure, Authentik-to-Supabase SSO, verified owner login, and atomic Starfiniti tenant bootstrap are live. Public signup remains disabled; one real WooCommerce store connection is pending before tenant value is accepted.
 
 ## Broken or unavailable
 
 - Docker, Podman, and WSL remain unavailable on this workstation; GitHub Actions is the verified database runner.
-- The production dashboard and API are live at `loyalty.starfiniti.com` and `api.loyalty.starfiniti.com`; no owner tenant or WooCommerce store has been connected yet.
+- The production dashboard and API are live at `loyalty.starfiniti.com` and `api.loyalty.starfiniti.com`; the verified owner tenant is connected, while a real WooCommerce store is not yet connected.
 - An isolated database recovered from the encrypted off-host Borg archive, replayed archived WAL, promoted cleanly, and became ready in 9 seconds with all twenty-six migrations. Full application/Auth/secret-escrow recovery smoke remains due.
 - The globally configured `pnpm` shim is broken; npm is the supported package manager.
 
 ## Database migration state
 
-Twenty-six versioned migrations are applied to the pinned production Supabase/Postgres 17 database and also replay successfully in CI with 1,049 pgTAP assertions plus concurrency/property probes. Production remains empty of tenant/customer value until first-owner bootstrap.
+Twenty-six versioned migrations are applied to the pinned production Supabase/Postgres 17 database and also replay successfully in CI with 1,049 pgTAP assertions plus concurrency/property probes. Production contains the audited initial Starfiniti owner scope but no customer or loyalty-ledger value.
 
 ## Git state
 
-Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 WooCommerce pipeline, PR `#7` merged Phase 9, PR `#9` merged Authentik workforce SSO, and PR `#10` merged the English-only launch presentation. Release `v0.1.2` points at merge commit `3d1a7cb`. GitHub recognizes the repository license as GNU AGPLv3.
+Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 WooCommerce pipeline, PR `#7` merged Phase 9, PR `#9` merged Authentik workforce SSO, and PR `#10` merged the English-only launch presentation. Releases through `v0.1.6` include the hardened workforce PKCE callback and bounded production diagnostics. GitHub recognizes the repository license as GNU AGPLv3.
 
 ## Last verification
 
@@ -83,6 +84,7 @@ Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 Wo
 - PR `#10` exact-head run `31691207685` passed all seven jobs with 166 unit tests, twenty-six migration replays, all 1,049 pgTAP assertions, both production images, and all four minimum/current HPOS/legacy WooCommerce runtimes.
 - Release run `31691454507` published the checksummed English-only WooCommerce ZIP and immutable dashboard/worker images for `v0.1.2` after the full release and database gate passed.
 - Live production smoke on 2026-08-13 passed TLS, dashboard readiness, English-only login and legacy-locale fallback with no switcher, Starfiniti SSO entry, unsigned Woo endpoint rejection, public database-port isolation, all eleven Supabase services, both immutable application images, WAL/base backup timers, and off-host physical-backup verification.
+- Live Chrome verification on 2026-08-13 completed Authentik custom OIDC and Supabase PKCE with `/token` HTTP 200, preserved the exact Auth UUID, bootstrapped its audited owner membership, and rendered the Starfiniti / Main Store dashboard through RLS. The dashboard container's split-DNS route and PostgREST `loyalty` schema allowlist were verified live.
 - PR exact-head run `31512548299` passed the baseline and Docker/Supabase database jobs.
 - Public `main` run `31513294330` passed both jobs after merge, including migration replay, seed, pgTAP, and cleanup.
 - PR exact-head run `31527785181` passed both jobs, including replay/reset/seed, all 87 pgTAP assertions, the dynamic ingestion build, and cleanup.

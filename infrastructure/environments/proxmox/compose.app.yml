@@ -12,6 +12,8 @@ services:
       DASHBOARD_PUBLIC_ORIGIN: ${DASHBOARD_PUBLIC_ORIGIN:?required}
       DATABASE_URL: ${DATABASE_URL:?required}
       WOOCOMMERCE_SIGNING_MATERIAL_FILE: /run/secrets/woocommerce_signing_material
+    extra_hosts:
+      - "${SUPABASE_PUBLIC_HOST:?required}:${SUPABASE_INTERNAL_PROXY_IP:?required}"
     secrets:
       - woocommerce_signing_material
     ports:
