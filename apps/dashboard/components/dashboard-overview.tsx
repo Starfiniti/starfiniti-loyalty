@@ -135,16 +135,17 @@ export function DashboardOverview({
       icon: WalletCards,
       label: "Eligible spend",
       tone: "green",
-      value: report
-        ? compactCurrency(
-            formatExactMinorAmount(
-              report.eligibleSpendMinor,
-              report.currencyCode,
-              report.minorUnitsPerMajor,
-              intlLocale,
-            ),
-          )
-        : "—",
+      value:
+        report?.currencyCode && report.minorUnitsPerMajor
+          ? compactCurrency(
+              formatExactMinorAmount(
+                report.eligibleSpendMinor,
+                report.currencyCode,
+                report.minorUnitsPerMajor,
+                intlLocale,
+              ),
+            )
+          : "—",
     },
     {
       icon: Percent,
