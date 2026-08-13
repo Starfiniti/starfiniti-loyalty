@@ -652,6 +652,7 @@ tasks:
       - the Hub-style Earning Rules route directly authors the strict V2 contract through seven reviewed templates source-safe conditions and exclusions hard caps conflict diagnostics and immutable save review
       - the browser simulator imports the exact worker evaluator; desktop and mobile Playwright added a birthday rule and reproduced 250 points with no overflow or console error
       - V1 migration copies tiers and rewards but explicitly warns when different legacy tier rates would become one programme-wide V2 base rate before publication
+      - exact-head CI run 31735847075 passed baseline, images, four WooCommerce runtimes, 29 pgTAP files with 1200 assertions, and the ledger/programme concurrency-property probe
 
   - id: M04-REWARDS-AND-FULFILMENT
     title: Expand native rewards and audited manual fulfilment

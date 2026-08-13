@@ -26,6 +26,12 @@ Status: in progress.
 - Equal-priority overlapping multipliers use the shared domain conflict inspector. The live preview calls `simulateEarningV2` from the same package and configuration used by the worker, including exact minor-unit conversion without floating-point arithmetic.
 - A V1 baseline copies existing tiers and rewards into the new draft, preserves the published version, and warns when tier-specific V1 rates would become one programme-wide V2 base rate.
 - A temporary real Next.js/Playwright harness exercised the Hub shell at 1440×1000 and 390×844. Adding a birthday template changed one rule to two, the shared evaluator returned exactly 250 points, both widths had zero horizontal overflow, and the browser reported no console error. The temporary public fixture and automation script were removed after the run.
-- Dashboard/contract typechecks, focused model/contract tests, zero-warning lint, and the standalone production build pass locally.
+- Dashboard/contract typechecks, 221 workspace tests, zero-warning lint, and the standalone production build pass locally.
 
-Pending before module closure: exact-head database/concurrency matrix, final adversarial review, managed-tenant canary, and the evidence-based 90/100 score.
+## Exact-head verification
+
+- GitHub Actions run `31735847075` passed baseline, both immutable container builds, all four minimum/current HPOS/legacy WooCommerce cells, clean migration replay, 29 pgTAP files / 1,200 assertions, and the ledger/programme concurrency-property probe at commit `2100a09`.
+- Local adversarial review fixed four deterministic weaknesses before the final gate: worker tests no longer require broad table reads, streamed ingestion uses the exact lease-close signature, draft retries retain their idempotency identity until success, and disabled tenants cannot render V2 authoring or new source provisioning while historical source health remains inspectable.
+- Contract, database, runtime, editor, and ADR surfaces agree that signed backends may submit an already-qualified referral fact, while M06 exclusively owns first-party referral attribution, cooling, fraud review, and reversible qualification.
+
+Pending before module closure: managed-tenant deployment/canary and the evidence-based 90/100 score. Production VM guest access is not available to the current SSH key, so no unverified deployment or database mutation was attempted.
