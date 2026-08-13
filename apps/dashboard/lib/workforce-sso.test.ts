@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  dashboardPublicUrl,
   isExpectedWorkforceAuthorizeUrl,
+  workforceSsoFlowId,
   workforceSsoCallbackUrl,
 } from "./workforce-sso";
 
@@ -23,6 +25,18 @@ describe("Starfiniti workforce SSO navigation", () => {
     expect(
       workforceSsoCallbackUrl("http://localhost:3000", "//evil.test"),
     ).toBe("http://localhost:3000/auth/callback?next=%2F");
+    expect(() => dashboardPublicUrl("https://0.0.0.0:3000", "/login")).toThrow(
+      "dashboard_public_origin_invalid",
+    );
+  });
+
+  it("accepts only bounded PKCE flow identifiers", () => {
+    expect(workforceSsoFlowId("bc0f26282e6abeac61d7b21c49683e6a")).toBe(
+      "bc0f26282e6abeac61d7b21c49683e6a",
+    );
+    expect(workforceSsoFlowId("short")).toBeNull();
+    expect(workforceSsoFlowId("x".repeat(65))).toBeNull();
+    expect(workforceSsoFlowId("invalid/value")).toBeNull();
   });
 
   it("accepts only the configured Supabase custom-provider authorize URL", () => {

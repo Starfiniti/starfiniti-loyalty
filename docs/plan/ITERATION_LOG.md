@@ -350,3 +350,9 @@
 - Removed the bundled Slovenian WooCommerce catalog and stopped adding language to signed customer-claim navigation. The standard WordPress text domain and exact source POT remain available for a future explicitly approved localization phase.
 - PR `#10` passed all seven CI jobs and merged at `3d1a7cb`; release run `31691454507` published `v0.1.2`, its checksummed WooCommerce ZIP, and immutable application images.
 - Production now runs the exact `3d1a7cb` dashboard and worker images. Public smoke against the legacy `?lang=sl-SI` login URL returned English HTML with Starfiniti SSO and no language switcher or Slovenian label.
+
+## 2026-08-13 — Workforce SSO callback hardening
+
+- A real owner login reached Authentik and Supabase successfully but the Next.js PKCE exchange failed, then its error redirect exposed the internal `0.0.0.0:3000` bind address.
+- Enabled flow-specific verifier correlation through the reserved `sb_flow_id`, passed only bounded flow identifiers into the one-time code exchange, and hardened production server auth cookies as HTTP-only, Secure, SameSite=Lax.
+- Anchored every callback success and failure to `DASHBOARD_PUBLIC_ORIGIN`, rejected unspecified bind-address origins, and added route/unit coverage proving internal request origins cannot escape into browser navigation.

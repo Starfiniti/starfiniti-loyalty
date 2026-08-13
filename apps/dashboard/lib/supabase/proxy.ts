@@ -2,6 +2,10 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { resolveMerchantLocale } from "../merchant-locale";
 import { readSupabasePublicConfig } from "./config";
+import {
+  SUPABASE_SERVER_AUTH_OPTIONS,
+  supabaseServerCookieOptions,
+} from "./server-options";
 
 const REQUEST_LOCALE_HEADER = "x-starfiniti-locale";
 
@@ -84,6 +88,8 @@ export async function updateSupabaseSession(
   let response = NextResponse.next({ request: { headers: requestHeaders } });
   const config = readSupabasePublicConfig();
   const supabase = createServerClient(config.url, config.publishableKey, {
+    auth: SUPABASE_SERVER_AUTH_OPTIONS,
+    cookieOptions: supabaseServerCookieOptions(),
     cookies: {
       getAll() {
         return request.cookies.getAll();
