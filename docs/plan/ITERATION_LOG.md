@@ -348,3 +348,5 @@
 - Product-owner direction superseded the original bilingual launch requirement. Removed language switchers from merchant, login, customer account, public programme, and experience-editor surfaces; legacy locale queries now canonicalize to English.
 - Limited active customer-copy authoring and rendering to English while retaining historical locale-keyed database rows and contracts for migration compatibility rather than rewriting released migrations.
 - Removed the bundled Slovenian WooCommerce catalog and stopped adding language to signed customer-claim navigation. The standard WordPress text domain and exact source POT remain available for a future explicitly approved localization phase.
+- PR `#10` passed all seven CI jobs and merged at `3d1a7cb`; release run `31691454507` published `v0.1.2`, its checksummed WooCommerce ZIP, and immutable application images.
+- Production now runs the exact `3d1a7cb` dashboard and worker images. Public smoke against the legacy `?lang=sl-SI` login URL returned English HTML with Starfiniti SSO and no language switcher or Slovenian label.
