@@ -7,7 +7,10 @@ import {
 } from "@/lib/customer-locale";
 import { customerExportPath } from "@/lib/customer-export";
 import { signInWithWorkforceSso } from "./actions";
-import { WORKFORCE_SSO_COPY } from "@/lib/workforce-sso";
+import {
+  WORKFORCE_SSO_COPY,
+  workforceSsoFailureReason,
+} from "@/lib/workforce-sso";
 
 export default async function LoginPage({
   searchParams,
@@ -15,11 +18,12 @@ export default async function LoginPage({
   searchParams: Promise<{
     next?: string;
     error?: string;
+    reason?: string;
     lang?: string;
     reauth?: string;
   }>;
 }) {
-  const { next, error, lang, reauth } = await searchParams;
+  const { next, error, reason, lang, reauth } = await searchParams;
   const customerExportReauthentication = reauth === "customer-export";
   const requestedNextPath = safeAppPath(next);
   const locale = resolveCustomerNavigationLocale(lang, requestedNextPath);
@@ -28,6 +32,7 @@ export default async function LoginPage({
     : customerLocalePath(requestedNextPath, locale);
   const copy = CUSTOMER_COPY[locale];
   const workforceCopy = WORKFORCE_SSO_COPY.en;
+  const authFailureReason = workforceSsoFailureReason(reason);
 
   return (
     <main className="login-page" id="main-content" lang={locale} tabIndex={-1}>
@@ -60,6 +65,9 @@ export default async function LoginPage({
             ? { reauthentication: "customer-export" as const }
             : {})}
         />
+        {error === "authentication_failed" && authFailureReason ? (
+          <span data-auth-failure-reason={authFailureReason} hidden />
+        ) : null}
         {!customerExportReauthentication ? (
           <>
             <div className="login-divider" role="separator">
