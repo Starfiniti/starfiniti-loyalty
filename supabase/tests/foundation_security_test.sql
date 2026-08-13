@@ -96,6 +96,7 @@ select is_empty(
           'loyalty.get_public_loyalty_experience(uuid,uuid,text)',
           'loyalty.retry_connector_effect_command(uuid,text,text,uuid)',
           'loyalty.schedule_programme_version_command(uuid,text,timestamp with time zone,text,uuid)',
+          'loyalty.set_customer_tier_override_command(uuid,uuid,uuid,text,timestamp with time zone,text,text,uuid)',
           'loyalty.save_experience_translation_command(uuid,uuid,text,text,text,text,text,text,text,text,text,uuid)',
           'loyalty.save_experience_theme_command(uuid,uuid,text,text,integer,text,text,boolean,boolean,text,text,uuid)',
           'loyalty.start_reward_fulfilment_command(uuid,text,uuid)',

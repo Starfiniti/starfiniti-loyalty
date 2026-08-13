@@ -123,6 +123,7 @@ select is_empty(
           'save_experience_translation_command',
           'save_experience_theme_command',
           'schedule_programme_version_command',
+          'set_customer_tier_override_command',
           'start_reward_fulfilment_command',
           'resolve_reward_fulfilment_command'
         )
