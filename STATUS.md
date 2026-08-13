@@ -27,7 +27,7 @@
 - The operations view can download a versioned, tenant-scoped support bundle containing only public scope/connection IDs, queue totals, watermarks, and a labelled bounded sample of grouped canonical error codes. Item IDs, display names, payloads, commerce/customer identities, actors, reasons, signing references, and secrets are omitted.
 - A tenant owner/admin can provision the first WooCommerce connector for an active workspace and published programme from the operations view. The server consumes one unique reference from a root-readable deployment key pool, records a secret-free immutable audit event, and returns an exact setup package only in that action result; the plugin validates and encrypts the imported signing key at rest.
 - A deployment operator can create the initial organization, live owner membership, workspace, programme group, and link for an existing Auth UUID through one atomic repository command. Exact retries are stable, changed retries fail closed, audit metadata is minimized, and browser, dashboard-runtime, and worker roles cannot execute the boundary.
-- Pull-request CI builds the dashboard and worker Dockerfiles from a constrained context using a digest-pinned Node base. Exact semantic-version tags are configured to rerun baseline/database gates, publish GHCR images under commit-SHA and version tags, and attach the WooCommerce ZIP plus SHA-256 checksum to a GitHub release; no production release has been tagged yet.
+- Pull-request CI builds the dashboard and worker Dockerfiles from a constrained context using a digest-pinned Node base. Release `v0.1.0` published commit-addressed GHCR dashboard/worker images and the checksummed WooCommerce ZIP after the full release/database gate passed.
 - `npm run deploy:preflight -- --env <absolute-secret-env-file>` validates the populated Proxmox application configuration and signing-key pool without printing values. It covers Compose parity, placeholders, immutable image selectors, HTTPS origins, dedicated database logins, pool schema, and Linux owner-only permissions; network and live-role checks remain deployment-time gates.
 - `/api/healthz` returns only `ok` or `unavailable` with no-store headers and fails closed unless the runtime login can execute the exact commerce-ingestion and connector-provisioning functions and the mounted signing pool has at least one valid entry. Proxmox Compose uses this dependency-aware route for dashboard readiness.
 - The localized customer-experience view reads one RLS-scoped workspace/programme-group theme and previews English/Slovenian member/guest states responsively. Owners/admins can revision a contract-validated token set through an idempotent audited command with localized outcomes; inaccessible colors, arbitrary CSS, remote fonts, scripts, uploads, and caller-supplied tenant authority are rejected.
@@ -51,22 +51,22 @@
 ## Partial
 
 - Phases 0 through 7 are complete for the active WooCommerce scope. Shopify Phase 8 is deferred by product-owner direction.
-- Phase 9 is in progress. The authenticated shell, audited initial-tenant bootstrap, complete English/Slovenian launch administration, guided WooCommerce provisioning, customer wallet/ledger reads, safe hub connector operations, reason-bound individual and exact-preview bulk value adjustments, live source-reconciliation requests, real reporting, localized route-wide keyboard bypass, sanitized support diagnostics, localized WooCommerce and hosted customer journeys, controlled experience themes/translations, guest hosted loyalty delivery, signed authenticated member delivery, controlled native-coupon redemption, direct audited customer export, and WooCommerce-originated customer erasure exist; merge, release, broader live authenticated evidence, and production deployment remain after adversarial branch review completed without unresolved blocker or should-fix findings.
+- Phase 9 code, merge, first release, and self-hosted production infrastructure are complete. Public signup remains disabled; first-owner Auth/bootstrap and one real WooCommerce store connection are intentionally pending owner identity/store access before live tenant data is accepted.
 
 ## Broken or unavailable
 
 - Docker, Podman, and WSL remain unavailable on this workstation; GitHub Actions is the verified database runner.
-- Direct Proxmox SSH is not usable with the available aliases and keys. No persistent Supabase or WooCommerce environment has been mutated.
-- GHCR images and the GitHub release do not exist until an approved version tag is created after the Phase 9 branch is merged.
+- The production dashboard and API are live at `loyalty.starfiniti.com` and `api.loyalty.starfiniti.com`; no owner tenant or WooCommerce store has been connected yet.
+- Full clean-room point-in-time service recovery remains due even though off-host archive extraction and physical `pg_verifybackup` passed.
 - The globally configured `pnpm` shim is broken; npm is the supported package manager.
 
 ## Database migration state
 
-Twenty-six versioned migrations and the seed replay successfully against disposable Supabase/Postgres 17 CI with 1,049 pgTAP assertions plus concurrency/property probes. No persistent or production database has been changed.
+Twenty-six versioned migrations are applied to the pinned production Supabase/Postgres 17 database and also replay successfully in CI with 1,049 pgTAP assertions plus concurrency/property probes. Production remains empty of tenant/customer value until first-owner bootstrap.
 
 ## Git state
 
-Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 WooCommerce pipeline. Draft PR `#7` contains active Phase 9 work on `codex/phase-9-merchant-hub`. GitHub recognizes the repository license as GNU AGPLv3.
+Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 WooCommerce pipeline, PR `#7` merged Phase 9, and release `v0.1.0` points at merge commit `eabdbaf4d14669442f25057ea86aa034a8fdc871`. GitHub recognizes the repository license as GNU AGPLv3.
 
 ## Last verification
 
@@ -79,6 +79,8 @@ Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 Wo
 - `npm run licenses` — passed for six AGPL npm package declarations, the full AGPL text, and both WooCommerce GPL declarations.
 - `npm run architecture:validate` — passed for eight Phase 2 models and three accepted ADRs; it now runs inside `npm run check`.
 - PR exact-head run `31645976689` passed all seven release-hardening jobs with 164 unit tests, twenty-six migration replays, all 1,049 pgTAP assertions, concurrency/property probes, both production images, and all four uncapped-percentage WooCommerce runtime variants.
+- Release run `31681490618` passed the full baseline, twenty-six-migration/1,049-pgTAP database gate, image publication, WooCommerce packaging, and GitHub release publication for `v0.1.0`.
+- Live production smoke on 2026-08-13 passed TLS, dashboard readiness/login/Slovenian locale, unsigned Woo endpoint rejection, public database-port isolation, all eleven Supabase services, both immutable application images, WAL/base backup timers, and off-host physical-backup verification.
 - PR exact-head run `31512548299` passed the baseline and Docker/Supabase database jobs.
 - Public `main` run `31513294330` passed both jobs after merge, including migration replay, seed, pgTAP, and cleanup.
 - PR exact-head run `31527785181` passed both jobs, including replay/reset/seed, all 87 pgTAP assertions, the dynamic ingestion build, and cleanup.

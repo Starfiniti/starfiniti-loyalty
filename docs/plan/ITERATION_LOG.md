@@ -326,3 +326,11 @@
 - Moved allowlisted document language to the server-rendered root layout, preserved Slovenian across authenticated and guest redirects, strengthened the public experience color contract, and removed inert Overview search/preferences/notification and placeholder navigation affordances.
 - Parallel adversarial reviews covered complexity, security, value flows, project idioms, and prototype cruft; all verified blocker and should-fix findings were fixed and independently re-reviewed with no unresolved release-level finding.
 - Exact-head run `31645976689` passed all seven jobs with 164 unit tests, both production images, twenty-six migration replays, all 1,049 pgTAP assertions, concurrency/property probes, and uncapped percentage issuance in all four minimum/current HPOS/legacy WooCommerce runtimes.
+
+## 2026-08-13 — v0.1.0 production deployment
+
+- Merged the release branch, published `v0.1.0`, and verified exact-head release run `31681490618` produced immutable dashboard and worker images plus the checksummed WooCommerce plugin archive.
+- Deployed pinned self-hosted Supabase and the application onto isolated Proxmox VMs behind Caddy TLS at `loyalty.starfiniti.com` and `api.loyalty.starfiniti.com`; public database, pooler, and administration ports remain closed.
+- Applied all twenty-six migrations, created distinct least-privilege runtime and worker logins, disabled public signup, validated dashboard readiness, and confirmed unsigned WooCommerce ingress and command requests fail closed.
+- Enabled PostgreSQL WAL archiving, daily physical base backups, restricted off-host export, and encrypted Borg retention. The first off-host archive passed `pg_verifybackup` with the exact production PostgreSQL image; a complete start-and-WAL-replay RTO rehearsal remains open.
+- Recorded two rollout safeguards: the signing pool must be owner-readable by the container UID `1001`, and Supavisor must be recreated after a database-container address change so it does not retain stale Docker DNS state.
