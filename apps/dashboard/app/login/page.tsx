@@ -7,6 +7,8 @@ import {
 } from "@/lib/customer-locale";
 import { customerExportPath } from "@/lib/customer-export";
 import { MerchantLocaleSwitcher } from "@/components/merchant-locale-switcher";
+import { signInWithWorkforceSso } from "./actions";
+import { WORKFORCE_SSO_COPY } from "@/lib/workforce-sso";
 
 export default async function LoginPage({
   searchParams,
@@ -26,6 +28,7 @@ export default async function LoginPage({
     ? customerExportPath(locale)
     : customerLocalePath(requestedNextPath, locale);
   const copy = CUSTOMER_COPY[locale];
+  const workforceCopy = WORKFORCE_SSO_COPY[locale];
 
   return (
     <main className="login-page" id="main-content" lang={locale} tabIndex={-1}>
@@ -47,7 +50,11 @@ export default async function LoginPage({
         </p>
         <LoginForm
           initialMessage={
-            error === "authentication_failed" ? copy.authLinkFailed : ""
+            error === "authentication_failed"
+              ? copy.authLinkFailed
+              : error === "workforce_sso_failed"
+                ? workforceCopy.failed
+                : ""
           }
           locale={locale}
           nextPath={nextPath}
@@ -55,6 +62,23 @@ export default async function LoginPage({
             ? { reauthentication: "customer-export" as const }
             : {})}
         />
+        {!customerExportReauthentication ? (
+          <>
+            <div className="login-divider" role="separator">
+              <span>{workforceCopy.divider}</span>
+            </div>
+            <form
+              action={signInWithWorkforceSso}
+              className="workforce-sso-form"
+            >
+              <input name="lang" type="hidden" value={locale} />
+              <input name="next" type="hidden" value={nextPath} />
+              <button className="secondary" type="submit">
+                {workforceCopy.button}
+              </button>
+            </form>
+          </>
+        ) : null}
         <p className="login-footnote">{copy.signInFootnote}</p>
       </section>
     </main>

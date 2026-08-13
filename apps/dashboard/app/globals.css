@@ -100,6 +100,27 @@
   color: #b91c1c;
   font-size: 12px;
 }
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0 12px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.login-divider::before,
+.login-divider::after {
+  height: 1px;
+  flex: 1;
+  background: var(--border-soft);
+  content: "";
+}
+.workforce-sso-form button {
+  width: 100%;
+  min-height: 44px;
+  border-radius: 9px;
+  font-weight: 700;
+}
 .login-footnote {
   margin: 20px 0 0;
   padding-top: 18px;

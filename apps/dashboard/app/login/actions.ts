@@ -4,6 +4,12 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { safeAppPath } from "@/lib/safe-navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { readSupabasePublicConfig } from "@/lib/supabase/config";
+import {
+  isExpectedWorkforceAuthorizeUrl,
+  STARFINITI_WORKFORCE_PROVIDER,
+  workforceSsoCallbackUrl,
+} from "@/lib/workforce-sso";
 import { CUSTOMER_COPY, resolveCustomerLocale } from "@/lib/customer-locale";
 import { customerExportPath, isSupabaseSessionId } from "@/lib/customer-export";
 import {
@@ -12,6 +18,51 @@ import {
 } from "@/lib/server/customer-data-export";
 
 export type LoginState = Readonly<{ message: string }>;
+
+function workforceSsoFailurePath(locale: string, nextPath: string): string {
+  const parameters = new URLSearchParams({
+    error: "workforce_sso_failed",
+    lang: locale,
+    next: nextPath,
+  });
+  return `/login?${parameters.toString()}`;
+}
+
+export async function signInWithWorkforceSso(
+  formData: FormData,
+): Promise<never> {
+  const locale = resolveCustomerLocale(formData.get("lang"));
+  const nextPath = safeAppPath(formData.get("next"));
+  const failurePath = workforceSsoFailurePath(locale, nextPath);
+  const publicOrigin = process.env.DASHBOARD_PUBLIC_ORIGIN?.trim();
+
+  if (!publicOrigin) redirect(failurePath);
+
+  let authorizationUrl: string | null = null;
+  let supabaseUrl = "";
+  try {
+    const callbackUrl = workforceSsoCallbackUrl(publicOrigin, nextPath);
+    const publicConfig = readSupabasePublicConfig();
+    supabaseUrl = publicConfig.url;
+    const supabase = await createSupabaseServerClient();
+    const result = await supabase.auth.signInWithOAuth({
+      provider: STARFINITI_WORKFORCE_PROVIDER,
+      options: {
+        redirectTo: callbackUrl,
+        scopes: "openid profile email",
+        skipBrowserRedirect: true,
+      },
+    });
+    if (!result.error) authorizationUrl = result.data.url;
+  } catch {
+    redirect(failurePath);
+  }
+
+  if (!isExpectedWorkforceAuthorizeUrl(authorizationUrl, supabaseUrl)) {
+    redirect(failurePath);
+  }
+  redirect(authorizationUrl);
+}
 
 export async function signIn(
   _previousState: LoginState,

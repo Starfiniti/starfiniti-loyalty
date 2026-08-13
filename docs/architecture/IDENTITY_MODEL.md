@@ -14,12 +14,16 @@ Email, phone, name, cookie, IP address, and shipping/billing details are attribu
 ## Merchant authorization
 
 - Supabase Auth establishes the user ID and session.
+- Starfiniti workforce users enter through Authentik as the Supabase custom OIDC provider `custom:starfiniti-sso`. Supabase remains the session broker, so the OIDC-linked Auth UUID is still the `auth.uid()` subject used by RLS.
+- Authentik application entitlement (`app-loyalty-admin`) permits central sign-in but grants no organization or role. OIDC groups, email domain, and user metadata are never tenant authority.
 - Organization roles come from `organization_memberships`, not `raw_user_meta_data`, email domain, or client-supplied organization ID.
-- The first production membership is created only after the Auth principal exists, through the deployment-only `loyalty_private.bootstrap_initial_tenant` boundary. Its direct PostgreSQL operator must assume `loyalty_owner`; browser, authenticated Data API, dashboard runtime, and worker roles have no execute privilege.
+- The first production membership is created only after the Auth principal exists and a real Authentik SSO session has linked and verified its custom identity, through the deployment-only `loyalty_private.bootstrap_initial_tenant` boundary. Its direct PostgreSQL operator must assume `loyalty_owner`; browser, authenticated Data API, dashboard runtime, and worker roles have no execute privilege.
 - RLS helpers query live membership rows. Sensitive writes recheck membership inside the database command.
 - Revocation sets `revoked_at` immediately. Because access tokens may remain valid after Auth deletion/revocation, live membership checks fail closed; high-risk operations may additionally validate the Auth session ID.
 - `app_metadata` may carry non-authoritative UI hints, never the sole tenant authorization decision.
 - MFA and recent-auth requirements apply to owner changes, credential rotation, exports, support grants, and manual value adjustments once those flows are implemented.
+
+Workforce and customer authentication remain distinct presentation and lifecycle paths. Customer password login and purpose-bound customer-export password reauthentication are not replaced by workforce SSO.
 
 ## Customer identity keys
 

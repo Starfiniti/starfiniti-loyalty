@@ -2,6 +2,7 @@
 
 ## What works
 
+- The dashboard can initiate PKCE sign-in through the exact Supabase provider `custom:starfiniti-sso`, accepts only the configured Supabase `/auth/v1/authorize` destination, and returns through the existing private no-store callback to the same Supabase Auth/RLS session model. Customer password flows remain separate.
 - Phase 0's reproducible npm workspace, responsive standalone Next.js Overview, Supabase migration baseline, WooCommerce HPOS scaffold, repository operating system, and pinned CI are verified.
 - The Docker-backed GitHub Actions database job replays migrations/seed and runs 1,049 transactional pgTAP assertions plus real two-session ledger/programme concurrency and property probes.
 - Phase 1 Rosy Rewards semantics are owner-approved and encoded as versioned configuration rather than global merchant assumptions.

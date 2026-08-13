@@ -385,6 +385,7 @@ tasks:
       - docs/operations/BACKUP_RESTORE.md
       - infrastructure/environments/proxmox/README.md
     evidence:
+      - Authentik workforce SSO is being integrated through Supabase custom OIDC with exact `/auth/v1` callbacks, PKCE, preserved customer password login, and an explicit owner-identity-before-tenant-bootstrap gate
       - digest-pinned dashboard and worker Dockerfiles have a constrained build context
       - pull-request CI builds both application images without publishing them
       - exact semantic-version tags are configured to rerun baseline and database gates before publishing commit-SHA and version GHCR images plus the checksummed WooCommerce ZIP

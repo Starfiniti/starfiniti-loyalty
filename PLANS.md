@@ -94,18 +94,18 @@ Phase 9 — merchant administration and customer experience. Shopify Phase 8 rem
 
 ## Active work
 
-- `P9-MERCHANT-HUB` (in progress): repository implementation and release hardening are complete and `v0.1.0` is live on Proxmox. The remaining launch work is to create the approved first Auth owner, bootstrap the tenant/programme, connect the real WooCommerce store, and execute authenticated and outage-recovery smoke tests.
+- `P9-MERCHANT-HUB` (in progress): repository implementation and release hardening are complete and `v0.1.0` is live on Proxmox. Authentik-to-Supabase workforce SSO is being released with public signup still disabled. The remaining launch work is owner-interactive SSO verification, same-UUID membership/RLS bootstrap, real WooCommerce connection, and authenticated/outage-recovery smoke tests.
 
 ## Next safe tasks
 
-1. Create the approved first Auth owner and bootstrap the initial tenant/programme.
-2. Connect the real WooCommerce store, then execute authenticated connector and outage-recovery smoke tests.
-3. Complete a clean-room PostgreSQL start plus WAL replay rehearsal and record measured RPO/RTO.
+1. Complete the approved owner's real Authentik SSO flow and verify the linked Supabase identity/session while it still has no tenant membership.
+2. Bootstrap the initial tenant/programme only for that verified UUID, then prove same-tenant and forbidden cross-tenant RLS behavior.
+3. Connect the real WooCommerce store, execute authenticated connector/outage-recovery smoke tests, and complete the clean-room WAL replay rehearsal.
 
 ## Dependencies and blockers
 
 - Production SSH, DNS, TLS, isolated VMs, pinned services, secrets, and encrypted off-host backup targets are configured and verified.
-- The approved first Auth owner email and the real WooCommerce store access remain product-owner inputs. Tenant membership itself is handled by the audited bootstrap command.
+- The owner email is approved; the only unavoidable identity input is the owner's interactive Authentik login. The real WooCommerce store access remains a product-owner input. Tenant membership itself is handled only after identity verification by the audited bootstrap command.
 
 ## Decisions awaiting approval
 
