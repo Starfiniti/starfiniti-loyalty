@@ -1,17 +1,17 @@
 # Quality Scorecard
 
-Scores are evidence-based and cover implementation through the Phase 9 merchant, hosted guest, and signed authenticated customer-account slices.
+Scores are evidence-based and cover implementation through the M02 deployment-entitlement production slice.
 
 | Category                      |  Weight | Current | Evidence                                                                                                                                                                |
 | ----------------------------- | ------: | ------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Functional/domain correctness |      20 |      20 | Rosy evaluation, immutable programme/ledger, order awards, cumulative refunds, and coupon issue/capture/cancel compensation execute deterministically                   |
 | Security/tenant isolation     |      20 |      19 | Tenant RLS, raw-body HMAC, encrypted plugin key, private queues, narrow roles, replay fences, and cross-tenant tests execute in CI                                      |
 | Ledger integrity/reliability  |      15 |      15 | Immutable zero-sum entries, origin-preserving reservations, layered idempotency, deterministic locks, compensation, races, and property probes pass                     |
-| Test strength                 |      15 |      15 | 177 unit tests, accessibility/i18n/package gates, 1,049 CI-passed pgTAP assertions, race/property probes, browser QA, and four WooCommerce runtimes                     |
+| Test strength                 |      15 |      15 | 185 unit tests, accessibility/package gates, 1,095 CI-passed pgTAP assertions, race/property probes, browser QA, and four WooCommerce runtimes                          |
 | Performance/storefront        |      10 |       7 | Checkout performs no hub call and the Hub-style merchant shell passes 390/1440-pixel responsive browser QA; no load measurements exist                                  |
 | Observability/operability     |      10 |       9 | Tenant queue health/issues, minimized support bundle, safe replay/reconciliation, exact reporting, worker leases, watermarks, SLOs, and recovery procedures are defined |
 | Documentation/maintainability |      10 |      10 | Accepted ADRs, executable examples, operating files, task graph, integration/API docs, package tooling, and evidence remain versioned                                   |
-| **Total**                     | **100** |  **95** | Phase 9 administration plus guest/member delivery and controlled redemption exist; load/restore drills and deployment remain release gates                              |
+| **Total**                     | **100** |  **95** | M02 entitlement authority is production-proven; the real-store pilot, full recovery, and load evidence remain automatic release gates                                   |
 
 Automatic fail remains active until complete application/Auth/signing-secret recovery and the real-store pilot exist. A higher total cannot override that missing critical gate.
 
@@ -27,7 +27,7 @@ Engineering quality and product completeness are deliberately separate. The mach
 | Customer value        |      15 |       5 | Discovery, progress, referrals, communications, and full store placements              |
 | Reliability           |      15 |      13 | Real-store outage and full recovery proof                                              |
 | Operations            |      10 |       8 | Capacity and clean-room application/Auth/secret recovery                               |
-| Enterprise/commercial |      10 |       2 | Tenant SSO/SCIM, agency controls, entitlements, metering, managed billing              |
-| **Total**             | **100** |  **49** | Enterprise finish requires at least 90                                                 |
+| Enterprise/commercial |      10 |       4 | Tenant SSO/SCIM, agency controls, metering, and managed billing                        |
+| **Total**             | **100** |  **51** | Enterprise finish requires at least 90                                                 |
 
 Every module also requires at least 90/100 and at least 80% of every relevant category. Unexplained value differences, cross-tenant access, duplicate effects, checkout dependency, missing recovery/canary evidence, or unresolved critical/high findings fail the gate regardless of score.

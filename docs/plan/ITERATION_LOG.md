@@ -387,3 +387,12 @@
 - PR `#20` exact-head run `31713151458` passed all seven CI jobs with 177 unit tests, both production images, twenty-six migration replays, all 1,049 pgTAP assertions, concurrency/property probes, and all four minimum/current HPOS/legacy WooCommerce runtimes.
 - Release run `31713458344` published `v0.1.10`, the checksummed WooCommerce ZIP, and immutable commit `4713c65e4ca47c0a97264854afea46f6a8730a3a` dashboard/worker images. Both images are healthy on the production Proxmox application VM with the prior `v0.1.9` environment retained for rollback.
 - Authenticated production Chrome verification passed all four live Programme routes, first-reward setup, `€200 → Bloom → 1,200 points` simulation, overlap blocking, exact navigation, the mobile drawer, and a 390-pixel no-overflow check with no browser warnings or errors.
+
+## 2026-08-13 — M02 deployment entitlements
+
+- Added versioned self-hosted/managed deployment modes, 18 stable capabilities, exact optional limits, append-only tenant overrides, deterministic percentage rollout, explicit canaries, and private externally configured provider mappings.
+- Made PostgreSQL the authority and denied browser/runtime/worker mutation. Auth claims and provider configuration grant nothing; six balance/refund/reconciliation/checkout/export/promised-redemption paths cannot be disabled.
+- Added contracts, a fail-closed dashboard adapter, ADR-0010, API/data/threat/deployment/runbook updates, a deterministic no-provider validator, and 46 focused pgTAP assertions.
+- Exact-head run `31723413178` passed baseline, both containers, migration replay, all 1,095 pgTAP assertions, concurrency/property probes, and all four WooCommerce runtime cells.
+- PRs #22–#24 merged sequentially. Production took a new physical base backup, applied the exact v27 migration, entered managed mode, enabled only the Starfiniti `programme.v2` canary, retained all 6/6 protected paths, kept billing/provider mapping inactive, and passed WAL/readiness/unauthorized-ingress smoke.
+- M02 closes at 93/100 with every category at or above 80%. Product readiness rises from 49/100 to 51/100; M03 is next while the M01 real-store gate remains externally pending.

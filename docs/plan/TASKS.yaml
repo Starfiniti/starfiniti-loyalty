@@ -539,7 +539,7 @@ tasks:
   - id: M02-ENTITLEMENTS-AND-FLAGS
     title: Add deployment modes, entitlements, limits, and tenant rollout controls
     module: M02
-    status: in_progress
+    status: complete
     module_score: 93
     dependencies: [M00-REALITY-AND-EVIDENCE]
     hypothesis: Database-authoritative entitlements allow safe managed rollout without remote enforcement in self-hosted installations or interference with loyalty value.
@@ -589,7 +589,10 @@ tasks:
       - 66 contract and 86 dashboard tests pass with exact bigint and fail-closed snapshot coverage
       - migration 20260813190000 adds immutable deployment catalogue rollout provider and tenant evidence
       - exact-head GitHub Actions run 31722665940 replayed 27 migrations and passed all 1,095 pgTAP assertions plus concurrency and property probes
-      - repository score is 93/100; production migration, managed mode, and Starfiniti tenant canary evidence remain before closure
+      - module score is 93/100 with every category at or above 80 percent
+      - production applied the exact additive migration after a successful physical base backup and registered v27 once
+      - managed mode resolves one Starfiniti programme.v2 canary while all 6 protected paths remain enabled and billing/provider mappings remain disabled and empty
+      - docs/plan/evidence/M02/production-rollout-2026-08-13.md
 
   - id: M03-EARNING-RULES
     title: Deliver ProgrammeDefinitionV2 and competitive earning rules
