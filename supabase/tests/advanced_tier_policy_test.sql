@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(40);
+select plan(80);
 
 select has_table('loyalty', 'programme_tier_policies', 'advanced tier policies exist');
 select has_table('loyalty', 'programme_tier_policy_levels', 'advanced tier levels exist');
@@ -343,6 +343,543 @@ select results_eq(
   'compatible V2 publication is not retroactively reinterpreted as advanced VIP'
 );
 reset role;
+
+select has_table(
+  'loyalty_private', 'tier_qualification_facts',
+  'live qualification uses immutable private event-time facts'
+);
+select ok(
+  (select relrowsecurity from pg_class
+   where oid = 'loyalty_private.tier_qualification_facts'::regclass),
+  'live qualification facts have RLS enabled'
+);
+select has_trigger(
+  'loyalty_private', 'tier_qualification_facts',
+  'tier_qualification_facts_immutable',
+  'live qualification facts cannot be rewritten'
+);
+select ok(
+  not has_table_privilege(
+    'authenticated', 'loyalty_private.tier_qualification_facts', 'SELECT'
+  ),
+  'browser sessions cannot read private qualification facts'
+);
+select ok(
+  not has_function_privilege(
+    'authenticated',
+    'loyalty_private.get_tier_qualification_context_v2(bigint,bigint,bigint,bigint,timestamp with time zone)',
+    'EXECUTE'
+  ),
+  'browser sessions cannot request authoritative qualification context'
+);
+select ok(
+  has_function_privilege(
+    'loyalty_worker',
+    'loyalty_private.commit_programme_v2_award(bigint,bigint,bigint,bigint,bigint,text,text,text,bytea,bytea,jsonb,jsonb,timestamp with time zone,timestamp with time zone)',
+    'EXECUTE'
+  ),
+  'worker enters the fact-producing V2 award boundary'
+);
+select ok(
+  has_function_privilege(
+    'loyalty_worker',
+    'loyalty_private.record_tier_refund_fact_v2(bigint,uuid,uuid)',
+    'EXECUTE'
+  ),
+  'worker can append refund compensation facts'
+);
+select ok(
+  has_function_privilege(
+    'loyalty_worker',
+    'loyalty_private.get_tier_qualification_context_v2(bigint,bigint,bigint,bigint,timestamp with time zone)',
+    'EXECUTE'
+  ),
+  'worker can read one serialized authoritative snapshot'
+);
+select ok(
+  has_function_privilege(
+    'loyalty_worker',
+    'loyalty_private.record_tier_qualification_decision_v2(bigint,bigint,bigint,bigint,bigint,timestamp with time zone,jsonb)',
+    'EXECUTE'
+  ),
+  'worker can submit a pure evaluation for independent verification'
+);
+select ok(
+  not has_function_privilege(
+    'loyalty_worker',
+    'loyalty_private.commit_programme_v2_award_core(bigint,bigint,bigint,bigint,bigint,text,text,text,bytea,bytea,jsonb,jsonb,timestamp with time zone,timestamp with time zone)',
+    'EXECUTE'
+  ),
+  'worker cannot bypass immutable qualification fact creation'
+);
+select ok(
+  not has_table_privilege(
+    'loyalty_worker', 'loyalty_private.tier_qualification_facts', 'SELECT'
+  ),
+  'worker cannot enumerate private facts outside narrow functions'
+);
+
+insert into loyalty.workspaces (public_id, organization_id, slug, name)
+select '85000000-0000-4000-8000-000000000110', id, 'm05-store', 'M05 Store'
+from loyalty.organizations where slug = 'm05-one';
+
+insert into loyalty.commerce_connections (
+  public_id, organization_id, workspace_id, platform, external_store_id,
+  external_url, display_name, key_version, signing_secret_ciphertext,
+  programme_id
+)
+select '85000000-0000-4000-8000-000000000111', organization.id, workspace.id,
+  'woocommerce', 'm05-store', 'https://m05.example.test', 'M05 Store',
+  'v1', 'test://m05', programme.id
+from loyalty.organizations as organization
+join loyalty.workspaces as workspace on workspace.organization_id = organization.id
+join loyalty.programmes as programme on programme.organization_id = organization.id
+  and programme.public_id = '85000000-0000-4000-8000-000000000101'
+where organization.slug = 'm05-one';
+
+insert into loyalty.customers (public_id, organization_id, display_reference)
+select '85000000-0000-4000-8000-000000000112', id, 'm05-member'
+from loyalty.organizations where slug = 'm05-one';
+
+create temporary table m05_live_refs (name text primary key, value bigint not null);
+insert into m05_live_refs
+select 'organization', organization.id
+from loyalty.organizations as organization where organization.slug = 'm05-one'
+union all
+select 'organization-two', organization.id
+from loyalty.organizations as organization where organization.slug = 'm05-two'
+union all
+select 'group', programme.programme_group_id
+from loyalty.programmes as programme
+where programme.public_id = '85000000-0000-4000-8000-000000000101'
+union all
+select 'programme', programme.id
+from loyalty.programmes as programme
+where programme.public_id = '85000000-0000-4000-8000-000000000101'
+union all
+select 'version', version.id
+from loyalty.programme_versions as version
+join loyalty.programmes as programme on programme.id = version.programme_id
+where programme.public_id = '85000000-0000-4000-8000-000000000101'
+  and version.status = 'published'
+union all
+select 'customer', customer.id
+from loyalty.customers as customer
+where customer.public_id = '85000000-0000-4000-8000-000000000112';
+
+create function pg_temp.m05_live_ref(target_name text)
+returns bigint
+language sql
+stable
+security definer
+set search_path = pg_catalog, pg_temp
+as $$
+  select value from pg_temp.m05_live_refs where name = target_name;
+$$;
+revoke all on function pg_temp.m05_live_ref(text) from public;
+grant execute on function pg_temp.m05_live_ref(text) to loyalty_worker;
+
+create function pg_temp.m05_evaluation_ref(target_idempotency_key text)
+returns uuid
+language sql
+stable
+security definer
+set search_path = pg_catalog, pg_temp
+as $$
+  select evaluation.public_id
+  from loyalty_private.programme_evaluations as evaluation
+  where evaluation.idempotency_key = target_idempotency_key;
+$$;
+revoke all on function pg_temp.m05_evaluation_ref(text) from public;
+grant execute on function pg_temp.m05_evaluation_ref(text) to loyalty_worker;
+
+create temporary view m05_live_facts as
+select * from loyalty_private.tier_qualification_facts;
+grant select on pg_temp.m05_live_facts to loyalty_worker;
+
+create function pg_temp.add_m05_live_event(
+  target_number integer,
+  target_event_type text,
+  target_occurred_at timestamptz
+)
+returns bigint
+language plpgsql
+as $$
+declare
+  created_inbox_id bigint;
+  created_event_id bigint;
+begin
+  insert into loyalty_private.commerce_delivery_inbox (
+    organization_id, connection_id, source_delivery_id, envelope_version,
+    source_event_id, event_type, source_object_id, occurred_at, delivered_at,
+    key_version, nonce, body_sha256, raw_body, state, processed_at
+  )
+  select organization.id, connection.id, 'm05-delivery-' || target_number,
+    '1', 'm05-event-' || target_number, target_event_type, 'order-m05-1',
+    target_occurred_at, target_occurred_at, 'v1',
+    'm05-nonce-' || target_number,
+    repeat(substr(md5(target_number::text), 1, 1), 64),
+    '{}'::jsonb, 'applied', target_occurred_at
+  from loyalty.organizations as organization
+  join loyalty.commerce_connections as connection
+    on connection.organization_id = organization.id
+  where organization.slug = 'm05-one'
+  returning id into created_inbox_id;
+
+  insert into loyalty_private.canonical_commerce_events (
+    organization_id, connection_id, delivery_inbox_id, source_event_id,
+    normalization_version, event_type, source_object_id, occurred_at, payload
+  )
+  select organization.id, connection.id, created_inbox_id,
+    'm05-event-' || target_number, 'v1', target_event_type,
+    'order-m05-1', target_occurred_at, '{}'::jsonb
+  from loyalty.organizations as organization
+  join loyalty.commerce_connections as connection
+    on connection.organization_id = organization.id
+  where organization.slug = 'm05-one'
+  returning id into created_event_id;
+  return created_event_id;
+end;
+$$;
+
+insert into m05_live_refs values
+  ('event-award', pg_temp.add_m05_live_event(
+    1, 'commerce.order.status_changed', '2026-08-14T10:00:00Z'
+  )),
+  ('event-refund-partial', pg_temp.add_m05_live_event(
+    2, 'commerce.order.refunded', '2026-08-20T10:00:00Z'
+  )),
+  ('event-refund-full', pg_temp.add_m05_live_event(
+    3, 'commerce.order.refunded', '2026-09-21T10:00:00Z'
+  )),
+  ('event-refund-invalid', pg_temp.add_m05_live_event(
+    4, 'commerce.order.refunded', '2026-09-22T10:00:00Z'
+  ));
+
+create function pg_temp.m05_entry_result()
+returns jsonb
+language sql
+immutable
+as $$
+  select '{
+    "version":"2","evaluatedAt":"2026-08-14T10:00:01.000Z",
+    "window":{"kind":"rolling_days","startsAt":"2025-08-14T10:00:01.000Z","endsAt":"2026-08-14T10:00:01.000Z"},
+    "metrics":{"eligibleSpendMinor":"16000","earnedPoints":"800","orderCount":"1","referralCount":"0","verifiedActionCount":"0","verifiedActionCounts":{}},
+    "currentTierCode":null,"qualifiedTierCode":"bloom","effectiveTierCode":"bloom","transition":"entry","belowThresholdSince":null,"graceUntil":null,
+    "levels":[
+      {"tierCode":"rose","thresholdKind":"base","operator":null,"matched":true,"thresholds":[]},
+      {"tierCode":"bloom","thresholdKind":"entry","operator":"all","matched":true,"thresholds":[{"metric":"eligible_spend","activityCodes":[],"actual":"16000","minimum":"15000","remaining":"0","matched":true}]},
+      {"tierCode":"icon","thresholdKind":"entry","operator":"all","matched":false,"thresholds":[{"metric":"verified_action_count","activityCodes":["verified-review"],"actual":"0","minimum":"3","remaining":"3","matched":false}]}
+    ],
+    "nextMilestone":{"tierCode":"icon","thresholdKind":"entry","operator":"all","matched":false,"thresholds":[{"metric":"verified_action_count","activityCodes":["verified-review"],"actual":"0","minimum":"3","remaining":"3","matched":false}]}
+  }'::jsonb;
+$$;
+
+create function pg_temp.m05_grace_result()
+returns jsonb
+language sql
+immutable
+as $$
+  select '{
+    "version":"2","evaluatedAt":"2026-08-20T10:00:01.000Z",
+    "window":{"kind":"rolling_days","startsAt":"2025-08-20T10:00:01.000Z","endsAt":"2026-08-20T10:00:01.000Z"},
+    "metrics":{"eligibleSpendMinor":"11000","earnedPoints":"550","orderCount":"1","referralCount":"0","verifiedActionCount":"0","verifiedActionCounts":{}},
+    "currentTierCode":"bloom","qualifiedTierCode":"rose","effectiveTierCode":"bloom","transition":"grace","belowThresholdSince":"2026-08-20T10:00:01.000Z","graceUntil":"2026-09-19T10:00:01.000Z",
+    "levels":[
+      {"tierCode":"rose","thresholdKind":"base","operator":null,"matched":true,"thresholds":[]},
+      {"tierCode":"bloom","thresholdKind":"retention","operator":"any","matched":false,"thresholds":[{"metric":"eligible_spend","activityCodes":[],"actual":"11000","minimum":"12500","remaining":"1500","matched":false},{"metric":"order_count","activityCodes":[],"actual":"1","minimum":"3","remaining":"2","matched":false}]},
+      {"tierCode":"icon","thresholdKind":"entry","operator":"all","matched":false,"thresholds":[{"metric":"verified_action_count","activityCodes":["verified-review"],"actual":"0","minimum":"3","remaining":"3","matched":false}]}
+    ],
+    "nextMilestone":{"tierCode":"icon","thresholdKind":"entry","operator":"all","matched":false,"thresholds":[{"metric":"verified_action_count","activityCodes":["verified-review"],"actual":"0","minimum":"3","remaining":"3","matched":false}]}
+  }'::jsonb;
+$$;
+
+create function pg_temp.m05_downgrade_result()
+returns jsonb
+language sql
+immutable
+as $$
+  select '{
+    "version":"2","evaluatedAt":"2026-09-21T10:00:01.000Z",
+    "window":{"kind":"rolling_days","startsAt":"2025-09-21T10:00:01.000Z","endsAt":"2026-09-21T10:00:01.000Z"},
+    "metrics":{"eligibleSpendMinor":"0","earnedPoints":"0","orderCount":"0","referralCount":"0","verifiedActionCount":"0","verifiedActionCounts":{}},
+    "currentTierCode":"bloom","qualifiedTierCode":"rose","effectiveTierCode":"rose","transition":"downgrade","belowThresholdSince":"2026-08-20T10:00:01.000Z","graceUntil":"2026-09-19T10:00:01.000Z",
+    "levels":[
+      {"tierCode":"rose","thresholdKind":"base","operator":null,"matched":true,"thresholds":[]},
+      {"tierCode":"bloom","thresholdKind":"retention","operator":"any","matched":false,"thresholds":[{"metric":"eligible_spend","activityCodes":[],"actual":"0","minimum":"12500","remaining":"12500","matched":false},{"metric":"order_count","activityCodes":[],"actual":"0","minimum":"3","remaining":"3","matched":false}]},
+      {"tierCode":"icon","thresholdKind":"entry","operator":"all","matched":false,"thresholds":[{"metric":"verified_action_count","activityCodes":["verified-review"],"actual":"0","minimum":"3","remaining":"3","matched":false}]}
+    ],
+    "nextMilestone":{"tierCode":"bloom","thresholdKind":"retention","operator":"any","matched":false,"thresholds":[{"metric":"eligible_spend","activityCodes":[],"actual":"0","minimum":"12500","remaining":"12500","matched":false},{"metric":"order_count","activityCodes":[],"actual":"0","minimum":"3","remaining":"3","matched":false}]}
+  }'::jsonb;
+$$;
+
+grant execute on function pg_temp.m05_entry_result(),
+  pg_temp.m05_grace_result(), pg_temp.m05_downgrade_result()
+  to loyalty_worker;
+
+set local role loyalty_worker;
+
+select results_eq(
+  $$ select outcome from loyalty_private.commit_programme_v2_award(
+    pg_temp.m05_live_ref('organization'), pg_temp.m05_live_ref('group'),
+    pg_temp.m05_live_ref('version'), pg_temp.m05_live_ref('event-award'),
+    pg_temp.m05_live_ref('customer'), 'woocommerce:order:m05-1',
+    'm05:live:award:evaluation', 'm05:live:award:ledger',
+    decode(repeat('1',64),'hex'), decode(repeat('2',64),'hex'),
+    '{"version":"2","eventId":"woo:event:m05:1","source":"purchase","eligibleSpendMinor":"16000","awardedPoints":"800","tierCodeSnapshot":"rose","pendingAt":"2026-08-14T10:00:00Z","availableAt":"2026-09-13T10:00:00Z","expiresAt":"2027-09-13T10:00:00Z","selectedMultiplierRuleCode":null,"contributions":[{"ruleCode":"purchase-base","effectKind":"base_rate","uncappedPoints":"800","awardedPoints":"800","uncappedNumerator":"800","awardedNumerator":"800","denominator":"1","capApplied":"none"}],"lines":[]}'::jsonb,
+    '{}'::jsonb, '2026-08-14T10:00:00Z', '2026-08-14T10:00:01Z'
+  ) $$,
+  array['created'::text],
+  'purchase award appends its qualification fact atomically'
+);
+select results_eq(
+  $$ select fact_kind, eligible_spend_minor_delta, earned_points_delta,
+       order_count_delta::integer, effective_at, recorded_at
+     from pg_temp.m05_live_facts $$,
+  $$ values ('purchase'::text, 16000::bigint, 800::bigint, 1,
+    '2026-08-14T10:00:00Z'::timestamptz,
+    '2026-08-14T10:00:01Z'::timestamptz) $$,
+  'purchase fact preserves separate event and recording time'
+);
+select results_eq(
+  $$ select outcome from loyalty_private.commit_programme_v2_award(
+    pg_temp.m05_live_ref('organization'), pg_temp.m05_live_ref('group'),
+    pg_temp.m05_live_ref('version'), pg_temp.m05_live_ref('event-award'),
+    pg_temp.m05_live_ref('customer'), 'woocommerce:order:m05-1',
+    'm05:live:award:evaluation', 'm05:live:award:ledger',
+    decode(repeat('1',64),'hex'), decode(repeat('2',64),'hex'),
+    '{"version":"2","eventId":"woo:event:m05:1","source":"purchase","eligibleSpendMinor":"16000","awardedPoints":"800","tierCodeSnapshot":"rose","pendingAt":"2026-08-14T10:00:00Z","availableAt":"2026-09-13T10:00:00Z","expiresAt":"2027-09-13T10:00:00Z","selectedMultiplierRuleCode":null,"contributions":[{"ruleCode":"purchase-base","effectKind":"base_rate","uncappedPoints":"800","awardedPoints":"800","uncappedNumerator":"800","awardedNumerator":"800","denominator":"1","capApplied":"none"}],"lines":[]}'::jsonb,
+    '{}'::jsonb, '2026-08-14T10:00:00Z', '2026-08-14T10:00:01Z'
+  ) $$,
+  array['duplicate'::text],
+  'duplicate award returns its original effect'
+);
+select results_eq(
+  $$ select count(*)::bigint from pg_temp.m05_live_facts $$,
+  array[1::bigint],
+  'duplicate award creates one qualification fact'
+);
+select results_eq(
+  $$ select metrics from loyalty_private.get_tier_qualification_context_v2(
+    pg_temp.m05_live_ref('organization'), pg_temp.m05_live_ref('group'),
+    pg_temp.m05_live_ref('version'), pg_temp.m05_live_ref('customer'),
+    '2026-08-14T10:00:01Z'
+  ) $$,
+  $$ values ('{"eligibleSpendMinor":"16000","earnedPoints":"800","orderCount":"1","referralCount":"0","verifiedActionCount":"0","verifiedActionCounts":{}}'::jsonb) $$,
+  'authoritative entry snapshot reconciles to the immutable fact'
+);
+select throws_ok(
+  $$ select * from loyalty_private.record_tier_qualification_decision_v2(
+    pg_temp.m05_live_ref('organization'), pg_temp.m05_live_ref('group'),
+    pg_temp.m05_live_ref('version'), pg_temp.m05_live_ref('event-award'),
+    pg_temp.m05_live_ref('customer'), '2026-08-14T10:00:01Z',
+    jsonb_set(pg_temp.m05_entry_result(), '{metrics,eligibleSpendMinor}', '"99999"')
+  ) $$,
+  '23514', 'live tier evaluation does not match authoritative metrics',
+  'worker cannot forge qualification metrics'
+);
+select results_eq(
+  $$ select outcome from loyalty_private.record_tier_qualification_decision_v2(
+    pg_temp.m05_live_ref('organization'), pg_temp.m05_live_ref('group'),
+    pg_temp.m05_live_ref('version'), pg_temp.m05_live_ref('event-award'),
+    pg_temp.m05_live_ref('customer'), '2026-08-14T10:00:01Z',
+    pg_temp.m05_entry_result()
+  ) $$,
+  array['created'::text],
+  'verified entry decision is appended'
+);
+select results_eq(
+  $$ select membership.tier_code
+     from loyalty.tier_memberships as membership
+     where membership.effective_until is null $$,
+  array['bloom'::text],
+  'entry creates one current Bloom membership'
+);
+
+select results_eq(
+  $$ select outcome from loyalty_private.record_programme_evaluation(
+    pg_temp.m05_live_ref('organization'), pg_temp.m05_live_ref('group'),
+    pg_temp.m05_live_ref('version'), pg_temp.m05_live_ref('event-refund-partial'),
+    'live_refund', 'woocommerce:refund:m05-partial',
+    'm05:refund:partial:evaluation', decode(repeat('3',64),'hex'),
+    decode(repeat('4',64),'hex'),
+    '{"version":"2","orderEventId":"woo:event:m05:1","cumulativeRefundedEligibleSpendMinor":"5000","originalEligibleSpendMinor":"16000","reversalPoints":"250"}'::jsonb,
+    '{}'::jsonb, '2026-08-20T10:00:01Z'
+  ) $$,
+  array['created'::text],
+  'partial refund evaluation is immutable and idempotent'
+);
+select results_eq(
+  $$ select outcome from loyalty_private.record_tier_refund_fact_v2(
+    pg_temp.m05_live_ref('organization'),
+    pg_temp.m05_evaluation_ref('m05:live:award:evaluation'),
+    pg_temp.m05_evaluation_ref('m05:refund:partial:evaluation')
+  ) $$,
+  array['created'::text],
+  'partial refund appends a compensating qualification fact'
+);
+select results_eq(
+  $$ select metrics from loyalty_private.get_tier_qualification_context_v2(
+    pg_temp.m05_live_ref('organization'), pg_temp.m05_live_ref('group'),
+    pg_temp.m05_live_ref('version'), pg_temp.m05_live_ref('customer'),
+    '2026-08-20T10:00:01Z'
+  ) $$,
+  $$ values ('{"eligibleSpendMinor":"11000","earnedPoints":"550","orderCount":"1","referralCount":"0","verifiedActionCount":"0","verifiedActionCounts":{}}'::jsonb) $$,
+  'partial refund reduces spend and points without removing the order'
+);
+select results_eq(
+  $$ select outcome from loyalty_private.record_tier_qualification_decision_v2(
+    pg_temp.m05_live_ref('organization'), pg_temp.m05_live_ref('group'),
+    pg_temp.m05_live_ref('version'), pg_temp.m05_live_ref('event-refund-partial'),
+    pg_temp.m05_live_ref('customer'), '2026-08-20T10:00:01Z',
+    pg_temp.m05_grace_result()
+  ) $$,
+  array['created'::text],
+  'failed retention starts an audited grace decision'
+);
+select results_eq(
+  $$ select tier_code from loyalty.tier_memberships
+     where effective_until is null $$,
+  array['bloom'::text],
+  'grace preserves the current tier'
+);
+select results_eq(
+  $$ select below_threshold_since, grace_until
+     from loyalty.tier_decisions order by id desc limit 1 $$,
+  $$ values (
+    '2026-08-20T10:00:01Z'::timestamptz,
+    '2026-09-19T10:00:01Z'::timestamptz
+  ) $$,
+  'grace boundary is stored exactly'
+);
+
+select results_eq(
+  $$ select outcome from loyalty_private.record_programme_evaluation(
+    pg_temp.m05_live_ref('organization'), pg_temp.m05_live_ref('group'),
+    pg_temp.m05_live_ref('version'), pg_temp.m05_live_ref('event-refund-full'),
+    'live_refund', 'woocommerce:refund:m05-full',
+    'm05:refund:full:evaluation', decode(repeat('5',64),'hex'),
+    decode(repeat('6',64),'hex'),
+    '{"version":"2","orderEventId":"woo:event:m05:1","cumulativeRefundedEligibleSpendMinor":"16000","originalEligibleSpendMinor":"16000","reversalPoints":"550"}'::jsonb,
+    '{}'::jsonb, '2026-09-21T10:00:01Z'
+  ) $$,
+  array['created'::text],
+  'full refund evaluation is appended after the partial refund'
+);
+select results_eq(
+  $$ select outcome from loyalty_private.record_tier_refund_fact_v2(
+    pg_temp.m05_live_ref('organization'),
+    pg_temp.m05_evaluation_ref('m05:live:award:evaluation'),
+    pg_temp.m05_evaluation_ref('m05:refund:full:evaluation')
+  ) $$,
+  array['created'::text],
+  'full refund appends only the remaining compensation'
+);
+select results_eq(
+  $$ select metrics from loyalty_private.get_tier_qualification_context_v2(
+    pg_temp.m05_live_ref('organization'), pg_temp.m05_live_ref('group'),
+    pg_temp.m05_live_ref('version'), pg_temp.m05_live_ref('customer'),
+    '2026-09-21T10:00:01Z'
+  ) $$,
+  $$ values ('{"eligibleSpendMinor":"0","earnedPoints":"0","orderCount":"0","referralCount":"0","verifiedActionCount":"0","verifiedActionCounts":{}}'::jsonb) $$,
+  'full refund reconciles every qualification metric to zero'
+);
+select results_eq(
+  $$ select outcome from loyalty_private.record_tier_qualification_decision_v2(
+    pg_temp.m05_live_ref('organization'), pg_temp.m05_live_ref('group'),
+    pg_temp.m05_live_ref('version'), pg_temp.m05_live_ref('event-refund-full'),
+    pg_temp.m05_live_ref('customer'), '2026-09-21T10:00:01Z',
+    pg_temp.m05_downgrade_result()
+  ) $$,
+  array['created'::text],
+  'expired grace appends a verified downgrade decision'
+);
+select results_eq(
+  $$ select tier_code from loyalty.tier_memberships
+     where effective_until is null $$,
+  array['rose'::text],
+  'expired grace moves the current membership to Rose'
+);
+select results_eq(
+  $$ select count(*)::bigint,
+       count(*) filter (where effective_until is null)::bigint
+     from loyalty.tier_memberships $$,
+  $$ values (2::bigint, 1::bigint) $$,
+  'membership history retains Bloom and exactly one current Rose row'
+);
+select results_eq(
+  $$ select count(*)::bigint from pg_temp.m05_live_facts
+     where fact_kind = 'refund'
+       and effective_at = '2026-08-14T10:00:00Z'
+       and recorded_at > effective_at $$,
+  array[2::bigint],
+  'refund facts compensate the original order event time without rewriting it'
+);
+select results_eq(
+  $$ select outcome from loyalty_private.record_tier_refund_fact_v2(
+    pg_temp.m05_live_ref('organization'),
+    pg_temp.m05_evaluation_ref('m05:live:award:evaluation'),
+    pg_temp.m05_evaluation_ref('m05:refund:full:evaluation')
+  ) $$,
+  array['duplicate'::text],
+  'duplicate refund fact returns the original immutable fact'
+);
+select results_eq(
+  $$ select count(*)::bigint from pg_temp.m05_live_facts $$,
+  array[3::bigint],
+  'award and two refunds create exactly three qualification facts'
+);
+
+select results_eq(
+  $$ select outcome from loyalty_private.record_programme_evaluation(
+    pg_temp.m05_live_ref('organization'), pg_temp.m05_live_ref('group'),
+    pg_temp.m05_live_ref('version'), pg_temp.m05_live_ref('event-refund-invalid'),
+    'live_refund', 'woocommerce:refund:m05-invalid',
+    'm05:refund:invalid:evaluation', decode(repeat('7',64),'hex'),
+    decode(repeat('8',64),'hex'),
+    '{"version":"2","orderEventId":"woo:event:m05:1","cumulativeRefundedEligibleSpendMinor":"16000","originalEligibleSpendMinor":"99999","reversalPoints":"0"}'::jsonb,
+    '{}'::jsonb, '2026-09-22T10:00:01Z'
+  ) $$,
+  array['created'::text],
+  'invalid refund evidence is stored before the fact boundary rejects it'
+);
+select throws_ok(
+  $$ select * from loyalty_private.record_tier_refund_fact_v2(
+    pg_temp.m05_live_ref('organization'),
+    pg_temp.m05_evaluation_ref('m05:live:award:evaluation'),
+    pg_temp.m05_evaluation_ref('m05:refund:invalid:evaluation')
+  ) $$,
+  '23514', 'refund tier fact cumulative spend moved outside its original award',
+  'forged original totals cannot release qualification value'
+);
+select throws_ok(
+  $$ select * from loyalty_private.get_tier_qualification_context_v2(
+    pg_temp.m05_live_ref('organization-two'),
+    pg_temp.m05_live_ref('group'), pg_temp.m05_live_ref('version'),
+    pg_temp.m05_live_ref('customer'), '2026-09-22T10:00:01Z'
+  ) $$,
+  '22023', 'unknown active tier customer',
+  'cross-tenant qualification context fails closed'
+);
+reset role;
+
+select throws_ok(
+  $$ update loyalty_private.tier_qualification_facts
+     set earned_points_delta = earned_points_delta + 1 $$,
+  '55000', 'immutable loyalty history cannot be changed',
+  'qualification facts reject corrective rewrites'
+);
+select results_eq(
+  $$ select count(*)::bigint from loyalty.tier_decisions $$,
+  array[3::bigint],
+  'entry grace and downgrade remain as three attributable decisions'
+);
+select results_eq(
+  $$ select count(*)::bigint from loyalty.tier_memberships
+     where effective_until is null $$,
+  array[1::bigint],
+  'live qualification leaves exactly one current tier membership'
+);
 
 select * from finish();
 rollback;

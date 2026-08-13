@@ -1,8 +1,10 @@
 import type {
+  TierLevelProgressV2,
+  TierMetricSnapshotV2,
   TierPolicyLevelV2,
   TierPolicyV2,
+  TierQualificationEvaluationV2,
   TierQualificationExpressionV2,
-  TierQualificationMetricV2,
   TierQualificationThresholdV2,
 } from "@starfiniti/contracts/tier-policy-v2";
 
@@ -26,55 +28,18 @@ export interface TierQualificationFactV2 {
   readonly activityCode: string | null;
 }
 
-export interface TierMetricSnapshotV2 {
-  readonly eligibleSpendMinor: string;
-  readonly earnedPoints: string;
-  readonly orderCount: string;
-  readonly referralCount: string;
-  readonly verifiedActionCount: string;
-  readonly verifiedActionCounts: Readonly<Record<string, string>>;
-}
-
-export interface TierThresholdProgressV2 {
-  readonly metric: TierQualificationMetricV2;
-  readonly activityCodes: readonly string[];
-  readonly actual: string;
-  readonly minimum: string;
-  readonly remaining: string;
-  readonly matched: boolean;
-}
-
-export interface TierLevelProgressV2 {
-  readonly tierCode: string;
-  readonly thresholdKind: "base" | "entry" | "retention" | "reentry";
-  readonly operator: "all" | "any" | null;
-  readonly matched: boolean;
-  readonly thresholds: readonly TierThresholdProgressV2[];
-}
-
-export interface TierQualificationEvaluationV2 {
-  readonly version: "2";
-  readonly evaluatedAt: string;
-  readonly window: Readonly<{
-    kind: TierPolicyV2["qualificationPeriod"]["kind"];
-    startsAt: string | null;
-    endsAt: string | null;
-  }>;
-  readonly metrics: TierMetricSnapshotV2;
-  readonly currentTierCode: string | null;
-  readonly qualifiedTierCode: string;
-  readonly effectiveTierCode: string;
-  readonly transition:
-    "entry" | "none" | "upgrade" | "reentry" | "grace" | "downgrade";
-  readonly belowThresholdSince: string | null;
-  readonly graceUntil: string | null;
-  readonly levels: readonly TierLevelProgressV2[];
-  readonly nextMilestone: TierLevelProgressV2 | null;
-}
-
 export interface EvaluateTierQualificationInputV2 {
   readonly policy: TierPolicyV2;
   readonly facts: readonly TierQualificationFactV2[];
+  readonly evaluatedAt: string;
+  readonly currentTierCode: string | null;
+  readonly previouslyHeldTierCodes: readonly string[];
+  readonly belowThresholdSince: string | null;
+}
+
+export interface EvaluateTierQualificationSnapshotInputV2 {
+  readonly policy: TierPolicyV2;
+  readonly metrics: TierMetricSnapshotV2;
   readonly evaluatedAt: string;
   readonly currentTierCode: string | null;
   readonly previouslyHeldTierCodes: readonly string[];
@@ -314,6 +279,38 @@ function aggregateFacts(
   };
 }
 
+function validateMetricSnapshot(metrics: TierMetricSnapshotV2): void {
+  for (const [name, value] of [
+    ["Eligible spend", metrics.eligibleSpendMinor],
+    ["Earned points", metrics.earnedPoints],
+    ["Order count", metrics.orderCount],
+    ["Referral count", metrics.referralCount],
+    ["Verified action count", metrics.verifiedActionCount],
+  ] as const) {
+    assertNonNegative(parseSignedBigint(value, name), name);
+  }
+  for (const [activityCode, value] of Object.entries(
+    metrics.verifiedActionCounts,
+  )) {
+    if (!/^[a-z][a-z0-9_-]{0,79}$/u.test(activityCode)) {
+      throw new TypeError("Verified action metric code is invalid");
+    }
+    assertNonNegative(
+      parseSignedBigint(value, `Verified action ${activityCode}`),
+      `Verified action ${activityCode}`,
+    );
+  }
+  const actionTotal = Object.values(metrics.verifiedActionCounts).reduce(
+    (total, value) => total + BigInt(value),
+    0n,
+  );
+  if (actionTotal !== BigInt(metrics.verifiedActionCount)) {
+    throw new RangeError(
+      "Verified action total must equal its per-activity metrics",
+    );
+  }
+}
+
 function actualForThreshold(
   threshold: TierQualificationThresholdV2,
   metrics: TierMetricSnapshotV2,
@@ -405,7 +402,24 @@ export function evaluateTierQualificationV2(
   input: EvaluateTierQualificationInputV2,
 ): TierQualificationEvaluationV2 {
   const evaluatedAt = parseInstant(input.evaluatedAt, "Evaluation instant");
+  const window = qualificationWindow(input.policy, evaluatedAt);
+  const metrics = aggregateFacts(input.facts, evaluatedAt, window);
+  return evaluateTierQualificationSnapshotV2({
+    policy: input.policy,
+    metrics,
+    evaluatedAt: input.evaluatedAt,
+    currentTierCode: input.currentTierCode,
+    previouslyHeldTierCodes: input.previouslyHeldTierCodes,
+    belowThresholdSince: input.belowThresholdSince,
+  });
+}
+
+export function evaluateTierQualificationSnapshotV2(
+  input: EvaluateTierQualificationSnapshotInputV2,
+): TierQualificationEvaluationV2 {
+  const evaluatedAt = parseInstant(input.evaluatedAt, "Evaluation instant");
   const evaluatedAtIso = new Date(evaluatedAt).toISOString();
+  validateMetricSnapshot(input.metrics);
   const codes = input.policy.levels.map((level) => level.tierCode);
   if (
     input.currentTierCode !== null &&
@@ -419,7 +433,7 @@ export function evaluateTierQualificationV2(
     }
   }
   const window = qualificationWindow(input.policy, evaluatedAt);
-  const metrics = aggregateFacts(input.facts, evaluatedAt, window);
+  const metrics = input.metrics;
   const previouslyHeld = new Set(input.previouslyHeldTierCodes);
   const levels = input.policy.levels.map((level, index) =>
     levelProgress(level, index, metrics, input.currentTierCode, previouslyHeld),

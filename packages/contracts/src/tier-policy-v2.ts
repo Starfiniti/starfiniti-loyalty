@@ -2,6 +2,12 @@ import { z } from "zod";
 
 const code = z.string().regex(/^[a-z][a-z0-9_-]{0,79}$/u);
 const POSTGRES_BIGINT_MAX = 9_223_372_036_854_775_807n;
+const nonNegativeBigintString = z
+  .string()
+  .regex(/^(?:0|[1-9][0-9]*)$/u)
+  .refine((value) => BigInt(value) <= POSTGRES_BIGINT_MAX, {
+    message: "Value exceeds PostgreSQL bigint capacity",
+  });
 const positiveBigintString = z
   .string()
   .regex(/^[1-9][0-9]*$/u)
@@ -163,6 +169,84 @@ export const tierPolicyV2 = z
     });
   });
 
+export const tierMetricSnapshotV2 = z
+  .object({
+    eligibleSpendMinor: nonNegativeBigintString,
+    earnedPoints: nonNegativeBigintString,
+    orderCount: nonNegativeBigintString,
+    referralCount: nonNegativeBigintString,
+    verifiedActionCount: nonNegativeBigintString,
+    verifiedActionCounts: z.record(code, nonNegativeBigintString),
+  })
+  .strict()
+  .superRefine((metrics, context) => {
+    const actionTotal = Object.values(metrics.verifiedActionCounts).reduce(
+      (total, value) => total + BigInt(value),
+      0n,
+    );
+    if (actionTotal !== BigInt(metrics.verifiedActionCount)) {
+      context.addIssue({
+        code: "custom",
+        path: ["verifiedActionCounts"],
+        message:
+          "Verified action total must equal its per-activity metric values",
+      });
+    }
+  });
+
+export const tierQualificationWindowV2 = z
+  .object({
+    kind: z.enum(["lifetime", "rolling_days", "calendar_year"]),
+    startsAt: z.iso.datetime({ offset: true }).nullable(),
+    endsAt: z.iso.datetime({ offset: true }).nullable(),
+  })
+  .strict();
+
+export const tierThresholdProgressV2 = z
+  .object({
+    metric: tierQualificationMetricV2,
+    activityCodes: z.array(code).max(100),
+    actual: nonNegativeBigintString,
+    minimum: positiveBigintString,
+    remaining: nonNegativeBigintString,
+    matched: z.boolean(),
+  })
+  .strict();
+
+export const tierLevelProgressV2 = z
+  .object({
+    tierCode: code,
+    thresholdKind: z.enum(["base", "entry", "retention", "reentry"]),
+    operator: z.enum(["all", "any"]).nullable(),
+    matched: z.boolean(),
+    thresholds: z.array(tierThresholdProgressV2).max(20),
+  })
+  .strict();
+
+export const tierQualificationEvaluationV2 = z
+  .object({
+    version: z.literal("2"),
+    evaluatedAt: z.iso.datetime({ offset: true }),
+    window: tierQualificationWindowV2,
+    metrics: tierMetricSnapshotV2,
+    currentTierCode: code.nullable(),
+    qualifiedTierCode: code,
+    effectiveTierCode: code,
+    transition: z.enum([
+      "entry",
+      "none",
+      "upgrade",
+      "reentry",
+      "grace",
+      "downgrade",
+    ]),
+    belowThresholdSince: z.iso.datetime({ offset: true }).nullable(),
+    graceUntil: z.iso.datetime({ offset: true }).nullable(),
+    levels: z.array(tierLevelProgressV2).min(1).max(15),
+    nextMilestone: tierLevelProgressV2.nullable(),
+  })
+  .strict();
+
 export type TierQualificationMetricV2 = z.infer<
   typeof tierQualificationMetricV2
 >;
@@ -178,3 +262,12 @@ export type TierQualificationPeriodV2 = z.infer<
 export type TierBenefitsV2 = z.infer<typeof tierBenefitsV2>;
 export type TierPolicyLevelV2 = z.infer<typeof tierPolicyLevelV2>;
 export type TierPolicyV2 = z.infer<typeof tierPolicyV2>;
+export type TierMetricSnapshotV2 = z.infer<typeof tierMetricSnapshotV2>;
+export type TierQualificationWindowV2 = z.infer<
+  typeof tierQualificationWindowV2
+>;
+export type TierThresholdProgressV2 = z.infer<typeof tierThresholdProgressV2>;
+export type TierLevelProgressV2 = z.infer<typeof tierLevelProgressV2>;
+export type TierQualificationEvaluationV2 = z.infer<
+  typeof tierQualificationEvaluationV2
+>;

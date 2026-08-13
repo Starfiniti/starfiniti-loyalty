@@ -772,14 +772,14 @@ tasks:
       ]
     slices:
       - id: M05-S01-TIER-POLICY
-        status: in_progress
+        status: completed
         acceptance:
           - ProgrammeDefinitionV2 optionally carries a strict versioned advanced tier policy without reinterpreting existing V1 or V2 definitions
           - lifetime rolling-day and IANA-timezone calendar-year windows evaluate spend points orders referrals and verified actions using exact integer facts
           - AND and OR entry retention and re-entry thresholds produce deterministic explanation and progress evidence
           - Rose Bloom and Icon migrate to an outcome-identical rolling policy with the retained 30-day downgrade grace
       - id: M05-S02-LIVE-QUALIFICATION
-        status: planned
+        status: in_progress
         acceptance:
           - immutable event-time qualification facts and serialized decisions cover awards refunds late events and verified activities
           - automatic upgrade grace downgrade and re-entry preserve one current membership and append-only history

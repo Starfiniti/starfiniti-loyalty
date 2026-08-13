@@ -4,6 +4,7 @@ import {
   type TierQualificationThresholdV2,
 } from "@starfiniti/contracts/tier-policy-v2";
 import {
+  evaluateTierQualificationSnapshotV2,
   evaluateTierQualificationV2,
   migrateLegacySpendTiersToPolicyV2,
   type TierQualificationFactV2,
@@ -119,6 +120,29 @@ const policy = tierPolicyV2.parse({
 });
 
 describe("advanced tier qualification", () => {
+  it("uses the same pure decision path for authoritative metric snapshots", () => {
+    const result = evaluateTierQualificationSnapshotV2({
+      policy,
+      metrics: {
+        eligibleSpendMinor: "15000",
+        earnedPoints: "750",
+        orderCount: "2",
+        referralCount: "0",
+        verifiedActionCount: "0",
+        verifiedActionCounts: {},
+      },
+      evaluatedAt: "2026-02-01T10:00:00Z",
+      currentTierCode: "rose",
+      previouslyHeldTierCodes: ["rose"],
+      belowThresholdSince: null,
+    });
+    expect(result).toMatchObject({
+      qualifiedTierCode: "bloom",
+      effectiveTierCode: "bloom",
+      transition: "upgrade",
+    });
+  });
+
   it("evaluates AND/OR entry thresholds and exact next progress", () => {
     const result = evaluateTierQualificationV2({
       policy,

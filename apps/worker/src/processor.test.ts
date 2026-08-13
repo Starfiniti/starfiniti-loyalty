@@ -408,6 +408,24 @@ describe("WooCommerce effect worker", () => {
                   pointsPerMajorUnit: "5",
                 },
               ],
+              tierPolicy: {
+                version: "2",
+                qualificationPeriod: { kind: "lifetime" },
+                downgradeGraceDays: 30,
+                levels: [
+                  {
+                    tierCode: "rose",
+                    entry: null,
+                    retention: null,
+                    reentry: null,
+                    benefits: {
+                      earningMultiplierBasisPoints: 10000,
+                      rewardCodes: [],
+                      earlyAccess: false,
+                    },
+                  },
+                ],
+              },
               rewards: [],
               earningRules: [
                 {
@@ -493,6 +511,30 @@ describe("WooCommerce effect worker", () => {
           },
         ];
       }
+      if (text.includes("get_tier_qualification_context_v2")) {
+        return [
+          {
+            metrics: {
+              eligibleSpendMinor: "0",
+              earnedPoints: "0",
+              orderCount: "0",
+              referralCount: "0",
+              verifiedActionCount: "0",
+              verifiedActionCounts: {},
+            },
+            current_tier_code: null,
+            previously_held_tier_codes: [],
+            below_threshold_since: null,
+          },
+        ];
+      }
+      if (text.includes("record_tier_qualification_decision_v2")) {
+        return [
+          {
+            tier_decision_public_id: "00000000-0000-4000-8000-000000000031",
+          },
+        ];
+      }
       if (text.includes("finish_commerce_effect")) return [];
       throw new Error(`Unexpected query: ${text}`);
     };
@@ -534,6 +576,16 @@ describe("WooCommerce effect worker", () => {
     ).toBe(true);
     expect(
       calls.filter((call) => call.includes("commit_programme_v2_award")),
+    ).toHaveLength(3);
+    expect(
+      calls.filter((call) =>
+        call.includes("get_tier_qualification_context_v2"),
+      ),
+    ).toHaveLength(3);
+    expect(
+      calls.filter((call) =>
+        call.includes("record_tier_qualification_decision_v2"),
+      ),
     ).toHaveLength(3);
     expect(calls.some((call) => call.includes("finish_commerce_effect"))).toBe(
       true,

@@ -1,7 +1,7 @@
 # Programme Engine Boundary
 
 - Contract versions: `1` and `2`
-- Database migrations: `20260812054204_programme_engine_foundation.sql` and `20260813200000_programme_v2_earning_rules.sql`
+- Database migrations: `20260812054204_programme_engine_foundation.sql`, `20260813200000_programme_v2_earning_rules.sql`, `20260814010000_advanced_tier_policy.sql`, and `20260814020000_live_tier_qualification.sql`
 - TypeScript schemas: `packages/contracts/src/programme.ts` and `packages/contracts/src/programme-v2.ts`
 - Pure evaluators: `packages/domain/src/engine.ts` and `packages/domain/src/engine-v2.ts`
 
@@ -37,11 +37,17 @@ The merchant Earning Rules route edits this same contract rather than a UI-only 
 
 Drafts may change before approval. Scheduled, published, superseded, and retired interpretation fields cannot be rewritten. Historical ledger transactions, evaluations, tier decisions, and reservations retain their exact programme version.
 
-## Tier history
+## Advanced tier qualification and history
 
-The pure domain engine supports rolling, calendar, and lifetime qualification over spend, earned points, or order counts. Rosy uses rolling eligible spend. Automatic upgrades, downgrade grace, downgrades, and explicit manual overrides produce append-only `tier_decisions` with explanation evidence.
+`TierPolicyV2` is optional beside existing V1 and V2 definitions. It supports lifetime, rolling-day, and IANA-timezone calendar-year qualification over eligible spend, earned points, order count, referrals, and verified actions. Ordered levels carry independent AND/OR entry, retention, and re-entry thresholds plus value-neutral benefit declarations. Existing Rose/Bloom/Icon behavior migrates to an equivalent rolling 365-day policy with the retained 30-day grace; stored V1 evaluations are never reinterpreted.
 
-The decision command serializes by wallet. When the effective tier changes, it closes the current `tier_memberships` interval and opens exactly one new interval in the same transaction. Closed intervals cannot be changed or deleted.
+The shared pure evaluator accepts either raw immutable facts or one authoritative metric snapshot and returns exact progress, qualified/effective tiers, next milestone, grace bounds, and an explanation. The worker and merchant simulations use that same decision path.
+
+Live purchase and verified-activity awards append a private qualification fact inside the existing atomic award boundary. Each fact keeps separate `effective_at` and `recorded_at` instants, so late delivery is visible. Partial and full refunds append compensating facts at the original order instant; neither the order fact nor historical decisions are rewritten. Cumulative refund totals and reversed points are bounded independently against the original award.
+
+The worker can request only one serialized context for an active customer and published policy. PostgreSQL recomputes the window and metrics, rechecks every threshold, current/history state, grace boundary, transition, tenant, customer, event, programme, and version before accepting the pure result. Browser roles cannot read the private facts or execute these functions, and the worker cannot execute the underlying award primitive or enumerate facts directly.
+
+The decision command serializes by programme group and customer. Automatic entry, upgrade, re-entry, grace, and downgrade append `tier_decisions`. When the effective tier changes, the existing history boundary closes the current `tier_memberships` interval and opens exactly one new interval in the same transaction. Closed intervals and qualification facts cannot be changed or deleted. Manual overrides remain a separate audited M05 slice and are not implied by automatic qualification.
 
 ## Rewards and failure compensation
 

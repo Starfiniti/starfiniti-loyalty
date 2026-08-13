@@ -5,11 +5,12 @@ M05 is in progress. Evidence will be added per slice without treating implementa
 ## Current evidence
 
 - ADR-0014 records the event-time, versioned-policy, timezone, compatibility, and rollback decisions.
-- M05-S01 is implementing the strict policy contract, pure evaluator, and Rose/Bloom/Icon equivalence proof.
+- M05-S01 completed the strict policy contract, pure event-time evaluator, independent publication validation, and Rose/Bloom/Icon migration proof. Exact-head run `31750684991` passed the full repository, clean 31-migration/31-pgTAP replay, concurrency, container, and four WooCommerce runtime gates at commit `f8db7ae`.
+- M05-S02 is implementing immutable qualification facts, independently checked automatic decisions, original-event-time refund compensation, and worker integration.
 
 ## Open gates
 
-- Live immutable qualification facts and automatic tier decisions
+- Exact-head database replay and adversarial review of M05-S02 live qualification
 - Tier benefits and audited manual overrides
 - Expiry administration, preview, notification, and liability evidence
 - Merchant and customer progression browser/accessibility evidence
