@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   dashboardPublicUrl,
   isExpectedWorkforceAuthorizeUrl,
+  workforceSsoFailureReason,
   workforceSsoFlowId,
   workforceSsoCallbackUrl,
 } from "./workforce-sso";
@@ -37,6 +38,14 @@ describe("Starfiniti workforce SSO navigation", () => {
     expect(workforceSsoFlowId("short")).toBeNull();
     expect(workforceSsoFlowId("x".repeat(65))).toBeNull();
     expect(workforceSsoFlowId("invalid/value")).toBeNull();
+  });
+
+  it("exposes only fixed callback failure labels for diagnostics", () => {
+    expect(workforceSsoFailureReason("verifier_cookie_missing")).toBe(
+      "verifier_cookie_missing",
+    );
+    expect(workforceSsoFailureReason("provider detail")).toBeNull();
+    expect(workforceSsoFailureReason(["exchange_failed"])).toBeNull();
   });
 
   it("accepts only the configured Supabase custom-provider authorize URL", () => {

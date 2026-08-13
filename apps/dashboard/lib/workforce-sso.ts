@@ -49,6 +49,19 @@ export function workforceSsoFlowId(value: unknown): string | null {
     : null;
 }
 
+const WORKFORCE_SSO_FAILURE_REASONS = new Set([
+  "code_missing",
+  "flow_id_missing",
+  "verifier_cookie_missing",
+  "exchange_failed",
+]);
+
+export function workforceSsoFailureReason(value: unknown): string | null {
+  return typeof value === "string" && WORKFORCE_SSO_FAILURE_REASONS.has(value)
+    ? value
+    : null;
+}
+
 export function workforceSsoCallbackUrl(
   publicOrigin: string,
   nextPath: unknown,
