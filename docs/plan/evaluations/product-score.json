@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "evaluatedAt": "2026-08-13",
-  "release": "v0.1.10",
-  "sourceCommit": "3e26165376d6bd1b135c5236887452314a2d58aa",
-  "score": 51,
+  "release": "v0.1.11",
+  "sourceCommit": "0ced4b666a55d836bd3d4927337fe057a71bb4ba",
+  "score": 54,
   "target": 90,
   "minimumCategoryRatio": 0.8,
   "categories": [
@@ -16,14 +16,14 @@
     {
       "id": "feature_breadth",
       "weight": 25,
-      "score": 8,
-      "evidence": "Purchase earning and three reward types exist; referrals, campaigns, communications, migration, advanced VIP, and enterprise breadth do not."
+      "score": 10,
+      "evidence": "Six versioned earning sources, conditions, exclusions, precedence, caps, signed activity, and three reward types exist; referrals, campaigns, communications, migration, advanced VIP, and enterprise breadth do not."
     },
     {
       "id": "merchant_usability",
       "weight": 15,
-      "score": 10,
-      "evidence": "Hub shell and focused programme workflows pass responsive QA; advanced builders, previews, approvals, and operations are incomplete."
+      "score": 11,
+      "evidence": "The Hub shell, focused programme workflows, source-safe earning-rule catalogue, conflict review, and exact simulator pass responsive production QA; advanced campaign, referral, approval, and fulfilment operations remain incomplete."
     },
     {
       "id": "customer_value",

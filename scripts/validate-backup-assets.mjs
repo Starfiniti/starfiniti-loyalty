@@ -5,10 +5,12 @@ const assetRoot = new URL(
   "../infrastructure/environments/proxmox/scripts/",
   import.meta.url,
 );
-const [exporter, basebackup] = await Promise.all([
+const [exporterFile, basebackupFile] = await Promise.all([
   readFile(new URL("starfiniti-postgres-backup-export", assetRoot), "utf8"),
   readFile(new URL("starfiniti-postgres-basebackup", assetRoot), "utf8"),
 ]);
+const exporter = exporterFile.replaceAll("\r\n", "\n");
+const basebackup = basebackupFile.replaceAll("\r\n", "\n");
 
 for (const [label, source] of [
   ["exporter", exporter],

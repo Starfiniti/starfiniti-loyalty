@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Released and deployed `v0.1.11`: applied the additive V2 migration after a fresh recovery point, retained zero production value, enabled only the Starfiniti database-authoritative canary, and passed authenticated desktop/mobile earning-builder simulation with no browser diagnostics.
+
 - Repaired the live PostgreSQL off-host backup race with a snapshot-safe forced exporter, incomplete-base exclusion, retained-base-aware WAL cleanup, deterministic deployment validation, and successful forced-WAL/manual/timer-driven production archives.
 
 - Added `ProgrammeDefinitionV2` competitive earning rules with six sources, explicit precedence/exclusions, exact event/member caps, immutable explanation evidence, signed WooCommerce/Merchant Activity ingestion, and atomic ledger commit while retaining V1 evaluation.

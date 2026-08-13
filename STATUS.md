@@ -2,14 +2,14 @@
 
 ## Enterprise roadmap status
 
-- Production application images remain `v0.1.10`; M00 and M02 are complete, and M01 plus M03–M16 remain the authoritative unfinished enterprise graph.
-- Released engineering foundations score 95/100, while evidence-based whole-product readiness is 51/100 because the real-store pilot and major competitive, enterprise, and commercial modules remain incomplete.
+- Production application images run `v0.1.11`; M00, M02, and M03 are complete, and M01 plus M04–M16 remain the authoritative unfinished enterprise graph.
+- Released engineering foundations score 95/100, while evidence-based whole-product readiness is 54/100 because the real-store pilot and major reward, VIP, referral, campaign, communication, enterprise, and commercial modules remain incomplete.
 - The old local Phase 4 branch and six modified planning files are preserved in a named stash. M00, the M01 evidence gate, M02, and M03 repository implementation merged through PRs #22–#26; active work proceeds from integrated `main`.
-- M01 is active for an approved real WooCommerce store and recovery proof. Its external gate does not block the dependency-safe M03 implementation.
+- M01 is active for an approved real WooCommerce store and full-service recovery proof. Its external gate does not block dependency-safe M04 implementation.
 - M02 is complete at 93/100 after exact-head migration replay, 1,095 pgTAP assertions, concurrency/property probes, containers, four WooCommerce runtime cells, a fresh production physical backup, additive v27 migration, managed-mode transition, and the single Starfiniti `programme.v2` canary passed.
 - M02 defaults upgrades to locally controlled `self_hosted`, keeps managed billing off, and makes PostgreSQL—not Auth claims, the browser, Stripe, or a licence server—the entitlement authority. Six protected value paths cannot be commercially disabled.
-- M03 competitive earning rules are now the active dependency-safe implementation module while M01 continues waiting only for an approved real WooCommerce store.
-- M03 is repository-complete: the strict V2 contract, shared exact evaluator, WooCommerce and signed activity inputs, database-authoritative publication/cap/ledger boundaries, and Hub-style rule builder/simulator passed PR #26 exact-head run `31736396618` with 1,200 pgTAP assertions and four WooCommerce runtimes. Production deployment/canary and scoring remain before closure.
+- M03 is complete at 93/100: the strict V2 contract, shared exact evaluator, WooCommerce and signed activity inputs, database-authoritative publication/cap/ledger boundaries, and Hub-style rule builder/simulator passed PR #26 exact-head run `31736396618`, release run `31738294379`, additive production migration, explicit Starfiniti tenant canary, and authenticated desktop/mobile production smoke.
+- M04 expanded rewards and audited fulfilment is now the active dependency-safe implementation module while M01 continues waiting only for an approved real WooCommerce store.
 - M01 live read-only reconstruction confirms zero commerce connections, customers, wallets, ledger transactions, reservations, events, effects, or commands. The real-store pilot cannot accidentally overlap existing accepted value.
 - `npm run pilot:validate` enforces 22 M01 checks. Database WAL recovery is proven; the live recursive-export race was repaired with a snapshot-safe exporter, retained-base WAL cleanup, a fresh physical base, a forced-WAL concurrency test, two manual encrypted archives, and one timer-triggered archive. Twenty-one store/application/alert/reconciliation checks remain pending; application/Auth/signing recovery is not claimed.
 
@@ -41,7 +41,7 @@
 - The operations view can download a versioned, tenant-scoped support bundle containing only public scope/connection IDs, queue totals, watermarks, and a labelled bounded sample of grouped canonical error codes. Item IDs, display names, payloads, commerce/customer identities, actors, reasons, signing references, and secrets are omitted.
 - A tenant owner/admin can provision the first WooCommerce connector for an active workspace and published programme from the operations view. The server consumes one unique reference from a root-readable deployment key pool, records a secret-free immutable audit event, and returns an exact setup package only in that action result; the plugin validates and encrypts the imported signing key at rest.
 - A deployment operator can create the initial organization, live owner membership, workspace, programme group, and link for an existing Auth UUID through one atomic repository command. Exact retries are stable, changed retries fail closed, audit metadata is minimized, and browser, dashboard-runtime, and worker roles cannot execute the boundary.
-- Pull-request CI builds the dashboard and worker Dockerfiles from a constrained context using a digest-pinned Node base. Release `v0.1.10` publishes commit-addressed GHCR dashboard/worker images and the checksummed WooCommerce ZIP after the full release/database gate passed.
+- Pull-request CI builds the dashboard and worker Dockerfiles from a constrained context using a digest-pinned Node base. Release `v0.1.11` publishes commit-addressed GHCR dashboard/worker images and the checksummed WooCommerce ZIP after the full release/database gate passed.
 - `npm run deploy:preflight -- --env <absolute-secret-env-file>` validates the populated Proxmox application configuration and signing-key pool without printing values. It covers Compose parity, placeholders, immutable image selectors, HTTPS origins, dedicated database logins, pool schema, and Linux owner-only permissions; network and live-role checks remain deployment-time gates.
 - The application Compose contract maps the public Supabase TLS hostname to the private reverse-proxy address inside the dashboard container, avoiding public-NAT hairpin failures without changing browser URLs or certificate validation. Production PostgREST exposes `public,graphql_public,loyalty`; explicit grants and tenant RLS remain authoritative.
 - `/api/healthz` returns only `ok` or `unavailable` with no-store headers and fails closed unless the runtime login can execute the exact commerce-ingestion and connector-provisioning functions and the mounted signing pool has at least one valid entry. Proxmox Compose uses this dependency-aware route for dashboard readiness.
@@ -61,9 +61,9 @@
 - WooCommerce issue, cancellation, and reconciliation commands stop after ten claims in a visible inspect-only manual-review state. Ambiguous coupon outcomes retain the reservation and ledger state until the native result is verified; they never trigger speculative compensation.
 - Native percentage rewards support 0.01–100% without a maximum cap. The contract/editor reject caps, PostgreSQL independently blocks direct-RPC publication/scheduling and legacy capped redemption before value moves, and the plugin retains a defensive rejection boundary.
 - The Overview no longer renders illustrative tenant figures. It reads versioned, tenant/workspace/programme-authorized aggregates for members, eligible loyalty spend, repeat-member rate, captured-to-awarded point redemption, point liability, and bounded 7/30/90-day trends without exposing private source evidence.
-- Merchant Overview, programme, customer, connector, and experience routes now share the owner-selected Hub-style application shell with the real Starfiniti mark, grouped Lucide navigation, working mobile drawer, persistent theme and refresh controls, and no tenant or language switcher. Overview is a data-backed launch command center whose checklist, performance rail, and activity rows derive from live programme, connector, reporting, and audit state. The exact `v0.1.10` images are live on Proxmox.
-- Programme administration is live as four distinct merchant workflows. Overview shows readiness, configuration summaries, immutable version actions, and recent audit evidence; Earning rules provides exact tier-rate simulation; Rewards provides a guided WooCommerce-ready catalogue; VIP tiers provides a separate ladder with overlap blocking and qualification preview. Focused edits keep the other programme fields intact in the same immutable draft contract.
-- The in-progress V2 Earning Rules workflow replaces the released tier-rate-only view with source templates, allowlisted product/category/currency/market/channel/segment/tier/date conditions, explicit commerce exclusions, event/member-period caps, conflict warnings, and the exact worker evaluator. Saving produces an immutable V2 draft while the published V1 remains active until reviewed publication.
+- Merchant Overview, programme, customer, connector, and experience routes now share the owner-selected Hub-style application shell with the real Starfiniti mark, grouped Lucide navigation, working mobile drawer, persistent theme and refresh controls, and no tenant or language switcher. Overview is a data-backed launch command center whose checklist, performance rail, and activity rows derive from live programme, connector, reporting, and audit state. The exact `v0.1.11` images are live on Proxmox.
+- Programme administration is live as four distinct merchant workflows. Overview shows readiness, configuration summaries, immutable version actions, and recent audit evidence; Earning rules provides the complete V2 source/condition/cap builder and exact simulation; Rewards provides a guided WooCommerce-ready catalogue; VIP tiers provides a separate ladder with overlap blocking and qualification preview. Focused edits keep the other programme fields intact in the same immutable draft contract.
+- The completed V2 Earning Rules workflow provides source templates, allowlisted product/category/currency/market/channel/segment/tier/date conditions, explicit commerce exclusions, event/member-period caps, conflict warnings, and the exact worker evaluator. Production canary authoring and simulation pass while the published V1 remains active until M05 supplies an equivalent tier-rate migration.
 
 ## Partial
 
@@ -79,11 +79,11 @@
 
 ## Database migration state
 
-Twenty-six versioned migrations are applied to the pinned production Supabase/Postgres 17 database and also replay successfully in CI with 1,049 pgTAP assertions plus concurrency/property probes. Production contains the audited initial Starfiniti owner scope but no customer or loyalty-ledger value.
+Twenty-eight versioned migrations replay in CI with 1,200 pgTAP assertions plus concurrency/property probes. Production has applied all twenty-eight migrations through `20260813200000`, contains the audited initial Starfiniti owner scope and explicit `programme.v2` canary, and still has no customer or loyalty-ledger value.
 
 ## Git state
 
-Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 WooCommerce pipeline, PR `#7` merged Phase 9, PR `#9` merged Authentik workforce SSO, PR `#10` merged the English-only launch presentation, PR `#17` merged the Hub-style redesign, PR `#18` merged its live-reporting polish, and PR `#20` merged the focused Programme workflows. Releases through `v0.1.10` include the hardened workforce PKCE callback, bounded production diagnostics, and the owner-approved merchant command center. GitHub recognizes the repository license as GNU AGPLv3.
+Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 WooCommerce pipeline, PR `#7` merged Phase 9, PR `#9` merged Authentik workforce SSO, PR `#10` merged the English-only launch presentation, PR `#17` merged the Hub-style redesign, PR `#20` merged the focused Programme workflows, PR `#26` merged M03, and PR `#27` versioned the production-backup repair. Release `v0.1.11` runs the exact M03/recovery commit in production. GitHub recognizes the repository license as GNU AGPLv3.
 
 The enterprise roadmap work is isolated on `codex/enterprise-roadmap`. Stale Phase 4 local planning changes are preserved as `preserve stale phase-4 planning state before enterprise roadmap 2026-08-13` and are not part of this branch.
 
@@ -158,7 +158,7 @@ The enterprise roadmap work is isolated on `codex/enterprise-roadmap`. Stale Pha
 
 ## Next recommended task
 
-Release and deploy the merged M03 earning-rules slice, run the disabled-to-Starfiniti-canary production smoke, score M03, and then begin M04 expanded rewards while M01 waits for an explicitly approved real WooCommerce store.
+Build M04 expanded rewards and audited fulfilment as the next vertical slice while M01 waits for an explicitly approved real WooCommerce store and full-service clean-room recovery evidence.
 
 ## Blockers
 

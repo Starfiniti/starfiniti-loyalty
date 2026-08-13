@@ -1,6 +1,6 @@
 # M03 Evidence — Earning Rules
 
-Status: in progress.
+Status: complete at 93/100.
 
 ## Slice 1 — contract, engine, and publication boundary
 
@@ -34,4 +34,13 @@ Status: in progress.
 - Local adversarial review fixed four deterministic weaknesses before the final gate: worker tests no longer require broad table reads, streamed ingestion uses the exact lease-close signature, draft retries retain their idempotency identity until success, and disabled tenants cannot render V2 authoring or new source provisioning while historical source health remains inspectable.
 - Contract, database, runtime, editor, and ADR surfaces agree that signed backends may submit an already-qualified referral fact, while M06 exclusively owns first-party referral attribution, cooling, fraud review, and reversible qualification.
 
-Pending before module closure: managed-tenant deployment/canary and the evidence-based 90/100 score. Production VM guest access is not available to the current SSH key, so no unverified deployment or database mutation was attempted.
+## Production closure
+
+- PR #26 merged the earning-rules implementation; PR #27 merged the recovery prerequisite after the live exporter race was repaired and independently passed exact-head CI.
+- Release `v0.1.11` run `31738294379` passed the full repository, database, package, licence, audit, image, and release gate at commit `0ced4b666a55d836bd3d4927337fe057a71bb4ba`.
+- Production received additive migration `20260813200000_programme_v2_earning_rules.sql` in one transaction after a fresh verified physical base and encrypted off-host archive. The migration ledger, RLS, zero accepted-value baseline, WAL archiver, and explicit Starfiniti `programme.v2` tenant canary passed.
+- Both application containers run the exact release SHA. Public health and login return 200 and unsigned WooCommerce delivery returns 401.
+- An authenticated production owner session rendered the real V2 builder and exact `EUR 150.00 → 750 points` simulation at 1744 and 390 pixel widths with no horizontal overflow or browser warning/error.
+- The V1 draft remains unchanged and unpublished: automatic V2 migration warns that its one base rate would change existing tier-specific behavior. M05 owns the exact Rose/Bloom/Icon equivalent migration, so the production canary proves gated authoring/simulation without silently changing loyalty value.
+
+The complete deployment evidence is in `production-rollout-2026-08-13.md`; the evidence-based module score is in `docs/plan/evaluations/M03.json`.
