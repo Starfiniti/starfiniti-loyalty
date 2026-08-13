@@ -3240,6 +3240,109 @@ h1 {
   gap: 10px;
 }
 
+.expiry-policy-panel {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--merchant-border);
+  border-radius: 12px;
+  background: var(--programme-soft);
+}
+
+.expiry-policy-summary {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 11px;
+  align-items: start;
+}
+
+.expiry-policy-summary > svg {
+  width: 36px;
+  height: 36px;
+  padding: 9px;
+  border-radius: 10px;
+  color: var(--merchant-violet);
+  background: var(--merchant-violet-soft);
+}
+
+.expiry-policy-summary strong {
+  font-size: 12px;
+}
+
+.expiry-policy-summary p,
+.expiry-policy-preview,
+.expiry-next-date {
+  margin: 4px 0 0;
+  color: var(--merchant-muted);
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.expiry-notification-schedule {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.expiry-notification-schedule legend {
+  width: 100%;
+  margin-bottom: 7px;
+  color: var(--merchant-muted);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.expiry-notification-schedule label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+}
+
+.expiry-liability-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.expiry-liability-grid div {
+  padding: 10px;
+  border: 1px solid var(--merchant-border);
+  border-radius: 9px;
+  background: var(--merchant-surface);
+}
+
+.expiry-liability-grid dt {
+  color: var(--merchant-muted);
+  font-size: 9px;
+}
+
+.expiry-liability-grid dd {
+  margin: 3px 0 0;
+  font-size: 14px;
+  font-weight: 760;
+  font-variant-numeric: tabular-nums;
+}
+
+.expiry-overdue-warning {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  color: #b45309;
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.expiry-overdue-warning svg {
+  width: 14px;
+  height: 14px;
+}
+
 .earning-settings-grid label,
 .earning-rule-core-grid label,
 .earning-condition-grid label,
@@ -3600,6 +3703,9 @@ h1 {
   .earning-checkbox-grid,
   .earning-simulator-fields {
     grid-template-columns: 1fr;
+  }
+  .expiry-liability-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .earning-rule-add-bar {
     align-items: stretch;

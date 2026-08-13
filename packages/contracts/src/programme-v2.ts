@@ -5,6 +5,7 @@ import {
   programmeTierDefinitionV1,
 } from "./programme";
 import { programmeRewardDefinitionV2 } from "./reward-v2";
+import { pointExpiryPolicyV2 } from "./point-expiry-v2";
 import { tierPolicyV2 } from "./tier-policy-v2";
 
 const code = z.string().regex(/^[a-z][a-z0-9_-]{0,79}$/u);
@@ -257,6 +258,7 @@ export const programmeDefinitionV2 = z
     currencyMinorUnitDigits: z.number().int().min(0).max(6),
     pendingDays: z.number().int().min(0).max(365),
     pointsExpireAfterDays: z.number().int().min(1).max(3650),
+    pointsExpiryPolicy: pointExpiryPolicyV2.optional(),
     tiers: z.array(programmeTierDefinitionV1).min(1),
     tierPolicy: tierPolicyV2.optional(),
     rewards: z
@@ -271,6 +273,17 @@ export const programmeDefinitionV2 = z
   })
   .strict()
   .superRefine((definition, context) => {
+    if (
+      definition.pointsExpiryPolicy &&
+      definition.pointsExpiryPolicy.expireAfterDays !==
+        definition.pointsExpireAfterDays
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "The versioned expiry policy must match pointsExpireAfterDays",
+        path: ["pointsExpiryPolicy", "expireAfterDays"],
+      });
+    }
     const codes = new Set<string>();
     let enabledBaseRules = 0;
     definition.earningRules.forEach((rule, index) => {

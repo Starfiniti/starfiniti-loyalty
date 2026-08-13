@@ -83,7 +83,9 @@ Expired unused coupons follow the inverse sequence: the worker queues one cancel
 
 ## Expiry notifications
 
-`enqueue_point_expiry_notifications` finds non-empty lots within a positive lead-time window, writes one tenant/lot/lead-time fence, and appends a `loyalty.points.expiring` command to the transactional outbox. A scheduler retry creates no duplicate notification. Actual value expiry remains the immutable `expire_points` ledger command.
+`PointExpiryPolicyV2` keeps finite earned-date expiry compatible with `pointsExpireAfterDays` and adds a bounded immutable reminder schedule. Publication materializes the exact policy per programme version. The worker calls only `run_point_expiry_lifecycle_v2(as_of, limit)`: it is single-flight, bounded to 1–500 groups/events, expires due lots separately by original organization, wallet, and programme version, and schedules one nearest relevant reminder per lot. The worker cannot call `expire_points` directly. Each expiry remains an immutable balanced ledger transaction and lot allocation; each reminder retains the `(organization, lot, lead-day)` fence and transactional outbox event. Retry creates no duplicate.
+
+Reservation cancellation and other compensation restore the original lot and original expiry date. A restored past-due lot expires on the next sweep. `get_programme_expiry_liability_v2` returns tenant-authorized aggregate outstanding, overdue, reserved-past-expiry, 30/90-day, affected-member, and next-date evidence without customer identities. Provider delivery of `loyalty.points.expiring` remains M08 scope.
 
 ## Trust boundary
 

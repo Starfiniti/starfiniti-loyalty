@@ -83,6 +83,7 @@ select is_empty(
           'loyalty.get_customer_tier_read_model(uuid,uuid)',
           'loyalty.get_my_loyalty_accounts()',
           'loyalty.get_my_entitlements_v1(uuid,timestamp with time zone)',
+          'loyalty.get_programme_expiry_liability_v2(uuid,timestamp with time zone)',
           'loyalty.get_reward_fulfilment_summary(uuid)',
           'loyalty.get_connector_operation_issues(uuid,integer)',
           'loyalty.get_connector_operation_summaries(uuid)',

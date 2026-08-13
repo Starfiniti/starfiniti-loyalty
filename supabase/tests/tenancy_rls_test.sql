@@ -108,6 +108,7 @@ select is_empty(
           'get_customer_tier_read_model',
           'get_my_loyalty_accounts',
           'get_my_entitlements_v1',
+          'get_programme_expiry_liability_v2',
           'get_connector_operation_issues',
           'get_connector_operation_summaries',
           'get_overview_report',

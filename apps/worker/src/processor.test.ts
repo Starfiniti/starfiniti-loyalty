@@ -5,6 +5,7 @@ import {
   calculateCumulativeRefundPlanV2,
   evidenceSha256,
   expireDueTierOverrides,
+  runPointExpiryLifecycle,
   parseWooCommerceEffect,
   processWooCommerceEffect,
   toOrderAwardFact,
@@ -46,6 +47,35 @@ const event: ClaimedEffect = {
 };
 
 describe("WooCommerce effect worker", () => {
+  it("runs the bounded point expiry lifecycle and validates aggregate output", async () => {
+    const validSql = (async () => [
+      {
+        expiry_batches: "2",
+        expired_lots: "3",
+        expired_points: "9223372036854775807",
+        notifications_enqueued: "4",
+      },
+    ]) as unknown as Sql;
+    await expect(runPointExpiryLifecycle(validSql)).resolves.toEqual({
+      expiryBatches: 2,
+      expiredLots: 3,
+      expiredPoints: "9223372036854775807",
+      notificationsEnqueued: 4,
+    });
+
+    const invalidSql = (async () => [
+      {
+        expiry_batches: "101",
+        expired_lots: "3",
+        expired_points: "-1",
+        notifications_enqueued: "0",
+      },
+    ]) as unknown as Sql;
+    await expect(runPointExpiryLifecycle(invalidSql)).rejects.toThrow(
+      "invalid_point_expiry_lifecycle_result",
+    );
+  });
+
   it("runs the bounded tier override expiry sweep and rejects malformed counts", async () => {
     const validSql = (async () => [{ expired_count: "2" }]) as unknown as Sql;
     expect(await expireDueTierOverrides(validSql)).toBe(2);

@@ -10,6 +10,7 @@ import {
 import { hasEntitlement } from "@/lib/entitlements";
 import { getEntitlementSnapshot } from "@/lib/server/entitlements";
 import { getMerchantProgrammeState } from "@/lib/server/programme";
+import { getProgrammeExpiryLiability } from "@/lib/server/programme";
 import { getRewardFulfilmentState } from "@/lib/server/reward-fulfilment";
 import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
 import { EarningRulesEditor } from "./earning-rules-editor";
@@ -93,6 +94,10 @@ export async function ProgrammeSectionPage({
     state.versions.find((version) => version.status === "published") ??
     state.versions[0];
   const copy = sectionCopy[mode];
+  const expiryLiability =
+    mode === "earning"
+      ? await getProgrammeExpiryLiability(state.programme.id)
+      : null;
   const fulfilment =
     mode === "rewards"
       ? await getRewardFulfilmentState(state.programme.id)
@@ -150,6 +155,7 @@ export async function ProgrammeSectionPage({
         {mode === "earning" ? (
           <EarningRulesEditor
             canEdit={canEdit}
+            expiryLiability={expiryLiability!}
             initialConfiguration={baseline?.configuration}
             operationId={crypto.randomUUID()}
             programmeId={state.programme.id}

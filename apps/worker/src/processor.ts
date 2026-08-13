@@ -546,6 +546,56 @@ export async function expireDueTierOverrides(sql: Sql): Promise<number> {
   return expiredCount;
 }
 
+export type PointExpiryLifecycleResult = Readonly<{
+  expiryBatches: number;
+  expiredLots: number;
+  expiredPoints: string;
+  notificationsEnqueued: number;
+}>;
+
+export async function runPointExpiryLifecycle(
+  sql: Sql,
+): Promise<PointExpiryLifecycleResult> {
+  const rows = await sql<
+    {
+      expiry_batches: number | string;
+      expired_lots: number | string;
+      expired_points: string;
+      notifications_enqueued: number | string;
+    }[]
+  >`
+    select expiry_batches, expired_lots, expired_points::text,
+      notifications_enqueued
+    from loyalty_private.run_point_expiry_lifecycle_v2(
+      clock_timestamp(), 100
+    )
+  `;
+  const row = rows[0];
+  if (!row) throw new Error("point_expiry_lifecycle_result_unavailable");
+  const expiryBatches = Number(row.expiry_batches);
+  const expiredLots = Number(row.expired_lots);
+  const notificationsEnqueued = Number(row.notifications_enqueued);
+  if (
+    !Number.isSafeInteger(expiryBatches) ||
+    expiryBatches < 0 ||
+    expiryBatches > 100 ||
+    !Number.isSafeInteger(expiredLots) ||
+    expiredLots < 0 ||
+    !Number.isSafeInteger(notificationsEnqueued) ||
+    notificationsEnqueued < 0 ||
+    notificationsEnqueued > 100 ||
+    !/^(?:0|[1-9][0-9]*)$/u.test(row.expired_points)
+  ) {
+    throw new Error("invalid_point_expiry_lifecycle_result");
+  }
+  return {
+    expiryBatches,
+    expiredLots,
+    expiredPoints: row.expired_points,
+    notificationsEnqueued,
+  };
+}
+
 async function processRefund(
   sql: Sql,
   workerId: string,

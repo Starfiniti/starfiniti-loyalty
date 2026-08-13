@@ -19,6 +19,7 @@ import {
 import {
   AlertTriangle,
   CalendarHeart,
+  CalendarClock,
   Calculator,
   CheckCircle2,
   ChevronDown,
@@ -35,10 +36,12 @@ import {
 } from "lucide-react";
 import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { saveProgrammeDraft, type ProgrammeActionState } from "./actions";
+import type { ProgrammeExpiryLiability } from "@/lib/server/programme";
 import {
   createEarningRuleTemplate,
   decimalToMinor,
   defaultPurchaseExclusions,
+  defaultPointExpiryPolicy,
   initialProgrammeDefinitionV2,
   selectorList,
   type EarningRuleTemplate,
@@ -93,12 +96,14 @@ type SimulatorState = Readonly<{
 
 export function EarningRulesEditor({
   canEdit,
+  expiryLiability,
   initialConfiguration,
   operationId,
   programmeId,
   simulationOccurredAt,
 }: Readonly<{
   canEdit: boolean;
+  expiryLiability: ProgrammeExpiryLiability;
   initialConfiguration: unknown;
   operationId: string;
   programmeId: string;
@@ -163,6 +168,40 @@ export function EarningRulesEditor({
 
   function updateDefinition(patch: Partial<ProgrammeDefinitionV2>) {
     setDefinition((current) => ({ ...current, ...patch }));
+  }
+
+  function updateExpiryDays(expireAfterDays: number) {
+    const currentPolicy =
+      definition.pointsExpiryPolicy ??
+      defaultPointExpiryPolicy(expireAfterDays);
+    updateDefinition({
+      pointsExpireAfterDays: expireAfterDays,
+      pointsExpiryPolicy: {
+        ...currentPolicy,
+        expireAfterDays,
+        notificationLeadDays: currentPolicy.notificationLeadDays.filter(
+          (leadDays) => leadDays < expireAfterDays,
+        ),
+      },
+    });
+  }
+
+  function toggleExpiryNotification(leadDays: number) {
+    const currentPolicy =
+      definition.pointsExpiryPolicy ??
+      defaultPointExpiryPolicy(definition.pointsExpireAfterDays);
+    const enabled = currentPolicy.notificationLeadDays.includes(leadDays);
+    updateDefinition({
+      pointsExpiryPolicy: {
+        ...currentPolicy,
+        notificationLeadDays: (enabled
+          ? currentPolicy.notificationLeadDays.filter(
+              (candidate) => candidate !== leadDays,
+            )
+          : [...currentPolicy.notificationLeadDays, leadDays]
+        ).sort((left, right) => right - left),
+      },
+    });
   }
 
   function updateRule(
@@ -353,13 +392,91 @@ export function EarningRulesEditor({
               min="1"
               type="number"
               value={definition.pointsExpireAfterDays}
-              onChange={(event) =>
-                updateDefinition({
-                  pointsExpireAfterDays: Number(event.target.value),
-                })
-              }
+              onChange={(event) => updateExpiryDays(Number(event.target.value))}
             />
           </label>
+        </div>
+        <div className="expiry-policy-panel">
+          <div className="expiry-policy-summary">
+            <CalendarClock aria-hidden="true" />
+            <div>
+              <strong>Earned-date expiry</strong>
+              <p>
+                Every released lot keeps its original expiry date. Refunds and
+                cancelled reservations restore the same lot; they never reset
+                the clock.
+              </p>
+            </div>
+          </div>
+          <fieldset className="expiry-notification-schedule">
+            <legend>Advance reminder schedule</legend>
+            {[30, 14, 7].map((leadDays) => (
+              <label key={leadDays}>
+                <input
+                  checked={
+                    definition.pointsExpiryPolicy?.notificationLeadDays.includes(
+                      leadDays,
+                    ) ?? false
+                  }
+                  disabled={
+                    !canEdit || leadDays >= definition.pointsExpireAfterDays
+                  }
+                  type="checkbox"
+                  onChange={() => toggleExpiryNotification(leadDays)}
+                />
+                {leadDays} days before
+              </label>
+            ))}
+          </fieldset>
+          <p className="expiry-policy-preview">
+            A lot released today expires in {definition.pointsExpireAfterDays}{" "}
+            days. Reminder events are queued once. Schedule:{" "}
+            {definition.pointsExpiryPolicy?.notificationLeadDays.length
+              ? `${definition.pointsExpiryPolicy.notificationLeadDays.join(", ")} days before expiry`
+              : "no advance reminders"}
+            .
+          </p>
+          <dl className="expiry-liability-grid">
+            <div>
+              <dt>Outstanding</dt>
+              <dd>{formatPoints(expiryLiability.outstandingPoints)}</dd>
+            </div>
+            <div>
+              <dt>Due in 30 days</dt>
+              <dd>{formatPoints(expiryLiability.expiring30Days)}</dd>
+            </div>
+            <div>
+              <dt>Due in 90 days</dt>
+              <dd>{formatPoints(expiryLiability.expiring90Days)}</dd>
+            </div>
+            <div>
+              <dt>Affected members</dt>
+              <dd>{formatPoints(expiryLiability.affectedMembers)}</dd>
+            </div>
+          </dl>
+          {BigInt(expiryLiability.overduePoints) > 0n ? (
+            <p className="expiry-overdue-warning" role="status">
+              <AlertTriangle aria-hidden="true" />
+              {formatPoints(expiryLiability.overduePoints)} overdue points are
+              queued for the next bounded lifecycle sweep.
+            </p>
+          ) : expiryLiability.nextExpiryAt ? (
+            <p className="expiry-next-date">
+              Next liability date: {formatUtcDate(expiryLiability.nextExpiryAt)}
+            </p>
+          ) : (
+            <p className="expiry-next-date">
+              No funded lots are awaiting expiry.
+            </p>
+          )}
+          {BigInt(expiryLiability.reservedPastExpiryPoints) > 0n ? (
+            <p className="expiry-overdue-warning" role="status">
+              <ShieldCheck aria-hidden="true" />
+              {formatPoints(expiryLiability.reservedPastExpiryPoints)} points
+              are held by active rewards past their original expiry date. They
+              expire immediately if the reservation is released.
+            </p>
+          ) : null}
         </div>
       </section>
 
@@ -1342,6 +1459,19 @@ function effectLabel(rule: EarningRuleV2): string {
 
 function isoToDateTimeLocal(value: string | null): string {
   return value ? value.slice(0, 16) : "";
+}
+
+function formatPoints(value: string): string {
+  return BigInt(value).toLocaleString("en-GB");
+}
+
+function formatUtcDate(value: string): string {
+  return new Date(value).toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
 }
 
 function dateTimeLocalToIso(value: string): string | null {

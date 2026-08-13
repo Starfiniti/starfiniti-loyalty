@@ -796,6 +796,12 @@ tasks:
         acceptance:
           - expiry policy authoring preview notification schedule and liability impact use immutable lots and exact dates
           - expiry refund restoration and notification retries preserve original attribution and create one effect
+        evidence:
+          - PointExpiryPolicyV2 independently validates finite earned-date duration and a unique descending reminder schedule while retaining pointsExpireAfterDays wire compatibility
+          - additive migration materializes immutable V2 policy and fixes expiry to group lots by original tenant wallet and programme version
+          - one bounded single-flight worker sweep performs actual expiry and nearest-relevant exactly-once reminder scheduling while the worker cannot call the low-level expiry primitive
+          - merchant authoring explains original-lot restoration and shows aggregate outstanding overdue reserved-past-expiry 30-day 90-day affected-member and next-expiry evidence without identities
+          - 48 focused pgTAP assertions are authored for direct RPC validation RLS grants mixed-version attribution replay reminder retries reservation restoration liability minimization and projection rebuilds; exact-head database CI is pending
       - id: M05-S05-PROGRESSION-EXPERIENCE
         status: planned
         acceptance:
@@ -810,6 +816,7 @@ tasks:
       [
         docs/api/PROGRAMME_ENGINE.md,
         docs/architecture/ADR/0014-event-time-tier-qualification.md,
+        docs/architecture/ADR/0015-earned-date-point-expiry-lifecycle.md,
       ]
     evidence: [docs/plan/evidence/M05/README.md]
 
