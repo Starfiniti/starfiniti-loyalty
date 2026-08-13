@@ -133,6 +133,62 @@ describe("WooCommerce effect worker", () => {
     });
   });
 
+  it("classifies PII-free account creation and verified review activities", () => {
+    expect(
+      parseWooCommerceEffect({
+        ...event,
+        event_type: "commerce.customer.created",
+        payload: { kind: "customer_created", externalCustomerId: "7" },
+      }),
+    ).toEqual({
+      kind: "activity",
+      source: "account_created",
+      externalCustomerId: "7",
+      activityReference: "woocommerce:customer:7",
+      activityCode: "account_created",
+      productId: null,
+      categoryIds: [],
+    });
+    expect(
+      parseWooCommerceEffect({
+        ...event,
+        event_type: "commerce.review.verified",
+        payload: {
+          kind: "verified_product_review",
+          externalCustomerId: "7",
+          reviewId: "101",
+          productId: "42",
+          categoryIds: ["8", "9"],
+        },
+      }),
+    ).toEqual({
+      kind: "activity",
+      source: "verified_product_review",
+      externalCustomerId: "7",
+      activityReference: "woocommerce:review:101",
+      activityCode: "verified_product_review",
+      productId: "42",
+      categoryIds: ["8", "9"],
+    });
+    expect(
+      parseWooCommerceEffect({
+        ...event,
+        event_type: "commerce.review.verified",
+        payload: {
+          kind: "verified_product_review",
+          externalCustomerId: "7",
+          reviewId: "101",
+          productId: "42",
+          categoryIds: [],
+          content: "PII must never cross the boundary",
+        },
+      }),
+    ).toEqual({
+      kind: "quarantine",
+      reason: "invalid_verified_review_payload",
+    });
+  });
+
   it("hashes equivalent object keys deterministically", () => {
     expect(evidenceSha256({ a: 1, b: { c: 2 } })).toBe(
       evidenceSha256({ b: { c: 2 }, a: 1 }),
@@ -263,7 +319,7 @@ describe("WooCommerce effect worker", () => {
     ).toBe("4503599627370496");
   });
 
-  it("routes a live V2 award through serialized usage and the atomic database command", async () => {
+  it("routes live V2 purchase and activity awards through the atomic database command", async () => {
     const calls: string[] = [];
     const query = async (parts: TemplateStringsArray): Promise<unknown[]> => {
       const text = parts.join("?");
@@ -313,6 +369,7 @@ describe("WooCommerce effect worker", () => {
                     currencyCodes: [],
                     markets: [],
                     channels: [],
+                    activityCodes: [],
                     segmentCodes: [],
                     tierCodes: [],
                     startsAt: null,
@@ -332,6 +389,34 @@ describe("WooCommerce effect worker", () => {
                     perEventPoints: null,
                     perMemberPoints: "1000",
                     memberPeriod: "calendar_year",
+                    rollingDays: null,
+                  },
+                },
+                {
+                  code: "account-created",
+                  name: "Account created",
+                  source: "account_created",
+                  enabled: true,
+                  priority: 10,
+                  stackable: true,
+                  effect: { kind: "fixed_bonus", points: "100" },
+                  conditions: {
+                    productIds: [],
+                    categoryIds: [],
+                    currencyCodes: [],
+                    markets: [],
+                    channels: [],
+                    activityCodes: [],
+                    segmentCodes: [],
+                    tierCodes: [],
+                    startsAt: null,
+                    endsAt: null,
+                  },
+                  purchaseExclusions: null,
+                  cap: {
+                    perEventPoints: "100",
+                    perMemberPoints: "100",
+                    memberPeriod: "lifetime",
                     rollingDays: null,
                   },
                 },
@@ -363,13 +448,22 @@ describe("WooCommerce effect worker", () => {
     });
 
     await processWooCommerceEffect(fakeSql, "worker-test", event);
+    await processWooCommerceEffect(fakeSql, "worker-test", {
+      ...event,
+      canonical_event_id: "2",
+      canonical_event_public_id: "00000000-0000-4000-8000-000000000002",
+      event_type: "commerce.customer.created",
+      source_event_id: "customer:7:created",
+      source_object_id: "7",
+      payload: { kind: "customer_created", externalCustomerId: "7" },
+    });
 
     expect(
       calls.some((call) => call.includes("get_member_earning_rule_usage")),
     ).toBe(true);
     expect(
-      calls.some((call) => call.includes("commit_programme_v2_award")),
-    ).toBe(true);
+      calls.filter((call) => call.includes("commit_programme_v2_award")),
+    ).toHaveLength(2);
     expect(calls.some((call) => call.includes("finish_commerce_effect"))).toBe(
       true,
     );

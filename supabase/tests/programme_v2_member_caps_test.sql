@@ -122,7 +122,7 @@ from loyalty_private.create_programme_draft(
       "code":"purchase-base","name":"Base purchase points","source":"purchase",
       "enabled":true,"priority":0,"stackable":false,
       "effect":{"kind":"base_rate","pointsPerMajorUnit":"5"},
-      "conditions":{"productIds":[],"categoryIds":[],"currencyCodes":[],"markets":[],"channels":[],"segmentCodes":[],"tierCodes":[],"startsAt":null,"endsAt":null},
+      "conditions":{"productIds":[],"categoryIds":[],"currencyCodes":[],"markets":[],"channels":[],"activityCodes":[],"segmentCodes":[],"tierCodes":[],"startsAt":null,"endsAt":null},
       "purchaseExclusions":{"productIds":[],"categoryIds":[],"shipping":true,"tax":true,"fees":true,"giftCardPayments":true,"storeCreditPayments":true,"discounts":true},
       "cap":{"perEventPoints":"90","perMemberPoints":"100","memberPeriod":"calendar_day","rollingDays":null}
     }]
@@ -195,6 +195,8 @@ insert into v2_cap_refs values
   ('event-4', pg_temp.add_v2_cap_event(4, '2026-08-14T10:00:00Z'));
 
 grant loyalty_worker to current_user;
+grant usage on schema extensions to loyalty_worker;
+grant execute on all functions in schema extensions to loyalty_worker;
 set local role loyalty_worker;
 
 select results_eq(

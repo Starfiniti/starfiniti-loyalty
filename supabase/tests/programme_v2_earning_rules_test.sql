@@ -93,7 +93,7 @@ as $$
         "code":"purchase-base","name":"Base purchase points","source":"purchase",
         "enabled":true,"priority":0,"stackable":false,
         "effect":{"kind":"base_rate","pointsPerMajorUnit":"5"},
-        "conditions":{"productIds":[],"categoryIds":[],"currencyCodes":[],"markets":[],"channels":[],"segmentCodes":[],"tierCodes":[],"startsAt":null,"endsAt":null},
+        "conditions":{"productIds":[],"categoryIds":[],"currencyCodes":[],"markets":[],"channels":[],"activityCodes":[],"segmentCodes":[],"tierCodes":[],"startsAt":null,"endsAt":null},
         "purchaseExclusions":{"productIds":[],"categoryIds":["clearance"],"shipping":true,"tax":true,"fees":true,"giftCardPayments":true,"storeCreditPayments":true,"discounts":true},
         "cap":{"perEventPoints":"10000","perMemberPoints":null,"memberPeriod":null,"rollingDays":null}
       },
@@ -101,7 +101,7 @@ as $$
         "code":"vip-double","name":"VIP double points","source":"purchase",
         "enabled":true,"priority":50,"stackable":false,
         "effect":{"kind":"multiplier","multiplierBasisPoints":20000},
-        "conditions":{"productIds":[],"categoryIds":["skincare"],"currencyCodes":["EUR"],"markets":["SI"],"channels":["woocommerce"],"segmentCodes":[],"tierCodes":["rose"],"startsAt":null,"endsAt":null},
+        "conditions":{"productIds":[],"categoryIds":["skincare"],"currencyCodes":["EUR"],"markets":["SI"],"channels":["woocommerce"],"activityCodes":[],"segmentCodes":[],"tierCodes":["rose"],"startsAt":null,"endsAt":null},
         "purchaseExclusions":{"productIds":[],"categoryIds":[],"shipping":true,"tax":true,"fees":true,"giftCardPayments":true,"storeCreditPayments":true,"discounts":true},
         "cap":{"perEventPoints":null,"perMemberPoints":null,"memberPeriod":null,"rollingDays":null}
       },
@@ -109,7 +109,7 @@ as $$
         "code":"birthday","name":"Birthday points","source":"birthday",
         "enabled":true,"priority":10,"stackable":true,
         "effect":{"kind":"fixed_bonus","points":"500"},
-        "conditions":{"productIds":[],"categoryIds":[],"currencyCodes":[],"markets":[],"channels":[],"segmentCodes":[],"tierCodes":[],"startsAt":null,"endsAt":null},
+        "conditions":{"productIds":[],"categoryIds":[],"currencyCodes":[],"markets":[],"channels":[],"activityCodes":[],"segmentCodes":[],"tierCodes":[],"startsAt":null,"endsAt":null},
         "purchaseExclusions":null,
         "cap":{"perEventPoints":"500","perMemberPoints":"500","memberPeriod":"calendar_year","rollingDays":null}
       }
@@ -352,6 +352,8 @@ select throws_ok(
 reset role;
 
 grant loyalty_worker to current_user;
+grant usage on schema extensions to loyalty_worker;
+grant execute on all functions in schema extensions to loyalty_worker;
 set local role loyalty_worker;
 select results_eq(
   $$ select count(*)::bigint from loyalty.programme_earning_rules $$,

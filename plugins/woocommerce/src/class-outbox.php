@@ -44,6 +44,8 @@ final class Outbox
     {
         add_action('woocommerce_order_status_changed', [self::class, 'captureOrderStatus'], 10, 4);
         add_action('woocommerce_refund_created', [self::class, 'captureRefund'], 10, 2);
+        add_action('woocommerce_created_customer', [self::class, 'captureCustomerCreation'], 20, 1);
+        add_action('transition_comment_status', [self::class, 'captureReviewVerification'], 20, 3);
         add_action('delete_user', [self::class, 'captureCustomerDeletion'], 10, 1);
         add_action(self::ACTION, [self::class, 'deliverPending']);
     }
@@ -122,6 +124,67 @@ final class Outbox
                 'kind' => 'customer_deleted',
                 'externalCustomerId' => $externalCustomerId,
             ]
+        );
+    }
+
+    public static function captureCustomerCreation(int $customerId): void
+    {
+        if ($customerId <= 0) {
+            return;
+        }
+        self::enqueue(
+            'customer:' . $customerId . ':created',
+            'commerce.customer.created',
+            (string) $customerId,
+            null,
+            [
+                'kind' => 'customer_created',
+                'externalCustomerId' => (string) $customerId,
+            ]
+        );
+    }
+
+    /** @param mixed $comment */
+    public static function captureReviewVerification(
+        string $newStatus,
+        string $oldStatus,
+        $comment
+    ): void {
+        if (
+            'approved' !== $newStatus
+            || 'approved' === $oldStatus
+            || ! $comment instanceof \WP_Comment
+            || 'product' !== get_post_type((int) $comment->comment_post_ID)
+            || (int) $comment->user_id <= 0
+        ) {
+            return;
+        }
+        $reviewId = (int) $comment->comment_ID;
+        $productId = (int) $comment->comment_post_ID;
+        $verified = '1' === (string) get_comment_meta($reviewId, 'verified', true)
+            || wc_customer_bought_product('', (int) $comment->user_id, $productId);
+        if (! $verified) {
+            return;
+        }
+        $product = wc_get_product($productId);
+        $categoryIds = $product instanceof \WC_Product
+            ? array_map('strval', $product->get_category_ids())
+            : [];
+        self::enqueue(
+            'review:' . $reviewId . ':verified',
+            'commerce.review.verified',
+            (string) $reviewId,
+            (string) $productId,
+            [
+                'kind' => 'verified_product_review',
+                'externalCustomerId' => (string) $comment->user_id,
+                'reviewId' => (string) $reviewId,
+                'productId' => (string) $productId,
+                'categoryIds' => $categoryIds,
+            ],
+            '' !== (string) $comment->comment_date_gmt
+                ? (string) $comment->comment_date_gmt
+                : null
         );
     }
 

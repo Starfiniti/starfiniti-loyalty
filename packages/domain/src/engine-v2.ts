@@ -44,6 +44,9 @@ export interface ActivityEarningFactV2 extends EarningFactBaseV2 {
   readonly source: Exclude<EarningSourceV2, "purchase">;
   readonly verified: boolean;
   readonly activityReference: string;
+  readonly activityCode: string;
+  readonly productId: string | null;
+  readonly categoryIds: readonly string[];
 }
 
 export type EarningFactV2 = PurchaseEarningFactV2 | ActivityEarningFactV2;
@@ -137,13 +140,19 @@ function commonConditionsMatch(
       : parseInstant(conditions.endsAt, "Rule end");
   return (
     matchesAny(conditions.channels, [fact.channel]) &&
+    (fact.source === "purchase" ||
+      matchesAny(conditions.activityCodes, [fact.activityCode])) &&
     matchesAny(conditions.segmentCodes, fact.segmentCodes) &&
     matchesAny(conditions.tierCodes, [fact.tierCode]) &&
     (!startsAt || occurredAt >= startsAt) &&
     (!endsAt || occurredAt < endsAt) &&
     (fact.source !== "purchase" ||
       (matchesAny(conditions.currencyCodes, [fact.currencyCode]) &&
-        matchesAny(conditions.markets, [fact.market])))
+        matchesAny(conditions.markets, [fact.market]))) &&
+    (fact.source !== "verified_product_review" ||
+      (fact.productId !== null &&
+        matchesAny(conditions.productIds, [fact.productId]) &&
+        matchesAny(conditions.categoryIds, fact.categoryIds)))
   );
 }
 
@@ -573,6 +582,15 @@ function evaluateActivity(
   if (fact.activityReference.trim().length === 0) {
     throw new TypeError("Activity reference cannot be empty");
   }
+  if (!/^[a-z][a-z0-9_-]{0,79}$/u.test(fact.activityCode)) {
+    throw new TypeError("Activity code is invalid");
+  }
+  if (
+    fact.source === "verified_product_review" &&
+    (fact.productId === null || fact.productId.trim().length === 0)
+  ) {
+    throw new TypeError("Verified product reviews require a product");
+  }
   const denominator = 1n;
   const contributions: EarningRuleContributionV2[] = [];
   for (const rule of orderRules(programme.earningRules)) {
@@ -646,6 +664,7 @@ function conditionsCanOverlap(
     selectorOverlap(left.currencyCodes, right.currencyCodes) &&
     selectorOverlap(left.markets, right.markets) &&
     selectorOverlap(left.channels, right.channels) &&
+    selectorOverlap(left.activityCodes, right.activityCodes) &&
     selectorOverlap(left.segmentCodes, right.segmentCodes) &&
     selectorOverlap(left.tierCodes, right.tierCodes)
   );

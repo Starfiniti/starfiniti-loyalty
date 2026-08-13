@@ -39,6 +39,7 @@ export const earningRuleConditionsV2 = z
       .max(100)
       .default([]),
     channels: selectorList,
+    activityCodes: z.array(code).max(100).default([]),
     segmentCodes: z.array(code).max(100).default([]),
     tierCodes: z.array(code).max(100).default([]),
     startsAt: timestamp.nullable().default(null),
@@ -193,8 +194,9 @@ export const earningRuleV2 = z
         });
       }
       if (
-        rule.conditions.productIds.length > 0 ||
-        rule.conditions.categoryIds.length > 0 ||
+        (rule.source !== "verified_product_review" &&
+          (rule.conditions.productIds.length > 0 ||
+            rule.conditions.categoryIds.length > 0)) ||
         rule.conditions.currencyCodes.length > 0 ||
         rule.conditions.markets.length > 0
       ) {
@@ -205,6 +207,16 @@ export const earningRuleV2 = z
           path: ["conditions"],
         });
       }
+    }
+    if (
+      rule.source !== "custom_activity" &&
+      rule.conditions.activityCodes.length > 0
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "Only custom activity rules may select activity codes",
+        path: ["conditions", "activityCodes"],
+      });
     }
   });
 

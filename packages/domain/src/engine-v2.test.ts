@@ -17,6 +17,7 @@ const conditions = {
   currencyCodes: [],
   markets: [],
   channels: [],
+  activityCodes: [],
   segmentCodes: [],
   tierCodes: [],
   startsAt: null,
@@ -409,6 +410,9 @@ describe("ProgrammeDefinitionV2 earning engine", () => {
       memberRuleUsage: { birthday: "450" },
       verified: true,
       activityReference: "customer:7:2026",
+      activityCode: "birthday",
+      productId: null,
+      categoryIds: [],
     };
     expect(evaluateEarningV2(programme, birthday)).toMatchObject({
       awardedPoints: "50",
@@ -440,6 +444,9 @@ describe("ProgrammeDefinitionV2 earning engine", () => {
         memberRuleUsage: {},
         verified: false,
         activityReference: "event:1",
+        activityCode: "review_shared",
+        productId: null,
+        categoryIds: [],
       }),
     ).toThrow("authoritative source");
     expect(() =>
@@ -454,6 +461,86 @@ describe("ProgrammeDefinitionV2 earning engine", () => {
         lines: [{ ...purchase.lines[0]!, refundedMinor: "1001" }],
       }),
     ).toThrow("exceed gross value");
+  });
+
+  it("matches verified reviews by product and custom activities by signed code", () => {
+    const activityProgramme = {
+      ...programme,
+      earningRules: [
+        ...programme.earningRules,
+        {
+          code: "verified-serum-review",
+          name: "Verified serum review",
+          source: "verified_product_review",
+          enabled: true,
+          priority: 20,
+          stackable: true,
+          effect: { kind: "fixed_bonus", points: "75" },
+          conditions: {
+            ...conditions,
+            productIds: ["serum"],
+            categoryIds: ["skincare"],
+          },
+          purchaseExclusions: null,
+          cap: uncapped,
+        },
+        {
+          code: "in-store-consultation",
+          name: "In-store consultation",
+          source: "custom_activity",
+          enabled: true,
+          priority: 20,
+          stackable: true,
+          effect: { kind: "fixed_bonus", points: "25" },
+          conditions: { ...conditions, activityCodes: ["consultation"] },
+          purchaseExclusions: null,
+          cap: uncapped,
+        },
+      ],
+    } satisfies ProgrammeDefinitionV2;
+    const review: ActivityEarningFactV2 = {
+      source: "verified_product_review",
+      eventId: "review:101",
+      occurredAt: "2026-08-13T10:00:00Z",
+      channel: "woocommerce",
+      segmentCodes: [],
+      tierCode: "rose",
+      memberRuleUsage: {},
+      verified: true,
+      activityReference: "review:101",
+      activityCode: "verified_product_review",
+      productId: "serum",
+      categoryIds: ["skincare"],
+    };
+    expect(evaluateEarningV2(activityProgramme, review).awardedPoints).toBe(
+      "75",
+    );
+    expect(
+      evaluateEarningV2(activityProgramme, {
+        ...review,
+        productId: "cleanser",
+      }).awardedPoints,
+    ).toBe("0");
+
+    const consultation: ActivityEarningFactV2 = {
+      ...review,
+      source: "custom_activity",
+      eventId: "activity:202",
+      channel: "merchant-api",
+      activityReference: "activity:202",
+      activityCode: "consultation",
+      productId: null,
+      categoryIds: [],
+    };
+    expect(
+      evaluateEarningV2(activityProgramme, consultation).awardedPoints,
+    ).toBe("25");
+    expect(
+      evaluateEarningV2(activityProgramme, {
+        ...consultation,
+        activityCode: "newsletter_signup",
+      }).awardedPoints,
+    ).toBe("0");
   });
 
   it("uses exact bigint arithmetic beyond the JavaScript safe-integer range", () => {

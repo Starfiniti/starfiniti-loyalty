@@ -2,9 +2,11 @@ import { createHash } from "node:crypto";
 import {
   programmeDefinitionV2,
   wooCommerceCouponCapturedPayloadV1,
+  wooCommerceCustomerCreatedPayloadV1,
   wooCommerceCustomerDeletedPayloadV1,
   wooCommerceOrderRefundedPayloadV1,
   wooCommerceOrderStatusChangedPayloadV1,
+  wooCommerceVerifiedProductReviewPayloadV1,
   type WooCommerceOrderFactV1,
   type ProgrammeDefinitionV2,
 } from "@starfiniti/contracts";
@@ -19,6 +21,7 @@ import {
   tierCode,
   type OrderAwardEvaluation,
   type EarningEvaluationV2,
+  type ActivityEarningFactV2,
   type PurchaseEarningFactV2,
   type ProgrammeVersion,
 } from "@starfiniti/domain";
@@ -51,6 +54,15 @@ type ParsedEffect =
       readonly orderId: string;
     }
   | { readonly kind: "customer_delete"; readonly externalCustomerId: string }
+  | {
+      readonly kind: "activity";
+      readonly source: "account_created" | "verified_product_review";
+      readonly externalCustomerId: string;
+      readonly activityReference: string;
+      readonly activityCode: string;
+      readonly productId: string | null;
+      readonly categoryIds: readonly string[];
+    }
   | { readonly kind: "skip"; readonly reason: string }
   | { readonly kind: "quarantine"; readonly reason: string };
 
@@ -144,6 +156,39 @@ export function parseWooCommerceEffect(event: ClaimedEffect): ParsedEffect {
         }
       : { kind: "quarantine", reason: "invalid_customer_deleted_payload" };
   }
+  if (event.event_type === "commerce.customer.created") {
+    const parsed = wooCommerceCustomerCreatedPayloadV1.safeParse(event.payload);
+    return parsed.success
+      ? {
+          kind: "activity",
+          source: "account_created",
+          externalCustomerId: parsed.data.externalCustomerId,
+          activityReference: `woocommerce:customer:${parsed.data.externalCustomerId}`,
+          activityCode: "account_created",
+          productId: null,
+          categoryIds: [],
+        }
+      : { kind: "quarantine", reason: "invalid_customer_created_payload" };
+  }
+  if (event.event_type === "commerce.review.verified") {
+    const parsed = wooCommerceVerifiedProductReviewPayloadV1.safeParse(
+      event.payload,
+    );
+    return parsed.success
+      ? {
+          kind: "activity",
+          source: "verified_product_review",
+          externalCustomerId: parsed.data.externalCustomerId,
+          activityReference: `woocommerce:review:${parsed.data.reviewId}`,
+          activityCode: "verified_product_review",
+          productId: parsed.data.productId,
+          categoryIds: parsed.data.categoryIds,
+        }
+      : {
+          kind: "quarantine",
+          reason: "invalid_verified_review_payload",
+        };
+  }
   return { kind: "quarantine", reason: "unsupported_event_type" };
 }
 
@@ -220,7 +265,10 @@ export async function processWooCommerceEffect(
     if (event.programme_id === null) {
       throw new RetryableEffectError("programme_not_configured");
     }
-    const identity = identityFromOrder(effect.order);
+    const identity =
+      effect.kind === "activity"
+        ? { kind: "registered" as const, externalId: effect.externalCustomerId }
+        : identityFromOrder(effect.order);
     const identities = await sql<IdentityRow[]>`
       select customer_id::text
       from loyalty_private.resolve_commerce_customer(
@@ -239,6 +287,20 @@ export async function processWooCommerceEffect(
       event.programme_id,
       customerId,
     );
+    if (effect.kind === "activity") {
+      if (context.definitionVersion !== "2") {
+        await finishEffect(
+          sql,
+          workerId,
+          event,
+          "skipped",
+          "programme_v2_not_published",
+        );
+        return;
+      }
+      await commitActivityV2(sql, workerId, event, customerId, context, effect);
+      return;
+    }
     if (context.definitionVersion === "2") {
       if (
         effect.order.currency !== context.programme.currencyCode ||
@@ -952,6 +1014,93 @@ async function commitAwardV2(
         ${workerId},
         'applied',
         'loyalty.order.award',
+        ${operation},
+        ${resultReference},
+        null,
+        0
+      )
+    `;
+  });
+}
+
+async function commitActivityV2(
+  sql: Sql,
+  workerId: string,
+  event: ClaimedEffect,
+  customerId: string,
+  context: V2ProgrammeContext,
+  activity: Extract<ParsedEffect, { kind: "activity" }>,
+): Promise<void> {
+  const operation = `connection:${event.connection_id}:activity:${event.canonical_event_public_id}`;
+  const evaluationKey = `woo:evaluation:activity:${operation}`;
+  const awardKey = `woo:ledger:activity:${operation}`;
+  await sql.begin(async (transaction) => {
+    const usageRows = await transaction<MemberRuleUsageRow[]>`
+      select rule_code, consumed_points::text
+      from loyalty_private.get_member_earning_rule_usage(
+        ${event.organization_id}::bigint,
+        ${context.programmeGroupId}::bigint,
+        ${context.programmeVersionId}::bigint,
+        ${customerId}::bigint,
+        ${event.occurred_at}::timestamptz,
+        ${evaluationKey}
+      )
+    `;
+    const fact: ActivityEarningFactV2 = {
+      source: activity.source,
+      eventId: `woocommerce:${event.connection_id}:${event.source_event_id}`,
+      occurredAt: new Date(event.occurred_at).toISOString(),
+      channel: "woocommerce",
+      segmentCodes: [],
+      tierCode: context.tierCode,
+      memberRuleUsage: Object.fromEntries(
+        usageRows.map((row) => [row.rule_code, row.consumed_points]),
+      ),
+      verified: true,
+      activityReference: activity.activityReference,
+      activityCode: activity.activityCode,
+      productId: activity.productId,
+      categoryIds: activity.categoryIds,
+    };
+    const evaluation = evaluateEarningV2(context.programme, fact);
+    const inputHash = evidenceSha256({
+      version: "2",
+      programmeVersionId: context.programmeVersionId,
+      activity: fact,
+    });
+    const resultHash = evidenceSha256(evaluation);
+    const awards = await transaction<V2AwardRow[]>`
+      select evaluation_public_id::text,
+        transaction_public_id::text,
+        outcome
+      from loyalty_private.commit_programme_v2_award(
+        ${event.organization_id}::bigint,
+        ${context.programmeGroupId}::bigint,
+        ${context.programmeVersionId}::bigint,
+        ${event.canonical_event_id}::bigint,
+        ${customerId}::bigint,
+        ${activity.activityReference},
+        ${evaluationKey},
+        ${awardKey},
+        ${Buffer.from(inputHash, "hex")},
+        ${Buffer.from(resultHash, "hex")},
+        ${JSON.stringify(evaluation)}::jsonb,
+        ${JSON.stringify({ activity: activity.activityCode })}::jsonb,
+        ${event.occurred_at}::timestamptz,
+        ${new Date().toISOString()}::timestamptz
+      )
+    `;
+    const award = awards[0];
+    if (!award) throw new Error("v2_activity_award_record_failed");
+    const resultReference = award.transaction_public_id
+      ? `ledger-transaction:${award.transaction_public_id}`
+      : `evaluation:${award.evaluation_public_id}`;
+    await transaction`
+      select * from loyalty_private.finish_commerce_effect(
+        ${event.canonical_event_public_id}::uuid,
+        ${workerId},
+        'applied',
+        'loyalty.activity.award',
         ${operation},
         ${resultReference},
         null,

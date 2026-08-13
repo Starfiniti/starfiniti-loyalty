@@ -64,8 +64,10 @@ export const canonicalCommerceEventTypes = [
   "commerce.order.status_changed",
   "commerce.order.refunded",
   "commerce.customer.upserted",
+  "commerce.customer.created",
   "commerce.customer.deleted",
   "commerce.product.upserted",
+  "commerce.review.verified",
   "commerce.connection.rotated",
   "commerce.connection.disabled",
   "commerce.coupon.issued",
@@ -378,10 +380,29 @@ export const wooCommerceCouponCapturedPayloadV1 = z
   })
   .strict();
 
+const wooCommerceNumericId = z.string().regex(/^[1-9][0-9]{0,19}$/u);
+
+export const wooCommerceCustomerCreatedPayloadV1 = z
+  .object({
+    kind: z.literal("customer_created"),
+    externalCustomerId: wooCommerceNumericId,
+  })
+  .strict();
+
+export const wooCommerceVerifiedProductReviewPayloadV1 = z
+  .object({
+    kind: z.literal("verified_product_review"),
+    externalCustomerId: wooCommerceNumericId,
+    reviewId: wooCommerceNumericId,
+    productId: wooCommerceNumericId,
+    categoryIds: z.array(wooCommerceNumericId).max(100),
+  })
+  .strict();
+
 export const wooCommerceCustomerDeletedPayloadV1 = z
   .object({
     kind: z.literal("customer_deleted"),
-    externalCustomerId: z.string().regex(/^[1-9][0-9]{0,19}$/u),
+    externalCustomerId: wooCommerceNumericId,
   })
   .strict();
 
@@ -441,6 +462,12 @@ export type WooCommerceOrderRefundedPayloadV1 = z.infer<
 >;
 export type WooCommerceCouponCapturedPayloadV1 = z.infer<
   typeof wooCommerceCouponCapturedPayloadV1
+>;
+export type WooCommerceCustomerCreatedPayloadV1 = z.infer<
+  typeof wooCommerceCustomerCreatedPayloadV1
+>;
+export type WooCommerceVerifiedProductReviewPayloadV1 = z.infer<
+  typeof wooCommerceVerifiedProductReviewPayloadV1
 >;
 
 const wooCommerceCouponIssuePayloadV1 = z

@@ -18,6 +18,7 @@ const noConditions = {
   currencyCodes: [],
   markets: [],
   channels: [],
+  activityCodes: [],
   segmentCodes: [],
   tierCodes: [],
   startsAt: null,
@@ -224,6 +225,53 @@ describe("ProgrammeDefinitionV2", () => {
         ],
       }),
     ).toThrow("Rule end must follow rule start");
+  });
+
+  it("allows review product selectors and reserves activity codes for custom facts", () => {
+    expect(() =>
+      programmeDefinitionV2.parse({
+        ...definition,
+        earningRules: [
+          ...definition.earningRules,
+          {
+            ...definition.earningRules[2]!,
+            code: "verified-serum-review",
+            source: "verified_product_review",
+            conditions: {
+              ...noConditions,
+              productIds: ["serum"],
+              categoryIds: ["skincare"],
+            },
+          },
+        ],
+      }),
+    ).not.toThrow();
+    expect(() =>
+      programmeDefinitionV2.parse({
+        ...definition,
+        earningRules: [
+          ...definition.earningRules,
+          {
+            ...definition.earningRules[2]!,
+            conditions: { ...noConditions, activityCodes: ["birthday"] },
+          },
+        ],
+      }),
+    ).toThrow("Only custom activity rules may select activity codes");
+    expect(() =>
+      programmeDefinitionV2.parse({
+        ...definition,
+        earningRules: [
+          ...definition.earningRules,
+          {
+            ...definition.earningRules[2]!,
+            code: "signed-consultation",
+            source: "custom_activity",
+            conditions: { ...noConditions, activityCodes: ["consultation"] },
+          },
+        ],
+      }),
+    ).not.toThrow();
   });
 
   it("retains V1 tier and reward validation on the compatible surface", () => {

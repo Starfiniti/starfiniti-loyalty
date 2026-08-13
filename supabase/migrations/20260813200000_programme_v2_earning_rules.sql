@@ -165,17 +165,17 @@ begin
     if jsonb_typeof(condition_value) <> 'object'
       or not (condition_value ?& array[
         'productIds', 'categoryIds', 'currencyCodes', 'markets', 'channels',
-        'segmentCodes', 'tierCodes', 'startsAt', 'endsAt'
+        'activityCodes', 'segmentCodes', 'tierCodes', 'startsAt', 'endsAt'
       ])
       or condition_value - array[
         'productIds', 'categoryIds', 'currencyCodes', 'markets', 'channels',
-        'segmentCodes', 'tierCodes', 'startsAt', 'endsAt'
+        'activityCodes', 'segmentCodes', 'tierCodes', 'startsAt', 'endsAt'
       ] <> '{}'::jsonb
       or exists (
         select 1
         from unnest(array[
           'productIds', 'categoryIds', 'currencyCodes', 'markets', 'channels',
-          'segmentCodes', 'tierCodes'
+          'activityCodes', 'segmentCodes', 'tierCodes'
         ]) as field(name)
         where jsonb_typeof(condition_value -> field.name) <> 'array'
           or jsonb_array_length(condition_value -> field.name) > 100
@@ -198,6 +198,7 @@ begin
     ) or exists (
       select 1
       from jsonb_array_elements_text(
+        (condition_value -> 'activityCodes') ||
         (condition_value -> 'segmentCodes') || (condition_value -> 'tierCodes')
       ) as item(value)
       where item.value !~ '^[a-z][a-z0-9_-]{0,79}$'
@@ -337,11 +338,17 @@ begin
         raise exception using errcode = '22023', message = 'invalid ProgrammeDefinitionV2 purchase exclusions';
       end if;
     elsif exclusion_value <> 'null'::jsonb
-      or jsonb_array_length(condition_value -> 'productIds') > 0
-      or jsonb_array_length(condition_value -> 'categoryIds') > 0
+      or (rule_value ->> 'source' <> 'verified_product_review' and (
+        jsonb_array_length(condition_value -> 'productIds') > 0
+        or jsonb_array_length(condition_value -> 'categoryIds') > 0
+      ))
       or jsonb_array_length(condition_value -> 'currencyCodes') > 0
       or jsonb_array_length(condition_value -> 'markets') > 0 then
       raise exception using errcode = '22023', message = 'non-purchase earning rules cannot use commerce conditions';
+    end if;
+    if rule_value ->> 'source' <> 'custom_activity'
+      and jsonb_array_length(condition_value -> 'activityCodes') > 0 then
+      raise exception using errcode = '22023', message = 'only custom activity rules may select activity codes';
     end if;
   end loop;
 
@@ -837,6 +844,81 @@ begin
 end;
 $$;
 
+create or replace function loyalty_private.claim_woocommerce_effects(
+  target_worker_id text,
+  target_batch_size integer default 25,
+  target_lease_seconds integer default 60
+)
+returns table (
+  canonical_event_id bigint,
+  canonical_event_public_id uuid,
+  organization_id bigint,
+  connection_id bigint,
+  programme_id bigint,
+  event_type text,
+  source_event_id text,
+  source_object_id text,
+  occurred_at timestamptz,
+  payload jsonb,
+  attempt_count integer
+)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if length(btrim(target_worker_id)) not between 1 and 200 then
+    raise exception using errcode = '22023', message = 'invalid worker id';
+  end if;
+  if target_batch_size not between 1 and 100 then
+    raise exception using errcode = '22023', message = 'invalid batch size';
+  end if;
+  if target_lease_seconds not between 10 and 3600 then
+    raise exception using errcode = '22023', message = 'invalid lease duration';
+  end if;
+
+  return query
+  with candidates as (
+    select event.id
+    from loyalty_private.canonical_commerce_events as event
+    where event.event_type in (
+        'commerce.order.status_changed', 'commerce.order.refunded',
+        'commerce.coupon.captured', 'commerce.customer.deleted',
+        'commerce.customer.created', 'commerce.review.verified'
+      )
+      and (
+        (event.effect_state in ('pending', 'retryable')
+          and event.effect_available_at <= clock_timestamp())
+        or (event.effect_state = 'processing'
+          and event.effect_lease_expires_at <= clock_timestamp())
+      )
+    order by event.effect_available_at, event.id
+    for update skip locked
+    limit target_batch_size
+  ), claimed as (
+    update loyalty_private.canonical_commerce_events as event
+    set effect_state = 'processing',
+        effect_attempt_count = event.effect_attempt_count + 1,
+        effect_lease_owner = target_worker_id,
+        effect_lease_expires_at = clock_timestamp()
+          + pg_catalog.make_interval(secs => target_lease_seconds),
+        effect_last_error_code = null
+    from candidates
+    where event.id = candidates.id
+    returning event.*
+  )
+  select claimed.id, claimed.public_id, claimed.organization_id,
+    claimed.connection_id, connection.programme_id, claimed.event_type,
+    claimed.source_event_id, claimed.source_object_id, claimed.occurred_at,
+    claimed.payload, claimed.effect_attempt_count
+  from claimed
+  join loyalty.commerce_connections as connection
+    on connection.organization_id = claimed.organization_id
+   and connection.id = claimed.connection_id
+  order by claimed.id;
+end;
+$$;
+
 alter function loyalty_private.validate_programme_definition_v2(jsonb) owner to loyalty_owner;
 alter function loyalty_private.enforce_programme_v2_entitlement() owner to loyalty_owner;
 alter function loyalty_private.member_earning_period_matches(jsonb, timestamptz, timestamptz) owner to loyalty_owner;
@@ -846,6 +928,8 @@ alter function loyalty_private.commit_programme_v2_award(
   jsonb, jsonb, timestamptz, timestamptz
 ) owner to loyalty_owner;
 alter function loyalty_private.materialize_programme_definition(bigint) owner to loyalty_owner;
+alter function loyalty_private.claim_woocommerce_effects(text, integer, integer)
+  owner to loyalty_owner;
 
 alter table loyalty.programme_earning_rules enable row level security;
 alter table loyalty_private.member_earning_rule_effects enable row level security;
