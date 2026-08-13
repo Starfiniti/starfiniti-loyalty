@@ -1,0 +1,113 @@
+schema: starfiniti.production-pilot.v1
+status: in_progress
+observedAt: 2026-08-13T16:20:16Z
+release: v0.1.10
+applicationCommit: 4713c65e4ca47c0a97264854afea46f6a8730a3a
+store:
+  approved: false
+  origin: null
+  selectionRule: A reachable customer store is never approval; use an explicitly approved Starfiniti-controlled or merchant-authorized store.
+productionBaseline:
+  applicationVm:
+    vmId: 970
+    status: running
+    containersHealthy: 2
+  supabaseVm:
+    vmId: 971
+    status: running
+    containersHealthy: 11
+  publicSmokes:
+    dashboardHealth: 200
+    login: 200
+    unsignedWooEvents: 401
+    tlsVerified: true
+  aggregates:
+    organizations: 1
+    memberships: 1
+    workspaces: 1
+    programmes: 1
+    programmeVersions: 1
+    commerceConnections: 0
+    customers: 0
+    wallets: 0
+    ledgerTransactions: 0
+    rewardReservations: 0
+    deliveryInbox: 0
+    canonicalEvents: 0
+    businessEffects: 0
+    transactionalOutbox: 0
+  recovery:
+    walArchive: passed
+    archiveTimeout: 1 minute
+    baseBackup: passed
+    postgresOffHostBorg: passed
+    isolatedDatabaseWalRestore: passed
+    wholeVmBorg: pending first completed run
+    applicationAuthSigningEscrowRestore: pending
+checks:
+  - id: store_owner_approval
+    status: pending
+    evidence: No store has been selected or modified by inference.
+  - id: store_preflight
+    status: pending
+    evidence: Await approved store; capture versions, HPOS, Blocks/classic, backups, cron, and queue health.
+  - id: connection_provisioning
+    status: pending
+    evidence: Production aggregate has zero commerce connections.
+  - id: programme_publication
+    status: pending
+    evidence: The only production programme version remains a draft.
+  - id: test_customer_link
+    status: pending
+    evidence: Production aggregate has zero customers and wallets.
+  - id: completed_order_award
+    status: pending
+    evidence: No accepted commerce event or ledger value exists.
+  - id: pending_release
+    status: pending
+    evidence: Requires controlled order award.
+  - id: points_release
+    status: pending
+    evidence: Requires a published pilot policy and controlled release time.
+  - id: reward_redemption
+    status: pending
+    evidence: Requires linked test customer with available points.
+  - id: coupon_issue_and_capture
+    status: pending
+    evidence: Requires connector-created native benefit and controlled use.
+  - id: partial_refund
+    status: pending
+    evidence: Requires controlled paid order and line-level refund.
+  - id: full_refund
+    status: pending
+    evidence: Requires cumulative completion of the controlled refund.
+  - id: points_expiry
+    status: pending
+    evidence: Requires an owner-approved short pilot policy or isolated clock-controlled evidence.
+  - id: source_reconciliation
+    status: pending
+    evidence: Requires a connected source order.
+  - id: credential_rotation
+    status: pending
+    evidence: Requires an active connection and verified overlap/revocation window.
+  - id: hub_outage_checkout
+    status: pending
+    evidence: Runtime matrix passes; real-store checkout evidence is absent.
+  - id: worker_outage_checkout
+    status: pending
+    evidence: Runtime matrix passes; real-store queue recovery evidence is absent.
+  - id: plugin_recovery
+    status: pending
+    evidence: Requires approved store backup and local outbox replay.
+  - id: database_wal_restore
+    status: passed
+    evidence: Isolated encrypted Borg restore replayed WAL, promoted in 9 seconds, and retained all 26 migrations.
+  - id: application_auth_secret_restore
+    status: pending
+    evidence: Whole-VM job is configured but has not completed its first run; full smoke is absent.
+  - id: alert_coverage
+    status: pending
+    evidence: Existing health and queue views are not yet proven to alert every pilot stage.
+  - id: final_reconciliation
+    status: pending
+    evidence: Baseline is exactly zero value; final controlled order/effect/balance/coupon comparison is pending.

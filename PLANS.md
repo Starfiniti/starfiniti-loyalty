@@ -19,9 +19,9 @@ The implementation branch is `codex/enterprise-roadmap`, created from production
 
 ## Current M01 slice
 
-- Inventory the approved store-access boundary and existing production connection state without exposing secrets.
-- Complete every recovery/outage/reconciliation step that does not require interactive store-owner access.
-- Leave only the real-store connection and owner-controlled checkout/order actions for the final pilot gate if credentials are unavailable.
+- Production/store/recovery state is inventoried without secrets: exact `v0.1.10` images and all Supabase containers are healthy, value/event aggregates are zero, and no reachable customer store was treated as approved.
+- The 22-case machine-readable pilot gate and exact operational runbook now define provisioning, value, refund, expiry, reconciliation, rotation, outage, recovery, alert, and final-reconciliation evidence.
+- Complete every recovery/outage/reconciliation step that does not require interactive store-owner access. Leave only explicit store selection and owner-controlled checkout/order actions for the end if credentials remain unavailable.
 
 ## Next safe work
 

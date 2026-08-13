@@ -518,6 +518,7 @@ tasks:
     verification:
       [
         real store runbook,
+        npm run pilot:validate,
         outage drill,
         clean-room recovery smoke,
         reconciliation report,
@@ -530,7 +531,10 @@ tasks:
         docs/operations/BACKUP_RESTORE.md,
         docs/operations/RUNBOOKS.md,
       ]
-    evidence: [docs/plan/evidence/M01/README.md]
+    evidence:
+      - docs/plan/evidence/M01/README.md
+      - docs/plan/evidence/M01/pilot.yaml
+      - docs/plan/evidence/M01/production-baseline-2026-08-13.md
 
   - id: M02-ENTITLEMENTS-AND-FLAGS
     title: Add deployment modes, entitlements, limits, and tenant rollout controls
