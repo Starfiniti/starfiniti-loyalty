@@ -779,16 +779,18 @@ tasks:
           - AND and OR entry retention and re-entry thresholds produce deterministic explanation and progress evidence
           - Rose Bloom and Icon migrate to an outcome-identical rolling policy with the retained 30-day downgrade grace
       - id: M05-S02-LIVE-QUALIFICATION
-        status: in_progress
+        status: completed
         acceptance:
           - immutable event-time qualification facts and serialized decisions cover awards refunds late events and verified activities
           - automatic upgrade grace downgrade and re-entry preserve one current membership and append-only history
           - direct database calls cannot forge tenant customer wallet metric or tier authority
       - id: M05-S03-BENEFITS-AND-OVERRIDES
-        status: planned
+        status: in_progress
         acceptance:
           - tier earning multipliers reward access free shipping early access and custom perks have executable or explicitly manual fulfilment paths
           - expiring manual overrides require owner or admin authority reason and immutable audit evidence
+          - automatic qualification retains its independently verified underlying tier while an active override pins only effective membership
+          - browser and worker roles cannot bypass benefit publication award multiplier or raw membership decision boundaries
       - id: M05-S04-EXPIRY-POLICY
         status: planned
         acceptance:
@@ -803,7 +805,7 @@ tasks:
         status: planned
         acceptance:
           - shadow comparison exact-head CI disabled deployment Starfiniti canary reconciliation and score at least 90 pass
-    risks: [R-002, R-020]
+    risks: [R-002, R-020, R-033]
     docs:
       [
         docs/api/PROGRAMME_ENGINE.md,

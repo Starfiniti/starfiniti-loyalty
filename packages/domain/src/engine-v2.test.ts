@@ -266,6 +266,40 @@ describe("ProgrammeDefinitionV2 earning engine", () => {
     });
   });
 
+  it("applies the effective tier multiplier to purchase value before one campaign multiplier", () => {
+    const tierProgramme: ProgrammeDefinitionV2 = {
+      ...programme,
+      tierPolicy: {
+        version: "2",
+        qualificationPeriod: { kind: "lifetime" },
+        downgradeGraceDays: 30,
+        levels: [
+          {
+            tierCode: "rose",
+            entry: null,
+            retention: null,
+            reentry: null,
+            benefits: {
+              earningMultiplierBasisPoints: 15_000,
+              rewardCodes: [],
+              earlyAccess: false,
+            },
+          },
+        ],
+      },
+    };
+    const result = evaluateEarningV2(tierProgramme, purchase);
+    expect(result).toMatchObject({
+      awardedPoints: "167",
+      selectedMultiplierRuleCode: "vip-double",
+    });
+    expect(result.contributions).toMatchObject([
+      { ruleCode: "purchase-base", awardedPoints: "75" },
+      { ruleCode: "vip-double", awardedPoints: "67" },
+      { ruleCode: "order-bonus", awardedPoints: "25" },
+    ]);
+  });
+
   it("produces identical live and simulation evidence independent of rule and line order", () => {
     const expected = evaluateEarningV2(programme, purchase);
     expect(simulateEarningV2(programme, purchase)).toEqual(expected);

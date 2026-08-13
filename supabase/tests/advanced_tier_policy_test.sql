@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(80);
+select plan(122);
 
 select has_table('loyalty', 'programme_tier_policies', 'advanced tier policies exist');
 select has_table('loyalty', 'programme_tier_policy_levels', 'advanced tier levels exist');
@@ -57,6 +57,8 @@ select ok(
 insert into auth.users (id, email)
 values
   ('85000000-0000-4000-8000-000000000001', 'm05-owner-one@example.test'),
+  ('85000000-0000-4000-8000-000000000002', 'm05-admin-one@example.test'),
+  ('85000000-0000-4000-8000-000000000003', 'm05-analyst-one@example.test'),
   ('86000000-0000-4000-8000-000000000001', 'm05-owner-two@example.test');
 
 insert into loyalty.organizations (public_id, slug, name)
@@ -67,6 +69,8 @@ values
 insert into loyalty.organization_memberships (organization_id, user_id, role)
 values
   ((select id from loyalty.organizations where slug = 'm05-one'), '85000000-0000-4000-8000-000000000001', 'owner'),
+  ((select id from loyalty.organizations where slug = 'm05-one'), '85000000-0000-4000-8000-000000000002', 'admin'),
+  ((select id from loyalty.organizations where slug = 'm05-one'), '85000000-0000-4000-8000-000000000003', 'analyst'),
   ((select id from loyalty.organizations where slug = 'm05-two'), '86000000-0000-4000-8000-000000000001', 'owner');
 
 insert into loyalty.programme_groups (organization_id, slug, name)
@@ -115,11 +119,19 @@ as $$
       "downgradeGraceDays":30,
       "levels":[
         {"tierCode":"rose","entry":null,"retention":null,"reentry":null,"benefits":{"earningMultiplierBasisPoints":10000,"rewardCodes":[],"earlyAccess":false}},
-        {"tierCode":"bloom","entry":{"operator":"all","thresholds":[{"metric":"eligible_spend","minimum":"15000","activityCodes":[]}]},"retention":{"operator":"any","thresholds":[{"metric":"eligible_spend","minimum":"12500","activityCodes":[]},{"metric":"order_count","minimum":"3","activityCodes":[]}]},"reentry":{"operator":"all","thresholds":[{"metric":"eligible_spend","minimum":"10000","activityCodes":[]}]},"benefits":{"earningMultiplierBasisPoints":12000,"rewardCodes":[],"earlyAccess":true}},
+        {"tierCode":"bloom","entry":{"operator":"all","thresholds":[{"metric":"eligible_spend","minimum":"15000","activityCodes":[]}]},"retention":{"operator":"any","thresholds":[{"metric":"eligible_spend","minimum":"12500","activityCodes":[]},{"metric":"order_count","minimum":"3","activityCodes":[]}]},"reentry":{"operator":"all","thresholds":[{"metric":"eligible_spend","minimum":"10000","activityCodes":[]}]},"benefits":{"earningMultiplierBasisPoints":12000,"rewardCodes":["bloom-shipping"],"earlyAccess":true}},
         {"tierCode":"icon","entry":{"operator":"all","thresholds":[{"metric":"verified_action_count","minimum":"3","activityCodes":["verified-review"]}]},"retention":{"operator":"all","thresholds":[{"metric":"eligible_spend","minimum":"45000","activityCodes":[]}]},"reentry":{"operator":"all","thresholds":[{"metric":"eligible_spend","minimum":"40000","activityCodes":[]}]},"benefits":{"earningMultiplierBasisPoints":14000,"rewardCodes":[],"earlyAccess":true}}
       ]
     },
-    "rewards":[],
+    "rewards":[{
+      "code":"bloom-shipping","name":"Bloom free shipping",
+      "kind":"free_shipping","costPoints":"500",
+      "configuration":{
+        "version":"2","fulfilmentMode":"woocommerce_coupon","validityDays":30,
+        "availability":{"startsAt":null,"endsAt":null,"tierCodes":["bloom"],"segmentCodes":[],"perCustomerLimit":1,"globalQuantity":null,"pointsBudget":null},
+        "restrictions":{"minimumSpendMinor":null,"productIds":[],"excludedProductIds":[],"categoryIds":[],"excludedCategoryIds":[],"excludeSaleItems":false,"stacking":"exclusive"}
+      }
+    }],
     "earningRules":[{
       "code":"purchase-base","name":"Base purchase points","source":"purchase",
       "enabled":true,"priority":0,"stackable":false,
@@ -150,6 +162,14 @@ select lives_ok(
     'canary', 'test:m05', 'Enable advanced VIP for M05 canary', now() - interval '30 seconds', null
   ) $$,
   'test enables advanced VIP for the canary'
+);
+select lives_ok(
+  $$ select loyalty_private.set_organization_entitlement(
+    '85000000-0000-4000-8000-000000000100', 'rewards.expanded', 'enabled', null,
+    'canary', 'test:m05', 'Enable fulfilable tier reward benefits',
+    now() - interval '30 seconds', null
+  ) $$,
+  'test enables expanded fulfilment for linked tier rewards'
 );
 select lives_ok(
   $$ select loyalty_private.set_organization_entitlement(
@@ -238,6 +258,17 @@ select throws_ok(
   '22023', 'invalid TierPolicyV2 benefits',
   'tier benefit cannot reference an unfulfillable reward'
 );
+select throws_ok(
+  $$ select * from loyalty.create_programme_draft_command(
+    '85000000-0000-4000-8000-000000000101',
+    jsonb_set(pg_temp.valid_m05(),
+      '{rewards,0,configuration,availability,tierCodes}', '["rose"]'::jsonb),
+    'm05:invalid:benefit-availability',
+    '85000000-0000-4000-8000-000000000210'
+  ) $$,
+  '23514', 'tier benefit reward must be V2 and available to its tier',
+  'linked tier rewards must independently allow the benefiting tier'
+);
 select results_eq(
   $$ select count(*)::bigint from loyalty.programme_versions
      where programme_id = (select id from loyalty.programmes where public_id =
@@ -284,6 +315,18 @@ select results_eq(
      from loyalty.programme_tier_policy_levels where tier_code = 'icon' $$,
   $$ values (14000, true) $$,
   'materialization preserves value-neutral tier benefit configuration'
+);
+select results_eq(
+  $$ select level.tier_code, level.reward_codes,
+       reward.configuration -> 'availability' -> 'tierCodes'
+     from loyalty.programme_tier_policy_levels as level
+     join loyalty.programme_rewards as reward
+       on reward.organization_id = level.organization_id
+      and reward.programme_version_id = level.programme_version_id
+      and reward.code = any(level.reward_codes)
+     where level.tier_code = 'bloom' $$,
+  $$ values ('bloom'::text, array['bloom-shipping']::text[], '["bloom"]'::jsonb) $$,
+  'materialized tier reward access resolves to its executable availability boundary'
 );
 
 set local role anon;
@@ -436,8 +479,14 @@ join loyalty.programmes as programme on programme.organization_id = organization
 where organization.slug = 'm05-one';
 
 insert into loyalty.customers (public_id, organization_id, display_reference)
-select '85000000-0000-4000-8000-000000000112', id, 'm05-member'
-from loyalty.organizations where slug = 'm05-one';
+select customer.public_id, organization.id, customer.display_reference
+from loyalty.organizations as organization
+cross join (values
+  ('85000000-0000-4000-8000-000000000112'::uuid, 'm05-member'),
+  ('85000000-0000-4000-8000-000000000113'::uuid, 'm05-override-owner'),
+  ('85000000-0000-4000-8000-000000000114'::uuid, 'm05-override-admin')
+) as customer(public_id, display_reference)
+where organization.slug = 'm05-one';
 
 create temporary table m05_live_refs (name text primary key, value bigint not null);
 insert into m05_live_refs
@@ -617,6 +666,29 @@ grant execute on function pg_temp.m05_entry_result(),
 
 set local role loyalty_worker;
 
+select throws_ok(
+  $$ select * from loyalty_private.commit_programme_v2_award(
+    pg_temp.m05_live_ref('organization'), pg_temp.m05_live_ref('group'),
+    pg_temp.m05_live_ref('version'), pg_temp.m05_live_ref('event-award'),
+    pg_temp.m05_live_ref('customer'), 'woocommerce:order:m05-forged-tier',
+    'm05:forged:tier-multiplier:evaluation',
+    'm05:forged:tier-multiplier:ledger',
+    decode(repeat('a',64),'hex'), decode(repeat('b',64),'hex'),
+    '{"version":"2","eventId":"woo:event:m05:forged-tier","source":"purchase","eligibleSpendMinor":"16000","awardedPoints":"960","tierCodeSnapshot":"rose","pendingAt":"2026-08-14T10:00:00Z","availableAt":"2026-09-13T10:00:00Z","expiresAt":"2027-09-13T10:00:00Z","selectedMultiplierRuleCode":null,"contributions":[{"ruleCode":"purchase-base","effectKind":"base_rate","uncappedPoints":"960","awardedPoints":"960","uncappedNumerator":"960","awardedNumerator":"960","denominator":"1","capApplied":"none"}],"lines":[]}'::jsonb,
+    '{"tierMultiplierBasisPoints":12000}'::jsonb,
+    '2026-08-14T10:00:00Z', '2026-08-14T10:00:01Z'
+  ) $$,
+  '23514', 'tier earning multiplier does not match published benefit',
+  'worker cannot forge a tier earning multiplier at the atomic award boundary'
+);
+select results_eq(
+  $$ select pg_temp.m05_evaluation_ref(
+       'm05:forged:tier-multiplier:evaluation'
+     ) is null $$,
+  array[true],
+  'rejected multiplier evidence creates no evaluation or value effect'
+);
+
 select results_eq(
   $$ select outcome from loyalty_private.commit_programme_v2_award(
     pg_temp.m05_live_ref('organization'), pg_temp.m05_live_ref('group'),
@@ -625,7 +697,8 @@ select results_eq(
     'm05:live:award:evaluation', 'm05:live:award:ledger',
     decode(repeat('1',64),'hex'), decode(repeat('2',64),'hex'),
     '{"version":"2","eventId":"woo:event:m05:1","source":"purchase","eligibleSpendMinor":"16000","awardedPoints":"800","tierCodeSnapshot":"rose","pendingAt":"2026-08-14T10:00:00Z","availableAt":"2026-09-13T10:00:00Z","expiresAt":"2027-09-13T10:00:00Z","selectedMultiplierRuleCode":null,"contributions":[{"ruleCode":"purchase-base","effectKind":"base_rate","uncappedPoints":"800","awardedPoints":"800","uncappedNumerator":"800","awardedNumerator":"800","denominator":"1","capApplied":"none"}],"lines":[]}'::jsonb,
-    '{}'::jsonb, '2026-08-14T10:00:00Z', '2026-08-14T10:00:01Z'
+    '{"tierMultiplierBasisPoints":10000}'::jsonb,
+    '2026-08-14T10:00:00Z', '2026-08-14T10:00:01Z'
   ) $$,
   array['created'::text],
   'purchase award appends its qualification fact atomically'
@@ -647,7 +720,8 @@ select results_eq(
     'm05:live:award:evaluation', 'm05:live:award:ledger',
     decode(repeat('1',64),'hex'), decode(repeat('2',64),'hex'),
     '{"version":"2","eventId":"woo:event:m05:1","source":"purchase","eligibleSpendMinor":"16000","awardedPoints":"800","tierCodeSnapshot":"rose","pendingAt":"2026-08-14T10:00:00Z","availableAt":"2026-09-13T10:00:00Z","expiresAt":"2027-09-13T10:00:00Z","selectedMultiplierRuleCode":null,"contributions":[{"ruleCode":"purchase-base","effectKind":"base_rate","uncappedPoints":"800","awardedPoints":"800","uncappedNumerator":"800","awardedNumerator":"800","denominator":"1","capApplied":"none"}],"lines":[]}'::jsonb,
-    '{}'::jsonb, '2026-08-14T10:00:00Z', '2026-08-14T10:00:01Z'
+    '{"tierMultiplierBasisPoints":10000}'::jsonb,
+    '2026-08-14T10:00:00Z', '2026-08-14T10:00:01Z'
   ) $$,
   array['duplicate'::text],
   'duplicate award returns its original effect'
@@ -877,6 +951,351 @@ select results_eq(
      where effective_until is null $$,
   array[1::bigint],
   'live qualification leaves exactly one current tier membership'
+);
+
+select has_trigger(
+  'loyalty', 'programme_versions', 'programme_versions_tier_benefit_execution',
+  'tier benefit execution is guarded at the immutable version boundary'
+);
+select has_table(
+  'loyalty', 'tier_manual_overrides',
+  'manual tier override grants are immutable resources'
+);
+select has_table(
+  'loyalty', 'tier_manual_override_resolutions',
+  'manual tier override resolution evidence is immutable'
+);
+select ok(
+  (select relrowsecurity from pg_class
+   where oid = 'loyalty.tier_manual_overrides'::regclass),
+  'manual tier overrides have RLS enabled'
+);
+select ok(
+  (select relrowsecurity from pg_class
+   where oid = 'loyalty.tier_manual_override_resolutions'::regclass),
+  'manual tier override resolutions have RLS enabled'
+);
+select ok(
+  has_function_privilege(
+    'authenticated',
+    'loyalty.set_customer_tier_override_command(uuid,uuid,uuid,text,timestamp with time zone,text,text,uuid)',
+    'EXECUTE'
+  ),
+  'authenticated merchants can enter the scoped override command'
+);
+select ok(
+  not has_function_privilege(
+    'authenticated',
+    'loyalty_private.expire_due_tier_overrides_v1(timestamp with time zone,integer)',
+    'EXECUTE'
+  ),
+  'browser sessions cannot run override expiry maintenance'
+);
+select ok(
+  has_function_privilege(
+    'loyalty_worker',
+    'loyalty_private.expire_due_tier_overrides_v1(timestamp with time zone,integer)',
+    'EXECUTE'
+  ),
+  'worker can run only the bounded override expiry boundary'
+);
+select ok(
+  not has_function_privilege(
+    'loyalty_worker',
+    'loyalty_private.record_tier_decision(bigint,bigint,bigint,bigint,text,text,text,bigint,timestamp with time zone,timestamp with time zone,timestamp with time zone,text,bytea,jsonb)',
+    'EXECUTE'
+  ),
+  'worker cannot bypass independently verified qualification with a raw decision'
+);
+select ok(
+  not has_function_privilege(
+    'loyalty_worker',
+    'loyalty_private.record_tier_decision_core(bigint,bigint,bigint,bigint,text,text,text,bigint,timestamp with time zone,timestamp with time zone,timestamp with time zone,text,bytea,jsonb)',
+    'EXECUTE'
+  ),
+  'worker cannot enter the membership-writing core'
+);
+select ok(
+  has_table_privilege(
+    'authenticated', 'loyalty.tier_manual_overrides', 'SELECT'
+  ) and not has_table_privilege(
+    'authenticated', 'loyalty.tier_manual_overrides', 'INSERT'
+  ),
+  'merchant sessions receive tenant-filtered inspection without table writes'
+);
+
+set local role authenticated;
+set local request.jwt.claim.sub = '85000000-0000-4000-8000-000000000001';
+select results_eq(
+  $$ select outcome, effective_tier_code from loyalty.set_customer_tier_override_command(
+    '85000000-0000-4000-8000-000000000113',
+    (select public_id from loyalty.programme_groups where slug = 'rewards'
+      and organization_id = (select id from loyalty.organizations where slug = 'm05-one')),
+    (select version.public_id from loyalty.programme_versions as version
+      join loyalty.programmes as programme on programme.id = version.programme_id
+      where programme.public_id = '85000000-0000-4000-8000-000000000101'
+        and version.status = 'published'),
+    'icon', now() + interval '2 days', 'Approved service recovery',
+    'm05:override:owner', '85000000-0000-4000-8000-000000000301'
+  ) $$,
+  $$ values ('created'::text, 'icon'::text) $$,
+  'owner creates one future-expiring reason-bound override'
+);
+select results_eq(
+  $$ select tier_code, previous_tier_code, reason, actor_user_id
+     from loyalty.tier_manual_overrides
+     where idempotency_key = 'm05:override:owner' $$,
+  $$ values ('icon'::text, 'rose'::text, 'Approved service recovery'::text,
+    '85000000-0000-4000-8000-000000000001'::uuid) $$,
+  'override evidence attributes the exact tier reason actor and prior tier'
+);
+select results_eq(
+  $$ select outcome from loyalty.set_customer_tier_override_command(
+    '85000000-0000-4000-8000-000000000113',
+    (select public_id from loyalty.programme_groups where slug = 'rewards'
+      and organization_id = (select id from loyalty.organizations where slug = 'm05-one')),
+    (select version.public_id from loyalty.programme_versions as version
+      join loyalty.programmes as programme on programme.id = version.programme_id
+      where programme.public_id = '85000000-0000-4000-8000-000000000101'
+        and version.status = 'published'),
+    'icon', now() + interval '2 days', 'Approved service recovery',
+    'm05:override:owner', '85000000-0000-4000-8000-000000000301'
+  ) $$,
+  array['duplicate'::text],
+  'same override command returns its original result'
+);
+select throws_ok(
+  $$ select * from loyalty.set_customer_tier_override_command(
+    '85000000-0000-4000-8000-000000000113',
+    (select public_id from loyalty.programme_groups where slug = 'rewards'
+      and organization_id = (select id from loyalty.organizations where slug = 'm05-one')),
+    (select version.public_id from loyalty.programme_versions as version
+      join loyalty.programmes as programme on programme.id = version.programme_id
+      where programme.public_id = '85000000-0000-4000-8000-000000000101'
+        and version.status = 'published'),
+    'bloom', now() + interval '2 days', 'Approved service recovery',
+    'm05:override:owner', '85000000-0000-4000-8000-000000000301'
+  ) $$,
+  '23514', 'manual tier override idempotency conflict',
+  'changed override payload conflicts instead of creating another grant'
+);
+
+set local request.jwt.claim.sub = '85000000-0000-4000-8000-000000000003';
+select throws_ok(
+  $$ select * from loyalty.set_customer_tier_override_command(
+    '85000000-0000-4000-8000-000000000114',
+    (select public_id from loyalty.programme_groups where slug = 'rewards'
+      and organization_id = (select id from loyalty.organizations where slug = 'm05-one')),
+    (select version.public_id from loyalty.programme_versions as version
+      join loyalty.programmes as programme on programme.id = version.programme_id
+      where programme.public_id = '85000000-0000-4000-8000-000000000101'
+        and version.status = 'published'),
+    'icon', now() + interval '4 days', 'Unapproved analyst request',
+    'm05:override:analyst', '85000000-0000-4000-8000-000000000302'
+  ) $$,
+  '42501', 'manual tier override not authorized',
+  'analyst membership cannot grant a manual tier override'
+);
+set local request.jwt.claim.sub = '86000000-0000-4000-8000-000000000001';
+select throws_ok(
+  $$ select * from loyalty.set_customer_tier_override_command(
+    '85000000-0000-4000-8000-000000000114',
+    '85000000-0000-4000-8000-000000000001',
+    '85000000-0000-4000-8000-000000000002',
+    'icon', now() + interval '4 days', 'Cross tenant override request',
+    'm05:override:cross-tenant', '85000000-0000-4000-8000-000000000303'
+  ) $$,
+  '42501', 'manual tier override not authorized',
+  'another organization owner cannot discover or override this customer'
+);
+
+set local request.jwt.claim.sub = '85000000-0000-4000-8000-000000000002';
+select results_eq(
+  $$ select outcome, effective_tier_code from loyalty.set_customer_tier_override_command(
+    '85000000-0000-4000-8000-000000000114',
+    (select public_id from loyalty.programme_groups where slug = 'rewards'
+      and organization_id = (select id from loyalty.organizations where slug = 'm05-one')),
+    (select version.public_id from loyalty.programme_versions as version
+      join loyalty.programmes as programme on programme.id = version.programme_id
+      where programme.public_id = '85000000-0000-4000-8000-000000000101'
+        and version.status = 'published'),
+    'icon', now() + interval '4 days', 'Approved account recovery',
+    'm05:override:admin', '85000000-0000-4000-8000-000000000304'
+  ) $$,
+  $$ values ('created'::text, 'icon'::text) $$,
+  'admin has the same bounded override authority as owner'
+);
+select results_eq(
+  $$ select count(*)::bigint from loyalty.tier_manual_overrides $$,
+  array[2::bigint],
+  'tenant RLS exposes both attributable override grants to this member'
+);
+select results_eq(
+  $$ select count(*)::bigint, count(distinct actor_user_id)::bigint
+     from loyalty.admin_audit_events
+     where action = 'customer.tier.override' $$,
+  $$ values (2::bigint, 2::bigint) $$,
+  'each created override has one immutable admin audit event and actor'
+);
+reset role;
+
+set local role anon;
+select throws_ok(
+  $$ select count(*) from loyalty.tier_manual_overrides $$,
+  '42501', null,
+  'anonymous clients cannot inspect manual tier override evidence'
+);
+reset role;
+
+insert into pg_temp.m05_live_refs
+select 'customer-override-owner', customer.id
+from loyalty.customers as customer
+where customer.public_id = '85000000-0000-4000-8000-000000000113'
+union all
+select 'wallet-override-owner', wallet.id
+from loyalty.wallets as wallet
+join loyalty.customers as customer on customer.id = wallet.customer_id
+where customer.public_id = '85000000-0000-4000-8000-000000000113'
+union all
+select 'customer-override-admin', customer.id
+from loyalty.customers as customer
+where customer.public_id = '85000000-0000-4000-8000-000000000114';
+
+set local role loyalty_worker;
+select results_eq(
+  $$ select current_tier_code, previously_held_tier_codes
+     from loyalty_private.get_tier_qualification_context_v2(
+       pg_temp.m05_live_ref('organization'), pg_temp.m05_live_ref('group'),
+       pg_temp.m05_live_ref('version'),
+       pg_temp.m05_live_ref('customer-override-owner'), now() + interval '1 hour'
+     ) $$,
+  $$ values ('rose'::text, array[]::text[]) $$,
+  'active override exposes the underlying automatic tier to qualification'
+);
+select throws_ok(
+  $$ select * from loyalty_private.record_tier_decision(
+    pg_temp.m05_live_ref('organization'), pg_temp.m05_live_ref('group'),
+    pg_temp.m05_live_ref('version'), pg_temp.m05_live_ref('wallet-override-owner'),
+    'bloom', 'bloom', 'upgrade', 16000, null, null, now() + interval '1 hour',
+    'm05:override:forged-worker-decision', decode(repeat('c',64),'hex'),
+    '{"version":"2","effectiveTierCode":"bloom"}'::jsonb
+  ) $$,
+  '42501', null,
+  'worker cannot forge the automatic decision used beneath an override'
+);
+reset role;
+
+select results_eq(
+  $$ select outcome from loyalty_private.record_tier_decision(
+    pg_temp.m05_live_ref('organization'), pg_temp.m05_live_ref('group'),
+    pg_temp.m05_live_ref('version'), pg_temp.m05_live_ref('wallet-override-owner'),
+    'bloom', 'bloom', 'upgrade', 16000, null, null, now() + interval '1 hour',
+    'm05:override:verified-automatic', decode(repeat('d',64),'hex'),
+    '{"version":"2","effectiveTierCode":"bloom"}'::jsonb
+  ) $$,
+  array['created'::text],
+  'verified automatic decision path continues while the override is active'
+);
+select results_eq(
+  $$ select decision.tier_code, decision.qualified_tier_code,
+       decision.transition, decision.explanation ->> 'effectiveTierCode',
+       (decision.explanation ? 'activeOverrideId')
+     from loyalty.tier_decisions as decision
+     where decision.idempotency_key = 'm05:override:verified-automatic' $$,
+  $$ values ('icon'::text, 'bloom'::text, 'manual'::text, 'bloom'::text, true) $$,
+  'automatic decision records underlying qualification while pinning effective tier'
+);
+select results_eq(
+  $$ select tier_code from loyalty.tier_memberships as membership
+     join loyalty.wallets as wallet on wallet.id = membership.wallet_id
+     join loyalty.customers as customer on customer.id = wallet.customer_id
+     where customer.public_id = '85000000-0000-4000-8000-000000000113'
+       and membership.effective_until is null $$,
+  array['icon'::text],
+  'active override keeps the customer effective membership at Icon'
+);
+
+set local role loyalty_worker;
+select results_eq(
+  $$ select current_tier_code from loyalty_private.get_tier_qualification_context_v2(
+    pg_temp.m05_live_ref('organization'), pg_temp.m05_live_ref('group'),
+    pg_temp.m05_live_ref('version'),
+    pg_temp.m05_live_ref('customer-override-owner'), now() + interval '2 hours'
+  ) $$,
+  array['bloom'::text],
+  'next automatic evaluation advances from verified Bloom rather than manual Icon'
+);
+select results_eq(
+  $$ select expired_count from loyalty_private.expire_due_tier_overrides_v1(
+    now() + interval '1 day', 50
+  ) $$,
+  array[0],
+  'expiry sweep does nothing before the bounded override deadline'
+);
+select results_eq(
+  $$ select expired_count from loyalty_private.expire_due_tier_overrides_v1(
+    now() + interval '3 days', 50
+  ) $$,
+  array[1],
+  'expiry sweep resolves only the due owner override'
+);
+select results_eq(
+  $$ select expired_count from loyalty_private.expire_due_tier_overrides_v1(
+    now() + interval '3 days', 50
+  ) $$,
+  array[0],
+  'replayed expiry sweep creates no duplicate decision or resolution'
+);
+select results_eq(
+  $$ select expired_count from loyalty_private.expire_due_tier_overrides_v1(
+    now() + interval '5 days', 50
+  ) $$,
+  array[1],
+  'later expiry sweep independently resolves the admin override'
+);
+select throws_ok(
+  $$ select * from loyalty_private.expire_due_tier_overrides_v1(now(), 201) $$,
+  '22023', 'invalid tier override expiry sweep',
+  'worker maintenance cannot request an unbounded override sweep'
+);
+select throws_ok(
+  $$ select * from loyalty_private.expire_due_tier_overrides_v1(now(), null) $$,
+  '22023', 'invalid tier override expiry sweep',
+  'null cannot bypass the bounded override sweep limit'
+);
+reset role;
+
+select results_eq(
+  $$ select customer.public_id, membership.tier_code
+     from loyalty.tier_memberships as membership
+     join loyalty.wallets as wallet on wallet.id = membership.wallet_id
+     join loyalty.customers as customer on customer.id = wallet.customer_id
+     where customer.public_id in (
+       '85000000-0000-4000-8000-000000000113',
+       '85000000-0000-4000-8000-000000000114'
+     ) and membership.effective_until is null
+     order by customer.public_id $$,
+  $$ values
+    ('85000000-0000-4000-8000-000000000113'::uuid, 'bloom'::text),
+    ('85000000-0000-4000-8000-000000000114'::uuid, 'rose'::text)
+  $$,
+  'expiry restores the latest verified owner tier and admin pre-override tier'
+);
+select results_eq(
+  $$ select count(*)::bigint, count(*) filter (where resolution = 'expired')::bigint
+     from loyalty.tier_manual_override_resolutions $$,
+  $$ values (2::bigint, 2::bigint) $$,
+  'every override has exactly one immutable terminal resolution'
+);
+select throws_ok(
+  $$ update loyalty.tier_manual_overrides set reason = 'Rewritten reason' $$,
+  '55000', 'immutable loyalty history cannot be changed',
+  'manual override grants reject corrective rewrites'
+);
+select throws_ok(
+  $$ delete from loyalty.tier_manual_override_resolutions $$,
+  '55000', 'immutable loyalty history cannot be changed',
+  'manual override resolutions reject deletion'
 );
 
 select * from finish();

@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  merchantSetTierOverrideCommandV1,
   programmeDefinitionV2,
+  programmeRewardDefinitionV2,
   tierPolicyV2,
   type ProgrammeDefinitionV2,
   type TierPolicyV2,
@@ -158,6 +160,24 @@ const definition: ProgrammeDefinitionV2 = {
 };
 
 describe("TierPolicyV2", () => {
+  it("accepts only bounded attributed manual tier override commands", () => {
+    const command = {
+      version: "1",
+      customerId: "85000000-0000-4000-8000-000000000112",
+      programmeGroupId: "85000000-0000-4000-8000-000000000113",
+      programmeVersionId: "85000000-0000-4000-8000-000000000114",
+      tierCode: "bloom",
+      expiresAt: "2026-09-14T10:00:00Z",
+      reason: "Approved service recovery",
+      idempotencyKey: "tier:override:85000000-0000-4000-8000-000000000115",
+      correlationId: "85000000-0000-4000-8000-000000000116",
+    } as const;
+    expect(merchantSetTierOverrideCommandV1.parse(command)).toEqual(command);
+    expect(() =>
+      merchantSetTierOverrideCommandV1.parse({ ...command, reason: "short" }),
+    ).toThrow();
+  });
+
   it("accepts calendar qualification with independent threshold expressions", () => {
     expect(tierPolicyV2.parse(policy)).toEqual(policy);
     expect(programmeDefinitionV2.parse(definition).tierPolicy).toEqual(policy);
@@ -245,5 +265,25 @@ describe("TierPolicyV2", () => {
         },
       }),
     ).toThrow("Unknown tier benefit reward code");
+    const reward = programmeRewardDefinitionV2.parse(definition.rewards[0]);
+    expect(() =>
+      programmeDefinitionV2.parse({
+        ...definition,
+        rewards: [
+          {
+            ...reward,
+            configuration: {
+              ...reward.configuration,
+              availability: {
+                ...reward.configuration.availability,
+                tierCodes: ["rose"],
+              },
+            },
+          },
+        ],
+      }),
+    ).toThrow(
+      "Tier benefit rewards must use V2 fulfilment and include the tier in availability",
+    );
   });
 });

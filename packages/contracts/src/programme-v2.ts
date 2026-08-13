@@ -340,10 +340,37 @@ export const programmeDefinitionV2 = z
       }
       definition.tierPolicy.levels.forEach((level, levelIndex) => {
         level.benefits.rewardCodes.forEach((rewardCode, rewardIndex) => {
-          if (!rewardCodes.has(rewardCode)) {
+          const reward = definition.rewards.find(
+            (candidate) => candidate.code === rewardCode,
+          );
+          if (!reward) {
             context.addIssue({
               code: "custom",
               message: `Unknown tier benefit reward code: ${rewardCode}`,
+              path: [
+                "tierPolicy",
+                "levels",
+                levelIndex,
+                "benefits",
+                "rewardCodes",
+                rewardIndex,
+              ],
+            });
+          } else {
+            const executableReward =
+              programmeRewardDefinitionV2.safeParse(reward);
+            if (
+              executableReward.success &&
+              executableReward.data.configuration.availability.tierCodes.includes(
+                level.tierCode,
+              )
+            ) {
+              return;
+            }
+            context.addIssue({
+              code: "custom",
+              message:
+                "Tier benefit rewards must use V2 fulfilment and include the tier in availability",
               path: [
                 "tierPolicy",
                 "levels",

@@ -1,7 +1,7 @@
 # Programme Engine Boundary
 
 - Contract versions: `1` and `2`
-- Database migrations: `20260812054204_programme_engine_foundation.sql`, `20260813200000_programme_v2_earning_rules.sql`, `20260814010000_advanced_tier_policy.sql`, and `20260814020000_live_tier_qualification.sql`
+- Database migrations: `20260812054204_programme_engine_foundation.sql`, `20260813200000_programme_v2_earning_rules.sql`, `20260814010000_advanced_tier_policy.sql`, `20260814020000_live_tier_qualification.sql`, and `20260814030000_tier_benefit_enforcement.sql`
 - TypeScript schemas: `packages/contracts/src/programme.ts` and `packages/contracts/src/programme-v2.ts`
 - Pure evaluators: `packages/domain/src/engine.ts` and `packages/domain/src/engine-v2.ts`
 
@@ -19,7 +19,7 @@ Purchase evaluation is deterministic:
 
 1. Apply explicit product, category, payment, discount, shipping, tax, and fee exclusions.
 2. Apply exactly one enabled base purchase rate.
-3. Apply only the highest-priority eligible multiplier; stable rule code breaks an equal-priority tie and the editor reports that conflict.
+3. Apply the effective tier earning multiplier to the base purchase rate, then apply only the highest-priority eligible campaign multiplier to that tier-adjusted base; stable rule code breaks an equal-priority tie and the editor reports that conflict.
 4. Add only fixed bonuses that explicitly opt in to stacking.
 5. Apply exact event and member-period caps, allocate any shared fractional point deterministically by remainder and rule code, then retain contribution and product/component explanations whose integer points reconcile exactly to the ledger award.
 
@@ -47,7 +47,11 @@ Live purchase and verified-activity awards append a private qualification fact i
 
 The worker can request only one serialized context for an active customer and published policy. PostgreSQL recomputes the window and metrics, rechecks every threshold, current/history state, grace boundary, transition, tenant, customer, event, programme, and version before accepting the pure result. Browser roles cannot read the private facts or execute these functions, and the worker cannot execute the underlying award primitive or enumerate facts directly.
 
-The decision command serializes by programme group and customer. Automatic entry, upgrade, re-entry, grace, and downgrade append `tier_decisions`. When the effective tier changes, the existing history boundary closes the current `tier_memberships` interval and opens exactly one new interval in the same transaction. Closed intervals and qualification facts cannot be changed or deleted. Manual overrides remain a separate audited M05 slice and are not implied by automatic qualification.
+The decision command serializes by programme group and customer. Automatic entry, upgrade, re-entry, grace, and downgrade append `tier_decisions`. When the effective tier changes, the existing history boundary closes the current `tier_memberships` interval and opens exactly one new interval in the same transaction. Closed intervals and qualification facts cannot be changed or deleted.
+
+Tier purchase multipliers are independently checked against the current published policy at the atomic award boundary. Linked benefit rewards must be strict V2 rewards whose immutable availability includes the benefiting tier; they still use normal reservation, quantity/budget, connector, or audited manual-fulfilment state machines. Free shipping is a linked native reward, exclusive access and custom perks are linked manual rewards, and `earlyAccess` remains a value-neutral eligibility fact until a later campaign/storefront boundary consumes it.
+
+`set_customer_tier_override_command(customer_public_id, programme_group_public_id, programme_version_public_id, tier_code, expires_at, reason, idempotency_key, correlation_id)` is the only browser-callable override boundary. It derives organization, actor, customer, wallet, and published tier authority; allows only live owners/admins; requires a trimmed 8–500 character reason and an expiry within 365 days; and writes one immutable decision, grant, and admin audit event. A second override cannot start before the first has immutable resolution evidence. Automatic evaluation continues from its underlying automatic tier while effective membership remains pinned. The worker can run only a 1–200 row expiry sweep, which restores the latest verified automatic tier (or the pre-override tier), records one resolution, and creates no duplicate on replay. Browser sessions cannot run maintenance, and the worker cannot call either raw tier-decision primitive.
 
 ## Rewards and failure compensation
 

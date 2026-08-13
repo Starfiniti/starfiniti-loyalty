@@ -529,6 +529,23 @@ export async function enqueueExpiredWooCommerceCouponCancellations(
   return Number(rows[0]?.enqueued_count ?? "0");
 }
 
+export async function expireDueTierOverrides(sql: Sql): Promise<number> {
+  const rows = await sql<{ expired_count: number | string }[]>`
+    select expired_count
+    from loyalty_private.expire_due_tier_overrides_v1(clock_timestamp(), 50)
+  `;
+  const rawCount = rows[0]?.expired_count ?? 0;
+  const expiredCount = Number(rawCount);
+  if (
+    !Number.isSafeInteger(expiredCount) ||
+    expiredCount < 0 ||
+    expiredCount > 50
+  ) {
+    throw new Error("invalid_tier_override_expiry_count");
+  }
+  return expiredCount;
+}
+
 async function processRefund(
   sql: Sql,
   workerId: string,
@@ -1031,6 +1048,15 @@ export function calculateCumulativeRefundPlanV2(
   };
 }
 
+function tierPurchaseMultiplier(context: V2ProgrammeContext): number {
+  if (!context.programme.tierPolicy) return 10_000;
+  const level = context.programme.tierPolicy.levels.find(
+    (candidate) => candidate.tierCode === context.tierCode,
+  );
+  if (!level) throw new Error("tier_benefit_level_unavailable");
+  return level.benefits.earningMultiplierBasisPoints;
+}
+
 async function commitAwardV2(
   sql: Sql,
   workerId: string,
@@ -1088,7 +1114,10 @@ async function commitAwardV2(
         ${Buffer.from(inputHash, "hex")},
         ${Buffer.from(resultHash, "hex")},
         ${JSON.stringify(evaluation)}::jsonb,
-        ${JSON.stringify({ lines: evaluation.lines })}::jsonb,
+        ${JSON.stringify({
+          lines: evaluation.lines,
+          tierMultiplierBasisPoints: tierPurchaseMultiplier(context),
+        })}::jsonb,
         ${event.occurred_at}::timestamptz,
         ${evaluatedAt}::timestamptz
       )
@@ -1183,7 +1212,10 @@ async function commitActivityV2(
         ${Buffer.from(inputHash, "hex")},
         ${Buffer.from(resultHash, "hex")},
         ${JSON.stringify(evaluation)}::jsonb,
-        ${JSON.stringify({ activity: activity.activityCode })}::jsonb,
+        ${JSON.stringify({
+          activity: activity.activityCode,
+          tierMultiplierBasisPoints: 10_000,
+        })}::jsonb,
         ${event.occurred_at}::timestamptz,
         ${evaluatedAt}::timestamptz
       )

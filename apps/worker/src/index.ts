@@ -3,6 +3,7 @@ import postgres from "postgres";
 import {
   claimWooCommerceEffects,
   enqueueExpiredWooCommerceCouponCancellations,
+  expireDueTierOverrides,
   processWooCommerceEffect,
 } from "./processor.ts";
 
@@ -30,6 +31,7 @@ process.once("SIGTERM", () => {
 while (!stopping) {
   if (Date.now() >= nextCancellationSweepAt) {
     await enqueueExpiredWooCommerceCouponCancellations(sql);
+    await expireDueTierOverrides(sql);
     nextCancellationSweepAt = Date.now() + 60_000;
   }
   const events = await claimWooCommerceEffects(sql, workerId);

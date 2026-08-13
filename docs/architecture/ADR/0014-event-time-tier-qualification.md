@@ -17,6 +17,8 @@ References reviewed on 2026-08-14:
 - [LoyaltyLion tier construction](https://help.loyaltylion.com/en/articles/1965846-building-tiers-how-they-work)
 - [LoyaltyLion customer tier progress](https://help.loyaltylion.com/en/articles/9042359-customer-tier-progress)
 - [Yotpo VIP tier entry, retention, and re-entry](https://support.yotpo.com/docs/loyalty-referrals-vip-tiers)
+- [Yotpo Loyalty Tiers benefits](https://support.yotpo.com/docs/create-loyalty-tiers-program)
+- [LoyaltyLion tier benefits](https://help.loyaltylion.com/en/articles/5464060-shopify-tier-benefits)
 - [PostgreSQL date/time and IANA timezone behavior](https://www.postgresql.org/docs/current/datatype-datetime.html)
 
 ## Decision
@@ -31,6 +33,10 @@ The evaluator returns the selected window, exact metrics, matched expression, ef
 
 Rose, Bloom, and Icon migrate as a 365-day rolling eligible-spend policy with thresholds EUR 0, EUR 150, and EUR 500 and a 30-day downgrade grace. Entry, retention, and re-entry expressions are identical for this migration. Shadow evaluation must prove the same tier at every boundary before the advanced policy can be enabled for the pilot tenant.
 
+Tier earning multipliers are part of the member's effective base purchase rate, not another merchant-authored campaign rule. The engine applies the effective tier multiplier to the base-rate numerator, then applies at most the one existing highest-priority eligible purchase multiplier to that tier-adjusted base; explicitly stackable fixed bonuses remain unmultiplied. The evaluation records both factors, so liability and historical explanations remain reconstructable. Tier reward codes grant access only to immutable published rewards and still pass the normal redemption, reservation, connector/manual fulfilment, and budget boundaries. Free-shipping benefits are therefore linked free-shipping rewards, while exclusive access and custom perks use the audited manual fulfilment state machine. `earlyAccess` is a visible eligibility fact for later campaign/storefront enforcement and grants no direct commerce authority by itself.
+
+Manual tier overrides are separate append-only, expiring decisions. Owner/admin commands derive the tenant, programme, customer, wallet, and published tier; require a bounded reason, future expiry, idempotency key, and correlation ID; and never edit qualification facts. Automatic qualification continues to calculate progress against its underlying automatic tier while an active override pins only the effective membership. Expiry restores the latest independently verified underlying automatic tier, or the pre-override tier when no new automatic decision exists, before opening the next membership interval. A second override cannot start until the prior override has immutable expiry resolution evidence. Rollback can stop new overrides and expiry processing without deleting the active/history evidence.
+
 ## Alternatives considered
 
 1. Reinterpret the existing `tiers` array as advanced policy. Rejected because published V1/V2 definitions would silently gain new semantics and cannot express independent retention or re-entry.
@@ -38,6 +44,8 @@ Rose, Bloom, and Icon migrate as a 365-day rolling eligible-spend policy with th
 3. Maintain mutable per-customer counters. Rejected because late events, refunds, window changes, and recovery would be hard to audit and could drift from ledger/canonical evidence.
 4. Recompute from immutable event-time facts and append decisions. Accepted because it supports deterministic replay, exact shadow comparison, late facts, and forward-only correction.
 5. Use the server session timezone for calendar years. Rejected because results would depend on deployment configuration. Policies store a named IANA zone and all boundaries are explicit instants.
+6. Model tier multipliers as ordinary priority rules. Rejected because merchant rule ordering could silently remove a promised tier benefit and make the same tier depend on unrelated campaign priority.
+7. Multiply fixed bonuses and every eligible campaign multiplier. Rejected because liability would grow combinatorially and would contradict the one-multiplier M03 precedence contract.
 
 ## Security and integrity effects
 

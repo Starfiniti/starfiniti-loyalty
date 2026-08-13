@@ -478,13 +478,26 @@ function evaluatePurchase(
   }
   const baseEligible = matchingPurchaseSpend(base, fact);
   const minorUnitsPerMajor = 10n ** BigInt(programme.currencyMinorUnitDigits);
-  const denominator = minorUnitsPerMajor * BASIS_POINTS;
+  const tierLevel = programme.tierPolicy?.levels.find(
+    (level) => level.tierCode === fact.tierCode,
+  );
+  if (programme.tierPolicy && !tierLevel) {
+    throw new TypeError(`Tier ${fact.tierCode} has no advanced-policy level`);
+  }
+  const tierMultiplierBasisPoints = BigInt(
+    tierLevel?.benefits.earningMultiplierBasisPoints ?? 10_000,
+  );
+  const denominator = programme.tierPolicy
+    ? minorUnitsPerMajor * BASIS_POINTS * BASIS_POINTS
+    : minorUnitsPerMajor * BASIS_POINTS;
   const contributions: EarningRuleContributionV2[] = [];
 
   const baseNumerator =
     baseEligible.spend *
     parsePositive(base.effect.pointsPerMajorUnit, "Base rate") *
-    BASIS_POINTS;
+    (programme.tierPolicy
+      ? tierMultiplierBasisPoints * BASIS_POINTS
+      : BASIS_POINTS);
   const baseContribution = ruleContribution(
     base,
     baseNumerator,
@@ -507,7 +520,8 @@ function evaluatePurchase(
     const extraNumerator =
       multiplierSpend *
       parsePositive(base.effect.pointsPerMajorUnit, "Base rate") *
-      (BigInt(selectedMultiplier.effect.multiplierBasisPoints) - BASIS_POINTS);
+      (BigInt(selectedMultiplier.effect.multiplierBasisPoints) - BASIS_POINTS) *
+      (programme.tierPolicy ? tierMultiplierBasisPoints : 1n);
     const contribution = ruleContribution(
       selectedMultiplier,
       extraNumerator,

@@ -4,6 +4,7 @@ import {
   calculateCumulativeRefundPlan,
   calculateCumulativeRefundPlanV2,
   evidenceSha256,
+  expireDueTierOverrides,
   parseWooCommerceEffect,
   processWooCommerceEffect,
   toOrderAwardFact,
@@ -45,6 +46,18 @@ const event: ClaimedEffect = {
 };
 
 describe("WooCommerce effect worker", () => {
+  it("runs the bounded tier override expiry sweep and rejects malformed counts", async () => {
+    const validSql = (async () => [{ expired_count: "2" }]) as unknown as Sql;
+    expect(await expireDueTierOverrides(validSql)).toBe(2);
+
+    const invalidSql = (async () => [
+      { expired_count: "51" },
+    ]) as unknown as Sql;
+    await expect(expireDueTierOverrides(invalidSql)).rejects.toThrow(
+      "invalid_tier_override_expiry_count",
+    );
+  });
+
   it("classifies completed orders as awards and earlier states as skips", () => {
     expect(parseWooCommerceEffect(event).kind).toBe("award");
     expect(

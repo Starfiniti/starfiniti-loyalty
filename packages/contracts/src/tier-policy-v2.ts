@@ -247,6 +247,35 @@ export const tierQualificationEvaluationV2 = z
   })
   .strict();
 
+export const merchantSetTierOverrideCommandV1 = z
+  .object({
+    version: z.literal("1"),
+    customerId: z.uuid(),
+    programmeGroupId: z.uuid(),
+    programmeVersionId: z.uuid(),
+    tierCode: code,
+    expiresAt: z.iso.datetime({ offset: true }),
+    reason: z
+      .string()
+      .trim()
+      .min(8)
+      .max(500)
+      .regex(/^[^\u0000-\u001f\u007f]*$/u),
+    idempotencyKey: z.string().trim().min(1).max(255),
+    correlationId: z.uuid(),
+  })
+  .strict();
+
+export const merchantSetTierOverrideResultV1 = z
+  .object({
+    overrideId: z.uuid(),
+    tierDecisionId: z.uuid(),
+    outcome: z.enum(["created", "duplicate"]),
+    effectiveTierCode: code,
+    expiresAt: z.iso.datetime({ offset: true }),
+  })
+  .strict();
+
 export type TierQualificationMetricV2 = z.infer<
   typeof tierQualificationMetricV2
 >;
@@ -270,4 +299,10 @@ export type TierThresholdProgressV2 = z.infer<typeof tierThresholdProgressV2>;
 export type TierLevelProgressV2 = z.infer<typeof tierLevelProgressV2>;
 export type TierQualificationEvaluationV2 = z.infer<
   typeof tierQualificationEvaluationV2
+>;
+export type MerchantSetTierOverrideCommandV1 = z.infer<
+  typeof merchantSetTierOverrideCommandV1
+>;
+export type MerchantSetTierOverrideResultV1 = z.infer<
+  typeof merchantSetTierOverrideResultV1
 >;
