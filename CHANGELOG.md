@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Repaired the live PostgreSQL off-host backup race with a snapshot-safe forced exporter, incomplete-base exclusion, retained-base-aware WAL cleanup, deterministic deployment validation, and successful forced-WAL/manual/timer-driven production archives.
+
 - Added `ProgrammeDefinitionV2` competitive earning rules with six sources, explicit precedence/exclusions, exact event/member caps, immutable explanation evidence, signed WooCommerce/Merchant Activity ingestion, and atomic ledger commit while retaining V1 evaluation.
 - Rebuilt Earning Rules as a Hub-style rule catalogue and source-safe condition/cap builder with deterministic conflict diagnostics, V1 migration review, and the same evaluator for merchant simulation and worker execution.
 

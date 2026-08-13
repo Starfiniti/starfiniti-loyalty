@@ -1,6 +1,6 @@
 schema: starfiniti.production-pilot.v1
 status: in_progress
-observedAt: 2026-08-13T16:20:16Z
+observedAt: 2026-08-13T19:47:50Z
 release: v0.1.10
 applicationCommit: 4713c65e4ca47c0a97264854afea46f6a8730a3a
 store:
@@ -101,7 +101,7 @@ checks:
     evidence: Requires approved store backup and local outbox replay.
   - id: database_wal_restore
     status: passed
-    evidence: Isolated encrypted Borg restore replayed WAL, promoted in 9 seconds, and retained all 26 migrations.
+    evidence: Isolated encrypted Borg restore replayed WAL, promoted in 9 seconds, and retained all 26 production migrations; after repairing a live recursive-export race, a fresh base plus forced WAL switch and the next timer-driven archive completed successfully.
   - id: application_auth_secret_restore
     status: pending
     evidence: Whole-VM job is configured but has not completed its first run; full smoke is absent.
