@@ -22,7 +22,7 @@ function loadSigningMaterial(): SigningMaterial {
   return cachedMaterial;
 }
 
-export function getWooCommerceSigningKey(reference: string): Uint8Array {
+export function getSigningKey(reference: string): Uint8Array {
   const material = loadSigningMaterial();
 
   const encoded = material[reference];
@@ -33,6 +33,8 @@ export function getWooCommerceSigningKey(reference: string): Uint8Array {
   if (key.byteLength < 32) throw new Error("signing_key_unavailable");
   return key;
 }
+
+export const getWooCommerceSigningKey = getSigningKey;
 
 export function getWooCommerceSigningPoolReferences(): readonly string[] {
   return Object.entries(loadSigningMaterial())
@@ -52,3 +54,5 @@ export function getWooCommerceSigningPoolReferences(): readonly string[] {
     .map(([reference]) => reference)
     .sort();
 }
+
+export const getSigningPoolReferences = getWooCommerceSigningPoolReferences;

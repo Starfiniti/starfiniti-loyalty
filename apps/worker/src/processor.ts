@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import {
   programmeDefinitionV2,
+  merchantActivityPayloadV1,
   wooCommerceCouponCapturedPayloadV1,
   wooCommerceCustomerCreatedPayloadV1,
   wooCommerceCustomerDeletedPayloadV1,
@@ -57,7 +58,28 @@ type ParsedEffect =
   | {
       readonly kind: "activity";
       readonly source: "account_created" | "verified_product_review";
-      readonly externalCustomerId: string;
+      readonly customerSelector: Readonly<{
+        kind: "commerce";
+        externalCustomerId: string;
+      }>;
+      readonly channel: "woocommerce";
+      readonly activityReference: string;
+      readonly activityCode: string;
+      readonly productId: string | null;
+      readonly categoryIds: readonly string[];
+    }
+  | {
+      readonly kind: "activity";
+      readonly source:
+        | "account_created"
+        | "birthday"
+        | "verified_product_review"
+        | "custom_activity";
+      readonly customerSelector: Readonly<{
+        kind: "public";
+        customerId: string;
+      }>;
+      readonly channel: "merchant-api";
       readonly activityReference: string;
       readonly activityCode: string;
       readonly productId: string | null;
@@ -162,7 +184,11 @@ export function parseWooCommerceEffect(event: ClaimedEffect): ParsedEffect {
       ? {
           kind: "activity",
           source: "account_created",
-          externalCustomerId: parsed.data.externalCustomerId,
+          customerSelector: {
+            kind: "commerce",
+            externalCustomerId: parsed.data.externalCustomerId,
+          },
+          channel: "woocommerce",
           activityReference: `woocommerce:customer:${parsed.data.externalCustomerId}`,
           activityCode: "account_created",
           productId: null,
@@ -178,7 +204,11 @@ export function parseWooCommerceEffect(event: ClaimedEffect): ParsedEffect {
       ? {
           kind: "activity",
           source: "verified_product_review",
-          externalCustomerId: parsed.data.externalCustomerId,
+          customerSelector: {
+            kind: "commerce",
+            externalCustomerId: parsed.data.externalCustomerId,
+          },
+          channel: "woocommerce",
           activityReference: `woocommerce:review:${parsed.data.reviewId}`,
           activityCode: "verified_product_review",
           productId: parsed.data.productId,
@@ -187,6 +217,27 @@ export function parseWooCommerceEffect(event: ClaimedEffect): ParsedEffect {
       : {
           kind: "quarantine",
           reason: "invalid_verified_review_payload",
+        };
+  }
+  if (event.event_type === "commerce.activity.recorded") {
+    const parsed = merchantActivityPayloadV1.safeParse(event.payload);
+    return parsed.success
+      ? {
+          kind: "activity",
+          source: parsed.data.source,
+          customerSelector: {
+            kind: "public",
+            customerId: parsed.data.customerId,
+          },
+          channel: "merchant-api",
+          activityReference: `merchant-activity:${event.source_event_id}`,
+          activityCode: parsed.data.activityCode,
+          productId: parsed.data.productId,
+          categoryIds: parsed.data.categoryIds,
+        }
+      : {
+          kind: "quarantine",
+          reason: "invalid_merchant_activity_payload",
         };
   }
   return { kind: "quarantine", reason: "unsupported_event_type" };
@@ -265,19 +316,39 @@ export async function processWooCommerceEffect(
     if (event.programme_id === null) {
       throw new RetryableEffectError("programme_not_configured");
     }
-    const identity =
-      effect.kind === "activity"
-        ? { kind: "registered" as const, externalId: effect.externalCustomerId }
-        : identityFromOrder(effect.order);
-    const identities = await sql<IdentityRow[]>`
-      select customer_id::text
-      from loyalty_private.resolve_commerce_customer(
-        ${event.organization_id}::bigint,
-        ${event.connection_id}::bigint,
-        ${identity.kind},
-        ${identity.externalId}
-      )
-    `;
+    let identities: IdentityRow[];
+    if (effect.kind === "activity") {
+      if (effect.customerSelector.kind === "public") {
+        identities = await sql<IdentityRow[]>`
+          select id::text as customer_id
+          from loyalty.customers
+          where organization_id = ${event.organization_id}::bigint
+            and public_id = ${effect.customerSelector.customerId}::uuid
+          limit 1
+        `;
+      } else {
+        identities = await sql<IdentityRow[]>`
+          select customer_id::text
+          from loyalty_private.resolve_commerce_customer(
+            ${event.organization_id}::bigint,
+            ${event.connection_id}::bigint,
+            'registered',
+            ${effect.customerSelector.externalCustomerId}
+          )
+        `;
+      }
+    } else {
+      const identity = identityFromOrder(effect.order);
+      identities = await sql<IdentityRow[]>`
+        select customer_id::text
+        from loyalty_private.resolve_commerce_customer(
+          ${event.organization_id}::bigint,
+          ${event.connection_id}::bigint,
+          ${identity.kind},
+          ${identity.externalId}
+        )
+      `;
+    }
     const customerId = identities[0]?.customer_id;
     if (!customerId) throw new Error("customer_resolution_failed");
 
@@ -1048,9 +1119,9 @@ async function commitActivityV2(
     `;
     const fact: ActivityEarningFactV2 = {
       source: activity.source,
-      eventId: `woocommerce:${event.connection_id}:${event.source_event_id}`,
+      eventId: `${activity.channel}:${event.connection_id}:${event.source_event_id}`,
       occurredAt: new Date(event.occurred_at).toISOString(),
-      channel: "woocommerce",
+      channel: activity.channel,
       segmentCodes: [],
       tierCode: context.tierCode,
       memberRuleUsage: Object.fromEntries(

@@ -143,7 +143,8 @@ describe("WooCommerce effect worker", () => {
     ).toEqual({
       kind: "activity",
       source: "account_created",
-      externalCustomerId: "7",
+      customerSelector: { kind: "commerce", externalCustomerId: "7" },
+      channel: "woocommerce",
       activityReference: "woocommerce:customer:7",
       activityCode: "account_created",
       productId: null,
@@ -164,7 +165,8 @@ describe("WooCommerce effect worker", () => {
     ).toEqual({
       kind: "activity",
       source: "verified_product_review",
-      externalCustomerId: "7",
+      customerSelector: { kind: "commerce", externalCustomerId: "7" },
+      channel: "woocommerce",
       activityReference: "woocommerce:review:101",
       activityCode: "verified_product_review",
       productId: "42",
@@ -186,6 +188,36 @@ describe("WooCommerce effect worker", () => {
     ).toEqual({
       kind: "quarantine",
       reason: "invalid_verified_review_payload",
+    });
+  });
+
+  it("classifies signed Merchant Activity facts with public customer authority", () => {
+    expect(
+      parseWooCommerceEffect({
+        ...event,
+        event_type: "commerce.activity.recorded",
+        source_event_id: "crm:consultation:42",
+        payload: {
+          kind: "activity",
+          source: "custom_activity",
+          customerId: "20000000-0000-4000-8000-000000000001",
+          activityCode: "consultation",
+          productId: null,
+          categoryIds: [],
+        },
+      }),
+    ).toEqual({
+      kind: "activity",
+      source: "custom_activity",
+      customerSelector: {
+        kind: "public",
+        customerId: "20000000-0000-4000-8000-000000000001",
+      },
+      channel: "merchant-api",
+      activityReference: "merchant-activity:crm:consultation:42",
+      activityCode: "consultation",
+      productId: null,
+      categoryIds: [],
     });
   });
 
@@ -327,6 +359,9 @@ describe("WooCommerce effect worker", () => {
       if (text.includes("resolve_commerce_customer")) {
         return [{ customer_id: "7" }];
       }
+      if (text.includes("from loyalty.customers")) {
+        return [{ customer_id: "7" }];
+      }
       if (text.includes("from loyalty.programmes as programme")) {
         return [
           {
@@ -457,13 +492,29 @@ describe("WooCommerce effect worker", () => {
       source_object_id: "7",
       payload: { kind: "customer_created", externalCustomerId: "7" },
     });
+    await processWooCommerceEffect(fakeSql, "worker-test", {
+      ...event,
+      canonical_event_id: "3",
+      canonical_event_public_id: "00000000-0000-4000-8000-000000000003",
+      event_type: "commerce.activity.recorded",
+      source_event_id: "crm:consultation:42",
+      source_object_id: "20000000-0000-4000-8000-000000000001",
+      payload: {
+        kind: "activity",
+        source: "custom_activity",
+        customerId: "20000000-0000-4000-8000-000000000001",
+        activityCode: "consultation",
+        productId: null,
+        categoryIds: [],
+      },
+    });
 
     expect(
       calls.some((call) => call.includes("get_member_earning_rule_usage")),
     ).toBe(true);
     expect(
       calls.filter((call) => call.includes("commit_programme_v2_award")),
-    ).toHaveLength(2);
+    ).toHaveLength(3);
     expect(calls.some((call) => call.includes("finish_commerce_effect"))).toBe(
       true,
     );

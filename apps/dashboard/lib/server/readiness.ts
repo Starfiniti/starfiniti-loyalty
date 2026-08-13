@@ -26,6 +26,16 @@ export async function runtimeIsReady(): Promise<boolean> {
           'EXECUTE'
         ),
         false
+      )
+      and coalesce(
+        pg_catalog.has_function_privilege(
+          current_user,
+          pg_catalog.to_regprocedure(
+            'loyalty_private.provision_merchant_activity_source(uuid,uuid,uuid,text,text,text,uuid)'
+          ),
+          'EXECUTE'
+        ),
+        false
       ) as database_ready
   `;
   return isRuntimeReady(rows, getWooCommerceSigningPoolReferences().length);

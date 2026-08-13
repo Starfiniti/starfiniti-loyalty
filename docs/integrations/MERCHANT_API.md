@@ -6,6 +6,16 @@ Authenticated merchant reads and programme commands use the exposed `loyalty` sc
 
 Tenant and actor authority are not command inputs. Each command derives the Auth subject from PostgreSQL request claims and rechecks a live, unrevoked `organization_memberships` row. Only `owner` and `admin` may alter programme value policy; `operator`, `analyst`, `auditor`, revoked members, anonymous callers, and owners of another tenant fail closed.
 
+## Signed Merchant Activity API v1
+
+`POST /api/v1/activities/events` is a server-to-server earning-fact endpoint, not a browser API. A live tenant owner/admin provisions one source for an active workspace and published ProgrammeDefinitionV2. The trusted runtime consumes a unique deployment key reference and displays one exact package containing `version`, HTTPS `endpoint`, public `sourceId`, `keyVersion`, and a 256-bit-or-stronger base64 `signingKey`. The database and audit retain the reference only; the browser Data API cannot read it and the package is not recoverable after leaving the result page.
+
+The sender serializes the exact JSON body and sends `X-Starfiniti-Activity-Source-ID`, `X-Starfiniti-Delivery-ID`, `X-Starfiniti-Timestamp`, `X-Starfiniti-Nonce`, `X-Starfiniti-Key-Version`, `X-Starfiniti-Body-SHA256`, and `X-Starfiniti-Signature`. The lowercase hex signature is HMAC-SHA256 over newline-joined `starfiniti-merchant-activity-delivery-v1`, request target, source ID, delivery ID, ten-digit Unix timestamp, nonce, key version, and body hash. The timestamp window is five minutes and the maximum body is 65,536 bytes; repeated delivery/event identities must retain the exact body.
+
+The strict v1 envelope contains `version`, `deliveryId`, `sourceId`, `eventId`, `occurredAt`, `deliveredAt`, optional `correlationId`, and `payload`. Payload fields are exactly `kind: activity`, `source`, public `customerId`, `activityCode`, nullable `productId`, and bounded `categoryIds`. Sources are `account_created`, `birthday`, `verified_product_review`, and `custom_activity`. Built-in sources require their canonical code; only verified reviews may carry product selectors. Email, name, address, review content, tenant ID, points, rule ID, programme ID, wallet ID, and any unknown field are rejected.
+
+The public customer ID remains only a selector. PostgreSQL derives tenant and programme from the active source; the worker resolves that customer inside the same organization, evaluates the immutable published V2 version, enters serialized cap accounting, and appends evaluation plus ledger effects atomically. Duplicate events create one effect. Signature/provider outage does not affect WooCommerce checkout or previously accepted value.
+
 ## Read models
 
 The programme page reads these RLS-protected relations:

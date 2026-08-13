@@ -632,13 +632,23 @@ tasks:
         compatibility replay,
       ]
     risks: [R-001, R-002, R-030]
-    docs: [docs/api/PROGRAMME_ENGINE.md, docs/integrations/MERCHANT_API.md]
+    docs:
+      [
+        docs/api/PROGRAMME_ENGINE.md,
+        docs/integrations/MERCHANT_API.md,
+        docs/architecture/ADR/0011-versioned-earning-rules-and-authoritative-cap-accounting.md,
+        docs/architecture/ADR/0012-purpose-bound-merchant-activity-ingestion.md,
+      ]
     evidence:
       - docs/plan/evidence/M03/README.md
       - ProgrammeDefinitionV2 contract and exact bigint pure evaluator tests pass
       - additive V2 entitlement publication and immutable materialization migration is under exact-head database verification
       - serialized member-cap accounting atomically appends evaluation per-rule usage and ledger evidence with exact-retry exclusion
       - the WooCommerce worker evaluates V2 through the shared engine and preserves exact cumulative line and component refund evidence while V1 remains unchanged
+      - WooCommerce account creation and verified product review hooks emit strict PII-free facts and all four minimum/current HPOS/legacy runtime gates exercise the connector lifecycle
+      - the purpose-bound Merchant Activity API streams at most 65536 bytes, accepts only strict signed server facts, derives customer and programme authority, and reuses canonical replay/effect evidence
+      - tenant owner/admin source provisioning consumes one unique external signing reference and exposes one exact nonrecoverable setup package while browser grants omit secrets and raw deliveries
+      - ADR-0012 records the shared canonical-ingestion decision, rejected browser authority, canary rollout, and value-preserving rollback
 
   - id: M04-REWARDS-AND-FULFILMENT
     title: Expand native rewards and audited manual fulfilment

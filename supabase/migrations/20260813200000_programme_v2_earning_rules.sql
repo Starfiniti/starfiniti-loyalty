@@ -884,7 +884,8 @@ begin
     where event.event_type in (
         'commerce.order.status_changed', 'commerce.order.refunded',
         'commerce.coupon.captured', 'commerce.customer.deleted',
-        'commerce.customer.created', 'commerce.review.verified'
+        'commerce.customer.created', 'commerce.review.verified',
+        'commerce.activity.recorded'
       )
       and (
         (event.effect_state in ('pending', 'retryable')
@@ -978,3 +979,189 @@ comment on function loyalty_private.commit_programme_v2_award(
   bigint, bigint, bigint, bigint, bigint, text, text, text, bytea, bytea,
   jsonb, jsonb, timestamptz, timestamptz
 ) is 'Rechecks V2 contribution totals and caps, then atomically appends evaluation, usage, and ledger evidence.';
+
+alter table loyalty.commerce_connections
+  drop constraint commerce_connections_platform_check;
+alter table loyalty.commerce_connections
+  add constraint commerce_connections_platform_check
+  check (platform in ('woocommerce', 'merchant_activity'));
+
+create or replace function loyalty_private.provision_merchant_activity_source(
+  target_actor_user_id uuid,
+  target_workspace_public_id uuid,
+  target_programme_public_id uuid,
+  target_display_name text,
+  target_signing_material_ref text,
+  target_idempotency_key text,
+  target_correlation_id uuid
+)
+returns table (
+  source_public_id uuid,
+  key_version text,
+  signing_material_ref text,
+  outcome text
+)
+language plpgsql
+security definer
+set search_path = ''
+set statement_timeout = '5s'
+as $$
+declare
+  target_workspace loyalty.workspaces%rowtype;
+  target_programme loyalty.programmes%rowtype;
+  existing_audit loyalty.admin_audit_events%rowtype;
+  request_hash bytea;
+  created_source loyalty.commerce_connections%rowtype;
+  created_source_public_id uuid := extensions.gen_random_uuid();
+begin
+  if target_actor_user_id is null
+    or target_workspace_public_id is null
+    or target_programme_public_id is null
+    or target_display_name is null
+    or pg_catalog.length(target_display_name) not between 1 and 200
+    or target_display_name <> pg_catalog.btrim(target_display_name)
+    or target_display_name ~ '[[:cntrl:]]'
+    or target_signing_material_ref is null
+    or target_signing_material_ref !~ '^pool:[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}:v1$'
+    or target_idempotency_key is null
+    or pg_catalog.length(target_idempotency_key) not between 1 and 255
+    or target_idempotency_key <> pg_catalog.btrim(target_idempotency_key)
+    or target_correlation_id is null then
+    raise exception using errcode = '22023', message = 'invalid activity source provisioning input';
+  end if;
+
+  select workspace.* into target_workspace
+  from loyalty.workspaces as workspace
+  join loyalty.organizations as organization
+    on organization.id = workspace.organization_id
+   and organization.status = 'active'
+  where workspace.public_id = target_workspace_public_id
+    and workspace.status = 'active'
+    and exists (
+      select 1
+      from loyalty.organization_memberships as membership
+      where membership.organization_id = workspace.organization_id
+        and membership.user_id = target_actor_user_id
+        and membership.role in ('owner', 'admin')
+        and membership.revoked_at is null
+    )
+  for update of workspace;
+  if not found then
+    raise exception using errcode = '42501', message = 'activity source provisioning not authorized';
+  end if;
+
+  select programme.* into target_programme
+  from loyalty.programmes as programme
+  join loyalty.programme_group_workspaces as group_workspace
+    on group_workspace.organization_id = programme.organization_id
+   and group_workspace.programme_group_id = programme.programme_group_id
+   and group_workspace.workspace_id = target_workspace.id
+  where programme.public_id = target_programme_public_id
+    and programme.organization_id = target_workspace.organization_id
+    and programme.status = 'active'
+    and exists (
+      select 1
+      from loyalty.programme_versions as version
+      where version.organization_id = programme.organization_id
+        and version.programme_id = programme.id
+        and version.status = 'published'
+        and version.configuration ->> 'version' = '2'
+    )
+  for update of programme;
+  if not found then
+    raise exception using errcode = '42501', message = 'activity source provisioning not authorized';
+  end if;
+
+  request_hash := extensions.digest(
+    pg_catalog.convert_to(
+      'source.merchant_activity.provision|' || target_workspace.public_id::text || '|' ||
+      target_programme.public_id::text || '|' || target_display_name,
+      'utf8'
+    ),
+    'sha256'
+  );
+  select audit.* into existing_audit
+  from loyalty.admin_audit_events as audit
+  where audit.organization_id = target_workspace.organization_id
+    and audit.idempotency_key = target_idempotency_key;
+  if found then
+    if existing_audit.action <> 'source.merchant_activity.provision'
+      or existing_audit.request_sha256 <> request_hash then
+      raise exception using errcode = '23514', message = 'activity source idempotency conflict';
+    end if;
+    return query
+    select source.public_id, source.current_key_version,
+      source.signing_material_ref, 'duplicate'::text
+    from loyalty.commerce_connections as source
+    where source.organization_id = target_workspace.organization_id
+      and source.public_id = existing_audit.resource_public_id
+      and source.platform = 'merchant_activity';
+    if not found then
+      raise exception using errcode = '55000', message = 'activity source audit is inconsistent';
+    end if;
+    return;
+  end if;
+
+  if exists (
+    select 1 from loyalty.commerce_connections as connection
+    where connection.signing_material_ref = target_signing_material_ref
+  ) then
+    raise exception using errcode = '23514', message = 'connector signing material unavailable';
+  end if;
+  if exists (
+    select 1 from loyalty.commerce_connections as source
+    where source.organization_id = target_workspace.organization_id
+      and source.workspace_id = target_workspace.id
+      and source.platform = 'merchant_activity'
+  ) then
+    raise exception using errcode = '23514', message = 'merchant activity source already exists';
+  end if;
+
+  insert into loyalty.commerce_connections (
+    public_id, organization_id, workspace_id, platform, external_store_id,
+    display_name, status, current_key_version, signing_material_ref, programme_id
+  ) values (
+    created_source_public_id, target_workspace.organization_id,
+    target_workspace.id, 'merchant_activity',
+    'activity-source:' || created_source_public_id::text,
+    target_display_name, 'active', 'v1', target_signing_material_ref,
+    target_programme.id
+  ) returning * into created_source;
+
+  insert into loyalty.admin_audit_events (
+    organization_id, actor_user_id, action, resource_type,
+    resource_public_id, idempotency_key, request_sha256, correlation_id,
+    metadata
+  ) values (
+    target_workspace.organization_id, target_actor_user_id,
+    'source.merchant_activity.provision', 'merchant_activity_source',
+    created_source.public_id, target_idempotency_key, request_hash,
+    target_correlation_id,
+    pg_catalog.jsonb_build_object(
+      'workspacePublicId', target_workspace.public_id,
+      'programmePublicId', target_programme.public_id,
+      'platform', 'merchant_activity',
+      'displayName', target_display_name,
+      'keyVersion', created_source.current_key_version
+    )
+  );
+
+  return query select created_source.public_id,
+    created_source.current_key_version, created_source.signing_material_ref,
+    'created'::text;
+end;
+$$;
+
+alter function loyalty_private.provision_merchant_activity_source(
+  uuid, uuid, uuid, text, text, text, uuid
+) owner to loyalty_owner;
+revoke all on function loyalty_private.provision_merchant_activity_source(
+  uuid, uuid, uuid, text, text, text, uuid
+) from public, anon, authenticated, loyalty_worker;
+grant execute on function loyalty_private.provision_merchant_activity_source(
+  uuid, uuid, uuid, text, text, text, uuid
+) to loyalty_runtime;
+
+comment on function loyalty_private.provision_merchant_activity_source(
+  uuid, uuid, uuid, text, text, text, uuid
+) is 'Consumes one deployment-managed signing reference to create a programme-bound, audited Merchant Activity API source for a live owner/admin.';

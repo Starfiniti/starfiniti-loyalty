@@ -1,5 +1,13 @@
 # Iteration Log
 
+## 2026-08-13 — M03 authoritative activity sources
+
+- Extended the strict V2 rule contract with activity-code selectors and verified-review product/category conditions; the shared pure evaluator now proves source-specific matching and exact member caps.
+- Added PII-free WooCommerce account-created and verified product-review events, queue claiming, public worker evaluation, connector validation, and real runtime smoke assertions without introducing a synchronous hub dependency.
+- Added a separate-purpose signed Merchant Activity API with a streaming 64 KiB cap, exact raw-body HMAC, timestamp/nonce/key-version replay controls, public customer selectors, one audited source per workspace, and one-time secret packaging.
+- Reused the canonical delivery/effect pipeline instead of creating a parallel value path. PostgreSQL derives tenant/programme scope and the worker commits evaluation, cap usage, and immutable ledger value atomically.
+- Reviewed current official Supabase database-function/RLS, PostgreSQL locking, and WooCommerce webhook/review verification guidance; ADR-0012 records alternatives, security effects, rollout, and rollback.
+
 ## 2026-08-13 — M01 production and pilot reconstruction
 
 - Connected read-only through the approved Proxmox host to application VM 970 and Supabase VM 971. Exact `v0.1.10` dashboard/worker images and all eleven Supabase containers are healthy; public health/login pass TLS and unsigned WooCommerce ingress fails with 401.

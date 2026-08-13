@@ -27,7 +27,7 @@ Live processing acquires a transaction-scoped organization/programme-group/custo
 
 WooCommerce cumulative order facts include product-line and shipping, tax, and fee refund evidence. V2 carries those values as exact integer strings and uses the immutable original programme when calculating proportional cumulative reversal. Missing component fields from an older connector parse as zero, preserving the V1 delivery contract while current connectors send the complete evidence.
 
-Custom activity is accepted only through a bounded signed server endpoint with timestamp, nonce, body hash, key version, and idempotent source event. Account creation and verified product review originate in the WooCommerce connector; birthday originates in an internal scheduled fact; referral originates in M06. None can be self-reported by browser code.
+Custom activity and birthday are accepted only through the bounded signed Merchant Activity server endpoint with timestamp, nonce, body hash, key version, and idempotent source event. Account creation and verified product review originate in the WooCommerce connector or an explicitly provisioned trusted merchant source; referral originates in M06. None can be self-reported by browser code. ADR-0012 defines the shared canonical-ingestion boundary.
 
 ## Security and integrity effects
 
@@ -38,6 +38,10 @@ Custom activity is accepted only through a bounded signed server endpoint with t
 - Immutable evaluation and rule-usage rows preserve the exact historical programme version and explanation.
 - Serialized usage plus a unique event/rule fence prevents concurrent cap oversubscription and duplicate effects.
 
-## Rollout and rollback
+## Operations
+
+Operations exposes bounded queue state and immutable evaluation references without raw facts, customer identifiers, or signing material. Alerts cover dead-letter effects, cap-command failures, and canary reconciliation. The V2 worker remains separately credentialed from signed ingress and the browser.
+
+## Migration and rollback
 
 Deploy additive tables and readers first. Keep live V2 processing disabled except for the named Starfiniti tenant canary. Publish a controlled V2 version only after simulator/live parity, worker, API, database, connector, and browser evidence pass. Rollback disables new V2 publication and new activity acceptance through the entitlement record; it does not delete V2 definitions, block refunds, or reinterpret accepted awards. Existing V2 versions remain readable and pinned evaluation code remains deployable for reconciliation.

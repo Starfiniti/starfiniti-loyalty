@@ -19,6 +19,7 @@ import { getMerchantProgrammeState } from "@/lib/server/programme";
 import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
 import { buildSupportDiagnostics } from "@/lib/support-diagnostics";
 import { RetryEffectForm } from "./retry-effect-form";
+import { ActivitySourceProvisioningForm } from "./activity-source-provisioning-form";
 import { ConnectorProvisioningForm } from "./connector-provisioning-form";
 import { ReconciliationForm } from "./reconciliation-form";
 import { SupportDiagnosticsDownload } from "./support-diagnostics-download";
@@ -60,6 +61,20 @@ export default async function OperationsPage({
   );
   const hasPublishedProgramme = programme.versions.some(
     (version) => version.status === "published",
+  );
+  const hasPublishedV2Programme = programme.versions.some(
+    (version) =>
+      version.status === "published" &&
+      typeof version.configuration === "object" &&
+      version.configuration !== null &&
+      "version" in version.configuration &&
+      version.configuration.version === "2",
+  );
+  const wooConnections = connections.filter(
+    (connection) => connection.platform === "woocommerce",
+  );
+  const activitySources = connections.filter(
+    (connection) => connection.platform === "merchant_activity",
   );
   const diagnostics = buildSupportDiagnostics({
     generatedAt: new Date().toISOString(),
@@ -103,7 +118,7 @@ export default async function OperationsPage({
 
         <SupportDiagnosticsDownload diagnostics={diagnostics} locale={locale} />
 
-        {connections.length === 0 ? (
+        {wooConnections.length === 0 ? (
           mayProvision &&
           tenant.context.workspace &&
           programme.programme &&
@@ -127,7 +142,7 @@ export default async function OperationsPage({
             </section>
           )
         ) : (
-          connections.map((connection) => {
+          wooConnections.map((connection) => {
             const failedCount =
               connection.deliveriesFailed +
               connection.effectsFailed +
@@ -279,6 +294,90 @@ export default async function OperationsPage({
                     </table>
                   </div>
                 )}
+              </section>
+            );
+          })
+        )}
+
+        <div className="customer-result-heading">
+          <div>
+            <Activity aria-hidden="true" />
+            <strong>{t("Merchant Activity API")}</strong>
+          </div>
+          <span>{t("Signed server events only")}</span>
+        </div>
+        {activitySources.length === 0 ? (
+          mayProvision &&
+          tenant.context.workspace &&
+          programme.programme &&
+          hasPublishedV2Programme ? (
+            <ActivitySourceProvisioningForm
+              locale={locale}
+              programmeId={programme.programme.id}
+              programmeName={programme.programme.name}
+              workspaceId={tenant.context.workspace.public_id}
+              workspaceName={tenant.context.workspace.name}
+            />
+          ) : (
+            <section className="customer-panel empty-state">
+              <Activity aria-hidden="true" />
+              <h2>{t("Merchant Activity source not ready")}</h2>
+              <p>
+                {t(
+                  "A live owner or admin, active workspace, and published V2 programme are required. Browser self-reported activities are never accepted.",
+                )}
+              </p>
+            </section>
+          )
+        ) : (
+          activitySources.map((source) => {
+            const failedCount = source.deliveriesFailed + source.effectsFailed;
+            const health = connectorHealth({
+              status: source.status,
+              lastSeenAt: source.lastSeenAt,
+              failedCount,
+            });
+            return (
+              <section className="connector-card" key={source.id}>
+                <header className="connector-card-heading">
+                  <div>
+                    <Activity aria-hidden="true" />
+                    <div>
+                      <h2>{source.displayName}</h2>
+                      <p>
+                        {t("Last verified activity:")}{" "}
+                        {formatDate(source.lastSeenAt, locale)}
+                      </p>
+                    </div>
+                  </div>
+                  <span className={`health-badge ${health}`}>
+                    <Activity aria-hidden="true" />
+                    {t(health)}
+                  </span>
+                </header>
+                <div className="queue-grid activity-source-grid">
+                  <article>
+                    <span>{t("Delivery queue")}</span>
+                    <strong>{source.deliveriesReady}</strong>
+                    <small>
+                      {source.deliveriesFailed} {t("need attention")}
+                    </small>
+                  </article>
+                  <article>
+                    <span>{t("Loyalty effects")}</span>
+                    <strong>{source.effectsReady}</strong>
+                    <small>
+                      {source.effectsFailed} {t("need attention")}
+                    </small>
+                  </article>
+                  <article className="safety-card">
+                    <ShieldCheck aria-hidden="true" />
+                    <span>{t("Browser authority denied")}</span>
+                    <small>
+                      {t("Every activity requires a bounded signed delivery.")}
+                    </small>
+                  </article>
+                </div>
               </section>
             );
           })

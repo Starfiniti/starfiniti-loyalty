@@ -16,6 +16,7 @@ export type ConnectorIssue = Readonly<{
 
 export type ConnectorOperationSummary = Readonly<{
   id: string;
+  platform: "woocommerce" | "merchant_activity";
   displayName: string;
   status: string;
   lastSeenAt: string | null;
@@ -62,6 +63,25 @@ export async function getConnectorOperations(
     });
   if (summaryResult.error) throw new Error("connector_operations_unavailable");
   const summaries = (summaryResult.data ?? []) as SummaryRow[];
+  const platformResult =
+    summaries.length === 0
+      ? { data: [], error: null }
+      : await supabase
+          .schema("loyalty")
+          .from("commerce_connections")
+          .select("public_id,platform")
+          .eq("organization_id", context.organization.id)
+          .in(
+            "public_id",
+            summaries.map((summary) => summary.connection_public_id),
+          );
+  if (platformResult.error) throw new Error("connector_operations_unavailable");
+  const platforms = new Map(
+    (platformResult.data ?? []).map((row) => [
+      String(row.public_id),
+      String(row.platform),
+    ]),
+  );
   const issues = await Promise.all(
     summaries.map((summary) =>
       supabase.schema("loyalty").rpc("get_connector_operation_issues", {
@@ -76,6 +96,10 @@ export async function getConnectorOperations(
 
   return summaries.map((summary, index) => ({
     id: summary.connection_public_id,
+    platform:
+      platforms.get(summary.connection_public_id) === "merchant_activity"
+        ? "merchant_activity"
+        : "woocommerce",
     displayName: summary.display_name,
     status: summary.connection_status,
     lastSeenAt: summary.last_seen_at,
