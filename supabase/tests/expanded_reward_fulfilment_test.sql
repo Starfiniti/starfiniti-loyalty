@@ -1148,9 +1148,12 @@ reset role;
 select results_eq(
   $$ select count(*)::bigint
      from loyalty.programme_rewards as reward
+     join loyalty.programme_versions as version
+       on version.organization_id = reward.organization_id
+      and version.id = reward.programme_version_id
      join loyalty.programmes as programme
-       on programme.organization_id = reward.organization_id
-      and programme.id = reward.programme_id
+       on programme.organization_id = version.organization_id
+      and programme.id = version.programme_id
      where programme.public_id = '84000000-0000-4000-8000-000000000121' $$,
   array[3::bigint],
   'legacy native publication materializes exactly three rewards'
@@ -1158,9 +1161,12 @@ select results_eq(
 select results_eq(
   $$ select reward.reward_kind
      from loyalty.programme_rewards as reward
+     join loyalty.programme_versions as version
+       on version.organization_id = reward.organization_id
+      and version.id = reward.programme_version_id
      join loyalty.programmes as programme
-       on programme.organization_id = reward.organization_id
-      and programme.id = reward.programme_id
+       on programme.organization_id = version.organization_id
+      and programme.id = version.programme_id
      where programme.public_id = '84000000-0000-4000-8000-000000000121'
        and not (reward.configuration ? 'version')
      order by reward.reward_kind $$,

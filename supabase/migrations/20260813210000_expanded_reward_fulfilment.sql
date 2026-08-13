@@ -444,7 +444,7 @@ declare
   entitlement_enabled boolean;
   target_minor_unit_digits smallint;
 begin
-  if new.configuration ->> 'version' <> '2' then
+  if coalesce(new.configuration ->> 'version', '') <> '2' then
     return new;
   end if;
   target_minor_unit_digits := (new.configuration ->> 'currencyMinorUnitDigits')::smallint;
