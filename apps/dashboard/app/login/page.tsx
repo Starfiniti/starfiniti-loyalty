@@ -6,7 +6,6 @@ import {
   resolveCustomerNavigationLocale,
 } from "@/lib/customer-locale";
 import { customerExportPath } from "@/lib/customer-export";
-import { MerchantLocaleSwitcher } from "@/components/merchant-locale-switcher";
 import { signInWithWorkforceSso } from "./actions";
 import { WORKFORCE_SSO_COPY } from "@/lib/workforce-sso";
 
@@ -28,12 +27,11 @@ export default async function LoginPage({
     ? customerExportPath(locale)
     : customerLocalePath(requestedNextPath, locale);
   const copy = CUSTOMER_COPY[locale];
-  const workforceCopy = WORKFORCE_SSO_COPY[locale];
+  const workforceCopy = WORKFORCE_SSO_COPY.en;
 
   return (
     <main className="login-page" id="main-content" lang={locale} tabIndex={-1}>
       <section className="login-card" aria-labelledby="login-title">
-        <MerchantLocaleSwitcher locale={locale} />
         <div className="login-mark" aria-hidden="true">
           SF
         </div>

@@ -294,8 +294,8 @@ tasks:
       - tenant operations can download a versioned aggregate-only support bundle containing queue totals watermarks and an explicit bounded-recent-sample count for grouped canonical error codes while omitting item identities names payloads customer or commerce identifiers actors reasons and signing evidence
       - support-diagnostic unit tests prove aggregation deterministic scope nonnegative counters and redaction of noncanonical strings that could contain private data
       - exact-head run 31597255280 passed the support-diagnostics baseline fourteen migrations 613 pgTAP assertions concurrency and property probes and all four WooCommerce runtime variants
-      - all 38 WooCommerce strings have exact POT coverage and a bundled Slovenian catalog loaded from the standard init-time WordPress text-domain path
-      - every minimum current HPOS and legacy runtime switches to sl_SI and proves the customer Loyalty rewards navigation is translated before continuing checkout outage coupon refund reconciliation and recovery tests
+      - all WooCommerce strings have exact POT coverage through the standard WordPress text-domain path; the launch package is English-only and carries no bundled locale catalog
+      - every minimum current HPOS and legacy runtime proves the English customer Loyalty rewards navigation before continuing checkout outage coupon refund reconciliation and recovery tests
       - exact-head run 31598618092 passed the localization baseline fourteen migrations 613 pgTAP assertions concurrency and property probes and all four localized WooCommerce runtime variants
       - one RLS-scoped workspace and programme-group experience theme stores only accessible bounded design tokens and revisions through an idempotent owner or admin command with immutable audit evidence
       - the responsive experience editor previews member and guest states while contracts and database checks reject low-contrast colors arbitrary CSS remote font URLs scripts uploads role escalation and cross-tenant scope
@@ -310,11 +310,11 @@ tasks:
       - exact-head run 31603764054 passed the bulk-adjustment baseline sixteen migrations 693 pgTAP assertions concurrency and property probes and all four localized WooCommerce runtime variants
       - WooCommerce customer rendering has enforced zero connector JavaScript zero connector CSS and zero hub requests with 20-reward and markup-size ceilings checked statically and in every real runtime variant
       - exact-head run 31604654919 passed the storefront-budget baseline including bounded zero-request account and cart rendering in all four localized WooCommerce runtime variants
-      - English and Slovenian hosted customer copy are separate revisioned RLS-scoped locale rows saved only by a live owner or admin command whose immutable audit metadata omits translated text
+      - the hosted editor and runtime use one revisioned RLS-scoped English customer-copy row saved only by a live owner or admin command whose immutable audit metadata omits copy; legacy locale rows remain non-selectable
       - 33 experience-translation pgTAP assertions cover grants direct DML denial bounded markup-free copy independent locale revisions exact retries conflicts role revocation cross-tenant and mixed-scope denial RLS and audit immutability
       - exact-head run 31606226276 passed the hosted-translation baseline 114 unit tests seventeen migrations 726 pgTAP assertions concurrency and property probes and all four localized WooCommerce runtime variants
       - one mobile-first public loyalty route consumes a bounded anonymous projection only when public workspace and programme IDs resolve to one active linked published programme
-      - public delivery supports explicit English and Slovenian locale switching safe theme tokens exact bigint tier and reward values and a merchant launch link while exposing no customer raw programme reward configuration audit integration or commerce evidence
+      - public delivery uses canonical English with no language switcher plus safe theme tokens exact bigint tier and reward values and a merchant launch link while exposing no customer raw programme reward configuration audit integration or commerce evidence
       - 26 public-experience pgTAP assertions cover exact schema and function grants empty search path source-table denial localized and legacy fallback content minimization mixed and unknown scope lifecycle fail-closed behavior and zero mutable customer ledger commerce audit or translation effects
       - exact-head run 31608392260 passed the hosted guest-delivery baseline 119 unit tests eighteen migrations 752 pgTAP assertions concurrency and property probes and all four localized WooCommerce runtime variants
       - WooCommerce My Account creates a five-minute purpose-bound HMAC capability locally with zero hub render requests and no email or profile fields
@@ -331,9 +331,9 @@ tasks:
       - the leased worker transaction creates an immutable keyed private tombstone revokes hosted access pseudonymizes the channel and customer display state scrubs restricted raw and canonical event identifiers preserves wallets and ledger and suppresses later re-import
       - 47 customer-erasure pgTAP assertions plus connector and 128 unit tests cover exact grants tenant and lease binding keyed fingerprints repeats pre-import suppression immutable cases raw-event minimization and zero ledger effects
       - exact-head run 31625573608 passed all six jobs with twenty-two migrations 910 pgTAP assertions concurrency and property probes and all four localized WooCommerce runtime variants
-      - hosted login claim member-account and redemption routes provide complete explicit English and Slovenian system copy and preserve locale only through allowlisted values and safe local navigation
-      - the WooCommerce claim link carries its active locale outside the purpose-bound HMAC identity fields and all four runtime variants prove the resulting Slovenian continuation
-      - four locale unit tests plus a 390-pixel browser pass cover explicit fallback unsafe continuations complete dictionaries Slovenian authentication and redemption login continuation without horizontal overflow
+      - hosted login claim member-account and redemption routes provide canonical English system copy and strip legacy locale values from safe local navigation
+      - the WooCommerce claim link is language-neutral and all four runtime variants prove that no locale enters the purpose-bound HMAC identity fields
+      - English-only routing tests plus the 390-pixel browser gate cover legacy locale fallback safe continuation and authentication/redemption layouts without horizontal overflow
       - exact-head run 31627622779 passed all six jobs with 132 unit tests twenty-two migrations 910 pgTAP assertions concurrency and property probes and all four localized WooCommerce runtime variants
       - hosted customer export requires password reauthentication then issues one random five-minute capability stored only as a SHA-256 digest and bound to the verified Auth subject and Supabase session
       - the no-selector export transaction rechecks every active link and tenant boundary atomically consumes the capability and returns versioned identities wallets tiers reservations and complete wallet-side ledger history without persisting document content
@@ -344,22 +344,22 @@ tasks:
       - the plugin validates and imports all package fields atomically and stores the signing key through its existing Sodium-backed encrypted option
       - 44 provisioning pgTAP assertions plus 146 unit tests cover grants column minimization roles tenancy lifecycle idempotency key reuse setup-package validation and dashboard eligibility
       - exact-head run 31633310240 passed all six jobs with twenty-four migrations 997 pgTAP assertions concurrency and property probes and setup-package import in all four localized WooCommerce runtime variants
-      - authenticated Overview programme lifecycle and connector operations preserve one explicit English or Slovenian locale through safe navigation sign-out and every server action
+      - authenticated Overview programme lifecycle and connector operations use canonical English through safe navigation sign-out and every server action
       - programme scheduling converts explicit Europe Ljubljana wall time independently of the server timezone and rejects nonexistent or ambiguous DST instants
-      - responsive Playwright evidence covers Slovenian Overview programme editing provisioning reconciliation and retry controls at 390 by 844 and 1440 by 1000 with locale switching interactions no horizontal overflow and no browser errors
+      - responsive Playwright evidence covers Overview programme editing provisioning reconciliation and retry controls at 390 by 844 and 1440 by 1000 with no horizontal overflow and no browser errors; the retired locale control is absent
       - exact-head runs 31638672681 and 31640311302 passed all seven jobs with 151 then 154 unit tests both production images twenty-five migration replays 1028 pgTAP assertions concurrency and property probes and all four localized WooCommerce runtime variants
       - exact-head run 31640919355 passed all seven jobs for localized connector provisioning and operations with 154 unit tests and the unchanged production image database and WooCommerce runtime gates
-      - customer search detail tier wallet immutable activity individual adjustment and exact-preview bulk adjustment administration preserve English or Slovenian through links filters forms and action results
+      - customer search detail tier wallet immutable activity individual adjustment and exact-preview bulk adjustment administration use English through links filters forms and action results
       - customer credit expiries use the shared Europe Ljubljana wall-time parser with exact winter and summer conversion plus DST gap and ambiguity rejection independent of the server timezone
-      - the theme and customer-copy editor localizes all bounded controls role validation conflict and revision feedback while its sample member and guest wallet follows the independently selected customer locale
+      - the theme and English customer-copy editor covers all bounded controls role validation conflict and revision feedback while its sample member and guest wallet has no language selector
       - responsive Playwright evidence covers real customer and experience administration at 390 by 844 and 1440 by 1000 with review and preview interactions no horizontal overflow and no browser errors
-      - the client navigation shell updates the document language and first-focus skip-link copy from the exact locale allowlist while retaining a server-rendered English accessibility fallback
+      - the client navigation shell and server-rendered first-focus skip link use canonical English
       - exact-head runs 31642070490 and 31642918324 passed all seven jobs for localized customer and experience administration with 154 unit tests both production images twenty-five migration replays 1028 pgTAP assertions concurrency and property probes and all four localized WooCommerce runtime variants
       - exact-head run 31643300533 passed all seven jobs for the localized document-language and keyboard-bypass shell with the unchanged complete repository production image database and WooCommerce runtime gates
       - both public signed WooCommerce routes stream at most 65536 bytes before database or signing-material access and unit/static checks cover declared omitted-length multi-chunk single-chunk empty and malformed-length cases
       - issue cancellation and reconciliation commands receive at most ten claims then become inspect-only manual-review diagnostics while ambiguous coupon reservations and immutable ledger value remain untouched pending native verification
       - percentage rewards support uncapped native WooCommerce coupons only; contract and editor reject caps while PostgreSQL independently rejects direct authenticated publish schedule and legacy redemption before materialization or value movement
-      - the request proxy supplies only an allowlisted locale to server-render the document language and preserves Slovenian across both authenticated-home and guest-login redirects
+      - the request proxy supplies canonical English to the server-rendered document and strips legacy locale selectors across authenticated-home and guest-login redirects
       - adversarial complexity security value-flow project-idiom and cruft reviews completed with every verified blocker or should-fix finding resolved and independently rechecked
       - exact-head run 31645976689 passed all seven release-hardening jobs with 164 unit tests both production images twenty-six migration replays 1049 pgTAP assertions concurrency and property probes and all four uncapped-percentage WooCommerce runtime variants
   - id: DEPLOY-PROXMOX

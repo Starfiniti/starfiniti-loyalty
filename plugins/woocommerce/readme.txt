@@ -13,7 +13,7 @@ A resilient connector between WooCommerce and the self-hosted Starfiniti Loyalty
 
 The connector uses an HPOS-safe local outbox for order and refund facts, signed asynchronous delivery, encrypted connection settings, and native one-use WooCommerce coupons for supported rewards. Checkout remains available when the loyalty hub is offline.
 
-Customer and administration strings use the `starfiniti-loyalty` WordPress text domain. The installable package includes an exact source POT template and a bundled Slovenian (`sl_SI`) catalog; other locales fall back to English and can use the same standard WordPress translation workflow.
+Customer and administration strings use the `starfiniti-loyalty` WordPress text domain. The installable package includes an exact source POT template for standard WordPress translation workflows; the initial product experience is English-only.
 
 Multisite installations activate and configure the connector separately per WooCommerce site. Network activation is intentionally rejected so tenant and signing-key boundaries remain explicit.
 

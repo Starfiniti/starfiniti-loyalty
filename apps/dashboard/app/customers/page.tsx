@@ -2,7 +2,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Search, Users } from "lucide-react";
 import { signOut } from "@/app/actions";
-import { MerchantLocaleSwitcher } from "@/components/merchant-locale-switcher";
 import { formatPointText, normalizeCustomerSearch } from "@/lib/customers";
 import {
   merchantIntlLocale,
@@ -63,7 +62,6 @@ export default async function CustomersPage({
           </p>
         </div>
         <div className="programme-topbar-actions">
-          <MerchantLocaleSwitcher locale={locale} />
           <nav aria-label={t("Account navigation")}>
             <Link
               className="secondary"

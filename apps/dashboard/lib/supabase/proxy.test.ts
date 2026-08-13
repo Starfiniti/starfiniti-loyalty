@@ -37,7 +37,7 @@ describe("customer export reauthentication routing", () => {
 });
 
 describe("merchant locale routing", () => {
-  it("provides an allowlisted locale to server-rendered layouts", () => {
+  it("provides English to server-rendered layouts", () => {
     const slRequest = new NextRequest(
       "https://loyalty.example.test/programme?lang=sl-SI",
     );
@@ -46,19 +46,19 @@ describe("merchant locale routing", () => {
     );
 
     expect(localeRequestHeaders(slRequest).get("x-starfiniti-locale")).toBe(
-      "sl-SI",
+      "en",
     );
     expect(
       localeRequestHeaders(invalidRequest).get("x-starfiniti-locale"),
     ).toBe("en");
   });
 
-  it("preserves Slovenian after an authenticated login redirect", () => {
+  it("drops locale selectors after an authenticated login redirect", () => {
     expect(
       authenticatedHomeTarget(
         new URL("https://loyalty.example.test/login?lang=sl-SI"),
       ).toString(),
-    ).toBe("https://loyalty.example.test/?lang=sl-SI");
+    ).toBe("https://loyalty.example.test/");
     expect(
       authenticatedHomeTarget(
         new URL("https://loyalty.example.test/login?lang=de-DE"),
@@ -66,13 +66,11 @@ describe("merchant locale routing", () => {
     ).toBe("https://loyalty.example.test/");
   });
 
-  it("preserves Slovenian while sending a guest to login", () => {
+  it("drops locale selectors while sending a guest to login", () => {
     expect(
       unauthenticatedLoginTarget(
         new URL("https://loyalty.example.test/programme?lang=sl-SI"),
       ).toString(),
-    ).toBe(
-      "https://loyalty.example.test/login?next=%2Fprogramme%3Flang%3Dsl-SI&lang=sl-SI",
-    );
+    ).toBe("https://loyalty.example.test/login?next=%2Fprogramme");
   });
 });

@@ -68,20 +68,6 @@ export default async function CustomerLoyaltyPage({
           <p>{copy.accountEyebrow}</p>
           <h1>{copy.accountTitle}</h1>
           <p>{copy.accountIntro}</p>
-          <nav aria-label={copy.language} className="public-locale-nav">
-            <Link
-              href="/account/loyalty"
-              aria-current={locale === "en" ? "page" : undefined}
-            >
-              {copy.english}
-            </Link>
-            <Link
-              href="/account/loyalty?lang=sl-SI"
-              aria-current={locale === "sl-SI" ? "page" : undefined}
-            >
-              {copy.slovenian}
-            </Link>
-          </nav>
         </div>
         {state.accounts.length === 0 ? (
           <section className="member-empty">

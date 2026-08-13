@@ -36,7 +36,7 @@ WooCommerce is a thin connector. It uses HTTPS, least-privilege credentials, sig
 
 - Every customer and administration string uses the literal `starfiniti-loyalty` text domain. `Domain Path: /languages` and an `init`-time `load_plugin_textdomain` registration support the self-distributed ZIP without loading translations too early.
 - `languages/starfiniti-loyalty.pot` is the canonical translator template and must exactly match source strings. `npm run woocommerce:localization:validate` rejects missing/stale messages, missing customer strings, empty translations, and placeholder drift.
-- The package currently bundles `sl_SI` in WordPress's `.l10n.php` format. All 43 customer/admin strings, including the secure account link and setup-package import, follow the active WordPress locale; absent translations fall back to English.
+- The launch package is English-only. All 43 customer/admin strings use the standard WordPress text domain and have exact POT coverage, so future catalogs can be added deliberately without changing connector authority.
 
 ## Storefront budgets
 
@@ -62,7 +62,7 @@ Copy that package directly into **WooCommerce > Settings > Starfiniti Loyalty > 
 
 The My Account loyalty endpoint creates a local five-minute link only for the logged-in WooCommerce user and only when the connector has a valid HTTPS hub endpoint, connection UUID, key version, and decrypted signing key. It performs no HTTP request. The purpose-specific HMAC covers the connection UUID, numeric WooCommerce customer ID, ten-digit issue time, UUID nonce, and current key version.
 
-The connector also appends the active WordPress locale as `en` or `sl-SI`. That display-only parameter is deliberately outside the HMAC message: it can select hosted copy, but it cannot change the signed connection/customer identity. The hub allowlists the locale and preserves it only through safe local authentication and redemption navigation.
+The connector does not append a locale to the claim URL. The hub presents English and canonicalizes legacy locale-bearing links to English without changing the signed connection/customer identity.
 
 The hub verifies the live connection/key and HMAC, preserves the full link only through private no-store/no-referrer authentication navigation, displays the store name, and requires explicit POST confirmation. PostgreSQL resolves only `registered:<Woo customer ID>` on that exact connection, consumes hashed proof/nonce evidence once, and rejects cross-account conflicts. Email/profile fields are never sent or used. A successful link opens the hosted member page; checkout and local coupon behavior remain independent of this optional flow.
 

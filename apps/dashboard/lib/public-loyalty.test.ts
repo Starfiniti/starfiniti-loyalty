@@ -7,8 +7,8 @@ import {
 } from "./public-loyalty";
 
 describe("public loyalty presentation", () => {
-  it("allows only explicit English and Slovenian locale selection", () => {
-    expect(resolvePublicLocale("sl-SI")).toBe("sl-SI");
+  it("uses English for every locale selector", () => {
+    expect(resolvePublicLocale("sl-SI")).toBe("en");
     expect(resolvePublicLocale("en")).toBe("en");
     expect(resolvePublicLocale(["sl-SI"])).toBe("en");
     expect(resolvePublicLocale("../../private")).toBe("en");
@@ -25,6 +25,6 @@ describe("public loyalty presentation", () => {
       "9,007,199,254,740,993",
     );
     expect(formatEurMinor("15000", "en")).toBe("€150");
-    expect(formatEurMinor("15025", "sl-SI")).toBe("€150,25");
+    expect(formatEurMinor("15025", "en")).toBe("€150.25");
   });
 });

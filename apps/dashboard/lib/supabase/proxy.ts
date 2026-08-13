@@ -58,6 +58,7 @@ export function authenticatedHomeTarget(source: URL): URL {
 export function unauthenticatedLoginTarget(source: URL): URL {
   const target = new URL(source);
   const locale = resolveMerchantLocale(target.searchParams.get("lang"));
+  target.searchParams.delete("lang");
   const next = `${target.pathname}${target.search}`;
   target.pathname = "/login";
   target.search = "";

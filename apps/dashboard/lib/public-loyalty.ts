@@ -7,7 +7,8 @@ export function isPublicId(value: string): boolean {
 }
 
 export function resolvePublicLocale(value: unknown): ExperienceLocaleV1 {
-  return value === "sl-SI" ? "sl-SI" : "en";
+  void value;
+  return "en";
 }
 
 export function formatPublicPoints(

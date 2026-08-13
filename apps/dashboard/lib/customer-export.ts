@@ -12,7 +12,6 @@ export function customerExportReauthenticationPath(
     reauth: "customer-export",
     next: exportPath,
   });
-  if (locale === "sl-SI") query.set("lang", locale);
   return `/login?${query.toString()}`;
 }
 

@@ -42,23 +42,17 @@ export function ExperienceEditor({
 }>) {
   const t = (source: string) => merchantText(merchantLocale, source);
   const [theme, setTheme] = useState(initialTheme);
-  const [locale, setLocale] = useState<ExperienceLocaleV1>("en");
-  const [translations, setTranslations] = useState(() => ({
-    en: initialTranslations.en.definition,
-    "sl-SI": initialTranslations["sl-SI"].definition,
-  }));
+  const [translation, setTranslation] = useState(
+    initialTranslations.en.definition,
+  );
   const [actionState, formAction, pending] = useActionState(
     saveExperienceTheme,
     initialActionState,
   );
   const [translationActionState, translationAction, translationPending] =
     useActionState(saveExperienceTranslation, initialActionState);
-  const translation = translations[locale];
-  const previewText = (english: string, slovenian: string) =>
-    locale === "sl-SI" ? slovenian : english;
-  const previewBalance = new Intl.NumberFormat(
-    locale === "sl-SI" ? "sl-SI" : "en-GB",
-  ).format(2450);
+  const previewText = (...[english]: [string, string]) => english;
+  const previewBalance = new Intl.NumberFormat("en-GB").format(2450);
   const contrast = useMemo(
     () => contrastAgainstWhite(theme.brandColor),
     [theme.brandColor],
@@ -68,10 +62,7 @@ export function ExperienceEditor({
     field: keyof Omit<ExperienceTranslationDefinitionV1, "version" | "locale">,
     value: string,
   ) => {
-    setTranslations({
-      ...translations,
-      [locale]: { ...translation, [field]: value },
-    });
+    setTranslation({ ...translation, [field]: value });
   };
 
   return (
@@ -242,7 +233,7 @@ export function ExperienceEditor({
           <input
             name="operationId"
             type="hidden"
-            value={translationOperationIds[locale]}
+            value={translationOperationIds.en}
           />
           <input name="workspaceId" type="hidden" value={workspaceId} />
           <input
@@ -256,23 +247,11 @@ export function ExperienceEditor({
               <h2 id="translation-title">{t("Customer translations")}</h2>
             </div>
             <span>
-              {t("Revision")} {initialTranslations[locale].revision || "—"}
+              {t("Revision")} {initialTranslations.en.revision || "—"}
             </span>
           </div>
           <div className="experience-fields">
-            <label>
-              <span>{t("Preview and edit locale")}</span>
-              <select
-                name="locale"
-                onChange={(event) =>
-                  setLocale(event.target.value as ExperienceLocaleV1)
-                }
-                value={locale}
-              >
-                <option value="en">{t("English")}</option>
-                <option value="sl-SI">Slovenščina</option>
-              </select>
-            </label>
+            <input name="locale" type="hidden" value="en" />
             <label>
               <span>{t("Points label")}</span>
               <input
@@ -338,7 +317,7 @@ export function ExperienceEditor({
           <div className="experience-save">
             <p>
               {t(
-                "English and Slovenian are explicit launch locales. Unsupported locale selectors fail closed instead of silently mixing copy.",
+                "English is the active launch language. Stored legacy translations remain isolated from the live experience.",
               )}
             </p>
             <button
@@ -348,7 +327,7 @@ export function ExperienceEditor({
             >
               {translationPending
                 ? t("Saving…")
-                : `${t("Save copy")} (${locale})`}
+                : `${t("Save copy")} (English)`}
             </button>
           </div>
           <p

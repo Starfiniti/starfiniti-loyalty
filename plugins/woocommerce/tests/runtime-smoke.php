@@ -22,26 +22,6 @@ function starfiniti_runtime_assert($condition, string $message): void
 
 starfiniti_runtime_assert(class_exists('WooCommerce'), 'WooCommerce is active');
 starfiniti_runtime_assert(class_exists(Outbox::class), 'Starfiniti Loyalty is active');
-$originalLocale = determine_locale();
-starfiniti_runtime_assert(
-    $originalLocale === 'sl_SI' || switch_to_locale('sl_SI'),
-    'runtime can switch to the bundled Slovenian locale'
-);
-unload_textdomain('starfiniti-loyalty', true);
-Plugin::loadTextDomain();
-$localizedMenu = Plugin::accountMenuItems([
-    'dashboard' => 'Dashboard',
-    'customer-logout' => 'Logout',
-]);
-starfiniti_runtime_assert(
-    ($localizedMenu['loyalty'] ?? null) === 'Nagrade za zvestobo',
-    'bundled Slovenian customer navigation translation loads at runtime'
-);
-if ($originalLocale !== 'sl_SI') {
-    restore_previous_locale();
-}
-unload_textdomain('starfiniti-loyalty', true);
-Plugin::loadTextDomain();
 $expectedHpos = get_option('starfiniti_runtime_expected_hpos');
 starfiniti_runtime_assert(
     in_array($expectedHpos, ['yes', 'no'], true),
@@ -202,14 +182,7 @@ starfiniti_runtime_assert(is_string($encryptedSigningKey), 'runtime can protect 
 update_option('starfiniti_loyalty_connection_id', $claimConnectionId, false);
 update_option('starfiniti_loyalty_key_version', $claimKeyVersion, false);
 update_option('starfiniti_loyalty_signing_key_encrypted', $encryptedSigningKey, false);
-$claimLocaleChanged = get_locale() !== 'sl_SI';
-if ($claimLocaleChanged) {
-    switch_to_locale('sl_SI');
-}
 $claimLink = CustomerClaim::linkForUser((int) $customerId);
-if ($claimLocaleChanged) {
-    restore_previous_locale();
-}
 $claimQuery = [];
 parse_str((string) wp_parse_url($claimLink, PHP_URL_QUERY), $claimQuery);
 $claimMessage = implode("\n", [
@@ -225,7 +198,7 @@ starfiniti_runtime_assert(
     && ($claimQuery['connectionId'] ?? null) === $claimConnectionId
     && ($claimQuery['externalCustomerId'] ?? null) === (string) $customerId
     && ($claimQuery['keyVersion'] ?? null) === $claimKeyVersion
-    && ($claimQuery['lang'] ?? null) === 'sl-SI'
+    && ! array_key_exists('lang', $claimQuery)
     && 1 === preg_match('/^\d{10}$/', (string) ($claimQuery['issuedAt'] ?? ''))
     && 1 === preg_match('/^[0-9a-f-]{36}$/', (string) ($claimQuery['nonce'] ?? ''))
     && hash_equals(
@@ -233,7 +206,7 @@ starfiniti_runtime_assert(
         (string) ($claimQuery['signature'] ?? '')
     )
     && ! array_key_exists('email', $claimQuery),
-    'customer claim is short-lived, channel-bound, PII-free, signed locally, and preserves the active locale'
+    'customer claim is short-lived, channel-bound, PII-free, signed locally, and language-neutral'
 );
 $checkoutHttpRequests = 0;
 $rejectCheckoutHttp = static function ($preempt) use (&$checkoutHttpRequests) {
