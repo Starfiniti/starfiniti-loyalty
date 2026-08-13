@@ -27,7 +27,7 @@ Live processing acquires a transaction-scoped organization/programme-group/custo
 
 WooCommerce cumulative order facts include product-line and shipping, tax, and fee refund evidence. V2 carries those values as exact integer strings and uses the immutable original programme when calculating proportional cumulative reversal. Missing component fields from an older connector parse as zero, preserving the V1 delivery contract while current connectors send the complete evidence.
 
-Custom activity and birthday are accepted only through the bounded signed Merchant Activity server endpoint with timestamp, nonce, body hash, key version, and idempotent source event. Account creation and verified product review originate in the WooCommerce connector or an explicitly provisioned trusted merchant source; referral originates in M06. None can be self-reported by browser code. ADR-0012 defines the shared canonical-ingestion boundary.
+Custom activity and birthday are accepted only through the bounded signed Merchant Activity server endpoint with timestamp, nonce, body hash, key version, and idempotent source event. Account creation and verified product review originate in the WooCommerce connector or an explicitly provisioned trusted merchant source. A trusted backend may report an already-qualified referral fact; M06 still owns Starfiniti's first-party attribution, cooling, fraud review, and reversible qualification workflow. None can be self-reported by browser code. ADR-0012 defines the shared canonical-ingestion boundary.
 
 ## Security and integrity effects
 

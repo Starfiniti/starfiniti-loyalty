@@ -159,7 +159,7 @@ export function EarningRulesEditor({
     if (actionState.kind === "success" && operationInput.current) {
       operationInput.current.value = crypto.randomUUID();
     }
-  }, [actionState.kind]);
+  }, [actionState]);
 
   function updateDefinition(patch: Partial<ProgrammeDefinitionV2>) {
     setDefinition((current) => ({ ...current, ...patch }));

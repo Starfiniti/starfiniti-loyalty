@@ -5,7 +5,7 @@
 
 ## Context
 
-ProgrammeDefinitionV2 supports birthdays, account creation, verified product reviews, and custom activities. WooCommerce can authoritatively emit account and verified-review facts, but a merchant CRM or backend also needs a connector-neutral path. Browser assertions, Auth metadata, email matching, or a generic unauthenticated event endpoint would let a customer manufacture value.
+ProgrammeDefinitionV2 supports birthdays, account creation, verified product reviews, already-qualified referrals, and custom activities. WooCommerce can authoritatively emit account and verified-review facts, but a merchant CRM or backend also needs a connector-neutral path. Browser assertions, Auth metadata, email matching, or a generic unauthenticated event endpoint would let a customer manufacture value. This API accepts a trusted referral fact but does not implement referral attribution or fraud decisions; those remain M06 state-machine authority.
 
 Current Supabase guidance recommends private-schema security-definer functions with an empty search path and explicit execution grants. PostgreSQL row locks/advisory locks remain the final concurrency boundary. WooCommerce's official webhook contract also confirms the established model of signing the exact raw payload with HMAC-SHA256. Documentation reviewed on 2026-08-13: https://supabase.com/docs/guides/database/functions, https://supabase.com/docs/guides/database/postgres/row-level-security, https://www.postgresql.org/docs/current/explicit-locking.html, and https://developer.woocommerce.com/docs/apis/rest-api/v2/webhooks.
 
