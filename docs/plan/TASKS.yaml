@@ -1,8 +1,25 @@
-version: 2
-updated: 2026-08-12
+version: 3
+updated: 2026-08-13
 scope:
-  active: [self-hosted-supabase, proxmox, nextjs, woocommerce]
-  deferred: [shopify]
+  active:
+    [
+      self-hosted-supabase,
+      managed-starfiniti,
+      proxmox,
+      nextjs,
+      woocommerce,
+      english,
+    ]
+  deferred: [shopify, localization, store-credit, gift-cards, cash-redemption]
+roadmap:
+  authority: docs/plan/ENTERPRISE_ROADMAP.md
+  baseline_release: v0.1.10
+  baseline_commit: ff7978dd8faa4519a378f5bb538c7956905b2125
+  evaluation: docs/plan/evaluations/product-score.json
+  evidence_root: docs/plan/evidence
+  completion_score: 90
+  minimum_category_ratio: 0.8
+  deterministic_failures_override_score: true
 tasks:
   - id: P0-BOOTSTRAP
     title: Bootstrap repository and reproducible baseline
@@ -232,7 +249,8 @@ tasks:
   - id: P9-MERCHANT-HUB
     title: Build authenticated merchant programme customer and operations surfaces
     phase: 9
-    status: in_progress
+    status: superseded
+    superseded_by: [M01-PRODUCTION-PILOT]
     dependencies: [P7-WOOCOMMERCE-CONNECTOR]
     acceptance:
       - Merchant routes derive organization and workspace context from authenticated membership
@@ -376,7 +394,8 @@ tasks:
   - id: DEPLOY-PROXMOX
     title: Release and deploy the self-hosted platform on Proxmox
     phase: deployment
-    status: in_progress
+    status: superseded
+    superseded_by: [M01-PRODUCTION-PILOT]
     dependencies: [P9-MERCHANT-HUB]
     acceptance:
       - Approved commit produces immutable dashboard worker and WooCommerce artifacts
@@ -415,3 +434,705 @@ tasks:
       - a complete clean-room start plus WAL replay and authenticated tenant WooCommerce outage-recovery drill still require the approved first Auth owner and store
       - production Chrome completed Authentik custom OIDC and Supabase PKCE for the approved owner UUID then rendered its atomically bootstrapped Starfiniti tenant through live RLS
       - application Compose preserves the public Supabase TLS hostname while routing server-side requests to the private proxy and the pinned PostgREST allowlist exposes the RLS-protected loyalty schema
+
+  # Enterprise roadmap. Detailed slices and gates live in docs/plan/ENTERPRISE_ROADMAP.md.
+  - id: M00-REALITY-AND-EVIDENCE
+    title: Establish repository reality, module graph, competitive evidence, and finish gate
+    module: M00
+    status: complete
+    module_score: 94
+    dependencies: [P7-WOOCOMMERCE-CONNECTOR]
+    hypothesis: Stable module gates and evidence-backed scoring prevent shallow feature breadth and unverifiable completion claims.
+    baseline: Production v0.1.10 has strong value foundations, partial merchant/customer breadth, and no real-store proof.
+    targets:
+      [
+        product baseline is reproducible,
+        every later module is measurable,
+        no undocumented dependency,
+      ]
+    owner_inputs: []
+    acceptance:
+      [
+        stale work is preserved,
+        competitor matrix uses current official sources,
+        module score and automatic failures are explicit,
+        M01-M16 contain rollout rollback and evidence requirements,
+      ]
+    failure_modes:
+      [
+        planning claims exceed released evidence,
+        an old broad phase remains active,
+        score can override deterministic failure,
+      ]
+    rollout: Documentation-only; make the new graph authoritative for all new work.
+    rollback: Revert the planning commit; completed historical task evidence remains unchanged.
+    verification:
+      [
+        parse TASKS.yaml and product-score.json,
+        format changed files,
+        git diff --check,
+        npm run check,
+      ]
+    risks: [R-030]
+    docs:
+      [
+        docs/plan/ENTERPRISE_ROADMAP.md,
+        docs/product/COMPETITIVE_CAPABILITY_MATRIX.md,
+        docs/architecture/ADR/0009-sequential-evidence-gated-enterprise-modules.md,
+      ]
+    evidence:
+      - docs/plan/evidence/M00/README.md
+      - npm ci restored 962 packages and the declared worker esbuild binary
+      - 177 unit tests lint all workspace typechecks dashboard and worker builds passed
+      - CI deployment architecture accessibility WooCommerce migration secret production audit and licence gates passed
+      - targeted changed-file Prettier YAML and JSON parsing and git diff checks passed
+
+  - id: M01-PRODUCTION-PILOT
+    title: Prove a real WooCommerce pilot, outage behavior, and clean-room recovery
+    module: M01
+    status: in_progress
+    dependencies: [M00-REALITY-AND-EVIDENCE]
+    hypothesis: Existing asynchronous connector and recovery controls preserve exact value and checkout under real production failures.
+    baseline: Runtime matrix and database WAL restore pass; no approved real store is connected and full application/Auth/secret recovery is unproved.
+    targets:
+      [
+        zero unexplained balance or coupon difference,
+        checkout succeeds through hub and worker outages,
+        complete recovery meets recorded RPO and RTO,
+      ]
+    owner_inputs: [approved real WooCommerce store access]
+    acceptance:
+      [
+        award release redemption capture refund expiry reconciliation rotation recovery and outage cases pass,
+        every pilot order reconciles to canonical event ledger balance and coupon evidence,
+      ]
+    failure_modes:
+      [
+        checkout waits for hub,
+        lost or duplicate effect,
+        unexplained coupon,
+        unrecoverable Auth application or signing secret,
+      ]
+    rollout: Use one controlled programme reward customer and test order set; accept no unbounded customer value.
+    rollback: Disable the connection, preserve event and ledger evidence, restore prior plugin package and immutable application images.
+    verification:
+      [
+        real store runbook,
+        outage drill,
+        clean-room recovery smoke,
+        reconciliation report,
+        production alerts,
+      ]
+    risks: [R-004, R-005, R-008]
+    docs:
+      [
+        docs/integrations/WOOCOMMERCE.md,
+        docs/operations/BACKUP_RESTORE.md,
+        docs/operations/RUNBOOKS.md,
+      ]
+    evidence: [docs/plan/evidence/M01/README.md]
+
+  - id: M02-ENTITLEMENTS-AND-FLAGS
+    title: Add deployment modes, entitlements, limits, and tenant rollout controls
+    module: M02
+    status: ready
+    dependencies: [M00-REALITY-AND-EVIDENCE]
+    hypothesis: Database-authoritative entitlements allow safe managed rollout without remote enforcement in self-hosted installations or interference with loyalty value.
+    baseline: One self-hosted deployment mode exists with no versioned capability catalogue or tenant canary controls.
+    targets:
+      [
+        self-hosted makes zero Stripe or licence calls,
+        every later feature is tenant-gated server-side,
+        disabling preserves history and promised value,
+      ]
+    owner_inputs: []
+    acceptance:
+      [
+        versioned catalogue and effective-dated limits exist,
+        managed authority is tenant-scoped and audited,
+        checkout refunds reconciliation balances and exports bypass commercial restrictions,
+      ]
+    failure_modes:
+      [
+        browser grants capability,
+        Auth claims become entitlement authority,
+        billing hides or destroys value,
+        percentage rollout is nondeterministic,
+      ]
+    rollout: Deploy disabled, enable only Starfiniti pilot, then increase an audited tenant percentage.
+    rollback: Disable new capability writes while retaining readers, history, value processing, and locally controlled self-hosted access.
+    verification:
+      [
+        contract tests,
+        pgTAP grants and RLS,
+        tenant canary tests,
+        self-hosted no-network test,
+        rollback smoke,
+      ]
+    risks: [R-025, R-031]
+    docs: [docs/plan/ENTERPRISE_ROADMAP.md]
+    evidence: [docs/plan/evidence/M02/README.md]
+
+  - id: M03-EARNING-RULES
+    title: Deliver ProgrammeDefinitionV2 and competitive earning rules
+    module: M03
+    status: planned
+    dependencies: [M02-ENTITLEMENTS-AND-FLAGS]
+    hypothesis: Versioned conditional earning with explicit precedence and traces expands merchant value without changing historical V1 results.
+    baseline: V1 supports tier-based eligible purchase earning only.
+    targets:
+      [
+        simulator equals live evaluation,
+        duplicate and reordering produce one effect,
+        every award retains its historical explanation,
+      ]
+    owner_inputs: []
+    acceptance:
+      [
+        six earning sources,
+        allowlisted conditions and exclusions,
+        caps precedence simulator conflict review and signed activity API pass,
+      ]
+    failure_modes:
+      [
+        browser self-reports authority,
+        stack order changes value,
+        cap race,
+        V1 replay changes,
+      ]
+    rollout: Canary V2 per tenant while keeping V1 readers and immutable evaluation active.
+    rollback: Stop V2 publication and new V2 events; continue evaluating already accepted versions with pinned contracts.
+    verification:
+      [
+        unit and property tests,
+        pgTAP and concurrency,
+        API and plugin contracts,
+        browser builder/simulator,
+        compatibility replay,
+      ]
+    risks: [R-001, R-002, R-030]
+    docs: [docs/api/PROGRAMME_ENGINE.md, docs/integrations/MERCHANT_API.md]
+    evidence: [docs/plan/evidence/M03/README.md]
+
+  - id: M04-REWARDS-AND-FULFILMENT
+    title: Expand native rewards and audited manual fulfilment
+    module: M04
+    status: planned
+    dependencies: [M03-EARNING-RULES]
+    hypothesis: Fulfilment-complete reward types increase redemption without stranding or speculatively releasing points.
+    baseline: Fixed, uncapped percentage, and free-shipping coupons exist; broader restrictions, inventory, free product, and manual perks do not.
+    targets:
+      [
+        every authorable reward has an end-to-end state machine,
+        quantity and budget cannot oversubscribe,
+        ambiguity retains reservation,
+      ]
+    owner_inputs: []
+    acceptance:
+      [
+        native and manual types restrictions limits availability reservations recovery operations and summaries pass,
+      ]
+    failure_modes:
+      [
+        unfulfillable published reward,
+        oversold quantity,
+        duplicate benefit,
+        speculative compensation,
+      ]
+    rollout: Enable each reward kind independently for the pilot after native matrix proof.
+    rollback: Stop new reservations for the kind; finish or manually reconcile accepted reservations before disabling execution.
+    verification:
+      [
+        contracts,
+        pgTAP and two-session races,
+        plugin matrix,
+        worker retries,
+        browser fulfilment and recovery,
+      ]
+    risks: [R-014, R-025]
+    docs: [docs/integrations/WOOCOMMERCE.md]
+    evidence: [docs/plan/evidence/M04/README.md]
+
+  - id: M05-VIP-AND-EXPIRY
+    title: Deliver advanced VIP qualification, expiry, and member progression
+    module: M05
+    status: planned
+    dependencies: [M04-REWARDS-AND-FULFILMENT]
+    hypothesis: Auditable qualification periods and progress increase retention while preserving equivalent Rose/Bloom/Icon outcomes.
+    baseline: Lifetime eligible spend, basic tiers/grace/history, and expiry primitives exist.
+    targets:
+      [
+        V1 migration is outcome-identical,
+        every boundary refund expiry downgrade and backdated case is deterministic,
+      ]
+    owner_inputs: []
+    acceptance:
+      [
+        qualification modes threshold groups lifecycle benefits override expiry previews notifications progress history and performance pass,
+      ]
+    failure_modes:
+      [
+        retroactive tier rewrite,
+        refund fails to downgrade,
+        timezone boundary changes qualification,
+        override bypasses audit,
+      ]
+    rollout: Shadow-evaluate V2 against V1 before tenant canary publication.
+    rollback: Freeze V2 transitions and retain the last effective historical tier while forward-fixing qualification.
+    verification:
+      [
+        property and boundary tests,
+        pgTAP,
+        backdated/refund concurrency,
+        migration comparison,
+        browser previews,
+      ]
+    risks: [R-002, R-020]
+    docs: [docs/api/PROGRAMME_ENGINE.md]
+    evidence: [docs/plan/evidence/M05/README.md]
+
+  - id: M06-REFERRALS
+    title: Add referrals with minimized fraud review and reversible decisions
+    module: M06
+    status: planned
+    dependencies: [M05-VIP-AND-EXPIRY]
+    hypothesis: Cooling-period attribution and reversible review grow acquisition without granting value from self-referral or replay.
+    baseline: Referral earning, attribution, fraud review, and customer sharing are absent.
+    targets:
+      [
+        one advocate per referred customer,
+        no reward bypasses ledger,
+        uncertain cases retain reversible review state,
+      ]
+    owner_inputs: []
+    acceptance:
+      [
+        opaque links attribution window cooling rewards fraud signals review customer progress and funnel views pass,
+      ]
+    failure_modes:
+      [
+        identity leak,
+        self-referral,
+        duplicate attribution,
+        refund retains reward,
+        fraud data over-retention,
+      ]
+    rollout: Pilot with conservative velocity limits and manual review enabled.
+    rollback: Pause new attribution and qualification; preserve/reconcile accepted referral ledger effects.
+    verification:
+      [
+        replay self-referral refund duplicate identity concurrency privacy and tenant tests,
+        browser flow,
+      ]
+    risks: [R-026]
+    docs: [docs/security/PRIVACY_MODEL.md]
+    evidence: [docs/plan/evidence/M06/README.md]
+
+  - id: M07-CAMPAIGNS
+    title: Add allowlisted audiences, segments, and campaigns
+    module: M07
+    status: planned
+    dependencies: [M06-REFERRALS]
+    hypothesis: Snapshot-based campaigns increase participation while atomic budgets cap liability.
+    baseline: No segment or campaign engine exists.
+    targets:
+      [
+        concurrency cannot exceed budget or quantity,
+        every effect retains audience and explanation evidence,
+      ]
+    owner_inputs: []
+    acceptance:
+      [
+        allowlisted segments seven campaign types schedules snapshots caps budgets controls approvals and results pass,
+      ]
+    failure_modes:
+      [
+        arbitrary SQL,
+        DST drift,
+        budget race,
+        audience mutation rewrites history,
+        cancellation double-reverses,
+      ]
+    rollout: Dry-run audience/liability, approval, disabled deploy, pilot canary, then bounded schedule.
+    rollback: Pause campaign atomically and reconcile reserved capacity and accepted effects.
+    verification:
+      [
+        property and two-session tests,
+        DST/control/cancel/retry cases,
+        liability reconciliation,
+        browser calendar,
+      ]
+    risks: [R-026, R-020]
+    docs: [docs/plan/ENTERPRISE_ROADMAP.md]
+    evidence: [docs/plan/evidence/M07/README.md]
+
+  - id: M08-NOTIFICATIONS
+    title: Add provider-neutral notifications, SMTP, Klaviyo, and webhooks
+    module: M08
+    status: planned
+    dependencies: [M07-CAMPAIGNS]
+    hypothesis: Consent-aware asynchronous messages improve activation without coupling providers to value processing.
+    baseline: Expiry notification scheduling exists without provider delivery; Klaviyo is deferred in current docs.
+    targets:
+      [
+        withdrawal is immediate,
+        duplicate event sends once,
+        provider outage cannot affect value or checkout,
+      ]
+    owner_inputs:
+      [
+        Klaviyo credentials for managed canary,
+        SMTP credentials for deployment canary,
+      ]
+    acceptance:
+      [
+        event contracts consent suppression templates dedupe schedules retries dead letters SMTP Klaviyo webhooks and health pass,
+      ]
+    failure_modes:
+      [
+        send after withdrawal,
+        PII or coupon in logs,
+        provider becomes authority,
+        retry storm,
+      ]
+    rollout: Local sink, then test provider, then Starfiniti tenant per channel/purpose.
+    rollback: Disable provider dispatch while retaining provider-neutral queued evidence and value processing.
+    verification:
+      [
+        contract and provider-sink tests,
+        replay/outage tests,
+        privacy scan,
+        webhook verification,
+        template browser QA,
+      ]
+    risks: [R-027]
+    docs: [docs/integrations/KLAVIYO.md, docs/security/PRIVACY_MODEL.md]
+    evidence: [docs/plan/evidence/M08/README.md]
+
+  - id: M09-STOREFRONT-EXPERIENCE
+    title: Complete hosted and WooCommerce customer experiences
+    module: M09
+    status: planned
+    dependencies: [M08-NOTIFICATIONS]
+    hypothesis: Complete, accessible loyalty discovery and progress increase redemption while local rendering preserves checkout.
+    baseline: Basic hosted guest/member routes and bounded WooCommerce account/cart markup exist.
+    targets:
+      [
+        primary tasks pass desktop/mobile/accessibility,
+        compressed asset budget is explicit,
+        checkout has zero synchronous hub dependency,
+      ]
+    owner_inputs: []
+    acceptance:
+      [
+        seven hosted areas store placements progressive panel controlled branding discovery sharing warnings and offline states pass,
+      ]
+    failure_modes:
+      [
+        hub blocks render or checkout,
+        inaccessible value,
+        stale cache grants benefit,
+        uncontrolled asset or script,
+      ]
+    rollout: Cached server rendering first; progressive panel is separate disabled enhancement.
+    rollback: Remove enhancement and retain native cached/account/coupon experience.
+    verification:
+      [
+        browser desktop/mobile keyboard screen-reader zoom contrast motion slow/offline,
+        plugin matrix,
+        asset budget,
+      ]
+    risks: [R-005, R-009, R-030]
+    docs: [design-qa.md, docs/testing/PLATFORM_MATRIX.md]
+    evidence: [docs/plan/evidence/M09/README.md]
+
+  - id: M10-ANALYTICS
+    title: Add reconciled analytics, reporting, liability, and exports
+    module: M10
+    status: planned
+    dependencies: [M09-STOREFRONT-EXPERIENCE]
+    hypothesis: Defined and exactly reconciled metrics let merchants improve loyalty without overstating causality.
+    baseline: Basic spend/member/redemption/liability trends and ledger exports exist.
+    targets:
+      [
+        financial aggregates reconcile exactly,
+        every dashboard exposes definition,
+        incremental revenue is never inferred from influence,
+      ]
+    owner_inputs: []
+    acceptance:
+      [
+        metric dictionary value/liability forecasts business/referral/campaign/cohort reports controlled exports and schedules pass,
+      ]
+    failure_modes:
+      [
+        large integer loss,
+        currency or timezone mix,
+        private export leak,
+        influenced revenue labelled incremental,
+      ]
+    rollout: Backfill/read-only shadow comparison before replacing any existing aggregate.
+    rollback: Revert reads to prior versioned metric while preserving source facts and generated-export audit.
+    verification:
+      [
+        formula tests,
+        database reconciliation,
+        timezone/currency/bigint cases,
+        RLS/export expiry,
+        browser definitions,
+      ]
+    risks: [R-001, R-030]
+    docs: [docs/plan/ENTERPRISE_ROADMAP.md]
+    evidence: [docs/plan/evidence/M10/README.md]
+
+  - id: M11-ECOSYSTEM
+    title: Add multi-store policy, currencies, service APIs, and ecosystem operations
+    module: M11
+    status: planned
+    dependencies: [M10-ANALYTICS]
+    hypothesis: Explicit sharing and scoped APIs enable larger merchants without implicit cross-tenant authority or currency ambiguity.
+    baseline: One isolated workspace/programme link and signed WooCommerce integration exist.
+    targets:
+      [
+        sharing is explicit,
+        unrelated tenants remain isolated,
+        replay creates one effect,
+        currency reconciliation is exact,
+      ]
+    owner_inputs: [approved exchange-rate provider before live multi-currency]
+    acceptance:
+      [
+        groups rate evidence service accounts keys limits webhooks clients and integration operations pass,
+      ]
+    failure_modes:
+      [
+        implicit shared wallet,
+        stale key authority,
+        webhook replay,
+        rate/rounding ambiguity,
+        connector placeholder,
+      ]
+    rollout: Isolated multi-store first; explicit shared policy and multi-currency follow separate tenant canaries.
+    rollback: Revoke credentials and stop new shared/currency effects while retaining versioned evidence and readers.
+    verification:
+      [
+        pgTAP RLS/grants,
+        replay/rate-limit/rotation,
+        currency property/reconciliation,
+        TypeScript/PHP contracts,
+      ]
+    risks: [R-001, R-002]
+    docs: [docs/integrations/MERCHANT_API.md, docs/api/WEBHOOKS.md]
+    evidence: [docs/plan/evidence/M11/README.md]
+
+  - id: M12-MIGRATION
+    title: Add traceable, idempotent loyalty migration
+    module: M12
+    status: planned
+    dependencies: [M11-ECOSYSTEM]
+    hypothesis: Fingerprinted dry runs and opening-balance ledger effects migrate customers without duplicate or untraceable value.
+    baseline: No supported import framework or competitor adapter exists.
+    targets:
+      [
+        rerun duplicates nothing,
+        totals and counts reconcile,
+        every point traces to batch and source row,
+      ]
+    owner_inputs: [representative redacted exports for each approved adapter]
+    acceptance:
+      [
+        canonical format dry run mapping approval error export opening balances four priority adapters corrections and reports pass,
+      ]
+    failure_modes:
+      [
+        duplicate value,
+        merge by email,
+        mutable import,
+        approval drift,
+        source PII retention,
+      ]
+    rollout: Dry run, fingerprinted owner approval, small canary batch, reconciliation, then bounded batches.
+    rollback: Compensate an entire batch with traceable correction transactions; never edit imported entries.
+    verification:
+      [
+        rerun and duplicate tests,
+        concurrency,
+        totals/liability reconciliation,
+        privacy and tenant tests,
+        adapter fixtures,
+      ]
+    risks: [R-028]
+    docs: [docs/plan/ENTERPRISE_ROADMAP.md]
+    evidence: [docs/plan/evidence/M12/README.md]
+
+  - id: M13-ENTERPRISE-IDENTITY
+    title: Complete enterprise administration, tenant SSO, SCIM, and agency access
+    module: M13
+    status: planned
+    dependencies: [M12-MIGRATION]
+    hypothesis: Provisioning-controlled membership with database authority enables enterprise identity without cross-tenant grants from upstream claims.
+    baseline: Starfiniti workforce Authentik brokerage and owner/admin/operator membership exist; tenant federation and SCIM do not.
+    targets:
+      [
+        deprovisioning invalidates stale sessions,
+        forged domain group metadata grants nothing,
+        cross-tenant flows fail closed,
+      ]
+    owner_inputs: [enterprise IdP test tenant]
+    acceptance:
+      [
+        organization lifecycle invitations seven roles federation SCIM break-glass support agency and visible history pass,
+      ]
+    failure_modes:
+      [
+        email/domain auto-join,
+        IdP group becomes authority,
+        stale membership,
+        reusable SCIM secret,
+        hidden support access,
+      ]
+    rollout: Test IdP, one organization, explicit provisioned users, forced deprovision, then agency canary.
+    rollback: Disable tenant federation/SCIM and revoke credentials while retaining local break-glass owner and audit.
+    verification:
+      [
+        OIDC SAML SCIM contracts,
+        RLS and role matrix,
+        stale-session/deprovision tests,
+        cross-tenant forgery,
+        audit,
+      ]
+    risks: [R-029, R-023]
+    docs:
+      [
+        docs/architecture/ADR/0008-broker-workforce-authentik-through-supabase-auth.md,
+        docs/architecture/IDENTITY_MODEL.md,
+      ]
+    evidence: [docs/plan/evidence/M13/README.md]
+
+  - id: M14-MANAGED-BILLING
+    title: Add managed Stripe billing and idempotent usage metering
+    module: M14
+    status: planned
+    dependencies: [M13-ENTERPRISE-IDENTITY]
+    hypothesis: Managed commercial state can fund the service without becoming loyalty-value authority or burdening self-hosted deployments.
+    baseline: No Stripe, subscription, entitlement catalogue, or usage metering exists.
+    targets:
+      [
+        self-hosted makes no Stripe call,
+        webhook order/replay is safe,
+        usage reconciles,
+        delinquency preserves existing value/access,
+      ]
+    owner_inputs:
+      [
+        Stripe test and production credentials,
+        approved prices and Price IDs,
+        delinquency policy approval,
+      ]
+    acceptance:
+      [
+        customer references signed webhooks checkout portal lifecycle grace metering protected operations and manual contracts pass,
+      ]
+    failure_modes:
+      [
+        card data stored,
+        event replay changes state,
+        price in source,
+        delinquency blocks value/refund/export/checkout,
+      ]
+    rollout: Stripe test clock and fixtures, managed Starfiniti tenant, invoice reconciliation, then limited managed canary.
+    rollback: Disable new checkout/upgrade and use effective-dated manual override; do not disable loyalty processing.
+    verification:
+      [
+        signature/replay/out-of-order tests,
+        usage reconciliation,
+        self-hosted no-call test,
+        lifecycle browser/API tests,
+      ]
+    risks: [R-025, R-031]
+    docs: [docs/plan/ENTERPRISE_ROADMAP.md]
+    evidence: [docs/plan/evidence/M14/README.md]
+
+  - id: M15-GA-HARDENING
+    title: Prove capacity, chaos, security, recovery, canary, and GA operations
+    module: M15
+    status: planned
+    dependencies: [M14-MANAGED-BILLING]
+    hypothesis: Measured capacity, recovery, security, and a reconciled canary make GA claims independently verifiable.
+    baseline: Strong CI and production deployment exist without declared capacity, independent penetration test, full recovery, or 30-day canary.
+    targets:
+      [
+        no critical or high issue,
+        SLO RPO RTO and capacity have evidence,
+        all pilot values and invoices reconcile,
+        operational ownership exists,
+      ]
+    owner_inputs: [independent penetration test, final GA approval]
+    acceptance:
+      [
+        load chaos scans pen test recovery observability runbooks on-call 30-day canary claim review and approval pass,
+      ]
+    failure_modes:
+      [
+        unbounded retry storm,
+        untested restore,
+        unsupported capacity claim,
+        unresolved high finding,
+        unreconciled canary,
+      ]
+    rollout: Thirty-day controlled production canary with daily reconciliation and explicit abort thresholds.
+    rollback: Disable new enterprise features, preserve ingestion/value/recovery, and revert immutable images per runbook.
+    verification:
+      [
+        load chaos recovery scan and canary reports,
+        incident exercise,
+        final npm and database/plugin/image/deploy gates,
+      ]
+    risks: [R-004, R-005, R-008, R-030]
+    docs:
+      [
+        docs/operations/BACKUP_RESTORE.md,
+        docs/operations/RUNBOOKS.md,
+        docs/testing/TEST_STRATEGY.md,
+      ]
+    evidence: [docs/plan/evidence/M15/README.md]
+
+  - id: M16-CONTINUOUS-IMPROVEMENT
+    title: Institutionalize evidence-ranked product and operational improvement
+    module: M16
+    status: planned
+    dependencies: [M15-GA-HARDENING]
+    hypothesis: Scheduled measurement and exercises turn recurring failures into durable prevention instead of undocumented fixes.
+    baseline: Iteration evidence exists but no complete enterprise monthly/quarterly cadence is active.
+    targets:
+      [
+        affected modules are rescored after material change,
+        recurring failures become durable controls,
+        backlog remains evidence-ranked,
+      ]
+    owner_inputs:
+      [monthly product review owner, quarterly exercise participants]
+    acceptance:
+      [
+        monthly metrics/support/security/billing review quarterly recovery/isolation/privacy/SCIM exercises provider review and ADR supersession operate,
+      ]
+    failure_modes:
+      [
+        stale roadmap,
+        subjective promotion,
+        obsolete provider assumptions,
+        repeated incident without regression control,
+      ]
+    rollout: Start cadence during the GA canary and publish the first monthly and quarterly evidence dates.
+    rollback: Not applicable to historical evidence; suspend experiments that breach guardrails and supersede decisions by ADR.
+    verification:
+      [
+        scheduled review records,
+        regression links,
+        score history,
+        exercise reports,
+        evidence-ranked backlog,
+      ]
+    risks: [R-030, R-031]
+    docs: [docs/plan/ENTERPRISE_ROADMAP.md, docs/plan/ITERATION_LOG.md]
+    evidence: [docs/plan/evidence/M16/README.md]

@@ -3,10 +3,11 @@
 ## Required reading
 
 1. `docs/product/MASTER_PLAN.md`
-2. `PLANS.md`
-3. `STATUS.md`
-4. `RISKS.md`
-5. Relevant ADRs and integration/security docs
+2. `docs/plan/ENTERPRISE_ROADMAP.md`
+3. `PLANS.md`
+4. `STATUS.md`
+5. `RISKS.md`
+6. Relevant ADRs and integration/security docs
 
 ## Layout
 

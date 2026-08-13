@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Replaced broad unfinished phases with the evidence-gated M00–M16 enterprise roadmap, stable dependencies, owner-input fields, rollout/rollback requirements, and deterministic finish rules while preserving completed historical evidence.
+- Added an official-source Smile/LoyaltyLion/Yotpo capability matrix, a machine-readable 49/100 whole-product baseline distinct from the 95/100 engineering score, a module evidence standard, and ADR-0009 for sequential vertical delivery.
+- Kept Shopify, localization, store credit, gift cards, and cash redemption deferred; self-hosted AGPL installations remain independent of Stripe or remote licence enforcement.
+
 - Replaced the monolithic Programme editor and duplicate fragment links with four honest merchant workflows: a launch/readiness overview, tier-based earning rules with live order simulation, a WooCommerce-ready rewards catalogue with guided empty state, and a distinct VIP-tier ladder with overlap validation and member qualification preview.
 - Rebuilt merchant administration around the owner-selected Hub-style launch command center: one fixed Lucide sidebar, real Starfiniti identity, data-backed programme checklist, compact performance rail, audit activity, responsive drawer, and persistent light/dark theme now frame Overview, programme, customer, connector, and experience workflows without a tenant or language switcher.
 - Show eligible spend as unavailable until an authoritative published-programme currency exists instead of exposing an implementation-level minor-unit fallback in the merchant command center.

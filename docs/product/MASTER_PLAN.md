@@ -6,7 +6,9 @@
 **Purpose:** Enterprise-grade, multi-tenant loyalty platform for Shopify and WooCommerce  
 **Document role:** Master product mandate, execution plan, quality contract, and agent operating procedure  
 **Status:** Living plan  
-**Last reviewed:** 2026-08-10
+**Last reviewed:** 2026-08-13
+
+> **Active roadmap:** Completed foundation phases in this document remain historical product intent. The owner-approved, English-only WooCommerce enterprise delivery graph in `docs/plan/ENTERPRISE_ROADMAP.md` supersedes unfinished broad phases. Shopify and cash-like stored-value features are deferred.
 
 ---
 

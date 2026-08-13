@@ -13,4 +13,21 @@ Scores are evidence-based and cover implementation through the Phase 9 merchant,
 | Documentation/maintainability |      10 |      10 | Accepted ADRs, executable examples, operating files, task graph, integration/API docs, package tooling, and evidence remain versioned                                   |
 | **Total**                     | **100** |  **95** | Phase 9 administration plus guest/member delivery and controlled redemption exist; load/restore drills and deployment remain release gates                              |
 
-Automatic fail remains active until backup/restore verification exists. A higher total cannot override that missing critical gate.
+Automatic fail remains active until complete application/Auth/signing-secret recovery and the real-store pilot exist. A higher total cannot override that missing critical gate.
+
+## Whole-product readiness
+
+Engineering quality and product completeness are deliberately separate. The machine-readable baseline is `docs/plan/evaluations/product-score.json`.
+
+| Category              |  Weight | Current | Primary gap                                                                            |
+| --------------------- | ------: | ------: | -------------------------------------------------------------------------------------- |
+| Activation            |      10 |       3 | No real WooCommerce store or production-value customer                                 |
+| Feature breadth       |      25 |       8 | Earning sources, advanced rewards/VIP, referrals, campaigns, communications, migration |
+| Merchant usability    |      15 |      10 | Advanced builders, previews, approvals, and operations                                 |
+| Customer value        |      15 |       5 | Discovery, progress, referrals, communications, and full store placements              |
+| Reliability           |      15 |      13 | Real-store outage and full recovery proof                                              |
+| Operations            |      10 |       8 | Capacity and clean-room application/Auth/secret recovery                               |
+| Enterprise/commercial |      10 |       2 | Tenant SSO/SCIM, agency controls, entitlements, metering, managed billing              |
+| **Total**             | **100** |  **49** | Enterprise finish requires at least 90                                                 |
+
+Every module also requires at least 90/100 and at least 80% of every relevant category. Unexplained value differences, cross-tenant access, duplicate effects, checkout dependency, missing recovery/canary evidence, or unresolved critical/high findings fail the gate regardless of score.

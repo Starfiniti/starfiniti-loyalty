@@ -1,5 +1,16 @@
 # Iteration Log
 
+## 2026-08-13 — M00 enterprise roadmap reconstruction
+
+- Preserved the stale `agent/phase-4-woocommerce-inbox` worktree changes in a named stash, fetched repository truth, and created `codex/enterprise-roadmap` from clean `origin/main` commit `ff7978dd8faa4519a378f5bb538c7956905b2125`.
+- Reconstructed released `v0.1.10` capability from status, tasks, risks, ADRs, migrations, contracts, tests, operations, WooCommerce integration, and production evidence.
+- Reviewed current official Smile, LoyaltyLion, Yotpo, and Supabase change documentation. The comparison confirmed strong Starfiniti ledger/isolation/recovery architecture but material gaps in feature breadth, real-store proof, enterprise administration, and managed commercial operation.
+- Compared a broad parallel feature build, sequential vertical modules, and third-party loyalty-core adoption. Accepted ADR-0009: dependency-gated vertical modules with server-side pilot canaries preserve authority, compatibility, and rollback evidence best.
+- Added M00–M16 with measurable hypotheses, baselines, targets, owner inputs, acceptance, failure modes, rollout, rollback, verification, risks, docs, and evidence locations. Added a 49/100 product baseline and deterministic failures that scores cannot override.
+- The clean Windows baseline reproduced the repository's tracked CRLF Prettier warning across 180 files before lint/tests/build. M00 uses targeted changed-file formatting plus independent validation rather than rewriting unrelated release history.
+- A clean `npm ci` restored the declared worker build binary. Lint, 177 tests, all workspace types/builds, workflow/deployment/architecture/accessibility/WooCommerce/migration validators, secret scan, production audit, licences, changed-file formatting, YAML/JSON parsing, and diff safety then passed.
+- Full development audit found the pinned WordPress test runtime's ZIP advisory. Its available minor update trades it for a different high advisory, so the dependency remains pinned, production audit stays at zero, untrusted runtime archives are prohibited, and R-032 blocks the M15 security gate until upstream resolves it.
+
 ## 2026-08-11 — Repository reconstruction
 
 - Found no existing repository or implementation; preserved the user-provided design archive.
