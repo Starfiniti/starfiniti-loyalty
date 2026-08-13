@@ -425,12 +425,10 @@ from loyalty.organizations where slug = 'm05-one';
 
 insert into loyalty.commerce_connections (
   public_id, organization_id, workspace_id, platform, external_store_id,
-  external_url, display_name, key_version, signing_secret_ciphertext,
-  programme_id
+  display_name, current_key_version, signing_material_ref, programme_id
 )
 select '85000000-0000-4000-8000-000000000111', organization.id, workspace.id,
-  'woocommerce', 'm05-store', 'https://m05.example.test', 'M05 Store',
-  'v1', 'test://m05', programme.id
+  'woocommerce', 'm05-store', 'M05 Store', 'v1', 'test://m05', programme.id
 from loyalty.organizations as organization
 join loyalty.workspaces as workspace on workspace.organization_id = organization.id
 join loyalty.programmes as programme on programme.organization_id = organization.id
