@@ -511,7 +511,7 @@ declare
   referral jsonb;
   order_fact jsonb;
   target_advocate loyalty.referral_advocates%rowtype;
-  friend_customer_id bigint;
+  target_friend_customer_id bigint;
   existing_attribution loyalty.referral_attributions%rowtype;
   created_attribution loyalty.referral_attributions%rowtype;
   captured_at timestamptz;
@@ -608,7 +608,7 @@ begin
   end if;
 
   if order_fact -> 'customer' ->> 'kind' = 'registered' then
-    select identity.customer_id into strict friend_customer_id
+    select identity.customer_id into strict target_friend_customer_id
     from loyalty.customer_identities as identity
     where identity.organization_id = target_event.organization_id
       and identity.commerce_connection_id = target_event.connection_id
@@ -616,7 +616,7 @@ begin
       and identity.external_customer_id =
         order_fact -> 'customer' ->> 'externalCustomerId';
   elsif order_fact -> 'customer' ->> 'kind' = 'guest' then
-    select identity.customer_id into strict friend_customer_id
+    select identity.customer_id into strict target_friend_customer_id
     from loyalty.customer_identities as identity
     where identity.organization_id = target_event.organization_id
       and identity.commerce_connection_id = target_event.connection_id
@@ -628,13 +628,13 @@ begin
 
   perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(
     'referral-attribution:' || target_policy.programme_group_id::text || ':' ||
-    friend_customer_id::text, target_event.organization_id
+    target_friend_customer_id::text, target_event.organization_id
   ));
   select attribution.* into existing_attribution
   from loyalty.referral_attributions as attribution
   where attribution.organization_id = target_event.organization_id
     and attribution.programme_group_id = target_policy.programme_group_id
-    and attribution.friend_customer_id = friend_customer_id;
+    and attribution.friend_customer_id = target_friend_customer_id;
   if found then
     return query select existing_attribution.public_id, 'existing'::text,
       case when existing_attribution.advocate_id = target_advocate.id
@@ -667,7 +667,7 @@ begin
     shipping := decode(referral ->> 'shippingFingerprint', 'hex');
   end if;
 
-  if target_advocate.customer_id = friend_customer_id then
+  if target_advocate.customer_id = target_friend_customer_id then
     risk_codes := array_append(risk_codes, 'self_referral');
     initial_state := 'blocked';
   else
@@ -733,7 +733,8 @@ begin
     source_order_id, captured_at, attribution_expires_at, risk_codes
   ) values (
     target_event.organization_id, target_policy.programme_group_id,
-    target_policy.programme_version_id, target_advocate.id, friend_customer_id,
+    target_policy.programme_version_id, target_advocate.id,
+    target_friend_customer_id,
     target_event.connection_id, target_event.id, target_event.source_object_id,
     captured_at,
     captured_at + make_interval(days => target_policy.attribution_window_days),

@@ -245,7 +245,7 @@ select results_eq(
 );
 select throws_ok(
   $$ update loyalty.programme_referral_policies set cooling_days = 1 $$,
-  '55000', 'immutable loyalty record',
+  '55000', 'immutable loyalty history cannot be changed',
   'materialized referral policy cannot be rewritten'
 );
 
