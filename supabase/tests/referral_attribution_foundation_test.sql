@@ -279,7 +279,7 @@ insert into loyalty.customer_identities (
   external_customer_id, identity_kind, verified_at
 )
 select customer.organization_id, customer.id, connection.id,
-  customer.display_reference, 'registered', now()
+  'registered:' || customer.display_reference, 'registered', now()
 from loyalty.customers as customer
 join loyalty.commerce_connections as connection
   on connection.organization_id = customer.organization_id

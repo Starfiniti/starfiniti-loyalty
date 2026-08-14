@@ -613,15 +613,16 @@ begin
     where identity.organization_id = target_event.organization_id
       and identity.commerce_connection_id = target_event.connection_id
       and identity.identity_kind = 'registered'
-      and identity.external_customer_id =
-        order_fact -> 'customer' ->> 'externalCustomerId';
+      and identity.external_customer_id = 'registered:' ||
+        (order_fact -> 'customer' ->> 'externalCustomerId');
   elsif order_fact -> 'customer' ->> 'kind' = 'guest' then
     select identity.customer_id into strict target_friend_customer_id
     from loyalty.customer_identities as identity
     where identity.organization_id = target_event.organization_id
       and identity.commerce_connection_id = target_event.connection_id
       and identity.identity_kind = 'guest'
-      and identity.external_customer_id = order_fact -> 'customer' ->> 'guestOrderId';
+      and identity.external_customer_id = 'guest-order:' ||
+        (order_fact -> 'customer' ->> 'guestOrderId');
   else
     raise exception using errcode = '22023', message = 'invalid referral customer selector';
   end if;
