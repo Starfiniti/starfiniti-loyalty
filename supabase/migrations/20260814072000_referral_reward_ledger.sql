@@ -969,12 +969,12 @@ begin
     and job.attribution_id = target_attribution.id
     and job.state = 'processing'
   on conflict (organization_id, job_id, attempt_number) do nothing;
-  update loyalty_private.referral_reward_jobs
+  update loyalty_private.referral_reward_jobs as job
   set state = 'cancelled', lease_owner = null, lease_expires_at = null,
     last_error_code = 'source_order_refunded', updated_at = clock_timestamp()
-  where organization_id = target_attribution.organization_id
-    and attribution_id = target_attribution.id
-    and state in ('pending', 'processing', 'retryable', 'manual_review');
+  where job.organization_id = target_attribution.organization_id
+    and job.attribution_id = target_attribution.id
+    and job.state in ('pending', 'processing', 'retryable', 'manual_review');
   insert into loyalty.referral_attribution_transitions (
     organization_id, attribution_id, from_state, to_state, reason_code,
     actor_kind, actor_user_id, idempotency_key

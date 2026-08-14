@@ -356,7 +356,9 @@ export async function processWooCommerceEffect(
       return;
     }
     if (effect.kind === "refund") {
-      await processRefund(sql, workerId, event, effect);
+      await sql.begin((transaction) =>
+        processRefund(transaction, workerId, event, effect),
+      );
       return;
     }
     if (event.programme_id === null) {
@@ -822,7 +824,7 @@ export async function runReferralRewardLifecycle(
 }
 
 async function processRefund(
-  sql: Sql,
+  sql: Sql | TransactionSql,
   workerId: string,
   event: ClaimedEffect,
   effect: Extract<ParsedEffect, { kind: "refund" }>,
@@ -886,7 +888,11 @@ async function processRefund(
           ${event.canonical_event_public_id}::uuid,
           ${workerId},
           'applied',
-          'loyalty.referral.refund_rejection',
+          ${
+            referralRefund.outcome === "reversed"
+              ? "loyalty.referral.refund_compensation"
+              : "loyalty.referral.refund_rejection"
+          },
           ${`referral-refund:${referralRefund.attribution_id}`},
           ${`referral-attribution:${referralRefund.attribution_id}`},
           null,
@@ -959,7 +965,7 @@ async function processRefund(
 }
 
 async function processRefundV2(
-  sql: Sql,
+  sql: Sql | TransactionSql,
   workerId: string,
   event: ClaimedEffect,
   effect: Extract<ParsedEffect, { kind: "refund" }>,
@@ -1724,7 +1730,7 @@ async function commitAward(
 }
 
 async function commitRefund(
-  sql: Sql,
+  sql: Sql | TransactionSql,
   workerId: string,
   event: ClaimedEffect,
   refundId: string,
@@ -1761,8 +1767,7 @@ async function commitRefund(
     refundId,
   });
   const resultHash = evidenceSha256(result);
-  await sql.begin(async (transaction) => {
-    const evaluations = await transaction<EvaluationRow[]>`
+  const evaluations = await sql<EvaluationRow[]>`
       select evaluation_public_id::text
       from loyalty_private.record_programme_evaluation(
         ${event.organization_id}::bigint,
@@ -1778,15 +1783,15 @@ async function commitRefund(
         ${JSON.stringify({ lines: context.currentEvaluation.explanation })}::jsonb,
         ${new Date().toISOString()}::timestamptz
       )
-    `;
-    const evaluationId = evaluations[0]?.evaluation_public_id;
-    if (!evaluationId) throw new Error("refund_evaluation_record_failed");
-    let resultReference = `evaluation:${evaluationId}`;
-    if (context.reversalPoints > 0) {
-      if (context.originEntryPublicId === null) {
-        throw new RetryableEffectError("original_award_entry_not_found");
-      }
-      const reversals = await transaction<AwardRow[]>`
+  `;
+  const evaluationId = evaluations[0]?.evaluation_public_id;
+  if (!evaluationId) throw new Error("refund_evaluation_record_failed");
+  let resultReference = `evaluation:${evaluationId}`;
+  if (context.reversalPoints > 0) {
+    if (context.originEntryPublicId === null) {
+      throw new RetryableEffectError("original_award_entry_not_found");
+    }
+    const reversals = await sql<AwardRow[]>`
         select transaction_public_id::text
         from loyalty_private.reverse_award_points(
           ${event.organization_id}::bigint,
@@ -1797,12 +1802,12 @@ async function commitRefund(
           'Cumulative WooCommerce order refund reversal',
           ${event.occurred_at}::timestamptz
         )
-      `;
-      const transactionId = reversals[0]?.transaction_public_id;
-      if (!transactionId) throw new Error("refund_reversal_record_failed");
-      resultReference = `ledger-transaction:${transactionId}`;
-    }
-    await transaction`
+    `;
+    const transactionId = reversals[0]?.transaction_public_id;
+    if (!transactionId) throw new Error("refund_reversal_record_failed");
+    resultReference = `ledger-transaction:${transactionId}`;
+  }
+  await sql`
       select * from loyalty_private.finish_commerce_effect(
         ${event.canonical_event_public_id}::uuid,
         ${workerId},
@@ -1813,12 +1818,11 @@ async function commitRefund(
         null,
         0
       )
-    `;
-  });
+  `;
 }
 
 async function commitRefundV2(
-  sql: Sql,
+  sql: Sql | TransactionSql,
   workerId: string,
   event: ClaimedEffect,
   refundId: string,
@@ -1859,8 +1863,7 @@ async function commitRefundV2(
   });
   const resultHash = evidenceSha256(result);
   const evaluatedAt = new Date().toISOString();
-  await sql.begin(async (transaction) => {
-    const evaluations = await transaction<EvaluationRow[]>`
+  const evaluations = await sql<EvaluationRow[]>`
       select evaluation_public_id::text
       from loyalty_private.record_programme_evaluation(
         ${event.organization_id}::bigint,
@@ -1876,15 +1879,15 @@ async function commitRefundV2(
         ${JSON.stringify({ lines: context.currentEvaluation.lines })}::jsonb,
         ${evaluatedAt}::timestamptz
       )
-    `;
-    const evaluationId = evaluations[0]?.evaluation_public_id;
-    if (!evaluationId) throw new Error("refund_evaluation_record_failed");
-    let resultReference = `evaluation:${evaluationId}`;
-    if (BigInt(context.reversalPoints) > 0n) {
-      if (context.originEntryPublicId === null) {
-        throw new RetryableEffectError("original_award_entry_not_found");
-      }
-      const reversals = await transaction<AwardRow[]>`
+  `;
+  const evaluationId = evaluations[0]?.evaluation_public_id;
+  if (!evaluationId) throw new Error("refund_evaluation_record_failed");
+  let resultReference = `evaluation:${evaluationId}`;
+  if (BigInt(context.reversalPoints) > 0n) {
+    if (context.originEntryPublicId === null) {
+      throw new RetryableEffectError("original_award_entry_not_found");
+    }
+    const reversals = await sql<AwardRow[]>`
         select transaction_public_id::text
         from loyalty_private.reverse_award_points(
           ${event.organization_id}::bigint,
@@ -1895,39 +1898,39 @@ async function commitRefundV2(
           'Cumulative WooCommerce order refund reversal',
           ${event.occurred_at}::timestamptz
         )
-      `;
-      const transactionId = reversals[0]?.transaction_public_id;
-      if (!transactionId) throw new Error("refund_reversal_record_failed");
-      resultReference = `ledger-transaction:${transactionId}`;
-    }
-    const facts = await transaction<TierRefundFactRow[]>`
+    `;
+    const transactionId = reversals[0]?.transaction_public_id;
+    if (!transactionId) throw new Error("refund_reversal_record_failed");
+    resultReference = `ledger-transaction:${transactionId}`;
+  }
+  const facts = await sql<TierRefundFactRow[]>`
       select fact_public_id::text, customer_id::text, outcome
       from loyalty_private.record_tier_refund_fact_v2(
         ${event.organization_id}::bigint,
         ${context.originalEvaluationPublicId}::uuid,
         ${evaluationId}::uuid
       )
-    `;
-    const customerId = facts[0]?.customer_id;
-    if (!customerId) throw new Error("refund_tier_fact_record_failed");
-    if (event.programme_id !== null) {
-      const currentProgramme = await loadProgrammeContext(
-        transaction,
-        event.organization_id,
-        event.programme_id,
+  `;
+  const customerId = facts[0]?.customer_id;
+  if (!customerId) throw new Error("refund_tier_fact_record_failed");
+  if (event.programme_id !== null) {
+    const currentProgramme = await loadProgrammeContext(
+      sql,
+      event.organization_id,
+      event.programme_id,
+      customerId,
+    );
+    if (currentProgramme.definitionVersion === "2") {
+      await applyAdvancedTierQualificationV2(
+        sql,
+        event,
         customerId,
+        currentProgramme,
+        evaluatedAt,
       );
-      if (currentProgramme.definitionVersion === "2") {
-        await applyAdvancedTierQualificationV2(
-          transaction,
-          event,
-          customerId,
-          currentProgramme,
-          evaluatedAt,
-        );
-      }
     }
-    await transaction`
+  }
+  await sql`
       select * from loyalty_private.finish_commerce_effect(
         ${event.canonical_event_public_id}::uuid,
         ${workerId},
@@ -1938,8 +1941,7 @@ async function commitRefundV2(
         null,
         0
       )
-    `;
-  });
+  `;
 }
 
 async function applyAdvancedTierQualificationV2(

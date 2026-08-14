@@ -80,6 +80,7 @@ for (const adr of [
   "0013-capability-negotiated-native-reward-fulfilment.md",
   "0016-first-attribution-and-minimized-referral-risk.md",
   "0017-historical-referral-qualification-and-cooling.md",
+  "0018-leased-atomic-referral-reward-lifecycle.md",
 ]) {
   const relativePath = `docs/architecture/ADR/${adr}`;
   const content = readFileSync(join(root, relativePath), "utf8");

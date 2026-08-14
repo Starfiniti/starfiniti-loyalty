@@ -374,6 +374,7 @@ describe("WooCommerce effect worker", () => {
 
   it("finishes a pre-award refund after rejecting its cooling referral", async () => {
     const calls: string[] = [];
+    let transactionCount = 0;
     const refundEvent = {
       ...event,
       event_type: "commerce.order.refunded",
@@ -407,6 +408,12 @@ describe("WooCommerce effect worker", () => {
       throw new Error(`Unexpected query: ${text}`);
     };
     const fakeSql = query as unknown as Sql;
+    Object.assign(fakeSql, {
+      begin: async (callback: (transaction: Sql) => Promise<unknown>) => {
+        transactionCount += 1;
+        return callback(fakeSql);
+      },
+    });
 
     await processWooCommerceEffect(fakeSql, "worker-referral", refundEvent);
 
@@ -419,6 +426,7 @@ describe("WooCommerce effect worker", () => {
     expect(calls.some((call) => call.includes("finish_commerce_effect"))).toBe(
       true,
     );
+    expect(transactionCount).toBe(1);
   });
 
   it("quarantines malformed facts without exposing payload values", () => {
