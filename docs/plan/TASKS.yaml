@@ -936,7 +936,7 @@ tasks:
   - id: M07-CAMPAIGNS
     title: Add allowlisted audiences, segments, and campaigns
     module: M07
-    status: planned
+    status: in_progress
     dependencies: [M06-REFERRALS]
     hypothesis: Snapshot-based campaigns increase participation while atomic budgets cap liability.
     baseline: No segment or campaign engine exists.
@@ -967,8 +967,56 @@ tasks:
         liability reconciliation,
         browser calendar,
       ]
+    slices:
+      - id: M07-S01-AUDIENCE-AUTHORITY
+        status: complete
+        acceptance:
+          - versioned allowlisted audience definitions and exact pure PostgreSQL parity reject arbitrary SQL browser tags and unsupported facts
+          - tenant-derived publication and database-timed immutable snapshots retain bounded condition evidence without exposing member identities
+          - entitlement rollback blocks new targeting but preserves definitions snapshots accepted work value history and reconciliation
+          - cross-tenant idempotency conflict null-recency rolling-boundary and two-session snapshot tests pass
+        evidence:
+          - exact-head run 31773939480 passed baseline both images 42 migrations 36 pgTAP files 1770 assertions and all four WooCommerce runtime cells at 8192dd7
+          - 70 focused assertions plus the two-session probe cover storage lifecycle tenant commands exact retries rollback candidate bounds and one-snapshot concurrency
+          - adversarial security tenancy correctness complexity idiom and cruft review has no remaining blocker or should-fix finding
+      - id: M07-S02-CAMPAIGN-CONTRACT-AND-SCHEDULE
+        status: complete
+        acceptance:
+          - seven strict campaign types bind immutable audiences rewards schedules timezone exclusions caps budgets liability and control assignment
+          - preview approval pause and cancellation commands are role-derived audited idempotent and fail closed across DST boundaries
+        evidence:
+          - ADR-0022 selects explicit instants plus timezone local evidence and approval-bound private deterministic wallet assignment
+          - 14 focused contract tests cover all seven behaviors budgets liabilities offset chronology DST gaps overlaps empty-preview reconciliation exact integers and single-line command reasons
+          - additive migration 20260814081000 and 81 focused pgTAP assertions pass exact-head clean replay
+          - exact-head run 31777177961 passed baseline both images 43 migrations 37 pgTAP files 1851 assertions all four concurrency probes and all four WooCommerce runtime cells at e92f52d
+          - adversarial review replaced probabilistic control thresholds with exact salted-hash ranks aligned public and database reason validation preserved exact RPC integers and accepted empty previews without allowing empty approval
+      - id: M07-S03-ATOMIC-CAPACITY-AND-EXECUTION
+        status: in_progress
+        acceptance:
+          - limited quantity points budgets and per-member caps reserve atomically before any value effect
+          - highest-priority multiplier and explicitly additive bonuses retain snapshot explanation and exactly-once ledger evidence
+      - id: M07-S04-MILESTONE-WINBACK-TIER-REFERRAL
+        status: planned
+        acceptance:
+          - milestone win-back tier referral and limited campaign triggers use canonical facts and bounded leased processing
+          - retries refunds cancellation and control groups cannot duplicate reverse or over-issue value
+      - id: M07-S05-MERCHANT-EXPERIENCE-AND-RESULTS
+        status: planned
+        acceptance:
+          - merchants can build audiences forecast liability approve schedule pause cancel and inspect exact results in a responsive accessible calendar
+          - every metric defines its canonical fact and influenced results remain distinct from experimental incrementality
+      - id: M07-S06-CANARY-AND-CLOSE
+        status: planned
+        acceptance:
+          - exact-head CI disabled deployment Starfiniti canary full reconciliation and score at least 90 pass
     risks: [R-026, R-020]
-    docs: [docs/plan/ENTERPRISE_ROADMAP.md]
+    docs:
+      [
+        docs/plan/ENTERPRISE_ROADMAP.md,
+        docs/architecture/ADR/0021-allowlisted-audiences-and-immutable-snapshots.md,
+        docs/api/CAMPAIGNS.md,
+        docs/architecture/DATA_MODEL.md,
+      ]
     evidence: [docs/plan/evidence/M07/README.md]
 
   - id: M08-NOTIFICATIONS
