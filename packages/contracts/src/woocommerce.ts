@@ -1,5 +1,6 @@
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
+import { referralAttributionEvidenceV1 } from "./referral";
 
 const merchantOperationKey = z.string().trim().min(1).max(255);
 const merchantReason = z
@@ -220,6 +221,7 @@ export const wooCommerceOrderFactV1 = z
         .strict(),
     ]),
     paymentKind: z.enum(["money", "gift-card", "store-credit"]),
+    referral: referralAttributionEvidenceV1.nullable().optional(),
     lines: z.array(wooCommerceOrderLineV1),
     shippingTotal: wooCommerceDecimal,
     shippingRefundedTotal: wooCommerceDecimal.default("0"),

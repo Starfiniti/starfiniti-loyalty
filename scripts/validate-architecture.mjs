@@ -68,7 +68,7 @@ for (const [relativePath, markers] of required) {
   }
 }
 
-for (const adr of [
+const acceptedAdrs = [
   "0005-database-authorization-boundaries.md",
   "0006-double-entry-points-ledger.md",
   "0007-transactional-inbox-outbox.md",
@@ -78,7 +78,14 @@ for (const adr of [
   "0011-versioned-earning-rules-and-authoritative-cap-accounting.md",
   "0012-purpose-bound-merchant-activity-ingestion.md",
   "0013-capability-negotiated-native-reward-fulfilment.md",
-]) {
+  "0016-first-attribution-and-minimized-referral-risk.md",
+  "0017-historical-referral-qualification-and-cooling.md",
+  "0018-leased-atomic-referral-reward-lifecycle.md",
+  "0019-auth-derived-reversible-referral-review.md",
+  "0020-auth-derived-referral-experience-and-fact-sourced-funnel.md",
+];
+
+for (const adr of acceptedAdrs) {
   const relativePath = `docs/architecture/ADR/${adr}`;
   const content = readFileSync(join(root, relativePath), "utf8");
   for (const marker of [
@@ -99,5 +106,5 @@ for (const adr of [
 }
 
 console.log(
-  `Validated ${required.size} architecture models and 9 accepted architecture decisions.`,
+  `Validated ${required.size} architecture models and ${acceptedAdrs.length} accepted architecture decisions.`,
 );

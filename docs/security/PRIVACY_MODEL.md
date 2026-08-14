@@ -6,16 +6,18 @@ Collect the minimum data required to identify commerce facts, operate loyalty va
 
 ## Processing inventory
 
-| Data                       | Purpose                               | Source                 | Access                                                          | Retention design                                                                     |
-| -------------------------- | ------------------------------------- | ---------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| Auth user/session          | Merchant/customer authentication      | Supabase Auth          | Subject, authorized operators, Auth admins                      | Auth/session policy; revoke promptly                                                 |
-| Channel customer/order IDs | Attribution, identity, reconciliation | WooCommerce            | Tenant operators, restricted workers, subject view where needed | While connection/value evidence is retained; pseudonymize on deletion where possible |
-| Email/phone/name           | Claim/notification/support            | WooCommerce or subject | Masked, role-limited                                            | Minimized; delete/pseudonymize per request/policy                                    |
-| Order monetary/line facts  | Award/refund explanation              | WooCommerce            | Authorized tenant operators/workers                             | Contractual/accounting retention; avoid unrelated product detail                     |
-| Ledger/programme versions  | Value authority and audit             | Starfiniti             | Tenant roles, subject redacted history, auditors                | Immutable retention required for explanation                                         |
-| Raw webhook body           | Verification/debug/replay             | WooCommerce            | Restricted worker/break-glass only                              | Short configured window, then delete after canonicalization/reconciliation           |
-| Audit/support events       | Accountability/security               | Starfiniti             | Tenant owners/auditors, restricted support                      | Security/legal retention; no secrets or unnecessary PII                              |
-| Exports/backups            | Portability/recovery                  | Starfiniti             | Reauthenticated subject or explicitly authorized operators      | Direct non-persisted subject export; backup lifecycle and cryptographic deletion     |
+| Data                            | Purpose                                  | Source                                   | Access                                                          | Retention design                                                                     |
+| ------------------------------- | ---------------------------------------- | ---------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Auth user/session               | Merchant/customer authentication         | Supabase Auth                            | Subject, authorized operators, Auth admins                      | Auth/session policy; revoke promptly                                                 |
+| Channel customer/order IDs      | Attribution, identity, reconciliation    | WooCommerce                              | Tenant operators, restricted workers, subject view where needed | While connection/value evidence is retained; pseudonymize on deletion where possible |
+| Email/phone/name                | Claim/notification/support               | WooCommerce or subject                   | Masked, role-limited                                            | Minimized; delete/pseudonymize per request/policy                                    |
+| Order monetary/line facts       | Award/refund explanation                 | WooCommerce                              | Authorized tenant operators/workers                             | Contractual/accounting retention; avoid unrelated product detail                     |
+| Ledger/programme versions       | Value authority and audit                | Starfiniti                               | Tenant roles, subject redacted history, auditors                | Immutable retention required for explanation                                         |
+| Raw webhook body                | Verification/debug/replay                | WooCommerce                              | Restricted worker/break-glass only                              | Short configured window, then delete after canonicalization/reconciliation           |
+| Audit/support events            | Accountability/security                  | Starfiniti                               | Tenant owners/auditors, restricted support                      | Security/legal retention; no secrets or unnecessary PII                              |
+| Referral risk fingerprints      | Abuse equality/velocity review           | WooCommerce keyed HMAC                   | Restricted worker only                                          | Configured 1–720 hour purpose window, then bounded purge                             |
+| Referral qualification evidence | Paid-status/minimum/first-order decision | Canonical order plus immutable programme | Restricted worker; later minimized tenant/customer projection   | Immutable decision/hash evidence; excludes raw identity and risk fingerprints        |
+| Exports/backups                 | Portability/recovery                     | Starfiniti                               | Reauthenticated subject or explicitly authorized operators      | Direct non-persisted subject export; backup lifecycle and cryptographic deletion     |
 
 ## Data minimization
 
@@ -23,6 +25,8 @@ Collect the minimum data required to identify commerce facts, operate loyalty va
 - Logs store IDs/reason codes/correlation IDs, not bodies, tokens, signatures, email, phone, addresses, coupon plaintext, or free-form secrets.
 - Support views mask contact data and never expose credentials or raw webhook bodies by default.
 - Analytics uses aggregates/pseudonymous IDs; no marketing enrichment is inferred from loyalty operations.
+- Referral events send an opaque advocate UUID plus purpose-separated HMAC fingerprints. Raw IP, forwarding headers, user agent, payment tokens, shipping address, email, and name remain in WooCommerce. Only allowlisted decision reason codes survive fingerprint expiry.
+- Referral qualification stores canonical event/programme references, exact eligible spend, a first-paid-order boolean, decision, and cooling times. It does not copy customer contact data, raw order payloads, or risk fingerprints into the qualification fact.
 
 ## Subject rights workflow
 

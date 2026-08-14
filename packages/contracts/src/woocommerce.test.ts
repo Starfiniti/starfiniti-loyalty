@@ -297,6 +297,38 @@ describe("WooCommerce commerce facts", () => {
     ).toBe(true);
   });
 
+  it("accepts an opaque referral code with keyed fingerprints and rejects raw network data", () => {
+    const referral = {
+      version: "1" as const,
+      advocateCode: "55000000-0000-4000-8000-000000000001",
+      capturedAt: "2026-08-14T00:00:00Z",
+      sourceNetworkFingerprint: "a".repeat(64),
+      deviceFingerprint: "b".repeat(64),
+      paymentFingerprint: null,
+      shippingFingerprint: "c".repeat(64),
+    };
+    expect(
+      wooCommerceOrderStatusChangedPayloadV1.safeParse({
+        kind: "order_status_changed",
+        previousStatus: "pending",
+        order: { ...order, referral },
+      }).success,
+    ).toBe(true);
+    expect(
+      wooCommerceOrderStatusChangedPayloadV1.safeParse({
+        kind: "order_status_changed",
+        previousStatus: "pending",
+        order: {
+          ...order,
+          referral: {
+            ...referral,
+            sourceNetworkFingerprint: "192.0.2.1",
+          },
+        },
+      }).success,
+    ).toBe(false);
+  });
+
   it("converts decimal strings to integer minor units without floating point", () => {
     expect(wooCommerceDecimalToMinor("12.34", 2)).toBe(1234);
     expect(wooCommerceDecimalToMinor("12", 2)).toBe(1200);

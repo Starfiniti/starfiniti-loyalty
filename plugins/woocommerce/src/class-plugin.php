@@ -15,6 +15,7 @@ final class Plugin
         add_filter('woocommerce_account_menu_items', [self::class, 'accountMenuItems']);
         add_action('woocommerce_account_loyalty_endpoint', [self::class, 'renderAccount']);
         add_action('woocommerce_before_cart', [self::class, 'renderCartNotice']);
+        Referrals::boot();
         Outbox::boot();
         Commands::boot();
         Privacy::boot();
