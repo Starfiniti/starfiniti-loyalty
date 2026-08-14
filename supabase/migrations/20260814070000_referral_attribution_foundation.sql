@@ -100,7 +100,7 @@ set search_path = ''
 as $$
 begin
   perform loyalty_private.validate_programme_definition_v2_pre_referrals(
-    target_configuration
+    target_configuration - 'referralPolicy'
   );
   perform loyalty_private.validate_referral_policy_v1(target_configuration);
 end;
