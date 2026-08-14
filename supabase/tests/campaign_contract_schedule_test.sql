@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(79);
+select plan(81);
 
 select has_table('loyalty', 'campaigns', 'stable campaign identities exist');
 select has_table('loyalty', 'campaign_versions', 'campaign definitions are versioned');
@@ -659,6 +659,12 @@ select results_eq(
   'stored campaign aggregates reconcile without exposing membership'
 );
 select results_eq(
+  $$ select treatment_member_count, control_member_count
+     from loyalty.campaign_versions $$,
+  $$ values (1::bigint, 1::bigint) $$,
+  'approval materializes the exact treatment and control counts from preview'
+);
+select results_eq(
   $$ select count(*)::bigint from loyalty_private.campaign_assignments $$,
   array[2::bigint],
   'approval creates one private assignment per eligible wallet'
@@ -703,6 +709,15 @@ select throws_ok(
 );
 
 set local request.jwt.claim.sub = '89000000-0000-4000-8000-000000000002';
+select throws_ok(
+  $$ select * from loyalty.pause_campaign_version_command(
+    (select public_id from loyalty.campaign_versions where status = 'scheduled'),
+    E'Operational\nsafety pause', 'm07:campaign:pause:multiline',
+    '89000000-0000-4000-8000-000000000214'
+  ) $$,
+  '22023', 'invalid campaign pause identity',
+  'database rejects multiline operational reasons at the command boundary'
+);
 select results_eq(
   $$ select outcome, status from loyalty.pause_campaign_version_command(
     (select public_id from loyalty.campaign_versions where status = 'scheduled'),

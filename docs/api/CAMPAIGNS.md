@@ -52,7 +52,7 @@ Every definition binds one completed inclusion snapshot and at most ten complete
 
 Schedules contain an IANA timezone, explicit-offset start/end instants, and matching local start/end evidence. TypeScript and PostgreSQL compare chronological instants and independently format each instant in the selected zone. Repeated fall-back time is accepted only with its chosen offset; a spring-gap local time, unknown zone, mismatch, reversed interval, or duration over 366 days fails closed.
 
-Approval materializes the eligible inclusion-minus-exclusion wallet set and generates a private random salt. Each wallet receives one immutable SHA-256-based `treatment` or `control` assignment according to the approved 0–9,000 basis-point ratio. Merchant reads expose only eligible/treatment/control counts and an aggregate hash. `loyalty_private.campaign_controls` and `loyalty_private.campaign_assignments` have no browser, anonymous, runtime, connector, or worker table grants.
+Approval materializes the eligible inclusion-minus-exclusion wallet set and generates a private random salt. Wallets are ranked by salted SHA-256 evidence; the exact floor of the approved 0–9,000 basis-point ratio enters `control` and every remaining wallet enters `treatment`. Merchant reads expose only eligible/treatment/control counts and an aggregate hash. `loyalty_private.campaign_controls` and `loyalty_private.campaign_assignments` have no browser, anonymous, runtime, connector, or worker table grants.
 
 ## Campaign commands
 

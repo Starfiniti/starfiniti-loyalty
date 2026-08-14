@@ -986,8 +986,8 @@ tasks:
           - preview approval pause and cancellation commands are role-derived audited idempotent and fail closed across DST boundaries
         evidence:
           - ADR-0022 selects explicit instants plus timezone local evidence and approval-bound private deterministic wallet assignment
-          - 12 focused contract tests cover all seven behaviors budgets liabilities offset chronology DST gaps overlaps and preview reconciliation
-          - additive migration 20260814081000 and 79 focused pgTAP assertions await exact-head clean replay
+          - 13 focused contract tests cover all seven behaviors budgets liabilities offset chronology DST gaps overlaps preview reconciliation and single-line command reasons
+          - additive migration 20260814081000 and 81 focused pgTAP assertions await exact-head clean replay
       - id: M07-S03-ATOMIC-CAPACITY-AND-EXECUTION
         status: planned
         acceptance:

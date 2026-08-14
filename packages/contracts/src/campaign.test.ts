@@ -3,6 +3,7 @@ import {
   campaignDefinitionV1,
   campaignPreviewV1,
   campaignScheduleV1,
+  merchantPauseCampaignVersionCommandV1,
 } from "./campaign";
 
 const schedule = {
@@ -189,6 +190,20 @@ describe("campaignPreviewV1", () => {
       campaignPreviewV1.safeParse({
         ...preview,
         expectedTreatmentMembers: "80",
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe("merchantPauseCampaignVersionCommandV1", () => {
+  it("rejects multiline operational reasons at the public boundary", () => {
+    expect(
+      merchantPauseCampaignVersionCommandV1.safeParse({
+        schemaVersion: "1",
+        campaignVersionId: "87000000-0000-4000-8000-000000000701",
+        reason: "Operational\nsafety pause",
+        idempotencyKey: "campaign:pause:1",
+        correlationId: "87000000-0000-4000-8000-000000000702",
       }).success,
     ).toBe(false);
   });

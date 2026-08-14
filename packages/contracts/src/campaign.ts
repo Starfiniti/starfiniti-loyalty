@@ -26,7 +26,7 @@ const reviewReason = z
   .min(8)
   .max(1000)
   .refine(
-    (value) => !/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/u.test(value),
+    (value) => !/[\u0000-\u001f\u007f]/u.test(value),
     { message: "Reason contains unsupported control characters" },
   );
 

@@ -1246,6 +1246,13 @@ begin
         'sha256'
       ) as evidence
     from eligible
+  ), ranked as (
+    select scored.*,
+      pg_catalog.row_number() over (
+        order by scored.evidence, scored.wallet_id
+      ) as assignment_rank,
+      pg_catalog.count(*) over () as assignment_count
+    from scored
   )
   insert into loyalty_private.campaign_assignments (
     organization_id, programme_group_id, campaign_version_id,
@@ -1254,14 +1261,13 @@ begin
   )
   select target_version.organization_id, target_version.programme_group_id,
     target_version.id, target_version.audience_snapshot_id,
-    scored.customer_id, scored.wallet_id,
-    case when pg_catalog.mod(
-      (('x' || pg_catalog.substr(
-        pg_catalog.encode(scored.evidence, 'hex'), 1, 15
-      ))::bit(60)::bigint), 10000
-    ) < target_version.control_basis_points then 'control' else 'treatment' end,
-    scored.evidence
-  from scored;
+    ranked.customer_id, ranked.wallet_id,
+    case when ranked.assignment_rank <= pg_catalog.floor(
+      ranked.assignment_count::numeric
+        * target_version.control_basis_points / 10000
+    )::bigint then 'control' else 'treatment' end,
+    ranked.evidence
+  from ranked;
   select pg_catalog.count(*)::bigint,
     pg_catalog.count(*) filter (where assignment.assignment = 'treatment')::bigint,
     pg_catalog.count(*) filter (where assignment.assignment = 'control')::bigint,
@@ -1275,7 +1281,10 @@ begin
   from loyalty_private.campaign_assignments as assignment
   where assignment.organization_id = target_version.organization_id
     and assignment.campaign_version_id = target_version.id;
-  if eligible_count <> preview.eligible_members or assignment_hash is null then
+  if eligible_count <> preview.eligible_members
+    or control_count <> preview.expected_control_members
+    or treatment_count <> preview.expected_treatment_members
+    or assignment_hash is null then
     raise exception using errcode = '23514',
       message = 'campaign assignment reconciliation failed';
   end if;
