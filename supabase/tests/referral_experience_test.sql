@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(30);
+select plan(31);
 
 select ok(
   has_function_privilege(
@@ -324,6 +324,12 @@ select results_eq(
     from loyalty.get_my_referral_experiences_v1() $$,
   $$ values ('3000'::text, 'completed'::text, 14::smallint) $$,
   'customer explanation uses the published historical policy'
+);
+select results_eq(
+  $$ select currency_code, currency_minor_unit_digits
+    from loyalty.get_my_referral_experiences_v1() $$,
+  $$ values ('EUR'::text, 2::smallint) $$,
+  'customer explanation carries explicit currency precision'
 );
 
 set local request.jwt.claim.sub = '86000000-0000-4000-8000-000000000004';

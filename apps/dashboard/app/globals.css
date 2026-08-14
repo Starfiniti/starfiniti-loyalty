@@ -2573,6 +2573,667 @@ h1 {
   }
 }
 
+.member-referral-panel {
+  margin-top: 28px;
+  overflow: hidden;
+  border: 1px solid #ddd6fe;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #fafaff 0%, #fff 52%, #f8f7ff 100%);
+}
+
+.member-referral-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 22px 22px 18px;
+}
+
+.member-referral-heading-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 12px;
+  color: #4338ca;
+  background: #ede9fe;
+}
+
+.member-referral-heading-icon svg {
+  width: 21px;
+  height: 21px;
+}
+
+.member-referral-heading p,
+.member-referral-heading h3,
+.member-referral-heading span {
+  margin: 0;
+}
+
+.member-referral-heading p {
+  margin-bottom: 5px;
+  color: #4f46e5;
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.member-referral-heading h3 {
+  font-size: 18px;
+}
+
+.member-referral-heading div > span {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.member-referral-policy {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  border-top: 1px solid #ede9fe;
+  border-bottom: 1px solid #ede9fe;
+  background: #ede9fe;
+}
+
+.member-referral-policy > div {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 4px 9px;
+  padding: 15px 22px;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.member-referral-policy svg {
+  width: 16px;
+  height: 16px;
+  grid-row: 1 / 3;
+  color: #6366f1;
+}
+
+.member-referral-policy span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.member-referral-policy strong {
+  font-size: 13px;
+}
+
+.member-referral-create,
+.member-referral-share,
+.member-referral-paused {
+  margin: 20px 22px 0;
+  padding: 16px;
+  border: 1px solid #ddd6fe;
+  border-radius: 12px;
+  background: white;
+}
+
+.member-referral-create p,
+.member-referral-share p,
+.member-referral-paused span {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.member-referral-create button,
+.member-referral-share button {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 0;
+  border-radius: 8px;
+  color: white;
+  background: #4f46e5;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.member-referral-create button {
+  margin-top: 12px;
+  padding: 0 14px;
+}
+
+.member-referral-create button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.member-referral-create svg,
+.member-referral-share button svg {
+  width: 15px;
+  height: 15px;
+}
+
+.member-referral-create .action-message {
+  margin-top: 8px;
+}
+
+.member-referral-share label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.member-referral-share > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 8px;
+}
+
+.member-referral-share input {
+  min-width: 0;
+  height: 38px;
+  padding: 0 11px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  background: #fafafa;
+  font: inherit;
+  font-size: 12px;
+}
+
+.member-referral-share button {
+  padding: 0 12px;
+}
+
+.member-referral-safety {
+  margin-top: 9px !important;
+}
+
+.member-referral-live {
+  min-height: 18px;
+  margin-top: 5px !important;
+  color: #047857 !important;
+}
+
+.member-referral-paused {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  border-color: #fde68a;
+  background: #fffbeb;
+}
+
+.member-referral-paused > svg {
+  width: 19px;
+  height: 19px;
+  flex: 0 0 auto;
+  color: #b45309;
+}
+
+.member-referral-paused strong,
+.member-referral-paused span {
+  display: block;
+}
+
+.member-referral-paused span {
+  margin-top: 3px;
+}
+
+.member-referral-counts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 20px 22px;
+}
+
+.member-referral-counts > div {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 3px 7px;
+  padding: 12px;
+  border: 1px solid #ede9fe;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.member-referral-counts svg {
+  width: 15px;
+  height: 15px;
+  grid-row: 1 / 3;
+  color: #6366f1;
+}
+
+.member-referral-counts span {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.member-referral-counts strong {
+  font-size: 18px;
+}
+
+.member-referral-history {
+  padding: 20px 22px 22px;
+  border-top: 1px solid #ede9fe;
+  background: white;
+}
+
+.member-referral-history > div h4,
+.member-referral-history > div span {
+  margin: 0;
+}
+
+.member-referral-history > div h4 {
+  font-size: 14px;
+}
+
+.member-referral-history > div span {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.member-referral-history ul {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.member-referral-history-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 0;
+  border-top: 1px solid var(--border-soft);
+}
+
+.member-referral-history-icon {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  color: #6366f1;
+  background: #eef2ff;
+}
+
+.member-referral-history-row.success .member-referral-history-icon {
+  color: #047857;
+  background: #ecfdf5;
+}
+
+.member-referral-history-row.closed .member-referral-history-icon {
+  color: #78716c;
+  background: #f5f5f4;
+}
+
+.member-referral-history-row.review .member-referral-history-icon {
+  color: #b45309;
+  background: #fffbeb;
+}
+
+.member-referral-history-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.member-referral-history-row strong,
+.member-referral-history-row span,
+.member-referral-history-row small {
+  display: block;
+}
+
+.member-referral-history-row strong {
+  font-size: 12px;
+}
+
+.member-referral-history-row span,
+.member-referral-history-row small {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.member-referral-history-row b {
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.referral-performance-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.referral-performance-summary > div {
+  min-height: 122px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-content: center;
+  gap: 5px 9px;
+  padding: 19px;
+  border: 1px solid var(--merchant-border);
+  border-radius: 10px;
+  background: var(--merchant-surface);
+  box-shadow: var(--merchant-shadow);
+}
+
+.referral-performance-summary svg {
+  width: 17px;
+  height: 17px;
+  color: var(--merchant-violet);
+}
+
+.referral-performance-summary span,
+.referral-performance-summary small {
+  color: var(--merchant-muted);
+  font-size: 11px;
+}
+
+.referral-performance-summary strong,
+.referral-performance-summary small {
+  grid-column: 1 / -1;
+}
+
+.referral-performance-summary strong {
+  font-size: 24px;
+  letter-spacing: -0.03em;
+}
+
+.referral-performance-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.85fr);
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.referral-performance-panel {
+  overflow: hidden;
+  border: 1px solid var(--merchant-border);
+  border-radius: 10px;
+  background: var(--merchant-surface);
+  box-shadow: var(--merchant-shadow);
+}
+
+.referral-panel-heading.compact {
+  min-height: 91px;
+  align-items: center;
+}
+
+.referral-panel-heading.compact > svg {
+  width: 22px;
+  height: 22px;
+  color: var(--merchant-violet);
+}
+
+.referral-funnel {
+  display: grid;
+  gap: 16px;
+  padding: 22px 24px 18px;
+}
+
+.referral-funnel > div > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 13px;
+}
+
+.referral-funnel small {
+  display: block;
+  margin-top: 6px;
+  color: var(--merchant-muted);
+  font-size: 11px;
+}
+
+.referral-funnel-track {
+  height: 8px;
+  margin-top: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--merchant-canvas);
+}
+
+.referral-funnel-track span {
+  height: 100%;
+  display: block;
+  border-radius: inherit;
+  background: #a5b4fc;
+}
+
+.referral-funnel-track span.pending {
+  background: #fbbf24;
+}
+
+.referral-funnel-track span.qualified {
+  background: #10b981;
+}
+
+.referral-funnel-closed {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  border-top: 1px solid var(--merchant-border);
+  background: var(--merchant-border);
+}
+
+.referral-funnel-closed span {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 18px;
+  background: var(--merchant-surface);
+  color: var(--merchant-muted);
+  font-size: 11px;
+}
+
+.referral-funnel-closed svg {
+  width: 14px;
+  height: 14px;
+}
+
+.referral-funnel-closed strong {
+  color: var(--merchant-text);
+  font-size: 13px;
+}
+
+.referral-advocates ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.referral-advocates li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+  min-height: 65px;
+  padding: 11px 20px;
+  border-top: 1px solid var(--merchant-border);
+}
+
+.referral-advocates li > span {
+  width: 25px;
+  height: 25px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--merchant-violet);
+  background: var(--merchant-violet-soft);
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.referral-advocates strong,
+.referral-advocates small {
+  display: block;
+}
+
+.referral-advocates strong {
+  font-size: 12px;
+}
+
+.referral-advocates small {
+  margin-top: 3px;
+  color: var(--merchant-muted);
+  font-size: 10px;
+}
+
+.referral-advocates b {
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.referral-performance-empty {
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  padding: 24px;
+  color: var(--merchant-muted);
+  text-align: center;
+}
+
+.referral-performance-empty.wide {
+  min-height: 130px;
+}
+
+.referral-performance-empty svg {
+  width: 24px;
+  height: 24px;
+  color: var(--merchant-violet);
+}
+
+.referral-performance-empty p {
+  margin: 0;
+  font-size: 12px;
+}
+
+.referral-recent {
+  margin-bottom: 18px;
+}
+
+.referral-recent-table-wrap {
+  overflow-x: auto;
+}
+
+.referral-recent table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.referral-recent th,
+.referral-recent td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--merchant-border);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.referral-recent th {
+  color: var(--merchant-muted);
+  background: var(--merchant-canvas);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.referral-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--merchant-muted);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.referral-state svg {
+  width: 14px;
+  height: 14px;
+}
+
+.referral-state.success {
+  color: #047857;
+}
+
+.referral-state.review {
+  color: #b45309;
+}
+
+.referral-metric-note {
+  margin: 0;
+  padding: 14px 16px;
+  color: var(--merchant-muted);
+  background: var(--merchant-canvas);
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+@media (max-width: 1080px) {
+  .referral-performance-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .referral-performance-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .member-referral-heading,
+  .member-referral-history {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+  .member-referral-policy,
+  .member-referral-counts,
+  .referral-performance-summary,
+  .referral-funnel-closed {
+    grid-template-columns: 1fr;
+  }
+  .member-referral-create,
+  .member-referral-share,
+  .member-referral-paused {
+    margin-right: 16px;
+    margin-left: 16px;
+  }
+  .member-referral-share > div {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .member-referral-share input {
+    grid-column: 1 / -1;
+  }
+  .member-referral-counts {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+  .member-referral-history-row {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .member-referral-history-row b {
+    grid-column: 2;
+  }
+  .referral-performance-summary > div {
+    min-height: 102px;
+  }
+  .referral-funnel {
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+}
+
 /* M05 advanced VIP authoring, performance, and progression */
 .vip-workflow {
   display: grid;

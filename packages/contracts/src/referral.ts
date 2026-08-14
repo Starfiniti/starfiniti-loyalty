@@ -155,6 +155,8 @@ export const customerReferralExperienceV1 = z
     advocateRewardPoints: positiveBigintString,
     friendRewardPoints: positiveBigintString,
     minimumEligibleSpendMinor: nonNegativeBigintString,
+    currencyCode: z.string().regex(/^[A-Z]{3}$/u),
+    currencyMinorUnitDigits: z.number().int().min(0).max(3),
     qualificationStatus: z.enum(["processing", "completed"]),
     coolingDays: z.number().int().min(0).max(90),
     counts: z

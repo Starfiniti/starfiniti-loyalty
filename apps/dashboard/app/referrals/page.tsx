@@ -7,8 +7,12 @@ import {
   resolveMerchantLocale,
 } from "@/lib/merchant-locale";
 import { getMerchantProgrammeState } from "@/lib/server/programme";
-import { getReferralReviewCases } from "@/lib/server/referrals";
+import {
+  getReferralDashboard,
+  getReferralReviewCases,
+} from "@/lib/server/referrals";
 import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
+import { ReferralPerformance } from "./referral-performance";
 import { ReferralReviewQueue } from "./referral-review-queue";
 
 export default async function ReferralsPage({
@@ -31,9 +35,12 @@ export default async function ReferralsPage({
   if (tenant.kind === "unassigned") redirect(merchantLocalePath("/", locale));
 
   const programme = await getMerchantProgrammeState(tenant.context);
-  const cases = programme.programme
-    ? await getReferralReviewCases(programme.programme.id)
-    : [];
+  const [cases, dashboard] = programme.programme
+    ? await Promise.all([
+        getReferralReviewCases(programme.programme.id),
+        getReferralDashboard(programme.programme.id),
+      ])
+    : [[], null];
   const canOperate = ["owner", "admin", "operator"].includes(
     tenant.context.membershipRole,
   );
@@ -59,12 +66,12 @@ export default async function ReferralsPage({
       >
         <div className="customer-heading referrals-heading">
           <div>
-            <p className="login-eyebrow">Audited growth operations</p>
-            <h1>Referral review</h1>
+            <p className="login-eyebrow">Audited customer growth</p>
+            <h1>Referral performance &amp; review</h1>
             <p>
-              Resolve uncertain referrals and recover exhausted internal reward
-              jobs without exposing identity fingerprints or bypassing the
-              immutable ledger.
+              Follow canonical referral outcomes, understand advocate progress,
+              and resolve protected review cases without bypassing the immutable
+              ledger.
             </p>
           </div>
           <span className="referrals-heading-icon" aria-hidden="true">
@@ -73,14 +80,17 @@ export default async function ReferralsPage({
         </div>
 
         {programme.programme ? (
-          <ReferralReviewQueue
-            canOperate={canOperate}
-            cases={cases}
-            operations={cases.map((item) => ({
-              reviewId: item.reviewId,
-              operationId: crypto.randomUUID(),
-            }))}
-          />
+          <>
+            {dashboard ? <ReferralPerformance dashboard={dashboard} /> : null}
+            <ReferralReviewQueue
+              canOperate={canOperate}
+              cases={cases}
+              operations={cases.map((item) => ({
+                reviewId: item.reviewId,
+                operationId: crypto.randomUUID(),
+              }))}
+            />
+          </>
         ) : (
           <section className="customer-panel referral-empty-state">
             <UserRoundPlus aria-hidden="true" />

@@ -1,6 +1,8 @@
 import "server-only";
 import {
+  merchantReferralDashboardV1,
   referralReviewCaseV1,
+  type MerchantReferralDashboardV1,
   type ReferralReviewCaseV1,
 } from "@starfiniti/contracts";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -40,4 +42,31 @@ export async function getReferralReviewCases(
   if (error) throw new Error("referral_review_read_unavailable");
   const rows = Array.isArray(data) ? (data as UnknownRow[]) : [];
   return rows.map(reviewCaseFromRow);
+}
+
+export async function getReferralDashboard(
+  programmeId: string,
+  lookbackDays = 30,
+): Promise<MerchantReferralDashboardV1> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .schema("loyalty")
+    .rpc("get_referral_dashboard_v1", {
+      target_programme_public_id: programmeId,
+      target_lookback_days: lookbackDays,
+    });
+  if (error) throw new Error("referral_dashboard_unavailable");
+  const raw = Array.isArray(data) ? data[0] : data;
+  const row =
+    raw && typeof raw === "object" ? (raw as UnknownRow) : ({} as UnknownRow);
+  const parsed = merchantReferralDashboardV1.safeParse({
+    programmeId: row.programme_id,
+    lookbackDays: row.lookback_days,
+    generatedAt: row.generated_at,
+    totals: row.totals,
+    topAdvocates: row.top_advocates,
+    recent: row.recent,
+  });
+  if (!parsed.success) throw new Error("referral_dashboard_unavailable");
+  return parsed.data;
 }

@@ -120,6 +120,8 @@ describe("referral experience contracts", () => {
         advocateRewardPoints: "500",
         friendRewardPoints: "250",
         minimumEligibleSpendMinor: "3000",
+        currencyCode: "EUR",
+        currencyMinorUnitDigits: 2,
         qualificationStatus: "completed",
         coolingDays: 14,
         counts: {
@@ -152,6 +154,8 @@ describe("referral experience contracts", () => {
         advocateRewardPoints: "500",
         friendRewardPoints: "250",
         minimumEligibleSpendMinor: "3000",
+        currencyCode: "EUR",
+        currencyMinorUnitDigits: 2,
         qualificationStatus: "completed",
         coolingDays: 14,
         counts: {
@@ -175,6 +179,8 @@ describe("referral experience contracts", () => {
         advocateRewardPoints: "500",
         friendRewardPoints: "250",
         minimumEligibleSpendMinor: "3000",
+        currencyCode: "EUR",
+        currencyMinorUnitDigits: 2,
         qualificationStatus: "completed",
         coolingDays: 14,
         counts: {

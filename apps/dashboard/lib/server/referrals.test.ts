@@ -6,7 +6,7 @@ vi.mock("@/lib/supabase/server", () => ({
   createSupabaseServerClient: async () => ({ schema: () => ({ rpc }) }),
 }));
 
-import { getReferralReviewCases } from "./referrals";
+import { getReferralDashboard, getReferralReviewCases } from "./referrals";
 
 const baseRow = {
   review_id: "85000000-0000-4000-8000-000000000001",
@@ -75,5 +75,75 @@ describe("referral review server read", () => {
     await expect(
       getReferralReviewCases("85000000-0000-4000-8000-000000000004"),
     ).rejects.toThrow();
+  });
+
+  it("parses a reconciled fact-sourced merchant dashboard", async () => {
+    rpc.mockResolvedValue({
+      data: [
+        {
+          programme_id: "85000000-0000-4000-8000-000000000004",
+          lookback_days: 30,
+          generated_at: "2026-08-14T08:00:00Z",
+          totals: {
+            advocates: "2",
+            attributions: "2",
+            pending: "1",
+            qualified: "1",
+            rejected: "0",
+            reversed: "0",
+            advocatePointsIssued: "500",
+            friendPointsIssued: "250",
+          },
+          top_advocates: [
+            {
+              customerId: "85000000-0000-4000-8000-000000000005",
+              reference: "Advocate Example",
+              attributions: "2",
+              qualified: "1",
+              pointsIssued: "500",
+            },
+          ],
+          recent: [],
+        },
+      ],
+      error: null,
+    });
+
+    const dashboard = await getReferralDashboard(
+      "85000000-0000-4000-8000-000000000004",
+    );
+    expect(dashboard.totals.attributions).toBe("2");
+    expect(rpc).toHaveBeenCalledWith("get_referral_dashboard_v1", {
+      target_programme_public_id: "85000000-0000-4000-8000-000000000004",
+      target_lookback_days: 30,
+    });
+  });
+
+  it("fails closed when merchant funnel totals do not reconcile", async () => {
+    rpc.mockResolvedValue({
+      data: [
+        {
+          programme_id: "85000000-0000-4000-8000-000000000004",
+          lookback_days: 30,
+          generated_at: "2026-08-14T08:00:00Z",
+          totals: {
+            advocates: "2",
+            attributions: "2",
+            pending: "1",
+            qualified: "0",
+            rejected: "0",
+            reversed: "0",
+            advocatePointsIssued: "0",
+            friendPointsIssued: "0",
+          },
+          top_advocates: [],
+          recent: [],
+        },
+      ],
+      error: null,
+    });
+    await expect(
+      getReferralDashboard("85000000-0000-4000-8000-000000000004"),
+    ).rejects.toThrow("referral_dashboard_unavailable");
   });
 });

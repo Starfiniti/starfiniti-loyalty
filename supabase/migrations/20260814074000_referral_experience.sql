@@ -8,6 +8,8 @@ returns table (
   advocate_reward_points text,
   friend_reward_points text,
   minimum_eligible_spend_minor text,
+  currency_code text,
+  currency_minor_unit_digits smallint,
   qualification_status text,
   cooling_days smallint,
   total_count text,
@@ -47,6 +49,8 @@ begin
     policy.advocate_reward_points::text,
     policy.friend_reward_points::text,
     policy.minimum_eligible_spend_minor::text,
+    policy.currency_code,
+    policy.currency_minor_unit_digits,
     policy.qualification_status,
     policy.cooling_days,
     coalesce(referral_counts.total_count, 0)::text,
@@ -72,7 +76,11 @@ begin
    and programme_group.id = programme.programme_group_id
    and programme_group.status = 'active'
   join lateral (
-    select referral_policy.*
+    select referral_policy.*,
+      coalesce(version.configuration ->> 'currencyCode', 'EUR')
+        as currency_code,
+      coalesce((version.configuration ->> 'currencyMinorUnitDigits')::smallint, 2)
+        as currency_minor_unit_digits
     from loyalty.programme_versions as version
     join loyalty.programme_referral_policies as referral_policy
       on referral_policy.organization_id = version.organization_id
