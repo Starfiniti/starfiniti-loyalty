@@ -70,3 +70,26 @@ export async function getReferralDashboard(
   if (!parsed.success) throw new Error("referral_dashboard_unavailable");
   return parsed.data;
 }
+
+export type ReferralWorkspaceRead = Readonly<{
+  cases: readonly ReferralReviewCaseV1[];
+  casesAvailable: boolean;
+  dashboard: MerchantReferralDashboardV1 | null;
+  dashboardAvailable: boolean;
+}>;
+
+export async function getReferralWorkspace(
+  programmeId: string,
+): Promise<ReferralWorkspaceRead> {
+  const [casesResult, dashboardResult] = await Promise.allSettled([
+    getReferralReviewCases(programmeId),
+    getReferralDashboard(programmeId),
+  ]);
+  return {
+    cases: casesResult.status === "fulfilled" ? casesResult.value : [],
+    casesAvailable: casesResult.status === "fulfilled",
+    dashboard:
+      dashboardResult.status === "fulfilled" ? dashboardResult.value : null,
+    dashboardAvailable: dashboardResult.status === "fulfilled",
+  };
+}

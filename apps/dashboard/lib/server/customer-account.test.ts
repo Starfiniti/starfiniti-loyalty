@@ -97,7 +97,7 @@ describe("customer account referral composition", () => {
     expect(rpc).toHaveBeenCalledWith("get_my_referral_experiences_v1");
   });
 
-  it("fails closed when referral counts or URLs do not match the contract", async () => {
+  it("fails the optional referral panel closed without hiding loyalty value", async () => {
     rpc.mockImplementation((name: string) => {
       if (name === "get_my_loyalty_accounts") {
         return Promise.resolve({ data: [], error: null });
@@ -131,9 +131,30 @@ describe("customer account referral composition", () => {
       });
     });
 
-    await expect(getCustomerLoyaltyAccounts()).rejects.toThrow(
-      "customer_account_unavailable",
-    );
+    await expect(getCustomerLoyaltyAccounts()).resolves.toEqual({
+      kind: "ready",
+      accounts: [],
+    });
+  });
+
+  it("keeps the customer account available during a referral projection outage", async () => {
+    rpc.mockImplementation((name: string) => {
+      if (name === "get_my_loyalty_accounts") {
+        return Promise.resolve({ data: [], error: null });
+      }
+      if (name === "get_my_tier_progress_v1") {
+        return Promise.resolve({ data: [], error: null });
+      }
+      return Promise.resolve({
+        data: null,
+        error: { message: "referral projection unavailable" },
+      });
+    });
+
+    await expect(getCustomerLoyaltyAccounts()).resolves.toEqual({
+      kind: "ready",
+      accounts: [],
+    });
   });
 
   it("does not call a projection without an Auth subject", async () => {

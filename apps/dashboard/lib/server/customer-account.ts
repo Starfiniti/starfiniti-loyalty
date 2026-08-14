@@ -70,7 +70,7 @@ export async function getCustomerLoyaltyAccounts(): Promise<CustomerAccountState
       .rpc("get_my_tier_progress_v1", { target_as_of: asOf }),
     supabase.schema("loyalty").rpc("get_my_referral_experiences_v1"),
   ]);
-  if (result.error || progressResult.error || referralResult.error) {
+  if (result.error || progressResult.error) {
     throw new Error("customer_account_unavailable");
   }
   const progressByAccount = new Map<string, CustomerTierProgressV1>();
@@ -87,33 +87,39 @@ export async function getCustomerLoyaltyAccounts(): Promise<CustomerAccountState
     progressByAccount.set(raw.account_id, parsed.data);
   }
   const referralByAccount = new Map<string, CustomerReferralExperienceV1>();
-  for (const raw of (referralResult.data ?? []) as ReadonlyArray<
-    Readonly<Record<string, unknown>>
-  >) {
-    const parsed = customerReferralExperienceV1.safeParse({
-      accountId: raw.account_id,
-      sharingState: raw.sharing_state,
-      shareUrl: raw.share_url,
-      advocateRewardPoints: raw.advocate_reward_points,
-      friendRewardPoints: raw.friend_reward_points,
-      minimumEligibleSpendMinor: raw.minimum_eligible_spend_minor,
-      currencyCode: raw.currency_code,
-      currencyMinorUnitDigits: raw.currency_minor_unit_digits,
-      qualificationStatus: raw.qualification_status,
-      coolingDays: raw.cooling_days,
-      counts: {
-        total: raw.total_count,
-        pending: raw.pending_count,
-        qualified: raw.qualified_count,
-        rejected: raw.rejected_count,
-        reversed: raw.reversed_count,
-      },
-      history: raw.history,
-    });
-    if (!parsed.success || referralByAccount.has(parsed.data.accountId)) {
-      throw new Error("customer_account_unavailable");
+  if (!referralResult.error) {
+    try {
+      for (const raw of (referralResult.data ?? []) as ReadonlyArray<
+        Readonly<Record<string, unknown>>
+      >) {
+        const parsed = customerReferralExperienceV1.parse({
+          accountId: raw.account_id,
+          sharingState: raw.sharing_state,
+          shareUrl: raw.share_url,
+          advocateRewardPoints: raw.advocate_reward_points,
+          friendRewardPoints: raw.friend_reward_points,
+          minimumEligibleSpendMinor: raw.minimum_eligible_spend_minor,
+          currencyCode: raw.currency_code,
+          currencyMinorUnitDigits: raw.currency_minor_unit_digits,
+          qualificationStatus: raw.qualification_status,
+          coolingDays: raw.cooling_days,
+          counts: {
+            total: raw.total_count,
+            pending: raw.pending_count,
+            qualified: raw.qualified_count,
+            rejected: raw.rejected_count,
+            reversed: raw.reversed_count,
+          },
+          history: raw.history,
+        });
+        if (referralByAccount.has(parsed.accountId)) {
+          throw new Error("duplicate customer referral experience");
+        }
+        referralByAccount.set(parsed.accountId, parsed);
+      }
+    } catch {
+      referralByAccount.clear();
     }
-    referralByAccount.set(parsed.data.accountId, parsed.data);
   }
   return {
     kind: "ready",

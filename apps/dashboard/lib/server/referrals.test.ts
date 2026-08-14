@@ -6,7 +6,11 @@ vi.mock("@/lib/supabase/server", () => ({
   createSupabaseServerClient: async () => ({ schema: () => ({ rpc }) }),
 }));
 
-import { getReferralDashboard, getReferralReviewCases } from "./referrals";
+import {
+  getReferralDashboard,
+  getReferralReviewCases,
+  getReferralWorkspace,
+} from "./referrals";
 
 const baseRow = {
   review_id: "85000000-0000-4000-8000-000000000001",
@@ -145,5 +149,78 @@ describe("referral review server read", () => {
     await expect(
       getReferralDashboard("85000000-0000-4000-8000-000000000004"),
     ).rejects.toThrow("referral_dashboard_unavailable");
+  });
+
+  it("keeps performance visible when the review projection is unavailable", async () => {
+    rpc.mockImplementation((name: string) => {
+      if (name === "list_referral_review_cases") {
+        return Promise.resolve({
+          data: null,
+          error: { message: "review projection unavailable" },
+        });
+      }
+      return Promise.resolve({
+        data: [
+          {
+            programme_id: "85000000-0000-4000-8000-000000000004",
+            lookback_days: 30,
+            generated_at: "2026-08-14T08:00:00Z",
+            totals: {
+              advocates: "0",
+              attributions: "0",
+              pending: "0",
+              qualified: "0",
+              rejected: "0",
+              reversed: "0",
+              advocatePointsIssued: "0",
+              friendPointsIssued: "0",
+            },
+            top_advocates: [],
+            recent: [],
+          },
+        ],
+        error: null,
+      });
+    });
+
+    await expect(
+      getReferralWorkspace("85000000-0000-4000-8000-000000000004"),
+    ).resolves.toMatchObject({
+      cases: [],
+      casesAvailable: false,
+      dashboardAvailable: true,
+    });
+  });
+
+  it("keeps accepted review cases visible when performance is unavailable", async () => {
+    rpc.mockImplementation((name: string) => {
+      if (name === "get_referral_dashboard_v1") {
+        return Promise.resolve({
+          data: null,
+          error: { message: "dashboard projection unavailable" },
+        });
+      }
+      return Promise.resolve({
+        data: [
+          {
+            ...baseRow,
+            review_kind: "risk",
+            state: "pending_review",
+            attempt_count: null,
+            review_cycle: null,
+            error_code: null,
+          },
+        ],
+        error: null,
+      });
+    });
+
+    const workspace = await getReferralWorkspace(
+      "85000000-0000-4000-8000-000000000004",
+    );
+    expect(workspace.dashboard).toBeNull();
+    expect(workspace.dashboardAvailable).toBe(false);
+    expect(workspace.casesAvailable).toBe(true);
+    expect(workspace.cases).toHaveLength(1);
   });
 });

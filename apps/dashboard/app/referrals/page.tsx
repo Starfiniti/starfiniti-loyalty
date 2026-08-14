@@ -7,10 +7,7 @@ import {
   resolveMerchantLocale,
 } from "@/lib/merchant-locale";
 import { getMerchantProgrammeState } from "@/lib/server/programme";
-import {
-  getReferralDashboard,
-  getReferralReviewCases,
-} from "@/lib/server/referrals";
+import { getReferralWorkspace } from "@/lib/server/referrals";
 import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
 import { ReferralPerformance } from "./referral-performance";
 import { ReferralReviewQueue } from "./referral-review-queue";
@@ -35,12 +32,9 @@ export default async function ReferralsPage({
   if (tenant.kind === "unassigned") redirect(merchantLocalePath("/", locale));
 
   const programme = await getMerchantProgrammeState(tenant.context);
-  const [cases, dashboard] = programme.programme
-    ? await Promise.all([
-        getReferralReviewCases(programme.programme.id),
-        getReferralDashboard(programme.programme.id),
-      ])
-    : [[], null];
+  const workspace = programme.programme
+    ? await getReferralWorkspace(programme.programme.id)
+    : null;
   const canOperate = ["owner", "admin", "operator"].includes(
     tenant.context.membershipRole,
   );
@@ -81,15 +75,23 @@ export default async function ReferralsPage({
 
         {programme.programme ? (
           <>
-            {dashboard ? <ReferralPerformance dashboard={dashboard} /> : null}
-            <ReferralReviewQueue
-              canOperate={canOperate}
-              cases={cases}
-              operations={cases.map((item) => ({
-                reviewId: item.reviewId,
-                operationId: crypto.randomUUID(),
-              }))}
-            />
+            {workspace?.dashboard ? (
+              <ReferralPerformance dashboard={workspace.dashboard} />
+            ) : (
+              <ReferralReadUnavailable area="performance" />
+            )}
+            {workspace?.casesAvailable ? (
+              <ReferralReviewQueue
+                canOperate={canOperate}
+                cases={workspace.cases}
+                operations={workspace.cases.map((item) => ({
+                  reviewId: item.reviewId,
+                  operationId: crypto.randomUUID(),
+                }))}
+              />
+            ) : (
+              <ReferralReadUnavailable area="review queue" />
+            )}
           </>
         ) : (
           <section className="customer-panel referral-empty-state">
@@ -103,5 +105,20 @@ export default async function ReferralsPage({
         )}
       </main>
     </MerchantShell>
+  );
+}
+
+function ReferralReadUnavailable({
+  area,
+}: Readonly<{ area: "performance" | "review queue" }>) {
+  return (
+    <section className="customer-panel referral-empty-state" role="status">
+      <UserRoundPlus aria-hidden="true" />
+      <h2>Referral {area} temporarily unavailable</h2>
+      <p>
+        Existing loyalty value is unaffected. Refresh after the referral read
+        service recovers.
+      </p>
+    </section>
   );
 }
