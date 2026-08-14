@@ -237,15 +237,19 @@ select case audience.code
     when 'excluded' then '89000000-0000-4000-8000-000000000462'::uuid
     else '8a000000-0000-4000-8000-000000000461'::uuid end,
   audience.organization_id, audience.programme_group_id, audience.id, 1,
-  'published', pg_temp.m07_campaign_audience(audience.code),
+  'draft', pg_temp.m07_campaign_audience(audience.code),
   extensions.digest(
     pg_catalog.convert_to(
       pg_temp.m07_campaign_audience(audience.code)::text, 'UTF8'
     ), 'sha256'
   ),
-  audience.created_by_user_id, audience.created_by_user_id, now()
+  audience.created_by_user_id, null, null
 from loyalty.audiences as audience
 where audience.code in ('included', 'excluded', 'other');
+
+update loyalty.audience_versions
+set status = 'published', approved_by_user_id = created_by_user_id,
+  published_at = now();
 
 insert into loyalty.audience_snapshots (
   public_id, organization_id, programme_group_id, audience_version_id,
