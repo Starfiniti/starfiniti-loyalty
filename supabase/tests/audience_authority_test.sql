@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(67);
+select plan(68);
 
 select has_table('loyalty', 'audiences', 'stable audience identities exist');
 select has_table('loyalty', 'audience_versions', 'audience definitions are versioned');
@@ -357,6 +357,16 @@ select throws_ok(
   ) $$,
   '22023', 'invalid audience metric condition',
   'an inverted bigint range fails before storage'
+);
+select throws_ok(
+  $$ select * from loyalty.create_audience_draft_command(
+    '87000000-0000-4000-8000-000000000101',
+    jsonb_set(pg_temp.m07_value_audience('numeric_threshold'),
+      '{conditions,0,minimum}', '1000'::jsonb),
+    'm07:invalid:numeric', '87000000-0000-4000-8000-000000000298'
+  ) $$,
+  '22023', 'invalid audience metric condition',
+  'numeric JSON cannot disguise the contract-required exact bigint text'
 );
 select results_eq(
   $$ select outcome from loyalty.create_audience_draft_command(

@@ -224,6 +224,11 @@ begin
     or target_definition - array[
       'schemaVersion', 'code', 'name', 'description', 'match', 'conditions'
     ] <> '{}'::jsonb
+    or jsonb_typeof(target_definition -> 'schemaVersion') <> 'string'
+    or jsonb_typeof(target_definition -> 'code') <> 'string'
+    or jsonb_typeof(target_definition -> 'name') <> 'string'
+    or jsonb_typeof(target_definition -> 'description') <> 'string'
+    or jsonb_typeof(target_definition -> 'match') <> 'string'
     or target_definition ->> 'schemaVersion' <> '1'
     or coalesce(target_definition ->> 'code', '') !~ '^[a-z][a-z0-9_-]{0,79}$'
     or length(coalesce(target_definition ->> 'name', '')) not between 1 and 120
@@ -292,6 +297,9 @@ begin
       'customer_age_days', 'days_since_last_paid_order'
     )
       or operator_name not in ('at_least', 'at_most', 'between')
+      or jsonb_typeof(condition_value -> 'minimum') <> 'string'
+      or jsonb_typeof(condition_value -> 'maximum')
+        not in ('string', 'null')
       or not loyalty_private.is_bounded_bigint_text(minimum_value, true)
       or (operator_name = 'between') <> (maximum_value is not null)
       or (maximum_value is not null and (
@@ -325,6 +333,7 @@ begin
           and (
             not (window_value ?& array['kind', 'days'])
             or window_value - array['kind', 'days'] <> '{}'::jsonb
+            or jsonb_typeof(window_value -> 'days') <> 'number'
             or coalesce(window_value ->> 'days', '') !~ '^[1-9][0-9]{0,3}$'
             or (window_value ->> 'days')::integer > 3650
           )
@@ -900,6 +909,7 @@ declare
   request_hash bytea;
   snapshot_time timestamptz;
   candidate_count bigint;
+  processed_count bigint := 0;
   included_count bigint := 0;
   candidate record;
   decision record;
@@ -1006,6 +1016,11 @@ begin
       and customer.created_at <= snapshot_time
     order by wallet.id
   loop
+    processed_count := processed_count + 1;
+    if processed_count > 100000 then
+      raise exception using errcode = '54000',
+        message = 'audience snapshot exceeds the synchronous candidate limit';
+    end if;
     select evaluated.included, evaluated.evaluation into strict decision
     from loyalty_private.evaluate_audience_member_v1(
       target_version.definition, target_version.organization_id,
@@ -1024,6 +1039,7 @@ begin
       included_count := included_count + 1;
     end if;
   end loop;
+  candidate_count := processed_count;
   update loyalty.audience_snapshots as snapshot
   set state = 'complete', member_count = included_count,
     completed_at = clock_timestamp()
