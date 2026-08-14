@@ -150,15 +150,15 @@ where organization.slug in ('m07-one', 'm07-two');
 insert into loyalty.customers (
   public_id, organization_id, display_reference, created_at, updated_at
 )
-select '87000000-0000-4000-8000-000000000301', id, 'M07 A',
+select '87000000-0000-4000-8000-000000000301'::uuid, id, 'M07 A',
   now() - interval '60 days', now() - interval '60 days'
 from loyalty.organizations where slug = 'm07-one'
 union all
-select '87000000-0000-4000-8000-000000000302', id, 'M07 B',
+select '87000000-0000-4000-8000-000000000302'::uuid, id, 'M07 B',
   now() - interval '10 days', now() - interval '10 days'
 from loyalty.organizations where slug = 'm07-one'
 union all
-select '88000000-0000-4000-8000-000000000301', id, 'M07 Other',
+select '88000000-0000-4000-8000-000000000301'::uuid, id, 'M07 Other',
   now() - interval '90 days', now() - interval '90 days'
 from loyalty.organizations where slug = 'm07-two';
 
