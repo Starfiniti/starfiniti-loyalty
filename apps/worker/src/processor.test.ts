@@ -46,6 +46,79 @@ const event: ClaimedEffect = {
   },
 };
 
+const referralProgrammeConfiguration = {
+  version: "2",
+  currencyCode: "EUR",
+  currencyMinorUnitDigits: 2,
+  pendingDays: 30,
+  pointsExpireAfterDays: 365,
+  tiers: [
+    {
+      code: "rose",
+      name: "Rose",
+      minimumEligibleSpendMinor: "0",
+      pointsPerMajorUnit: "5",
+    },
+  ],
+  rewards: [],
+  earningRules: [
+    {
+      code: "purchase-base",
+      name: "Base purchase points",
+      source: "purchase",
+      enabled: true,
+      priority: 0,
+      stackable: false,
+      effect: { kind: "base_rate", pointsPerMajorUnit: "5" },
+      conditions: {
+        productIds: [],
+        categoryIds: [],
+        currencyCodes: [],
+        markets: [],
+        channels: [],
+        activityCodes: [],
+        segmentCodes: [],
+        tierCodes: [],
+        startsAt: null,
+        endsAt: null,
+      },
+      purchaseExclusions: {
+        productIds: [],
+        categoryIds: [],
+        shipping: true,
+        tax: true,
+        fees: true,
+        giftCardPayments: true,
+        storeCreditPayments: true,
+        discounts: true,
+      },
+      cap: {
+        perEventPoints: null,
+        perMemberPoints: null,
+        memberPeriod: null,
+        rollingDays: null,
+      },
+    },
+  ],
+  referralPolicy: {
+    version: "1",
+    attributionWindowDays: 30,
+    qualificationStatus: "processing",
+    coolingDays: 14,
+    minimumEligibleSpendMinor: "2500",
+    requireNewCustomer: true,
+    monthlyAdvocateReferralLimit: 10,
+    advocateReward: { kind: "points", points: "500" },
+    friendReward: { kind: "points", points: "250" },
+    risk: {
+      manualReviewEnabled: true,
+      rollingWindowHours: 24,
+      sourceNetworkReferralLimit: 2,
+      deviceReferralLimit: 2,
+    },
+  },
+} as const;
+
 describe("WooCommerce effect worker", () => {
   it("runs the bounded point expiry lifecycle and validates aggregate output", async () => {
     const validSql = (async () => [
@@ -129,6 +202,159 @@ describe("WooCommerce effect worker", () => {
         },
       }),
     ).toMatchObject({ kind: "award", awardEligible: false });
+  });
+
+  it("records processing qualification against the attributed programme without awarding purchase points", async () => {
+    const calls: string[] = [];
+    const processingEvent = {
+      ...event,
+      payload: {
+        ...(event.payload as Record<string, unknown>),
+        order: {
+          ...(event.payload as { order: Record<string, unknown> }).order,
+          status: "processing",
+          referral: {
+            version: "1",
+            advocateCode: "55000000-0000-4000-8000-000000000001",
+            capturedAt: "2026-08-12T09:00:00Z",
+            sourceNetworkFingerprint: "a".repeat(64),
+            deviceFingerprint: null,
+            paymentFingerprint: null,
+            shippingFingerprint: null,
+          },
+        },
+      },
+    } satisfies ClaimedEffect;
+    const programmeRow = {
+      programme_group_id: "8",
+      programme_version_id: "9",
+      programme_version_public_id: "00000000-0000-4000-8000-000000000009",
+      version_number: 1,
+      tier_code: "rose",
+      tier_name: "Rose",
+      minimum_eligible_spend_minor: "0",
+      points_per_major_unit: "5",
+      ordinal: 0,
+      configuration: referralProgrammeConfiguration,
+    };
+    const query = async (strings: TemplateStringsArray) => {
+      const text = strings.join("?");
+      calls.push(text);
+      if (text.includes("resolve_commerce_customer")) {
+        return [{ customer_id: "7" }];
+      }
+      if (text.includes("from loyalty.programmes as programme")) {
+        return [programmeRow];
+      }
+      if (text.includes("from loyalty.wallets as wallet")) return [];
+      if (text.includes("record_referral_attribution_v1")) {
+        return [
+          {
+            attribution_id: "00000000-0000-4000-8000-000000000071",
+            state: "captured",
+            outcome: "created",
+          },
+        ];
+      }
+      if (text.includes("get_referral_qualification_context_v1")) {
+        return [
+          {
+            attribution_id: "00000000-0000-4000-8000-000000000071",
+            programme_version_id: "9",
+            current_state: "captured",
+            qualification_status: "processing",
+            outcome: "ready",
+          },
+        ];
+      }
+      if (text.includes("from loyalty.programme_versions as version")) {
+        return [programmeRow];
+      }
+      if (text.includes("get_member_earning_rule_usage")) return [];
+      if (text.includes("record_referral_qualification_v1")) {
+        return [
+          {
+            attribution_id: "00000000-0000-4000-8000-000000000071",
+            evaluation_id: "00000000-0000-4000-8000-000000000072",
+            state: "cooling",
+            outcome: "eligible",
+            cooling_ends_at: "2026-08-26T10:00:00Z",
+          },
+        ];
+      }
+      if (text.includes("finish_commerce_effect")) return [];
+      throw new Error(`Unexpected query: ${text}`);
+    };
+    const fakeSql = query as unknown as Sql;
+    Object.assign(fakeSql, {
+      begin: async (callback: (transaction: Sql) => Promise<unknown>) =>
+        callback(fakeSql),
+    });
+
+    await processWooCommerceEffect(fakeSql, "worker-referral", processingEvent);
+
+    expect(
+      calls.some((call) => call.includes("record_referral_qualification_v1")),
+    ).toBe(true);
+    expect(
+      calls.some((call) => call.includes("commit_programme_v2_award")),
+    ).toBe(false);
+    expect(
+      calls.some(
+        (call) =>
+          call.includes("finish_commerce_effect") &&
+          call.includes("loyalty.referral.qualification"),
+      ),
+    ).toBe(true);
+  });
+
+  it("finishes a pre-award refund after rejecting its cooling referral", async () => {
+    const calls: string[] = [];
+    const refundEvent = {
+      ...event,
+      event_type: "commerce.order.refunded",
+      source_event_id: "order:42:refund:one",
+      payload: {
+        kind: "order_refunded",
+        refundId: "one",
+        refundAmount: "50.00",
+        order: {
+          ...(event.payload as { order: Record<string, unknown> }).order,
+          refundedTotal: "50.00",
+        },
+      },
+    } satisfies ClaimedEffect;
+    const query = async (strings: TemplateStringsArray) => {
+      const text = strings.join("?");
+      calls.push(text);
+      if (text.includes("reject_referral_for_refund_v1")) {
+        return [
+          {
+            attribution_id: "00000000-0000-4000-8000-000000000071",
+            state: "rejected",
+            outcome: "rejected",
+          },
+        ];
+      }
+      if (text.includes("from loyalty_private.programme_evaluations")) {
+        return [];
+      }
+      if (text.includes("finish_commerce_effect")) return [];
+      throw new Error(`Unexpected query: ${text}`);
+    };
+    const fakeSql = query as unknown as Sql;
+
+    await processWooCommerceEffect(fakeSql, "worker-referral", refundEvent);
+
+    expect(
+      calls.some((call) => call.includes("reject_referral_for_refund_v1")),
+    ).toBe(true);
+    expect(calls.some((call) => call.includes("reverse_award_points"))).toBe(
+      false,
+    );
+    expect(calls.some((call) => call.includes("finish_commerce_effect"))).toBe(
+      true,
+    );
   });
 
   it("quarantines malformed facts without exposing payload values", () => {

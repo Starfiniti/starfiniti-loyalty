@@ -28,7 +28,7 @@ The WooCommerce plugin captures the code locally and never calls the hub during 
 
 PostgreSQL resolves the friend only from the canonical event's exact connection-scoped registered or guest identity. It resolves the advocate only from the opaque code under the same tenant and programme group. A transaction-scoped advisory lock serializes the friend/programme-group decision. The first eligible advocate wins; an exact retry returns the same fact, and a different later advocate cannot replace it. Deterministic self-referral enters `blocked`. Allowlisted velocity or evidence reuse enters `pending_review` when review is enabled. Every accepted decision is an immutable attribution plus append-only transition.
 
-Fingerprint evidence is private, connection-keyed, and retained only for the configured 1–720 hour window. Public/customer tables store only allowlisted reason codes. A bounded worker purge deletes expired fingerprint rows. Attribution itself creates no ledger value; qualification, cooling, points issuance, refund reversal, and merchant review are later M06 slices and must use the normal immutable ledger and audited transition boundaries.
+Fingerprint evidence is private, connection-keyed, and retained only for the configured 1–720 hour window. Public/customer tables store only allowlisted reason codes. A bounded worker purge deletes expired fingerprint rows. Attribution itself creates no ledger value. ADR-0017 defines historical qualification and value-neutral cooling; points issuance, post-issuance refund compensation, and merchant review remain later M06 slices and must use the normal immutable ledger and audited transition boundaries.
 
 ## Alternatives considered
 

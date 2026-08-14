@@ -30,8 +30,8 @@ Contract/domain/worker tests cover invalid shapes, 1/90-day boundaries, monthly 
 - `npm run woocommerce:validate` — source, 43-message English POT, zero-JS/CSS storefront, zero render-time hub request, and PHP budget passed.
 - PHP syntax validation — all connector and runtime-smoke files passed.
 - `npm run architecture:validate` — passed locally after ADR-0016 was added.
-- Draft PR #31 exact CI run `31762510623` is pending; no clean-replay or runtime-matrix claim is made before it completes.
+- Draft PR #31 exact-head run `31763563259` passed baseline, both production images, a clean 37-migration replay, all 33 pgTAP files with 1,549 assertions including 55 focused referral assertions, both concurrency probes, and all four minimum/current HPOS/legacy WooCommerce runtime cells.
 
 ## Open limitations
 
-This slice records attribution only. It intentionally does not qualify an order, issue either reward, reverse value, expose merchant review operations, or render customer/merchant referral experiences. Those boundaries are M06-S02 through S05. Production remains disabled until all slices, recovery evidence, reconciliation, and score pass.
+This slice records attribution only. M06-S02 now owns historical qualification and value-neutral cooling. Give/get issuance, post-issuance compensation, merchant review operations, and customer/merchant referral experiences remain M06-S03 through S05. Production remains disabled until all slices, recovery evidence, reconciliation, and score pass.

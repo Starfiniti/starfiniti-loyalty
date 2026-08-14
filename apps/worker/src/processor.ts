@@ -118,6 +118,25 @@ type V2AwardRow = {
   transaction_public_id: string | null;
   outcome: string;
 };
+type ReferralQualificationContextRow = {
+  attribution_id: string | null;
+  programme_version_id: string | null;
+  current_state: string | null;
+  qualification_status: string | null;
+  outcome: string;
+};
+type ReferralQualificationRow = {
+  attribution_id: string | null;
+  evaluation_id: string | null;
+  state: string;
+  outcome: string;
+  cooling_ends_at: string | Date | null;
+};
+type ReferralRefundRow = {
+  attribution_id: string | null;
+  state: string;
+  outcome: string;
+};
 type TierQualificationContextRow = {
   metrics: unknown;
   current_tier_code: string | null;
@@ -385,13 +404,19 @@ export async function processWooCommerceEffect(
       event.programme_id,
       customerId,
     );
-    if (
-      effect.kind === "award" &&
-      effect.order.referral &&
-      context.definitionVersion === "2"
-    ) {
+    if (effect.kind === "award" && context.definitionVersion === "2") {
       if (!effect.awardEligible) {
         await sql.begin(async (transaction) => {
+          if (!effect.order.referral) {
+            await finishEffect(
+              transaction,
+              workerId,
+              event,
+              "skipped",
+              "referral.evidence_unavailable",
+            );
+            return;
+          }
           const referrals = await transaction<
             { attribution_id: string | null; state: string; outcome: string }[]
           >`
@@ -402,6 +427,27 @@ export async function processWooCommerceEffect(
           `;
           const referral = referrals[0];
           if (!referral) throw new Error("referral_attribution_record_failed");
+          const qualification = await recordReferralQualificationV1(
+            transaction,
+            event,
+            customerId,
+            effect.order,
+          );
+          if (qualification.evaluation_id && referral.attribution_id) {
+            await transaction`
+              select * from loyalty_private.finish_commerce_effect(
+                ${event.canonical_event_public_id}::uuid,
+                ${workerId},
+                'applied',
+                'loyalty.referral.qualification',
+                ${`referral-qualification:${referral.attribution_id}`},
+                ${`evaluation:${qualification.evaluation_id}`},
+                null,
+                0
+              )
+            `;
+            return;
+          }
           if (referral.outcome === "created" && referral.attribution_id) {
             await transaction`
               select * from loyalty_private.finish_commerce_effect(
@@ -427,15 +473,26 @@ export async function processWooCommerceEffect(
         });
         return;
       }
-      const referrals = await sql<
-        { attribution_id: string | null; state: string; outcome: string }[]
-      >`
-        select attribution_id::text, state, outcome
-        from loyalty_private.record_referral_attribution_v1(
-          ${event.canonical_event_public_id}::uuid
-        )
-      `;
-      if (!referrals[0]) throw new Error("referral_attribution_record_failed");
+      if (effect.order.referral) {
+        const referrals = await sql<
+          { attribution_id: string | null; state: string; outcome: string }[]
+        >`
+          select attribution_id::text, state, outcome
+          from loyalty_private.record_referral_attribution_v1(
+            ${event.canonical_event_public_id}::uuid
+          )
+        `;
+        if (!referrals[0])
+          throw new Error("referral_attribution_record_failed");
+      }
+      if (effect.order.referral || context.programme.referralPolicy) {
+        await recordReferralQualificationV1(
+          sql,
+          event,
+          customerId,
+          effect.order,
+        );
+      }
     }
     if (effect.kind === "activity") {
       if (context.definitionVersion !== "2") {
@@ -678,6 +735,16 @@ async function processRefund(
   const operation = `connection:${event.connection_id}:order:${effect.order.orderId}`;
   const awardEvaluationKey = `woo:evaluation:award:${operation}`;
   const awardLedgerKey = `woo:ledger:award:${operation}`;
+  const referralRefunds = await sql<ReferralRefundRow[]>`
+    select attribution_id::text, state, outcome
+    from loyalty_private.reject_referral_for_refund_v1(
+      ${event.canonical_event_public_id}::uuid
+    )
+  `;
+  const referralRefund = referralRefunds[0];
+  if (!referralRefund) {
+    throw new Error("referral_refund_result_unavailable");
+  }
   const originals = await sql<OriginalAwardRow[]>`
     select evaluation.public_id::text as evaluation_public_id,
       evaluation.programme_group_id::text,
@@ -714,7 +781,27 @@ async function processRefund(
     limit 1
   `;
   const original = originals[0];
-  if (!original) throw new RetryableEffectError("original_award_not_found");
+  if (!original) {
+    if (
+      referralRefund.attribution_id &&
+      referralRefund.outcome !== "compensation_required"
+    ) {
+      await sql`
+        select * from loyalty_private.finish_commerce_effect(
+          ${event.canonical_event_public_id}::uuid,
+          ${workerId},
+          'applied',
+          'loyalty.referral.refund_rejection',
+          ${`referral-refund:${referralRefund.attribution_id}`},
+          ${`referral-attribution:${referralRefund.attribution_id}`},
+          null,
+          0
+        )
+      `;
+      return;
+    }
+    throw new RetryableEffectError("original_award_not_found");
+  }
   if (original.result.version === "2") {
     await processRefundV2(sql, workerId, event, effect, original);
     return;
@@ -932,7 +1019,7 @@ async function loadProgrammeContext(
 }
 
 async function loadProgrammeVersion(
-  sql: Sql,
+  sql: Sql | TransactionSql,
   organizationId: string,
   programmeVersionIdValue: string,
 ): Promise<LegacyProgrammeContext | V2ProgrammeContext> {
@@ -1178,6 +1265,103 @@ function tierPurchaseMultiplier(context: V2ProgrammeContext): number {
   );
   if (!level) throw new Error("tier_benefit_level_unavailable");
   return level.benefits.earningMultiplierBasisPoints;
+}
+
+async function recordReferralQualificationV1(
+  sql: Sql | TransactionSql,
+  event: ClaimedEffect,
+  customerId: string,
+  order: WooCommerceOrderFactV1,
+): Promise<ReferralQualificationRow> {
+  const contexts = await sql<ReferralQualificationContextRow[]>`
+    select attribution_id::text, programme_version_id::text,
+      current_state, qualification_status, outcome
+    from loyalty_private.get_referral_qualification_context_v1(
+      ${event.canonical_event_public_id}::uuid
+    )
+  `;
+  const qualificationContext = contexts[0];
+  if (!qualificationContext) {
+    throw new Error("referral_qualification_context_unavailable");
+  }
+  if (qualificationContext.outcome !== "ready") {
+    return {
+      attribution_id: qualificationContext.attribution_id,
+      evaluation_id: null,
+      state: qualificationContext.current_state ?? "ignored",
+      outcome: qualificationContext.outcome,
+      cooling_ends_at: null,
+    };
+  }
+  if (!qualificationContext.programme_version_id) {
+    throw new Error("referral_qualification_programme_unavailable");
+  }
+  const historicalContext = await loadProgrammeVersion(
+    sql,
+    event.organization_id,
+    qualificationContext.programme_version_id,
+  );
+  if (
+    historicalContext.definitionVersion !== "2" ||
+    !historicalContext.programme.referralPolicy
+  ) {
+    throw new PermanentEffectError("referral_qualification_policy_mismatch");
+  }
+  if (
+    order.currency !== historicalContext.programme.currencyCode ||
+    order.currencyMinorUnitDigits !==
+      historicalContext.programme.currencyMinorUnitDigits
+  ) {
+    throw new PermanentEffectError("referral_qualification_currency_mismatch");
+  }
+
+  const operation = `connection:${event.connection_id}:event:${event.canonical_event_public_id}`;
+  const evaluationKey = `woo:evaluation:referral-qualification:${operation}`;
+  const usageRows = await sql<MemberRuleUsageRow[]>`
+    select rule_code, consumed_points::text
+    from loyalty_private.get_member_earning_rule_usage(
+      ${event.organization_id}::bigint,
+      ${historicalContext.programmeGroupId}::bigint,
+      ${historicalContext.programmeVersionId}::bigint,
+      ${customerId}::bigint,
+      ${event.occurred_at}::timestamptz,
+      ${evaluationKey}
+    )
+  `;
+  const orderFact = toPurchaseEarningFactV2(
+    order,
+    event,
+    historicalContext.tierCode,
+    Object.fromEntries(
+      usageRows.map((row) => [row.rule_code, row.consumed_points]),
+    ),
+    false,
+  );
+  const evaluation = evaluateEarningV2(historicalContext.programme, orderFact);
+  const inputHash = evidenceSha256({
+    version: "2",
+    programmeVersionId: historicalContext.programmeVersionId,
+    referralOrder: orderFact,
+  });
+  const resultHash = evidenceSha256(evaluation);
+  const evaluatedAt = new Date().toISOString();
+  const rows = await sql<ReferralQualificationRow[]>`
+    select attribution_id::text, evaluation_id::text, state, outcome,
+      cooling_ends_at
+    from loyalty_private.record_referral_qualification_v1(
+      ${event.canonical_event_public_id}::uuid,
+      ${Buffer.from(inputHash, "hex")},
+      ${Buffer.from(resultHash, "hex")},
+      ${JSON.stringify(evaluation)}::jsonb,
+      ${JSON.stringify({ lines: evaluation.lines })}::jsonb,
+      ${evaluatedAt}::timestamptz
+    )
+  `;
+  const qualification = rows[0];
+  if (!qualification) {
+    throw new Error("referral_qualification_record_failed");
+  }
+  return qualification;
 }
 
 async function commitAwardV2(

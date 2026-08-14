@@ -79,6 +79,7 @@ for (const adr of [
   "0012-purpose-bound-merchant-activity-ingestion.md",
   "0013-capability-negotiated-native-reward-fulfilment.md",
   "0016-first-attribution-and-minimized-referral-risk.md",
+  "0017-historical-referral-qualification-and-cooling.md",
 ]) {
   const relativePath = `docs/architecture/ADR/${adr}`;
   const content = readFileSync(join(root, relativePath), "utf8");
@@ -100,5 +101,5 @@ for (const adr of [
 }
 
 console.log(
-  `Validated ${required.size} architecture models and 10 accepted architecture decisions.`,
+  `Validated ${required.size} architecture models and 11 accepted architecture decisions.`,
 );

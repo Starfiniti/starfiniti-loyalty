@@ -79,6 +79,8 @@ Platform payloads are preserved only in the restricted delivery record. Canonica
 
 An order may carry `ReferralAttributionEvidenceV1`: one opaque advocate UUID, capture instant, and nullable purpose-separated network, device, payment, and shipping HMAC fingerprints. WooCommerce retains the raw inputs locally. The canonical event contains no IP address, user agent, email, name, payment token, or shipping address. PostgreSQL derives the tenant, programme, advocate, and friend from the signed event and connection-scoped identities, then serializes first attribution before the worker records its business-effect fence.
 
+Referral qualification derives the attribution's original immutable programme version from the canonical status event. The worker runs the shared V2 evaluator against that historical definition; PostgreSQL verifies event identity/time and result bounds, derives prior paid-order history and minimum-spend eligibility, and appends cooling/rejection/review-held evidence. A signed source-order refund rejects a value-neutral captured/review/cooling case. No referral points exist until the later cooling-completion ledger command succeeds.
+
 ## Processing states
 
 Deliveries transition only through:

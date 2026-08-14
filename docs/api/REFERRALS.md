@@ -52,4 +52,18 @@ Only `loyalty_worker` may execute `loyalty_private.record_referral_attribution_v
 
 Outcomes are `created`, `duplicate`, `existing_attribution`, `no_referral`, `policy_unavailable`, `feature_disabled`, `outside_window`, or `unknown_advocate`. Accepted initial states are `captured`, `pending_review`, or `blocked`. The first eligible friend/programme-group attribution is immutable; later decisions append transitions.
 
-This foundation issues no points. Qualification, cooling, two-sided ledger effects, refund reversal, review operations, and merchant/customer projections are subsequent M06 contracts. Disabling rollout stops new links and attribution while preserving accepted history.
+## Qualification and cooling
+
+`loyalty_private.get_referral_qualification_context_v1(canonicalEventId)` is worker-only. It derives the matching attribution, original immutable programme version, current state, and configured `processing` or `completed` status from one signed canonical order event. It accepts no tenant, customer, programme, order, attribution, or reward selector.
+
+The worker evaluates that order against the attribution's historical V2 programme with the shared purchase evaluator. `loyalty_private.record_referral_qualification_v1(...)` verifies the canonical event identifier and time, strict result shape, bounded hashes, and bigint fields before PostgreSQL independently derives the new-customer decision, checks minimum eligible spend, and appends exactly one result:
+
+- eligible `captured` -> `cooling` until event time plus policy days;
+- returning customer or below minimum -> `rejected` with a deterministic reason;
+- eligible `pending_review` -> private `review_held` evidence without changing review state.
+
+Qualification facts and their `referral_qualification` programme evaluations are immutable and private. Delayed/wrong status remains pending, and duplicates create no second fact or transition. Qualification and cooling issue no ledger value.
+
+`loyalty_private.reject_referral_for_refund_v1(canonicalEventId)` derives the source-order attribution from a signed refund. Captured, review-held, or cooling cases append `source_order_refunded -> rejected`. A previously qualified case returns `compensation_required` so the give/get ledger slice can compensate both sides atomically before changing referral state.
+
+Disabling rollout stops new links and attribution while preserving and continuing accepted qualification, refund rejection, later compensation, and history. Two-sided ledger effects, review commands, and merchant/customer projections remain subsequent M06 contracts.

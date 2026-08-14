@@ -8,7 +8,7 @@ Deliver the enterprise WooCommerce roadmap in `docs/plan/ENTERPRISE_ROADMAP.md` 
 
 M06 — referrals with minimized fraud review and reversible decisions. M00, M02, and M03 are complete; M01 remains active at its approved-real-store and full-service-recovery external gates, while M04 and M05 retain reviewed merge/deployment/canary/reconciliation closeout.
 
-M06-S01 is active on draft PR #31. The strict policy, opaque Auth-linked advocate identity, offline WooCommerce capture, purpose-separated expiring risk fingerprints, database-derived first attribution, deterministic self-referral block, reversible review state, and rollout rollback are implemented. Local lint, all workspace typechecks, 305 tests, static migration validation, PHP syntax, architecture, and WooCommerce validators pass; exact clean database replay and the four-runtime matrix remain pending CI run `31762510623`.
+M06-S01 is exact-head green on draft PR #31. Run `31763563259` passed the strict policy, opaque Auth-linked advocate identity, offline WooCommerce capture, purpose-separated expiring risk fingerprints, database-derived first attribution, deterministic self-referral block, reversible review state, rollback, clean 37-migration/1,549-assertion replay, both images/probes, and all four WooCommerce runtimes. M06-S02 is active with historical-version paid-status/minimum/new-customer qualification, reversible review hold, event-time cooling, and value-neutral refund rejection implemented locally; exact 38-migration replay remains pending.
 
 M05-S01 through S05 are exact-head green. M05-S06 shadow comparison found and fixed a predeployment Rose/Bloom/Icon displayed-versus-executable rate mismatch; all 36 V1/V2 award comparisons now match, and exact-head run `31760806620` passed. Reviewed merge, disabled deployment, a fresh recovery point, Starfiniti-only canary, reconciliation, and scoring remain open.
 
@@ -37,7 +37,7 @@ The active integrated baseline is released production commit `0ced4b666a55d836bd
 
 ## Next safe work
 
-1. M06: close exact CI for first attribution, then implement qualification/cooling, two-sided ledger value, reversible review, and customer/merchant experiences.
+1. M06: close exact CI for qualification/cooling, then implement two-sided ledger value, reversible review, and customer/merchant experiences.
 2. M05: complete reviewed merge, disabled deployment, fresh recovery point, Starfiniti-only canary, zero-drift reconciliation, and score after the exact-green shadow gate.
 3. M01: connect an approved real WooCommerce store when access is supplied and complete its value, outage, rotation, alert, and clean-room recovery gate.
 
