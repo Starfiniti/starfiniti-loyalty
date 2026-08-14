@@ -399,29 +399,6 @@ select results_eq(
   $$ select outcome from loyalty.create_audience_draft_command(
     '87000000-0000-4000-8000-000000000101',
     pg_temp.m07_value_audience('established'), 'm07:established:draft',
-    '87000000-0000-4000-8000-000000000204'
-  ) $$,
-  array['duplicate'::text],
-  'rollback still resolves an exact retry of an accepted audience draft'
-);
-select results_eq(
-  $$ select outcome from loyalty.publish_audience_version_command(
-    (select version.public_id from loyalty.audience_versions as version
-     join loyalty.audiences as audience on audience.id = version.audience_id
-     where audience.code = 'established'),
-    (select encode(version.definition_sha256, 'hex')
-     from loyalty.audience_versions as version
-     join loyalty.audiences as audience on audience.id = version.audience_id
-     where audience.code = 'established'),
-    'm07:established:publish', '87000000-0000-4000-8000-000000000206'
-  ) $$,
-  array['duplicate'::text],
-  'rollback still resolves an exact retry of an accepted publication'
-);
-select results_eq(
-  $$ select outcome from loyalty.create_audience_draft_command(
-    '87000000-0000-4000-8000-000000000101',
-    pg_temp.m07_value_audience('established'), 'm07:established:draft',
     '87000000-0000-4000-8000-000000000299'
   ) $$,
   array['duplicate'::text],
@@ -709,6 +686,29 @@ select lives_ok(
 );
 set local role authenticated;
 set local request.jwt.claim.sub = '87000000-0000-4000-8000-000000000001';
+select results_eq(
+  $$ select outcome from loyalty.create_audience_draft_command(
+    '87000000-0000-4000-8000-000000000101',
+    pg_temp.m07_value_audience('established'), 'm07:established:draft',
+    '87000000-0000-4000-8000-000000000204'
+  ) $$,
+  array['duplicate'::text],
+  'rollback still resolves an exact retry of an accepted audience draft'
+);
+select results_eq(
+  $$ select outcome from loyalty.publish_audience_version_command(
+    (select version.public_id from loyalty.audience_versions as version
+     join loyalty.audiences as audience on audience.id = version.audience_id
+     where audience.code = 'established'),
+    (select encode(version.definition_sha256, 'hex')
+     from loyalty.audience_versions as version
+     join loyalty.audiences as audience on audience.id = version.audience_id
+     where audience.code = 'established'),
+    'm07:established:publish', '87000000-0000-4000-8000-000000000206'
+  ) $$,
+  array['duplicate'::text],
+  'rollback still resolves an exact retry of an accepted publication'
+);
 select results_eq(
   $$ select outcome from loyalty.create_audience_snapshot_command(
     (select version.public_id from loyalty.audience_versions as version
