@@ -15,6 +15,7 @@ Collect the minimum data required to identify commerce facts, operate loyalty va
 | Ledger/programme versions  | Value authority and audit             | Starfiniti             | Tenant roles, subject redacted history, auditors                | Immutable retention required for explanation                                         |
 | Raw webhook body           | Verification/debug/replay             | WooCommerce            | Restricted worker/break-glass only                              | Short configured window, then delete after canonicalization/reconciliation           |
 | Audit/support events       | Accountability/security               | Starfiniti             | Tenant owners/auditors, restricted support                      | Security/legal retention; no secrets or unnecessary PII                              |
+| Referral risk fingerprints | Abuse equality/velocity review        | WooCommerce keyed HMAC | Restricted worker only                                          | Configured 1–720 hour purpose window, then bounded purge                             |
 | Exports/backups            | Portability/recovery                  | Starfiniti             | Reauthenticated subject or explicitly authorized operators      | Direct non-persisted subject export; backup lifecycle and cryptographic deletion     |
 
 ## Data minimization
@@ -23,6 +24,7 @@ Collect the minimum data required to identify commerce facts, operate loyalty va
 - Logs store IDs/reason codes/correlation IDs, not bodies, tokens, signatures, email, phone, addresses, coupon plaintext, or free-form secrets.
 - Support views mask contact data and never expose credentials or raw webhook bodies by default.
 - Analytics uses aggregates/pseudonymous IDs; no marketing enrichment is inferred from loyalty operations.
+- Referral events send an opaque advocate UUID plus purpose-separated HMAC fingerprints. Raw IP, forwarding headers, user agent, payment tokens, shipping address, email, and name remain in WooCommerce. Only allowlisted decision reason codes survive fingerprint expiry.
 
 ## Subject rights workflow
 

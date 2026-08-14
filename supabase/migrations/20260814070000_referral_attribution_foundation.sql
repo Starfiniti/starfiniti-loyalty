@@ -21,12 +21,16 @@ begin
     return;
   end if;
   if jsonb_typeof(target_policy) <> 'object'
-    or jsonb_object_length(target_policy) <> 10
     or not (target_policy ?& array[
       'version', 'attributionWindowDays', 'qualificationStatus', 'coolingDays',
       'minimumEligibleSpendMinor', 'requireNewCustomer',
       'monthlyAdvocateReferralLimit', 'advocateReward', 'friendReward', 'risk'
     ])
+    or target_policy - array[
+      'version', 'attributionWindowDays', 'qualificationStatus', 'coolingDays',
+      'minimumEligibleSpendMinor', 'requireNewCustomer',
+      'monthlyAdvocateReferralLimit', 'advocateReward', 'friendReward', 'risk'
+    ] <> '{}'::jsonb
     or target_policy ->> 'version' <> '1'
     or jsonb_typeof(target_policy -> 'attributionWindowDays') <> 'number'
     or (target_policy ->> 'attributionWindowDays') !~ '^[0-9]{1,3}$'
@@ -51,8 +55,8 @@ begin
     target_policy -> 'advocateReward', target_policy -> 'friendReward'
   ] loop
     if jsonb_typeof(target_reward) <> 'object'
-      or jsonb_object_length(target_reward) <> 2
       or not (target_reward ?& array['kind', 'points'])
+      or target_reward - array['kind', 'points'] <> '{}'::jsonb
       or target_reward ->> 'kind' <> 'points'
       or jsonb_typeof(target_reward -> 'points') <> 'string'
       or (target_reward ->> 'points') !~ '^[1-9][0-9]{0,18}$'
@@ -63,11 +67,14 @@ begin
 
   target_risk := target_policy -> 'risk';
   if jsonb_typeof(target_risk) <> 'object'
-    or jsonb_object_length(target_risk) <> 4
     or not (target_risk ?& array[
       'manualReviewEnabled', 'rollingWindowHours',
       'sourceNetworkReferralLimit', 'deviceReferralLimit'
     ])
+    or target_risk - array[
+      'manualReviewEnabled', 'rollingWindowHours',
+      'sourceNetworkReferralLimit', 'deviceReferralLimit'
+    ] <> '{}'::jsonb
     or jsonb_typeof(target_risk -> 'manualReviewEnabled') <> 'boolean'
     or jsonb_typeof(target_risk -> 'rollingWindowHours') <> 'number'
     or (target_risk ->> 'rollingWindowHours') !~ '^[0-9]{1,3}$'
@@ -530,11 +537,14 @@ begin
     return;
   end if;
   if jsonb_typeof(referral) <> 'object'
-    or jsonb_object_length(referral) <> 7
     or not (referral ?& array[
       'version', 'advocateCode', 'capturedAt', 'sourceNetworkFingerprint',
       'deviceFingerprint', 'paymentFingerprint', 'shippingFingerprint'
     ])
+    or referral - array[
+      'version', 'advocateCode', 'capturedAt', 'sourceNetworkFingerprint',
+      'deviceFingerprint', 'paymentFingerprint', 'shippingFingerprint'
+    ] <> '{}'::jsonb
     or referral ->> 'version' <> '1'
     or (referral ->> 'advocateCode') !~
       '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'

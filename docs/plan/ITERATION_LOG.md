@@ -1,5 +1,11 @@
 # Iteration Log
 
+## 2026-08-14 — M06 first-attribution foundation
+
+- Reviewed current official Smile, LoyaltyLion, and Yotpo referral behavior and accepted ADR-0016: first eligible attribution from signed WooCommerce evidence, no synchronous hub call, no browser identity authority, and only purpose-separated expiring HMAC evidence for ambiguous risk review.
+- Added the strict referral policy, one opaque Auth-linked advocate code, local WooCommerce capture, database-serialized first attribution, deterministic self-referral blocking, append-only review states, bounded fingerprint purge, and entitlement rollback. Attribution remains value-neutral until qualification and cooling pass.
+- Added 55 focused pgTAP assertions plus contract/domain/worker/runtime coverage. Local lint, all workspace typechecks, 305 tests, PHP syntax, 37-migration static validation, architecture, and WooCommerce validators pass; exact clean replay and runtime matrix are pending draft PR #31 run `31762510623`.
+
 ## 2026-08-14 — M05 progression and predeployment shadow gate
 
 - Completed bigint-safe merchant and customer tier progress, immutable history, exact next/retention/re-entry milestones, aggregate tier performance, and the responsive advanced policy builder/simulator. Exact-head run `31759304542` passed 35 migrations, 1,491 pgTAP assertions, both images, and all four WooCommerce runtimes.

@@ -102,6 +102,7 @@ select is_empty(
           'adjust_customer_points_command',
           'create_programme_command',
           'create_programme_draft_command',
+          'create_my_referral_link',
           'execute_bulk_customer_adjustment',
           'get_customer_adjustment_context',
           'get_customer_read_model',

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added the M06 referral foundation: strict versioned policy, opaque Auth-linked advocate URLs, offline WooCommerce capture with purpose-separated expiring fingerprints, database-derived first attribution, deterministic self-referral blocking, reversible risk review, and entitlement rollback without issuing value before qualification.
+
 - Added advanced VIP qualification with lifetime, rolling-day, and IANA-calendar windows; independent entry, retention, and re-entry expressions; immutable event-time facts; refund compensation; exact progress; and database-verified automatic entry, upgrade, grace, downgrade, and re-entry.
 - Added executable tier earning multipliers and fulfilment-bound tier reward benefits. Purchase awards independently prove their published tier factor, linked free-shipping/manual perks retain normal reservation and fulfilment controls, and fixed bonuses remain unmultiplied.
 - Added owner/admin-only, reason-bound, future-expiring tier overrides with immutable audit/history, continued underlying automatic qualification, bounded exactly-once worker expiry, tenant RLS, and no raw browser/worker membership-writing capability.

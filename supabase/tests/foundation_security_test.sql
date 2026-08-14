@@ -78,6 +78,7 @@ select is_empty(
           'loyalty.adjust_customer_points_command(uuid,uuid,uuid,bigint,text,text,timestamp with time zone,text,uuid)',
           'loyalty.create_programme_command(uuid,text,text,text,uuid)',
           'loyalty.create_programme_draft_command(uuid,jsonb,text,uuid)',
+          'loyalty.create_my_referral_link(uuid,uuid)',
           'loyalty.get_customer_adjustment_context(uuid,uuid)',
           'loyalty.get_customer_read_model(uuid,uuid)',
           'loyalty.get_customer_tier_progress_v1(uuid,uuid,timestamp with time zone)',
