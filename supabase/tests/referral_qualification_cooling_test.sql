@@ -135,7 +135,7 @@ select lives_ok(
 select lives_ok(
   $$ select loyalty_private.set_organization_entitlement(
     'b6000000-0000-4000-8000-000000000100', 'referrals', 'enabled', null,
-    'canary', 'test:m06-s02', 'Enable referrals', now() - interval '2 minutes', null
+    'canary', 'test:m06-s02', 'Enable referrals', now() - interval '30 days', null
   ) $$,
   'test enables referrals'
 );
