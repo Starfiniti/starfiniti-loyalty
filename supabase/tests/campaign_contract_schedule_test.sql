@@ -360,6 +360,18 @@ returns jsonb language sql stable as $$
   );
 $$;
 
+create function pg_temp.m07_stored_campaign(target_code text)
+returns jsonb language sql stable as $$
+  select version.definition
+  from loyalty.campaign_versions as version
+  join loyalty.campaigns as campaign
+    on campaign.organization_id = version.organization_id
+   and campaign.id = version.campaign_id
+  where campaign.code = target_code
+  order by version.version_number
+  limit 1;
+$$;
+
 select lives_ok(
   $$ select loyalty_private.validate_campaign_definition_v1(
     pg_temp.m07_bonus('bonus_contract')
@@ -535,7 +547,8 @@ select results_eq(
 );
 select results_eq(
   $$ select outcome from loyalty.create_campaign_draft_command(
-    '89000000-0000-4000-8000-000000000101', pg_temp.m07_bonus('autumn_bonus'),
+    '89000000-0000-4000-8000-000000000101',
+    pg_temp.m07_stored_campaign('autumn_bonus'),
     'm07:campaign:draft', '89000000-0000-4000-8000-000000000299'
   ) $$,
   array['duplicate'::text],
@@ -544,7 +557,10 @@ select results_eq(
 select throws_ok(
   $$ select * from loyalty.create_campaign_draft_command(
     '89000000-0000-4000-8000-000000000101',
-    jsonb_set(pg_temp.m07_bonus('autumn_bonus'), '{name}', '"Changed"'::jsonb),
+    jsonb_set(
+      pg_temp.m07_stored_campaign('autumn_bonus'),
+      '{name}', '"Changed"'::jsonb
+    ),
     'm07:campaign:draft', '89000000-0000-4000-8000-000000000204'
   ) $$,
   '23514', 'campaign command idempotency conflict',
@@ -786,7 +802,8 @@ set local role authenticated;
 set local request.jwt.claim.sub = '89000000-0000-4000-8000-000000000001';
 select results_eq(
   $$ select outcome from loyalty.create_campaign_draft_command(
-    '89000000-0000-4000-8000-000000000101', pg_temp.m07_bonus('autumn_bonus'),
+    '89000000-0000-4000-8000-000000000101',
+    pg_temp.m07_stored_campaign('autumn_bonus'),
     'm07:campaign:draft', '89000000-0000-4000-8000-000000000293'
   ) $$,
   array['duplicate'::text],
