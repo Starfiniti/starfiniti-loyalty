@@ -560,7 +560,7 @@ select results_eq(
 select lives_ok(
   $$ select loyalty_private.set_organization_entitlement(
     'a6000000-0000-4000-8000-000000000100', 'referrals', 'disabled', null,
-    'rollback', 'test:m06', 'Disable new referral growth after canary',
+    'manual_override', 'test:m06', 'Disable new referral growth after canary',
     now() - interval '1 second', null
   ) $$,
   'operator can disable new referral growth without touching history'
