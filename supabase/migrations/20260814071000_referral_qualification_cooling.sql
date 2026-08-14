@@ -445,7 +445,7 @@ begin
     target_attribution.organization_id, target_attribution.id,
     target_state, 'rejected', 'source_order_refunded', 'system', null,
     'refund:' || target_event.public_id::text
-  ) on conflict (organization_id, attribution_id, idempotency_key) do nothing;
+  );
   return query select target_attribution.public_id, 'rejected'::text,
     'rejected'::text;
 end;
