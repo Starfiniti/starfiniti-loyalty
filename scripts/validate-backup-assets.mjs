@@ -97,6 +97,11 @@ assert.match(
 );
 assert.match(
   borg,
+  /--compress-choice=zstd[\s\S]*--compress-level=3/u,
+  "incremental WAL transport must use the negotiated compression supported by both hosts",
+);
+assert.match(
+  borg,
   /--stats/u,
   "host backup must expose per-run transfer measurements",
 );

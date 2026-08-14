@@ -6,7 +6,7 @@
 - Confirmed the traffic did not traverse the physical uplink and was not database replication or another guest. PostgreSQL, all Supabase containers, continuous WAL archiving, the daily verified base timer, and the Borg repository remained healthy.
 - Replaced the single tar-over-stdin object with a forced read-only `rrsync` source, an owner-only incremental host stage, and normal Borg file caching while keeping the off-site repository credential off the database VM.
 - Seeded the stage from the last valid encrypted archive. The first delta run transferred 269,360,503 guest bytes, the warm run transferred 16,871,892 bytes in three seconds, and a scheduled run transferred 50,602,257 bytes and completed Borg work in 0.50 seconds instead of retransmitting 22 GB.
-- Rejected arbitrary-command use of the pull key, validated systemd and sudoers policy, extracted and byte-compared one base plus one WAL file from the new archive, and recorded ADR-0013, rollback copies, and R-033. Transfer anomaly alerting and the wider M01 full-service restore gate remain open.
+- Rejected arbitrary-command use of the pull key, validated systemd and sudoers policy, extracted and byte-compared one base plus one WAL file from the new archive, and recorded ADR-0013, rollback copies, and R-033. Negotiated zstd then reduced a measured 50,331,648 bytes of new WAL to 45,178 guest-interface bytes without increasing the three-second cycle. Transfer anomaly alerting and the wider M01 full-service restore gate remain open.
 
 ## 2026-08-13 — M03 production canary and closure
 

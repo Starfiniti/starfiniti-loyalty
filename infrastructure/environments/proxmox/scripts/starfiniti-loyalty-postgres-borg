@@ -29,6 +29,8 @@ rsync \
   --archive \
   --chmod=D700,F600 \
   --chown=root:root \
+  --compress-choice=zstd \
+  --compress-level=3 \
   --delete-delay \
   --exclude='*.partial' \
   --ignore-existing \

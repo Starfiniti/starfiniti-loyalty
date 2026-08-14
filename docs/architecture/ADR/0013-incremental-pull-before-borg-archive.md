@@ -17,7 +17,7 @@ The security boundary remains important: the database VM must not hold the off-s
 
 ## Decision
 
-Use option 3. The database-VM key is restricted to the reviewed `starfiniti-postgres-backup-rsync` wrapper, which requires an rsync server command and executes `rrsync -ro` against the fixed recovery root. The Proxmox job mirrors completed files into an owner-only systemd state directory with `.partial` files excluded, then creates the encrypted off-site archive from that normal directory with the Borg files cache enabled.
+Use option 3. The database-VM key is restricted to the reviewed `starfiniti-postgres-backup-rsync` wrapper, which requires an rsync server command and executes `rrsync -ro` against the fixed recovery root. The Proxmox job mirrors completed files into an owner-only systemd state directory with `.partial` files excluded, negotiates zstd compression for the immutable WAL/base transfer, then creates the encrypted off-site archive from that normal directory with the Borg files cache enabled.
 
 The host may delete a staged file only when the read-only source no longer retains it. Source retention remains governed by the oldest verified base backup and `pg_archivecleanup`; the host mirror and Borg retention never decide PostgreSQL's WAL deletion boundary.
 

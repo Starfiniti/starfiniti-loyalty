@@ -30,6 +30,7 @@ The host service used `borg create --content-from-command` and obtained one tar 
 - First measured incremental cycle: 269,360,503 guest bytes, representing the WAL files created since the seed; 1,377 normal files archived; 28.96 MB new Borg data; exit code zero.
 - Immediate warm-cache cycle: 16,871,892 guest bytes, three seconds end to end, 1.72 KB new Borg data; exit code zero.
 - The immediate timer-triggered archive after re-enabling completed successfully and added 824 bytes of new Borg data. The next scheduled steady-state cycle transferred 50,602,257 guest bytes (three WAL segments plus overhead), completed Borg processing in 0.50 seconds, and added 3.56 KB of new Borg data.
+- Both endpoints advertised zstd support. Enabling negotiated transport compression reduced a measured 50,331,648 bytes of newly completed WAL content to 45,178 bytes on the guest interface; the complete archive cycle still finished in three seconds.
 - Extracted one completed base backup and one WAL segment from the new normal-file archive and compared both byte-for-byte with the staged source; both matched. The owner-only verification directory was removed afterward.
 
 ## Rollback and follow-up
