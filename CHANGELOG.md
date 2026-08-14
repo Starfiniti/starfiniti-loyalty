@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added the M07 audience authority foundation: strict allowlisted predicates over canonical loyalty facts, exact bigint TypeScript/domain contracts, independently validated immutable PostgreSQL versions, database-timed private membership snapshots, Auth-derived idempotent commands, and rollback-safe campaign entitlement enforcement without arbitrary SQL, PII selectors, or browser-supplied targeting authority.
+
 - Added the M06 referral foundation: strict versioned policy, opaque Auth-linked advocate URLs, offline WooCommerce capture with purpose-separated expiring fingerprints, database-derived first attribution, deterministic self-referral blocking, reversible risk review, and entitlement rollback without issuing value before qualification.
 - Added historical-version referral qualification with configured paid-status, minimum-spend, and first-order enforcement; immutable evaluator evidence; reversible review hold; event-time return cooling; and value-neutral refund rejection before give/get ledger issuance.
 - Added bounded leased referral reward work with atomic advocate/friend award-release pairs, historical expiry lots, immutable tier evidence, ten-attempt manual-review exhaustion, and exactly-once two-sided refund compensation.

@@ -83,6 +83,7 @@ const acceptedAdrs = [
   "0018-leased-atomic-referral-reward-lifecycle.md",
   "0019-auth-derived-reversible-referral-review.md",
   "0020-auth-derived-referral-experience-and-fact-sourced-funnel.md",
+  "0021-allowlisted-audiences-and-immutable-snapshots.md",
 ];
 
 for (const adr of acceptedAdrs) {
