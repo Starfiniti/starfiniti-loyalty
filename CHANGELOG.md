@@ -6,6 +6,7 @@
 - Added historical-version referral qualification with configured paid-status, minimum-spend, and first-order enforcement; immutable evaluator evidence; reversible review hold; event-time return cooling; and value-neutral refund rejection before give/get ledger issuance.
 - Added bounded leased referral reward work with atomic advocate/friend award-release pairs, historical expiry lots, immutable tier evidence, ten-attempt manual-review exhaustion, and exactly-once two-sided refund compensation.
 - Added the referral review workspace with fingerprint-free risk cases, Auth-derived owner/admin/operator decisions, immutable reason-bound audit, read-only analyst/auditor access, and capped reviewed recovery for exhausted atomic jobs.
+- Added customer referral link sharing, give/get explanation, minimized progress/history, canonical merchant funnel and advocate performance, honest metric boundaries, independently degradable referral reads, and responsive merchant/customer experiences.
 
 - Added advanced VIP qualification with lifetime, rolling-day, and IANA-calendar windows; independent entry, retention, and re-entry expressions; immutable event-time facts; refund compensation; exact progress; and database-verified automatic entry, upgrade, grace, downgrade, and re-entry.
 - Added executable tier earning multipliers and fulfilment-bound tier reward benefits. Purchase awards independently prove their published tier factor, linked free-shipping/manual perks retain normal reservation and fulfilment controls, and fixed bonuses remain unmultiplied.

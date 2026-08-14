@@ -12,7 +12,9 @@ M06 is in progress. The referral path now remains value-neutral through attribut
 - M06-S03 exact-head run `31766887239` passes baseline, both images, a clean 39-migration replay, all 34 pgTAP files with 1,635 assertions including 86 focused referral qualification/cooling/ledger assertions, all three concurrency probes including the dedicated two-worker referral race, and all four WooCommerce runtime cells.
 - ADR-0019 and M06-S04 add an Auth-derived, reason-bound, idempotent risk decision command; a fingerprint-free merchant review projection; immutable merchant/audit evidence; and at most four reviewed ten-attempt recovery cycles for atomic internal jobs.
 - M06-S04 exact-head run `31768294674` passes baseline, both images, a clean 40-migration replay, all 34 pgTAP files with 1,668 assertions including 119 focused referral assertions, all three concurrency probes, 115 dashboard tests, 132 contract tests, the `/referrals` production route, and all four WooCommerce runtime cells.
+- ADR-0020 and M06-S05 add an Auth-derived customer share/progress/history projection, a tenant-derived fact-sourced merchant funnel, honest metric boundaries, independently degradable reads, and responsive customer/merchant experiences.
+- M06-S05 exact-head run `31770764870` passes baseline, both images, a clean 41-migration replay, all 35 pgTAP files with 1,700 assertions including 151 focused referral assertions, all three concurrency probes, 126 dashboard tests, 136 contract tests, 14 accepted ADRs, and all four WooCommerce runtime cells. Production-build browser review passed desktop/mobile, keyboard, copy/share fallback, mobile navigation, contained table overflow, and zero diagnostics.
 
 ## Open gates
 
-- Customer sharing/progress/history; merchant funnel/history; browser/accessibility evidence; disabled deployment; Starfiniti canary; reconciliation; and module score
+- Reviewed merge; disabled deployment; fresh recovery point; Starfiniti canary; reconciliation; production smoke; and module score

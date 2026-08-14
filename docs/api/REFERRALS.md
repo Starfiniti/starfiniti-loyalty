@@ -82,4 +82,12 @@ An eligible cooling transition creates one private job due at the canonical even
 
 `loyalty.retry_referral_reward_job_command(jobId, reason, idempotencyKey, correlationId)` can requeue only an atomic internal job already at its ten-attempt manual-review boundary. Attempt numbers remain cumulative. At most four merchant-reviewed cycles are allowed after the initial cycle, for 50 total claims; the fifth exhaustion remains nonclaimable for engineering reconciliation. Analyst and auditor roles remain read-only.
 
-Disabling rollout stops new links and attribution while preserving and continuing accepted qualification, reward jobs, refund rejection/compensation, review inspection/resolution, and history. Customer sharing/progress and merchant funnel/history remain the subsequent M06 experience contract.
+## Customer and merchant experience reads
+
+`loyalty.get_my_referral_experiences_v1()` accepts no arguments. It derives the live Auth subject and linked active customer accounts, then returns one strictly versioned experience per account: sharing state, canonical opaque HTTPS URL when active, current give/get policy and currency precision, reconciled current-state counts, and at most 20 newest-first identity-free history rows. Every history amount comes from that attribution's immutable historical policy version. Friend identity, order reference, risk evidence, fingerprints, and internal keys are never returned.
+
+`loyalty.get_referral_dashboard_v1(programmeId, lookbackDays)` accepts one public programme selector and a 1–365 day window. PostgreSQL derives the organization/programme group from live membership and returns active advocates, reconciled current outcomes, immutable two-sided issued points, bounded top advocates, and recent canonical referral orders. It deliberately excludes shares, clicks, signups, influenced revenue, and CAC because no authoritative fact currently supports those metrics.
+
+Both projections are optional read surfaces. A customer-projection error suppresses only the referral panel and cannot hide balances, rewards, tier progress, export, or accepted value. Merchant performance and review projections degrade independently and render explicit unavailable states rather than false zeroes. Copy and native-share actions are progressive enhancement over the selectable URL.
+
+Disabling rollout stops new links and attribution while preserving and continuing accepted qualification, reward jobs, refund rejection/compensation, review inspection/resolution, customer history, and merchant history.

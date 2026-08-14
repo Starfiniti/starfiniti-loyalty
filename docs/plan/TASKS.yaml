@@ -906,12 +906,18 @@ tasks:
           - exhausted atomic jobs require an audited review and receive at most four additional bounded ten-attempt cycles with cumulative attempt identities
           - exact-head run 31768294674 passed baseline both images clean 40-migration replay all 34 pgTAP files with 1668 assertions including 119 focused referral assertions all three concurrency probes and all four WooCommerce runtime cells
       - id: M06-S05-CUSTOMER-AND-MERCHANT-EXPERIENCE
-        status: in_progress
+        status: completed
         acceptance:
           - customers can share and inspect minimized progress and history while merchants can inspect funnel and fraud operations
           - desktop mobile keyboard screen-reader and outage review has no critical issue
+        evidence:
+          - ADR-0020 selects a no-selector Auth-derived customer projection and tenant-derived canonical merchant funnel while rejecting raw-table reads and fabricated browser metrics
+          - customer sharing exposes one opaque HTTPS URL and identity-free history while merchant performance reconciles current immutable outcomes issued points top advocates and recent canonical orders
+          - projection outages fail independently without hiding balances rewards tiers accepted review cases or other loyalty value
+          - exact-head run 31770764870 passed baseline both images clean 41-migration replay all 35 pgTAP files with 1700 assertions including 151 focused referral assertions all three concurrency probes and all four WooCommerce runtime cells
+          - production-build browser review passed desktop mobile keyboard landmark focus copy share fallback navigation overflow and zero-diagnostic checks
       - id: M06-S06-CANARY-AND-CLOSE
-        status: planned
+        status: in_progress
         acceptance:
           - exact-head CI disabled deployment Starfiniti canary full reconciliation and score at least 90 pass
     risks: [R-026]
