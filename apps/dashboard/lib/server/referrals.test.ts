@@ -1,0 +1,79 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const rpc = vi.fn();
+vi.mock("server-only", () => ({}));
+vi.mock("@/lib/supabase/server", () => ({
+  createSupabaseServerClient: async () => ({ schema: () => ({ rpc }) }),
+}));
+
+import { getReferralReviewCases } from "./referrals";
+
+const baseRow = {
+  review_id: "85000000-0000-4000-8000-000000000001",
+  attribution_id: "85000000-0000-4000-8000-000000000002",
+  advocate_reference: "Advocate 104",
+  friend_reference: "Friend 205",
+  source_order_reference: "1842",
+  risk_codes: ["source_network_velocity"],
+  qualification_decision: "review_held",
+  cooling_ends_at: "2026-08-28T00:00:00Z",
+  created_at: "2026-08-14T00:00:00Z",
+};
+
+describe("referral review server read", () => {
+  beforeEach(() => rpc.mockReset());
+
+  it("parses minimized risk and internal recovery rows", async () => {
+    rpc.mockResolvedValue({
+      data: [
+        {
+          ...baseRow,
+          review_kind: "risk",
+          state: "pending_review",
+          attempt_count: null,
+          review_cycle: null,
+          error_code: null,
+        },
+        {
+          ...baseRow,
+          review_id: "85000000-0000-4000-8000-000000000003",
+          review_kind: "reward",
+          state: "manual_review",
+          attempt_count: 10,
+          review_cycle: 0,
+          error_code: "worker_error",
+        },
+      ],
+      error: null,
+    });
+
+    const cases = await getReferralReviewCases(
+      "85000000-0000-4000-8000-000000000004",
+    );
+    expect(cases.map((item) => item.kind)).toEqual(["risk", "reward"]);
+    expect(rpc).toHaveBeenCalledWith("list_referral_review_cases", {
+      target_programme_public_id: "85000000-0000-4000-8000-000000000004",
+      target_kind: null,
+      target_limit: 100,
+    });
+  });
+
+  it("fails closed on malformed database diagnostics", async () => {
+    rpc.mockResolvedValue({
+      data: [
+        {
+          ...baseRow,
+          review_kind: "reward",
+          state: "manual_review",
+          attempt_count: 10,
+          review_cycle: 0,
+          error_code: "raw database message with spaces",
+        },
+      ],
+      error: null,
+    });
+    await expect(
+      getReferralReviewCases("85000000-0000-4000-8000-000000000004"),
+    ).rejects.toThrow();
+  });
+});

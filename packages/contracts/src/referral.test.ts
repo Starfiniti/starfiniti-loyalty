@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   createMyReferralLinkResultV1,
+  merchantResolveReferralReviewCommandV1,
+  merchantRetryReferralRewardCommandV1,
   referralAttributionEvidenceV1,
   referralPolicyV1,
+  referralReviewCaseV1,
 } from "./referral";
 
 const policy = {
@@ -97,6 +100,97 @@ describe("createMyReferralLinkResultV1", () => {
         shareUrl:
           "https://shop.example/?stf_ref=55000000-0000-4000-8000-000000000001&utm_source=customer",
         outcome: "created",
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe("referral review contracts", () => {
+  const baseCase = {
+    reviewId: "55000000-0000-4000-8000-000000000010",
+    attributionId: "55000000-0000-4000-8000-000000000011",
+    advocateReference: "Advocate 104",
+    friendReference: "Friend 205",
+    sourceOrderReference: "1842",
+    riskCodes: ["source_network_velocity"],
+    qualificationDecision: "review_held",
+    coolingEndsAt: "2026-08-28T00:00:00Z",
+    createdAt: "2026-08-14T00:00:00Z",
+  } as const;
+
+  it("accepts minimized risk and exhausted-job rows", () => {
+    expect(
+      referralReviewCaseV1.parse({
+        ...baseCase,
+        kind: "risk",
+        state: "pending_review",
+        attemptCount: null,
+        reviewCycle: null,
+        errorCode: null,
+      }).kind,
+    ).toBe("risk");
+    expect(
+      referralReviewCaseV1.parse({
+        ...baseCase,
+        kind: "reward",
+        state: "manual_review",
+        attemptCount: 10,
+        reviewCycle: 0,
+        errorCode: "worker_error",
+      }).kind,
+    ).toBe("reward");
+  });
+
+  it("rejects raw fingerprint fields and inconsistent queue states", () => {
+    expect(
+      referralReviewCaseV1.safeParse({
+        ...baseCase,
+        kind: "risk",
+        state: "pending_review",
+        attemptCount: null,
+        reviewCycle: null,
+        errorCode: null,
+        paymentFingerprint: "a".repeat(64),
+      }).success,
+    ).toBe(false);
+    expect(
+      referralReviewCaseV1.safeParse({
+        ...baseCase,
+        kind: "reward",
+        state: "retryable",
+        attemptCount: 10,
+        reviewCycle: 0,
+        errorCode: "worker_error",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("requires bounded reason-bound merchant commands", () => {
+    const common = {
+      version: "1",
+      reason: "Verified shared household evidence",
+      idempotencyKey: "referral:review:one",
+      correlationId: "55000000-0000-4000-8000-000000000012",
+    } as const;
+    expect(
+      merchantResolveReferralReviewCommandV1.safeParse({
+        ...common,
+        attributionId: "55000000-0000-4000-8000-000000000011",
+        resolution: "approved",
+      }).success,
+    ).toBe(true);
+    expect(
+      merchantRetryReferralRewardCommandV1.safeParse({
+        ...common,
+        jobId: "55000000-0000-4000-8000-000000000010",
+      }).success,
+    ).toBe(true);
+    expect(
+      merchantResolveReferralReviewCommandV1.safeParse({
+        ...common,
+        reason: "short",
+        attributionId: "55000000-0000-4000-8000-000000000011",
+        resolution: "rejected",
       }).success,
     ).toBe(false);
   });

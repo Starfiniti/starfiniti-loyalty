@@ -7037,6 +7037,287 @@ html[data-dashboard-theme="dark"] {
   box-shadow: var(--merchant-shadow);
 }
 
+.referrals-page > * {
+  width: min(100%, 1160px);
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.referrals-heading {
+  align-items: center;
+}
+
+.referrals-heading-icon {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--merchant-violet) 24%, transparent);
+  border-radius: 14px;
+  color: var(--merchant-violet);
+  background: var(--merchant-violet-soft);
+}
+
+.referrals-heading-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.referral-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.referral-summary-grid > div {
+  min-height: 118px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-content: center;
+  gap: 6px 10px;
+  padding: 20px;
+  border: 1px solid var(--merchant-border);
+  border-radius: 10px;
+  background: var(--merchant-surface);
+  box-shadow: var(--merchant-shadow);
+}
+
+.referral-summary-grid svg {
+  width: 18px;
+  height: 18px;
+  color: var(--merchant-violet);
+}
+
+.referral-summary-grid span,
+.referral-summary-grid small {
+  color: var(--merchant-muted);
+  font-size: 12px;
+}
+
+.referral-summary-grid strong,
+.referral-summary-grid small {
+  grid-column: 1 / -1;
+}
+
+.referral-summary-grid strong {
+  font-size: 22px;
+  letter-spacing: -0.025em;
+}
+
+.referral-review-panel {
+  overflow: hidden;
+  border: 1px solid var(--merchant-border);
+  border-radius: 10px;
+  background: var(--merchant-surface);
+  box-shadow: var(--merchant-shadow);
+}
+
+.referral-panel-heading {
+  min-height: 108px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px;
+  border-bottom: 1px solid var(--merchant-border);
+}
+
+.referral-panel-heading h2 {
+  margin: 4px 0 7px;
+  font-size: 20px;
+  letter-spacing: -0.02em;
+}
+
+.referral-panel-heading p:last-child {
+  max-width: 680px;
+  margin: 0;
+  color: var(--merchant-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.referral-review-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  padding: 18px;
+}
+
+.referral-review-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--merchant-border);
+  border-radius: 10px;
+  background: var(--merchant-canvas);
+}
+
+.referral-review-card > header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 18px;
+  border-bottom: 1px solid var(--merchant-border);
+}
+
+.referral-review-icon {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 10px;
+  color: #b15d00;
+  background: #fff3dd;
+}
+
+.referral-review-card.reward .referral-review-icon {
+  color: #d92d3e;
+  background: #ffe8ea;
+}
+
+.referral-review-icon svg {
+  width: 19px;
+  height: 19px;
+}
+
+.referral-review-card h3 {
+  margin: 8px 0 2px;
+  font-size: 16px;
+}
+
+.referral-review-card header p {
+  margin: 0;
+  color: var(--merchant-muted);
+  font-size: 12px;
+}
+
+.referral-review-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--merchant-border);
+}
+
+.referral-review-meta > div {
+  min-width: 0;
+  padding-right: 12px;
+}
+
+.referral-review-meta > div + div {
+  padding-left: 12px;
+  border-left: 1px solid var(--merchant-border);
+}
+
+.referral-review-meta dt,
+.referral-review-meta dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.referral-review-meta dt {
+  margin-bottom: 5px;
+  color: var(--merchant-muted);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.referral-review-meta dd {
+  font-size: 12px;
+  font-weight: 620;
+  line-height: 1.45;
+}
+
+.referral-risk-codes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding: 14px 18px 0;
+}
+
+.referral-review-form {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+}
+
+.referral-review-form label {
+  display: grid;
+  gap: 7px;
+  color: var(--merchant-text);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.referral-review-form textarea {
+  width: 100%;
+  resize: vertical;
+  padding: 10px 11px;
+  border: 1px solid var(--merchant-border-strong);
+  border-radius: 8px;
+  color: var(--merchant-text);
+  background: var(--merchant-surface);
+  font: inherit;
+  font-weight: 450;
+  line-height: 1.5;
+}
+
+.referral-review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.referral-value-note,
+.referral-read-only-note {
+  margin: 0;
+  color: var(--merchant-muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.referral-read-only-note {
+  padding: 18px;
+}
+
+.referral-review-form .action-message:empty {
+  display: none;
+}
+
+.referral-empty-state {
+  min-height: 270px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  padding: 36px 24px;
+  text-align: center;
+}
+
+.referral-empty-state > svg {
+  width: 32px;
+  height: 32px;
+  margin-bottom: 4px;
+  color: var(--merchant-violet);
+}
+
+.referral-empty-state h2,
+.referral-empty-state h3,
+.referral-empty-state p {
+  margin: 0;
+}
+
+.referral-empty-state p {
+  max-width: 520px;
+  color: var(--merchant-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
 .is-spinning {
   animation: merchant-spin 700ms linear infinite;
 }
@@ -7055,6 +7336,9 @@ html[data-dashboard-theme="dark"] {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0 22px;
+  }
+  .referral-review-list {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -7100,6 +7384,12 @@ html[data-dashboard-theme="dark"] {
   .merchant-main.experience-page {
     padding: 26px 20px 46px;
   }
+  .referral-summary-grid {
+    grid-template-columns: 1fr;
+  }
+  .referral-summary-grid > div {
+    min-height: 98px;
+  }
   .programme-context-strip {
     flex-wrap: wrap;
     gap: 12px 18px;
@@ -7127,6 +7417,35 @@ html[data-dashboard-theme="dark"] {
   }
   .overview-intro h1 {
     font-size: 23px;
+  }
+  .referrals-heading-icon {
+    display: none;
+  }
+  .referral-panel-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .referral-review-list {
+    padding: 12px;
+  }
+  .referral-review-meta {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .referral-review-meta > div + div {
+    padding-top: 12px;
+    padding-left: 0;
+    border-top: 1px solid var(--merchant-border);
+    border-left: 0;
+  }
+  .referral-review-actions,
+  .referral-review-actions .ui-button,
+  .referral-review-form > .ui-button {
+    width: 100%;
+  }
+  .referral-review-actions .ui-button,
+  .referral-review-form > .ui-button {
+    justify-content: center;
   }
   .programme-context-strip > span:not(.ui-badge):not(.programme-tier-summary),
   .programme-tier-summary {
