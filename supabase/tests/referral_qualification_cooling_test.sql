@@ -119,16 +119,24 @@ as $$
   }'::jsonb;
 $$;
 
+insert into loyalty.entitlement_catalogue (
+  catalogue_version, capability_key, display_name, protected_value_path,
+  self_hosted_default_enabled, managed_default_enabled, effective_from
+) values
+  (2, 'programme.v2', 'Competitive earning rules', false, true, false,
+    now() - interval '40 days'),
+  (2, 'referrals', 'Referrals', false, true, false,
+    now() - interval '40 days');
 select lives_ok(
   $$ select loyalty_private.set_deployment_mode(
-    'managed', 1, 'test:m06-s02', 'Exercise referral cooling', now() - interval '40 days'
+    'managed', 2, 'test:m06-s02', 'Exercise referral cooling', now() - interval '40 days'
   ) $$,
   'test enters managed deployment mode'
 );
 select lives_ok(
   $$ select loyalty_private.set_organization_entitlement(
     'b6000000-0000-4000-8000-000000000100', 'programme.v2', 'enabled', null,
-    'canary', 'test:m06-s02', 'Enable V2', now() - interval '2 minutes', null
+    'canary', 'test:m06-s02', 'Enable V2', now() - interval '30 days', null
   ) $$,
   'test enables V2'
 );
