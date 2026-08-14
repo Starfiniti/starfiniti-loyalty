@@ -11,7 +11,7 @@
 - M03 is complete at 93/100: the strict V2 contract, shared exact evaluator, WooCommerce and signed activity inputs, database-authoritative publication/cap/ledger boundaries, and Hub-style rule builder/simulator passed PR #26 exact-head run `31736396618`, release run `31738294379`, additive production migration, explicit Starfiniti tenant canary, and authenticated desktop/mobile production smoke.
 - M04 expanded rewards and audited fulfilment is now the active dependency-safe implementation module while M01 continues waiting only for an approved real WooCommerce store.
 - M01 live read-only reconstruction confirms zero commerce connections, customers, wallets, ledger transactions, reservations, events, effects, or commands. The real-store pilot cannot accidentally overlap existing accepted value.
-- `npm run pilot:validate` enforces 22 M01 checks. Database WAL recovery is proven; the live recursive-export race was repaired with a snapshot-safe exporter, retained-base WAL cleanup, a fresh physical base, a forced-WAL concurrency test, two manual encrypted archives, and one timer-triggered archive. Twenty-one store/application/alert/reconciliation checks remain pending; application/Auth/signing recovery is not claimed.
+- `npm run pilot:validate` enforces 22 M01 checks. Database WAL recovery is proven. The later tar-over-stdin transfer-amplification incident was contained after 3.6 TB of internal VM-to-host traffic and replaced with a restricted incremental rsync stage; measured manual warm-cache and timer archives passed without stopping PostgreSQL or local recovery. Twenty-one store/application/alert/reconciliation checks remain pending; application/Auth/signing recovery is not claimed.
 
 ## What works
 

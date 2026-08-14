@@ -1,5 +1,13 @@
 # Iteration Log
 
+## 2026-08-14 — M01 backup transfer-amplification incident
+
+- Contained VM 971's recurring 200–235 MB/s internal transfer after Proxmox tap/bridge counters, SSH journal entries, systemd cadence, and Borg statistics proved the host was pulling the complete 22 GB PostgreSQL recovery tree every cycle.
+- Confirmed the traffic did not traverse the physical uplink and was not database replication or another guest. PostgreSQL, all Supabase containers, continuous WAL archiving, the daily verified base timer, and the Borg repository remained healthy.
+- Replaced the single tar-over-stdin object with a forced read-only `rrsync` source, an owner-only incremental host stage, and normal Borg file caching while keeping the off-site repository credential off the database VM.
+- Seeded the stage from the last valid encrypted archive. The first delta run transferred 269,360,503 guest bytes, the warm run transferred 16,871,892 bytes in three seconds, and a scheduled run transferred 50,602,257 bytes and completed Borg work in 0.50 seconds instead of retransmitting 22 GB.
+- Rejected arbitrary-command use of the pull key, validated systemd and sudoers policy, extracted and byte-compared one base plus one WAL file from the new archive, and recorded ADR-0013, rollback copies, and R-033. Transfer anomaly alerting and the wider M01 full-service restore gate remain open.
+
 ## 2026-08-13 — M03 production canary and closure
 
 - Release run `31738294379` passed the complete `v0.1.11` gate and published immutable artifacts from commit `0ced4b666a55d836bd3d4927337fe057a71bb4ba`.

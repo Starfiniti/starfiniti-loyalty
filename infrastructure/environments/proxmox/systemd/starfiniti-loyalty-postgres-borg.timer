@@ -1,0 +1,12 @@
+[Unit]
+Description=Frequent incremental Starfiniti Loyalty PostgreSQL off-host backup
+
+[Timer]
+OnBootSec=2m
+OnUnitInactiveSec=3m
+AccuracySec=15s
+RandomizedDelaySec=15s
+Unit=starfiniti-loyalty-postgres-borg.service
+
+[Install]
+WantedBy=timers.target

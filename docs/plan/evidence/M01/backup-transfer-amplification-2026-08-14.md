@@ -1,0 +1,37 @@
+# PostgreSQL backup transfer amplification incident — 2026-08-14
+
+## Outcome
+
+The internal VM-to-host transfer loop was contained and replaced without stopping PostgreSQL, Supabase, local WAL archiving, or the daily verified base-backup timer. The corrected steady-state job transfers only newly completed immutable recovery files and keeps the Borg repository credential off the database VM.
+
+## Detection and impact
+
+- Proxmox VM 971 reported approximately 3.60 TB transmitted since boot. Its tap receive counter and `vmbr10` receive counter matched, while the physical uplink did not, proving the traffic stayed inside the Proxmox host.
+- Bursts recurred roughly every five minutes. Each old Borg archive reported one 22.2–22.7 GB input file and ran for 94–114 seconds.
+- VM disk-read telemetry reached approximately 2.28 TB. No evidence indicated PostgreSQL replication, another guest receiving the data, or external exfiltration.
+- Database availability and checkout-facing services were unaffected, but the repeated full-tree reads and internal transfer were an unacceptable reliability risk.
+
+## Root cause
+
+The host service used `borg create --content-from-command` and obtained one tar stream from a forced SSH exporter. Borg reduced each completed stream to a few kilobytes of new chunks, but only after the entire logical backup set crossed the VM-to-host link. With one stdin object, Borg's file cache had no individual immutable files to skip. `OnUnitInactiveSec=3m` plus the 94–114 second job duration produced the observed roughly five-minute cycle.
+
+## Containment and recovery validation
+
+1. Disabled and stopped only `starfiniti-loyalty-postgres-borg.timer`; the in-flight service was terminated and its failed state reset.
+2. Confirmed the VM tap counter increased only about 13 KB over 15 seconds after containment.
+3. Confirmed all Supabase containers healthy, PostgreSQL ready, `archive_mode=on`, and `pg_stat_archiver` at 634 successes and zero failures.
+4. Confirmed the daily physical-base timer remained enabled/active, 62 GB remained free on the database VM, and four completed bases plus the continuous WAL set remained present.
+5. Opened the Borg repository and listed the last three completed archives, proving the interrupted process left no repository lock or corruption symptom.
+
+## Corrective implementation and measurements
+
+- Replaced the forced tar exporter with a read-only `rrsync` wrapper bound to the fixed backup root. An allowed directory listing succeeded; an attempted arbitrary `id` command failed with `SSH_ORIGINAL_COMMAND does not run rsync`.
+- Seeded the owner-only Proxmox stage from the last valid encrypted archive (`loyalty-postgres-20260814T070347Z`) rather than retransmitting 22 GB from VM 971.
+- First measured incremental cycle: 269,360,503 guest bytes, representing the WAL files created since the seed; 1,377 normal files archived; 28.96 MB new Borg data; exit code zero.
+- Immediate warm-cache cycle: 16,871,892 guest bytes, three seconds end to end, 1.72 KB new Borg data; exit code zero.
+- The immediate timer-triggered archive after re-enabling completed successfully and added 824 bytes of new Borg data. The next scheduled steady-state cycle transferred 50,602,257 guest bytes (three WAL segments plus overhead), completed Borg processing in 0.50 seconds, and added 3.56 KB of new Borg data.
+- Extracted one completed base backup and one WAL segment from the new normal-file archive and compared both byte-for-byte with the staged source; both matched. The owner-only verification directory was removed afterward.
+
+## Rollback and follow-up
+
+Timestamped copies of the prior guest `authorized_keys` entry, host script, service, and timer remain on their respective machines. The timer can be disabled immediately without affecting PostgreSQL or local recovery files. Legacy tar-stream archives remain readable during retention; restore procedures must recognize both layouts. Capacity and transfer-size anomaly monitoring remain part of the unfinished M01 operational gate.

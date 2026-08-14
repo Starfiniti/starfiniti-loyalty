@@ -524,7 +524,7 @@ tasks:
         reconciliation report,
         production alerts,
       ]
-    risks: [R-004, R-005, R-008]
+    risks: [R-004, R-005, R-008, R-033]
     docs:
       [
         docs/integrations/WOOCOMMERCE.md,
@@ -536,6 +536,7 @@ tasks:
       - docs/plan/evidence/M01/pilot.yaml
       - docs/plan/evidence/M01/production-baseline-2026-08-13.md
       - docs/plan/evidence/M01/backup-export-repair-2026-08-13.md
+      - docs/plan/evidence/M01/backup-transfer-amplification-2026-08-14.md
 
   - id: M02-ENTITLEMENTS-AND-FLAGS
     title: Add deployment modes, entitlements, limits, and tenant rollout controls
