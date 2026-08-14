@@ -540,7 +540,7 @@ select results_eq(
 );
 select throws_ok(
   $$ update loyalty.referral_attributions set source_order_id = 'rewritten' $$,
-  '55000', 'immutable loyalty record',
+  '55000', 'immutable loyalty history cannot be changed',
   'first attribution cannot be reassigned or rewritten'
 );
 
