@@ -11,13 +11,13 @@ alter table loyalty_private.programme_evaluations
 
 alter table loyalty_private.tier_qualification_facts
   drop constraint tier_qualification_facts_fact_kind_check,
-  drop constraint tier_qualification_facts_check,
+  drop constraint tier_qualification_facts_check1,
   add constraint tier_qualification_facts_fact_kind_check
     check (fact_kind in (
       'purchase', 'refund', 'points_adjustment', 'referral',
       'referral_reversal', 'verified_action'
     )),
-  add constraint tier_qualification_facts_check check (
+  add constraint tier_qualification_facts_shape_check check (
     (fact_kind = 'purchase'
       and eligible_spend_minor_delta >= 0 and earned_points_delta >= 0
       and order_count_delta = 1 and referral_count_delta = 0
