@@ -28,7 +28,16 @@ Worker tests cover processing-status qualification without purchase award and re
 - Worker typecheck: passed.
 - `npm run db:validate`: 38 migrations and 34 pgTAP files passed static validation.
 - `git diff --check`: passed.
-- Exact Docker-backed replay is pending and is not claimed in this evidence yet.
+
+## Exact-head verification
+
+GitHub Actions run `31764805380` passed at commit `270fa50`:
+
+- baseline repository gate, secret scan, zero-vulnerability production audit, licences, and packaged connector;
+- clean 38-migration replay and all 34 pgTAP files with 1,592 assertions, including all 43 focused qualification/cooling assertions;
+- ledger/programme and reward-capacity concurrency/property probes;
+- pinned dashboard and worker images; and
+- minimum/current WooCommerce on HPOS/legacy storage.
 
 ## Rollback and open limitations
 

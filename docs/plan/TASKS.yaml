@@ -880,16 +880,16 @@ tasks:
           - local lint all workspace typechecks 305 unit tests 37-migration static validation WooCommerce validation and architecture validation pass
           - exact-head run 31763563259 passed baseline both images clean 37-migration replay all 33 pgTAP files with 1549 assertions both concurrency probes and all four WooCommerce runtime cells
       - id: M06-S02-QUALIFICATION-AND-COOLING
-        status: in_progress
+        status: completed
         acceptance:
           - only the configured paid status minimum spend new-customer rule and return-cooling window can qualify an attribution
           - delayed status changes and refunds append deterministic transitions without rewriting attribution
         evidence:
           - worker reloads the attribution original immutable V2 version and reuses the exact purchase evaluator instead of current policy or a second SQL rules engine
           - PostgreSQL verifies signed event status identity and time derives prior paid-order history and appends cooling deterministic rejection or review-held evidence without ledger value
-          - focused worker tests and static 38-migration 34-pgTAP validation pass while exact database replay remains pending
+          - exact-head run 31764805380 passed baseline both images clean 38-migration replay all 34 pgTAP files with 1592 assertions including 43 focused qualification and cooling assertions both concurrency probes and all four WooCommerce runtime cells
       - id: M06-S03-GIVE-GET-LEDGER
-        status: planned
+        status: in_progress
         acceptance:
           - advocate and friend points issue through immutable exactly-once ledger effects only after qualification and cooling
           - refund and rejection compensate each side exactly once without deleting history

@@ -5,7 +5,7 @@
 - Closed M06-S01 at exact-head run `31763563259`: clean 37-migration replay, all 33 pgTAP files with 1,549 assertions, both concurrency probes/images, and all four minimum/current HPOS/legacy WooCommerce runtimes.
 - Accepted ADR-0017 after comparing current-policy evaluation, a second SQL rules engine, and historical shared-evaluator evidence. Qualification now reloads the attribution's immutable V2 version so delayed publication cannot change paid-status, eligible-spend, or cooling meaning.
 - Added private immutable qualification facts and worker-only context/record boundaries. PostgreSQL verifies canonical event identity/time, derives prior paid-order history and minimum-spend outcome, and appends cooling, deterministic rejection, or review-held evidence without issuing value.
-- Added conservative source-refund rejection for captured/review/cooling states and an explicit `compensation_required` outcome after qualification. Focused worker tests and 38-migration/34-pgTAP static validation pass; exact Docker replay is next.
+- Added conservative source-refund rejection for captured/review/cooling states and an explicit `compensation_required` outcome after qualification. Exact-head run `31764805380` passed baseline, both images, a clean 38-migration replay, all 34 pgTAP files with 1,592 assertions including 43 focused qualification/cooling assertions, both concurrency probes, and all four WooCommerce runtimes.
 
 ## 2026-08-14 — M06 first-attribution foundation
 
