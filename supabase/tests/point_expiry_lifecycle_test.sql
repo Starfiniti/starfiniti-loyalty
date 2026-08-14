@@ -352,6 +352,9 @@ select * from loyalty_private.release_points(
   decode(repeat('8a', 32), 'hex'), '2026-03-01T00:00:00Z'
 );
 
+grant loyalty_worker to current_user;
+grant usage on schema extensions to loyalty_worker;
+grant execute on all functions in schema extensions to loyalty_worker;
 set local role loyalty_worker;
 select results_eq(
   $$ select * from loyalty_private.run_point_expiry_lifecycle_v2(
