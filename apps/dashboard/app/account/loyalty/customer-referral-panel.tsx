@@ -185,8 +185,8 @@ export function CustomerReferralPanel({
             Invite friends, earn points
           </h3>
           <span>
-            Your friend earns {formatPoints(experience.friendRewardPoints)}
-            points and you earn {formatPoints(experience.advocateRewardPoints)}
+            Your friend earns {formatPoints(experience.friendRewardPoints)}{" "}
+            points and you earn {formatPoints(experience.advocateRewardPoints)}{" "}
             points after an eligible first order.
           </span>
         </div>
