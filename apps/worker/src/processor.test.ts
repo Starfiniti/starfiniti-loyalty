@@ -6,6 +6,7 @@ import {
   evidenceSha256,
   expireDueTierOverrides,
   runPointExpiryLifecycle,
+  runReferralRewardLifecycle,
   parseWooCommerceEffect,
   processWooCommerceEffect,
   toOrderAwardFact,
@@ -159,6 +160,69 @@ describe("WooCommerce effect worker", () => {
     await expect(expireDueTierOverrides(invalidSql)).rejects.toThrow(
       "invalid_tier_override_expiry_count",
     );
+  });
+
+  it("settles bounded referral reward leases without leaking exception details", async () => {
+    let issueCalls = 0;
+    const query = async (strings: TemplateStringsArray) => {
+      const text = strings.join("?");
+      if (text.includes("claim_due_referral_reward_jobs_v1")) {
+        return [
+          {
+            job_id: "10000000-0000-4000-8000-000000000001",
+            attribution_id: "20000000-0000-4000-8000-000000000001",
+            attempt_count: "1",
+          },
+          {
+            job_id: "10000000-0000-4000-8000-000000000002",
+            attribution_id: "20000000-0000-4000-8000-000000000002",
+            attempt_count: "10",
+          },
+        ];
+      }
+      if (text.includes("issue_referral_reward_job_v1")) {
+        issueCalls += 1;
+        if (issueCalls === 2)
+          throw new Error("contains-private-provider-detail");
+        return [
+          {
+            attribution_id: "20000000-0000-4000-8000-000000000001",
+            issuance_id: "30000000-0000-4000-8000-000000000001",
+            state: "qualified",
+            outcome: "created",
+          },
+        ];
+      }
+      if (text.includes("finish_referral_reward_job_v1")) {
+        expect(text).toContain("referral_reward_issue_failed");
+        expect(text).not.toContain("private-provider-detail");
+        return [{ state: "manual_review", outcome: "manual_review" }];
+      }
+      throw new Error(`Unexpected query: ${text}`);
+    };
+
+    await expect(
+      runReferralRewardLifecycle(query as unknown as Sql, "worker-referral"),
+    ).resolves.toEqual({
+      claimed: 2,
+      completed: 1,
+      cancelled: 0,
+      retryable: 0,
+      manualReview: 1,
+    });
+  });
+
+  it("rejects malformed referral reward claim responses", async () => {
+    const invalidSql = (async () => [
+      {
+        job_id: "not-a-job",
+        attribution_id: "20000000-0000-4000-8000-000000000001",
+        attempt_count: "0",
+      },
+    ]) as unknown as Sql;
+    await expect(
+      runReferralRewardLifecycle(invalidSql, "worker-referral"),
+    ).rejects.toThrow("invalid_referral_reward_claim_result");
   });
 
   it("classifies completed orders as awards and earlier states as skips", () => {

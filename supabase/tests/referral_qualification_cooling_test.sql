@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(43);
+select plan(86);
 
 select has_table(
   'loyalty_private', 'referral_qualification_facts',
@@ -680,6 +680,365 @@ select results_eq(
   $$ select count(*)::bigint from loyalty.ledger_transactions $$,
   array[0::bigint],
   'qualification, review, cooling, and refund rejection issue no value'
+);
+
+select has_table(
+  'loyalty_private', 'referral_reward_jobs',
+  'referral reward jobs are private'
+);
+select has_table(
+  'loyalty_private', 'referral_reward_job_attempts',
+  'referral reward attempt history is private'
+);
+select has_table(
+  'loyalty_private', 'referral_reward_issuances',
+  'referral reward issuance evidence is private'
+);
+select has_table(
+  'loyalty_private', 'referral_reward_compensations',
+  'referral reward compensation evidence is private'
+);
+select ok(
+  (select relrowsecurity from pg_class
+    where oid = 'loyalty_private.referral_reward_jobs'::regclass),
+  'referral reward jobs have RLS enabled'
+);
+select has_trigger(
+  'loyalty_private', 'referral_reward_job_attempts',
+  'referral_reward_job_attempts_immutable',
+  'reward job attempt history is immutable'
+);
+select has_trigger(
+  'loyalty_private', 'referral_reward_issuances',
+  'referral_reward_issuances_immutable',
+  'reward issuance evidence is immutable'
+);
+select has_trigger(
+  'loyalty_private', 'referral_reward_compensations',
+  'referral_reward_compensations_immutable',
+  'reward compensation evidence is immutable'
+);
+select ok(
+  has_function_privilege(
+    'loyalty_worker',
+    'loyalty_private.claim_due_referral_reward_jobs_v1(text,integer,integer)',
+    'EXECUTE'
+  ),
+  'worker can claim bounded referral reward leases'
+);
+select ok(
+  has_function_privilege(
+    'loyalty_worker',
+    'loyalty_private.finish_referral_reward_job_v1(uuid,text,text,integer)',
+    'EXECUTE'
+  ),
+  'worker can persist a minimized retry result'
+);
+select ok(
+  has_function_privilege(
+    'loyalty_worker',
+    'loyalty_private.issue_referral_reward_job_v1(uuid,text)',
+    'EXECUTE'
+  ),
+  'worker can atomically issue accepted referral value'
+);
+select ok(
+  not has_function_privilege(
+    'authenticated',
+    'loyalty_private.issue_referral_reward_job_v1(uuid,text)',
+    'EXECUTE'
+  ),
+  'browser sessions cannot issue referral value'
+);
+select ok(
+  not has_table_privilege(
+    'authenticated', 'loyalty_private.referral_reward_jobs', 'SELECT'
+  ),
+  'browser sessions cannot enumerate referral reward work'
+);
+
+insert into loyalty.customers (public_id, organization_id, display_reference)
+select 'b6000000-0000-4000-8000-000000000156', organization.id, 'issued'
+from loyalty.organizations as organization where organization.slug = 'm06-s02';
+insert into loyalty.customer_identities (
+  organization_id, customer_id, commerce_connection_id,
+  external_customer_id, identity_kind, verified_at
+)
+select customer.organization_id, customer.id, connection.id,
+  'registered:issued', 'registered', now()
+from loyalty.customers as customer
+join loyalty.commerce_connections as connection
+  on connection.organization_id = customer.organization_id
+where customer.display_reference = 'issued'
+  and customer.organization_id = (
+    select id from loyalty.organizations where slug = 'm06-s02'
+  );
+insert into referral_s02_events values
+  ('issued-completed', pg_temp.add_status_event(
+    'issued-completed', 'order-issued', 'issued', 'completed',
+    now() - interval '15 days', true, null
+  ));
+select results_eq(
+  $$ select state, outcome from loyalty_private.record_referral_attribution_v1(
+    (select public_id from referral_s02_events where name = 'issued-completed')
+  ) $$,
+  $$ values ('captured'::text, 'created'::text) $$,
+  'a new paid friend creates one captured referral'
+);
+select results_eq(
+  $$ select state, outcome
+    from loyalty_private.record_referral_qualification_v1(
+      (select public_id from referral_s02_events where name = 'issued-completed'),
+      decode(repeat('a', 64), 'hex'), decode(repeat('b', 64), 'hex'),
+      pg_temp.qualification_result(
+        (select public_id from referral_s02_events where name = 'issued-completed'),
+        '5000'
+      ),
+      '{"lines":[],"tierMultiplierBasisPoints":10000}'::jsonb,
+      now()
+    ) $$,
+  $$ values ('cooling'::text, 'eligible'::text) $$,
+  'eligible friend enters cooling without directly issuing value'
+);
+select results_eq(
+  $$ select state, (next_attempt_at <= now())::text
+    from loyalty_private.referral_reward_jobs as job
+    join loyalty.referral_attributions as attribution
+      on attribution.id = job.attribution_id
+    join loyalty.customers as customer
+      on customer.id = attribution.friend_customer_id
+    where customer.display_reference = 'issued' $$,
+  $$ values ('pending'::text, 'true'::text) $$,
+  'cooling transition enqueues due internal work from event time'
+);
+select lives_ok(
+  $$ select loyalty_private.set_organization_entitlement(
+    'b6000000-0000-4000-8000-000000000100', 'referrals', 'disabled', null,
+    'canary', 'test:m06-s03', 'Exercise accepted-job rollback', now(), null
+  ) $$,
+  'rollout can disable new referral configuration after work is accepted'
+);
+select results_eq(
+  $$ select attempt_count from loyalty_private.claim_due_referral_reward_jobs_v1(
+    'worker-a', 25, 60
+  ) $$,
+  array[1::smallint],
+  'worker claims the due referral once with its first bounded attempt'
+);
+select is_empty(
+  $$ select * from loyalty_private.claim_due_referral_reward_jobs_v1(
+    'worker-b', 25, 60
+  ) $$,
+  'an active lease cannot be claimed by a second worker'
+);
+select throws_ok(
+  $$ select * from loyalty_private.issue_referral_reward_job_v1(
+    (select public_id from loyalty_private.referral_reward_jobs as job
+      join loyalty.referral_attributions as attribution
+        on attribution.id = job.attribution_id
+      join loyalty.customers as customer
+        on customer.id = attribution.friend_customer_id
+      where customer.display_reference = 'issued'),
+    'worker-b'
+  ) $$,
+  '42501', 'referral reward job lease is inactive',
+  'a different worker cannot spend an active referral lease'
+);
+select results_eq(
+  $$ select state, outcome from loyalty_private.issue_referral_reward_job_v1(
+    (select public_id from loyalty_private.referral_reward_jobs as job
+      join loyalty.referral_attributions as attribution
+        on attribution.id = job.attribution_id
+      join loyalty.customers as customer
+        on customer.id = attribution.friend_customer_id
+      where customer.display_reference = 'issued'),
+    'worker-a'
+  ) $$,
+  $$ values ('qualified'::text, 'created'::text) $$,
+  'accepted work atomically qualifies even after rollout is disabled'
+);
+select results_eq(
+  $$ select count(*)::bigint from loyalty.ledger_transactions
+    where transaction_kind = 'award' $$,
+  array[2::bigint],
+  'qualification creates exactly two award transactions'
+);
+select results_eq(
+  $$ select count(*)::bigint from loyalty.ledger_transactions
+    where transaction_kind = 'release' $$,
+  array[2::bigint],
+  'qualification immediately releases both referral awards'
+);
+select results_eq(
+  $$ select advocate_points, friend_points
+    from loyalty_private.referral_reward_issuances $$,
+  $$ values (500::bigint, 250::bigint) $$,
+  'issuance retains the immutable give/get values'
+);
+select results_eq(
+  $$ select customer.display_reference, balance.points
+    from loyalty.wallet_balances as balance
+    join loyalty.wallets as wallet on wallet.id = balance.wallet_id
+    join loyalty.customers as customer on customer.id = wallet.customer_id
+    where balance.account_kind = 'available' and balance.points > 0
+    order by customer.display_reference $$,
+  $$ values ('advocate'::text, 500::bigint), ('issued'::text, 250::bigint) $$,
+  'both customer wallets receive their exact available value'
+);
+select results_eq(
+  $$ select count(*)::bigint,
+      bool_and(expires_at - available_at = interval '365 days')::text
+    from loyalty.point_lots $$,
+  $$ values (2::bigint, 'true'::text) $$,
+  'both releases create FIFO lots using the historical programme expiry policy'
+);
+select results_eq(
+  $$ select customer.display_reference, fact.fact_kind,
+      fact.earned_points_delta, fact.referral_count_delta
+    from loyalty_private.tier_qualification_facts as fact
+    join loyalty.customers as customer on customer.id = fact.customer_id
+    join loyalty_private.programme_evaluations as evaluation
+      on evaluation.id = fact.evaluation_id
+    where evaluation.evaluation_kind = 'referral_reward'
+    order by customer.display_reference $$,
+  $$ values
+    ('advocate'::text, 'referral'::text, 500::bigint, 1::smallint),
+    ('issued'::text, 'points_adjustment'::text, 250::bigint, 0::smallint) $$,
+  'both sides retain exact immutable tier evidence'
+);
+select results_eq(
+  $$ select from_state, to_state, reason_code
+    from loyalty.referral_attribution_transitions as transition
+    join loyalty.referral_attributions as attribution
+      on attribution.id = transition.attribution_id
+    join loyalty.customers as customer
+      on customer.id = attribution.friend_customer_id
+    where customer.display_reference = 'issued'
+    order by transition.id desc limit 1 $$,
+  $$ values ('cooling'::text, 'qualified'::text, 'cooling_completed'::text) $$,
+  'state becomes qualified only after both ledger effects exist'
+);
+select results_eq(
+  $$ select state, attempt_count from loyalty_private.referral_reward_jobs as job
+    join loyalty.referral_attributions as attribution
+      on attribution.id = job.attribution_id
+    join loyalty.customers as customer
+      on customer.id = attribution.friend_customer_id
+    where customer.display_reference = 'issued' $$,
+  $$ values ('completed'::text, 1::smallint) $$,
+  'successful referral work becomes nonclaimable and retains attempt count'
+);
+select results_eq(
+  $$ select state, outcome from loyalty_private.issue_referral_reward_job_v1(
+    (select public_id from loyalty_private.referral_reward_jobs as job
+      join loyalty.referral_attributions as attribution
+        on attribution.id = job.attribution_id
+      join loyalty.customers as customer
+        on customer.id = attribution.friend_customer_id
+      where customer.display_reference = 'issued'),
+    'worker-a'
+  ) $$,
+  $$ values ('qualified'::text, 'duplicate'::text) $$,
+  'unknown worker acknowledgement retry returns the existing issuance'
+);
+select results_eq(
+  $$ select count(*)::bigint from loyalty.ledger_transactions $$,
+  array[4::bigint],
+  'issuance replay cannot duplicate either ledger pair'
+);
+
+insert into referral_s02_events values
+  ('issued-refund', pg_temp.add_refund_event(
+    'issued-refund', 'order-issued', 'issued', now()
+  ));
+select results_eq(
+  $$ select state, outcome from loyalty_private.reject_referral_for_refund_v1(
+    (select public_id from referral_s02_events where name = 'issued-refund')
+  ) $$,
+  $$ values ('reversed'::text, 'reversed'::text) $$,
+  'refund atomically compensates both issued referral sides'
+);
+select results_eq(
+  $$ select count(*)::bigint from loyalty.ledger_transactions
+    where transaction_kind = 'refund_reversal' $$,
+  array[2::bigint],
+  'refund creates exactly two linked reversal transactions'
+);
+select results_eq(
+  $$ select count(*)::bigint
+    from loyalty_private.referral_reward_compensations $$,
+  array[1::bigint],
+  'refund records one immutable two-sided compensation'
+);
+select results_eq(
+  $$ select customer.display_reference, balance.points
+    from loyalty.wallet_balances as balance
+    join loyalty.wallets as wallet on wallet.id = balance.wallet_id
+    join loyalty.customers as customer on customer.id = wallet.customer_id
+    where balance.account_kind = 'available'
+      and customer.display_reference in ('advocate', 'issued')
+    order by customer.display_reference $$,
+  $$ values ('advocate'::text, 0::bigint), ('issued'::text, 0::bigint) $$,
+  'refund removes the available referral value from both wallets'
+);
+select results_eq(
+  $$ select count(*)::bigint from loyalty.point_lot_balances
+    where remaining_points = 0 $$,
+  array[2::bigint],
+  'refund consumes both referral lots exactly once'
+);
+select results_eq(
+  $$ select customer.display_reference, fact.earned_points_delta,
+      fact.referral_count_delta
+    from loyalty_private.tier_qualification_facts as fact
+    join loyalty.customers as customer on customer.id = fact.customer_id
+    where fact.fact_kind = 'referral_reversal'
+    order by customer.display_reference $$,
+  $$ values
+    ('advocate'::text, -500::bigint, -1::smallint),
+    ('issued'::text, -250::bigint, 0::smallint) $$,
+  'refund appends compensating tier facts for both customers'
+);
+select results_eq(
+  $$ select from_state, to_state, reason_code
+    from loyalty.referral_attribution_transitions as transition
+    join loyalty.referral_attributions as attribution
+      on attribution.id = transition.attribution_id
+    join loyalty.customers as customer
+      on customer.id = attribution.friend_customer_id
+    where customer.display_reference = 'issued'
+    order by transition.id desc limit 1 $$,
+  $$ values ('qualified'::text, 'reversed'::text, 'source_order_refunded'::text) $$,
+  'qualified state moves to reversed only after compensation succeeds'
+);
+select results_eq(
+  $$ select state, outcome from loyalty_private.reject_referral_for_refund_v1(
+    (select public_id from referral_s02_events where name = 'issued-refund')
+  ) $$,
+  $$ values ('reversed'::text, 'state_final'::text) $$,
+  'refund replay observes the terminal state without another reversal'
+);
+select results_eq(
+  $$ select count(*)::bigint from loyalty.ledger_transactions $$,
+  array[6::bigint],
+  'refund replay leaves the complete ledger effect count unchanged'
+);
+select throws_ok(
+  $$ update loyalty_private.referral_reward_issuances
+    set advocate_points = advocate_points + 1 $$,
+  '55000', 'immutable loyalty history cannot be changed',
+  'issued referral evidence cannot be rewritten'
+);
+select throws_ok(
+  $$ delete from loyalty_private.referral_reward_compensations $$,
+  '55000', 'immutable loyalty history cannot be changed',
+  'compensation evidence cannot be deleted'
+);
+select throws_ok(
+  $$ update loyalty_private.referral_reward_job_attempts
+    set outcome = 'retryable' $$,
+  '55000', 'immutable loyalty history cannot be changed',
+  'job attempt history cannot be rewritten'
 );
 
 select * from finish();

@@ -726,6 +726,101 @@ export async function runPointExpiryLifecycle(
   };
 }
 
+type ClaimedReferralRewardJob = Readonly<{
+  job_id: string;
+  attribution_id: string;
+  attempt_count: number | string;
+}>;
+
+type ReferralRewardIssueRow = Readonly<{
+  attribution_id: string;
+  issuance_id: string | null;
+  state: string;
+  outcome: string;
+}>;
+
+export type ReferralRewardLifecycleResult = Readonly<{
+  claimed: number;
+  completed: number;
+  cancelled: number;
+  retryable: number;
+  manualReview: number;
+}>;
+
+export async function runReferralRewardLifecycle(
+  sql: Sql,
+  workerId: string,
+): Promise<ReferralRewardLifecycleResult> {
+  const jobs = await sql<ClaimedReferralRewardJob[]>`
+    select job_id::text, attribution_id::text, attempt_count
+    from loyalty_private.claim_due_referral_reward_jobs_v1(
+      ${workerId}, 25, 60
+    )
+  `;
+  if (jobs.length > 25) {
+    throw new Error("invalid_referral_reward_claim_result");
+  }
+  let completed = 0;
+  let cancelled = 0;
+  let retryable = 0;
+  let manualReview = 0;
+  for (const job of jobs) {
+    const attemptCount = Number(job.attempt_count);
+    if (
+      !isUuid(job.job_id) ||
+      !isUuid(job.attribution_id) ||
+      !Number.isSafeInteger(attemptCount) ||
+      attemptCount < 1 ||
+      attemptCount > 10
+    ) {
+      throw new Error("invalid_referral_reward_claim_result");
+    }
+    try {
+      const issues = await sql<ReferralRewardIssueRow[]>`
+        select attribution_id::text, issuance_id::text, state, outcome
+        from loyalty_private.issue_referral_reward_job_v1(
+          ${job.job_id}::uuid, ${workerId}
+        )
+      `;
+      const issue = issues[0];
+      if (
+        !issue ||
+        issue.attribution_id !== job.attribution_id ||
+        !["created", "duplicate", "state_final"].includes(issue.outcome) ||
+        ((issue.outcome === "created" || issue.outcome === "duplicate") &&
+          !isUuid(issue.issuance_id))
+      ) {
+        throw new Error("invalid_referral_reward_issue_result");
+      }
+      if (issue.outcome === "state_final") cancelled += 1;
+      else completed += 1;
+    } catch {
+      const finishes = await sql<{ state: string; outcome: string }[]>`
+        select state, outcome
+        from loyalty_private.finish_referral_reward_job_v1(
+          ${job.job_id}::uuid,
+          ${workerId},
+          'referral_reward_issue_failed',
+          ${retryDelay(attemptCount)}
+        )
+      `;
+      const finish = finishes[0];
+      if (!finish || !["retryable", "manual_review"].includes(finish.state)) {
+        throw new Error("invalid_referral_reward_finish_result");
+      }
+      if (finish.state === "manual_review") manualReview += 1;
+      else retryable += 1;
+    }
+  }
+  return {
+    claimed: jobs.length,
+    completed,
+    cancelled,
+    retryable,
+    manualReview,
+  };
+}
+
 async function processRefund(
   sql: Sql,
   workerId: string,
@@ -1982,6 +2077,15 @@ function evidenceString(
     throw new PermanentEffectError("invalid_original_award_evidence");
   }
   return value;
+}
+
+function isUuid(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu.test(
+      value,
+    )
+  );
 }
 
 function retryDelay(attempt: number): number {
