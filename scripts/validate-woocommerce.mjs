@@ -20,6 +20,10 @@ const privacy = readFileSync(
 );
 const uninstall = readFileSync("plugins/woocommerce/uninstall.php", "utf8");
 const outbox = readFileSync("plugins/woocommerce/src/class-outbox.php", "utf8");
+const referrals = readFileSync(
+  "plugins/woocommerce/src/class-referrals.php",
+  "utf8",
+);
 const receiver = readFileSync(
   "apps/dashboard/app/api/v1/integrations/woocommerce/events/route.ts",
   "utf8",
@@ -41,6 +45,7 @@ for (const [label, content, requirements] of [
       "register_activation_hook",
       "FeaturesUtil::declare_compatibility",
       "class-outbox.php",
+      "class-referrals.php",
     ],
   ],
   [
@@ -48,6 +53,7 @@ for (const [label, content, requirements] of [
     plugin,
     [
       "Outbox::boot()",
+      "Referrals::boot()",
       "manage_woocommerce",
       "woocommerce_account_loyalty_endpoint",
       "woocommerce_before_cart",
@@ -134,6 +140,20 @@ for (const [label, content, requirements] of [
     ],
   ],
   [
+    "referrals",
+    referrals,
+    [
+      "template_redirect",
+      "woocommerce_checkout_create_order",
+      "stf_ref",
+      "REMOTE_ADDR",
+      "hash_hmac('sha256'",
+      "sourceNetworkFingerprint",
+      "paymentFingerprint",
+      "shippingFingerprint",
+    ],
+  ],
+  [
     "receiver",
     receiver,
     [
@@ -182,7 +202,7 @@ for (const forbidden of [
 ]) {
   if (
     forbidden.test(
-      `${bootstrap}\n${plugin}\n${settings}\n${cli}\n${commands}\n${privacy}\n${uninstall}\n${outbox}\n${receiver}`,
+      `${bootstrap}\n${plugin}\n${settings}\n${cli}\n${commands}\n${privacy}\n${uninstall}\n${outbox}\n${referrals}\n${receiver}`,
     )
   ) {
     throw new Error(

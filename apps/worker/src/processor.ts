@@ -46,7 +46,11 @@ export type ClaimedEffect = Readonly<{
 }>;
 
 type ParsedEffect =
-  | { readonly kind: "award"; readonly order: WooCommerceOrderFactV1 }
+  | {
+      readonly kind: "award";
+      readonly order: WooCommerceOrderFactV1;
+      readonly awardEligible: boolean;
+    }
   | {
       readonly kind: "refund";
       readonly refundId: string;
@@ -160,10 +164,17 @@ export function parseWooCommerceEffect(event: ClaimedEffect): ParsedEffect {
     if (!parsed.success) {
       return { kind: "quarantine", reason: "invalid_order_status_payload" };
     }
-    if (parsed.data.order.status !== "completed") {
+    if (
+      parsed.data.order.status !== "completed" &&
+      !(parsed.data.order.status === "processing" && parsed.data.order.referral)
+    ) {
       return { kind: "skip", reason: "order_status_not_eligible" };
     }
-    return { kind: "award", order: parsed.data.order };
+    return {
+      kind: "award",
+      order: parsed.data.order,
+      awardEligible: parsed.data.order.status === "completed",
+    };
   }
   if (event.event_type === "commerce.order.refunded") {
     const parsed = wooCommerceOrderRefundedPayloadV1.safeParse(event.payload);
@@ -374,6 +385,58 @@ export async function processWooCommerceEffect(
       event.programme_id,
       customerId,
     );
+    if (
+      effect.kind === "award" &&
+      effect.order.referral &&
+      context.definitionVersion === "2"
+    ) {
+      if (!effect.awardEligible) {
+        await sql.begin(async (transaction) => {
+          const referrals = await transaction<
+            { attribution_id: string | null; state: string; outcome: string }[]
+          >`
+            select attribution_id::text, state, outcome
+            from loyalty_private.record_referral_attribution_v1(
+              ${event.canonical_event_public_id}::uuid
+            )
+          `;
+          const referral = referrals[0];
+          if (!referral) throw new Error("referral_attribution_record_failed");
+          if (referral.outcome === "created" && referral.attribution_id) {
+            await transaction`
+              select * from loyalty_private.finish_commerce_effect(
+                ${event.canonical_event_public_id}::uuid,
+                ${workerId},
+                'applied',
+                'loyalty.referral.attribution',
+                ${`referral-attribution:${referral.attribution_id}`},
+                ${`referral-attribution:${referral.attribution_id}`},
+                null,
+                0
+              )
+            `;
+            return;
+          }
+          await finishEffect(
+            transaction,
+            workerId,
+            event,
+            "skipped",
+            `referral.${referral.outcome}`,
+          );
+        });
+        return;
+      }
+      const referrals = await sql<
+        { attribution_id: string | null; state: string; outcome: string }[]
+      >`
+        select attribution_id::text, state, outcome
+        from loyalty_private.record_referral_attribution_v1(
+          ${event.canonical_event_public_id}::uuid
+        )
+      `;
+      if (!referrals[0]) throw new Error("referral_attribution_record_failed");
+    }
     if (effect.kind === "activity") {
       if (context.definitionVersion !== "2") {
         await finishEffect(
@@ -386,6 +449,16 @@ export async function processWooCommerceEffect(
         return;
       }
       await commitActivityV2(sql, workerId, event, customerId, context, effect);
+      return;
+    }
+    if (!effect.awardEligible) {
+      await finishEffect(
+        sql,
+        workerId,
+        event,
+        "skipped",
+        "referral.programme_v2_not_published",
+      );
       return;
     }
     if (context.definitionVersion === "2") {
@@ -1643,7 +1716,7 @@ async function applyAdvancedTierQualificationV2(
 }
 
 async function finishEffect(
-  sql: Sql,
+  sql: Sql | TransactionSql,
   workerId: string,
   event: ClaimedEffect,
   outcome: "skipped" | "retryable" | "quarantined" | "dead_letter",

@@ -6,6 +6,7 @@ import {
 } from "./programme";
 import { programmeRewardDefinitionV2 } from "./reward-v2";
 import { pointExpiryPolicyV2 } from "./point-expiry-v2";
+import { referralPolicyV1 } from "./referral";
 import { tierPolicyV2 } from "./tier-policy-v2";
 
 const code = z.string().regex(/^[a-z][a-z0-9_-]{0,79}$/u);
@@ -259,6 +260,7 @@ export const programmeDefinitionV2 = z
     pendingDays: z.number().int().min(0).max(365),
     pointsExpireAfterDays: z.number().int().min(1).max(3650),
     pointsExpiryPolicy: pointExpiryPolicyV2.optional(),
+    referralPolicy: referralPolicyV1.optional(),
     tiers: z.array(programmeTierDefinitionV1).min(1),
     tierPolicy: tierPolicyV2.optional(),
     rewards: z

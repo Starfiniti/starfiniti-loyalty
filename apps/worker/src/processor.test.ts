@@ -89,7 +89,10 @@ describe("WooCommerce effect worker", () => {
   });
 
   it("classifies completed orders as awards and earlier states as skips", () => {
-    expect(parseWooCommerceEffect(event).kind).toBe("award");
+    expect(parseWooCommerceEffect(event)).toMatchObject({
+      kind: "award",
+      awardEligible: true,
+    });
     expect(
       parseWooCommerceEffect({
         ...event,
@@ -102,6 +105,30 @@ describe("WooCommerce effect worker", () => {
         },
       }),
     ).toEqual({ kind: "skip", reason: "order_status_not_eligible" });
+  });
+
+  it("retains a processing order only when it carries signed referral evidence", () => {
+    expect(
+      parseWooCommerceEffect({
+        ...event,
+        payload: {
+          ...(event.payload as Record<string, unknown>),
+          order: {
+            ...(event.payload as { order: Record<string, unknown> }).order,
+            status: "processing",
+            referral: {
+              version: "1",
+              advocateCode: "55000000-0000-4000-8000-000000000001",
+              capturedAt: "2026-08-14T00:00:00Z",
+              sourceNetworkFingerprint: "a".repeat(64),
+              deviceFingerprint: null,
+              paymentFingerprint: null,
+              shippingFingerprint: null,
+            },
+          },
+        },
+      }),
+    ).toMatchObject({ kind: "award", awardEligible: false });
   });
 
   it("quarantines malformed facts without exposing payload values", () => {
