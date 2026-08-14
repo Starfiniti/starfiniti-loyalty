@@ -383,8 +383,10 @@ select results_eq(
   $$ select balance.remaining_points
      from loyalty.point_lot_balances as balance
      join loyalty.point_lots as lot on lot.id = balance.lot_id
-     where lot.expires_at = '2026-08-31T00:00:00Z'
-     order by lot.programme_version_id $$,
+     join loyalty.ledger_entries as entry on entry.id = lot.origin_entry_id
+     join expiry_origins as origin on origin.origin_entry_public_id = entry.public_id
+     where origin.operation in ('legacy-due', 'v2-due')
+     order by origin.operation $$,
   $$ values (0::bigint), (0::bigint) $$,
   'both due lots are fully consumed exactly once'
 );
@@ -534,15 +536,15 @@ select results_eq(
   $$ values ('2026-09-30T00:00:00Z'::timestamptz) $$,
   'merchant preview reports the exact next immutable lot deadline'
 );
-select results_eq(
-  $$ select routine.proargnames[3:9]
-     from pg_proc as routine
-     where routine.oid =
-       'loyalty.get_programme_expiry_liability_v2(uuid,timestamp with time zone)'::regprocedure $$,
-  $$ values (array[
+select is(
+  (select to_jsonb(routine.proargnames[3:9])
+   from pg_proc as routine
+   where routine.oid =
+     'loyalty.get_programme_expiry_liability_v2(uuid,timestamp with time zone)'::regprocedure),
+  to_jsonb(array[
     'outstanding_points', 'overdue_points', 'reserved_past_expiry_points', 'expiring_30_days',
     'expiring_90_days', 'affected_members', 'next_expiry_at'
-  ]::text[]) $$,
+  ]::text[]),
   'liability read model exposes aggregates and no customer identity'
 );
 set local request.jwt.claim.sub = '88000000-0000-4000-8000-000000000001';
