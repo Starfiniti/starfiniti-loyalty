@@ -912,7 +912,7 @@ declare
   processed_count bigint := 0;
   included_count bigint := 0;
   candidate record;
-  decision record;
+  member_decision record;
 begin
   if actor_user_id is null
     or target_idempotency_key is null
@@ -1021,20 +1021,21 @@ begin
       raise exception using errcode = '54000',
         message = 'audience snapshot exceeds the synchronous candidate limit';
     end if;
-    select evaluated.included, evaluated.evaluation into strict decision
+    select evaluated.included, evaluated.evaluation
+    into strict member_decision
     from loyalty_private.evaluate_audience_member_v1(
       target_version.definition, target_version.organization_id,
       target_version.programme_group_id, candidate.customer_id,
       candidate.wallet_id, snapshot_time
     ) as evaluated;
-    if decision.included then
+    if member_decision.included then
       insert into loyalty_private.audience_snapshot_members (
         organization_id, programme_group_id, audience_snapshot_id,
         customer_id, wallet_id, evaluation
       ) values (
         target_version.organization_id, target_version.programme_group_id,
         target_snapshot.id, candidate.customer_id, candidate.wallet_id,
-        decision.evaluation
+        member_decision.evaluation
       );
       included_count := included_count + 1;
     end if;
