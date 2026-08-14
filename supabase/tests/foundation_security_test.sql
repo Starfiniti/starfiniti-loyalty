@@ -76,6 +76,9 @@ select is_empty(
         namespace.nspname = 'loyalty'
         and routine.oid::regprocedure::text in (
           'loyalty.adjust_customer_points_command(uuid,uuid,uuid,bigint,text,text,timestamp with time zone,text,uuid)',
+          'loyalty.approve_campaign_version_command(uuid,text,text,uuid)',
+          'loyalty.cancel_campaign_version_command(uuid,text,text,uuid)',
+          'loyalty.create_campaign_draft_command(uuid,jsonb,text,uuid)',
           'loyalty.create_programme_command(uuid,text,text,text,uuid)',
           'loyalty.create_programme_draft_command(uuid,jsonb,text,uuid)',
           'loyalty.create_audience_draft_command(uuid,jsonb,text,uuid)',
@@ -101,7 +104,9 @@ select is_empty(
           'loyalty.list_reward_fulfilment_cases(uuid,text,integer)',
           'loyalty.publish_programme_version_command(uuid,text,text,uuid)',
           'loyalty.publish_audience_version_command(uuid,text,text,uuid)',
+          'loyalty.pause_campaign_version_command(uuid,text,text,uuid)',
           'loyalty.preview_bulk_customer_adjustment(uuid[],uuid,uuid,bigint,text,timestamp with time zone)',
+          'loyalty.preview_campaign_version_command(uuid,text,text,uuid)',
           'loyalty.redeem_my_reward(uuid,text,uuid)',
           'loyalty.request_connector_reconciliation_command(uuid,text,text,text,uuid)',
           'loyalty.get_public_loyalty_experience(uuid,uuid,text)',

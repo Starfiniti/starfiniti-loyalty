@@ -41,3 +41,25 @@ Analyst and auditor roles remain read-only through tenant RLS. No authenticated 
 The `campaigns` entitlement gates new draft, publication, and snapshot work. Disabling it preserves definitions, completed snapshots, private evidence, audit history, and exact retries of already accepted commands. Campaign execution, capacity reservation, scheduling, control assignment, UI, and results are later M07 slices and must remain disabled until their own gates pass.
 
 Audience contracts are additive. Existing V1/V2 programme evaluation and historical loyalty effects are unchanged.
+
+## CampaignDefinitionV1
+
+M07-S02 adds seven closed campaign behaviors: `bonus_points`, `purchase_multiplier`, `milestone`, `win_back`, `tier`, `referral`, and `limited_quantity`. Each behavior exposes only its reviewed trigger and points/programme-reward fields. Arbitrary event names, scripts, SQL, customer properties, and unmaterialized programme rewards fail at both contract and storage boundaries.
+
+Every definition binds one completed inclusion snapshot and at most ten completed exclusion snapshots in the same organization/programme group. It also carries a global effect limit, a per-member limit, a hard maximum-points budget for every points-producing behavior, and a monetary liability ceiling with explicit ISO currency/precision for every programme-reward behavior. Limited rewards permit one effect per member. These are approval ceilings; S03 must reserve capacity atomically before any effect.
+
+## Explicit schedule and control evidence
+
+Schedules contain an IANA timezone, explicit-offset start/end instants, and matching local start/end evidence. TypeScript and PostgreSQL compare chronological instants and independently format each instant in the selected zone. Repeated fall-back time is accepted only with its chosen offset; a spring-gap local time, unknown zone, mismatch, reversed interval, or duration over 366 days fails closed.
+
+Approval materializes the eligible inclusion-minus-exclusion wallet set and generates a private random salt. Each wallet receives one immutable SHA-256-based `treatment` or `control` assignment according to the approved 0–9,000 basis-point ratio. Merchant reads expose only eligible/treatment/control counts and an aggregate hash. `loyalty_private.campaign_controls` and `loyalty_private.campaign_assignments` have no browser, anonymous, runtime, connector, or worker table grants.
+
+## Campaign commands
+
+- `create_campaign_draft_command` allows owner/admin authoring and stores one immutable version under a stable campaign code.
+- `preview_campaign_version_command` allows owner/admin/operator preview of inclusion, exclusions, expected control/treatment counts, maximum effects, points budget, and liability without member identities.
+- `approve_campaign_version_command` allows owner/admin approval only while the reviewed hash matches, the start remains future, the audience is nonempty, no accepted version overlaps, the entitlement is enabled, and private assignments reconcile in the same transaction.
+- `pause_campaign_version_command` allows owner/admin/operator to stop accepted operational work.
+- `cancel_campaign_version_command` allows owner/admin to terminate accepted policy with a bounded reason.
+
+All commands derive tenant and actor from the live Auth session, use tenant-scoped request-hash idempotency, and append minimized audit evidence. Exact retries return the original accepted outcome even after later pause/cancel or rollout disablement. Pause and cancellation are never commercially blocked. S02 creates no ledger/reward effect and does not activate schedules; execution remains disabled until S03/S04 pass their atomic value gates.

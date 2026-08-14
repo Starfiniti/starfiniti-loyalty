@@ -100,6 +100,9 @@ select is_empty(
         namespace.nspname = 'loyalty'
         and routine.proname in (
           'adjust_customer_points_command',
+          'approve_campaign_version_command',
+          'cancel_campaign_version_command',
+          'create_campaign_draft_command',
           'create_programme_command',
           'create_programme_draft_command',
           'create_audience_draft_command',
@@ -127,7 +130,9 @@ select is_empty(
           'list_reward_fulfilment_cases',
           'publish_programme_version_command',
           'publish_audience_version_command',
+          'pause_campaign_version_command',
           'preview_bulk_customer_adjustment',
+          'preview_campaign_version_command',
           'redeem_my_reward',
           'request_connector_reconciliation_command',
           'retry_connector_effect_command',

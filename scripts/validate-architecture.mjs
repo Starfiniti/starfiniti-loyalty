@@ -84,6 +84,7 @@ const acceptedAdrs = [
   "0019-auth-derived-reversible-referral-review.md",
   "0020-auth-derived-referral-experience-and-fact-sourced-funnel.md",
   "0021-allowlisted-audiences-and-immutable-snapshots.md",
+  "0022-explicit-instant-campaign-schedules-and-bound-control-assignment.md",
 ];
 
 for (const adr of acceptedAdrs) {

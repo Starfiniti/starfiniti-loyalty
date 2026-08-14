@@ -16,6 +16,7 @@ export * from "./entitlements";
 export * from "./activity";
 export * from "./referral";
 export * from "./audience";
+export * from "./campaign";
 
 export const commerceEnvelopeV1 = z.object({
   version: z.literal("1"),

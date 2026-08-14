@@ -91,6 +91,13 @@ Immutable tenant-scoped evidence for administration commands: request-derived ac
 
 Current audience metrics are derived from wallet balances, immutable tier-qualification facts, active tier intervals, and customer creation evidence. Arbitrary SQL, browser tags, PII predicates, and caller-supplied member lists are not part of the contract. New targeting is gated by the database-authoritative `campaigns` entitlement; rollback preserves versions, completed snapshots, and accepted retry evidence.
 
+- `campaigns`: stable tenant/programme-group identity for one campaign code.
+- `campaign_versions`: immutable strict behavior, audience/exclusion snapshot references, explicit-instant/IANA schedule evidence, hard effect/points/liability ceilings, aggregate assignment counts/hash, and draft/scheduled/active/paused/cancelled/completed lifecycle.
+- `loyalty_private.campaign_controls`: one private 32-byte random assignment salt plus aggregate assignment hash for an approved version.
+- `loyalty_private.campaign_assignments`: one immutable eligible wallet/customer treatment-or-control row with its assignment evidence hash. Browser/runtime roles cannot enumerate it.
+
+Approval materializes inclusion minus exclusions and the treatment/control split in one transaction before a version becomes scheduled. One accepted-version partial unique index prevents overlap for a stable campaign. S02 schedules no worker and issues no value; later executors must use the immutable version/assignment and atomically reserve the stored limits.
+
 ### `experience_themes`
 
 Unique per `(organization_id, workspace_id, programme_group_id)` and protected by a composite foreign key to the explicit workspace/group link. Each revision stores one accessible canonical brand color, an allowlisted local font token, bounded radius and copy, section visibility, and widget side. It stores no CSS, markup, scripts, URLs, uploads, customer attributes, or secrets. Members can read through RLS; only the guarded owner/admin command can create or revision a row and append matching immutable audit evidence.
