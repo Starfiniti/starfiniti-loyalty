@@ -980,16 +980,18 @@ tasks:
           - 70 focused assertions plus the two-session probe cover storage lifecycle tenant commands exact retries rollback candidate bounds and one-snapshot concurrency
           - adversarial security tenancy correctness complexity idiom and cruft review has no remaining blocker or should-fix finding
       - id: M07-S02-CAMPAIGN-CONTRACT-AND-SCHEDULE
-        status: in_progress
+        status: complete
         acceptance:
           - seven strict campaign types bind immutable audiences rewards schedules timezone exclusions caps budgets liability and control assignment
           - preview approval pause and cancellation commands are role-derived audited idempotent and fail closed across DST boundaries
         evidence:
           - ADR-0022 selects explicit instants plus timezone local evidence and approval-bound private deterministic wallet assignment
           - 14 focused contract tests cover all seven behaviors budgets liabilities offset chronology DST gaps overlaps empty-preview reconciliation exact integers and single-line command reasons
-          - additive migration 20260814081000 and 81 focused pgTAP assertions await exact-head clean replay
+          - additive migration 20260814081000 and 81 focused pgTAP assertions pass exact-head clean replay
+          - exact-head run 31777177961 passed baseline both images 43 migrations 37 pgTAP files 1851 assertions all four concurrency probes and all four WooCommerce runtime cells at e92f52d
+          - adversarial review replaced probabilistic control thresholds with exact salted-hash ranks aligned public and database reason validation preserved exact RPC integers and accepted empty previews without allowing empty approval
       - id: M07-S03-ATOMIC-CAPACITY-AND-EXECUTION
-        status: planned
+        status: in_progress
         acceptance:
           - limited quantity points budgets and per-member caps reserve atomically before any value effect
           - highest-priority multiplier and explicitly additive bonuses retain snapshot explanation and exactly-once ledger evidence
