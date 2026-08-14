@@ -111,24 +111,150 @@ export const createMyReferralLinkCommandV1 = z
   })
   .strict();
 
+const referralShareUrlV1 = z.url().refine((value) => {
+  const parsed = new URL(value);
+  return (
+    parsed.protocol === "https:" &&
+    parsed.username === "" &&
+    parsed.password === "" &&
+    parsed.hash === "" &&
+    parsed.searchParams.size === 1 &&
+    parsed.searchParams.has("stf_ref") &&
+    z.uuid().safeParse(parsed.searchParams.get("stf_ref")).success
+  );
+}, "Use one HTTPS referral URL containing only stf_ref");
+
 export const createMyReferralLinkResultV1 = z
   .object({
     advocateCode: z.uuid(),
-    shareUrl: z.url().refine((value) => {
-      const parsed = new URL(value);
-      return (
-        parsed.protocol === "https:" &&
-        parsed.username === "" &&
-        parsed.password === "" &&
-        parsed.hash === "" &&
-        parsed.searchParams.size === 1 &&
-        parsed.searchParams.has("stf_ref") &&
-        z.uuid().safeParse(parsed.searchParams.get("stf_ref")).success
-      );
-    }, "Use one HTTPS referral URL containing only stf_ref"),
+    shareUrl: referralShareUrlV1,
     outcome: z.enum(["created", "duplicate"]),
   })
   .strict();
+
+export const customerReferralHistoryItemV1 = z
+  .object({
+    referralId: z.uuid(),
+    state: referralAttributionStateV1,
+    rewardPoints: positiveBigintString,
+    capturedAt: z.iso.datetime({ offset: true }),
+    updatedAt: z.iso.datetime({ offset: true }),
+    availableAt: z.iso.datetime({ offset: true }).nullable(),
+  })
+  .strict()
+  .refine((item) => Date.parse(item.updatedAt) >= Date.parse(item.capturedAt), {
+    message: "Referral update cannot precede capture",
+    path: ["updatedAt"],
+  });
+
+export const customerReferralExperienceV1 = z
+  .object({
+    accountId: z.uuid(),
+    sharingState: z.enum(["available", "active", "paused", "disabled"]),
+    shareUrl: referralShareUrlV1.nullable(),
+    advocateRewardPoints: positiveBigintString,
+    friendRewardPoints: positiveBigintString,
+    minimumEligibleSpendMinor: nonNegativeBigintString,
+    qualificationStatus: z.enum(["processing", "completed"]),
+    coolingDays: z.number().int().min(0).max(90),
+    counts: z
+      .object({
+        total: nonNegativeBigintString,
+        pending: nonNegativeBigintString,
+        qualified: nonNegativeBigintString,
+        rejected: nonNegativeBigintString,
+        reversed: nonNegativeBigintString,
+      })
+      .strict(),
+    history: z.array(customerReferralHistoryItemV1).max(20),
+  })
+  .strict()
+  .superRefine((experience, context) => {
+    if (
+      (experience.sharingState === "active") !==
+      (experience.shareUrl !== null)
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "Only an active referral experience exposes a share URL",
+        path: ["shareUrl"],
+      });
+    }
+    const counted =
+      BigInt(experience.counts.pending) +
+      BigInt(experience.counts.qualified) +
+      BigInt(experience.counts.rejected) +
+      BigInt(experience.counts.reversed);
+    if (counted !== BigInt(experience.counts.total)) {
+      context.addIssue({
+        code: "custom",
+        message: "Referral status counts must reconcile",
+        path: ["counts", "total"],
+      });
+    }
+  });
+
+const merchantReferralTopAdvocateV1 = z
+  .object({
+    customerId: z.uuid(),
+    reference: z.string().trim().min(1).max(200),
+    attributions: nonNegativeBigintString,
+    qualified: nonNegativeBigintString,
+    pointsIssued: nonNegativeBigintString,
+  })
+  .strict()
+  .refine((item) => BigInt(item.qualified) <= BigInt(item.attributions), {
+    message: "Qualified referrals cannot exceed attributions",
+  });
+
+const merchantReferralRecentItemV1 = z
+  .object({
+    referralId: z.uuid(),
+    advocateReference: z.string().trim().min(1).max(200),
+    friendReference: z.string().trim().min(1).max(200),
+    sourceOrderReference: z.string().trim().min(1).max(255),
+    state: referralAttributionStateV1,
+    riskCodes: z.array(referralRiskCodeV1).max(6),
+    capturedAt: z.iso.datetime({ offset: true }),
+    updatedAt: z.iso.datetime({ offset: true }),
+  })
+  .strict();
+
+export const merchantReferralDashboardV1 = z
+  .object({
+    programmeId: z.uuid(),
+    lookbackDays: z.number().int().min(1).max(365),
+    generatedAt: z.iso.datetime({ offset: true }),
+    totals: z
+      .object({
+        advocates: nonNegativeBigintString,
+        attributions: nonNegativeBigintString,
+        pending: nonNegativeBigintString,
+        qualified: nonNegativeBigintString,
+        rejected: nonNegativeBigintString,
+        reversed: nonNegativeBigintString,
+        advocatePointsIssued: nonNegativeBigintString,
+        friendPointsIssued: nonNegativeBigintString,
+      })
+      .strict(),
+    topAdvocates: z.array(merchantReferralTopAdvocateV1).max(10),
+    recent: z.array(merchantReferralRecentItemV1).max(20),
+  })
+  .strict()
+  .superRefine((dashboard, context) => {
+    const counted =
+      BigInt(dashboard.totals.pending) +
+      BigInt(dashboard.totals.qualified) +
+      BigInt(dashboard.totals.rejected) +
+      BigInt(dashboard.totals.reversed);
+    if (counted !== BigInt(dashboard.totals.attributions)) {
+      context.addIssue({
+        code: "custom",
+        message: "Referral funnel counts must reconcile",
+        path: ["totals", "attributions"],
+      });
+    }
+  });
 
 const referralReviewCaseBaseV1 = z.object({
   reviewId: z.uuid(),
@@ -212,6 +338,15 @@ export type CreateMyReferralLinkCommandV1 = z.infer<
 >;
 export type CreateMyReferralLinkResultV1 = z.infer<
   typeof createMyReferralLinkResultV1
+>;
+export type CustomerReferralHistoryItemV1 = z.infer<
+  typeof customerReferralHistoryItemV1
+>;
+export type CustomerReferralExperienceV1 = z.infer<
+  typeof customerReferralExperienceV1
+>;
+export type MerchantReferralDashboardV1 = z.infer<
+  typeof merchantReferralDashboardV1
 >;
 export type ReferralRiskCodeV1 = z.infer<typeof referralRiskCodeV1>;
 export type ReferralReviewCaseV1 = z.infer<typeof referralReviewCaseV1>;

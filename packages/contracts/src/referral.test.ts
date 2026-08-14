@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   createMyReferralLinkResultV1,
+  customerReferralExperienceV1,
+  merchantReferralDashboardV1,
   merchantResolveReferralReviewCommandV1,
   merchantRetryReferralRewardCommandV1,
   referralAttributionEvidenceV1,
@@ -100,6 +102,154 @@ describe("createMyReferralLinkResultV1", () => {
         shareUrl:
           "https://shop.example/?stf_ref=55000000-0000-4000-8000-000000000001&utm_source=customer",
         outcome: "created",
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe("referral experience contracts", () => {
+  const referralId = "81000000-0000-4000-8000-000000000001";
+  const shareUrl = `https://shop.example.test/?stf_ref=${referralId}`;
+
+  it("accepts a reconciled customer experience without friend identity", () => {
+    expect(
+      customerReferralExperienceV1.parse({
+        accountId: "81000000-0000-4000-8000-000000000002",
+        sharingState: "active",
+        shareUrl,
+        advocateRewardPoints: "500",
+        friendRewardPoints: "250",
+        minimumEligibleSpendMinor: "3000",
+        qualificationStatus: "completed",
+        coolingDays: 14,
+        counts: {
+          total: "4",
+          pending: "1",
+          qualified: "1",
+          rejected: "1",
+          reversed: "1",
+        },
+        history: [
+          {
+            referralId,
+            state: "qualified",
+            rewardPoints: "500",
+            capturedAt: "2026-08-01T10:00:00+02:00",
+            updatedAt: "2026-08-16T08:00:00Z",
+            availableAt: "2026-08-16T08:00:00Z",
+          },
+        ],
+      }).shareUrl,
+    ).toBe(shareUrl);
+  });
+
+  it("rejects a paused experience that still exposes a link", () => {
+    expect(
+      customerReferralExperienceV1.safeParse({
+        accountId: "81000000-0000-4000-8000-000000000002",
+        sharingState: "paused",
+        shareUrl,
+        advocateRewardPoints: "500",
+        friendRewardPoints: "250",
+        minimumEligibleSpendMinor: "3000",
+        qualificationStatus: "completed",
+        coolingDays: 14,
+        counts: {
+          total: "0",
+          pending: "0",
+          qualified: "0",
+          rejected: "0",
+          reversed: "0",
+        },
+        history: [],
+      }).success,
+    ).toBe(false);
+  });
+
+  it("rejects unreconciled customer and merchant counts", () => {
+    expect(
+      customerReferralExperienceV1.safeParse({
+        accountId: "81000000-0000-4000-8000-000000000002",
+        sharingState: "available",
+        shareUrl: null,
+        advocateRewardPoints: "500",
+        friendRewardPoints: "250",
+        minimumEligibleSpendMinor: "3000",
+        qualificationStatus: "completed",
+        coolingDays: 14,
+        counts: {
+          total: "2",
+          pending: "1",
+          qualified: "0",
+          rejected: "0",
+          reversed: "0",
+        },
+        history: [],
+      }).success,
+    ).toBe(false);
+    expect(
+      merchantReferralDashboardV1.safeParse({
+        programmeId: "81000000-0000-4000-8000-000000000003",
+        lookbackDays: 30,
+        generatedAt: "2026-08-14T12:00:00Z",
+        totals: {
+          advocates: "3",
+          attributions: "2",
+          pending: "1",
+          qualified: "0",
+          rejected: "0",
+          reversed: "0",
+          advocatePointsIssued: "0",
+          friendPointsIssued: "0",
+        },
+        topAdvocates: [],
+        recent: [],
+      }).success,
+    ).toBe(false);
+  });
+
+  it("accepts a fact-sourced merchant funnel and rejects impossible advocates", () => {
+    const dashboard = {
+      programmeId: "81000000-0000-4000-8000-000000000003",
+      lookbackDays: 30,
+      generatedAt: "2026-08-14T12:00:00Z",
+      totals: {
+        advocates: "3",
+        attributions: "4",
+        pending: "1",
+        qualified: "1",
+        rejected: "1",
+        reversed: "1",
+        advocatePointsIssued: "500",
+        friendPointsIssued: "250",
+      },
+      topAdvocates: [
+        {
+          customerId: "81000000-0000-4000-8000-000000000004",
+          reference: "Customer 1004",
+          attributions: "2",
+          qualified: "1",
+          pointsIssued: "500",
+        },
+      ],
+      recent: [
+        {
+          referralId,
+          advocateReference: "Customer 1004",
+          friendReference: "Customer 1005",
+          sourceOrderReference: "1842",
+          state: "qualified",
+          riskCodes: [],
+          capturedAt: "2026-08-01T08:00:00Z",
+          updatedAt: "2026-08-16T08:00:00Z",
+        },
+      ],
+    };
+    expect(merchantReferralDashboardV1.parse(dashboard).recent).toHaveLength(1);
+    expect(
+      merchantReferralDashboardV1.safeParse({
+        ...dashboard,
+        topAdvocates: [{ ...dashboard.topAdvocates[0], qualified: "3" }],
       }).success,
     ).toBe(false);
   });

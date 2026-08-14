@@ -923,6 +923,7 @@ tasks:
         docs/architecture/ADR/0017-historical-referral-qualification-and-cooling.md,
         docs/architecture/ADR/0018-leased-atomic-referral-reward-lifecycle.md,
         docs/architecture/ADR/0019-auth-derived-reversible-referral-review.md,
+        docs/architecture/ADR/0020-auth-derived-referral-experience-and-fact-sourced-funnel.md,
       ]
     evidence: [docs/plan/evidence/M06/README.md]
 
