@@ -213,7 +213,8 @@ $$;
 insert into loyalty.audiences (
   public_id, organization_id, programme_group_id, code, created_by_user_id
 )
-select public_id, organization.id, programme_group.id, code, actor_id
+select fixture.public_id, organization.id, programme_group.id,
+  fixture.code, fixture.actor_id
 from (values
   ('89000000-0000-4000-8000-000000000451'::uuid, 'm07-campaign-one', 'included',
     '89000000-0000-4000-8000-000000000001'::uuid),
