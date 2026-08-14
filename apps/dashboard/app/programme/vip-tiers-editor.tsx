@@ -74,6 +74,7 @@ function defaultLevel(
   tierCode: string,
   minimum: string,
   base: boolean,
+  earningMultiplierBasisPoints = 10_000,
 ): TierPolicyLevelV2 {
   if (base) {
     return {
@@ -82,7 +83,7 @@ function defaultLevel(
       retention: null,
       reentry: null,
       benefits: {
-        earningMultiplierBasisPoints: 10_000,
+        earningMultiplierBasisPoints,
         rewardCodes: [],
         earlyAccess: false,
       },
@@ -98,7 +99,7 @@ function defaultLevel(
     retention: expression,
     reentry: expression,
     benefits: {
-      earningMultiplierBasisPoints: 10_000,
+      earningMultiplierBasisPoints,
       rewardCodes: [],
       earlyAccess: false,
     },
@@ -195,6 +196,41 @@ export function VipTiersEditor({
     }));
   }
 
+  function updateTierRate(index: number, pointsPerMajorUnit: string) {
+    if (index === 0 || !/^[1-9][0-9]*$/u.test(pointsPerMajorUnit)) return;
+    setDefinition((current) => {
+      const baseRule = current.earningRules.find(
+        (rule) => rule.enabled && rule.effect.kind === "base_rate",
+      );
+      if (baseRule?.effect.kind !== "base_rate") return current;
+      const numerator = BigInt(pointsPerMajorUnit) * 10_000n;
+      const baseRate = BigInt(baseRule.effect.pointsPerMajorUnit);
+      if (numerator % baseRate !== 0n) return current;
+      const multiplier = numerator / baseRate;
+      if (multiplier < 10_000n || multiplier > 100_000n) return current;
+      return {
+        ...current,
+        tiers: current.tiers.map((tier, tierIndex) =>
+          tierIndex === index ? { ...tier, pointsPerMajorUnit } : tier,
+        ),
+        tierPolicy: {
+          ...current.tierPolicy!,
+          levels: current.tierPolicy!.levels.map((level, levelIndex) =>
+            levelIndex === index
+              ? {
+                  ...level,
+                  benefits: {
+                    ...level.benefits,
+                    earningMultiplierBasisPoints: Number(multiplier),
+                  },
+                }
+              : level,
+          ),
+        },
+      };
+    });
+  }
+
   function addTier() {
     setDefinition((current) => {
       const nextIndex = current.tiers.length + 1;
@@ -218,7 +254,13 @@ export function VipTiersEditor({
           ...current.tierPolicy!,
           levels: [
             ...current.tierPolicy!.levels,
-            defaultLevel(tierCode, nextMinimum, false),
+            defaultLevel(
+              tierCode,
+              nextMinimum,
+              false,
+              current.tierPolicy!.levels.at(-1)?.benefits
+                .earningMultiplierBasisPoints ?? 10_000,
+            ),
           ],
         },
       };
@@ -473,31 +515,21 @@ export function VipTiersEditor({
                 )}
                 <div className="vip-benefits">
                   <label>
-                    <span>Earning multiplier</span>
-                    <select
-                      disabled={!canEdit}
-                      value={
-                        definition.tierPolicy!.levels[index]!.benefits
-                          .earningMultiplierBasisPoints
-                      }
+                    <span>Points per major currency unit</span>
+                    <input
+                      disabled={!canEdit || index === 0}
+                      min="1"
+                      type="number"
+                      value={tier.pointsPerMajorUnit}
                       onChange={(event) =>
-                        updateLevel(index, (level) => ({
-                          ...level,
-                          benefits: {
-                            ...level.benefits,
-                            earningMultiplierBasisPoints: Number(
-                              event.target.value,
-                            ),
-                          },
-                        }))
+                        updateTierRate(index, event.target.value)
                       }
-                    >
-                      {[1, 1.25, 1.5, 2, 3, 5].map((multiplier) => (
-                        <option key={multiplier} value={multiplier * 10_000}>
-                          {multiplier}× points
-                        </option>
-                      ))}
-                    </select>
+                    />
+                    <small>
+                      {index === 0
+                        ? "Edit the base rate in Earning rules."
+                        : `${definition.tierPolicy!.levels[index]!.benefits.earningMultiplierBasisPoints / 10_000}× the base rate.`}
+                    </small>
                   </label>
                   <label className="vip-checkbox">
                     <input

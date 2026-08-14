@@ -336,6 +336,9 @@ export const programmeDefinitionV2 = z
     });
 
     if (definition.tierPolicy) {
+      const baseRule = definition.earningRules.find(
+        (rule) => rule.enabled && rule.effect.kind === "base_rate",
+      );
       const policyCodes = definition.tierPolicy.levels.map(
         (level) => level.tierCode,
       );
@@ -352,6 +355,27 @@ export const programmeDefinitionV2 = z
         });
       }
       definition.tierPolicy.levels.forEach((level, levelIndex) => {
+        const tier = definition.tiers[levelIndex];
+        if (
+          tier &&
+          baseRule?.effect.kind === "base_rate" &&
+          BigInt(tier.pointsPerMajorUnit) * 10_000n !==
+            BigInt(baseRule.effect.pointsPerMajorUnit) *
+              BigInt(level.benefits.earningMultiplierBasisPoints)
+        ) {
+          context.addIssue({
+            code: "custom",
+            message:
+              "Tier earning multiplier must exactly match the displayed points rate",
+            path: [
+              "tierPolicy",
+              "levels",
+              levelIndex,
+              "benefits",
+              "earningMultiplierBasisPoints",
+            ],
+          });
+        }
         level.benefits.rewardCodes.forEach((rewardCode, rewardIndex) => {
           const reward = definition.rewards.find(
             (candidate) => candidate.code === rewardCode,

@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(141);
+select plan(144);
 
 select has_table('loyalty', 'programme_tier_policies', 'advanced tier policies exist');
 select has_table('loyalty', 'programme_tier_policy_levels', 'advanced tier levels exist');
@@ -52,6 +52,13 @@ select ok(
     'authenticated', 'loyalty_private.validate_tier_policy_v2(jsonb)', 'EXECUTE'
   ),
   'browser sessions cannot bypass commands through the advanced validator'
+);
+select ok(
+  not has_function_privilege(
+    'authenticated', 'loyalty_private.validate_tier_rate_parity_v2(jsonb)',
+    'EXECUTE'
+  ),
+  'browser sessions cannot bypass the tier rate parity boundary'
 );
 
 insert into auth.users (id, email)
@@ -262,6 +269,18 @@ select throws_ok(
   $$ select * from loyalty.create_programme_draft_command(
     '85000000-0000-4000-8000-000000000101',
     jsonb_set(pg_temp.valid_m05(),
+      '{tierPolicy,levels,1,benefits,earningMultiplierBasisPoints}',
+      '10000'::jsonb),
+    'm05:invalid:tier-rate-parity',
+    '85000000-0000-4000-8000-000000000211'
+  ) $$,
+  '23514', 'tier earning multiplier must exactly match displayed tier rate',
+  'draft storage rejects a tier benefit that would award less than its displayed rate'
+);
+select throws_ok(
+  $$ select * from loyalty.create_programme_draft_command(
+    '85000000-0000-4000-8000-000000000101',
+    jsonb_set(pg_temp.valid_m05(),
       '{rewards,0,configuration,availability,tierCodes}', '["rose"]'::jsonb),
     'm05:invalid:benefit-availability',
     '85000000-0000-4000-8000-000000000210'
@@ -315,6 +334,31 @@ select results_eq(
      from loyalty.programme_tier_policy_levels where tier_code = 'icon' $$,
   $$ values (14000, true) $$,
   'materialization preserves value-neutral tier benefit configuration'
+);
+select results_eq(
+  $$ select tier.code, tier.points_per_major_unit,
+       rule.points_per_major_unit * level.earning_multiplier_basis_points / 10000
+     from loyalty.programme_tiers as tier
+     join loyalty.programme_tier_policy_levels as level
+       on level.organization_id = tier.organization_id
+      and level.programme_version_id = tier.programme_version_id
+      and level.tier_code = tier.code
+     cross join lateral (
+       select (earning.effect ->> 'pointsPerMajorUnit')::bigint
+         as points_per_major_unit
+       from loyalty.programme_earning_rules as earning
+       where earning.organization_id = tier.organization_id
+         and earning.programme_version_id = tier.programme_version_id
+         and earning.enabled and earning.effect_kind = 'base_rate'
+       limit 1
+     ) as rule
+     order by tier.ordinal $$,
+  $$ values
+    ('rose'::text, 5::bigint, 5::bigint),
+    ('bloom'::text, 6::bigint, 6::bigint),
+    ('icon'::text, 7::bigint, 7::bigint)
+  $$,
+  'materialized Rose Bloom and Icon award exactly their displayed legacy rates'
 );
 select results_eq(
   $$ select level.tier_code, level.reward_codes,

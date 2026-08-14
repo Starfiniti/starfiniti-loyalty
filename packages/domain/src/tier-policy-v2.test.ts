@@ -333,10 +333,27 @@ describe("advanced tier qualification", () => {
 
   it("preserves Rose Bloom Icon boundaries with the legacy migration", () => {
     const rosyPolicy = migrateLegacySpendTiersToPolicyV2([
-      { code: "rose", minimumEligibleSpendMinor: "0" },
-      { code: "bloom", minimumEligibleSpendMinor: "15000" },
-      { code: "icon", minimumEligibleSpendMinor: "50000" },
+      {
+        code: "rose",
+        minimumEligibleSpendMinor: "0",
+        pointsPerMajorUnit: "5",
+      },
+      {
+        code: "bloom",
+        minimumEligibleSpendMinor: "15000",
+        pointsPerMajorUnit: "6",
+      },
+      {
+        code: "icon",
+        minimumEligibleSpendMinor: "50000",
+        pointsPerMajorUnit: "7",
+      },
     ]);
+    expect(
+      rosyPolicy.levels.map(
+        (level) => level.benefits.earningMultiplierBasisPoints,
+      ),
+    ).toEqual([10_000, 12_000, 14_000]);
     for (const [spend, expected] of [
       ["0", "rose"],
       ["14999", "rose"],

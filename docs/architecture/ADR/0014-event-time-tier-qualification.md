@@ -27,11 +27,15 @@ Keep `ProgrammeDefinitionV2` and add an optional nested `TierPolicyV2` discrimin
 
 Each advanced policy selects one qualification window: lifetime, an exact rolling number of days, or a calendar year in an IANA timezone. Each non-base tier defines entry, retention, and re-entry threshold expressions. An expression is either `all` or `any` over bounded thresholds for eligible spend, earned points, completed orders, qualified referrals, or verified actions. Values remain decimal integer strings through browser, worker, and PostgreSQL boundaries.
 
+Progress remains a projection, not a mutable authority. Merchant and customer reads rebuild exact qualification metrics from immutable event-time facts under the currently published policy, combine them with immutable decision/membership history, and return only bounded versioned view contracts. The customer boundary derives scope from an active Auth/customer link and accepts no resource selector; the merchant boundary derives organization membership before accepting public customer/programme selectors. Aggregate tier performance contains no customer identity.
+
+The experience deliberately shows spendable wallet points and qualification metrics as separate facts. It exposes the active qualification window and review date, exact amount remaining for every AND/OR threshold, retention state, grace/override bounds, and immutable tier intervals. This follows the documented Smile milestone/reset and LoyaltyLion progress/review-date models without treating a points balance as qualification authority.
+
 Qualification uses immutable facts with two timestamps: `effective_at` determines the qualification window and `recorded_at` proves when the platform learned the fact. Late events append a current decision from a recomputed event-time snapshot; they never rewrite a past decision or membership interval. Refund effects retain original-order attribution for qualification, so reversing an old order cannot create an unrelated negative metric in the current rolling period.
 
 The evaluator returns the selected window, exact metrics, matched expression, effective threshold kind, next milestone, and grace evidence. The live worker and merchant simulator use the same pure evaluator. PostgreSQL independently validates policy publication, derives organization/customer/wallet authority, serializes live fact/decision writes, and verifies the submitted metric snapshot against stored facts before opening or closing a membership interval.
 
-Rose, Bloom, and Icon migrate as a 365-day rolling eligible-spend policy with thresholds EUR 0, EUR 150, and EUR 500 and a 30-day downgrade grace. Entry, retention, and re-entry expressions are identical for this migration. Shadow evaluation must prove the same tier at every boundary before the advanced policy can be enabled for the pilot tenant.
+Rose, Bloom, and Icon migrate as a 365-day rolling eligible-spend policy with thresholds EUR 0, EUR 150, and EUR 500 and a 30-day downgrade grace. Entry, retention, and re-entry expressions are identical for this migration. Their retained 5/6/7 points-per-euro rates derive exact 10,000/12,000/14,000 basis-point benefits from the 5-point base. Contract and PostgreSQL validation reject any advanced definition whose displayed tier rate differs from that executable product. Shadow evaluation must prove the same tier and award rate at every boundary before the advanced policy can be enabled for the pilot tenant.
 
 Tier earning multipliers are part of the member's effective base purchase rate, not another merchant-authored campaign rule. The engine applies the effective tier multiplier to the base-rate numerator, then applies at most the one existing highest-priority eligible purchase multiplier to that tier-adjusted base; explicitly stackable fixed bonuses remain unmultiplied. The evaluation records both factors, so liability and historical explanations remain reconstructable. Tier reward codes grant access only to immutable published rewards and still pass the normal redemption, reservation, connector/manual fulfilment, and budget boundaries. Free-shipping benefits are therefore linked free-shipping rewards, while exclusive access and custom perks use the audited manual fulfilment state machine. `earlyAccess` is a visible eligibility fact for later campaign/storefront enforcement and grants no direct commerce authority by itself.
 
@@ -55,9 +59,12 @@ Manual tier overrides are separate append-only, expiring decisions. Owner/admin 
 - Calendar boundaries use a stored timezone rather than session or browser locale.
 - Backdated facts and refunds append evidence instead of rewriting historical membership.
 - Manual overrides remain a separate audited command and never masquerade as automatic qualification.
+- Displayed tier rates and executable base-rate multipliers must have exact integer parity before draft storage and publication.
 
 ## Migration and rollback
 
 Deploy the additive contract, schema, and readers while `vip.advanced` is disabled. Existing definitions omit `tierPolicy` and continue unchanged. Shadow-evaluate migrated Rose/Bloom/Icon policies without moving memberships, then enable one tenant.
+
+While rollout remains disabled, legacy V1 tier authoring stays available. If an accepted advanced definition already exists, disabling the capability makes its editor read-only but does not hide customer progress, merchant history/performance, or accepted tier value. Rollback therefore removes only new advanced authoring; the projection functions remain safe to serve until a forward fix.
 
 Rollback disables new advanced policy publication and automatic transitions. Existing advanced definitions, immutable facts, decisions, and membership history remain readable. The last effective tier remains in place while a forward fix is prepared; historical decisions are never deleted or rewritten.

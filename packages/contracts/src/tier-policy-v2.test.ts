@@ -286,4 +286,28 @@ describe("TierPolicyV2", () => {
       "Tier benefit rewards must use V2 fulfilment and include the tier in availability",
     );
   });
+
+  it("requires displayed tier rates to equal the executable base multiplier", () => {
+    expect(programmeDefinitionV2.parse(definition).tiers[1]).toMatchObject({
+      pointsPerMajorUnit: "6",
+    });
+    expect(() =>
+      programmeDefinitionV2.parse({
+        ...definition,
+        tierPolicy: {
+          ...policy,
+          levels: [
+            policy.levels[0],
+            {
+              ...policy.levels[1],
+              benefits: {
+                ...policy.levels[1]!.benefits,
+                earningMultiplierBasisPoints: 10_000,
+              },
+            },
+          ],
+        },
+      }),
+    ).toThrow("must exactly match the displayed points rate");
+  });
 });

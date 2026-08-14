@@ -498,6 +498,7 @@ export function migrateLegacySpendTiersToPolicyV2(
   tiers: readonly Readonly<{
     code: string;
     minimumEligibleSpendMinor: string;
+    pointsPerMajorUnit?: string;
   }>[],
   options: Readonly<{ rollingDays: number; downgradeGraceDays: number }> = {
     rollingDays: 365,
@@ -505,6 +506,16 @@ export function migrateLegacySpendTiersToPolicyV2(
   },
 ): TierPolicyV2 {
   if (tiers.length === 0) throw new TypeError("At least one tier is required");
+  const suppliedRateCount = tiers.filter(
+    (tier) => tier.pointsPerMajorUnit !== undefined,
+  ).length;
+  if (suppliedRateCount !== 0 && suppliedRateCount !== tiers.length) {
+    throw new TypeError("Legacy tier earning rates must be supplied together");
+  }
+  const baseRate =
+    suppliedRateCount === tiers.length
+      ? BigInt(tiers[0]!.pointsPerMajorUnit!)
+      : null;
   return {
     version: "2",
     qualificationPeriod: {
@@ -513,6 +524,22 @@ export function migrateLegacySpendTiersToPolicyV2(
     },
     downgradeGraceDays: options.downgradeGraceDays,
     levels: tiers.map((tier, index) => {
+      let earningMultiplierBasisPoints = 10_000;
+      if (baseRate !== null) {
+        const numerator = BigInt(tier.pointsPerMajorUnit!) * 10_000n;
+        if (baseRate <= 0n || numerator % baseRate !== 0n) {
+          throw new TypeError(
+            "Legacy tier earning rates cannot be represented exactly",
+          );
+        }
+        const multiplier = numerator / baseRate;
+        if (multiplier < 10_000n || multiplier > 100_000n) {
+          throw new TypeError(
+            "Legacy tier earning multiplier is outside the supported range",
+          );
+        }
+        earningMultiplierBasisPoints = Number(multiplier);
+      }
       const threshold =
         index === 0
           ? null
@@ -532,7 +559,7 @@ export function migrateLegacySpendTiersToPolicyV2(
         retention: threshold,
         reentry: threshold,
         benefits: {
-          earningMultiplierBasisPoints: 10_000,
+          earningMultiplierBasisPoints,
           rewardCodes: [],
           earlyAccess: false,
         },
