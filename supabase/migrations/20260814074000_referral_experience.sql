@@ -130,7 +130,7 @@ begin
       pg_catalog.jsonb_build_object(
         'referralId', row.referral_id,
         'state', row.state,
-        'rewardPoints', policy.advocate_reward_points::text,
+        'rewardPoints', row.reward_points::text,
         'capturedAt', row.captured_at,
         'updatedAt', row.updated_at,
         'availableAt', row.available_at
@@ -139,10 +139,15 @@ begin
     from (
       select attribution.public_id as referral_id,
         current_state.state,
+        historical_policy.advocate_reward_points as reward_points,
         attribution.captured_at,
         current_state.updated_at,
         issuance.available_at
       from loyalty.referral_attributions as attribution
+      join loyalty.programme_referral_policies as historical_policy
+        on historical_policy.organization_id = attribution.organization_id
+       and historical_policy.programme_group_id = attribution.programme_group_id
+       and historical_policy.programme_version_id = attribution.programme_version_id
       join lateral (
         select transition.to_state as state,
           transition.created_at as updated_at

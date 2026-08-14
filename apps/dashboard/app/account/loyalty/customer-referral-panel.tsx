@@ -105,6 +105,23 @@ const statePresentation = {
   },
 } as const;
 
+function historyPointsLabel(item: CustomerReferralHistoryItemV1): string {
+  const points = formatPoints(item.rewardPoints);
+  switch (item.state) {
+    case "qualified":
+      return `${points} points issued`;
+    case "reversed":
+      return `${points} points reversed`;
+    case "cooling":
+      return `${points} points pending`;
+    case "blocked":
+    case "rejected":
+      return "No points issued";
+    default:
+      return `${points} potential points`;
+  }
+}
+
 function ReferralHistoryRow({
   item,
 }: Readonly<{ item: CustomerReferralHistoryItemV1 }>) {
@@ -120,7 +137,7 @@ function ReferralHistoryRow({
         <span>{presentation.detail}</span>
         <small>Started {formatDate(item.capturedAt)}</small>
       </div>
-      <b>{formatPoints(item.rewardPoints)} points</b>
+      <b>{historyPointsLabel(item)}</b>
     </li>
   );
 }

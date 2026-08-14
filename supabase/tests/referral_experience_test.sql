@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(31);
+select plan(32);
 
 select ok(
   has_function_privilege(
@@ -330,6 +330,47 @@ select results_eq(
     from loyalty.get_my_referral_experiences_v1() $$,
   $$ values ('EUR'::text, 2::smallint) $$,
   'customer explanation carries explicit currency precision'
+);
+
+reset role;
+
+update loyalty.programme_versions
+set status = 'superseded', retired_at = now() - interval '1 hour'
+where public_id = '86000000-0000-4000-8000-000000000130';
+
+insert into loyalty.programme_versions (
+  public_id, organization_id, programme_group_id, programme_id,
+  version_number, status, configuration, configuration_sha256,
+  approved_by_user_id, published_at, supersedes_version_id
+)
+select '86000000-0000-4000-8000-000000000131', previous.organization_id,
+  previous.programme_group_id, previous.programme_id, 2, 'published',
+  '{"version":"1","tiers":[],"rewards":[]}'::jsonb,
+  extensions.digest(pg_catalog.convert_to('{}', 'UTF8'), 'sha256'),
+  '86000000-0000-4000-8000-000000000001', now(), previous.id
+from loyalty.programme_versions as previous
+where previous.public_id = '86000000-0000-4000-8000-000000000130';
+
+insert into loyalty.programme_referral_policies (
+  organization_id, programme_group_id, programme_version_id,
+  attribution_window_days, qualification_status, cooling_days,
+  minimum_eligible_spend_minor, require_new_customer,
+  monthly_advocate_referral_limit, advocate_reward_points,
+  friend_reward_points, manual_review_enabled, risk_window_hours,
+  source_network_referral_limit, device_referral_limit
+)
+select version.organization_id, version.programme_group_id, version.id,
+  30, 'completed', 14, 3000, true, 10, 700, 350, true, 24, 3, 3
+from loyalty.programme_versions as version
+where version.public_id = '86000000-0000-4000-8000-000000000131';
+
+set local role authenticated;
+set local request.jwt.claim.sub = '86000000-0000-4000-8000-000000000003';
+select results_eq(
+  $$ select advocate_reward_points, history -> 0 ->> 'rewardPoints'
+    from loyalty.get_my_referral_experiences_v1() $$,
+  $$ values ('700'::text, '500'::text) $$,
+  'new policy explanation does not rewrite historical referral reward amounts'
 );
 
 set local request.jwt.claim.sub = '86000000-0000-4000-8000-000000000004';
