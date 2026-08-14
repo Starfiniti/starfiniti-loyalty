@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, Crown, ShieldCheck } from "lucide-react";
 import { MerchantShell } from "@/components/merchant-shell";
+import { TierProgress } from "@/components/tier-progress";
 import {
   merchantIntlLocale,
   merchantLocalePath,
@@ -12,6 +13,7 @@ import {
 import {
   getCustomerAdjustmentContext,
   getCustomerDetail,
+  getCustomerTierProgress,
   getCustomerTierState,
 } from "@/lib/server/customers";
 import { getMerchantProgrammeState } from "@/lib/server/programme";
@@ -62,12 +64,14 @@ export default async function CustomerDetailPage({
   }
   if (tenant.kind === "unassigned") redirect(merchantLocalePath("/", locale));
 
-  const [detail, adjustmentContext, programmeState, tierState] =
+  const asOf = new Date().toISOString();
+  const [detail, adjustmentContext, programmeState, tierState, tierProgress] =
     await Promise.all([
       getCustomerDetail(tenant.context, customerId),
       getCustomerAdjustmentContext(tenant.context, customerId),
       getMerchantProgrammeState(tenant.context),
       getCustomerTierState(tenant.context, customerId),
+      getCustomerTierProgress(tenant.context, customerId, asOf),
     ]);
   if (!detail) notFound();
   const publishedVersion = programmeState.versions.find(
@@ -141,66 +145,74 @@ export default async function CustomerDetailPage({
           ))}
         </section>
 
-        <section
-          className="customer-panel tier-panel"
-          aria-labelledby="tier-title"
-        >
-          <div className="customer-result-heading">
-            <div>
-              <Crown aria-hidden="true" />
-              <strong id="tier-title">{t("Tier qualification")}</strong>
+        {tierProgress ? (
+          <TierProgress
+            availablePoints={detail.balances.available}
+            mode="merchant"
+            progress={tierProgress}
+          />
+        ) : (
+          <section
+            className="customer-panel tier-panel"
+            aria-labelledby="tier-title"
+          >
+            <div className="customer-result-heading">
+              <div>
+                <Crown aria-hidden="true" />
+                <strong id="tier-title">{t("Tier qualification")}</strong>
+              </div>
+              <span>{t("Current immutable decision")}</span>
             </div>
-            <span>{t("Current immutable decision")}</span>
-          </div>
-          {tierState?.tierCode ? (
-            <dl className="tier-detail-grid">
-              <div>
-                <dt>{t("Effective tier")}</dt>
-                <dd>{tierState.tierName ?? tierState.tierCode}</dd>
-              </div>
-              <div>
-                <dt>{t("Qualified tier")}</dt>
-                <dd>
-                  {tierState.qualifiedTierName ??
-                    tierState.qualifiedTierCode ??
-                    t("Not recorded")}
-                </dd>
-              </div>
-              <div>
-                <dt>{t("Decision")}</dt>
-                <dd>{label(tierState.transition ?? "none")}</dd>
-              </div>
-              <div>
-                <dt>{t("Rolling eligible spend")}</dt>
-                <dd>
-                  {tierState.rollingEligibleSpendMinor
-                    ? `${formatPointText(tierState.rollingEligibleSpendMinor, locale)} ${t("minor units")}`
-                    : t("Not recorded")}
-                </dd>
-              </div>
-              <div>
-                <dt>{t("Effective since")}</dt>
-                <dd>
-                  {tierState.effectiveFrom
-                    ? formatDate(tierState.effectiveFrom, locale)
-                    : t("Not recorded")}
-                </dd>
-              </div>
-              <div>
-                <dt>{t("Grace until")}</dt>
-                <dd>
-                  {tierState.graceUntil
-                    ? formatDate(tierState.graceUntil, locale)
-                    : t("No active grace period")}
-                </dd>
-              </div>
-            </dl>
-          ) : (
-            <p className="empty-state">
-              {t("No tier decision has been recorded for this wallet yet.")}
-            </p>
-          )}
-        </section>
+            {tierState?.tierCode ? (
+              <dl className="tier-detail-grid">
+                <div>
+                  <dt>{t("Effective tier")}</dt>
+                  <dd>{tierState.tierName ?? tierState.tierCode}</dd>
+                </div>
+                <div>
+                  <dt>{t("Qualified tier")}</dt>
+                  <dd>
+                    {tierState.qualifiedTierName ??
+                      tierState.qualifiedTierCode ??
+                      t("Not recorded")}
+                  </dd>
+                </div>
+                <div>
+                  <dt>{t("Decision")}</dt>
+                  <dd>{label(tierState.transition ?? "none")}</dd>
+                </div>
+                <div>
+                  <dt>{t("Rolling eligible spend")}</dt>
+                  <dd>
+                    {tierState.rollingEligibleSpendMinor
+                      ? `${formatPointText(tierState.rollingEligibleSpendMinor, locale)} ${t("minor units")}`
+                      : t("Not recorded")}
+                  </dd>
+                </div>
+                <div>
+                  <dt>{t("Effective since")}</dt>
+                  <dd>
+                    {tierState.effectiveFrom
+                      ? formatDate(tierState.effectiveFrom, locale)
+                      : t("Not recorded")}
+                  </dd>
+                </div>
+                <div>
+                  <dt>{t("Grace until")}</dt>
+                  <dd>
+                    {tierState.graceUntil
+                      ? formatDate(tierState.graceUntil, locale)
+                      : t("No active grace period")}
+                  </dd>
+                </div>
+              </dl>
+            ) : (
+              <p className="empty-state">
+                {t("No tier decision has been recorded for this wallet yet.")}
+              </p>
+            )}
+          </section>
+        )}
 
         {adjustmentContext &&
         publishedVersion &&

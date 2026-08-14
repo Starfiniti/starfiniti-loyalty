@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(122);
+select plan(141);
 
 select has_table('loyalty', 'programme_tier_policies', 'advanced tier policies exist');
 select has_table('loyalty', 'programme_tier_policy_levels', 'advanced tier levels exist');
@@ -1297,6 +1297,182 @@ select throws_ok(
   '55000', 'immutable loyalty history cannot be changed',
   'manual override resolutions reject deletion'
 );
+
+select has_function(
+  'loyalty', 'get_customer_tier_progress_v1',
+  array['uuid', 'uuid', 'timestamp with time zone'],
+  'merchant customer progress projection exists'
+);
+select has_function(
+  'loyalty', 'get_my_tier_progress_v1',
+  array['timestamp with time zone'],
+  'customer self-service progress projection exists'
+);
+select has_function(
+  'loyalty', 'get_programme_tier_performance_v1',
+  array['uuid', 'timestamp with time zone'],
+  'merchant aggregate tier performance projection exists'
+);
+select ok(
+  has_function_privilege(
+    'authenticated',
+    'loyalty.get_customer_tier_progress_v1(uuid,uuid,timestamp with time zone)',
+    'EXECUTE'
+  ),
+  'authenticated merchants can enter the tenant-authorized progress projection'
+);
+select ok(
+  has_function_privilege(
+    'authenticated',
+    'loyalty.get_my_tier_progress_v1(timestamp with time zone)', 'EXECUTE'
+  ),
+  'authenticated customers can enter their Auth-derived progress projection'
+);
+select ok(
+  has_function_privilege(
+    'authenticated',
+    'loyalty.get_programme_tier_performance_v1(uuid,timestamp with time zone)',
+    'EXECUTE'
+  ),
+  'authenticated merchants can enter aggregate tier performance'
+);
+select ok(
+  not has_function_privilege(
+    'anon',
+    'loyalty.get_customer_tier_progress_v1(uuid,uuid,timestamp with time zone)',
+    'EXECUTE'
+  ),
+  'anonymous clients cannot enter merchant progress'
+);
+select ok(
+  not has_function_privilege(
+    'authenticated',
+    'loyalty_private.build_customer_tier_progress_v1(bigint,bigint,bigint,bigint,bigint,timestamp with time zone)',
+    'EXECUTE'
+  ),
+  'browser sessions cannot bypass the scoped projections through the private builder'
+);
+
+insert into loyalty.customer_user_links (
+  public_id, organization_id, customer_id, auth_user_id, source_connection_id
+)
+select '85000000-0000-4000-8000-000000000119',
+  customer.organization_id, customer.id,
+  '85000000-0000-4000-8000-000000000001', connection.id
+from loyalty.customers as customer
+join loyalty.commerce_connections as connection
+  on connection.organization_id = customer.organization_id
+where customer.public_id = '85000000-0000-4000-8000-000000000113';
+
+set local role authenticated;
+set local request.jwt.claim.sub = '85000000-0000-4000-8000-000000000001';
+select results_eq(
+  $$ select customer_id from loyalty.get_customer_tier_progress_v1(
+    '85000000-0000-4000-8000-000000000113',
+    (select public_id from loyalty.programme_groups where slug = 'rewards'
+      and organization_id = (select id from loyalty.organizations where slug = 'm05-one')),
+    now() + interval '6 days'
+  ) $$,
+  array['85000000-0000-4000-8000-000000000113'::uuid],
+  'merchant progress returns only the requested tenant customer'
+);
+select results_eq(
+  $$ select tier_progress -> 'currentTier' ->> 'code',
+       tier_progress -> 'automaticTier' ->> 'code',
+       tier_progress -> 'qualifiedTier' ->> 'code'
+     from loyalty.get_customer_tier_progress_v1(
+       '85000000-0000-4000-8000-000000000113',
+       (select public_id from loyalty.programme_groups where slug = 'rewards'
+         and organization_id = (select id from loyalty.organizations where slug = 'm05-one')),
+       now() + interval '6 days'
+     ) $$,
+  $$ values ('bloom'::text, 'bloom'::text, 'bloom'::text) $$,
+  'progress distinguishes effective automatic and qualified tier after override expiry'
+);
+select results_eq(
+  $$ select tier_progress -> 'nextMilestone' -> 'tier' ->> 'code',
+       tier_progress -> 'nextMilestone' ->> 'thresholdKind',
+       tier_progress -> 'nextMilestone' -> 'thresholds' -> 0 ->> 'remaining'
+     from loyalty.get_customer_tier_progress_v1(
+       '85000000-0000-4000-8000-000000000113',
+       (select public_id from loyalty.programme_groups where slug = 'rewards'
+         and organization_id = (select id from loyalty.organizations where slug = 'm05-one')),
+       now() + interval '6 days'
+     ) $$,
+  $$ values ('icon'::text, 'reentry'::text, '40000'::text) $$,
+  'next milestone returns exact re-entry progress after a prior manual tier interval'
+);
+select ok(
+  (select jsonb_array_length(tier_progress -> 'history') >= 3
+   from loyalty.get_customer_tier_progress_v1(
+     '85000000-0000-4000-8000-000000000113',
+     (select public_id from loyalty.programme_groups where slug = 'rewards'
+       and organization_id = (select id from loyalty.organizations where slug = 'm05-one')),
+     now() + interval '6 days'
+   )),
+  'progress includes bounded immutable membership history'
+);
+select ok(
+  (select not (tier_progress ? 'availablePoints')
+     and not (tier_progress::text ~ 'reason|actor|idempotency|request')
+   from loyalty.get_customer_tier_progress_v1(
+     '85000000-0000-4000-8000-000000000113',
+     (select public_id from loyalty.programme_groups where slug = 'rewards'
+       and organization_id = (select id from loyalty.organizations where slug = 'm05-one')),
+     now() + interval '6 days'
+   )),
+  'qualification progress omits wallet balances and private decision evidence'
+);
+select results_eq(
+  $$ select count(*)::bigint from loyalty.get_customer_tier_progress_v1(
+    '86000000-0000-4000-8000-000000000999',
+    (select public_id from loyalty.programme_groups where slug = 'rewards'
+      and organization_id = (select id from loyalty.organizations where slug = 'm05-one')),
+    now()
+  ) $$,
+  array[0::bigint],
+  'unknown or cross-tenant customer progress returns no row'
+);
+select results_eq(
+  $$ select account_id from loyalty.get_my_tier_progress_v1(now() + interval '6 days') $$,
+  array['85000000-0000-4000-8000-000000000119'::uuid],
+  'customer self-service progress derives the one active Auth link'
+);
+select results_eq(
+  $$ select tier_progress -> 'currentTier' ->> 'name',
+       tier_progress -> 'metrics' ->> 'eligibleSpendMinor'
+     from loyalty.get_my_tier_progress_v1(now() + interval '6 days') $$,
+  $$ values ('Bloom'::text, '0'::text) $$,
+  'customer progress returns safe names and exact qualification metrics'
+);
+select results_eq(
+  $$ select tier_performance ->> 'membersWithTier',
+       tier_performance -> 'tiers' -> 0 -> 'tier' ->> 'code'
+     from loyalty.get_programme_tier_performance_v1(
+       '85000000-0000-4000-8000-000000000101', now() + interval '6 days'
+     ) $$,
+  $$ values ('3'::text, 'rose'::text) $$,
+  'merchant performance aggregates current memberships and ordered tiers'
+);
+select ok(
+  (select not (tier_performance::text ~ 'customer|display|email|reason|actor')
+   from loyalty.get_programme_tier_performance_v1(
+     '85000000-0000-4000-8000-000000000101', now() + interval '6 days'
+   )),
+  'aggregate performance exposes no customer identity or override reason'
+);
+reset role;
+
+update loyalty.customer_user_links set revoked_at = now()
+where public_id = '85000000-0000-4000-8000-000000000119';
+set local role authenticated;
+set local request.jwt.claim.sub = '85000000-0000-4000-8000-000000000001';
+select results_eq(
+  $$ select count(*)::bigint from loyalty.get_my_tier_progress_v1(now()) $$,
+  array[0::bigint],
+  'revoked customer links lose progression access immediately'
+);
+reset role;
 
 select * from finish();
 rollback;

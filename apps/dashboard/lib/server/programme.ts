@@ -1,4 +1,8 @@
 import "server-only";
+import {
+  tierPerformanceV1,
+  type TierPerformanceV1,
+} from "@starfiniti/contracts";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { TenantContext } from "@/lib/tenant-context";
 
@@ -191,4 +195,24 @@ export async function getProgrammeExpiryLiability(
     affectedMembers: raw.affected_members,
     nextExpiryAt: raw.next_expiry_at,
   };
+}
+
+export async function getProgrammeTierPerformance(
+  programmeId: string,
+  asOf: string,
+): Promise<TierPerformanceV1> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .schema("loyalty")
+    .rpc("get_programme_tier_performance_v1", {
+      target_programme_public_id: programmeId,
+      target_as_of: asOf,
+    });
+  const row = (Array.isArray(data) ? data[0] : data) as
+    Readonly<{ tier_performance?: unknown }> | undefined;
+  const parsed = tierPerformanceV1.safeParse(row?.tier_performance);
+  if (error || !parsed.success) {
+    throw new Error("programme_tier_performance_unavailable");
+  }
+  return parsed.data;
 }

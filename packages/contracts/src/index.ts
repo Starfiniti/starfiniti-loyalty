@@ -5,6 +5,7 @@ export * from "./ledger";
 export * from "./programme";
 export * from "./programme-v2";
 export * from "./tier-policy-v2";
+export * from "./tier-progression";
 export * from "./point-expiry-v2";
 export * from "./reward-v2";
 export * from "./reward-fulfilment";
