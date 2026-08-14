@@ -792,7 +792,7 @@ tasks:
           - automatic qualification retains its independently verified underlying tier while an active override pins only effective membership
           - browser and worker roles cannot bypass benefit publication award multiplier or raw membership decision boundaries
       - id: M05-S04-EXPIRY-POLICY
-        status: in_progress
+        status: completed
         acceptance:
           - expiry policy authoring preview notification schedule and liability impact use immutable lots and exact dates
           - expiry refund restoration and notification retries preserve original attribution and create one effect
@@ -801,9 +801,10 @@ tasks:
           - additive migration materializes immutable V2 policy and fixes expiry to group lots by original tenant wallet and programme version
           - one bounded single-flight worker sweep performs actual expiry and nearest-relevant exactly-once reminder scheduling while the worker cannot call the low-level expiry primitive
           - merchant authoring explains original-lot restoration and shows aggregate outstanding overdue reserved-past-expiry 30-day 90-day affected-member and next-expiry evidence without identities
-          - 48 focused pgTAP assertions are authored for direct RPC validation RLS grants mixed-version attribution replay reminder retries reservation restoration liability minimization and projection rebuilds; exact-head database CI is pending
+          - exact-head run 31756142529 passed a clean 34-migration replay all 32 pgTAP files and 1,472 assertions including 48 focused expiry assertions plus both concurrency probes both images and all four WooCommerce runtimes
+          - a temporary production-build Playwright fixture exercised the real merchant shell and expiry editor at 1440 by 1000 and 390 by 844 with exact reminder filtering liability evidence mobile navigation no horizontal overflow and no browser diagnostics
       - id: M05-S05-PROGRESSION-EXPERIENCE
-        status: planned
+        status: in_progress
         acceptance:
           - merchant policy builder simulator member progress history next milestone and tier performance pass responsive accessibility review
           - customer progress distinguishes qualification metrics available points retention and expiry
@@ -811,7 +812,7 @@ tasks:
         status: planned
         acceptance:
           - shadow comparison exact-head CI disabled deployment Starfiniti canary reconciliation and score at least 90 pass
-    risks: [R-002, R-020, R-033]
+    risks: [R-002, R-020, R-033, R-034]
     docs:
       [
         docs/api/PROGRAMME_ENGINE.md,
