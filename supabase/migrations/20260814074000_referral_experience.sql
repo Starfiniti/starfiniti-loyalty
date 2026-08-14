@@ -79,7 +79,7 @@ begin
     select referral_policy.*,
       coalesce(version.configuration ->> 'currencyCode', 'EUR')
         as currency_code,
-      coalesce((version.configuration ->> 'currencyMinorUnitDigits')::smallint, 2)
+      coalesce((version.configuration ->> 'currencyMinorUnitDigits')::smallint, 2)::smallint
         as currency_minor_unit_digits
     from loyalty.programme_versions as version
     join loyalty.programme_referral_policies as referral_policy
