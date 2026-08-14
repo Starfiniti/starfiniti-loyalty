@@ -74,4 +74,12 @@ An eligible cooling transition creates one private job due at the canonical even
 
 `loyalty_private.finish_referral_reward_job_v1(...)` records only an allowlisted generic error code and bounded retry delay. Job, attempt, issuance, and compensation tables are private and RLS-enabled. Browser/runtime roles have no table or function access.
 
-Disabling rollout stops new links and attribution while preserving and continuing accepted qualification, reward jobs, refund rejection/compensation, and history. Authorized review commands and merchant/customer projections remain subsequent M06 contracts.
+## Merchant review and internal recovery
+
+`loyalty.list_referral_review_cases(programmeId, kind, limit)` derives organization and programme group from the public programme selector plus the live membership. Owner, admin, operator, analyst, and auditor roles can inspect `risk` and `reward` cases. The bounded projection includes display references, source-order reference, allowlisted risk codes, qualification/cooling state, attempt/review counts, and a generic error code. It never returns network/device/payment/shipping fingerprints or internal tenant/customer keys.
+
+`loyalty.resolve_referral_review_command(attributionId, resolution, reason, idempotencyKey, correlationId)` is limited to live owner, admin, or operator roles. `approved` before qualification returns the attribution to `captured`; `approved` after immutable `review_held` evidence appends `cooling` and creates the normal event-time job; `rejected` appends the terminal value-neutral state. The bounded reason is request-hash-bound and retained in immutable administration audit. Exact retries are duplicates; changed reuse conflicts.
+
+`loyalty.retry_referral_reward_job_command(jobId, reason, idempotencyKey, correlationId)` can requeue only an atomic internal job already at its ten-attempt manual-review boundary. Attempt numbers remain cumulative. At most four merchant-reviewed cycles are allowed after the initial cycle, for 50 total claims; the fifth exhaustion remains nonclaimable for engineering reconciliation. Analyst and auditor roles remain read-only.
+
+Disabling rollout stops new links and attribution while preserving and continuing accepted qualification, reward jobs, refund rejection/compensation, review inspection/resolution, and history. Customer sharing/progress and merchant funnel/history remain the subsequent M06 experience contract.

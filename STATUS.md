@@ -16,7 +16,7 @@
 - M05-S04 is complete. Strict earned-date policy, immutable per-version materialization, bounded single-flight lifecycle processing, mixed-version-safe immutable expiry, nearest-relevant 30/14/7 reminder fences, original-lot reservation restoration, and minimized liability preview passed exact-head run `31756142529`: clean 34-migration replay, all 32 pgTAP files with 1,472 assertions including 48 focused expiry assertions, both concurrency probes, both images, and all four WooCommerce runtimes. A production-build Playwright fixture exercised the real merchant shell and expiry editor at 1440 by 1000 and 390 by 844, including 21-day reminder filtering, liability evidence, mobile navigation, zero horizontal overflow, and no browser diagnostics.
 - M05-S05 is complete. Bigint-safe tenant/customer progression, immutable history, exact next/retention/re-entry milestones, aggregate tier performance, advanced policy authoring/simulation, and responsive merchant/customer experiences passed exact-head run `31759304542`: clean 35-migration replay, all 32 pgTAP files with 1,491 assertions including 141 focused VIP assertions, both concurrency probes, both images, and all four WooCommerce runtimes. Desktop/mobile production-build interaction had no overflow or component diagnostics.
 - M05-S06 predeployment verification is exact-head green. The shadow loop found that migrated Bloom/Icon could display 6/7 points while executing the Rose 5-point base rate; no production value moved because advanced VIP remains undeployed and unpublished. Contracts, PostgreSQL, migration, and editor now bind displayed rate to the exact executable multiplier, all 36 V1/V2 Rose/Bloom/Icon award comparisons match, and run `31760806620` passed a clean 36-migration replay, all 32 pgTAP files with 1,494 assertions, both concurrency probes, both images, and all four WooCommerce runtimes. Reviewed merge, disabled deployment, fresh recovery point, Starfiniti-only canary, zero-drift reconciliation, and module score remain open.
-- M06-S01 through S03 are exact-head green on draft PR #31. Strict policy, opaque Auth-linked identity, signed offline capture, first attribution, historical qualification/cooling, and two-sided exactly-once issuance/compensation passed runs `31763563259`, `31764805380`, and `31766887239`; the latest passed baseline, both images, a clean 39-migration replay, all 34 pgTAP files with 1,635 assertions including 86 focused referral assertions, all three concurrency probes, and all four WooCommerce runtimes. M06-S04 fraud review is active.
+- M06-S01 through S04 are exact-head green on draft PR #31. Strict policy, signed offline capture, first attribution, historical qualification/cooling, two-sided exactly-once issuance/compensation, and Auth-derived reversible fraud review with capped recovery passed runs `31763563259`, `31764805380`, `31766887239`, and `31768294674`; the latest passed baseline, both images, a clean 40-migration replay, all 34 pgTAP files with 1,668 assertions including 119 focused referral assertions, all three concurrency probes, the `/referrals` production route, and all four WooCommerce runtimes. M06-S05 customer/merchant referral experience is active.
 - M01 live read-only reconstruction confirms zero commerce connections, customers, wallets, ledger transactions, reservations, events, effects, or commands. The real-store pilot cannot accidentally overlap existing accepted value.
 - `npm run pilot:validate` enforces 22 M01 checks. Database WAL recovery is proven; the live recursive-export race was repaired with a snapshot-safe exporter, retained-base WAL cleanup, a fresh physical base, a forced-WAL concurrency test, two manual encrypted archives, and one timer-triggered archive. Twenty-one store/application/alert/reconciliation checks remain pending; application/Auth/signing recovery is not claimed.
 
@@ -86,7 +86,7 @@
 
 ## Database migration state
 
-The M06 branch validates 39 versioned migrations and 34 pgTAP files; exact-head run `31766887239` passed its clean replay and all three concurrency probes. Production has applied twenty-eight migrations through `20260813200000`, contains the audited initial Starfiniti owner scope and explicit `programme.v2` canary, and still has no customer or loyalty-ledger value.
+The M06 branch validates 40 versioned migrations and 34 pgTAP files; exact-head run `31768294674` passed its clean replay and all three concurrency probes. Production has applied twenty-eight migrations through `20260813200000`, contains the audited initial Starfiniti owner scope and explicit `programme.v2` canary, and still has no customer or loyalty-ledger value.
 
 ## Git state
 
@@ -165,7 +165,7 @@ The enterprise roadmap work is isolated on `codex/enterprise-roadmap`. Stale Pha
 
 ## Next recommended task
 
-Close M06-S01 exact database/runtime CI, then implement qualification/cooling and exactly-once advocate/friend ledger value while M01 waits for an approved real WooCommerce store and M04/M05 wait for reviewed deployment closeout.
+Implement M06-S05 customer sharing/progress/history and merchant funnel/history with responsive accessibility evidence, while M01 waits for an approved real WooCommerce store and M04/M05 wait for reviewed deployment closeout.
 
 ## Blockers
 
