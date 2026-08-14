@@ -1402,15 +1402,18 @@ select results_eq(
   $$ values ('icon'::text, 'reentry'::text, '40000'::text) $$,
   'next milestone returns exact re-entry progress after a prior manual tier interval'
 );
-select ok(
-  (select jsonb_array_length(tier_progress -> 'history') >= 3
-   from loyalty.get_customer_tier_progress_v1(
-     '85000000-0000-4000-8000-000000000113',
-     (select public_id from loyalty.programme_groups where slug = 'rewards'
-       and organization_id = (select id from loyalty.organizations where slug = 'm05-one')),
-     now() + interval '6 days'
-   )),
-  'progress includes bounded immutable membership history'
+select results_eq(
+  $$ select jsonb_array_length(tier_progress -> 'history'),
+       tier_progress -> 'history' -> 0 -> 'tier' ->> 'code',
+       tier_progress -> 'history' -> 1 -> 'tier' ->> 'code'
+     from loyalty.get_customer_tier_progress_v1(
+       '85000000-0000-4000-8000-000000000113',
+       (select public_id from loyalty.programme_groups where slug = 'rewards'
+         and organization_id = (select id from loyalty.organizations where slug = 'm05-one')),
+       now() + interval '6 days'
+     ) $$,
+  $$ values (2, 'bloom'::text, 'icon'::text) $$,
+  'progress includes the exact immutable manual and automatic membership history'
 );
 select ok(
   (select not (tier_progress ? 'availablePoints')
