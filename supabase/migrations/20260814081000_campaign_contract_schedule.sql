@@ -338,14 +338,14 @@ returns table (
   resource_public_id uuid,
   outcome text,
   definition_sha256 text,
-  inclusion_members bigint,
-  excluded_members bigint,
-  eligible_members bigint,
-  expected_control_members bigint,
-  expected_treatment_members bigint,
-  maximum_effects bigint,
-  maximum_points bigint,
-  maximum_liability_minor bigint
+  inclusion_members text,
+  excluded_members text,
+  eligible_members text,
+  expected_control_members text,
+  expected_treatment_members text,
+  maximum_effects text,
+  maximum_points text,
+  maximum_liability_minor text
 )
 language plpgsql
 security definer
@@ -434,10 +434,10 @@ begin
   return query select target_version.public_id,
     case when existing_audit.id is null then 'created' else 'duplicate' end,
     pg_catalog.encode(target_version.definition_sha256, 'hex'),
-    preview.inclusion_members, preview.excluded_members,
-    preview.eligible_members, preview.expected_control_members,
-    preview.expected_treatment_members, preview.maximum_effects,
-    preview.maximum_points, preview.maximum_liability_minor;
+    preview.inclusion_members::text, preview.excluded_members::text,
+    preview.eligible_members::text, preview.expected_control_members::text,
+    preview.expected_treatment_members::text, preview.maximum_effects::text,
+    preview.maximum_points::text, preview.maximum_liability_minor::text;
 end;
 $$;
 
@@ -1097,9 +1097,9 @@ returns table (
   status text,
   starts_at timestamptz,
   ends_at timestamptz,
-  eligible_members bigint,
-  treatment_members bigint,
-  control_members bigint,
+  eligible_members text,
+  treatment_members text,
+  control_members text,
   assignment_sha256 text
 )
 language plpgsql
@@ -1165,8 +1165,8 @@ begin
     end if;
     return query
     select version.public_id, 'duplicate'::text, 'scheduled'::text,
-      version.starts_at, version.ends_at, version.eligible_member_count,
-      version.treatment_member_count, version.control_member_count,
+      version.starts_at, version.ends_at, version.eligible_member_count::text,
+      version.treatment_member_count::text, version.control_member_count::text,
       pg_catalog.encode(version.assignment_sha256, 'hex')
     from loyalty.campaign_versions as version
     where version.organization_id = target_version.organization_id
@@ -1324,7 +1324,7 @@ begin
   );
   return query select target_version.public_id, 'created'::text,
     'scheduled'::text, target_version.starts_at, target_version.ends_at,
-    eligible_count, treatment_count, control_count,
+    eligible_count::text, treatment_count::text, control_count::text,
     pg_catalog.encode(assignment_hash, 'hex');
 end;
 $$;

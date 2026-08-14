@@ -608,7 +608,7 @@ select results_eq(
        (select encode(definition_sha256, 'hex') from loyalty.campaign_versions),
        'm07:campaign:preview', '89000000-0000-4000-8000-000000000206'
      ) $$,
-  $$ values ('created'::text, 3::bigint, 1::bigint, 2::bigint, 1::bigint, 1::bigint) $$,
+  $$ values ('created'::text, '3'::text, '1'::text, '2'::text, '1'::text, '1'::text) $$,
   'preview reconciles inclusion exclusions and expected control totals'
 );
 select results_eq(
@@ -618,7 +618,7 @@ select results_eq(
        (select encode(definition_sha256, 'hex') from loyalty.campaign_versions),
        'm07:campaign:preview', '89000000-0000-4000-8000-000000000298'
      ) $$,
-  $$ values (4::bigint, 10000::bigint, null::bigint) $$,
+  $$ values ('4'::text, '10000'::text, null::text) $$,
   'exact preview retry retains bounded capacity and liability evidence'
 );
 select results_eq(
@@ -645,7 +645,7 @@ select results_eq(
        (select encode(definition_sha256, 'hex') from loyalty.campaign_versions),
        'm07:campaign:approve', '89000000-0000-4000-8000-000000000208'
      ) $$,
-  $$ values ('created'::text, 'scheduled'::text, 2::bigint) $$,
+  $$ values ('created'::text, 'scheduled'::text, '2'::text) $$,
   'reviewed future campaign schedules only after private assignments reconcile'
 );
 reset role;

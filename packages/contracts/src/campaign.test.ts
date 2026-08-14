@@ -193,6 +193,30 @@ describe("campaignPreviewV1", () => {
       }).success,
     ).toBe(false);
   });
+
+  it("accepts an empty preview but rejects inconsistent audience arithmetic", () => {
+    const emptyPreview = {
+      schemaVersion: "1" as const,
+      campaignVersionId: "87000000-0000-4000-8000-000000000701",
+      definitionSha256: "a".repeat(64),
+      inclusionMembers: "0",
+      excludedMembers: "0",
+      eligibleMembers: "0",
+      expectedControlMembers: "0",
+      expectedTreatmentMembers: "0",
+      maximumEffects: "0",
+      maximumPoints: "100000",
+      maximumLiabilityMinor: null,
+    };
+    expect(campaignPreviewV1.safeParse(emptyPreview).success).toBe(true);
+    expect(
+      campaignPreviewV1.safeParse({
+        ...emptyPreview,
+        inclusionMembers: "2",
+        excludedMembers: "1",
+      }).success,
+    ).toBe(false);
+  });
 });
 
 describe("merchantPauseCampaignVersionCommandV1", () => {

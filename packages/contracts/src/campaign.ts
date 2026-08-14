@@ -25,10 +25,9 @@ const reviewReason = z
   .trim()
   .min(8)
   .max(1000)
-  .refine(
-    (value) => !/[\u0000-\u001f\u007f]/u.test(value),
-    { message: "Reason contains unsupported control characters" },
-  );
+  .refine((value) => !/[\u0000-\u001f\u007f]/u.test(value), {
+    message: "Reason contains unsupported control characters",
+  });
 
 const formatLocalDateTime = (instant: string, timezone: string) => {
   try {
@@ -373,12 +372,22 @@ export const campaignPreviewV1 = z
     eligibleMembers: nonNegativeBigint,
     expectedControlMembers: nonNegativeBigint,
     expectedTreatmentMembers: nonNegativeBigint,
-    maximumEffects: positiveBigint,
+    maximumEffects: nonNegativeBigint,
     maximumPoints: positiveBigint.nullable(),
     maximumLiabilityMinor: positiveBigint.nullable(),
   })
   .strict()
   .superRefine((preview, context) => {
+    if (
+      BigInt(preview.inclusionMembers) - BigInt(preview.excludedMembers) !==
+      BigInt(preview.eligibleMembers)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["eligibleMembers"],
+        message: "Eligible members must reconcile inclusion and exclusions",
+      });
+    }
     if (
       BigInt(preview.eligibleMembers) !==
       BigInt(preview.expectedControlMembers) +
