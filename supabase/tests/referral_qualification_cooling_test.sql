@@ -121,7 +121,7 @@ $$;
 
 select lives_ok(
   $$ select loyalty_private.set_deployment_mode(
-    'managed', 1, 'test:m06-s02', 'Exercise referral cooling', now() - interval '3 minutes'
+    'managed', 1, 'test:m06-s02', 'Exercise referral cooling', now() - interval '40 days'
   ) $$,
   'test enters managed deployment mode'
 );

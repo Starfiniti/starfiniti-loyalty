@@ -265,7 +265,7 @@ begin
     'lease_expired'
   from loyalty_private.referral_reward_jobs as job
   where job.state = 'processing' and job.lease_expires_at <= clock_timestamp()
-  on conflict (organization_id, job_id, attempt_number) do nothing;
+  on conflict do nothing;
 
   update loyalty_private.referral_reward_jobs as job
   set state = case when job.attempt_count >= 10
