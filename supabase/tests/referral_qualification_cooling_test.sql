@@ -841,7 +841,7 @@ select is_empty(
 );
 select throws_ok(
   $$ select * from loyalty_private.issue_referral_reward_job_v1(
-    (select public_id from loyalty_private.referral_reward_jobs as job
+    (select job.public_id from loyalty_private.referral_reward_jobs as job
       join loyalty.referral_attributions as attribution
         on attribution.id = job.attribution_id
       join loyalty.customers as customer
@@ -854,7 +854,7 @@ select throws_ok(
 );
 select results_eq(
   $$ select state, outcome from loyalty_private.issue_referral_reward_job_v1(
-    (select public_id from loyalty_private.referral_reward_jobs as job
+    (select job.public_id from loyalty_private.referral_reward_jobs as job
       join loyalty.referral_attributions as attribution
         on attribution.id = job.attribution_id
       join loyalty.customers as customer
@@ -938,7 +938,7 @@ select results_eq(
 );
 select results_eq(
   $$ select state, outcome from loyalty_private.issue_referral_reward_job_v1(
-    (select public_id from loyalty_private.referral_reward_jobs as job
+    (select job.public_id from loyalty_private.referral_reward_jobs as job
       join loyalty.referral_attributions as attribution
         on attribution.id = job.attribution_id
       join loyalty.customers as customer
