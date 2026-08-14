@@ -119,18 +119,21 @@ select is_empty(
           'get_public_loyalty_experience',
           'get_reward_fulfilment_summary',
           'list_customer_summaries',
+          'list_referral_review_cases',
           'list_reward_fulfilment_cases',
           'publish_programme_version_command',
           'preview_bulk_customer_adjustment',
           'redeem_my_reward',
           'request_connector_reconciliation_command',
           'retry_connector_effect_command',
+          'retry_referral_reward_job_command',
           'save_experience_translation_command',
           'save_experience_theme_command',
           'schedule_programme_version_command',
           'set_customer_tier_override_command',
           'start_reward_fulfilment_command',
-          'resolve_reward_fulfilment_command'
+          'resolve_reward_fulfilment_command',
+          'resolve_referral_review_command'
         )
       )
       and not exists (

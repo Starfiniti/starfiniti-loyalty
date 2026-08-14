@@ -93,6 +93,7 @@ select is_empty(
           'loyalty.get_connector_operation_summaries(uuid)',
           'loyalty.get_overview_report(uuid,uuid,uuid,integer,timestamp with time zone)',
           'loyalty.list_customer_summaries(uuid,uuid,text)',
+          'loyalty.list_referral_review_cases(uuid,text,integer)',
           'loyalty.list_reward_fulfilment_cases(uuid,text,integer)',
           'loyalty.publish_programme_version_command(uuid,text,text,uuid)',
           'loyalty.preview_bulk_customer_adjustment(uuid[],uuid,uuid,bigint,text,timestamp with time zone)',
@@ -100,12 +101,14 @@ select is_empty(
           'loyalty.request_connector_reconciliation_command(uuid,text,text,text,uuid)',
           'loyalty.get_public_loyalty_experience(uuid,uuid,text)',
           'loyalty.retry_connector_effect_command(uuid,text,text,uuid)',
+          'loyalty.retry_referral_reward_job_command(uuid,text,text,uuid)',
           'loyalty.schedule_programme_version_command(uuid,text,timestamp with time zone,text,uuid)',
           'loyalty.set_customer_tier_override_command(uuid,uuid,uuid,text,timestamp with time zone,text,text,uuid)',
           'loyalty.save_experience_translation_command(uuid,uuid,text,text,text,text,text,text,text,text,text,uuid)',
           'loyalty.save_experience_theme_command(uuid,uuid,text,text,integer,text,text,boolean,boolean,text,text,uuid)',
           'loyalty.start_reward_fulfilment_command(uuid,text,uuid)',
           'loyalty.resolve_reward_fulfilment_command(uuid,text,text,text,text,uuid)',
+          'loyalty.resolve_referral_review_command(uuid,text,text,text,uuid)',
           'loyalty.execute_bulk_customer_adjustment(uuid[],uuid,uuid,bigint,text,timestamp with time zone,text,text,uuid)'
         )
       )

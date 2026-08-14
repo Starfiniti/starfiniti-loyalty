@@ -1071,6 +1071,45 @@ select throws_ok(
   'job attempt history cannot be rewritten'
 );
 
+create function pg_temp.referral_case_id(target_reference text)
+returns uuid
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select attribution.public_id
+  from loyalty.referral_attributions as attribution
+  join loyalty.customers as customer
+    on customer.organization_id = attribution.organization_id
+   and customer.id = attribution.friend_customer_id
+  where customer.display_reference = target_reference
+    and attribution.organization_id = (
+      select id from loyalty.organizations where slug = 'm06-s02'
+    );
+$$;
+
+create function pg_temp.referral_job_id(target_reference text)
+returns uuid
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select job.public_id
+  from loyalty_private.referral_reward_jobs as job
+  join loyalty.referral_attributions as attribution
+    on attribution.organization_id = job.organization_id
+   and attribution.id = job.attribution_id
+  join loyalty.customers as customer
+    on customer.organization_id = attribution.organization_id
+   and customer.id = attribution.friend_customer_id
+  where customer.display_reference = target_reference
+    and job.organization_id = (
+      select id from loyalty.organizations where slug = 'm06-s02'
+    );
+$$;
+
 select ok(
   has_function_privilege(
     'authenticated',
@@ -1126,17 +1165,13 @@ select results_eq(
     ) where friend_reference = 'review' $$,
   $$ values (
     'review'::text, 'pending_review'::text, 'review_held'::text,
-    array['source_network_velocity'::text]
+    array['reused_payment_evidence'::text, 'reused_shipping_evidence'::text]
   ) $$,
   'the review queue exposes only allowlisted risk and qualification codes'
 );
 select throws_ok(
   $$ select * from loyalty.resolve_referral_review_command(
-    (select attribution.public_id
-      from loyalty.referral_attributions as attribution
-      join loyalty.customers as customer
-        on customer.id = attribution.friend_customer_id
-      where customer.display_reference = 'review'),
+    pg_temp.referral_case_id('review'),
     'approved', 'Analyst must not approve this referral',
     'm06-s04:analyst-denied', 'b6000000-0000-4000-8000-000000000301'
   ) $$,
@@ -1147,17 +1182,14 @@ select throws_ok(
 set local request.jwt.claim.sub = 'b6000000-0000-4000-8000-000000000001';
 select results_eq(
   $$ select state, outcome from loyalty.resolve_referral_review_command(
-    (select attribution.public_id
-      from loyalty.referral_attributions as attribution
-      join loyalty.customers as customer
-        on customer.id = attribution.friend_customer_id
-      where customer.display_reference = 'review'),
+    pg_temp.referral_case_id('review'),
     'approved', 'Verified shared household evidence',
     'm06-s04:approve', 'b6000000-0000-4000-8000-000000000302'
   ) $$,
   $$ values ('cooling'::text, 'created'::text) $$,
   'an owner can approve reviewed historical qualification into cooling'
 );
+reset role;
 select results_eq(
   $$ select decision from loyalty_private.referral_qualification_facts as fact
     join loyalty.referral_attributions as attribution
@@ -1212,13 +1244,11 @@ select results_eq(
   ) $$,
   'approval retains minimized reason-bound administration evidence'
 );
+set local role authenticated;
+set local request.jwt.claim.sub = 'b6000000-0000-4000-8000-000000000001';
 select results_eq(
   $$ select state, outcome from loyalty.resolve_referral_review_command(
-    (select attribution.public_id
-      from loyalty.referral_attributions as attribution
-      join loyalty.customers as customer
-        on customer.id = attribution.friend_customer_id
-      where customer.display_reference = 'review'),
+    pg_temp.referral_case_id('review'),
     'approved', 'Verified shared household evidence',
     'm06-s04:approve', 'b6000000-0000-4000-8000-000000000303'
   ) $$,
@@ -1227,11 +1257,7 @@ select results_eq(
 );
 select throws_ok(
   $$ select * from loyalty.resolve_referral_review_command(
-    (select attribution.public_id
-      from loyalty.referral_attributions as attribution
-      join loyalty.customers as customer
-        on customer.id = attribution.friend_customer_id
-      where customer.display_reference = 'review'),
+    pg_temp.referral_case_id('review'),
     'approved', 'A conflicting replacement reason',
     'm06-s04:approve', 'b6000000-0000-4000-8000-000000000304'
   ) $$,
@@ -1240,17 +1266,14 @@ select throws_ok(
 );
 select results_eq(
   $$ select state, outcome from loyalty.resolve_referral_review_command(
-    (select attribution.public_id
-      from loyalty.referral_attributions as attribution
-      join loyalty.customers as customer
-        on customer.id = attribution.friend_customer_id
-      where customer.display_reference = 'review-reject'),
+    pg_temp.referral_case_id('review-reject'),
     'rejected', 'Confirmed repeated payment identity',
     'm06-s04:reject', 'b6000000-0000-4000-8000-000000000305'
   ) $$,
   $$ values ('rejected'::text, 'created'::text) $$,
   'an owner can definitively reject an uncertain value-neutral referral'
 );
+reset role;
 select results_eq(
   $$ select transition.to_state, transition.reason_code
     from loyalty.referral_attribution_transitions as transition
@@ -1279,6 +1302,8 @@ select results_eq(
   array[6::bigint],
   'review rejection creates no ledger value'
 );
+set local role authenticated;
+set local request.jwt.claim.sub = 'b6000000-0000-4000-8000-000000000003';
 select is_empty(
   $$ select * from loyalty.list_referral_review_cases(
     'b6000000-0000-4000-8000-000000000101', 'risk', 50
@@ -1340,18 +1365,14 @@ set local request.jwt.claim.sub = 'b6000000-0000-4000-8000-000000000002';
 select results_eq(
   $$ select state, review_cycle, outcome
     from loyalty.retry_referral_reward_job_command(
-      (select job.public_id from loyalty_private.referral_reward_jobs as job
-        join loyalty.referral_attributions as attribution
-          on attribution.id = job.attribution_id
-        join loyalty.customers as customer
-          on customer.id = attribution.friend_customer_id
-        where customer.display_reference = 'review'),
+      pg_temp.referral_job_id('review'),
       'Transient database fault was remediated',
       'm06-s04:retry', 'b6000000-0000-4000-8000-000000000306'
     ) $$,
   $$ values ('retryable'::text, 1::smallint, 'created'::text) $$,
   'an operator can release one reviewed job into another bounded cycle'
 );
+reset role;
 select results_eq(
   $$ select action, metadata ->> 'reviewCycle', metadata ->> 'reason'
     from loyalty.admin_audit_events
@@ -1362,15 +1383,12 @@ select results_eq(
   ) $$,
   'reward retry retains attributable reason and bounded cycle evidence'
 );
+set local role authenticated;
+set local request.jwt.claim.sub = 'b6000000-0000-4000-8000-000000000002';
 select results_eq(
   $$ select state, review_cycle, outcome
     from loyalty.retry_referral_reward_job_command(
-      (select job.public_id from loyalty_private.referral_reward_jobs as job
-        join loyalty.referral_attributions as attribution
-          on attribution.id = job.attribution_id
-        join loyalty.customers as customer
-          on customer.id = attribution.friend_customer_id
-        where customer.display_reference = 'review'),
+      pg_temp.referral_job_id('review'),
       'Transient database fault was remediated',
       'm06-s04:retry', 'b6000000-0000-4000-8000-000000000307'
     ) $$,
@@ -1424,12 +1442,7 @@ set local role authenticated;
 set local request.jwt.claim.sub = 'b6000000-0000-4000-8000-000000000002';
 select throws_ok(
   $$ select * from loyalty.retry_referral_reward_job_command(
-    (select job.public_id from loyalty_private.referral_reward_jobs as job
-      join loyalty.referral_attributions as attribution
-        on attribution.id = job.attribution_id
-      join loyalty.customers as customer
-        on customer.id = attribution.friend_customer_id
-      where customer.display_reference = 'review'),
+    pg_temp.referral_job_id('review'),
     'Another retry would exceed the reviewed ceiling',
     'm06-s04:retry-limit', 'b6000000-0000-4000-8000-000000000308'
   ) $$,
@@ -1439,12 +1452,7 @@ select throws_ok(
 set local request.jwt.claim.sub = 'b6000000-0000-4000-8000-000000000003';
 select throws_ok(
   $$ select * from loyalty.retry_referral_reward_job_command(
-    (select job.public_id from loyalty_private.referral_reward_jobs as job
-      join loyalty.referral_attributions as attribution
-        on attribution.id = job.attribution_id
-      join loyalty.customers as customer
-        on customer.id = attribution.friend_customer_id
-      where customer.display_reference = 'review'),
+    pg_temp.referral_job_id('review'),
     'Analyst must not restart value processing',
     'm06-s04:retry-denied', 'b6000000-0000-4000-8000-000000000309'
   ) $$,
