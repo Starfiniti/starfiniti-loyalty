@@ -804,15 +804,25 @@ tasks:
           - exact-head run 31756142529 passed a clean 34-migration replay all 32 pgTAP files and 1,472 assertions including 48 focused expiry assertions plus both concurrency probes both images and all four WooCommerce runtimes
           - a temporary production-build Playwright fixture exercised the real merchant shell and expiry editor at 1440 by 1000 and 390 by 844 with exact reminder filtering liability evidence mobile navigation no horizontal overflow and no browser diagnostics
       - id: M05-S05-PROGRESSION-EXPERIENCE
-        status: in_progress
+        status: completed
         acceptance:
           - merchant policy builder simulator member progress history next milestone and tier performance pass responsive accessibility review
           - customer progress distinguishes qualification metrics available points retention and expiry
+        evidence:
+          - strict bigint-safe merchant and customer progress projections rebuild next retention and re-entry milestones from immutable qualification facts and decision history
+          - the VIP policy builder exposes qualification windows AND OR thresholds lifecycle benefits exact simulation and aggregate tier health while customer and merchant detail keep qualification progress separate from balances and expiry
+          - exact-head run 31759304542 passed a clean 35-migration replay all 32 pgTAP files and 1,491 assertions including 141 focused VIP assertions plus both concurrency probes both images and all four WooCommerce runtimes
+          - temporary production-build desktop and mobile fixtures passed keyboard mobile-navigation responsive overflow and browser-diagnostic review
       - id: M05-S06-CANARY-AND-CLOSE
-        status: planned
+        status: in_progress
         acceptance:
           - shadow comparison exact-head CI disabled deployment Starfiniti canary reconciliation and score at least 90 pass
-    risks: [R-002, R-020, R-033, R-034]
+        evidence:
+          - deterministic V1 V2 shadow comparison proves all 36 Rose Bloom Icon point-award cases are identical across floor threshold and large-order boundaries
+          - contract PostgreSQL and editor boundaries require every displayed tier rate to equal the executable base-rate multiplier and fail closed on incomplete or inexact legacy migration
+          - exact-head run 31760806620 passed a clean 36-migration replay all 32 pgTAP files and 1,494 assertions plus both concurrency probes both images and all four WooCommerce runtimes
+          - merge disabled deployment fresh recovery point Starfiniti-only canary zero-drift reconciliation and module score remain open
+    risks: [R-002, R-020, R-033, R-034, R-035]
     docs:
       [
         docs/api/PROGRAMME_ENGINE.md,

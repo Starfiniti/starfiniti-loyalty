@@ -1,5 +1,12 @@
 # Iteration Log
 
+## 2026-08-14 — M05 progression and predeployment shadow gate
+
+- Completed bigint-safe merchant and customer tier progress, immutable history, exact next/retention/re-entry milestones, aggregate tier performance, and the responsive advanced policy builder/simulator. Exact-head run `31759304542` passed 35 migrations, 1,491 pgTAP assertions, both images, and all four WooCommerce runtimes.
+- The required V1/V2 shadow comparison found a predeployment correctness defect: preserved Bloom/Icon display rates of 6/7 points could execute the Rose 5-point base rate because all migrated multipliers were 1.0×. Advanced VIP was still undeployed and unpublished, so no customer value moved.
+- Forward-fixed migration, contract, database, and editor boundaries to derive and enforce exact 1.0×/1.2×/1.4× benefits. All 36 V1/V2 Rose/Bloom/Icon award comparisons now match, and desktop/mobile production-build interaction kept display and serialized execution atomic.
+- Exact-head run `31760806620` passed baseline, both production images, a clean 36-migration replay, all 32 pgTAP files with 1,494 assertions, both concurrency probes, and all four WooCommerce runtime cells. Reviewed merge, disabled deployment, recovery point, canary reconciliation, and scoring remain open.
+
 ## 2026-08-13 — M03 production canary and closure
 
 - Release run `31738294379` passed the complete `v0.1.11` gate and published immutable artifacts from commit `0ced4b666a55d836bd3d4927337fe057a71bb4ba`.

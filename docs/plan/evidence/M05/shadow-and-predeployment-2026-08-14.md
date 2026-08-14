@@ -1,7 +1,7 @@
 # M05-S06 shadow and predeployment evidence
 
 Date: 2026-08-14  
-Status: shadow implementation and browser verification complete; exact-head database/runtime CI and production deployment remain open
+Status: shadow implementation, browser verification, and exact-head database/runtime CI complete; production deployment remains open
 
 ## Weakness found by the self-improving loop
 
@@ -21,7 +21,8 @@ No production value moved: advanced VIP remains undeployed and unpublished. The 
 - A deterministic domain shadow compares V1 and V2 awards for Rose, Bloom, and Icon across twelve order values each: zero, fractional-euro floor boundaries, one-euro boundaries, both tier thresholds, and a large non-round amount. All 36 comparisons are exact.
 - Contract tests accept the 5/6/7 to 1.0×/1.2×/1.4× mapping and reject a displayed/executable mismatch.
 - pgTAP rejects direct authenticated draft creation with a mismatched multiplier, proves the parity helper is private, and reconciles materialized Rose/Bloom/Icon rates to the base-rate product.
-- Local lint, 273 affected unit tests, domain/contracts/dashboard typechecks, a clean production dashboard build, 36-migration/32-pgTAP static validation, and diff checks pass.
+- Local lint, all 289 unit tests, all workspace typechecks, a clean production dashboard build, 36-migration/32-pgTAP static validation, and diff checks pass.
+- Exact-head GitHub run `31760806620` passed all seven jobs: baseline, a clean 36-migration replay, all 32 pgTAP files with 1,494 assertions, both concurrency probes, both production images, and all four minimum/current HPOS/legacy WooCommerce runtime cells.
 
 ## Production-build browser verification
 
@@ -39,4 +40,4 @@ Screenshots were visually inspected from:
 
 ## Remaining production gate
 
-Do not enable `vip.advanced` yet. Exact-head Linux replay/runtime CI must pass first. Production then requires the normal reviewed merge/release boundary, additive migrations deployed with `vip.advanced` disabled, a fresh recovery point, Starfiniti-only entitlement canary, zero-drift tier/award reconciliation, and module score at least 90.
+Do not enable `vip.advanced` yet. Production requires the normal reviewed merge/release boundary, additive migrations deployed with `vip.advanced` disabled, a fresh recovery point, Starfiniti-only entitlement canary, zero-drift tier/award reconciliation, and module score at least 90.
