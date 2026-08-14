@@ -14,6 +14,7 @@ import {
 } from "@/lib/customer-locale";
 import { customerExportReauthenticationPath } from "@/lib/customer-export";
 import { isSelfServiceRewardKind } from "@/lib/customer-rewards";
+import { TierProgress } from "@/components/tier-progress";
 
 export default async function CustomerLoyaltyPage({
   searchParams,
@@ -146,6 +147,15 @@ function AccountCard({
           {formatPoints(account.next_expiry_points, locale)} {copy.pointsExpire}{" "}
           {formatDate(account.next_expiry_at, locale)}.
         </p>
+      ) : null}
+      {account.tier_progress ? (
+        <TierProgress
+          availablePoints={account.available_points}
+          mode="member"
+          nextExpiryAt={account.next_expiry_at}
+          nextExpiryPoints={account.next_expiry_points}
+          progress={account.tier_progress}
+        />
       ) : null}
       <div className="member-columns">
         <section>

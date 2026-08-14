@@ -39,6 +39,12 @@ describe("earning rules editor model", () => {
       kind: "base_rate",
       pointsPerMajorUnit: "5",
     });
+    expect(result.definition.pointsExpiryPolicy).toEqual({
+      version: "2",
+      method: "earned_date",
+      expireAfterDays: 365,
+      notificationLeadDays: [30, 14, 7],
+    });
   });
 
   it("builds unique, source-safe catalogue templates", () => {

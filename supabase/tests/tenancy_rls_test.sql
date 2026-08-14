@@ -105,9 +105,13 @@ select is_empty(
           'execute_bulk_customer_adjustment',
           'get_customer_adjustment_context',
           'get_customer_read_model',
+          'get_customer_tier_progress_v1',
           'get_customer_tier_read_model',
           'get_my_loyalty_accounts',
           'get_my_entitlements_v1',
+          'get_my_tier_progress_v1',
+          'get_programme_expiry_liability_v2',
+          'get_programme_tier_performance_v1',
           'get_connector_operation_issues',
           'get_connector_operation_summaries',
           'get_overview_report',
@@ -123,6 +127,7 @@ select is_empty(
           'save_experience_translation_command',
           'save_experience_theme_command',
           'schedule_programme_version_command',
+          'set_customer_tier_override_command',
           'start_reward_fulfilment_command',
           'resolve_reward_fulfilment_command'
         )

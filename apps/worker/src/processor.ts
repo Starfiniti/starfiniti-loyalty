@@ -1,6 +1,8 @@
 import { createHash } from "node:crypto";
 import {
   programmeDefinitionV2,
+  tierMetricSnapshotV2,
+  tierQualificationEvaluationV2,
   merchantActivityPayloadV1,
   wooCommerceCouponCapturedPayloadV1,
   wooCommerceCustomerCreatedPayloadV1,
@@ -15,6 +17,7 @@ import {
   calculateRefundReversal,
   evaluateOrderAward,
   evaluateEarningV2,
+  evaluateTierQualificationSnapshotV2,
   minorUnit,
   points,
   programmeVersionId,
@@ -26,7 +29,7 @@ import {
   type PurchaseEarningFactV2,
   type ProgrammeVersion,
 } from "@starfiniti/domain";
-import type { Sql } from "postgres";
+import type { Sql, TransactionSql } from "postgres";
 
 export type ClaimedEffect = Readonly<{
   canonical_event_id: string;
@@ -111,7 +114,19 @@ type V2AwardRow = {
   transaction_public_id: string | null;
   outcome: string;
 };
+type TierQualificationContextRow = {
+  metrics: unknown;
+  current_tier_code: string | null;
+  previously_held_tier_codes: string[];
+  below_threshold_since: string | Date | null;
+};
+type TierRefundFactRow = {
+  fact_public_id: string;
+  customer_id: string;
+  outcome: string;
+};
 type OriginalAwardRow = {
+  evaluation_public_id: string;
   programme_group_id: string;
   programme_version_id: string;
   result: Record<string, unknown>;
@@ -514,6 +529,73 @@ export async function enqueueExpiredWooCommerceCouponCancellations(
   return Number(rows[0]?.enqueued_count ?? "0");
 }
 
+export async function expireDueTierOverrides(sql: Sql): Promise<number> {
+  const rows = await sql<{ expired_count: number | string }[]>`
+    select expired_count
+    from loyalty_private.expire_due_tier_overrides_v1(clock_timestamp(), 50)
+  `;
+  const rawCount = rows[0]?.expired_count ?? 0;
+  const expiredCount = Number(rawCount);
+  if (
+    !Number.isSafeInteger(expiredCount) ||
+    expiredCount < 0 ||
+    expiredCount > 50
+  ) {
+    throw new Error("invalid_tier_override_expiry_count");
+  }
+  return expiredCount;
+}
+
+export type PointExpiryLifecycleResult = Readonly<{
+  expiryBatches: number;
+  expiredLots: number;
+  expiredPoints: string;
+  notificationsEnqueued: number;
+}>;
+
+export async function runPointExpiryLifecycle(
+  sql: Sql,
+): Promise<PointExpiryLifecycleResult> {
+  const rows = await sql<
+    {
+      expiry_batches: number | string;
+      expired_lots: number | string;
+      expired_points: string;
+      notifications_enqueued: number | string;
+    }[]
+  >`
+    select expiry_batches, expired_lots, expired_points::text,
+      notifications_enqueued
+    from loyalty_private.run_point_expiry_lifecycle_v2(
+      clock_timestamp(), 100
+    )
+  `;
+  const row = rows[0];
+  if (!row) throw new Error("point_expiry_lifecycle_result_unavailable");
+  const expiryBatches = Number(row.expiry_batches);
+  const expiredLots = Number(row.expired_lots);
+  const notificationsEnqueued = Number(row.notifications_enqueued);
+  if (
+    !Number.isSafeInteger(expiryBatches) ||
+    expiryBatches < 0 ||
+    expiryBatches > 100 ||
+    !Number.isSafeInteger(expiredLots) ||
+    expiredLots < 0 ||
+    !Number.isSafeInteger(notificationsEnqueued) ||
+    notificationsEnqueued < 0 ||
+    notificationsEnqueued > 100 ||
+    !/^(?:0|[1-9][0-9]*)$/u.test(row.expired_points)
+  ) {
+    throw new Error("invalid_point_expiry_lifecycle_result");
+  }
+  return {
+    expiryBatches,
+    expiredLots,
+    expiredPoints: row.expired_points,
+    notificationsEnqueued,
+  };
+}
+
 async function processRefund(
   sql: Sql,
   workerId: string,
@@ -524,7 +606,8 @@ async function processRefund(
   const awardEvaluationKey = `woo:evaluation:award:${operation}`;
   const awardLedgerKey = `woo:ledger:award:${operation}`;
   const originals = await sql<OriginalAwardRow[]>`
-    select evaluation.programme_group_id::text,
+    select evaluation.public_id::text as evaluation_public_id,
+      evaluation.programme_group_id::text,
       evaluation.programme_version_id::text,
       evaluation.result,
       origin_entry.public_id::text as origin_entry_public_id,
@@ -670,6 +753,7 @@ async function processRefundV2(
     alreadyReversedPoints: original.already_reversed_points,
   });
   await commitRefundV2(sql, workerId, event, effect.refundId, {
+    originalEvaluationPublicId: original.evaluation_public_id,
     programmeGroupId: original.programme_group_id,
     programmeVersionId: original.programme_version_id,
     originEntryPublicId: original.origin_entry_public_id,
@@ -692,7 +776,7 @@ function identityFromOrder(order: WooCommerceOrderFactV1): {
 }
 
 async function loadProgrammeContext(
-  sql: Sql,
+  sql: Sql | TransactionSql,
   organizationId: string,
   programmeId: string,
   customerId: string,
@@ -1014,6 +1098,15 @@ export function calculateCumulativeRefundPlanV2(
   };
 }
 
+function tierPurchaseMultiplier(context: V2ProgrammeContext): number {
+  if (!context.programme.tierPolicy) return 10_000;
+  const level = context.programme.tierPolicy.levels.find(
+    (candidate) => candidate.tierCode === context.tierCode,
+  );
+  if (!level) throw new Error("tier_benefit_level_unavailable");
+  return level.benefits.earningMultiplierBasisPoints;
+}
+
 async function commitAwardV2(
   sql: Sql,
   workerId: string,
@@ -1025,6 +1118,7 @@ async function commitAwardV2(
   const operation = `connection:${event.connection_id}:order:${order.orderId}`;
   const evaluationKey = `woo:evaluation:award:${operation}`;
   const awardKey = `woo:ledger:award:${operation}`;
+  const evaluatedAt = new Date().toISOString();
   await sql.begin(async (transaction) => {
     const usageRows = await transaction<MemberRuleUsageRow[]>`
       select rule_code, consumed_points::text
@@ -1070,13 +1164,23 @@ async function commitAwardV2(
         ${Buffer.from(inputHash, "hex")},
         ${Buffer.from(resultHash, "hex")},
         ${JSON.stringify(evaluation)}::jsonb,
-        ${JSON.stringify({ lines: evaluation.lines })}::jsonb,
+        ${JSON.stringify({
+          lines: evaluation.lines,
+          tierMultiplierBasisPoints: tierPurchaseMultiplier(context),
+        })}::jsonb,
         ${event.occurred_at}::timestamptz,
-        ${new Date().toISOString()}::timestamptz
+        ${evaluatedAt}::timestamptz
       )
     `;
     const award = awards[0];
     if (!award) throw new Error("v2_award_record_failed");
+    await applyAdvancedTierQualificationV2(
+      transaction,
+      event,
+      customerId,
+      context,
+      evaluatedAt,
+    );
     const resultReference = award.transaction_public_id
       ? `ledger-transaction:${award.transaction_public_id}`
       : `evaluation:${award.evaluation_public_id}`;
@@ -1106,6 +1210,7 @@ async function commitActivityV2(
   const operation = `connection:${event.connection_id}:activity:${event.canonical_event_public_id}`;
   const evaluationKey = `woo:evaluation:activity:${operation}`;
   const awardKey = `woo:ledger:activity:${operation}`;
+  const evaluatedAt = new Date().toISOString();
   await sql.begin(async (transaction) => {
     const usageRows = await transaction<MemberRuleUsageRow[]>`
       select rule_code, consumed_points::text
@@ -1157,13 +1262,23 @@ async function commitActivityV2(
         ${Buffer.from(inputHash, "hex")},
         ${Buffer.from(resultHash, "hex")},
         ${JSON.stringify(evaluation)}::jsonb,
-        ${JSON.stringify({ activity: activity.activityCode })}::jsonb,
+        ${JSON.stringify({
+          activity: activity.activityCode,
+          tierMultiplierBasisPoints: 10_000,
+        })}::jsonb,
         ${event.occurred_at}::timestamptz,
-        ${new Date().toISOString()}::timestamptz
+        ${evaluatedAt}::timestamptz
       )
     `;
     const award = awards[0];
     if (!award) throw new Error("v2_activity_award_record_failed");
+    await applyAdvancedTierQualificationV2(
+      transaction,
+      event,
+      customerId,
+      context,
+      evaluatedAt,
+    );
     const resultReference = award.transaction_public_id
       ? `ledger-transaction:${award.transaction_public_id}`
       : `evaluation:${award.evaluation_public_id}`;
@@ -1356,6 +1471,7 @@ async function commitRefundV2(
   event: ClaimedEffect,
   refundId: string,
   context: Readonly<{
+    originalEvaluationPublicId: string;
     programmeGroupId: string;
     programmeVersionId: string;
     originEntryPublicId: string | null;
@@ -1390,6 +1506,7 @@ async function commitRefundV2(
     refundId,
   });
   const resultHash = evidenceSha256(result);
+  const evaluatedAt = new Date().toISOString();
   await sql.begin(async (transaction) => {
     const evaluations = await transaction<EvaluationRow[]>`
       select evaluation_public_id::text
@@ -1405,7 +1522,7 @@ async function commitRefundV2(
         ${Buffer.from(resultHash, "hex")},
         ${JSON.stringify(result)}::jsonb,
         ${JSON.stringify({ lines: context.currentEvaluation.lines })}::jsonb,
-        ${new Date().toISOString()}::timestamptz
+        ${evaluatedAt}::timestamptz
       )
     `;
     const evaluationId = evaluations[0]?.evaluation_public_id;
@@ -1431,6 +1548,33 @@ async function commitRefundV2(
       if (!transactionId) throw new Error("refund_reversal_record_failed");
       resultReference = `ledger-transaction:${transactionId}`;
     }
+    const facts = await transaction<TierRefundFactRow[]>`
+      select fact_public_id::text, customer_id::text, outcome
+      from loyalty_private.record_tier_refund_fact_v2(
+        ${event.organization_id}::bigint,
+        ${context.originalEvaluationPublicId}::uuid,
+        ${evaluationId}::uuid
+      )
+    `;
+    const customerId = facts[0]?.customer_id;
+    if (!customerId) throw new Error("refund_tier_fact_record_failed");
+    if (event.programme_id !== null) {
+      const currentProgramme = await loadProgrammeContext(
+        transaction,
+        event.organization_id,
+        event.programme_id,
+        customerId,
+      );
+      if (currentProgramme.definitionVersion === "2") {
+        await applyAdvancedTierQualificationV2(
+          transaction,
+          event,
+          customerId,
+          currentProgramme,
+          evaluatedAt,
+        );
+      }
+    }
     await transaction`
       select * from loyalty_private.finish_commerce_effect(
         ${event.canonical_event_public_id}::uuid,
@@ -1444,6 +1588,58 @@ async function commitRefundV2(
       )
     `;
   });
+}
+
+async function applyAdvancedTierQualificationV2(
+  sql: Sql | TransactionSql,
+  event: ClaimedEffect,
+  customerId: string,
+  context: V2ProgrammeContext,
+  evaluatedAt: string,
+): Promise<void> {
+  const policy = context.programme.tierPolicy;
+  if (!policy) return;
+  const rows = await sql<TierQualificationContextRow[]>`
+    select metrics, current_tier_code, previously_held_tier_codes,
+      below_threshold_since
+    from loyalty_private.get_tier_qualification_context_v2(
+      ${event.organization_id}::bigint,
+      ${context.programmeGroupId}::bigint,
+      ${context.programmeVersionId}::bigint,
+      ${customerId}::bigint,
+      ${evaluatedAt}::timestamptz
+    )
+  `;
+  const row = rows[0];
+  if (!row) throw new Error("tier_qualification_context_unavailable");
+  const evaluation = tierQualificationEvaluationV2.parse(
+    evaluateTierQualificationSnapshotV2({
+      policy,
+      metrics: tierMetricSnapshotV2.parse(row.metrics),
+      evaluatedAt,
+      currentTierCode: row.current_tier_code,
+      previouslyHeldTierCodes: row.previously_held_tier_codes,
+      belowThresholdSince:
+        row.below_threshold_since === null
+          ? null
+          : new Date(row.below_threshold_since).toISOString(),
+    }),
+  );
+  const decisions = await sql<{ tier_decision_public_id: string }[]>`
+    select tier_decision_public_id::text
+    from loyalty_private.record_tier_qualification_decision_v2(
+      ${event.organization_id}::bigint,
+      ${context.programmeGroupId}::bigint,
+      ${context.programmeVersionId}::bigint,
+      ${event.canonical_event_id}::bigint,
+      ${customerId}::bigint,
+      ${evaluatedAt}::timestamptz,
+      ${JSON.stringify(evaluation)}::jsonb
+    )
+  `;
+  if (!decisions[0]?.tier_decision_public_id) {
+    throw new Error("tier_qualification_decision_unavailable");
+  }
 }
 
 async function finishEffect(

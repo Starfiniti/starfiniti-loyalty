@@ -1,5 +1,9 @@
 import "server-only";
 import {
+  customerTierProgressV1,
+  type CustomerTierProgressV1,
+} from "@starfiniti/contracts";
+import {
   isExactPointText,
   isUuid,
   normalizeCustomerSearch,
@@ -258,4 +262,32 @@ export async function getCustomerTierState(
     effectiveFrom: nullableString(row, "effective_from"),
     decidedAt: nullableString(row, "decided_at"),
   };
+}
+
+export async function getCustomerTierProgress(
+  context: TenantContext,
+  customerPublicId: string,
+  asOf: string,
+): Promise<CustomerTierProgressV1 | null> {
+  if (!isUuid(customerPublicId) || !context.programmeGroup) return null;
+  const supabase = await createSupabaseServerClient();
+  const result = await supabase
+    .schema("loyalty")
+    .rpc("get_customer_tier_progress_v1", {
+      target_customer_public_id: customerPublicId,
+      target_programme_group_public_id: context.programmeGroup.public_id,
+      target_as_of: asOf,
+    });
+  if (result.error) throw new Error("customer_tier_progress_unavailable");
+  const row = firstRow(result.data) as Readonly<{
+    customer_id?: unknown;
+    tier_progress?: unknown;
+  }> | null;
+  if (!row) return null;
+  if (row.customer_id !== customerPublicId) {
+    throw new Error("customer_tier_progress_unavailable");
+  }
+  const parsed = customerTierProgressV1.safeParse(row.tier_progress);
+  if (!parsed.success) throw new Error("customer_tier_progress_unavailable");
+  return parsed.data;
 }

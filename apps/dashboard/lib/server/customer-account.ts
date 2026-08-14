@@ -1,4 +1,8 @@
 import "server-only";
+import {
+  customerTierProgressV1,
+  type CustomerTierProgressV1,
+} from "@starfiniti/contracts";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type CustomerReward = Readonly<{
@@ -42,6 +46,7 @@ export type CustomerLoyaltyAccount = Readonly<{
   rewards: CustomerReward[];
   reservations: CustomerReservation[];
   activity: CustomerActivity[];
+  tier_progress: CustomerTierProgressV1 | null;
 }>;
 
 export type CustomerAccountState =
@@ -54,12 +59,36 @@ export async function getCustomerLoyaltyAccounts(): Promise<CustomerAccountState
   if (claims.error || typeof claims.data?.claims?.sub !== "string") {
     return { kind: "unauthenticated" };
   }
-  const result = await supabase
-    .schema("loyalty")
-    .rpc("get_my_loyalty_accounts");
-  if (result.error) throw new Error("customer_account_unavailable");
+  const asOf = new Date().toISOString();
+  const [result, progressResult] = await Promise.all([
+    supabase.schema("loyalty").rpc("get_my_loyalty_accounts"),
+    supabase
+      .schema("loyalty")
+      .rpc("get_my_tier_progress_v1", { target_as_of: asOf }),
+  ]);
+  if (result.error || progressResult.error) {
+    throw new Error("customer_account_unavailable");
+  }
+  const progressByAccount = new Map<string, CustomerTierProgressV1>();
+  for (const raw of (progressResult.data ?? []) as ReadonlyArray<
+    Readonly<{ account_id?: unknown; tier_progress?: unknown }>
+  >) {
+    if (typeof raw.account_id !== "string") {
+      throw new Error("customer_account_unavailable");
+    }
+    const parsed = customerTierProgressV1.safeParse(raw.tier_progress);
+    if (!parsed.success || progressByAccount.has(raw.account_id)) {
+      throw new Error("customer_account_unavailable");
+    }
+    progressByAccount.set(raw.account_id, parsed.data);
+  }
   return {
     kind: "ready",
-    accounts: (result.data ?? []) as CustomerLoyaltyAccount[],
+    accounts: (
+      (result.data ?? []) as Omit<CustomerLoyaltyAccount, "tier_progress">[]
+    ).map((account) => ({
+      ...account,
+      tier_progress: progressByAccount.get(account.account_id) ?? null,
+    })),
   };
 }

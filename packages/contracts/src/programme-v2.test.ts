@@ -103,6 +103,20 @@ const definition: ProgrammeDefinitionV2 = {
 };
 
 describe("ProgrammeDefinitionV2", () => {
+  it("requires the versioned expiry duration to match the compatible field", () => {
+    expect(
+      programmeDefinitionV2.safeParse({
+        ...definition,
+        pointsExpiryPolicy: {
+          version: "2",
+          method: "earned_date",
+          expireAfterDays: 364,
+          notificationLeadDays: [30, 14, 7],
+        },
+      }).success,
+    ).toBe(false);
+  });
+
   it("accepts explicit purchase precedence and non-purchase member caps", () => {
     expect(programmeDefinitionV2.parse(definition)).toEqual(definition);
   });

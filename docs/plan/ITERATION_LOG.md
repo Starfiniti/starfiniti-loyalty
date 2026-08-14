@@ -1,5 +1,12 @@
 # Iteration Log
 
+## 2026-08-14 — M05 progression and predeployment shadow gate
+
+- Completed bigint-safe merchant and customer tier progress, immutable history, exact next/retention/re-entry milestones, aggregate tier performance, and the responsive advanced policy builder/simulator. Exact-head run `31759304542` passed 35 migrations, 1,491 pgTAP assertions, both images, and all four WooCommerce runtimes.
+- The required V1/V2 shadow comparison found a predeployment correctness defect: preserved Bloom/Icon display rates of 6/7 points could execute the Rose 5-point base rate because all migrated multipliers were 1.0×. Advanced VIP was still undeployed and unpublished, so no customer value moved.
+- Forward-fixed migration, contract, database, and editor boundaries to derive and enforce exact 1.0×/1.2×/1.4× benefits. All 36 V1/V2 Rose/Bloom/Icon award comparisons now match, and desktop/mobile production-build interaction kept display and serialized execution atomic.
+- Exact-head run `31760806620` passed baseline, both production images, a clean 36-migration replay, all 32 pgTAP files with 1,494 assertions, both concurrency probes, and all four WooCommerce runtime cells. Reviewed merge, disabled deployment, recovery point, canary reconciliation, and scoring remain open.
+
 ## 2026-08-13 — M03 production canary and closure
 
 - Release run `31738294379` passed the complete `v0.1.11` gate and published immutable artifacts from commit `0ced4b666a55d836bd3d4927337fe057a71bb4ba`.
@@ -427,3 +434,10 @@
 - Added database-authoritative entitlement, publication validation, immutable rule materialization, serialized cap accounting, atomic evaluation/ledger commit, exact retries, and source provisioning with one-time external signing material.
 - Replaced the old tier-rate-only Earning Rules view with a Hub-style V2 rule catalogue, allowlisted condition/exclusion/cap builder, conflict warnings, migration review, and the exact shared live simulator.
 - Local lint, typechecks, focused/full tests, validators, production build, and desktop/mobile browser interactions pass. Exact-head Docker database replay and the managed pilot canary remain the closure gates.
+
+## 2026-08-14 — M05 earned-date point expiry
+
+- Added a strict earned-date `PointExpiryPolicyV2`, immutable per-version policy materialization, and a bounded single-flight worker lifecycle that groups expiry by original tenant, wallet, and programme version.
+- Preserved original-lot expiry through reward reservations and cancellation, scheduled nearest-relevant 30/14/7 reminders behind durable deduplication fences, revoked worker access to the low-level expiry primitive, and exposed only minimized aggregate liability evidence.
+- Exact-head run `31756142529` passed a clean 34-migration replay, all 32 pgTAP files and 1,472 assertions, both concurrency probes, both production images, and all four WooCommerce runtime variants.
+- A temporary production-build Playwright fixture exercised the real merchant shell and expiry editor at 1440 by 1000 and 390 by 844. Reminder filtering, liability evidence, mobile navigation, and responsive layout passed with no horizontal overflow or browser diagnostics; the fixture was removed after verification.
