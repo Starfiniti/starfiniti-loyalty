@@ -462,7 +462,7 @@ begin
   from loyalty_private.referral_qualification_facts as fact
   where fact.organization_id = target_attribution.organization_id
     and fact.attribution_id = target_attribution.id
-    and fact.decision = 'eligible';
+    and fact.decision in ('eligible', 'review_held');
   if target_fact.cooling_ends_at > clock_timestamp() then
     raise exception using errcode = '55000',
       message = 'referral cooling period is not complete';

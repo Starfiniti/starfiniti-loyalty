@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(86);
+select plan(119);
 
 select has_table(
   'loyalty_private', 'referral_qualification_facts',
@@ -59,15 +59,22 @@ select ok(
   'the worker can invalidate value-neutral referrals from canonical refunds'
 );
 
-insert into auth.users (id, email)
-values ('b6000000-0000-4000-8000-000000000001', 'm06-s02-owner@example.test');
+insert into auth.users (id, email) values
+  ('b6000000-0000-4000-8000-000000000001', 'm06-s02-owner@example.test'),
+  ('b6000000-0000-4000-8000-000000000002', 'm06-s04-operator@example.test'),
+  ('b6000000-0000-4000-8000-000000000003', 'm06-s04-analyst@example.test'),
+  ('b6000000-0000-4000-8000-000000000004', 'm06-s04-outsider@example.test');
 insert into loyalty.organizations (public_id, slug, name)
 values ('b6000000-0000-4000-8000-000000000100', 'm06-s02', 'M06 S02');
 insert into loyalty.organization_memberships (organization_id, user_id, role)
-values (
-  (select id from loyalty.organizations where slug = 'm06-s02'),
-  'b6000000-0000-4000-8000-000000000001', 'owner'
-);
+select organization.id, member.user_id, member.role
+from loyalty.organizations as organization
+cross join (values
+  ('b6000000-0000-4000-8000-000000000001'::uuid, 'owner'::text),
+  ('b6000000-0000-4000-8000-000000000002'::uuid, 'operator'::text),
+  ('b6000000-0000-4000-8000-000000000003'::uuid, 'analyst'::text)
+) as member(user_id, role)
+where organization.slug = 'm06-s02';
 insert into loyalty.workspaces (public_id, organization_id, slug, name)
 select 'b6000000-0000-4000-8000-000000000110', id, 'store', 'M06 S02 Store'
 from loyalty.organizations where slug = 'm06-s02';
@@ -192,7 +199,8 @@ cross join (values
   ('b6000000-0000-4000-8000-000000000152'::uuid, 'minimum'),
   ('b6000000-0000-4000-8000-000000000153'::uuid, 'existing'),
   ('b6000000-0000-4000-8000-000000000154'::uuid, 'review'),
-  ('b6000000-0000-4000-8000-000000000155'::uuid, 'unattributed')
+  ('b6000000-0000-4000-8000-000000000155'::uuid, 'unattributed'),
+  ('b6000000-0000-4000-8000-000000000157'::uuid, 'review-reject')
 ) as fixture(public_id, reference)
 where organization.slug = 'm06-s02';
 insert into loyalty.customer_identities (
@@ -608,6 +616,20 @@ select throws_ok(
     ) $$,
   '23514', 'referral qualification idempotency hash conflict',
   'review-held replay cannot replace accepted qualification evidence'
+);
+
+insert into referral_s02_events values
+  ('review-reject-completed', pg_temp.add_status_event(
+    'review-reject-completed', 'order-review-reject', 'review-reject',
+    'completed', now() - interval '20 minutes', true, repeat('a', 64)
+  ));
+select results_eq(
+  $$ select state from loyalty_private.record_referral_attribution_v1(
+    (select public_id from referral_s02_events
+      where name = 'review-reject-completed')
+  ) $$,
+  array['pending_review'::text],
+  'a second uncertain referral remains value-neutral for rejection review'
 );
 
 insert into referral_s02_events values
@@ -1048,6 +1070,396 @@ select throws_ok(
   '55000', 'immutable loyalty history cannot be changed',
   'job attempt history cannot be rewritten'
 );
+
+select ok(
+  has_function_privilege(
+    'authenticated',
+    'loyalty.resolve_referral_review_command(uuid,text,text,text,uuid)',
+    'EXECUTE'
+  ),
+  'authenticated merchants can invoke the scoped referral review command'
+);
+select ok(
+  not has_function_privilege(
+    'anon',
+    'loyalty.resolve_referral_review_command(uuid,text,text,text,uuid)',
+    'EXECUTE'
+  ),
+  'anonymous sessions cannot mutate referral review state'
+);
+select ok(
+  has_function_privilege(
+    'authenticated',
+    'loyalty.retry_referral_reward_job_command(uuid,text,text,uuid)',
+    'EXECUTE'
+  ),
+  'authenticated merchants can invoke the scoped reward retry command'
+);
+select ok(
+  has_function_privilege(
+    'authenticated',
+    'loyalty.list_referral_review_cases(uuid,text,integer)',
+    'EXECUTE'
+  ),
+  'authenticated merchant roles can request the minimized review queue'
+);
+select ok(
+  not has_table_privilege(
+    'authenticated', 'loyalty_private.referral_risk_evidence', 'SELECT'
+  ),
+  'reviewers cannot read raw referral fingerprint evidence'
+);
+
+set local role authenticated;
+set local request.jwt.claim.sub = 'b6000000-0000-4000-8000-000000000003';
+select results_eq(
+  $$ select count(*)::bigint from loyalty.list_referral_review_cases(
+    'b6000000-0000-4000-8000-000000000101', 'risk', 50
+  ) $$,
+  array[2::bigint],
+  'an analyst can inspect both tenant-scoped pending risk cases'
+);
+select results_eq(
+  $$ select friend_reference, state, qualification_decision, risk_codes
+    from loyalty.list_referral_review_cases(
+      'b6000000-0000-4000-8000-000000000101', 'risk', 50
+    ) where friend_reference = 'review' $$,
+  $$ values (
+    'review'::text, 'pending_review'::text, 'review_held'::text,
+    array['source_network_velocity'::text]
+  ) $$,
+  'the review queue exposes only allowlisted risk and qualification codes'
+);
+select throws_ok(
+  $$ select * from loyalty.resolve_referral_review_command(
+    (select attribution.public_id
+      from loyalty.referral_attributions as attribution
+      join loyalty.customers as customer
+        on customer.id = attribution.friend_customer_id
+      where customer.display_reference = 'review'),
+    'approved', 'Analyst must not approve this referral',
+    'm06-s04:analyst-denied', 'b6000000-0000-4000-8000-000000000301'
+  ) $$,
+  '42501', 'referral review command not authorized',
+  'analysts cannot resolve referral holds'
+);
+
+set local request.jwt.claim.sub = 'b6000000-0000-4000-8000-000000000001';
+select results_eq(
+  $$ select state, outcome from loyalty.resolve_referral_review_command(
+    (select attribution.public_id
+      from loyalty.referral_attributions as attribution
+      join loyalty.customers as customer
+        on customer.id = attribution.friend_customer_id
+      where customer.display_reference = 'review'),
+    'approved', 'Verified shared household evidence',
+    'm06-s04:approve', 'b6000000-0000-4000-8000-000000000302'
+  ) $$,
+  $$ values ('cooling'::text, 'created'::text) $$,
+  'an owner can approve reviewed historical qualification into cooling'
+);
+select results_eq(
+  $$ select decision from loyalty_private.referral_qualification_facts as fact
+    join loyalty.referral_attributions as attribution
+      on attribution.id = fact.attribution_id
+    join loyalty.customers as customer
+      on customer.id = attribution.friend_customer_id
+    where customer.display_reference = 'review' $$,
+  array['review_held'::text],
+  'approval preserves the immutable automated review-held decision'
+);
+select results_eq(
+  $$ select transition.to_state, transition.reason_code,
+      transition.actor_kind, transition.actor_user_id
+    from loyalty.referral_attribution_transitions as transition
+    join loyalty.referral_attributions as attribution
+      on attribution.id = transition.attribution_id
+    join loyalty.customers as customer
+      on customer.id = attribution.friend_customer_id
+    where customer.display_reference = 'review'
+    order by transition.id desc limit 1 $$,
+  $$ values (
+    'cooling'::text, 'merchant_review_approved'::text, 'merchant'::text,
+    'b6000000-0000-4000-8000-000000000001'::uuid
+  ) $$,
+  'approval appends attributable merchant transition evidence'
+);
+select results_eq(
+  $$ select job.state, (job.next_attempt_at = fact.cooling_ends_at)::text
+    from loyalty_private.referral_reward_jobs as job
+    join loyalty.referral_attributions as attribution
+      on attribution.id = job.attribution_id
+    join loyalty_private.referral_qualification_facts as fact
+      on fact.attribution_id = attribution.id
+    join loyalty.customers as customer
+      on customer.id = attribution.friend_customer_id
+    where customer.display_reference = 'review' $$,
+  $$ values ('pending'::text, 'true'::text) $$,
+  'approved reviewed evidence enters the normal event-time reward queue'
+);
+select results_eq(
+  $$ select count(*)::bigint from loyalty.ledger_transactions $$,
+  array[6::bigint],
+  'review approval alone issues no ledger value'
+);
+select results_eq(
+  $$ select action, metadata ->> 'state', metadata ->> 'reason'
+    from loyalty.admin_audit_events
+    where idempotency_key = 'm06-s04:approve' $$,
+  $$ values (
+    'referral.review.approved'::text, 'cooling'::text,
+    'Verified shared household evidence'::text
+  ) $$,
+  'approval retains minimized reason-bound administration evidence'
+);
+select results_eq(
+  $$ select state, outcome from loyalty.resolve_referral_review_command(
+    (select attribution.public_id
+      from loyalty.referral_attributions as attribution
+      join loyalty.customers as customer
+        on customer.id = attribution.friend_customer_id
+      where customer.display_reference = 'review'),
+    'approved', 'Verified shared household evidence',
+    'm06-s04:approve', 'b6000000-0000-4000-8000-000000000303'
+  ) $$,
+  $$ values ('cooling'::text, 'duplicate'::text) $$,
+  'exact review retry returns the current state without a new transition'
+);
+select throws_ok(
+  $$ select * from loyalty.resolve_referral_review_command(
+    (select attribution.public_id
+      from loyalty.referral_attributions as attribution
+      join loyalty.customers as customer
+        on customer.id = attribution.friend_customer_id
+      where customer.display_reference = 'review'),
+    'approved', 'A conflicting replacement reason',
+    'm06-s04:approve', 'b6000000-0000-4000-8000-000000000304'
+  ) $$,
+  '23514', 'referral review idempotency conflict',
+  'review idempotency keys cannot be reused with different evidence'
+);
+select results_eq(
+  $$ select state, outcome from loyalty.resolve_referral_review_command(
+    (select attribution.public_id
+      from loyalty.referral_attributions as attribution
+      join loyalty.customers as customer
+        on customer.id = attribution.friend_customer_id
+      where customer.display_reference = 'review-reject'),
+    'rejected', 'Confirmed repeated payment identity',
+    'm06-s04:reject', 'b6000000-0000-4000-8000-000000000305'
+  ) $$,
+  $$ values ('rejected'::text, 'created'::text) $$,
+  'an owner can definitively reject an uncertain value-neutral referral'
+);
+select results_eq(
+  $$ select transition.to_state, transition.reason_code
+    from loyalty.referral_attribution_transitions as transition
+    join loyalty.referral_attributions as attribution
+      on attribution.id = transition.attribution_id
+    join loyalty.customers as customer
+      on customer.id = attribution.friend_customer_id
+    where customer.display_reference = 'review-reject'
+    order by transition.id desc limit 1 $$,
+  $$ values ('rejected'::text, 'merchant_review_rejected'::text) $$,
+  'rejection appends a deterministic terminal transition'
+);
+select results_eq(
+  $$ select count(*)::bigint
+    from loyalty_private.referral_reward_jobs as job
+    join loyalty.referral_attributions as attribution
+      on attribution.id = job.attribution_id
+    join loyalty.customers as customer
+      on customer.id = attribution.friend_customer_id
+    where customer.display_reference = 'review-reject' $$,
+  array[0::bigint],
+  'rejection before cooling creates no reward job'
+);
+select results_eq(
+  $$ select count(*)::bigint from loyalty.ledger_transactions $$,
+  array[6::bigint],
+  'review rejection creates no ledger value'
+);
+select is_empty(
+  $$ select * from loyalty.list_referral_review_cases(
+    'b6000000-0000-4000-8000-000000000101', 'risk', 50
+  ) $$,
+  'resolved risk cases leave the active review queue'
+);
+reset role;
+
+insert into loyalty_private.referral_reward_job_attempts (
+  organization_id, job_id, attempt_number, outcome, error_code
+)
+select job.organization_id, job.id, attempt.number::smallint,
+  'retryable', 'worker_error'
+from loyalty_private.referral_reward_jobs as job
+join loyalty.referral_attributions as attribution
+  on attribution.id = job.attribution_id
+join loyalty.customers as customer
+  on customer.id = attribution.friend_customer_id
+cross join generate_series(1, 9) as attempt(number)
+where customer.display_reference = 'review';
+update loyalty_private.referral_reward_jobs as job
+set state = 'processing', attempt_count = 10,
+    lease_owner = 'worker-review', lease_expires_at = now() + interval '1 minute',
+    updated_at = clock_timestamp()
+from loyalty.referral_attributions as attribution,
+  loyalty.customers as customer
+where attribution.id = job.attribution_id
+  and customer.id = attribution.friend_customer_id
+  and customer.display_reference = 'review';
+select results_eq(
+  $$ select state, outcome from loyalty_private.finish_referral_reward_job_v1(
+    (select job.public_id from loyalty_private.referral_reward_jobs as job
+      join loyalty.referral_attributions as attribution
+        on attribution.id = job.attribution_id
+      join loyalty.customers as customer
+        on customer.id = attribution.friend_customer_id
+      where customer.display_reference = 'review'),
+    'worker-review', 'worker_error', 60
+  ) $$,
+  $$ values ('manual_review'::text, 'manual_review'::text) $$,
+  'the tenth failed attempt enters nonclaimable manual review'
+);
+
+set local role authenticated;
+set local request.jwt.claim.sub = 'b6000000-0000-4000-8000-000000000003';
+select results_eq(
+  $$ select friend_reference, state, attempt_count, review_cycle, error_code
+    from loyalty.list_referral_review_cases(
+      'b6000000-0000-4000-8000-000000000101', 'reward', 50
+    ) $$,
+  $$ values (
+    'review'::text, 'manual_review'::text, 10::smallint, 0::smallint,
+    'worker_error'::text
+  ) $$,
+  'analysts can inspect minimized exhausted-job diagnostics'
+);
+
+set local request.jwt.claim.sub = 'b6000000-0000-4000-8000-000000000002';
+select results_eq(
+  $$ select state, review_cycle, outcome
+    from loyalty.retry_referral_reward_job_command(
+      (select job.public_id from loyalty_private.referral_reward_jobs as job
+        join loyalty.referral_attributions as attribution
+          on attribution.id = job.attribution_id
+        join loyalty.customers as customer
+          on customer.id = attribution.friend_customer_id
+        where customer.display_reference = 'review'),
+      'Transient database fault was remediated',
+      'm06-s04:retry', 'b6000000-0000-4000-8000-000000000306'
+    ) $$,
+  $$ values ('retryable'::text, 1::smallint, 'created'::text) $$,
+  'an operator can release one reviewed job into another bounded cycle'
+);
+select results_eq(
+  $$ select action, metadata ->> 'reviewCycle', metadata ->> 'reason'
+    from loyalty.admin_audit_events
+    where idempotency_key = 'm06-s04:retry' $$,
+  $$ values (
+    'referral.reward.retry'::text, '1'::text,
+    'Transient database fault was remediated'::text
+  ) $$,
+  'reward retry retains attributable reason and bounded cycle evidence'
+);
+select results_eq(
+  $$ select state, review_cycle, outcome
+    from loyalty.retry_referral_reward_job_command(
+      (select job.public_id from loyalty_private.referral_reward_jobs as job
+        join loyalty.referral_attributions as attribution
+          on attribution.id = job.attribution_id
+        join loyalty.customers as customer
+          on customer.id = attribution.friend_customer_id
+        where customer.display_reference = 'review'),
+      'Transient database fault was remediated',
+      'm06-s04:retry', 'b6000000-0000-4000-8000-000000000307'
+    ) $$,
+  $$ values ('retryable'::text, 1::smallint, 'duplicate'::text) $$,
+  'exact operator retry is idempotent'
+);
+reset role;
+
+select results_eq(
+  $$ select attempt_count from loyalty_private.claim_due_referral_reward_jobs_v1(
+    'worker-reviewed', 25, 60
+  ) $$,
+  array[11::smallint],
+  'a reviewed job starts the next bounded cycle at attempt eleven'
+);
+select results_eq(
+  $$ select state, outcome from loyalty_private.finish_referral_reward_job_v1(
+    (select job.public_id from loyalty_private.referral_reward_jobs as job
+      join loyalty.referral_attributions as attribution
+        on attribution.id = job.attribution_id
+      join loyalty.customers as customer
+        on customer.id = attribution.friend_customer_id
+      where customer.display_reference = 'review'),
+    'worker-reviewed', 'worker_error', 60
+  ) $$,
+  $$ values ('retryable'::text, 'retryable'::text) $$,
+  'attempt eleven remains inside the reviewed ten-attempt cycle'
+);
+select results_eq(
+  $$ select state, attempt_count, review_cycle
+    from loyalty_private.referral_reward_jobs as job
+    join loyalty.referral_attributions as attribution
+      on attribution.id = job.attribution_id
+    join loyalty.customers as customer
+      on customer.id = attribution.friend_customer_id
+    where customer.display_reference = 'review' $$,
+  $$ values ('retryable'::text, 11::smallint, 1::smallint) $$,
+  'job state retains the global attempt count and current review cycle'
+);
+
+update loyalty_private.referral_reward_jobs as job
+set state = 'manual_review', attempt_count = 50, review_cycle = 4,
+    next_attempt_at = now(), lease_owner = null, lease_expires_at = null,
+    last_error_code = 'operator_limit_test', updated_at = clock_timestamp()
+from loyalty.referral_attributions as attribution,
+  loyalty.customers as customer
+where attribution.id = job.attribution_id
+  and customer.id = attribution.friend_customer_id
+  and customer.display_reference = 'review';
+set local role authenticated;
+set local request.jwt.claim.sub = 'b6000000-0000-4000-8000-000000000002';
+select throws_ok(
+  $$ select * from loyalty.retry_referral_reward_job_command(
+    (select job.public_id from loyalty_private.referral_reward_jobs as job
+      join loyalty.referral_attributions as attribution
+        on attribution.id = job.attribution_id
+      join loyalty.customers as customer
+        on customer.id = attribution.friend_customer_id
+      where customer.display_reference = 'review'),
+    'Another retry would exceed the reviewed ceiling',
+    'm06-s04:retry-limit', 'b6000000-0000-4000-8000-000000000308'
+  ) $$,
+  '23514', 'referral reward review retry limit reached',
+  'review cannot create an unbounded retry loop'
+);
+set local request.jwt.claim.sub = 'b6000000-0000-4000-8000-000000000003';
+select throws_ok(
+  $$ select * from loyalty.retry_referral_reward_job_command(
+    (select job.public_id from loyalty_private.referral_reward_jobs as job
+      join loyalty.referral_attributions as attribution
+        on attribution.id = job.attribution_id
+      join loyalty.customers as customer
+        on customer.id = attribution.friend_customer_id
+      where customer.display_reference = 'review'),
+    'Analyst must not restart value processing',
+    'm06-s04:retry-denied', 'b6000000-0000-4000-8000-000000000309'
+  ) $$,
+  '42501', 'referral reward retry not authorized',
+  'analysts cannot restart referral reward processing'
+);
+set local request.jwt.claim.sub = 'b6000000-0000-4000-8000-000000000004';
+select throws_ok(
+  $$ select * from loyalty.list_referral_review_cases(
+    'b6000000-0000-4000-8000-000000000101', null, 50
+  ) $$,
+  '42501', 'referral review queue not authorized',
+  'a user without tenant membership cannot inspect the review queue'
+);
+reset role;
 
 select * from finish();
 rollback;
