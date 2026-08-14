@@ -181,7 +181,8 @@ The reservation holds programme version, wallet, reward, points, expiry, idempot
 - `programme_evaluations` stores immutable live/simulation/tier-review input and result hashes plus explanation evidence.
 - `programme_referral_policies` materializes the immutable attribution, qualifying status, minimum spend, cooling, give/get, and bounded risk policy for each V2 version. `referral_advocates` binds one opaque code to a database customer/programme group; it is not authorization.
 - `referral_attributions` stores one serialized friend/programme-group first attribution. `referral_attribution_transitions` is the append-only captured/review/blocked/cooling/qualified/rejected/reversed state history.
-- Private `referral_qualification_facts` binds one canonical status event and one historical `referral_qualification` evaluation to exact eligible spend, database-derived first-paid-order evidence, decision, event time, and cooling deadline. Qualification is value-neutral; later points must reference this fact through normal immutable ledger transactions.
+- Private `referral_qualification_facts` binds one canonical status event and one historical `referral_qualification` evaluation to exact eligible spend, database-derived first-paid-order evidence, decision, event time, and cooling deadline. Qualification is value-neutral.
+- Private `referral_reward_jobs` leases due cooling work with a ten-attempt ceiling and immutable attempt history. `referral_reward_issuances` binds one qualified referral to both evaluation/award/release/tier-fact chains; `referral_reward_compensations` binds one canonical refund to both reversal chains. Accepted jobs continue independently of rollout entitlement, and all tables are inaccessible to browser/runtime roles.
 - `audit_events` is append-only and records organization, actor, support grant, action, object type/ID, before/after metadata without secrets/PII, IP classification, correlation ID, and timestamp.
 - `manual_adjustment_requests` requires reason, evidence, requester, approver where policy requires, and the resulting compensating ledger transaction.
 - `admin_audit_events` currently records initial tenant bootstrap, programme creation/draft/publication/scheduling, connector operations, customer adjustments, and experience-theme revisions with an attributable Auth principal, canonical request hash, idempotency key, correlation ID, resource ID, and minimized metadata. Bootstrap identifies the newly approved owner under deployment-owner authority; normal merchant commands derive their actor from the live Auth request. Rows are immutable; owner/admin/auditor reads remain tenant scoped.
@@ -213,7 +214,7 @@ The reservation holds programme version, wallet, reward, points, expiry, idempot
 - No network call occurs inside a database transaction.
 - Wallets/lots are locked in ascending ID/expiry order. Transactions remain short and have local statement/lock timeouts.
 - Insert-or-ignore/upsert patterns rely on unique constraints, never `SELECT`-then-`INSERT` races.
-- Redemption, capture, reversal, tier transition, and event effect each use one database transaction.
+- Redemption, capture, reversal, referral two-sided issue/compensation, tier transition, and event effect each use one database transaction.
 - Deadlocks are safe to retry only with the same idempotency key and canonical request hash.
 
 ## Retention and deletion

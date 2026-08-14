@@ -889,12 +889,15 @@ tasks:
           - PostgreSQL verifies signed event status identity and time derives prior paid-order history and appends cooling deterministic rejection or review-held evidence without ledger value
           - exact-head run 31764805380 passed baseline both images clean 38-migration replay all 34 pgTAP files with 1592 assertions including 43 focused qualification and cooling assertions both concurrency probes and all four WooCommerce runtime cells
       - id: M06-S03-GIVE-GET-LEDGER
-        status: in_progress
+        status: completed
         acceptance:
           - advocate and friend points issue through immutable exactly-once ledger effects only after qualification and cooling
           - refund and rejection compensate each side exactly once without deleting history
+        evidence:
+          - PostgreSQL claims bounded leased jobs with deterministic SKIP LOCKED ordering then derives both wallets policy points expiry and canonical evidence before one atomic two-sided issue or compensation transaction
+          - exact-head run 31766887239 passed baseline both images clean 39-migration replay all 34 pgTAP files with 1635 assertions including 86 focused referral qualification cooling and ledger assertions all three concurrency probes and all four WooCommerce runtime cells
       - id: M06-S04-FRAUD-REVIEW
-        status: planned
+        status: in_progress
         acceptance:
           - uncertain cases remain value-neutral until authorized approval or rejection
           - owner admin and operator review commands are tenant-derived reversible reason-bound idempotent and audited
@@ -914,6 +917,7 @@ tasks:
         docs/architecture/ADR/0016-first-attribution-and-minimized-referral-risk.md,
         docs/security/PRIVACY_MODEL.md,
         docs/architecture/ADR/0017-historical-referral-qualification-and-cooling.md,
+        docs/architecture/ADR/0018-leased-atomic-referral-reward-lifecycle.md,
       ]
     evidence: [docs/plan/evidence/M06/README.md]
 

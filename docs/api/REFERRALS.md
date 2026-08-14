@@ -64,6 +64,14 @@ The worker evaluates that order against the attribution's historical V2 programm
 
 Qualification facts and their `referral_qualification` programme evaluations are immutable and private. Delayed/wrong status remains pending, and duplicates create no second fact or transition. Qualification and cooling issue no ledger value.
 
-`loyalty_private.reject_referral_for_refund_v1(canonicalEventId)` derives the source-order attribution from a signed refund. Captured, review-held, or cooling cases append `source_order_refunded -> rejected`. A previously qualified case returns `compensation_required` so the give/get ledger slice can compensate both sides atomically before changing referral state.
+`loyalty_private.reject_referral_for_refund_v1(canonicalEventId)` derives the source-order attribution from a signed refund. Captured, review-held, or cooling cases cancel accepted reward work and append `source_order_refunded -> rejected` without value. A qualified case atomically reverses the advocate and friend ledger awards, appends both compensating tier facts and one immutable compensation, and only then appends `qualified -> reversed`. Exact replay returns the terminal state without another ledger effect.
 
-Disabling rollout stops new links and attribution while preserving and continuing accepted qualification, refund rejection, later compensation, and history. Two-sided ledger effects, review commands, and merchant/customer projections remain subsequent M06 contracts.
+## Cooling-completion reward lifecycle
+
+An eligible cooling transition creates one private job due at the canonical event-time cooling deadline. `loyalty_private.claim_due_referral_reward_jobs_v1(workerId, limit, leaseSeconds)` is worker-only, capped at 50 by contract and 25 by the production worker, uses deterministic `FOR UPDATE SKIP LOCKED` claiming, and grants a 15–300 second lease. Attempts are capped at ten; expired leases retry, and exhaustion becomes nonclaimable `manual_review` with a bounded error code.
+
+`loyalty_private.issue_referral_reward_job_v1(jobId, workerId)` accepts only the public job selector and active lease owner. PostgreSQL derives attribution, historical policy/version, both customers, points, qualification evidence, canonical event, wallets, and expiry. One transaction creates separate immutable advocate/friend evaluations, award/release ledger pairs, FIFO lots, tier facts, one two-sided issuance, `cooling -> qualified`, and job completion. A failure commits nothing. An unknown acknowledgement retry returns the existing issuance.
+
+`loyalty_private.finish_referral_reward_job_v1(...)` records only an allowlisted generic error code and bounded retry delay. Job, attempt, issuance, and compensation tables are private and RLS-enabled. Browser/runtime roles have no table or function access.
+
+Disabling rollout stops new links and attribution while preserving and continuing accepted qualification, reward jobs, refund rejection/compensation, and history. Authorized review commands and merchant/customer projections remain subsequent M06 contracts.
