@@ -217,6 +217,7 @@ declare
   window_required boolean;
 begin
   if target_definition is null
+    or pg_column_size(target_definition) > 65536
     or jsonb_typeof(target_definition) <> 'object'
     or not (target_definition ?& array[
       'schemaVersion', 'code', 'name', 'description', 'match', 'conditions'
