@@ -1,5 +1,8 @@
 -- M05 fail-closed parity between displayed tier rates and executable benefits.
 
+alter function loyalty_private.validate_programme_definition_v2(jsonb)
+  rename to validate_programme_definition_v2_pre_tier_rate_parity;
+
 create or replace function loyalty_private.validate_tier_rate_parity_v2(
   target_configuration jsonb
 )
@@ -59,11 +62,10 @@ security definer
 set search_path = ''
 as $$
 begin
-  perform loyalty_private.validate_programme_definition_v2_core(
-    target_configuration - 'tierPolicy'
+  perform loyalty_private.validate_programme_definition_v2_pre_tier_rate_parity(
+    target_configuration
   );
   if target_configuration ? 'tierPolicy' then
-    perform loyalty_private.validate_tier_policy_v2(target_configuration);
     perform loyalty_private.validate_tier_rate_parity_v2(target_configuration);
   end if;
 end;
@@ -101,6 +103,8 @@ $$;
 
 alter function loyalty_private.validate_tier_rate_parity_v2(jsonb)
   owner to loyalty_owner;
+alter function loyalty_private.validate_programme_definition_v2_pre_tier_rate_parity(jsonb)
+  owner to loyalty_owner;
 alter function loyalty_private.validate_programme_definition_v2(jsonb)
   owner to loyalty_owner;
 alter function loyalty_private.enforce_advanced_tier_contract()
@@ -108,6 +112,7 @@ alter function loyalty_private.enforce_advanced_tier_contract()
 
 revoke all on function
   loyalty_private.validate_tier_rate_parity_v2(jsonb),
+  loyalty_private.validate_programme_definition_v2_pre_tier_rate_parity(jsonb),
   loyalty_private.validate_programme_definition_v2(jsonb),
   loyalty_private.enforce_advanced_tier_contract()
   from public, anon, authenticated, loyalty_runtime, loyalty_worker;
