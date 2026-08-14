@@ -10,7 +10,7 @@ M07 — allowlisted audiences, segments, and campaigns. M00, M02, and M03 are co
 
 M06-S01 through S05 are exact-head green on draft PR #31. Runs `31763563259`, `31764805380`, `31766887239`, `31768294674`, and `31770764870` passed strict policy, signed offline capture, first attribution, historical qualification/cooling, two-sided exactly-once issuance/compensation, Auth-derived reversible fraud review, customer sharing/progress/history, and a fact-sourced merchant funnel. The latest passed a clean 41-migration/1,700-assertion replay, all three concurrency probes, both images, baseline, 126 dashboard tests, 136 contract tests, and all four WooCommerce runtimes. Production-build desktop/mobile browser review passed with no critical accessibility, overflow, or diagnostic issue. M06-S06 reviewed merge, disabled deployment, Starfiniti canary, reconciliation, and scoring is active.
 
-M07-S01 is in progress on a stacked branch. The first vertical boundary adds `AudienceDefinitionV1`, exact pure evaluation, independent PostgreSQL validation, immutable audience versions, database-timed bounded snapshots, private membership evidence, Auth-derived commands, and entitlement-safe rollback. Local targeted tests, typechecks, static database validation, architecture validation, and the complete non-format repository gate pass; the exact 42-migration/36-pgTAP Linux replay remains pending CI because local Docker is unavailable.
+M07-S01 is exact-head green on draft PR #32. `AudienceDefinitionV1`, exact pure evaluation, independent PostgreSQL validation, immutable audience versions, database-timed bounded snapshots, private membership evidence, Auth-derived commands, and entitlement-safe rollback passed run `31773939480` at `8192dd7`: the complete repository gate, both images, a clean 42-migration/36-pgTAP replay with 1,770 assertions, all four concurrency probes, and all four WooCommerce runtimes. Adversarial review found and resolved every blocker and should-fix issue. M07-S02 strict campaign contracts and scheduling is active.
 
 M05-S01 through S05 are exact-head green. M05-S06 shadow comparison found and fixed a predeployment Rose/Bloom/Icon displayed-versus-executable rate mismatch; all 36 V1/V2 award comparisons now match, and exact-head run `31760806620` passed. Reviewed merge, disabled deployment, a fresh recovery point, Starfiniti-only canary, reconciliation, and scoring remain open.
 
@@ -39,7 +39,7 @@ The active integrated baseline is released production commit `0ced4b666a55d836bd
 
 ## Next safe work
 
-1. M07: complete the S01 exact-head Linux database replay and adversarial review, then implement strict campaign contracts and scheduling in S02.
+1. M07: implement strict campaign contracts and scheduling in S02, preserving the exact-green S01 audience authority.
 2. M06: after reviewed stacked merges, deploy disabled, take a fresh recovery point, run the Starfiniti-only canary, reconcile, smoke, and score.
 3. M05: complete reviewed merge, disabled deployment, fresh recovery point, Starfiniti-only canary, zero-drift reconciliation, and score after the exact-green shadow gate.
 4. M01: connect an approved real WooCommerce store when access is supplied and complete its value, outage, rotation, alert, and clean-room recovery gate.

@@ -969,14 +969,18 @@ tasks:
       ]
     slices:
       - id: M07-S01-AUDIENCE-AUTHORITY
-        status: in_progress
+        status: complete
         acceptance:
           - versioned allowlisted audience definitions and exact pure PostgreSQL parity reject arbitrary SQL browser tags and unsupported facts
           - tenant-derived publication and database-timed immutable snapshots retain bounded condition evidence without exposing member identities
           - entitlement rollback blocks new targeting but preserves definitions snapshots accepted work value history and reconciliation
           - cross-tenant idempotency conflict null-recency rolling-boundary and two-session snapshot tests pass
+        evidence:
+          - exact-head run 31773939480 passed baseline both images 42 migrations 36 pgTAP files 1770 assertions and all four WooCommerce runtime cells at 8192dd7
+          - 70 focused assertions plus the two-session probe cover storage lifecycle tenant commands exact retries rollback candidate bounds and one-snapshot concurrency
+          - adversarial security tenancy correctness complexity idiom and cruft review has no remaining blocker or should-fix finding
       - id: M07-S02-CAMPAIGN-CONTRACT-AND-SCHEDULE
-        status: planned
+        status: in_progress
         acceptance:
           - seven strict campaign types bind immutable audiences rewards schedules timezone exclusions caps budgets liability and control assignment
           - preview approval pause and cancellation commands are role-derived audited idempotent and fail closed across DST boundaries
