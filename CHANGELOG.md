@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Replaced the production PostgreSQL tar-over-stdin Borg pull, which retransmitted the complete 22 GB recovery tree every cycle, with a forced read-only incremental rsync stage and normal Borg file caching while retaining host-only repository credentials.
+
 - Released and deployed `v0.1.11`: applied the additive V2 migration after a fresh recovery point, retained zero production value, enabled only the Starfiniti database-authoritative canary, and passed authenticated desktop/mobile earning-builder simulation with no browser diagnostics.
 
 - Repaired the live PostgreSQL off-host backup race with a snapshot-safe forced exporter, incomplete-base exclusion, retained-base-aware WAL cleanup, deterministic deployment validation, and successful forced-WAL/manual/timer-driven production archives.
