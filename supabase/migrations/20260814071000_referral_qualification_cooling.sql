@@ -233,19 +233,14 @@ begin
       and target_result ->> 'awardedPoints' > '9223372036854775807'
     )
     or jsonb_typeof(target_result -> 'contributions') <> 'array'
-    or case
-      when jsonb_typeof(target_result -> 'contributions') = 'array'
-        then jsonb_array_length(target_result -> 'contributions') > 200
-      else false
-    end
     or jsonb_typeof(target_result -> 'lines') <> 'array'
-    or case
-      when jsonb_typeof(target_result -> 'lines') = 'array'
-        then jsonb_array_length(target_result -> 'lines') > 1000
-      else false
-    end
     or jsonb_typeof(target_explanation) <> 'object'
     or target_evaluated_at is null then
+    raise exception using errcode = '22023',
+      message = 'invalid referral qualification evidence';
+  end if;
+  if jsonb_array_length(target_result -> 'contributions') > 200
+    or jsonb_array_length(target_result -> 'lines') > 1000 then
     raise exception using errcode = '22023',
       message = 'invalid referral qualification evidence';
   end if;
