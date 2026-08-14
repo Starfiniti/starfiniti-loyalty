@@ -295,7 +295,7 @@ begin
       target_definition ->> 'code', actor_user_id
     ) returning * into strict target_campaign;
   end if;
-  select pg_catalog.coalesce(pg_catalog.max(version.version_number), 0) + 1
+  select coalesce(pg_catalog.max(version.version_number), 0) + 1
   into created_version_number
   from loyalty.campaign_versions as version
   where version.organization_id = target_campaign.organization_id
@@ -770,7 +770,7 @@ as $$
     bounded.eligible_count - pg_catalog.floor(
       bounded.eligible_count::numeric * bounded.control_basis_points / 10000
     )::bigint,
-    pg_catalog.least(
+    least(
       bounded.global_effect_limit::numeric,
       bounded.eligible_count::numeric * bounded.per_member_effect_limit
     )::bigint,
