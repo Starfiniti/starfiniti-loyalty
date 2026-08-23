@@ -38,7 +38,7 @@ Analyst and auditor roles remain read-only through tenant RLS. No authenticated 
 
 ## Rollout and compatibility
 
-The `campaigns` entitlement gates new draft, publication, and snapshot work. Disabling it preserves definitions, completed snapshots, private evidence, audit history, and exact retries of already accepted commands. Campaign execution, capacity reservation, scheduling, control assignment, UI, and results are later M07 slices and must remain disabled until their own gates pass.
+The `campaigns` entitlement gates new draft, publication, snapshot, purchase-context, and trigger-issue work. Disabling it preserves definitions, completed snapshots, private evidence, audit history, exact retries of already accepted commands, accepted trigger jobs, reversals, refunds, and customer value. It does not delete or compensate an ambiguous native outcome.
 
 Audience contracts are additive. Existing V1/V2 programme evaluation and historical loyalty effects are unchanged.
 
@@ -83,12 +83,25 @@ The batch stores the original private candidate context. An exact retry receives
 
 ## Reserved non-purchase capacity
 
-`reserve_campaign_capacity_v1` is the S03 primitive for milestone, win-back, tier, referral, and limited-quantity triggers. It requires one treatment assignment and an open event-time schedule, derives points or `liabilityMinorPerEffect` from the accepted definition, and atomically enforces global effects, per-member effects, maximum points, and maximum liability. A reservation is either committed with a bounded downstream reference or released; terminal evidence cannot be rewritten.
+`reserve_campaign_capacity_v1` is the capacity primitive for milestone, win-back, tier, referral, and limited-quantity triggers. It requires one treatment assignment and an open event-time schedule, derives points or `liabilityMinorPerEffect` from the accepted definition, and atomically enforces global effects, per-member effects, maximum points, and maximum liability. A reservation is either committed with a bounded downstream reference or released; terminal evidence cannot be rewritten.
 
-S04 must combine canonical trigger verification, reservation, ledger/reward fulfilment, and completion in one transaction before any non-purchase schedule is activated. S03 does not start a scheduler, issue a programme reward, reverse a campaign award, or enable the managed rollout.
+## Canonical trigger execution
+
+M07-S04 appends private jobs only from database-owned tier qualification facts, tier decisions, referral issuance/compensation evidence, and immutable limited-campaign assignments. Milestone and win-back history is restricted to the campaign's exact programme even when another programme shares the same wallet group. Purchase campaign context is likewise bound to the exact immutable programme version supplied by the canonical evaluation transaction.
+
+The worker may schedule at most 100 due limited assignments, claim at most 25 jobs per sweep, and lease each claim for 60 seconds. PostgreSQL recovers no more than the requested claim limit of expired leases, increments attempts only on rows actually claimed, stops after the tenth attempt, and retains exhausted jobs as `manual_review`. The worker receives minimized public job/version IDs and cannot select or mutate private queues, assignments, counters, or source evidence directly.
+
+`execute_campaign_trigger_job_v1(jobId, workerId)` verifies the owned lease, immutable evidence hash, source-bound programme/campaign/assignment, and event-time schedule before it atomically reserves capacity and records one of these outcomes:
+
+- treatment points append an attributable award, immediate release, immutable expiry evidence, and committed capacity;
+- native programme rewards create a campaign-funded reservation, internal control-to-reserved ledger entry, WooCommerce issue command, and committed capacity without debiting member available points;
+- control and capacity-exhausted assignments append zero-value execution evidence; and
+- canonical refunds/compensations cancel unleased work or append exactly one linked points reversal/native cancellation decision.
+
+Campaign-funded native rewards use the existing WooCommerce state machine. Definitive pre-delivery cancellation compensates the internal funding entries exactly once. Issued rewards request native cancellation. Captured or ambiguous connector outcomes are never speculatively released or clawed back.
 
 ## Privileges and rollback
 
-Campaign counters, candidate replay context, assignments, batches, effects, and allocations remain in `loyalty_private`, have RLS enabled, and have no direct grants to browser, runtime, connector, or worker roles. The worker receives only the four narrow context/reservation/completion/commit functions; internal arithmetic and table mutation remain private.
+Campaign counters, candidate replay context, assignments, batches, effects, allocations, trigger jobs, attempts, and executions remain in `loyalty_private`, have RLS enabled, and have no direct grants to browser, runtime, connector, or worker roles. The worker receives only narrow context, scheduling, claim, execution, retry, reservation, and completion functions; internal arithmetic and table mutation remain private.
 
-Rollout disablement may stop new context and reservation work. It must preserve exact retries, accepted batches, campaign-attributed ledger transactions, allocations, counters, refunds, reconciliation, history, and checkout independence. After value exists, schema rollback is forward-fix only.
+Rollout disablement stops new issue context and trigger jobs while preserving accepted work and every reversal path. It must preserve exact retries, accepted batches/jobs, attempts, executions, campaign-attributed ledger transactions, reservations, connector commands, allocations, counters, refunds, reconciliation, history, and checkout independence. After value exists, schema rollback is forward-fix only.

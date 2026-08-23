@@ -1001,12 +1001,17 @@ tasks:
           - exact-head run 32662380030 passed baseline, both images, 44 migrations, 38 pgTAP files, 1914 assertions, all four concurrency probes, and all four WooCommerce runtime cells at c82f3ed
           - the two-session campaign probe proves one last-budget reservation wins, the competitor observes exhaustion, exact retry is idempotent, and counters reconcile
       - id: M07-S04-MILESTONE-WINBACK-TIER-REFERRAL
-        status: in_progress
+        status: complete
         acceptance:
           - milestone win-back tier referral and limited campaign triggers use canonical facts and bounded leased processing
           - retries refunds cancellation and control groups cannot duplicate reverse or over-issue value
+        evidence:
+          - ADR-0024 binds campaign purchase context and canonical trigger history to one exact programme and keeps campaign-funded native rewards out of member available points
+          - additive migration 20260823200509 and 115 focused pgTAP assertions pass exact-head clean replay
+          - exact-head run 32667482144 passed baseline both images 45 migrations 38 pgTAP files 1967 assertions all five concurrency probes and all four WooCommerce runtime cells at 0b60d1b
+          - bounded lease recovery stops at ten attempts private queue inspection remains denied to the worker and rollout disablement blocks only new issue work while accepted work and reversals remain
       - id: M07-S05-MERCHANT-EXPERIENCE-AND-RESULTS
-        status: planned
+        status: in_progress
         acceptance:
           - merchants can build audiences forecast liability approve schedule pause cancel and inspect exact results in a responsive accessible calendar
           - every metric defines its canonical fact and influenced results remain distinct from experimental incrementality
@@ -1019,6 +1024,9 @@ tasks:
       [
         docs/plan/ENTERPRISE_ROADMAP.md,
         docs/architecture/ADR/0021-allowlisted-audiences-and-immutable-snapshots.md,
+        docs/architecture/ADR/0022-explicit-instant-campaign-schedules-and-bound-control-assignment.md,
+        docs/architecture/ADR/0023-atomic-campaign-capacity-and-attributed-value.md,
+        docs/architecture/ADR/0024-canonical-campaign-triggers-and-campaign-funded-rewards.md,
         docs/api/CAMPAIGNS.md,
         docs/architecture/DATA_MODEL.md,
       ]

@@ -91,16 +91,21 @@ Immutable tenant-scoped evidence for administration commands: request-derived ac
 
 Current audience metrics are derived from wallet balances, immutable tier-qualification facts, active tier intervals, and customer creation evidence. Arbitrary SQL, browser tags, PII predicates, and caller-supplied member lists are not part of the contract. New targeting is gated by the database-authoritative `campaigns` entitlement; rollback preserves versions, completed snapshots, and accepted retry evidence.
 
-- `campaigns`: stable tenant/programme-group identity for one campaign code.
+- `campaigns`: stable tenant/programme-group identity for one campaign code, bound to the exact programme selected by the authenticated draft command.
 - `campaign_versions`: immutable strict behavior, audience/exclusion snapshot references, explicit-instant/IANA schedule evidence, hard effect/points/liability ceilings, aggregate assignment counts/hash, and draft/scheduled/active/paused/cancelled/completed lifecycle.
 - `loyalty_private.campaign_controls`: one private 32-byte random assignment salt plus aggregate assignment hash for an approved version.
 - `loyalty_private.campaign_assignments`: one immutable eligible wallet/customer treatment-or-control row with its assignment evidence hash. Browser/runtime roles cannot enumerate it.
 - `loyalty_private.campaign_capacity_counters`: serialized mutable projections of reserved/committed effects, points, and monetary liability for one immutable campaign version.
 - `loyalty_private.campaign_execution_batches`: immutable purchase operation, original candidate context, baseline/final evaluation, and programme-evaluation/transaction evidence used for exact retry.
 - `loyalty_private.campaign_effects`: one immutable control, exhausted, suppressed, or awarded decision per matched purchase campaign, with awarded decisions linked to their exact ledger transaction and pending origin entry.
-- `loyalty_private.campaign_capacity_allocations`: one-way `reserved -> committed|released` evidence for milestone, win-back, tier, referral, and limited-reward capacity before S04 trigger fulfilment.
+- `loyalty_private.campaign_capacity_allocations`: one-way `reserved -> committed|released` evidence for milestone, win-back, tier, referral, and limited-reward capacity.
+- `loyalty_private.campaign_trigger_jobs`: canonical programme-bound milestone, win-back, tier, referral, and limited work with minimized evidence, treatment/control assignment, bounded lease state, and an optional original job for compensation.
+- `loyalty_private.campaign_trigger_job_attempts`: immutable claim, retry, lease-expiry, and manual-review evidence, capped at ten attempts.
+- `loyalty_private.campaign_trigger_executions`: immutable source-to-capacity-to-ledger-or-native-reservation outcomes, including zero-value control/exhaustion and linked compensation evidence.
 
-Approval materializes inclusion minus exclusions and the treatment/control split in one transaction before a version becomes scheduled. One accepted-version partial unique index prevents overlap for a stable campaign. Purchase execution locks operation, member, and campaign capacity in a stable order; reserves capacity; calls the existing programme award boundary; appends separately attributed campaign awards; and commits counters in one transaction. Original context is replayed on exact retry. S04 must bind non-purchase reservations to canonical triggers and fulfilment before any production schedule is enabled.
+Approval materializes inclusion minus exclusions and the treatment/control split in one transaction before a version becomes scheduled. One accepted-version partial unique index prevents overlap for a stable campaign. Purchase execution locks operation, member, and campaign capacity in a stable order; reserves capacity; calls the existing programme award boundary; appends separately attributed campaign awards; and commits counters in one transaction. Original context is replayed on exact retry.
+
+Canonical qualification, tier, referral, and limited-assignment facts enqueue private programme-bound work. The worker receives only bounded scheduling, claim, execution, and retry functions. One execution transaction verifies the lease/evidence, reserves capacity, appends point value or a campaign-funded native reward reservation, and records immutable completion. Definitive native cancellation compensates internal campaign funding; ambiguous outcomes retain reservations and committed capacity for inspection. Entitlement disablement stops new issue jobs but preserves accepted jobs and reversals.
 
 ### `experience_themes`
 
