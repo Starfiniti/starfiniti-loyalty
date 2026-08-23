@@ -834,11 +834,11 @@ select results_eq(
   'campaign awards use bounded campaign-specific source identities'
 );
 select results_eq(
-  $$ select balance.pending_points
+  $$ select balance.points
      from loyalty.wallet_balances as balance
-     join loyalty.ledger_accounts as account
-       on account.id = balance.ledger_account_id
-     where account.account_kind = 'pending' $$,
+     where balance.organization_id = pg_temp.m07_ref('organization')
+       and balance.wallet_id = pg_temp.m07_ref('wallet')
+       and balance.account_kind = 'pending' $$,
   array[25::bigint],
   'wallet pending balance reconciles five programme plus 20 campaign points'
 );
