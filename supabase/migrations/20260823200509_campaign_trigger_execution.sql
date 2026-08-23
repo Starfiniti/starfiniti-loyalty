@@ -79,7 +79,7 @@ create table loyalty_private.campaign_trigger_jobs (
   assignment text not null check (assignment in ('treatment', 'control')),
   trigger_kind text not null check (trigger_kind in (
     'milestone', 'win_back', 'tier', 'referral', 'limited_quantity'
-  ))),
+  )),
   action text not null check (action in ('issue', 'reverse')),
   source_reference text not null,
   qualification_fact_id bigint,
@@ -165,7 +165,7 @@ create table loyalty_private.campaign_trigger_jobs (
       and campaign_assignment_id is not null
       and qualification_fact_id is null and tier_decision_id is null
       and referral_issuance_id is null and referral_compensation_id is null)
-  )),
+  ))),
   check ((action = 'issue' and origin_job_id is null)
     or (action = 'reverse' and origin_job_id is not null))
 );
