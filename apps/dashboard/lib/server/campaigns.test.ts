@@ -82,6 +82,20 @@ describe("campaign merchant results read", () => {
     });
   });
 
+  it("accepts an empty result collection", async () => {
+    rpc.mockResolvedValue({ data: [], error: null });
+    await expect(getCampaignResults(baseResult.programmeId)).resolves.toEqual(
+      [],
+    );
+  });
+
+  it("fails closed on a malformed result container", async () => {
+    rpc.mockResolvedValue({ data: null, error: null });
+    await expect(getCampaignResults(baseResult.programmeId)).rejects.toThrow(
+      "campaign_results_unavailable",
+    );
+  });
+
   it("fails closed on causal claims or unreconciled assignments", async () => {
     rpc.mockResolvedValue({
       data: [

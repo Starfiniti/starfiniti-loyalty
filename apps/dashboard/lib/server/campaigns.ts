@@ -101,8 +101,12 @@ function exactNonNegativeInteger(value: unknown): string {
   throw new Error("campaign_read_unavailable");
 }
 
-function rows(data: unknown): UnknownRow[] {
-  return Array.isArray(data) ? (data as UnknownRow[]) : [];
+function rows(
+  data: unknown,
+  errorCode = "campaign_read_unavailable",
+): UnknownRow[] {
+  if (!Array.isArray(data)) throw new Error(errorCode);
+  return data as UnknownRow[];
 }
 
 async function getCampaignCatalogue(
@@ -338,7 +342,9 @@ export async function getCampaignResults(
       target_limit: 100,
     });
   if (error) throw new Error("campaign_results_unavailable");
-  return rows(data).map((row) => campaignResultV1.parse(row.campaign_result));
+  return rows(data, "campaign_results_unavailable").map((row) =>
+    campaignResultV1.parse(row.campaign_result),
+  );
 }
 
 export async function getCampaignWorkspace(

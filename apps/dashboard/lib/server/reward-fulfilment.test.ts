@@ -68,4 +68,38 @@ describe("reward fulfilment server read", () => {
       getRewardFulfilmentState("84000000-0000-4000-8000-000000000004"),
     ).rejects.toThrow();
   });
+
+  it("fails closed on a malformed cases container", async () => {
+    rpc
+      .mockResolvedValueOnce({ data: null, error: null })
+      .mockResolvedValueOnce({
+        data: {
+          pending: 0,
+          inProgress: 0,
+          overdue: 0,
+          fulfilled30d: 0,
+          rejected30d: 0,
+        },
+        error: null,
+      });
+    await expect(
+      getRewardFulfilmentState("84000000-0000-4000-8000-000000000004"),
+    ).rejects.toThrow("reward_fulfilment_read_unavailable");
+  });
+
+  it("accepts an empty cases collection", async () => {
+    rpc.mockResolvedValueOnce({ data: [], error: null }).mockResolvedValueOnce({
+      data: {
+        pending: 0,
+        inProgress: 0,
+        overdue: 0,
+        fulfilled30d: 0,
+        rejected30d: 0,
+      },
+      error: null,
+    });
+    await expect(
+      getRewardFulfilmentState("84000000-0000-4000-8000-000000000004"),
+    ).resolves.toMatchObject({ cases: [] });
+  });
 });

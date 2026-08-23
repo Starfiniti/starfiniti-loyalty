@@ -44,12 +44,14 @@ export async function getRewardFulfilmentState(programmeId: string): Promise<
       target_programme_public_id: programmeId,
     }),
   ]);
-  if (casesResult.error || summaryResult.error) {
+  if (
+    casesResult.error ||
+    summaryResult.error ||
+    !Array.isArray(casesResult.data)
+  ) {
     throw new Error("reward_fulfilment_read_unavailable");
   }
-  const rows = Array.isArray(casesResult.data)
-    ? (casesResult.data as UnknownRow[])
-    : [];
+  const rows = casesResult.data as UnknownRow[];
   return {
     cases: rows.map(caseFromRow),
     summary: rewardFulfilmentSummaryV1.parse(summaryResult.data),
