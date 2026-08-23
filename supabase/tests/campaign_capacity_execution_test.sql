@@ -1434,6 +1434,7 @@ join loyalty_private.canonical_commerce_events as event
 join loyalty_private.programme_evaluations as evaluation
   on evaluation.public_id = '8b000000-0000-4000-8000-000000000603'
 where original.organization_id = pg_temp.m07_ref('organization')
+  and original.source_programme_version_id = pg_temp.m07_ref('version')
   and original.fact_kind = 'purchase';
 
 select results_eq(
