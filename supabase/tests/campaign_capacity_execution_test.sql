@@ -433,15 +433,21 @@ select results_eq(
 );
 select results_eq(
   $$ select outcome from loyalty.publish_programme_version_command(
-    version.public_id, pg_catalog.encode(version.configuration_sha256, 'hex'),
+    (select version.public_id
+     from loyalty.programme_versions as version
+     join loyalty.programmes as programme
+       on programme.organization_id = version.organization_id
+      and programme.id = version.programme_id
+     where programme.public_id = '8b000000-0000-4000-8000-000000000104'),
+    (select pg_catalog.encode(version.configuration_sha256, 'hex')
+     from loyalty.programme_versions as version
+     join loyalty.programmes as programme
+       on programme.organization_id = version.organization_id
+      and programme.id = version.programme_id
+     where programme.public_id = '8b000000-0000-4000-8000-000000000104'),
     'm07:capacity:other-programme:publish',
     '8b000000-0000-4000-8000-000000000304'
-  )
-  from loyalty.programme_versions as version
-  join loyalty.programmes as programme
-    on programme.organization_id = version.organization_id
-   and programme.id = version.programme_id
-  where programme.public_id = '8b000000-0000-4000-8000-000000000104' $$,
+  ) $$,
   array['created'::text],
   'owner publishes the same-group isolation fixture programme'
 );
