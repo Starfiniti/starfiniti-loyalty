@@ -2224,8 +2224,7 @@ revoke all on function
   loyalty_private.create_campaign_reward_reservation_v1(bigint, bigint, text),
   loyalty_private.request_campaign_reward_reversal_v1(bigint, uuid, text),
   loyalty_private.execute_campaign_trigger_job_v1(uuid, text)
-from public, anon, authenticated, loyalty_app_runtime, loyalty_connector,
-  loyalty_worker;
+from public, anon, authenticated, loyalty_runtime, loyalty_worker;
 
 grant execute on function
   loyalty_private.enqueue_due_limited_campaigns_v1(timestamptz, integer),
