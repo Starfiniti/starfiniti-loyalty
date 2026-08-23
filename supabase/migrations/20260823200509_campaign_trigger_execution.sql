@@ -746,6 +746,7 @@ declare
   next_metric numeric;
   threshold_value bigint;
   prior_purchase loyalty_private.tier_qualification_facts%rowtype;
+  target_programme_id bigint;
   inactive_days bigint;
   original_job loyalty_private.campaign_trigger_jobs%rowtype;
   original_eligible bigint;
@@ -753,6 +754,11 @@ declare
   remaining_orders numeric;
   evidence jsonb;
 begin
+  select version.programme_id into strict target_programme_id
+  from loyalty.programme_versions as version
+  where version.organization_id = new.organization_id
+    and version.programme_group_id = new.programme_group_id
+    and version.id = new.source_programme_version_id;
   for candidate in
     select version.*, campaign.programme_id,
       assignment.id as assignment_id,
@@ -810,6 +816,11 @@ begin
         then fact.verified_action_count_delta else 0 end
     end), 0) into prior_metric
     from loyalty_private.tier_qualification_facts as fact
+    join loyalty.programme_versions as fact_version
+      on fact_version.organization_id = fact.organization_id
+     and fact_version.programme_group_id = fact.programme_group_id
+     and fact_version.id = fact.source_programme_version_id
+     and fact_version.programme_id = candidate.programme_id
     where fact.organization_id = new.organization_id
       and fact.programme_group_id = new.programme_group_id
       and fact.customer_id = new.customer_id and fact.id < new.id;
@@ -875,6 +886,11 @@ begin
   if new.fact_kind = 'purchase' then
     select purchase.* into prior_purchase
     from loyalty_private.tier_qualification_facts as purchase
+    join loyalty.programme_versions as purchase_version
+      on purchase_version.organization_id = purchase.organization_id
+     and purchase_version.programme_group_id = purchase.programme_group_id
+     and purchase_version.id = purchase.source_programme_version_id
+     and purchase_version.programme_id = target_programme_id
     where purchase.organization_id = new.organization_id
       and purchase.programme_group_id = new.programme_group_id
       and purchase.customer_id = new.customer_id

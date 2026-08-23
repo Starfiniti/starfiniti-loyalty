@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(103);
+select plan(106);
 
 select has_table(
   'loyalty_private', 'campaign_trigger_jobs',
@@ -410,6 +410,43 @@ select results_eq(
 );
 reset role;
 
+insert into loyalty.programmes (
+  public_id, organization_id, programme_group_id, slug, name
+)
+select '8b000000-0000-4000-8000-000000000104', organization.id,
+  programme_group.id, 'other-rewards', 'Other same-group rewards'
+from loyalty.organizations as organization
+join loyalty.programme_groups as programme_group
+  on programme_group.organization_id = organization.id
+where organization.slug = 'm07-capacity';
+
+set local role authenticated;
+set local request.jwt.claim.sub = '8b000000-0000-4000-8000-000000000001';
+select results_eq(
+  $$ select outcome from loyalty.create_programme_draft_command(
+    '8b000000-0000-4000-8000-000000000104',
+    pg_temp.m07_capacity_programme(), 'm07:capacity:other-programme:draft',
+    '8b000000-0000-4000-8000-000000000303'
+  ) $$,
+  array['created'::text],
+  'owner creates a second programme in the shared programme group'
+);
+select results_eq(
+  $$ select outcome from loyalty.publish_programme_version_command(
+    version.public_id, pg_catalog.encode(version.configuration_sha256, 'hex'),
+    'm07:capacity:other-programme:publish',
+    '8b000000-0000-4000-8000-000000000304'
+  )
+  from loyalty.programme_versions as version
+  join loyalty.programmes as programme
+    on programme.organization_id = version.organization_id
+   and programme.id = version.programme_id
+  where programme.public_id = '8b000000-0000-4000-8000-000000000104' $$,
+  array['created'::text],
+  'owner publishes the same-group isolation fixture programme'
+);
+reset role;
+
 create function pg_temp.m07_capacity_audience()
 returns jsonb
 language sql
@@ -700,7 +737,11 @@ where organization.slug = 'm07-capacity'
 union all
 select 'version', version.id
 from loyalty.programme_versions as version
+join loyalty.programmes as programme
+  on programme.organization_id = version.organization_id
+ and programme.id = version.programme_id
 where version.status = 'published'
+  and programme.public_id = '8b000000-0000-4000-8000-000000000101'
 union all
 select 'customer', customer.id
 from loyalty.customers as customer
@@ -841,6 +882,50 @@ insert into m07_capacity_refs
 select 'event', event.id
 from loyalty_private.canonical_commerce_events as event
 where event.public_id = '8b000000-0000-4000-8000-000000000601';
+
+insert into loyalty_private.programme_evaluations (
+  public_id, organization_id, programme_group_id, programme_version_id,
+  canonical_event_id, evaluation_kind, subject_reference, idempotency_key,
+  input_sha256, result_sha256, result, explanation, evaluated_at
+)
+select '8b000000-0000-4000-8000-000000000605',
+  programme.organization_id, programme.programme_group_id, version.id,
+  pg_temp.m07_ref('event'), 'live_award', 'woocommerce:other-programme:order:1',
+  'm07:capacity:other-programme:evaluation',
+  decode(repeat('c', 64), 'hex'), decode(repeat('d', 64), 'hex'),
+  '{"version":"2","source":"purchase","awardedPoints":"1"}'::jsonb,
+  '{"fixture":"same_group_programme_isolation"}'::jsonb,
+  pg_temp.m07_event_time() - interval '1 day'
+from loyalty.programmes as programme
+join loyalty.programme_versions as version
+  on version.organization_id = programme.organization_id
+ and version.programme_id = programme.id
+ and version.status = 'published'
+where programme.public_id = '8b000000-0000-4000-8000-000000000104';
+
+insert into loyalty_private.tier_qualification_facts (
+  public_id, organization_id, programme_group_id,
+  source_programme_version_id, customer_id, canonical_event_id,
+  evaluation_id, fact_kind, source_reference,
+  eligible_spend_minor_delta, earned_points_delta, order_count_delta,
+  referral_count_delta, verified_action_count_delta, activity_code,
+  effective_at, recorded_at
+)
+select '8b000000-0000-4000-8000-000000000606',
+  evaluation.organization_id, evaluation.programme_group_id,
+  evaluation.programme_version_id, pg_temp.m07_ref('customer'),
+  evaluation.canonical_event_id, evaluation.id, 'purchase',
+  'm07:capacity:other-programme:purchase', 100, 1, 1, 0, 0, null,
+  evaluation.evaluated_at, evaluation.evaluated_at
+from loyalty_private.programme_evaluations as evaluation
+where evaluation.public_id = '8b000000-0000-4000-8000-000000000605';
+
+select results_eq(
+  $$ select count(*)::bigint
+     from loyalty_private.campaign_trigger_jobs $$,
+  array[0::bigint],
+  'same-group activity in another programme cannot cross this programme campaign milestones'
+);
 
 create function pg_temp.m07_baseline_result()
 returns jsonb
