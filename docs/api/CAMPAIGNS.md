@@ -83,7 +83,7 @@ The batch stores the original private candidate context. An exact retry receives
 
 ## Reserved non-purchase capacity
 
-`reserve_campaign_capacity_v1` is the capacity primitive for milestone, win-back, tier, referral, and limited-quantity triggers. It requires one treatment assignment and an open event-time schedule, derives points or `liabilityMinorPerEffect` from the accepted definition, and atomically enforces global effects, per-member effects, maximum points, and maximum liability. A reservation is either committed with a bounded downstream reference or released; terminal evidence cannot be rewritten.
+`reserve_campaign_capacity_v1` is the capacity primitive for milestone, win-back, tier, referral, and limited-quantity triggers. It requires one treatment assignment and an open event-time schedule, derives points or `liabilityMinorPerEffect` from the accepted definition, and atomically enforces global effects, per-member effects, maximum points, and maximum liability. Hard monetary liability is available only for a V2 fixed-discount reward from the campaign's exact published programme; PostgreSQL binds per-effect face value, currency, and precision to the immutable reward at draft and approval boundaries. Percentage, free-shipping, and free-product rewards cannot claim a hard monetary campaign ceiling. A reservation is either committed with a bounded downstream reference or released; terminal evidence cannot be rewritten.
 
 ## Canonical trigger execution
 
@@ -112,7 +112,7 @@ The `/campaigns` merchant route is the complete M07 operating surface. It suppor
 
 - allowlisted multi-condition audience authoring and editing as new immutable versions;
 - audience publication and database-timed completed snapshots;
-- all seven campaign behaviors with completed inclusion/exclusion snapshots, explicit IANA/local schedule evidence, control groups, member/effect caps, points budgets, and native-reward liability ceilings;
+- all seven campaign behaviors with completed inclusion/exclusion snapshots, explicit IANA/local schedule evidence, control groups, member/effect caps, points budgets, and fixed-discount face-value liability ceilings;
 - immutable campaign-version editing, preview, exact-hash approval, calendar inspection, pause, and cancellation; and
 - exact aggregate capacity, points, liability, purchase, trigger, reversal, and manual-review results with visible metric definitions.
 

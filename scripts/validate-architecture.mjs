@@ -89,6 +89,7 @@ const acceptedAdrs = [
   "0024-canonical-campaign-triggers-and-campaign-funded-rewards.md",
   "0025-minimized-campaign-results-and-honest-attribution.md",
   "0026-cumulative-purchase-campaign-refund-compensation.md",
+  "0027-derived-fixed-discount-campaign-liability.md",
 ];
 
 for (const adr of acceptedAdrs) {

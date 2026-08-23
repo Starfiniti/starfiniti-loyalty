@@ -48,7 +48,7 @@ const blankAudience = (): AudienceDraftInput => ({
 
 const blankCampaign = (
   snapshotId: string,
-  rewardId: string,
+  reward: MerchantCampaignReward | undefined,
 ): CampaignDraftInput => ({
   code: "",
   name: "",
@@ -72,14 +72,14 @@ const blankCampaign = (
   tierCodes: "bloom",
   referralParty: "advocate",
   rewardKind: "points",
-  rewardId,
+  rewardId: reward?.id ?? "",
   globalEffectLimit: "1000",
   perMemberEffectLimit: "1",
   maximumPoints: "100000",
   maximumLiabilityMinor: "500000",
-  liabilityMinorPerEffect: "500",
-  liabilityCurrencyCode: "EUR",
-  liabilityMinorUnitDigits: "2",
+  liabilityMinorPerEffect: reward?.amountMinor ?? "",
+  liabilityCurrencyCode: reward?.currencyCode ?? "",
+  liabilityMinorUnitDigits: String(reward?.currencyMinorUnitDigits ?? ""),
   controlBasisPoints: "1000",
 });
 
@@ -487,10 +487,13 @@ export function CampaignBuilder({
     (snapshot) => snapshot.state === "complete",
   );
   const [draft, setDraft] = useState<CampaignDraftInput>(() =>
-    blankCampaign(completeSnapshots[0]?.id ?? "", rewards[0]?.id ?? ""),
+    blankCampaign(completeSnapshots[0]?.id ?? "", rewards[0]),
   );
   const [state, action, pending] = useActionState(createCampaignDraft, idle);
-  const definition = useMemo(() => buildCampaignDefinition(draft), [draft]);
+  const definition = useMemo(
+    () => buildCampaignDefinition(draft, rewards),
+    [draft, rewards],
+  );
   const authoringEnabled = canAuthor && enabled;
   const rewardBearing = [
     "milestone",
@@ -502,6 +505,7 @@ export function CampaignBuilder({
   const nativeReward =
     draft.behaviorKind === "limited_quantity" ||
     (rewardBearing && draft.rewardKind === "programme_reward");
+  const selectedReward = rewards.find((reward) => reward.id === draft.rewardId);
 
   const update = (patch: Partial<CampaignDraftInput>) =>
     setDraft((current) => ({ ...current, ...patch }));
@@ -774,36 +778,24 @@ export function CampaignBuilder({
                   />
                 </label>
                 <label>
-                  <span>Liability / effect</span>
-                  <input
-                    inputMode="numeric"
-                    onChange={(event) =>
-                      update({ liabilityMinorPerEffect: event.target.value })
-                    }
-                    value={draft.liabilityMinorPerEffect}
-                  />
+                  <span>Face value / effect</span>
+                  <output>
+                    {selectedReward
+                      ? `${selectedReward.amountMinor} ${selectedReward.currencyCode} minor units`
+                      : "Select a published fixed discount"}
+                  </output>
                 </label>
                 <label>
                   <span>Currency</span>
-                  <input
-                    maxLength={3}
-                    onChange={(event) =>
-                      update({ liabilityCurrencyCode: event.target.value })
-                    }
-                    value={draft.liabilityCurrencyCode}
-                  />
+                  <output>
+                    {selectedReward?.currencyCode ?? "Unavailable"}
+                  </output>
                 </label>
                 <label>
                   <span>Currency precision</span>
-                  <input
-                    max={3}
-                    min={0}
-                    onChange={(event) =>
-                      update({ liabilityMinorUnitDigits: event.target.value })
-                    }
-                    type="number"
-                    value={draft.liabilityMinorUnitDigits}
-                  />
+                  <output>
+                    {selectedReward?.currencyMinorUnitDigits ?? "Unavailable"}
+                  </output>
                 </label>
               </>
             )}
@@ -1024,7 +1016,7 @@ function BehaviorFields({
             value={draft.rewardKind}
           >
             <option value="points">Points</option>
-            <option value="programme_reward">Programme reward</option>
+            <option value="programme_reward">Fixed discount reward</option>
           </select>
         </label>
       ) : null}
@@ -1042,15 +1034,16 @@ function BehaviorFields({
       {draft.behaviorKind === "limited_quantity" ||
       (rewardBearing && draft.rewardKind === "programme_reward") ? (
         <label className="span-two">
-          <span>Published native reward</span>
+          <span>Published fixed discount</span>
           <select
             onChange={(event) => update({ rewardId: event.target.value })}
             value={draft.rewardId}
           >
-            <option value="">Select a fulfilable WooCommerce reward</option>
+            <option value="">Select a published fixed discount</option>
             {rewards.map((reward) => (
               <option key={reward.id} value={reward.id}>
-                {reward.name} · {reward.kind.replaceAll("_", " ")}
+                {reward.name} · {reward.amountMinor} {reward.currencyCode} minor
+                units
               </option>
             ))}
           </select>

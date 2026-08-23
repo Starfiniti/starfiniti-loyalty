@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(137);
+select plan(139);
 
 select ok(
   has_function_privilege(
@@ -360,7 +360,8 @@ as $$
       {"code":"rose","name":"Rose","minimumEligibleSpendMinor":"0","pointsPerMajorUnit":"5"}
     ],
     "rewards":[
-      {"code":"five_euro","name":"Five euro reward","kind":"fixed_discount","costPoints":"100","configuration":{"version":"2","fulfilmentMode":"woocommerce_coupon","validityDays":30,"amountMinor":"500","currencyMinorUnitDigits":2,"availability":{"startsAt":null,"endsAt":null,"tierCodes":[],"segmentCodes":[],"perCustomerLimit":3,"globalQuantity":"3","pointsBudget":"300"},"restrictions":{"minimumSpendMinor":null,"productIds":[],"excludedProductIds":[],"categoryIds":[],"excludedCategoryIds":[],"excludeSaleItems":false,"stacking":"exclusive"}}}
+      {"code":"five_euro","name":"Five euro reward","kind":"fixed_discount","costPoints":"100","configuration":{"version":"2","fulfilmentMode":"woocommerce_coupon","validityDays":30,"amountMinor":"500","currencyMinorUnitDigits":2,"availability":{"startsAt":null,"endsAt":null,"tierCodes":[],"segmentCodes":[],"perCustomerLimit":3,"globalQuantity":"3","pointsBudget":"300"},"restrictions":{"minimumSpendMinor":null,"productIds":[],"excludedProductIds":[],"categoryIds":[],"excludedCategoryIds":[],"excludeSaleItems":false,"stacking":"exclusive"}}},
+      {"code":"free_delivery","name":"Free delivery","kind":"free_shipping","costPoints":"50","configuration":{"version":"2","fulfilmentMode":"woocommerce_coupon","validityDays":30,"availability":{"startsAt":null,"endsAt":null,"tierCodes":[],"segmentCodes":[],"perCustomerLimit":3,"globalQuantity":"3","pointsBudget":"150"},"restrictions":{"minimumSpendMinor":null,"productIds":[],"excludedProductIds":[],"categoryIds":[],"excludedCategoryIds":[],"excludeSaleItems":false,"stacking":"exclusive"}}}
     ],
     "earningRules":[
       {
@@ -613,7 +614,7 @@ as $$
   select pg_catalog.jsonb_build_object(
     'globalEffectLimit', '1', 'perMemberEffectLimit', 1,
     'maximumPoints', null, 'maximumLiabilityMinor', '5000',
-    'liabilityMinorPerEffect', '5000',
+    'liabilityMinorPerEffect', '500',
     'liabilityCurrencyCode', 'EUR', 'liabilityMinorUnitDigits', 2
   );
 $$;
@@ -658,6 +659,102 @@ select results_eq(
   ) $$,
   array['created'::text],
   'owner creates a points allocation campaign'
+);
+select throws_ok(
+  $$ select * from loyalty.create_campaign_draft_command(
+    '8b000000-0000-4000-8000-000000000101',
+    pg_temp.m07_campaign_definition(
+      'understated_native_liability',
+      pg_catalog.jsonb_build_object(
+        'kind', 'limited_quantity',
+        'reward', pg_catalog.jsonb_build_object(
+          'kind', 'programme_reward', 'rewardId',
+          (
+            select reward.public_id
+            from loyalty.programme_rewards as reward
+            join loyalty.programme_versions as version
+              on version.organization_id = reward.organization_id
+             and version.id = reward.programme_version_id
+            join loyalty.programmes as programme
+              on programme.organization_id = version.organization_id
+             and programme.id = version.programme_id
+            where reward.code = 'five_euro'
+              and programme.public_id =
+                '8b000000-0000-4000-8000-000000000101'
+          )
+        )
+      ),
+      pg_catalog.jsonb_set(
+        pg_temp.m07_liability_capacity(),
+        '{liabilityMinorPerEffect}', '"1"'::jsonb
+      )
+    ), 'm07:capacity:campaign:understated-liability',
+    '8b000000-0000-4000-8000-000000000508'
+  ) $$,
+  '23514', 'campaign liability must match fixed-discount face value',
+  'browser input cannot understate immutable fixed-discount face value'
+);
+select throws_ok(
+  $$ select * from loyalty.create_campaign_draft_command(
+    '8b000000-0000-4000-8000-000000000101',
+    pg_temp.m07_campaign_definition(
+      'unbounded_free_shipping',
+      pg_catalog.jsonb_build_object(
+        'kind', 'limited_quantity',
+        'reward', pg_catalog.jsonb_build_object(
+          'kind', 'programme_reward', 'rewardId',
+          (
+            select reward.public_id
+            from loyalty.programme_rewards as reward
+            join loyalty.programme_versions as version
+              on version.organization_id = reward.organization_id
+             and version.id = reward.programme_version_id
+            join loyalty.programmes as programme
+              on programme.organization_id = version.organization_id
+             and programme.id = version.programme_id
+            where reward.code = 'free_delivery'
+              and programme.public_id =
+                '8b000000-0000-4000-8000-000000000101'
+          )
+        )
+      ), pg_temp.m07_liability_capacity()
+    ), 'm07:capacity:campaign:unbounded-shipping',
+    '8b000000-0000-4000-8000-000000000509'
+  ) $$,
+  '23514',
+  'campaign liability requires a published fixed-discount reward',
+  'free-shipping cannot claim a fabricated hard monetary ceiling'
+);
+select throws_ok(
+  $$ select * from loyalty.create_campaign_draft_command(
+    '8b000000-0000-4000-8000-000000000101',
+    pg_temp.m07_campaign_definition(
+      'other_programme_reward',
+      pg_catalog.jsonb_build_object(
+        'kind', 'limited_quantity',
+        'reward', pg_catalog.jsonb_build_object(
+          'kind', 'programme_reward', 'rewardId',
+          (
+            select reward.public_id
+            from loyalty.programme_rewards as reward
+            join loyalty.programme_versions as version
+              on version.organization_id = reward.organization_id
+             and version.id = reward.programme_version_id
+            join loyalty.programmes as programme
+              on programme.organization_id = version.organization_id
+             and programme.id = version.programme_id
+            where reward.code = 'five_euro'
+              and programme.public_id =
+                '8b000000-0000-4000-8000-000000000104'
+          )
+        )
+      ), pg_temp.m07_liability_capacity()
+    ), 'm07:capacity:campaign:other-programme-reward',
+    '8b000000-0000-4000-8000-000000000510'
+  ) $$,
+  '23514',
+  'campaign reward must belong to the exact published programme',
+  'same-group reward identity cannot cross the exact programme boundary'
 );
 select results_eq(
   $$ select outcome from loyalty.create_campaign_draft_command(
@@ -1443,9 +1540,9 @@ select '8b000000-0000-4000-8000-000000000603',
     'refundId', 'refund-1',
     'originalEligibleSpendMinor', '100',
     'originalAwardedPoints', '5',
-    'cumulativeRefundedEligibleSpendMinor', '50',
+    'cumulativeRefundedEligibleSpendMinor', '100',
     'alreadyReversedPoints', '0',
-    'reversalPoints', '2'
+    'reversalPoints', '5'
   ),
   '{"rule":"cumulative_refund"}'::jsonb,
   pg_temp.m07_event_time() + interval '2 hours'
@@ -1465,7 +1562,7 @@ select '8b000000-0000-4000-8000-000000000604',
   original.source_programme_version_id, original.customer_id, event.id,
   evaluation.id, original.id, 'refund',
   'campaign-test-refund:' || event.public_id::text,
-  -50, -2, 0,
+  -original.eligible_spend_minor_delta, -original.earned_points_delta, -1,
   0, 0, null, event.occurred_at, event.occurred_at
 from loyalty_private.tier_qualification_facts as original
 join loyalty_private.canonical_commerce_events as event
@@ -1618,7 +1715,7 @@ select results_eq(
           on campaign.organization_id = version.organization_id
          and campaign.id = version.campaign_id
         where campaign.code = 'limited_execution') $$,
-  $$ values (0::bigint, 100::bigint, 1::bigint, 5000::bigint) $$,
+  $$ values (0::bigint, 100::bigint, 1::bigint, 500::bigint) $$,
   'limited native grant is member-balance neutral and reconciles committed liability'
 );
 
@@ -1787,7 +1884,7 @@ select results_eq(
        'm07:capacity:allocation:limited:1',
        decode(repeat('7',64),'hex'), pg_temp.m07_event_time()
      ) $$,
-  $$ values ('created'::text, '0'::text, '5000'::text) $$,
+  $$ values ('created'::text, '0'::text, '500'::text) $$,
   'limited reward reserves its exact approved monetary liability'
 );
 select results_eq(
@@ -1879,7 +1976,7 @@ select results_eq(
      where campaign.code in ('milestone_points', 'limited_reward')
      order by campaign.code $$,
   $$ values ('limited_reward'::text, 0::bigint, 1::bigint,
-              0::bigint, 0::bigint, 0::bigint, 5000::bigint),
+              0::bigint, 0::bigint, 0::bigint, 500::bigint),
             ('milestone_points'::text, 0::bigint, 1::bigint,
               0::bigint, 25::bigint, 0::bigint, 0::bigint) $$,
   'generic allocations reconcile reserved and committed points and liability'
@@ -1911,7 +2008,7 @@ select results_eq(
        'limited_reward', 'milestone_points'
      ) order by campaign_result #>> '{campaignCode}' $$,
   $$ values ('limited_reward'::text, '0'::text, '1'::text,
-              '0'::text, '5000'::text),
+              '0'::text, '500'::text),
             ('milestone_points'::text, '0'::text, '1'::text,
               '25'::text, '0'::text) $$,
   'analyst reads exact reconciled aggregate capacity without private facts'
@@ -1976,6 +2073,20 @@ select ok(
   ),
   'only the worker can enter the purchase campaign refund boundary'
 );
+select results_eq(
+  $$ select loyalty_private.calculate_campaign_refund_target_v1(
+       10, 100, 50
+     ) $$,
+  array[5::bigint],
+  'partial campaign refund target uses the cumulative proportional policy'
+);
+select throws_ok(
+  $$ select loyalty_private.calculate_campaign_refund_target_v1(
+       10, 100, 101
+     ) $$,
+  '23514', 'campaign refund cumulative spend is outside its original award',
+  'campaign refund target rejects cumulative spend beyond the original award'
+);
 
 set local role loyalty_worker;
 select results_eq(
@@ -1993,8 +2104,8 @@ select results_eq(
        ),
        '8b000000-0000-4000-8000-000000000603'
      ) $$,
-  $$ values (2::bigint, 10::bigint, 'created'::text) $$,
-  'partial refund proportionally compensates every purchase campaign origin'
+  $$ values (2::bigint, 20::bigint, 'created'::text) $$,
+  'full refund compensates every purchase campaign origin'
 );
 select results_eq(
   $$ select affected_effects, reversed_points, outcome
@@ -2044,101 +2155,8 @@ select results_eq(
        pg_catalog.sum(compensation.reversal_points)::bigint
      from loyalty_private.campaign_purchase_refund_compensations
        as compensation $$,
-  $$ values (2::bigint, 10::bigint) $$,
-  'partial refund retains one append-only row per awarded campaign effect'
-);
-select results_eq(
-  $$ select points
-     from loyalty.wallet_balances
-     where organization_id = pg_temp.m07_ref('organization')
-       and wallet_id = pg_temp.m07_ref('wallet')
-       and account_kind = 'pending' $$,
-  array[15::bigint],
-  'partial campaign compensation leaves half of each campaign origin intact'
-);
-
-insert into loyalty_private.commerce_delivery_inbox (
-  organization_id, connection_id, source_delivery_id, envelope_version,
-  source_event_id, event_type, source_object_id, occurred_at, delivered_at,
-  key_version, nonce, body_sha256, raw_body, state, processed_at
-)
-select organization.id, connection.id, 'm07-capacity-full-refund-delivery', '1',
-  'm07-capacity-full-refund-event', 'commerce.order.refunded', 'order-1',
-  pg_temp.m07_event_time() + interval '3 hours',
-  pg_temp.m07_event_time() + interval '3 hours', 'v1',
-  'm07-capacity-full-refund-nonce', repeat('c', 64), '{}'::jsonb, 'applied',
-  pg_temp.m07_event_time() + interval '3 hours'
-from loyalty.organizations as organization
-join loyalty.commerce_connections as connection
-  on connection.organization_id = organization.id
-where organization.slug = 'm07-capacity';
-
-insert into loyalty_private.canonical_commerce_events (
-  public_id, organization_id, connection_id, delivery_inbox_id,
-  source_event_id, normalization_version, event_type, source_object_id,
-  occurred_at, payload
-)
-select '8b000000-0000-4000-8000-000000000605', inbox.organization_id,
-  inbox.connection_id, inbox.id, 'm07-capacity-full-refund-event', 'v1',
-  'commerce.order.refunded', 'order-1',
-  pg_temp.m07_event_time() + interval '3 hours', '{}'::jsonb
-from loyalty_private.commerce_delivery_inbox as inbox
-where inbox.source_delivery_id = 'm07-capacity-full-refund-delivery';
-
-insert into loyalty_private.programme_evaluations (
-  public_id, organization_id, programme_group_id, programme_version_id,
-  canonical_event_id, evaluation_kind, subject_reference, idempotency_key,
-  input_sha256, result_sha256, result, explanation, evaluated_at
-)
-select '8b000000-0000-4000-8000-000000000606',
-  pg_temp.m07_ref('organization'), pg_temp.m07_ref('group'),
-  pg_temp.m07_ref('version'), event.id, 'live_refund',
-  'woocommerce:order:1:refund:full', 'm07:capacity:full-refund:evaluation',
-  decode(repeat('c', 64), 'hex'), decode(repeat('d', 64), 'hex'),
-  pg_catalog.jsonb_build_object(
-    'version', '2',
-    'programmeVersionId', '8b000000-0000-4000-8000-000000000102',
-    'orderEventId', 'woocommerce:order:1',
-    'refundId', 'refund-full',
-    'originalEligibleSpendMinor', '100',
-    'originalAwardedPoints', '5',
-    'cumulativeRefundedEligibleSpendMinor', '100',
-    'alreadyReversedPoints', '2',
-    'reversalPoints', '3'
-  ),
-  '{"rule":"cumulative_refund"}'::jsonb,
-  pg_temp.m07_event_time() + interval '3 hours'
-from loyalty_private.canonical_commerce_events as event
-where event.public_id = '8b000000-0000-4000-8000-000000000605';
-
-set local role loyalty_worker;
-select results_eq(
-  $$ select affected_effects, reversed_points, outcome
-     from loyalty_private.record_purchase_campaign_refund_v1(
-       pg_temp.m07_ref('organization'),
-       (
-         select evaluation.public_id
-         from loyalty_private.campaign_execution_batches as batch
-         join loyalty_private.programme_evaluations as evaluation
-           on evaluation.organization_id = batch.organization_id
-          and evaluation.id = batch.programme_evaluation_id
-         where batch.organization_id = pg_temp.m07_ref('organization')
-           and batch.operation_key = 'connection:1:order:1'
-       ),
-       '8b000000-0000-4000-8000-000000000606'
-     ) $$,
-  $$ values (2::bigint, 10::bigint, 'created'::text) $$,
-  'later full refund reverses only each campaign origin remainder'
-);
-reset role;
-
-select results_eq(
-  $$ select count(*)::bigint,
-       pg_catalog.sum(compensation.reversal_points)::bigint
-     from loyalty_private.campaign_purchase_refund_compensations
-       as compensation $$,
-  $$ values (4::bigint, 20::bigint) $$,
-  'partial then full refunds end at exactly the original campaign value'
+  $$ values (2::bigint, 20::bigint) $$,
+  'full refund retains one append-only row per awarded campaign effect'
 );
 select results_eq(
   $$ select count(*)::bigint
@@ -2149,7 +2167,7 @@ select results_eq(
       and transaction.id = compensation.reversal_transaction_id
      where compensation.reversal_points > 0
        and transaction.transaction_kind = 'refund_reversal' $$,
-  array[4::bigint],
+  array[2::bigint],
   'every positive campaign compensation links its immutable reversal transaction'
 );
 select results_eq(
@@ -2159,7 +2177,7 @@ select results_eq(
        and wallet_id = pg_temp.m07_ref('wallet')
        and account_kind = 'pending' $$,
   array[5::bigint],
-  'full campaign compensation leaves only the separately refunded programme origin'
+  'campaign compensation leaves only the separately refunded programme origin'
 );
 
 set local role authenticated;

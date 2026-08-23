@@ -61,8 +61,10 @@ export type MerchantCampaignReward = Readonly<{
   id: string;
   code: string;
   name: string;
-  kind:
-    "fixed_discount" | "percentage_discount" | "free_shipping" | "free_product";
+  kind: "fixed_discount";
+  amountMinor: string;
+  currencyCode: string;
+  currencyMinorUnitDigits: number;
 }>;
 
 export type CampaignWorkspaceRead = Readonly<{
@@ -150,10 +152,10 @@ async function getCampaignCatalogue(
       supabase
         .schema("loyalty")
         .from("programme_versions")
-        .select("id")
+        .select("id,configuration")
         .eq("organization_id", context.organization.id)
         .eq("programme_id", programmeId)
-        .in("status", ["published", "scheduled"])
+        .eq("status", "published")
         .order("version_number", { ascending: false })
         .limit(20),
     ]);
@@ -167,9 +169,11 @@ async function getCampaignCatalogue(
 
   const audienceRows = rows(audienceResult.data);
   const campaignRows = rows(campaignResult.data);
-  const programmeVersionIds = rows(programmeVersionResult.data).map((row) =>
-    integer(row.id),
-  );
+  const programmeVersions = rows(programmeVersionResult.data).map((row) => ({
+    id: integer(row.id),
+    configuration: row.configuration as UnknownRow | null,
+  }));
+  const programmeVersionIds = programmeVersions.map((version) => version.id);
   const audienceIds = audienceRows.map((row) => integer(row.id));
   const campaignIds = campaignRows.map((row) => integer(row.id));
 
@@ -204,7 +208,9 @@ async function getCampaignCatalogue(
         : supabase
             .schema("loyalty")
             .from("programme_rewards")
-            .select("public_id,code,name,reward_kind,configuration")
+            .select(
+              "public_id,programme_version_id,code,name,reward_kind,configuration",
+            )
             .eq("organization_id", context.organization.id)
             .in("programme_version_id", programmeVersionIds)
             .order("id", { ascending: true })
@@ -306,24 +312,41 @@ async function getCampaignCatalogue(
   const rewardById = new Map<string, MerchantCampaignReward>();
   for (const row of rows(rewardResult.data)) {
     const configuration = row.configuration as UnknownRow | null;
+    const programmeVersion = programmeVersions.find(
+      (version) => version.id === integer(row.programme_version_id),
+    );
+    const programmeConfiguration = programmeVersion?.configuration;
     const kind = text(row.reward_kind);
     if (
+      !programmeConfiguration ||
       configuration?.version !== "2" ||
       configuration.fulfilmentMode !== "woocommerce_coupon" ||
-      ![
-        "fixed_discount",
-        "percentage_discount",
-        "free_shipping",
-        "free_product",
-      ].includes(kind)
+      kind !== "fixed_discount"
     ) {
       continue;
+    }
+    const amountMinor = exactNonNegativeInteger(configuration.amountMinor);
+    if (amountMinor === "0") throw new Error("campaign_read_unavailable");
+    const currencyCode = text(programmeConfiguration.currencyCode);
+    const currencyMinorUnitDigits = integer(
+      programmeConfiguration.currencyMinorUnitDigits,
+    );
+    if (
+      !/^[A-Z]{3}$/u.test(currencyCode) ||
+      currencyMinorUnitDigits < 0 ||
+      currencyMinorUnitDigits > 6 ||
+      integer(configuration.currencyMinorUnitDigits) !== currencyMinorUnitDigits
+    ) {
+      throw new Error("campaign_read_unavailable");
     }
     const reward: MerchantCampaignReward = {
       id: text(row.public_id),
       code: text(row.code),
       name: text(row.name),
-      kind: kind as MerchantCampaignReward["kind"],
+      kind,
+      amountMinor,
+      currencyCode,
+      currencyMinorUnitDigits,
     };
     rewardById.set(reward.id, reward);
   }

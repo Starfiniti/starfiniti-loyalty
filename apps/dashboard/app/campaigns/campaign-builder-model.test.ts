@@ -63,6 +63,15 @@ const campaign: CampaignDraftInput = {
   controlBasisPoints: "1000",
 };
 
+const rewardLiabilities = [
+  {
+    id: "87000000-0000-4000-8000-000000000601",
+    amountMinor: "500",
+    currencyCode: "EUR",
+    currencyMinorUnitDigits: 2,
+  },
+] as const;
+
 describe("campaign builder model", () => {
   it("builds an allowlisted audience without caller SQL", () => {
     expect(buildAudienceDefinition(audience)).toMatchObject({
@@ -98,12 +107,15 @@ describe("campaign builder model", () => {
 
   it("requires complete native liability and rejects DST ambiguity", () => {
     expect(
-      buildCampaignDefinition({
-        ...campaign,
-        behaviorKind: "limited_quantity",
-        rewardKind: "programme_reward",
-        maximumLiabilityMinor: "",
-      }),
+      buildCampaignDefinition(
+        {
+          ...campaign,
+          behaviorKind: "limited_quantity",
+          rewardKind: "programme_reward",
+          maximumLiabilityMinor: "",
+        },
+        rewardLiabilities,
+      ),
     ).toBeNull();
     expect(
       buildCampaignDefinition({
@@ -111,5 +123,25 @@ describe("campaign builder model", () => {
         startsLocal: "2026-10-25T02:30",
       }),
     ).toBeNull();
+  });
+
+  it("derives native face value and currency from the published reward", () => {
+    expect(
+      buildCampaignDefinition(
+        {
+          ...campaign,
+          behaviorKind: "limited_quantity",
+          rewardKind: "programme_reward",
+          liabilityMinorPerEffect: "1",
+          liabilityCurrencyCode: "USD",
+          liabilityMinorUnitDigits: "0",
+        },
+        rewardLiabilities,
+      )?.capacity,
+    ).toMatchObject({
+      liabilityMinorPerEffect: "500",
+      liabilityCurrencyCode: "EUR",
+      liabilityMinorUnitDigits: 2,
+    });
   });
 });

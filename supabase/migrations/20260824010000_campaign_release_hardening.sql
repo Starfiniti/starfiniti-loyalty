@@ -59,6 +59,49 @@ alter table loyalty_private.campaign_purchase_refund_compensations
 revoke all on loyalty_private.campaign_purchase_refund_compensations
   from public, anon, authenticated, loyalty_runtime, loyalty_worker;
 
+create or replace function
+  loyalty_private.calculate_campaign_refund_target_v1(
+    original_points bigint,
+    original_eligible_spend_minor bigint,
+    cumulative_refunded_eligible_spend_minor bigint
+  )
+returns bigint
+language plpgsql
+immutable
+set search_path = ''
+as $$
+begin
+  if original_points < 0
+    or original_eligible_spend_minor < 0
+    or cumulative_refunded_eligible_spend_minor < 0
+    or cumulative_refunded_eligible_spend_minor
+      > original_eligible_spend_minor then
+    raise exception using errcode = '23514',
+      message = 'campaign refund cumulative spend is outside its original award';
+  end if;
+  if cumulative_refunded_eligible_spend_minor
+      = original_eligible_spend_minor then
+    return original_points;
+  end if;
+  if original_eligible_spend_minor = 0 then
+    return 0;
+  end if;
+  return pg_catalog.trunc(
+    original_points::numeric
+      * cumulative_refunded_eligible_spend_minor::numeric
+      / original_eligible_spend_minor::numeric
+  )::bigint;
+end;
+$$;
+
+alter function loyalty_private.calculate_campaign_refund_target_v1(
+  bigint, bigint, bigint
+) owner to loyalty_owner;
+
+revoke all on function
+  loyalty_private.calculate_campaign_refund_target_v1(bigint, bigint, bigint)
+  from public, anon, authenticated, loyalty_runtime, loyalty_worker;
+
 create or replace function loyalty_private.record_purchase_campaign_refund_v1(
   target_organization_id bigint,
   target_original_evaluation_public_id uuid,
@@ -201,14 +244,10 @@ begin
     where compensation.organization_id = target_organization_id
       and compensation.campaign_effect_id = target_effect.id;
 
-    target_reversed := case
-      when current_refunded = original_eligible then target_effect.points
-      when original_eligible = 0 then 0
-      else pg_catalog.trunc(
-        target_effect.points::numeric * current_refunded::numeric
-          / original_eligible::numeric
-      )::bigint
-    end;
+    target_reversed :=
+      loyalty_private.calculate_campaign_refund_target_v1(
+        target_effect.points, original_eligible, current_refunded
+      );
 
     if target_reversed < prior_reversed
       or target_reversed > target_effect.points then
@@ -316,6 +355,147 @@ comment on function loyalty_private.record_purchase_campaign_refund_v1(
   bigint, uuid, uuid
 ) is
   'Serializes a V2 refund, records its tier fact, and proportionally compensates every purchase-campaign award origin exactly once without entitlement checks.';
+
+-- A monetary campaign ceiling is meaningful only when PostgreSQL can derive
+-- the exact face value from the immutable reward. Other coupon kinds remain
+-- valid programme rewards but cannot claim a hard monetary campaign bound.
+
+create or replace function loyalty_private.validate_campaign_native_liability_v1(
+  target_organization_id bigint,
+  target_programme_group_id bigint,
+  target_campaign_id bigint,
+  target_definition jsonb
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  target_programme_id bigint;
+  reward_public_id_text text;
+  target_reward loyalty.programme_rewards%rowtype;
+  target_programme_version loyalty.programme_versions%rowtype;
+  face_value_minor bigint;
+  declared_per_effect bigint;
+  declared_maximum bigint;
+  declared_currency text;
+  declared_digits smallint;
+begin
+  reward_public_id_text :=
+    target_definition #>> '{behavior,reward,rewardId}';
+  if reward_public_id_text is null then
+    return;
+  end if;
+
+  select campaign.programme_id into strict target_programme_id
+  from loyalty.campaigns as campaign
+  where campaign.organization_id = target_organization_id
+    and campaign.programme_group_id = target_programme_group_id
+    and campaign.id = target_campaign_id;
+
+  select reward, version
+    into target_reward, target_programme_version
+  from loyalty.programme_rewards as reward
+  join loyalty.programme_versions as version
+    on version.organization_id = reward.organization_id
+   and version.id = reward.programme_version_id
+  where reward.organization_id = target_organization_id
+    and reward.programme_group_id = target_programme_group_id
+    and reward.public_id = reward_public_id_text::uuid
+    and version.programme_id = target_programme_id
+    and version.status = 'published';
+  if not found then
+    raise exception using errcode = '23514',
+      message = 'campaign reward must belong to the exact published programme';
+  end if;
+
+  if target_reward.reward_kind <> 'fixed_discount'
+    or target_reward.configuration ->> 'version' <> '2'
+    or target_reward.configuration ->> 'fulfilmentMode'
+      <> 'woocommerce_coupon'
+    or coalesce(target_reward.configuration ->> 'amountMinor', '')
+      !~ '^[1-9][0-9]*$'
+    or (target_reward.configuration ->> 'amountMinor')::numeric
+      > 9223372036854775807
+    or coalesce(
+      target_reward.configuration ->> 'currencyMinorUnitDigits', ''
+    ) !~ '^[0-6]$' then
+    raise exception using errcode = '23514',
+      message = 'campaign liability requires a published fixed-discount reward';
+  end if;
+
+  face_value_minor :=
+    (target_reward.configuration ->> 'amountMinor')::bigint;
+  declared_per_effect :=
+    (target_definition #>> '{capacity,liabilityMinorPerEffect}')::bigint;
+  declared_maximum :=
+    (target_definition #>> '{capacity,maximumLiabilityMinor}')::bigint;
+  declared_currency :=
+    target_definition #>> '{capacity,liabilityCurrencyCode}';
+  declared_digits :=
+    (target_definition #>> '{capacity,liabilityMinorUnitDigits}')::smallint;
+
+  if declared_per_effect <> face_value_minor
+    or declared_maximum < face_value_minor
+    or declared_currency
+      <> (target_programme_version.configuration ->> 'currencyCode')
+    or declared_digits
+      <> (target_programme_version.configuration
+        ->> 'currencyMinorUnitDigits')::smallint
+    or declared_digits
+      <> (target_reward.configuration
+        ->> 'currencyMinorUnitDigits')::smallint then
+    raise exception using errcode = '23514',
+      message = 'campaign liability must match fixed-discount face value';
+  end if;
+end;
+$$;
+
+alter function loyalty_private.validate_campaign_native_liability_v1(
+  bigint, bigint, bigint, jsonb
+) owner to loyalty_owner;
+
+revoke all on function
+  loyalty_private.validate_campaign_native_liability_v1(
+    bigint, bigint, bigint, jsonb
+  ) from public, anon, authenticated, loyalty_runtime, loyalty_worker;
+
+create or replace function loyalty_private.enforce_campaign_native_liability_v1()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  must_validate boolean := tg_op = 'INSERT';
+begin
+  if tg_op = 'UPDATE' then
+    must_validate := old.status = 'draft' and new.status = 'scheduled';
+  end if;
+  if must_validate then
+    perform loyalty_private.validate_campaign_native_liability_v1(
+      new.organization_id,
+      new.programme_group_id,
+      new.campaign_id,
+      new.definition
+    );
+  end if;
+  return new;
+end;
+$$;
+
+alter function loyalty_private.enforce_campaign_native_liability_v1()
+  owner to loyalty_owner;
+
+revoke all on function
+  loyalty_private.enforce_campaign_native_liability_v1()
+  from public, anon, authenticated, loyalty_runtime, loyalty_worker;
+
+create trigger campaign_versions_native_liability
+before insert or update of status on loyalty.campaign_versions
+for each row execute function
+  loyalty_private.enforce_campaign_native_liability_v1();
 
 -- M07 minimized merchant campaign results. Browser sessions receive only
 -- exact tenant-scoped aggregates; private assignments, source references,
@@ -528,4 +708,3 @@ grant execute on function loyalty.get_campaign_results_v1(uuid, integer)
 
 comment on function loyalty.get_campaign_results_v1(uuid, integer) is
   'Returns bounded exact campaign aggregates for an Auth-derived live organization member without exposing private assignments, identities, source references, errors, salts, or causal-incrementality claims.';
-

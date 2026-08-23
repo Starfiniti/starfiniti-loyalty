@@ -8149,6 +8149,7 @@ html[data-dashboard-theme="dark"] {
 .campaign-builder-form input,
 .campaign-builder-form select,
 .campaign-builder-form textarea,
+.campaign-builder-form output,
 .campaign-state-actions input {
   width: 100%;
   min-height: 40px;
@@ -8159,6 +8160,12 @@ html[data-dashboard-theme="dark"] {
   background: var(--merchant-surface);
   font: inherit;
   font-size: 12px;
+}
+
+.campaign-builder-form output {
+  display: flex;
+  align-items: center;
+  overflow-wrap: anywhere;
 }
 
 .campaign-builder-form select[multiple] {

@@ -177,6 +177,13 @@ export type CampaignDraftInput = Readonly<{
   controlBasisPoints: string;
 }>;
 
+export type CampaignRewardLiability = Readonly<{
+  id: string;
+  amountMinor: string;
+  currencyCode: string;
+  currencyMinorUnitDigits: number;
+}>;
+
 function campaignReward(input: CampaignDraftInput) {
   return input.rewardKind === "programme_reward"
     ? { kind: "programme_reward" as const, rewardId: input.rewardId }
@@ -242,6 +249,7 @@ function campaignBehavior(input: CampaignDraftInput) {
 
 export function buildCampaignDefinition(
   input: CampaignDraftInput,
+  rewardLiabilities: readonly CampaignRewardLiability[] = [],
 ): CampaignDefinitionV1 | null {
   const start = parseLocalDateTimeInTimeZone(input.startsLocal, input.timezone);
   const end = parseLocalDateTimeInTimeZone(input.endsLocal, input.timezone);
@@ -251,6 +259,10 @@ export function buildCampaignDefinition(
   const issuesPoints =
     behavior.kind === "purchase_multiplier" || reward?.kind === "points";
   const usesNativeReward = reward?.kind === "programme_reward";
+  const nativeLiability = usesNativeReward
+    ? rewardLiabilities.find((candidate) => candidate.id === reward.rewardId)
+    : null;
+  if (usesNativeReward && !nativeLiability) return null;
   const parsed = campaignDefinitionV1.safeParse({
     schemaVersion: "1",
     code: input.code.trim().toLowerCase(),
@@ -279,13 +291,13 @@ export function buildCampaignDefinition(
         ? nullablePositive(input.maximumLiabilityMinor)
         : null,
       liabilityMinorPerEffect: usesNativeReward
-        ? nullablePositive(input.liabilityMinorPerEffect)
+        ? nativeLiability?.amountMinor
         : null,
       liabilityCurrencyCode: usesNativeReward
-        ? input.liabilityCurrencyCode.trim().toUpperCase()
+        ? nativeLiability?.currencyCode
         : null,
       liabilityMinorUnitDigits: usesNativeReward
-        ? Number(input.liabilityMinorUnitDigits)
+        ? nativeLiability?.currencyMinorUnitDigits
         : null,
     },
     controlBasisPoints: Number(input.controlBasisPoints),

@@ -1026,8 +1026,10 @@ tasks:
         acceptance:
           - exact-head CI disabled deployment Starfiniti canary full reconciliation and score at least 90 pass
           - partial and full purchase refunds compensate every campaign ledger origin cumulatively without rewriting gross capacity or accepted history
+          - hard monetary campaign ceilings derive exact face value currency and precision from a fixed discount in the exact published programme
         evidence:
           - ADR-0026 defines append-only per-origin cumulative campaign refund compensation; exact-head database replay and canary evidence remain pending
+          - ADR-0027 rejects merchant-declared per-effect valuation unsupported native kinds unpublished rewards and same-group cross-programme reward references
     risks: [R-026, R-020]
     docs:
       [
@@ -1038,6 +1040,7 @@ tasks:
         docs/architecture/ADR/0024-canonical-campaign-triggers-and-campaign-funded-rewards.md,
         docs/architecture/ADR/0025-minimized-campaign-results-and-honest-attribution.md,
         docs/architecture/ADR/0026-cumulative-purchase-campaign-refund-compensation.md,
+        docs/architecture/ADR/0027-derived-fixed-discount-campaign-liability.md,
         docs/api/CAMPAIGNS.md,
         docs/architecture/DATA_MODEL.md,
       ]
