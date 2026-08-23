@@ -27,4 +27,12 @@ describe("merchant programme navigation", () => {
       expect(matches.map((item) => item.href)).toEqual([current.href]);
     }
   });
+
+  it("exposes campaigns as a real Grow destination", () => {
+    const campaign = merchantNavigation.find(
+      (item) => item.href === "/campaigns",
+    );
+    expect(campaign?.label).toBe("Campaigns");
+    expect(campaign?.match("/campaigns/history")).toBe(true);
+  });
 });

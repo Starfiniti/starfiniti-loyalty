@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   audienceDefinitionV1,
   audienceEvaluationFactV1,
+  merchantAudienceSnapshotResultV1,
   merchantCreateAudienceDraftCommandV1,
 } from "./audience";
 
@@ -105,6 +106,19 @@ describe("audienceDefinitionV1", () => {
         correlationId: "00000000-0000-4000-8000-000000000002",
       }).success,
     ).toBe(false);
+  });
+});
+
+describe("audience merchant result contracts", () => {
+  it("preserves exact snapshot counts without numeric coercion", () => {
+    expect(
+      merchantAudienceSnapshotResultV1.parse({
+        resourceId: "00000000-0000-4000-8000-000000000003",
+        outcome: "created",
+        snapshotAt: "2026-08-23T08:00:00Z",
+        memberCount: "9223372036854775807",
+      }).memberCount,
+    ).toBe("9223372036854775807");
   });
 });
 

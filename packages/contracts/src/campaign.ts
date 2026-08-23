@@ -424,6 +424,236 @@ export const campaignPreviewV1 = z
     }
   });
 
+export const merchantCampaignDraftResultV1 = z
+  .object({
+    resourceId: z.uuid(),
+    outcome: z.enum(["created", "duplicate"]),
+    definitionSha256: sha256,
+    versionNumber: z.number().int().positive(),
+  })
+  .strict();
+
+export const merchantCampaignPreviewResultV1 = campaignPreviewV1.extend({
+  outcome: z.enum(["created", "duplicate"]),
+});
+
+export const merchantCampaignApprovalResultV1 = z
+  .object({
+    resourceId: z.uuid(),
+    outcome: z.enum(["created", "duplicate"]),
+    status: z.literal("scheduled"),
+    startsAt: offsetDateTime,
+    endsAt: offsetDateTime,
+    eligibleMembers: nonNegativeBigint,
+    treatmentMembers: nonNegativeBigint,
+    controlMembers: nonNegativeBigint,
+    assignmentSha256: sha256,
+  })
+  .strict()
+  .superRefine((result, context) => {
+    if (
+      BigInt(result.eligibleMembers) !==
+      BigInt(result.treatmentMembers) + BigInt(result.controlMembers)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["eligibleMembers"],
+        message: "Approved treatment and control assignments must reconcile",
+      });
+    }
+  });
+
+export const merchantCampaignStateChangeResultV1 = z
+  .object({
+    resourceId: z.uuid(),
+    outcome: z.enum(["created", "duplicate"]),
+    status: z.enum(["paused", "cancelled"]),
+    changedAt: offsetDateTime,
+  })
+  .strict();
+
+const campaignStatusV1 = z.enum([
+  "draft",
+  "scheduled",
+  "active",
+  "paused",
+  "cancelled",
+  "completed",
+]);
+
+export const campaignResultV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    programmeId: z.uuid(),
+    campaignId: z.uuid(),
+    campaignVersionId: z.uuid(),
+    campaignCode: code,
+    campaignName: z.string().trim().min(1).max(120),
+    versionNumber: z.number().int().positive(),
+    status: campaignStatusV1,
+    startsAt: offsetDateTime,
+    endsAt: offsetDateTime,
+    generatedAt: offsetDateTime,
+    assignments: z
+      .object({
+        eligible: nonNegativeBigint,
+        treatment: nonNegativeBigint,
+        control: nonNegativeBigint,
+      })
+      .strict(),
+    capacity: z
+      .object({
+        globalEffectLimit: positiveBigint,
+        maximumPoints: positiveBigint.nullable(),
+        maximumLiabilityMinor: positiveBigint.nullable(),
+        reservedEffects: nonNegativeBigint,
+        committedEffects: nonNegativeBigint,
+        reservedPoints: nonNegativeBigint,
+        committedPoints: nonNegativeBigint,
+        reservedLiabilityMinor: nonNegativeBigint,
+        committedLiabilityMinor: nonNegativeBigint,
+      })
+      .strict(),
+    purchaseOutcomes: z
+      .object({
+        awarded: nonNegativeBigint,
+        control: nonNegativeBigint,
+        capacityExhausted: nonNegativeBigint,
+        suppressed: nonNegativeBigint,
+        reversedAwards: nonNegativeBigint,
+      })
+      .strict(),
+    triggerJobs: z
+      .object({
+        pending: nonNegativeBigint,
+        processing: nonNegativeBigint,
+        retryable: nonNegativeBigint,
+        completed: nonNegativeBigint,
+        cancelled: nonNegativeBigint,
+        manualReview: nonNegativeBigint,
+      })
+      .strict(),
+    triggerOutcomes: z
+      .object({
+        pointsAwarded: nonNegativeBigint,
+        rewardReserved: nonNegativeBigint,
+        control: nonNegativeBigint,
+        capacityExhausted: nonNegativeBigint,
+        pointsReversed: nonNegativeBigint,
+        rewardCancellationRequested: nonNegativeBigint,
+        rewardAlreadyResolved: nonNegativeBigint,
+        rewardNonreversible: nonNegativeBigint,
+        noValueToReverse: nonNegativeBigint,
+      })
+      .strict(),
+    measurement: z
+      .object({
+        classification: z.literal("influenced"),
+        incrementalityState: z.literal("not_measured"),
+        explanation: z.literal(
+          "These are directly attributed campaign outcomes, not experimentally measured incremental lift.",
+        ),
+      })
+      .strict(),
+  })
+  .strict()
+  .superRefine((result, context) => {
+    if (
+      BigInt(result.assignments.eligible) !==
+      BigInt(result.assignments.treatment) + BigInt(result.assignments.control)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["assignments", "eligible"],
+        message: "Treatment and control assignments must reconcile",
+      });
+    }
+    if (
+      BigInt(result.capacity.reservedEffects) +
+        BigInt(result.capacity.committedEffects) >
+      BigInt(result.capacity.globalEffectLimit)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["capacity", "globalEffectLimit"],
+        message: "Campaign effects cannot exceed the approved global limit",
+      });
+    }
+  });
+
+export const campaignMetricDefinitionV1 = z
+  .object({
+    key: z.enum([
+      "eligible_members",
+      "committed_effects",
+      "committed_points",
+      "committed_liability_minor",
+      "manual_review_jobs",
+    ]),
+    label: z.string().trim().min(1).max(80),
+    unit: z.enum(["members", "effects", "points", "minor_currency", "jobs"]),
+    classification: z.enum(["operational", "influenced"]),
+    canonicalSource: z.enum([
+      "campaign_version_assignment",
+      "campaign_capacity_counter",
+      "campaign_trigger_job",
+    ]),
+    definition: z.string().trim().min(1).max(300),
+  })
+  .strict();
+
+export const CAMPAIGN_METRIC_DICTIONARY_V1 = [
+  {
+    key: "eligible_members",
+    label: "Eligible members",
+    unit: "members",
+    classification: "operational",
+    canonicalSource: "campaign_version_assignment",
+    definition:
+      "Members frozen into the approved treatment and control assignment set.",
+  },
+  {
+    key: "committed_effects",
+    label: "Committed effects",
+    unit: "effects",
+    classification: "influenced",
+    canonicalSource: "campaign_capacity_counter",
+    definition:
+      "Campaign allocations whose protected fulfilment reached a committed outcome.",
+  },
+  {
+    key: "committed_points",
+    label: "Committed points",
+    unit: "points",
+    classification: "influenced",
+    canonicalSource: "campaign_capacity_counter",
+    definition:
+      "Points committed through campaign-funded immutable ledger effects.",
+  },
+  {
+    key: "committed_liability_minor",
+    label: "Committed liability",
+    unit: "minor_currency",
+    classification: "influenced",
+    canonicalSource: "campaign_capacity_counter",
+    definition:
+      "Approved minor-currency liability committed to campaign reward fulfilment.",
+  },
+  {
+    key: "manual_review_jobs",
+    label: "Manual review",
+    unit: "jobs",
+    classification: "operational",
+    canonicalSource: "campaign_trigger_job",
+    definition:
+      "Canonical trigger jobs stopped after bounded retry exhaustion and awaiting review.",
+  },
+] as const;
+
+CAMPAIGN_METRIC_DICTIONARY_V1.forEach((definition) =>
+  campaignMetricDefinitionV1.parse(definition),
+);
+
 export const campaignPurchaseCandidateV1 = z
   .object({
     schemaVersion: z.literal("1"),
@@ -638,6 +868,22 @@ export type CampaignPurchaseBehaviorV1 = z.infer<
 export type CampaignCapacityV1 = z.infer<typeof campaignCapacityV1>;
 export type CampaignDefinitionV1 = z.infer<typeof campaignDefinitionV1>;
 export type CampaignPreviewV1 = z.infer<typeof campaignPreviewV1>;
+export type MerchantCampaignDraftResultV1 = z.infer<
+  typeof merchantCampaignDraftResultV1
+>;
+export type MerchantCampaignPreviewResultV1 = z.infer<
+  typeof merchantCampaignPreviewResultV1
+>;
+export type MerchantCampaignApprovalResultV1 = z.infer<
+  typeof merchantCampaignApprovalResultV1
+>;
+export type MerchantCampaignStateChangeResultV1 = z.infer<
+  typeof merchantCampaignStateChangeResultV1
+>;
+export type CampaignResultV1 = z.infer<typeof campaignResultV1>;
+export type CampaignMetricDefinitionV1 = z.infer<
+  typeof campaignMetricDefinitionV1
+>;
 export type CampaignPurchaseCandidateV1 = z.infer<
   typeof campaignPurchaseCandidateV1
 >;

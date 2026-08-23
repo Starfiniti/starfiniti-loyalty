@@ -1027,6 +1027,7 @@ tasks:
         docs/architecture/ADR/0022-explicit-instant-campaign-schedules-and-bound-control-assignment.md,
         docs/architecture/ADR/0023-atomic-campaign-capacity-and-attributed-value.md,
         docs/architecture/ADR/0024-canonical-campaign-triggers-and-campaign-funded-rewards.md,
+        docs/architecture/ADR/0025-minimized-campaign-results-and-honest-attribution.md,
         docs/api/CAMPAIGNS.md,
         docs/architecture/DATA_MODEL.md,
       ]

@@ -107,6 +107,8 @@ Approval materializes inclusion minus exclusions and the treatment/control split
 
 Canonical qualification, tier, referral, and limited-assignment facts enqueue private programme-bound work. The worker receives only bounded scheduling, claim, execution, and retry functions. One execution transaction verifies the lease/evidence, reserves capacity, appends point value or a campaign-funded native reward reservation, and records immutable completion. Definitive native cancellation compensates internal campaign funding; ambiguous outcomes retain reservations and committed capacity for inspection. Entitlement disablement stops new issue jobs but preserves accepted jobs and reversals.
 
+`get_campaign_results_v1(programmeId, limit)` is the only browser-facing projection over private campaign execution evidence. It derives tenant access from live membership, binds the exact programme, returns bounded exact aggregate decimal text, and excludes assignments, identities, sources, errors, salts, and raw evidence. Its measurement contract labels directly attributed outcomes as influenced and explicitly records that experimental incrementality is not measured.
+
 ### `experience_themes`
 
 Unique per `(organization_id, workspace_id, programme_group_id)` and protected by a composite foreign key to the explicit workspace/group link. Each revision stores one accessible canonical brand color, an allowlisted local font token, bounded radius and copy, section visibility, and widget side. It stores no CSS, markup, scripts, URLs, uploads, customer attributes, or secrets. Members can read through RLS; only the guarded owner/admin command can create or revision a row and append matching immutable audit evidence.

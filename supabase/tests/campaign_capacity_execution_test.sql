@@ -2,7 +2,27 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(115);
+select plan(123);
+
+select ok(
+  has_function_privilege(
+    'authenticated',
+    'loyalty.get_campaign_results_v1(uuid,integer)', 'EXECUTE'
+  ),
+  'authenticated members can enter the minimized campaign results boundary'
+);
+select ok(
+  not has_function_privilege(
+    'anon', 'loyalty.get_campaign_results_v1(uuid,integer)', 'EXECUTE'
+  ),
+  'anonymous callers cannot read campaign results'
+);
+select ok(
+  not has_function_privilege(
+    'loyalty_worker', 'loyalty.get_campaign_results_v1(uuid,integer)', 'EXECUTE'
+  ),
+  'workers cannot use the merchant campaign projection'
+);
 
 select has_table(
   'loyalty_private', 'campaign_trigger_jobs',
@@ -251,16 +271,25 @@ select ok(
 );
 
 insert into auth.users (id, email)
-values ('8b000000-0000-4000-8000-000000000001',
-  'm07-capacity-owner@example.test');
+values
+  ('8b000000-0000-4000-8000-000000000001',
+    'm07-capacity-owner@example.test'),
+  ('8b000000-0000-4000-8000-000000000002',
+    'm07-capacity-analyst@example.test'),
+  ('8b000000-0000-4000-8000-000000000003',
+    'm07-capacity-outsider@example.test');
 
 insert into loyalty.organizations (public_id, slug, name)
 values ('8b000000-0000-4000-8000-000000000100',
   'm07-capacity', 'M07 Capacity');
 
 insert into loyalty.organization_memberships (organization_id, user_id, role)
-select organization.id, '8b000000-0000-4000-8000-000000000001', 'owner'
+select organization.id, fixture.user_id, fixture.role
 from loyalty.organizations as organization
+cross join (values
+  ('8b000000-0000-4000-8000-000000000001'::uuid, 'owner'::text),
+  ('8b000000-0000-4000-8000-000000000002'::uuid, 'analyst'::text)
+) as fixture(user_id, role)
 where organization.slug = 'm07-capacity';
 
 insert into loyalty.programme_groups (organization_id, slug, name)
@@ -1856,6 +1885,59 @@ select throws_ok(
   '55000', 'campaign capacity history cannot be deleted',
   'campaign capacity history cannot be deleted'
 );
+
+set local role authenticated;
+set local request.jwt.claim.sub = '8b000000-0000-4000-8000-000000000002';
+select results_eq(
+  $$ select campaign_result #>> '{campaignCode}',
+       campaign_result #>> '{capacity,reservedEffects}',
+       campaign_result #>> '{capacity,committedEffects}',
+       campaign_result #>> '{capacity,committedPoints}',
+       campaign_result #>> '{capacity,committedLiabilityMinor}'
+     from loyalty.get_campaign_results_v1(
+       '8b000000-0000-4000-8000-000000000101', 100
+     )
+     where campaign_result #>> '{campaignCode}' in (
+       'limited_reward', 'milestone_points'
+     ) order by campaign_result #>> '{campaignCode}' $$,
+  $$ values ('limited_reward'::text, '0'::text, '1'::text,
+              '0'::text, '5000'::text),
+            ('milestone_points'::text, '0'::text, '1'::text,
+              '25'::text, '0'::text) $$,
+  'analyst reads exact reconciled aggregate capacity without private facts'
+);
+select results_eq(
+  $$ select distinct campaign_result #>> '{measurement,incrementalityState}',
+       campaign_result #>> '{measurement,classification}'
+     from loyalty.get_campaign_results_v1(
+       '8b000000-0000-4000-8000-000000000101', 100
+     ) $$,
+  $$ values ('not_measured'::text, 'influenced'::text) $$,
+  'merchant results distinguish attribution from measured incrementality'
+);
+select results_eq(
+  $$ select count(*)::bigint from loyalty.get_campaign_results_v1(
+       '8b000000-0000-4000-8000-000000000104', 100
+     ) $$,
+  array[0::bigint],
+  'same-group campaigns remain isolated to their exact programme'
+);
+select throws_ok(
+  $$ select * from loyalty.get_campaign_results_v1(
+       '8b000000-0000-4000-8000-000000000101', 101
+     ) $$,
+  '22023', 'invalid campaign results request',
+  'campaign results enforce their bounded row limit'
+);
+set local request.jwt.claim.sub = '8b000000-0000-4000-8000-000000000003';
+select throws_ok(
+  $$ select * from loyalty.get_campaign_results_v1(
+       '8b000000-0000-4000-8000-000000000101', 100
+     ) $$,
+  '42501', 'campaign results not authorized',
+  'an unrelated caller cannot read another organization campaign results'
+);
+reset role;
 
 select * from finish();
 rollback;

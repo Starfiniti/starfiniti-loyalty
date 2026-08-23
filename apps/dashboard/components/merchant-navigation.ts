@@ -4,6 +4,7 @@ import {
   Gem,
   Gift,
   LayoutDashboard,
+  Megaphone,
   Palette,
   Star,
   Users,
@@ -63,6 +64,12 @@ export const merchantNavigation: readonly MerchantNavigationItem[] = [
     href: "/referrals",
     icon: UserRoundPlus,
     match: (pathname) => pathname.startsWith("/referrals"),
+  },
+  {
+    label: "Campaigns",
+    href: "/campaigns",
+    icon: Megaphone,
+    match: (pathname) => pathname.startsWith("/campaigns"),
   },
   {
     label: "Connector operations",

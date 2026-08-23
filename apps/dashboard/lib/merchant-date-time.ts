@@ -8,9 +8,9 @@ type LocalDateTimeParts = Readonly<{
   minute: number;
 }>;
 
-function zoneOffsetMinutes(instant: number): number | null {
+function zoneOffsetMinutes(instant: number, timeZone: string): number | null {
   const zone = new Intl.DateTimeFormat("en-US", {
-    timeZone: MERCHANT_TIME_ZONE,
+    timeZone,
     timeZoneName: "longOffset",
     hour: "2-digit",
   })
@@ -22,9 +22,12 @@ function zoneOffsetMinutes(instant: number): number | null {
   return match[1] === "-" ? -magnitude : magnitude;
 }
 
-function partsInMerchantZone(instant: number): LocalDateTimeParts {
+function partsInTimeZone(
+  instant: number,
+  timeZone: string,
+): LocalDateTimeParts {
   const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: MERCHANT_TIME_ZONE,
+    timeZone,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -56,7 +59,10 @@ function sameLocalDateTime(
   );
 }
 
-export function parseMerchantLocalDateTime(input: string): Date | null {
+export function parseLocalDateTimeInTimeZone(
+  input: string,
+  timeZone: string,
+): Date | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/u.exec(input);
   if (!match) return null;
   const requested: LocalDateTimeParts = {
@@ -73,15 +79,24 @@ export function parseMerchantLocalDateTime(input: string): Date | null {
     requested.hour,
     requested.minute,
   );
-  const offsets = new Set(
-    [-86_400_000, 0, 86_400_000]
-      .map((delta) => zoneOffsetMinutes(wallClockAsUtc + delta))
-      .filter((offset): offset is number => offset !== null),
-  );
+  let offsets: Set<number>;
+  try {
+    offsets = new Set(
+      [-86_400_000, 0, 86_400_000]
+        .map((delta) => zoneOffsetMinutes(wallClockAsUtc + delta, timeZone))
+        .filter((offset): offset is number => offset !== null),
+    );
+  } catch {
+    return null;
+  }
   const candidates = [...offsets]
     .map((offset) => wallClockAsUtc - offset * 60_000)
     .filter((instant) =>
-      sameLocalDateTime(partsInMerchantZone(instant), requested),
+      sameLocalDateTime(partsInTimeZone(instant, timeZone), requested),
     );
   return candidates.length === 1 ? new Date(candidates[0]!) : null;
+}
+
+export function parseMerchantLocalDateTime(input: string): Date | null {
+  return parseLocalDateTimeInTimeZone(input, MERCHANT_TIME_ZONE);
 }

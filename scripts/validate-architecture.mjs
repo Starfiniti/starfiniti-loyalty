@@ -86,6 +86,8 @@ const acceptedAdrs = [
   "0021-allowlisted-audiences-and-immutable-snapshots.md",
   "0022-explicit-instant-campaign-schedules-and-bound-control-assignment.md",
   "0023-atomic-campaign-capacity-and-attributed-value.md",
+  "0024-canonical-campaign-triggers-and-campaign-funded-rewards.md",
+  "0025-minimized-campaign-results-and-honest-attribution.md",
 ];
 
 for (const adr of acceptedAdrs) {

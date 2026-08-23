@@ -276,6 +276,32 @@ export const audienceSnapshotReadV1 = z
   })
   .strict();
 
+export const merchantAudienceDraftResultV1 = z
+  .object({
+    resourceId: z.uuid(),
+    outcome: z.enum(["created", "duplicate"]),
+    definitionSha256: z.string().regex(/^[a-f0-9]{64}$/u),
+    versionNumber: z.number().int().positive(),
+  })
+  .strict();
+
+export const merchantAudiencePublishResultV1 = z
+  .object({
+    resourceId: z.uuid(),
+    outcome: z.enum(["created", "duplicate"]),
+    publishedAt: timestamp,
+  })
+  .strict();
+
+export const merchantAudienceSnapshotResultV1 = z
+  .object({
+    resourceId: z.uuid(),
+    outcome: z.enum(["created", "duplicate"]),
+    snapshotAt: timestamp,
+    memberCount: exactNonNegativeBigint,
+  })
+  .strict();
+
 export type AudienceMetricV1 = z.infer<typeof audienceMetricV1>;
 export type AudienceMetricWindowV1 = z.infer<typeof audienceMetricWindowV1>;
 export type AudienceNumericConditionV1 = z.infer<
@@ -287,3 +313,12 @@ export type AudienceMetricEvidenceV1 = z.infer<typeof audienceMetricEvidenceV1>;
 export type AudienceEvaluationFactV1 = z.infer<typeof audienceEvaluationFactV1>;
 export type AudienceEvaluationV1 = z.infer<typeof audienceEvaluationV1>;
 export type AudienceSnapshotReadV1 = z.infer<typeof audienceSnapshotReadV1>;
+export type MerchantAudienceDraftResultV1 = z.infer<
+  typeof merchantAudienceDraftResultV1
+>;
+export type MerchantAudiencePublishResultV1 = z.infer<
+  typeof merchantAudiencePublishResultV1
+>;
+export type MerchantAudienceSnapshotResultV1 = z.infer<
+  typeof merchantAudienceSnapshotResultV1
+>;

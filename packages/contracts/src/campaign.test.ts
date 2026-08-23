@@ -3,11 +3,13 @@ import {
   campaignDefinitionV1,
   campaignPurchaseCandidateV1,
   campaignPurchaseEvaluationV1,
+  campaignResultV1,
   campaignPreviewV1,
   campaignScheduleV1,
   campaignTriggerExecutionV1,
   campaignTriggerJobV1,
   merchantPauseCampaignVersionCommandV1,
+  CAMPAIGN_METRIC_DICTIONARY_V1,
 } from "./campaign";
 
 const schedule = {
@@ -241,6 +243,98 @@ describe("campaignPreviewV1", () => {
         ...emptyPreview,
         inclusionMembers: "2",
         excludedMembers: "1",
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe("campaignResultV1", () => {
+  const result = {
+    schemaVersion: "1" as const,
+    programmeId: "87000000-0000-4000-8000-000000000700",
+    campaignId: "87000000-0000-4000-8000-000000000701",
+    campaignVersionId: "87000000-0000-4000-8000-000000000702",
+    campaignCode: "autumn_bonus",
+    campaignName: "Autumn bonus",
+    versionNumber: 1,
+    status: "active" as const,
+    startsAt: "2026-08-20T10:00:00Z",
+    endsAt: "2026-09-20T10:00:00Z",
+    generatedAt: "2026-08-23T10:00:00Z",
+    assignments: { eligible: "100", treatment: "90", control: "10" },
+    capacity: {
+      globalEffectLimit: "1000",
+      maximumPoints: "100000",
+      maximumLiabilityMinor: null,
+      reservedEffects: "2",
+      committedEffects: "20",
+      reservedPoints: "200",
+      committedPoints: "2000",
+      reservedLiabilityMinor: "0",
+      committedLiabilityMinor: "0",
+    },
+    purchaseOutcomes: {
+      awarded: "18",
+      control: "2",
+      capacityExhausted: "0",
+      suppressed: "1",
+      reversedAwards: "1",
+    },
+    triggerJobs: {
+      pending: "1",
+      processing: "0",
+      retryable: "0",
+      completed: "2",
+      cancelled: "0",
+      manualReview: "0",
+    },
+    triggerOutcomes: {
+      pointsAwarded: "2",
+      rewardReserved: "0",
+      control: "0",
+      capacityExhausted: "0",
+      pointsReversed: "0",
+      rewardCancellationRequested: "0",
+      rewardAlreadyResolved: "0",
+      rewardNonreversible: "0",
+      noValueToReverse: "0",
+    },
+    measurement: {
+      classification: "influenced" as const,
+      incrementalityState: "not_measured" as const,
+      explanation:
+        "These are directly attributed campaign outcomes, not experimentally measured incremental lift." as const,
+    },
+  };
+
+  it("accepts exact tenant-safe aggregate outcomes", () => {
+    expect(campaignResultV1.parse(result)).toEqual(result);
+    expect(CAMPAIGN_METRIC_DICTIONARY_V1).toHaveLength(5);
+  });
+
+  it("rejects unreconciled assignments, over-capacity effects, and incrementality claims", () => {
+    expect(
+      campaignResultV1.safeParse({
+        ...result,
+        assignments: { ...result.assignments, treatment: "89" },
+      }).success,
+    ).toBe(false);
+    expect(
+      campaignResultV1.safeParse({
+        ...result,
+        capacity: {
+          ...result.capacity,
+          reservedEffects: "981",
+        },
+      }).success,
+    ).toBe(false);
+    expect(
+      campaignResultV1.safeParse({
+        ...result,
+        measurement: {
+          ...result.measurement,
+          incrementalityState: "measured",
+        },
       }).success,
     ).toBe(false);
   });

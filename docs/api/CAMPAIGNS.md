@@ -105,3 +105,21 @@ Campaign-funded native rewards use the existing WooCommerce state machine. Defin
 Campaign counters, candidate replay context, assignments, batches, effects, allocations, trigger jobs, attempts, and executions remain in `loyalty_private`, have RLS enabled, and have no direct grants to browser, runtime, connector, or worker roles. The worker receives only narrow context, scheduling, claim, execution, retry, reservation, and completion functions; internal arithmetic and table mutation remain private.
 
 Rollout disablement stops new issue context and trigger jobs while preserving accepted work and every reversal path. It must preserve exact retries, accepted batches/jobs, attempts, executions, campaign-attributed ledger transactions, reservations, connector commands, allocations, counters, refunds, reconciliation, history, and checkout independence. After value exists, schema rollback is forward-fix only.
+
+## Merchant catalogue, operations, and results
+
+The `/campaigns` merchant route is the complete M07 operating surface. It supports:
+
+- allowlisted multi-condition audience authoring and editing as new immutable versions;
+- audience publication and database-timed completed snapshots;
+- all seven campaign behaviors with completed inclusion/exclusion snapshots, explicit IANA/local schedule evidence, control groups, member/effect caps, points budgets, and native-reward liability ceilings;
+- immutable campaign-version editing, preview, exact-hash approval, calendar inspection, pause, and cancellation; and
+- exact aggregate capacity, points, liability, purchase, trigger, reversal, and manual-review results with visible metric definitions.
+
+Authoring, new snapshots, preview, and approval follow the database-authoritative `campaigns` entitlement. Disabling rollout never hides existing catalogue history, accepted schedules, pause/cancel controls, canonical results, or manual-review counts.
+
+`loyalty.get_campaign_results_v1(programmeId, limit)` accepts a public programme UUID and a 1–100 row limit. The function derives the current actor, tenant, internal programme, and allowed membership from Auth. It returns one strict `CampaignResultV1` JSON object per immutable version. Exact PostgreSQL integers remain decimal strings.
+
+The projection exposes only public campaign/version metadata, aggregate assignment counts, aggregate capacity counters, purchase outcome counts, trigger job states, and trigger execution outcomes. It excludes assignment membership, customers, wallets, source references, raw evidence, retry errors, salts, actors, channel identifiers, and coupon material. Anonymous, application runtime, and worker roles cannot execute it and authenticated roles retain no direct private-table read.
+
+Every displayed metric has a versioned canonical-source definition. Current outcome measures are labelled `influenced`; `incrementalityState` is always `not_measured` with the fixed explanation that directly attributed outcomes are not experimentally measured incremental lift. M10 must introduce a new evidence-backed metric contract before presenting causal incrementality.
