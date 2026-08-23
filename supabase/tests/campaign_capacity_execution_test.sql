@@ -530,6 +530,13 @@ where version.status = 'published'
 union all
 select 'customer', customer.id
 from loyalty.customers as customer
+where customer.public_id = '8b000000-0000-4000-8000-000000000201'
+union all
+select 'wallet', wallet.id
+from loyalty.wallets as wallet
+join loyalty.customers as customer
+  on customer.organization_id = wallet.organization_id
+ and customer.id = wallet.customer_id
 where customer.public_id = '8b000000-0000-4000-8000-000000000201';
 
 create function pg_temp.m07_ref(target_name text)
@@ -1048,7 +1055,7 @@ select results_eq(
 select throws_ok(
   $$ update loyalty_private.campaign_capacity_allocations
      set completion_reference = 'changed' where state = 'committed' $$,
-  '55000', 'campaign allocation identity is immutable',
+  '55000', 'invalid campaign allocation transition',
   'terminal allocation evidence cannot be rewritten'
 );
 select throws_ok(
