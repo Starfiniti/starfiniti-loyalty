@@ -1,6 +1,7 @@
 import { hostname } from "node:os";
 import postgres from "postgres";
 import {
+  advanceCampaignLifecycle,
   claimWooCommerceEffects,
   enqueueExpiredWooCommerceCouponCancellations,
   expireDueTierOverrides,
@@ -37,6 +38,7 @@ while (!stopping) {
     await expireDueTierOverrides(sql);
     await runPointExpiryLifecycle(sql);
     await runReferralRewardLifecycle(sql, workerId);
+    await advanceCampaignLifecycle(sql);
     await runCampaignTriggerLifecycle(sql, workerId);
     nextCancellationSweepAt = Date.now() + 60_000;
   }

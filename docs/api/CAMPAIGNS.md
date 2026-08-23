@@ -22,7 +22,7 @@ Tier conditions use only published tier codes. Verified-action conditions may fi
 - `loyalty.audience_snapshots` stores database-timed aggregate snapshot evidence.
 - `loyalty_private.audience_snapshot_members` stores included customer/wallet keys and exact evaluation evidence. Browser, anonymous, application runtime, and connector roles cannot read it.
 
-Snapshots consider active customers with active wallets in the version's exact organization and programme group. Synchronous creation is limited to 100,000 candidates; a later worker slice may replace that implementation without changing the public contract. The caller cannot choose the tenant, programme group, member identities, observation values, or snapshot time.
+Snapshots consider active customers with active wallets in the version's exact organization and programme group. Synchronous creation is limited to 100,000 candidates. One materialized cursor statement fixes the database-time anchor, bounded candidate set, balances, facts, tiers, and every member decision to one MVCC snapshot; a timestamp alone is not treated as read-consistency evidence. The caller cannot choose the tenant, programme group, member identities, observation values, or snapshot time.
 
 ## Merchant commands
 
@@ -64,6 +64,8 @@ Approval materializes the eligible inclusion-minus-exclusion wallet set and gene
 
 All commands derive tenant and actor from the live Auth session, use tenant-scoped request-hash idempotency, and append minimized audit evidence. Count, capacity, points, and liability values cross the RPC boundary as exact decimal strings, including a valid zero-effect empty preview; PostgreSQL retains native bigint authority internally. Exact retries return the original accepted outcome even after later pause/cancel or rollout disablement. Pause and cancellation are never commercially blocked. S02 creates no ledger/reward effect and does not activate schedules; production scheduling remains disabled until S03/S04 pass their atomic value gates.
 
+The worker calls `advance_campaign_lifecycle_v1(limit)` before campaign issue scheduling. PostgreSQL advances due `scheduled` versions to `active`, and ended `scheduled`, `active`, or `paused` versions to `completed`, in stable bounded `SKIP LOCKED` batches. The wrapper derives time from PostgreSQL and appends one private immutable lifecycle event per transition. Completion releases the accepted-version uniqueness boundary but never blocks delayed canonical in-window effects, refunds, reversals, or reconciliation, which continue to use immutable schedule/audit evidence.
+
 ## Atomic purchase execution
 
 M07-S03 adds a private purchase execution boundary without changing the signed WooCommerce event contract. Inside the existing event transaction, the worker requests `get_purchase_campaign_context_v1`. PostgreSQL derives the active wallet, immutable treatment/control assignments, event-time schedule state, and exact remaining global/member/points capacity. The worker cannot choose tenant, campaign, assignment, counters, or schedule time.
@@ -102,7 +104,7 @@ Campaign-funded native rewards use the existing WooCommerce state machine. Defin
 
 ## Privileges and rollback
 
-Campaign counters, candidate replay context, assignments, batches, effects, allocations, trigger jobs, attempts, and executions remain in `loyalty_private`, have RLS enabled, and have no direct grants to browser, runtime, connector, or worker roles. The worker receives only narrow context, scheduling, claim, execution, retry, reservation, and completion functions; internal arithmetic and table mutation remain private.
+Campaign counters, candidate replay context, assignments, batches, effects, allocations, lifecycle events, trigger jobs, attempts, and executions remain in `loyalty_private`, have RLS enabled, and have no direct grants to browser, runtime, connector, or worker roles. The worker receives only narrow lifecycle, context, scheduling, claim, execution, retry, reservation, and completion functions; internal arithmetic and table mutation remain private.
 
 Rollout disablement stops new issue context and trigger jobs while preserving accepted work and every reversal path. It must preserve exact retries, accepted batches/jobs, attempts, executions, campaign-attributed ledger transactions, reservations, connector commands, allocations, counters, refunds, reconciliation, history, and checkout independence. After value exists, schema rollback is forward-fix only.
 

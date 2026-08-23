@@ -1008,3 +1008,252 @@ grant execute on function loyalty.get_campaign_results_v1(uuid, integer)
 
 comment on function loyalty.get_campaign_results_v1(uuid, integer) is
   'Returns bounded exact campaign aggregates for an Auth-derived live organization member without exposing private assignments, identities, source references, errors, salts, or causal-incrementality claims.';
+
+-- Accepted campaign versions need a real database-timed lifecycle. Without
+-- these transitions a scheduled version remains scheduled forever, never
+-- becomes visibly active/completed, and permanently blocks its successor.
+
+create table loyalty_private.campaign_lifecycle_events (
+  id bigint generated always as identity primary key,
+  public_id uuid not null default gen_random_uuid() unique,
+  organization_id bigint not null,
+  programme_group_id bigint not null,
+  campaign_version_id bigint not null,
+  from_status text not null check (
+    from_status in ('scheduled', 'active', 'paused')
+  ),
+  to_status text not null check (to_status in ('active', 'completed')),
+  transitioned_at timestamptz not null,
+  created_at timestamptz not null default now(),
+  unique (organization_id, id),
+  unique (organization_id, campaign_version_id, to_status),
+  foreign key (organization_id, programme_group_id, campaign_version_id)
+    references loyalty.campaign_versions(
+      organization_id, programme_group_id, id
+    ) on delete restrict,
+  check (
+    (from_status = 'scheduled' and to_status in ('active', 'completed'))
+    or (from_status in ('active', 'paused') and to_status = 'completed')
+  )
+);
+
+create index campaign_versions_completion_due_idx
+  on loyalty.campaign_versions (ends_at, id)
+  where status in ('scheduled', 'active', 'paused');
+
+alter table loyalty_private.campaign_lifecycle_events owner to loyalty_owner;
+
+create trigger campaign_lifecycle_events_immutable
+before update or delete on loyalty_private.campaign_lifecycle_events
+for each row execute function loyalty_private.reject_immutable_change();
+
+alter table loyalty_private.campaign_lifecycle_events enable row level security;
+
+revoke all on loyalty_private.campaign_lifecycle_events
+  from public, anon, authenticated, loyalty_runtime, loyalty_worker;
+
+create or replace function loyalty_private.protect_campaign_version()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if tg_op = 'DELETE' then
+    raise exception using errcode = '55000',
+      message = 'campaign versions are immutable';
+  end if;
+  if new.id <> old.id
+    or new.public_id <> old.public_id
+    or new.organization_id <> old.organization_id
+    or new.programme_group_id <> old.programme_group_id
+    or new.campaign_id <> old.campaign_id
+    or new.version_number <> old.version_number
+    or new.definition <> old.definition
+    or new.definition_sha256 <> old.definition_sha256
+    or new.audience_snapshot_id <> old.audience_snapshot_id
+    or new.schedule_timezone <> old.schedule_timezone
+    or new.starts_at <> old.starts_at
+    or new.ends_at <> old.ends_at
+    or new.global_effect_limit <> old.global_effect_limit
+    or new.per_member_effect_limit <> old.per_member_effect_limit
+    or new.maximum_points is distinct from old.maximum_points
+    or new.maximum_liability_minor is distinct from old.maximum_liability_minor
+    or new.liability_minor_per_effect
+      is distinct from old.liability_minor_per_effect
+    or new.liability_currency_code
+      is distinct from old.liability_currency_code
+    or new.liability_minor_unit_digits
+      is distinct from old.liability_minor_unit_digits
+    or new.control_basis_points <> old.control_basis_points
+    or new.created_by_user_id <> old.created_by_user_id
+    or new.created_at <> old.created_at then
+    raise exception using errcode = '55000',
+      message = 'campaign definition history is immutable';
+  end if;
+  if old.status = 'draft' and new.status = 'scheduled'
+    and old.approved_by_user_id is null
+    and new.approved_by_user_id is not null
+    and old.approved_at is null and new.approved_at is not null
+    and old.assignment_sha256 is null and new.assignment_sha256 is not null
+    and new.eligible_member_count > 0
+    and new.treatment_member_count + new.control_member_count
+      = new.eligible_member_count
+    and new.status_changed_at >= old.status_changed_at then
+    return new;
+  end if;
+  if old.status in ('scheduled', 'active') and new.status = 'paused'
+    and new.approved_by_user_id = old.approved_by_user_id
+    and new.approved_at = old.approved_at
+    and new.eligible_member_count = old.eligible_member_count
+    and new.treatment_member_count = old.treatment_member_count
+    and new.control_member_count = old.control_member_count
+    and new.assignment_sha256 = old.assignment_sha256
+    and new.status_changed_at >= old.status_changed_at then
+    return new;
+  end if;
+  if old.status in ('scheduled', 'active', 'paused')
+    and new.status = 'cancelled'
+    and new.approved_by_user_id = old.approved_by_user_id
+    and new.approved_at = old.approved_at
+    and new.eligible_member_count = old.eligible_member_count
+    and new.treatment_member_count = old.treatment_member_count
+    and new.control_member_count = old.control_member_count
+    and new.assignment_sha256 = old.assignment_sha256
+    and new.status_changed_at >= old.status_changed_at then
+    return new;
+  end if;
+  if old.status = 'scheduled' and new.status = 'active'
+    and new.approved_by_user_id = old.approved_by_user_id
+    and new.approved_at = old.approved_at
+    and new.eligible_member_count = old.eligible_member_count
+    and new.treatment_member_count = old.treatment_member_count
+    and new.control_member_count = old.control_member_count
+    and new.assignment_sha256 = old.assignment_sha256
+    and new.status_changed_at >= old.starts_at
+    and new.status_changed_at < old.ends_at then
+    return new;
+  end if;
+  if old.status in ('scheduled', 'active', 'paused')
+    and new.status = 'completed'
+    and new.approved_by_user_id = old.approved_by_user_id
+    and new.approved_at = old.approved_at
+    and new.eligible_member_count = old.eligible_member_count
+    and new.treatment_member_count = old.treatment_member_count
+    and new.control_member_count = old.control_member_count
+    and new.assignment_sha256 = old.assignment_sha256
+    and new.status_changed_at >= old.ends_at then
+    return new;
+  end if;
+  raise exception using errcode = '55000',
+    message = 'invalid campaign version transition';
+end;
+$$;
+
+alter function loyalty_private.protect_campaign_version()
+  owner to loyalty_owner;
+
+revoke all on function loyalty_private.protect_campaign_version()
+  from public, anon, authenticated, loyalty_runtime, loyalty_worker;
+
+create or replace function loyalty_private.advance_campaign_lifecycle_at_v1(
+  target_now timestamptz,
+  target_limit integer
+)
+returns table (
+  campaign_version_id uuid,
+  from_status text,
+  to_status text,
+  transitioned_at timestamptz
+)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  candidate loyalty.campaign_versions%rowtype;
+  next_status text;
+begin
+  if target_now is null or target_limit not between 1 and 100 then
+    raise exception using errcode = '22023',
+      message = 'invalid campaign lifecycle request';
+  end if;
+  for candidate in
+    select version.*
+    from loyalty.campaign_versions as version
+    where (
+      version.status = 'scheduled'
+      and version.starts_at <= target_now
+    ) or (
+      version.status in ('active', 'paused')
+      and version.ends_at <= target_now
+    )
+    order by
+      case when version.ends_at <= target_now
+        then version.ends_at else version.starts_at end,
+      version.id
+    limit target_limit
+    for update skip locked
+  loop
+    next_status := case when candidate.ends_at <= target_now
+      then 'completed' else 'active' end;
+    update loyalty.campaign_versions as version
+    set status = next_status, status_changed_at = target_now
+    where version.organization_id = candidate.organization_id
+      and version.id = candidate.id;
+    insert into loyalty_private.campaign_lifecycle_events (
+      organization_id, programme_group_id, campaign_version_id,
+      from_status, to_status, transitioned_at
+    ) values (
+      candidate.organization_id, candidate.programme_group_id, candidate.id,
+      candidate.status, next_status, target_now
+    );
+    campaign_version_id := candidate.public_id;
+    from_status := candidate.status;
+    to_status := next_status;
+    transitioned_at := target_now;
+    return next;
+  end loop;
+end;
+$$;
+
+alter function loyalty_private.advance_campaign_lifecycle_at_v1(
+  timestamptz, integer
+) owner to loyalty_owner;
+
+revoke all on function loyalty_private.advance_campaign_lifecycle_at_v1(
+  timestamptz, integer
+) from public, anon, authenticated, loyalty_runtime, loyalty_worker;
+
+create or replace function loyalty_private.advance_campaign_lifecycle_v1(
+  target_limit integer
+)
+returns table (
+  campaign_version_id uuid,
+  from_status text,
+  to_status text,
+  transitioned_at timestamptz
+)
+language sql
+security definer
+set search_path = ''
+as $$
+  select *
+  from loyalty_private.advance_campaign_lifecycle_at_v1(
+    pg_catalog.clock_timestamp(), target_limit
+  )
+$$;
+
+alter function loyalty_private.advance_campaign_lifecycle_v1(integer)
+  owner to loyalty_owner;
+
+revoke all on function loyalty_private.advance_campaign_lifecycle_v1(integer)
+  from public, anon, authenticated, loyalty_runtime, loyalty_worker;
+grant execute on function loyalty_private.advance_campaign_lifecycle_v1(integer)
+  to loyalty_worker;
+
+comment on table loyalty_private.campaign_lifecycle_events is
+  'Append-only evidence for database-timed scheduled, active, paused, and completed campaign transitions.';
+
+comment on function loyalty_private.advance_campaign_lifecycle_v1(integer) is
+  'Advances a bounded SKIP LOCKED campaign lifecycle batch using database time; accepted value, reversals, and history remain available after completion.';

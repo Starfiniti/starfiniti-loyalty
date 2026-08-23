@@ -853,6 +853,52 @@ type ClaimedCampaignTriggerJob = Readonly<{
   attempt_count: number | string;
 }>;
 
+type CampaignLifecycleTransitionRow = Readonly<{
+  campaign_version_id: string;
+  from_status: string;
+  to_status: string;
+  transitioned_at: string | Date;
+}>;
+
+export type CampaignLifecycleAdvanceResult = Readonly<{
+  activated: number;
+  completed: number;
+}>;
+
+export async function advanceCampaignLifecycle(
+  sql: Sql,
+): Promise<CampaignLifecycleAdvanceResult> {
+  const rows = await sql<CampaignLifecycleTransitionRow[]>`
+    select campaign_version_id::text, from_status, to_status, transitioned_at
+    from loyalty_private.advance_campaign_lifecycle_v1(100)
+  `;
+  if (rows.length > 100) {
+    throw new Error("invalid_campaign_lifecycle_result");
+  }
+  let activated = 0;
+  let completed = 0;
+  for (const row of rows) {
+    const transitionedAt =
+      row.transitioned_at instanceof Date
+        ? row.transitioned_at
+        : new Date(row.transitioned_at);
+    const validTransition =
+      (row.from_status === "scheduled" && row.to_status === "active") ||
+      (["scheduled", "active", "paused"].includes(row.from_status) &&
+        row.to_status === "completed");
+    if (
+      !isUuid(row.campaign_version_id) ||
+      !validTransition ||
+      Number.isNaN(transitionedAt.valueOf())
+    ) {
+      throw new Error("invalid_campaign_lifecycle_result");
+    }
+    if (row.to_status === "active") activated += 1;
+    else completed += 1;
+  }
+  return { activated, completed };
+}
+
 type CampaignTriggerExecutionRow = Readonly<{
   job_id: string;
   campaign_version_id: string;

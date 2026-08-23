@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(139);
+select plan(151);
 
 select ok(
   has_function_privilege(
@@ -22,6 +22,39 @@ select ok(
     'loyalty_worker', 'loyalty.get_campaign_results_v1(uuid,integer)', 'EXECUTE'
   ),
   'workers cannot use the merchant campaign projection'
+);
+select has_table(
+  'loyalty_private', 'campaign_lifecycle_events',
+  'campaign lifecycle transitions retain append-only evidence'
+);
+select ok(
+  (
+    select relation.relrowsecurity
+    from pg_catalog.pg_class as relation
+    where relation.oid =
+      'loyalty_private.campaign_lifecycle_events'::regclass
+  ),
+  'campaign lifecycle evidence has RLS enabled'
+);
+select has_trigger(
+  'loyalty_private', 'campaign_lifecycle_events',
+  'campaign_lifecycle_events_immutable',
+  'campaign lifecycle evidence cannot be rewritten'
+);
+select ok(
+  has_function_privilege(
+    'loyalty_worker',
+    'loyalty_private.advance_campaign_lifecycle_v1(integer)', 'EXECUTE'
+  ),
+  'worker may advance only the database-timed campaign lifecycle wrapper'
+);
+select ok(
+  not has_function_privilege(
+    'authenticated',
+    'loyalty_private.advance_campaign_lifecycle_at_v1(timestamptz,integer)',
+    'EXECUTE'
+  ),
+  'browser sessions cannot select campaign lifecycle time or transitions'
 );
 
 select has_table(
@@ -2189,6 +2222,56 @@ select results_eq(
   'merchant results derive fully reversed purchase awards from compensation evidence'
 );
 reset role;
+
+select results_eq(
+  $$ select pg_catalog.count(*)::bigint
+     from loyalty_private.advance_campaign_lifecycle_at_v1(
+       pg_catalog.statement_timestamp() + interval '2 days 1 hour', 100
+     ) where from_status = 'scheduled' and to_status = 'active' $$,
+  array[7::bigint],
+  'every due scheduled campaign becomes active in one bounded lifecycle pass'
+);
+select results_eq(
+  $$ select pg_catalog.count(*)::bigint
+     from loyalty.campaign_versions where status = 'active' $$,
+  array[7::bigint],
+  'campaign status reflects the database-timed active window'
+);
+select results_eq(
+  $$ select pg_catalog.count(*)::bigint
+     from loyalty_private.campaign_lifecycle_events
+     where from_status = 'scheduled' and to_status = 'active' $$,
+  array[7::bigint],
+  'each activation retains one immutable lifecycle event'
+);
+select results_eq(
+  $$ select pg_catalog.count(*)::bigint
+     from loyalty_private.advance_campaign_lifecycle_at_v1(
+       pg_catalog.statement_timestamp() + interval '3 days 1 hour', 100
+     ) where from_status = 'active' and to_status = 'completed' $$,
+  array[7::bigint],
+  'every ended active campaign becomes completed in one bounded pass'
+);
+select results_eq(
+  $$ select pg_catalog.count(*)::bigint
+     from loyalty.campaign_versions where status = 'completed' $$,
+  array[7::bigint],
+  'completed campaigns release the accepted-version uniqueness boundary'
+);
+select results_eq(
+  $$ select pg_catalog.count(*)::bigint
+     from loyalty_private.campaign_lifecycle_events $$,
+  array[14::bigint],
+  'activation and completion history reconcile exactly'
+);
+select results_eq(
+  $$ select pg_catalog.count(*)::bigint
+     from loyalty_private.advance_campaign_lifecycle_at_v1(
+       pg_catalog.statement_timestamp() + interval '4 days', 100
+     ) $$,
+  array[0::bigint],
+  'completed campaign lifecycle replay is a no-op'
+);
 
 select * from finish();
 rollback;

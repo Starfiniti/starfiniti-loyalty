@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Sql } from "postgres";
 import {
+  advanceCampaignLifecycle,
   calculateCumulativeRefundPlan,
   calculateCumulativeRefundPlanV2,
   evidenceSha256,
@@ -224,6 +225,43 @@ describe("WooCommerce effect worker", () => {
     await expect(
       runReferralRewardLifecycle(invalidSql, "worker-referral"),
     ).rejects.toThrow("invalid_referral_reward_claim_result");
+  });
+
+  it("advances database-timed campaign activation and completion", async () => {
+    const query = (async () => [
+      {
+        campaign_version_id: "42000000-0000-4000-8000-000000000001",
+        from_status: "scheduled",
+        to_status: "active",
+        transitioned_at: "2026-08-24T08:00:00Z",
+      },
+      {
+        campaign_version_id: "42000000-0000-4000-8000-000000000002",
+        from_status: "paused",
+        to_status: "completed",
+        transitioned_at: new Date("2026-08-24T08:00:00Z"),
+      },
+    ]) as unknown as Sql;
+
+    await expect(advanceCampaignLifecycle(query)).resolves.toEqual({
+      activated: 1,
+      completed: 1,
+    });
+  });
+
+  it("rejects malformed campaign lifecycle transitions", async () => {
+    const query = (async () => [
+      {
+        campaign_version_id: "not-a-version",
+        from_status: "draft",
+        to_status: "active",
+        transitioned_at: "not-an-instant",
+      },
+    ]) as unknown as Sql;
+
+    await expect(advanceCampaignLifecycle(query)).rejects.toThrow(
+      "invalid_campaign_lifecycle_result",
+    );
   });
 
   it("executes bounded canonical campaign jobs and reconciles zero-value controls", async () => {
