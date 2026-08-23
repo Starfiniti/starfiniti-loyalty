@@ -1443,23 +1443,32 @@ begin
     raise exception using errcode = '22023',
       message = 'invalid campaign trigger job claim';
   end if;
+  with expired_candidates as (
+    select job.id
+    from loyalty_private.campaign_trigger_jobs as job
+    where job.state = 'processing'
+      and job.lease_expires_at <= pg_catalog.clock_timestamp()
+    order by job.lease_expires_at, job.id
+    for update of job skip locked
+    limit target_limit
+  ), expired as (
+    update loyalty_private.campaign_trigger_jobs as job
+    set state = case when job.attempt_count >= 10
+        then 'manual_review' else 'retryable' end,
+      next_attempt_at = pg_catalog.clock_timestamp(), lease_owner = null,
+      lease_expires_at = null, last_error_code = 'lease_expired',
+      updated_at = pg_catalog.clock_timestamp()
+    from expired_candidates
+    where job.id = expired_candidates.id
+    returning job.organization_id, job.id, job.attempt_count
+  )
   insert into loyalty_private.campaign_trigger_job_attempts (
     organization_id, job_id, attempt_number, outcome, error_code
   )
-  select job.organization_id, job.id, job.attempt_count, 'lease_expired',
-    'lease_expired'
-  from loyalty_private.campaign_trigger_jobs as job
-  where job.state = 'processing'
-    and job.lease_expires_at <= pg_catalog.clock_timestamp()
-  on conflict do nothing;
-  update loyalty_private.campaign_trigger_jobs as job
-  set state = case when job.attempt_count >= 10
-      then 'manual_review' else 'retryable' end,
-    next_attempt_at = pg_catalog.clock_timestamp(), lease_owner = null,
-    lease_expires_at = null, last_error_code = 'lease_expired',
-    updated_at = pg_catalog.clock_timestamp()
-  where job.state = 'processing'
-    and job.lease_expires_at <= pg_catalog.clock_timestamp();
+  select expired.organization_id, expired.id, expired.attempt_count,
+    'lease_expired', 'lease_expired'
+  from expired
+  on conflict on constraint campaign_trigger_job_attempt_once do nothing;
 
   return query
   with candidates as (

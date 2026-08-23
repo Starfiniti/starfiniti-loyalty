@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(106);
+select plan(112);
 
 select has_table(
   'loyalty_private', 'campaign_trigger_jobs',
@@ -1524,6 +1524,95 @@ select results_eq(
         where campaign.code = 'limited_execution') $$,
   $$ values (0::bigint, 100::bigint, 1::bigint, 5000::bigint) $$,
   'limited native grant is member-balance neutral and reconciles committed liability'
+);
+
+insert into loyalty_private.campaign_trigger_jobs (
+  public_id, organization_id, programme_group_id, programme_version_id,
+  campaign_version_id, customer_id, wallet_id, assignment, trigger_kind,
+  action, source_reference, qualification_fact_id, tier_decision_id,
+  referral_issuance_id, referral_compensation_id, campaign_assignment_id,
+  canonical_event_id, origin_job_id, canonical_evidence,
+  canonical_evidence_sha256, occurred_at, state, attempt_count,
+  next_attempt_at, lease_owner, lease_expires_at, created_at, updated_at
+)
+select case fixture.ordinal
+    when 1 then '8b000000-0000-4000-8000-000000000607'::uuid
+    else '8b000000-0000-4000-8000-000000000608'::uuid end,
+  job.organization_id, job.programme_group_id, job.programme_version_id,
+  job.campaign_version_id, job.customer_id, job.wallet_id, job.assignment,
+  job.trigger_kind, job.action,
+  job.source_reference || ':expired-lease:' || fixture.ordinal::text,
+  job.qualification_fact_id, job.tier_decision_id,
+  job.referral_issuance_id, job.referral_compensation_id,
+  job.campaign_assignment_id, job.canonical_event_id, job.origin_job_id,
+  job.canonical_evidence, job.canonical_evidence_sha256, job.occurred_at,
+  'processing', 9, pg_catalog.clock_timestamp(), 'expired-fixture',
+  pg_catalog.clock_timestamp() - interval '1 minute',
+  pg_catalog.clock_timestamp() - interval '2 minutes',
+  pg_catalog.clock_timestamp() - interval '1 minute'
+from loyalty_private.campaign_trigger_jobs as job
+cross join pg_catalog.generate_series(1, 2) as fixture(ordinal)
+where job.public_id = pg_temp.m07_job_ref('limited_execution', 'issue');
+
+set local role loyalty_worker;
+select results_eq(
+  $$ select count(*)::bigint
+     from loyalty_private.claim_due_campaign_trigger_jobs_v1(
+       'campaign-lease-recovery', 1, 60
+     ) $$,
+  array[1::bigint],
+  'lease recovery and the following claim remain bounded to one job'
+);
+select results_eq(
+  $$ select lease_owner, count(*)::bigint
+     from loyalty_private.campaign_trigger_jobs
+     where public_id in (
+       '8b000000-0000-4000-8000-000000000607',
+       '8b000000-0000-4000-8000-000000000608'
+     ) group by lease_owner order by lease_owner $$,
+  $$ values ('campaign-lease-recovery'::text, 1::bigint),
+            ('expired-fixture'::text, 1::bigint) $$,
+  'one expired lease remains untouched outside the bounded recovery batch'
+);
+select results_eq(
+  $$ select state from loyalty_private.finish_campaign_trigger_job_v1(
+       '8b000000-0000-4000-8000-000000000607',
+       'campaign-lease-recovery', 'fixture_retry_exhausted', 60
+     ) $$,
+  array['manual_review'::text],
+  'the tenth failed claim stops at manual review'
+);
+select results_eq(
+  $$ select count(*)::bigint
+     from loyalty_private.claim_due_campaign_trigger_jobs_v1(
+       'campaign-lease-recovery', 1, 60
+     ) $$,
+  array[1::bigint],
+  'the next bounded claim recovers only the remaining expired lease'
+);
+select results_eq(
+  $$ select state from loyalty_private.finish_campaign_trigger_job_v1(
+       '8b000000-0000-4000-8000-000000000608',
+       'campaign-lease-recovery', 'fixture_retry_exhausted', 60
+     ) $$,
+  array['manual_review'::text],
+  'each independently exhausted lease stops without an eleventh claim'
+);
+reset role;
+
+select results_eq(
+  $$ select attempt.outcome, count(*)::bigint
+     from loyalty_private.campaign_trigger_job_attempts as attempt
+     join loyalty_private.campaign_trigger_jobs as job
+       on job.organization_id = attempt.organization_id
+      and job.id = attempt.job_id
+     where job.public_id in (
+       '8b000000-0000-4000-8000-000000000607',
+       '8b000000-0000-4000-8000-000000000608'
+     ) group by attempt.outcome order by attempt.outcome $$,
+  $$ values ('lease_expired'::text, 2::bigint),
+            ('manual_review'::text, 2::bigint) $$,
+  'only won lease transitions append expiry and terminal attempt evidence'
 );
 select throws_ok(
   $$ update loyalty_private.campaign_trigger_jobs
