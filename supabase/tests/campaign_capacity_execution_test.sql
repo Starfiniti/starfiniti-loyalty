@@ -1438,7 +1438,7 @@ select results_eq(
         where organization_id = pg_temp.m07_ref('organization')
           and wallet_id = pg_temp.m07_ref('wallet')
           and account_kind = 'reserved'),
-       (select pg_catalog.coalesce(pg_catalog.sum(entry.points), 0)::bigint
+       (select coalesce(pg_catalog.sum(entry.points), 0::numeric)::bigint
         from loyalty.ledger_entries as entry
         join loyalty.ledger_accounts as account
           on account.organization_id = entry.organization_id
