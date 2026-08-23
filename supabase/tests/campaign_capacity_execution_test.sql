@@ -653,8 +653,18 @@ select results_eq(
         'activityCodes', pg_catalog.jsonb_build_array(),
         'reward', pg_catalog.jsonb_build_object(
           'kind', 'programme_reward', 'rewardId',
-          (select public_id from loyalty.programme_rewards
-           where code = 'five_euro')
+          (
+            select reward.public_id
+            from loyalty.programme_rewards reward
+            join loyalty.programme_versions version
+              on version.organization_id = reward.organization_id
+             and version.id = reward.programme_version_id
+            join loyalty.programmes programme
+              on programme.organization_id = version.organization_id
+             and programme.id = version.programme_id
+            where reward.code = 'five_euro'
+              and programme.public_id = '8b000000-0000-4000-8000-000000000101'
+          )
         )
       ), pg_temp.m07_liability_capacity()
     ), 'm07:capacity:campaign:milestone-reward-execution:draft',
@@ -672,8 +682,18 @@ select results_eq(
         'kind', 'limited_quantity',
         'reward', pg_catalog.jsonb_build_object(
           'kind', 'programme_reward', 'rewardId',
-          (select public_id from loyalty.programme_rewards
-           where code = 'five_euro')
+          (
+            select reward.public_id
+            from loyalty.programme_rewards reward
+            join loyalty.programme_versions version
+              on version.organization_id = reward.organization_id
+             and version.id = reward.programme_version_id
+            join loyalty.programmes programme
+              on programme.organization_id = version.organization_id
+             and programme.id = version.programme_id
+            where reward.code = 'five_euro'
+              and programme.public_id = '8b000000-0000-4000-8000-000000000101'
+          )
         )
       ),
       pg_temp.m07_liability_capacity()
@@ -692,8 +712,18 @@ select results_eq(
         'kind', 'limited_quantity',
         'reward', pg_catalog.jsonb_build_object(
           'kind', 'programme_reward', 'rewardId',
-          (select public_id from loyalty.programme_rewards
-           where code = 'five_euro')
+          (
+            select reward.public_id
+            from loyalty.programme_rewards reward
+            join loyalty.programme_versions version
+              on version.organization_id = reward.organization_id
+             and version.id = reward.programme_version_id
+            join loyalty.programmes programme
+              on programme.organization_id = version.organization_id
+             and programme.id = version.programme_id
+            where reward.code = 'five_euro'
+              and programme.public_id = '8b000000-0000-4000-8000-000000000101'
+          )
         )
       ), pg_temp.m07_liability_capacity()
     ), 'm07:capacity:campaign:limited-execution:draft',
