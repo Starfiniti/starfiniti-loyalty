@@ -753,7 +753,7 @@ select throws_ok(
     '8b000000-0000-4000-8000-000000000510'
   ) $$,
   '23514',
-  'campaign reward must belong to the exact published programme',
+  'campaign reward is not a native reward for its programme',
   'same-group reward identity cannot cross the exact programme boundary'
 );
 select results_eq(
@@ -2088,20 +2088,28 @@ select throws_ok(
   'campaign refund target rejects cumulative spend beyond the original award'
 );
 
+create function pg_temp.m07_purchase_campaign_evaluation_public_id()
+returns uuid
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select evaluation.public_id
+  from loyalty_private.campaign_execution_batches as batch
+  join loyalty_private.programme_evaluations as evaluation
+    on evaluation.organization_id = batch.organization_id
+   and evaluation.id = batch.programme_evaluation_id
+  where batch.organization_id = pg_temp.m07_ref('organization')
+    and batch.operation_key = 'connection:1:order:1'
+$$;
+
 set local role loyalty_worker;
 select results_eq(
   $$ select affected_effects, reversed_points, outcome
      from loyalty_private.record_purchase_campaign_refund_v1(
        pg_temp.m07_ref('organization'),
-       (
-         select evaluation.public_id
-         from loyalty_private.campaign_execution_batches as batch
-         join loyalty_private.programme_evaluations as evaluation
-           on evaluation.organization_id = batch.organization_id
-          and evaluation.id = batch.programme_evaluation_id
-         where batch.organization_id = pg_temp.m07_ref('organization')
-           and batch.operation_key = 'connection:1:order:1'
-       ),
+       pg_temp.m07_purchase_campaign_evaluation_public_id(),
        '8b000000-0000-4000-8000-000000000603'
      ) $$,
   $$ values (2::bigint, 20::bigint, 'created'::text) $$,
@@ -2111,15 +2119,7 @@ select results_eq(
   $$ select affected_effects, reversed_points, outcome
      from loyalty_private.record_purchase_campaign_refund_v1(
        pg_temp.m07_ref('organization'),
-       (
-         select evaluation.public_id
-         from loyalty_private.campaign_execution_batches as batch
-         join loyalty_private.programme_evaluations as evaluation
-           on evaluation.organization_id = batch.organization_id
-          and evaluation.id = batch.programme_evaluation_id
-         where batch.organization_id = pg_temp.m07_ref('organization')
-           and batch.operation_key = 'connection:1:order:1'
-       ),
+       pg_temp.m07_purchase_campaign_evaluation_public_id(),
        '8b000000-0000-4000-8000-000000000603'
      ) $$,
   $$ values (2::bigint, 0::bigint, 'duplicate'::text) $$,
@@ -2128,15 +2128,7 @@ select results_eq(
 select throws_ok(
   $$ select * from loyalty_private.record_purchase_campaign_refund_v1(
        pg_temp.m07_ref('organization') + 999999,
-       (
-         select evaluation.public_id
-         from loyalty_private.campaign_execution_batches as batch
-         join loyalty_private.programme_evaluations as evaluation
-           on evaluation.organization_id = batch.organization_id
-          and evaluation.id = batch.programme_evaluation_id
-         where batch.organization_id = pg_temp.m07_ref('organization')
-           and batch.operation_key = 'connection:1:order:1'
-       ),
+       pg_temp.m07_purchase_campaign_evaluation_public_id(),
        '8b000000-0000-4000-8000-000000000603'
      ) $$,
   'P0002', 'query returned no rows',
