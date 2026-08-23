@@ -196,7 +196,8 @@ create table loyalty_private.campaign_trigger_job_attempts (
   error_code text,
   created_at timestamptz not null default now(),
   unique (organization_id, id),
-  unique (organization_id, job_id, attempt_number),
+  constraint campaign_trigger_job_attempt_once
+    unique (organization_id, job_id, attempt_number),
   foreign key (organization_id, job_id)
     references loyalty_private.campaign_trigger_jobs(organization_id, id)
     on delete restrict,
@@ -1512,7 +1513,7 @@ begin
   ) values (
     target_job.organization_id, target_job.id, target_job.attempt_count,
     next_state, target_error_code
-  ) on conflict (organization_id, job_id, attempt_number) do nothing;
+  ) on conflict on constraint campaign_trigger_job_attempt_once do nothing;
   update loyalty_private.campaign_trigger_jobs
   set state = next_state,
     next_attempt_at = pg_catalog.clock_timestamp()
@@ -2129,7 +2130,7 @@ begin
   ) values (
     target_job.organization_id, target_job.id, target_job.attempt_count,
     'completed'
-  ) on conflict (organization_id, job_id, attempt_number) do nothing;
+  ) on conflict on constraint campaign_trigger_job_attempt_once do nothing;
   update loyalty_private.campaign_trigger_jobs
   set state = 'completed', lease_owner = null, lease_expires_at = null,
     last_error_code = null, updated_at = target_executed_at
