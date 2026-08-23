@@ -886,8 +886,9 @@ begin
       ), 0) > 0
     order by purchase.effective_at desc, purchase.id desc limit 1;
     if found then
-      inactive_days := pg_catalog.floor(pg_catalog.extract(epoch from
-        (new.effective_at - prior_purchase.effective_at)) / 86400)::bigint;
+      inactive_days := pg_catalog.floor(pg_catalog.date_part(
+        'epoch', new.effective_at - prior_purchase.effective_at
+      ) / 86400)::bigint;
       for candidate in
         select version.*, assignment.id as assignment_id,
           version.definition -> 'behavior' as behavior
@@ -1019,7 +1020,7 @@ declare
   evidence jsonb;
 begin
   event_public_id := pg_catalog.substring(
-    new.idempotency_key from
+    new.idempotency_key,
       'tier:v2:event:([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}):version:'
   );
   if event_public_id is not null then
