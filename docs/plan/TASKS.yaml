@@ -1011,12 +1011,17 @@ tasks:
           - exact-head run 32667482144 passed baseline both images 45 migrations 38 pgTAP files 1967 assertions all five concurrency probes and all four WooCommerce runtime cells at 0b60d1b
           - bounded lease recovery stops at ten attempts private queue inspection remains denied to the worker and rollout disablement blocks only new issue work while accepted work and reversals remain
       - id: M07-S05-MERCHANT-EXPERIENCE-AND-RESULTS
-        status: in_progress
+        status: complete
         acceptance:
           - merchants can build audiences forecast liability approve schedule pause cancel and inspect exact results in a responsive accessible calendar
           - every metric defines its canonical fact and influenced results remain distinct from experimental incrementality
+        evidence:
+          - ADR-0025 selects one Auth-derived minimized exact aggregate projection and prohibits causal incrementality claims without an experiment metric contract
+          - the Hub-style command center supports multi-condition audiences all seven campaign behaviors immutable editing database-timed snapshots arbitrary valid IANA zones explicit liability confirmation calendar pause cancel and independent exact results
+          - production-build browser review passed at 1440x1000 and 390x844 with keyboard bypass mobile navigation dark mode dynamic builders no horizontal overflow and zero browser diagnostics
+          - exact-head run 32671197966 passed baseline both images 46 migrations 38 pgTAP files 1975 assertions including 123 focused campaign assertions all five concurrency probes and all four WooCommerce runtime cells at fcb1f3c
       - id: M07-S06-CANARY-AND-CLOSE
-        status: planned
+        status: in_progress
         acceptance:
           - exact-head CI disabled deployment Starfiniti canary full reconciliation and score at least 90 pass
     risks: [R-026, R-020]
