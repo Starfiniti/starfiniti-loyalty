@@ -1025,6 +1025,9 @@ tasks:
         status: in_progress
         acceptance:
           - exact-head CI disabled deployment Starfiniti canary full reconciliation and score at least 90 pass
+          - partial and full purchase refunds compensate every campaign ledger origin cumulatively without rewriting gross capacity or accepted history
+        evidence:
+          - ADR-0026 defines append-only per-origin cumulative campaign refund compensation; exact-head database replay and canary evidence remain pending
     risks: [R-026, R-020]
     docs:
       [
@@ -1034,6 +1037,7 @@ tasks:
         docs/architecture/ADR/0023-atomic-campaign-capacity-and-attributed-value.md,
         docs/architecture/ADR/0024-canonical-campaign-triggers-and-campaign-funded-rewards.md,
         docs/architecture/ADR/0025-minimized-campaign-results-and-honest-attribution.md,
+        docs/architecture/ADR/0026-cumulative-purchase-campaign-refund-compensation.md,
         docs/api/CAMPAIGNS.md,
         docs/architecture/DATA_MODEL.md,
       ]

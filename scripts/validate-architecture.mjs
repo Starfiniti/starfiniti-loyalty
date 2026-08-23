@@ -88,6 +88,7 @@ const acceptedAdrs = [
   "0023-atomic-campaign-capacity-and-attributed-value.md",
   "0024-canonical-campaign-triggers-and-campaign-funded-rewards.md",
   "0025-minimized-campaign-results-and-honest-attribution.md",
+  "0026-cumulative-purchase-campaign-refund-compensation.md",
 ];
 
 for (const adr of acceptedAdrs) {

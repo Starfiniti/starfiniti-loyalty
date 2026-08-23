@@ -570,6 +570,132 @@ describe("WooCommerce effect worker", () => {
     expect(transactionCount).toBe(1);
   });
 
+  it("retries a V2 refund only after campaign compensation rolls back", async () => {
+    const calls: string[] = [];
+    let transactionCount = 0;
+    let insideTransaction = false;
+    const finishCalls: Array<{
+      insideTransaction: boolean;
+      outcome: unknown;
+      errorCode: unknown;
+    }> = [];
+    const refundEvent = {
+      ...event,
+      event_type: "commerce.order.refunded",
+      source_event_id: "order:42:refund:campaign",
+      payload: {
+        kind: "order_refunded",
+        refundId: "campaign",
+        refundAmount: "1.00",
+        order: {
+          ...(event.payload as { order: Record<string, unknown> }).order,
+          refundedTotal: "1.00",
+        },
+      },
+    } satisfies ClaimedEffect;
+    const programmeRow = {
+      programme_group_id: "8",
+      programme_version_id: "9",
+      programme_version_public_id: "00000000-0000-4000-8000-000000000009",
+      version_number: 2,
+      tier_code: "rose",
+      tier_name: "Rose",
+      minimum_eligible_spend_minor: "0",
+      points_per_major_unit: "5",
+      ordinal: 0,
+      configuration: referralProgrammeConfiguration,
+    };
+    const query = async (
+      strings: TemplateStringsArray,
+      ...values: unknown[]
+    ) => {
+      const text = strings.join("?");
+      calls.push(text);
+      if (text.includes("reject_referral_for_refund_v1")) {
+        return [{ attribution_id: null, state: "none", outcome: "none" }];
+      }
+      if (text.includes("from loyalty_private.programme_evaluations")) {
+        return [
+          {
+            evaluation_public_id: "00000000-0000-4000-8000-000000000021",
+            programme_group_id: "8",
+            programme_version_id: "9",
+            result: {
+              version: "2",
+              eventId: "woocommerce:1:order:42:completed",
+              eligibleSpendMinor: "100",
+              awardedPoints: "5",
+              tierCodeSnapshot: "rose",
+              pendingAt: event.occurred_at,
+            },
+            origin_entry_public_id: "00000000-0000-4000-8000-000000000022",
+            already_reversed_points: "0",
+          },
+        ];
+      }
+      if (text.includes("from loyalty.programme_versions as version")) {
+        return [programmeRow];
+      }
+      if (text.includes("record_programme_evaluation")) {
+        return [
+          {
+            evaluation_public_id: "00000000-0000-4000-8000-000000000023",
+          },
+        ];
+      }
+      if (text.includes("reverse_award_points")) {
+        return [
+          {
+            transaction_public_id: "00000000-0000-4000-8000-000000000024",
+          },
+        ];
+      }
+      if (text.includes("record_purchase_campaign_refund_v1")) {
+        throw new Error("campaign_compensation_failed");
+      }
+      if (text.includes("finish_commerce_effect")) {
+        finishCalls.push({
+          insideTransaction,
+          outcome: values[2],
+          errorCode: values[3],
+        });
+        return [];
+      }
+      throw new Error(`Unexpected query: ${text}`);
+    };
+    const fakeSql = query as unknown as Sql;
+    Object.assign(fakeSql, {
+      begin: async (callback: (transaction: Sql) => Promise<unknown>) => {
+        transactionCount += 1;
+        insideTransaction = true;
+        try {
+          return await callback(fakeSql);
+        } finally {
+          insideTransaction = false;
+        }
+      },
+    });
+
+    await processWooCommerceEffect(fakeSql, "worker-campaign", refundEvent);
+
+    const programmeReversal = calls.findIndex((call) =>
+      call.includes("reverse_award_points"),
+    );
+    const campaignCompensation = calls.findIndex((call) =>
+      call.includes("record_purchase_campaign_refund_v1"),
+    );
+    expect(programmeReversal).toBeGreaterThanOrEqual(0);
+    expect(campaignCompensation).toBeGreaterThan(programmeReversal);
+    expect(finishCalls).toEqual([
+      {
+        insideTransaction: false,
+        outcome: "retryable",
+        errorCode: "campaign_compensation_failed",
+      },
+    ]);
+    expect(transactionCount).toBe(1);
+  });
+
   it("quarantines malformed facts without exposing payload values", () => {
     expect(
       parseWooCommerceEffect({

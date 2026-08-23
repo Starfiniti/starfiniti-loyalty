@@ -28,4 +28,6 @@ ADR-0025 and the strict `CampaignResultV1` boundary add the complete merchant co
 
 The first exact-head run retained a deterministic failure: the new projection incorrectly schema-qualified PostgreSQL's special `coalesce` expression and was absent from two deliberate security-definer allowlists. Commit `fcb1f3c` fixed both without reducing the 123-test plan. Production-build browser evidence and the exact interaction matrix are recorded in `merchant-experience-2026-08-24.md`. M07-S06 reviewed stacked merge, disabled deployment, Starfiniti canary, full reconciliation, and module scoring remain open; no production campaign schedule or value is claimed.
 
+M07-S06 adversarial review found a release-blocking refund gap: programme points were reversed cumulatively, while separately posted purchase bonus and multiplier origins remained spendable. ADR-0026 selects append-only per-effect cumulative compensation, exact original-ledger reversals, no gross-capacity refill, and atomic worker rollback. The additive migration, focused partial/full/replay/privilege pgTAP coverage, and worker failure-order test are implemented; exact-head Linux replay and concurrency evidence remain pending. Production rollout remains paused.
+
 Record deployment, Starfiniti canary, exact balance/capacity/reward reconciliation, rollback, smoke, and score evidence here during S06.

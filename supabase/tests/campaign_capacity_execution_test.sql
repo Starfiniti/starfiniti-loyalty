@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(123);
+select plan(137);
 
 select ok(
   has_function_privilege(
@@ -1436,7 +1436,17 @@ select '8b000000-0000-4000-8000-000000000603',
   pg_temp.m07_ref('version'), event.id, 'live_refund',
   'woocommerce:order:1:refund:1', 'm07:capacity:refund:evaluation',
   decode(repeat('a', 64), 'hex'), decode(repeat('b', 64), 'hex'),
-  '{"version":"2","source":"refund","reversalPoints":"5"}'::jsonb,
+  pg_catalog.jsonb_build_object(
+    'version', '2',
+    'programmeVersionId', '8b000000-0000-4000-8000-000000000102',
+    'orderEventId', 'woocommerce:order:1',
+    'refundId', 'refund-1',
+    'originalEligibleSpendMinor', '100',
+    'originalAwardedPoints', '5',
+    'cumulativeRefundedEligibleSpendMinor', '50',
+    'alreadyReversedPoints', '0',
+    'reversalPoints', '2'
+  ),
   '{"rule":"cumulative_refund"}'::jsonb,
   pg_temp.m07_event_time() + interval '2 hours'
 from loyalty_private.canonical_commerce_events as event
@@ -1455,7 +1465,7 @@ select '8b000000-0000-4000-8000-000000000604',
   original.source_programme_version_id, original.customer_id, event.id,
   evaluation.id, original.id, 'refund',
   'campaign-test-refund:' || event.public_id::text,
-  -original.eligible_spend_minor_delta, -original.earned_points_delta, -1,
+  -50, -2, 0,
   0, 0, null, event.occurred_at, event.occurred_at
 from loyalty_private.tier_qualification_facts as original
 join loyalty_private.canonical_commerce_events as event
@@ -1936,6 +1946,237 @@ select throws_ok(
      ) $$,
   '42501', 'campaign results not authorized',
   'an unrelated caller cannot read another organization campaign results'
+);
+reset role;
+
+select has_table(
+  'loyalty_private', 'campaign_purchase_refund_compensations',
+  'purchase campaign refunds retain append-only compensation evidence'
+);
+select ok(
+  (
+    select relation.relrowsecurity
+    from pg_catalog.pg_class as relation
+    join pg_catalog.pg_namespace as namespace
+      on namespace.oid = relation.relnamespace
+    where namespace.nspname = 'loyalty_private'
+      and relation.relname = 'campaign_purchase_refund_compensations'
+  ),
+  'campaign refund evidence has tenant-table RLS enabled'
+);
+select ok(
+  has_function_privilege(
+    'loyalty_worker',
+    'loyalty_private.record_purchase_campaign_refund_v1(bigint,uuid,uuid)',
+    'EXECUTE'
+  ) and not has_function_privilege(
+    'loyalty_runtime',
+    'loyalty_private.record_purchase_campaign_refund_v1(bigint,uuid,uuid)',
+    'EXECUTE'
+  ),
+  'only the worker can enter the purchase campaign refund boundary'
+);
+
+set local role loyalty_worker;
+select results_eq(
+  $$ select affected_effects, reversed_points, outcome
+     from loyalty_private.record_purchase_campaign_refund_v1(
+       pg_temp.m07_ref('organization'),
+       (
+         select evaluation.public_id
+         from loyalty_private.campaign_execution_batches as batch
+         join loyalty_private.programme_evaluations as evaluation
+           on evaluation.organization_id = batch.organization_id
+          and evaluation.id = batch.programme_evaluation_id
+         where batch.organization_id = pg_temp.m07_ref('organization')
+           and batch.operation_key = 'connection:1:order:1'
+       ),
+       '8b000000-0000-4000-8000-000000000603'
+     ) $$,
+  $$ values (2::bigint, 10::bigint, 'created'::text) $$,
+  'partial refund proportionally compensates every purchase campaign origin'
+);
+select results_eq(
+  $$ select affected_effects, reversed_points, outcome
+     from loyalty_private.record_purchase_campaign_refund_v1(
+       pg_temp.m07_ref('organization'),
+       (
+         select evaluation.public_id
+         from loyalty_private.campaign_execution_batches as batch
+         join loyalty_private.programme_evaluations as evaluation
+           on evaluation.organization_id = batch.organization_id
+          and evaluation.id = batch.programme_evaluation_id
+         where batch.organization_id = pg_temp.m07_ref('organization')
+           and batch.operation_key = 'connection:1:order:1'
+       ),
+       '8b000000-0000-4000-8000-000000000603'
+     ) $$,
+  $$ values (2::bigint, 0::bigint, 'duplicate'::text) $$,
+  'exact campaign refund replay appends no value or evidence'
+);
+select throws_ok(
+  $$ select * from loyalty_private.record_purchase_campaign_refund_v1(
+       pg_temp.m07_ref('organization') + 999999,
+       (
+         select evaluation.public_id
+         from loyalty_private.campaign_execution_batches as batch
+         join loyalty_private.programme_evaluations as evaluation
+           on evaluation.organization_id = batch.organization_id
+          and evaluation.id = batch.programme_evaluation_id
+         where batch.organization_id = pg_temp.m07_ref('organization')
+           and batch.operation_key = 'connection:1:order:1'
+       ),
+       '8b000000-0000-4000-8000-000000000603'
+     ) $$,
+  'P0002', 'query returned no rows',
+  'cross-tenant refund evidence fails closed'
+);
+select throws_ok(
+  $$ select count(*)
+     from loyalty_private.campaign_purchase_refund_compensations $$,
+  '42501', 'permission denied for table campaign_purchase_refund_compensations',
+  'worker cannot inspect private campaign refund evidence directly'
+);
+reset role;
+
+select results_eq(
+  $$ select count(*)::bigint,
+       pg_catalog.sum(compensation.reversal_points)::bigint
+     from loyalty_private.campaign_purchase_refund_compensations
+       as compensation $$,
+  $$ values (2::bigint, 10::bigint) $$,
+  'partial refund retains one append-only row per awarded campaign effect'
+);
+select results_eq(
+  $$ select points
+     from loyalty.wallet_balances
+     where organization_id = pg_temp.m07_ref('organization')
+       and wallet_id = pg_temp.m07_ref('wallet')
+       and account_kind = 'pending' $$,
+  array[15::bigint],
+  'partial campaign compensation leaves half of each campaign origin intact'
+);
+
+insert into loyalty_private.commerce_delivery_inbox (
+  organization_id, connection_id, source_delivery_id, envelope_version,
+  source_event_id, event_type, source_object_id, occurred_at, delivered_at,
+  key_version, nonce, body_sha256, raw_body, state, processed_at
+)
+select organization.id, connection.id, 'm07-capacity-full-refund-delivery', '1',
+  'm07-capacity-full-refund-event', 'commerce.order.refunded', 'order-1',
+  pg_temp.m07_event_time() + interval '3 hours',
+  pg_temp.m07_event_time() + interval '3 hours', 'v1',
+  'm07-capacity-full-refund-nonce', repeat('c', 64), '{}'::jsonb, 'applied',
+  pg_temp.m07_event_time() + interval '3 hours'
+from loyalty.organizations as organization
+join loyalty.commerce_connections as connection
+  on connection.organization_id = organization.id
+where organization.slug = 'm07-capacity';
+
+insert into loyalty_private.canonical_commerce_events (
+  public_id, organization_id, connection_id, delivery_inbox_id,
+  source_event_id, normalization_version, event_type, source_object_id,
+  occurred_at, payload
+)
+select '8b000000-0000-4000-8000-000000000605', inbox.organization_id,
+  inbox.connection_id, inbox.id, 'm07-capacity-full-refund-event', 'v1',
+  'commerce.order.refunded', 'order-1',
+  pg_temp.m07_event_time() + interval '3 hours', '{}'::jsonb
+from loyalty_private.commerce_delivery_inbox as inbox
+where inbox.source_delivery_id = 'm07-capacity-full-refund-delivery';
+
+insert into loyalty_private.programme_evaluations (
+  public_id, organization_id, programme_group_id, programme_version_id,
+  canonical_event_id, evaluation_kind, subject_reference, idempotency_key,
+  input_sha256, result_sha256, result, explanation, evaluated_at
+)
+select '8b000000-0000-4000-8000-000000000606',
+  pg_temp.m07_ref('organization'), pg_temp.m07_ref('group'),
+  pg_temp.m07_ref('version'), event.id, 'live_refund',
+  'woocommerce:order:1:refund:full', 'm07:capacity:full-refund:evaluation',
+  decode(repeat('c', 64), 'hex'), decode(repeat('d', 64), 'hex'),
+  pg_catalog.jsonb_build_object(
+    'version', '2',
+    'programmeVersionId', '8b000000-0000-4000-8000-000000000102',
+    'orderEventId', 'woocommerce:order:1',
+    'refundId', 'refund-full',
+    'originalEligibleSpendMinor', '100',
+    'originalAwardedPoints', '5',
+    'cumulativeRefundedEligibleSpendMinor', '100',
+    'alreadyReversedPoints', '2',
+    'reversalPoints', '3'
+  ),
+  '{"rule":"cumulative_refund"}'::jsonb,
+  pg_temp.m07_event_time() + interval '3 hours'
+from loyalty_private.canonical_commerce_events as event
+where event.public_id = '8b000000-0000-4000-8000-000000000605';
+
+set local role loyalty_worker;
+select results_eq(
+  $$ select affected_effects, reversed_points, outcome
+     from loyalty_private.record_purchase_campaign_refund_v1(
+       pg_temp.m07_ref('organization'),
+       (
+         select evaluation.public_id
+         from loyalty_private.campaign_execution_batches as batch
+         join loyalty_private.programme_evaluations as evaluation
+           on evaluation.organization_id = batch.organization_id
+          and evaluation.id = batch.programme_evaluation_id
+         where batch.organization_id = pg_temp.m07_ref('organization')
+           and batch.operation_key = 'connection:1:order:1'
+       ),
+       '8b000000-0000-4000-8000-000000000606'
+     ) $$,
+  $$ values (2::bigint, 10::bigint, 'created'::text) $$,
+  'later full refund reverses only each campaign origin remainder'
+);
+reset role;
+
+select results_eq(
+  $$ select count(*)::bigint,
+       pg_catalog.sum(compensation.reversal_points)::bigint
+     from loyalty_private.campaign_purchase_refund_compensations
+       as compensation $$,
+  $$ values (4::bigint, 20::bigint) $$,
+  'partial then full refunds end at exactly the original campaign value'
+);
+select results_eq(
+  $$ select count(*)::bigint
+     from loyalty_private.campaign_purchase_refund_compensations
+       as compensation
+     join loyalty.ledger_transactions as transaction
+       on transaction.organization_id = compensation.organization_id
+      and transaction.id = compensation.reversal_transaction_id
+     where compensation.reversal_points > 0
+       and transaction.transaction_kind = 'refund_reversal' $$,
+  array[4::bigint],
+  'every positive campaign compensation links its immutable reversal transaction'
+);
+select results_eq(
+  $$ select points
+     from loyalty.wallet_balances
+     where organization_id = pg_temp.m07_ref('organization')
+       and wallet_id = pg_temp.m07_ref('wallet')
+       and account_kind = 'pending' $$,
+  array[5::bigint],
+  'full campaign compensation leaves only the separately refunded programme origin'
+);
+
+set local role authenticated;
+set local request.jwt.claim.sub = '8b000000-0000-4000-8000-000000000002';
+select results_eq(
+  $$ select campaign_result #>> '{campaignCode}',
+       campaign_result #>> '{purchaseOutcomes,reversedAwards}'
+     from loyalty.get_campaign_results_v1(
+       '8b000000-0000-4000-8000-000000000101', 100
+     )
+     where campaign_result #>> '{campaignCode}' in (
+       'autumn_bonus', 'priority_multiplier'
+     )
+     order by campaign_result #>> '{campaignCode}' $$,
+  $$ values ('autumn_bonus'::text, '1'::text),
+            ('priority_multiplier'::text, '1'::text) $$,
+  'merchant results derive fully reversed purchase awards from compensation evidence'
 );
 reset role;
 

@@ -162,9 +162,10 @@ type TierQualificationContextRow = {
   previously_held_tier_codes: string[];
   below_threshold_since: string | Date | null;
 };
-type TierRefundFactRow = {
-  fact_public_id: string;
+type CampaignRefundRow = {
   customer_id: string;
+  affected_effects: string;
+  reversed_points: string;
   outcome: string;
 };
 type OriginalAwardRow = {
@@ -2154,16 +2155,21 @@ async function commitRefundV2(
     if (!transactionId) throw new Error("refund_reversal_record_failed");
     resultReference = `ledger-transaction:${transactionId}`;
   }
-  const facts = await sql<TierRefundFactRow[]>`
-      select fact_public_id::text, customer_id::text, outcome
-      from loyalty_private.record_tier_refund_fact_v2(
+  const campaignRefunds = await sql<CampaignRefundRow[]>`
+      select customer_id::text, affected_effects::text,
+        reversed_points::text, outcome
+      from loyalty_private.record_purchase_campaign_refund_v1(
         ${event.organization_id}::bigint,
         ${context.originalEvaluationPublicId}::uuid,
         ${evaluationId}::uuid
       )
   `;
-  const customerId = facts[0]?.customer_id;
-  if (!customerId) throw new Error("refund_tier_fact_record_failed");
+  const campaignRefund = campaignRefunds[0];
+  const customerId = campaignRefund?.customer_id;
+  if (!customerId) throw new Error("campaign_refund_record_failed");
+  if (BigInt(campaignRefund.reversed_points) > 0n) {
+    resultReference = `campaign-refund:${evaluationId}`;
+  }
   if (event.programme_id !== null) {
     const currentProgramme = await loadProgrammeContext(
       sql,
