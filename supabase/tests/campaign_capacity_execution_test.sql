@@ -1620,6 +1620,7 @@ select results_eq(
   array[1::bigint],
   'lease recovery and the following claim remain bounded to one job'
 );
+reset role;
 select results_eq(
   $$ select lease_owner, count(*)::bigint
      from loyalty_private.campaign_trigger_jobs
@@ -1631,6 +1632,7 @@ select results_eq(
             ('expired-fixture'::text, 1::bigint) $$,
   'one expired lease remains untouched outside the bounded recovery batch'
 );
+set local role loyalty_worker;
 select results_eq(
   $$ select state from loyalty_private.finish_campaign_trigger_job_v1(
        '8b000000-0000-4000-8000-000000000607',
