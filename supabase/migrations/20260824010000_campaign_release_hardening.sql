@@ -374,8 +374,9 @@ as $$
 declare
   target_programme_id bigint;
   reward_public_id_text text;
-  target_reward loyalty.programme_rewards%rowtype;
-  target_programme_version loyalty.programme_versions%rowtype;
+  target_reward_kind text;
+  target_reward_configuration jsonb;
+  target_programme_configuration jsonb;
   face_value_minor bigint;
   declared_per_effect bigint;
   declared_maximum bigint;
@@ -394,8 +395,9 @@ begin
     and campaign.programme_group_id = target_programme_group_id
     and campaign.id = target_campaign_id;
 
-  select reward, version
-    into target_reward, target_programme_version
+  select reward.reward_kind, reward.configuration, version.configuration
+    into target_reward_kind, target_reward_configuration,
+      target_programme_configuration
   from loyalty.programme_rewards as reward
   join loyalty.programme_versions as version
     on version.organization_id = reward.organization_id
@@ -410,23 +412,23 @@ begin
       message = 'campaign reward must belong to the exact published programme';
   end if;
 
-  if target_reward.reward_kind <> 'fixed_discount'
-    or target_reward.configuration ->> 'version' <> '2'
-    or target_reward.configuration ->> 'fulfilmentMode'
+  if target_reward_kind <> 'fixed_discount'
+    or target_reward_configuration ->> 'version' <> '2'
+    or target_reward_configuration ->> 'fulfilmentMode'
       <> 'woocommerce_coupon'
-    or coalesce(target_reward.configuration ->> 'amountMinor', '')
+    or coalesce(target_reward_configuration ->> 'amountMinor', '')
       !~ '^[1-9][0-9]*$'
-    or (target_reward.configuration ->> 'amountMinor')::numeric
+    or (target_reward_configuration ->> 'amountMinor')::numeric
       > 9223372036854775807
     or coalesce(
-      target_reward.configuration ->> 'currencyMinorUnitDigits', ''
+      target_reward_configuration ->> 'currencyMinorUnitDigits', ''
     ) !~ '^[0-6]$' then
     raise exception using errcode = '23514',
       message = 'campaign liability requires a published fixed-discount reward';
   end if;
 
   face_value_minor :=
-    (target_reward.configuration ->> 'amountMinor')::bigint;
+    (target_reward_configuration ->> 'amountMinor')::bigint;
   declared_per_effect :=
     (target_definition #>> '{capacity,liabilityMinorPerEffect}')::bigint;
   declared_maximum :=
@@ -439,12 +441,12 @@ begin
   if declared_per_effect <> face_value_minor
     or declared_maximum < face_value_minor
     or declared_currency
-      <> (target_programme_version.configuration ->> 'currencyCode')
+      <> (target_programme_configuration ->> 'currencyCode')
     or declared_digits
-      <> (target_programme_version.configuration
+      <> (target_programme_configuration
         ->> 'currencyMinorUnitDigits')::smallint
     or declared_digits
-      <> (target_reward.configuration
+      <> (target_reward_configuration
         ->> 'currencyMinorUnitDigits')::smallint then
     raise exception using errcode = '23514',
       message = 'campaign liability must match fixed-discount face value';
@@ -496,6 +498,304 @@ create trigger campaign_versions_native_liability
 before insert or update of status on loyalty.campaign_versions
 for each row execute function
   loyalty_private.enforce_campaign_native_liability_v1();
+
+-- Snapshot evaluation must use one PostgreSQL statement snapshot. Mark the
+-- read-only nested functions STABLE, then open one bounded cursor whose time
+-- anchor, candidate set, wallet balances, facts, tiers, and decisions share
+-- the same MVCC view.
+
+alter function loyalty_private.calculate_audience_metric_v1(
+  bigint, bigint, bigint, bigint, text, jsonb, text[], timestamptz
+) stable;
+
+alter function loyalty_private.evaluate_audience_member_v1(
+  jsonb, bigint, bigint, bigint, bigint, timestamptz
+) stable;
+
+create or replace function loyalty_private.assert_audience_candidate_limit_v1(
+  target_candidate_count bigint
+)
+returns bigint
+language plpgsql
+immutable
+set search_path = ''
+as $$
+begin
+  if target_candidate_count > 100000 then
+    raise exception using errcode = '54000',
+      message = 'audience snapshot exceeds the synchronous candidate limit';
+  end if;
+  return target_candidate_count;
+end;
+$$;
+
+alter function loyalty_private.assert_audience_candidate_limit_v1(bigint)
+  owner to loyalty_owner;
+
+revoke all on function
+  loyalty_private.assert_audience_candidate_limit_v1(bigint)
+  from public, anon, authenticated, loyalty_runtime, loyalty_worker;
+
+create or replace function loyalty_private.build_audience_snapshot_v1(
+  target_version_public_id uuid,
+  target_actor_user_id uuid
+)
+returns table (
+  snapshot_public_id uuid,
+  snapshot_at timestamptz,
+  candidate_count bigint,
+  member_count bigint
+)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  target_version loyalty.audience_versions%rowtype;
+  target_snapshot loyalty.audience_snapshots%rowtype;
+  candidate record;
+  processed_count bigint := 0;
+  included_count bigint := 0;
+  bounded_count bigint := 0;
+begin
+  select version.* into strict target_version
+  from loyalty.audience_versions as version
+  where version.public_id = target_version_public_id
+    and version.status = 'published';
+
+  for candidate in
+    with snapshot_anchor as materialized (
+      select pg_catalog.clock_timestamp() as snapshot_at
+    ),
+    bounded_candidates as materialized (
+      select customer.id as customer_id, wallet.id as wallet_id
+      from loyalty.wallets as wallet
+      join loyalty.customers as customer
+        on customer.organization_id = wallet.organization_id
+       and customer.id = wallet.customer_id
+      cross join snapshot_anchor as anchor
+      where wallet.organization_id = target_version.organization_id
+        and wallet.programme_group_id = target_version.programme_group_id
+        and wallet.status = 'active'
+        and customer.status = 'active'
+        and wallet.created_at <= anchor.snapshot_at
+        and customer.created_at <= anchor.snapshot_at
+      order by wallet.id
+      limit 100001
+    ),
+    candidate_guard as materialized (
+      select loyalty_private.assert_audience_candidate_limit_v1(
+        pg_catalog.count(*)::bigint
+      ) as candidate_count
+      from bounded_candidates
+    ),
+    decisions as materialized (
+      select bounded.customer_id, bounded.wallet_id,
+        evaluated.included, evaluated.evaluation
+      from bounded_candidates as bounded
+      cross join snapshot_anchor as anchor
+      cross join lateral loyalty_private.evaluate_audience_member_v1(
+        target_version.definition,
+        target_version.organization_id,
+        target_version.programme_group_id,
+        bounded.customer_id,
+        bounded.wallet_id,
+        anchor.snapshot_at
+      ) as evaluated
+    )
+    select anchor.snapshot_at, guard.candidate_count,
+      decision.customer_id, decision.wallet_id,
+      decision.included, decision.evaluation
+    from snapshot_anchor as anchor
+    cross join candidate_guard as guard
+    left join decisions as decision on true
+    order by decision.wallet_id nulls first
+  loop
+    if target_snapshot.id is null then
+      bounded_count := candidate.candidate_count;
+      insert into loyalty.audience_snapshots (
+        organization_id, programme_group_id, audience_version_id, state,
+        snapshot_at, definition_sha256, created_by_user_id
+      ) values (
+        target_version.organization_id, target_version.programme_group_id,
+        target_version.id, 'building', candidate.snapshot_at,
+        target_version.definition_sha256, target_actor_user_id
+      ) returning * into strict target_snapshot;
+    end if;
+
+    if candidate.customer_id is not null then
+      processed_count := processed_count + 1;
+      if candidate.included then
+        insert into loyalty_private.audience_snapshot_members (
+          organization_id, programme_group_id, audience_snapshot_id,
+          customer_id, wallet_id, evaluation
+        ) values (
+          target_version.organization_id, target_version.programme_group_id,
+          target_snapshot.id, candidate.customer_id, candidate.wallet_id,
+          candidate.evaluation
+        );
+        included_count := included_count + 1;
+      end if;
+    end if;
+  end loop;
+
+  if target_snapshot.id is null or processed_count <> bounded_count then
+    raise exception using errcode = '23514',
+      message = 'audience snapshot candidate evaluation did not reconcile';
+  end if;
+
+  update loyalty.audience_snapshots as snapshot
+  set state = 'complete', member_count = included_count,
+    completed_at = pg_catalog.clock_timestamp()
+  where snapshot.organization_id = target_snapshot.organization_id
+    and snapshot.id = target_snapshot.id
+  returning * into strict target_snapshot;
+
+  return query select target_snapshot.public_id, target_snapshot.snapshot_at,
+    bounded_count, target_snapshot.member_count;
+end;
+$$;
+
+alter function loyalty_private.build_audience_snapshot_v1(uuid, uuid)
+  owner to loyalty_owner;
+
+revoke all on function loyalty_private.build_audience_snapshot_v1(uuid, uuid)
+  from public, anon, authenticated, loyalty_runtime, loyalty_worker;
+
+create or replace function loyalty.create_audience_snapshot_command(
+  target_version_public_id uuid,
+  target_idempotency_key text,
+  target_correlation_id uuid
+)
+returns table (
+  resource_public_id uuid,
+  outcome text,
+  snapshot_at timestamptz,
+  member_count text
+)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  actor_user_id uuid := loyalty_private.request_user_id();
+  target_version loyalty.audience_versions%rowtype;
+  target_audience loyalty.audiences%rowtype;
+  target_snapshot loyalty.audience_snapshots%rowtype;
+  existing_audit loyalty.admin_audit_events%rowtype;
+  entitlement_enabled boolean;
+  request_hash bytea;
+  snapshot_build record;
+begin
+  if actor_user_id is null
+    or target_idempotency_key is null
+    or length(btrim(target_idempotency_key)) not between 1 and 255
+    or target_idempotency_key <> btrim(target_idempotency_key)
+    or target_correlation_id is null then
+    raise exception using errcode = '22023',
+      message = 'invalid audience snapshot identity';
+  end if;
+
+  select audience.* into target_audience
+  from loyalty.audiences as audience
+  join loyalty.audience_versions as version
+    on version.organization_id = audience.organization_id
+   and version.audience_id = audience.id
+  where version.public_id = target_version_public_id
+    and loyalty_private.has_organization_role(
+      audience.organization_id, array['owner', 'admin', 'operator']::text[]
+    )
+  for update of audience;
+  if not found then
+    raise exception using errcode = '42501',
+      message = 'audience command not authorized';
+  end if;
+
+  select version.* into strict target_version
+  from loyalty.audience_versions as version
+  where version.organization_id = target_audience.organization_id
+    and version.public_id = target_version_public_id;
+  request_hash := extensions.digest(pg_catalog.convert_to(
+    'audience.snapshot.create|' || target_version.public_id::text,
+    'UTF8'
+  ), 'sha256');
+
+  select audit.* into existing_audit
+  from loyalty.admin_audit_events as audit
+  where audit.organization_id = target_version.organization_id
+    and audit.idempotency_key = target_idempotency_key;
+  if found then
+    if existing_audit.action <> 'audience.snapshot.create'
+      or existing_audit.request_sha256 <> request_hash then
+      raise exception using errcode = '23514',
+        message = 'audience command idempotency conflict';
+    end if;
+    return query
+    select snapshot.public_id, 'duplicate'::text, snapshot.snapshot_at,
+      snapshot.member_count::text
+    from loyalty.audience_snapshots as snapshot
+    where snapshot.organization_id = target_version.organization_id
+      and snapshot.public_id = existing_audit.resource_public_id;
+    return;
+  end if;
+
+  if target_version.status <> 'published' then
+    raise exception using errcode = '23514',
+      message = 'only the published audience can be snapshotted';
+  end if;
+  select decision.enabled into strict entitlement_enabled
+  from loyalty_private.resolve_organization_entitlement(
+    target_version.organization_id, 'campaigns',
+    'audience:' || target_audience.public_id::text, pg_catalog.now()
+  ) as decision;
+  if not entitlement_enabled then
+    raise exception using errcode = '42501',
+      message = 'campaigns are not enabled for this organization';
+  end if;
+
+  select * into strict snapshot_build
+  from loyalty_private.build_audience_snapshot_v1(
+    target_version.public_id, actor_user_id
+  );
+  select snapshot.* into strict target_snapshot
+  from loyalty.audience_snapshots as snapshot
+  where snapshot.organization_id = target_version.organization_id
+    and snapshot.public_id = snapshot_build.snapshot_public_id;
+
+  insert into loyalty.admin_audit_events (
+    organization_id, actor_user_id, action, resource_type,
+    resource_public_id, idempotency_key, request_sha256, correlation_id,
+    metadata
+  ) values (
+    target_snapshot.organization_id, actor_user_id,
+    'audience.snapshot.create', 'audience_snapshot', target_snapshot.public_id,
+    target_idempotency_key, request_hash, target_correlation_id,
+    pg_catalog.jsonb_build_object(
+      'audiencePublicId', target_audience.public_id,
+      'audienceVersionPublicId', target_version.public_id,
+      'definitionSha256', pg_catalog.encode(
+        target_version.definition_sha256, 'hex'
+      ),
+      'candidateCount', snapshot_build.candidate_count::text,
+      'memberCount', snapshot_build.member_count::text,
+      'snapshotAt', snapshot_build.snapshot_at
+    )
+  );
+
+  return query select target_snapshot.public_id, 'created'::text,
+    target_snapshot.snapshot_at, target_snapshot.member_count::text;
+end;
+$$;
+
+alter function loyalty.create_audience_snapshot_command(uuid, text, uuid)
+  owner to loyalty_owner;
+
+revoke all on function
+  loyalty.create_audience_snapshot_command(uuid, text, uuid)
+  from public, anon, authenticated, loyalty_runtime, loyalty_worker;
+grant execute on function
+  loyalty.create_audience_snapshot_command(uuid, text, uuid)
+  to authenticated;
 
 -- M07 minimized merchant campaign results. Browser sessions receive only
 -- exact tenant-scoped aggregates; private assignments, source references,

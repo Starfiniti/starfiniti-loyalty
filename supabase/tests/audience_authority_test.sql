@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(70);
+select plan(74);
 
 select has_table('loyalty', 'audiences', 'stable audience identities exist');
 select has_table('loyalty', 'audience_versions', 'audience definitions are versioned');
@@ -106,6 +106,36 @@ select ok(
     'loyalty_private.validate_audience_definition_v1(jsonb)', 'EXECUTE'
   ),
   'the independent database validator remains private'
+);
+select ok(
+  not has_function_privilege(
+    'authenticated',
+    'loyalty_private.build_audience_snapshot_v1(uuid,uuid)', 'EXECUTE'
+  ),
+  'browser sessions cannot invoke the coherent snapshot builder directly'
+);
+select ok(
+  not has_function_privilege(
+    'loyalty_worker',
+    'loyalty_private.build_audience_snapshot_v1(uuid,uuid)', 'EXECUTE'
+  ),
+  'worker credentials cannot manufacture audience snapshots'
+);
+select ok(
+  (
+    select pg_catalog.bool_and(proc.provolatile = 's')
+    from pg_catalog.pg_proc as proc
+    where proc.oid in (
+      'loyalty_private.calculate_audience_metric_v1(bigint,bigint,bigint,bigint,text,jsonb,text[],timestamptz)'::regprocedure,
+      'loyalty_private.evaluate_audience_member_v1(jsonb,bigint,bigint,bigint,bigint,timestamptz)'::regprocedure
+    )
+  ),
+  'nested audience evaluators share their calling statement snapshot'
+);
+select throws_ok(
+  $$ select loyalty_private.assert_audience_candidate_limit_v1(100001) $$,
+  '54000', 'audience snapshot exceeds the synchronous candidate limit',
+  'the materialized candidate guard rejects an oversized snapshot'
 );
 
 insert into auth.users (id, email)
