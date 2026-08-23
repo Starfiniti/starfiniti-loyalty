@@ -991,12 +991,17 @@ tasks:
           - exact-head run 31777177961 passed baseline both images 43 migrations 37 pgTAP files 1851 assertions all four concurrency probes and all four WooCommerce runtime cells at e92f52d
           - adversarial review replaced probabilistic control thresholds with exact salted-hash ranks aligned public and database reason validation preserved exact RPC integers and accepted empty previews without allowing empty approval
       - id: M07-S03-ATOMIC-CAPACITY-AND-EXECUTION
-        status: in_progress
+        status: complete
         acceptance:
           - limited quantity points budgets and per-member caps reserve atomically before any value effect
           - highest-priority multiplier and explicitly additive bonuses retain snapshot explanation and exactly-once ledger evidence
+        evidence:
+          - ADR-0023 selects stable operation/member/campaign lock order, private counters, atomic programme/campaign ledger commits, and immutable original-context replay
+          - additive migration 20260814082000 and 62 focused pgTAP assertions pass exact-head clean replay
+          - exact-head run 32662380030 passed baseline, both images, 44 migrations, 38 pgTAP files, 1914 assertions, all four concurrency probes, and all four WooCommerce runtime cells at c82f3ed
+          - the two-session campaign probe proves one last-budget reservation wins, the competitor observes exhaustion, exact retry is idempotent, and counters reconcile
       - id: M07-S04-MILESTONE-WINBACK-TIER-REFERRAL
-        status: planned
+        status: in_progress
         acceptance:
           - milestone win-back tier referral and limited campaign triggers use canonical facts and bounded leased processing
           - retries refunds cancellation and control groups cannot duplicate reverse or over-issue value
