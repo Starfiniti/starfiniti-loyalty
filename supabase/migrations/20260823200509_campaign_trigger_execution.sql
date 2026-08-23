@@ -79,7 +79,7 @@ create table loyalty_private.campaign_trigger_jobs (
   assignment text not null check (assignment in ('treatment', 'control')),
   trigger_kind text not null check (trigger_kind in (
     'milestone', 'win_back', 'tier', 'referral', 'limited_quantity'
-  )),
+  ))),
   action text not null check (action in ('issue', 'reverse')),
   source_reference text not null,
   qualification_fact_id bigint,
