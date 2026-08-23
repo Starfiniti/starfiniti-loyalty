@@ -2203,8 +2203,7 @@ alter table loyalty_private.campaign_trigger_executions
 revoke all on loyalty_private.campaign_trigger_jobs,
   loyalty_private.campaign_trigger_job_attempts,
   loyalty_private.campaign_trigger_executions
-from public, anon, authenticated, loyalty_app_runtime, loyalty_connector,
-  loyalty_worker;
+from public, anon, authenticated, loyalty_runtime, loyalty_worker;
 
 revoke all on function
   loyalty_private.enforce_campaign_execution_binding_v1(),
