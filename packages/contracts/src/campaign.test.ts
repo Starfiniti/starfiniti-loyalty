@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   campaignDefinitionV1,
+  campaignPurchaseCandidateV1,
+  campaignPurchaseEvaluationV1,
   campaignPreviewV1,
   campaignScheduleV1,
   merchantPauseCampaignVersionCommandV1,
@@ -32,6 +34,7 @@ const definition = {
     perMemberEffectLimit: 2,
     maximumPoints: "100000",
     maximumLiabilityMinor: null,
+    liabilityMinorPerEffect: null,
     liabilityCurrencyCode: null,
     liabilityMinorUnitDigits: null,
   },
@@ -130,6 +133,7 @@ describe("campaignDefinitionV1", () => {
           perMemberEffectLimit: usesProgrammeReward ? 1 : 2,
           maximumPoints: usesProgrammeReward ? null : "100000",
           maximumLiabilityMinor: usesProgrammeReward ? "500000" : null,
+          liabilityMinorPerEffect: usesProgrammeReward ? "5000" : null,
           liabilityCurrencyCode: usesProgrammeReward ? "EUR" : null,
           liabilityMinorUnitDigits: usesProgrammeReward ? 2 : null,
         },
@@ -142,6 +146,27 @@ describe("campaignDefinitionV1", () => {
       campaignDefinitionV1.safeParse({
         ...definition,
         capacity: { ...definition.capacity, maximumPoints: null },
+      }).success,
+    ).toBe(false);
+    expect(
+      campaignDefinitionV1.safeParse({
+        ...definition,
+        behavior: {
+          kind: "limited_quantity",
+          reward: {
+            kind: "programme_reward",
+            rewardId: "87000000-0000-4000-8000-000000000601",
+          },
+        },
+        capacity: {
+          ...definition.capacity,
+          perMemberEffectLimit: 1,
+          maximumPoints: null,
+          maximumLiabilityMinor: "5000",
+          liabilityMinorPerEffect: "5001",
+          liabilityCurrencyCode: "EUR",
+          liabilityMinorUnitDigits: 2,
+        },
       }).success,
     ).toBe(false);
     expect(
@@ -228,6 +253,95 @@ describe("merchantPauseCampaignVersionCommandV1", () => {
         reason: "Operational\nsafety pause",
         idempotencyKey: "campaign:pause:1",
         correlationId: "87000000-0000-4000-8000-000000000702",
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe("campaign purchase execution evidence", () => {
+  const candidate = {
+    schemaVersion: "1" as const,
+    campaignVersionId: "87000000-0000-4000-8000-000000000801",
+    campaignCode: "autumn_bonus",
+    assignment: "treatment" as const,
+    behavior: {
+      kind: "bonus_points" as const,
+      earningRuleCodes: ["purchase"],
+      reward: { kind: "points" as const, points: "100" },
+    },
+    remainingGlobalEffects: "10",
+    remainingMemberEffects: "1",
+    remainingPoints: "1000",
+  };
+
+  it("accepts exact bigint candidate capacity without numeric coercion", () => {
+    expect(campaignPurchaseCandidateV1.parse(candidate)).toEqual(candidate);
+  });
+
+  it("reconciles awarded decisions and the selected multiplier", () => {
+    const evaluation = {
+      schemaVersion: "1" as const,
+      selectedCampaignMultiplierVersionId:
+        "87000000-0000-4000-8000-000000000802",
+      suppressedProgrammeMultiplierRuleCode: "double_points",
+      totalCampaignPoints: "150",
+      decisions: [
+        {
+          campaignVersionId: candidate.campaignVersionId,
+          campaignCode: candidate.campaignCode,
+          assignment: "treatment" as const,
+          effectKind: "bonus_points" as const,
+          matchedRuleCodes: ["purchase"],
+          priority: null,
+          points: "100",
+          outcome: "awarded" as const,
+        },
+        {
+          campaignVersionId: "87000000-0000-4000-8000-000000000802",
+          campaignCode: "priority_multiplier",
+          assignment: "treatment" as const,
+          effectKind: "purchase_multiplier" as const,
+          matchedRuleCodes: ["purchase"],
+          priority: 200,
+          points: "50",
+          outcome: "awarded" as const,
+        },
+      ],
+    };
+    expect(campaignPurchaseEvaluationV1.parse(evaluation)).toEqual(evaluation);
+    expect(
+      campaignPurchaseEvaluationV1.safeParse({
+        ...evaluation,
+        totalCampaignPoints: "149",
+      }).success,
+    ).toBe(false);
+    expect(
+      campaignPurchaseEvaluationV1.safeParse({
+        ...evaluation,
+        selectedCampaignMultiplierVersionId: null,
+      }).success,
+    ).toBe(false);
+  });
+
+  it("prohibits value on control or suppressed decisions", () => {
+    expect(
+      campaignPurchaseEvaluationV1.safeParse({
+        schemaVersion: "1",
+        selectedCampaignMultiplierVersionId: null,
+        suppressedProgrammeMultiplierRuleCode: null,
+        totalCampaignPoints: "0",
+        decisions: [
+          {
+            campaignVersionId: candidate.campaignVersionId,
+            campaignCode: candidate.campaignCode,
+            assignment: "control",
+            effectKind: "bonus_points",
+            matchedRuleCodes: ["purchase"],
+            priority: null,
+            points: "100",
+            outcome: "control",
+          },
+        ],
       }).success,
     ).toBe(false);
   });

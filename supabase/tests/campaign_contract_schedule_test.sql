@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(81);
+select plan(82);
 
 select has_table('loyalty', 'campaigns', 'stable campaign identities exist');
 select has_table('loyalty', 'campaign_versions', 'campaign definitions are versioned');
@@ -335,6 +335,7 @@ returns jsonb language sql immutable as $$
   select jsonb_build_object(
     'globalEffectLimit', '10', 'perMemberEffectLimit', 2,
     'maximumPoints', '10000', 'maximumLiabilityMinor', null,
+    'liabilityMinorPerEffect', null,
     'liabilityCurrencyCode', null, 'liabilityMinorUnitDigits', null
   );
 $$;
@@ -344,6 +345,7 @@ returns jsonb language sql immutable as $$
   select jsonb_build_object(
     'globalEffectLimit', '10', 'perMemberEffectLimit', 1,
     'maximumPoints', null, 'maximumLiabilityMinor', '50000',
+    'liabilityMinorPerEffect', '5000',
     'liabilityCurrencyCode', 'EUR', 'liabilityMinorUnitDigits', 2
   );
 $$;
@@ -472,6 +474,20 @@ select throws_ok(
   )) $$,
   '22023', 'invalid campaign capacity',
   'numeric JSON cannot disguise exact bigint text'
+);
+select throws_ok(
+  $$ select loyalty_private.validate_campaign_definition_v1(jsonb_set(
+    pg_temp.m07_campaign('liability_overrun', jsonb_build_object(
+      'kind', 'limited_quantity',
+      'reward', jsonb_build_object(
+        'kind', 'programme_reward',
+        'rewardId', '89000000-0000-4000-8000-000000000601'
+      )
+    ), pg_temp.m07_reward_capacity()),
+    '{capacity,liabilityMinorPerEffect}', '"50001"'::jsonb
+  )) $$,
+  '22023', 'invalid campaign liability budget',
+  'per-effect liability cannot exceed the approved campaign ceiling'
 );
 select throws_ok(
   $$ select loyalty_private.validate_campaign_definition_v1(jsonb_set(

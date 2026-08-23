@@ -62,4 +62,33 @@ Approval materializes the eligible inclusion-minus-exclusion wallet set and gene
 - `pause_campaign_version_command` allows owner/admin/operator to stop accepted operational work.
 - `cancel_campaign_version_command` allows owner/admin to terminate accepted policy with a bounded reason.
 
-All commands derive tenant and actor from the live Auth session, use tenant-scoped request-hash idempotency, and append minimized audit evidence. Count, capacity, points, and liability values cross the RPC boundary as exact decimal strings, including a valid zero-effect empty preview; PostgreSQL retains native bigint authority internally. Exact retries return the original accepted outcome even after later pause/cancel or rollout disablement. Pause and cancellation are never commercially blocked. S02 creates no ledger/reward effect and does not activate schedules; execution remains disabled until S03/S04 pass their atomic value gates.
+All commands derive tenant and actor from the live Auth session, use tenant-scoped request-hash idempotency, and append minimized audit evidence. Count, capacity, points, and liability values cross the RPC boundary as exact decimal strings, including a valid zero-effect empty preview; PostgreSQL retains native bigint authority internally. Exact retries return the original accepted outcome even after later pause/cancel or rollout disablement. Pause and cancellation are never commercially blocked. S02 creates no ledger/reward effect and does not activate schedules; production scheduling remains disabled until S03/S04 pass their atomic value gates.
+
+## Atomic purchase execution
+
+M07-S03 adds a private purchase execution boundary without changing the signed WooCommerce event contract. Inside the existing event transaction, the worker requests `get_purchase_campaign_context_v1`. PostgreSQL derives the active wallet, immutable treatment/control assignments, event-time schedule state, and exact remaining global/member/points capacity. The worker cannot choose tenant, campaign, assignment, counters, or schedule time.
+
+The pure domain evaluator applies these rules:
+
+- fixed campaign bonuses stack when their configured earning-rule selectors contributed;
+- purchase multipliers compete with the selected programme multiplier by descending priority and stable namespace identity;
+- only one multiplier is awarded;
+- treatment candidates without effect/member/points headroom are recorded as `capacity_exhausted`;
+- control candidates retain zero-value evidence; and
+- suppressed multipliers retain zero-value evidence.
+
+`commit_purchase_campaign_execution_v1` independently reconstructs the expected decisions and points from immutable definitions, baseline contribution evidence, assignments, and locked counters. It reserves all awarded campaign capacity before calling the existing ProgrammeDefinitionV2 award boundary. It then appends one campaign-attributed ledger award per awarded campaign, links each decision to the exact pending origin entry, commits its counters, and stores one immutable execution batch. Any error rolls back programme value, campaign value, counters, and evidence together.
+
+The batch stores the original private candidate context. An exact retry receives and submits that context even after capacity is consumed or the campaign is paused, so it returns the original result without re-evaluating mutable headroom. A changed hash or resource identity fails closed.
+
+## Reserved non-purchase capacity
+
+`reserve_campaign_capacity_v1` is the S03 primitive for milestone, win-back, tier, referral, and limited-quantity triggers. It requires one treatment assignment and an open event-time schedule, derives points or `liabilityMinorPerEffect` from the accepted definition, and atomically enforces global effects, per-member effects, maximum points, and maximum liability. A reservation is either committed with a bounded downstream reference or released; terminal evidence cannot be rewritten.
+
+S04 must combine canonical trigger verification, reservation, ledger/reward fulfilment, and completion in one transaction before any non-purchase schedule is activated. S03 does not start a scheduler, issue a programme reward, reverse a campaign award, or enable the managed rollout.
+
+## Privileges and rollback
+
+Campaign counters, candidate replay context, assignments, batches, effects, and allocations remain in `loyalty_private`, have RLS enabled, and have no direct grants to browser, runtime, connector, or worker roles. The worker receives only the four narrow context/reservation/completion/commit functions; internal arithmetic and table mutation remain private.
+
+Rollout disablement may stop new context and reservation work. It must preserve exact retries, accepted batches, campaign-attributed ledger transactions, allocations, counters, refunds, reconciliation, history, and checkout independence. After value exists, schema rollback is forward-fix only.

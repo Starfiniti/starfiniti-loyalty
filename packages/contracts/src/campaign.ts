@@ -129,22 +129,31 @@ const uniqueCodes = z
     "Codes must be unique",
   );
 
+export const bonusPointsCampaignBehaviorV1 = z
+  .object({
+    kind: z.literal("bonus_points"),
+    earningRuleCodes: uniqueCodes,
+    reward: campaignPointsRewardV1,
+  })
+  .strict();
+
+export const purchaseMultiplierCampaignBehaviorV1 = z
+  .object({
+    kind: z.literal("purchase_multiplier"),
+    earningRuleCodes: uniqueCodes,
+    multiplierBasisPoints: z.number().int().min(10_001).max(100_000),
+    priority: z.number().int().min(0).max(10_000),
+  })
+  .strict();
+
+export const campaignPurchaseBehaviorV1 = z.discriminatedUnion("kind", [
+  bonusPointsCampaignBehaviorV1,
+  purchaseMultiplierCampaignBehaviorV1,
+]);
+
 export const campaignBehaviorV1 = z.discriminatedUnion("kind", [
-  z
-    .object({
-      kind: z.literal("bonus_points"),
-      earningRuleCodes: uniqueCodes,
-      reward: campaignPointsRewardV1,
-    })
-    .strict(),
-  z
-    .object({
-      kind: z.literal("purchase_multiplier"),
-      earningRuleCodes: uniqueCodes,
-      multiplierBasisPoints: z.number().int().min(10_001).max(100_000),
-      priority: z.number().int().min(0).max(10_000),
-    })
-    .strict(),
+  bonusPointsCampaignBehaviorV1,
+  purchaseMultiplierCampaignBehaviorV1,
   z
     .object({
       kind: z.literal("milestone"),
@@ -218,6 +227,7 @@ export const campaignCapacityV1 = z
     perMemberEffectLimit: z.number().int().min(1).max(100),
     maximumPoints: positiveBigint.nullable(),
     maximumLiabilityMinor: positiveBigint.nullable(),
+    liabilityMinorPerEffect: positiveBigint.nullable(),
     liabilityCurrencyCode: z
       .string()
       .regex(/^[A-Z]{3}$/u)
@@ -235,6 +245,7 @@ export const campaignCapacityV1 = z
     }
     const hasLiability = capacity.maximumLiabilityMinor !== null;
     if (
+      hasLiability !== (capacity.liabilityMinorPerEffect !== null) ||
       hasLiability !== (capacity.liabilityCurrencyCode !== null) ||
       hasLiability !== (capacity.liabilityMinorUnitDigits !== null)
     ) {
@@ -242,7 +253,19 @@ export const campaignCapacityV1 = z
         code: "custom",
         path: ["maximumLiabilityMinor"],
         message:
-          "Liability amount, currency, and precision must be set together",
+          "Liability ceiling, per-effect amount, currency, and precision must be set together",
+      });
+    }
+    if (
+      capacity.maximumLiabilityMinor !== null &&
+      capacity.liabilityMinorPerEffect !== null &&
+      BigInt(capacity.liabilityMinorPerEffect) >
+        BigInt(capacity.maximumLiabilityMinor)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["liabilityMinorPerEffect"],
+        message: "Per-effect liability cannot exceed the campaign ceiling",
       });
     }
   });
@@ -401,9 +424,117 @@ export const campaignPreviewV1 = z
     }
   });
 
+export const campaignPurchaseCandidateV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    campaignVersionId: z.uuid(),
+    campaignCode: code,
+    assignment: z.enum(["treatment", "control"]),
+    behavior: campaignPurchaseBehaviorV1,
+    remainingGlobalEffects: nonNegativeBigint,
+    remainingMemberEffects: nonNegativeBigint,
+    remainingPoints: nonNegativeBigint,
+  })
+  .strict();
+
+export const campaignPurchaseDecisionV1 = z
+  .object({
+    campaignVersionId: z.uuid(),
+    campaignCode: code,
+    assignment: z.enum(["treatment", "control"]),
+    effectKind: z.enum(["bonus_points", "purchase_multiplier"]),
+    matchedRuleCodes: z.array(code).min(1).max(50),
+    priority: z.number().int().min(0).max(10_000).nullable(),
+    points: nonNegativeBigint,
+    outcome: z.enum(["awarded", "control", "capacity_exhausted", "suppressed"]),
+  })
+  .strict()
+  .superRefine((decision, context) => {
+    if ((decision.outcome === "awarded") !== BigInt(decision.points) > 0n) {
+      context.addIssue({
+        code: "custom",
+        path: ["points"],
+        message: "Only awarded campaign decisions may carry positive points",
+      });
+    }
+    if (
+      (decision.effectKind === "purchase_multiplier") !==
+      (decision.priority !== null)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["priority"],
+        message: "Only multiplier decisions carry a priority",
+      });
+    }
+  });
+
+export const campaignPurchaseEvaluationV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    selectedCampaignMultiplierVersionId: z.uuid().nullable(),
+    suppressedProgrammeMultiplierRuleCode: code.nullable(),
+    totalCampaignPoints: nonNegativeBigint,
+    decisions: z.array(campaignPurchaseDecisionV1).max(100),
+  })
+  .strict()
+  .superRefine((evaluation, context) => {
+    const awarded = evaluation.decisions.filter(
+      (decision) => decision.outcome === "awarded",
+    );
+    const total = awarded.reduce(
+      (sum, decision) => sum + BigInt(decision.points),
+      0n,
+    );
+    if (total !== BigInt(evaluation.totalCampaignPoints)) {
+      context.addIssue({
+        code: "custom",
+        path: ["totalCampaignPoints"],
+        message: "Campaign decision points must reconcile to the total",
+      });
+    }
+    const selected = awarded.filter(
+      (decision) => decision.effectKind === "purchase_multiplier",
+    );
+    if (
+      selected.length > 1 ||
+      (selected[0]?.campaignVersionId ?? null) !==
+        evaluation.selectedCampaignMultiplierVersionId
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["selectedCampaignMultiplierVersionId"],
+        message:
+          "The selected multiplier must match exactly one awarded decision",
+      });
+    }
+    const identities = evaluation.decisions.map(
+      (decision) => decision.campaignVersionId,
+    );
+    if (new Set(identities).size !== identities.length) {
+      context.addIssue({
+        code: "custom",
+        path: ["decisions"],
+        message: "A campaign version may appear only once per evaluation",
+      });
+    }
+  });
+
 export type CampaignScheduleV1 = z.infer<typeof campaignScheduleV1>;
 export type CampaignRewardV1 = z.infer<typeof campaignRewardV1>;
 export type CampaignBehaviorV1 = z.infer<typeof campaignBehaviorV1>;
+export type CampaignPurchaseBehaviorV1 = z.infer<
+  typeof campaignPurchaseBehaviorV1
+>;
 export type CampaignCapacityV1 = z.infer<typeof campaignCapacityV1>;
 export type CampaignDefinitionV1 = z.infer<typeof campaignDefinitionV1>;
 export type CampaignPreviewV1 = z.infer<typeof campaignPreviewV1>;
+export type CampaignPurchaseCandidateV1 = z.infer<
+  typeof campaignPurchaseCandidateV1
+>;
+export type CampaignPurchaseDecisionV1 = z.infer<
+  typeof campaignPurchaseDecisionV1
+>;
+export type CampaignPurchaseEvaluationV1 = z.infer<
+  typeof campaignPurchaseEvaluationV1
+>;

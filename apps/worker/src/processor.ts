@@ -4,6 +4,7 @@ import {
   tierMetricSnapshotV2,
   tierQualificationEvaluationV2,
   merchantActivityPayloadV1,
+  campaignPurchaseCandidateV1,
   wooCommerceCouponCapturedPayloadV1,
   wooCommerceCustomerCreatedPayloadV1,
   wooCommerceCustomerDeletedPayloadV1,
@@ -12,11 +13,13 @@ import {
   wooCommerceVerifiedProductReviewPayloadV1,
   type WooCommerceOrderFactV1,
   type ProgrammeDefinitionV2,
+  type CampaignPurchaseCandidateV1,
 } from "@starfiniti/contracts";
 import {
   calculateRefundReversal,
   evaluateOrderAward,
   evaluateEarningV2,
+  evaluatePurchaseCampaignsV1,
   evaluateTierQualificationSnapshotV2,
   minorUnit,
   points,
@@ -117,6 +120,19 @@ type V2AwardRow = {
   evaluation_public_id: string;
   transaction_public_id: string | null;
   outcome: string;
+};
+type CampaignPurchaseContextRow = {
+  campaign_version_public_id: string;
+  campaign_code: string;
+  assignment: "treatment" | "control";
+  behavior: CampaignPurchaseCandidateV1["behavior"];
+  remaining_global_effects: string;
+  remaining_member_effects: string;
+  remaining_points: string;
+};
+type CampaignPurchaseCommitRow = V2AwardRow & {
+  campaign_batch_public_id: string;
+  campaign_points: string;
 };
 type ReferralQualificationContextRow = {
   attribution_id: string | null;
@@ -1499,37 +1515,119 @@ async function commitAwardV2(
       memberRuleUsage,
       false,
     );
-    const evaluation = evaluateEarningV2(context.programme, orderFact);
+    const campaignRows = await transaction<CampaignPurchaseContextRow[]>`
+      select campaign_version_public_id::text, campaign_code, assignment,
+        behavior, remaining_global_effects, remaining_member_effects,
+        remaining_points
+      from loyalty_private.get_purchase_campaign_context_v1(
+        ${event.organization_id}::bigint,
+        ${context.programmeGroupId}::bigint,
+        ${customerId}::bigint,
+        ${event.occurred_at}::timestamptz,
+        ${operation}
+      )
+    `;
+    const campaignContext = campaignRows.map((row) =>
+      campaignPurchaseCandidateV1.parse({
+        schemaVersion: "1",
+        campaignVersionId: row.campaign_version_public_id,
+        campaignCode: row.campaign_code,
+        assignment: row.assignment,
+        behavior: row.behavior,
+        remainingGlobalEffects: row.remaining_global_effects,
+        remainingMemberEffects: row.remaining_member_effects,
+        remainingPoints: row.remaining_points,
+      }),
+    );
+    const campaignResult =
+      campaignContext.length === 0
+        ? null
+        : evaluatePurchaseCampaignsV1(
+            context.programme,
+            orderFact,
+            campaignContext,
+          );
+    const baselineEvaluation =
+      campaignResult?.baselineProgrammeEvaluation ??
+      evaluateEarningV2(context.programme, orderFact);
+    const evaluation =
+      campaignResult?.programmeEvaluation ?? baselineEvaluation;
     const inputHash = evidenceSha256({
       version: "2",
       programmeVersionId: context.programmeVersionId,
       order: orderFact,
     });
     const resultHash = evidenceSha256(evaluation);
-    const awards = await transaction<V2AwardRow[]>`
-      select evaluation_public_id::text,
-        transaction_public_id::text,
-        outcome
-      from loyalty_private.commit_programme_v2_award(
-        ${event.organization_id}::bigint,
-        ${context.programmeGroupId}::bigint,
-        ${context.programmeVersionId}::bigint,
-        ${event.canonical_event_id}::bigint,
-        ${customerId}::bigint,
-        ${`woocommerce:order:${order.orderId}`},
-        ${evaluationKey},
-        ${awardKey},
-        ${Buffer.from(inputHash, "hex")},
-        ${Buffer.from(resultHash, "hex")},
-        ${JSON.stringify(evaluation)}::jsonb,
-        ${JSON.stringify({
-          lines: evaluation.lines,
-          tierMultiplierBasisPoints: tierPurchaseMultiplier(context),
-        })}::jsonb,
-        ${event.occurred_at}::timestamptz,
-        ${evaluatedAt}::timestamptz
-      )
-    `;
+    const explanation = {
+      lines: evaluation.lines,
+      tierMultiplierBasisPoints: tierPurchaseMultiplier(context),
+    };
+    let awards: (V2AwardRow | CampaignPurchaseCommitRow)[];
+    if (campaignResult === null) {
+      awards = await transaction<V2AwardRow[]>`
+        select evaluation_public_id::text,
+          transaction_public_id::text,
+          outcome
+        from loyalty_private.commit_programme_v2_award(
+          ${event.organization_id}::bigint,
+          ${context.programmeGroupId}::bigint,
+          ${context.programmeVersionId}::bigint,
+          ${event.canonical_event_id}::bigint,
+          ${customerId}::bigint,
+          ${`woocommerce:order:${order.orderId}`},
+          ${evaluationKey},
+          ${awardKey},
+          ${Buffer.from(inputHash, "hex")},
+          ${Buffer.from(resultHash, "hex")},
+          ${JSON.stringify(evaluation)}::jsonb,
+          ${JSON.stringify(explanation)}::jsonb,
+          ${event.occurred_at}::timestamptz,
+          ${evaluatedAt}::timestamptz
+        )
+      `;
+    } else {
+      const campaignInputHash = evidenceSha256({
+        version: "1",
+        operation,
+        programmeVersionId: context.programmeVersionId,
+        order: orderFact,
+        candidates: campaignContext,
+      });
+      const campaignResultHash = evidenceSha256({
+        baselineProgrammeEvaluation: campaignResult.baselineProgrammeEvaluation,
+        programmeEvaluation: campaignResult.programmeEvaluation,
+        campaignEvaluation: campaignResult.campaignEvaluation,
+      });
+      awards = await transaction<CampaignPurchaseCommitRow[]>`
+        select evaluation_public_id::text,
+          transaction_public_id::text,
+          campaign_batch_public_id::text,
+          campaign_points,
+          outcome
+        from loyalty_private.commit_purchase_campaign_execution_v1(
+          ${event.organization_id}::bigint,
+          ${context.programmeGroupId}::bigint,
+          ${context.programmeVersionId}::bigint,
+          ${event.canonical_event_id}::bigint,
+          ${customerId}::bigint,
+          ${`woocommerce:order:${order.orderId}`},
+          ${evaluationKey},
+          ${awardKey},
+          ${Buffer.from(inputHash, "hex")},
+          ${Buffer.from(resultHash, "hex")},
+          ${JSON.stringify(evaluation)}::jsonb,
+          ${JSON.stringify(explanation)}::jsonb,
+          ${operation},
+          ${Buffer.from(campaignInputHash, "hex")},
+          ${Buffer.from(campaignResultHash, "hex")},
+          ${JSON.stringify(campaignContext)}::jsonb,
+          ${JSON.stringify(campaignResult.baselineProgrammeEvaluation)}::jsonb,
+          ${JSON.stringify(campaignResult.campaignEvaluation)}::jsonb,
+          ${event.occurred_at}::timestamptz,
+          ${evaluatedAt}::timestamptz
+        )
+      `;
+    }
     const award = awards[0];
     if (!award) throw new Error("v2_award_record_failed");
     await applyAdvancedTierQualificationV2(
@@ -1541,7 +1639,9 @@ async function commitAwardV2(
     );
     const resultReference = award.transaction_public_id
       ? `ledger-transaction:${award.transaction_public_id}`
-      : `evaluation:${award.evaluation_public_id}`;
+      : "campaign_batch_public_id" in award
+        ? `campaign-execution:${award.campaign_batch_public_id}`
+        : `evaluation:${award.evaluation_public_id}`;
     await transaction`
       select * from loyalty_private.finish_commerce_effect(
         ${event.canonical_event_public_id}::uuid,

@@ -870,6 +870,7 @@ describe("WooCommerce effect worker", () => {
       if (text.includes("get_member_earning_rule_usage")) {
         return [{ rule_code: "purchase-base", consumed_points: "25" }];
       }
+      if (text.includes("get_purchase_campaign_context_v1")) return [];
       if (text.includes("commit_programme_v2_award")) {
         return [
           {
@@ -961,5 +962,143 @@ describe("WooCommerce effect worker", () => {
     expect(
       calls.some((call) => call.includes("record_programme_evaluation")),
     ).toBe(false);
+  });
+
+  it("evaluates purchase campaigns and commits their capacity with the programme award", async () => {
+    const calls: string[] = [];
+    const campaignEvent = {
+      ...event,
+      payload: {
+        kind: "order_status_changed",
+        previousStatus: "processing",
+        order: {
+          ...(event.payload as { order: Record<string, unknown> }).order,
+          lines: [
+            {
+              lineId: "1",
+              productId: "serum",
+              variationId: null,
+              categoryIds: ["skincare"],
+              collectionIds: [],
+              quantity: "1",
+              subtotal: "1.00",
+              total: "1.00",
+              refundedTotal: "0.00",
+            },
+          ],
+        },
+      },
+    } satisfies ClaimedEffect;
+    const programmeRow = {
+      programme_group_id: "8",
+      programme_version_id: "9",
+      programme_version_public_id: "00000000-0000-4000-8000-000000000009",
+      version_number: 1,
+      tier_code: "rose",
+      tier_name: "Rose",
+      minimum_eligible_spend_minor: "0",
+      points_per_major_unit: "5",
+      ordinal: 0,
+      configuration: referralProgrammeConfiguration,
+    };
+    const query = async (strings: TemplateStringsArray) => {
+      const text = strings.join("?");
+      calls.push(text);
+      if (text.includes("resolve_commerce_customer")) {
+        return [{ customer_id: "7" }];
+      }
+      if (text.includes("from loyalty.programmes as programme")) {
+        return [programmeRow];
+      }
+      if (text.includes("from loyalty.wallets as wallet")) return [];
+      if (text.includes("record_referral_attribution_v1")) {
+        return [{ attribution_id: null, state: "none", outcome: "none" }];
+      }
+      if (text.includes("get_referral_qualification_context_v1")) {
+        return [
+          {
+            attribution_id: null,
+            programme_version_id: null,
+            current_state: null,
+            qualification_status: null,
+            outcome: "none",
+          },
+        ];
+      }
+      if (text.includes("get_member_earning_rule_usage")) return [];
+      if (text.includes("get_purchase_campaign_context_v1")) {
+        return [
+          {
+            campaign_version_public_id: "87000000-0000-4000-8000-000000000801",
+            campaign_code: "order_bonus",
+            assignment: "treatment",
+            behavior: {
+              kind: "bonus_points",
+              earningRuleCodes: ["purchase-base"],
+              reward: { kind: "points", points: "10" },
+            },
+            remaining_global_effects: "100",
+            remaining_member_effects: "1",
+            remaining_points: "1000",
+          },
+        ];
+      }
+      if (text.includes("commit_purchase_campaign_execution_v1")) {
+        return [
+          {
+            evaluation_public_id: "00000000-0000-4000-8000-000000000021",
+            transaction_public_id: "00000000-0000-4000-8000-000000000022",
+            campaign_batch_public_id: "00000000-0000-4000-8000-000000000023",
+            campaign_points: "10",
+            outcome: "created",
+          },
+        ];
+      }
+      if (text.includes("get_tier_qualification_context_v2")) {
+        return [
+          {
+            metrics: {
+              eligibleSpendMinor: "0",
+              earnedPoints: "0",
+              orderCount: "0",
+              referralCount: "0",
+              verifiedActionCount: "0",
+              verifiedActionCounts: {},
+            },
+            current_tier_code: null,
+            previously_held_tier_codes: [],
+            below_threshold_since: null,
+          },
+        ];
+      }
+      if (text.includes("record_tier_qualification_decision_v2")) {
+        return [
+          {
+            tier_decision_public_id: "00000000-0000-4000-8000-000000000031",
+          },
+        ];
+      }
+      if (text.includes("finish_commerce_effect")) return [];
+      throw new Error(`Unexpected query: ${text}`);
+    };
+    const fakeSql = query as unknown as Sql;
+    Object.assign(fakeSql, {
+      begin: async (callback: (transaction: Sql) => Promise<unknown>) =>
+        callback(fakeSql),
+    });
+
+    await processWooCommerceEffect(fakeSql, "worker-campaign", campaignEvent);
+
+    expect(
+      calls.some((call) =>
+        call.includes("commit_purchase_campaign_execution_v1"),
+      ),
+    ).toBe(true);
+    expect(
+      calls.some((call) => call.includes("commit_programme_v2_award(")),
+    ).toBe(false);
+    expect(calls.some((call) => call.includes("finish_commerce_effect"))).toBe(
+      true,
+    );
   });
 });

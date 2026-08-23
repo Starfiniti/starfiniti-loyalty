@@ -85,6 +85,7 @@ const acceptedAdrs = [
   "0020-auth-derived-referral-experience-and-fact-sourced-funnel.md",
   "0021-allowlisted-audiences-and-immutable-snapshots.md",
   "0022-explicit-instant-campaign-schedules-and-bound-control-assignment.md",
+  "0023-atomic-campaign-capacity-and-attributed-value.md",
 ];
 
 for (const adr of acceptedAdrs) {

@@ -40,6 +40,7 @@ create table loyalty.campaign_versions (
   ),
   maximum_points bigint check (maximum_points > 0),
   maximum_liability_minor bigint check (maximum_liability_minor > 0),
+  liability_minor_per_effect bigint check (liability_minor_per_effect > 0),
   liability_currency_code text,
   liability_minor_unit_digits smallint,
   control_basis_points integer not null check (
@@ -67,9 +68,12 @@ create table loyalty.campaign_versions (
   check (ends_at - starts_at <= interval '366 days'),
   check (
     (maximum_liability_minor is null
+      and liability_minor_per_effect is null
       and liability_currency_code is null
       and liability_minor_unit_digits is null)
     or (maximum_liability_minor is not null
+      and liability_minor_per_effect is not null
+      and liability_minor_per_effect <= maximum_liability_minor
       and liability_currency_code ~ '^[A-Z]{3}$'
       and liability_minor_unit_digits between 0 and 3)
   ),
@@ -619,6 +623,8 @@ begin
     (new.definition #>> '{capacity,maximumPoints}')::bigint;
   new.maximum_liability_minor :=
     (new.definition #>> '{capacity,maximumLiabilityMinor}')::bigint;
+  new.liability_minor_per_effect :=
+    (new.definition #>> '{capacity,liabilityMinorPerEffect}')::bigint;
   new.liability_currency_code :=
     new.definition #>> '{capacity,liabilityCurrencyCode}';
   new.liability_minor_unit_digits :=
@@ -659,6 +665,7 @@ begin
     or new.per_member_effect_limit <> old.per_member_effect_limit
     or new.maximum_points is distinct from old.maximum_points
     or new.maximum_liability_minor is distinct from old.maximum_liability_minor
+    or new.liability_minor_per_effect is distinct from old.liability_minor_per_effect
     or new.liability_currency_code is distinct from old.liability_currency_code
     or new.liability_minor_unit_digits is distinct from old.liability_minor_unit_digits
     or new.control_basis_points <> old.control_basis_points
@@ -801,6 +808,7 @@ declare
   timezone_value text;
   maximum_points_value numeric;
   maximum_liability_value numeric;
+  liability_per_effect_value numeric;
 begin
   if pg_catalog.jsonb_typeof(target_definition) <> 'object'
     or pg_catalog.pg_column_size(target_definition) > 65536
@@ -1020,8 +1028,8 @@ begin
     or not loyalty_private.campaign_object_has_exact_keys_v1(
       capacity_value, array[
         'globalEffectLimit', 'perMemberEffectLimit', 'maximumPoints',
-        'maximumLiabilityMinor', 'liabilityCurrencyCode',
-        'liabilityMinorUnitDigits'
+        'maximumLiabilityMinor', 'liabilityMinorPerEffect',
+        'liabilityCurrencyCode', 'liabilityMinorUnitDigits'
       ]
     )
     or pg_catalog.jsonb_typeof(capacity_value -> 'globalEffectLimit') <> 'string'
@@ -1047,7 +1055,9 @@ begin
   end if;
   if pg_catalog.jsonb_typeof(capacity_value -> 'maximumLiabilityMinor') = 'null' then
     maximum_liability_value := null;
-    if pg_catalog.jsonb_typeof(capacity_value -> 'liabilityCurrencyCode') <> 'null'
+    liability_per_effect_value := null;
+    if pg_catalog.jsonb_typeof(capacity_value -> 'liabilityMinorPerEffect') <> 'null'
+      or pg_catalog.jsonb_typeof(capacity_value -> 'liabilityCurrencyCode') <> 'null'
       or pg_catalog.jsonb_typeof(capacity_value -> 'liabilityMinorUnitDigits') <> 'null' then
       raise exception using errcode = '22023',
         message = 'invalid campaign liability identity';
@@ -1055,12 +1065,18 @@ begin
   elsif pg_catalog.jsonb_typeof(capacity_value -> 'maximumLiabilityMinor') = 'string'
     and capacity_value ->> 'maximumLiabilityMinor' ~ '^[1-9][0-9]*$'
     and (capacity_value ->> 'maximumLiabilityMinor')::numeric <= 9223372036854775807
+    and pg_catalog.jsonb_typeof(capacity_value -> 'liabilityMinorPerEffect') = 'string'
+    and capacity_value ->> 'liabilityMinorPerEffect' ~ '^[1-9][0-9]*$'
+    and (capacity_value ->> 'liabilityMinorPerEffect')::numeric
+      <= (capacity_value ->> 'maximumLiabilityMinor')::numeric
     and pg_catalog.jsonb_typeof(capacity_value -> 'liabilityCurrencyCode') = 'string'
     and capacity_value ->> 'liabilityCurrencyCode' ~ '^[A-Z]{3}$'
     and pg_catalog.jsonb_typeof(capacity_value -> 'liabilityMinorUnitDigits') = 'number'
     and capacity_value ->> 'liabilityMinorUnitDigits' ~ '^(0|[1-3])$' then
     maximum_liability_value :=
       (capacity_value ->> 'maximumLiabilityMinor')::numeric;
+    liability_per_effect_value :=
+      (capacity_value ->> 'liabilityMinorPerEffect')::numeric;
   else
     raise exception using errcode = '22023',
       message = 'invalid campaign liability budget';

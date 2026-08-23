@@ -95,8 +95,12 @@ Current audience metrics are derived from wallet balances, immutable tier-qualif
 - `campaign_versions`: immutable strict behavior, audience/exclusion snapshot references, explicit-instant/IANA schedule evidence, hard effect/points/liability ceilings, aggregate assignment counts/hash, and draft/scheduled/active/paused/cancelled/completed lifecycle.
 - `loyalty_private.campaign_controls`: one private 32-byte random assignment salt plus aggregate assignment hash for an approved version.
 - `loyalty_private.campaign_assignments`: one immutable eligible wallet/customer treatment-or-control row with its assignment evidence hash. Browser/runtime roles cannot enumerate it.
+- `loyalty_private.campaign_capacity_counters`: serialized mutable projections of reserved/committed effects, points, and monetary liability for one immutable campaign version.
+- `loyalty_private.campaign_execution_batches`: immutable purchase operation, original candidate context, baseline/final evaluation, and programme-evaluation/transaction evidence used for exact retry.
+- `loyalty_private.campaign_effects`: one immutable control, exhausted, suppressed, or awarded decision per matched purchase campaign, with awarded decisions linked to their exact ledger transaction and pending origin entry.
+- `loyalty_private.campaign_capacity_allocations`: one-way `reserved -> committed|released` evidence for milestone, win-back, tier, referral, and limited-reward capacity before S04 trigger fulfilment.
 
-Approval materializes inclusion minus exclusions and the treatment/control split in one transaction before a version becomes scheduled. One accepted-version partial unique index prevents overlap for a stable campaign. S02 schedules no worker and issues no value; later executors must use the immutable version/assignment and atomically reserve the stored limits.
+Approval materializes inclusion minus exclusions and the treatment/control split in one transaction before a version becomes scheduled. One accepted-version partial unique index prevents overlap for a stable campaign. Purchase execution locks operation, member, and campaign capacity in a stable order; reserves capacity; calls the existing programme award boundary; appends separately attributed campaign awards; and commits counters in one transaction. Original context is replayed on exact retry. S04 must bind non-purchase reservations to canonical triggers and fulfilment before any production schedule is enabled.
 
 ### `experience_themes`
 
