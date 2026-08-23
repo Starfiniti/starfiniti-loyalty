@@ -1353,9 +1353,15 @@ select results_eq(
         where organization_id = pg_temp.m07_ref('organization')
           and wallet_id = pg_temp.m07_ref('wallet')
           and account_kind = 'reserved'),
-       (select points from loyalty.wallet_balances
-        where organization_id = pg_temp.m07_ref('organization')
-          and wallet_id is null and account_kind = 'adjustment'),
+       (select pg_catalog.coalesce(pg_catalog.sum(entry.points), 0)::bigint
+        from loyalty.ledger_entries as entry
+        join loyalty.ledger_accounts as account
+          on account.organization_id = entry.organization_id
+         and account.programme_group_id = entry.programme_group_id
+         and account.id = entry.account_id
+        where account.organization_id = pg_temp.m07_ref('organization')
+          and account.wallet_id is null
+          and account.account_kind = 'adjustment'),
        (select state from loyalty.reward_reservations
         where funding_kind = 'campaign' order by id limit 1),
        (select state from loyalty_private.transactional_outbox
