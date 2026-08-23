@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(61);
+select plan(62);
 
 select has_table(
   'loyalty_private', 'campaign_capacity_counters',
@@ -821,6 +821,17 @@ select results_eq(
      where effect.state = 'committed' and entry.points = effect.points $$,
   array[2::bigint],
   'every campaign effect points to its exact immutable award entry'
+);
+select results_eq(
+  $$ select count(distinct transaction.source_reference)::bigint
+     from loyalty_private.campaign_effects as effect
+     join loyalty.ledger_transactions as transaction
+       on transaction.organization_id = effect.organization_id
+      and transaction.id = effect.award_transaction_id
+     where transaction.source_event_id = pg_temp.m07_ref('event')
+       and transaction.source_reference like 'campaign:%:operation:%' $$,
+  array[2::bigint],
+  'campaign awards use bounded campaign-specific source identities'
 );
 select results_eq(
   $$ select balance.pending_points

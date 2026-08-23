@@ -1223,7 +1223,11 @@ begin
         extensions.digest(
           pg_catalog.convert_to(decision::text, 'UTF8'), 'sha256'
         ),
-        target_canonical_event_id, target_subject_reference,
+        target_canonical_event_id,
+        'campaign:' || target_version.public_id::text || ':operation:' ||
+          pg_catalog.encode(extensions.digest(
+            pg_catalog.convert_to(target_operation_key, 'UTF8'), 'sha256'
+          ), 'hex'),
         target_occurred_at
       );
       select transaction.id into strict campaign_transaction_id
