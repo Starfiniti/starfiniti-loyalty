@@ -113,6 +113,7 @@ select is_empty(
           'get_customer_read_model',
           'get_customer_tier_progress_v1',
           'get_customer_tier_read_model',
+          'get_campaign_results_v1',
           'get_my_loyalty_accounts',
           'get_my_referral_experiences_v1',
           'get_my_entitlements_v1',
