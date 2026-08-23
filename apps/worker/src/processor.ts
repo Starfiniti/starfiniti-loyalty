@@ -1672,6 +1672,7 @@ async function commitAwardV2(
       from loyalty_private.get_purchase_campaign_context_v1(
         ${event.organization_id}::bigint,
         ${context.programmeGroupId}::bigint,
+        ${context.programmeVersionId}::bigint,
         ${customerId}::bigint,
         ${event.occurred_at}::timestamptz,
         ${operation}

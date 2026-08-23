@@ -237,6 +237,7 @@ $$;
 create or replace function loyalty_private.get_purchase_campaign_context_v1(
   target_organization_id bigint,
   target_programme_group_id bigint,
+  target_programme_version_id bigint,
   target_customer_id bigint,
   target_occurred_at timestamptz,
   target_operation_key text
@@ -259,12 +260,21 @@ declare
   candidate_version_id bigint;
   existing_batch loyalty_private.campaign_execution_batches%rowtype;
 begin
-  if target_occurred_at is null
+  if target_programme_version_id is null or target_occurred_at is null
     or target_operation_key is null
     or pg_catalog.length(target_operation_key) not between 1 and 255
     or target_operation_key <> pg_catalog.btrim(target_operation_key) then
     raise exception using errcode = '22023',
       message = 'invalid campaign execution context';
+  end if;
+  perform 1
+  from loyalty.programme_versions as programme_version
+  where programme_version.organization_id = target_organization_id
+    and programme_version.programme_group_id = target_programme_group_id
+    and programme_version.id = target_programme_version_id;
+  if not found then
+    raise exception using errcode = '22023',
+      message = 'unknown campaign programme context';
   end if;
   perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(
     'campaign-operation|' || target_organization_id::text || '|' ||
@@ -277,6 +287,7 @@ begin
     and batch.operation_key = target_operation_key;
   if found then
     if existing_batch.programme_group_id <> target_programme_group_id
+      or existing_batch.programme_version_id <> target_programme_version_id
       or existing_batch.customer_id <> target_customer_id then
       raise exception using errcode = '23514',
         message = 'campaign execution operation conflict';
@@ -938,8 +949,9 @@ begin
   ) order by context.campaign_code, context.campaign_version_public_id),
   '[]'::jsonb) into expected_context
   from loyalty_private.get_purchase_campaign_context_v1(
-    target_organization_id, target_programme_group_id, target_customer_id,
-    target_occurred_at, target_operation_key
+    target_organization_id, target_programme_group_id,
+    target_programme_version_id, target_customer_id, target_occurred_at,
+    target_operation_key
   ) as context;
   if expected_context <> target_campaign_context then
     raise exception using errcode = '23514',
@@ -1293,7 +1305,7 @@ alter function loyalty_private.campaign_open_at_v1(bigint, timestamptz)
 alter function loyalty_private.campaign_matching_rule_codes_v1(jsonb, jsonb)
   owner to loyalty_owner;
 alter function loyalty_private.get_purchase_campaign_context_v1(
-  bigint, bigint, bigint, timestamptz, text
+  bigint, bigint, bigint, bigint, timestamptz, text
 ) owner to loyalty_owner;
 alter function loyalty_private.campaign_multiplier_points_v1(jsonb, integer)
   owner to loyalty_owner;
@@ -1322,7 +1334,7 @@ revoke all on function
   loyalty_private.campaign_open_at_v1(bigint, timestamptz),
   loyalty_private.campaign_matching_rule_codes_v1(jsonb, jsonb),
   loyalty_private.get_purchase_campaign_context_v1(
-    bigint, bigint, bigint, timestamptz, text
+    bigint, bigint, bigint, bigint, timestamptz, text
   ),
   loyalty_private.campaign_multiplier_points_v1(jsonb, integer),
   loyalty_private.protect_campaign_capacity_counter(),
@@ -1339,7 +1351,7 @@ revoke all on function
 
 grant execute on function
   loyalty_private.get_purchase_campaign_context_v1(
-    bigint, bigint, bigint, timestamptz, text
+    bigint, bigint, bigint, bigint, timestamptz, text
   ),
   loyalty_private.reserve_campaign_capacity_v1(
     bigint, bigint, uuid, bigint, text, text, bytea, timestamptz

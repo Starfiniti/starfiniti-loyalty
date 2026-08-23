@@ -51,6 +51,178 @@ create trigger campaigns_immutable
 before update or delete on loyalty.campaigns
 for each row execute function loyalty_private.reject_immutable_change();
 
+create or replace function loyalty_private.get_purchase_campaign_context_v1(
+  target_organization_id bigint,
+  target_programme_group_id bigint,
+  target_programme_version_id bigint,
+  target_customer_id bigint,
+  target_occurred_at timestamptz,
+  target_operation_key text
+)
+returns table (
+  campaign_version_public_id uuid,
+  campaign_code text,
+  assignment text,
+  behavior jsonb,
+  remaining_global_effects text,
+  remaining_member_effects text,
+  remaining_points text
+)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  target_programme loyalty.programmes%rowtype;
+  target_wallet_id bigint;
+  candidate_version_id bigint;
+  existing_batch loyalty_private.campaign_execution_batches%rowtype;
+  entitlement_enabled boolean;
+begin
+  if target_programme_version_id is null or target_occurred_at is null
+    or target_operation_key is null
+    or pg_catalog.length(target_operation_key) not between 1 and 255
+    or target_operation_key <> pg_catalog.btrim(target_operation_key) then
+    raise exception using errcode = '22023',
+      message = 'invalid campaign execution context';
+  end if;
+  select programme.* into target_programme
+  from loyalty.programme_versions as version
+  join loyalty.programmes as programme
+    on programme.organization_id = version.organization_id
+   and programme.programme_group_id = version.programme_group_id
+   and programme.id = version.programme_id
+  where version.organization_id = target_organization_id
+    and version.programme_group_id = target_programme_group_id
+    and version.id = target_programme_version_id
+    and version.status = 'published';
+  if not found then
+    raise exception using errcode = '22023',
+      message = 'unknown campaign programme context';
+  end if;
+  perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(
+    'campaign-operation|' || target_organization_id::text || '|' ||
+      target_operation_key, 0
+  ));
+  select batch.* into existing_batch
+  from loyalty_private.campaign_execution_batches as batch
+  where batch.organization_id = target_organization_id
+    and batch.operation_key = target_operation_key;
+  if found then
+    if existing_batch.programme_group_id <> target_programme_group_id
+      or existing_batch.programme_version_id <> target_programme_version_id
+      or existing_batch.customer_id <> target_customer_id then
+      raise exception using errcode = '23514',
+        message = 'campaign execution operation conflict';
+    end if;
+    return query
+    select item."campaignVersionId", item."campaignCode", item.assignment,
+      item.behavior, item."remainingGlobalEffects",
+      item."remainingMemberEffects", item."remainingPoints"
+    from pg_catalog.jsonb_to_recordset(existing_batch.campaign_context) as item(
+      "schemaVersion" text, "campaignVersionId" uuid, "campaignCode" text,
+      assignment text, behavior jsonb, "remainingGlobalEffects" text,
+      "remainingMemberEffects" text, "remainingPoints" text
+    )
+    order by item."campaignCode", item."campaignVersionId";
+    return;
+  end if;
+  select decision.enabled into strict entitlement_enabled
+  from loyalty_private.resolve_organization_entitlement(
+    target_organization_id, 'campaigns',
+    'programme:' || target_programme.public_id::text,
+    pg_catalog.clock_timestamp()
+  ) as decision;
+  if not entitlement_enabled then
+    return;
+  end if;
+  select wallet.id into target_wallet_id
+  from loyalty.wallets as wallet
+  where wallet.organization_id = target_organization_id
+    and wallet.programme_group_id = target_programme_group_id
+    and wallet.customer_id = target_customer_id and wallet.status = 'active';
+  if not found then
+    raise exception using errcode = '22023',
+      message = 'unknown campaign member context';
+  end if;
+  perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(
+    'campaign-member|' || target_organization_id::text || '|' ||
+      target_programme_group_id::text || '|' || target_customer_id::text, 0
+  ));
+  for candidate_version_id in
+    select version.id
+    from loyalty.campaign_versions as version
+    join loyalty.campaigns as campaign
+      on campaign.organization_id = version.organization_id
+     and campaign.id = version.campaign_id
+     and campaign.programme_id = target_programme.id
+    join loyalty_private.campaign_assignments as assigned
+      on assigned.organization_id = version.organization_id
+     and assigned.campaign_version_id = version.id
+     and assigned.wallet_id = target_wallet_id
+    where version.organization_id = target_organization_id
+      and version.programme_group_id = target_programme_group_id
+      and version.definition #>> '{behavior,kind}' in (
+        'bonus_points', 'purchase_multiplier'
+      )
+      and loyalty_private.campaign_open_at_v1(
+        version.id, target_occurred_at
+      )
+    order by version.id
+  loop
+    perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(
+      'campaign-capacity|' || target_organization_id::text || '|' ||
+        candidate_version_id::text, 0
+    ));
+    insert into loyalty_private.campaign_capacity_counters (
+      organization_id, programme_group_id, campaign_version_id
+    ) values (
+      target_organization_id, target_programme_group_id, candidate_version_id
+    ) on conflict (organization_id, campaign_version_id) do nothing;
+  end loop;
+  return query
+  select version.public_id, campaign.code, assigned.assignment,
+    version.definition -> 'behavior',
+    greatest(version.global_effect_limit -
+      (counter.reserved_effects + counter.committed_effects), 0)::text,
+    greatest(version.per_member_effect_limit::bigint - (
+      (select pg_catalog.count(*)
+       from loyalty_private.campaign_effects as effect
+       where effect.organization_id = version.organization_id
+         and effect.campaign_version_id = version.id
+         and effect.wallet_id = target_wallet_id
+         and effect.decision_outcome = 'awarded')
+      + (select pg_catalog.count(*)
+         from loyalty_private.campaign_capacity_allocations as allocation
+         where allocation.organization_id = version.organization_id
+           and allocation.campaign_version_id = version.id
+           and allocation.wallet_id = target_wallet_id
+           and allocation.state in ('reserved', 'committed'))
+    ), 0)::text,
+    greatest(coalesce(version.maximum_points, 0) -
+      (counter.reserved_points + counter.committed_points), 0)::text
+  from loyalty.campaign_versions as version
+  join loyalty.campaigns as campaign
+    on campaign.organization_id = version.organization_id
+   and campaign.id = version.campaign_id
+   and campaign.programme_id = target_programme.id
+  join loyalty_private.campaign_assignments as assigned
+    on assigned.organization_id = version.organization_id
+   and assigned.campaign_version_id = version.id
+   and assigned.wallet_id = target_wallet_id
+  join loyalty_private.campaign_capacity_counters as counter
+    on counter.organization_id = version.organization_id
+   and counter.campaign_version_id = version.id
+  where version.organization_id = target_organization_id
+    and version.programme_group_id = target_programme_group_id
+    and version.definition #>> '{behavior,kind}' in (
+      'bonus_points', 'purchase_multiplier'
+    )
+    and loyalty_private.campaign_open_at_v1(version.id, target_occurred_at)
+  order by campaign.code, version.id;
+end;
+$$;
+
 alter table loyalty.reward_reservations
   add column funding_kind text not null default 'wallet_points'
     check (funding_kind in ('wallet_points', 'campaign')),
@@ -658,6 +830,7 @@ declare
   target_programme_version loyalty.programme_versions%rowtype;
   target_assignment loyalty_private.campaign_assignments%rowtype;
   created_job_id bigint;
+  entitlement_enabled boolean;
 begin
   if target_trigger_kind not in (
       'milestone', 'win_back', 'tier', 'referral', 'limited_quantity'
@@ -683,6 +856,20 @@ begin
     and version.programme_group_id = target_version.programme_group_id
     and version.id = target_programme_version_id
     and version.programme_id = target_stable.programme_id;
+  if target_action = 'issue' then
+    select decision.enabled into strict entitlement_enabled
+    from loyalty.programmes as programme
+    cross join lateral loyalty_private.resolve_organization_entitlement(
+      target_version.organization_id, 'campaigns',
+      'programme:' || programme.public_id::text,
+      pg_catalog.clock_timestamp()
+    ) as decision
+    where programme.organization_id = target_version.organization_id
+      and programme.id = target_stable.programme_id;
+    if not entitlement_enabled then
+      return null;
+    end if;
+  end if;
   if target_campaign_assignment_id is null then
     select assignment.* into strict target_assignment
     from loyalty_private.campaign_assignments as assignment
@@ -1318,6 +1505,7 @@ declare
   candidate record;
   enqueued_count bigint := 0;
   evidence jsonb;
+  scheduled_job_id bigint;
 begin
   if target_as_of is null or target_limit not between 1 and 1000 then
     raise exception using errcode = '22023',
@@ -1373,14 +1561,16 @@ begin
       'rewardId', candidate.reward_public_id,
       'scheduledAt', target_as_of
     );
-    perform loyalty_private.enqueue_campaign_trigger_job_v1(
+    scheduled_job_id := loyalty_private.enqueue_campaign_trigger_job_v1(
       candidate.campaign_version_id, candidate.programme_version_id,
       candidate.customer_id, 'limited_quantity', 'issue',
       'limited-assignment:' || candidate.assignment_id::text,
       null, null, null, null, candidate.assignment_id, null, null,
       evidence, target_as_of
     );
-    enqueued_count := enqueued_count + 1;
+    if scheduled_job_id is not null then
+      enqueued_count := enqueued_count + 1;
+    end if;
   end loop;
   return enqueued_count;
 end;

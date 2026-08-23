@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(112);
+select plan(115);
 
 select has_table(
   'loyalty_private', 'campaign_trigger_jobs',
@@ -173,7 +173,7 @@ select has_trigger(
 select ok(
   has_function_privilege(
     'loyalty_worker',
-    'loyalty_private.get_purchase_campaign_context_v1(bigint,bigint,bigint,timestamp with time zone,text)',
+    'loyalty_private.get_purchase_campaign_context_v1(bigint,bigint,bigint,bigint,timestamp with time zone,text)',
     'EXECUTE'
   ),
   'worker can request one serialized purchase campaign context'
@@ -743,6 +743,14 @@ join loyalty.programmes as programme
 where version.status = 'published'
   and programme.public_id = '8b000000-0000-4000-8000-000000000101'
 union all
+select 'other_version', version.id
+from loyalty.programme_versions as version
+join loyalty.programmes as programme
+  on programme.organization_id = version.organization_id
+ and programme.id = version.programme_id
+where version.status = 'published'
+  and programme.public_id = '8b000000-0000-4000-8000-000000000104'
+union all
 select 'customer', customer.id
 from loyalty.customers as customer
 where customer.public_id = '8b000000-0000-4000-8000-000000000201'
@@ -999,7 +1007,8 @@ as $$
   '[]'::jsonb)
   from loyalty_private.get_purchase_campaign_context_v1(
     pg_temp.m07_ref('organization'), pg_temp.m07_ref('group'),
-    pg_temp.m07_ref('customer'), pg_temp.m07_event_time(), target_operation
+    pg_temp.m07_ref('version'), pg_temp.m07_ref('customer'),
+    pg_temp.m07_event_time(), target_operation
   ) as context;
 $$;
 
@@ -1054,6 +1063,17 @@ grant loyalty_worker to current_user;
 grant usage on schema extensions to loyalty_worker;
 grant execute on all functions in schema extensions to loyalty_worker;
 set local role loyalty_worker;
+
+select results_eq(
+  $$ select count(*)::bigint
+     from loyalty_private.get_purchase_campaign_context_v1(
+       pg_temp.m07_ref('organization'), pg_temp.m07_ref('group'),
+       pg_temp.m07_ref('other_version'), pg_temp.m07_ref('customer'),
+       pg_temp.m07_event_time(), 'connection:other-programme:order:1'
+     ) $$,
+  array[0::bigint],
+  'purchase context excludes campaigns owned by another same-group programme'
+);
 
 select results_eq(
   $$ select pg_catalog.jsonb_array_length(pg_temp.m07_context(
@@ -1712,6 +1732,59 @@ select results_eq(
   'limited reward liability commits only after fulfilment evidence exists'
 );
 reset role;
+
+select lives_ok(
+  $$ select loyalty_private.set_organization_entitlement(
+    '8b000000-0000-4000-8000-000000000100', 'campaigns', 'disabled', null,
+    'canary', 'test:m07-capacity', 'Stop accepting new campaign work',
+    pg_catalog.clock_timestamp(), null
+  ) $$,
+  'campaign rollout can be disabled without mutating accepted value'
+);
+
+insert into loyalty_private.programme_evaluations (
+  public_id, organization_id, programme_group_id, programme_version_id,
+  canonical_event_id, evaluation_kind, subject_reference, idempotency_key,
+  input_sha256, result_sha256, result, explanation, evaluated_at
+)
+values (
+  '8b000000-0000-4000-8000-000000000609', pg_temp.m07_ref('organization'),
+  pg_temp.m07_ref('group'), pg_temp.m07_ref('version'), pg_temp.m07_ref('event'),
+  'live_award', 'woocommerce:order:after-disable',
+  'm07:capacity:after-disable:evaluation', decode(repeat('e', 64), 'hex'),
+  decode(repeat('f', 64), 'hex'),
+  '{"version":"2","source":"purchase","awardedPoints":"1"}'::jsonb,
+  '{"fixture":"campaign_rollout_disabled"}'::jsonb,
+  pg_temp.m07_event_time() + interval '3 hours'
+);
+
+insert into loyalty_private.tier_qualification_facts (
+  public_id, organization_id, programme_group_id,
+  source_programme_version_id, customer_id, canonical_event_id,
+  evaluation_id, fact_kind, source_reference,
+  eligible_spend_minor_delta, earned_points_delta, order_count_delta,
+  referral_count_delta, verified_action_count_delta, activity_code,
+  effective_at, recorded_at
+)
+select '8b000000-0000-4000-8000-000000000610',
+  evaluation.organization_id, evaluation.programme_group_id,
+  evaluation.programme_version_id, pg_temp.m07_ref('customer'),
+  evaluation.canonical_event_id, evaluation.id, 'purchase',
+  'm07:capacity:after-disable:purchase', 100, 1, 1, 0, 0, null,
+  evaluation.evaluated_at, evaluation.evaluated_at
+from loyalty_private.programme_evaluations as evaluation
+where evaluation.public_id = '8b000000-0000-4000-8000-000000000609';
+
+select results_eq(
+  $$ select count(*)::bigint
+     from loyalty_private.campaign_trigger_jobs as job
+     join loyalty_private.tier_qualification_facts as fact
+       on fact.organization_id = job.organization_id
+      and fact.id = job.qualification_fact_id
+     where fact.public_id = '8b000000-0000-4000-8000-000000000610' $$,
+  array[0::bigint],
+  'disabled rollout accepts no new campaign trigger while prior history remains'
+);
 
 select results_eq(
   $$ select campaign.code, counter.reserved_effects,
