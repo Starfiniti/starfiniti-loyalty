@@ -5,6 +5,7 @@ import {
   calculateCumulativeRefundPlanV2,
   evidenceSha256,
   expireDueTierOverrides,
+  runCampaignTriggerLifecycle,
   runPointExpiryLifecycle,
   runReferralRewardLifecycle,
   parseWooCommerceEffect,
@@ -223,6 +224,146 @@ describe("WooCommerce effect worker", () => {
     await expect(
       runReferralRewardLifecycle(invalidSql, "worker-referral"),
     ).rejects.toThrow("invalid_referral_reward_claim_result");
+  });
+
+  it("executes bounded canonical campaign jobs and reconciles zero-value controls", async () => {
+    let executionCalls = 0;
+    const query = async (strings: TemplateStringsArray) => {
+      const text = strings.join("?");
+      if (text.includes("enqueue_due_limited_campaigns_v1")) {
+        return [{ enqueued: "1" }];
+      }
+      if (text.includes("claim_due_campaign_trigger_jobs_v1")) {
+        return [
+          {
+            job_id: "41000000-0000-4000-8000-000000000001",
+            campaign_version_id: "42000000-0000-4000-8000-000000000001",
+            trigger_kind: "milestone",
+            action: "issue",
+            source_reference: "milestone-fact:one",
+            occurred_at: "2026-08-23T18:30:00Z",
+            attempt_count: "1",
+          },
+          {
+            job_id: "41000000-0000-4000-8000-000000000002",
+            campaign_version_id: "42000000-0000-4000-8000-000000000002",
+            trigger_kind: "tier",
+            action: "issue",
+            source_reference: "tier-decision:one",
+            occurred_at: new Date("2026-08-23T18:31:00Z"),
+            attempt_count: 1,
+          },
+        ];
+      }
+      if (text.includes("execute_campaign_trigger_job_v1")) {
+        executionCalls += 1;
+        return executionCalls === 1
+          ? [
+              {
+                job_id: "41000000-0000-4000-8000-000000000001",
+                campaign_version_id: "42000000-0000-4000-8000-000000000001",
+                action: "issue",
+                outcome: "points_awarded",
+                allocation_id: "43000000-0000-4000-8000-000000000001",
+                transaction_id: "44000000-0000-4000-8000-000000000001",
+                reward_reservation_id: null,
+              },
+            ]
+          : [
+              {
+                job_id: "41000000-0000-4000-8000-000000000002",
+                campaign_version_id: "42000000-0000-4000-8000-000000000002",
+                action: "issue",
+                outcome: "control",
+                allocation_id: null,
+                transaction_id: null,
+                reward_reservation_id: null,
+              },
+            ];
+      }
+      throw new Error(`Unexpected query: ${text}`);
+    };
+    await expect(
+      runCampaignTriggerLifecycle(query as unknown as Sql, "worker-campaign"),
+    ).resolves.toEqual({
+      enqueued: 1,
+      claimed: 2,
+      completed: 2,
+      reversed: 0,
+      controls: 1,
+      capacityExhausted: 0,
+      retryable: 0,
+      manualReview: 0,
+    });
+  });
+
+  it("moves the tenth failed campaign trigger to manual review without error leakage", async () => {
+    const query = async (strings: TemplateStringsArray) => {
+      const text = strings.join("?");
+      if (text.includes("enqueue_due_limited_campaigns_v1")) {
+        return [{ enqueued: 0 }];
+      }
+      if (text.includes("claim_due_campaign_trigger_jobs_v1")) {
+        return [
+          {
+            job_id: "41000000-0000-4000-8000-000000000010",
+            campaign_version_id: "42000000-0000-4000-8000-000000000010",
+            trigger_kind: "referral",
+            action: "reverse",
+            source_reference: "referral-compensation:ten",
+            occurred_at: "2026-08-23T18:40:00Z",
+            attempt_count: "10",
+          },
+        ];
+      }
+      if (text.includes("execute_campaign_trigger_job_v1")) {
+        throw new Error("tenant-private-database-detail");
+      }
+      if (text.includes("finish_campaign_trigger_job_v1")) {
+        expect(text).toContain("campaign_trigger_execution_failed");
+        expect(text).not.toContain("tenant-private-database-detail");
+        return [{ state: "manual_review", outcome: "manual_review" }];
+      }
+      throw new Error(`Unexpected query: ${text}`);
+    };
+    await expect(
+      runCampaignTriggerLifecycle(query as unknown as Sql, "worker-campaign"),
+    ).resolves.toMatchObject({
+      claimed: 1,
+      completed: 0,
+      retryable: 0,
+      manualReview: 1,
+    });
+  });
+
+  it("rejects malformed campaign scheduler and claim results", async () => {
+    const invalidEnqueue = (async () => [
+      { enqueued: "101" },
+    ]) as unknown as Sql;
+    await expect(
+      runCampaignTriggerLifecycle(invalidEnqueue, "worker-campaign"),
+    ).rejects.toThrow("invalid_limited_campaign_enqueue_result");
+
+    let calls = 0;
+    const invalidClaim = (async () => {
+      calls += 1;
+      return calls === 1
+        ? [{ enqueued: 0 }]
+        : [
+            {
+              job_id: "not-a-uuid",
+              campaign_version_id: "42000000-0000-4000-8000-000000000001",
+              trigger_kind: "milestone",
+              action: "issue",
+              source_reference: "fact:one",
+              occurred_at: "2026-08-23T18:30:00Z",
+              attempt_count: 0,
+            },
+          ];
+    }) as unknown as Sql;
+    await expect(
+      runCampaignTriggerLifecycle(invalidClaim, "worker-campaign"),
+    ).rejects.toThrow();
   });
 
   it("classifies completed orders as awards and earlier states as skips", () => {

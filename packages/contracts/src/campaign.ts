@@ -520,6 +520,115 @@ export const campaignPurchaseEvaluationV1 = z
     }
   });
 
+export const campaignTriggerJobV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    jobId: z.uuid(),
+    campaignVersionId: z.uuid(),
+    triggerKind: z.enum([
+      "milestone",
+      "win_back",
+      "tier",
+      "referral",
+      "limited_quantity",
+    ]),
+    action: z.enum(["issue", "reverse"]),
+    sourceReference: z.string().trim().min(1).max(500),
+    occurredAt: offsetDateTime,
+    attemptCount: z.number().int().min(1).max(10),
+  })
+  .strict();
+
+export const campaignTriggerExecutionV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    jobId: z.uuid(),
+    campaignVersionId: z.uuid(),
+    action: z.enum(["issue", "reverse"]),
+    outcome: z.enum([
+      "points_awarded",
+      "reward_reserved",
+      "control",
+      "capacity_exhausted",
+      "points_reversed",
+      "reward_cancellation_requested",
+      "reward_already_resolved",
+      "reward_nonreversible",
+      "no_value_to_reverse",
+      "duplicate",
+    ]),
+    allocationId: z.uuid().nullable(),
+    transactionId: z.uuid().nullable(),
+    rewardReservationId: z.uuid().nullable(),
+  })
+  .strict()
+  .superRefine((execution, context) => {
+    const hasAllocation = execution.allocationId !== null;
+    const hasTransaction = execution.transactionId !== null;
+    const hasReservation = execution.rewardReservationId !== null;
+    if (
+      execution.outcome === "points_awarded" &&
+      (!hasAllocation || !hasTransaction || hasReservation)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["outcome"],
+        message: "Point awards require allocation and ledger evidence",
+      });
+    }
+    if (
+      execution.outcome === "reward_reserved" &&
+      (!hasAllocation || hasTransaction || !hasReservation)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["outcome"],
+        message: "Reward grants require allocation and reservation evidence",
+      });
+    }
+    if (
+      execution.outcome === "points_reversed" &&
+      (hasAllocation || !hasTransaction || hasReservation)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["outcome"],
+        message: "Point reversals require only their compensating transaction",
+      });
+    }
+    if (
+      ["control", "capacity_exhausted"].includes(execution.outcome) &&
+      (hasAllocation || hasTransaction || hasReservation)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["outcome"],
+        message: "Non-value outcomes cannot expose value evidence",
+      });
+    }
+    if (
+      execution.outcome === "no_value_to_reverse" &&
+      (hasAllocation || hasTransaction || hasReservation)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["outcome"],
+        message: "A zero-value reversal cannot carry value evidence",
+      });
+    }
+    if (
+      execution.outcome.startsWith("reward_") &&
+      execution.outcome !== "reward_reserved" &&
+      (hasAllocation || hasTransaction || !hasReservation)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["outcome"],
+        message: "Reward resolutions require only their reservation identity",
+      });
+    }
+  });
+
 export type CampaignScheduleV1 = z.infer<typeof campaignScheduleV1>;
 export type CampaignRewardV1 = z.infer<typeof campaignRewardV1>;
 export type CampaignBehaviorV1 = z.infer<typeof campaignBehaviorV1>;
@@ -537,4 +646,8 @@ export type CampaignPurchaseDecisionV1 = z.infer<
 >;
 export type CampaignPurchaseEvaluationV1 = z.infer<
   typeof campaignPurchaseEvaluationV1
+>;
+export type CampaignTriggerJobV1 = z.infer<typeof campaignTriggerJobV1>;
+export type CampaignTriggerExecutionV1 = z.infer<
+  typeof campaignTriggerExecutionV1
 >;

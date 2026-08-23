@@ -28,6 +28,14 @@ try {
       values (${organization.id}, 'probe', 'Campaign Capacity Group')
       returning id
     `;
+    const [programme] = await sql`
+      insert into loyalty.programmes (
+        organization_id, programme_group_id, slug, name
+      ) values (
+        ${organization.id}, ${group.id}, 'probe', 'Campaign Capacity Programme'
+      )
+      returning id
+    `;
     const customers = await sql`
       insert into loyalty.customers (organization_id, display_reference)
       values
@@ -114,9 +122,11 @@ try {
     }
     const [campaign] = await sql`
       insert into loyalty.campaigns (
-        organization_id, programme_group_id, code, created_by_user_id
+        organization_id, programme_group_id, programme_id, code,
+        created_by_user_id
       ) values (
-        ${organization.id}, ${group.id}, 'one_reward', ${actorId}
+        ${organization.id}, ${group.id}, ${programme.id}, 'one_reward',
+        ${actorId}
       ) returning id
     `;
     const startsAt = new Date(Date.now() - 60_000).toISOString();

@@ -2,7 +2,118 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(62);
+select plan(103);
+
+select has_table(
+  'loyalty_private', 'campaign_trigger_jobs',
+  'canonical non-purchase campaign work has a private lease queue'
+);
+select has_table(
+  'loyalty_private', 'campaign_trigger_job_attempts',
+  'campaign trigger retries retain immutable bounded attempt evidence'
+);
+select has_table(
+  'loyalty_private', 'campaign_trigger_executions',
+  'campaign trigger outcomes retain immutable value and control evidence'
+);
+select ok(
+  (select relrowsecurity from pg_class
+   where oid = 'loyalty_private.campaign_trigger_jobs'::regclass),
+  'campaign trigger jobs have RLS enabled'
+);
+select ok(
+  (select relrowsecurity from pg_class
+   where oid = 'loyalty_private.campaign_trigger_job_attempts'::regclass),
+  'campaign trigger attempts have RLS enabled'
+);
+select ok(
+  (select relrowsecurity from pg_class
+   where oid = 'loyalty_private.campaign_trigger_executions'::regclass),
+  'campaign trigger executions have RLS enabled'
+);
+select has_trigger(
+  'loyalty_private', 'campaign_trigger_jobs',
+  'campaign_trigger_jobs_protect',
+  'campaign trigger identity and lifecycle are protected'
+);
+select has_trigger(
+  'loyalty_private', 'campaign_trigger_executions',
+  'campaign_trigger_executions_immutable',
+  'campaign trigger execution evidence cannot be rewritten'
+);
+select has_trigger(
+  'loyalty', 'reward_reservations',
+  'reward_reservations_settle_campaign_funding',
+  'campaign-funded cancellation settles back to the control account'
+);
+select ok(
+  has_function_privilege(
+    'loyalty_worker',
+    'loyalty_private.enqueue_due_limited_campaigns_v1(timestamp with time zone,integer)',
+    'EXECUTE'
+  ),
+  'worker can materialize only bounded due limited campaign work'
+);
+select ok(
+  has_function_privilege(
+    'loyalty_worker',
+    'loyalty_private.claim_due_campaign_trigger_jobs_v1(text,integer,integer)',
+    'EXECUTE'
+  ),
+  'worker can claim bounded campaign trigger leases'
+);
+select ok(
+  has_function_privilege(
+    'loyalty_worker',
+    'loyalty_private.execute_campaign_trigger_job_v1(uuid,text)',
+    'EXECUTE'
+  ),
+  'worker can execute one owned campaign trigger lease'
+);
+select ok(
+  has_function_privilege(
+    'loyalty_worker',
+    'loyalty_private.finish_campaign_trigger_job_v1(uuid,text,text,integer)',
+    'EXECUTE'
+  ),
+  'worker can settle one failed campaign trigger lease'
+);
+select ok(
+  not has_function_privilege(
+    'loyalty_worker',
+    'loyalty_private.enqueue_campaign_trigger_job_v1(bigint,bigint,bigint,text,text,text,bigint,bigint,bigint,bigint,bigint,bigint,bigint,jsonb,timestamp with time zone)',
+    'EXECUTE'
+  ),
+  'worker cannot choose canonical campaign trigger identity'
+);
+select ok(
+  not has_function_privilege(
+    'loyalty_worker',
+    'loyalty_private.create_campaign_reward_reservation_v1(bigint,bigint,text)',
+    'EXECUTE'
+  ),
+  'worker cannot directly fund a campaign reward reservation'
+);
+select ok(
+  not has_function_privilege(
+    'authenticated',
+    'loyalty_private.execute_campaign_trigger_job_v1(uuid,text)',
+    'EXECUTE'
+  ),
+  'browser sessions cannot execute campaign value'
+);
+select ok(
+  not has_table_privilege(
+    'loyalty_worker', 'loyalty_private.campaign_trigger_jobs', 'SELECT'
+  ),
+  'worker cannot enumerate private campaign trigger jobs'
+);
+select ok(
+  not has_table_privilege(
+    'authenticated', 'loyalty_private.campaign_trigger_executions', 'SELECT'
+  ),
+  'browser sessions cannot enumerate private campaign execution evidence'
+);
 
 select has_table(
   'loyalty_private', 'campaign_capacity_counters',
@@ -220,7 +331,7 @@ as $$
       {"code":"rose","name":"Rose","minimumEligibleSpendMinor":"0","pointsPerMajorUnit":"5"}
     ],
     "rewards":[
-      {"code":"five_euro","name":"Five euro reward","kind":"fixed_discount","costPoints":"100","configuration":{"amountMinor":"500","currencyMinorUnitDigits":2,"validityDays":30}}
+      {"code":"five_euro","name":"Five euro reward","kind":"fixed_discount","costPoints":"100","configuration":{"version":"2","fulfilmentMode":"woocommerce_coupon","validityDays":30,"amountMinor":"500","currencyMinorUnitDigits":2,"availability":{"startsAt":null,"endsAt":null,"tierCodes":[],"segmentCodes":[],"perCustomerLimit":3,"globalQuantity":"3","pointsBudget":"300"},"restrictions":{"minimumSpendMinor":null,"productIds":[],"excludedProductIds":[],"categoryIds":[],"excludedCategoryIds":[],"excludeSaleItems":false,"stacking":"exclusive"}}}
     ],
     "earningRules":[
       {
@@ -265,6 +376,14 @@ select lives_ok(
     now() - interval '1 minute', null
   ) $$,
   'fixture enables campaigns for the canary organization'
+);
+select lives_ok(
+  $$ select loyalty_private.set_organization_entitlement(
+    '8b000000-0000-4000-8000-000000000100', 'rewards.expanded', 'enabled', null,
+    'canary', 'test:m07-capacity', 'Enable V2 native campaign rewards',
+    now() - interval '30 seconds', null
+  ) $$,
+  'fixture enables expanded native rewards for campaign-funded fulfilment'
 );
 
 set local role authenticated;
@@ -472,6 +591,39 @@ select results_eq(
   $$ select outcome from loyalty.create_campaign_draft_command(
     '8b000000-0000-4000-8000-000000000101',
     pg_temp.m07_campaign_definition(
+      'milestone_execution',
+      '{"kind":"milestone","metric":"order_count","threshold":"1","activityCodes":[],"reward":{"kind":"points","points":"30"}}'::jsonb,
+      pg_temp.m07_points_capacity('1', '30')
+    ), 'm07:capacity:campaign:milestone-execution:draft',
+    '8b000000-0000-4000-8000-000000000505'
+  ) $$,
+  array['created'::text],
+  'owner creates a milestone campaign for atomic trigger execution'
+);
+select results_eq(
+  $$ select outcome from loyalty.create_campaign_draft_command(
+    '8b000000-0000-4000-8000-000000000101',
+    pg_temp.m07_campaign_definition(
+      'milestone_reward_execution',
+      pg_catalog.jsonb_build_object(
+        'kind', 'milestone', 'metric', 'order_count', 'threshold', '1',
+        'activityCodes', pg_catalog.jsonb_build_array(),
+        'reward', pg_catalog.jsonb_build_object(
+          'kind', 'programme_reward', 'rewardId',
+          (select public_id from loyalty.programme_rewards
+           where code = 'five_euro')
+        )
+      ), pg_temp.m07_liability_capacity()
+    ), 'm07:capacity:campaign:milestone-reward-execution:draft',
+    '8b000000-0000-4000-8000-000000000506'
+  ) $$,
+  array['created'::text],
+  'owner creates a native-reward milestone campaign'
+);
+select results_eq(
+  $$ select outcome from loyalty.create_campaign_draft_command(
+    '8b000000-0000-4000-8000-000000000101',
+    pg_temp.m07_campaign_definition(
       'limited_reward',
       pg_catalog.jsonb_build_object(
         'kind', 'limited_quantity',
@@ -488,6 +640,25 @@ select results_eq(
   array['created'::text],
   'owner creates a liability-bounded limited reward campaign'
 );
+select results_eq(
+  $$ select outcome from loyalty.create_campaign_draft_command(
+    '8b000000-0000-4000-8000-000000000101',
+    pg_temp.m07_campaign_definition(
+      'limited_execution',
+      pg_catalog.jsonb_build_object(
+        'kind', 'limited_quantity',
+        'reward', pg_catalog.jsonb_build_object(
+          'kind', 'programme_reward', 'rewardId',
+          (select public_id from loyalty.programme_rewards
+           where code = 'five_euro')
+        )
+      ), pg_temp.m07_liability_capacity()
+    ), 'm07:capacity:campaign:limited-execution:draft',
+    '8b000000-0000-4000-8000-000000000507'
+  ) $$,
+  array['created'::text],
+  'owner creates a limited native reward for scheduled execution'
+);
 
 select lives_ok(
   $$ select loyalty.approve_campaign_version_command(
@@ -497,7 +668,10 @@ select lives_ok(
       when 'autumn_bonus' then '8b000000-0000-4000-8000-000000000511'::uuid
       when 'priority_multiplier' then '8b000000-0000-4000-8000-000000000512'::uuid
       when 'milestone_points' then '8b000000-0000-4000-8000-000000000513'::uuid
-      else '8b000000-0000-4000-8000-000000000514'::uuid
+      when 'limited_reward' then '8b000000-0000-4000-8000-000000000514'::uuid
+      when 'milestone_execution' then '8b000000-0000-4000-8000-000000000515'::uuid
+      when 'milestone_reward_execution' then '8b000000-0000-4000-8000-000000000516'::uuid
+      else '8b000000-0000-4000-8000-000000000517'::uuid
     end
   )
   from loyalty.campaign_versions as version
@@ -505,7 +679,7 @@ select lives_ok(
     on campaign.organization_id = version.organization_id
    and campaign.id = version.campaign_id
   order by campaign.code $$,
-  'all four reviewed campaigns approve with immutable treatment assignments'
+  'all reviewed campaigns approve with immutable treatment assignments'
 );
 reset role;
 
@@ -585,6 +759,28 @@ $$;
 revoke all on function pg_temp.m07_allocation_ref(text) from public;
 grant execute on function pg_temp.m07_allocation_ref(text) to loyalty_worker;
 
+create function pg_temp.m07_job_ref(target_code text, target_action text)
+returns uuid
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select job.public_id
+  from loyalty_private.campaign_trigger_jobs as job
+  join loyalty.campaign_versions as version
+    on version.organization_id = job.organization_id
+   and version.id = job.campaign_version_id
+  join loyalty.campaigns as campaign
+    on campaign.organization_id = version.organization_id
+   and campaign.id = version.campaign_id
+  where campaign.organization_id = pg_temp.m07_ref('organization')
+    and campaign.code = target_code and job.action = target_action
+  order by job.id desc limit 1;
+$$;
+revoke all on function pg_temp.m07_job_ref(text, text) from public;
+grant execute on function pg_temp.m07_job_ref(text, text) to loyalty_worker;
+
 create function pg_temp.m07_event_time()
 returns timestamptz
 language sql
@@ -628,6 +824,18 @@ select '8b000000-0000-4000-8000-000000000601', inbox.organization_id,
   '{}'::jsonb
 from loyalty_private.commerce_delivery_inbox as inbox
 where inbox.source_delivery_id = 'm07-capacity-delivery';
+
+insert into loyalty.customer_identities (
+  organization_id, customer_id, commerce_connection_id,
+  external_customer_id, identity_kind, verified_at
+)
+select customer.organization_id, customer.id, connection.id,
+  'registered:77', 'registered', pg_catalog.clock_timestamp()
+from loyalty.customers as customer
+join loyalty.commerce_connections as connection
+  on connection.organization_id = customer.organization_id
+where customer.public_id = '8b000000-0000-4000-8000-000000000201'
+  and connection.public_id = '8b000000-0000-4000-8000-000000000103';
 
 insert into m07_capacity_refs
 select 'event', event.id
@@ -938,6 +1146,299 @@ select throws_ok(
   $$ delete from loyalty_private.campaign_execution_batches $$,
   '55000', 'immutable loyalty history cannot be changed',
   'campaign execution history cannot be deleted'
+);
+
+select results_eq(
+  $$ select count(*)::bigint
+     from loyalty.campaigns as campaign
+     join loyalty.programmes as programme
+       on programme.organization_id = campaign.organization_id
+      and programme.programme_group_id = campaign.programme_group_id
+      and programme.id = campaign.programme_id
+     where campaign.organization_id = pg_temp.m07_ref('organization') $$,
+  array[7::bigint],
+  'every stable campaign is bound to the exact authenticated programme'
+);
+select results_eq(
+  $$ select count(*)::bigint
+     from loyalty_private.campaign_trigger_jobs as job
+     join loyalty.campaign_versions as version
+       on version.organization_id = job.organization_id
+      and version.id = job.campaign_version_id
+     where job.trigger_kind = 'milestone' and job.action = 'issue' $$,
+  array[3::bigint],
+  'one canonical purchase fact enqueues each matching milestone exactly once'
+);
+
+set local role loyalty_worker;
+select results_eq(
+  $$ select count(*)::bigint
+     from loyalty_private.claim_due_campaign_trigger_jobs_v1(
+       'campaign-test-worker', 25, 60
+     ) $$,
+  array[3::bigint],
+  'worker claims the three canonical milestone jobs in one bounded lease batch'
+);
+select results_eq(
+  $$ select outcome, allocation_id is not null,
+       transaction_id is not null, reward_reservation_id is null
+     from loyalty_private.execute_campaign_trigger_job_v1(
+       pg_temp.m07_job_ref('milestone_execution', 'issue'),
+       'campaign-test-worker'
+     ) $$,
+  $$ values ('points_awarded'::text, true, true, true) $$,
+  'milestone points reserve capacity and commit attributable released value atomically'
+);
+select results_eq(
+  $$ select outcome, allocation_id is not null,
+       transaction_id is null, reward_reservation_id is not null
+     from loyalty_private.execute_campaign_trigger_job_v1(
+       pg_temp.m07_job_ref('milestone_reward_execution', 'issue'),
+       'campaign-test-worker'
+     ) $$,
+  $$ values ('reward_reserved'::text, true, true, true) $$,
+  'milestone native reward reserves campaign funding and enqueues fulfilment atomically'
+);
+select results_eq(
+  $$ select state, outcome
+     from loyalty_private.finish_campaign_trigger_job_v1(
+       pg_temp.m07_job_ref('milestone_points', 'issue'),
+       'campaign-test-worker', 'fixture_deferred', 60
+     ) $$,
+  $$ values ('retryable'::text, 'retryable'::text) $$,
+  'a deferred canonical trigger releases its lease without consuming capacity'
+);
+reset role;
+
+select results_eq(
+  $$ select
+       (select points from loyalty.wallet_balances
+        where organization_id = pg_temp.m07_ref('organization')
+          and wallet_id = pg_temp.m07_ref('wallet')
+          and account_kind = 'available'),
+       (select points from loyalty.wallet_balances
+        where organization_id = pg_temp.m07_ref('organization')
+          and wallet_id = pg_temp.m07_ref('wallet')
+          and account_kind = 'reserved'),
+       (select count(*)::bigint from loyalty.reward_reservations
+        where funding_kind = 'campaign' and state = 'reserved'),
+       (select count(*)::bigint
+        from loyalty_private.campaign_trigger_executions) $$,
+  $$ values (30::bigint, 100::bigint, 1::bigint, 2::bigint) $$,
+  'campaign-funded reward changes reserved only while points reward is released to available'
+);
+
+insert into loyalty_private.commerce_delivery_inbox (
+  organization_id, connection_id, source_delivery_id, envelope_version,
+  source_event_id, event_type, source_object_id, occurred_at, delivered_at,
+  key_version, nonce, body_sha256, raw_body, state, processed_at
+)
+select organization.id, connection.id, 'm07-capacity-refund-delivery', '1',
+  'm07-capacity-refund-event', 'commerce.order.refunded', 'order-1',
+  pg_temp.m07_event_time() + interval '2 hours',
+  pg_temp.m07_event_time() + interval '2 hours', 'v1',
+  'm07-capacity-refund-nonce', repeat('b', 64), '{}'::jsonb, 'applied',
+  pg_temp.m07_event_time() + interval '2 hours'
+from loyalty.organizations as organization
+join loyalty.commerce_connections as connection
+  on connection.organization_id = organization.id
+where organization.slug = 'm07-capacity';
+
+insert into loyalty_private.canonical_commerce_events (
+  public_id, organization_id, connection_id, delivery_inbox_id,
+  source_event_id, normalization_version, event_type, source_object_id,
+  occurred_at, payload
+)
+select '8b000000-0000-4000-8000-000000000602', inbox.organization_id,
+  inbox.connection_id, inbox.id, 'm07-capacity-refund-event', 'v1',
+  'commerce.order.refunded', 'order-1',
+  pg_temp.m07_event_time() + interval '2 hours', '{}'::jsonb
+from loyalty_private.commerce_delivery_inbox as inbox
+where inbox.source_delivery_id = 'm07-capacity-refund-delivery';
+
+insert into loyalty_private.programme_evaluations (
+  public_id, organization_id, programme_group_id, programme_version_id,
+  canonical_event_id, evaluation_kind, subject_reference, idempotency_key,
+  input_sha256, result_sha256, result, explanation, evaluated_at
+)
+select '8b000000-0000-4000-8000-000000000603',
+  pg_temp.m07_ref('organization'), pg_temp.m07_ref('group'),
+  pg_temp.m07_ref('version'), event.id, 'live_refund',
+  'woocommerce:order:1:refund:1', 'm07:capacity:refund:evaluation',
+  decode(repeat('a', 64), 'hex'), decode(repeat('b', 64), 'hex'),
+  '{"version":"2","source":"refund","reversalPoints":"5"}'::jsonb,
+  '{"rule":"cumulative_refund"}'::jsonb,
+  pg_temp.m07_event_time() + interval '2 hours'
+from loyalty_private.canonical_commerce_events as event
+where event.public_id = '8b000000-0000-4000-8000-000000000602';
+
+insert into loyalty_private.tier_qualification_facts (
+  public_id, organization_id, programme_group_id,
+  source_programme_version_id, customer_id, canonical_event_id,
+  evaluation_id, origin_fact_id, fact_kind, source_reference,
+  eligible_spend_minor_delta, earned_points_delta, order_count_delta,
+  referral_count_delta, verified_action_count_delta, activity_code,
+  effective_at, recorded_at
+)
+select '8b000000-0000-4000-8000-000000000604',
+  original.organization_id, original.programme_group_id,
+  original.source_programme_version_id, original.customer_id, event.id,
+  evaluation.id, original.id, 'refund',
+  'campaign-test-refund:' || event.public_id::text,
+  -original.eligible_spend_minor_delta, -original.earned_points_delta, -1,
+  0, 0, null, event.occurred_at, event.occurred_at
+from loyalty_private.tier_qualification_facts as original
+join loyalty_private.canonical_commerce_events as event
+  on event.public_id = '8b000000-0000-4000-8000-000000000602'
+join loyalty_private.programme_evaluations as evaluation
+  on evaluation.public_id = '8b000000-0000-4000-8000-000000000603'
+where original.organization_id = pg_temp.m07_ref('organization')
+  and original.fact_kind = 'purchase';
+
+select results_eq(
+  $$ select state, count(*)::bigint
+     from loyalty_private.campaign_trigger_jobs as job
+     join loyalty.campaign_versions as version
+       on version.organization_id = job.organization_id
+      and version.id = job.campaign_version_id
+     join loyalty.campaigns as campaign
+       on campaign.organization_id = version.organization_id
+      and campaign.id = version.campaign_id
+     where campaign.code in (
+       'milestone_points', 'milestone_execution',
+       'milestone_reward_execution'
+     ) and (job.action = 'reverse' or campaign.code = 'milestone_points')
+     group by state order by state $$,
+  $$ values ('cancelled'::text, 1::bigint),
+            ('pending'::text, 2::bigint) $$,
+  'refund cancels unaccepted work and enqueues one compensation per accepted effect'
+);
+
+set local role loyalty_worker;
+select results_eq(
+  $$ select count(*)::bigint
+     from loyalty_private.claim_due_campaign_trigger_jobs_v1(
+       'campaign-test-worker', 25, 60
+     ) $$,
+  array[2::bigint],
+  'worker claims only the two refund compensation jobs'
+);
+select results_eq(
+  $$ select outcome, transaction_id is not null
+     from loyalty_private.execute_campaign_trigger_job_v1(
+       pg_temp.m07_job_ref('milestone_execution', 'reverse'),
+       'campaign-test-worker'
+     ) $$,
+  $$ values ('points_reversed'::text, true) $$,
+  'refund appends one full immutable reversal of campaign points'
+);
+select results_eq(
+  $$ select outcome, reward_reservation_id is not null
+     from loyalty_private.execute_campaign_trigger_job_v1(
+       pg_temp.m07_job_ref('milestone_reward_execution', 'reverse'),
+       'campaign-test-worker'
+     ) $$,
+  $$ values ('reward_already_resolved'::text, true) $$,
+  'undelivered native reward is cancelled and campaign funding is compensated atomically'
+);
+reset role;
+
+select results_eq(
+  $$ select
+       (select points from loyalty.wallet_balances
+        where organization_id = pg_temp.m07_ref('organization')
+          and wallet_id = pg_temp.m07_ref('wallet')
+          and account_kind = 'available'),
+       (select points from loyalty.wallet_balances
+        where organization_id = pg_temp.m07_ref('organization')
+          and wallet_id = pg_temp.m07_ref('wallet')
+          and account_kind = 'reserved'),
+       (select points from loyalty.wallet_balances
+        where organization_id = pg_temp.m07_ref('organization')
+          and wallet_id is null and account_kind = 'adjustment'),
+       (select state from loyalty.reward_reservations
+        where funding_kind = 'campaign' order by id limit 1),
+       (select state from loyalty_private.transactional_outbox
+        where topic = 'woocommerce.coupon.issue' order by id limit 1) $$,
+  $$ values (0::bigint, 0::bigint, 0::bigint,
+             'released'::text, 'cancelled'::text) $$,
+  'refund leaves member available and reserved neutral and returns funding to the control account'
+);
+
+set local role loyalty_worker;
+select results_eq(
+  $$ select outcome
+     from loyalty_private.execute_campaign_trigger_job_v1(
+       pg_temp.m07_job_ref('milestone_execution', 'reverse'),
+       'campaign-test-worker'
+     ) $$,
+  array['duplicate'::text],
+  'exact reversal retry returns immutable evidence without another compensation'
+);
+select results_eq(
+  $$ select loyalty_private.enqueue_due_limited_campaigns_v1(
+       pg_temp.m07_event_time(), 100
+     ) $$,
+  array[2::bigint],
+  'schedule-open sweep materializes one job per limited campaign assignment'
+);
+select results_eq(
+  $$ select count(*)::bigint
+     from loyalty_private.claim_due_campaign_trigger_jobs_v1(
+       'campaign-test-worker', 25, 60
+     ) $$,
+  array[2::bigint],
+  'limited campaign jobs use the same bounded lease queue'
+);
+select results_eq(
+  $$ select outcome, reward_reservation_id is not null
+     from loyalty_private.execute_campaign_trigger_job_v1(
+       pg_temp.m07_job_ref('limited_execution', 'issue'),
+       'campaign-test-worker'
+     ) $$,
+  $$ values ('reward_reserved'::text, true) $$,
+  'limited campaign atomically reserves quantity liability reward funding and native fulfilment'
+);
+select results_eq(
+  $$ select state
+     from loyalty_private.finish_campaign_trigger_job_v1(
+       pg_temp.m07_job_ref('limited_reward', 'issue'),
+       'campaign-test-worker', 'fixture_deferred', 60
+     ) $$,
+  array['retryable'::text],
+  'unexecuted limited work releases its lease without reserving value'
+);
+reset role;
+
+select results_eq(
+  $$ select
+       (select points from loyalty.wallet_balances
+        where organization_id = pg_temp.m07_ref('organization')
+          and wallet_id = pg_temp.m07_ref('wallet')
+          and account_kind = 'available'),
+       (select points from loyalty.wallet_balances
+        where organization_id = pg_temp.m07_ref('organization')
+          and wallet_id = pg_temp.m07_ref('wallet')
+          and account_kind = 'reserved'),
+       (select count(*)::bigint from loyalty.reward_reservations
+        where funding_kind = 'campaign' and state = 'reserved'),
+       (select counter.committed_liability_minor
+        from loyalty_private.campaign_capacity_counters as counter
+        join loyalty.campaign_versions as version
+          on version.organization_id = counter.organization_id
+         and version.id = counter.campaign_version_id
+        join loyalty.campaigns as campaign
+          on campaign.organization_id = version.organization_id
+         and campaign.id = version.campaign_id
+        where campaign.code = 'limited_execution') $$,
+  $$ values (0::bigint, 100::bigint, 1::bigint, 5000::bigint) $$,
+  'limited native grant is member-balance neutral and reconciles committed liability'
+);
+select throws_ok(
+  $$ update loyalty_private.campaign_trigger_jobs
+     set source_reference = source_reference || ':changed' $$,
+  '55000', 'campaign trigger job identity is immutable',
+  'canonical trigger identity cannot be rewritten'
 );
 
 set local role loyalty_worker;

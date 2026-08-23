@@ -5,6 +5,8 @@ import {
   tierQualificationEvaluationV2,
   merchantActivityPayloadV1,
   campaignPurchaseCandidateV1,
+  campaignTriggerExecutionV1,
+  campaignTriggerJobV1,
   wooCommerceCouponCapturedPayloadV1,
   wooCommerceCustomerCreatedPayloadV1,
   wooCommerceCustomerDeletedPayloadV1,
@@ -14,6 +16,7 @@ import {
   type WooCommerceOrderFactV1,
   type ProgrammeDefinitionV2,
   type CampaignPurchaseCandidateV1,
+  type CampaignTriggerExecutionV1,
 } from "@starfiniti/contracts";
 import {
   calculateRefundReversal,
@@ -834,6 +837,153 @@ export async function runReferralRewardLifecycle(
     claimed: jobs.length,
     completed,
     cancelled,
+    retryable,
+    manualReview,
+  };
+}
+
+type ClaimedCampaignTriggerJob = Readonly<{
+  job_id: string;
+  campaign_version_id: string;
+  trigger_kind: string;
+  action: string;
+  source_reference: string;
+  occurred_at: string | Date;
+  attempt_count: number | string;
+}>;
+
+type CampaignTriggerExecutionRow = Readonly<{
+  job_id: string;
+  campaign_version_id: string;
+  action: string;
+  outcome: string;
+  allocation_id: string | null;
+  transaction_id: string | null;
+  reward_reservation_id: string | null;
+}>;
+
+export type CampaignTriggerLifecycleResult = Readonly<{
+  enqueued: number;
+  claimed: number;
+  completed: number;
+  reversed: number;
+  controls: number;
+  capacityExhausted: number;
+  retryable: number;
+  manualReview: number;
+}>;
+
+export async function runCampaignTriggerLifecycle(
+  sql: Sql,
+  workerId: string,
+): Promise<CampaignTriggerLifecycleResult> {
+  const enqueuedRows = await sql<{ enqueued: number | string }[]>`
+    select loyalty_private.enqueue_due_limited_campaigns_v1(
+      clock_timestamp(), 100
+    ) as enqueued
+  `;
+  const enqueued = Number(enqueuedRows[0]?.enqueued);
+  if (!Number.isSafeInteger(enqueued) || enqueued < 0 || enqueued > 100) {
+    throw new Error("invalid_limited_campaign_enqueue_result");
+  }
+  const rows = await sql<ClaimedCampaignTriggerJob[]>`
+    select job_id::text, campaign_version_id::text, trigger_kind, action,
+      source_reference, occurred_at, attempt_count
+    from loyalty_private.claim_due_campaign_trigger_jobs_v1(
+      ${workerId}, 25, 60
+    )
+  `;
+  if (rows.length > 25) {
+    throw new Error("invalid_campaign_trigger_claim_result");
+  }
+  const jobs = rows.map((row) =>
+    campaignTriggerJobV1.parse({
+      schemaVersion: "1",
+      jobId: row.job_id,
+      campaignVersionId: row.campaign_version_id,
+      triggerKind: row.trigger_kind,
+      action: row.action,
+      sourceReference: row.source_reference,
+      occurredAt:
+        row.occurred_at instanceof Date
+          ? row.occurred_at.toISOString()
+          : row.occurred_at,
+      attemptCount: Number(row.attempt_count),
+    }),
+  );
+  let completed = 0;
+  let reversed = 0;
+  let controls = 0;
+  let capacityExhausted = 0;
+  let retryable = 0;
+  let manualReview = 0;
+  for (const job of jobs) {
+    try {
+      const executions = await sql<CampaignTriggerExecutionRow[]>`
+        select job_id::text, campaign_version_id::text, action, outcome,
+          allocation_id::text, transaction_id::text,
+          reward_reservation_id::text
+        from loyalty_private.execute_campaign_trigger_job_v1(
+          ${job.jobId}::uuid, ${workerId}
+        )
+      `;
+      const row = executions[0];
+      if (!row) throw new Error("campaign_trigger_execution_unavailable");
+      const execution: CampaignTriggerExecutionV1 =
+        campaignTriggerExecutionV1.parse({
+          schemaVersion: "1",
+          jobId: row.job_id,
+          campaignVersionId: row.campaign_version_id,
+          action: row.action,
+          outcome: row.outcome,
+          allocationId: row.allocation_id,
+          transactionId: row.transaction_id,
+          rewardReservationId: row.reward_reservation_id,
+        });
+      if (
+        execution.jobId !== job.jobId ||
+        execution.campaignVersionId !== job.campaignVersionId ||
+        execution.action !== job.action
+      ) {
+        throw new Error("campaign_trigger_execution_identity_mismatch");
+      }
+      completed += 1;
+      if (
+        execution.outcome === "points_reversed" ||
+        (execution.outcome.startsWith("reward_") &&
+          execution.outcome !== "reward_reserved")
+      ) {
+        reversed += 1;
+      }
+      if (execution.outcome === "control") controls += 1;
+      if (execution.outcome === "capacity_exhausted") {
+        capacityExhausted += 1;
+      }
+    } catch {
+      const finishes = await sql<{ state: string; outcome: string }[]>`
+        select state, outcome
+        from loyalty_private.finish_campaign_trigger_job_v1(
+          ${job.jobId}::uuid,
+          ${workerId},
+          'campaign_trigger_execution_failed',
+          ${retryDelay(job.attemptCount)}
+        )
+      `;
+      const finish = finishes[0];
+      if (!finish || !["retryable", "manual_review"].includes(finish.state)) {
+        throw new Error("invalid_campaign_trigger_finish_result");
+      }
+      if (finish.state === "manual_review") manualReview += 1;
+      else retryable += 1;
+    }
+  }
+  return {
+    enqueued,
+    claimed: jobs.length,
+    completed,
+    reversed,
+    controls,
+    capacityExhausted,
     retryable,
     manualReview,
   };

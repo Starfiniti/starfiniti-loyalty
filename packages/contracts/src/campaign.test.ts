@@ -5,6 +5,8 @@ import {
   campaignPurchaseEvaluationV1,
   campaignPreviewV1,
   campaignScheduleV1,
+  campaignTriggerExecutionV1,
+  campaignTriggerJobV1,
   merchantPauseCampaignVersionCommandV1,
 } from "./campaign";
 
@@ -342,6 +344,94 @@ describe("campaign purchase execution evidence", () => {
             outcome: "control",
           },
         ],
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe("campaign non-purchase trigger evidence", () => {
+  const job = {
+    schemaVersion: "1" as const,
+    jobId: "87000000-0000-4000-8000-000000000901",
+    campaignVersionId: "87000000-0000-4000-8000-000000000902",
+    triggerKind: "milestone" as const,
+    action: "issue" as const,
+    sourceReference: "tier-fact:87000000-0000-4000-8000-000000000903",
+    occurredAt: "2026-08-23T18:30:00+02:00",
+    attemptCount: 1,
+  };
+
+  it("accepts one bounded leased canonical trigger", () => {
+    expect(campaignTriggerJobV1.parse(job)).toEqual(job);
+    expect(
+      campaignTriggerJobV1.safeParse({ ...job, attemptCount: 11 }).success,
+    ).toBe(false);
+    expect(
+      campaignTriggerJobV1.safeParse({
+        ...job,
+        sourceReference: `fact:${"x".repeat(501)}`,
+      }).success,
+    ).toBe(false);
+  });
+
+  it.each([
+    {
+      outcome: "points_awarded",
+      allocationId: "87000000-0000-4000-8000-000000000904",
+      transactionId: "87000000-0000-4000-8000-000000000905",
+      rewardReservationId: null,
+    },
+    {
+      outcome: "reward_reserved",
+      allocationId: "87000000-0000-4000-8000-000000000904",
+      transactionId: null,
+      rewardReservationId: "87000000-0000-4000-8000-000000000906",
+    },
+    {
+      outcome: "control",
+      allocationId: null,
+      transactionId: null,
+      rewardReservationId: null,
+    },
+    {
+      outcome: "points_reversed",
+      allocationId: null,
+      transactionId: "87000000-0000-4000-8000-000000000907",
+      rewardReservationId: null,
+    },
+    {
+      outcome: "reward_cancellation_requested",
+      allocationId: null,
+      transactionId: null,
+      rewardReservationId: "87000000-0000-4000-8000-000000000906",
+    },
+  ] as const)("accepts reconciled $outcome evidence", (evidence) => {
+    expect(
+      campaignTriggerExecutionV1.safeParse({
+        schemaVersion: "1",
+        jobId: job.jobId,
+        campaignVersionId: job.campaignVersionId,
+        action: evidence.outcome.includes("revers")
+          ? "reverse"
+          : evidence.outcome.startsWith("reward_cancellation")
+            ? "reverse"
+            : "issue",
+        ...evidence,
+      }).success,
+    ).toBe(true);
+  });
+
+  it("rejects value outcomes without their exact evidence", () => {
+    expect(
+      campaignTriggerExecutionV1.safeParse({
+        schemaVersion: "1",
+        jobId: job.jobId,
+        campaignVersionId: job.campaignVersionId,
+        action: "issue",
+        outcome: "points_awarded",
+        allocationId: null,
+        transactionId: "87000000-0000-4000-8000-000000000905",
+        rewardReservationId: null,
       }).success,
     ).toBe(false);
   });

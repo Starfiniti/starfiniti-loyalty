@@ -5,6 +5,7 @@ import {
   enqueueExpiredWooCommerceCouponCancellations,
   expireDueTierOverrides,
   processWooCommerceEffect,
+  runCampaignTriggerLifecycle,
   runPointExpiryLifecycle,
   runReferralRewardLifecycle,
 } from "./processor.ts";
@@ -36,6 +37,7 @@ while (!stopping) {
     await expireDueTierOverrides(sql);
     await runPointExpiryLifecycle(sql);
     await runReferralRewardLifecycle(sql, workerId);
+    await runCampaignTriggerLifecycle(sql, workerId);
     nextCancellationSweepAt = Date.now() + 60_000;
   }
   const events = await claimWooCommerceEffects(sql, workerId);
