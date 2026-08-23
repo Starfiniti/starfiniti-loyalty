@@ -36,3 +36,14 @@ The host service used `borg create --content-from-command` and obtained one tar 
 ## Rollback and follow-up
 
 Timestamped copies of the prior guest `authorized_keys` entry, host script, service, and timer remain on their respective machines. The timer can be disabled immediately without affecting PostgreSQL or local recovery files. Legacy tar-stream archives remain readable during retention; restore procedures must recognize both layouts. Capacity and transfer-size anomaly monitoring remain part of the unfinished M01 operational gate.
+
+## Production revalidation — 2026-08-23
+
+The original 3.60 TB remains visible in VM 971's guest `eth0`, Proxmox `tap971i0`, and `vmbr10` cumulative counters because the virtual NIC has remained running since the incident. It is historical traffic, not a counter scoped to the current day.
+
+- Proxmox one-minute RRD samples for the latest complete 24-hour window measured 139,991,772 bytes (133.51 MiB) total VM egress, 1,620 bytes/second average, and 100,561 bytes/second maximum.
+- A current timer cycle pulled three new immutable WAL files: 50,208 logical bytes plus 223,660 bytes of rsync protocol/file-list traffic. The following Borg archive added 2.81 kB of deduplicated data and completed successfully.
+- The current forced backup identity still terminates in `rrsync -ro`; no `tar --content-from-command` process, active high-volume socket, PostgreSQL replication stream, or external egress spike was present.
+- The historical RRD spike begins with the original VM deployment on 2026-08-13 and ends at the incremental cutover on 2026-08-14. Its disk-read and network-out curves track the old full-tree stream described above.
+
+Operational diagnosis must therefore use a bounded RRD interval and the per-run rsync `Total bytes received` value. Raw interface totals are monotonic since NIC creation and retain historical incident bytes until the NIC is recreated or its host counters are reset; resetting production networking solely to clear the display is not justified.
