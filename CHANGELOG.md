@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Replaced the production PostgreSQL tar-over-stdin Borg pull, which retransmitted the complete 22 GB recovery tree every cycle, with a forced read-only, zstd-compressed incremental rsync stage and normal Borg file caching while retaining host-only repository credentials.
+
 - Added the M07 audience authority foundation: strict allowlisted predicates over canonical loyalty facts, exact bigint TypeScript/domain contracts, independently validated immutable PostgreSQL versions, database-timed private membership snapshots, Auth-derived idempotent commands, and rollback-safe campaign entitlement enforcement without arbitrary SQL, PII selectors, or browser-supplied targeting authority.
 - Added strict contracts for seven campaign behaviors, explicit-instant/IANA schedule evidence with DST gap/overlap checks, immutable audience/exclusion bindings, hard points/liability ceilings, exact decimal preview values, exact salted-hash approval-time treatment/control assignment, and Auth-derived preview/approve/pause/cancel lifecycles without activating value execution.
 - Added atomic campaign effect/points/liability counters, deterministic fixed-bonus and highest-priority multiplier evaluation, one-transaction programme and campaign-attributed ledger commits, immutable exact-retry context, and a two-session last-budget reservation probe.

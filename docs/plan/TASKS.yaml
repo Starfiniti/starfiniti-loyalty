@@ -524,7 +524,7 @@ tasks:
         reconciliation report,
         production alerts,
       ]
-    risks: [R-004, R-005, R-008]
+    risks: [R-004, R-005, R-008, R-033]
     docs:
       [
         docs/integrations/WOOCOMMERCE.md,
@@ -536,6 +536,7 @@ tasks:
       - docs/plan/evidence/M01/pilot.yaml
       - docs/plan/evidence/M01/production-baseline-2026-08-13.md
       - docs/plan/evidence/M01/backup-export-repair-2026-08-13.md
+      - docs/plan/evidence/M01/backup-transfer-amplification-2026-08-14.md
 
   - id: M02-ENTITLEMENTS-AND-FLAGS
     title: Add deployment modes, entitlements, limits, and tenant rollout controls
@@ -822,7 +823,7 @@ tasks:
           - contract PostgreSQL and editor boundaries require every displayed tier rate to equal the executable base-rate multiplier and fail closed on incomplete or inexact legacy migration
           - exact-head run 31760806620 passed a clean 36-migration replay all 32 pgTAP files and 1,494 assertions plus both concurrency probes both images and all four WooCommerce runtimes
           - merge disabled deployment fresh recovery point Starfiniti-only canary zero-drift reconciliation and module score remain open
-    risks: [R-002, R-020, R-033, R-034, R-035]
+    risks: [R-002, R-020, R-034, R-035, R-036]
     docs:
       [
         docs/api/PROGRAMME_ENGINE.md,
