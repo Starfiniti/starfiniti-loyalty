@@ -170,6 +170,18 @@ describe("SMTP notification delivery", () => {
     },
   );
 
+  it("dead-letters deterministic local rendering failures before SMTP submission", () => {
+    const failure = captureFailure(() =>
+      renderNotificationEmail(event, "{{customerEmail}}", "ok", "ok"),
+    );
+
+    expect(classifySmtpDeliveryError(failure)).toEqual({
+      outcome: "dead_letter",
+      responseCode: null,
+      errorCode: "smtp_message_invalid",
+    });
+  });
+
   it("delivers once to a real local SMTP sink with a deterministic message id", async () => {
     const messages: string[] = [];
     const server = new SMTPServer({
@@ -281,4 +293,13 @@ function authorizedDispatch(): Extract<
     ...template,
     event,
   };
+}
+
+function captureFailure(operation: () => unknown): unknown {
+  try {
+    operation();
+  } catch (error) {
+    return error;
+  }
+  throw new Error("expected_operation_to_fail");
 }

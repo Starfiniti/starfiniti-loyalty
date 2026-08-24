@@ -862,7 +862,7 @@ select results_eq(
 select throws_ok(
   $$ update loyalty_private.notification_email_template_versions
      set subject_template = 'rewritten' where template_code = 'points_released' $$,
-  '55000', 'immutable row cannot be changed',
+  '55000', 'immutable loyalty history cannot be changed',
   'template history rejects updates'
 );
 select throws_ok(
@@ -870,7 +870,7 @@ select throws_ok(
      set error_code = 'rewritten' where id = (
        select min(id) from loyalty_private.notification_smtp_delivery_attempts
      ) $$,
-  '55000', 'immutable row cannot be changed',
+  '55000', 'immutable loyalty history cannot be changed',
   'SMTP attempt history rejects updates'
 );
 set local role loyalty_worker;

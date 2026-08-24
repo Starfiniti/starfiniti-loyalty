@@ -356,11 +356,20 @@ export function renderNotificationEmail(
   const subject = interpolateTemplate(subjectTemplate, values, false);
   const text = interpolateTemplate(textTemplate, values, false);
   const html = interpolateTemplate(htmlTemplate, values, true);
-  if (/\r|\n/u.test(subject)) throw new Error("smtp_subject_invalid");
+  if (/\r|\n/u.test(subject)) {
+    throw new SmtpMessageInvalidError("smtp_subject_invalid");
+  }
   return { subject, text, html };
 }
 
 export function classifySmtpDeliveryError(error: unknown): SmtpResult {
+  if (error instanceof SmtpMessageInvalidError) {
+    return {
+      outcome: "dead_letter",
+      responseCode: null,
+      errorCode: "smtp_message_invalid",
+    };
+  }
   if (error instanceof SmtpOutcomeAmbiguousError) {
     return {
       outcome: "manual_review",
@@ -472,7 +481,7 @@ function verifyTemplateHash(
     .digest();
   const expected = Buffer.from(authorization.templateSha256, "hex");
   if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) {
-    throw new Error("smtp_template_hash_mismatch");
+    throw new SmtpMessageInvalidError("smtp_template_hash_mismatch");
   }
 }
 
@@ -526,12 +535,14 @@ function interpolateTemplate(
     /\{\{([A-Za-z][A-Za-z0-9]*)\}\}/gu,
     (_placeholder, token: string) => {
       const value = values[token];
-      if (value === undefined) throw new Error("smtp_template_token_invalid");
+      if (value === undefined) {
+        throw new SmtpMessageInvalidError("smtp_template_token_invalid");
+      }
       return html ? escapeHtml(value) : value;
     },
   );
   if (/\{\{|\}\}/u.test(rendered)) {
-    throw new Error("smtp_template_token_invalid");
+    throw new SmtpMessageInvalidError("smtp_template_token_invalid");
   }
   return rendered;
 }
@@ -594,3 +605,5 @@ class SmtpOutcomeAmbiguousError extends Error {
     super("smtp_outcome_ambiguous");
   }
 }
+
+class SmtpMessageInvalidError extends Error {}
