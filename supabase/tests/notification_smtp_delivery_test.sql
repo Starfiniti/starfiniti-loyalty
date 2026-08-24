@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(82);
+select plan(84);
 
 grant loyalty_worker to current_user;
 grant usage on schema extensions to loyalty_worker;
@@ -59,6 +59,15 @@ select has_function(
   'loyalty_private', 'finish_smtp_notification_delivery_v1',
   array['uuid', 'text', 'text', 'integer', 'text'],
   'SMTP finish function exists'
+);
+select has_function(
+  'loyalty_private', 'resolve_verified_auth_email_v1', array['uuid'],
+  'verified Auth contact uses one narrow bridge'
+);
+select function_owner_is(
+  'loyalty_private', 'resolve_verified_auth_email_v1', array['uuid'],
+  'supabase_auth_admin',
+  'the narrow contact bridge executes with the Auth table owner'
 );
 select ok(
   has_function_privilege(
@@ -121,14 +130,18 @@ select ok(
   'browser sessions cannot enumerate message templates'
 );
 select ok(
-  has_column_privilege('loyalty_owner', 'auth.users', 'email', 'SELECT'),
-  'NOLOGIN function owner can resolve only the authorized Auth contact'
+  has_function_privilege(
+    'loyalty_owner',
+    'loyalty_private.resolve_verified_auth_email_v1(uuid)', 'EXECUTE'
+  ),
+  'NOLOGIN loyalty owner can call the narrow verified-contact bridge'
 );
 select ok(
-  not has_column_privilege(
-    'loyalty_worker', 'auth.users', 'email', 'SELECT'
+  not has_function_privilege(
+    'loyalty_worker',
+    'loyalty_private.resolve_verified_auth_email_v1(uuid)', 'EXECUTE'
   ),
-  'worker cannot query Auth contact outside the security-definer boundary'
+  'worker cannot resolve Auth contact outside dispatch authorization'
 );
 select results_eq(
   $$ select count(*)::bigint

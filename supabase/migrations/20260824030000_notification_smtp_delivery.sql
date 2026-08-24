@@ -275,6 +275,24 @@ as $$
   where event.id = target_event_id and event.purpose = 'loyalty_transactional';
 $$;
 
+create or replace function loyalty_private.resolve_verified_auth_email_v1(
+  target_auth_user_id uuid
+)
+returns text
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select auth_user.email
+  from auth.users as auth_user
+  where auth_user.id = target_auth_user_id
+    and auth_user.email_confirmed_at is not null
+    and auth_user.deleted_at is null
+    and pg_catalog.length(auth_user.email) between 3 and 320
+    and auth_user.email ~ '^[^[:cntrl:][:space:]@]+@[^[:cntrl:][:space:]@]+$';
+$$;
+
 create or replace function loyalty_private.claim_smtp_notification_deliveries_v1(
   target_worker_id text,
   target_batch_size integer default 10,
@@ -480,18 +498,14 @@ begin
     return;
   end if;
 
-  select auth_user.email into resolved_email
+  select loyalty_private.resolve_verified_auth_email_v1(link.auth_user_id)
+    into resolved_email
   from loyalty.customers as customer
   join loyalty.customer_user_links as link
     on link.organization_id = customer.organization_id
    and link.customer_id = customer.id and link.revoked_at is null
-  join auth.users as auth_user on auth_user.id = link.auth_user_id
   where customer.organization_id = delivery.organization_id
     and customer.id = source_event.customer_id and customer.status = 'active'
-    and auth_user.email_confirmed_at is not null
-    and auth_user.deleted_at is null
-    and pg_catalog.length(auth_user.email) between 3 and 320
-    and auth_user.email ~ '^[^[:cntrl:][:space:]@]+@[^[:cntrl:][:space:]@]+$'
   order by link.linked_at desc, link.id desc
   limit 1;
   if resolved_email is null then
@@ -678,6 +692,13 @@ alter function loyalty_private.enqueue_self_hosted_smtp_notification_v1()
   owner to loyalty_owner;
 alter function loyalty_private.notification_event_json_v1(bigint)
   owner to loyalty_owner;
+-- Supabase Auth can restore its schema ACL after application migrations. Keep
+-- the verified-contact read in one Auth-owned function instead of granting the
+-- loyalty owner direct access to auth.users.
+grant usage, create on schema loyalty_private to supabase_auth_admin;
+alter function loyalty_private.resolve_verified_auth_email_v1(uuid)
+  owner to supabase_auth_admin;
+revoke usage, create on schema loyalty_private from supabase_auth_admin;
 alter function loyalty_private.claim_smtp_notification_deliveries_v1(
   text, integer, integer
 ) owner to loyalty_owner;
@@ -706,25 +727,21 @@ revoke all on function loyalty_private.notification_email_template_hash_v1(
   text, integer, text, text, text, text
 ), loyalty_private.enqueue_self_hosted_smtp_notification_v1(),
   loyalty_private.notification_event_json_v1(bigint),
+  loyalty_private.resolve_verified_auth_email_v1(uuid),
   loyalty_private.claim_smtp_notification_deliveries_v1(text, integer, integer),
   loyalty_private.authorize_smtp_notification_delivery_v1(uuid, text),
   loyalty_private.finish_smtp_notification_delivery_v1(
     uuid, text, text, integer, text
   )
 from public, anon, authenticated, loyalty_runtime, loyalty_worker;
+grant execute on function loyalty_private.resolve_verified_auth_email_v1(uuid)
+  to loyalty_owner;
 grant execute on function loyalty_private.claim_smtp_notification_deliveries_v1(
   text, integer, integer
 ), loyalty_private.authorize_smtp_notification_delivery_v1(uuid, text),
   loyalty_private.finish_smtp_notification_delivery_v1(
     uuid, text, text, integer, text
   ) to loyalty_worker;
-
--- The NOLOGIN owner executes the authorization boundary and needs only the
--- verified Auth contact columns. Runtime/worker/browser roles receive no Auth
--- schema or table privilege, and the address is never copied into loyalty data.
-grant usage on schema auth to loyalty_owner;
-grant select (id, email, email_confirmed_at, deleted_at)
-  on auth.users to loyalty_owner;
 
 comment on table loyalty_private.notification_email_template_versions is
   'Immutable English SMTP template versions; rendered contact is never persisted.';
@@ -734,6 +751,8 @@ comment on table loyalty_private.notification_smtp_delivery_attempts is
   'Append-only SMTP outcome evidence containing bounded codes and no contact, body, secret, or raw provider response.';
 comment on function loyalty_private.authorize_smtp_notification_delivery_v1(uuid, text) is
   'Linearizes self-hosted entitlement, consent, suppression, active identity, and verified Auth email immediately before one SMTP attempt.';
+comment on function loyalty_private.resolve_verified_auth_email_v1(uuid) is
+  'Auth-owned narrow bridge returning one confirmed non-deleted email; callable only by the NOLOGIN loyalty function owner.';
 comment on function loyalty_private.finish_smtp_notification_delivery_v1(
   uuid, text, text, integer, text
 ) is
