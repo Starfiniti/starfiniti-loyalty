@@ -96,6 +96,7 @@ const acceptedAdrs = [
   "0031-provider-neutral-notification-events-and-local-consent-authority.md",
   "0032-isolated-database-authorized-smtp-delivery.md",
   "0033-tenant-bound-klaviyo-projection-and-consent-sync.md",
+  "0034-standard-hmac-webhooks-with-pinned-public-destinations.md",
 ];
 
 for (const adr of acceptedAdrs) {

@@ -7,6 +7,9 @@ import {
   notificationPreferenceV1,
   smtpNotificationDeliveryClaimV1,
   smtpNotificationDispatchAuthorizationV1,
+  webhookDestinationUrlV1,
+  webhookNotificationDeliveryClaimV1,
+  webhookNotificationDispatchAuthorizationV1,
 } from "./notification";
 
 const base = {
@@ -424,5 +427,101 @@ describe("SMTP notification delivery contracts", () => {
         recipientEmail: "member@example.test",
       }).success,
     ).toBe(false);
+  });
+});
+
+describe("generic webhook notification contracts", () => {
+  const event = notificationEventV1.parse({
+    schemaVersion: "1",
+    eventId: "93000000-0000-4000-8000-000000000101",
+    organizationId: "93000000-0000-4000-8000-000000000102",
+    programmeGroupId: null,
+    locale: "en",
+    occurredAt: "2026-08-24T10:00:00Z",
+    eventType: "loyalty.connector.health",
+    purpose: "merchant_operational",
+    subject: { kind: "merchant" },
+    payload: {
+      connectionId: "93000000-0000-4000-8000-000000000103",
+      state: "degraded",
+      errorCode: "delivery_lag",
+    },
+  });
+
+  it("accepts exact HTTPS and explicit loopback-test destinations", () => {
+    expect(
+      webhookDestinationUrlV1.parse("https://hooks.example.test/loyalty"),
+    ).toBe("https://hooks.example.test/loyalty");
+    expect(webhookDestinationUrlV1.parse("http://127.0.0.1:8080/sink")).toBe(
+      "http://127.0.0.1:8080/sink",
+    );
+  });
+
+  it.each([
+    "http://hooks.example.test/loyalty",
+    "https://user:pass@hooks.example.test/loyalty",
+    "https://hooks.example.test/loyalty?secret=value",
+    "https://hooks.example.test:8443/loyalty",
+    "https://192.0.2.10/loyalty",
+    "https://[2001:db8::1]/loyalty",
+    "https://hooks.example.test",
+  ])("rejects unsafe destination %s", (destinationUrl) => {
+    expect(webhookDestinationUrlV1.safeParse(destinationUrl).success).toBe(
+      false,
+    );
+  });
+
+  it("accepts a contact-free claim and exact event authorization", () => {
+    expect(
+      webhookNotificationDeliveryClaimV1.parse({
+        schemaVersion: "1",
+        deliveryId: "93000000-0000-4000-8000-000000000104",
+        leaseExpiresAt: "2026-08-24T10:01:00Z",
+      }),
+    ).toMatchObject({ schemaVersion: "1" });
+    expect(
+      webhookNotificationDispatchAuthorizationV1.parse({
+        schemaVersion: "1",
+        deliveryId: "93000000-0000-4000-8000-000000000104",
+        outcome: "authorized",
+        attempt: 1,
+        destinationUrl: "https://hooks.example.test/loyalty",
+        event,
+      }),
+    ).toMatchObject({ outcome: "authorized", event });
+  });
+
+  it.each(["held", "suppressed"] as const)(
+    "accepts a payload-free %s outcome",
+    (outcome) => {
+      expect(
+        webhookNotificationDispatchAuthorizationV1.parse({
+          schemaVersion: "1",
+          deliveryId: "93000000-0000-4000-8000-000000000104",
+          outcome,
+        }),
+      ).toMatchObject({ outcome });
+    },
+  );
+
+  it("rejects contact, secret, signature, and raw provider smuggling", () => {
+    for (const extra of [
+      { recipientEmail: "member@example.test" },
+      { signingSecret: "whsec_secret" },
+      { signature: "v1,secret" },
+      { rawProviderResponse: { body: "private" } },
+    ]) {
+      expect(
+        webhookNotificationDispatchAuthorizationV1.safeParse({
+          schemaVersion: "1",
+          deliveryId: "93000000-0000-4000-8000-000000000104",
+          outcome: "authorized",
+          attempt: 1,
+          destinationUrl: "https://hooks.example.test/loyalty",
+          event,
+          ...extra,
+        }).success,
+      ).toBe(false);
+    }
   });
 });

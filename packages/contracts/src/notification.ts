@@ -370,6 +370,68 @@ export const klaviyoNotificationActionAuthorizationV1 = z.discriminatedUnion(
   [klaviyoActionUnavailableV1, klaviyoActionAuthorizedV1],
 );
 
+export const webhookDestinationUrlV1 = z
+  .url()
+  .max(2_048)
+  .refine((value) => {
+    const destination = new URL(value);
+    if (
+      destination.username !== "" ||
+      destination.password !== "" ||
+      destination.search !== "" ||
+      destination.hash !== ""
+    ) {
+      return false;
+    }
+    if (destination.protocol === "https:") {
+      return (
+        (destination.port === "" || destination.port === "443") &&
+        /^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/u.test(
+          destination.hostname,
+        ) &&
+        value.startsWith(`${destination.origin}/`)
+      );
+    }
+    return (
+      destination.protocol === "http:" &&
+      (destination.hostname === "127.0.0.1" ||
+        destination.hostname === "localhost" ||
+        destination.hostname === "[::1]")
+    );
+  }, "Webhook destination must be HTTPS without credentials, query, or fragment");
+
+export const webhookNotificationDeliveryClaimV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    deliveryId: z.uuid(),
+    leaseExpiresAt: instant,
+  })
+  .strict();
+
+const webhookDispatchUnavailableV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    deliveryId: z.uuid(),
+    outcome: z.enum(["held", "suppressed", "dead_letter"]),
+  })
+  .strict();
+
+const webhookDispatchAuthorizedV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    deliveryId: z.uuid(),
+    outcome: z.literal("authorized"),
+    attempt: z.number().int().min(1).max(10),
+    destinationUrl: webhookDestinationUrlV1,
+    event: notificationEventV1,
+  })
+  .strict();
+
+export const webhookNotificationDispatchAuthorizationV1 = z.discriminatedUnion(
+  "outcome",
+  [webhookDispatchUnavailableV1, webhookDispatchAuthorizedV1],
+);
+
 export const notificationPreferenceV1 = z
   .object({
     schemaVersion: z.literal("1"),
@@ -404,4 +466,10 @@ export type KlaviyoNotificationPreparationV1 = z.infer<
 >;
 export type KlaviyoNotificationActionAuthorizationV1 = z.infer<
   typeof klaviyoNotificationActionAuthorizationV1
+>;
+export type WebhookNotificationDeliveryClaimV1 = z.infer<
+  typeof webhookNotificationDeliveryClaimV1
+>;
+export type WebhookNotificationDispatchAuthorizationV1 = z.infer<
+  typeof webhookNotificationDispatchAuthorizationV1
 >;

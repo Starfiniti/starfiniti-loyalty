@@ -1146,6 +1146,24 @@ tasks:
         status: in_progress
         acceptance:
           - generic outbound webhooks are destination-allowlisted HMAC-signed replay-safe rotatable rate-limited and payload-minimized
+          - one endpoint-bound worker emits the Standard Webhooks v1 id timestamp and exact-body signatures with an optional time-bounded previous signature
+          - HTTPS destination DNS answers are public and socket-pinned redirects are rejected and loopback HTTP exists only in explicit test mode
+          - current entitlement purpose consent endpoint subscription lease payload size and secret fingerprints are rechecked immediately before dispatch
+        failure_modes:
+          - tenant endpoint or current and previous secret fingerprints are mismatched
+          - DNS rebinding redirect or encoded private address reaches an internal service
+          - retry changes the webhook id or signs bytes different from those transmitted
+          - withdrawn or suppressed customer events leave the database
+          - endpoint throughput payload response or retry schedule is unbounded
+          - raw destination payload response signature contact or secret appears in logs or evidence
+        rollout: Deploy private schema and disabled endpoint-isolated worker first then verify an exact local sink before any reviewed HTTPS receiver is enabled.
+        rollback: Stop or disable the endpoint while retaining immutable events delivery attempts and stable delivery IDs; reconcile manual-review attempts before replay.
+        verification:
+          - contract tests for strict event envelopes claims authorizations URL constraints and contact-smuggling rejection
+          - pgTAP for grants RLS endpoint-key binding event subscription consent entitlement dedupe rate limiting leases retries rotation and immutability
+          - loopback HTTP sink tests for exact HMAC bytes stable replay dual signatures 2xx 302 410 429 503 timeout bounded response and worker death
+          - pure destination-policy tests for private reserved mapped IPv4 and IPv6 rejection plus public address acceptance and socket pin selection
+          - exact-head baseline database replay images WooCommerce matrix secret scan and disabled deployment smoke
       - id: M08-S05-TEMPLATES-AND-HEALTH
         status: planned
         acceptance:
@@ -1163,8 +1181,11 @@ tasks:
         docs/architecture/ADR/0031-provider-neutral-notification-events-and-local-consent-authority.md,
         docs/architecture/ADR/0032-isolated-database-authorized-smtp-delivery.md,
         docs/architecture/ADR/0033-tenant-bound-klaviyo-projection-and-consent-sync.md,
+        docs/architecture/ADR/0034-standard-hmac-webhooks-with-pinned-public-destinations.md,
+        docs/api/OUTBOUND_WEBHOOKS.md,
         docs/operations/SMTP.md,
         docs/operations/KLAVIYO.md,
+        docs/operations/WEBHOOKS.md,
       ]
     evidence: [docs/plan/evidence/M08/README.md]
 

@@ -68,6 +68,8 @@ The default `worker` service remains the loyalty-value process. Self-hosted tran
 
 An SMTP outage or configuration failure must never trigger a restart or health failure in the default worker. Roll back email by stopping only `notification-worker` or disabling the `notifications` entitlement. Do not delete event, delivery, template, or attempt evidence, and do not directly replay manual-review outcomes.
 
+Generic outbound notifications use the same immutable worker image in a separate endpoint-isolated `webhook-worker` behind the optional `webhook` profile. Each running instance is bound to one endpoint UUID, exact allowed origin, and owner-only current/optional previous secret files. Follow `WEBHOOKS.md`; never enable production test mode, share an endpoint secret, follow redirects, or expose private/non-public DNS destinations. A receiver outage cannot affect the default value worker.
+
 ## Release process
 
 1. After all required checks pass on an approved commit, push one exact `vMAJOR.MINOR.PATCH` tag. The release workflow reruns the baseline and disposable database gate, publishes dashboard/worker GHCR images under the commit SHA and version, and attaches the WooCommerce ZIP plus `SHA256SUMS` to the GitHub release. Deploy the commit-SHA image tags or resolved digests, never a floating version tag.

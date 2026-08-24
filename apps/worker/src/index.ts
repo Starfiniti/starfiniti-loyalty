@@ -11,6 +11,11 @@ import {
   runSmtpNotificationLifecycle,
 } from "./notification-delivery.ts";
 import {
+  createWebhookDeliveryRuntime,
+  readWebhookDeliveryConfig,
+  runWebhookDeliveryLifecycle,
+} from "./webhook-delivery.ts";
+import {
   advanceCampaignLifecycle,
   claimWooCommerceEffects,
   enqueueExpiredWooCommerceCouponCancellations,
@@ -75,6 +80,20 @@ if (workerMode === "notification") {
     );
     if (result.claimed === 0) await delay(1_000);
   }
+} else if (workerMode === "webhook") {
+  const webhookConfig = readWebhookDeliveryConfig(process.env);
+  if (webhookConfig === null) {
+    throw new Error("LOYALTY_WEBHOOK_ENABLED must be true in webhook mode");
+  }
+  const webhookRuntime = createWebhookDeliveryRuntime(webhookConfig);
+  while (!stopping) {
+    const result = await runWebhookDeliveryLifecycle(
+      sql,
+      workerId,
+      webhookRuntime,
+    );
+    if (result.claimed === 0) await delay(1_000);
+  }
 } else {
   while (!stopping) {
     if (Date.now() >= nextCancellationSweepAt) {
@@ -102,11 +121,16 @@ function delay(milliseconds: number): Promise<void> {
 
 function readWorkerMode(
   value: string | undefined,
-): "value" | "notification" | "klaviyo" {
+): "value" | "notification" | "klaviyo" | "webhook" {
   const mode = value ?? "value";
-  if (mode !== "value" && mode !== "notification" && mode !== "klaviyo") {
+  if (
+    mode !== "value" &&
+    mode !== "notification" &&
+    mode !== "klaviyo" &&
+    mode !== "webhook"
+  ) {
     throw new Error(
-      "LOYALTY_WORKER_MODE must be value, notification, or klaviyo",
+      "LOYALTY_WORKER_MODE must be value, notification, klaviyo, or webhook",
     );
   }
   return mode;

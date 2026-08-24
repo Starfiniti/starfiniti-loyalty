@@ -100,6 +100,32 @@ services:
       - ALL
     stop_grace_period: 75s
 
+  webhook-worker:
+    profiles: ["webhook"]
+    image: ${WORKER_IMAGE:?set WORKER_IMAGE to an immutable tag}
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    environment:
+      NODE_ENV: production
+      LOYALTY_WORKER_MODE: webhook
+      LOYALTY_WORKER_DATABASE_URL: ${LOYALTY_WORKER_DATABASE_URL:?required}
+      LOYALTY_WEBHOOK_ENABLED: "true"
+      LOYALTY_WEBHOOK_ENDPOINT_ID: ${LOYALTY_WEBHOOK_ENDPOINT_ID:-00000000-0000-0000-0000-000000000000}
+      LOYALTY_WEBHOOK_ALLOWED_ORIGIN: ${LOYALTY_WEBHOOK_ALLOWED_ORIGIN:-https://invalid.example}
+      LOYALTY_WEBHOOK_CURRENT_SECRET_FILE: /run/secrets/webhook_current_secret
+      LOYALTY_WEBHOOK_PREVIOUS_SECRET_FILE: ${LOYALTY_WEBHOOK_PREVIOUS_SECRET_FILE:-}
+    volumes:
+      - ${LOYALTY_WEBHOOK_CURRENT_SECRET_PATH:-/dev/null}:/run/secrets/webhook_current_secret:ro
+      - ${LOYALTY_WEBHOOK_PREVIOUS_SECRET_PATH:-/dev/null}:/run/secrets/webhook_previous_secret:ro
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    stop_grace_period: 75s
+
 secrets:
   woocommerce_signing_material:
     file: ${WOOCOMMERCE_SIGNING_MATERIAL_PATH:?required}
