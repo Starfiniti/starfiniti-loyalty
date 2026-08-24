@@ -22,3 +22,11 @@ M08 is in progress. M08-S01 is complete: ADR-0031 defines strict provider-neutra
 - Deployment remains disabled. No SMTP credentials are committed or active, and no production email has been sent.
 
 M08-S03 Klaviyo is now active. Its test-account canary, S04 signed webhook, S05 browser/health, and S06 deployment/canary evidence remain open. No Klaviyo, webhook, SMTP, or production notification delivery is active yet.
+
+## M08-S03 — Tenant-bound managed Klaviyo synchronization
+
+- ADR-0033 pins stable API revision `2026-07-15` and selects one isolated worker per tenant-bound connection. Claims and authorizations verify the connection UUID and SHA-256 private-key fingerprint before resolving contact; the private key stays in an absolute mounted file and PostgreSQL stores only its fingerprint.
+- Additive private schema projects provider-neutral customer events and latest marketing preference facts into bounded leases. Preparation and action authorization independently recheck managed mode, entitlement, current purpose consent, exact latest preference event, active customer/link, verified Auth email, and tenant-scoped provider profile mapping.
+- Profile sync sends only verified email and opaque customer UUID. Event sync uses the immutable event UUID as Klaviyo `unique_id`; local unsubscribe is globally restrictive and safely repeatable. Subscribe first reads provider subscription/suppression state, never uses historical-import fields, imports stronger provider suppression locally, and stops ambiguous submission in manual review.
+- Worker verification currently includes a real loopback HTTP sink, pinned revision/auth headers, minimized profile/event/consent bodies, provider-suppression parsing, bounded/cancelled response reads, `Retry-After`, and distinct ambiguity behavior for subscribe versus safe event/unsubscribe retries. PostgreSQL tests cover the tenant/key binding, grants/RLS, replay, late contact/consent/entitlement checks, provider suppression, supersession, profile mapping, accepted/retry/manual evidence, immutability, and zero ledger change.
+- Production remains disabled with no connection or credential. Exact-head Linux migration replay/pgTAP and full CI evidence are still pending; a real Klaviyo test-account canary remains an S06 owner-input gate.

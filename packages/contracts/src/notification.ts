@@ -269,6 +269,107 @@ export const smtpNotificationDispatchAuthorizationV1 = z.discriminatedUnion(
   [smtpDispatchUnavailableV1, smtpDispatchAuthorizedV1],
 );
 
+export const klaviyoApiRevisionV1 = z.literal("2026-07-15");
+const providerIdentifier = z
+  .string()
+  .min(1)
+  .max(100)
+  .regex(/^[A-Za-z0-9_-]+$/u);
+
+export const klaviyoCustomerNotificationEventV1 = z.discriminatedUnion(
+  "eventType",
+  [
+    pointsEarnedNotificationEventV1,
+    pointsReleasedNotificationEventV1,
+    pointsExpiringNotificationEventV1,
+    rewardChangedNotificationEventV1,
+    tierChangedNotificationEventV1,
+    referralChangedNotificationEventV1,
+    campaignEffectNotificationEventV1,
+  ],
+);
+
+export const klaviyoNotificationOperationClaimV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    operationId: z.uuid(),
+    operationKind: z.enum(["event_sync", "consent_sync"]),
+    leaseExpiresAt: instant,
+  })
+  .strict();
+
+const klaviyoPreparationUnavailableV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    operationId: z.uuid(),
+    outcome: z.enum([
+      "held",
+      "suppressed",
+      "superseded",
+      "contact_unavailable",
+    ]),
+  })
+  .strict();
+
+const klaviyoPreparationCommon = {
+  schemaVersion: z.literal("1"),
+  operationId: z.uuid(),
+  outcome: z.literal("authorized"),
+  attempt: z.number().int().min(1).max(10),
+  recipientEmail: z.email().max(320),
+  externalCustomerId: z.uuid(),
+  providerProfileId: providerIdentifier.nullable(),
+  apiRevision: klaviyoApiRevisionV1,
+  listId: providerIdentifier.nullable(),
+};
+
+const klaviyoEventPreparationAuthorizedV1 = z
+  .object({
+    ...klaviyoPreparationCommon,
+    operationKind: z.literal("event_sync"),
+    event: klaviyoCustomerNotificationEventV1,
+  })
+  .strict();
+
+const klaviyoConsentPreparationAuthorizedV1 = z
+  .object({
+    ...klaviyoPreparationCommon,
+    operationKind: z.literal("consent_sync"),
+    preferenceEventId: z.uuid(),
+    desiredState: z.enum(["subscribed", "unsubscribed"]),
+    effectiveAt: instant,
+  })
+  .strict();
+
+export const klaviyoNotificationPreparationV1 = z.union([
+  klaviyoPreparationUnavailableV1,
+  klaviyoEventPreparationAuthorizedV1,
+  klaviyoConsentPreparationAuthorizedV1,
+]);
+
+const klaviyoActionUnavailableV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    operationId: z.uuid(),
+    outcome: z.enum(["held", "suppressed", "superseded"]),
+  })
+  .strict();
+
+const klaviyoActionAuthorizedV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    operationId: z.uuid(),
+    outcome: z.literal("authorized"),
+    action: z.enum(["event", "subscribe", "unsubscribe"]),
+    providerProfileId: providerIdentifier,
+  })
+  .strict();
+
+export const klaviyoNotificationActionAuthorizationV1 = z.discriminatedUnion(
+  "outcome",
+  [klaviyoActionUnavailableV1, klaviyoActionAuthorizedV1],
+);
+
 export const notificationPreferenceV1 = z
   .object({
     schemaVersion: z.literal("1"),
@@ -291,4 +392,16 @@ export type SmtpNotificationDeliveryClaimV1 = z.infer<
 >;
 export type SmtpNotificationDispatchAuthorizationV1 = z.infer<
   typeof smtpNotificationDispatchAuthorizationV1
+>;
+export type KlaviyoCustomerNotificationEventV1 = z.infer<
+  typeof klaviyoCustomerNotificationEventV1
+>;
+export type KlaviyoNotificationOperationClaimV1 = z.infer<
+  typeof klaviyoNotificationOperationClaimV1
+>;
+export type KlaviyoNotificationPreparationV1 = z.infer<
+  typeof klaviyoNotificationPreparationV1
+>;
+export type KlaviyoNotificationActionAuthorizationV1 = z.infer<
+  typeof klaviyoNotificationActionAuthorizationV1
 >;

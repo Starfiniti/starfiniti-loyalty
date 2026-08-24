@@ -1,6 +1,11 @@
 import { hostname } from "node:os";
 import postgres from "postgres";
 import {
+  createKlaviyoDeliveryRuntime,
+  readKlaviyoDeliveryConfig,
+  runKlaviyoNotificationLifecycle,
+} from "./klaviyo-delivery.ts";
+import {
   createSmtpDeliveryRuntime,
   readSmtpDeliveryConfig,
   runSmtpNotificationLifecycle,
@@ -56,6 +61,20 @@ if (workerMode === "notification") {
   } finally {
     smtpRuntime.transporter.close();
   }
+} else if (workerMode === "klaviyo") {
+  const klaviyoConfig = readKlaviyoDeliveryConfig(process.env);
+  if (klaviyoConfig === null) {
+    throw new Error("LOYALTY_KLAVIYO_ENABLED must be true in klaviyo mode");
+  }
+  const klaviyoRuntime = createKlaviyoDeliveryRuntime(klaviyoConfig);
+  while (!stopping) {
+    const result = await runKlaviyoNotificationLifecycle(
+      sql,
+      workerId,
+      klaviyoRuntime,
+    );
+    if (result.claimed === 0) await delay(1_000);
+  }
 } else {
   while (!stopping) {
     if (Date.now() >= nextCancellationSweepAt) {
@@ -81,10 +100,14 @@ function delay(milliseconds: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
-function readWorkerMode(value: string | undefined): "value" | "notification" {
+function readWorkerMode(
+  value: string | undefined,
+): "value" | "notification" | "klaviyo" {
   const mode = value ?? "value";
-  if (mode !== "value" && mode !== "notification") {
-    throw new Error("LOYALTY_WORKER_MODE must be value or notification");
+  if (mode !== "value" && mode !== "notification" && mode !== "klaviyo") {
+    throw new Error(
+      "LOYALTY_WORKER_MODE must be value, notification, or klaviyo",
+    );
   }
   return mode;
 }

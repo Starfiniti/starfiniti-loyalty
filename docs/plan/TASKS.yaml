@@ -1125,6 +1125,23 @@ tasks:
         status: in_progress
         acceptance:
           - managed Klaviyo profile event and consent synchronization pins an API revision unique IDs retry-after handling and minimized fields without becoming authority
+          - one managed organization is bound to one provider connection and API key fingerprint before verified contact can leave the database
+          - local consent withdrawal is rechecked at action authorization provider suppression can only tighten local eligibility and ambiguous opt-in never auto-retries
+          - exact event and unsubscribe retries converge duplicate provider events use the immutable event UUID and provider outage cannot affect value processing or checkout
+        failure_modes:
+          - tenant selector and provider key are mismatched
+          - browser or Auth metadata becomes provider or tenant authority
+          - provider unsubscribe or suppression is silently cleared
+          - subscribe ambiguity sends repeated double-opt-in messages
+          - 202 is reported as delivered rather than accepted
+          - raw contact event secret or provider error body is persisted or logged
+        rollout: Deploy private schema and disabled worker first then bind one managed pilot tenant to a least-scope test key and reconcile a bounded canary.
+        rollback: Stop the isolated worker or disable its connection while retaining provider-neutral facts and immutable provider evidence; never reverse consent remotely during rollback.
+        verification:
+          - contract tests for minimized claims authorizations provider responses and contact-smuggling rejection
+          - pgTAP for grants tenant-key binding late consent and entitlement checks supersession suppression lease expiry replay and immutable evidence
+          - local HTTP sink tests for profile event subscribe unsubscribe 429 503 timeout bounded bodies and pre/post-action worker death
+          - exact-head baseline database replay images WooCommerce matrix secret scan and disabled deployment smoke
       - id: M08-S04-SIGNED-WEBHOOKS
         status: planned
         acceptance:
@@ -1145,7 +1162,9 @@ tasks:
         docs/security/PRIVACY_MODEL.md,
         docs/architecture/ADR/0031-provider-neutral-notification-events-and-local-consent-authority.md,
         docs/architecture/ADR/0032-isolated-database-authorized-smtp-delivery.md,
+        docs/architecture/ADR/0033-tenant-bound-klaviyo-projection-and-consent-sync.md,
         docs/operations/SMTP.md,
+        docs/operations/KLAVIYO.md,
       ]
     evidence: [docs/plan/evidence/M08/README.md]
 

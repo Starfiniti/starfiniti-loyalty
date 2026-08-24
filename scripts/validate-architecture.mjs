@@ -95,6 +95,7 @@ const acceptedAdrs = [
   "0030-published-programme-campaign-selector-authority.md",
   "0031-provider-neutral-notification-events-and-local-consent-authority.md",
   "0032-isolated-database-authorized-smtp-delivery.md",
+  "0033-tenant-bound-klaviyo-projection-and-consent-sync.md",
 ];
 
 for (const adr of acceptedAdrs) {

@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  klaviyoNotificationActionAuthorizationV1,
+  klaviyoNotificationOperationClaimV1,
+  klaviyoNotificationPreparationV1,
   notificationEventV1,
   notificationPreferenceV1,
   smtpNotificationDeliveryClaimV1,
@@ -143,6 +146,136 @@ describe("notificationEventV1", () => {
           points: "9223372036854775808",
           availableBalance: "0",
         },
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe("Klaviyo notification delivery contracts", () => {
+  const event = notificationEventV1.parse({
+    ...base,
+    eventType: "loyalty.campaign.effect",
+    purpose: "loyalty_marketing",
+    payload: {
+      campaignVersionId: "00000000-0000-4000-8000-000000000007",
+      outcome: "points_awarded",
+      points: "10",
+    },
+  });
+
+  it("accepts a bounded contact-free operation claim", () => {
+    expect(
+      klaviyoNotificationOperationClaimV1.parse({
+        schemaVersion: "1",
+        operationId: "92000000-0000-4000-8000-000000000001",
+        operationKind: "event_sync",
+        leaseExpiresAt: "2026-08-24T10:01:00Z",
+      }),
+    ).toMatchObject({ operationKind: "event_sync" });
+  });
+
+  it("accepts minimized event and consent preparations", () => {
+    const common = {
+      schemaVersion: "1",
+      operationId: "92000000-0000-4000-8000-000000000001",
+      outcome: "authorized",
+      attempt: 1,
+      recipientEmail: "member@example.test",
+      externalCustomerId: "92000000-0000-4000-8000-000000000002",
+      providerProfileId: null,
+      apiRevision: "2026-07-15",
+      listId: "LoyaltyList",
+    } as const;
+    expect(
+      klaviyoNotificationPreparationV1.parse({
+        ...common,
+        operationKind: "event_sync",
+        event,
+      }),
+    ).toMatchObject({ operationKind: "event_sync" });
+    expect(
+      klaviyoNotificationPreparationV1.parse({
+        ...common,
+        operationKind: "consent_sync",
+        preferenceEventId: "92000000-0000-4000-8000-000000000003",
+        desiredState: "subscribed",
+        effectiveAt: "2026-08-24T10:00:00Z",
+      }),
+    ).toMatchObject({ operationKind: "consent_sync" });
+  });
+
+  it.each(["held", "suppressed", "superseded", "contact_unavailable"] as const)(
+    "accepts a contact-free %s preparation",
+    (outcome) => {
+      expect(
+        klaviyoNotificationPreparationV1.parse({
+          schemaVersion: "1",
+          operationId: "92000000-0000-4000-8000-000000000001",
+          outcome,
+        }),
+      ).toEqual({
+        schemaVersion: "1",
+        operationId: "92000000-0000-4000-8000-000000000001",
+        outcome,
+      });
+    },
+  );
+
+  it("accepts only bounded provider action authorization", () => {
+    expect(
+      klaviyoNotificationActionAuthorizationV1.parse({
+        schemaVersion: "1",
+        operationId: "92000000-0000-4000-8000-000000000001",
+        outcome: "authorized",
+        action: "subscribe",
+        providerProfileId: "01KlaviyoProfile_1",
+      }),
+    ).toMatchObject({ action: "subscribe" });
+  });
+
+  it("rejects contact smuggling, merchant events, and provider payloads", () => {
+    expect(
+      klaviyoNotificationOperationClaimV1.safeParse({
+        schemaVersion: "1",
+        operationId: "92000000-0000-4000-8000-000000000001",
+        operationKind: "event_sync",
+        leaseExpiresAt: "2026-08-24T10:01:00Z",
+        recipientEmail: "member@example.test",
+      }).success,
+    ).toBe(false);
+    expect(
+      klaviyoNotificationPreparationV1.safeParse({
+        schemaVersion: "1",
+        operationId: "92000000-0000-4000-8000-000000000001",
+        outcome: "authorized",
+        attempt: 1,
+        recipientEmail: "merchant@example.test",
+        externalCustomerId: "92000000-0000-4000-8000-000000000002",
+        providerProfileId: null,
+        apiRevision: "2026-07-15",
+        listId: null,
+        operationKind: "event_sync",
+        event: {
+          ...event,
+          eventType: "loyalty.connector.health",
+          purpose: "merchant_operational",
+          subject: { kind: "merchant" },
+          payload: {
+            connectionId: "92000000-0000-4000-8000-000000000004",
+            state: "healthy",
+            errorCode: null,
+          },
+        },
+      }).success,
+    ).toBe(false);
+    expect(
+      klaviyoNotificationActionAuthorizationV1.safeParse({
+        schemaVersion: "1",
+        operationId: "92000000-0000-4000-8000-000000000001",
+        outcome: "authorized",
+        action: "event",
+        providerProfileId: "profile-1",
+        rawProviderResponse: { email: "member@example.test" },
       }).success,
     ).toBe(false);
   });
