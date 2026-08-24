@@ -1039,7 +1039,7 @@ tasks:
           - ADR-0029 selects bounded database-timed lifecycle transitions with append-only evidence; exact-head run 32675181455 passed 2007 pgTAP assertions and lifecycle canary evidence remains pending
           - ADR-0015 and ADR-0024 require campaign point lots to retain canonical earned-date availability and expiry; exact-head run 32675527696 passed 2008 pgTAP assertions and all repository/runtime gates
           - ADR-0024 separates first-attempt deterministic manual review from transient retries and blocks native approval before assignment when no active exact-programme connector exists; exact-head run 32676129608 passed 2010 pgTAP assertions and every repository/runtime gate
-          - ADR-0030 removes hard-coded selector placeholders, validates direct RPC drafts and approvals against the exact published programme, and blocks incompatible programme publication; exact-head replay remains pending
+          - ADR-0030 removes hard-coded selector placeholders, validates direct RPC drafts and approvals against the exact published programme, serializes campaign approval with programme publication, and blocks incompatible publication atomically; exact-head run 32677551229 passed 47 migrations 38 pgTAP files 2016 assertions the two-session selector race every repository and image gate and all four WooCommerce runtime cells at a9e75f2
     risks: [R-026, R-020, R-035]
     docs:
       [
