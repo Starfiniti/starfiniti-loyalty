@@ -165,6 +165,68 @@ join loyalty.programme_groups as programme_group
   on programme_group.organization_id = organization.id
 where organization.slug in ('m07-campaign-one', 'm07-campaign-two');
 
+create function pg_temp.m07_campaign_programme()
+returns jsonb
+language sql
+immutable
+as $$
+  select '{
+    "version":"2","currencyCode":"EUR","currencyMinorUnitDigits":2,
+    "pendingDays":0,"pointsExpireAfterDays":365,
+    "tiers":[
+      {"code":"rose","name":"Rose","minimumEligibleSpendMinor":"0","pointsPerMajorUnit":"1"},
+      {"code":"bloom","name":"Bloom","minimumEligibleSpendMinor":"10000","pointsPerMajorUnit":"1"}
+    ],
+    "rewards":[],
+    "earningRules":[{
+      "code":"purchase","name":"Purchase","source":"purchase",
+      "enabled":true,"priority":0,"stackable":false,
+      "effect":{"kind":"base_rate","pointsPerMajorUnit":"1"},
+      "conditions":{"productIds":[],"categoryIds":[],"currencyCodes":[],"markets":[],"channels":[],"activityCodes":[],"segmentCodes":[],"tierCodes":[],"startsAt":null,"endsAt":null},
+      "purchaseExclusions":{"productIds":[],"categoryIds":[],"shipping":true,"tax":true,"fees":true,"giftCardPayments":true,"storeCreditPayments":true,"discounts":true},
+      "cap":{"perEventPoints":null,"perMemberPoints":null,"memberPeriod":null,"rollingDays":null}
+    }]
+  }'::jsonb;
+$$;
+
+do $$
+declare
+  target record;
+  created record;
+  configuration jsonb := pg_temp.m07_campaign_programme();
+  configuration_sha256 bytea := extensions.digest(
+    pg_catalog.convert_to(pg_temp.m07_campaign_programme()::text, 'UTF8'),
+    'sha256'
+  );
+begin
+  for target in
+    select programme.id, programme.organization_id,
+      case organization.slug
+        when 'm07-campaign-one'
+          then '89000000-0000-4000-8000-000000000001'::uuid
+        else '8a000000-0000-4000-8000-000000000001'::uuid
+      end as actor_id
+    from loyalty.programmes as programme
+    join loyalty.organizations as organization
+      on organization.id = programme.organization_id
+    where organization.slug in ('m07-campaign-one', 'm07-campaign-two')
+    order by programme.id
+  loop
+    select * into strict created
+    from loyalty_private.create_programme_draft(
+      target.organization_id, target.id, configuration,
+      configuration_sha256, target.actor_id
+    );
+    perform loyalty_private.publish_programme_version(
+      created.programme_version_public_id,
+      configuration_sha256,
+      target.actor_id,
+      pg_catalog.statement_timestamp()
+    );
+  end loop;
+end;
+$$;
+
 insert into loyalty.customers (
   public_id, organization_id, display_reference, created_at, updated_at
 )

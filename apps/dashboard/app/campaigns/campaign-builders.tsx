@@ -17,6 +17,8 @@ import {
 import {
   buildAudienceDefinition,
   buildCampaignDefinition,
+  audienceUsesPublishedTierSelectors,
+  campaignUsesPublishedProgrammeSelectors,
   audienceDraftInputFromDefinition,
   campaignDraftInputFromDefinition,
   type AudienceConditionInput,
@@ -124,7 +126,16 @@ export function AudienceBuilder({
     blankAudience(tiers[0]?.code),
   );
   const [state, action, pending] = useActionState(createAudienceDraft, idle);
-  const definition = useMemo(() => buildAudienceDefinition(draft), [draft]);
+  const definition = useMemo(
+    () =>
+      audienceUsesPublishedTierSelectors(
+        draft,
+        tiers.map((tier) => tier.code),
+      )
+        ? buildAudienceDefinition(draft)
+        : null,
+    [draft, tiers],
+  );
   const updateCondition = (
     index: number,
     patch: Partial<AudienceConditionInput>,
@@ -525,8 +536,15 @@ export function CampaignBuilder({
   );
   const [state, action, pending] = useActionState(createCampaignDraft, idle);
   const definition = useMemo(
-    () => buildCampaignDefinition(draft, rewards),
-    [draft, rewards],
+    () =>
+      campaignUsesPublishedProgrammeSelectors(
+        draft,
+        purchaseEarningRules.map((rule) => rule.code),
+        tiers.map((tier) => tier.code),
+      )
+        ? buildCampaignDefinition(draft, rewards)
+        : null,
+    [draft, purchaseEarningRules, rewards, tiers],
   );
   const authoringEnabled = canAuthor && enabled;
   const rewardBearing = [

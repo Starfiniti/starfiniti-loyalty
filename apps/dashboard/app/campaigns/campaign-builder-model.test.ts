@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   buildAudienceDefinition,
   buildCampaignDefinition,
+  audienceUsesPublishedTierSelectors,
+  campaignUsesPublishedProgrammeSelectors,
   audienceDraftInputFromDefinition,
   campaignDraftInputFromDefinition,
   type AudienceDraftInput,
@@ -120,6 +122,36 @@ describe("campaign builder model", () => {
         ? campaignDraftInputFromDefinition(definition).tierCodes
         : null,
     ).toBe("");
+  });
+
+  it("fails closed when an editable template references stale programme codes", () => {
+    const tierAudience: AudienceDraftInput = {
+      ...audience,
+      conditions: [
+        {
+          ...audience.conditions[0]!,
+          kind: "tier",
+          tierCodes: "retired-tier",
+        },
+      ],
+    };
+    expect(audienceUsesPublishedTierSelectors(tierAudience, ["rose"])).toBe(
+      false,
+    );
+    expect(
+      campaignUsesPublishedProgrammeSelectors(
+        { ...campaign, earningRuleCodes: "retired-rule" },
+        ["purchase-base"],
+        ["rose"],
+      ),
+    ).toBe(false);
+    expect(
+      campaignUsesPublishedProgrammeSelectors(
+        { ...campaign, behaviorKind: "tier", tierCodes: "rose" },
+        ["purchase-base"],
+        ["rose"],
+      ),
+    ).toBe(true);
   });
 
   it("requires complete native liability and rejects DST ambiguity", () => {

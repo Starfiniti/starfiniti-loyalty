@@ -451,54 +451,6 @@ select lives_ok(
 
 set local role authenticated;
 set local request.jwt.claim.sub = '8b000000-0000-4000-8000-000000000001';
-select throws_ok(
-  $$ select * from loyalty.create_campaign_draft_command(
-    '8b000000-0000-4000-8000-000000000101',
-    pg_temp.m07_campaign_definition(
-      'unknown_purchase_selector',
-      '{"kind":"bonus_points","earningRuleCodes":["missing-rule"],"reward":{"kind":"points","points":"10"}}'::jsonb,
-      pg_temp.m07_points_capacity('1', '10')
-    ), 'm07:capacity:campaign:unknown-rule',
-    '8b000000-0000-4000-8000-000000000580'
-  ) $$,
-  '23514',
-  'campaign earning rules must exist in the published programme',
-  'direct RPC callers cannot author a campaign with a nonexistent rule'
-);
-select throws_ok(
-  $$ select * from loyalty.create_campaign_draft_command(
-    '8b000000-0000-4000-8000-000000000101',
-    pg_temp.m07_campaign_definition(
-      'unknown_tier_selector',
-      '{"kind":"tier","movement":"entry","tierCodes":["missing-tier"],"reward":{"kind":"points","points":"10"}}'::jsonb,
-      pg_temp.m07_points_capacity('1', '10')
-    ), 'm07:capacity:campaign:unknown-tier',
-    '8b000000-0000-4000-8000-000000000581'
-  ) $$,
-  '23514', 'campaign tiers must exist in the published programme',
-  'direct RPC callers cannot author a campaign with a nonexistent tier'
-);
-select throws_ok(
-  $command$
-    do $body$
-    begin
-      perform * from loyalty.create_campaign_draft_command(
-        '8b000000-0000-4000-8000-000000000101',
-        pg_temp.m07_campaign_definition(
-          'known_tier_selector',
-          '{"kind":"tier","movement":"entry","tierCodes":["rose"],"reward":{"kind":"points","points":"10"}}'::jsonb,
-          pg_temp.m07_points_capacity('1', '10')
-        ), 'm07:capacity:campaign:known-tier',
-        '8b000000-0000-4000-8000-000000000582'
-      );
-      raise exception using errcode = 'P0001',
-        message = 'known campaign tier accepted';
-    end
-    $body$
-  $command$,
-  'P0001', 'known campaign tier accepted',
-  'a selector from the exact published programme remains authorable'
-);
 select results_eq(
   $$ select outcome from loyalty.create_programme_draft_command(
     '8b000000-0000-4000-8000-000000000101',
@@ -702,6 +654,54 @@ $$;
 
 set local role authenticated;
 set local request.jwt.claim.sub = '8b000000-0000-4000-8000-000000000001';
+select throws_ok(
+  $$ select * from loyalty.create_campaign_draft_command(
+    '8b000000-0000-4000-8000-000000000101',
+    pg_temp.m07_campaign_definition(
+      'unknown_purchase_selector',
+      '{"kind":"bonus_points","earningRuleCodes":["missing-rule"],"reward":{"kind":"points","points":"10"}}'::jsonb,
+      pg_temp.m07_points_capacity('1', '10')
+    ), 'm07:capacity:campaign:unknown-rule',
+    '8b000000-0000-4000-8000-000000000580'
+  ) $$,
+  '23514',
+  'campaign earning rules must exist in the published programme',
+  'direct RPC callers cannot author a campaign with a nonexistent rule'
+);
+select throws_ok(
+  $$ select * from loyalty.create_campaign_draft_command(
+    '8b000000-0000-4000-8000-000000000101',
+    pg_temp.m07_campaign_definition(
+      'unknown_tier_selector',
+      '{"kind":"tier","movement":"entry","tierCodes":["missing-tier"],"reward":{"kind":"points","points":"10"}}'::jsonb,
+      pg_temp.m07_points_capacity('1', '10')
+    ), 'm07:capacity:campaign:unknown-tier',
+    '8b000000-0000-4000-8000-000000000581'
+  ) $$,
+  '23514', 'campaign tiers must exist in the published programme',
+  'direct RPC callers cannot author a campaign with a nonexistent tier'
+);
+select throws_ok(
+  $command$
+    do $body$
+    begin
+      perform * from loyalty.create_campaign_draft_command(
+        '8b000000-0000-4000-8000-000000000101',
+        pg_temp.m07_campaign_definition(
+          'known_tier_selector',
+          '{"kind":"tier","movement":"entry","tierCodes":["rose"],"reward":{"kind":"points","points":"10"}}'::jsonb,
+          pg_temp.m07_points_capacity('1', '10')
+        ), 'm07:capacity:campaign:known-tier',
+        '8b000000-0000-4000-8000-000000000582'
+      );
+      raise exception using errcode = 'P0001',
+        message = 'known campaign tier accepted';
+    end
+    $body$
+  $command$,
+  'P0001', 'known campaign tier accepted',
+  'a selector from the exact published programme remains authorable'
+);
 select results_eq(
   $$ select outcome from loyalty.create_campaign_draft_command(
     '8b000000-0000-4000-8000-000000000101',

@@ -85,6 +85,18 @@ export function buildAudienceDefinition(
   return parsed.success ? parsed.data : null;
 }
 
+export function audienceUsesPublishedTierSelectors(
+  input: AudienceDraftInput,
+  publishedTierCodes: readonly string[],
+): boolean {
+  const published = new Set(publishedTierCodes);
+  return input.conditions.every(
+    (condition) =>
+      condition.kind !== "tier" ||
+      list(condition.tierCodes).every((code) => published.has(code)),
+  );
+}
+
 export function audienceDraftInputFromDefinition(
   definition: AudienceDefinitionV1,
 ): AudienceDraftInput {
@@ -303,6 +315,22 @@ export function buildCampaignDefinition(
     controlBasisPoints: Number(input.controlBasisPoints),
   });
   return parsed.success ? parsed.data : null;
+}
+
+export function campaignUsesPublishedProgrammeSelectors(
+  input: CampaignDraftInput,
+  publishedPurchaseRuleCodes: readonly string[],
+  publishedTierCodes: readonly string[],
+): boolean {
+  if (["bonus_points", "purchase_multiplier"].includes(input.behaviorKind)) {
+    const published = new Set(publishedPurchaseRuleCodes);
+    return list(input.earningRuleCodes).every((code) => published.has(code));
+  }
+  if (input.behaviorKind === "tier") {
+    const published = new Set(publishedTierCodes);
+    return list(input.tierCodes).every((code) => published.has(code));
+  }
+  return true;
 }
 
 export function campaignDraftInputFromDefinition(
