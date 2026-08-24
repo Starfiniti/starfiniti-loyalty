@@ -1113,15 +1113,16 @@ tasks:
           - NotificationEventV1 and PostgreSQL independently enforce nine exact English event payloads Auth-derived purpose preferences stronger trusted suppression immutable idempotency privacy-erasure suppression and point-expiry dual-write without external delivery
           - exact-head run 32682221777 at 33e0396 passed the complete baseline both images clean 48-migration replay all 39 pgTAP files with 2066 assertions including 50 focused notification assertions every concurrency probe and all four WooCommerce runtime cells after a transient upstream package-download 504 was retried
       - id: M08-S02-SMTP-DELIVERY
-        status: in_progress
+        status: completed
         acceptance:
           - self-hosted transactional email uses verified contact resolution versioned English templates bounded leases and a real local SMTP sink
           - withdrawal and suppression are rechecked at dispatch authorization duplicate events send once and provider outage never affects value processing
         evidence:
           - ADR-0032 selects a separate optional notification worker database-owned lease and retry state late verified Auth contact resolution immutable English templates and manual review for ambiguous SMTP acceptance
-          - local contract typecheck worker build and 45 worker tests pass including 15 SMTP tests and a real loopback SMTP sink with deterministic event Message-ID while the 86 focused PostgreSQL assertions await exact-head Linux replay
+          - exact-head run 32686442063 at 604bbeb passed the complete baseline both production images a clean 49-migration replay all 40 pgTAP files with 2152 assertions including all 86 focused SMTP assertions every concurrency probe and all four WooCommerce runtime cells
+          - 46 worker tests include 16 focused SMTP tests and a real loopback SMTP sink with deterministic event Message-ID dispatch-time authority conservative ambiguity handling and terminal classification for deterministic local message failures
       - id: M08-S03-KLAVIYO
-        status: planned
+        status: in_progress
         acceptance:
           - managed Klaviyo profile event and consent synchronization pins an API revision unique IDs retry-after handling and minimized fields without becoming authority
       - id: M08-S04-SIGNED-WEBHOOKS
