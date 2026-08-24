@@ -36,6 +36,13 @@ Mobile `390 x 844`:
 
 The browser review also exercised disabled controls, dynamic condition creation, immutable-template loading, dark-mode persistence, skip navigation, desktop/sidebar containment, and mobile menu behavior.
 
+Release-review extension:
+
+- the exact result table now exposes all previously hidden protected capacity, purchase, trigger, reversal, and queue aggregates through a native disclosure;
+- Enter opened the focused disclosure at both 1440 × 1000 and 390 × 844, with the four evidence groups and refund/manual-review facts visible;
+- the real component and stylesheet produced no page-level horizontal overflow, console warning/error, or page error at either viewport; and
+- the temporary public production-style fixture and test script were removed after the check.
+
 ## Verification
 
 - Changed-file Prettier check: passed.

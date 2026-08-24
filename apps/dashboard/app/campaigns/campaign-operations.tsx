@@ -621,6 +621,7 @@ export function CampaignResults({
                     <th>Points</th>
                     <th>Liability (minor)</th>
                     <th>Review</th>
+                    <th>Evidence</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -644,6 +645,9 @@ export function CampaignResults({
                       <td>{result.capacity.committedPoints}</td>
                       <td>{result.capacity.committedLiabilityMinor}</td>
                       <td>{result.triggerJobs.manualReview}</td>
+                      <td>
+                        <CampaignResultEvidence result={result} />
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -667,6 +671,95 @@ export function CampaignResults({
           </details>
         </>
       )}
+    </section>
+  );
+}
+
+function CampaignResultEvidence({
+  result,
+}: Readonly<{ result: CampaignResultV1 }>) {
+  return (
+    <details className="campaign-result-evidence">
+      <summary>Inspect exact outcomes</summary>
+      <div>
+        <EvidenceGroup
+          items={[
+            ["Reserved effects", result.capacity.reservedEffects],
+            ["Reserved points", result.capacity.reservedPoints],
+            ["Reserved liability", result.capacity.reservedLiabilityMinor],
+            ["Effect ceiling", result.capacity.globalEffectLimit],
+            [
+              "Point ceiling",
+              result.capacity.maximumPoints ?? "Not applicable",
+            ],
+            [
+              "Liability ceiling",
+              result.capacity.maximumLiabilityMinor ?? "Not applicable",
+            ],
+          ]}
+          title="Capacity"
+        />
+        <EvidenceGroup
+          items={[
+            ["Purchase awards", result.purchaseOutcomes.awarded],
+            ["Fully reversed", result.purchaseOutcomes.reversedAwards],
+            ["Control", result.purchaseOutcomes.control],
+            ["Capacity exhausted", result.purchaseOutcomes.capacityExhausted],
+            ["Suppressed", result.purchaseOutcomes.suppressed],
+          ]}
+          title="Purchase outcomes"
+        />
+        <EvidenceGroup
+          items={[
+            ["Point awards", result.triggerOutcomes.pointsAwarded],
+            ["Rewards reserved", result.triggerOutcomes.rewardReserved],
+            ["Point reversals", result.triggerOutcomes.pointsReversed],
+            [
+              "Cancellation requested",
+              result.triggerOutcomes.rewardCancellationRequested,
+            ],
+            ["Already resolved", result.triggerOutcomes.rewardAlreadyResolved],
+            ["Non-reversible", result.triggerOutcomes.rewardNonreversible],
+            ["Control", result.triggerOutcomes.control],
+            ["Capacity exhausted", result.triggerOutcomes.capacityExhausted],
+            ["No value to reverse", result.triggerOutcomes.noValueToReverse],
+          ]}
+          title="Trigger outcomes"
+        />
+        <EvidenceGroup
+          items={[
+            ["Pending", result.triggerJobs.pending],
+            ["Processing", result.triggerJobs.processing],
+            ["Retryable", result.triggerJobs.retryable],
+            ["Completed", result.triggerJobs.completed],
+            ["Cancelled", result.triggerJobs.cancelled],
+            ["Manual review", result.triggerJobs.manualReview],
+          ]}
+          title="Trigger queue"
+        />
+      </div>
+    </details>
+  );
+}
+
+function EvidenceGroup({
+  items,
+  title,
+}: Readonly<{
+  items: readonly (readonly [label: string, value: string])[];
+  title: string;
+}>) {
+  return (
+    <section>
+      <h3>{title}</h3>
+      <dl>
+        {items.map(([label, value]) => (
+          <div key={label}>
+            <dt>{label}</dt>
+            <dd>{value}</dd>
+          </div>
+        ))}
+      </dl>
     </section>
   );
 }
