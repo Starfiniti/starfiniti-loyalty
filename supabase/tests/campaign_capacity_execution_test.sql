@@ -912,6 +912,7 @@ select throws_ok(
   '23514', 'campaign reward requires an active programme connection',
   'native campaign approval fails before accepting an unavailable connector path'
 );
+reset role;
 select results_eq(
   $$ select version.status, pg_catalog.count(assignment.id)::bigint
      from loyalty.campaign_versions as version
@@ -926,7 +927,6 @@ select results_eq(
   $$ values ('draft'::text, 0::bigint) $$,
   'failed native preflight leaves the campaign draft and assignments untouched'
 );
-reset role;
 update loyalty.commerce_connections
 set status = 'active'
 where public_id = '8b000000-0000-4000-8000-000000000103';
