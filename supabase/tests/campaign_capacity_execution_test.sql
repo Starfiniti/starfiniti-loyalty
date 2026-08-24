@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(152);
+select plan(154);
 
 select ok(
   has_function_privilege(
@@ -892,6 +892,47 @@ select results_eq(
   'owner creates a limited native reward for scheduled execution'
 );
 
+reset role;
+update loyalty.commerce_connections
+set status = 'disabled'
+where public_id = '8b000000-0000-4000-8000-000000000103';
+set local role authenticated;
+set local request.jwt.claim.sub = '8b000000-0000-4000-8000-000000000001';
+select throws_ok(
+  $$ select loyalty.approve_campaign_version_command(
+    version.public_id, pg_catalog.encode(version.definition_sha256, 'hex'),
+    'm07:capacity:approve:no-connection',
+    '8b000000-0000-4000-8000-000000000509'
+  )
+  from loyalty.campaign_versions as version
+  join loyalty.campaigns as campaign
+    on campaign.organization_id = version.organization_id
+   and campaign.id = version.campaign_id
+  where campaign.code = 'milestone_reward_execution' $$,
+  '23514', 'campaign reward requires an active programme connection',
+  'native campaign approval fails before accepting an unavailable connector path'
+);
+select results_eq(
+  $$ select version.status, pg_catalog.count(assignment.id)::bigint
+     from loyalty.campaign_versions as version
+     join loyalty.campaigns as campaign
+       on campaign.organization_id = version.organization_id
+      and campaign.id = version.campaign_id
+     left join loyalty_private.campaign_assignments as assignment
+       on assignment.organization_id = version.organization_id
+      and assignment.campaign_version_id = version.id
+     where campaign.code = 'milestone_reward_execution'
+     group by version.status $$,
+  $$ values ('draft'::text, 0::bigint) $$,
+  'failed native preflight leaves the campaign draft and assignments untouched'
+);
+reset role;
+update loyalty.commerce_connections
+set status = 'active'
+where public_id = '8b000000-0000-4000-8000-000000000103';
+set local role authenticated;
+set local request.jwt.claim.sub = '8b000000-0000-4000-8000-000000000001';
+
 select lives_ok(
   $$ select loyalty.approve_campaign_version_command(
     version.public_id, pg_catalog.encode(version.definition_sha256, 'hex'),
@@ -1747,10 +1788,10 @@ select results_eq(
   $$ select state
      from loyalty_private.finish_campaign_trigger_job_v1(
        pg_temp.m07_job_ref('limited_reward', 'issue'),
-       'campaign-test-worker', 'fixture_deferred', 60
+       'campaign-test-worker', 'campaign_trigger_contract_failed', 60
      ) $$,
-  array['retryable'::text],
-  'unexecuted limited work releases its lease without reserving value'
+  array['manual_review'::text],
+  'deterministic unexecuted work enters manual review after one attempt without reserving value'
 );
 reset role;
 

@@ -58,7 +58,7 @@ Approval materializes the eligible inclusion-minus-exclusion wallet set and gene
 
 - `create_campaign_draft_command` allows owner/admin authoring and stores one immutable version under a stable campaign code.
 - `preview_campaign_version_command` allows owner/admin/operator preview of inclusion, exclusions, expected control/treatment counts, maximum effects, points budget, and liability without member identities.
-- `approve_campaign_version_command` allows owner/admin approval only while the reviewed hash matches, the start remains future, the audience is nonempty, no accepted version overlaps, the entitlement is enabled, and private assignments reconcile in the same transaction.
+- `approve_campaign_version_command` allows owner/admin approval only while the reviewed hash matches, the start remains future, the audience is nonempty, no accepted version overlaps, the entitlement is enabled, any native reward has an active or rotating connection for the exact programme, and private assignments reconcile in the same transaction.
 - `pause_campaign_version_command` allows owner/admin/operator to stop accepted operational work.
 - `cancel_campaign_version_command` allows owner/admin to terminate accepted policy with a bounded reason.
 
@@ -91,7 +91,7 @@ The batch stores the original private candidate context. An exact retry receives
 
 M07-S04 appends private jobs only from database-owned tier qualification facts, tier decisions, referral issuance/compensation evidence, and immutable limited-campaign assignments. Milestone and win-back history is restricted to the campaign's exact programme even when another programme shares the same wallet group. Purchase campaign context is likewise bound to the exact immutable programme version supplied by the canonical evaluation transaction.
 
-The worker may schedule at most 100 due limited assignments, claim at most 25 jobs per sweep, and lease each claim for 60 seconds. PostgreSQL recovers no more than the requested claim limit of expired leases, increments attempts only on rows actually claimed, stops after the tenth attempt, and retains exhausted jobs as `manual_review`. The worker receives minimized public job/version IDs and cannot select or mutate private queues, assignments, counters, or source evidence directly.
+The worker may schedule at most 100 due limited assignments, claim at most 25 jobs per sweep, and lease each claim for 60 seconds. PostgreSQL recovers no more than the requested claim limit of expired leases, increments attempts only on rows actually claimed, stops after the tenth attempt, and retains exhausted jobs as `manual_review`. Deterministic SQL input/arithmetic/contract/authority failures move directly to manual review after their rolled-back first attempt; transient database failures alone remain retryable. The worker records only allowlisted safe codes, never raw database messages. The worker receives minimized public job/version IDs and cannot select or mutate private queues, assignments, counters, or source evidence directly.
 
 `execute_campaign_trigger_job_v1(jobId, workerId)` verifies the owned lease, immutable evidence hash, source-bound programme/campaign/assignment, and event-time schedule before it atomically reserves capacity and records one of these outcomes:
 

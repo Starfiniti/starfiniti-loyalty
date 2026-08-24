@@ -1006,13 +1006,27 @@ export async function runCampaignTriggerLifecycle(
       if (execution.outcome === "capacity_exhausted") {
         capacityExhausted += 1;
       }
-    } catch {
+    } catch (error) {
+      const errorCode = databaseCode(error);
+      const deterministicFailure = [
+        "22003",
+        "22023",
+        "23514",
+        "P0002",
+        "P0003",
+      ].includes(errorCode ?? "");
       const finishes = await sql<{ state: string; outcome: string }[]>`
         select state, outcome
         from loyalty_private.finish_campaign_trigger_job_v1(
           ${job.jobId}::uuid,
           ${workerId},
-          'campaign_trigger_execution_failed',
+          ${
+            deterministicFailure
+              ? errorCode === "22023" || errorCode === "22003"
+                ? "campaign_trigger_input_invalid"
+                : "campaign_trigger_contract_failed"
+              : "campaign_trigger_execution_failed"
+          },
           ${retryDelay(job.attemptCount)}
         )
       `;

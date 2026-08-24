@@ -336,7 +336,10 @@ describe("WooCommerce effect worker", () => {
   });
 
   it("moves the tenth failed campaign trigger to manual review without error leakage", async () => {
-    const query = async (strings: TemplateStringsArray) => {
+    const query = async (
+      strings: TemplateStringsArray,
+      ...values: readonly unknown[]
+    ) => {
       const text = strings.join("?");
       if (text.includes("enqueue_due_limited_campaigns_v1")) {
         return [{ enqueued: 0 }];
@@ -358,7 +361,7 @@ describe("WooCommerce effect worker", () => {
         throw new Error("tenant-private-database-detail");
       }
       if (text.includes("finish_campaign_trigger_job_v1")) {
-        expect(text).toContain("campaign_trigger_execution_failed");
+        expect(values).toContain("campaign_trigger_execution_failed");
         expect(text).not.toContain("tenant-private-database-detail");
         return [{ state: "manual_review", outcome: "manual_review" }];
       }
@@ -371,6 +374,96 @@ describe("WooCommerce effect worker", () => {
       completed: 0,
       retryable: 0,
       manualReview: 1,
+    });
+  });
+
+  it("moves a deterministic campaign contract failure directly to manual review", async () => {
+    const query = async (
+      strings: TemplateStringsArray,
+      ...values: readonly unknown[]
+    ) => {
+      const text = strings.join("?");
+      if (text.includes("enqueue_due_limited_campaigns_v1")) {
+        return [{ enqueued: 0 }];
+      }
+      if (text.includes("claim_due_campaign_trigger_jobs_v1")) {
+        return [
+          {
+            job_id: "41000000-0000-4000-8000-000000000011",
+            campaign_version_id: "42000000-0000-4000-8000-000000000011",
+            trigger_kind: "limited_quantity",
+            action: "issue",
+            source_reference: "limited-assignment:eleven",
+            occurred_at: "2026-08-23T18:41:00Z",
+            attempt_count: "1",
+          },
+        ];
+      }
+      if (text.includes("execute_campaign_trigger_job_v1")) {
+        throw Object.assign(new Error("tenant-private-contract-detail"), {
+          code: "23514",
+        });
+      }
+      if (text.includes("finish_campaign_trigger_job_v1")) {
+        expect(values).toContain("campaign_trigger_contract_failed");
+        expect(values).not.toContain("tenant-private-contract-detail");
+        return [{ state: "manual_review", outcome: "manual_review" }];
+      }
+      throw new Error(`Unexpected query: ${text}`);
+    };
+
+    await expect(
+      runCampaignTriggerLifecycle(query as unknown as Sql, "worker-campaign"),
+    ).resolves.toMatchObject({
+      claimed: 1,
+      completed: 0,
+      retryable: 0,
+      manualReview: 1,
+    });
+  });
+
+  it("keeps a transient campaign database failure on the bounded retry path", async () => {
+    const query = async (
+      strings: TemplateStringsArray,
+      ...values: readonly unknown[]
+    ) => {
+      const text = strings.join("?");
+      if (text.includes("enqueue_due_limited_campaigns_v1")) {
+        return [{ enqueued: 0 }];
+      }
+      if (text.includes("claim_due_campaign_trigger_jobs_v1")) {
+        return [
+          {
+            job_id: "41000000-0000-4000-8000-000000000012",
+            campaign_version_id: "42000000-0000-4000-8000-000000000012",
+            trigger_kind: "milestone",
+            action: "issue",
+            source_reference: "milestone-fact:twelve",
+            occurred_at: "2026-08-23T18:42:00Z",
+            attempt_count: "1",
+          },
+        ];
+      }
+      if (text.includes("execute_campaign_trigger_job_v1")) {
+        throw Object.assign(new Error("serialization detail"), {
+          code: "40001",
+        });
+      }
+      if (text.includes("finish_campaign_trigger_job_v1")) {
+        expect(values).toContain("campaign_trigger_execution_failed");
+        expect(values).not.toContain("serialization detail");
+        return [{ state: "retryable", outcome: "retryable" }];
+      }
+      throw new Error(`Unexpected query: ${text}`);
+    };
+
+    await expect(
+      runCampaignTriggerLifecycle(query as unknown as Sql, "worker-campaign"),
+    ).resolves.toMatchObject({
+      claimed: 1,
+      completed: 0,
+      retryable: 1,
+      manualReview: 0,
     });
   });
 

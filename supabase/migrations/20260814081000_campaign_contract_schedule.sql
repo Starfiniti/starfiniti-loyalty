@@ -1198,6 +1198,17 @@ begin
   perform loyalty_private.validate_campaign_definition_v1(
     target_version.definition
   );
+  if target_version.definition #>> '{behavior,reward,rewardId}' is not null
+    and not exists (
+      select 1
+      from loyalty.commerce_connections as connection
+      where connection.organization_id = target_version.organization_id
+        and connection.programme_id = target_campaign.programme_id
+        and connection.status in ('active', 'rotating')
+    ) then
+    raise exception using errcode = '23514',
+      message = 'campaign reward requires an active programme connection';
+  end if;
   if target_version.starts_at <= pg_catalog.statement_timestamp() then
     raise exception using errcode = '22023',
       message = 'campaign start must remain in the future at approval';

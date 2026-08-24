@@ -1706,6 +1706,7 @@ as $$
 declare
   target_job loyalty_private.campaign_trigger_jobs%rowtype;
   next_state text;
+  deterministic_failure boolean;
 begin
   if coalesce(pg_catalog.length(target_worker_id), 0) not between 1 and 200
     or coalesce(target_error_code, '') !~ '^[a-z][a-z0-9_.-]{0,99}$'
@@ -1721,8 +1722,15 @@ begin
     return query select target_job.state, 'state_final'::text;
     return;
   end if;
-  next_state := case when target_job.attempt_count >= 10
-    then 'manual_review' else 'retryable' end;
+  deterministic_failure := target_error_code in (
+    'campaign_trigger_contract_failed',
+    'campaign_trigger_input_invalid'
+  );
+  next_state := case
+    when deterministic_failure or target_job.attempt_count >= 10
+      then 'manual_review'
+    else 'retryable'
+  end;
   insert into loyalty_private.campaign_trigger_job_attempts (
     organization_id, job_id, attempt_number, outcome, error_code
   ) values (
@@ -1909,7 +1917,7 @@ begin
         and identity.external_customer_id like 'registered:%'
     );
   if target_connection_count <> 1 then
-    raise exception using errcode = '55000',
+    raise exception using errcode = '23514',
       message = 'campaign reward requires one registered programme connection';
   end if;
   perform * from loyalty_private.enqueue_woocommerce_coupon_issue_v2(

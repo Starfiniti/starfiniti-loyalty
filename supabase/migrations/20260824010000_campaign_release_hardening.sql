@@ -471,9 +471,11 @@ set search_path = ''
 as $$
 declare
   must_validate boolean := tg_op = 'INSERT';
+  approval_transition boolean := false;
 begin
   if tg_op = 'UPDATE' then
-    must_validate := old.status = 'draft' and new.status = 'scheduled';
+    approval_transition := old.status = 'draft' and new.status = 'scheduled';
+    must_validate := approval_transition;
   end if;
   if must_validate then
     perform loyalty_private.validate_campaign_native_liability_v1(
@@ -482,6 +484,21 @@ begin
       new.campaign_id,
       new.definition
     );
+    if approval_transition
+      and new.definition #>> '{behavior,reward,rewardId}' is not null
+      and not exists (
+        select 1
+        from loyalty.campaigns as campaign
+        join loyalty.commerce_connections as connection
+          on connection.organization_id = campaign.organization_id
+         and connection.programme_id = campaign.programme_id
+         and connection.status in ('active', 'rotating')
+        where campaign.organization_id = new.organization_id
+          and campaign.id = new.campaign_id
+      ) then
+      raise exception using errcode = '23514',
+        message = 'campaign reward requires an active programme connection';
+    end if;
   end if;
   return new;
 end;
