@@ -372,11 +372,11 @@ with preference_event as (
 )
 insert into loyalty_private.notification_preferences(
   organization_id, customer_id, channel, purpose, state, source,
-  policy_version, effective_at, last_event_id
+  policy_version, effective_at, last_event_id, updated_at
 )
 select pg_temp.wh_org('webhook-one'), pg_temp.wh_customer('webhook-one'),
   'email', 'loyalty_transactional', 'unsubscribed', 'system', 'system-v1',
-  '2026-08-24T08:02:00Z', id
+  '2026-08-24T08:02:00Z', id, '2026-08-24T08:02:00Z'
 from preference_event;
 set local role loyalty_worker;
 select results_eq(
