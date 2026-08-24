@@ -1122,7 +1122,7 @@ tasks:
           - exact-head run 32686442063 at 604bbeb passed the complete baseline both production images a clean 49-migration replay all 40 pgTAP files with 2152 assertions including all 86 focused SMTP assertions every concurrency probe and all four WooCommerce runtime cells
           - 46 worker tests include 16 focused SMTP tests and a real loopback SMTP sink with deterministic event Message-ID dispatch-time authority conservative ambiguity handling and terminal classification for deterministic local message failures
       - id: M08-S03-KLAVIYO
-        status: in_progress
+        status: completed
         acceptance:
           - managed Klaviyo profile event and consent synchronization pins an API revision unique IDs retry-after handling and minimized fields without becoming authority
           - one managed organization is bound to one provider connection and API key fingerprint before verified contact can leave the database
@@ -1143,7 +1143,7 @@ tasks:
           - local HTTP sink tests for profile event subscribe unsubscribe 429 503 timeout bounded bodies and pre/post-action worker death
           - exact-head baseline database replay images WooCommerce matrix secret scan and disabled deployment smoke
       - id: M08-S04-SIGNED-WEBHOOKS
-        status: planned
+        status: in_progress
         acceptance:
           - generic outbound webhooks are destination-allowlisted HMAC-signed replay-safe rotatable rate-limited and payload-minimized
       - id: M08-S05-TEMPLATES-AND-HEALTH

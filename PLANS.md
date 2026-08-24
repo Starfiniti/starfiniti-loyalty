@@ -16,6 +16,8 @@ M08-S01 is exact-head green on draft PR #32. ADR-0031 selects a strict provider-
 
 M08-S02 is exact-head green at `604bbeb` on draft PR #32. ADR-0032 isolates an optional SMTP worker from value processing, uses database-owned bounded leases and dispatch-time consent/entitlement/contact authorization, pins six immutable English templates, dead-letters deterministic local message failures, and stops ambiguous remote acceptance in manual review. Run `32686442063` passed the complete baseline, both production images, a clean 49-migration replay, all 40 pgTAP files with 2,152 assertions including all 86 focused SMTP assertions, every concurrency probe, and all four WooCommerce runtimes. The 46 worker tests include 16 focused SMTP tests and a real loopback sink. No production SMTP credentials or delivery are active.
 
+M08-S03 is exact-head green at `a6bbf14` on draft PR #32. ADR-0033 binds every managed Klaviyo operation to one tenant connection and API-key fingerprint, resolves verified contact only after database authorization, pins API revision `2026-07-15`, minimizes profiles/events, treats provider suppression as stronger local authority, and stops ambiguous opt-in submission for review. Run `32689107286` passed the complete baseline, both production images, a clean 50-migration replay, all 41 pgTAP files with 2,219 assertions including all 67 focused Klaviyo assertions, every concurrency probe, and all four WooCommerce runtimes. The disabled worker profile has no production connection or credential; the real test-account canary remains an S06 gate.
+
 M05-S01 through S05 are exact-head green. M05-S06 shadow comparison found and fixed a predeployment Rose/Bloom/Icon displayed-versus-executable rate mismatch; all 36 V1/V2 award comparisons now match, and exact-head run `31760806620` passed. Reviewed merge, disabled deployment, a fresh recovery point, Starfiniti-only canary, reconciliation, and scoring remain open.
 
 The active integrated baseline is released production commit `0ced4b666a55d836bd3d4927337fe057a71bb4ba` (`v0.1.11`). The previous local Phase 4 branch and its six modified planning files remain preserved in a named git stash and have not been mixed into this work.
@@ -43,7 +45,7 @@ The active integrated baseline is released production commit `0ced4b666a55d836bd
 
 ## Next safe work
 
-1. M08: implement S03 managed Klaviyo profile/event/consent synchronization against local/test boundaries without activating production delivery.
+1. M08: implement S04 destination-restricted, signed, replay-safe generic outbound webhooks without activating production delivery.
 2. M07: complete reviewed stacked merge, disabled deployment, fresh recovery point, Starfiniti-only canary, exact result/value reconciliation, smoke, and score in S06.
 3. M06: after reviewed stacked merges, deploy disabled, take a fresh recovery point, run the Starfiniti-only canary, reconcile, smoke, and score.
 4. M05: complete reviewed merge, disabled deployment, fresh recovery point, Starfiniti-only canary, zero-drift reconciliation, and score after the exact-green shadow gate.
