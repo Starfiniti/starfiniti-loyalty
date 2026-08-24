@@ -4,6 +4,10 @@ create extension if not exists pgtap with schema extensions;
 
 select plan(50);
 
+grant loyalty_worker to current_user;
+grant usage on schema extensions to loyalty_worker;
+grant execute on all functions in schema extensions to loyalty_worker;
+
 select has_table(
   'loyalty_private', 'notification_events',
   'provider-neutral notification events are retained privately'
