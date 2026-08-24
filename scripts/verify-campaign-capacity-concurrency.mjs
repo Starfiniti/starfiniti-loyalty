@@ -36,6 +36,84 @@ try {
       )
       returning id
     `;
+    const programmeDefinition = {
+      version: "2",
+      currencyCode: "EUR",
+      currencyMinorUnitDigits: 2,
+      pendingDays: 0,
+      pointsExpireAfterDays: 365,
+      tiers: [
+        {
+          code: "rose",
+          name: "Rose",
+          minimumEligibleSpendMinor: "0",
+          pointsPerMajorUnit: "1",
+        },
+      ],
+      rewards: [],
+      earningRules: [
+        {
+          code: "purchase",
+          name: "Purchase",
+          source: "purchase",
+          enabled: true,
+          priority: 0,
+          stackable: false,
+          effect: { kind: "base_rate", pointsPerMajorUnit: "1" },
+          conditions: {
+            productIds: [],
+            categoryIds: [],
+            currencyCodes: [],
+            markets: [],
+            channels: [],
+            activityCodes: [],
+            segmentCodes: [],
+            tierCodes: [],
+            startsAt: null,
+            endsAt: null,
+          },
+          purchaseExclusions: {
+            productIds: [],
+            categoryIds: [],
+            shipping: true,
+            tax: true,
+            fees: true,
+            giftCardPayments: true,
+            storeCreditPayments: true,
+            discounts: true,
+          },
+          cap: {
+            perEventPoints: null,
+            perMemberPoints: null,
+            memberPeriod: null,
+            rollingDays: null,
+          },
+        },
+      ],
+    };
+    const [programmeVersion] = await sql`
+      with configuration as (
+        select ${programmeDefinition}::jsonb as value
+      )
+      select draft.programme_version_public_id as public_id,
+        extensions.digest(
+          convert_to(configuration.value::text, 'UTF8'), 'sha256'
+        ) as configuration_sha256
+      from configuration
+      cross join lateral loyalty_private.create_programme_draft(
+        ${organization.id}, ${programme.id}, configuration.value,
+        extensions.digest(
+          convert_to(configuration.value::text, 'UTF8'), 'sha256'
+        ), ${actorId}
+      ) as draft
+    `;
+    await sql`
+      select loyalty_private.publish_programme_version(
+        ${programmeVersion.public_id},
+        ${programmeVersion.configuration_sha256},
+        ${actorId}, statement_timestamp()
+      )
+    `;
     const customers = await sql`
       insert into loyalty.customers (organization_id, display_reference)
       values
@@ -146,10 +224,9 @@ try {
         endsLocal: endsAt.slice(0, 19),
       },
       behavior: {
-        kind: "milestone",
-        metric: "order_count",
-        threshold: "1",
-        activityCodes: [],
+        kind: "tier",
+        movement: "entry",
+        tierCodes: ["rose"],
         reward: { kind: "points", points: "25" },
       },
       capacity: {
@@ -199,22 +276,144 @@ try {
         )
       `;
     }
-    await sql`
-      update loyalty.campaign_versions
-      set status = 'scheduled', approved_by_user_id = ${actorId},
-          approved_at = clock_timestamp(), status_changed_at = clock_timestamp(),
-          eligible_member_count = 2, treatment_member_count = 2,
-          control_member_count = 0, assignment_sha256 = ${assignmentHash}
-      where id = ${version.id}
+    const replacementProgrammeDefinition = {
+      ...programmeDefinition,
+      tiers: [
+        {
+          code: "bloom",
+          name: "Bloom",
+          minimumEligibleSpendMinor: "0",
+          pointsPerMajorUnit: "1",
+        },
+      ],
+    };
+    const [replacementProgrammeVersion] = await sql`
+      with configuration as (
+        select ${replacementProgrammeDefinition}::jsonb as value
+      )
+      select draft.programme_version_public_id as public_id,
+        extensions.digest(
+          convert_to(configuration.value::text, 'UTF8'), 'sha256'
+        ) as configuration_sha256
+      from configuration
+      cross join lateral loyalty_private.create_programme_draft(
+        ${organization.id}, ${programme.id}, configuration.value,
+        extensions.digest(
+          convert_to(configuration.value::text, 'UTF8'), 'sha256'
+        ), ${actorId}
+      ) as draft
     `;
     return {
+      actorId,
       organizationId: organization.id,
       groupId: group.id,
+      programmeId: programme.id,
+      replacementProgrammeVersion,
+      campaignVersionInternalId: version.id,
       campaignVersionId: version.public_id,
+      assignmentHash,
       firstCustomerId: customers[0].id,
       secondCustomerId: customers[1].id,
     };
   });
+
+  let allowApprovalCommit;
+  let markApprovalReady;
+  const approvalReady = new Promise((resolve) => {
+    markApprovalReady = resolve;
+  });
+  const approvalCommitGate = new Promise((resolve) => {
+    allowApprovalCommit = resolve;
+  });
+  const campaignApproval = first.begin(async (sql) => {
+    await sql`
+      update loyalty.campaign_versions
+      set status = 'scheduled', approved_by_user_id = ${fixture.actorId},
+          approved_at = clock_timestamp(), status_changed_at = clock_timestamp(),
+          eligible_member_count = 2, treatment_member_count = 2,
+          control_member_count = 0,
+          assignment_sha256 = ${fixture.assignmentHash}
+      where id = ${fixture.campaignVersionInternalId}
+    `;
+    markApprovalReady();
+    await approvalCommitGate;
+  });
+  await approvalReady;
+
+  let publicationBackendPid;
+  let markPublicationStarted;
+  const publicationStarted = new Promise((resolve) => {
+    markPublicationStarted = resolve;
+  });
+  const competingPublication = second
+    .begin(async (sql) => {
+      const [backend] = await sql`select pg_backend_pid() as pid`;
+      publicationBackendPid = backend.pid;
+      markPublicationStarted();
+      await sql`
+        select loyalty_private.publish_programme_version(
+          ${fixture.replacementProgrammeVersion.public_id},
+          ${fixture.replacementProgrammeVersion.configuration_sha256},
+          ${fixture.actorId}, statement_timestamp()
+        )
+      `;
+    })
+    .then(
+      () => ({ error: undefined }),
+      (error) => ({ error }),
+    );
+  await publicationStarted;
+
+  let publicationWaitedForProgramme = false;
+  for (let attempt = 0; attempt < 100; attempt += 1) {
+    const [activity] = await admin`
+      select wait_event_type, wait_event
+      from pg_stat_activity
+      where pid = ${publicationBackendPid}
+    `;
+    if (activity?.wait_event_type === "Lock") {
+      publicationWaitedForProgramme = true;
+      break;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+  allowApprovalCommit();
+  await campaignApproval;
+
+  const { error: publicationError } = await competingPublication;
+  if (!publicationWaitedForProgramme) {
+    throw new Error(
+      "campaign approval did not serialize a competing programme publication",
+    );
+  }
+  if (
+    publicationError?.code !== "23514" ||
+    publicationError?.message !==
+      "campaign tiers must exist in the published programme"
+  ) {
+    throw new Error(
+      `competing programme publication did not fail closed: ${publicationError?.message ?? "no error"}`,
+    );
+  }
+  const [programmeState] = await admin`
+    select
+      count(*) filter (where status = 'published')::integer as published_versions,
+      count(*) filter (
+        where public_id = ${fixture.replacementProgrammeVersion.public_id}
+          and status = 'draft'
+      )::integer as replacement_drafts
+    from loyalty.programme_versions
+    where organization_id = ${fixture.organizationId}
+      and programme_id = ${fixture.programmeId}
+  `;
+  if (
+    programmeState.published_versions !== 1 ||
+    programmeState.replacement_drafts !== 1
+  ) {
+    throw new Error(
+      `competing programme publication did not roll back atomically: ${JSON.stringify(programmeState)}`,
+    );
+  }
 
   let allowFirstCommit;
   let markFirstReserved;
@@ -302,7 +501,7 @@ try {
   }
 
   console.log(
-    "Campaign capacity concurrency probe passed: two sessions serialized on one campaign, exactly one reservation consumed the global points budget, the competitor observed exhaustion, the retry was idempotent, and counters reconcile.",
+    "Campaign concurrency probe passed: campaign approval serialized with programme publication and preserved the accepted selector, two capacity sessions serialized on one campaign, exactly one reservation consumed the global points budget, the competitor observed exhaustion, the retry was idempotent, and counters reconcile.",
   );
 } finally {
   await Promise.allSettled([admin.end(), first.end(), second.end()]);

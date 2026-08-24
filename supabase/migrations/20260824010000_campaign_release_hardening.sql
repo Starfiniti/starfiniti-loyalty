@@ -611,6 +611,17 @@ declare
   accepted_campaign record;
 begin
   if new.status = 'published' and old.status <> 'published' then
+    perform 1
+    from loyalty.programmes as programme
+    where programme.organization_id = new.organization_id
+      and programme.programme_group_id = new.programme_group_id
+      and programme.id = new.programme_id
+    for update;
+    if not found then
+      raise exception using errcode = '23514',
+        message = 'programme publication authority unavailable';
+    end if;
+
     for accepted_campaign in
       select campaign.id as campaign_id, version.definition
       from loyalty.campaigns as campaign
@@ -666,6 +677,22 @@ begin
     must_validate := approval_transition;
   end if;
   if must_validate then
+    if approval_transition then
+      perform 1
+      from loyalty.campaigns as campaign
+      join loyalty.programmes as programme
+        on programme.organization_id = campaign.organization_id
+       and programme.programme_group_id = campaign.programme_group_id
+       and programme.id = campaign.programme_id
+      where campaign.organization_id = new.organization_id
+        and campaign.programme_group_id = new.programme_group_id
+        and campaign.id = new.campaign_id
+      for update of programme;
+      if not found then
+        raise exception using errcode = '23514',
+          message = 'campaign approval programme unavailable';
+      end if;
+    end if;
     perform loyalty_private.validate_campaign_programme_selectors_v1(
       new.organization_id,
       new.programme_group_id,

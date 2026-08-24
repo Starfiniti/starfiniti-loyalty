@@ -37,6 +37,12 @@ The current published programme is the authoring and acceptance authority:
 - publishing or activating a new programme version fails atomically if it
   would remove a selector used by a scheduled, active, or paused campaign.
 
+Campaign approval and programme publication serialize on the exact stable
+programme row before the approval transition is accepted. Whichever operation
+wins, the later operation observes and validates against the committed
+programme/campaign state; a concurrent change cannot pass both guards against
+different published versions.
+
 Completed and cancelled campaign history does not constrain future programme
 versions. Immutable campaign templates retain their original selectors for
 inspection, but a new version cannot be accepted until its selectors match
@@ -88,3 +94,16 @@ publication while preserving all accepted definitions, assignments, effects,
 ledger entries, jobs, reservations, and reconciliation. Do not weaken the
 database guard after a campaign is accepted; forward-fix incompatible
 programme or campaign drafts instead.
+
+## References reviewed
+
+- [PostgreSQL 17 explicit locking](https://www.postgresql.org/docs/17/explicit-locking.html),
+  reviewed 2026-08-24: conflicting `FOR UPDATE` row locks wait until the
+  owning transaction completes and are held through transaction end.
+- [PostgreSQL 17 transaction isolation](https://www.postgresql.org/docs/17/transaction-iso.html),
+  reviewed 2026-08-24: under the default read-committed isolation, a later
+  statement observes a concurrent transaction after waiting for its row lock.
+- [Supabase breaking-change changelog](https://supabase.com/changelog?types=breaking-change),
+  reviewed 2026-08-24: no current change alters this PostgreSQL locking
+  boundary; the repository's pinned self-hosted PostgreSQL 17 runtime remains
+  the verification authority.
