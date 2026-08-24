@@ -670,7 +670,7 @@ select results_eq(
 );
 reset role;
 select results_eq(
-  $$ select attempt_count, outcome
+  $$ select attempt_number, outcome
      from loyalty_private.notification_smtp_delivery_attempts as attempt
      where attempt.delivery_id = (
        select id from loyalty_private.notification_smtp_deliveries
