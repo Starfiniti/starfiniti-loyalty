@@ -541,12 +541,12 @@ select results_eq(
 );
 select throws_ok(
   $$ update loyalty_private.notification_events set event_type = 'changed' $$,
-  '55000', 'immutable evidence cannot be changed',
+  '55000', 'immutable loyalty history cannot be changed',
   'notification event history rejects updates'
 );
 select throws_ok(
   $$ delete from loyalty_private.notification_preference_events $$,
-  '55000', 'immutable evidence cannot be changed',
+  '55000', 'immutable loyalty history cannot be changed',
   'preference decision history rejects deletion'
 );
 
