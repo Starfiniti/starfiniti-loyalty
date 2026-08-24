@@ -52,6 +52,31 @@ services:
       - ALL
     stop_grace_period: 75s
 
+  notification-worker:
+    profiles: ["smtp"]
+    image: ${WORKER_IMAGE:?set WORKER_IMAGE to an immutable tag}
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    environment:
+      NODE_ENV: production
+      LOYALTY_WORKER_MODE: notification
+      LOYALTY_WORKER_DATABASE_URL: ${LOYALTY_WORKER_DATABASE_URL:?required}
+      LOYALTY_SMTP_ENABLED: "true"
+      LOYALTY_SMTP_HOST: ${LOYALTY_SMTP_HOST:-127.0.0.1}
+      LOYALTY_SMTP_PORT: ${LOYALTY_SMTP_PORT:-587}
+      LOYALTY_SMTP_SECURITY: ${LOYALTY_SMTP_SECURITY:-starttls}
+      LOYALTY_SMTP_FROM_ADDRESS: ${LOYALTY_SMTP_FROM_ADDRESS:-loyalty@localhost.invalid}
+      LOYALTY_SMTP_USERNAME: ${LOYALTY_SMTP_USERNAME:-}
+      LOYALTY_SMTP_PASSWORD_FILE: ${LOYALTY_SMTP_PASSWORD_FILE:-}
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    stop_grace_period: 75s
+
 secrets:
   woocommerce_signing_material:
     file: ${WOOCOMMERCE_SIGNING_MATERIAL_PATH:?required}

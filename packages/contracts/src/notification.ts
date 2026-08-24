@@ -219,6 +219,56 @@ export const notificationEventV1 = z.discriminatedUnion("eventType", [
   billingChangedNotificationEventV1,
 ]);
 
+export const smtpTransactionalNotificationEventV1 = z.discriminatedUnion(
+  "eventType",
+  [
+    pointsEarnedNotificationEventV1,
+    pointsReleasedNotificationEventV1,
+    pointsExpiringNotificationEventV1,
+    rewardChangedNotificationEventV1,
+    tierChangedNotificationEventV1,
+    referralChangedNotificationEventV1,
+  ],
+);
+
+export const smtpNotificationDeliveryClaimV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    deliveryId: z.uuid(),
+    leaseExpiresAt: instant,
+  })
+  .strict();
+
+const smtpDispatchUnavailableV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    deliveryId: z.uuid(),
+    outcome: z.enum(["held", "suppressed", "contact_unavailable"]),
+  })
+  .strict();
+
+const smtpDispatchAuthorizedV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    deliveryId: z.uuid(),
+    outcome: z.literal("authorized"),
+    attempt: z.number().int().min(1).max(10),
+    recipientEmail: z.email().max(320),
+    templateCode: code,
+    templateVersion: z.number().int().positive(),
+    templateSha256: z.string().regex(/^[a-f0-9]{64}$/u),
+    subjectTemplate: z.string().min(1).max(200),
+    textTemplate: z.string().min(1).max(4_000),
+    htmlTemplate: z.string().min(1).max(8_000),
+    event: smtpTransactionalNotificationEventV1,
+  })
+  .strict();
+
+export const smtpNotificationDispatchAuthorizationV1 = z.discriminatedUnion(
+  "outcome",
+  [smtpDispatchUnavailableV1, smtpDispatchAuthorizedV1],
+);
+
 export const notificationPreferenceV1 = z
   .object({
     schemaVersion: z.literal("1"),
@@ -233,3 +283,12 @@ export const notificationPreferenceV1 = z
 
 export type NotificationEventV1 = z.infer<typeof notificationEventV1>;
 export type NotificationPreferenceV1 = z.infer<typeof notificationPreferenceV1>;
+export type SmtpTransactionalNotificationEventV1 = z.infer<
+  typeof smtpTransactionalNotificationEventV1
+>;
+export type SmtpNotificationDeliveryClaimV1 = z.infer<
+  typeof smtpNotificationDeliveryClaimV1
+>;
+export type SmtpNotificationDispatchAuthorizationV1 = z.infer<
+  typeof smtpNotificationDispatchAuthorizationV1
+>;

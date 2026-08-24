@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { notificationEventV1, notificationPreferenceV1 } from "./notification";
+import {
+  notificationEventV1,
+  notificationPreferenceV1,
+  smtpNotificationDeliveryClaimV1,
+  smtpNotificationDispatchAuthorizationV1,
+} from "./notification";
 
 const base = {
   schemaVersion: "1",
@@ -169,6 +174,121 @@ describe("notificationPreferenceV1", () => {
         policyVersion: "default-v1",
         effectiveAt: null,
         email: "secret@example.test",
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe("SMTP notification delivery contracts", () => {
+  const event = notificationEventV1.parse({
+    schemaVersion: "1",
+    eventId: "91000000-0000-4000-8000-000000000101",
+    organizationId: "91000000-0000-4000-8000-000000000102",
+    programmeGroupId: "91000000-0000-4000-8000-000000000103",
+    locale: "en",
+    occurredAt: "2026-08-24T10:00:00Z",
+    eventType: "loyalty.points.released",
+    purpose: "loyalty_transactional",
+    subject: {
+      kind: "customer",
+      customerId: "91000000-0000-4000-8000-000000000104",
+    },
+    payload: { points: "50", availableBalance: "250" },
+  });
+
+  it("accepts a bounded PII-free delivery claim", () => {
+    expect(
+      smtpNotificationDeliveryClaimV1.parse({
+        schemaVersion: "1",
+        deliveryId: "91000000-0000-4000-8000-000000000105",
+        leaseExpiresAt: "2026-08-24T10:01:00Z",
+      }),
+    ).toEqual({
+      schemaVersion: "1",
+      deliveryId: "91000000-0000-4000-8000-000000000105",
+      leaseExpiresAt: "2026-08-24T10:01:00Z",
+    });
+  });
+
+  it("accepts contact only inside a last-moment dispatch authorization", () => {
+    expect(
+      smtpNotificationDispatchAuthorizationV1.parse({
+        schemaVersion: "1",
+        deliveryId: "91000000-0000-4000-8000-000000000105",
+        outcome: "authorized",
+        attempt: 1,
+        recipientEmail: "member@example.test",
+        templateCode: "points_released",
+        templateVersion: 1,
+        templateSha256: "ab".repeat(32),
+        subjectTemplate: "{{points}} points are now available",
+        textTemplate: "You now have {{availableBalance}} points.",
+        htmlTemplate: "<p>You now have {{availableBalance}} points.</p>",
+        event,
+      }).outcome,
+    ).toBe("authorized");
+  });
+
+  it.each(["held", "suppressed", "contact_unavailable"] as const)(
+    "accepts the contact-free %s dispatch outcome",
+    (outcome) => {
+      expect(
+        smtpNotificationDispatchAuthorizationV1.parse({
+          schemaVersion: "1",
+          deliveryId: "91000000-0000-4000-8000-000000000105",
+          outcome,
+        }),
+      ).toEqual({
+        schemaVersion: "1",
+        deliveryId: "91000000-0000-4000-8000-000000000105",
+        outcome,
+      });
+    },
+  );
+
+  it("rejects merchant and marketing events from the SMTP transactional slice", () => {
+    expect(
+      smtpNotificationDispatchAuthorizationV1.safeParse({
+        schemaVersion: "1",
+        deliveryId: "91000000-0000-4000-8000-000000000105",
+        outcome: "authorized",
+        attempt: 1,
+        recipientEmail: "member@example.test",
+        templateCode: "campaign_effect",
+        templateVersion: 1,
+        templateSha256: "ab".repeat(32),
+        subjectTemplate: "Campaign update",
+        textTemplate: "Campaign update",
+        htmlTemplate: "<p>Campaign update</p>",
+        event: {
+          ...event,
+          eventType: "loyalty.campaign.effect",
+          purpose: "loyalty_marketing",
+          payload: {
+            campaignVersionId: "91000000-0000-4000-8000-000000000106",
+            outcome: "points_awarded",
+            points: "5",
+          },
+        },
+      }).success,
+    ).toBe(false);
+  });
+
+  it("rejects contact smuggling in claim and unavailable outcomes", () => {
+    expect(
+      smtpNotificationDeliveryClaimV1.safeParse({
+        schemaVersion: "1",
+        deliveryId: "91000000-0000-4000-8000-000000000105",
+        leaseExpiresAt: "2026-08-24T10:01:00Z",
+        recipientEmail: "member@example.test",
+      }).success,
+    ).toBe(false);
+    expect(
+      smtpNotificationDispatchAuthorizationV1.safeParse({
+        schemaVersion: "1",
+        deliveryId: "91000000-0000-4000-8000-000000000105",
+        outcome: "suppressed",
+        recipientEmail: "member@example.test",
       }).success,
     ).toBe(false);
   });
