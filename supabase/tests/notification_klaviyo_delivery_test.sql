@@ -521,7 +521,7 @@ select results_eq(
 );
 reset role;
 select results_eq(
-  $$ select state, source, reason_code
+  $$ select preference.state, event.source, event.reason_code
      from loyalty_private.notification_preferences as preference
      join loyalty_private.notification_preference_events as event
        on event.organization_id = preference.organization_id
