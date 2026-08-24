@@ -1119,7 +1119,7 @@ tasks:
           - withdrawal and suppression are rechecked at dispatch authorization duplicate events send once and provider outage never affects value processing
         evidence:
           - ADR-0032 selects a separate optional notification worker database-owned lease and retry state late verified Auth contact resolution immutable English templates and manual review for ambiguous SMTP acceptance
-          - local contract typecheck worker build and 45 worker tests pass including 15 SMTP tests and a real loopback SMTP sink with deterministic event Message-ID while the 84 focused PostgreSQL assertions await exact-head Linux replay
+          - local contract typecheck worker build and 45 worker tests pass including 15 SMTP tests and a real loopback SMTP sink with deterministic event Message-ID while the 86 focused PostgreSQL assertions await exact-head Linux replay
       - id: M08-S03-KLAVIYO
         status: planned
         acceptance:

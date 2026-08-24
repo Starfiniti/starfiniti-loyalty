@@ -692,13 +692,12 @@ alter function loyalty_private.enqueue_self_hosted_smtp_notification_v1()
   owner to loyalty_owner;
 alter function loyalty_private.notification_event_json_v1(bigint)
   owner to loyalty_owner;
--- Supabase Auth can restore its schema ACL after application migrations. Keep
--- the verified-contact read in one Auth-owned function instead of granting the
--- loyalty owner direct access to auth.users.
-grant usage, create on schema loyalty_private to supabase_auth_admin;
-alter function loyalty_private.resolve_verified_auth_email_v1(uuid)
-  owner to supabase_auth_admin;
-revoke usage, create on schema loyalty_private from supabase_auth_admin;
+-- Supabase Auth can restore its schema ACL after application migrations and
+-- the application migration role cannot assume supabase_auth_admin. Keep this
+-- static bridge owned by the migration administrator, which already has Auth
+-- access, instead of granting any loyalty runtime role access to auth.users.
+-- Its UUID-only input, empty search path, and explicitly revoked execution keep
+-- the elevated surface smaller than the dispatch command that calls it.
 alter function loyalty_private.claim_smtp_notification_deliveries_v1(
   text, integer, integer
 ) owner to loyalty_owner;
@@ -752,7 +751,7 @@ comment on table loyalty_private.notification_smtp_delivery_attempts is
 comment on function loyalty_private.authorize_smtp_notification_delivery_v1(uuid, text) is
   'Linearizes self-hosted entitlement, consent, suppression, active identity, and verified Auth email immediately before one SMTP attempt.';
 comment on function loyalty_private.resolve_verified_auth_email_v1(uuid) is
-  'Auth-owned narrow bridge returning one confirmed non-deleted email; callable only by the NOLOGIN loyalty function owner.';
+  'Migration-admin-owned narrow bridge returning one confirmed non-deleted email; callable only by the NOLOGIN loyalty function owner.';
 comment on function loyalty_private.finish_smtp_notification_delivery_v1(
   uuid, text, text, integer, text
 ) is

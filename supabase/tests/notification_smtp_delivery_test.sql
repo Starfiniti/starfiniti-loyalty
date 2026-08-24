@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(84);
+select plan(86);
 
 grant loyalty_worker to current_user;
 grant usage on schema extensions to loyalty_worker;
@@ -66,8 +66,20 @@ select has_function(
 );
 select function_owner_is(
   'loyalty_private', 'resolve_verified_auth_email_v1', array['uuid'],
-  'supabase_auth_admin',
-  'the narrow contact bridge executes with the Auth table owner'
+  'postgres',
+  'the narrow contact bridge executes with the migration administrator'
+);
+select results_eq(
+  $$ select routine.prosecdef
+     from pg_proc as routine
+     where routine.oid =
+       'loyalty_private.resolve_verified_auth_email_v1(uuid)'::regprocedure
+       and exists (
+         select 1 from unnest(routine.proconfig) as setting
+         where setting = 'search_path=""'
+       ) $$,
+  array[true],
+  'the contact bridge is security definer with an empty search path'
 );
 select ok(
   has_function_privilege(
@@ -135,6 +147,11 @@ select ok(
     'loyalty_private.resolve_verified_auth_email_v1(uuid)', 'EXECUTE'
   ),
   'NOLOGIN loyalty owner can call the narrow verified-contact bridge'
+);
+select ok(
+  not has_schema_privilege('loyalty_owner', 'auth', 'USAGE')
+    and not has_table_privilege('loyalty_owner', 'auth.users', 'SELECT'),
+  'loyalty function ownership does not grant direct Auth enumeration'
 );
 select ok(
   not has_function_privilege(
