@@ -671,7 +671,7 @@ select throws_ok(
        select id from loyalty_private.notification_webhook_deliveries
        where public_id = pg_temp.wh_delivery('webhook:event:one')
      ) $$,
-  '23514', 'immutable evidence cannot be changed',
+  '55000', 'immutable loyalty history cannot be changed',
   'webhook attempt evidence cannot be rewritten'
 );
 select is(
