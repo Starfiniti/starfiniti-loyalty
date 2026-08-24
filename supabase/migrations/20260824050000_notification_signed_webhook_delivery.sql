@@ -371,7 +371,7 @@ begin
   from loyalty_private.notification_webhook_rate_windows as rate_state
   where rate_state.endpoint_id = endpoint.id
   for update;
-  remaining := pg_catalog.greatest(
+  remaining := greatest(
     0, endpoint.rate_limit_per_minute - rate_window.claimed_attempts
   );
   if remaining = 0 then return; end if;
