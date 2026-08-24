@@ -623,14 +623,14 @@ begin
     else
       final_state := 'retryable';
       final_error_code := target_error_code;
-      retry_delay_seconds := pg_catalog.least(
+      retry_delay_seconds := least(
         3600, (30 * pg_catalog.power(2, delivery.attempt_count - 1))::integer
       );
       retry_delay_seconds := retry_delay_seconds + (
         pg_catalog.get_byte(extensions.digest(pg_catalog.convert_to(
           delivery.public_id::text || ':' || delivery.attempt_count::text,
           'UTF8'
-        ), 'sha256'), 0) % pg_catalog.greatest(1, retry_delay_seconds / 4)
+        ), 'sha256'), 0) % greatest(1, retry_delay_seconds / 4)
       );
       retry_at := finished_at + pg_catalog.make_interval(
         secs => retry_delay_seconds
