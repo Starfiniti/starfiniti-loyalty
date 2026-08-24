@@ -1064,7 +1064,7 @@ tasks:
   - id: M08-NOTIFICATIONS
     title: Add provider-neutral notifications, SMTP, Klaviyo, and webhooks
     module: M08
-    status: planned
+    status: in_progress
     dependencies: [M07-CAMPAIGNS]
     hypothesis: Consent-aware asynchronous messages improve activation without coupling providers to value processing.
     baseline: Expiry notification scheduling exists without provider delivery; Klaviyo is deferred in current docs.
@@ -1100,8 +1100,45 @@ tasks:
         webhook verification,
         template browser QA,
       ]
+    slices:
+      - id: M08-S01-EVENT-CONSENT-AUTHORITY
+        status: in_progress
+        acceptance:
+          - strict English-only provider-neutral events cover points rewards tiers referrals campaigns connector health and billing without arbitrary properties PII coupon plaintext or ledger metadata
+          - Auth-derived customer preferences separate loyalty transactional and loyalty marketing purposes while private provider suppression remains independently authoritative
+          - exact event and preference retries are idempotent conflicts fail closed customer erasure suppresses both purposes and point-expiry scheduling appends one canonical notification event
+          - direct table access cross-tenant selectors unsupported state transitions malformed payloads and attempts to clear provider suppression from a customer session fail closed
+        evidence:
+          - docs/architecture/ADR/0031-provider-neutral-notification-events-and-local-consent-authority.md records current official Supabase PostgreSQL and Klaviyo research alternatives and rollback consequences
+      - id: M08-S02-SMTP-DELIVERY
+        status: planned
+        acceptance:
+          - self-hosted transactional email uses verified contact resolution versioned English templates bounded leases and a real local SMTP sink
+          - withdrawal and suppression are rechecked at dispatch authorization duplicate events send once and provider outage never affects value processing
+      - id: M08-S03-KLAVIYO
+        status: planned
+        acceptance:
+          - managed Klaviyo profile event and consent synchronization pins an API revision unique IDs retry-after handling and minimized fields without becoming authority
+      - id: M08-S04-SIGNED-WEBHOOKS
+        status: planned
+        acceptance:
+          - generic outbound webhooks are destination-allowlisted HMAC-signed replay-safe rotatable rate-limited and payload-minimized
+      - id: M08-S05-TEMPLATES-AND-HEALTH
+        status: planned
+        acceptance:
+          - merchants can manage versioned English templates send tests and inspect consent suppression retry and dead-letter health without contact or secret disclosure
+      - id: M08-S06-CANARY-AND-CLOSE
+        status: planned
+        acceptance:
+          - exact-head CI disabled deployment local SMTP sink test-provider canary reconciliation rollback and score at least 90 pass
     risks: [R-027]
-    docs: [docs/integrations/KLAVIYO.md, docs/security/PRIVACY_MODEL.md]
+    docs:
+      [
+        docs/api/NOTIFICATIONS.md,
+        docs/integrations/KLAVIYO.md,
+        docs/security/PRIVACY_MODEL.md,
+        docs/architecture/ADR/0031-provider-neutral-notification-events-and-local-consent-authority.md,
+      ]
     evidence: [docs/plan/evidence/M08/README.md]
 
   - id: M09-STOREFRONT-EXPERIENCE
