@@ -1041,6 +1041,7 @@ tasks:
           - ADR-0024 separates first-attempt deterministic manual review from transient retries and blocks native approval before assignment when no active exact-programme connector exists; exact-head run 32676129608 passed 2010 pgTAP assertions and every repository/runtime gate
           - ADR-0030 removes hard-coded selector placeholders, validates direct RPC drafts and approvals against the exact published programme, serializes campaign approval with programme publication, and blocks incompatible publication atomically; exact-head run 32677551229 passed 47 migrations 38 pgTAP files 2016 assertions the two-session selector race every repository and image gate and all four WooCommerce runtime cells at a9e75f2
           - merchant results expose reserved capacity purchase reversals control and suppression trigger fulfilment and reversal outcomes plus bounded queue health through a keyboard-operable responsive disclosure; focused desktop and mobile browser evidence has zero page overflow and diagnostics
+          - exact-head run 32679145086 passed baseline database both images and all four WooCommerce runtime cells for the merchant result disclosure at 1b1406b
     risks: [R-026, R-020, R-035]
     docs:
       [

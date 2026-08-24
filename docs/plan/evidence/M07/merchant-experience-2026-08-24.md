@@ -52,6 +52,7 @@ Release-review extension:
 - Architecture/accessibility/deployment/entitlement/WooCommerce validators: passed.
 - Dashboard and worker production builds: passed.
 - Exact-head CI [`32671197966`](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/32671197966): passed at `fcb1f3c` with both images, clean migration replay, 1,975 pgTAP assertions including 123 focused campaign assertions, all five concurrency probes, and all four WooCommerce runtime cells.
+- Result-disclosure exact-head CI [`32679145086`](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/32679145086): passed at `1b1406b` with the complete baseline, database replay/pgTAP, both production images, and all four WooCommerce runtime cells.
 
 The initial exact-head run `32670992786` failed deterministically because the projection schema-qualified PostgreSQL's special `coalesce` expression and the repository's two security-definer allowlists had not yet accepted the reviewed function. The forward fix removed the invalid qualification and added the exact signature/name to both allowlists. No test count, authorization check, or product assertion was reduced.
 
