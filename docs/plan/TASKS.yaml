@@ -1102,7 +1102,7 @@ tasks:
       ]
     slices:
       - id: M08-S01-EVENT-CONSENT-AUTHORITY
-        status: in_progress
+        status: completed
         acceptance:
           - strict English-only provider-neutral events cover points rewards tiers referrals campaigns connector health and billing without arbitrary properties PII coupon plaintext or ledger metadata
           - Auth-derived customer preferences separate loyalty transactional and loyalty marketing purposes while private provider suppression remains independently authoritative
@@ -1110,6 +1110,8 @@ tasks:
           - direct table access cross-tenant selectors unsupported state transitions malformed payloads and attempts to clear provider suppression from a customer session fail closed
         evidence:
           - docs/architecture/ADR/0031-provider-neutral-notification-events-and-local-consent-authority.md records current official Supabase PostgreSQL and Klaviyo research alternatives and rollback consequences
+          - NotificationEventV1 and PostgreSQL independently enforce nine exact English event payloads Auth-derived purpose preferences stronger trusted suppression immutable idempotency privacy-erasure suppression and point-expiry dual-write without external delivery
+          - exact-head run 32682221777 at 33e0396 passed the complete baseline both images clean 48-migration replay all 39 pgTAP files with 2066 assertions including 50 focused notification assertions every concurrency probe and all four WooCommerce runtime cells after a transient upstream package-download 504 was retried
       - id: M08-S02-SMTP-DELIVERY
         status: planned
         acceptance:
