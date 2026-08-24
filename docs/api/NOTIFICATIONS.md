@@ -39,6 +39,8 @@ M08-S02 implements transactional email for the six customer event types. Campaig
 
 `SmtpNotificationDeliveryClaimV1` contains only a public delivery UUID and lease expiry. `loyalty_private.authorize_smtp_notification_delivery_v1` then rechecks the current self-hosted deployment mode, `notifications` entitlement, exact lease owner, active customer/link, verified Supabase Auth email, transactional preference, and trusted suppression. Only an authorized result contains an ephemeral `recipientEmail`, immutable template evidence, and strict event. Held, suppressed, and contact-unavailable outcomes contain no contact or message content.
 
+SMTP projection creation evaluates deployment mode and entitlement at the enqueue or backfill statement time, not at the event transaction timestamp. A disablement committed by an earlier statement therefore prevents later work creation even when both statements share one long transaction; already accepted leases still recheck the same authority before contact disclosure.
+
 The worker verifies the template SHA-256, renders only event-specific allowlisted tokens, and supplies a stable event-derived `Message-ID`. Recipient email, rendered subject/body, MIME content, SMTP password, and raw provider response are never written to notification event/delivery/attempt tables or logs.
 
 SMTP outcomes are conservative:

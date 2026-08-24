@@ -198,6 +198,7 @@ declare
   target_deployment_mode text;
   target_enabled boolean;
   target_template_id bigint;
+  eligibility_checked_at timestamptz := pg_catalog.statement_timestamp();
 begin
   if new.purpose <> 'loyalty_transactional' then
     return new;
@@ -205,7 +206,8 @@ begin
   select entitlement.deployment_mode, entitlement.enabled
     into target_deployment_mode, target_enabled
   from loyalty_private.resolve_organization_entitlement(
-    new.organization_id, 'notifications', new.public_id::text, new.created_at
+    new.organization_id, 'notifications', new.public_id::text,
+    eligibility_checked_at
   ) as entitlement;
   if target_deployment_mode <> 'self_hosted' or not target_enabled then
     return new;
@@ -235,7 +237,8 @@ from loyalty_private.notification_events as event
 join loyalty_private.notification_email_template_versions as template
   on template.event_type = event.event_type and template.template_version = 1
 cross join lateral loyalty_private.resolve_organization_entitlement(
-  event.organization_id, 'notifications', event.public_id::text, event.created_at
+  event.organization_id, 'notifications', event.public_id::text,
+  pg_catalog.statement_timestamp()
 ) as entitlement
 where event.purpose = 'loyalty_transactional'
   and entitlement.deployment_mode = 'self_hosted' and entitlement.enabled
