@@ -14,7 +14,7 @@ as $$
   select pg_catalog.jsonb_typeof(target_value) = 'object'
     and (
       select pg_catalog.count(*) = pg_catalog.cardinality(target_keys)
-        and pg_catalog.coalesce(pg_catalog.bool_and(key = any(target_keys)), true)
+        and coalesce(pg_catalog.bool_and(key = any(target_keys)), true)
       from pg_catalog.jsonb_object_keys(target_value) as keys(key)
     );
 $$;
@@ -509,8 +509,8 @@ set search_path = ''
 as $$
   select link.public_id,
     defaults.purpose,
-    pg_catalog.coalesce(preference.state, defaults.default_state),
-    pg_catalog.coalesce(preference.policy_version, 'default-v1'),
+    coalesce(preference.state, defaults.default_state),
+    coalesce(preference.policy_version, 'default-v1'),
     preference.effective_at
   from loyalty.customer_user_links as link
   join loyalty.customers as customer
@@ -616,7 +616,7 @@ begin
   for update;
   default_state := case when target_purpose = 'loyalty_transactional'
     then 'subscribed' else 'unsubscribed' end;
-  prior_state := pg_catalog.coalesce(current_preference.state, default_state);
+  prior_state := coalesce(current_preference.state, default_state);
   if prior_state = 'suppressed' and target_state = 'subscribed' then
     raise exception using errcode = '42501',
       message = 'notification preference is suppressed';
@@ -730,10 +730,10 @@ begin
   for update;
   default_state := case when target_purpose = 'loyalty_transactional'
     then 'subscribed' else 'unsubscribed' end;
-  prior_state := pg_catalog.coalesce(current_preference.state, default_state);
+  prior_state := coalesce(current_preference.state, default_state);
   applied_state := case when target_suppressed
     then 'suppressed' else 'unsubscribed' end;
-  if target_effective_at < pg_catalog.coalesce(
+  if target_effective_at < coalesce(
     current_preference.effective_at, '-infinity'::timestamptz
   ) then
     raise exception using errcode = '23514',
