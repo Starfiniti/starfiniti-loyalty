@@ -140,7 +140,7 @@ select loyalty_private.set_deployment_mode(
   'Exercise generic webhook delivery', pg_catalog.clock_timestamp()
 );
 select loyalty_private.set_organization_entitlement(
-  organization.public_id, 'notifications', 'enabled', null, 'local',
+  organization.public_id, 'notifications', 'enabled', null, 'local_control',
   'operator:webhook-test', 'Enable webhook delivery tests',
   pg_catalog.clock_timestamp(), null
 )
@@ -410,7 +410,7 @@ select results_eq(
 reset role;
 select loyalty_private.set_organization_entitlement(
   'c1000000-0000-4000-8000-000000000100', 'notifications', 'disabled', null,
-  'local', 'operator:webhook-test', 'Exercise webhook rollback',
+  'local_control', 'operator:webhook-test', 'Exercise webhook rollback',
   pg_catalog.clock_timestamp(), null
 );
 insert into loyalty_private.notification_events(
@@ -446,7 +446,7 @@ select results_eq(
 reset role;
 select loyalty_private.set_organization_entitlement(
   'c1000000-0000-4000-8000-000000000100', 'notifications', 'enabled', null,
-  'local', 'operator:webhook-test', 'Restore webhook test entitlement',
+  'local_control', 'operator:webhook-test', 'Restore webhook test entitlement',
   pg_catalog.clock_timestamp(), null
 );
 set local role loyalty_worker;
