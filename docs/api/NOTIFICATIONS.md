@@ -33,14 +33,24 @@ Email preferences are purpose-separated:
 
 Trusted provider/system suppression is stronger than a customer preference. A customer cannot clear it. Trusted unsuppression resolves to `unsubscribed`, requiring a new explicit marketing consent before marketing can resume. Pseudonymizing or closing a customer immediately suppresses both purposes.
 
-## Delivery boundary
+## Self-hosted SMTP delivery
 
-M08-S01 creates no external delivery and no fake provider. Later adapters must:
+M08-S02 implements transactional email for the six customer event types. Campaign marketing and merchant operational events remain provider-neutral only; they do not enter the SMTP transactional queue.
 
-1. derive a minimized delivery from the immutable event;
-2. resolve contact information late from a separately controlled source;
-3. recheck current preference and suppression at serialized dispatch authorization;
-4. send outside value-processing transactions;
-5. retain only bounded provider codes/references and retry evidence.
+`SmtpNotificationDeliveryClaimV1` contains only a public delivery UUID and lease expiry. `loyalty_private.authorize_smtp_notification_delivery_v1` then rechecks the current self-hosted deployment mode, `notifications` entitlement, exact lease owner, active customer/link, verified Supabase Auth email, transactional preference, and trusted suppression. Only an authorized result contains an ephemeral `recipientEmail`, immutable template evidence, and strict event. Held, suppressed, and contact-unavailable outcomes contain no contact or message content.
 
-Disabling notification delivery cannot block checkout, events, ledger effects, refunds, reconciliation, balances, or customer access.
+The worker verifies the template SHA-256, renders only event-specific allowlisted tokens, and supplies a stable event-derived `Message-ID`. Recipient email, rendered subject/body, MIME content, SMTP password, and raw provider response are never written to notification event/delivery/attempt tables or logs.
+
+SMTP outcomes are conservative:
+
+| Evidence                                                                  | State           | Automatic retry |
+| ------------------------------------------------------------------------- | --------------- | --------------- |
+| Exact 2xx acceptance for the one expected recipient                       | `delivered`     | No              |
+| Explicit 4xx or proven pre-acceptance DNS/TLS/connection/timeout failure  | `retryable`     | Yes, max 10     |
+| Explicit 5xx, authentication, configuration, envelope, or message failure | `dead_letter`   | No              |
+| Unknown/incomplete acceptance, DATA timeout, or post-authorization crash  | `manual_review` | No              |
+| Consent/suppression/contact/entitlement fails at authorization            | Withheld state  | No send         |
+
+An exact provider-neutral event replay creates one delivery. SMTP itself cannot atomically prove remote exactly-once delivery, so ambiguous acceptance is stopped for review rather than automatically repeated.
+
+The SMTP worker is a separate process and optional Compose profile. Disabling it cannot block checkout, events, ledger effects, refunds, reconciliation, balances, or customer access. See `docs/operations/SMTP.md` and ADR-0032.

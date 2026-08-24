@@ -1113,10 +1113,13 @@ tasks:
           - NotificationEventV1 and PostgreSQL independently enforce nine exact English event payloads Auth-derived purpose preferences stronger trusted suppression immutable idempotency privacy-erasure suppression and point-expiry dual-write without external delivery
           - exact-head run 32682221777 at 33e0396 passed the complete baseline both images clean 48-migration replay all 39 pgTAP files with 2066 assertions including 50 focused notification assertions every concurrency probe and all four WooCommerce runtime cells after a transient upstream package-download 504 was retried
       - id: M08-S02-SMTP-DELIVERY
-        status: planned
+        status: in_progress
         acceptance:
           - self-hosted transactional email uses verified contact resolution versioned English templates bounded leases and a real local SMTP sink
           - withdrawal and suppression are rechecked at dispatch authorization duplicate events send once and provider outage never affects value processing
+        evidence:
+          - ADR-0032 selects a separate optional notification worker database-owned lease and retry state late verified Auth contact resolution immutable English templates and manual review for ambiguous SMTP acceptance
+          - local contract typecheck worker build and 45 worker tests pass including 15 SMTP tests and a real loopback SMTP sink with deterministic event Message-ID while the 82 focused PostgreSQL assertions await exact-head Linux replay
       - id: M08-S03-KLAVIYO
         status: planned
         acceptance:
@@ -1140,6 +1143,8 @@ tasks:
         docs/integrations/KLAVIYO.md,
         docs/security/PRIVACY_MODEL.md,
         docs/architecture/ADR/0031-provider-neutral-notification-events-and-local-consent-authority.md,
+        docs/architecture/ADR/0032-isolated-database-authorized-smtp-delivery.md,
+        docs/operations/SMTP.md,
       ]
     evidence: [docs/plan/evidence/M08/README.md]
 

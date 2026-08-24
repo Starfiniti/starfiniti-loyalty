@@ -719,6 +719,13 @@ grant execute on function loyalty_private.claim_smtp_notification_deliveries_v1(
     uuid, text, text, integer, text
   ) to loyalty_worker;
 
+-- The NOLOGIN owner executes the authorization boundary and needs only the
+-- verified Auth contact columns. Runtime/worker/browser roles receive no Auth
+-- schema or table privilege, and the address is never copied into loyalty data.
+grant usage on schema auth to loyalty_owner;
+grant select (id, email, email_confirmed_at, deleted_at)
+  on auth.users to loyalty_owner;
+
 comment on table loyalty_private.notification_email_template_versions is
   'Immutable English SMTP template versions; rendered contact is never persisted.';
 comment on table loyalty_private.notification_smtp_deliveries is

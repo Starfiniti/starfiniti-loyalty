@@ -94,6 +94,7 @@ const acceptedAdrs = [
   "0029-database-timed-campaign-lifecycle.md",
   "0030-published-programme-campaign-selector-authority.md",
   "0031-provider-neutral-notification-events-and-local-consent-authority.md",
+  "0032-isolated-database-authorized-smtp-delivery.md",
 ];
 
 for (const adr of acceptedAdrs) {

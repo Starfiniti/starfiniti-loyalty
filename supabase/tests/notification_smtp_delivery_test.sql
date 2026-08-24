@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(80);
+select plan(82);
 
 grant loyalty_worker to current_user;
 grant usage on schema extensions to loyalty_worker;
@@ -119,6 +119,16 @@ select ok(
     'loyalty_private.notification_email_template_versions', 'SELECT'
   ),
   'browser sessions cannot enumerate message templates'
+);
+select ok(
+  has_column_privilege('loyalty_owner', 'auth.users', 'email', 'SELECT'),
+  'NOLOGIN function owner can resolve only the authorized Auth contact'
+);
+select ok(
+  not has_column_privilege(
+    'loyalty_worker', 'auth.users', 'email', 'SELECT'
+  ),
+  'worker cannot query Auth contact outside the security-definer boundary'
 );
 select results_eq(
   $$ select count(*)::bigint
