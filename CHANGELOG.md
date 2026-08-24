@@ -11,6 +11,7 @@
 - Added the complete Campaign command center: multi-condition audience and seven-behavior campaign versioning, snapshot publication, DST-safe scheduling, liability preview, approval, pause/cancel, responsive calendar, minimized exact aggregate results, canonical metric definitions, and honest influenced-versus-incremental measurement boundaries.
 - Hardened campaign release boundaries with append-only cumulative purchase-refund compensation, published fixed-discount-derived monetary liability, and one-statement coherent audience snapshot evaluation.
 - Added bounded database-timed campaign activation and completion with immutable private lifecycle evidence, including completion of paused/missed-start schedules so historical versions do not block successors.
+- Anchored campaign point availability and expiry to the immutable trigger instant so worker delay cannot extend customer value or change the historical earned-date policy.
 - Hardened purchase-campaign refunds with append-only cumulative per-effect compensation, exact original-ledger attribution, atomic worker rollback, and merchant reversal results derived without rewriting gross campaign effects or capacity.
 - Bound hard campaign monetary ceilings to the immutable face value, currency, precision, exact programme, and published state of V2 fixed-discount rewards; unsupported native kinds can no longer claim merchant-estimated hard liability.
 

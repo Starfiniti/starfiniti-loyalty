@@ -1029,12 +1029,14 @@ tasks:
           - hard monetary campaign ceilings derive exact face value currency and precision from a fixed discount in the exact published programme
           - every immutable audience membership set is evaluated from one bounded PostgreSQL statement snapshot rather than mixed READ COMMITTED statements
           - accepted versions advance scheduled active paused and completed states from database time without blocking historical value or successor versions
+          - delayed campaign execution cannot extend point lifetime because availability and expiry derive from the canonical trigger instant
         evidence:
-          - ADR-0026 defines append-only per-origin cumulative campaign refund compensation; exact-head database replay and canary evidence remain pending
-          - ADR-0027 rejects merchant-declared per-effect valuation unsupported native kinds unpublished rewards and same-group cross-programme reward references
-          - ADR-0028 selects one materialized candidate and decision statement with STABLE nested evaluators; exact-head replay and concurrent source-change canary evidence remain pending
-          - ADR-0029 selects bounded database-timed lifecycle transitions with append-only evidence; exact-head replay and lifecycle canary evidence remain pending
-    risks: [R-026, R-020]
+          - ADR-0026 defines append-only per-origin cumulative campaign refund compensation; exact-head run 32674872811 passed and partial/full refund canary evidence remains pending
+          - ADR-0027 rejects merchant-declared per-effect valuation unsupported native kinds unpublished rewards and same-group cross-programme reward references; exact-head run 32674872811 passed and canary evidence remains pending
+          - ADR-0028 selects one materialized candidate and decision statement with STABLE nested evaluators; exact-head run 32674872811 passed and concurrent source-change canary evidence remains pending
+          - ADR-0029 selects bounded database-timed lifecycle transitions with append-only evidence; exact-head run 32675181455 passed 2007 pgTAP assertions and lifecycle canary evidence remains pending
+          - ADR-0015 and ADR-0024 require campaign point lots to retain canonical earned-date availability and expiry; focused exact-head replay remains pending
+    risks: [R-026, R-020, R-035]
     docs:
       [
         docs/plan/ENTERPRISE_ROADMAP.md,

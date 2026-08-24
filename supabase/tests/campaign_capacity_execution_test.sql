@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(151);
+select plan(152);
 
 select ok(
   has_function_privilege(
@@ -1526,6 +1526,33 @@ select results_eq(
         from loyalty_private.campaign_trigger_executions) $$,
   $$ values (30::bigint, 100::bigint, 1::bigint, 2::bigint) $$,
   'campaign-funded reward changes reserved only while points reward is released to available'
+);
+
+select results_eq(
+  $$ select lot.available_at = job.occurred_at,
+       lot.expires_at = job.occurred_at
+         + pg_catalog.make_interval(days => policy.expire_after_days)
+     from loyalty_private.campaign_trigger_executions as execution
+     join loyalty_private.campaign_trigger_jobs as job
+       on job.organization_id = execution.organization_id
+      and job.id = execution.job_id
+     join loyalty.campaign_versions as campaign_version
+       on campaign_version.organization_id = execution.organization_id
+      and campaign_version.id = execution.campaign_version_id
+     join loyalty.campaigns as campaign
+       on campaign.organization_id = campaign_version.organization_id
+      and campaign.id = campaign_version.campaign_id
+     join loyalty.programme_point_expiry_policies as policy
+       on policy.organization_id = job.organization_id
+      and policy.programme_group_id = job.programme_group_id
+      and policy.programme_version_id = job.programme_version_id
+     join loyalty.point_lots as lot
+       on lot.organization_id = execution.organization_id
+      and lot.origin_entry_id = execution.award_origin_entry_id
+     where campaign.code = 'milestone_execution'
+       and execution.outcome = 'points_awarded' $$,
+  $$ values (true, true) $$,
+  'campaign point lots retain canonical earned-date availability and expiry despite delayed execution'
 );
 
 insert into loyalty_private.commerce_delivery_inbox (

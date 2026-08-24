@@ -2053,6 +2053,7 @@ declare
   target_outcome text;
   request_hash bytea;
   release_hash bytea;
+  target_expires_at timestamptz;
   target_executed_at timestamptz := pg_catalog.clock_timestamp();
 begin
   if coalesce(pg_catalog.length(target_worker_id), 0) not between 1 and 200 then
@@ -2171,6 +2172,8 @@ begin
           where policy.organization_id = target_job.organization_id
             and policy.programme_group_id = target_job.programme_group_id
             and policy.programme_version_id = target_job.programme_version_id;
+          target_expires_at := target_job.occurred_at
+            + pg_catalog.make_interval(days => target_policy.expire_after_days);
           select * into strict award_result
           from loyalty_private.award_points(
             target_job.organization_id, target_job.programme_group_id,
@@ -2197,20 +2200,16 @@ begin
             pg_catalog.jsonb_build_object(
               'jobId', target_job.public_id,
               'originEntryId', target_origin_entry.public_id,
-              'expiresAt', target_executed_at + pg_catalog.make_interval(
-                days => target_policy.expire_after_days
-              )
+              'expiresAt', target_expires_at
             )::text, 'utf8'
           ), 'sha256');
           select * into strict release_result
           from loyalty_private.release_points(
             target_job.organization_id, target_job.programme_group_id,
             target_job.programme_version_id, target_origin_entry.public_id,
-            target_executed_at + pg_catalog.make_interval(
-              days => target_policy.expire_after_days
-            ),
+            target_expires_at,
             'campaign-trigger:' || target_job.public_id::text || ':release',
-            release_hash, target_executed_at
+            release_hash, target_job.occurred_at
           );
           select transaction.* into strict target_release
           from loyalty.ledger_transactions as transaction

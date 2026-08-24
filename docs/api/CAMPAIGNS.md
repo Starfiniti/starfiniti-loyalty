@@ -95,7 +95,7 @@ The worker may schedule at most 100 due limited assignments, claim at most 25 jo
 
 `execute_campaign_trigger_job_v1(jobId, workerId)` verifies the owned lease, immutable evidence hash, source-bound programme/campaign/assignment, and event-time schedule before it atomically reserves capacity and records one of these outcomes:
 
-- treatment points append an attributable award, immediate release, immutable expiry evidence, and committed capacity;
+- treatment points append an attributable award, immediate release at the canonical trigger instant, expiry derived from that same earned instant under the immutable programme policy, and committed capacity;
 - native programme rewards create a campaign-funded reservation, internal control-to-reserved ledger entry, WooCommerce issue command, and committed capacity without debiting member available points;
 - control and capacity-exhausted assignments append zero-value execution evidence; and
 - canonical refunds/compensations cancel unleased work or append exactly one linked points reversal/native cancellation decision.
