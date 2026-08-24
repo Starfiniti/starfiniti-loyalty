@@ -67,10 +67,17 @@ export type MerchantCampaignReward = Readonly<{
   currencyMinorUnitDigits: number;
 }>;
 
+export type MerchantCampaignProgrammeSelector = Readonly<{
+  code: string;
+  name: string;
+}>;
+
 export type CampaignWorkspaceRead = Readonly<{
   audiences: readonly MerchantAudience[];
   campaigns: readonly MerchantCampaign[];
   rewards: readonly MerchantCampaignReward[];
+  purchaseEarningRules: readonly MerchantCampaignProgrammeSelector[];
+  tiers: readonly MerchantCampaignProgrammeSelector[];
   results: readonly CampaignResultV1[];
   catalogueAvailable: boolean;
   resultsAvailable: boolean;
@@ -114,9 +121,20 @@ function rows(
 async function getCampaignCatalogue(
   context: TenantContext,
   programmePublicId: string,
-): Promise<Pick<CampaignWorkspaceRead, "audiences" | "campaigns" | "rewards">> {
+): Promise<
+  Pick<
+    CampaignWorkspaceRead,
+    "audiences" | "campaigns" | "rewards" | "purchaseEarningRules" | "tiers"
+  >
+> {
   if (!context.programmeGroup) {
-    return { audiences: [], campaigns: [], rewards: [] };
+    return {
+      audiences: [],
+      campaigns: [],
+      rewards: [],
+      purchaseEarningRules: [],
+      tiers: [],
+    };
   }
   const supabase = await createSupabaseServerClient();
   const programmeResult = await supabase
@@ -157,7 +175,7 @@ async function getCampaignCatalogue(
         .eq("programme_id", programmeId)
         .eq("status", "published")
         .order("version_number", { ascending: false })
-        .limit(20),
+        .limit(1),
     ]);
   if (
     audienceResult.error ||
@@ -177,49 +195,78 @@ async function getCampaignCatalogue(
   const audienceIds = audienceRows.map((row) => integer(row.id));
   const campaignIds = campaignRows.map((row) => integer(row.id));
 
-  const [audienceVersionResult, campaignVersionResult, rewardResult] =
-    await Promise.all([
-      audienceIds.length === 0
-        ? Promise.resolve({ data: [], error: null })
-        : supabase
-            .schema("loyalty")
-            .from("audience_versions")
-            .select(
-              "id,public_id,audience_id,version_number,status,definition,definition_sha256,published_at,created_at",
-            )
-            .eq("organization_id", context.organization.id)
-            .in("audience_id", audienceIds)
-            .order("version_number", { ascending: false })
-            .limit(500),
-      campaignIds.length === 0
-        ? Promise.resolve({ data: [], error: null })
-        : supabase
-            .schema("loyalty")
-            .from("campaign_versions")
-            .select(
-              "public_id,campaign_id,version_number,status,definition,definition_sha256,approved_at,status_changed_at,created_at",
-            )
-            .eq("organization_id", context.organization.id)
-            .in("campaign_id", campaignIds)
-            .order("version_number", { ascending: false })
-            .limit(500),
-      programmeVersionIds.length === 0
-        ? Promise.resolve({ data: [], error: null })
-        : supabase
-            .schema("loyalty")
-            .from("programme_rewards")
-            .select(
-              "public_id,programme_version_id,code,name,reward_kind,configuration",
-            )
-            .eq("organization_id", context.organization.id)
-            .in("programme_version_id", programmeVersionIds)
-            .order("id", { ascending: true })
-            .limit(200),
-    ]);
+  const [
+    audienceVersionResult,
+    campaignVersionResult,
+    rewardResult,
+    earningRuleResult,
+    tierResult,
+  ] = await Promise.all([
+    audienceIds.length === 0
+      ? Promise.resolve({ data: [], error: null })
+      : supabase
+          .schema("loyalty")
+          .from("audience_versions")
+          .select(
+            "id,public_id,audience_id,version_number,status,definition,definition_sha256,published_at,created_at",
+          )
+          .eq("organization_id", context.organization.id)
+          .in("audience_id", audienceIds)
+          .order("version_number", { ascending: false })
+          .limit(500),
+    campaignIds.length === 0
+      ? Promise.resolve({ data: [], error: null })
+      : supabase
+          .schema("loyalty")
+          .from("campaign_versions")
+          .select(
+            "public_id,campaign_id,version_number,status,definition,definition_sha256,approved_at,status_changed_at,created_at",
+          )
+          .eq("organization_id", context.organization.id)
+          .in("campaign_id", campaignIds)
+          .order("version_number", { ascending: false })
+          .limit(500),
+    programmeVersionIds.length === 0
+      ? Promise.resolve({ data: [], error: null })
+      : supabase
+          .schema("loyalty")
+          .from("programme_rewards")
+          .select(
+            "public_id,programme_version_id,code,name,reward_kind,configuration",
+          )
+          .eq("organization_id", context.organization.id)
+          .in("programme_version_id", programmeVersionIds)
+          .order("id", { ascending: true })
+          .limit(200),
+    programmeVersionIds.length === 0
+      ? Promise.resolve({ data: [], error: null })
+      : supabase
+          .schema("loyalty")
+          .from("programme_earning_rules")
+          .select("code,name")
+          .eq("organization_id", context.organization.id)
+          .in("programme_version_id", programmeVersionIds)
+          .eq("source", "purchase")
+          .eq("enabled", true)
+          .order("ordinal", { ascending: true })
+          .limit(200),
+    programmeVersionIds.length === 0
+      ? Promise.resolve({ data: [], error: null })
+      : supabase
+          .schema("loyalty")
+          .from("programme_tiers")
+          .select("code,name")
+          .eq("organization_id", context.organization.id)
+          .in("programme_version_id", programmeVersionIds)
+          .order("ordinal", { ascending: true })
+          .limit(50),
+  ]);
   if (
     audienceVersionResult.error ||
     campaignVersionResult.error ||
-    rewardResult.error
+    rewardResult.error ||
+    earningRuleResult.error ||
+    tierResult.error
   ) {
     throw new Error("campaign_read_unavailable");
   }
@@ -351,7 +398,17 @@ async function getCampaignCatalogue(
     rewardById.set(reward.id, reward);
   }
 
-  return { audiences, campaigns, rewards: [...rewardById.values()] };
+  const programmeSelector = (row: UnknownRow) => ({
+    code: text(row.code),
+    name: text(row.name),
+  });
+  return {
+    audiences,
+    campaigns,
+    rewards: [...rewardById.values()],
+    purchaseEarningRules: rows(earningRuleResult.data).map(programmeSelector),
+    tiers: rows(tierResult.data).map(programmeSelector),
+  };
 }
 
 export async function getCampaignResults(
@@ -391,6 +448,12 @@ export async function getCampaignWorkspace(
       catalogueResult.status === "fulfilled"
         ? catalogueResult.value.rewards
         : [],
+    purchaseEarningRules:
+      catalogueResult.status === "fulfilled"
+        ? catalogueResult.value.purchaseEarningRules
+        : [],
+    tiers:
+      catalogueResult.status === "fulfilled" ? catalogueResult.value.tiers : [],
     results: resultResult.status === "fulfilled" ? resultResult.value : [],
     catalogueAvailable: catalogueResult.status === "fulfilled",
     resultsAvailable: resultResult.status === "fulfilled",

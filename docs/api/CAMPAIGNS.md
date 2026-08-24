@@ -48,6 +48,15 @@ M07-S02 adds seven closed campaign behaviors: `bonus_points`, `purchase_multipli
 
 Every definition binds one completed inclusion snapshot and at most ten completed exclusion snapshots in the same organization/programme group. It also carries a global effect limit, a per-member limit, a hard maximum-points budget for every points-producing behavior, and a monetary liability ceiling with explicit ISO currency/precision for every programme-reward behavior. Limited rewards permit one effect per member. These are approval ceilings; S03 must reserve capacity atomically before any effect.
 
+Purchase bonus/multiplier selectors come only from enabled purchase rules in
+the exact current published programme; tier campaign selectors come only from
+that programme's published tiers. PostgreSQL revalidates both at draft and
+approval, so direct RPC calls cannot introduce fabricated or cross-programme
+codes. Publishing or activating a programme version also fails atomically if
+it would remove a selector used by scheduled, active, or paused campaign work.
+Completed/cancelled campaign history remains immutable but does not block a
+future programme version.
+
 ## Explicit schedule and control evidence
 
 Schedules contain an IANA timezone, explicit-offset start/end instants, and matching local start/end evidence. TypeScript and PostgreSQL compare chronological instants and independently format each instant in the selected zone. Repeated fall-back time is accepted only with its chosen offset; a spring-gap local time, unknown zone, mismatch, reversed interval, or duration over 366 days fails closed.
@@ -115,6 +124,8 @@ The `/campaigns` merchant route is the complete M07 operating surface. It suppor
 - allowlisted multi-condition audience authoring and editing as new immutable versions;
 - audience publication and database-timed completed snapshots;
 - all seven campaign behaviors with completed inclusion/exclusion snapshots, explicit IANA/local schedule evidence, control groups, member/effect caps, points budgets, and fixed-discount face-value liability ceilings;
+- published-programme purchase-rule and tier selectors without hard-coded
+  programme codes, plus a portable UTC default for new schedules;
 - immutable campaign-version editing, preview, exact-hash approval, calendar inspection, pause, and cancellation; and
 - exact aggregate capacity, points, liability, purchase, trigger, reversal, and manual-review results with visible metric definitions.
 

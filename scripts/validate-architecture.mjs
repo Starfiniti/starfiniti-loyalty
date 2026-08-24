@@ -92,6 +92,7 @@ const acceptedAdrs = [
   "0027-derived-fixed-discount-campaign-liability.md",
   "0028-statement-consistent-audience-snapshots.md",
   "0029-database-timed-campaign-lifecycle.md",
+  "0030-published-programme-campaign-selector-authority.md",
 ];
 
 for (const adr of acceptedAdrs) {

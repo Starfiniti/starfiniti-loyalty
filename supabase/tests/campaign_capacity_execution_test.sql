@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(154);
+select plan(160);
 
 select ok(
   has_function_privilege(
@@ -451,6 +451,54 @@ select lives_ok(
 
 set local role authenticated;
 set local request.jwt.claim.sub = '8b000000-0000-4000-8000-000000000001';
+select throws_ok(
+  $$ select * from loyalty.create_campaign_draft_command(
+    '8b000000-0000-4000-8000-000000000101',
+    pg_temp.m07_campaign_definition(
+      'unknown_purchase_selector',
+      '{"kind":"bonus_points","earningRuleCodes":["missing-rule"],"reward":{"kind":"points","points":"10"}}'::jsonb,
+      pg_temp.m07_points_capacity('1', '10')
+    ), 'm07:capacity:campaign:unknown-rule',
+    '8b000000-0000-4000-8000-000000000580'
+  ) $$,
+  '23514',
+  'campaign earning rules must exist in the published programme',
+  'direct RPC callers cannot author a campaign with a nonexistent rule'
+);
+select throws_ok(
+  $$ select * from loyalty.create_campaign_draft_command(
+    '8b000000-0000-4000-8000-000000000101',
+    pg_temp.m07_campaign_definition(
+      'unknown_tier_selector',
+      '{"kind":"tier","movement":"entry","tierCodes":["missing-tier"],"reward":{"kind":"points","points":"10"}}'::jsonb,
+      pg_temp.m07_points_capacity('1', '10')
+    ), 'm07:capacity:campaign:unknown-tier',
+    '8b000000-0000-4000-8000-000000000581'
+  ) $$,
+  '23514', 'campaign tiers must exist in the published programme',
+  'direct RPC callers cannot author a campaign with a nonexistent tier'
+);
+select throws_ok(
+  $command$
+    do $body$
+    begin
+      perform * from loyalty.create_campaign_draft_command(
+        '8b000000-0000-4000-8000-000000000101',
+        pg_temp.m07_campaign_definition(
+          'known_tier_selector',
+          '{"kind":"tier","movement":"entry","tierCodes":["rose"],"reward":{"kind":"points","points":"10"}}'::jsonb,
+          pg_temp.m07_points_capacity('1', '10')
+        ), 'm07:capacity:campaign:known-tier',
+        '8b000000-0000-4000-8000-000000000582'
+      );
+      raise exception using errcode = 'P0001',
+        message = 'known campaign tier accepted';
+    end
+    $body$
+  $command$,
+  'P0001', 'known campaign tier accepted',
+  'a selector from the exact published programme remains authorable'
+);
 select results_eq(
   $$ select outcome from loyalty.create_programme_draft_command(
     '8b000000-0000-4000-8000-000000000101',
@@ -953,6 +1001,65 @@ select lives_ok(
    and campaign.id = version.campaign_id
   order by campaign.code $$,
   'all reviewed campaigns approve with immutable treatment assignments'
+);
+select results_eq(
+  $$ select outcome from loyalty.create_programme_draft_command(
+    '8b000000-0000-4000-8000-000000000101',
+    pg_catalog.jsonb_set(
+      pg_temp.m07_capacity_programme(),
+      '{earningRules,0,code}', '"replacement-base"'::jsonb
+    ), 'm07:capacity:programme:remove-accepted-selector',
+    '8b000000-0000-4000-8000-000000000590'
+  ) $$,
+  array['created'::text],
+  'owner may inspect a draft that changes an accepted campaign selector'
+);
+select throws_ok(
+  $$ select * from loyalty.publish_programme_version_command(
+    (
+      select version.public_id
+      from loyalty.programme_versions as version
+      join loyalty.programmes as programme
+        on programme.organization_id = version.organization_id
+       and programme.id = version.programme_id
+      where programme.public_id = '8b000000-0000-4000-8000-000000000101'
+        and version.status = 'draft'
+        and version.configuration #>> '{earningRules,0,code}' =
+          'replacement-base'
+    ),
+    (
+      select pg_catalog.encode(version.configuration_sha256, 'hex')
+      from loyalty.programme_versions as version
+      join loyalty.programmes as programme
+        on programme.organization_id = version.organization_id
+       and programme.id = version.programme_id
+      where programme.public_id = '8b000000-0000-4000-8000-000000000101'
+        and version.status = 'draft'
+        and version.configuration #>> '{earningRules,0,code}' =
+          'replacement-base'
+    ),
+    'm07:capacity:programme:publish-without-accepted-selector',
+    '8b000000-0000-4000-8000-000000000591'
+  ) $$,
+  '23514',
+  'campaign earning rules must exist in the published programme',
+  'programme publication cannot silently break an accepted campaign selector'
+);
+select results_eq(
+  $$ select version.status, pg_catalog.count(rule.id)::bigint
+     from loyalty.programme_versions as version
+     join loyalty.programmes as programme
+       on programme.organization_id = version.organization_id
+      and programme.id = version.programme_id
+     left join loyalty.programme_earning_rules as rule
+       on rule.organization_id = version.organization_id
+      and rule.programme_version_id = version.id
+     where programme.public_id = '8b000000-0000-4000-8000-000000000101'
+       and version.configuration #>> '{earningRules,0,code}' =
+         'replacement-base'
+     group by version.status $$,
+  $$ values ('draft'::text, 0::bigint) $$,
+  'failed programme publication rolls status and materialization back atomically'
 );
 reset role;
 

@@ -132,7 +132,7 @@ function blankAudienceConditionInput(): AudienceConditionInput {
     rollingDays: "30",
     activityCodes: "",
     tierOperator: "in",
-    tierCodes: "rose",
+    tierCodes: "",
   };
 }
 
@@ -323,7 +323,7 @@ export function campaignDraftInputFromDefinition(
     earningRuleCodes:
       "earningRuleCodes" in behavior
         ? behavior.earningRuleCodes.join(", ")
-        : "purchase-base",
+        : "",
     points: reward?.kind === "points" ? reward.points : "100",
     multiplierBasisPoints:
       behavior.kind === "purchase_multiplier"
@@ -346,8 +346,7 @@ export function campaignDraftInputFromDefinition(
     minimumEligibleSpendMinor:
       behavior.kind === "win_back" ? behavior.minimumEligibleSpendMinor : "0",
     tierMovement: behavior.kind === "tier" ? behavior.movement : "entry",
-    tierCodes:
-      behavior.kind === "tier" ? behavior.tierCodes.join(", ") : "bloom",
+    tierCodes: behavior.kind === "tier" ? behavior.tierCodes.join(", ") : "",
     referralParty:
       behavior.kind === "referral" ? behavior.rewardedParty : "advocate",
     rewardKind: reward?.kind ?? "points",

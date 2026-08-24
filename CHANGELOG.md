@@ -13,6 +13,7 @@
 - Added bounded database-timed campaign activation and completion with immutable private lifecycle evidence, including completion of paused/missed-start schedules so historical versions do not block successors.
 - Anchored campaign point availability and expiry to the immutable trigger instant so worker delay cannot extend customer value or change the historical earned-date policy.
 - Added exact-programme connector preflight for native campaigns and first-attempt manual review for deterministic trigger failures while retaining bounded retries for transient database faults.
+- Replaced hard-coded/free-text campaign earning-rule and tier codes with exact published-programme selectors, database validation at draft/approval, and an atomic programme-publication compatibility guard for accepted campaigns.
 - Hardened purchase-campaign refunds with append-only cumulative per-effect compensation, exact original-ledger attribution, atomic worker rollback, and merchant reversal results derived without rewriting gross campaign effects or capacity.
 - Bound hard campaign monetary ceilings to the immutable face value, currency, precision, exact programme, and published state of V2 fixed-discount rewards; unsupported native kinds can no longer claim merchant-estimated hard liability.
 

@@ -463,6 +463,194 @@ revoke all on function
     bigint, bigint, bigint, jsonb
   ) from public, anon, authenticated, loyalty_runtime, loyalty_worker;
 
+create or replace function
+  loyalty_private.validate_campaign_programme_selectors_for_version_v1(
+    target_organization_id bigint,
+    target_programme_group_id bigint,
+    target_campaign_id bigint,
+    target_definition jsonb,
+    target_programme_version_id bigint
+  )
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  target_programme_id bigint;
+  behavior_kind text;
+begin
+  select campaign.programme_id into strict target_programme_id
+  from loyalty.campaigns as campaign
+  where campaign.organization_id = target_organization_id
+    and campaign.programme_group_id = target_programme_group_id
+    and campaign.id = target_campaign_id;
+
+  perform 1
+  from loyalty.programme_versions as version
+  where version.organization_id = target_organization_id
+    and version.programme_group_id = target_programme_group_id
+    and version.programme_id = target_programme_id
+    and version.id = target_programme_version_id;
+  if not found then
+    raise exception using errcode = '23514',
+      message = 'campaign selectors require an exact programme version';
+  end if;
+
+  behavior_kind := target_definition #>> '{behavior,kind}';
+  if behavior_kind in ('bonus_points', 'purchase_multiplier')
+    and exists (
+      select 1
+      from pg_catalog.jsonb_array_elements_text(
+        target_definition #> '{behavior,earningRuleCodes}'
+      ) as selected(code)
+      where not exists (
+        select 1
+        from loyalty.programme_earning_rules as rule
+        where rule.organization_id = target_organization_id
+          and rule.programme_group_id = target_programme_group_id
+          and rule.programme_version_id = target_programme_version_id
+          and rule.source = 'purchase'
+          and rule.enabled
+          and rule.code = selected.code
+      )
+    ) then
+    raise exception using errcode = '23514',
+      message = 'campaign earning rules must exist in the published programme';
+  end if;
+
+  if behavior_kind = 'tier'
+    and exists (
+      select 1
+      from pg_catalog.jsonb_array_elements_text(
+        target_definition #> '{behavior,tierCodes}'
+      ) as selected(code)
+      where not exists (
+        select 1
+        from loyalty.programme_tiers as tier
+        where tier.organization_id = target_organization_id
+          and tier.programme_group_id = target_programme_group_id
+          and tier.programme_version_id = target_programme_version_id
+          and tier.code = selected.code
+      )
+    ) then
+    raise exception using errcode = '23514',
+      message = 'campaign tiers must exist in the published programme';
+  end if;
+end;
+$$;
+
+alter function
+  loyalty_private.validate_campaign_programme_selectors_for_version_v1(
+    bigint, bigint, bigint, jsonb, bigint
+  ) owner to loyalty_owner;
+
+revoke all on function
+  loyalty_private.validate_campaign_programme_selectors_for_version_v1(
+    bigint, bigint, bigint, jsonb, bigint
+  ) from public, anon, authenticated, loyalty_runtime, loyalty_worker;
+
+create or replace function
+  loyalty_private.validate_campaign_programme_selectors_v1(
+    target_organization_id bigint,
+    target_programme_group_id bigint,
+    target_campaign_id bigint,
+    target_definition jsonb
+  )
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  target_programme_version_id bigint;
+begin
+  select version.id into target_programme_version_id
+  from loyalty.programme_versions as version
+  join loyalty.campaigns as campaign
+    on campaign.organization_id = version.organization_id
+   and campaign.programme_group_id = version.programme_group_id
+   and campaign.programme_id = version.programme_id
+  where campaign.organization_id = target_organization_id
+    and campaign.programme_group_id = target_programme_group_id
+    and campaign.id = target_campaign_id
+    and version.status = 'published';
+  if not found then
+    raise exception using errcode = '23514',
+      message = 'campaign selectors require a published programme';
+  end if;
+
+  perform
+    loyalty_private.validate_campaign_programme_selectors_for_version_v1(
+      target_organization_id,
+      target_programme_group_id,
+      target_campaign_id,
+      target_definition,
+      target_programme_version_id
+    );
+end;
+$$;
+
+alter function loyalty_private.validate_campaign_programme_selectors_v1(
+  bigint, bigint, bigint, jsonb
+) owner to loyalty_owner;
+
+revoke all on function
+  loyalty_private.validate_campaign_programme_selectors_v1(
+    bigint, bigint, bigint, jsonb
+  ) from public, anon, authenticated, loyalty_runtime, loyalty_worker;
+
+create or replace function
+  loyalty_private.protect_accepted_campaign_programme_selectors_v1()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  accepted_campaign record;
+begin
+  if new.status = 'published' and old.status <> 'published' then
+    for accepted_campaign in
+      select campaign.id as campaign_id, version.definition
+      from loyalty.campaigns as campaign
+      join loyalty.campaign_versions as version
+        on version.organization_id = campaign.organization_id
+       and version.programme_group_id = campaign.programme_group_id
+       and version.campaign_id = campaign.id
+      where campaign.organization_id = new.organization_id
+        and campaign.programme_group_id = new.programme_group_id
+        and campaign.programme_id = new.programme_id
+        and version.status in ('scheduled', 'active', 'paused')
+      order by version.id
+    loop
+      perform
+        loyalty_private.validate_campaign_programme_selectors_for_version_v1(
+          new.organization_id,
+          new.programme_group_id,
+          accepted_campaign.campaign_id,
+          accepted_campaign.definition,
+          new.id
+        );
+    end loop;
+  end if;
+  return new;
+end;
+$$;
+
+alter function
+  loyalty_private.protect_accepted_campaign_programme_selectors_v1()
+  owner to loyalty_owner;
+
+revoke all on function
+  loyalty_private.protect_accepted_campaign_programme_selectors_v1()
+  from public, anon, authenticated, loyalty_runtime, loyalty_worker;
+
+create trigger programme_versions_campaign_selector_compatibility
+before update of status on loyalty.programme_versions
+for each row execute function
+  loyalty_private.protect_accepted_campaign_programme_selectors_v1();
+
 create or replace function loyalty_private.enforce_campaign_native_liability_v1()
 returns trigger
 language plpgsql
@@ -478,6 +666,12 @@ begin
     must_validate := approval_transition;
   end if;
   if must_validate then
+    perform loyalty_private.validate_campaign_programme_selectors_v1(
+      new.organization_id,
+      new.programme_group_id,
+      new.campaign_id,
+      new.definition
+    );
     perform loyalty_private.validate_campaign_native_liability_v1(
       new.organization_id,
       new.programme_group_id,

@@ -6,6 +6,7 @@ import type {
   MerchantAudience,
   MerchantAudienceSnapshot,
   MerchantCampaign,
+  MerchantCampaignProgrammeSelector,
   MerchantCampaignReward,
 } from "@/lib/server/campaigns";
 import {
@@ -25,7 +26,13 @@ import {
 
 const idle: CampaignActionState = { kind: "idle", message: "" };
 
-const blankCondition = (): AudienceConditionInput => ({
+const selectedCodes = (value: string) =>
+  value
+    .split(",")
+    .map((code) => code.trim())
+    .filter(Boolean);
+
+const blankCondition = (tierCode = ""): AudienceConditionInput => ({
   kind: "metric",
   metric: "available_points",
   operator: "at_least",
@@ -35,31 +42,33 @@ const blankCondition = (): AudienceConditionInput => ({
   rollingDays: "30",
   activityCodes: "",
   tierOperator: "in",
-  tierCodes: "rose",
+  tierCodes: tierCode,
 });
 
-const blankAudience = (): AudienceDraftInput => ({
+const blankAudience = (tierCode = ""): AudienceDraftInput => ({
   code: "",
   name: "",
   description: "",
   match: "all",
-  conditions: [blankCondition()],
+  conditions: [blankCondition(tierCode)],
 });
 
 const blankCampaign = (
   snapshotId: string,
   reward: MerchantCampaignReward | undefined,
+  earningRuleCode: string,
+  tierCode: string,
 ): CampaignDraftInput => ({
   code: "",
   name: "",
   description: "",
   audienceSnapshotId: snapshotId,
   exclusionSnapshotIds: [],
-  timezone: "Europe/Ljubljana",
+  timezone: "UTC",
   startsLocal: "",
   endsLocal: "",
   behaviorKind: "bonus_points",
-  earningRuleCodes: "purchase-base",
+  earningRuleCodes: earningRuleCode,
   points: "100",
   multiplierBasisPoints: "20000",
   priority: "100",
@@ -69,7 +78,7 @@ const blankCampaign = (
   minimumInactiveDays: "30",
   minimumEligibleSpendMinor: "0",
   tierMovement: "entry",
-  tierCodes: "bloom",
+  tierCodes: tierCode,
   referralParty: "advocate",
   rewardKind: "points",
   rewardId: reward?.id ?? "",
@@ -103,13 +112,17 @@ export function AudienceBuilder({
   enabled,
   programmeId,
   templates,
+  tiers,
 }: Readonly<{
   canAuthor: boolean;
   enabled: boolean;
   programmeId: string;
   templates: readonly MerchantAudience[];
+  tiers: readonly MerchantCampaignProgrammeSelector[];
 }>) {
-  const [draft, setDraft] = useState<AudienceDraftInput>(blankAudience);
+  const [draft, setDraft] = useState<AudienceDraftInput>(() =>
+    blankAudience(tiers[0]?.code),
+  );
   const [state, action, pending] = useActionState(createAudienceDraft, idle);
   const definition = useMemo(() => buildAudienceDefinition(draft), [draft]);
   const updateCondition = (
@@ -285,15 +298,24 @@ export function AudienceBuilder({
                       </select>
                     </label>
                     <label className="span-two">
-                      <span>Tier codes, comma-separated</span>
-                      <input
+                      <span>Published tiers</span>
+                      <select
+                        multiple
                         onChange={(event) =>
                           updateCondition(index, {
-                            tierCodes: event.target.value,
+                            tierCodes: [...event.target.selectedOptions]
+                              .map((option) => option.value)
+                              .join(", "),
                           })
                         }
-                        value={condition.tierCodes}
-                      />
+                        value={selectedCodes(condition.tierCodes)}
+                      >
+                        {tiers.map((tier) => (
+                          <option key={tier.code} value={tier.code}>
+                            {tier.name} · {tier.code}
+                          </option>
+                        ))}
+                      </select>
                     </label>
                   </>
                 ) : (
@@ -329,7 +351,10 @@ export function AudienceBuilder({
             onClick={() =>
               setDraft((current) => ({
                 ...current,
-                conditions: [...current.conditions, blankCondition()],
+                conditions: [
+                  ...current.conditions,
+                  blankCondition(tiers[0]?.code),
+                ],
               }))
             }
             type="button"
@@ -472,22 +497,31 @@ export function CampaignBuilder({
   canAuthor,
   enabled,
   programmeId,
+  purchaseEarningRules,
   rewards,
   snapshots,
   templates,
+  tiers,
 }: Readonly<{
   canAuthor: boolean;
   enabled: boolean;
   programmeId: string;
+  purchaseEarningRules: readonly MerchantCampaignProgrammeSelector[];
   rewards: readonly MerchantCampaignReward[];
   snapshots: readonly MerchantAudienceSnapshot[];
   templates: readonly MerchantCampaign[];
+  tiers: readonly MerchantCampaignProgrammeSelector[];
 }>) {
   const completeSnapshots = snapshots.filter(
     (snapshot) => snapshot.state === "complete",
   );
   const [draft, setDraft] = useState<CampaignDraftInput>(() =>
-    blankCampaign(completeSnapshots[0]?.id ?? "", rewards[0]),
+    blankCampaign(
+      completeSnapshots[0]?.id ?? "",
+      rewards[0],
+      purchaseEarningRules[0]?.code ?? "",
+      tiers[0]?.code ?? "",
+    ),
   );
   const [state, action, pending] = useActionState(createCampaignDraft, idle);
   const definition = useMemo(
@@ -721,7 +755,13 @@ export function CampaignBuilder({
 
         <fieldset className="campaign-builder-group">
           <legend>Behavior &amp; reward</legend>
-          <BehaviorFields draft={draft} rewards={rewards} update={update} />
+          <BehaviorFields
+            draft={draft}
+            purchaseEarningRules={purchaseEarningRules}
+            rewards={rewards}
+            tiers={tiers}
+            update={update}
+          />
         </fieldset>
 
         <fieldset className="campaign-builder-group">
@@ -847,11 +887,15 @@ export function CampaignBuilder({
 
 function BehaviorFields({
   draft,
+  purchaseEarningRules,
   rewards,
+  tiers,
   update,
 }: Readonly<{
   draft: CampaignDraftInput;
+  purchaseEarningRules: readonly MerchantCampaignProgrammeSelector[];
   rewards: readonly MerchantCampaignReward[];
+  tiers: readonly MerchantCampaignProgrammeSelector[];
   update: (patch: Partial<CampaignDraftInput>) => void;
 }>) {
   const rewardBearing = ["milestone", "win_back", "tier", "referral"].includes(
@@ -861,13 +905,24 @@ function BehaviorFields({
     <div className="campaign-form-grid four-columns">
       {["bonus_points", "purchase_multiplier"].includes(draft.behaviorKind) ? (
         <label className="span-two">
-          <span>Earning rule codes</span>
-          <input
+          <span>Published purchase rules</span>
+          <select
+            multiple
             onChange={(event) =>
-              update({ earningRuleCodes: event.target.value })
+              update({
+                earningRuleCodes: [...event.target.selectedOptions]
+                  .map((option) => option.value)
+                  .join(", "),
+              })
             }
-            value={draft.earningRuleCodes}
-          />
+            value={selectedCodes(draft.earningRuleCodes)}
+          >
+            {purchaseEarningRules.map((rule) => (
+              <option key={rule.code} value={rule.code}>
+                {rule.name} · {rule.code}
+              </option>
+            ))}
+          </select>
         </label>
       ) : null}
       {draft.behaviorKind === "purchase_multiplier" ? (
@@ -978,11 +1033,24 @@ function BehaviorFields({
             </select>
           </label>
           <label>
-            <span>Tier codes</span>
-            <input
-              onChange={(event) => update({ tierCodes: event.target.value })}
-              value={draft.tierCodes}
-            />
+            <span>Published tiers</span>
+            <select
+              multiple
+              onChange={(event) =>
+                update({
+                  tierCodes: [...event.target.selectedOptions]
+                    .map((option) => option.value)
+                    .join(", "),
+                })
+              }
+              value={selectedCodes(draft.tierCodes)}
+            >
+              {tiers.map((tier) => (
+                <option key={tier.code} value={tier.code}>
+                  {tier.name} · {tier.code}
+                </option>
+              ))}
+            </select>
           </label>
         </>
       ) : null}

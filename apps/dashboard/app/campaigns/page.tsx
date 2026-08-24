@@ -156,6 +156,7 @@ export default async function CampaignsPage({
               enabled={campaignsEnabled}
               programmeId={programmeId}
               templates={workspace.audiences}
+              tiers={workspace.tiers}
             />
             <AudienceCatalogue
               audiences={workspace.audiences}
@@ -167,9 +168,11 @@ export default async function CampaignsPage({
               canAuthor={canAuthor}
               enabled={campaignsEnabled}
               programmeId={programmeId}
+              purchaseEarningRules={workspace.purchaseEarningRules}
               rewards={workspace.rewards}
               snapshots={snapshots}
               templates={workspace.campaigns}
+              tiers={workspace.tiers}
             />
             <CampaignCalendar campaigns={workspace.campaigns} />
             <CampaignCatalogue

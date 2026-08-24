@@ -105,6 +105,23 @@ describe("campaign builder model", () => {
     ).toEqual(definition);
   });
 
+  it("does not invent programme selectors for unrelated templates", () => {
+    const definition = buildCampaignDefinition({
+      ...campaign,
+      behaviorKind: "milestone",
+    });
+    expect(
+      definition
+        ? campaignDraftInputFromDefinition(definition).earningRuleCodes
+        : "invalid",
+    ).toBe("");
+    expect(
+      definition
+        ? campaignDraftInputFromDefinition(definition).tierCodes
+        : null,
+    ).toBe("");
+  });
+
   it("requires complete native liability and rejects DST ambiguity", () => {
     expect(
       buildCampaignDefinition(
