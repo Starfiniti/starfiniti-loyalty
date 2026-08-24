@@ -367,9 +367,9 @@ begin
           else loyalty_private.notification_webhook_rate_windows.claimed_attempts
         end,
         updated_at = excluded.updated_at;
-  select window.* into strict rate_window
-  from loyalty_private.notification_webhook_rate_windows as window
-  where window.endpoint_id = endpoint.id
+  select rate_state.* into strict rate_window
+  from loyalty_private.notification_webhook_rate_windows as rate_state
+  where rate_state.endpoint_id = endpoint.id
   for update;
   remaining := pg_catalog.greatest(
     0, endpoint.rate_limit_per_minute - rate_window.claimed_attempts
