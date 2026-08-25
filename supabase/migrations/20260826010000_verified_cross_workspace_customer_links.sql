@@ -15,6 +15,26 @@ alter table loyalty.customer_user_links
     foreign key (organization_id, source_customer_id)
     references loyalty.customers(organization_id, id) on delete restrict;
 
+create or replace function loyalty_private.initialize_customer_user_link_source()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if new.source_customer_id is null then
+    new.source_customer_id := new.customer_id;
+  end if;
+  return new;
+end;
+$$;
+
+alter function loyalty_private.initialize_customer_user_link_source() owner to loyalty_owner;
+revoke all on function loyalty_private.initialize_customer_user_link_source() from public;
+
+create trigger customer_user_links_initialize_source
+before insert on loyalty.customer_user_links
+for each row execute function loyalty_private.initialize_customer_user_link_source();
+
 drop index loyalty.customer_user_links_active_user_uidx;
 create unique index customer_user_links_active_user_uidx
   on loyalty.customer_user_links (
@@ -443,7 +463,7 @@ declare
   canonical_link loyalty.customer_user_links%rowtype;
   created_link loyalty.customer_user_links%rowtype;
   target_programme_group loyalty.programme_groups%rowtype;
-  source_customer_id bigint;
+  resolved_source_customer_id bigint;
   decision_outcome text;
   external_hash bytea;
   sharing_enabled boolean := false;
@@ -547,10 +567,10 @@ begin
     limit 1
     for update;
 
-    source_customer_id := target_identity.customer_id;
+    resolved_source_customer_id := target_identity.customer_id;
     if user_connection_link.id is not null
       and user_connection_link.customer_id = target_identity.customer_id then
-      source_customer_id := user_connection_link.source_customer_id;
+      resolved_source_customer_id := user_connection_link.source_customer_id;
     elsif user_connection_link.id is null then
       select link.* into customer_link
       from loyalty.customer_user_links as link
@@ -564,11 +584,14 @@ begin
       order by link.id
       limit 1
       for update;
-      if found then source_customer_id := customer_link.source_customer_id; end if;
+      if found then
+        resolved_source_customer_id := customer_link.source_customer_id;
+      end if;
     end if;
 
     perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(
-      target_connection.organization_id::text || ':source-customer:' || source_customer_id::text,
+      target_connection.organization_id::text || ':source-customer:' ||
+        resolved_source_customer_id::text,
       0
     ));
 
@@ -576,7 +599,7 @@ begin
     from loyalty.customer_user_links as link
     where link.organization_id = target_connection.organization_id
       and link.source_connection_id = target_connection.id
-      and link.source_customer_id = source_customer_id
+      and link.source_customer_id = resolved_source_customer_id
       and link.revoked_at is null
     order by link.id
     limit 1
@@ -750,7 +773,7 @@ begin
             auth_user_id, source_connection_id
           ) values (
             target_connection.organization_id, canonical_link.customer_id,
-            source_customer_id, target_auth_user_id, target_connection.id
+            resolved_source_customer_id, target_auth_user_id, target_connection.id
           ) returning * into created_link;
           decision_outcome := 'linked';
         end if;
@@ -760,7 +783,7 @@ begin
           auth_user_id, source_connection_id
         ) values (
           target_connection.organization_id, target_identity.customer_id,
-          source_customer_id, target_auth_user_id, target_connection.id
+          resolved_source_customer_id, target_auth_user_id, target_connection.id
         ) returning * into created_link;
         decision_outcome := 'linked';
       end if;
@@ -773,7 +796,7 @@ begin
     key_version, issued_at, outcome
   ) values (
     target_connection.organization_id, target_connection.id,
-    source_customer_id, target_auth_user_id, external_hash,
+    resolved_source_customer_id, target_auth_user_id, external_hash,
     target_nonce_sha256, target_proof_sha256, target_key_version,
     target_issued_at, decision_outcome
   ) returning * into created_decision;
@@ -1096,12 +1119,12 @@ begin
     raise exception using errcode = '55000', message = 'customer unlink identity changed concurrently';
   end if;
 
-  update loyalty.customer_user_links
-  set customer_id = source_customer_id, revoked_at = unlink_time
-  where organization_id = target_link.organization_id
-    and id = target_link.id
-    and customer_id = current_version.canonical_customer_id
-    and revoked_at is null;
+  update loyalty.customer_user_links as link
+  set customer_id = link.source_customer_id, revoked_at = unlink_time
+  where link.organization_id = target_link.organization_id
+    and link.id = target_link.id
+    and link.customer_id = current_version.canonical_customer_id
+    and link.revoked_at is null;
   if not found then
     raise exception using errcode = '55000', message = 'customer unlink changed concurrently';
   end if;
