@@ -103,6 +103,26 @@ join loyalty.workspaces as workspace
   on workspace.organization_id = organization.id
 where organization.slug in ('analytics-one', 'analytics-two');
 
+-- The legacy Overview read model deliberately counts only customers linked to
+-- the selected commerce workspace. Keep this fixture inside that same scope so
+-- the shadow comparison measures aggregate compatibility rather than the two
+-- reports' intentionally different treatment of unlinked wallets.
+insert into loyalty.commerce_connections (
+  public_id, organization_id, workspace_id, external_store_id, display_name,
+  current_key_version, signing_material_ref
+)
+select
+  case organization.slug
+    when 'analytics-one' then '8b000000-0000-4000-8000-000000000120'::uuid
+    else '8c000000-0000-4000-8000-000000000120'::uuid
+  end,
+  organization.id, workspace.id, organization.slug || '-store',
+  organization.name || ' Store', 'v1', 'vault://' || organization.slug
+from loyalty.organizations as organization
+join loyalty.workspaces as workspace
+  on workspace.organization_id = organization.id
+where organization.slug in ('analytics-one', 'analytics-two');
+
 insert into loyalty.programmes (
   public_id, organization_id, programme_group_id, slug, name, status
 )
@@ -150,6 +170,17 @@ select '8b000000-0000-4000-8000-000000000150', organization.id,
   'Analytics member', '2026-08-18T00:00:00Z', '2026-08-18T00:00:00Z'
 from loyalty.organizations as organization
 where organization.slug = 'analytics-one';
+
+insert into loyalty.customer_identities (
+  organization_id, customer_id, commerce_connection_id,
+  external_customer_id, identity_kind, verified_at
+)
+select customer.organization_id, customer.id, connection.id,
+  'registered:analytics-member', 'registered', customer.created_at
+from loyalty.customers as customer
+join loyalty.commerce_connections as connection
+  on connection.organization_id = customer.organization_id
+where customer.public_id = '8b000000-0000-4000-8000-000000000150';
 
 insert into loyalty.wallets (
   public_id, organization_id, programme_group_id, customer_id,
