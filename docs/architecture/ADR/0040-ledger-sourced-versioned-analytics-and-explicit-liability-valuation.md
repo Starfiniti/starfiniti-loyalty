@@ -28,6 +28,11 @@ For monetary liability, inferring one global points-to-currency ratio or derivin
 6. Distinguish influenced revenue from experimentally estimated incremental revenue. Incremental output is unavailable unless immutable treatment/control assignment, population, estimator, window, exclusions, and sample evidence are present.
 7. Keep PostgreSQL as the source until measured query plans, latency, concurrency, or retention volume cross a documented capacity threshold. A future analytical store consumes immutable source facts and must reconcile before replacing any read.
 8. Public Data API access remains through narrow Auth-derived or public-selector read wrappers with live membership rechecks, empty search paths, exact grants, bounded output, and no raw identities, orders, entries, reasons, or internal keys.
+9. Commerce performance uses an additive normalized read stream. V2 purchases and refund compensations come from immutable `tier_qualification_facts`; legacy V1 purchases and cumulative refunds are reconstructed from immutable evaluations, their canonical event occurrence time, and historical programme configuration. V2 evaluations are never read again as fallback facts, preventing double counting.
+10. Reports distinguish event occurrence from knowledge time. A fact belongs to the period containing its original commerce occurrence, and is visible only when its immutable evidence was recorded before report `asOf`. A later refund therefore compensates the original order period in a newly generated report without rewriting the original purchase or a prior report.
+11. Member-grained performance requires a canonical customer link. Guest orders remain first-class linked customers and are included. A legacy event whose customer link is unavailable after privacy processing remains in order and spend totals, is excluded from member denominators, and appears in explicit linkage-coverage counters.
+12. Activation uses a mature 30-day cohort and the first immutable `release` transaction, not a pending award or manual credit. Observed LTV is a descriptive, non-predictive average of linked, refund-compensated lifetime eligible spend over linked customers with a positive net eligible-order lifetime.
+13. Currency amounts are returned only when every contributing historical programme version has one identical ISO currency and minor-unit precision. Mixed or missing currency scope leaves monetary fields explicitly unavailable while count metrics remain valid; currency conversion waits for M11 evidence.
 
 ## Consequences
 
@@ -36,6 +41,7 @@ For monetary liability, inferring one global points-to-currency ratio or derivin
 - Historical reports may cost more than projection reads; bounded periods and measured composite/partial indexes are required.
 - Multi-currency monetary liability waits for M11 conversion evidence plus an explicit valuation policy; this is an honest limitation rather than a guessed total.
 - Existing `MerchantOverviewReportV1` remains compatible while M10 introduces additive report contracts and shadow comparison.
+- Legacy V1 evaluation reconstruction is more complex than V2 fact reads, but preserves production history without backfilling or mutating immutable rows. The report exposes its V1/V2 and linkage coverage so migration gaps are observable.
 
 ## Security and integrity effects
 

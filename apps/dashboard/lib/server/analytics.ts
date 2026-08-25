@@ -1,6 +1,10 @@
 import "server-only";
-import type { AnalyticsValueTruthReportV1 } from "@starfiniti/contracts";
+import type {
+  AnalyticsCommercePerformanceReportV1,
+  AnalyticsValueTruthReportV1,
+} from "@starfiniti/contracts";
 import {
+  parseAnalyticsCommercePerformanceRow,
   parseAnalyticsValueTruthRow,
   type AnalyticsRange,
   type AnalyticsRow,
@@ -29,5 +33,29 @@ export async function getAnalyticsValueTruthReport(
     return parseAnalyticsValueTruthRow(row);
   } catch {
     throw new Error("analytics_value_truth_invalid");
+  }
+}
+
+export async function getAnalyticsCommercePerformanceReport(
+  context: TenantContext,
+  rangeDays: AnalyticsRange,
+): Promise<AnalyticsCommercePerformanceReportV1 | null> {
+  if (!context.workspace || !context.programmeGroup) return null;
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .schema("loyalty")
+    .rpc("get_analytics_commerce_performance_v1", {
+      target_organization_public_id: context.organization.public_id,
+      target_workspace_public_id: context.workspace.public_id,
+      target_programme_group_public_id: context.programmeGroup.public_id,
+      target_days: rangeDays,
+    });
+  if (error) throw new Error("analytics_commerce_performance_unavailable");
+  const row = (Array.isArray(data) ? data[0] : data) as AnalyticsRow | null;
+  if (!row) return null;
+  try {
+    return parseAnalyticsCommercePerformanceRow(row);
+  } catch {
+    throw new Error("analytics_commerce_performance_invalid");
   }
 }

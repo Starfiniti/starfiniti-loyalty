@@ -34,6 +34,21 @@ Dictionary V1 publishes only implemented point-value metrics from M10-S01. Each 
 
 Historical flows come from immutable ledger transactions and entries. Current balances and lot balances are only cross-checks. Counts and point quantities cross the Data API as decimal strings and are formatted with `BigInt`.
 
+## Dictionary V2 commerce boundary
+
+Dictionary V2 is additive: it carries all V1 definitions and adds member activation, participation, eligible-order, eligible-spend, repeat-purchase, AOV, observed-LTV, guest, and linkage-coverage definitions.
+
+- The report period is the exact UTC half-open interval `[from, to)`, ending at `asOf`.
+- V2 purchase/refund facts use `effective_at` for original-order attribution and `recorded_at < asOf` for knowledge-time reproducibility.
+- Legacy V1 purchases use canonical `occurred_at`; cumulative refund evaluations are converted into append-only deltas and attributed to that original instant. Versions marked V2 are excluded from this fallback.
+- Guest customers are normal channel-linked members. Missing legacy customer links do not erase commerce totals; the report counts affected purchase facts, excludes them from member-grained metrics, and reports their refund-compensated spend separately.
+- Activation cohorts are shifted back 30 days so every included new wallet had a full observation window. Activation requires its first released earning by the cohort deadline; manual credits do not qualify.
+- Participation is a linked wallet with a positive net purchase, referral, or verified-action count in the period, or a captured reward in the period.
+- AOV is net refund-compensated eligible spend divided by net eligible orders. Observed LTV is linked lifetime eligible spend divided by linked lifetime purchasers. Both are descriptive minor-unit values with integer truncation toward zero and return zero for an empty denominator.
+- Monetary fields are available only for one exact historical currency code and precision. Mixed currency or missing configuration returns an explicit unavailable currency scope and `null` monetary fields; counts remain available.
+
+Observed LTV is not gross merchandise value, predictive lifetime value, margin, or incrementality. Eligible spend follows the versioned loyalty exclusions that produced the immutable evaluation.
+
 ## Liability terminology
 
 - **Outstanding point exposure:** current pending plus available plus reserved points. It is an operational promotional-unit obligation and may be signed if a programme permits attributable negative available balance.

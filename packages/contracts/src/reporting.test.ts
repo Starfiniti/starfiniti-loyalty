@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  analyticsCommercePerformanceReportV1,
   analyticsMetricDictionaryV1,
   analyticsMetricDictionaryV1Schema,
+  analyticsMetricDictionaryV2,
+  analyticsMetricDictionaryV2Schema,
   analyticsMetricKeyV1,
+  analyticsMetricKeyV2,
   analyticsValueTruthReportV1,
   merchantOverviewReportV1,
 } from "./reporting";
@@ -199,5 +203,151 @@ describe("analytics value truth report V1", () => {
         monetaryLiability: { status: "available", amountMinor: "550" },
       }).success,
     ).toBe(false);
+  });
+});
+
+function commercePerformanceFixture() {
+  return {
+    reportVersion: "1",
+    dictionaryVersion: "2",
+    asOf: "2026-08-25T12:00:00Z",
+    period: {
+      from: "2026-08-18T12:00:00Z",
+      to: "2026-08-25T12:00:00Z",
+      rangeDays: 7,
+      timeZone: "UTC",
+    },
+    currency: {
+      status: "available",
+      code: "EUR",
+      minorUnitDigits: 2,
+      reason: null,
+    },
+    members: {
+      total: "40",
+      activation: {
+        windowDays: 30,
+        cohortFrom: "2026-07-19T12:00:00Z",
+        cohortTo: "2026-07-26T12:00:00Z",
+        cohortMembers: "10",
+        activatedMembers: "7",
+        rateBasisPoints: "7000",
+      },
+      participatingMembers: "12",
+      participationRateBasisPoints: "3000",
+    },
+    commerce: {
+      netEligibleOrders: "18",
+      purchasingMembers: "12",
+      repeatPurchasingMembers: "5",
+      repeatPurchaseRateBasisPoints: "4166",
+      netEligibleSpendMinor: "9007199254740993",
+      averageOrderValueMinor: "500399958596721",
+      observedLifetimeEligibleSpendMinor: "12000000",
+      observedLifetimePurchasingMembers: "30",
+      observedLifetimeValueMinor: "400000",
+    },
+    coverage: {
+      status: "partial_customer_linkage",
+      v1NetEligibleOrders: "8",
+      v2NetEligibleOrders: "10",
+      guestNetEligibleOrders: "3",
+      missingCustomerLinkOrders: "1",
+      missingCustomerLinkSpendMinor: "2500",
+    },
+  } as const;
+}
+
+describe("analytics commerce performance V1", () => {
+  it("publishes a complete additive Dictionary V2", () => {
+    expect(
+      analyticsMetricDictionaryV2Schema.safeParse(analyticsMetricDictionaryV2)
+        .success,
+    ).toBe(true);
+    const keys = analyticsMetricDictionaryV2.definitions.map(
+      (definition) => definition.key,
+    );
+    expect(new Set(keys)).toEqual(new Set(analyticsMetricKeyV2.options));
+    expect(new Set(keys).size).toBe(keys.length);
+    expect(new Set(keys)).toEqual(
+      new Set([...analyticsMetricKeyV1.options, ...keys.slice(25)]),
+    );
+  });
+
+  it("preserves exact currency amounts and reconciled denominators", () => {
+    expect(
+      analyticsCommercePerformanceReportV1.safeParse(
+        commercePerformanceFixture(),
+      ).success,
+    ).toBe(true);
+  });
+
+  it("accepts explicit mixed-currency unavailability without losing counts", () => {
+    const fixture = commercePerformanceFixture();
+    const unavailable = {
+      ...fixture,
+      currency: {
+        status: "unavailable",
+        code: null,
+        minorUnitDigits: null,
+        reason: "mixed_currency_scope",
+      },
+      commerce: {
+        ...fixture.commerce,
+        netEligibleSpendMinor: null,
+        averageOrderValueMinor: null,
+        observedLifetimeEligibleSpendMinor: null,
+        observedLifetimeValueMinor: null,
+      },
+      coverage: { ...fixture.coverage, missingCustomerLinkSpendMinor: null },
+    };
+    expect(
+      analyticsCommercePerformanceReportV1.safeParse(unavailable).success,
+    ).toBe(true);
+  });
+
+  it("rejects rate, source coverage, cohort, linkage, and currency mismatches", () => {
+    const fixture = commercePerformanceFixture();
+    const candidates = [
+      {
+        ...fixture,
+        members: {
+          ...fixture.members,
+          participationRateBasisPoints: "3001",
+        },
+      },
+      {
+        ...fixture,
+        commerce: { ...fixture.commerce, netEligibleOrders: "19" },
+      },
+      {
+        ...fixture,
+        members: {
+          ...fixture.members,
+          activation: {
+            ...fixture.members.activation,
+            cohortFrom: "2026-07-20T12:00:00Z",
+          },
+        },
+      },
+      {
+        ...fixture,
+        coverage: { ...fixture.coverage, status: "complete" },
+      },
+      {
+        ...fixture,
+        currency: {
+          status: "unavailable",
+          code: null,
+          minorUnitDigits: null,
+          reason: "mixed_currency_scope",
+        },
+      },
+    ];
+    for (const candidate of candidates) {
+      expect(
+        analyticsCommercePerformanceReportV1.safeParse(candidate).success,
+      ).toBe(false);
+    }
   });
 });

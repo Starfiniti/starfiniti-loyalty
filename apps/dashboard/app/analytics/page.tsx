@@ -6,7 +6,10 @@ import {
   resolveMerchantLocale,
 } from "@/lib/merchant-locale";
 import { parseOverviewRange } from "@/lib/overview";
-import { getAnalyticsValueTruthReport } from "@/lib/server/analytics";
+import {
+  getAnalyticsCommercePerformanceReport,
+  getAnalyticsValueTruthReport,
+} from "@/lib/server/analytics";
 import { getEntitlementSnapshot } from "@/lib/server/entitlements";
 import { getMerchantProgrammeState } from "@/lib/server/programme";
 import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
@@ -51,10 +54,18 @@ export default async function AnalyticsPage({
   } else if (!analyticsEnabled) {
     state = { kind: "disabled" };
   } else {
-    try {
-      const report = await getAnalyticsValueTruthReport(tenant.context, range);
-      state = report ? { kind: "ready", report } : { kind: "unavailable" };
-    } catch {
+    const [valueResult, commerceResult] = await Promise.allSettled([
+      getAnalyticsValueTruthReport(tenant.context, range),
+      getAnalyticsCommercePerformanceReport(tenant.context, range),
+    ]);
+    if (valueResult.status === "fulfilled" && valueResult.value) {
+      state = {
+        kind: "ready",
+        report: valueResult.value,
+        commerce:
+          commerceResult.status === "fulfilled" ? commerceResult.value : null,
+      };
+    } else {
       state = { kind: "unavailable" };
     }
   }

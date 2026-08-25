@@ -12130,6 +12130,82 @@ html[data-dashboard-theme="dark"] .analytics-integrity-mark {
   color: #6ee7b7;
 }
 
+.analytics-performance {
+  display: grid;
+  gap: 14px;
+  margin: 8px 0 14px;
+}
+
+.analytics-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  padding: 8px 2px 2px;
+}
+
+.analytics-section-heading .login-eyebrow,
+.analytics-section-heading h2,
+.analytics-section-heading p:last-child {
+  margin: 0;
+}
+
+.analytics-section-heading h2 {
+  margin-top: 5px;
+  font-size: 22px;
+  letter-spacing: -0.035em;
+}
+
+.analytics-section-heading p:last-child {
+  max-width: 720px;
+  margin-top: 6px;
+  color: var(--merchant-muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.analytics-section-heading > svg {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  color: var(--merchant-violet);
+}
+
+.analytics-module-unavailable {
+  min-height: 112px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid color-mix(in srgb, #c17b16 30%, var(--merchant-border));
+  border-radius: 12px;
+  background: color-mix(in srgb, #c17b16 6%, var(--merchant-surface));
+}
+
+.analytics-module-unavailable > svg {
+  width: 24px;
+  height: 24px;
+  color: #b45309;
+}
+
+.analytics-module-unavailable strong,
+.analytics-module-unavailable p {
+  margin: 0;
+}
+
+.analytics-module-unavailable strong {
+  font-size: 13px;
+}
+
+.analytics-module-unavailable p {
+  max-width: 900px;
+  margin-top: 5px;
+  color: var(--merchant-muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
 .analytics-summary {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -12241,6 +12317,10 @@ html[data-dashboard-theme="dark"] .analytics-integrity-mark {
   gap: 14px;
 }
 
+.analytics-commerce-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .analytics-panel,
 .analytics-dictionary {
   overflow: hidden;
@@ -12331,6 +12411,110 @@ html[data-dashboard-theme="dark"] .analytics-integrity-mark {
   font-weight: 720;
   font-variant-numeric: tabular-nums;
   text-align: right;
+}
+
+.analytics-commerce-list dd {
+  max-width: 55%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.analytics-panel-footnote {
+  margin: 0;
+  padding: 14px 20px;
+  border-top: 1px solid var(--merchant-border);
+  color: var(--merchant-muted);
+  background: var(--merchant-canvas);
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.analytics-panel-footnote strong {
+  color: var(--merchant-text);
+  font-weight: 720;
+}
+
+.analytics-coverage-status {
+  min-height: 72px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 11px;
+  margin: 16px 20px 6px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, #159b6b 28%, var(--merchant-border));
+  border-radius: 9px;
+  background: color-mix(in srgb, #159b6b 6%, var(--merchant-surface));
+}
+
+.analytics-coverage-status.is-partial_customer_linkage {
+  border-color: color-mix(in srgb, #c17b16 30%, var(--merchant-border));
+  background: color-mix(in srgb, #c17b16 6%, var(--merchant-surface));
+}
+
+.analytics-coverage-status > svg {
+  width: 20px;
+  height: 20px;
+  color: #047857;
+}
+
+.analytics-coverage-status.is-partial_customer_linkage > svg {
+  color: #b45309;
+}
+
+.analytics-coverage-status strong,
+.analytics-coverage-status small {
+  display: block;
+}
+
+.analytics-coverage-status strong {
+  font-size: 12px;
+}
+
+.analytics-coverage-status small {
+  margin-top: 3px;
+  color: var(--merchant-muted);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.analytics-cohort-note {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 13px;
+  padding: 16px 18px;
+  border: 1px solid
+    color-mix(in srgb, var(--merchant-violet) 22%, var(--merchant-border));
+  border-radius: 11px;
+  background: color-mix(
+    in srgb,
+    var(--merchant-violet) 5%,
+    var(--merchant-surface)
+  );
+}
+
+.analytics-cohort-note > svg {
+  width: 21px;
+  height: 21px;
+  color: var(--merchant-violet);
+}
+
+.analytics-cohort-note strong,
+.analytics-cohort-note p {
+  margin: 0;
+}
+
+.analytics-cohort-note strong {
+  font-size: 12px;
+}
+
+.analytics-cohort-note p {
+  margin-top: 4px;
+  color: var(--merchant-muted);
+  font-size: 10px;
+  line-height: 1.5;
 }
 
 .analytics-flow-grid {
@@ -12689,6 +12873,19 @@ html[data-dashboard-theme="dark"] .analytics-integrity-mark {
   }
   .analytics-integrity {
     margin-inline: -2px;
+  }
+  .analytics-section-heading {
+    align-items: flex-start;
+  }
+  .analytics-section-heading > svg {
+    display: none;
+  }
+  .analytics-commerce-list > div {
+    align-items: flex-start;
+  }
+  .analytics-commerce-list dd {
+    max-width: 52%;
+    white-space: normal;
   }
   .analytics-expiry-layout,
   .analytics-dictionary > header {

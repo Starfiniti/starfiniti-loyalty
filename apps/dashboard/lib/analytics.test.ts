@@ -2,8 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   analyticsMetricDefinition,
   analyticsShareBasisPoints,
+  formatAnalyticsBasisPoints,
+  formatAnalyticsCurrencyMinor,
   formatAnalyticsPeriod,
   formatAnalyticsPoints,
+  parseAnalyticsCommercePerformanceRow,
   parseAnalyticsValueTruthRow,
 } from "./analytics";
 
@@ -48,6 +51,43 @@ const row = {
   monetary_liability_reason: "valuation_policy_not_configured",
 };
 
+const commerceRow = {
+  report_version: "1",
+  dictionary_version: "2",
+  report_as_of: "2026-08-26T00:00:00Z",
+  period_from: "2026-08-19T00:00:00Z",
+  period_to: "2026-08-26T00:00:00Z",
+  range_days: 7,
+  currency_status: "available",
+  currency_code: "EUR",
+  currency_minor_unit_digits: 2,
+  currency_reason: null,
+  members_total: "4",
+  activation_window_days: 30,
+  activation_cohort_from: "2026-07-20T00:00:00Z",
+  activation_cohort_to: "2026-07-27T00:00:00Z",
+  activation_cohort_members: "2",
+  activated_members: "1",
+  activation_rate_basis_points: "5000",
+  participating_members: "2",
+  participation_rate_basis_points: "5000",
+  net_eligible_orders: "4",
+  purchasing_members: "2",
+  repeat_purchasing_members: "2",
+  repeat_purchase_rate_basis_points: "10000",
+  net_eligible_spend_minor: "9007199254740993",
+  average_order_value_minor: "2251799813685248",
+  observed_lifetime_eligible_spend_minor: "42000",
+  observed_lifetime_purchasing_members: "3",
+  observed_lifetime_value_minor: "14000",
+  coverage_status: "partial_customer_linkage",
+  v1_net_eligible_orders: "3",
+  v2_net_eligible_orders: "1",
+  guest_net_eligible_orders: "2",
+  missing_customer_link_orders: "1",
+  missing_customer_link_spend_minor: "0",
+};
+
 describe("analytics presentation", () => {
   it("maps snake-case RPC evidence into the strict value-truth contract", () => {
     const report = parseAnalyticsValueTruthRow(row);
@@ -90,5 +130,39 @@ describe("analytics presentation", () => {
       availability: "unavailable",
       currencyPolicy: "unavailable_without_valuation_policy",
     });
+    expect(analyticsMetricDefinition("commerce.ltv.observed")).toMatchObject({
+      causalClass: "descriptive",
+      currencyPolicy: "single_currency_minor_units",
+      displayFormat: "currency_minor",
+    });
+  });
+
+  it("maps exact commerce performance and formats money without Number", () => {
+    const report = parseAnalyticsCommercePerformanceRow(commerceRow);
+    expect(report.commerce.netEligibleSpendMinor).toBe("9007199254740993");
+    expect(report.coverage.status).toBe("partial_customer_linkage");
+    expect(formatAnalyticsBasisPoints("4166")).toBe("41.66%");
+    expect(
+      formatAnalyticsCurrencyMinor(
+        report.commerce.netEligibleSpendMinor ?? "0",
+        "EUR",
+        2,
+      ),
+    ).toBe("90,071,992,547,409.93 EUR");
+  });
+
+  it("rejects commerce source and denominator drift before rendering", () => {
+    expect(() =>
+      parseAnalyticsCommercePerformanceRow({
+        ...commerceRow,
+        v2_net_eligible_orders: "2",
+      }),
+    ).toThrow();
+    expect(() =>
+      parseAnalyticsCommercePerformanceRow({
+        ...commerceRow,
+        participation_rate_basis_points: "5001",
+      }),
+    ).toThrow();
   });
 });

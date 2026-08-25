@@ -1,9 +1,11 @@
 import {
-  analyticsMetricDictionaryV1,
-  type AnalyticsMetricKeyV1,
+  analyticsMetricDictionaryV2,
+  type AnalyticsCommercePerformanceReportV1,
+  type AnalyticsMetricKeyV2,
   type AnalyticsValueTruthReportV1,
 } from "@starfiniti/contracts";
 import {
+  Activity,
   AlertTriangle,
   ArrowDownToLine,
   ArrowUpFromLine,
@@ -13,21 +15,31 @@ import {
   Clock3,
   DatabaseZap,
   Info,
+  Repeat2,
   RefreshCcw,
   ShieldCheck,
+  ShoppingBag,
+  TrendingUp,
+  UsersRound,
   WalletCards,
 } from "lucide-react";
 import Link from "next/link";
 import {
   analyticsMetricDefinition,
   analyticsShareBasisPoints,
+  formatAnalyticsBasisPoints,
+  formatAnalyticsCurrencyMinor,
   formatAnalyticsPeriod,
   formatAnalyticsPoints,
   type AnalyticsRange,
 } from "@/lib/analytics";
 
 type AnalyticsState =
-  | Readonly<{ kind: "ready"; report: AnalyticsValueTruthReportV1 }>
+  | Readonly<{
+      kind: "ready";
+      report: AnalyticsValueTruthReportV1;
+      commerce: AnalyticsCommercePerformanceReportV1 | null;
+    }>
   | Readonly<{ kind: "disabled" }>
   | Readonly<{ kind: "setup_required" }>
   | Readonly<{ kind: "unavailable" }>;
@@ -44,10 +56,10 @@ export function AnalyticsValueTruth({
       <header className="analytics-heading">
         <div>
           <p className="login-eyebrow">Ledger-sourced analytics</p>
-          <h1>Value &amp; liability truth</h1>
+          <h1>Programme performance</h1>
           <p>
-            Follow every point from issue to expiry. Values only appear after
-            immutable history and operational projections reconcile exactly.
+            Understand activation, repeat purchase, customer value, and every
+            point movement from immutable, refund-aware evidence.
           </p>
         </div>
         <nav aria-label="Analytics period" className="analytics-range">
@@ -65,7 +77,7 @@ export function AnalyticsValueTruth({
       </header>
 
       {state.kind === "ready" ? (
-        <AnalyticsReport report={state.report} />
+        <AnalyticsReport commerce={state.commerce} report={state.report} />
       ) : (
         <AnalyticsUnavailable kind={state.kind} />
       )}
@@ -108,8 +120,12 @@ function AnalyticsUnavailable({
 }
 
 function AnalyticsReport({
+  commerce,
   report,
-}: Readonly<{ report: AnalyticsValueTruthReportV1 }>) {
+}: Readonly<{
+  commerce: AnalyticsCommercePerformanceReportV1 | null;
+  report: AnalyticsValueTruthReportV1;
+}>) {
   const cards = [
     {
       icon: WalletCards,
@@ -160,6 +176,20 @@ function AnalyticsReport({
         </span>
         <span>Dictionary v{report.dictionaryVersion}</span>
       </section>
+
+      <CommercePerformance report={commerce} />
+
+      <header className="analytics-section-heading">
+        <div>
+          <p className="login-eyebrow">Value lifecycle</p>
+          <h2>Point position and movement</h2>
+          <p>
+            Current exposure reconciles to immutable entries before any value is
+            shown.
+          </p>
+        </div>
+        <WalletCards aria-hidden="true" />
+      </header>
 
       <section className="analytics-summary" aria-label="Value summary">
         {cards.map((card) => (
@@ -349,6 +379,254 @@ function AnalyticsReport({
   );
 }
 
+function CommercePerformance({
+  report,
+}: Readonly<{ report: AnalyticsCommercePerformanceReportV1 | null }>) {
+  if (!report) {
+    return (
+      <section className="analytics-module-unavailable" role="status">
+        <AlertTriangle aria-hidden="true" />
+        <div>
+          <strong>
+            Commerce performance stopped before showing uncertain data
+          </strong>
+          <p>
+            Point value remains available above. Commerce metrics will return
+            after V1/V2 source, refund, customer-link, and currency evidence
+            passes its independent contract.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  const currency = report.currency;
+  const money = (value: string | null) =>
+    currency.status === "available" && value !== null
+      ? formatAnalyticsCurrencyMinor(
+          value,
+          currency.code,
+          currency.minorUnitDigits,
+        )
+      : "Unavailable";
+  const cards = [
+    {
+      icon: TrendingUp,
+      key: "members.activation.rate" as const,
+      label: "30-day activation",
+      value: formatAnalyticsBasisPoints(
+        report.members.activation.rateBasisPoints,
+      ),
+      note: `${formatCount(report.members.activation.activatedMembers)} of ${formatCount(
+        report.members.activation.cohortMembers,
+      )} mature members`,
+      tone: "violet",
+    },
+    {
+      icon: Activity,
+      key: "members.participation_rate" as const,
+      label: "Participation",
+      value: formatAnalyticsBasisPoints(
+        report.members.participationRateBasisPoints,
+      ),
+      note: `${formatCount(report.members.participatingMembers)} active members`,
+      tone: "green",
+    },
+    {
+      icon: ShoppingBag,
+      key: "commerce.spend.net_eligible" as const,
+      label: "Net eligible spend",
+      value: money(report.commerce.netEligibleSpendMinor),
+      note: `${formatCount(report.commerce.netEligibleOrders)} refund-adjusted orders`,
+      tone: "blue",
+    },
+    {
+      icon: Repeat2,
+      key: "commerce.repeat_purchase_rate" as const,
+      label: "Repeat purchase",
+      value: formatAnalyticsBasisPoints(
+        report.commerce.repeatPurchaseRateBasisPoints,
+      ),
+      note: `${formatCount(report.commerce.repeatPurchasingMembers)} repeat purchasers`,
+      tone: "amber",
+    },
+  ];
+
+  return (
+    <section
+      className="analytics-performance"
+      aria-labelledby="performance-title"
+    >
+      <header className="analytics-section-heading">
+        <div>
+          <p className="login-eyebrow">Member &amp; commerce outcomes</p>
+          <h2 id="performance-title">What the programme is doing</h2>
+          <p>
+            Original order timing, later refund knowledge, and legacy coverage
+            remain separate and auditable.
+          </p>
+        </div>
+        <TrendingUp aria-hidden="true" />
+      </header>
+
+      <div className="analytics-summary analytics-performance-summary">
+        {cards.map((card) => (
+          <article className={`analytics-kpi is-${card.tone}`} key={card.key}>
+            <span className="analytics-kpi-icon">
+              <card.icon aria-hidden="true" />
+            </span>
+            <div>
+              <span>{card.label}</span>
+              <strong>{card.value}</strong>
+              <small>{card.note}</small>
+            </div>
+            <MetricDefinitionButton metricKey={card.key} />
+          </article>
+        ))}
+      </div>
+
+      <div className="analytics-grid analytics-commerce-grid">
+        <section className="analytics-panel" aria-labelledby="commerce-title">
+          <PanelHeading
+            eyebrow={`${report.period.rangeDays}-day outcomes`}
+            icon={ShoppingBag}
+            id="commerce-title"
+            title="Commerce pulse"
+          />
+          <dl className="analytics-ledger-list analytics-commerce-list">
+            <PerformanceRow
+              definition="commerce.orders.net_eligible"
+              label="Net eligible orders"
+              value={formatCount(report.commerce.netEligibleOrders)}
+            />
+            <PerformanceRow
+              definition="commerce.members.purchasing"
+              label="Purchasing members"
+              value={formatCount(report.commerce.purchasingMembers)}
+            />
+            <PerformanceRow
+              definition="commerce.members.repeat_purchasing"
+              label="Repeat purchasers"
+              value={formatCount(report.commerce.repeatPurchasingMembers)}
+            />
+            <PerformanceRow
+              definition="commerce.aov.net_eligible"
+              label="Net eligible AOV"
+              value={money(report.commerce.averageOrderValueMinor)}
+            />
+            <PerformanceRow
+              definition="commerce.ltv.observed"
+              label="Observed member LTV"
+              value={money(report.commerce.observedLifetimeValueMinor)}
+            />
+          </dl>
+          <p className="analytics-panel-footnote">
+            Observed LTV uses{" "}
+            {formatCount(report.commerce.observedLifetimePurchasingMembers)}{" "}
+            linked lifetime purchasers. It is descriptive—not forecast or
+            incrementality.
+          </p>
+        </section>
+
+        <section className="analytics-panel" aria-labelledby="coverage-title">
+          <PanelHeading
+            eyebrow="Source integrity"
+            icon={DatabaseZap}
+            id="coverage-title"
+            title="Coverage &amp; identity"
+          />
+          <div
+            className={`analytics-coverage-status is-${report.coverage.status}`}
+          >
+            {report.coverage.status === "complete" ? (
+              <ShieldCheck aria-hidden="true" />
+            ) : (
+              <AlertTriangle aria-hidden="true" />
+            )}
+            <div>
+              <strong>
+                {report.coverage.status === "complete"
+                  ? "Customer linkage complete"
+                  : "Partial customer linkage"}
+              </strong>
+              <small>
+                Missing links stay in commerce totals and out of member-only
+                denominators.
+              </small>
+            </div>
+          </div>
+          <dl className="analytics-ledger-list analytics-commerce-list">
+            <PerformanceRow
+              definition="commerce.coverage.v1_net_orders"
+              label="Legacy V1 net orders"
+              value={formatCount(report.coverage.v1NetEligibleOrders)}
+            />
+            <PerformanceRow
+              definition="commerce.coverage.v2_net_orders"
+              label="V2 fact net orders"
+              value={formatCount(report.coverage.v2NetEligibleOrders)}
+            />
+            <PerformanceRow
+              definition="commerce.coverage.guest_net_orders"
+              label="Guest net orders"
+              value={formatCount(report.coverage.guestNetEligibleOrders)}
+            />
+            <PerformanceRow
+              definition="commerce.coverage.missing_customer_link_orders"
+              label="Orders missing member linkage"
+              value={formatCount(report.coverage.missingCustomerLinkOrders)}
+            />
+          </dl>
+          <p className="analytics-panel-footnote">
+            Currency:{" "}
+            {currency.status === "available" ? (
+              <strong>
+                {currency.code} · {currency.minorUnitDigits} decimal places
+              </strong>
+            ) : (
+              <strong>
+                unavailable · {currency.reason.replaceAll("_", " ")}
+              </strong>
+            )}
+          </p>
+        </section>
+      </div>
+
+      <div className="analytics-cohort-note">
+        <UsersRound aria-hidden="true" />
+        <div>
+          <strong>Activation cohort is fully mature</strong>
+          <p>
+            Joined {formatUtcDate(report.members.activation.cohortFrom)}–
+            {formatUtcDate(report.members.activation.cohortTo)}. Only a first
+            released earning within 30 days counts; pending awards and manual
+            credits do not.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PerformanceRow({
+  definition,
+  label,
+  value,
+}: Readonly<{
+  definition: AnalyticsMetricKeyV2;
+  label: string;
+  value: string;
+}>) {
+  return (
+    <div>
+      <dt>
+        {label} <MetricDefinitionButton metricKey={definition} />
+      </dt>
+      <dd>{value}</dd>
+    </div>
+  );
+}
+
 function PanelHeading({
   eyebrow,
   icon: Icon,
@@ -378,7 +656,7 @@ function LedgerRow({
   label,
   value,
 }: Readonly<{
-  keyName: AnalyticsMetricKeyV1;
+  keyName: AnalyticsMetricKeyV2;
   label: string;
   value: string;
 }>) {
@@ -399,7 +677,7 @@ function FlowValue({
   value,
 }: Readonly<{
   icon: typeof WalletCards;
-  keyName: AnalyticsMetricKeyV1;
+  keyName: AnalyticsMetricKeyV2;
   label: string;
   value: string;
 }>) {
@@ -419,7 +697,7 @@ function ExpiryBar({
   total,
   value,
 }: Readonly<{
-  keyName: AnalyticsMetricKeyV1;
+  keyName: AnalyticsMetricKeyV2;
   label: string;
   total: string;
   value: string;
@@ -446,7 +724,7 @@ function ExpiryBar({
 
 function MetricDefinitionButton({
   metricKey,
-}: Readonly<{ metricKey: AnalyticsMetricKeyV1 }>) {
+}: Readonly<{ metricKey: AnalyticsMetricKeyV2 }>) {
   const definition = analyticsMetricDefinition(metricKey);
   return (
     <span
@@ -468,7 +746,7 @@ function MetricDictionary() {
     >
       <header>
         <div>
-          <p className="login-eyebrow">Metric dictionary v1</p>
+          <p className="login-eyebrow">Metric dictionary v2</p>
           <h2 id="dictionary-title">Definitions behind every value</h2>
           <p>
             Formula, source, grain, UTC boundary, caveats, and causal class are
@@ -478,7 +756,7 @@ function MetricDictionary() {
         <DatabaseZap aria-hidden="true" />
       </header>
       <div className="analytics-definition-list">
-        {analyticsMetricDictionaryV1.definitions.map((definition) => (
+        {analyticsMetricDictionaryV2.definitions.map((definition) => (
           <details key={definition.key}>
             <summary>
               <span>{definition.label}</span>
@@ -517,4 +795,13 @@ function MetricDictionary() {
 
 function formatCount(value: string): string {
   return new Intl.NumberFormat("en-GB").format(BigInt(value));
+}
+
+function formatUtcDate(value: string): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(value));
 }

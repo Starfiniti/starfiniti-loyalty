@@ -1436,6 +1436,19 @@ tasks:
           - activation participation eligible orders repeat purchase AOV LTV reward tier referral and campaign metrics use versioned fact-sourced definitions and exact currency scope
           - refunds reversals guest identity and missing linkage are explicit exclusions or compensations rather than silent denominator changes
           - influenced revenue remains separately labelled from experimental incrementality
+        slices:
+          - id: M10-S02A-COMMERCE-AND-MEMBER-PERFORMANCE
+            status: in_progress
+            acceptance:
+              - V1 evaluations and V2 immutable qualification facts reconcile into one occurrence-attributed purchase and refund fact stream without double counting
+              - activation uses a mature 30-day cohort and first released earning while participation repeat purchase AOV and observed LTV expose exact numerators denominators and zero cases
+              - one exact currency and precision govern every monetary aggregate or monetary fields are explicitly unavailable for mixed or missing scope
+              - guest orders remain included while missing customer linkage is counted and excluded only from member-grained metrics
+          - id: M10-S02B-PROGRAMME-OUTCOME-PERFORMANCE
+            status: planned
+            acceptance:
+              - reward request capture and mature realization tier movement referral funnel and campaign treatment outcomes reconcile to immutable transitions and effects
+              - campaign-influenced eligible spend is descriptive and experimentally incremental revenue remains unavailable without a declared treatment-control estimator
       - id: M10-S03-COHORT-RETENTION-AND-CAUSAL-EVIDENCE
         status: planned
         acceptance:
