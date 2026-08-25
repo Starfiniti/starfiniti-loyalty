@@ -1,0 +1,148 @@
+schema: starfiniti.analytics-canary.v1
+status: in_progress
+observedAt: 2026-08-25T21:30:00Z
+currentProduction:
+  release: v0.1.11
+  applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
+candidate:
+  pullRequest: 37
+  commit: 65f1dfb06538dc56f9ba0e8a9898159d8338678d
+  approvedRelease: false
+  operatorAccess: false
+publicBaseline:
+  dashboardHealth: 200
+  login: 200
+  authWithoutKey: 401
+  restWithoutKey: 401
+  canonicalDns: true
+score:
+  total: 90
+  target: 90
+  minimumCategoryRatio: 0.8
+  categories:
+    - id: correctness
+      weight: 20
+      score: 20
+      evidence: Four strict versioned reports reconcile immutable point, commerce, programme, cohort, and causal evidence with explicit unavailable states.
+    - id: security
+      weight: 15
+      score: 15
+      evidence: PostgreSQL re-derives live scope and roles; RLS, exact grants, private payloads, one-use session capabilities, and minimized projections pass adversarial tests.
+    - id: ledger_reliability
+      weight: 15
+      score: 15
+      evidence: Reports are read-only, value truth fails on projection drift, exports and schedules cannot mutate loyalty value, and all concurrency fences pass.
+    - id: tests
+      weight: 15
+      score: 15
+      evidence: Candidate exact-head CI passed the complete baseline, clean database replay, 2,611 assertions, six concurrency probes, both images, and four WooCommerce runtimes.
+    - id: performance
+      weight: 10
+      score: 8
+      evidence: Periods, series, payloads, claims, leases, and workers are bounded; responsive browser checks pass, while production latency and load observation remain pending.
+    - id: operability
+      weight: 10
+      score: 3
+      evidence: Disabled-first rollout, isolated reporting mode, expiry, audit, and rollback contracts exist; release, recovery point, deployment, canary, and observation are pending.
+    - id: maintainability
+      weight: 15
+      score: 14
+      evidence: Four dictionary generations, strict parsers, additive SQL, ADRs, tests, runbooks, living evidence, and V1 compatibility are versioned; production closeout remains.
+checks:
+  - id: exact_head_ci
+    status: passed
+    evidence: Run 32901023124 passed all seven jobs at candidate commit 65f1dfb after the shadow fixture correction.
+  - id: migration_replay
+    status: passed
+    evidence: Run 32901023124 cleanly replayed all 62 additive migrations and 49 pgTAP files with 2,611 assertions.
+  - id: contract_and_parser_matrix
+    status: passed
+    evidence: Dictionary V4 and all four report plus aggregate export contracts reject arithmetic, currency, cohort, causal, bigint, and prohibited-key drift.
+  - id: database_authority_matrix
+    status: passed
+    evidence: Auth scope, grants, RLS, revocation, cross-scope selectors, projection reconciliation, privacy minimization, and zero-mutation assertions pass.
+  - id: concurrency_matrix
+    status: passed
+    evidence: Six two-session probes cover value, rewards, referrals, audience snapshots, campaign capacity, and export scheduling/capability consumption.
+  - id: woocommerce_runtime_matrix
+    status: passed
+    evidence: Minimum and current WordPress and WooCommerce pass with HPOS and legacy storage; analytics remains outside checkout.
+  - id: browser_accessibility
+    status: passed
+    evidence: Desktop and mobile command-center checks pass navigation, loading, stale, empty, keyboard, reduced motion, contrast, reflow, overflow, and English-only output.
+  - id: shared_snapshot_boundary
+    status: passed
+    evidence: One server-chosen UTC instant is sent to all four report functions and invalid, materially future, or divergent returned instants fail closed.
+  - id: legacy_overview_shadow
+    status: passed
+    evidence: Run 32901023124 passed both same-instant read-only comparisons for workspace-linked member count and outstanding points.
+  - id: public_production_baseline
+    status: passed
+    evidence: Canonical DNS resolves; dashboard health and login return 200, while unauthenticated Auth and REST roots return 401.
+  - id: approved_release
+    status: pending
+    evidence: PR 37 is a stacked draft based on the unmerged M09 branch and is not an approved immutable release.
+  - id: operator_access
+    status: pending
+    evidence: The configured public Proxmox alias rejects its key and the VPN alias reaches a different host; no access path was improvised.
+  - id: pre_change_recovery_point
+    status: pending
+    evidence: A fresh verified database base and encrypted incremental archive must complete immediately before deployment.
+  - id: production_source_baseline
+    status: pending
+    evidence: Public health is current, but fresh minimized source/report/export/ledger counts require approved operator database access.
+  - id: disabled_deployment
+    status: pending
+    evidence: Candidate migrations and immutable images have not been deployed; analytics and the reporting profile remain unenabled in production.
+  - id: migration_registration
+    status: pending
+    evidence: Production must record each M10 additive migration version and source hash exactly once before canary reads.
+  - id: analytics_entitlement_canary
+    status: pending
+    evidence: Keep analytics disabled globally, then enable only the Starfiniti organization after disabled-deployment smoke passes.
+  - id: value_truth_reconciliation
+    status: pending
+    evidence: Compare point buckets, flows, lots, expiry horizons, and projection counts to immutable production evidence with zero difference.
+  - id: commerce_reconciliation
+    status: pending
+    evidence: Compare members, activation, eligible orders/spend, refunds, repeat rate, AOV, LTV, coverage, and currency to source facts.
+  - id: programme_outcome_reconciliation
+    status: pending
+    evidence: Compare reward transitions, tier decisions, referral issuance/compensation, campaign effects, reversals, and unresolved work exactly.
+  - id: cohort_reconciliation
+    status: pending
+    evidence: Compare mature activation/retention rows and experiment population, sample, currency, estimator, and unavailable reasons exactly.
+  - id: manual_export_canary
+    status: pending
+    evidence: Generate one bounded Starfiniti aggregate JSON report and verify its strict contract, source digest, final digest, size, and expiry.
+  - id: download_privacy_and_replay
+    status: pending
+    evidence: Prove another session, replay, expiry, revocation, and prohibited identity inspection return no private report content.
+  - id: schedule_materialization
+    status: pending
+    evidence: Materialize one approved local-calendar occurrence once, then pause it before any unapproved recurring production generation.
+  - id: reporting_worker_isolation
+    status: pending
+    evidence: Stop and restart only the reporting process while verifying checkout, ledger, refunds, connector, and provider workers remain healthy.
+  - id: interactive_latency
+    status: pending
+    evidence: Record bounded production report latency, statement timeout behavior, database load, browser timing, and stale/unavailable counters.
+  - id: rollback_rehearsal
+    status: pending
+    evidence: Disable the canary, stop reporting, restore prior images, and retain additive history, report audit, checkout, and loyalty value.
+  - id: observation_window
+    status: pending
+    evidence: Observe the controlled canary after rollback rehearsal and record health, latency, errors, expiry, queues, privacy, and reconciliation.
+  - id: final_reconciliation
+    status: pending
+    evidence: Reconcile every pilot report/export/schedule effect and confirm zero unexplained source, aggregate, payload, capability, or value difference.
+automaticFails:
+  - unexplained ledger projection report export schedule or capability difference
+  - cross-organization access or authority derived from browser input or mutable identity claims
+  - duplicate export schedule materialization download consumption or immutable business effect
+  - report output exposes row-level identity contact coupon signing or private operational evidence
+  - influenced revenue is labelled incremental without complete treatment-control estimator evidence
+  - checkout value refunds reconciliation or provider processing depends on analytics or reporting availability
+  - large integer currency timezone cohort or refund arithmetic loses exact source meaning
+  - approved release recovery point rollback reconciliation or observation evidence is absent
+  - critical security privacy accessibility recovery or data-loss finding remains unresolved

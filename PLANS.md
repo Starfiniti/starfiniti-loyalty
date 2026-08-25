@@ -24,7 +24,7 @@ M08-S05 is exact-head green at `a377ef7` on draft PR #32. ADR-0035 adds immutabl
 
 M09-S01 through S05 are complete on draft PR #36. The Auth-derived hosted experience covers overview, earning, rewards, VIP, referrals, immutable history, and account states; demand-driven signed WooCommerce snapshots, classic placements, official namespaced Store API data, and a separately flagged Blocks panel use only strict local state. ADR-0039 adds controlled English V2 branding and exact section composition. Exact-head run `32875639062` at `639eac4` passed all seven jobs after desktop, mobile, 320-pixel, 200%-scale, keyboard, reduced-motion, dark-theme, public-privacy, preview-state, and outage review. M09-S06 is active at 88/100 with a mandatory 30-check canary validator; reviewed release, restored Proxmox access, an explicitly approved WooCommerce store, disabled deployment, production outage/rollback proof, exact reconciliation, observation, and a score of at least 90 remain.
 
-M10-S01 through S04 are complete on draft PR #37. Dictionary V4 publishes 103 exact definitions across four independently degradable reports and one strict aggregate JSON bundle. Private 24-hour payloads, five-minute subject/session-bound one-use downloads, owner/admin IANA-local schedules, bounded lease/retry/expiry handling, and the separately deployable reporting worker preserve tenant and loyalty-value isolation. Run `32897999942` at `4f97f3a` passed root checks, both production images, a clean 62-migration replay, all 49 pgTAP files with 2,609 assertions, all six concurrency probes, and all four WooCommerce runtimes. S05 now binds every interactive module to one exact database snapshot and locally passes its Hub-style loading/stale/empty/error, desktop/mobile, keyboard, reduced-motion, contrast, overflow, and English-only review. Exact-head CI remains before S05 closure; production generation remains disabled until S06.
+M10-S01 through S05 are complete on draft PR #37. Dictionary V4 publishes 103 exact definitions across four independently degradable reports and one strict aggregate JSON bundle. Private 24-hour payloads, five-minute subject/session-bound one-use downloads, owner/admin IANA-local schedules, bounded lease/retry/expiry handling, and the separately deployable reporting worker preserve tenant and loyalty-value isolation. The command center binds every module to one exact database snapshot and passed its Hub-style loading/stale/empty/error, desktop/mobile, keyboard, reduced-motion, contrast, overflow, and English-only review. Exact-head run `32901023124` at `65f1dfb` passed root checks, both production images, a clean 62-migration replay, all 49 pgTAP files with 2,611 assertions including the read-only legacy Overview shadow, all six concurrency probes, and all four WooCommerce runtimes. S06 is active with a 29-check fail-closed canary manifest and provisional 90/100 score, while release, operator, deployment, reconciliation, rollback, observation, and the 80% operability floor remain pending.
 
 M05-S01 through S05 are exact-head green. M05-S06 shadow comparison found and fixed a predeployment Rose/Bloom/Icon displayed-versus-executable rate mismatch; all 36 V1/V2 award comparisons now match, and exact-head run `31760806620` passed. Reviewed merge, disabled deployment, a fresh recovery point, Starfiniti-only canary, reconciliation, and scoring remain open.
 
@@ -53,12 +53,11 @@ The active integrated baseline is released production commit `0ced4b666a55d836bd
 
 ## Next safe work
 
-1. M10: close S05 on exact-head CI after locally passed command-center and accessibility hardening.
-2. M10: complete S06 read-only shadow comparison, disabled deployment, Starfiniti canary, reconciliation, rollback, and module scoring.
-3. M09: complete S06 reviewed release, disabled deployment, production outage/rollback proof, exact reconciliation, observation, and scoring when an approved store is available.
-4. M08: complete S06 disabled deployment, local SMTP sink, bounded provider canaries, exact reconciliation, rollback proof, and module scoring without enabling unapproved production delivery.
-5. M07/M06/M05: complete reviewed stacked merges, disabled deployments, fresh recovery points, Starfiniti-only canaries, exact reconciliation, smoke, and scores.
-6. M01: connect an approved real WooCommerce store when access is supplied and complete its value, outage, rotation, alert, and clean-room recovery gate.
+1. M10: complete S06 exact-head shadow proof, reviewed release, disabled deployment, Starfiniti canary, reconciliation, rollback, observation, and category-floor scoring.
+2. M09: complete S06 reviewed release, disabled deployment, production outage/rollback proof, exact reconciliation, observation, and scoring when an approved store is available.
+3. M08: complete S06 disabled deployment, local SMTP sink, bounded provider canaries, exact reconciliation, rollback proof, and module scoring without enabling unapproved production delivery.
+4. M07/M06/M05: complete reviewed stacked merges, disabled deployments, fresh recovery points, Starfiniti-only canaries, exact reconciliation, smoke, and scores.
+5. M01: connect an approved real WooCommerce store when access is supplied and complete its value, outage, rotation, alert, and clean-room recovery gate.
 
 ## External inputs
 

@@ -1,10 +1,17 @@
 # Iteration Log
 
+## 2026-08-25 — M10 shadow and canary gate
+
+- Added a 29-check machine-readable analytics closeout gate with exact category arithmetic, a 90/100 target, an 80% per-category floor, sensitive-key rejection, deterministic automatic failures, and a self-test that rejects false completion.
+- Added a read-only legacy Overview shadow at one exact scope/range/instant. The first CI run correctly exposed an invalid unlinked-wallet fixture; the fixture now uses a workspace-linked commerce identity so the comparison covers shared member and outstanding-point semantics without altering either production report.
+- Exact-head run `32901023124` at `65f1dfb` passed all seven jobs, including the corrected shadow, clean 62-migration replay, 49 pgTAP files with 2,611 assertions, six concurrency probes, both images, and all four WooCommerce runtimes.
+- Refreshed the public production baseline and recorded the real blocker: PR #37 is an unapproved stacked draft and neither configured SSH route proves safe Proxmox operator access. No production mutation was attempted.
+
 ## 2026-08-25 — M10 analytics command center
 
 - Bound the four parallel interactive reports to one explicit database snapshot instant and rejected invalid, future, or divergent timestamps before presenting a combined decision surface.
 - Added current/stale integrity labeling, value-free loading, explicit partial-error and reporting failure states, zero-denominator cohort states, six section anchors, and keyboard-focusable named table regions without synthetic values.
-- Chromium review passed desktop/mobile responsive layout, zero document overflow, 16.68:1 primary heading contrast, keyboard anchors and data regions, reduced motion, English-only output, stale/empty variants, and zero browser diagnostics. Exact-head Linux CI is pending before S05 closes.
+- Chromium review passed desktop/mobile responsive layout, zero document overflow, 16.68:1 primary heading contrast, keyboard anchors and data regions, reduced motion, English-only output, stale/empty variants, and zero browser diagnostics. Exact-head run `32900284858` at `e04fafd` passed all seven jobs, including a clean 62-migration/2,609-assertion database gate and all four WooCommerce runtimes, closing S05.
 
 ## 2026-08-25 — M10 controlled exports and scheduled reports
 

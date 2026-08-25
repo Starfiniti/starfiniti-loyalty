@@ -1,6 +1,6 @@
 # M10 Evidence — Analytics
 
-Status: in progress. M10-S01 through M10-S04 are complete; M10-S05 analytics command-center implementation and browser review pass locally while exact-head CI is pending. M09 waits only on its reviewed production canary gate.
+Status: in progress. M10-S01 through M10-S05 are complete and exact-head green; M10-S06 shadow, release, deployment, canary, reconciliation, rollback, and observation closeout is active. M09 waits only on its reviewed production canary gate.
 
 ## Reconstructed baseline
 
@@ -71,10 +71,19 @@ Status: in progress. M10-S01 through M10-S04 are complete; M10-S05 analytics com
 - Exact-head Linux CI [run 32897999942](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/32897999942) passed at commit `4f97f3a`: root checks, both production images, a clean 62-migration replay, all 49 pgTAP files with 2,609 assertions, all six concurrency probes including the analytics race, and minimum/current WooCommerce with HPOS/legacy storage.
 - Intentional limitations: schedules generate downloadable Hub reports rather than sending email attachments; PostgreSQL remains the source because no measured load requires a warehouse; payloads are JSON only; the reporting profile remains disabled until the Starfiniti S06 canary.
 
-## M10-S05 implementation evidence
+## M10-S05 completion evidence
 
 - One server-chosen UTC `asOf` instant now binds all four parallel report RPCs. Returned ISO timestamps must resolve to the same instant before modules are combined; invalid or materially future instants fail closed, and a snapshot older than five minutes renders an explicit stale warning without replacing values.
 - The Hub-style command center adds six section links, keeps 7/30/90-day filtering, exposes the exact report period/dictionary/ledger integrity strip, and preserves independent commerce/outcome/cohort/reporting failures rather than blanking valid evidence.
 - The route has a value-free accessible loading skeleton. Zero-denominator cohorts render an honest empty explanation; populated cohort tables have captions, row/column headers, named keyboard-focusable scroll regions, and small-screen instructions.
 - [Desktop/mobile browser QA](analytics-command-center-browser-qa-2026-08-25.md) passed at 1512 × 982 and 390 × 844 with `0 px` page overflow, 16.68:1 heading contrast, working keyboard anchors/table focus, reduced motion, English-only output, explicit stale/empty variants, and zero browser diagnostics. Temporary fixture and QA code were removed.
-- Focused dashboard typecheck, production build, lint, 15 analytics tests, targeted formatting, and diff checks pass locally. Exact-head Linux CI remains the final S05 closure check.
+- Focused dashboard typecheck, production build, lint, 15 analytics tests, targeted formatting, and diff checks passed locally. Exact-head Linux CI [run 32900284858](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/32900284858) then passed at commit `e04fafd`: root checks, both production images, a clean 62-migration replay, all 49 pgTAP files with 2,609 assertions, all six concurrency probes, and minimum/current WooCommerce with HPOS/legacy storage.
+
+## M10-S06 pre-canary evidence
+
+- A mandatory machine-readable gate records 29 exact repository, production, privacy, rollout, reconciliation, rollback, observation, and operator checks plus the seven-category module score. It rejects duplicate or missing checks, unsafe evidence keys, arithmetic drift, a false complete state, a score below 90, or any category below its 80% floor.
+- The read-only compatibility shadow calls the legacy Overview and M10 value-truth reports with identical public scope, range, and instant. It compares only their shared semantics—workspace-linked member count and outstanding points—while preserving both versioned contracts and creating no loyalty effect.
+- Exact-head Linux CI [run 32901023124](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/32901023124) passed at candidate commit `65f1dfb`: root checks, both production images, a clean 62-migration replay, all 49 pgTAP files with 2,611 assertions including both compatibility shadows, all six concurrency probes, and minimum/current WooCommerce with HPOS/legacy storage.
+- The public production baseline is healthy: canonical DNS resolves, dashboard health and login return HTTP 200, and unauthenticated Auth and REST roots return 401.
+- The candidate remains a stacked draft and production is still `v0.1.11`. The configured public Proxmox key is rejected, while the VPN alias reaches a different host; no deployment or alternate access path was improvised. Approved release, operator access, a fresh recovery point, disabled deployment, Starfiniti-only entitlement canary, exact source reconciliation, rollback rehearsal, and observation therefore remain pending.
+- The provisional evidence score is 90/100, but operability is 3/10 and below the mandatory category floor. M10 is not complete and the validator cannot represent it as complete until every check passes.

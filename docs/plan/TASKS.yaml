@@ -1378,6 +1378,7 @@ tasks:
     title: Add reconciled analytics, reporting, liability, and exports
     module: M10
     status: in_progress
+    module_score: 90
     dependencies: [M09-STOREFRONT-EXPERIENCE]
     hypothesis: Defined and exactly reconciled metrics let merchants improve loyalty without overstating causality.
     baseline: Basic spend/member/redemption/liability trends and ledger exports exist.
@@ -1520,12 +1521,12 @@ tasks:
           - route/action tests for fail-closed parsing cookie binding private headers filename and transaction rollback
           - exact-head baseline clean migration replay production images and all four WooCommerce runtimes
       - id: M10-S05-ANALYTICS-COMMAND-CENTER
-        status: in_progress
+        status: complete
         acceptance:
           - Hub-style desktop and mobile analytics exposes metric definitions filters empty loading error and stale states without fake data
           - keyboard screen-reader zoom contrast reduced-motion and large-table navigation have no critical issue
       - id: M10-S06-SHADOW-CANARY-AND-CLOSE
-        status: planned
+        status: in_progress
         acceptance:
           - read-only shadow comparison exact-head CI disabled deployment Starfiniti canary reconciliation rollback and module score at least 90 pass
     risks: [R-001, R-030, R-037, R-038]
