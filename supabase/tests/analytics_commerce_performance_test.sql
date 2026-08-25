@@ -265,7 +265,7 @@ select
   '1', 'commerce-analytics-event-' || event.number, event.event_type,
   event.order_id, event.occurred_at, event.occurred_at + interval '1 hour',
   'v1', 'commerce-analytics-nonce-' || event.number,
-  extensions.digest(convert_to('commerce-event-' || event.number, 'UTF8'), 'sha256'),
+  repeat(event.number::text, 64),
   '{}'::jsonb, 'applied'
 from (
   values
