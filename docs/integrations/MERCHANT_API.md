@@ -66,6 +66,16 @@ All commands are `SECURITY DEFINER`, owned by the `NOLOGIN` `loyalty_owner` role
 
 A workspace with a provisioned commerce connection for a programme inside the group is removal-protected. The command never copies or merges wallets, never links customers by email, writes no ledger value, and issues no WooCommerce command. Same-organization workspaces remain isolated unless their public IDs are present in an accepted exact allowlist. See ADR-0042; M11-S02 owns explicit verified cross-workspace customer linking.
 
+### Verified cross-workspace customer linking V1
+
+Cross-workspace customer linking is customer-initiated and does not add a general merchant merge API. The existing server-only WooCommerce claim consumes one fresh five-minute store-key HMAC proof for one exact registered customer and one live Supabase Auth subject. A second store must supply its own independent proof. Email, name, address, domain, organization membership, JWT metadata, and browser-supplied tenant/customer/channel keys are never matching authority.
+
+When both connections belong to the latest reconciled `explicit-workspace-allowlist` policy and `ecosystem.api` is enabled, PostgreSQL serializes the Auth subject and source customer, selects one stable canonical customer, and appends an immutable exact link revision. The source customer remains recorded separately while the protected identity/Auth-link projection points all verified store paths to the canonical customer and existing programme-group wallet. If the secondary customer already has any wallet in the group, the claim returns `rejected_value_conflict`; no account, identity, or value is changed and a traceable M12 migration is required.
+
+`get_my_cross_workspace_customer_links_v1()` accepts no selector. It derives the Auth subject and returns at most 20 link sets with at most 25 public account/workspace selectors, display names, one canonical marker, safe unlink state, revision, and status. It exposes no organization key, internal customer, channel customer number, email, proof hash, identity decision, wallet, balance, ledger, or connector secret and fails closed on projection drift.
+
+`unlink_my_cross_workspace_customer_account_v1(target_account_public_id, target_idempotency_key, target_correlation_id)` derives all tenant, subject, identity, connection, workspace, programme-group, and canonical-customer authority. Only an active non-canonical account may be disconnected. The command restores the exact source identity, revokes that store's Auth link, appends an immutable revision, and does not update ledger transactions, entries, lots, reservations, tier history, commerce events, or WooCommerce. The canonical account cannot be removed while shared value depends on it. See ADR-0043.
+
 ### `create_programme_command`
 
 Inputs:

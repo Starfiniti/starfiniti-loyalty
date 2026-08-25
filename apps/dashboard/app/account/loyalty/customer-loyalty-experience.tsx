@@ -1,4 +1,5 @@
 import type {
+  CrossWorkspaceCustomerLinksV1,
   ExperienceHeroAssetV2,
   ExperienceSectionV2,
 } from "@starfiniti/contracts";
@@ -57,6 +58,11 @@ import type {
   CustomerReward,
 } from "@/lib/server/customer-account";
 import { CustomerReferralPanel } from "./customer-referral-panel";
+import { CustomerLinkedStores } from "./customer-linked-stores";
+
+type CustomerLinksPresentationState =
+  | Readonly<{ kind: "unavailable" }>
+  | Readonly<{ kind: "ready"; value: CrossWorkspaceCustomerLinksV1 }>;
 
 const navigationIcons: Readonly<Record<ExperienceSectionV2, LucideIcon>> = {
   overview: LayoutDashboard,
@@ -107,10 +113,12 @@ const rewardIcons: Record<CustomerReward["kind"], LucideIcon> = {
 export function CustomerLoyaltyExperience({
   account,
   accounts,
+  customerLinks,
   messages,
 }: Readonly<{
   account: CustomerLoyaltyAccount;
   accounts: readonly CustomerLoyaltyAccount[];
+  customerLinks: CustomerLinksPresentationState;
   messages: ReadonlyArray<
     Readonly<{ kind: "success" | "error"; text: string }>
   >;
@@ -217,6 +225,7 @@ export function CustomerLoyaltyExperience({
           {visibleSections.map((section) => (
             <MemberExperienceArea
               account={account}
+              customerLinks={customerLinks}
               key={section}
               programmeName={programmeName}
               section={section}
@@ -253,10 +262,12 @@ function MemberNavigation({
 
 function MemberExperienceArea({
   account,
+  customerLinks,
   programmeName,
   section,
 }: Readonly<{
   account: CustomerLoyaltyAccount;
+  customerLinks: CustomerLinksPresentationState;
   programmeName: string;
   section: ExperienceSectionV2;
 }>) {
@@ -576,6 +587,7 @@ function MemberExperienceArea({
           </div>
         </article>
       </div>
+      <CustomerLinkedStores state={customerLinks} />
     </ExperienceSection>
   );
 }

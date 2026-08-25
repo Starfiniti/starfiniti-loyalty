@@ -1,5 +1,11 @@
 # Iteration Log
 
+## 2026-08-26 — M11 verified cross-workspace customer identity
+
+- Accepted ADR-0043: one live Auth subject must present a separate fresh WooCommerce HMAC proof for every store; email, profile attributes, organization membership, and browser tenant/customer inputs grant no identity authority.
+- Added immutable exact link revisions, source-customer retention, transaction-scoped projection guards, stable canonical-customer routing, value-conflict rejection, Auth-derived unlink/relink, a minimized no-selector customer read, and explicit zero-ledger boundaries.
+- Added strict contracts, server parsing/actions, an English responsive connected-stores experience, 53 planned pgTAP assertions, and an eighth concurrency probe covering simultaneous secondary proofs plus competing Auth subjects. Focused contracts and all 205 dashboard tests, affected typechecks, targeted lint, 64-migration/51-pgTAP validation, and diff checks pass locally; clean replay, concurrency execution, browser review, exact-head CI, and canary remain open.
+
 ## 2026-08-25 — M11 explicit multi-store wallet scope
 
 - Accepted ADR-0042: programme groups remain the wallet boundary, same-organization membership grants no implicit link, and cross-workspace customer identity waits for an explicit verified M11-S02 workflow rather than email matching.

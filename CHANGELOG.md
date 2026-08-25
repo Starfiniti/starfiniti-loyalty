@@ -1,5 +1,7 @@
 # Changelog
 
+- Added M11 verified cross-workspace customer linking with independent signed-store proofs, immutable source/canonical revisions, value-conflict rejection, protected reversible projections, Auth-derived unlink, and a responsive connected-stores customer experience.
+
 ## Unreleased
 
 - Added M11's explicit multi-store wallet-scope foundation with immutable programme-group sharing revisions, exact isolated/shared workspace allowlists, Auth-derived owner/admin entitlement authority, optimistic idempotent commands, projection-drift detection, connector-removal protection, and a responsive review-before-save Operations control.

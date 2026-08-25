@@ -8,11 +8,11 @@ select has_table('loyalty', 'customer_user_links', 'customer Auth links exist');
 select has_table('loyalty', 'identity_link_decisions', 'immutable claim evidence exists');
 select has_index(
   'loyalty', 'customer_user_links', 'customer_user_links_active_user_uidx',
-  'one active customer per Auth user and tenant is indexed and enforced'
+  'one active verified account per Auth user and store is indexed and enforced'
 );
 select has_index(
   'loyalty', 'customer_user_links', 'customer_user_links_active_customer_uidx',
-  'one active Auth user per customer is indexed and enforced'
+  'one active Auth subject per exact source customer and store is indexed and enforced'
 );
 select has_function(
   'loyalty_private', 'claim_woocommerce_customer_identity',

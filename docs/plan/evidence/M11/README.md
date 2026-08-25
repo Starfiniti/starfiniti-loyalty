@@ -20,4 +20,19 @@ Status: M11-S01 repository and browser gates are exact-head green on `codex/m11-
 - Unavailable and read-only role states remain covered by typed rendering and require production Auth/RLS confirmation during canary.
 - Disabled deployment, Starfiniti-only canary, exact topology/wallet/connector reconciliation, rollback rehearsal, and observation.
 
-Later evidence sections will record explicit cross-workspace customer linking, currency conversion, service-account/API, webhook/client, integration-operations, and final canary results.
+## M11-S02 verified cross-workspace customer linking
+
+- Decision: ADR-0043 rejects email/organization matching, read-time multi-wallet aggregation, and automatic value transfers. One stable canonical customer is selected only after a separate fresh store HMAC proof reaches the same live Auth subject.
+- Value safety: a secondary customer with any wallet in the shared programme group fails with an explicit reviewed-migration state. Link, unlink, and relink never write ledger, lot, reservation, tier, commerce-event, or WooCommerce value.
+- Evidence model: immutable revisions retain exact source Auth link, registered identity, source customer, connection, workspace, canonical customer, action, request fingerprint, and correlation evidence. Trigger-guarded current projections require private transaction-local capabilities.
+- Customer delivery: a no-selector bounded read and public-account-selector unlink command power an English connected-stores card with verified-store, wallet-home, confirmation, success/error, degraded, keyboard-focus, responsive, and value-preservation states.
+- Verification implemented: strict contract/server/action tests, 53 focused pgTAP assertions, and a concurrency probe for simultaneous secondary proofs plus competing Auth subjects. Focused contracts and all 205 dashboard tests, affected typechecks, targeted lint, 64-migration/51-pgTAP static validation, and diff checks pass locally.
+
+### Pending S02 closeout
+
+- Clean container replay of the additive migration and all 53 focused pgTAP assertions.
+- Execution of the two-scenario concurrency probe.
+- Production-build desktop/mobile keyboard, reduced-motion, contrast, overflow, degraded-state, and diagnostic review.
+- Exact-head repository/images/all-runtime CI, disabled deployment, Starfiniti-only canary, identity/link/wallet/event reconciliation, unlink/relink rollback rehearsal, and observation.
+
+Later evidence sections will record currency conversion, service-account/API, webhook/client, integration-operations, and final canary results.

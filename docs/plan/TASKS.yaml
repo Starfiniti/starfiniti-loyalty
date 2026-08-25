@@ -1621,10 +1621,49 @@ tasks:
           - exact-head run 32905613578 at 3cb609d passes all seven jobs including clean replay all 50 pgTAP files the same-revision concurrency race both images and all four WooCommerce runtimes
           - disabled production deployment canary topology wallet connector reconciliation rollback and observation remain pending
       - id: M11-S02-EXPLICIT-CROSS-WORKSPACE-CUSTOMER-LINKING
-        status: planned
+        status: in_progress
+        hypothesis: Two fresh store-signed customer proofs bound to one live Auth subject can safely establish shared-wallet identity without treating email organization membership or a browser selector as identity authority.
+        baseline: One Auth subject can link only one customer record per organization and shared workspace policy does not prove that two store identities belong to one person.
+        metrics:
+          - links created from email or domain matching = 0
+          - secondary customers with pre-existing wallet value canonicalized = 0
+          - exact proof retries creating another link revision = 0
+          - cross-tenant or unlinked-workspace identities accepted = 0
+          - link or unlink commands creating ledger effects = 0
+          - unresolved identity or Auth projection drift = 0
         acceptance:
           - shared wallets require an explicit verified cross-workspace identity link and never merge by email alone
           - unlinking preserves immutable value provenance and produces a reversible audited state
+          - each additional store requires its own fresh WooCommerce HMAC proof while PostgreSQL derives tenant programme group workspace customer and Auth authority
+          - canonicalization is permitted only when at most one member already owns a wallet and the secondary customer has no wallet value state to strand
+          - every accepted link or unlink appends one immutable revision with exact source identity customer connection workspace Auth and canonical-customer evidence
+          - all current customer and worker paths resolve the canonical customer through protected projections while historical claim and commerce evidence retain source provenance
+        failure_modes:
+          - email name address domain organization membership or JWT metadata links customers
+          - one signed store proof silently links another workspace
+          - two existing wallets are merged copied or hidden
+          - concurrent claims choose different canonical customers or create duplicate revisions
+          - unlink rewrites ledger history or leaves an identity mapped to an unauthorized wallet
+          - privacy erasure export or customer access omits a linked source identity
+        security_boundaries:
+          - raw link tables and immutable versions have RLS and no browser runtime or worker table grants
+          - only the server-only HMAC-verified claim command may add a store identity and the customer unlink command derives the live Auth subject
+          - exact source identity and canonical projections are changed only under transaction-scoped private authorization checked by triggers
+          - shared linking requires the latest explicit workspace allowlist and fails closed on topology or projection drift
+        rollout: Deploy disabled with read-only link-state inspection first then enable verified second-store claims for the Starfiniti tenant and reconcile identities links wallets events and customer reads.
+        rollback: Stop new link and unlink commands; retain immutable revisions and the last protected canonical projection. Reverse only a value-free secondary identity through an audited unlink revision; never rewrite ledger history.
+        verification:
+          - strict contracts for bounded minimized link state and unlink commands
+          - pgTAP for proof authority topology tenancy wallet conflicts RLS grants immutable revisions projection guards retries unlink and zero ledger effects
+          - two-session races for two secondary claims and competing Auth subjects
+          - worker award and customer read redemption privacy and outage regression checks
+          - responsive keyboard screen-reader reduced-motion and mobile customer link-state review
+        evidence:
+          - ADR-0043 strict contracts additive protected projection migration Auth-derived read and unlink server actions and connected-store customer UI are implemented on codex/m11-multistore
+          - 53 focused pgTAP assertions cover grants RLS proof authority canonicalization conflicts immutability unlink relink privacy minimization and zero ledger effects
+          - an eighth concurrency probe covers simultaneous second and third store proofs plus competing Auth subjects
+          - focused contract and all 205 dashboard tests both affected typechecks targeted lint migration validation and diff checks pass locally
+          - clean replay concurrency execution production build browser review exact-head CI and disabled production canary remain pending
       - id: M11-S03-MULTI-CURRENCY-EVIDENCE
         status: planned
         owner_inputs: [approved exchange-rate provider before live conversion]
@@ -1651,6 +1690,7 @@ tasks:
         docs/integrations/MERCHANT_API.md,
         docs/api/WEBHOOKS.md,
         docs/architecture/ADR/0042-versioned-explicit-programme-group-sharing.md,
+        docs/architecture/ADR/0043-verified-canonical-customer-link-revisions.md,
       ]
     evidence: [docs/plan/evidence/M11/README.md]
 

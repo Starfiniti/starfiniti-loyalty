@@ -19,6 +19,8 @@ import { selectCustomerAccount } from "@/lib/customer-experience-presentation";
 import { TierProgress } from "@/components/tier-progress";
 import { CustomerReferralPanel } from "./customer-referral-panel";
 import { CustomerLoyaltyExperience } from "./customer-loyalty-experience";
+import { CustomerLinkedStores } from "./customer-linked-stores";
+import { getCustomerLinksState } from "@/lib/server/customer-links";
 import starfinitiIcon from "../../../../../docs/design/prototype-source/assets/images/starfiniti-icon.png";
 
 export default async function CustomerLoyaltyPage({
@@ -31,9 +33,10 @@ export default async function CustomerLoyaltyPage({
     account?: string;
   }>;
 }) {
-  const [query, state] = await Promise.all([
+  const [query, state, customerLinks] = await Promise.all([
     searchParams,
     getCustomerLoyaltyAccounts(),
+    getCustomerLinksState(),
   ]);
   const { linked, redeemed, redemption } = query;
   if (state.kind === "unauthenticated") {
@@ -63,6 +66,11 @@ export default async function CustomerLoyaltyPage({
       <CustomerLoyaltyExperience
         account={selectedAccount}
         accounts={state.accounts}
+        customerLinks={
+          customerLinks.kind === "ready"
+            ? customerLinks
+            : { kind: "unavailable" }
+        }
         messages={messages}
       />
     );
@@ -136,6 +144,13 @@ export default async function CustomerLoyaltyPage({
               </nav>
             ) : null}
             <AccountCard account={selectedAccount} locale={locale} />
+            <CustomerLinkedStores
+              state={
+                customerLinks.kind === "ready"
+                  ? customerLinks
+                  : { kind: "unavailable" }
+              }
+            />
           </div>
         )}
         {state.accounts.length > 0 ? (

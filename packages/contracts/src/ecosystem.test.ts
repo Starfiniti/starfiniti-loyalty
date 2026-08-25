@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   configureProgrammeGroupSharingCommandV1,
   configureProgrammeGroupSharingResultV1,
+  crossWorkspaceCustomerLinksV1,
   programmeGroupSharingPolicyV1,
+  unlinkCrossWorkspaceCustomerAccountCommandV1,
 } from "./ecosystem";
 
 const groupId = "91000000-0000-4000-8000-000000000001";
@@ -137,6 +139,108 @@ describe("programme group sharing contracts", () => {
         revision: 2,
         mode: "explicit-workspace-allowlist",
         workspaceIds: [workspaceOne],
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe("cross-workspace customer link contracts", () => {
+  const canonicalMember = {
+    accountId: "92000000-0000-4000-8000-000000000001",
+    workspaceId: workspaceOne,
+    workspaceName: "Store one",
+    storeName: "Store one",
+    canonical: true,
+    canUnlink: false,
+    linkedAt: "2026-08-26T08:00:00.000Z",
+  } as const;
+  const secondaryMember = {
+    accountId: "92000000-0000-4000-8000-000000000002",
+    workspaceId: workspaceTwo,
+    workspaceName: "Store two",
+    storeName: "Store two",
+    canonical: false,
+    canUnlink: true,
+    linkedAt: "2026-08-26T08:01:00.000Z",
+  } as const;
+
+  it("accepts one minimized active link with exactly one canonical account", () => {
+    expect(
+      crossWorkspaceCustomerLinksV1.parse({
+        version: "1",
+        links: [
+          {
+            version: "1",
+            linkSetId: "92000000-0000-4000-8000-000000000003",
+            programmeGroupId: groupId,
+            programmeGroupName: "Shared rewards",
+            revision: 1,
+            state: "active",
+            members: [canonicalMember, secondaryMember],
+          },
+        ],
+      }).links[0]?.members,
+    ).toHaveLength(2);
+  });
+
+  it("rejects duplicate workspaces, multiple canonical accounts, and active singletons", () => {
+    const base = {
+      version: "1" as const,
+      linkSetId: "92000000-0000-4000-8000-000000000003",
+      programmeGroupId: groupId,
+      programmeGroupName: "Shared rewards",
+      revision: 1,
+    };
+    expect(
+      crossWorkspaceCustomerLinksV1.safeParse({
+        version: "1",
+        links: [
+          {
+            ...base,
+            state: "active",
+            members: [{ ...canonicalMember, canUnlink: true }],
+          },
+        ],
+      }).success,
+    ).toBe(false);
+    expect(
+      crossWorkspaceCustomerLinksV1.safeParse({
+        version: "1",
+        links: [
+          {
+            ...base,
+            state: "active",
+            members: [
+              canonicalMember,
+              {
+                ...secondaryMember,
+                workspaceId: workspaceOne,
+                canonical: true,
+                canUnlink: false,
+              },
+            ],
+          },
+        ],
+      }).success,
+    ).toBe(false);
+  });
+
+  it("accepts only bounded public selectors for customer unlink", () => {
+    expect(
+      unlinkCrossWorkspaceCustomerAccountCommandV1.parse({
+        version: "1",
+        accountId: secondaryMember.accountId,
+        idempotencyKey: "customer-link:unlink:one",
+        correlationId: "92000000-0000-4000-8000-000000000004",
+      }),
+    ).toMatchObject({ accountId: secondaryMember.accountId });
+    expect(
+      unlinkCrossWorkspaceCustomerAccountCommandV1.safeParse({
+        version: "1",
+        accountId: secondaryMember.accountId,
+        organizationId: groupId,
+        idempotencyKey: "customer-link:unlink:one",
+        correlationId: "92000000-0000-4000-8000-000000000004",
       }).success,
     ).toBe(false);
   });

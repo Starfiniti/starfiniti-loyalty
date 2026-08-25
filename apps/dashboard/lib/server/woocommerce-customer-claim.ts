@@ -28,7 +28,9 @@ type ClaimResultRow = {
     | "already_linked"
     | "rejected_identity"
     | "rejected_user_conflict"
-    | "rejected_customer_conflict";
+    | "rejected_customer_conflict"
+    | "rejected_value_conflict"
+    | "rejected_sharing_scope";
 };
 
 export function parseWooCommerceCustomerClaim(
