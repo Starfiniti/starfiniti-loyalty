@@ -1489,6 +1489,36 @@ tasks:
         acceptance:
           - tenant-scoped exports use bounded role checks one-use or expiring delivery audit privacy minimization and exact source definitions
           - scheduled reports are deduplicated retryable suppressible and cannot affect ledger value checkout or provider-neutral event processing
+          - one versioned JSON bundle includes all four strict aggregate reports Dictionary V4 exact request/generation/timezone evidence and source/delivery SHA-256 without row-level identity
+          - daily weekly and monthly IANA-local schedules materialize one job per due instant and run only in a separately deployable reporting worker
+          - generated payloads expire within 24 hours and five-minute subject/session-bound capabilities are consumed atomically once
+        metrics:
+          - duplicate manual or scheduled jobs per idempotency identity = 0
+          - exports containing prohibited identity keys = 0
+          - download capability replay success = 0
+          - reporting failures that change ledger rows or block checkout/value/provider workers = 0
+          - unexpired ready payloads older than 24 hours = 0
+        failure_modes:
+          - bearer URL or capability is replayed or used by another session
+          - revoked cross-tenant or lower-privilege actor reads export state or payload
+          - DST retry or concurrent materialization creates duplicate scheduled output
+          - worker death leaves a permanent lease or retry creates another business result
+          - private aggregate payload persists after expiry or leaks into logs/audit/browser state
+          - reporting workload delays the default value or provider-neutral notification workers
+        security_boundaries:
+          - only owner admin analyst and auditor may create manual aggregate exports and only owner/admin may manage schedules
+          - payload and capability tables remain private with no browser or worker table grants
+          - PostgreSQL rechecks live role entitlement and active public scope at request generation authorization and consumption
+          - downloads use HttpOnly SameSite strict cookies and private no-store attachment headers
+        rollout: Deploy additive schema and image with reporting-worker stopped; run Starfiniti-only payload size replay expiry and lease canaries before enabling recurring generation.
+        rollback: Stop only reporting-worker and hide export controls; schedules and request evidence remain inert while ready private payloads expire and no loyalty value or checkout path changes.
+        verification:
+          - strict contract tests for bundle dictionary/report bindings exact integers timezone schedule shapes and prohibited identity keys
+          - pgTAP for RLS grants roles tenancy idempotency schedule DST expiry capability session replay audit minimization and zero ledger mutation
+          - two-session concurrency tests for manual idempotency due-schedule materialization claim lease and one-use consumption
+          - worker tests for retry exhaustion lease recovery cleanup and failure isolation
+          - route/action tests for fail-closed parsing cookie binding private headers filename and transaction rollback
+          - exact-head baseline clean migration replay production images and all four WooCommerce runtimes
       - id: M10-S05-ANALYTICS-COMMAND-CENTER
         status: planned
         acceptance:
@@ -1503,6 +1533,7 @@ tasks:
       [
         docs/plan/ENTERPRISE_ROADMAP.md,
         docs/architecture/ADR/0040-ledger-sourced-versioned-analytics-and-explicit-liability-valuation.md,
+        docs/architecture/ADR/0041-bounded-aggregate-exports-and-isolated-report-scheduling.md,
         docs/api/ANALYTICS.md,
       ]
     evidence: [docs/plan/evidence/M10/README.md]

@@ -12,6 +12,7 @@ export * from "./reward-fulfilment";
 export * from "./reporting";
 export * from "./analytics-outcomes";
 export * from "./analytics-cohorts";
+export * from "./analytics-export";
 export * from "./experience";
 export * from "./customer-export";
 export * from "./entitlements";
