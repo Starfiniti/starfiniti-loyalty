@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added the strict M09 customer experience boundary: one Auth-derived snapshot for balances, earning, rewards, reservations, expiry, VIP, referrals, and activity; enhancement-only entitlement behavior; minimized public summaries; and fail-closed server parsing without browser-supplied scope.
 - Replaced the production PostgreSQL tar-over-stdin Borg pull, which retransmitted the complete 22 GB recovery tree every cycle, with a forced read-only, zstd-compressed incremental rsync stage and normal Borg file caching while retaining host-only repository credentials.
 - Added the M08 provider-neutral notification and consent foundation: nine strict English event types, PII/coupon/secret-free payloads, immutable deduplicated event evidence, purpose-separated Auth-derived customer preferences, stronger trusted suppression, privacy-erasure suppression, and point-expiry dual-write without activating an external provider.
 - Added disabled-first self-hosted transactional SMTP delivery with an isolated notification worker, database-authoritative leases and dispatch authorization, six immutable English templates, ephemeral verified-Auth contact resolution, deterministic Message-ID, bounded evidence-based retries, and manual review for ambiguous acceptance.

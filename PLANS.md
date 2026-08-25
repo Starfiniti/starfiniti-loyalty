@@ -6,7 +6,7 @@ Deliver the enterprise WooCommerce roadmap in `docs/plan/ENTERPRISE_ROADMAP.md` 
 
 ## Current module
 
-M08 — provider-neutral notifications, SMTP, Klaviyo, and signed webhooks is the active dependency-safe repository module while M07 retains reviewed merge/deployment/canary/reconciliation closeout. M00, M02, and M03 are complete; M01 remains active at its approved-real-store and full-service-recovery external gates, while M04, M05, and M06 retain reviewed merge/deployment/canary/reconciliation closeout.
+M09 — hosted and WooCommerce customer experience is the active dependency-safe repository module while M04–M08 retain reviewed merge/deployment/canary/reconciliation closeout. M00, M02, and M03 are complete; M01 remains active at its approved-real-store and full-service-recovery external gates.
 
 M06-S01 through S05 are exact-head green on draft PR #31. Runs `31763563259`, `31764805380`, `31766887239`, `31768294674`, and `31770764870` passed strict policy, signed offline capture, first attribution, historical qualification/cooling, two-sided exactly-once issuance/compensation, Auth-derived reversible fraud review, customer sharing/progress/history, and a fact-sourced merchant funnel. The latest passed a clean 41-migration/1,700-assertion replay, all three concurrency probes, both images, baseline, 126 dashboard tests, 136 contract tests, and all four WooCommerce runtimes. Production-build desktop/mobile browser review passed with no critical accessibility, overflow, or diagnostic issue. M06-S06 reviewed merge, disabled deployment, Starfiniti canary, reconciliation, and scoring is active.
 
@@ -21,6 +21,8 @@ M08-S03 is exact-head green at `a6bbf14` on draft PR #32. ADR-0033 binds every m
 M08-S04 is exact-head green at `ea9aa00` on draft PR #32. ADR-0034 binds Standard Webhooks v1 exact-body HMAC signatures to a stable delivery ID and endpoint-specific current/previous secret fingerprints, rejects redirects and every private/reserved DNS answer, pins the validated socket address while retaining TLS hostname verification, and rechecks subscription, entitlement, consent, suppression, payload, rate, and lease authority immediately before dispatch. Run `32691991986` passed the complete baseline, both production images, a clean 51-migration replay, all 42 pgTAP files with 2,277 assertions including all 58 focused webhook assertions, every concurrency probe, and all four WooCommerce runtimes. The disabled worker profile has no production endpoint, subscription, secret, or delivery; S05 merchant template and delivery-health experience is active.
 
 M08-S05 is exact-head green at `a377ef7` on draft PR #32. ADR-0035 adds immutable tenant English template versions, private active bindings, Auth-derived owner/admin publication, exact event-token validation, deterministic escaped HTML, an isolated actor-bound SMTP test queue, and a minimized merchant health projection. Run `32836814262` passed the complete baseline, both production images, a clean 54-migration replay, all 43 pgTAP files with 2,340 assertions including all 63 focused template/health assertions, every concurrency probe, and all four WooCommerce runtimes. Real-component Playwright review passed template switching, safe preview, dark mode, responsive navigation, and zero browser diagnostics. S06 disabled deployment, local sink, provider canaries, reconciliation, rollback, and scoring is active; no production provider delivery is enabled.
+
+M09-S01 is complete on draft PR #36. ADR-0036, strict `CustomerLoyaltyExperienceV1`, one Auth-derived PostgreSQL statement snapshot, minimized earning summaries, enhancement-only entitlement behavior, and fail-closed server parsing passed exact-head run `32839387263` at `f531f82`: baseline, both images, a clean 55-migration replay, all 43 pgTAP files with 2,361 assertions, and all four WooCommerce runtimes. M09-S02 now builds the feature-flagged hosted overview, earning, rewards, VIP, referrals, history, and account experience before local WooCommerce placement work.
 
 M05-S01 through S05 are exact-head green. M05-S06 shadow comparison found and fixed a predeployment Rose/Bloom/Icon displayed-versus-executable rate mismatch; all 36 V1/V2 award comparisons now match, and exact-head run `31760806620` passed. Reviewed merge, disabled deployment, a fresh recovery point, Starfiniti-only canary, reconciliation, and scoring remain open.
 
@@ -49,11 +51,12 @@ The active integrated baseline is released production commit `0ced4b666a55d836bd
 
 ## Next safe work
 
-1. M08: complete S06 disabled deployment, local SMTP sink, bounded provider canaries, exact reconciliation, rollback proof, and module scoring without enabling unapproved production delivery.
-2. M07: complete reviewed stacked merge, disabled deployment, fresh recovery point, Starfiniti-only canary, exact result/value reconciliation, smoke, and score in S06.
-3. M06: after reviewed stacked merges, deploy disabled, take a fresh recovery point, run the Starfiniti-only canary, reconcile, smoke, and score.
-4. M05: complete reviewed merge, disabled deployment, fresh recovery point, Starfiniti-only canary, zero-drift reconciliation, and score after the exact-green shadow gate.
-5. M01: connect an approved real WooCommerce store when access is supplied and complete its value, outage, rotation, alert, and clean-room recovery gate.
+1. M09: complete S02 hosted seven-area customer experience with real-component responsive and accessibility evidence, then continue into the local WooCommerce snapshot boundary.
+2. M08: complete S06 disabled deployment, local SMTP sink, bounded provider canaries, exact reconciliation, rollback proof, and module scoring without enabling unapproved production delivery.
+3. M07: complete reviewed stacked merge, disabled deployment, fresh recovery point, Starfiniti-only canary, exact result/value reconciliation, smoke, and score in S06.
+4. M06: after reviewed stacked merges, deploy disabled, take a fresh recovery point, run the Starfiniti-only canary, reconcile, smoke, and score.
+5. M05: complete reviewed merge, disabled deployment, fresh recovery point, Starfiniti-only canary, zero-drift reconciliation, and score after the exact-green shadow gate.
+6. M01: connect an approved real WooCommerce store when access is supplied and complete its value, outage, rotation, alert, and clean-room recovery gate.
 
 ## External inputs
 
