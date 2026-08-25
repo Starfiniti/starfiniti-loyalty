@@ -106,6 +106,7 @@ select is_empty(
           'loyalty.get_analytics_value_truth_v1(uuid,uuid,uuid,integer,timestamp with time zone)',
           'loyalty.get_analytics_commerce_performance_v1(uuid,uuid,uuid,integer,timestamp with time zone)',
           'loyalty.get_analytics_programme_outcomes_v1(uuid,uuid,uuid,integer,timestamp with time zone)',
+          'loyalty.get_analytics_cohort_retention_v1(uuid,uuid,uuid,integer,text,timestamp with time zone)',
           'loyalty.get_overview_report(uuid,uuid,uuid,integer,timestamp with time zone)',
           'loyalty.list_customer_summaries(uuid,uuid,text)',
           'loyalty.list_referral_review_cases(uuid,text,integer)',

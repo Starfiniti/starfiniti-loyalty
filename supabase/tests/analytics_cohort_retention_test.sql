@@ -572,7 +572,7 @@ select results_eq(
   array[1::bigint], 'authorized cohort report returns one minimized row'
 );
 select results_eq(
-  $$ select report ->> 'reportVersion' || ':' || report ->> 'dictionaryVersion'
+  $$ select (report ->> 'reportVersion') || ':' || (report ->> 'dictionaryVersion')
      from analytics_cohort_report $$,
   array['1:4'::text], 'cohort report binds the additive V4 dictionary'
 );
@@ -582,45 +582,45 @@ select results_eq(
   array[7], 'membership output includes every requested local cohort date'
 );
 select results_eq(
-  $$ select report #>> '{membershipActivation,joinedMembers}' || ':' ||
-            report #>> '{membershipActivation,activatedMembers}' || ':' ||
-            report #>> '{membershipActivation,activationRateBasisPoints}'
+  $$ select (report #>> '{membershipActivation,joinedMembers}') || ':' ||
+            (report #>> '{membershipActivation,activatedMembers}') || ':' ||
+            (report #>> '{membershipActivation,activationRateBasisPoints}')
      from analytics_cohort_report $$,
   array['60:2:333'::text],
   'mature membership activation uses only release-backed 30-day outcomes'
 );
 select results_eq(
-  $$ select report #>> '{earningRetention,qualifiedMembers}' || ':' ||
-            report #>> '{earningRetention,retainedMembers}' || ':' ||
-            report #>> '{earningRetention,retentionRateBasisPoints}'
+  $$ select (report #>> '{earningRetention,qualifiedMembers}') || ':' ||
+            (report #>> '{earningRetention,retainedMembers}') || ':' ||
+            (report #>> '{earningRetention,retentionRateBasisPoints}')
      from analytics_cohort_report $$,
   array['2:1:5000'::text],
   'earning retention uses a complete exact days 31 through 60 window'
 );
 select results_eq(
-  $$ select report #>> '{campaignExperiments,eligibleCampaigns}' || ':' ||
-            report #>> '{campaignExperiments,availableCampaigns}' || ':' ||
-            report #>> '{campaignExperiments,unavailableCampaigns}'
+  $$ select (report #>> '{campaignExperiments,eligibleCampaigns}') || ':' ||
+            (report #>> '{campaignExperiments,availableCampaigns}') || ':' ||
+            (report #>> '{campaignExperiments,unavailableCampaigns}')
      from analytics_cohort_report $$,
   array['1:1:0'::text],
   'campaign experiment availability is evidence-gated and reconciled'
 );
 select results_eq(
-  $$ select report #>> '{campaignExperiments,campaigns,0,treatmentMembers}' || ':' ||
-            report #>> '{campaignExperiments,campaigns,0,controlMembers}'
+  $$ select (report #>> '{campaignExperiments,campaigns,0,treatmentMembers}') || ':' ||
+            (report #>> '{campaignExperiments,campaigns,0,controlMembers}')
      from analytics_cohort_report $$,
   array['30:30'::text],
   'the ITT population includes every immutable assignment and zero outcome'
 );
 select results_eq(
-  $$ select report #>> '{campaignExperiments,campaigns,0,incrementality,status}' || ':' ||
-            report #>> '{campaignExperiments,campaigns,0,incrementality,currencyCode}' || ':' ||
-            report #>> '{campaignExperiments,campaigns,0,incrementality,minorUnitDigits}' || ':' ||
-            report #>> '{campaignExperiments,campaigns,0,incrementality,treatmentEligibleSpendMinor}' || ':' ||
-            report #>> '{campaignExperiments,campaigns,0,incrementality,controlEligibleSpendMinor}' || ':' ||
-            report #>> '{campaignExperiments,campaigns,0,incrementality,exactNumerator}' || ':' ||
-            report #>> '{campaignExperiments,campaigns,0,incrementality,exactDenominator}' || ':' ||
-            report #>> '{campaignExperiments,campaigns,0,incrementality,estimatedIncrementalEligibleSpendMinor}'
+  $$ select (report #>> '{campaignExperiments,campaigns,0,incrementality,status}') || ':' ||
+            (report #>> '{campaignExperiments,campaigns,0,incrementality,currencyCode}') || ':' ||
+            (report #>> '{campaignExperiments,campaigns,0,incrementality,minorUnitDigits}') || ':' ||
+            (report #>> '{campaignExperiments,campaigns,0,incrementality,treatmentEligibleSpendMinor}') || ':' ||
+            (report #>> '{campaignExperiments,campaigns,0,incrementality,controlEligibleSpendMinor}') || ':' ||
+            (report #>> '{campaignExperiments,campaigns,0,incrementality,exactNumerator}') || ':' ||
+            (report #>> '{campaignExperiments,campaigns,0,incrementality,exactDenominator}') || ':' ||
+            (report #>> '{campaignExperiments,campaigns,0,incrementality,estimatedIncrementalEligibleSpendMinor}')
      from analytics_cohort_report $$,
   array['available:EUR:2:30000:18000:360000:30:12000'::text],
   'difference-in-means ITT evidence and exact rational estimate reconcile'
@@ -640,7 +640,7 @@ select results_eq(
        (report #>> '{cohortPeriod,to}')::timestamptz
        - (report #>> '{cohortPeriod,from}')::timestamptz
      )) / 3600)::integer || ':' ||
-     report #>> '{cohortPeriod,timeZone}' || ':' ||
+     (report #>> '{cohortPeriod,timeZone}') || ':' ||
      jsonb_array_length(report #> '{earningRetention,cohorts}')
      from loyalty.get_analytics_cohort_retention_v1(
        '7c000000-0000-4000-8000-000000000100',
