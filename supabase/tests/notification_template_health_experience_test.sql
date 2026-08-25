@@ -316,7 +316,7 @@ select throws_ok(
   $$ update loyalty_private.notification_email_template_versions
      set subject_template = 'rewritten'
      where organization_id = pg_temp.template_org('template-one') $$,
-  '55000', 'immutable record cannot be changed',
+  '55000', 'immutable loyalty history cannot be changed',
   'published tenant content cannot be rewritten'
 );
 select ok(
