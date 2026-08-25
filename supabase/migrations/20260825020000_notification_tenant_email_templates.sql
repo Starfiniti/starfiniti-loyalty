@@ -95,9 +95,36 @@ alter table loyalty_private.notification_email_template_versions
   add column created_by_user_id uuid
     references auth.users(id) on delete restrict;
 
+do $$
+declare
+  target_constraint_name text;
+  dropped_constraint_count integer := 0;
+begin
+  for target_constraint_name in
+    select constraint_row.conname
+    from pg_catalog.pg_constraint as constraint_row
+    where constraint_row.conrelid =
+      'loyalty_private.notification_email_template_versions'::regclass
+      and constraint_row.contype = 'u'
+      and pg_catalog.pg_get_constraintdef(constraint_row.oid) in (
+        'UNIQUE (template_code, template_version)',
+        'UNIQUE (event_type, template_version)'
+      )
+  loop
+    execute pg_catalog.format(
+      'alter table loyalty_private.notification_email_template_versions drop constraint %I',
+      target_constraint_name
+    );
+    dropped_constraint_count := dropped_constraint_count + 1;
+  end loop;
+  if dropped_constraint_count <> 2 then
+    raise exception using errcode = '55000',
+      message = 'notification template uniqueness baseline not found';
+  end if;
+end;
+$$;
+
 alter table loyalty_private.notification_email_template_versions
-  drop constraint notification_email_template_versions_template_code_template_ver,
-  drop constraint notification_email_template_versions_event_type_template_versio,
   add constraint notification_email_template_versions_authority_check check (
     (organization_id is null and created_by_user_id is null)
     or (organization_id is not null and created_by_user_id is not null)

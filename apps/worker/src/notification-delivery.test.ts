@@ -240,8 +240,9 @@ describe("SMTP notification delivery", () => {
     const queries: string[] = [];
     const sql = (async (
       strings: TemplateStringsArray,
-      ..._values: readonly unknown[]
+      ...values: readonly unknown[]
     ) => {
+      void values;
       const query = strings.join("?");
       queries.push(query);
       if (query.includes("claim_smtp_notification_deliveries_v1")) return [];
