@@ -409,6 +409,8 @@ select results_eq(
   'a wallet conflict creates no link revision'
 );
 
+grant select on alpha_claim, beta_claim to authenticated;
+
 set local role authenticated;
 set local request.jwt.claim.sub = '93000000-0000-4000-8000-000000000001';
 
@@ -435,6 +437,7 @@ select results_eq(
   'the member projection exposes account selectors but no customer or channel identity'
 );
 
+reset role;
 select throws_ok(
   $$
     update loyalty.customer_user_links
@@ -471,6 +474,7 @@ select throws_ok(
   'link-version membership cannot be rewritten'
 );
 
+set local role authenticated;
 set local request.jwt.claim.sub = '93000000-0000-4000-8000-000000000002';
 select results_eq(
   $$
