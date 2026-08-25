@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added the versioned M10 analytics dictionary and immutable value-truth report with exact issued, released, pending, available, reserved, spent, expired, reversed, manual, outstanding, and expiry-window point evidence; projection reconciliation; explicit unavailable monetary liability; and a responsive formula-backed merchant experience.
+- Added mature-cohort activation, participation, refund-compensated V1/V2 eligible commerce, repeat purchase, AOV, observed LTV, source coverage, guest activity, and missing-link reporting with exact currency scope, bigint-safe contracts, independently degradable dashboard reads, and no inferred prediction or incrementality.
+
 - Added the strict M09 customer experience boundary: one Auth-derived snapshot for balances, earning, rewards, reservations, expiry, VIP, referrals, and activity; enhancement-only entitlement behavior; minimized public summaries; and fail-closed server parsing without browser-supplied scope.
 - Added the feature-flagged Hub-style hosted loyalty experience with overview, earning, rewards, VIP, referrals, immutable history, and account areas; exact affordability and progress guidance; a bounded guest journey; responsive evidence; and one same-origin English account path without a language switcher.
 - Added signed demand-driven WooCommerce customer snapshots with database-derived exact balances, tier, expiry, earning and reward summaries; strict monotonic non-autoloaded local storage; privacy lifecycle support; and My Account, product, cart, classic checkout, and post-purchase placements with zero connector assets or render-time Hub calls.

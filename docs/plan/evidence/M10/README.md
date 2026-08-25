@@ -1,6 +1,6 @@
 # M10 Evidence — Analytics
 
-Status: in progress. M10-S01 is complete and M10-S02 commerce and programme performance is active while M09 waits only on its reviewed production canary gate.
+Status: in progress. M10-S01 and M10-S02A are complete; M10-S02B programme outcome performance is active while M09 waits only on its reviewed production canary gate.
 
 ## Reconstructed baseline
 
@@ -26,3 +26,13 @@ Status: in progress. M10-S01 is complete and M10-S02 commerce and programme perf
 - Existing Overview copy now says “Outstanding points” instead of implying an accounting-currency liability.
 - Exact-head Linux CI [run 32880474317](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/32880474317) passed at commit `3e644ab`: root `npm run check`, migration validation, secret/audit/license/package gates, clean database replay, all 2,473 pgTAP assertions including the 33 new analytics cases, both production images, and minimum/current WooCommerce with HPOS/legacy storage.
 - Intentional limitation: monetary liability remains `unavailable:valuation_policy_not_configured`; no Rosy ratio, reward face value, or current mutable configuration is converted into money.
+
+## M10-S02A completion evidence
+
+- Dictionary V2 additively publishes 43 complete definitions. The strict `AnalyticsCommercePerformanceReportV1` validates report/version bindings, exact UTC periods, mature 30-day activation cohorts, every numerator/rate relationship, V1/V2 source coverage, guest and missing-link coverage, and exact currency-dependent arithmetic before browser rendering.
+- `loyalty.get_analytics_commerce_performance_v1` normalizes immutable V2 tier-qualification facts with legacy V1 evaluations without double counting. Legacy cumulative refunds become append-only deltas attributed to the original order occurrence; later-recorded refunds do not rewrite an earlier `asOf` knowledge snapshot.
+- Activation requires a released earning within the complete observation window. Participation includes compensated earning facts or captured rewards. Repeat purchase, AOV, and observed LTV expose exact denominators and remain explicitly descriptive rather than causal.
+- Guest commerce remains in totals. Missing legacy customer linkage remains counted and is excluded only from customer-grained metrics. One exact historical currency code and precision are required for monetary output; mixed or malformed currency evidence hides money while preserving valid counts.
+- Merchant `/analytics` independently loads value truth and commerce performance, so one report can fail without blanking the other. It exposes responsive performance, commerce, activation, source coverage, identity-health, value-lifecycle, and formula panels without synthetic fallback data.
+- Exact-head Linux CI [run 32884270756](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/32884270756) passed on retry attempt 2 at commit `0380d4d`: root `npm run check`, migration validation, secret/audit/license/package gates, clean 59-migration replay, all 2,501 pgTAP assertions including the 27 focused commerce cases, both production images, and minimum/current WooCommerce with HPOS/legacy storage. The retry was limited to a minimum-legacy MySQL startup health flake; the unchanged cell passed on attempt 2.
+- Intentional limitations: observed LTV is historical eligible spend rather than prediction or incrementality; mixed currencies are not converted; member metrics exclude commerce that lacks an authoritative customer link; production navigation and canary exposure remain deferred to M10-S05/S06.
