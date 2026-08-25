@@ -121,11 +121,11 @@ from loyalty.programme_versions
 where organization_id = (select id from loyalty.organizations where slug = 'member-one');
 insert into loyalty.programme_earning_rules (
   organization_id, programme_group_id, programme_version_id, code, name,
-  ordinal, source, enabled, priority, stackable, effect, conditions,
+  ordinal, source, enabled, priority, stackable, effect_kind, effect, conditions,
   purchase_exclusions, cap
 )
 select version.organization_id, version.programme_group_id, version.id,
-  'purchase-base', 'Every purchase', 1, 'purchase', true, 0, false,
+  'purchase-base', 'Every purchase', 1, 'purchase', true, 0, false, 'base_rate',
   '{"kind":"base_rate","pointsPerMajorUnit":"5"}'::jsonb,
   '{"productIds":[],"categoryIds":[],"currencyCodes":[],"markets":[],"channels":[],"activityCodes":[],"segmentCodes":[],"tierCodes":[],"startsAt":null,"endsAt":null}'::jsonb,
   '{"productIds":[],"categoryIds":[],"shipping":true,"tax":true,"fees":true,"giftCardPayments":true,"storeCreditPayments":true,"discounts":true}'::jsonb,
@@ -136,11 +136,11 @@ where version.organization_id = (
 );
 insert into loyalty.programme_earning_rules (
   organization_id, programme_group_id, programme_version_id, code, name,
-  ordinal, source, enabled, priority, stackable, effect, conditions,
+  ordinal, source, enabled, priority, stackable, effect_kind, effect, conditions,
   purchase_exclusions, cap
 )
 select version.organization_id, version.programme_group_id, version.id,
-  'birthday', 'Birthday bonus', 2, 'birthday', true, 10, true,
+  'birthday', 'Birthday bonus', 2, 'birthday', true, 10, true, 'fixed_bonus',
   '{"kind":"fixed_bonus","points":"250"}'::jsonb,
   '{"productIds":[],"categoryIds":[],"currencyCodes":[],"markets":[],"channels":[],"activityCodes":[],"segmentCodes":["private-segment"],"tierCodes":[],"startsAt":null,"endsAt":null}'::jsonb,
   null,
@@ -151,11 +151,12 @@ where version.organization_id = (
 );
 insert into loyalty.programme_earning_rules (
   organization_id, programme_group_id, programme_version_id, code, name,
-  ordinal, source, enabled, priority, stackable, effect, conditions,
+  ordinal, source, enabled, priority, stackable, effect_kind, effect, conditions,
   purchase_exclusions, cap
 )
 select version.organization_id, version.programme_group_id, version.id,
   'unsafe-rule', '<script>unsafe</script>', 3, 'custom_activity', true, 0, true,
+  'fixed_bonus',
   '{"kind":"fixed_bonus","points":"1"}'::jsonb,
   '{"productIds":[],"categoryIds":[],"currencyCodes":[],"markets":[],"channels":[],"activityCodes":["unsafe"],"segmentCodes":[],"tierCodes":[],"startsAt":null,"endsAt":null}'::jsonb,
   null,
