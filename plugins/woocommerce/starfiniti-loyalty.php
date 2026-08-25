@@ -51,6 +51,7 @@ add_action('plugins_loaded', static function (): void {
     require_once __DIR__ . '/src/class-plugin.php';
     require_once __DIR__ . '/src/class-settings.php';
     require_once __DIR__ . '/src/class-customer-claim.php';
+    require_once __DIR__ . '/src/class-experience-snapshot.php';
     require_once __DIR__ . '/src/class-referrals.php';
     require_once __DIR__ . '/src/class-outbox.php';
     require_once __DIR__ . '/src/class-commands.php';

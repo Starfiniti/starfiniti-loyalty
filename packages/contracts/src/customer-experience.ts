@@ -8,12 +8,19 @@ import { customerReferralExperienceV1 } from "./referral";
 import { customerTierProgressV1, tierDescriptorV1 } from "./tier-progression";
 
 const POSTGRES_BIGINT_MAX = 9_223_372_036_854_775_807n;
+const POSTGRES_BIGINT_MIN = -9_223_372_036_854_775_808n;
 const exactPoints = z
   .string()
-  .regex(/^(?:0|[1-9][0-9]*)$/u)
-  .refine((value) => BigInt(value) <= POSTGRES_BIGINT_MAX, {
-    message: "Value exceeds PostgreSQL bigint capacity",
-  });
+  .regex(/^(?:0|-?[1-9][0-9]*)$/u)
+  .refine(
+    (value) => {
+      const parsed = BigInt(value);
+      return parsed >= POSTGRES_BIGINT_MIN && parsed <= POSTGRES_BIGINT_MAX;
+    },
+    {
+      message: "Value exceeds PostgreSQL bigint capacity",
+    },
+  );
 const positivePoints = exactPoints.refine((value) => BigInt(value) > 0n, {
   message: "Value must be positive",
 });

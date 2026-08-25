@@ -135,6 +135,66 @@ msgstr ""
 msgid "You do not have permission to manage loyalty settings."
 msgstr ""
 
+msgid "%s points available"
+msgstr ""
+
+msgid "%1$s points expire %2$s"
+msgstr ""
+
+msgid "%1$s — %2$s points"
+msgstr ""
+
+msgid "%1$s — %2$s points needed"
+msgstr ""
+
+msgid "Available points"
+msgstr ""
+
+msgid "Available rewards"
+msgstr ""
+
+msgid "Eligible loyalty points are added after your order is processed. Current balance: %s points."
+msgstr ""
+
+msgid "Generated (UTC)"
+msgstr ""
+
+msgid "Last updated %s. Live value is confirmed in the secure loyalty hub."
+msgstr ""
+
+msgid "Loyalty balance: %s points. Rewards are redeemed through your loyalty account."
+msgstr ""
+
+msgid "Pending points"
+msgstr ""
+
+msgid "Pending: %1$s · Reserved: %2$s"
+msgstr ""
+
+msgid "Points balance"
+msgstr ""
+
+msgid "Reserved points"
+msgstr ""
+
+msgid "Snapshot revision"
+msgstr ""
+
+msgid "Starfiniti Loyalty local summary"
+msgstr ""
+
+msgid "VIP tier: %s"
+msgstr ""
+
+msgid "View loyalty account"
+msgstr ""
+
+msgid "You have %s loyalty points."
+msgstr ""
+
+msgid "Your loyalty summary is refreshing. Open your secure loyalty account for the latest balance."
+msgstr ""
+
 #. translators: %s is the My Account loyalty URL.
 msgid "You have an active loyalty reward. <a href=\"%s\">View your code</a>."
 msgstr ""

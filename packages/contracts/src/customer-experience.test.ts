@@ -74,6 +74,15 @@ describe("CustomerLoyaltyExperienceV1", () => {
     expect(customerLoyaltyExperienceV1.safeParse(value).success).toBe(false);
   });
 
+  it("preserves an exact negative balance after a reversal", () => {
+    const value = validExperience();
+    value.balances.available = "-25";
+    value.rewards[0]!.affordable = false;
+    expect(customerLoyaltyExperienceV1.parse(value).balances.available).toBe(
+      "-25",
+    );
+  });
+
   it("rejects scheduled availability that disagrees with the canonical instant", () => {
     const source = validExperience();
     const value = {

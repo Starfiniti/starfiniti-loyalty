@@ -1330,6 +1330,7 @@ tasks:
         design-qa.md,
         docs/testing/PLATFORM_MATRIX.md,
         docs/architecture/ADR/0036-auth-derived-customer-experience-and-local-woocommerce-snapshots.md,
+        docs/architecture/ADR/0037-demand-driven-woocommerce-snapshots-and-classic-placements.md,
       ]
     evidence: [docs/plan/evidence/M09/README.md]
 

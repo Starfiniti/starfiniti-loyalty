@@ -52,6 +52,23 @@ final class Privacy
                 ],
             ];
         }
+        if (1 === $page) {
+            $snapshot = ExperienceSnapshot::exportForUser((int) $user->ID);
+            if (is_array($snapshot)) {
+                $data[] = [
+                    'group_id' => 'starfiniti-loyalty-snapshot',
+                    'group_label' => __('Starfiniti Loyalty local summary', 'starfiniti-loyalty'),
+                    'item_id' => 'starfiniti-loyalty-snapshot-' . (int) $user->ID,
+                    'data' => [
+                        ['name' => __('Snapshot revision', 'starfiniti-loyalty'), 'value' => (string) $snapshot['revision']],
+                        ['name' => __('Generated (UTC)', 'starfiniti-loyalty'), 'value' => (string) $snapshot['generatedAt']],
+                        ['name' => __('Available points', 'starfiniti-loyalty'), 'value' => (string) $snapshot['balances']['available']],
+                        ['name' => __('Pending points', 'starfiniti-loyalty'), 'value' => (string) $snapshot['balances']['pending']],
+                        ['name' => __('Reserved points', 'starfiniti-loyalty'), 'value' => (string) $snapshot['balances']['reserved']],
+                    ],
+                ];
+            }
+        }
         return ['data' => $data, 'done' => count($rows) < 100];
     }
 
@@ -64,6 +81,8 @@ final class Privacy
             return ['items_removed' => false, 'items_retained' => false, 'messages' => [], 'done' => true];
         }
         Outbox::captureCustomerDeletion((int) $user->ID);
+        $hadSnapshot = null !== ExperienceSnapshot::exportForUser((int) $user->ID);
+        ExperienceSnapshot::deleteForUser((int) $user->ID);
         $pattern = '%"externalCustomerId":"' . $wpdb->esc_like((string) $user->ID) . '"%';
         $removed = $wpdb->query($wpdb->prepare(
             'DELETE FROM ' . self::table() . ' WHERE state = %s AND event_payload LIKE %s LIMIT 100',
@@ -80,7 +99,7 @@ final class Privacy
             $messages[] = __('Undelivered event evidence is retained until delivery or operator resolution; authoritative loyalty records follow the hub retention policy.', 'starfiniti-loyalty');
         }
         return [
-            'items_removed' => is_int($removed) && $removed > 0,
+            'items_removed' => $hadSnapshot || (is_int($removed) && $removed > 0),
             'items_retained' => $retained > 0,
             'messages' => $messages,
             'done' => ! (is_int($removed) && 100 === $removed),
