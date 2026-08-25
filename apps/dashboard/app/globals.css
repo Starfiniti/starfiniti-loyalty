@@ -12035,6 +12035,330 @@ html[data-dashboard-theme="dark"]
   gap: 18px;
 }
 
+.analytics-export-module {
+  display: grid;
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.analytics-export-builders,
+.analytics-export-history-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.analytics-export-card,
+.analytics-export-history {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--merchant-border);
+  border-radius: 12px;
+  background: var(--merchant-surface);
+  box-shadow: var(--merchant-shadow);
+}
+
+.analytics-export-card {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+}
+
+.analytics-export-card-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.analytics-export-card-title > span {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 10px;
+  color: var(--merchant-violet);
+  background: var(--merchant-violet-soft);
+}
+
+.analytics-export-card-title svg {
+  width: 18px;
+  height: 18px;
+}
+
+.analytics-export-card h3,
+.analytics-export-card p,
+.analytics-export-history h3,
+.analytics-export-history p {
+  margin: 0;
+}
+
+.analytics-export-card h3,
+.analytics-export-history h3 {
+  font-size: 16px;
+  letter-spacing: -0.025em;
+}
+
+.analytics-export-card-title p {
+  margin-top: 4px;
+  color: var(--merchant-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.analytics-export-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 11px;
+}
+
+.analytics-export-fields.is-schedule {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.analytics-export-fields label {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+  color: var(--merchant-muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.analytics-export-fields input,
+.analytics-export-fields select {
+  width: 100%;
+  min-height: 39px;
+  padding: 0 10px;
+  border: 1px solid var(--merchant-border);
+  border-radius: 8px;
+  color: var(--merchant-text);
+  background: var(--merchant-surface);
+  font: inherit;
+  font-size: 12px;
+}
+
+.analytics-time-zone-field {
+  grid-column: span 2;
+}
+
+.analytics-export-card > .ui-button {
+  justify-self: start;
+}
+
+.analytics-export-card .ui-button svg,
+.analytics-export-list .ui-button svg,
+.analytics-schedule-list .ui-button svg {
+  width: 14px;
+  height: 14px;
+}
+
+.analytics-export-message {
+  color: var(--merchant-muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.analytics-export-message.is-success {
+  color: #047857;
+}
+
+.analytics-export-message.is-error {
+  color: #b42318;
+}
+
+.analytics-export-history {
+  padding: 0;
+  overflow: hidden;
+}
+
+.analytics-export-history > header {
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 15px 18px;
+  border-bottom: 1px solid var(--merchant-border);
+}
+
+.analytics-export-history > header .login-eyebrow {
+  margin: 0 0 4px;
+}
+
+.analytics-export-history > header > span {
+  color: var(--merchant-muted);
+  font-size: 10px;
+}
+
+.analytics-export-list,
+.analytics-schedule-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.analytics-export-list > li,
+.analytics-schedule-list > li {
+  min-height: 82px;
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 18px;
+  border-top: 1px solid var(--merchant-border);
+}
+
+.analytics-export-list > li:first-child,
+.analytics-schedule-list > li:first-child {
+  border-top: 0;
+}
+
+.analytics-export-list strong,
+.analytics-schedule-list strong,
+.analytics-export-list small,
+.analytics-schedule-list small {
+  display: block;
+}
+
+.analytics-export-list strong,
+.analytics-schedule-list strong {
+  font-size: 12px;
+}
+
+.analytics-export-list small,
+.analytics-schedule-list small {
+  margin-top: 4px;
+  color: var(--merchant-muted);
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.analytics-export-state {
+  min-width: max-content;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  justify-self: start;
+  padding: 5px 8px;
+  border-radius: 999px;
+  color: var(--merchant-muted);
+  background: var(--merchant-canvas);
+  font-size: 9px;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.analytics-export-state svg {
+  width: 11px;
+  height: 11px;
+}
+
+.analytics-export-state.is-ready,
+.analytics-export-state.is-consumed,
+.analytics-export-state.is-active {
+  color: #047857;
+  background: color-mix(in srgb, #159b6b 10%, var(--merchant-surface));
+}
+
+.analytics-export-state.is-failed,
+.analytics-export-state.is-expired {
+  color: #b42318;
+  background: color-mix(in srgb, #ef4444 9%, var(--merchant-surface));
+}
+
+.analytics-export-state.is-processing svg,
+.analytics-export-state.is-retry svg {
+  animation: analytics-export-spin 1.1s linear infinite;
+}
+
+.analytics-export-empty {
+  min-height: 150px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 9px;
+  padding: 24px;
+  color: var(--merchant-muted);
+  text-align: center;
+}
+
+.analytics-export-empty svg {
+  width: 22px;
+  height: 22px;
+  color: var(--merchant-violet);
+}
+
+.analytics-export-empty p {
+  font-size: 11px;
+}
+
+.analytics-export-assurance {
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 15px;
+  border: 1px solid color-mix(in srgb, #159b6b 26%, var(--merchant-border));
+  border-radius: 10px;
+  color: var(--merchant-muted);
+  background: color-mix(in srgb, #159b6b 6%, var(--merchant-surface));
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.analytics-export-assurance svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  color: #047857;
+}
+
+.analytics-export-assurance p {
+  margin: 0;
+}
+
+@keyframes analytics-export-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 980px) {
+  .analytics-export-builders,
+  .analytics-export-history-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .analytics-export-card {
+    padding: 16px;
+  }
+
+  .analytics-export-fields,
+  .analytics-export-fields.is-schedule {
+    grid-template-columns: 1fr;
+  }
+
+  .analytics-time-zone-field {
+    grid-column: auto;
+  }
+
+  .analytics-export-list > li,
+  .analytics-schedule-list > li {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .analytics-export-state.is-processing svg,
+  .analytics-export-state.is-retry svg {
+    animation: none;
+  }
+}
+
 .analytics-heading {
   display: flex;
   align-items: flex-end;

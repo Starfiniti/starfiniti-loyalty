@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { AnalyticsValueTruth } from "@/components/analytics-value-truth";
+import { AnalyticsExportOperations } from "@/components/analytics-export-operations";
 import { hasEntitlement } from "@/lib/entitlements";
 import {
   merchantLocalePath,
@@ -12,6 +13,7 @@ import {
   getAnalyticsProgrammeOutcomeReport,
   getAnalyticsValueTruthReport,
 } from "@/lib/server/analytics";
+import { getAnalyticsExportWorkspace } from "@/lib/server/analytics-exports";
 import { getEntitlementSnapshot } from "@/lib/server/entitlements";
 import { getMerchantProgrammeState } from "@/lib/server/programme";
 import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
@@ -51,6 +53,8 @@ export default async function AnalyticsPage({
   );
 
   let state: Parameters<typeof AnalyticsValueTruth>[0]["state"];
+  let exportWorkspace: Awaited<ReturnType<typeof getAnalyticsExportWorkspace>> =
+    null;
   if (!hasScope) {
     state = { kind: "setup_required" };
   } else if (!analyticsEnabled) {
@@ -77,6 +81,11 @@ export default async function AnalyticsPage({
     } else {
       state = { kind: "unavailable" };
     }
+    try {
+      exportWorkspace = await getAnalyticsExportWorkspace(tenant.context);
+    } catch {
+      exportWorkspace = null;
+    }
   }
 
   return (
@@ -101,6 +110,18 @@ export default async function AnalyticsPage({
         tabIndex={-1}
       >
         <AnalyticsValueTruth range={range} state={state} />
+        {exportWorkspace &&
+        tenant.context.workspace &&
+        tenant.context.programmeGroup ? (
+          <AnalyticsExportOperations
+            initialExportOperationId={crypto.randomUUID()}
+            initialScheduleOperationId={crypto.randomUUID()}
+            organizationId={tenant.context.organization.public_id}
+            programmeGroupId={tenant.context.programmeGroup.public_id}
+            workspace={exportWorkspace}
+            workspaceId={tenant.context.workspace.public_id}
+          />
+        ) : null}
       </main>
     </MerchantShell>
   );
