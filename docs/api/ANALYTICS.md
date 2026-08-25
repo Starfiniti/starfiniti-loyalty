@@ -117,6 +117,14 @@ A ready export requires a trusted dashboard-runtime call to mint a random five-m
 
 The reporting worker is a separate process mode. It materializes due local-calendar instants with a unique schedule/instant fence, claims bounded jobs with `FOR UPDATE SKIP LOCKED`, reclaims expired leases, retries only deterministic safe classes up to five attempts, and records allowlisted failure codes without payloads. It has no loyalty-value mutation role; stopping it leaves ledger, refunds, reconciliation, notifications, connectors, and WooCommerce checkout operational.
 
+## Interactive command-center snapshot
+
+One `/analytics` request chooses one explicit UTC `asOf` instant before starting the four report RPCs. The same instant is passed as `target_as_of` to value truth, commerce performance, programme outcomes, and cohort retention. Report timestamps may use different ISO-8601 offset spellings, but they must identify the same instant before the dashboard combines them.
+
+The value-truth report is the required root. Commerce, outcome, and cohort modules may fail independently and render an explicit unavailable state. An invalid, materially future, or cross-report-divergent snapshot fails the complete view closed. A reconciled snapshot more than five minutes old is marked stale with its exact UTC instant; values remain visible and are not estimated.
+
+The 7/30/90-day selector changes the bounded period for every module. Section navigation exposes commerce, outcomes, cohorts, point value, definitions, and reporting operations without changing query authority. Zero cohort denominators render an explanatory empty state. Loading skeletons contain no values, and a failed reporting-operations read never implies an export or schedule exists.
+
 ## Causal terminology
 
 - `operational`: exact state or flow with no behavior claim.

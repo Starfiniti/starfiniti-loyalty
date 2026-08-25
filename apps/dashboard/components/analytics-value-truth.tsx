@@ -46,6 +46,7 @@ type AnalyticsState =
       commerce: AnalyticsCommercePerformanceReportV1 | null;
       outcomes: AnalyticsProgrammeOutcomeReportV1 | null;
       cohorts: AnalyticsCohortRetentionReportV1 | null;
+      freshness: "current" | "stale";
     }>
   | Readonly<{ kind: "disabled" }>
   | Readonly<{ kind: "setup_required" }>
@@ -87,6 +88,7 @@ export function AnalyticsValueTruth({
         <AnalyticsReport
           cohorts={state.cohorts}
           commerce={state.commerce}
+          freshness={state.freshness}
           outcomes={state.outcomes}
           report={state.report}
         />
@@ -134,11 +136,13 @@ function AnalyticsUnavailable({
 function AnalyticsReport({
   cohorts,
   commerce,
+  freshness,
   outcomes,
   report,
 }: Readonly<{
   cohorts: AnalyticsCohortRetentionReportV1 | null;
   commerce: AnalyticsCommercePerformanceReportV1 | null;
+  freshness: "current" | "stale";
   outcomes: AnalyticsProgrammeOutcomeReportV1 | null;
   report: AnalyticsValueTruthReportV1;
 }>) {
@@ -178,9 +182,28 @@ function AnalyticsReport({
   ];
   return (
     <>
+      <nav aria-label="Analytics sections" className="analytics-section-nav">
+        <a href="#analytics-commerce">Commerce</a>
+        <a href="#analytics-outcomes">Outcomes</a>
+        <a href="#analytics-cohorts">Cohorts</a>
+        <a href="#analytics-value">Point value</a>
+        <a href="#analytics-definitions">Definitions</a>
+        <a href="#analytics-reports">Reports</a>
+      </nav>
+
       <section className="analytics-integrity" aria-label="Report integrity">
-        <span className="analytics-integrity-mark">
-          <ShieldCheck aria-hidden="true" /> Reconciled
+        <span
+          className={`analytics-integrity-mark is-${freshness}`}
+          role="status"
+        >
+          {freshness === "current" ? (
+            <ShieldCheck aria-hidden="true" />
+          ) : (
+            <AlertTriangle aria-hidden="true" />
+          )}
+          {freshness === "current"
+            ? "Current and reconciled"
+            : "Stale but reconciled"}
         </span>
         <span>
           <Clock3 aria-hidden="true" /> {formatAnalyticsPeriod(report)}
@@ -193,13 +216,27 @@ function AnalyticsReport({
         <span>Dictionary v{report.dictionaryVersion}</span>
       </section>
 
+      {freshness === "stale" ? (
+        <section className="analytics-stale-state" role="status">
+          <RefreshCcw aria-hidden="true" />
+          <div>
+            <strong>Refresh before making a time-sensitive decision</strong>
+            <p>
+              The last internally consistent snapshot is from{" "}
+              {formatUtcDateTime(report.asOf)}. Values remain visible and are
+              never replaced with estimates.
+            </p>
+          </div>
+        </section>
+      ) : null}
+
       <CommercePerformance report={commerce} />
 
       <ProgrammeOutcomes report={outcomes} />
 
       <CohortRetention report={cohorts} />
 
-      <header className="analytics-section-heading">
+      <header className="analytics-section-heading" id="analytics-value">
         <div>
           <p className="login-eyebrow">Value lifecycle</p>
           <h2>Point position and movement</h2>
@@ -474,6 +511,7 @@ function ProgrammeOutcomes({
     <section
       className="analytics-performance analytics-outcomes"
       aria-labelledby="outcomes-title"
+      id="analytics-outcomes"
     >
       <header className="analytics-section-heading">
         <div>
@@ -750,6 +788,7 @@ function CohortRetention({
     <section
       className="analytics-performance analytics-cohorts"
       aria-labelledby="cohorts-title"
+      id="analytics-cohorts"
     >
       <header className="analytics-section-heading">
         <div>
@@ -906,6 +945,8 @@ function CohortTable({
   rows: AnalyticsCohortRetentionReportV1["membershipActivation"]["cohorts"];
   title: string;
 }>) {
+  const regionId = `cohort-${definition.replaceAll(".", "-")}`;
+  const hasMembers = rows.some((row) => BigInt(row.eligibleMembers) > 0n);
   return (
     <section className="analytics-panel analytics-cohort-panel">
       <header className="analytics-cohort-table-heading">
@@ -915,29 +956,53 @@ function CohortTable({
         </div>
         <MetricDefinitionButton metricKey={definition} />
       </header>
-      <div className="analytics-cohort-table-wrap">
-        <table>
-          <caption className="sr-only">{caption}</caption>
-          <thead>
-            <tr>
-              <th scope="col">Cohort</th>
-              <th scope="col">{eligibleLabel}</th>
-              <th scope="col">{outcomeLabel}</th>
-              <th scope="col">Rate</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr key={row.localDate}>
-                <th scope="row">{formatLocalDate(row.localDate)}</th>
-                <td>{formatCount(row.eligibleMembers)}</td>
-                <td>{formatCount(row.outcomeMembers)}</td>
-                <td>{formatAnalyticsBasisPoints(row.rateBasisPoints)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {hasMembers ? (
+        <>
+          <p className="sr-only" id={`${regionId}-instructions`}>
+            Scroll horizontally to review every cohort column on a small screen.
+          </p>
+          <div
+            aria-describedby={`${regionId}-instructions`}
+            aria-label={caption}
+            className="analytics-cohort-table-wrap"
+            role="region"
+            tabIndex={0}
+          >
+            <table>
+              <caption className="sr-only">{caption}</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Cohort</th>
+                  <th scope="col">{eligibleLabel}</th>
+                  <th scope="col">{outcomeLabel}</th>
+                  <th scope="col">Rate</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => (
+                  <tr key={row.localDate}>
+                    <th scope="row">{formatLocalDate(row.localDate)}</th>
+                    <td>{formatCount(row.eligibleMembers)}</td>
+                    <td>{formatCount(row.outcomeMembers)}</td>
+                    <td>{formatAnalyticsBasisPoints(row.rateBasisPoints)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      ) : (
+        <div className="analytics-cohort-empty" role="status">
+          <DatabaseZap aria-hidden="true" />
+          <div>
+            <strong>No mature members in this cohort window</strong>
+            <p>
+              The date rows are valid but every denominator is zero, so no rate
+              is inferred or charted.
+            </p>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
@@ -1019,6 +1084,7 @@ function CommercePerformance({
     <section
       className="analytics-performance"
       aria-labelledby="performance-title"
+      id="analytics-commerce"
     >
       <header className="analytics-section-heading">
         <div>
@@ -1306,6 +1372,7 @@ function MetricDictionary() {
     <section
       className="analytics-dictionary"
       aria-labelledby="dictionary-title"
+      id="analytics-definitions"
     >
       <header>
         <div>
@@ -1365,6 +1432,14 @@ function formatUtcDate(value: string): string {
     day: "numeric",
     month: "short",
     year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(value));
+}
+
+function formatUtcDateTime(value: string): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    dateStyle: "medium",
+    timeStyle: "short",
     timeZone: "UTC",
   }).format(new Date(value));
 }

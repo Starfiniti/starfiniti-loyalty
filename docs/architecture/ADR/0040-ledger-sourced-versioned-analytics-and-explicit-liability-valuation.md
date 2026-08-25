@@ -42,6 +42,8 @@ For monetary liability, inferring one global points-to-currency ratio or derivin
 20. Campaign incrementality uses an intention-to-treat difference-in-means estimator over all immutable treatment and control assignments, including members with zero observed outcome. The outcome is refund-compensated loyalty-eligible spend in the immutable campaign `[starts_at, ends_at)` window. For the treatment population, the exact rational estimate is `(treatment spend × control N - control spend × treatment N) / control N`; the API carries numerator and denominator and labels the rounded minor-unit result a point estimate only.
 21. A campaign estimate is unavailable unless the campaign is a purchase behavior, its full window is complete, assignment counts reconcile to the approved version, both arms have at least 30 members, purchase evidence is valid, and all observed outcomes use one exact currency and precision. This minimum is an operational guardrail, not a power calculation or significance threshold. Trigger campaigns, incomplete windows, mixed currency, missing purchase evidence, and assignment drift return explicit reason codes and null monetary values.
 22. The estimator reports incremental **eligible spend**, not gross merchandise value, margin, accounting revenue, or statistically significant lift. More advanced regression, covariate adjustment, sequential testing, and power planning require new versioned estimators and cannot reinterpret the V1 result.
+23. One interactive command-center render chooses one explicit `asOf` instant and supplies it to all four report functions. The dashboard rejects invalid, materially future, or divergent report instants before combining modules. A reconciled snapshot older than five minutes remains visible only with an explicit stale warning; it is never silently replaced with estimates.
+24. Loading, setup-required, disabled, unavailable, independently degraded, stale, and zero-denominator states are first-class product states. Mature cohort tables become named keyboard-focusable scroll regions only when a denominator exists; an empty denominator renders an explanation rather than a misleading zero-rate table.
 
 ## Consequences
 
@@ -53,6 +55,8 @@ For monetary liability, inferring one global points-to-currency ratio or derivin
 - Legacy V1 evaluation reconstruction is more complex than V2 fact reads, but preserves production history without backfilling or mutating immutable rows. The report exposes its V1/V2 and linkage coverage so migration gaps are observable.
 - Fixed-window cohorts arrive later than naive rolling rates, but every member receives the same observation opportunity and DST changes cannot alter elapsed qualification.
 - Small or operationally incomplete campaigns intentionally show an unavailable causal result. This is safer than reporting unstable lift as fact and gives merchants a concrete evidence gate to resolve.
+- Explicit cross-report snapshot binding prevents a transaction arriving between parallel RPC calls from creating a dashboard that is individually valid but internally time-inconsistent.
+- The five-minute stale threshold is a presentation and operating guardrail, not a cache promise or data-retention policy. On-demand PostgreSQL remains authoritative.
 
 ## Security and integrity effects
 
@@ -74,3 +78,5 @@ For monetary liability, inferring one global points-to-currency ratio or derivin
 Deploy additive functions and indexes first, keep analytics navigation disabled until shadow reconciliation passes, and canary only the Starfiniti tenant. Rollback stops consuming the new report and returns to Overview V1. Additive definitions and immutable evidence remain; no rollback rewrites ledger, lots, projections, programme versions, or historical reports.
 
 The cohort/experiment slice rolls back independently by stopping the `get_analytics_cohort_retention_v1` read and returning the dashboard module to its explicit unavailable state. Dictionary V4 remains additive; V1–V3 readers and reports are unchanged. No assignment, campaign effect, wallet, release, or refund evidence is removed or rewritten.
+
+The command-center slice rolls back by removing its section navigation, loading presentation, and shared `asOf` orchestration while leaving all additive report functions and contracts available. Because the slice is read-only, rollback cannot change ledger, commerce, campaign, export, or customer value evidence.

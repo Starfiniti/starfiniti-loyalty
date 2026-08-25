@@ -1,6 +1,6 @@
 # M10 Evidence — Analytics
 
-Status: in progress. M10-S01 through M10-S04 are complete; M10-S05 analytics command-center review is active while M09 waits only on its reviewed production canary gate.
+Status: in progress. M10-S01 through M10-S04 are complete; M10-S05 analytics command-center implementation and browser review pass locally while exact-head CI is pending. M09 waits only on its reviewed production canary gate.
 
 ## Reconstructed baseline
 
@@ -70,3 +70,11 @@ Status: in progress. M10-S01 through M10-S04 are complete; M10-S05 analytics com
 - [Desktop/mobile browser QA](analytics-exports-browser-qa-2026-08-25.md) exercised the real component at 1512 × 982 and 390 × 844, cadence changes, keyboard focus, reduced motion, English-only output, overflow, and fresh browser diagnostics. The temporary fixture was removed.
 - Exact-head Linux CI [run 32897999942](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/32897999942) passed at commit `4f97f3a`: root checks, both production images, a clean 62-migration replay, all 49 pgTAP files with 2,609 assertions, all six concurrency probes including the analytics race, and minimum/current WooCommerce with HPOS/legacy storage.
 - Intentional limitations: schedules generate downloadable Hub reports rather than sending email attachments; PostgreSQL remains the source because no measured load requires a warehouse; payloads are JSON only; the reporting profile remains disabled until the Starfiniti S06 canary.
+
+## M10-S05 implementation evidence
+
+- One server-chosen UTC `asOf` instant now binds all four parallel report RPCs. Returned ISO timestamps must resolve to the same instant before modules are combined; invalid or materially future instants fail closed, and a snapshot older than five minutes renders an explicit stale warning without replacing values.
+- The Hub-style command center adds six section links, keeps 7/30/90-day filtering, exposes the exact report period/dictionary/ledger integrity strip, and preserves independent commerce/outcome/cohort/reporting failures rather than blanking valid evidence.
+- The route has a value-free accessible loading skeleton. Zero-denominator cohorts render an honest empty explanation; populated cohort tables have captions, row/column headers, named keyboard-focusable scroll regions, and small-screen instructions.
+- [Desktop/mobile browser QA](analytics-command-center-browser-qa-2026-08-25.md) passed at 1512 × 982 and 390 × 844 with `0 px` page overflow, 16.68:1 heading contrast, working keyboard anchors/table focus, reduced motion, English-only output, explicit stale/empty variants, and zero browser diagnostics. Temporary fixture and QA code were removed.
+- Focused dashboard typecheck, production build, lint, 15 analytics tests, targeted formatting, and diff checks pass locally. Exact-head Linux CI remains the final S05 closure check.

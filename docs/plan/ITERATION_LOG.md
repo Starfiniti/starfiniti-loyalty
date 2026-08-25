@@ -1,5 +1,11 @@
 # Iteration Log
 
+## 2026-08-25 — M10 analytics command center
+
+- Bound the four parallel interactive reports to one explicit database snapshot instant and rejected invalid, future, or divergent timestamps before presenting a combined decision surface.
+- Added current/stale integrity labeling, value-free loading, explicit partial-error and reporting failure states, zero-denominator cohort states, six section anchors, and keyboard-focusable named table regions without synthetic values.
+- Chromium review passed desktop/mobile responsive layout, zero document overflow, 16.68:1 primary heading contrast, keyboard anchors and data regions, reduced motion, English-only output, stale/empty variants, and zero browser diagnostics. Exact-head Linux CI is pending before S05 closes.
+
 ## 2026-08-25 — M10 controlled exports and scheduled reports
 
 - Closed M10-S04 with one strict Dictionary V4/four-report JSON bundle, exact request/generation/timezone/digest evidence, 24-hour private payloads, and five-minute subject/session-bound one-use downloads.

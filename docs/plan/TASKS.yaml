@@ -1528,7 +1528,7 @@ tasks:
         status: planned
         acceptance:
           - read-only shadow comparison exact-head CI disabled deployment Starfiniti canary reconciliation rollback and module score at least 90 pass
-    risks: [R-001, R-030]
+    risks: [R-001, R-030, R-037, R-038]
     docs:
       [
         docs/plan/ENTERPRISE_ROADMAP.md,

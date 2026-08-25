@@ -15,6 +15,35 @@ import { formatExactInteger, type OverviewRange } from "./overview";
 
 export type AnalyticsRange = OverviewRange;
 export type AnalyticsRow = Readonly<Record<string, unknown>>;
+export type AnalyticsSnapshotFreshness = "current" | "stale" | "invalid";
+
+const ANALYTICS_STALE_AFTER_MS = 5 * 60 * 1000;
+const ANALYTICS_MAX_CLOCK_SKEW_MS = 60 * 1000;
+
+export function analyticsReportsShareSnapshot(
+  asOfValues: readonly string[],
+): boolean {
+  if (asOfValues.length === 0) return false;
+  const instants = asOfValues.map((value) => Date.parse(value));
+  return (
+    instants.every(Number.isFinite) &&
+    instants.every((instant) => instant === instants[0])
+  );
+}
+
+export function analyticsSnapshotFreshness(
+  asOf: string,
+  observedAt: string,
+): AnalyticsSnapshotFreshness {
+  const asOfInstant = Date.parse(asOf);
+  const observedInstant = Date.parse(observedAt);
+  if (!Number.isFinite(asOfInstant) || !Number.isFinite(observedInstant)) {
+    return "invalid";
+  }
+  const age = observedInstant - asOfInstant;
+  if (age < -ANALYTICS_MAX_CLOCK_SKEW_MS) return "invalid";
+  return age > ANALYTICS_STALE_AFTER_MS ? "stale" : "current";
+}
 
 export function parseAnalyticsValueTruthRow(
   row: AnalyticsRow,

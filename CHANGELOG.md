@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Completed the M10 analytics command-center slice with one explicit cross-report snapshot instant, fail-closed divergence/future checks, current/stale integrity states, section navigation, honest loading/empty/partial-error states, and keyboard-focusable responsive cohort tables.
+
 - Added the versioned M10 analytics dictionary and immutable value-truth report with exact issued, released, pending, available, reserved, spent, expired, reversed, manual, outstanding, and expiry-window point evidence; projection reconciliation; explicit unavailable monetary liability; and a responsive formula-backed merchant experience.
 - Added mature-cohort activation, participation, refund-compensated V1/V2 eligible commerce, repeat purchase, AOV, observed LTV, source coverage, guest activity, and missing-link reporting with exact currency scope, bigint-safe contracts, independently degradable dashboard reads, and no inferred prediction or incrementality.
 - Added immutable reward realization, event-time VIP movement, privacy-minimized referral issuance and compensation, and deduplicated refund-compensated campaign influence reporting with exact reversal evidence and an explicit unavailable causal-lift state.

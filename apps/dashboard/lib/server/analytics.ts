@@ -19,6 +19,7 @@ import type { TenantContext } from "@/lib/tenant-context";
 export async function getAnalyticsValueTruthReport(
   context: TenantContext,
   rangeDays: AnalyticsRange,
+  asOf: string,
 ): Promise<AnalyticsValueTruthReportV1 | null> {
   if (!context.workspace || !context.programmeGroup) return null;
   const supabase = await createSupabaseServerClient();
@@ -29,6 +30,7 @@ export async function getAnalyticsValueTruthReport(
       target_workspace_public_id: context.workspace.public_id,
       target_programme_group_public_id: context.programmeGroup.public_id,
       target_days: rangeDays,
+      target_as_of: asOf,
     });
   if (error) throw new Error("analytics_value_truth_unavailable");
   const row = (Array.isArray(data) ? data[0] : data) as AnalyticsRow | null;
@@ -43,6 +45,7 @@ export async function getAnalyticsValueTruthReport(
 export async function getAnalyticsProgrammeOutcomeReport(
   context: TenantContext,
   rangeDays: AnalyticsRange,
+  asOf: string,
 ): Promise<AnalyticsProgrammeOutcomeReportV1 | null> {
   if (!context.workspace || !context.programmeGroup) return null;
   const supabase = await createSupabaseServerClient();
@@ -53,6 +56,7 @@ export async function getAnalyticsProgrammeOutcomeReport(
       target_workspace_public_id: context.workspace.public_id,
       target_programme_group_public_id: context.programmeGroup.public_id,
       target_days: rangeDays,
+      target_as_of: asOf,
     });
   if (error) throw new Error("analytics_programme_outcomes_unavailable");
   const row = (Array.isArray(data) ? data[0] : data) as AnalyticsRow | null;
@@ -67,6 +71,7 @@ export async function getAnalyticsProgrammeOutcomeReport(
 export async function getAnalyticsCommercePerformanceReport(
   context: TenantContext,
   rangeDays: AnalyticsRange,
+  asOf: string,
 ): Promise<AnalyticsCommercePerformanceReportV1 | null> {
   if (!context.workspace || !context.programmeGroup) return null;
   const supabase = await createSupabaseServerClient();
@@ -77,6 +82,7 @@ export async function getAnalyticsCommercePerformanceReport(
       target_workspace_public_id: context.workspace.public_id,
       target_programme_group_public_id: context.programmeGroup.public_id,
       target_days: rangeDays,
+      target_as_of: asOf,
     });
   if (error) throw new Error("analytics_commerce_performance_unavailable");
   const row = (Array.isArray(data) ? data[0] : data) as AnalyticsRow | null;
@@ -91,6 +97,7 @@ export async function getAnalyticsCommercePerformanceReport(
 export async function getAnalyticsCohortRetentionReport(
   context: TenantContext,
   rangeDays: AnalyticsRange,
+  asOf: string,
 ): Promise<AnalyticsCohortRetentionReportV1 | null> {
   if (!context.workspace || !context.programmeGroup) return null;
   const supabase = await createSupabaseServerClient();
@@ -102,6 +109,7 @@ export async function getAnalyticsCohortRetentionReport(
       target_programme_group_public_id: context.programmeGroup.public_id,
       target_days: rangeDays,
       target_time_zone: "UTC",
+      target_as_of: asOf,
     });
   if (error) throw new Error("analytics_cohort_retention_unavailable");
   const row = (Array.isArray(data) ? data[0] : data) as AnalyticsRow | null;

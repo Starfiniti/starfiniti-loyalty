@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { AlertTriangle } from "lucide-react";
 import { AnalyticsValueTruth } from "@/components/analytics-value-truth";
 import { AnalyticsExportOperations } from "@/components/analytics-export-operations";
 import { hasEntitlement } from "@/lib/entitlements";
@@ -7,6 +8,10 @@ import {
   resolveMerchantLocale,
 } from "@/lib/merchant-locale";
 import { parseOverviewRange } from "@/lib/overview";
+import {
+  analyticsReportsShareSnapshot,
+  analyticsSnapshotFreshness,
+} from "@/lib/analytics";
 import {
   getAnalyticsCohortRetentionReport,
   getAnalyticsCommercePerformanceReport,
@@ -60,16 +65,43 @@ export default async function AnalyticsPage({
   } else if (!analyticsEnabled) {
     state = { kind: "disabled" };
   } else {
+    const targetAsOf = new Date().toISOString();
     const [valueResult, commerceResult, outcomeResult, cohortResult] =
       await Promise.allSettled([
-        getAnalyticsValueTruthReport(tenant.context, range),
-        getAnalyticsCommercePerformanceReport(tenant.context, range),
-        getAnalyticsProgrammeOutcomeReport(tenant.context, range),
-        getAnalyticsCohortRetentionReport(tenant.context, range),
+        getAnalyticsValueTruthReport(tenant.context, range, targetAsOf),
+        getAnalyticsCommercePerformanceReport(
+          tenant.context,
+          range,
+          targetAsOf,
+        ),
+        getAnalyticsProgrammeOutcomeReport(tenant.context, range, targetAsOf),
+        getAnalyticsCohortRetentionReport(tenant.context, range, targetAsOf),
       ]);
-    if (valueResult.status === "fulfilled" && valueResult.value) {
+    const reports = [
+      valueResult.status === "fulfilled" ? valueResult.value : null,
+      commerceResult.status === "fulfilled" ? commerceResult.value : null,
+      outcomeResult.status === "fulfilled" ? outcomeResult.value : null,
+      cohortResult.status === "fulfilled" ? cohortResult.value : null,
+    ].filter((report) => report !== null);
+    const sharedSnapshot = analyticsReportsShareSnapshot(
+      reports.map((report) => report.asOf),
+    );
+    const freshness =
+      valueResult.status === "fulfilled" && valueResult.value
+        ? analyticsSnapshotFreshness(
+            valueResult.value.asOf,
+            new Date().toISOString(),
+          )
+        : "invalid";
+    if (
+      valueResult.status === "fulfilled" &&
+      valueResult.value &&
+      sharedSnapshot &&
+      freshness !== "invalid"
+    ) {
       state = {
         kind: "ready",
+        freshness,
         report: valueResult.value,
         commerce:
           commerceResult.status === "fulfilled" ? commerceResult.value : null,
@@ -121,6 +153,22 @@ export default async function AnalyticsPage({
             workspace={exportWorkspace}
             workspaceId={tenant.context.workspace.public_id}
           />
+        ) : state.kind === "ready" ? (
+          <section
+            className="analytics-module-unavailable"
+            id="analytics-reports"
+            role="status"
+          >
+            <AlertTriangle aria-hidden="true" />
+            <div>
+              <strong>Reporting operations are temporarily unavailable</strong>
+              <p>
+                On-screen reconciled analytics remain available. No export or
+                schedule is implied until its private authorization state can be
+                verified.
+              </p>
+            </div>
+          </section>
         ) : null}
       </main>
     </MerchantShell>

@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   analyticsMetricDefinition,
+  analyticsReportsShareSnapshot,
   analyticsShareBasisPoints,
+  analyticsSnapshotFreshness,
   formatAnalyticsBasisPoints,
   formatAnalyticsCurrencyMinor,
   formatAnalyticsPeriod,
@@ -211,6 +213,47 @@ const cohortReport = {
 };
 
 describe("analytics presentation", () => {
+  it("requires one valid snapshot instant across every dashboard module", () => {
+    expect(
+      analyticsReportsShareSnapshot([
+        "2026-08-26T00:00:00Z",
+        "2026-08-26T02:00:00+02:00",
+        "2026-08-26T00:00:00.000Z",
+      ]),
+    ).toBe(true);
+    expect(
+      analyticsReportsShareSnapshot([
+        "2026-08-26T00:00:00Z",
+        "2026-08-26T00:00:01Z",
+      ]),
+    ).toBe(false);
+    expect(analyticsReportsShareSnapshot(["invalid"])).toBe(false);
+  });
+
+  it("classifies current, stale, future, and invalid report snapshots", () => {
+    expect(
+      analyticsSnapshotFreshness(
+        "2026-08-26T00:00:00Z",
+        "2026-08-26T00:05:00Z",
+      ),
+    ).toBe("current");
+    expect(
+      analyticsSnapshotFreshness(
+        "2026-08-26T00:00:00Z",
+        "2026-08-26T00:05:00.001Z",
+      ),
+    ).toBe("stale");
+    expect(
+      analyticsSnapshotFreshness(
+        "2026-08-26T00:02:00Z",
+        "2026-08-26T00:00:00Z",
+      ),
+    ).toBe("invalid");
+    expect(analyticsSnapshotFreshness("invalid", "also-invalid")).toBe(
+      "invalid",
+    );
+  });
+
   it("maps snake-case RPC evidence into the strict value-truth contract", () => {
     const report = parseAnalyticsValueTruthRow(row);
     expect(report.snapshot.availablePoints).toBe("9007199254741038");

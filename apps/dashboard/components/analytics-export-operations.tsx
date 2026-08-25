@@ -65,6 +65,7 @@ export function AnalyticsExportOperations({
     <section
       className="analytics-export-module"
       aria-labelledby="exports-title"
+      id="analytics-reports"
     >
       <header className="analytics-section-heading">
         <div>
