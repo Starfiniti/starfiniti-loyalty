@@ -538,11 +538,14 @@ begin
     where fact.fact_kind in ('purchase', 'refund')
   ), currency_history as (
     select count(*)::integer as candidate_count,
-      min(currency_code) as code,
-      min(minor_unit_digits) as digits,
-      bool_or(currency_code is null or minor_unit_digits is null)
+      min(candidate.currency_code) as code,
+      min(candidate.minor_unit_digits) as digits,
+      bool_or(
+        candidate.currency_code is null
+        or candidate.minor_unit_digits is null
+      )
         as has_invalid
-    from currency_candidates
+    from currency_candidates as candidate
   ), published_currency as (
     select version.currency_code as code, version.minor_unit_digits as digits
     from scoped_versions as version
