@@ -187,6 +187,20 @@ select version.organization_id, version.programme_group_id, version.id,
 from loyalty.programme_versions as version
 where version.public_id = '8f000000-0000-4000-8000-000000000140';
 
+insert into loyalty.programme_earning_rules (
+  organization_id, programme_group_id, programme_version_id, code, name,
+  ordinal, source, enabled, priority, stackable, effect_kind, effect,
+  conditions, purchase_exclusions, cap
+)
+select version.organization_id, version.programme_group_id, version.id,
+  'purchase', 'Eligible purchases', 1, 'purchase', true, 0, false,
+  'base_rate', '{"kind":"base_rate","pointsPerMajorUnit":"5"}'::jsonb,
+  '{"productIds":[],"categoryIds":[],"currencyCodes":[],"markets":[],"channels":[],"activityCodes":[],"segmentCodes":[],"tierCodes":[],"startsAt":null,"endsAt":null}'::jsonb,
+  '{"productIds":[],"categoryIds":[],"shipping":true,"tax":true,"fees":true,"giftCardPayments":true,"storeCreditPayments":true,"discounts":true}'::jsonb,
+  '{"perEventPoints":null,"perMemberPoints":null,"memberPeriod":null,"rollingDays":null}'::jsonb
+from loyalty.programme_versions as version
+where version.public_id = '8f000000-0000-4000-8000-000000000140';
+
 insert into loyalty.reward_reservations (
   public_id, organization_id, programme_group_id, programme_version_id,
   wallet_id, reward_id, cost_points, state, idempotency_key,
