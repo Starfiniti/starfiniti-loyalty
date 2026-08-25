@@ -1170,7 +1170,7 @@ tasks:
           - exact-head run 32691991986 at ea9aa00 passed the complete baseline both production images a clean 51-migration replay all 42 pgTAP files with 2277 assertions including all 58 focused webhook assertions every concurrency probe and all four WooCommerce runtime cells
           - the worker profile remains disabled with no production endpoint secret subscription or delivery
       - id: M08-S05-TEMPLATES-AND-HEALTH
-        status: in_progress
+        status: completed
         hypothesis: Safe tenant-owned message control and exact delivery health reduce launch mistakes without expanding contact or provider authority.
         baseline: Six immutable system SMTP templates exist but merchants cannot customize or test them and no merchant notification-health projection exists.
         targets:
@@ -1199,8 +1199,14 @@ tasks:
           - server read/action tests for malformed containers role failures and independent catalogue/health degradation
           - desktop and mobile browser tests for keyboard template editing preview test status consent summary health table dark mode and zero diagnostics
           - exact-head baseline database replay images WooCommerce matrix secret scan and disabled deployment smoke
+        evidence:
+          - ADR-0035 selects immutable global and tenant template versions, one private active binding, Auth-derived owner/admin publication, deterministic escaped HTML, and an isolated actor-bound SMTP test queue
+          - exact-head run 32836814262 at a377ef7 passed the complete baseline, both production images, a clean 54-migration replay, all 43 pgTAP files with 2340 assertions including all 63 focused template/health assertions, every concurrency probe, and all four WooCommerce runtime cells
+          - focused contracts and worker tests verify exact event tokens, immutable active versions, visible test prefix, no arbitrary recipient, separate normal/test claim routes, deterministic lifecycle outcomes, and real loopback SMTP acceptance
+          - server read/action tests fail closed on malformed containers and role errors while the Hub-style notification studio exposes six templates, safe preview, consent/provider aggregates, and bounded canonical issues
+          - real-component Playwright review passed template switching, dark theme, mobile navigation, key actions, and zero browser diagnostics; synthetic screenshots are retained under docs/plan/evidence/M08
       - id: M08-S06-CANARY-AND-CLOSE
-        status: planned
+        status: in_progress
         acceptance:
           - exact-head CI disabled deployment local SMTP sink test-provider canary reconciliation rollback and score at least 90 pass
     risks: [R-027]

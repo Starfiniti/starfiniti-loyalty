@@ -1,6 +1,6 @@
 # M08 Evidence — Notifications
 
-M08 is in progress. M08-S01 is complete: ADR-0031 defines strict provider-neutral English events, purpose-separated local consent, stronger trusted suppression, Auth-derived customer commands, late contact resolution, and provider-independent value processing.
+M08 is in progress. M08-S01 through S05 are complete: the provider-neutral consent authority, isolated SMTP/Klaviyo/webhook delivery, and safe merchant template/test/health experience are exact-head green. M08-S06 disabled deployment, provider canaries, reconciliation, rollback, and module scoring remain open.
 
 ## M08-S01 — Event and consent authority
 
@@ -45,4 +45,16 @@ M08-S03 is complete. Its real test-account canary remains an S06 owner-input gat
 - The self-improving CI loop promoted the recurring PostgreSQL schema-qualified conditional-expression failure into migration validation. Fixture-only entitlement, timestamp, and immutability expectation failures were corrected before exact-head evidence was recorded.
 - Deployment remains disabled. No production endpoint, subscription, webhook secret, or delivery exists.
 
-M08-S01 through S04 are complete. S05 merchant template/test-delivery/health/suppression experience and S06 disabled deployment/provider canaries/reconciliation/scoring remain open.
+## M08-S05 — Immutable tenant templates, actor-bound tests, and merchant health
+
+- Exact head: `a377ef7aa98917d5fac4801446f7018d27db4ba8` on draft PR #32.
+- CI: run `32836814262` passed the complete baseline, both production images, a clean 54-migration replay, all 43 pgTAP files with 2,340 assertions, every concurrency probe, and all four minimum/current HPOS/legacy WooCommerce runtimes.
+- ADR-0035 selects immutable global and organization template versions with one private active binding. A new accepted delivery retains its exact template UUID/version/hash; publication never rewrites existing content or changes an already accepted retry.
+- Owner/admin publication accepts only public workspace, event, content, idempotency, and correlation inputs. PostgreSQL derives tenant, actor, locale, next version, hash, deterministic escaped HTML, and binding; it rejects unknown tokens, markup, URLs, files, remote assets, control characters, unauthorized roles, cross-tenant selectors, and conflicting retries.
+- Test delivery uses a separate queue and accepts no address, content, version, sample value, actor, tenant, or provider selector. Authorization rechecks the requesting actor's live owner/admin membership, self-hosted entitlement, verified Auth email, exact lease, and template hash before one ephemeral contact disclosure. The real loopback sink verifies the visible `[Starfiniti test]` prefix and the same conservative retry/dead-letter/manual-review policy without sharing normal delivery state.
+- `get_notification_workspace_v1` returns exactly six active templates, three provider aggregates, purpose consent/suppression counts, deployment/entitlement state, and at most 100 canonical issues. Contract, SQL, and server parsers exclude contact/customer identity, payload, rendered content, destination, secret/fingerprint/signature, worker/lease identity, raw provider response, and arbitrary error text; malformed or incomplete containers fail closed.
+- Focused evidence includes 48 notification contract tests, 17 normal/test SMTP worker tests, 7 dashboard server/action tests, 63 pgTAP assertions, migration/architecture/accessibility validation, a production dashboard build exposing `/notifications`, and a real-component Playwright interaction pass.
+- Visual evidence uses synthetic non-customer values and contains no contact or secret data: [desktop](notification-studio-desktop.png), [dark](notification-studio-dark.png), and [mobile](notification-studio-mobile.png).
+- Rollback disables new publication/test work while retaining the active binding, immutable versions, accepted normal/test attempts, provider-neutral facts, health evidence, system fallback, and every checkout/value/refund/reconciliation path.
+
+M08-S01 through S05 are complete. S06 disabled deployment, local SMTP sink, real-provider canaries, exact reconciliation, rollback proof, and scoring remain open. No production notification provider is active.

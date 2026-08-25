@@ -56,3 +56,34 @@ SMTP outcomes are conservative:
 An exact provider-neutral event replay creates one delivery. SMTP itself cannot atomically prove remote exactly-once delivery, so ambiguous acceptance is stopped for review rather than automatically repeated.
 
 The SMTP worker is a separate process and optional Compose profile. Disabling it cannot block checkout, events, ledger effects, refunds, reconciliation, balances, or customer access. See `docs/operations/SMTP.md` and ADR-0032.
+
+## Immutable tenant email templates
+
+The six transactional SMTP event types each resolve one active English template. A tenant may use the immutable system version or publish an immutable organization version; switching the private active binding affects only subsequently accepted deliveries. Every delivery retains its exact template UUID, version, and SHA-256, so a retry cannot silently adopt later copy.
+
+`loyalty.publish_notification_email_template_command(workspaceId, eventType, subjectTemplate, textTemplate, idempotencyKey, correlationId)` is available only to a live organization owner or admin. The caller supplies one public workspace UUID and content, never organization, actor, locale, version, hash, binding, or HTML authority. PostgreSQL derives those fields, appends minimized audit evidence, and returns only the public template UUID, version, and `created`/`duplicate` outcome. An exact retry returns the original version; changed content under the same key conflicts.
+
+Content is intentionally constrained:
+
+| Event                      | Allowed tokens                               |
+| -------------------------- | -------------------------------------------- |
+| `loyalty.points.earned`    | `points`, `pendingUntil`                     |
+| `loyalty.points.released`  | `points`, `availableBalance`                 |
+| `loyalty.points.expiring`  | `points`, `expiresAt`, `daysRemaining`       |
+| `loyalty.reward.changed`   | `rewardReservationId`, `rewardCode`, `state` |
+| `loyalty.tier.changed`     | `fromTierCode`, `toTierCode`, `effectiveAt`  |
+| `loyalty.referral.changed` | `referralId`, `party`, `state`               |
+
+Subjects are 1–200 characters and bodies 1–4,000 characters. Unknown or malformed tokens, control characters, markup, URL schemes, `www.` links, files, scripts, styles, and remote assets fail closed. PostgreSQL escapes the accepted plain text into deterministic HTML; the browser never submits HTML.
+
+## Actor-bound test delivery
+
+`loyalty.send_notification_test_command(workspaceId, eventType, idempotencyKey, correlationId)` accepts no recipient, contact, subject, body, version, or sample values. PostgreSQL binds the current active template and requesting Auth user to a separate SMTP test-delivery queue. Dispatch authorization rechecks a live owner/admin membership, self-hosted notification entitlement, exact lease, verified Auth email, and template hash before returning the one ephemeral address and a database-owned synthetic event. The worker adds a visible `[Starfiniti test]` subject prefix and uses the same bounded retry, dead-letter, and ambiguity rules as normal SMTP without sharing its queue lifecycle.
+
+Disabling the notification entitlement blocks new tests and holds pre-send work but does not remove active bindings, historical versions, accepted attempts, normal delivery evidence, or any loyalty value path.
+
+## Merchant notification workspace
+
+`loyalty.get_notification_workspace_v1(workspaceId, issueLimit)` derives tenant scope from the live membership and returns exactly six active template projections, three provider summaries (`smtp`, `klaviyo`, `webhook`), aggregate transactional/marketing consent counts, deployment/entitlement state, and at most 100 newest canonical issues.
+
+Issue rows expose only provider, delivery/operation/test kind, public reference UUID, optional event type, canonical `contact_unavailable`/`dead_letter`/`manual_review` state, bounded attempt count, allowlisted error code, and update instant. The projection excludes email, customer identity, payload, rendered content, destination, key or secret fingerprint, signature, worker/lease reference, raw provider body, and arbitrary error text. An incomplete or malformed projection fails closed in both PostgreSQL and the server parser rather than appearing as a healthy empty state.
