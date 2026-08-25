@@ -1297,15 +1297,20 @@ tasks:
           - real-component Playwright review at 1440 by 1000 390 by 844 and 720 by 900 reflow passed headings landmarks first-focus bypass navigation overflow reduced-motion and zero browser diagnostics with eight retained screenshots
           - exact-head run 32844158775 at ad1ddcf passed baseline both images 55 migrations 43 pgTAP files with 2361 assertions and all four WooCommerce runtimes
       - id: M09-S03-LOCAL-WOOCOMMERCE-SNAPSHOT-AND-PLACEMENTS
-        status: in_progress
+        status: completed
         acceptance:
           - a signed leased idempotent bounded PII-free revisioned snapshot is stored locally without becoming balance coupon or redemption authority
           - My Account product cart checkout and post-purchase classic placements render only local data and degrade to generic copy
           - Hub worker DNS TLS and database outages add zero synchronous checkout dependency
         rollout: Deliver snapshots disabled first then enable classic placements for the Starfiniti store.
         rollback: Stop generation and placements while retaining the last valid snapshot account link and native coupons.
+        evidence:
+          - signed polls submit at most 25 unique numeric channel-local selectors and PostgreSQL derives tenant customer programme wallet balances catalogue affordability and entitlement into one bounded PII-free monotonic command
+          - strict plugin validation preserves the last-known-good non-autoloaded per-customer option across stale older conflicting private and cross-connection payloads while privacy export erasure user deletion and explicit uninstall handle local state
+          - My Account product cart classic checkout and post-purchase hooks render only local data with zero connector JavaScript CSS or render-time Hub calls and retain native coupon and secure-account fallbacks
+          - exact-head run 32853757058 at c2e2c82 passed baseline both images 56 migrations all 44 pgTAP files with 2392 assertions and all four minimum/current HPOS/legacy WooCommerce runtimes
       - id: M09-S04-BLOCKS-AND-PROGRESSIVE-PANEL
-        status: planned
+        status: in_progress
         acceptance:
           - namespaced Store API extension data and official SlotFill integration support Cart and Checkout Blocks without private data or live Hub calls
           - optional progressively enhanced panel preserves a complete no-script path and passes explicit compressed JavaScript and CSS budgets

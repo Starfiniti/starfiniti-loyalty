@@ -1,6 +1,6 @@
 # M09 Evidence — Storefront Experience
 
-Status: in progress. M09-S01 and M09-S02 are complete; M09-S03 is active. Local cache/offline behavior, plugin placements and matrix, progressive-panel budget, checkout-independence, hardening, and canary evidence remain required for module closure.
+Status: in progress. M09-S01 through M09-S03 are complete; M09-S04 is active. Blocks integration, progressive-panel budget, presentation hardening, accessibility/outage review, and canary evidence remain required for module closure.
 
 ## S01 — Auth-derived customer experience contract
 
@@ -24,9 +24,19 @@ Status: in progress. M09-S01 and M09-S02 are complete; M09-S03 is active. Local 
 - Local verification: 41 dashboard test files with 164 tests, dashboard lint/typecheck/build, root lint, every workspace typecheck/test/build, database/deployment/pilot/entitlement/architecture/accessibility/WooCommerce validators, secret scan, production audit, licence inventory, targeted formatting, and diff checks passed. The Windows Nextcloud worktree still reports the documented untouched-file CRLF Prettier noise; exact Linux CI is authoritative.
 - Rollback: disable `enhancements_enabled` and retain the compatible core account and public experience. The immutable read model, customer value, reservations, native coupons, and history remain available.
 
+## S03 — Local WooCommerce snapshot and classic placements
+
+- Commit: `c2e2c82b5557c9105d4311afed9f621776f11c53`
+- Exact-head CI: [run 32853757058](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/32853757058)
+- Result: baseline, dashboard and worker images, clean 56-migration replay, all 44 pgTAP files with 2,392 assertions, and all four minimum/current HPOS/legacy WooCommerce runtime cells passed.
+- Delivery boundary: a signed connector poll advertises `customer_experience.snapshot.v1` and supplies at most 25 unique numeric channel-local selectors. PostgreSQL derives connection, tenant, registered customer, programme, wallet, exact balances, tier, expiry, earning summaries, reward affordability, and presentation entitlement; neither WordPress nor the browser can choose value or tenant authority.
+- Local integrity: one strict, bounded, PII-free, monotonic command updates a per-customer non-autoloaded option only after complete schema, freshness, size, affordability, local-user, and connection checks. Older, conflicting, private, stale, or cross-connection payloads cannot replace the last known good revision. WordPress privacy export/erasure, user deletion, and explicit data-removing uninstall cover the cache.
+- Classic experience: My Account, product, cart, checkout, and post-purchase hooks expose local core value or generic stale guidance, gated enhancements, the secure account path, and native coupons. Runtime tests force every Hub HTTP call to fail while all placements render; checkout remains independent.
+- Budgets: 0 bytes connector JavaScript, 0 bytes connector CSS, 0 render-time Hub calls, 32 KiB per snapshot, 25 customer selectors per poll, and about 30 KiB combined storefront/snapshot PHP under a 48 KiB ceiling.
+- Rollback: stop queueing the capability and remove enhanced hooks. The last valid cache, secure account link, native coupons, local commerce outbox, and every canonical ledger/value record remain intact.
+
 ## Remaining
 
-- S03 local WooCommerce snapshot and classic placements.
 - S04 Blocks data and progressively enhanced panel.
 - S05 branding, accessibility, and outage hardening.
 - S06 disabled deployment, Starfiniti canary, reconciliation, rollback, and score.
