@@ -3,6 +3,7 @@ import {
   formatEurMinor,
   formatPublicPoints,
   isPublicId,
+  PUBLIC_LOYALTY_ACCOUNT_PATH,
   resolvePublicLocale,
 } from "./public-loyalty";
 
@@ -26,5 +27,13 @@ describe("public loyalty presentation", () => {
     );
     expect(formatEurMinor("15000", "en")).toBe("€150");
     expect(formatEurMinor("15025", "en")).toBe("€150.25");
+  });
+
+  it("routes guests to the canonical same-origin loyalty sign-in", () => {
+    expect(PUBLIC_LOYALTY_ACCOUNT_PATH).toBe(
+      "/login?next=%2Faccount%2Floyalty",
+    );
+    expect(PUBLIC_LOYALTY_ACCOUNT_PATH).not.toMatch(/^https?:/u);
+    expect(PUBLIC_LOYALTY_ACCOUNT_PATH).not.toContain("lang=");
   });
 });

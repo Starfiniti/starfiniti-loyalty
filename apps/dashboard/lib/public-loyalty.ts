@@ -1,12 +1,15 @@
 import type { ExperienceLocaleV1 } from "@starfiniti/contracts";
 
+export const PUBLIC_LOYALTY_ACCOUNT_PATH =
+  "/login?next=%2Faccount%2Floyalty" as const;
+
 export function isPublicId(value: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu.test(
     value,
   );
 }
 
-export function resolvePublicLocale(value: unknown): ExperienceLocaleV1 {
+export function resolvePublicLocale(value: unknown): "en" {
   void value;
   return "en";
 }

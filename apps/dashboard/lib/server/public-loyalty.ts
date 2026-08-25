@@ -1,7 +1,6 @@
 import "server-only";
 import {
   publicLoyaltyExperienceV1,
-  type ExperienceLocaleV1,
   type PublicLoyaltyExperienceV1,
 } from "@starfiniti/contracts";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
@@ -9,7 +8,7 @@ import { createPublicSupabaseClient } from "@/lib/supabase/public";
 export async function getPublicLoyaltyExperience(
   workspaceId: string,
   programmeId: string,
-  locale: ExperienceLocaleV1,
+  locale: "en",
 ): Promise<PublicLoyaltyExperienceV1 | null> {
   const supabase = createPublicSupabaseClient();
   const { data, error } = await supabase
@@ -49,6 +48,13 @@ export async function getPublicLoyaltyExperience(
     tiers: row.tiers,
     rewards: row.rewards,
   });
-  if (!parsed.success) throw new Error("public_loyalty_read_unavailable");
+  if (
+    !parsed.success ||
+    parsed.data.requestedLocale !== "en" ||
+    parsed.data.resolvedLocale !== "en" ||
+    parsed.data.copy.locale !== "en"
+  ) {
+    throw new Error("public_loyalty_read_unavailable");
+  }
   return parsed.data;
 }

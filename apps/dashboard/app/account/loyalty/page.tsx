@@ -14,8 +14,10 @@ import {
 } from "@/lib/customer-locale";
 import { customerExportReauthenticationPath } from "@/lib/customer-export";
 import { isSelfServiceRewardKind } from "@/lib/customer-rewards";
+import { selectCustomerAccount } from "@/lib/customer-experience-presentation";
 import { TierProgress } from "@/components/tier-progress";
 import { CustomerReferralPanel } from "./customer-referral-panel";
+import { CustomerLoyaltyExperience } from "./customer-loyalty-experience";
 
 export default async function CustomerLoyaltyPage({
   searchParams,
@@ -25,18 +27,45 @@ export default async function CustomerLoyaltyPage({
     redeemed?: string;
     redemption?: string;
     lang?: string;
+    account?: string;
   }>;
 }) {
-  const [{ linked, redeemed, redemption, lang }, state] = await Promise.all([
+  const [query, state] = await Promise.all([
     searchParams,
     getCustomerLoyaltyAccounts(),
   ]);
+  const { linked, redeemed, redemption, lang } = query;
   if (state.kind === "unauthenticated") {
     const locale = resolveCustomerLocale(lang);
     redirect(customerLocalePath("/login?next=%2Faccount%2Floyalty", locale));
   }
   const locale = resolveCustomerLocale(lang);
   const copy = CUSTOMER_COPY[locale];
+  const selectedAccount = selectCustomerAccount(state.accounts, query.account);
+  const messages = [
+    linked === "1"
+      ? ({ kind: "success", text: copy.connected } as const)
+      : null,
+    redeemed === "1"
+      ? ({ kind: "success", text: copy.rewardReserved } as const)
+      : null,
+    redemption
+      ? ({
+          kind: "error",
+          text: redemptionMessage(redemption, locale),
+        } as const)
+      : null,
+  ].filter((message) => message !== null);
+
+  if (selectedAccount?.enhancements_enabled) {
+    return (
+      <CustomerLoyaltyExperience
+        account={selectedAccount}
+        accounts={state.accounts}
+        messages={messages}
+      />
+    );
+  }
 
   return (
     <main className="member-page" id="main-content" tabIndex={-1}>
@@ -72,20 +101,32 @@ export default async function CustomerLoyaltyPage({
           <h1>{copy.accountTitle}</h1>
           <p>{copy.accountIntro}</p>
         </div>
-        {state.accounts.length === 0 ? (
+        {!selectedAccount ? (
           <section className="member-empty">
             <h2>{copy.noAccountTitle}</h2>
             <p>{copy.noAccountBody}</p>
           </section>
         ) : (
           <div className="member-accounts">
-            {state.accounts.map((account) => (
-              <AccountCard
-                account={account}
-                key={account.account_id}
-                locale={locale}
-              />
-            ))}
+            {state.accounts.length > 1 ? (
+              <nav
+                className="member-core-account-switcher"
+                aria-label="Store accounts"
+              >
+                {state.accounts.map((account) => (
+                  <Link
+                    aria-current={
+                      account.account_id === selectedAccount.account_id
+                    }
+                    href={`/account/loyalty?account=${account.account_id}`}
+                    key={account.account_id}
+                  >
+                    {account.store_name}
+                  </Link>
+                ))}
+              </nav>
+            ) : null}
+            <AccountCard account={selectedAccount} locale={locale} />
           </div>
         )}
         {state.accounts.length > 0 ? (
@@ -176,8 +217,7 @@ function AccountCard({
                   <div>
                     <strong>{reward.name}</strong>
                     <span>
-                      {formatPoints(reward.costPoints, locale)}{" "}
-                      {locale === "sl-SI" ? "točk" : "points"}
+                      {formatPoints(reward.costPoints, locale)} points
                     </span>
                   </div>
                   {ready &&

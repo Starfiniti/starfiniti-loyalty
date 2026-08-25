@@ -1,11 +1,21 @@
 import type { Metadata } from "next";
 import type { CSSProperties } from "react";
+import Link from "next/link";
+import {
+  ArrowRight,
+  Crown,
+  Gift,
+  ShieldCheck,
+  ShoppingBag,
+  Sparkles,
+} from "lucide-react";
 import { notFound } from "next/navigation";
 import { experienceFontStack } from "@/lib/experience-theme";
 import {
   formatEurMinor,
   formatPublicPoints,
   isPublicId,
+  PUBLIC_LOYALTY_ACCOUNT_PATH,
   resolvePublicLocale,
 } from "@/lib/public-loyalty";
 import { getPublicLoyaltyExperience } from "@/lib/server/public-loyalty";
@@ -32,6 +42,10 @@ const language = {
   rewardCost: "points",
   account: "Use your store account to join, see your balance, and redeem.",
   privacy: "This public page contains no customer or order information.",
+  join: "Open my loyalty account",
+  free: "Free to join",
+  protected: "Balances and redemptions stay private",
+  discover: "Discover your benefits",
 } as const;
 
 export default async function PublicLoyaltyPage({
@@ -65,29 +79,87 @@ export default async function PublicLoyaltyPage({
       style={style}
       tabIndex={-1}
     >
+      <nav className="public-loyalty-nav" aria-label="Programme navigation">
+        <Link
+          className="public-loyalty-brand"
+          href={`/loyalty/${workspaceId}/${programmeId}`}
+        >
+          <span aria-hidden="true">
+            <Sparkles />
+          </span>
+          <strong>{experience.programmeName}</strong>
+        </Link>
+        <div>
+          <a href="#earn">{labels.earn}</a>
+          {experience.showTier && experience.tiers.length ? (
+            <a href="#tiers">{labels.tiers}</a>
+          ) : null}
+          {experience.showRewards && experience.rewards.length ? (
+            <a href="#rewards">{experience.copy.rewardsLabel}</a>
+          ) : null}
+          <Link href={PUBLIC_LOYALTY_ACCOUNT_PATH}>{labels.join}</Link>
+        </div>
+      </nav>
+
       <header className="public-loyalty-hero">
-        <p>{labels.programme}</p>
+        <p>
+          <Sparkles aria-hidden="true" /> {labels.free}
+        </p>
         <h1>{experience.copy.heroText}</h1>
         <p>{experience.copy.earnMessage}</p>
-        <span>{experience.programmeName}</span>
+        <div className="public-loyalty-actions">
+          <Link href={PUBLIC_LOYALTY_ACCOUNT_PATH}>
+            {experience.copy.joinLabel} <ArrowRight aria-hidden="true" />
+          </Link>
+          <a href="#earn">{labels.discover}</a>
+        </div>
+        <span>
+          <ShieldCheck aria-hidden="true" /> {labels.protected}
+        </span>
       </header>
 
-      <section className="public-loyalty-section" aria-labelledby="how-title">
+      <section
+        className="public-loyalty-section public-loyalty-how"
+        id="earn"
+        aria-labelledby="how-title"
+      >
         <div>
           <p className="public-loyalty-kicker">01</p>
           <h2 id="how-title">{labels.how}</h2>
           <p>{labels.howText}</p>
         </div>
-        <article>
-          <span aria-hidden="true">◎</span>
-          <h3>{labels.earn}</h3>
-          <p>{labels.earnText}</p>
-        </article>
+        <div className="public-loyalty-steps">
+          <article>
+            <span aria-hidden="true">
+              <ShoppingBag />
+            </span>
+            <small>01</small>
+            <h3>{labels.earn}</h3>
+            <p>{labels.earnText}</p>
+          </article>
+          <article>
+            <span aria-hidden="true">
+              <Crown />
+            </span>
+            <small>02</small>
+            <h3>Grow your status</h3>
+            <p>Progress through published tiers and see every milestone.</p>
+          </article>
+          <article>
+            <span aria-hidden="true">
+              <Gift />
+            </span>
+            <small>03</small>
+            <h3>Choose a reward</h3>
+            <p>Use available points for a benefit you actually want.</p>
+          </article>
+        </div>
       </section>
 
       {experience.showTier && experience.tiers.length > 0 ? (
         <section
           className="public-loyalty-section public-loyalty-catalogue"
+          id="tiers"
           aria-labelledby="tiers-title"
         >
           <div>
@@ -115,6 +187,7 @@ export default async function PublicLoyaltyPage({
       {experience.showRewards && experience.rewards.length > 0 ? (
         <section
           className="public-loyalty-section public-loyalty-catalogue"
+          id="rewards"
           aria-labelledby="rewards-title"
         >
           <div>
@@ -138,7 +211,9 @@ export default async function PublicLoyaltyPage({
 
       <aside className="public-loyalty-account">
         <p>{labels.account}</p>
-        <strong>{experience.copy.joinLabel}</strong>
+        <Link href={PUBLIC_LOYALTY_ACCOUNT_PATH}>
+          {experience.copy.joinLabel} <ArrowRight aria-hidden="true" />
+        </Link>
       </aside>
       <footer className="public-loyalty-footer">
         <span>{experience.programmeName}</span>
