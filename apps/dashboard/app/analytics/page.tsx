@@ -7,6 +7,7 @@ import {
 } from "@/lib/merchant-locale";
 import { parseOverviewRange } from "@/lib/overview";
 import {
+  getAnalyticsCohortRetentionReport,
   getAnalyticsCommercePerformanceReport,
   getAnalyticsProgrammeOutcomeReport,
   getAnalyticsValueTruthReport,
@@ -55,11 +56,12 @@ export default async function AnalyticsPage({
   } else if (!analyticsEnabled) {
     state = { kind: "disabled" };
   } else {
-    const [valueResult, commerceResult, outcomeResult] =
+    const [valueResult, commerceResult, outcomeResult, cohortResult] =
       await Promise.allSettled([
         getAnalyticsValueTruthReport(tenant.context, range),
         getAnalyticsCommercePerformanceReport(tenant.context, range),
         getAnalyticsProgrammeOutcomeReport(tenant.context, range),
+        getAnalyticsCohortRetentionReport(tenant.context, range),
       ]);
     if (valueResult.status === "fulfilled" && valueResult.value) {
       state = {
@@ -69,6 +71,8 @@ export default async function AnalyticsPage({
           commerceResult.status === "fulfilled" ? commerceResult.value : null,
         outcomes:
           outcomeResult.status === "fulfilled" ? outcomeResult.value : null,
+        cohorts:
+          cohortResult.status === "fulfilled" ? cohortResult.value : null,
       };
     } else {
       state = { kind: "unavailable" };

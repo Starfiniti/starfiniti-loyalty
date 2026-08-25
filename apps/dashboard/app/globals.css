@@ -12832,6 +12832,210 @@ html[data-dashboard-theme="dark"] .analytics-integrity-mark {
   margin-top: 8px;
 }
 
+.analytics-cohort-table-heading {
+  min-height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--merchant-border);
+}
+
+.analytics-cohort-table-heading p,
+.analytics-cohort-table-heading h3 {
+  margin: 0;
+}
+
+.analytics-cohort-table-heading p {
+  color: var(--merchant-muted);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.analytics-cohort-table-heading h3 {
+  margin-top: 5px;
+  font-size: 15px;
+  letter-spacing: -0.02em;
+}
+
+.analytics-cohort-table-wrap {
+  max-height: 310px;
+  overflow: auto;
+  scrollbar-gutter: stable;
+}
+
+.analytics-cohort-table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.analytics-cohort-table-wrap th,
+.analytics-cohort-table-wrap td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--merchant-border);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.analytics-cohort-table-wrap th:first-child {
+  padding-left: 20px;
+  text-align: left;
+}
+
+.analytics-cohort-table-wrap thead th {
+  position: sticky;
+  z-index: 1;
+  top: 0;
+  color: var(--merchant-muted);
+  background: var(--merchant-surface-muted);
+  font-size: 9px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.analytics-cohort-table-wrap tbody th {
+  font-weight: 650;
+}
+
+.analytics-cohort-table-wrap tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+.analytics-experiments {
+  margin-top: 0;
+}
+
+.analytics-experiment-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 16px;
+}
+
+.analytics-experiment-list article {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--merchant-border);
+  border-radius: 10px;
+  background: var(--merchant-surface-muted);
+}
+
+.analytics-experiment-list article > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.analytics-experiment-list article > header span,
+.analytics-experiment-list article > header small {
+  display: block;
+}
+
+.analytics-experiment-list article > header span:first-child {
+  font-size: 13px;
+  font-weight: 750;
+  text-transform: capitalize;
+}
+
+.analytics-experiment-list article > header small {
+  margin-top: 3px;
+  color: var(--merchant-muted);
+  font-size: 10px;
+}
+
+.analytics-experiment-status {
+  flex: 0 0 auto;
+  padding: 5px 8px;
+  border-radius: 999px;
+  color: #9a5608;
+  background: color-mix(in srgb, #c17b16 12%, var(--merchant-surface));
+  font-size: 9px !important;
+  letter-spacing: 0.05em;
+  text-transform: uppercase !important;
+}
+
+.analytics-experiment-status.is-available {
+  color: #047857;
+  background: color-mix(in srgb, #159b6b 12%, var(--merchant-surface));
+}
+
+.analytics-experiment-list dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 16px 0 0;
+}
+
+.analytics-experiment-list dl > div {
+  min-width: 0;
+}
+
+.analytics-experiment-list dt,
+.analytics-experiment-list dd {
+  margin: 0;
+}
+
+.analytics-experiment-list dt {
+  color: var(--merchant-muted);
+  font-size: 9px;
+  text-transform: uppercase;
+}
+
+.analytics-experiment-list dd {
+  margin-top: 5px;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.analytics-experiment-list article > p {
+  margin: 14px 0 0;
+  color: var(--merchant-muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.analytics-experiment-empty {
+  min-height: 130px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  place-content: center;
+  gap: 12px;
+  padding: 22px;
+  color: var(--merchant-muted);
+}
+
+.analytics-experiment-empty > svg {
+  width: 21px;
+  height: 21px;
+  color: var(--merchant-violet);
+}
+
+.analytics-experiment-empty strong,
+.analytics-experiment-empty p {
+  margin: 0;
+}
+
+.analytics-experiment-empty strong {
+  color: var(--merchant-text);
+  font-size: 12px;
+}
+
+.analytics-experiment-empty p {
+  max-width: 680px;
+  margin-top: 4px;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
 @media (max-width: 1180px) {
   .analytics-summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -12851,6 +13055,9 @@ html[data-dashboard-theme="dark"] .analytics-integrity-mark {
     min-height: 0;
   }
   .analytics-definition-list {
+    grid-template-columns: 1fr;
+  }
+  .analytics-experiment-list {
     grid-template-columns: 1fr;
   }
 }
@@ -12908,5 +13115,8 @@ html[data-dashboard-theme="dark"] .analytics-integrity-mark {
   .analytics-definition-list dl > div {
     grid-template-columns: 1fr;
     gap: 2px;
+  }
+  .analytics-experiment-list dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

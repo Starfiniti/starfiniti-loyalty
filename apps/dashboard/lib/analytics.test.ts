@@ -7,6 +7,7 @@ import {
   formatAnalyticsPeriod,
   formatAnalyticsPoints,
   parseAnalyticsCommercePerformanceRow,
+  parseAnalyticsCohortRetentionRow,
   parseAnalyticsProgrammeOutcomeRow,
   parseAnalyticsValueTruthRow,
 } from "./analytics";
@@ -152,6 +153,63 @@ const outcomeRow = {
   campaign_incremental_revenue_minor: null,
 };
 
+const cohortReport = {
+  reportVersion: "1",
+  dictionaryVersion: "4",
+  asOf: "2026-08-26T00:00:00Z",
+  reportPeriod: {
+    from: "2026-08-19T00:00:00Z",
+    to: "2026-08-26T00:00:00Z",
+    rangeDays: 7,
+    timeZone: "UTC",
+  },
+  cohortPeriod: {
+    from: "2026-06-20T00:00:00Z",
+    to: "2026-06-27T00:00:00Z",
+    fromLocalDate: "2026-06-20",
+    toLocalDateExclusive: "2026-06-27",
+    rangeDays: 7,
+    timeZone: "UTC",
+    maturityLagDays: 60,
+    grain: "day",
+  },
+  membershipActivation: {
+    observationWindowDays: 30,
+    joinedMembers: "1",
+    activatedMembers: "1",
+    activationRateBasisPoints: "10000",
+    cohorts: Array.from({ length: 7 }, (_, index) => ({
+      localDate: `2026-06-${String(index + 20).padStart(2, "0")}`,
+      eligibleMembers: index === 0 ? "1" : "0",
+      outcomeMembers: index === 0 ? "1" : "0",
+      rateBasisPoints: index === 0 ? "10000" : "0",
+    })),
+  },
+  earningRetention: {
+    qualification: "first_released_earning",
+    observationWindow: { startsAfterDays: 30, endsAtDays: 60 },
+    qualifiedMembers: "1",
+    retainedMembers: "0",
+    retentionRateBasisPoints: "0",
+    cohorts: Array.from({ length: 7 }, (_, index) => ({
+      localDate: `2026-06-${String(index + 20).padStart(2, "0")}`,
+      eligibleMembers: index === 0 ? "1" : "0",
+      outcomeMembers: "0",
+      rateBasisPoints: "0",
+    })),
+  },
+  campaignExperiments: {
+    estimator: "difference_in_means_itt_v1",
+    population: "all_immutable_assignments",
+    outcome: "refund_compensated_eligible_spend_minor",
+    minimumMembersPerArm: 30,
+    eligibleCampaigns: "0",
+    availableCampaigns: "0",
+    unavailableCampaigns: "0",
+    campaigns: [],
+  },
+};
+
 describe("analytics presentation", () => {
   it("maps snake-case RPC evidence into the strict value-truth contract", () => {
     const report = parseAnalyticsValueTruthRow(row);
@@ -258,6 +316,30 @@ describe("analytics presentation", () => {
         ...outcomeRow,
         campaign_points_net: "801",
       }),
+    ).toThrow();
+  });
+
+  it("maps mature cohort JSON without exposing database row shape", () => {
+    const report = parseAnalyticsCohortRetentionRow({ report: cohortReport });
+    expect(report.membershipActivation.activationRateBasisPoints).toBe("10000");
+    expect(report.campaignExperiments.estimator).toBe(
+      "difference_in_means_itt_v1",
+    );
+    expect(
+      analyticsMetricDefinition(
+        "experiments.campaigns.incremental_eligible_spend",
+      ),
+    ).toMatchObject({
+      availability: "conditional",
+      causalClass: "experimental",
+    });
+  });
+
+  it("rejects a partial cohort series before rendering", () => {
+    const partial = structuredClone(cohortReport);
+    partial.earningRetention.cohorts.pop();
+    expect(() =>
+      parseAnalyticsCohortRetentionRow({ report: partial }),
     ).toThrow();
   });
 });

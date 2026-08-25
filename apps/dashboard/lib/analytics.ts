@@ -1,11 +1,13 @@
 import {
+  analyticsCohortRetentionReportV1,
   analyticsCommercePerformanceReportV1,
-  analyticsMetricDictionaryV3,
+  analyticsMetricDictionaryV4,
   analyticsProgrammeOutcomeReportV1,
   analyticsValueTruthReportV1,
+  type AnalyticsCohortRetentionReportV1,
   type AnalyticsCommercePerformanceReportV1,
-  type AnalyticsMetricDefinitionV3,
-  type AnalyticsMetricKeyV3,
+  type AnalyticsMetricDefinitionV4,
+  type AnalyticsMetricKeyV4,
   type AnalyticsProgrammeOutcomeReportV1,
   type AnalyticsValueTruthReportV1,
 } from "@starfiniti/contracts";
@@ -73,13 +75,19 @@ export function parseAnalyticsValueTruthRow(
 }
 
 export function analyticsMetricDefinition(
-  key: AnalyticsMetricKeyV3,
-): AnalyticsMetricDefinitionV3 {
-  const definition = analyticsMetricDictionaryV3.definitions.find(
+  key: AnalyticsMetricKeyV4,
+): AnalyticsMetricDefinitionV4 {
+  const definition = analyticsMetricDictionaryV4.definitions.find(
     (candidate) => candidate.key === key,
   );
   if (!definition) throw new Error("analytics_metric_definition_missing");
   return definition;
+}
+
+export function parseAnalyticsCohortRetentionRow(
+  row: AnalyticsRow,
+): AnalyticsCohortRetentionReportV1 {
+  return analyticsCohortRetentionReportV1.parse(row.report);
 }
 
 export function parseAnalyticsProgrammeOutcomeRow(

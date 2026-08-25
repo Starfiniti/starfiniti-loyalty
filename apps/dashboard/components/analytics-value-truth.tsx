@@ -1,7 +1,8 @@
 import {
-  analyticsMetricDictionaryV3,
+  analyticsMetricDictionaryV4,
+  type AnalyticsCohortRetentionReportV1,
   type AnalyticsCommercePerformanceReportV1,
-  type AnalyticsMetricKeyV3,
+  type AnalyticsMetricKeyV4,
   type AnalyticsProgrammeOutcomeReportV1,
   type AnalyticsValueTruthReportV1,
 } from "@starfiniti/contracts";
@@ -44,6 +45,7 @@ type AnalyticsState =
       report: AnalyticsValueTruthReportV1;
       commerce: AnalyticsCommercePerformanceReportV1 | null;
       outcomes: AnalyticsProgrammeOutcomeReportV1 | null;
+      cohorts: AnalyticsCohortRetentionReportV1 | null;
     }>
   | Readonly<{ kind: "disabled" }>
   | Readonly<{ kind: "setup_required" }>
@@ -83,6 +85,7 @@ export function AnalyticsValueTruth({
 
       {state.kind === "ready" ? (
         <AnalyticsReport
+          cohorts={state.cohorts}
           commerce={state.commerce}
           outcomes={state.outcomes}
           report={state.report}
@@ -129,10 +132,12 @@ function AnalyticsUnavailable({
 }
 
 function AnalyticsReport({
+  cohorts,
   commerce,
   outcomes,
   report,
 }: Readonly<{
+  cohorts: AnalyticsCohortRetentionReportV1 | null;
   commerce: AnalyticsCommercePerformanceReportV1 | null;
   outcomes: AnalyticsProgrammeOutcomeReportV1 | null;
   report: AnalyticsValueTruthReportV1;
@@ -191,6 +196,8 @@ function AnalyticsReport({
       <CommercePerformance report={commerce} />
 
       <ProgrammeOutcomes report={outcomes} />
+
+      <CohortRetention report={cohorts} />
 
       <header className="analytics-section-heading">
         <div>
@@ -676,6 +683,265 @@ function ProgrammeOutcomes({
   );
 }
 
+function CohortRetention({
+  report,
+}: Readonly<{ report: AnalyticsCohortRetentionReportV1 | null }>) {
+  if (!report) {
+    return (
+      <section className="analytics-module-unavailable" role="status">
+        <AlertTriangle aria-hidden="true" />
+        <div>
+          <strong>Cohort evidence stopped before showing uncertain data</strong>
+          <p>
+            Point, commerce, and programme outcomes remain available. Cohort
+            retention and experiments return after maturity, assignment,
+            currency, and purchase evidence independently reconcile.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  const experiment = report.campaignExperiments;
+  const cards = [
+    {
+      icon: BadgeCheck,
+      key: "cohorts.members.activation_rate_30d" as const,
+      label: "30-day activation",
+      value: formatAnalyticsBasisPoints(
+        report.membershipActivation.activationRateBasisPoints,
+      ),
+      note: `${formatCount(report.membershipActivation.activatedMembers)} of ${formatCount(
+        report.membershipActivation.joinedMembers,
+      )} mature members`,
+      tone: "violet",
+    },
+    {
+      icon: Repeat2,
+      key: "cohorts.earning.retention_rate_days_31_60" as const,
+      label: "Days 31–60 retention",
+      value: formatAnalyticsBasisPoints(
+        report.earningRetention.retentionRateBasisPoints,
+      ),
+      note: `${formatCount(report.earningRetention.retainedMembers)} of ${formatCount(
+        report.earningRetention.qualifiedMembers,
+      )} first earners`,
+      tone: "green",
+    },
+    {
+      icon: Megaphone,
+      key: "experiments.campaigns.available" as const,
+      label: "Measured experiments",
+      value: formatCount(experiment.availableCampaigns),
+      note: `${formatCount(experiment.eligibleCampaigns)} eligible campaign windows`,
+      tone: "blue",
+    },
+    {
+      icon: ShieldCheck,
+      key: "experiments.campaigns.unavailable" as const,
+      label: "Evidence-gated",
+      value: formatCount(experiment.unavailableCampaigns),
+      note: "No missing evidence is represented as zero",
+      tone: "amber",
+    },
+  ];
+
+  return (
+    <section
+      className="analytics-performance analytics-cohorts"
+      aria-labelledby="cohorts-title"
+    >
+      <header className="analytics-section-heading">
+        <div>
+          <p className="login-eyebrow">Cohorts &amp; experiments</p>
+          <h2 id="cohorts-title">Retention with a complete window</h2>
+          <p>
+            Daily cohorts are mature before they enter a denominator. Campaign
+            lift appears only when immutable control evidence supports the
+            declared estimator.
+          </p>
+        </div>
+        <Activity aria-hidden="true" />
+      </header>
+
+      <div className="analytics-summary analytics-performance-summary">
+        {cards.map((card) => (
+          <article className={`analytics-kpi is-${card.tone}`} key={card.key}>
+            <span className="analytics-kpi-icon">
+              <card.icon aria-hidden="true" />
+            </span>
+            <div>
+              <span>{card.label}</span>
+              <strong>{card.value}</strong>
+              <small>{card.note}</small>
+            </div>
+            <MetricDefinitionButton metricKey={card.key} />
+          </article>
+        ))}
+      </div>
+
+      <div className="analytics-grid analytics-commerce-grid">
+        <CohortTable
+          caption="Membership activation by join date"
+          definition="cohorts.members.activation_rate_30d"
+          eligibleLabel="Joined"
+          outcomeLabel="Activated"
+          rows={report.membershipActivation.cohorts}
+          title="Join → first earning"
+        />
+        <CohortTable
+          caption="Earning retention by first earning date"
+          definition="cohorts.earning.retention_rate_days_31_60"
+          eligibleLabel="First earned"
+          outcomeLabel="Returned"
+          rows={report.earningRetention.cohorts}
+          title="First earning → return"
+        />
+      </div>
+
+      <section
+        className="analytics-panel analytics-experiments"
+        aria-labelledby="experiments-title"
+      >
+        <PanelHeading
+          eyebrow="Intention-to-treat evidence"
+          icon={Megaphone}
+          id="experiments-title"
+          title="Campaign incrementality"
+        />
+        {experiment.campaigns.length === 0 ? (
+          <div className="analytics-experiment-empty">
+            <ShieldCheck aria-hidden="true" />
+            <div>
+              <strong>No experiment window overlaps this period</strong>
+              <p>
+                Approve a campaign with a control group to begin collecting
+                immutable assignment and eligible-spend evidence.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="analytics-experiment-list">
+            {experiment.campaigns.map((campaign) => {
+              const result = campaign.incrementality;
+              const estimate =
+                result.status === "available"
+                  ? formatAnalyticsCurrencyMinor(
+                      result.estimatedIncrementalEligibleSpendMinor,
+                      result.currencyCode,
+                      result.minorUnitDigits,
+                    )
+                  : "Unavailable";
+              return (
+                <article key={campaign.campaignVersionPublicId}>
+                  <header>
+                    <div>
+                      <span>{campaign.code.replaceAll("_", " ")}</span>
+                      <small>Version {campaign.versionNumber}</small>
+                    </div>
+                    <span
+                      className={`analytics-experiment-status is-${result.status}`}
+                    >
+                      {result.status === "available"
+                        ? "Measured"
+                        : "Evidence required"}
+                    </span>
+                  </header>
+                  <dl>
+                    <div>
+                      <dt>Treatment</dt>
+                      <dd>{formatCount(campaign.treatmentMembers)}</dd>
+                    </div>
+                    <div>
+                      <dt>Control</dt>
+                      <dd>{formatCount(campaign.controlMembers)}</dd>
+                    </div>
+                    <div>
+                      <dt>Estimated lift</dt>
+                      <dd>{estimate}</dd>
+                    </div>
+                  </dl>
+                  <p>
+                    {result.status === "available"
+                      ? "Refund-compensated eligible-spend point estimate; statistical significance is not claimed."
+                      : `Unavailable: ${result.reason.replaceAll("_", " ")}. No monetary value is emitted.`}
+                  </p>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      <div className="analytics-cohort-note">
+        <Clock3 aria-hidden="true" />
+        <div>
+          <strong>
+            Cohort dates use {report.cohortPeriod.timeZone} local days
+          </strong>
+          <p>
+            {formatLocalDate(report.cohortPeriod.fromLocalDate)}–
+            {formatLocalDate(report.cohortPeriod.toLocalDateExclusive)}. The end
+            is exclusive and shifted back 60 days so every retention opportunity
+            is fully observed.
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function CohortTable({
+  caption,
+  definition,
+  eligibleLabel,
+  outcomeLabel,
+  rows,
+  title,
+}: Readonly<{
+  caption: string;
+  definition: AnalyticsMetricKeyV4;
+  eligibleLabel: string;
+  outcomeLabel: string;
+  rows: AnalyticsCohortRetentionReportV1["membershipActivation"]["cohorts"];
+  title: string;
+}>) {
+  return (
+    <section className="analytics-panel analytics-cohort-panel">
+      <header className="analytics-cohort-table-heading">
+        <div>
+          <p>Daily mature cohorts</p>
+          <h3>{title}</h3>
+        </div>
+        <MetricDefinitionButton metricKey={definition} />
+      </header>
+      <div className="analytics-cohort-table-wrap">
+        <table>
+          <caption className="sr-only">{caption}</caption>
+          <thead>
+            <tr>
+              <th scope="col">Cohort</th>
+              <th scope="col">{eligibleLabel}</th>
+              <th scope="col">{outcomeLabel}</th>
+              <th scope="col">Rate</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.localDate}>
+                <th scope="row">{formatLocalDate(row.localDate)}</th>
+                <td>{formatCount(row.eligibleMembers)}</td>
+                <td>{formatCount(row.outcomeMembers)}</td>
+                <td>{formatAnalyticsBasisPoints(row.rateBasisPoints)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
 function CommercePerformance({
   report,
 }: Readonly<{ report: AnalyticsCommercePerformanceReportV1 | null }>) {
@@ -910,7 +1176,7 @@ function PerformanceRow({
   label,
   value,
 }: Readonly<{
-  definition: AnalyticsMetricKeyV3;
+  definition: AnalyticsMetricKeyV4;
   label: string;
   value: string;
 }>) {
@@ -953,7 +1219,7 @@ function LedgerRow({
   label,
   value,
 }: Readonly<{
-  keyName: AnalyticsMetricKeyV3;
+  keyName: AnalyticsMetricKeyV4;
   label: string;
   value: string;
 }>) {
@@ -974,7 +1240,7 @@ function FlowValue({
   value,
 }: Readonly<{
   icon: typeof WalletCards;
-  keyName: AnalyticsMetricKeyV3;
+  keyName: AnalyticsMetricKeyV4;
   label: string;
   value: string;
 }>) {
@@ -994,7 +1260,7 @@ function ExpiryBar({
   total,
   value,
 }: Readonly<{
-  keyName: AnalyticsMetricKeyV3;
+  keyName: AnalyticsMetricKeyV4;
   label: string;
   total: string;
   value: string;
@@ -1021,7 +1287,7 @@ function ExpiryBar({
 
 function MetricDefinitionButton({
   metricKey,
-}: Readonly<{ metricKey: AnalyticsMetricKeyV3 }>) {
+}: Readonly<{ metricKey: AnalyticsMetricKeyV4 }>) {
   const definition = analyticsMetricDefinition(metricKey);
   return (
     <span
@@ -1043,17 +1309,17 @@ function MetricDictionary() {
     >
       <header>
         <div>
-          <p className="login-eyebrow">Metric dictionary v3</p>
+          <p className="login-eyebrow">Metric dictionary v4</p>
           <h2 id="dictionary-title">Definitions behind every value</h2>
           <p>
-            Formula, source, grain, UTC boundary, caveats, and causal class are
-            part of the product contract—not dashboard copy.
+            Formula, source, grain, timezone boundary, caveats, and causal class
+            are part of the product contract—not dashboard copy.
           </p>
         </div>
         <DatabaseZap aria-hidden="true" />
       </header>
       <div className="analytics-definition-list">
-        {analyticsMetricDictionaryV3.definitions.map((definition) => (
+        {analyticsMetricDictionaryV4.definitions.map((definition) => (
           <details key={definition.key}>
             <summary>
               <span>{definition.label}</span>
@@ -1101,4 +1367,13 @@ function formatUtcDate(value: string): string {
     year: "numeric",
     timeZone: "UTC",
   }).format(new Date(value));
+}
+
+function formatLocalDate(value: string): string {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(`${value}T12:00:00Z`));
 }

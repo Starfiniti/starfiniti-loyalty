@@ -37,6 +37,11 @@ For monetary liability, inferring one global points-to-currency ratio or derivin
 15. VIP movement comes from immutable tier decisions at `effective_at`, visible only when `created_at < asOf`. Current tier memberships remain a customer read projection and cannot reconstruct historical entry, re-entry, grace, downgrade, or manual movement.
 16. Referral funnels reconstruct the latest transition at report `asOf` for attributions captured in the selected period. Issuance and compensation remain separate immutable facts; net advocate/friend points subtract only a matching compensation and never expose identity or fraud evidence.
 17. Campaign outcomes combine immutable purchase effects and trigger executions. A purchase with multiple awarded effects contributes once to influenced orders and eligible spend. Latest cumulative purchase refund evidence compensates that original occurrence; trigger and purchase point reversals remain explicit. Direct attribution is descriptive, and incremental revenue returns an unavailable state until M10-S03 defines and implements a valid estimator contract.
+18. Cohort retention uses fixed elapsed observation windows rather than calendar-month return buckets. Membership activation is a release-backed earning within 30 elapsed days of immutable wallet creation. Earning retention is another distinct release after 30 and no later than 60 elapsed days from the first release. Cohort entry dates are local IANA calendar dates, but each member's outcome window is exact elapsed time. The interactive cohort is shifted back 60 days so every denominator is mature.
+19. Calendar-month retention was rejected because month length, partial months, and report timing give members unequal opportunities. A rolling-current-member denominator was also rejected because it silently drops closed or privacy-processed historical members and allows future state to rewrite cohort history.
+20. Campaign incrementality uses an intention-to-treat difference-in-means estimator over all immutable treatment and control assignments, including members with zero observed outcome. The outcome is refund-compensated loyalty-eligible spend in the immutable campaign `[starts_at, ends_at)` window. For the treatment population, the exact rational estimate is `(treatment spend × control N - control spend × treatment N) / control N`; the API carries numerator and denominator and labels the rounded minor-unit result a point estimate only.
+21. A campaign estimate is unavailable unless the campaign is a purchase behavior, its full window is complete, assignment counts reconcile to the approved version, both arms have at least 30 members, purchase evidence is valid, and all observed outcomes use one exact currency and precision. This minimum is an operational guardrail, not a power calculation or significance threshold. Trigger campaigns, incomplete windows, mixed currency, missing purchase evidence, and assignment drift return explicit reason codes and null monetary values.
+22. The estimator reports incremental **eligible spend**, not gross merchandise value, margin, accounting revenue, or statistically significant lift. More advanced regression, covariate adjustment, sequential testing, and power planning require new versioned estimators and cannot reinterpret the V1 result.
 
 ## Consequences
 
@@ -46,6 +51,8 @@ For monetary liability, inferring one global points-to-currency ratio or derivin
 - Multi-currency monetary liability waits for M11 conversion evidence plus an explicit valuation policy; this is an honest limitation rather than a guessed total.
 - Existing `MerchantOverviewReportV1` remains compatible while M10 introduces additive report contracts and shadow comparison.
 - Legacy V1 evaluation reconstruction is more complex than V2 fact reads, but preserves production history without backfilling or mutating immutable rows. The report exposes its V1/V2 and linkage coverage so migration gaps are observable.
+- Fixed-window cohorts arrive later than naive rolling rates, but every member receives the same observation opportunity and DST changes cannot alter elapsed qualification.
+- Small or operationally incomplete campaigns intentionally show an unavailable causal result. This is safer than reporting unstable lift as fact and gives merchants a concrete evidence gate to resolve.
 
 ## Security and integrity effects
 
@@ -65,3 +72,5 @@ For monetary liability, inferring one global points-to-currency ratio or derivin
 ## Migration and rollback
 
 Deploy additive functions and indexes first, keep analytics navigation disabled until shadow reconciliation passes, and canary only the Starfiniti tenant. Rollback stops consuming the new report and returns to Overview V1. Additive definitions and immutable evidence remain; no rollback rewrites ledger, lots, projections, programme versions, or historical reports.
+
+The cohort/experiment slice rolls back independently by stopping the `get_analytics_cohort_retention_v1` read and returning the dashboard module to its explicit unavailable state. Dictionary V4 remains additive; V1–V3 readers and reports are unchanged. No assignment, campaign effect, wallet, release, or refund evidence is removed or rewritten.

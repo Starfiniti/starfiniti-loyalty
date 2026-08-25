@@ -64,6 +64,40 @@ Dictionary V3 is additive: it carries every V1/V2 definition and adds reward rea
 
 All point/count quantities remain decimal strings across the Data API and are checked with `BigInt`. The report contains no customer, wallet, order, referral, assignment, coupon, or connector identifiers.
 
+## Dictionary V4 cohort and experiment boundary
+
+Dictionary V4 adds mature membership activation, earning retention, and evidence-gated campaign experiment definitions without changing V1–V3 readers.
+
+`loyalty.get_analytics_cohort_retention_v1` accepts public organization, workspace, and programme-group selectors, a 7/30/90-day range, and an IANA timezone. PostgreSQL re-derives live membership and entitlement scope. The dashboard currently requests UTC; the contract retains exact timezone evidence so a future organization setting can change presentation without changing authority or historical facts.
+
+The report has two periods:
+
+- `reportPeriod` is the exact UTC `[asOf - rangeDays, asOf)` campaign-selection period.
+- `cohortPeriod` is a requested-IANA-local calendar range shifted back 60 days. Its UTC instants can span 23- or 25-hour DST days while its row count remains exactly `rangeDays`.
+
+Membership activation includes wallets created in the mature cohort. A member activates only when a point lot backed by an immutable `release` transaction becomes available between wallet creation and 30 elapsed days later. Pending awards and manual credits do not qualify.
+
+Earning retention groups members by their first release-backed earning. A member is retained when another distinct release becomes available after 30 and no later than 60 elapsed days. The rate is descriptive behavior, not causal lift.
+
+Campaign V1 experiments use:
+
+- population: every immutable treatment/control assignment, including zero outcomes;
+- outcome: refund-compensated loyalty-eligible spend in the exact immutable campaign window;
+- estimator: intention-to-treat difference in means, scaled to the treatment population;
+- exact arithmetic: numerator `treatment spend × control N - control spend × treatment N`, denominator `control N`;
+- disclosure: treatment/control counts, currency and precision, both spend totals, exact rational components, rounded minor-unit point estimate, and `pointEstimateOnly: true`.
+
+An estimate is `available` only for a completed purchase campaign with reconciled assignments, at least 30 members per arm, valid purchase/refund evidence, and one exact currency/precision. Otherwise it is `unavailable` with one reason:
+
+- `incomplete_window`
+- `unsupported_outcome`
+- `assignment_reconciliation_failed`
+- `insufficient_sample`
+- `currency_unavailable`
+- `purchase_evidence_unavailable`
+
+Unavailable campaigns return `null` for every monetary and rational field. Eligible spend is not gross revenue, accounting revenue, margin, or statistical significance. The output contains public campaign selectors but no customer, wallet, order, effect, or assignment identity.
+
 ## Liability terminology
 
 - **Outstanding point exposure:** current pending plus available plus reserved points. It is an operational promotional-unit obligation and may be signed if a programme permits attributable negative available balance.
