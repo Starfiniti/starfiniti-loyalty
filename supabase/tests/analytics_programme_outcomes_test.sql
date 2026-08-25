@@ -69,13 +69,13 @@ values
   ('9f000000-0000-4000-8000-000000000100', 'outcome-analytics-two', 'Outcome Analytics Two');
 
 insert into loyalty.organization_memberships (
-  organization_id, user_id, role, revoked_at
+  organization_id, user_id, role, created_at, revoked_at
 )
 values
-  ((select id from loyalty.organizations where slug = 'outcome-analytics-one'), '8f000000-0000-4000-8000-000000000001', 'owner', null),
-  ((select id from loyalty.organizations where slug = 'outcome-analytics-one'), '8f000000-0000-4000-8000-000000000002', 'analyst', null),
-  ((select id from loyalty.organizations where slug = 'outcome-analytics-one'), '8f000000-0000-4000-8000-000000000003', 'admin', '2026-08-01T00:00:00Z'),
-  ((select id from loyalty.organizations where slug = 'outcome-analytics-two'), '9f000000-0000-4000-8000-000000000001', 'owner', null);
+  ((select id from loyalty.organizations where slug = 'outcome-analytics-one'), '8f000000-0000-4000-8000-000000000001', 'owner', '2026-07-01T00:00:00Z', null),
+  ((select id from loyalty.organizations where slug = 'outcome-analytics-one'), '8f000000-0000-4000-8000-000000000002', 'analyst', '2026-07-01T00:00:00Z', null),
+  ((select id from loyalty.organizations where slug = 'outcome-analytics-one'), '8f000000-0000-4000-8000-000000000003', 'admin', '2026-07-01T00:00:00Z', '2026-08-01T00:00:00Z'),
+  ((select id from loyalty.organizations where slug = 'outcome-analytics-two'), '9f000000-0000-4000-8000-000000000001', 'owner', '2026-07-01T00:00:00Z', null);
 
 insert into loyalty.workspaces (public_id, organization_id, slug, name)
 select case organization.slug
