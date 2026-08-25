@@ -1431,7 +1431,7 @@ tasks:
           - independent reconciliation query compares report buckets with immutable ledger entries and point-lot allocations
           - exact-head baseline database replay production images and WooCommerce matrix
       - id: M10-S02-COMMERCE-AND-PROGRAMME-PERFORMANCE
-        status: in_progress
+        status: complete
         acceptance:
           - activation participation eligible orders repeat purchase AOV LTV reward tier referral and campaign metrics use versioned fact-sourced definitions and exact currency scope
           - refunds reversals guest identity and missing linkage are explicit exclusions or compensations rather than silent denominator changes
@@ -1445,7 +1445,7 @@ tasks:
               - one exact currency and precision govern every monetary aggregate or monetary fields are explicitly unavailable for mixed or missing scope
               - guest orders remain included while missing customer linkage is counted and excluded only from member-grained metrics
           - id: M10-S02B-PROGRAMME-OUTCOME-PERFORMANCE
-            status: in_progress
+            status: complete
             acceptance:
               - reward requests captures captured points unresolved work and a complete 24-hour mature request cohort reconcile from reservation and immutable transition evidence as known at report as-of
               - entry re-entry upgrade grace downgrade and manual VIP movements use effective occurrence with immutable decision knowledge time and never infer movement from the current membership projection
@@ -1463,7 +1463,7 @@ tasks:
               - pgTAP for Auth scope grants tenancy revocation as-of knowledge transitions compensation deduplication and no source mutation
               - exact-head baseline migration replay production images and WooCommerce matrix
       - id: M10-S03-COHORT-RETENTION-AND-CAUSAL-EVIDENCE
-        status: planned
+        status: in_progress
         acceptance:
           - cohort and retention reports bind immutable entry event and qualification dates with explicit timezone and denominator definitions
           - incremental claims require immutable treatment and control assignment plus declared estimator population window and exclusions otherwise return unavailable

@@ -1,6 +1,6 @@
 # M10 Evidence — Analytics
 
-Status: in progress. M10-S01 and M10-S02A are complete; M10-S02B programme outcome performance is active while M09 waits only on its reviewed production canary gate.
+Status: in progress. M10-S01 through M10-S02B are complete; M10-S03 cohort, retention, and causal evidence is active while M09 waits only on its reviewed production canary gate.
 
 ## Reconstructed baseline
 
@@ -36,3 +36,14 @@ Status: in progress. M10-S01 and M10-S02A are complete; M10-S02B programme outco
 - Merchant `/analytics` independently loads value truth and commerce performance, so one report can fail without blanking the other. It exposes responsive performance, commerce, activation, source coverage, identity-health, value-lifecycle, and formula panels without synthetic fallback data.
 - Exact-head Linux CI [run 32884270756](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/32884270756) passed on retry attempt 2 at commit `0380d4d`: root `npm run check`, migration validation, secret/audit/license/package gates, clean 59-migration replay, all 2,501 pgTAP assertions including the 27 focused commerce cases, both production images, and minimum/current WooCommerce with HPOS/legacy storage. The retry was limited to a minimum-legacy MySQL startup health flake; the unchanged cell passed on attempt 2.
 - Intentional limitations: observed LTV is historical eligible spend rather than prediction or incrementality; mixed currencies are not converted; member metrics exclude commerce that lacks an authoritative customer link; production navigation and canary exposure remain deferred to M10-S05/S06.
+
+## M10-S02B completion evidence
+
+- Dictionary V3 additively publishes 89 complete definitions. The strict `AnalyticsProgrammeOutcomeReportV1` validates reward, VIP, referral, and campaign arithmetic; exact UTC/as-of bindings; the complete 24-hour reward cohort; currency availability; deduplicated influenced-order counts; and the explicit unavailable incrementality state before rendering.
+- Reward realization reconstructs immutable reservation transitions at report `asOf`. Only ledger-backed capture realizes points; unresolved, failed, expired, cancelled, released, and ambiguous native work remains separate, and the mature cohort excludes requests without a complete observation window.
+- VIP movement reads immutable event-time tier decisions using effective occurrence and knowledge time. Entry, re-entry, upgrade, grace, downgrade, and manual movement do not infer history from current membership projections.
+- Referral funnels reconstruct latest transition state at report `asOf`, preserve two-sided issuance and compensation separately, report net points exactly, and expose no advocate, friend, order, payment, network, device, or fraud-review identity.
+- Campaign outcomes combine immutable purchase effects and trigger executions. Multiple effects on one order count once; cumulative purchase refunds compensate the original occurrence; treatment, control, suppression, capacity, reward, awarded points, and reversed points remain explicit. Influenced spend is descriptive and experimentally incremental revenue remains unavailable without a declared estimator.
+- Merchant `/analytics` loads programme outcomes independently from value and commerce reports and exposes responsive reward, VIP, referral, campaign, maturity, currency, reversal, and causal-state panels without synthetic fallback values.
+- Exact-head Linux CI [run 32889287858](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/32889287858) passed at commit `37998c6`: root `npm run check`, migration validation, secret/audit/license/package gates, clean 60-migration replay, all 47 pgTAP files with 2,524 assertions including 23 focused programme-outcome cases, both production images, and minimum/current WooCommerce with HPOS/legacy storage.
+- Intentional limitations: no causal lift is claimed, mixed-currency influenced spend is unavailable rather than converted, and production navigation/canary exposure remains deferred to M10-S05/S06.

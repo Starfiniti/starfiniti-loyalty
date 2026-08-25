@@ -1,5 +1,12 @@
 # Iteration Log
 
+## 2026-08-25 — M10 programme outcome performance
+
+- Closed M10-S02B with Dictionary V3's 89 exact definitions and an independently degradable reward, VIP, referral, and campaign report sourced from immutable transitions, decisions, issuance/compensation facts, and purchase/trigger effects.
+- Kept unresolved native rewards distinct from realization, reconstructed VIP movement by effective and knowledge time, removed referral identity from the projection, deduplicated multi-effect influenced orders, and compensated campaign spend and points through append-only reversal evidence.
+- Preserved the causal boundary: influenced revenue remains descriptive and incremental revenue remains unavailable until S03 supplies a declared treatment/control estimator, population, window, exclusions, and sample evidence.
+- Exact-head run `32889287858` at `37998c6` passed root checks, both images, a clean 60-migration replay, all 47 pgTAP files with 2,524 assertions, and every minimum/current HPOS/legacy WooCommerce runtime.
+
 ## 2026-08-25 — M09 WooCommerce Blocks progressive panel
 
 - Closed M09-S04 with ADR-0038's PII-free `starfiniti-loyalty` Store API namespace, official WooCommerce Blocks integration handles, separately staged default-off data/panel flags, native no-script guidance, and zero render-time Hub dependency.
