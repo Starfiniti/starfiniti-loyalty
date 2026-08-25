@@ -182,13 +182,16 @@ begin
   if new.customer_id <> old.customer_id then
     select exists (
       select 1
-      from loyalty_private.customer_link_projection_authorizations as authorization
-      where authorization.transaction_id = pg_catalog.txid_current()
-        and authorization.backend_pid = pg_catalog.pg_backend_pid()
-        and authorization.customer_user_link_id = old.id
-        and authorization.from_customer_id = old.customer_id
-        and authorization.to_customer_id = new.customer_id
-        and (new.revoked_at is not distinct from old.revoked_at or authorization.allow_revoke)
+      from loyalty_private.customer_link_projection_authorizations as projection_authorization
+      where projection_authorization.transaction_id = pg_catalog.txid_current()
+        and projection_authorization.backend_pid = pg_catalog.pg_backend_pid()
+        and projection_authorization.customer_user_link_id = old.id
+        and projection_authorization.from_customer_id = old.customer_id
+        and projection_authorization.to_customer_id = new.customer_id
+        and (
+          new.revoked_at is not distinct from old.revoked_at
+          or projection_authorization.allow_revoke
+        )
     ) into projection_authorized;
     if not projection_authorized then
       raise exception using errcode = '55000', message = 'customer identity link projection is protected';
@@ -225,12 +228,12 @@ as $$
 begin
   if new.customer_id <> old.customer_id and not exists (
     select 1
-    from loyalty_private.customer_link_projection_authorizations as authorization
-    where authorization.transaction_id = pg_catalog.txid_current()
-      and authorization.backend_pid = pg_catalog.pg_backend_pid()
-      and authorization.customer_identity_id = old.id
-      and authorization.from_customer_id = old.customer_id
-      and authorization.to_customer_id = new.customer_id
+    from loyalty_private.customer_link_projection_authorizations as projection_authorization
+    where projection_authorization.transaction_id = pg_catalog.txid_current()
+      and projection_authorization.backend_pid = pg_catalog.pg_backend_pid()
+      and projection_authorization.customer_identity_id = old.id
+      and projection_authorization.from_customer_id = old.customer_id
+      and projection_authorization.to_customer_id = new.customer_id
   ) then
     raise exception using errcode = '55000', message = 'customer identity canonical projection is protected';
   end if;
