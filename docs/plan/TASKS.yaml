@@ -1377,7 +1377,8 @@ tasks:
   - id: M10-ANALYTICS
     title: Add reconciled analytics, reporting, liability, and exports
     module: M10
-    status: planned
+    status: in_progress
+    module_score: 90
     dependencies: [M09-STOREFRONT-EXPERIENCE]
     hypothesis: Defined and exactly reconciled metrics let merchants improve loyalty without overstating causality.
     baseline: Basic spend/member/redemption/liability trends and ledger exports exist.
@@ -1387,7 +1388,8 @@ tasks:
         every dashboard exposes definition,
         incremental revenue is never inferred from influence,
       ]
-    owner_inputs: []
+    owner_inputs:
+      - approved non-zero real-store activity is required only for the final production reconciliation and canary gate
     acceptance:
       [
         metric dictionary value/liability forecasts business/referral/campaign/cohort reports controlled exports and schedules pass,
@@ -1409,8 +1411,133 @@ tasks:
         RLS/export expiry,
         browser definitions,
       ]
-    risks: [R-001, R-030]
-    docs: [docs/plan/ENTERPRISE_ROADMAP.md]
+    slices:
+      - id: M10-S01-METRIC-DICTIONARY-AND-VALUE-TRUTH
+        status: complete
+        acceptance:
+          - a versioned metric dictionary names source fields formula grain time boundary currency policy ownership caveats and causal classification for every implemented value metric
+          - one Auth-authorized report accepts only public organization workspace and programme selectors while PostgreSQL derives internal scope and returns exact point flows balances and expiry exposure from immutable ledger and lot evidence with projection reconciliation
+          - report V1 uses UTC half-open periods and exact decimal text without inferring monetary liability from a global point value or reward catalogue
+          - cross-tenant revoked malformed large-integer refund reversal expiry reservation and zero-denominator cases fail closed or reconcile exactly
+        failure_modes:
+          - mutable balance projection is treated as historical source truth
+          - manual adjustments or refund reversals disappear inside gross award totals
+          - available negative balance is coerced to zero or unsigned browser number
+          - points are labelled as accounting currency without an immutable valuation policy
+        rollout: Deploy additive read contracts disabled from navigation; shadow every snapshot total against immutable entries before merchant exposure.
+        rollback: Stop calling the V1 report and retain existing Overview V1; additive functions definitions and evidence remain inert.
+        verification:
+          - contract tests for exact keys arithmetic period bounds dictionary completeness and bigint preservation
+          - pgTAP for Auth derivation grants tenancy revocation flow formulas balance cross-check expiry bounds and no ledger mutation
+          - independent reconciliation query compares report buckets with immutable ledger entries and point-lot allocations
+          - exact-head baseline database replay production images and WooCommerce matrix
+      - id: M10-S02-COMMERCE-AND-PROGRAMME-PERFORMANCE
+        status: complete
+        acceptance:
+          - activation participation eligible orders repeat purchase AOV LTV reward tier referral and campaign metrics use versioned fact-sourced definitions and exact currency scope
+          - refunds reversals guest identity and missing linkage are explicit exclusions or compensations rather than silent denominator changes
+          - influenced revenue remains separately labelled from experimental incrementality
+        slices:
+          - id: M10-S02A-COMMERCE-AND-MEMBER-PERFORMANCE
+            status: complete
+            acceptance:
+              - V1 evaluations and V2 immutable qualification facts reconcile into one occurrence-attributed purchase and refund fact stream without double counting
+              - activation uses a mature 30-day cohort and first released earning while participation repeat purchase AOV and observed LTV expose exact numerators denominators and zero cases
+              - one exact currency and precision govern every monetary aggregate or monetary fields are explicitly unavailable for mixed or missing scope
+              - guest orders remain included while missing customer linkage is counted and excluded only from member-grained metrics
+          - id: M10-S02B-PROGRAMME-OUTCOME-PERFORMANCE
+            status: complete
+            acceptance:
+              - reward requests captures captured points unresolved work and a complete 24-hour mature request cohort reconcile from reservation and immutable transition evidence as known at report as-of
+              - entry re-entry upgrade grace downgrade and manual VIP movements use effective occurrence with immutable decision knowledge time and never infer movement from the current membership projection
+              - referral attribution latest-state funnel two-sided issuance compensation and net points reconcile without exposing advocate friend order or risk identity
+              - purchase and trigger campaign outcomes reconcile treatment control suppression capacity reward and point reversal evidence while each influenced purchase order is counted once
+              - campaign-influenced eligible spend is refund-compensated descriptive single-currency evidence and experimentally incremental revenue remains explicitly unavailable without a declared treatment-control estimator
+            failure_modes:
+              - current mutable reward referral or campaign state rewrites an earlier as-of result
+              - one purchase influenced by multiple campaign effects is counted multiple times
+              - unresolved or ambiguous native reward work is labelled realized
+              - referral compensation or campaign reversal is omitted from net value
+              - treatment assignment is presented as causal lift without estimator population exclusions window and sample evidence
+            verification:
+              - strict contract arithmetic mature-window dictionary-completeness currency and incrementality-state tests
+              - pgTAP for Auth scope grants tenancy revocation as-of knowledge transitions compensation deduplication and no source mutation
+              - exact-head baseline migration replay production images and WooCommerce matrix
+      - id: M10-S03-COHORT-RETENTION-AND-CAUSAL-EVIDENCE
+        status: complete
+        acceptance:
+          - cohort and retention reports bind immutable entry event and qualification dates with explicit timezone and denominator definitions
+          - incremental claims require immutable treatment and control assignment plus declared estimator population window and exclusions otherwise return unavailable
+          - membership activation uses only mature 30-day outcomes and earning retention uses a complete elapsed-day 31-through-60 window without rewriting historical facts
+          - campaign incrementality uses every immutable treatment and control assignment including zero outcomes and exposes an exact rational difference-in-means eligible-spend estimate only for one reconciled currency and at least 30 members per arm
+          - browser output exposes cohort maturity sample sizes estimator limitations and unavailable reasons without customer wallet order or assignment identity
+        failure_modes:
+          - partial cohorts silently enter denominators
+          - assignment drift or duplicate effects change experimental population or spend
+          - mixed invalid or unreconciled commerce evidence is presented as causal lift
+          - DST boundaries change the requested number of local cohort dates
+        security_boundaries:
+          - PostgreSQL derives live organization membership and analytics entitlement from public selectors
+          - only owner admin marketer operator analyst and auditor roles receive minimized aggregate output
+          - customer wallet order assignment and fraud identity never leaves the database report boundary
+        rollback: Stop calling the additive V1 cohort report and retain Dictionary V3 plus the three prior independent analytics reports; no source fact or ledger value is mutated.
+        verification:
+          - contract tests for dictionary completeness exact arithmetic cohort maturity estimator states bigint values and privacy-minimized shape
+          - pgTAP for grants Auth scope tenancy revocation DST mature boundaries assignment reconciliation one-currency evidence sample floors and zero source mutation
+          - exact-head baseline clean migration replay production images and all four WooCommerce runtimes
+      - id: M10-S04-EXPORTS-AND-SCHEDULED-REPORTS
+        status: complete
+        acceptance:
+          - tenant-scoped exports use bounded role checks one-use or expiring delivery audit privacy minimization and exact source definitions
+          - scheduled reports are deduplicated retryable suppressible and cannot affect ledger value checkout or provider-neutral event processing
+          - one versioned JSON bundle includes all four strict aggregate reports Dictionary V4 exact request/generation/timezone evidence and source/delivery SHA-256 without row-level identity
+          - daily weekly and monthly IANA-local schedules materialize one job per due instant and run only in a separately deployable reporting worker
+          - generated payloads expire within 24 hours and five-minute subject/session-bound capabilities are consumed atomically once
+        metrics:
+          - duplicate manual or scheduled jobs per idempotency identity = 0
+          - exports containing prohibited identity keys = 0
+          - download capability replay success = 0
+          - reporting failures that change ledger rows or block checkout/value/provider workers = 0
+          - unexpired ready payloads older than 24 hours = 0
+        failure_modes:
+          - bearer URL or capability is replayed or used by another session
+          - revoked cross-tenant or lower-privilege actor reads export state or payload
+          - DST retry or concurrent materialization creates duplicate scheduled output
+          - worker death leaves a permanent lease or retry creates another business result
+          - private aggregate payload persists after expiry or leaks into logs/audit/browser state
+          - reporting workload delays the default value or provider-neutral notification workers
+        security_boundaries:
+          - only owner admin analyst and auditor may create manual aggregate exports and only owner/admin may manage schedules
+          - payload and capability tables remain private with no browser or worker table grants
+          - PostgreSQL rechecks live role entitlement and active public scope at request generation authorization and consumption
+          - downloads use HttpOnly SameSite strict cookies and private no-store attachment headers
+        rollout: Deploy additive schema and image with reporting-worker stopped; run Starfiniti-only payload size replay expiry and lease canaries before enabling recurring generation.
+        rollback: Stop only reporting-worker and hide export controls; schedules and request evidence remain inert while ready private payloads expire and no loyalty value or checkout path changes.
+        verification:
+          - strict contract tests for bundle dictionary/report bindings exact integers timezone schedule shapes and prohibited identity keys
+          - pgTAP for RLS grants roles tenancy idempotency schedule DST expiry capability session replay audit minimization and zero ledger mutation
+          - two-session concurrency tests for manual idempotency due-schedule materialization claim lease and one-use consumption
+          - worker tests for retry exhaustion lease recovery cleanup and failure isolation
+          - route/action tests for fail-closed parsing cookie binding private headers filename and transaction rollback
+          - exact-head baseline clean migration replay production images and all four WooCommerce runtimes
+      - id: M10-S05-ANALYTICS-COMMAND-CENTER
+        status: complete
+        acceptance:
+          - Hub-style desktop and mobile analytics exposes metric definitions filters empty loading error and stale states without fake data
+          - keyboard screen-reader zoom contrast reduced-motion and large-table navigation have no critical issue
+      - id: M10-S06-SHADOW-CANARY-AND-CLOSE
+        status: in_progress
+        acceptance:
+          - read-only shadow comparison exact-head CI disabled deployment Starfiniti canary reconciliation rollback and module score at least 90 pass
+    risks: [R-001, R-030, R-037, R-038]
+    docs:
+      [
+        docs/plan/ENTERPRISE_ROADMAP.md,
+        docs/architecture/ADR/0040-ledger-sourced-versioned-analytics-and-explicit-liability-valuation.md,
+        docs/architecture/ADR/0041-bounded-aggregate-exports-and-isolated-report-scheduling.md,
+        docs/api/ANALYTICS.md,
+        docs/operations/ANALYTICS_REPORTS.md,
+      ]
     evidence: [docs/plan/evidence/M10/README.md]
 
   - id: M11-ECOSYSTEM

@@ -1,5 +1,40 @@
 # Iteration Log
 
+## 2026-08-25 — M10 shadow and canary gate
+
+- Added a 29-check machine-readable analytics closeout gate with exact category arithmetic, a 90/100 target, an 80% per-category floor, sensitive-key rejection, deterministic automatic failures, and a self-test that rejects false completion.
+- Added a read-only legacy Overview shadow at one exact scope/range/instant. The first CI run correctly exposed an invalid unlinked-wallet fixture; the fixture now uses a workspace-linked commerce identity so the comparison covers shared member and outstanding-point semantics without altering either production report.
+- Exact-head run `32901023124` at `65f1dfb` passed all seven jobs, including the corrected shadow, clean 62-migration replay, 49 pgTAP files with 2,611 assertions, six concurrency probes, both images, and all four WooCommerce runtimes.
+- Refreshed the public production baseline and recorded the real blocker: PR #37 is an unapproved stacked draft and neither configured SSH route proves safe Proxmox operator access. No production mutation was attempted.
+
+## 2026-08-25 — M10 analytics command center
+
+- Bound the four parallel interactive reports to one explicit database snapshot instant and rejected invalid, future, or divergent timestamps before presenting a combined decision surface.
+- Added current/stale integrity labeling, value-free loading, explicit partial-error and reporting failure states, zero-denominator cohort states, six section anchors, and keyboard-focusable named table regions without synthetic values.
+- Chromium review passed desktop/mobile responsive layout, zero document overflow, 16.68:1 primary heading contrast, keyboard anchors and data regions, reduced motion, English-only output, stale/empty variants, and zero browser diagnostics. Exact-head run `32900284858` at `e04fafd` passed all seven jobs, including a clean 62-migration/2,609-assertion database gate and all four WooCommerce runtimes, closing S05.
+
+## 2026-08-25 — M10 controlled exports and scheduled reports
+
+- Closed M10-S04 with one strict Dictionary V4/four-report JSON bundle, exact request/generation/timezone/digest evidence, 24-hour private payloads, and five-minute subject/session-bound one-use downloads.
+- Added owner/admin scheduling plus analyst/auditor manual authority, daily/weekly/monthly IANA-local recurrence, atomic schedule/instant and command-idempotency fences, bounded lease/retry/expiry handling, and an isolated optional reporting worker with no loyalty-value authority.
+- The adversarial two-session probe proved concurrent manual and schedule retries return one created plus one duplicate result, one due occurrence materializes once, two workers claim distinct jobs, and one capability consumer wins exactly once.
+- Desktop/mobile Chromium review passed cadence interaction, keyboard focus, reduced motion, overflow, English-only output, private-operation copy, and zero diagnostics. Scheduled reports remain Hub downloads, not claimed email delivery, and the production profile remains stopped until S06.
+- Exact-head run `32897999942` at `4f97f3a` passed root checks, both images, a clean 62-migration replay, all 49 pgTAP files with 2,609 assertions, every concurrency probe, and all four WooCommerce runtimes.
+
+## 2026-08-25 — M10 cohort retention and causal evidence
+
+- Closed M10-S03 with Dictionary V4's 103 exact definitions and an independently degradable mature-cohort/experiment report supporting IANA-local daily activation and exact elapsed-day 31–60 earning retention.
+- Added an evidence-gated campaign intention-to-treat difference-in-means estimator over every immutable assignment, including zero outcomes, with exact rational evidence, one-currency reconciliation, 30-member-per-arm floors, and deterministic unavailable reasons.
+- Preserved the causal boundary: eligible-spend lift is a point estimate rather than gross/accounting revenue or statistical significance, mixed currencies are not converted, and no customer, wallet, order, assignment, or fraud identity is exposed.
+- Exact-head run `32893065219` at `02f03a4` passed root checks, both images, a clean 61-migration replay, all 48 pgTAP files with 2,549 assertions including 25 focused cases, and every minimum/current HPOS/legacy WooCommerce runtime.
+
+## 2026-08-25 — M10 programme outcome performance
+
+- Closed M10-S02B with Dictionary V3's 89 exact definitions and an independently degradable reward, VIP, referral, and campaign report sourced from immutable transitions, decisions, issuance/compensation facts, and purchase/trigger effects.
+- Kept unresolved native rewards distinct from realization, reconstructed VIP movement by effective and knowledge time, removed referral identity from the projection, deduplicated multi-effect influenced orders, and compensated campaign spend and points through append-only reversal evidence.
+- Preserved the causal boundary: influenced revenue remains descriptive and incremental revenue remains unavailable until S03 supplies a declared treatment/control estimator, population, window, exclusions, and sample evidence.
+- Exact-head run `32889287858` at `37998c6` passed root checks, both images, a clean 60-migration replay, all 47 pgTAP files with 2,524 assertions, and every minimum/current HPOS/legacy WooCommerce runtime.
+
 ## 2026-08-25 — M09 WooCommerce Blocks progressive panel
 
 - Closed M09-S04 with ADR-0038's PII-free `starfiniti-loyalty` Store API namespace, official WooCommerce Blocks integration handles, separately staged default-off data/panel flags, native no-script guidance, and zero render-time Hub dependency.

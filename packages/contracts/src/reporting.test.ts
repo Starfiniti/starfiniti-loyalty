@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { merchantOverviewReportV1 } from "./reporting";
+import {
+  analyticsCommercePerformanceReportV1,
+  analyticsMetricDictionaryV1,
+  analyticsMetricDictionaryV1Schema,
+  analyticsMetricDictionaryV2,
+  analyticsMetricDictionaryV2Schema,
+  analyticsMetricKeyV1,
+  analyticsMetricKeyV2,
+  analyticsValueTruthReportV1,
+  merchantOverviewReportV1,
+} from "./reporting";
 
 function fixture() {
   return {
@@ -54,6 +64,289 @@ describe("merchant Overview report contract", () => {
     ]) {
       expect(
         merchantOverviewReportV1.safeParse({ ...fixture(), ...patch }).success,
+      ).toBe(false);
+    }
+  });
+});
+
+function valueTruthFixture() {
+  return {
+    reportVersion: "1",
+    dictionaryVersion: "1",
+    asOf: "2026-08-25T12:00:00Z",
+    period: {
+      from: "2026-08-18T12:00:00Z",
+      to: "2026-08-25T12:00:00Z",
+      rangeDays: 7,
+      timeZone: "UTC",
+    },
+    projection: {
+      status: "reconciled",
+      walletCount: "12",
+      walletAccountCount: "72",
+      ledgerEntryCount: "99",
+      lotCount: "18",
+    },
+    snapshot: {
+      pendingPoints: "500",
+      availablePoints: "-25",
+      reservedPoints: "75",
+      spentPoints: "9007199254740993",
+      expiredPoints: "50",
+      reversedPoints: "20",
+      outstandingPoints: "550",
+    },
+    flows: {
+      awardedPoints: "1000",
+      releasedPoints: "800",
+      reservedPoints: "200",
+      capturedPoints: "125",
+      cancelledPoints: "75",
+      expiredPoints: "50",
+      refundReversedPoints: "20",
+      manualCreditPoints: "10",
+      manualDebitPoints: "35",
+      manualNetPoints: "-25",
+    },
+    expiry: {
+      lotBackedPoints: "600",
+      overdueAvailablePoints: "25",
+      reservedPastExpiryPoints: "10",
+      expiringNext30Days: "100",
+      expiringDays31To90: "200",
+      expiringBeyond90Days: "265",
+      affectedMembers: "8",
+      nextExpiryAt: "2026-08-29T00:00:00Z",
+    },
+    monetaryLiability: {
+      status: "unavailable",
+      reason: "valuation_policy_not_configured",
+    },
+  } as const;
+}
+
+describe("analytics metric dictionary V1", () => {
+  it("covers every allowlisted metric exactly once with complete evidence fields", () => {
+    expect(
+      analyticsMetricDictionaryV1Schema.safeParse(analyticsMetricDictionaryV1)
+        .success,
+    ).toBe(true);
+
+    const dictionaryKeys = analyticsMetricDictionaryV1.definitions.map(
+      (definition) => definition.key,
+    );
+    expect(new Set(dictionaryKeys).size).toBe(dictionaryKeys.length);
+    expect(new Set(dictionaryKeys)).toEqual(
+      new Set(analyticsMetricKeyV1.options),
+    );
+  });
+
+  it("makes monetary liability explicitly unavailable without a valuation policy", () => {
+    const monetary = analyticsMetricDictionaryV1.definitions.find(
+      (definition) => definition.key === "liability.monetary",
+    );
+    expect(monetary).toMatchObject({
+      availability: "unavailable",
+      currencyPolicy: "unavailable_without_valuation_policy",
+      causalClass: "unavailable",
+      displayFormat: "currency_unavailable",
+    });
+    expect(JSON.stringify(monetary)).not.toContain("100 points");
+  });
+});
+
+describe("analytics value truth report V1", () => {
+  it("preserves signed and larger-than-JavaScript integers as exact text", () => {
+    expect(
+      analyticsValueTruthReportV1.safeParse(valueTruthFixture()).success,
+    ).toBe(true);
+  });
+
+  it("rejects mismatched periods and bucket arithmetic", () => {
+    for (const candidate of [
+      {
+        ...valueTruthFixture(),
+        period: { ...valueTruthFixture().period, from: "2026-08-19T12:00:00Z" },
+      },
+      {
+        ...valueTruthFixture(),
+        snapshot: { ...valueTruthFixture().snapshot, outstandingPoints: "551" },
+      },
+      {
+        ...valueTruthFixture(),
+        flows: { ...valueTruthFixture().flows, manualNetPoints: "25" },
+      },
+      {
+        ...valueTruthFixture(),
+        expiry: { ...valueTruthFixture().expiry, lotBackedPoints: "601" },
+      },
+    ]) {
+      expect(analyticsValueTruthReportV1.safeParse(candidate).success).toBe(
+        false,
+      );
+    }
+  });
+
+  it("rejects numeric coercion and invented monetary liability", () => {
+    expect(
+      analyticsValueTruthReportV1.safeParse({
+        ...valueTruthFixture(),
+        snapshot: {
+          ...valueTruthFixture().snapshot,
+          spentPoints: 9_007_199_254_740_993,
+        },
+      }).success,
+    ).toBe(false);
+    expect(
+      analyticsValueTruthReportV1.safeParse({
+        ...valueTruthFixture(),
+        monetaryLiability: { status: "available", amountMinor: "550" },
+      }).success,
+    ).toBe(false);
+  });
+});
+
+function commercePerformanceFixture() {
+  return {
+    reportVersion: "1",
+    dictionaryVersion: "2",
+    asOf: "2026-08-25T12:00:00Z",
+    period: {
+      from: "2026-08-18T12:00:00Z",
+      to: "2026-08-25T12:00:00Z",
+      rangeDays: 7,
+      timeZone: "UTC",
+    },
+    currency: {
+      status: "available",
+      code: "EUR",
+      minorUnitDigits: 2,
+      reason: null,
+    },
+    members: {
+      total: "40",
+      activation: {
+        windowDays: 30,
+        cohortFrom: "2026-07-19T12:00:00Z",
+        cohortTo: "2026-07-26T12:00:00Z",
+        cohortMembers: "10",
+        activatedMembers: "7",
+        rateBasisPoints: "7000",
+      },
+      participatingMembers: "12",
+      participationRateBasisPoints: "3000",
+    },
+    commerce: {
+      netEligibleOrders: "18",
+      purchasingMembers: "12",
+      repeatPurchasingMembers: "5",
+      repeatPurchaseRateBasisPoints: "4166",
+      netEligibleSpendMinor: "9007199254740993",
+      averageOrderValueMinor: "500399958596721",
+      observedLifetimeEligibleSpendMinor: "12000000",
+      observedLifetimePurchasingMembers: "30",
+      observedLifetimeValueMinor: "400000",
+    },
+    coverage: {
+      status: "partial_customer_linkage",
+      v1NetEligibleOrders: "8",
+      v2NetEligibleOrders: "10",
+      guestNetEligibleOrders: "3",
+      missingCustomerLinkOrders: "1",
+      missingCustomerLinkSpendMinor: "2500",
+    },
+  } as const;
+}
+
+describe("analytics commerce performance V1", () => {
+  it("publishes a complete additive Dictionary V2", () => {
+    expect(
+      analyticsMetricDictionaryV2Schema.safeParse(analyticsMetricDictionaryV2)
+        .success,
+    ).toBe(true);
+    const keys = analyticsMetricDictionaryV2.definitions.map(
+      (definition) => definition.key,
+    );
+    expect(new Set(keys)).toEqual(new Set(analyticsMetricKeyV2.options));
+    expect(new Set(keys).size).toBe(keys.length);
+    expect(new Set(keys)).toEqual(
+      new Set([...analyticsMetricKeyV1.options, ...keys.slice(25)]),
+    );
+  });
+
+  it("preserves exact currency amounts and reconciled denominators", () => {
+    expect(
+      analyticsCommercePerformanceReportV1.safeParse(
+        commercePerformanceFixture(),
+      ).success,
+    ).toBe(true);
+  });
+
+  it("accepts explicit mixed-currency unavailability without losing counts", () => {
+    const fixture = commercePerformanceFixture();
+    const unavailable = {
+      ...fixture,
+      currency: {
+        status: "unavailable",
+        code: null,
+        minorUnitDigits: null,
+        reason: "mixed_currency_scope",
+      },
+      commerce: {
+        ...fixture.commerce,
+        netEligibleSpendMinor: null,
+        averageOrderValueMinor: null,
+        observedLifetimeEligibleSpendMinor: null,
+        observedLifetimeValueMinor: null,
+      },
+      coverage: { ...fixture.coverage, missingCustomerLinkSpendMinor: null },
+    };
+    expect(
+      analyticsCommercePerformanceReportV1.safeParse(unavailable).success,
+    ).toBe(true);
+  });
+
+  it("rejects rate, source coverage, cohort, linkage, and currency mismatches", () => {
+    const fixture = commercePerformanceFixture();
+    const candidates = [
+      {
+        ...fixture,
+        members: {
+          ...fixture.members,
+          participationRateBasisPoints: "3001",
+        },
+      },
+      {
+        ...fixture,
+        commerce: { ...fixture.commerce, netEligibleOrders: "19" },
+      },
+      {
+        ...fixture,
+        members: {
+          ...fixture.members,
+          activation: {
+            ...fixture.members.activation,
+            cohortFrom: "2026-07-20T12:00:00Z",
+          },
+        },
+      },
+      {
+        ...fixture,
+        coverage: { ...fixture.coverage, status: "complete" },
+      },
+      {
+        ...fixture,
+        currency: {
+          status: "unavailable",
+          code: null,
+          minorUnitDigits: null,
+          reason: "mixed_currency_scope",
+        },
+      },
+    ];
+    for (const candidate of candidates) {
+      expect(
+        analyticsCommercePerformanceReportV1.safeParse(candidate).success,
       ).toBe(false);
     }
   });

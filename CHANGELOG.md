@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Completed the M10 analytics command-center slice with one explicit cross-report snapshot instant, fail-closed divergence/future checks, current/stale integrity states, section navigation, honest loading/empty/partial-error states, and keyboard-focusable responsive cohort tables.
+- Added the fail-closed M10 analytics closeout manifest and validator with 29 repository/production checks, exact seven-category scoring, an 80% category floor, sensitive-evidence rejection, false-completion self-test, and a read-only legacy Overview compatibility shadow.
+
+- Added the versioned M10 analytics dictionary and immutable value-truth report with exact issued, released, pending, available, reserved, spent, expired, reversed, manual, outstanding, and expiry-window point evidence; projection reconciliation; explicit unavailable monetary liability; and a responsive formula-backed merchant experience.
+- Added mature-cohort activation, participation, refund-compensated V1/V2 eligible commerce, repeat purchase, AOV, observed LTV, source coverage, guest activity, and missing-link reporting with exact currency scope, bigint-safe contracts, independently degradable dashboard reads, and no inferred prediction or incrementality.
+- Added immutable reward realization, event-time VIP movement, privacy-minimized referral issuance and compensation, and deduplicated refund-compensated campaign influence reporting with exact reversal evidence and an explicit unavailable causal-lift state.
+- Added mature IANA-local daily activation cohorts, exact 31–60-day earning retention, and evidence-gated campaign intention-to-treat eligible-spend lift with immutable assignment populations, zero outcomes, exact rational evidence, sample floors, and explicit unavailable/significance boundaries.
+- Added controlled aggregate analytics exports and daily/weekly/monthly IANA-local schedules with Dictionary V4 plus all four strict reports, private 24-hour payloads, five-minute subject/session-bound one-use downloads, exact digest evidence, bounded retries, concurrency fences, and an isolated reporting-worker profile that cannot delay loyalty value or checkout.
+
 - Added the strict M09 customer experience boundary: one Auth-derived snapshot for balances, earning, rewards, reservations, expiry, VIP, referrals, and activity; enhancement-only entitlement behavior; minimized public summaries; and fail-closed server parsing without browser-supplied scope.
 - Added the feature-flagged Hub-style hosted loyalty experience with overview, earning, rewards, VIP, referrals, immutable history, and account areas; exact affordability and progress guidance; a bounded guest journey; responsive evidence; and one same-origin English account path without a language switcher.
 - Added signed demand-driven WooCommerce customer snapshots with database-derived exact balances, tier, expiry, earning and reward summaries; strict monotonic non-autoloaded local storage; privacy lifecycle support; and My Account, product, cart, classic checkout, and post-purchase placements with zero connector assets or render-time Hub calls.

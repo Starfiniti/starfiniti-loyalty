@@ -70,6 +70,8 @@ An SMTP outage or configuration failure must never trigger a restart or health f
 
 Generic outbound notifications use the same immutable worker image in a separate endpoint-isolated `webhook-worker` behind the optional `webhook` profile. Each running instance is bound to one endpoint UUID, exact allowed origin, and owner-only current/optional previous secret files. Follow `WEBHOOKS.md`; never enable production test mode, share an endpoint secret, follow redirects, or expose private/non-public DNS destinations. A receiver outage cannot affect the default value worker.
 
+Analytics report generation uses the same immutable worker image in a separate `reporting-worker` behind the optional `reporting` profile. Deploy the additive schema and image with this profile stopped, then follow `ANALYTICS_REPORTS.md` for migration compatibility, manual generation, expiry, lease, payload-size, and Starfiniti-tenant canaries. Reporting has no provider credential and no table-level payload access. Stop only this profile to roll back generation; do not delete request/schedule/audit evidence or interrupt the default value and provider workers.
+
 ## Release process
 
 1. After all required checks pass on an approved commit, push one exact `vMAJOR.MINOR.PATCH` tag. The release workflow reruns the baseline and disposable database gate, publishes dashboard/worker GHCR images under the commit SHA and version, and attaches the WooCommerce ZIP plus `SHA256SUMS` to the GitHub release. Deploy the commit-SHA image tags or resolved digests, never a floating version tag.
