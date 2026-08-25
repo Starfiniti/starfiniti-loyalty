@@ -17,7 +17,8 @@ create table loyalty_private.woocommerce_customer_snapshot_deliveries (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (organization_id, id),
-  unique (connection_id, external_customer_id),
+  constraint woo_snapshot_delivery_connection_customer_uid
+    unique (connection_id, external_customer_id),
   foreign key (organization_id, connection_id)
     references loyalty.commerce_connections(organization_id, id) on delete cascade,
   foreign key (organization_id, customer_id)
@@ -343,7 +344,8 @@ begin
     ) values (
       target_connection.organization_id, target_connection.id,
       target_customer_id, requested_external_customer_id
-    ) on conflict (connection_id, external_customer_id) do nothing;
+    ) on conflict on constraint woo_snapshot_delivery_connection_customer_uid
+      do nothing;
 
     select state.* into delivery
     from loyalty_private.woocommerce_customer_snapshot_deliveries as state
