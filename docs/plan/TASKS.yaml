@@ -1284,15 +1284,20 @@ tasks:
           - focused contract and server tests cover exact bigint balances bounds database errors unauthenticated access and fail-closed parsing
           - exact-head run 32839387263 at f531f82 passed baseline both images 55 migrations 43 pgTAP files with 2361 assertions and all four WooCommerce runtimes
       - id: M09-S02-HOSTED-SEVEN-AREA-EXPERIENCE
-        status: in_progress
+        status: completed
         acceptance:
           - hosted member experience provides overview earning rewards VIP referrals history and account states with useful discovery progress affordability sharing and expiry guidance
           - public guest experience explains programme value without exposing customer state and routes sign-in through the canonical origin
           - desktop mobile keyboard zoom contrast reduced-motion and screen-reader checks have no critical issue
         rollout: Enable enhanced hosted navigation for the Starfiniti tenant before any WooCommerce placement.
         rollback: Disable enhanced navigation and retain the current core account and public pages.
+        evidence:
+          - the Auth-derived member experience renders overview earning rewards VIP referrals immutable history and account states with exact bigint balances affordability shortfalls progress sharing expiry guidance and no browser-supplied scope
+          - the anonymous experience explains earning tiers rewards and redemption through one bounded public projection and routes sign-in to a tested same-origin canonical English account path
+          - real-component Playwright review at 1440 by 1000 390 by 844 and 720 by 900 reflow passed headings landmarks first-focus bypass navigation overflow reduced-motion and zero browser diagnostics with eight retained screenshots
+          - exact-head run 32844158775 at ad1ddcf passed baseline both images 55 migrations 43 pgTAP files with 2361 assertions and all four WooCommerce runtimes
       - id: M09-S03-LOCAL-WOOCOMMERCE-SNAPSHOT-AND-PLACEMENTS
-        status: planned
+        status: in_progress
         acceptance:
           - a signed leased idempotent bounded PII-free revisioned snapshot is stored locally without becoming balance coupon or redemption authority
           - My Account product cart checkout and post-purchase classic placements render only local data and degrade to generic copy
