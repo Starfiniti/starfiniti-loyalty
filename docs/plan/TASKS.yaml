@@ -1618,7 +1618,8 @@ tasks:
           - additive contracts migration read and command boundaries plus 52 planned pgTAP assertions are implemented on codex/m11-multistore
           - all 626 workspace tests every workspace typecheck targeted lint production build validators migration validation formatting and diff checks pass locally
           - native Chrome desktop/mobile review passes protected-state shared-scope interaction exact review keyboard focus reduced motion English-only output mobile stacking zero overflow and zero unexpected diagnostics
-          - container replay concurrency execution exact-head CI and disabled production canary remain pending
+          - exact-head run 32905613578 at 3cb609d passes all seven jobs including clean replay all 50 pgTAP files the same-revision concurrency race both images and all four WooCommerce runtimes
+          - disabled production deployment canary topology wallet connector reconciliation rollback and observation remain pending
       - id: M11-S02-EXPLICIT-CROSS-WORKSPACE-CUSTOMER-LINKING
         status: planned
         acceptance:
