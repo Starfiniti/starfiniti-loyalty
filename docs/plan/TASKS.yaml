@@ -1377,7 +1377,7 @@ tasks:
   - id: M10-ANALYTICS
     title: Add reconciled analytics, reporting, liability, and exports
     module: M10
-    status: planned
+    status: in_progress
     dependencies: [M09-STOREFRONT-EXPERIENCE]
     hypothesis: Defined and exactly reconciled metrics let merchants improve loyalty without overstating causality.
     baseline: Basic spend/member/redemption/liability trends and ledger exports exist.
@@ -1387,7 +1387,8 @@ tasks:
         every dashboard exposes definition,
         incremental revenue is never inferred from influence,
       ]
-    owner_inputs: []
+    owner_inputs:
+      - approved non-zero real-store activity is required only for the final production reconciliation and canary gate
     acceptance:
       [
         metric dictionary value/liability forecasts business/referral/campaign/cohort reports controlled exports and schedules pass,
@@ -1409,8 +1410,58 @@ tasks:
         RLS/export expiry,
         browser definitions,
       ]
+    slices:
+      - id: M10-S01-METRIC-DICTIONARY-AND-VALUE-TRUTH
+        status: in_progress
+        acceptance:
+          - a versioned metric dictionary names source fields formula grain time boundary currency policy ownership caveats and causal classification for every implemented value metric
+          - one Auth-authorized report accepts only public organization workspace and programme selectors while PostgreSQL derives internal scope and returns exact point flows balances and expiry exposure from immutable ledger and lot evidence with projection reconciliation
+          - report V1 uses UTC half-open periods and exact decimal text without inferring monetary liability from a global point value or reward catalogue
+          - cross-tenant revoked malformed large-integer refund reversal expiry reservation and zero-denominator cases fail closed or reconcile exactly
+        failure_modes:
+          - mutable balance projection is treated as historical source truth
+          - manual adjustments or refund reversals disappear inside gross award totals
+          - available negative balance is coerced to zero or unsigned browser number
+          - points are labelled as accounting currency without an immutable valuation policy
+        rollout: Deploy additive read contracts disabled from navigation; shadow every snapshot total against immutable entries before merchant exposure.
+        rollback: Stop calling the V1 report and retain existing Overview V1; additive functions definitions and evidence remain inert.
+        verification:
+          - contract tests for exact keys arithmetic period bounds dictionary completeness and bigint preservation
+          - pgTAP for Auth derivation grants tenancy revocation flow formulas balance cross-check expiry bounds and no ledger mutation
+          - independent reconciliation query compares report buckets with immutable ledger entries and point-lot allocations
+          - exact-head baseline database replay production images and WooCommerce matrix
+      - id: M10-S02-COMMERCE-AND-PROGRAMME-PERFORMANCE
+        status: planned
+        acceptance:
+          - activation participation eligible orders repeat purchase AOV LTV reward tier referral and campaign metrics use versioned fact-sourced definitions and exact currency scope
+          - refunds reversals guest identity and missing linkage are explicit exclusions or compensations rather than silent denominator changes
+          - influenced revenue remains separately labelled from experimental incrementality
+      - id: M10-S03-COHORT-RETENTION-AND-CAUSAL-EVIDENCE
+        status: planned
+        acceptance:
+          - cohort and retention reports bind immutable entry event and qualification dates with explicit timezone and denominator definitions
+          - incremental claims require immutable treatment and control assignment plus declared estimator population window and exclusions otherwise return unavailable
+      - id: M10-S04-EXPORTS-AND-SCHEDULED-REPORTS
+        status: planned
+        acceptance:
+          - tenant-scoped exports use bounded role checks one-use or expiring delivery audit privacy minimization and exact source definitions
+          - scheduled reports are deduplicated retryable suppressible and cannot affect ledger value checkout or provider-neutral event processing
+      - id: M10-S05-ANALYTICS-COMMAND-CENTER
+        status: planned
+        acceptance:
+          - Hub-style desktop and mobile analytics exposes metric definitions filters empty loading error and stale states without fake data
+          - keyboard screen-reader zoom contrast reduced-motion and large-table navigation have no critical issue
+      - id: M10-S06-SHADOW-CANARY-AND-CLOSE
+        status: planned
+        acceptance:
+          - read-only shadow comparison exact-head CI disabled deployment Starfiniti canary reconciliation rollback and module score at least 90 pass
     risks: [R-001, R-030]
-    docs: [docs/plan/ENTERPRISE_ROADMAP.md]
+    docs:
+      [
+        docs/plan/ENTERPRISE_ROADMAP.md,
+        docs/architecture/ADR/0040-ledger-sourced-versioned-analytics-and-explicit-liability-valuation.md,
+        docs/api/ANALYTICS.md,
+      ]
     evidence: [docs/plan/evidence/M10/README.md]
 
   - id: M11-ECOSYSTEM

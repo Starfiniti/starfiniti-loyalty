@@ -100,6 +100,8 @@ const acceptedAdrs = [
   "0035-immutable-tenant-email-templates-and-actor-bound-tests.md",
   "0037-demand-driven-woocommerce-snapshots-and-classic-placements.md",
   "0038-namespaced-store-api-and-flagged-blocks-panel.md",
+  "0039-controlled-english-presentation-v2-and-degraded-delivery.md",
+  "0040-ledger-sourced-versioned-analytics-and-explicit-liability-valuation.md",
 ];
 
 for (const adr of acceptedAdrs) {
