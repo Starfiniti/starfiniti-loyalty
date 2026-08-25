@@ -13,6 +13,82 @@ const positiveBigint = nonNegativeBigint.refine((value) => value !== "0", {
 });
 const instant = z.iso.datetime({ offset: true });
 
+export const smtpTemplateEventTypeV1 = z.enum([
+  "loyalty.points.earned",
+  "loyalty.points.released",
+  "loyalty.points.expiring",
+  "loyalty.reward.changed",
+  "loyalty.tier.changed",
+  "loyalty.referral.changed",
+]);
+
+export const smtpTemplateTokensV1 = {
+  "loyalty.points.earned": ["points", "pendingUntil"],
+  "loyalty.points.released": ["points", "availableBalance"],
+  "loyalty.points.expiring": ["points", "expiresAt", "daysRemaining"],
+  "loyalty.reward.changed": ["rewardReservationId", "rewardCode", "state"],
+  "loyalty.tier.changed": ["fromTierCode", "toTierCode", "effectiveAt"],
+  "loyalty.referral.changed": ["referralId", "party", "state"],
+} as const satisfies Record<
+  z.infer<typeof smtpTemplateEventTypeV1>,
+  readonly string[]
+>;
+
+const templateSubject = z
+  .string()
+  .min(1)
+  .max(200)
+  .refine((value) => !/[\u0000-\u001F\u007F]/u.test(value), {
+    message: "Template subject contains a control character",
+  });
+const templateText = z
+  .string()
+  .min(1)
+  .max(4_000)
+  .refine(
+    (value) => !/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/u.test(value),
+    { message: "Template body contains a control character" },
+  )
+  .refine((value) => !/[<>]/u.test(value), {
+    message: "Template body cannot contain markup",
+  })
+  .refine((value) => !/(?:[a-z][a-z0-9+.-]*:\/\/|\bwww\.)/iu.test(value), {
+    message: "Template body cannot contain a URL",
+  });
+const templateToken = z.string().regex(/^[a-z][A-Za-z0-9]{0,79}$/u);
+
+function templateTokensAreAllowed(
+  eventType: z.infer<typeof smtpTemplateEventTypeV1>,
+  ...templates: readonly string[]
+): boolean {
+  const allowed = new Set<string>(smtpTemplateTokensV1[eventType]);
+  return templates.every((template) => {
+    let remainder = template;
+    for (const match of template.matchAll(/\{\{([A-Za-z][A-Za-z0-9]*)\}\}/gu)) {
+      if (!allowed.has(match[1] ?? "")) return false;
+      remainder = remainder.replace(match[0], "");
+    }
+    return !remainder.includes("{{") && !remainder.includes("}}");
+  });
+}
+
+export const notificationEmailTemplateContentV1 = z
+  .object({
+    eventType: smtpTemplateEventTypeV1,
+    subjectTemplate: templateSubject,
+    textTemplate: templateText,
+  })
+  .strict()
+  .refine(
+    (template) =>
+      templateTokensAreAllowed(
+        template.eventType,
+        template.subjectTemplate,
+        template.textTemplate,
+      ),
+    { message: "Template contains an unsupported or malformed token" },
+  );
+
 export const notificationCustomerPurposeV1 = z.enum([
   "loyalty_transactional",
   "loyalty_marketing",
@@ -25,6 +101,17 @@ export const notificationPreferenceStateV1 = z.enum([
   "subscribed",
   "unsubscribed",
   "suppressed",
+]);
+export const notificationEventTypeV1 = z.enum([
+  "loyalty.points.earned",
+  "loyalty.points.released",
+  "loyalty.points.expiring",
+  "loyalty.reward.changed",
+  "loyalty.tier.changed",
+  "loyalty.referral.changed",
+  "loyalty.campaign.effect",
+  "loyalty.connector.health",
+  "loyalty.billing.changed",
 ]);
 
 const common = {
@@ -432,6 +519,195 @@ export const webhookNotificationDispatchAuthorizationV1 = z.discriminatedUnion(
   [webhookDispatchUnavailableV1, webhookDispatchAuthorizedV1],
 );
 
+const sha256Hex = z.string().regex(/^[a-f0-9]{64}$/u);
+const commandKey = z
+  .string()
+  .min(1)
+  .max(200)
+  .regex(/^[A-Za-z0-9:_-]+$/u);
+
+export const merchantNotificationEmailTemplateV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    templateId: z.uuid(),
+    templateCode: code,
+    eventType: smtpTemplateEventTypeV1,
+    locale: z.literal("en"),
+    source: z.enum(["system", "organization"]),
+    templateVersion: z.number().int().positive(),
+    templateSha256: sha256Hex,
+    subjectTemplate: templateSubject,
+    textTemplate: templateText,
+    htmlTemplate: z.string().min(1).max(8_000),
+    allowedTokens: z.array(templateToken).min(2).max(3),
+    publishedAt: instant,
+  })
+  .strict()
+  .superRefine((template, context) => {
+    const expected = smtpTemplateTokensV1[template.eventType];
+    if (
+      template.allowedTokens.length !== expected.length ||
+      template.allowedTokens.some((token, index) => token !== expected[index])
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["allowedTokens"],
+        message: "Template tokens do not match the event type",
+      });
+    }
+    if (
+      !templateTokensAreAllowed(
+        template.eventType,
+        template.subjectTemplate,
+        template.textTemplate,
+      )
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["textTemplate"],
+        message: "Template contains an unsupported or malformed token",
+      });
+    }
+  });
+
+const notificationHealthCountsV1 = z
+  .object({
+    subscribed: nonNegativeBigint,
+    unsubscribed: nonNegativeBigint,
+    suppressed: nonNegativeBigint,
+  })
+  .strict();
+
+export const merchantNotificationProviderHealthV1 = z
+  .object({
+    provider: z.enum(["smtp", "klaviyo", "webhook"]),
+    enabled: z.boolean(),
+    pending: nonNegativeBigint,
+    processing: nonNegativeBigint,
+    retryable: nonNegativeBigint,
+    held: nonNegativeBigint,
+    completed: nonNegativeBigint,
+    suppressed: nonNegativeBigint,
+    contactUnavailable: nonNegativeBigint,
+    deadLetter: nonNegativeBigint,
+    manualReview: nonNegativeBigint,
+    oldestOutstandingAt: instant.nullable(),
+  })
+  .strict();
+
+export const merchantNotificationIssueV1 = z
+  .object({
+    provider: z.enum(["smtp", "klaviyo", "webhook"]),
+    kind: z.enum(["delivery", "operation", "test"]),
+    referenceId: z.uuid(),
+    eventType: notificationEventTypeV1.nullable(),
+    state: z.enum(["contact_unavailable", "dead_letter", "manual_review"]),
+    attemptCount: z.number().int().min(0).max(10),
+    errorCode: code.nullable(),
+    updatedAt: instant,
+  })
+  .strict();
+
+export const merchantNotificationWorkspaceV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    generatedAt: instant,
+    deploymentMode: z.enum(["self_hosted", "managed"]),
+    entitlementEnabled: z.boolean(),
+    templates: z.array(merchantNotificationEmailTemplateV1).length(6),
+    consent: z
+      .object({
+        activeCustomers: nonNegativeBigint,
+        loyaltyTransactional: notificationHealthCountsV1,
+        loyaltyMarketing: notificationHealthCountsV1,
+      })
+      .strict(),
+    providers: z.array(merchantNotificationProviderHealthV1).length(3),
+    issues: z.array(merchantNotificationIssueV1).max(100),
+  })
+  .strict()
+  .superRefine((workspace, context) => {
+    const providers = new Set(workspace.providers.map((item) => item.provider));
+    if (
+      providers.size !== 3 ||
+      !providers.has("smtp") ||
+      !providers.has("klaviyo") ||
+      !providers.has("webhook")
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["providers"],
+        message: "Provider health must contain each provider exactly once",
+      });
+    }
+    const eventTypes = new Set(
+      workspace.templates.map((template) => template.eventType),
+    );
+    if (eventTypes.size !== smtpTemplateEventTypeV1.options.length) {
+      context.addIssue({
+        code: "custom",
+        path: ["templates"],
+        message: "Template catalogue must contain each event type exactly once",
+      });
+    }
+  });
+
+export const merchantPublishNotificationTemplateCommandV1 = z
+  .object({
+    version: z.literal("1"),
+    workspaceId: z.uuid(),
+    eventType: smtpTemplateEventTypeV1,
+    subjectTemplate: templateSubject,
+    textTemplate: templateText,
+    idempotencyKey: commandKey,
+    correlationId: z.uuid(),
+  })
+  .strict()
+  .refine(
+    (command) =>
+      templateTokensAreAllowed(
+        command.eventType,
+        command.subjectTemplate,
+        command.textTemplate,
+      ),
+    { message: "Template contains an unsupported or malformed token" },
+  );
+
+export const merchantPublishNotificationTemplateResultV1 = z
+  .object({
+    templateId: z.uuid(),
+    templateVersion: z.number().int().positive(),
+    outcome: z.enum(["created", "duplicate"]),
+  })
+  .strict();
+
+export const merchantSendNotificationTestCommandV1 = z
+  .object({
+    version: z.literal("1"),
+    workspaceId: z.uuid(),
+    eventType: smtpTemplateEventTypeV1,
+    idempotencyKey: commandKey,
+    correlationId: z.uuid(),
+  })
+  .strict();
+
+export const merchantSendNotificationTestResultV1 = z
+  .object({
+    testDeliveryId: z.uuid(),
+    state: z.enum([
+      "pending",
+      "processing",
+      "retryable",
+      "held",
+      "delivered",
+      "contact_unavailable",
+      "dead_letter",
+      "manual_review",
+    ]),
+    outcome: z.enum(["created", "duplicate"]),
+  })
+  .strict();
+
 export const notificationPreferenceV1 = z
   .object({
     schemaVersion: z.literal("1"),
@@ -472,4 +748,28 @@ export type WebhookNotificationDeliveryClaimV1 = z.infer<
 >;
 export type WebhookNotificationDispatchAuthorizationV1 = z.infer<
   typeof webhookNotificationDispatchAuthorizationV1
+>;
+export type MerchantNotificationEmailTemplateV1 = z.infer<
+  typeof merchantNotificationEmailTemplateV1
+>;
+export type MerchantNotificationProviderHealthV1 = z.infer<
+  typeof merchantNotificationProviderHealthV1
+>;
+export type MerchantNotificationIssueV1 = z.infer<
+  typeof merchantNotificationIssueV1
+>;
+export type MerchantNotificationWorkspaceV1 = z.infer<
+  typeof merchantNotificationWorkspaceV1
+>;
+export type MerchantPublishNotificationTemplateCommandV1 = z.infer<
+  typeof merchantPublishNotificationTemplateCommandV1
+>;
+export type MerchantPublishNotificationTemplateResultV1 = z.infer<
+  typeof merchantPublishNotificationTemplateResultV1
+>;
+export type MerchantSendNotificationTestCommandV1 = z.infer<
+  typeof merchantSendNotificationTestCommandV1
+>;
+export type MerchantSendNotificationTestResultV1 = z.infer<
+  typeof merchantSendNotificationTestResultV1
 >;

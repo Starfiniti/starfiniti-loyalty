@@ -97,6 +97,7 @@ const acceptedAdrs = [
   "0032-isolated-database-authorized-smtp-delivery.md",
   "0033-tenant-bound-klaviyo-projection-and-consent-sync.md",
   "0034-standard-hmac-webhooks-with-pinned-public-destinations.md",
+  "0035-immutable-tenant-email-templates-and-actor-bound-tests.md",
 ];
 
 for (const adr of acceptedAdrs) {

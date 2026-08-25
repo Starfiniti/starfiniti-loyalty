@@ -3,6 +3,11 @@ import {
   klaviyoNotificationActionAuthorizationV1,
   klaviyoNotificationOperationClaimV1,
   klaviyoNotificationPreparationV1,
+  merchantNotificationEmailTemplateV1,
+  merchantNotificationWorkspaceV1,
+  merchantPublishNotificationTemplateCommandV1,
+  merchantSendNotificationTestCommandV1,
+  notificationEmailTemplateContentV1,
   notificationEventV1,
   notificationPreferenceV1,
   smtpNotificationDeliveryClaimV1,
@@ -523,5 +528,183 @@ describe("generic webhook notification contracts", () => {
         }).success,
       ).toBe(false);
     }
+  });
+});
+
+describe("merchant notification templates and health", () => {
+  const releasedTemplate = {
+    schemaVersion: "1",
+    templateId: "94000000-0000-4000-8000-000000000001",
+    templateCode: "points_released",
+    eventType: "loyalty.points.released",
+    locale: "en",
+    source: "organization",
+    templateVersion: 2,
+    templateSha256: "ab".repeat(32),
+    subjectTemplate: "{{points}} points are ready",
+    textTemplate: "You now have {{availableBalance}} points.",
+    htmlTemplate: "<p>You now have {{availableBalance}} points.</p>",
+    allowedTokens: ["points", "availableBalance"],
+    publishedAt: "2026-08-25T08:00:00Z",
+  } as const;
+
+  it("accepts bounded plain-text templates and exact event tokens", () => {
+    expect(
+      notificationEmailTemplateContentV1.parse({
+        eventType: "loyalty.points.expiring",
+        subjectTemplate: "{{points}} points expire soon",
+        textTemplate:
+          "Use {{points}} points before {{expiresAt}} ({{daysRemaining}} days).",
+      }),
+    ).toMatchObject({ eventType: "loyalty.points.expiring" });
+    expect(merchantNotificationEmailTemplateV1.parse(releasedTemplate)).toEqual(
+      releasedTemplate,
+    );
+  });
+
+  it.each([
+    {
+      eventType: "loyalty.points.released",
+      subjectTemplate: "Hello {{email}}",
+      textTemplate: "You have {{availableBalance}} points.",
+    },
+    {
+      eventType: "loyalty.points.released",
+      subjectTemplate: "Points ready",
+      textTemplate: "<script>alert(1)</script>",
+    },
+    {
+      eventType: "loyalty.points.released",
+      subjectTemplate: "Points ready",
+      textTemplate: "Open https://tracker.example.test now.",
+    },
+    {
+      eventType: "loyalty.points.released",
+      subjectTemplate: "Points ready",
+      textTemplate: "Broken {{points token",
+    },
+  ])("rejects unsafe template content %#", (template) => {
+    expect(notificationEmailTemplateContentV1.safeParse(template).success).toBe(
+      false,
+    );
+  });
+
+  it("rejects a token catalogue that disagrees with the event type", () => {
+    expect(
+      merchantNotificationEmailTemplateV1.safeParse({
+        ...releasedTemplate,
+        allowedTokens: ["points", "expiresAt", "daysRemaining"],
+      }).success,
+    ).toBe(false);
+  });
+
+  it("accepts only selector-free publish and actor-bound test commands", () => {
+    expect(
+      merchantPublishNotificationTemplateCommandV1.parse({
+        version: "1",
+        workspaceId: "94000000-0000-4000-8000-000000000009",
+        eventType: "loyalty.points.released",
+        subjectTemplate: "{{points}} points are ready",
+        textTemplate: "Balance: {{availableBalance}} points.",
+        idempotencyKey: "notification:template:94000000",
+        correlationId: "94000000-0000-4000-8000-000000000002",
+      }),
+    ).toMatchObject({ eventType: "loyalty.points.released" });
+    expect(
+      merchantSendNotificationTestCommandV1.parse({
+        version: "1",
+        workspaceId: "94000000-0000-4000-8000-000000000009",
+        eventType: "loyalty.points.released",
+        idempotencyKey: "notification:test:94000000",
+        correlationId: "94000000-0000-4000-8000-000000000003",
+      }),
+    ).toMatchObject({ version: "1" });
+    expect(
+      merchantSendNotificationTestCommandV1.safeParse({
+        version: "1",
+        workspaceId: "94000000-0000-4000-8000-000000000009",
+        eventType: "loyalty.points.released",
+        idempotencyKey: "notification:test:94000000",
+        correlationId: "94000000-0000-4000-8000-000000000003",
+        organizationId: "94000000-0000-4000-8000-000000000004",
+        recipientEmail: "victim@example.test",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("accepts exact aggregate health without contacts or provider bodies", () => {
+    const templateByEvent = {
+      "loyalty.points.earned": ["points", "pendingUntil"],
+      "loyalty.points.released": ["points", "availableBalance"],
+      "loyalty.points.expiring": ["points", "expiresAt", "daysRemaining"],
+      "loyalty.reward.changed": ["rewardReservationId", "rewardCode", "state"],
+      "loyalty.tier.changed": ["fromTierCode", "toTierCode", "effectiveAt"],
+      "loyalty.referral.changed": ["referralId", "party", "state"],
+    } as const;
+    const workspace = {
+      schemaVersion: "1",
+      generatedAt: "2026-08-25T08:00:00Z",
+      deploymentMode: "self_hosted",
+      entitlementEnabled: true,
+      templates: Object.entries(templateByEvent).map(
+        ([eventType, allowedTokens], index) => ({
+          ...releasedTemplate,
+          templateId: `94000000-0000-4000-8000-${String(index + 10).padStart(12, "0")}`,
+          templateCode: eventType.split(".").slice(1).join("_"),
+          eventType,
+          allowedTokens,
+          subjectTemplate: "Notification",
+          textTemplate: "Notification body.",
+        }),
+      ),
+      consent: {
+        activeCustomers: "10",
+        loyaltyTransactional: {
+          subscribed: "8",
+          unsubscribed: "1",
+          suppressed: "1",
+        },
+        loyaltyMarketing: {
+          subscribed: "3",
+          unsubscribed: "6",
+          suppressed: "1",
+        },
+      },
+      providers: ["smtp", "klaviyo", "webhook"].map((provider) => ({
+        provider,
+        enabled: provider === "smtp",
+        pending: "1",
+        processing: "0",
+        retryable: "0",
+        held: "0",
+        completed: "2",
+        suppressed: "0",
+        contactUnavailable: "0",
+        deadLetter: "0",
+        manualReview: "0",
+        oldestOutstandingAt: "2026-08-25T07:00:00Z",
+      })),
+      issues: [
+        {
+          provider: "smtp",
+          kind: "test",
+          referenceId: "94000000-0000-4000-8000-000000000020",
+          eventType: "loyalty.points.released",
+          state: "manual_review",
+          attemptCount: 1,
+          errorCode: "smtp_outcome_ambiguous",
+          updatedAt: "2026-08-25T08:00:00Z",
+        },
+      ],
+    };
+    expect(merchantNotificationWorkspaceV1.parse(workspace)).toMatchObject({
+      entitlementEnabled: true,
+    });
+    expect(
+      merchantNotificationWorkspaceV1.safeParse({
+        ...workspace,
+        recipientEmail: "member@example.test",
+      }).success,
+    ).toBe(false);
   });
 });

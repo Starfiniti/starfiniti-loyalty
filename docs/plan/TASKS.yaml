@@ -1171,8 +1171,34 @@ tasks:
           - the worker profile remains disabled with no production endpoint secret subscription or delivery
       - id: M08-S05-TEMPLATES-AND-HEALTH
         status: in_progress
+        hypothesis: Safe tenant-owned message control and exact delivery health reduce launch mistakes without expanding contact or provider authority.
+        baseline: Six immutable system SMTP templates exist but merchants cannot customize or test them and no merchant notification-health projection exists.
+        targets:
+          - every accepted delivery retains one exact immutable system or tenant template version
+          - test delivery accepts no recipient and resolves only the requesting merchant's verified Auth email at dispatch authorization
+          - health and suppression reads contain zero contact payload destination secret signature provider body worker identity or arbitrary error text
         acceptance:
           - merchants can manage versioned English templates send tests and inspect consent suppression retry and dead-letter health without contact or secret disclosure
+          - owner/admin publication is Auth-derived idempotent token-allowlisted audited and cannot mutate accepted or historical content
+          - safe text authoring generates deterministic escaped HTML while arbitrary markup scripts styles URLs files and remote assets fail closed
+          - test email uses the isolated SMTP queue and existing bounded retry or ambiguity policy without blocking normal delivery or value processing
+          - aggregate consent and provider health plus bounded canonical issue evidence remain inspectable when rollout is disabled
+        failure_modes:
+          - browser chooses organization actor recipient version hash active binding or sample value
+          - mutable content changes an accepted delivery after retry
+          - unknown token markup URL or control character survives publication
+          - analyst auditor operator or revoked member publishes content or sends a test
+          - malformed read container is presented as empty healthy state
+          - queue health leaks contact payload destination fingerprint worker reference or provider response
+        rollout: Deploy private version, test-queue, and read boundary disabled first; verify a local SMTP sink and responsive browser fixture before a single reviewed self-hosted tenant test.
+        rollback: Block new versions and tests while retaining system fallback, active binding, historical content, accepted deliveries, immutable attempts, health reads, and every value path.
+        verification:
+          - contract tests for content tokens generated HTML commands exact aggregates and minimized issues
+          - pgTAP for grants RLS Auth roles entitlement idempotency conflicts immutable versions exact delivery binding verified-actor test resolution retries ambiguity and no ledger change
+          - real SMTP sink worker tests for visible test prefix exact active version no arbitrary recipient timeout duplicate and post-authorization ambiguity
+          - server read/action tests for malformed containers role failures and independent catalogue/health degradation
+          - desktop and mobile browser tests for keyboard template editing preview test status consent summary health table dark mode and zero diagnostics
+          - exact-head baseline database replay images WooCommerce matrix secret scan and disabled deployment smoke
       - id: M08-S06-CANARY-AND-CLOSE
         status: planned
         acceptance:
@@ -1187,6 +1213,7 @@ tasks:
         docs/architecture/ADR/0032-isolated-database-authorized-smtp-delivery.md,
         docs/architecture/ADR/0033-tenant-bound-klaviyo-projection-and-consent-sync.md,
         docs/architecture/ADR/0034-standard-hmac-webhooks-with-pinned-public-destinations.md,
+        docs/architecture/ADR/0035-immutable-tenant-email-templates-and-actor-bound-tests.md,
         docs/api/OUTBOUND_WEBHOOKS.md,
         docs/operations/SMTP.md,
         docs/operations/KLAVIYO.md,
