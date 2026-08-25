@@ -17,6 +17,12 @@ msgstr ""
 msgid "Base64 signing key"
 msgstr ""
 
+msgid "Cart and Checkout Blocks data"
+msgstr ""
+
+msgid "Cart and Checkout Blocks panel"
+msgstr ""
+
 msgid "Connection settings saved."
 msgstr ""
 
@@ -29,6 +35,9 @@ msgstr ""
 msgid "Delivery state"
 msgstr ""
 
+msgid "Enable the optional local loyalty panel. It uses cached data only and can be turned off without affecting balances, coupons, or checkout."
+msgstr ""
+
 msgid "Enter a reward code in the native coupon field at cart or checkout."
 msgstr ""
 
@@ -39,6 +48,9 @@ msgid "Event type"
 msgstr ""
 
 msgid "Events"
+msgstr ""
+
+msgid "Expose the bounded local loyalty snapshot through WooCommerce Store API. Enable this before the optional panel during rollout."
 msgstr ""
 
 #. translators: %s is a localized date.

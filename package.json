@@ -37,7 +37,7 @@
     "entitlements:validate": "node scripts/validate-entitlements.mjs",
     "architecture:validate": "node scripts/validate-architecture.mjs",
     "accessibility:validate": "node scripts/validate-accessibility.mjs",
-    "woocommerce:validate": "node scripts/validate-woocommerce.mjs && node scripts/validate-woocommerce-localization.mjs && node scripts/validate-woocommerce-storefront.mjs",
+    "woocommerce:validate": "node scripts/validate-woocommerce.mjs && node scripts/validate-woocommerce-localization.mjs && node scripts/validate-woocommerce-storefront.mjs && node scripts/validate-woocommerce-blocks.mjs",
     "woocommerce:localization:validate": "node scripts/validate-woocommerce-localization.mjs",
     "woocommerce:package": "node scripts/package-woocommerce.mjs",
     "woocommerce:keys": "node scripts/generate-woocommerce-signing-pool.mjs",

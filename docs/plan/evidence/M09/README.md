@@ -1,6 +1,6 @@
 # M09 Evidence — Storefront Experience
 
-Status: in progress. M09-S01 through M09-S03 are complete; M09-S04 is active. Blocks integration, progressive-panel budget, presentation hardening, accessibility/outage review, and canary evidence remain required for module closure.
+Status: in progress. M09-S01 through M09-S03 are complete; M09-S04 implementation and local verification are complete pending exact-head Linux/runtime-matrix evidence. Presentation hardening, full accessibility/outage review, and canary evidence remain required for module closure.
 
 ## S01 — Auth-derived customer experience contract
 
@@ -35,8 +35,19 @@ Status: in progress. M09-S01 through M09-S03 are complete; M09-S04 is active. Bl
 - Budgets: 0 bytes connector JavaScript, 0 bytes connector CSS, 0 render-time Hub calls, 32 KiB per snapshot, 25 customer selectors per poll, and about 30 KiB combined storefront/snapshot PHP under a 48 KiB ceiling.
 - Rollback: stop queueing the capability and remove enhanced hooks. The last valid cache, secure account link, native coupons, local commerce outbox, and every canonical ledger/value record remain intact.
 
+## S04 — Cart and Checkout Blocks progressive panel
+
+- Exact-head CI: pending the implementation commit.
+- Architecture: ADR-0038 registers one `wc/store/cart` extension under `starfiniti-loyalty`, derives only the logged-in user's strict local snapshot, and uses the official `IntegrationInterface` plus `ExperimentalOrderMeta`. The display projection accepts no scope or value selector and cannot reserve, redeem, issue, capture, or cancel value.
+- Rollout: separate non-autoloaded Blocks-data and panel flags default off. The data response can be observed first; enabling the panel also enables its dependency. Disabling the panel removes its script, style, and no-script enhancement while native coupons, classic placements, hosted access, and the separately controlled data canary remain intact.
+- Privacy and failure behavior: fresh data is bounded to exact string-form available points, safe programme/tier labels, one same-origin account URL, and three reward summaries. Stale data contains no balance, programme, tier, or reward value. Unsafe account URLs fail closed in PHP and JavaScript, and the panel contains no request, socket, dynamic-HTML, remote-code, or absolute-provider primitive.
+- Budgets: the reviewed source is 3,821 bytes/1,177 bytes gzip JavaScript and 980 bytes/430 bytes gzip CSS against hard 4 KiB/2 KiB compressed ceilings. Classic placements retain their independent zero-JavaScript and zero-CSS budget. All panel rendering makes zero Hub requests.
+- Browser evidence: the real unbundled panel and production stylesheet passed Chromium DOM, region naming, visible-focus, same-origin-link, fresh/stale, unsafe-link, mobile overflow, and zero-diagnostic checks at 900×700 and 390×844. Retained captures: [desktop](./woocommerce-blocks-desktop.png) and [mobile](./woocommerce-blocks-mobile.png).
+- Runtime contract: every minimum/current HPOS/legacy cell must exercise default-off and staged flags, integration handles, the no-script path, actual fresh/stale `/wc/store/v1/cart` responses, native classic/Store API coupons, and forced Hub failure before this slice closes.
+- Rollback: disable the panel first and Blocks data second. No database migration or value-bearing WordPress data is introduced, and the existing local snapshot, native coupon, outbox, reservation, and canonical ledger boundaries remain unchanged.
+
 ## Remaining
 
-- S04 Blocks data and progressively enhanced panel.
+- S04 exact-head Linux and four-cell WooCommerce runtime evidence.
 - S05 branding, accessibility, and outage hardening.
 - S06 disabled deployment, Starfiniti canary, reconciliation, rollback, and score.

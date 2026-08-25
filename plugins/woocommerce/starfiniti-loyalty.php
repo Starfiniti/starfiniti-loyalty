@@ -34,6 +34,11 @@ add_action('before_woocommerce_init', static function (): void {
             __FILE__,
             true
         );
+        \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
+            'cart_checkout_blocks',
+            __FILE__,
+            true
+        );
     }
 });
 
@@ -52,6 +57,7 @@ add_action('plugins_loaded', static function (): void {
     require_once __DIR__ . '/src/class-settings.php';
     require_once __DIR__ . '/src/class-customer-claim.php';
     require_once __DIR__ . '/src/class-experience-snapshot.php';
+    require_once __DIR__ . '/src/class-blocks.php';
     require_once __DIR__ . '/src/class-referrals.php';
     require_once __DIR__ . '/src/class-outbox.php';
     require_once __DIR__ . '/src/class-commands.php';

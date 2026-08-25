@@ -26,9 +26,11 @@ function filesBelow(directory) {
 const pluginFiles = filesBelow(pluginRoot);
 const javascriptBytes = pluginFiles
   .filter((path) => /\.(?:js|mjs)$/iu.test(path))
+  .filter((path) => !path.endsWith(join("assets", "blocks.js")))
   .reduce((total, path) => total + statSync(path).size, 0);
 const stylesheetBytes = pluginFiles
   .filter((path) => /\.css$/iu.test(path))
+  .filter((path) => !path.endsWith(join("assets", "blocks.css")))
   .reduce((total, path) => total + statSync(path).size, 0);
 
 for (const [label, actual, limit] of [
@@ -80,5 +82,5 @@ for (const required of [
 }
 
 console.log(
-  `Validated WooCommerce storefront budgets: ${javascriptBytes} B JS, ${stylesheetBytes} B CSS, ${statSync(storefrontPath).size + statSync(snapshotPath).size}/${budgets.storefrontPhpBytes} B PHP, ${budgets.hubRequestsPerRender} hub requests per render, and at most ${budgets.activeCoupons} active rewards.`,
+  `Validated classic WooCommerce storefront budgets: ${javascriptBytes} B unrelated JS, ${stylesheetBytes} B unrelated CSS, ${statSync(storefrontPath).size + statSync(snapshotPath).size}/${budgets.storefrontPhpBytes} B PHP, ${budgets.hubRequestsPerRender} hub requests per render, and at most ${budgets.activeCoupons} active rewards.`,
 );

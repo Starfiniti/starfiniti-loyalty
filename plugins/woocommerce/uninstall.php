@@ -17,6 +17,8 @@ foreach ([
     'starfiniti_loyalty_key_version',
     'starfiniti_loyalty_signing_key_encrypted',
     'starfiniti_loyalty_snapshot_pending',
+    'starfiniti_loyalty_blocks_data_enabled',
+    'starfiniti_loyalty_progressive_panel_enabled',
 ] as $option) {
     delete_option($option);
 }

@@ -99,6 +99,7 @@ const acceptedAdrs = [
   "0034-standard-hmac-webhooks-with-pinned-public-destinations.md",
   "0035-immutable-tenant-email-templates-and-actor-bound-tests.md",
   "0037-demand-driven-woocommerce-snapshots-and-classic-placements.md",
+  "0038-namespaced-store-api-and-flagged-blocks-panel.md",
 ];
 
 for (const adr of acceptedAdrs) {

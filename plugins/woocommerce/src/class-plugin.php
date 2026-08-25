@@ -20,6 +20,7 @@ final class Plugin
         add_action('woocommerce_thankyou', [self::class, 'renderPostPurchaseLoyalty'], 20, 1);
         Referrals::boot();
         ExperienceSnapshot::boot();
+        Blocks::boot();
         Outbox::boot();
         Commands::boot();
         Privacy::boot();
@@ -77,6 +78,14 @@ final class Plugin
         self::textField('signing_key', __('Base64 signing key', 'starfiniti-loyalty'), '', 'password', Settings::hasSigningKey()
             ? __('Leave blank to keep the encrypted key already stored.', 'starfiniti-loyalty')
             : __('Paste the one-time key issued by the hub.', 'starfiniti-loyalty'));
+        echo '<tr><th scope="row">' . esc_html__('Cart and Checkout Blocks data', 'starfiniti-loyalty') . '</th><td><label>';
+        echo '<input name="blocks_data" type="checkbox" value="yes" ' . checked(Settings::blocksDataEnabled(), true, false) . '> ';
+        echo esc_html__('Expose the bounded local loyalty snapshot through WooCommerce Store API. Enable this before the optional panel during rollout.', 'starfiniti-loyalty');
+        echo '</label></td></tr>';
+        echo '<tr><th scope="row">' . esc_html__('Cart and Checkout Blocks panel', 'starfiniti-loyalty') . '</th><td><label>';
+        echo '<input name="progressive_panel" type="checkbox" value="yes" ' . checked(Settings::progressivePanelEnabled(), true, false) . '> ';
+        echo esc_html__('Enable the optional local loyalty panel. It uses cached data only and can be turned off without affecting balances, coupons, or checkout.', 'starfiniti-loyalty');
+        echo '</label></td></tr>';
         echo '</tbody></table>';
         submit_button(__('Save connection', 'starfiniti-loyalty'));
         echo '</form>';

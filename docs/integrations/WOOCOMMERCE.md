@@ -2,7 +2,7 @@
 
 - Documentation reviewed: 2026-08-25
 - REST API: `wc/v3` (current official integration)
-- References: https://developer.woocommerce.com/docs/apis/rest-api/, https://developer.woocommerce.com/docs/extensions/core-concepts/adding-actions-and-filters/, https://developer.woocommerce.com/docs/theming/theme-development/classic-theme-developer-handbook, https://woocommerce.github.io/code-reference/classes/WC-Order.html, https://developer.wordpress.org/reference/functions/update_option/, https://developer.wordpress.org/plugins/privacy/adding-the-personal-data-eraser-to-your-plugin/, and https://developer.wordpress.org/reference/functions/load_plugin_textdomain/
+- References: https://developer.woocommerce.com/docs/apis/rest-api/, https://developer.woocommerce.com/docs/apis/store-api/extending-store-api/extend-store-api-add-data/, https://developer.woocommerce.com/docs/block-development/reference/integration-interface/, https://developer.woocommerce.com/docs/block-development/reference/slot-fills/, https://developer.woocommerce.com/docs/block-development/extensible-blocks/cart-and-checkout-blocks/available-slot-fills/, https://developer.woocommerce.com/docs/extensions/core-concepts/adding-actions-and-filters/, https://developer.woocommerce.com/docs/theming/theme-development/classic-theme-developer-handbook, https://woocommerce.github.io/code-reference/classes/WC-Order.html, https://developer.wordpress.org/reference/functions/update_option/, https://developer.wordpress.org/plugins/privacy/adding-the-personal-data-eraser-to-your-plugin/, and https://developer.wordpress.org/reference/functions/load_plugin_textdomain/
 
 WooCommerce is a thin connector. It uses HTTPS, least-privilege credentials, signed outbound events, Action Scheduler retries, local queue diagnostics, HPOS declarations, and tested Cart/Checkout Blocks plus documented classic-checkout compatibility. Monetary API values arrive as decimal strings and must be converted to integer minor units without floating-point arithmetic. Central failure must never block checkout.
 
@@ -51,24 +51,34 @@ WooCommerce is a thin connector. It uses HTTPS, least-privilege credentials, sig
 - My Account may show cached core balances regardless of the enhancement entitlement. Product, cart, checkout, and post-purchase enhancements require the database-authored flag. After 24 hours, cached values are not shown; the placement displays generic refresh guidance and the local loyalty-account link.
 - A snapshot cannot reserve or redeem points, issue/capture a coupon, qualify a tier, or change ledger state. All live value actions remain in the hosted Auth-derived flow or native WooCommerce coupon boundary.
 
+## Cart and Checkout Blocks
+
+- The plugin declares Cart and Checkout Blocks compatibility and registers one `wc/store/cart` extension under `starfiniti-loyalty`. The callback derives the logged-in WordPress user and reads only the strict local snapshot; it accepts no browser-supplied scope or value.
+- `blocks_data` and `progressive_panel` are separate non-autoloaded, server-side flags that default off. Data can be canaried first. Enabling the panel also enables its data dependency; disabling either does not change balances, native coupons, checkout, or hosted access.
+- Fresh responses expose version/state, one same-store account URL, exact string-form available points, safe programme/tier labels, and at most three reward summaries. Stale responses expose no balance, label, tier, or reward value.
+- The optional integration uses WooCommerce `IntegrationInterface` and `ExperimentalOrderMeta`, reads the existing Store API `extensions` object, and makes no request. Its only dependencies are `wc-blocks-checkout`, `wp-element`, `wp-i18n`, and `wp-plugins`; it loads no editor asset.
+- Enabled Cart and Checkout blocks retain a semantic local `<noscript>` account path. The panel and fallback never apply or issue value; native WooCommerce coupons remain the checkout mechanism.
+- Because `ExperimentalOrderMeta` is experimental, minimum/current WooCommerce runtime cells are mandatory. Rollback disables the panel first and Store API data second while classic placements and every value-bearing path remain available.
+
 ## Localization
 
 - Every customer and administration string uses the literal `starfiniti-loyalty` text domain. `Domain Path: /languages` and an `init`-time `load_plugin_textdomain` registration support the self-distributed ZIP without loading translations too early.
 - `languages/starfiniti-loyalty.pot` is the canonical translator template and must exactly match source strings. `npm run woocommerce:localization:validate` rejects missing/stale messages, missing customer strings, empty translations, and placeholder drift.
-- The launch package is English-only. All 63 customer/admin strings use the standard WordPress text domain and have exact POT coverage, so future catalogs can be added deliberately without changing connector authority.
+- The launch package is English-only. All 67 customer/admin strings use the standard WordPress text domain and have exact POT coverage, so future catalogs can be added deliberately without changing connector authority.
 
 ## Storefront budgets
 
 The connector's production customer surfaces deliberately use WooCommerce's native server-rendered markup and coupon field. The enforced Phase 9 budgets are:
 
-- 0 bytes of connector storefront JavaScript and 0 bytes of connector CSS;
+- 0 bytes of connector JavaScript and 0 bytes of connector CSS for the complete classic path;
+- at most 4 KiB gzip JavaScript and 2 KiB gzip CSS for the separately flagged Blocks panel;
 - 0 hub requests while rendering My Account, product, cart, classic checkout, or post-purchase loyalty surfaces, validating coupons, or completing checkout;
 - at most 20 active reward coupons in one account response;
 - at most 10 cached reward summaries, 8 earning summaries, 25 refresh selectors per poll, and 32 KiB per stored snapshot;
 - at most 48 KiB of account loyalty markup, 8 KiB for the cart notice, and 4 KiB for each other classic placement in the real runtime smoke; and
 - at most 48 KiB combined for the PHP storefront/render-and-snapshot boundary, with any expansion requiring an explicit reviewed budget change.
 
-`scripts/validate-woocommerce-storefront.mjs` fails the complete repository gate if connector scripts/styles, inline executable/style tags, browser/network request calls, unbounded coupon reads, or missing escaping/login guards enter the storefront boundary. Every minimum/current HPOS/legacy runtime renders all five classic surfaces with the hub forcibly unavailable, checks semantic bounded asset-free markup, and proves zero HTTP calls.
+`scripts/validate-woocommerce-storefront.mjs` fails the complete repository gate if unrelated connector scripts/styles, inline executable/style tags, browser/network request calls, unbounded coupon reads, or missing escaping/login guards enter the classic boundary. `scripts/validate-woocommerce-blocks.mjs` independently enforces the reviewed Blocks asset budgets, dependencies, accessible fresh/stale rendering, and zero network/dangerous primitives. Every minimum/current HPOS/legacy runtime renders all five classic surfaces and executes the real namespaced Cart Store API under forced Hub failure.
 
 ## Guided connection setup
 

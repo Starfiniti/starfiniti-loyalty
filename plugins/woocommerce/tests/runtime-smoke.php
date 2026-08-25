@@ -3,6 +3,7 @@
 use Automattic\WooCommerce\Utilities\OrderUtil;
 use Automattic\WooCommerce\StoreApi\Utilities\CartController;
 use Starfiniti\Loyalty\Commands;
+use Starfiniti\Loyalty\Blocks;
 use Starfiniti\Loyalty\CustomerClaim;
 use Starfiniti\Loyalty\ExperienceSnapshot;
 use Starfiniti\Loyalty\Outbox;
@@ -459,6 +460,75 @@ $rejectCheckoutHttp = static function ($preempt) use (&$checkoutHttpRequests) {
 add_filter('pre_http_request', $rejectCheckoutHttp, 10, 1);
 
 wp_set_current_user((int) $customerId);
+starfiniti_runtime_assert(
+    ! Settings::blocksDataEnabled()
+    && ! Settings::progressivePanelEnabled()
+    && [] === Blocks::storeApiData(),
+    'Blocks data and panel default to server-side disabled without hiding core value'
+);
+update_option('starfiniti_loyalty_blocks_data_enabled', 'yes', false);
+update_option('starfiniti_loyalty_progressive_panel_enabled', 'yes', false);
+$blocksData = Blocks::storeApiData();
+$blocksRegistry = new class {
+    public $integration = null;
+
+    public function register($integration): void
+    {
+        $this->integration = $integration;
+    }
+};
+Blocks::registerIntegration($blocksRegistry);
+$blocksIntegration = $blocksRegistry->integration;
+starfiniti_runtime_assert(
+    is_object($blocksIntegration)
+    && $blocksIntegration->get_name() === 'starfiniti-loyalty'
+    && $blocksIntegration->get_editor_script_handles() === []
+    && ($blocksData['availablePoints'] ?? null) === '150'
+    && ($blocksData['currentTierName'] ?? null) === 'Bloom'
+    && count($blocksData['rewards'] ?? []) === 1
+    && ! array_key_exists('email', $blocksData)
+    && ! array_key_exists('customerId', $blocksData),
+    'Blocks integration consumes only the bounded local PII-free snapshot'
+);
+$blocksIntegration->initialize();
+$blocksScript = wp_scripts()->registered['starfiniti-loyalty-blocks'] ?? null;
+starfiniti_runtime_assert(
+    is_object($blocksScript)
+    && $blocksScript->deps === ['wc-blocks-checkout', 'wp-element', 'wp-i18n', 'wp-plugins']
+    && wp_style_is('starfiniti-loyalty-blocks', 'enqueued'),
+    'official Blocks integration registers only its reviewed dependency and style handles'
+);
+$noScriptMarkup = Blocks::appendNoScript('<div>cart</div>', []);
+starfiniti_runtime_assert(
+    str_contains($noScriptMarkup, '<noscript>')
+    && str_contains($noScriptMarkup, '150 points available')
+    && str_contains($noScriptMarkup, wc_get_account_endpoint_url('loyalty')),
+    'Cart and Checkout Blocks retain a local no-script loyalty path'
+);
+update_option('starfiniti_loyalty_progressive_panel_enabled', 'no', false);
+$disabledRegistry = new class {
+    public $integration = null;
+
+    public function register($integration): void
+    {
+        $this->integration = $integration;
+    }
+};
+Blocks::registerIntegration($disabledRegistry);
+$disabledBlocksData = Blocks::storeApiData();
+starfiniti_runtime_assert(
+    ($disabledBlocksData['availablePoints'] ?? null) === '150'
+    && null === $disabledRegistry->integration
+    && '<div>cart</div>' === Blocks::appendNoScript('<div>cart</div>', []),
+    'Blocks data canary remains independently observable while the panel and no-script enhancement are disabled'
+);
+update_option('starfiniti_loyalty_blocks_data_enabled', 'no', false);
+starfiniti_runtime_assert(
+    [] === Blocks::storeApiData(),
+    'the Store API presentation projection can be disabled independently'
+);
+update_option('starfiniti_loyalty_blocks_data_enabled', 'yes', false);
+update_option('starfiniti_loyalty_progressive_panel_enabled', 'yes', false);
 ob_start();
 Plugin::renderAccount();
 $accountMarkup = (string) ob_get_clean();
@@ -522,6 +592,41 @@ $cart = $cartController->get_cart_instance();
 $cart->empty_cart();
 $cartItemKey = $cart->add_to_cart($productId, 1);
 starfiniti_runtime_assert(false !== $cartItemKey, 'classic cart fixture contains the product');
+$storeApiResponse = rest_do_request(new WP_REST_Request('GET', '/wc/store/v1/cart'));
+$storeApiPayload = $storeApiResponse->get_data();
+$storeApiLoyalty = is_array($storeApiPayload)
+    ? ($storeApiPayload['extensions']['starfiniti-loyalty'] ?? null)
+    : null;
+starfiniti_runtime_assert(
+    ! $storeApiResponse->is_error()
+    && is_array($storeApiLoyalty)
+    && ($storeApiLoyalty['version'] ?? null) === '1'
+    && ($storeApiLoyalty['availablePoints'] ?? null) === '150'
+    && count($storeApiLoyalty['rewards'] ?? []) <= 3,
+    'the real namespaced Store API cart response exposes the bounded local projection'
+);
+$staleSnapshot = [
+    ...$storedSnapshot,
+    'generatedAt' => gmdate('c', time() - 3 * HOUR_IN_SECONDS),
+    'refreshAfter' => gmdate('c', time() - 2 * HOUR_IN_SECONDS),
+    'staleAfter' => gmdate('c', time() - HOUR_IN_SECONDS),
+];
+update_option('starfiniti_loyalty_snapshot_' . $customerId, $staleSnapshot, false);
+$staleStoreApiResponse = rest_do_request(new WP_REST_Request('GET', '/wc/store/v1/cart'));
+$staleStoreApiPayload = $staleStoreApiResponse->get_data();
+$staleStoreApiLoyalty = is_array($staleStoreApiPayload)
+    ? ($staleStoreApiPayload['extensions']['starfiniti-loyalty'] ?? null)
+    : null;
+starfiniti_runtime_assert(
+    ! $staleStoreApiResponse->is_error()
+    && is_array($staleStoreApiLoyalty)
+    && ($staleStoreApiLoyalty['state'] ?? null) === 'stale'
+    && ($staleStoreApiLoyalty['availablePoints'] ?? null) === ''
+    && ($staleStoreApiLoyalty['currentTierName'] ?? null) === ''
+    && ($staleStoreApiLoyalty['rewards'] ?? null) === [],
+    'the real Store API fails closed without balance tier or reward value when local data is stale'
+);
+update_option('starfiniti_loyalty_snapshot_' . $customerId, $storedSnapshot, false);
 starfiniti_runtime_assert(
     $cart->apply_coupon($couponCode) && $cart->has_discount($couponCode),
     'classic cart applies the native loyalty coupon'
