@@ -6,7 +6,7 @@ Deliver the enterprise WooCommerce roadmap in `docs/plan/ENTERPRISE_ROADMAP.md` 
 
 ## Current module
 
-M10 — analytics, reporting, and liability is the active dependency-safe repository module while M04–M09 retain reviewed merge/deployment/canary/reconciliation closeout. M00, M02, and M03 are complete; M01 remains active at its approved-real-store and full-service-recovery external gates.
+M11 — multi-store, currency, API, and ecosystem is the active dependency-safe repository module while M04–M10 retain reviewed merge/deployment/canary/reconciliation closeout. M00, M02, and M03 are complete; M01 remains active at its approved-real-store and full-service-recovery external gates.
 
 M06-S01 through S05 are exact-head green on draft PR #31. Runs `31763563259`, `31764805380`, `31766887239`, `31768294674`, and `31770764870` passed strict policy, signed offline capture, first attribution, historical qualification/cooling, two-sided exactly-once issuance/compensation, Auth-derived reversible fraud review, customer sharing/progress/history, and a fact-sourced merchant funnel. The latest passed a clean 41-migration/1,700-assertion replay, all three concurrency probes, both images, baseline, 126 dashboard tests, 136 contract tests, and all four WooCommerce runtimes. Production-build desktop/mobile browser review passed with no critical accessibility, overflow, or diagnostic issue. M06-S06 reviewed merge, disabled deployment, Starfiniti canary, reconciliation, and scoring is active.
 
@@ -25,6 +25,8 @@ M08-S05 is exact-head green at `a377ef7` on draft PR #32. ADR-0035 adds immutabl
 M09-S01 through S05 are complete on draft PR #36. The Auth-derived hosted experience covers overview, earning, rewards, VIP, referrals, immutable history, and account states; demand-driven signed WooCommerce snapshots, classic placements, official namespaced Store API data, and a separately flagged Blocks panel use only strict local state. ADR-0039 adds controlled English V2 branding and exact section composition. Exact-head run `32875639062` at `639eac4` passed all seven jobs after desktop, mobile, 320-pixel, 200%-scale, keyboard, reduced-motion, dark-theme, public-privacy, preview-state, and outage review. M09-S06 is active at 88/100 with a mandatory 30-check canary validator; reviewed release, restored Proxmox access, an explicitly approved WooCommerce store, disabled deployment, production outage/rollback proof, exact reconciliation, observation, and a score of at least 90 remain.
 
 M10-S01 through S05 are complete on draft PR #37. Dictionary V4 publishes 103 exact definitions across four independently degradable reports and one strict aggregate JSON bundle. Private 24-hour payloads, five-minute subject/session-bound one-use downloads, owner/admin IANA-local schedules, bounded lease/retry/expiry handling, and the separately deployable reporting worker preserve tenant and loyalty-value isolation. The command center binds every module to one exact database snapshot and passed its Hub-style loading/stale/empty/error, desktop/mobile, keyboard, reduced-motion, contrast, overflow, and English-only review. Exact-head run `32901023124` at `65f1dfb` passed root checks, both production images, a clean 62-migration replay, all 49 pgTAP files with 2,611 assertions including the read-only legacy Overview shadow, all six concurrency probes, and all four WooCommerce runtimes. S06 is active with a 29-check fail-closed canary manifest and provisional 90/100 score, while release, operator, deployment, reconciliation, rollback, observation, and the 80% operability floor remain pending.
+
+M11-S01 is in progress on `codex/m11-multistore`. The first vertical slice preserves the existing programme-group wallet boundary while replacing implicit/mutable topology administration with exact isolated or explicit workspace allowlists, immutable revisions, Auth-derived PostgreSQL authority, optimistic concurrency, connector-history removal protection, minimized read models, and a responsive Operations editor. Local suites, production build, validators, and native Chrome desktop/mobile interaction/accessibility review pass; container replay, the 52 new pgTAP assertions, execution of the two-session revision race, exact-head CI, and the disabled Starfiniti canary remain before S01 closure.
 
 M05-S01 through S05 are exact-head green. M05-S06 shadow comparison found and fixed a predeployment Rose/Bloom/Icon displayed-versus-executable rate mismatch; all 36 V1/V2 award comparisons now match, and exact-head run `31760806620` passed. Reviewed merge, disabled deployment, a fresh recovery point, Starfiniti-only canary, reconciliation, and scoring remain open.
 
@@ -53,9 +55,9 @@ The active integrated baseline is released production commit `0ced4b666a55d836bd
 
 ## Next safe work
 
-1. M10: complete S06 exact-head shadow proof, reviewed release, disabled deployment, Starfiniti canary, reconciliation, rollback, observation, and category-floor scoring.
-2. M09: complete S06 reviewed release, disabled deployment, production outage/rollback proof, exact reconciliation, observation, and scoring when an approved store is available.
-3. M08: complete S06 disabled deployment, local SMTP sink, bounded provider canaries, exact reconciliation, rollback proof, and module scoring without enabling unapproved production delivery.
+1. M11: complete S01 database replay, concurrency, browser review, exact-head CI, disabled canary, and reconciliation; then implement explicit cross-workspace customer linking.
+2. M10: complete S06 reviewed release, disabled deployment, Starfiniti canary, reconciliation, rollback, observation, and category-floor scoring.
+3. M09/M08: complete reviewed releases, disabled deployments, provider/store outage proof, exact reconciliation, observation, and scoring as external inputs permit.
 4. M07/M06/M05: complete reviewed stacked merges, disabled deployments, fresh recovery points, Starfiniti-only canaries, exact reconciliation, smoke, and scores.
 5. M01: connect an approved real WooCommerce store when access is supplied and complete its value, outage, rotation, alert, and clean-room recovery gate.
 

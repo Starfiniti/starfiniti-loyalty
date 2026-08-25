@@ -58,6 +58,14 @@ The wrapper does not return customer or channel identifiers, raw commerce payloa
 
 All commands are `SECURITY DEFINER`, owned by the `NOLOGIN` `loyalty_owner` role, use an empty search path, schema-qualify every object, revoke default `PUBLIC` execution, and expose `EXECUTE` only to `authenticated`.
 
+### Programme-group workspace sharing V1
+
+`get_programme_group_sharing_policy_v1(target_programme_group_public_id)` returns one minimized, reconciled policy to a live organization member. It exposes the public programme-group selector/name, immutable revision, `isolated` or `explicit-workspace-allowlist` mode, current entitlement state, and at most 100 active workspace selectors/names/slugs with exact link and connector-removal-protection flags. It exposes no organization key, actor, customer, wallet, ledger, connector credential, source identity, or commerce payload. Unknown, revoked, cross-tenant, inactive, empty, over-limit, or projection-drift scope returns no document or fails closed.
+
+`configure_programme_group_sharing_v1(target_programme_group_public_id, target_sharing_mode, target_workspace_public_ids, target_expected_revision, target_idempotency_key, target_correlation_id)` is an owner/admin-only browser command gated by the database-authoritative `ecosystem.api` entitlement. Isolated mode requires exactly one active same-tenant workspace; explicit sharing requires 2–25 unique exact workspace selectors. PostgreSQL derives organization, actor, internal group/workspace keys, locks the scope, enforces optimistic revision and idempotency, and atomically writes the current link projection, one immutable policy version, exact version membership, and a minimized audit event.
+
+A workspace with a provisioned commerce connection for a programme inside the group is removal-protected. The command never copies or merges wallets, never links customers by email, writes no ledger value, and issues no WooCommerce command. Same-organization workspaces remain isolated unless their public IDs are present in an accepted exact allowlist. See ADR-0042; M11-S02 owns explicit verified cross-workspace customer linking.
+
 ### `create_programme_command`
 
 Inputs:

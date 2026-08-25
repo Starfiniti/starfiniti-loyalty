@@ -1,5 +1,12 @@
 # Iteration Log
 
+## 2026-08-25 — M11 explicit multi-store wallet scope
+
+- Accepted ADR-0042: programme groups remain the wallet boundary, same-organization membership grants no implicit link, and cross-workspace customer identity waits for an explicit verified M11-S02 workflow rather than email matching.
+- Added immutable sharing revisions and exact workspace membership, migration parity checks, RLS with revoked direct grants, a minimized member projection, and an owner/admin `ecosystem.api` command with group/workspace locks, optimistic revision, idempotency, audit, and connector-history removal protection.
+- Added strict public-selector contracts and a responsive Hub-style Operations control for isolated/shared modes, exact store selection, protected connector states, unavailable handling, and review-before-save English copy.
+- All 626 workspace tests, every workspace typecheck, targeted lint, production build, validators, 63-migration/50-pgTAP static validation, formatting, and diff checks pass. Native Chrome desktop/mobile review passed isolated-to-shared interaction, connector lock, exact review, keyboard focus, reduced motion, English-only output, mobile stacking, zero overflow, and zero unexpected diagnostics. Clean container replay, 52 new pgTAP assertions, two-session concurrency execution, exact-head CI, and canary remain open.
+
 ## 2026-08-25 — M10 shadow and canary gate
 
 - Added a 29-check machine-readable analytics closeout gate with exact category arithmetic, a 90/100 target, an 80% per-category floor, sensitive-key rejection, deterministic automatic failures, and a self-test that rejects false completion.

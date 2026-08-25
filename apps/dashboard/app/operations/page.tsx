@@ -1,5 +1,11 @@
 import { redirect } from "next/navigation";
-import { Activity, PlugZap, ShieldCheck, TriangleAlert } from "lucide-react";
+import {
+  Activity,
+  GitFork,
+  PlugZap,
+  ShieldCheck,
+  TriangleAlert,
+} from "lucide-react";
 import { MerchantShell } from "@/components/merchant-shell";
 import {
   canRetryConnectorEffect,
@@ -17,6 +23,7 @@ import {
 import { hasEntitlement } from "@/lib/entitlements";
 import { getConnectorOperations } from "@/lib/server/connector-operations";
 import { getEntitlementSnapshot } from "@/lib/server/entitlements";
+import { getProgrammeGroupSharingPolicy } from "@/lib/server/ecosystem";
 import { getMerchantProgrammeState } from "@/lib/server/programme";
 import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
 import { buildSupportDiagnostics } from "@/lib/support-diagnostics";
@@ -24,6 +31,7 @@ import { RetryEffectForm } from "./retry-effect-form";
 import { ActivitySourceProvisioningForm } from "./activity-source-provisioning-form";
 import { ConnectorProvisioningForm } from "./connector-provisioning-form";
 import { ReconciliationForm } from "./reconciliation-form";
+import { ProgrammeSharingForm } from "./programme-sharing-form";
 import { SupportDiagnosticsDownload } from "./support-diagnostics-download";
 
 function formatDate(value: string | null, locale: MerchantLocale): string {
@@ -53,10 +61,13 @@ export default async function OperationsPage({
     );
   }
   if (tenant.kind === "unassigned") redirect(merchantLocalePath("/", locale));
-  const [connections, programme, entitlements] = await Promise.all([
+  const [connections, programme, entitlements, sharing] = await Promise.all([
     getConnectorOperations(tenant.context),
     getMerchantProgrammeState(tenant.context),
     getEntitlementSnapshot(tenant.context),
+    tenant.context.programmeGroup
+      ? getProgrammeGroupSharingPolicy(tenant.context.programmeGroup.public_id)
+      : Promise.resolve({ kind: "not_configured" } as const),
   ]);
   const programmeV2Enabled = hasEntitlement(entitlements, "programme.v2");
   const mayRetry = canRetryConnectorEffect(tenant.context.membershipRole);
@@ -121,6 +132,25 @@ export default async function OperationsPage({
         </div>
 
         <SupportDiagnosticsDownload diagnostics={diagnostics} locale={locale} />
+
+        {sharing.kind === "ready" ? (
+          <ProgrammeSharingForm
+            mayConfigure={mayProvision}
+            policy={sharing.policy}
+          />
+        ) : (
+          <section className="customer-panel sharing-policy-unavailable">
+            <GitFork aria-hidden="true" />
+            <div>
+              <h2>Multi-store wallet scope unavailable</h2>
+              <p>
+                {sharing.kind === "not_configured"
+                  ? "Create and link the first active workspace before configuring programme sharing."
+                  : "The reviewed policy could not be verified. Existing wallet value and WooCommerce checkout are unaffected."}
+              </p>
+            </div>
+          </section>
+        )}
 
         {wooConnections.length === 0 ? (
           mayProvision &&

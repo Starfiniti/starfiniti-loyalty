@@ -1543,7 +1543,7 @@ tasks:
   - id: M11-ECOSYSTEM
     title: Add multi-store policy, currencies, service APIs, and ecosystem operations
     module: M11
-    status: planned
+    status: in_progress
     dependencies: [M10-ANALYTICS]
     hypothesis: Explicit sharing and scoped APIs enable larger merchants without implicit cross-tenant authority or currency ambiguity.
     baseline: One isolated workspace/programme link and signed WooCommerce integration exist.
@@ -1576,8 +1576,81 @@ tasks:
         currency property/reconciliation,
         TypeScript/PHP contracts,
       ]
-    risks: [R-001, R-002]
-    docs: [docs/integrations/MERCHANT_API.md, docs/api/WEBHOOKS.md]
+    slices:
+      - id: M11-S01-EXPLICIT-MULTI-STORE-SHARING
+        status: in_progress
+        hypothesis: A reviewed exact workspace allowlist can extend one programme-group wallet boundary without treating organization membership as value-sharing authority.
+        baseline: Programme groups and workspace links exist as mutable topology with no immutable policy revisions or merchant command.
+        metrics:
+          - implicit workspace links created = 0
+          - cross-tenant workspace selectors accepted = 0
+          - exact command retries creating another version = 0
+          - sharing commands creating ledger effects = 0
+          - connector-history workspaces removed = 0
+        acceptance:
+          - isolated mode retains exactly one active workspace and explicit shared mode requires 2 through 25 unique active workspace selectors
+          - PostgreSQL derives tenant actor role entitlement programme group and internal workspace keys from live Auth and public selectors
+          - every accepted change appends one immutable policy version exact workspace membership and minimized audit event while current topology remains reconciled
+          - owners and admins receive a responsive review-before-save merchant control while all other members receive a read-only minimized policy
+          - a workspace with a provisioned connector for this programme group cannot be removed by the sharing command
+          - policy changes never mutate a customer wallet ledger lot programme version connector event or WooCommerce checkout path
+        failure_modes:
+          - same-organization workspace is linked implicitly
+          - mutable link projection diverges from latest immutable policy
+          - stale revision or changed idempotency reuse overwrites topology
+          - suspended cross-tenant duplicate or caller-expanded workspace authority is accepted
+          - connected workspace removal strands connector and customer history
+          - unbounded workspace projection reaches the browser
+        security_boundaries:
+          - browser roles have no direct table access to immutable sharing history and no direct DML over current topology
+          - only a live owner/admin with ecosystem.api may execute the security-definer command
+          - the read model returns public group/workspace selectors names slugs link state revision entitlement and connector removal protection only
+          - group and selected workspace rows are locked before revision comparison and topology mutation
+        rollout: Deploy additive version tables and command first, verify migrated projection parity, expose read-only policy, then enable owner/admin controls for only the Starfiniti tenant.
+        rollback: Hide the control and stop new policy commands while retaining the last exact topology immutable revisions connector links customer access and all loyalty value.
+        verification:
+          - strict contract tests for isolated/shared cardinality unique selectors and minimized response shape
+          - pgTAP for RLS grants Auth roles tenancy revocation idempotency optimistic revision drift connector protection audit immutability and zero ledger mutation
+          - two-session same-group revision race proves at most one accepted next revision
+          - Hub-style desktop mobile keyboard contrast reduced-motion loading unavailable and protected-workspace browser review
+          - exact-head baseline clean migration replay production images and all four WooCommerce runtimes
+        evidence:
+          - additive contracts migration read and command boundaries plus 52 planned pgTAP assertions are implemented on codex/m11-multistore
+          - all 626 workspace tests every workspace typecheck targeted lint production build validators migration validation formatting and diff checks pass locally
+          - native Chrome desktop/mobile review passes protected-state shared-scope interaction exact review keyboard focus reduced motion English-only output mobile stacking zero overflow and zero unexpected diagnostics
+          - container replay concurrency execution exact-head CI and disabled production canary remain pending
+      - id: M11-S02-EXPLICIT-CROSS-WORKSPACE-CUSTOMER-LINKING
+        status: planned
+        acceptance:
+          - shared wallets require an explicit verified cross-workspace identity link and never merge by email alone
+          - unlinking preserves immutable value provenance and produces a reversible audited state
+      - id: M11-S03-MULTI-CURRENCY-EVIDENCE
+        status: planned
+        owner_inputs: [approved exchange-rate provider before live conversion]
+        acceptance:
+          - every conversion stores source amount currency rate provider timestamp rounding base amount and policy version
+          - mixed-currency analytics and liability remain unavailable until exact reconciliation passes
+      - id: M11-S04-SERVICE-ACCOUNTS-AND-INBOUND-APIS
+        status: planned
+        acceptance:
+          - scoped hashed service credentials support rotation revocation rate limits and idempotent activity/customer commands
+          - browser clients never receive server credentials or caller-selected tenant authority
+      - id: M11-S05-OUTBOUND-WEBHOOKS-CLIENTS-AND-OPERATIONS
+        status: planned
+        acceptance:
+          - signed minimized outbound webhooks have replay protection bounded retries rotation and deletion controls
+          - published TypeScript and PHP contracts plus integration health views match tested runtime behavior
+      - id: M11-S06-SHADOW-CANARY-AND-CLOSE
+        status: planned
+        acceptance:
+          - isolated and explicitly shared Starfiniti canaries reconcile wallets events currencies API requests and webhooks with module score at least 90 and every category above its floor
+    risks: [R-001, R-002, R-039]
+    docs:
+      [
+        docs/integrations/MERCHANT_API.md,
+        docs/api/WEBHOOKS.md,
+        docs/architecture/ADR/0042-versioned-explicit-programme-group-sharing.md,
+      ]
     evidence: [docs/plan/evidence/M11/README.md]
 
   - id: M12-MIGRATION

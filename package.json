@@ -53,7 +53,7 @@
     "db:start": "supabase db start",
     "db:reset": "supabase db reset --local",
     "db:test": "supabase test db supabase/tests --local",
-    "db:concurrency": "node scripts/verify-ledger-concurrency.mjs && node scripts/verify-reward-capacity-concurrency.mjs && node scripts/verify-referral-reward-concurrency.mjs && node scripts/verify-audience-snapshot-concurrency.mjs && node scripts/verify-campaign-capacity-concurrency.mjs && node scripts/verify-analytics-export-concurrency.mjs",
+    "db:concurrency": "node scripts/verify-ledger-concurrency.mjs && node scripts/verify-reward-capacity-concurrency.mjs && node scripts/verify-referral-reward-concurrency.mjs && node scripts/verify-audience-snapshot-concurrency.mjs && node scripts/verify-campaign-capacity-concurrency.mjs && node scripts/verify-analytics-export-concurrency.mjs && node scripts/verify-programme-group-sharing-concurrency.mjs",
     "db:verify": "node scripts/require-container-runtime.mjs && npm run db:start && npm run db:reset && npm run db:test && npm run db:concurrency",
     "db:stop": "supabase stop --no-backup"
   },
