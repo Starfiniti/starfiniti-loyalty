@@ -62,6 +62,16 @@ Status: in progress. M09-S01 through M09-S05 are complete; M09-S06 disabled depl
 - Retained visual evidence: [editor desktop](experience-v2-editor-desktop.png), [editor mobile](experience-v2-editor-mobile.png), [editor dark](experience-v2-editor-dark.png), [member desktop](experience-v2-member-desktop.png), [member mobile](experience-v2-member-mobile.png), [public desktop](experience-v2-public-desktop.png), and [public mobile](experience-v2-public-mobile.png).
 - Rollback: application readers and writers can return to V1 while additive V2 columns/functions remain inert and auditable. Presentation reset uses `none`, `comfortable`, and canonical order; no rollback mutates programme versions, reservations, coupons, commerce facts, or ledger value.
 
+## S06 — Canary and close
+
+- Status: in progress; pre-canary automation is complete and no production mutation has been attempted.
+- Exact-head CI: [run 32875639062](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/32875639062) passed the closure commit across baseline, both images, clean database replay, concurrency probes, and all four WooCommerce runtime cells.
+- Machine gate: [`canary.yaml`](canary.yaml) is validated during `npm run check`. It requires 30 unique minimized checks, exact scoring arithmetic, at least 90/100 overall, at least 80% in every category, an approved release, working operator access, no failed/pending checks, and matching completed task state before it can claim completion.
+- Current pre-canary score: 88/100. Correctness, security, ledger reliability, tests, performance, and maintainability clear their category floors; operability remains 4/10 until the disabled deployment, production rollback, observation, and reconciliation evidence exists.
+- Public baseline on 2026-08-25: canonical dashboard and API DNS resolve; dashboard health and login return HTTP 200 with no-store/private cache behavior; unauthenticated Auth and REST roots reject with HTTP 401.
+- Safe stop: PR #36 is a stacked unreviewed draft, not an approved release, and the configured non-interactive Proxmox key is currently rejected. The release contract forbids deploying it or improvising production access. These conditions do not invalidate the implementation evidence and do not permit a false canary claim.
+
 ## Remaining
 
-- S06 disabled deployment, Starfiniti canary, reconciliation, rollback, and score.
+- Reviewed stacked merge and approved immutable release.
+- Restored production operator access, fresh recovery point, disabled migration/application deployment, Starfiniti hosted and WooCommerce canary, outage/rollback rehearsal, exact reconciliation, observation, and score of at least 90.

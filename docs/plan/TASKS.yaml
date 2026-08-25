@@ -450,7 +450,10 @@ tasks:
         every later module is measurable,
         no undocumented dependency,
       ]
-    owner_inputs: []
+    owner_inputs:
+      - reviewed merge and immutable release approval for the stacked M04 through M09 branch chain
+      - restored non-interactive Proxmox operator access for the approved release
+      - one explicitly approved Starfiniti-controlled or merchant-authorized WooCommerce canary store and test customer
     acceptance:
       [
         stale work is preserved,
@@ -1231,6 +1234,7 @@ tasks:
     title: Complete hosted and WooCommerce customer experiences
     module: M09
     status: in_progress
+    module_score: 88
     dependencies: [M08-NOTIFICATIONS]
     hypothesis: Complete, accessible loyalty discovery and progress increase redemption while local rendering preserves checkout.
     baseline: Basic hosted guest/member routes and bounded WooCommerce account/cart markup exist.
@@ -1347,6 +1351,17 @@ tasks:
         status: in_progress
         acceptance:
           - exact-head CI disabled deployment Starfiniti hosted and WooCommerce canary checkout trace reconciliation rollback and module score at least 90 pass
+        verification:
+          - machine-validated canary evidence includes one approved release and pre-change recovery point before any production migration or application change
+          - hosted public member and merchant surfaces pass English-only privacy accessibility and bounded-recovery checks on the Starfiniti tenant
+          - local WooCommerce classic Blocks no-script native-coupon hub-outage and worker-outage paths pass without synchronous Hub checkout dependency
+          - ledger coupon queue and presentation state reconcile exactly before and after rollback rehearsal and observation
+          - seven-category module score reaches at least 90 with every category at least 80 percent and no deterministic failure
+        evidence:
+          - exact-head run 32875639062 at 639eac4 passed baseline both production images clean database replay every concurrency probe and all four WooCommerce runtimes after S05 evidence closure
+          - current production dashboard health and login return HTTP 200 with no-store or private cache policy while unauthenticated Auth and REST roots reject with HTTP 401
+          - docs/plan/evidence/M09/canary.yaml records 30 minimized checks and a deterministic seven-category pre-canary score of 88; completion is impossible while any check is pending failed or below threshold
+          - production mutation remains intentionally pending because PR 36 is a stacked unreviewed draft rather than an approved release and the configured non-interactive Proxmox key is rejected
     risks: [R-005, R-009, R-030]
     docs:
       [
