@@ -157,7 +157,7 @@ export function DashboardOverview({
     },
     {
       icon: Shield,
-      label: "Liability",
+      label: "Outstanding points",
       tone: "amber",
       value: report
         ? `${formatExactInteger(report.outstandingPoints, intlLocale)} pts`
