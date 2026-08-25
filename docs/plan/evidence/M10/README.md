@@ -87,3 +87,7 @@ Status: in progress. M10-S01 through M10-S05 are complete and exact-head green; 
 - The public production baseline is healthy: canonical DNS resolves, dashboard health and login return HTTP 200, and unauthenticated Auth and REST roots return 401.
 - The candidate remains a stacked draft and production is still `v0.1.11`. The configured public Proxmox key is rejected, while the VPN alias reaches a different host; no deployment or alternate access path was improvised. Approved release, operator access, a fresh recovery point, disabled deployment, Starfiniti-only entitlement canary, exact source reconciliation, rollback rehearsal, and observation therefore remain pending.
 - The provisional evidence score is 90/100, but operability is 3/10 and below the mandatory category floor. M10 is not complete and the validator cannot represent it as complete until every check passes.
+
+### Operator-access follow-up — 2026-08-26
+
+The configured `s2-root` route successfully reached the production Proxmox node for read-only VM 971 traffic inspection. No candidate deployment or production mutation was performed. Approved release, a fresh recovery point, disabled deployment, Starfiniti-only entitlement canary, exact source reconciliation, rollback rehearsal, and observation remain pending.

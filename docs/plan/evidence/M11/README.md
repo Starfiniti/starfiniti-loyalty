@@ -1,6 +1,6 @@
 # M11 Evidence — Ecosystem
 
-Status: M11-S01 repository and browser gates are exact-head green on `codex/m11-multistore`; disabled deployment and the Starfiniti production canary remain open.
+Status: M11-S01 and M11-S02 repository/browser gates are exact-head green on `codex/m11-multistore`; M11-S03 is next and M11-S06 retains disabled deployment and Starfiniti production-canary closeout.
 
 ## M11-S01 explicit multi-store sharing
 
@@ -26,13 +26,13 @@ Status: M11-S01 repository and browser gates are exact-head green on `codex/m11-
 - Value safety: a secondary customer with any wallet in the shared programme group fails with an explicit reviewed-migration state. Link, unlink, and relink never write ledger, lot, reservation, tier, commerce-event, or WooCommerce value.
 - Evidence model: immutable revisions retain exact source Auth link, registered identity, source customer, connection, workspace, canonical customer, action, request fingerprint, and correlation evidence. Trigger-guarded current projections require private transaction-local capabilities.
 - Customer delivery: a no-selector bounded read and public-account-selector unlink command power an English connected-stores card with verified-store, wallet-home, confirmation, success/error, degraded, keyboard-focus, responsive, and value-preservation states.
-- Verification implemented: strict contract/server/action tests, 53 focused pgTAP assertions, and a concurrency probe for simultaneous secondary proofs plus competing Auth subjects. Focused contracts and all 205 dashboard tests, affected typechecks, targeted lint, 64-migration/51-pgTAP static validation, and diff checks pass locally.
+- Verification: strict contract/server/action tests, 53 focused pgTAP assertions, and a concurrency probe cover simultaneous secondary proofs plus competing Auth subjects. Focused contracts and all 205 dashboard tests, affected typechecks, lint, production build, 64-migration/51-pgTAP static validation, and diff checks pass locally.
+- [Playwright desktop/mobile QA](customer-link-browser-qa-2026-08-26.md) found and corrected 8–11 px text plus a weak focus ring, then passed 1440×1000 and 375×812 layouts with readable 11–18 px type, a 40 px action, required confirmation, keyboard-visible focus, reduced motion, degraded state, zero horizontal overflow, and zero browser diagnostics.
+- Exact-head run [`32910582010`](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/32910582010) at `19c24a4` passed all seven jobs: root checks, both production images, clean 64-migration replay, all 51 pgTAP files with 2,716 assertions including the 53 focused link cases, all eight concurrency probes, and minimum/current HPOS/legacy WooCommerce runtimes.
+- Self-improvement evidence: four earlier database runs failed closed on a reserved alias, a legacy insert-compatibility gap plus ambiguous variable, test-role misuse, and a final temporary-fixture grant. Each correction narrowed compatibility or test authority without relaxing production RLS, grants, projection guards, identity authority, or value invariants.
 
-### Pending S02 closeout
+### Pending production closeout
 
-- Clean container replay of the additive migration and all 53 focused pgTAP assertions.
-- Execution of the two-scenario concurrency probe.
-- Production-build desktop/mobile keyboard, reduced-motion, contrast, overflow, degraded-state, and diagnostic review.
-- Exact-head repository/images/all-runtime CI, disabled deployment, Starfiniti-only canary, identity/link/wallet/event reconciliation, unlink/relink rollback rehearsal, and observation.
+- M11-S06 owns disabled deployment, read compatibility, Starfiniti-only canary, identity/link/wallet/event reconciliation, unlink/relink rollback rehearsal, and observation after reviewed stacked merge.
 
 Later evidence sections will record currency conversion, service-account/API, webhook/client, integration-operations, and final canary results.

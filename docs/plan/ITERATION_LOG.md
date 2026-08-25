@@ -4,7 +4,15 @@
 
 - Accepted ADR-0043: one live Auth subject must present a separate fresh WooCommerce HMAC proof for every store; email, profile attributes, organization membership, and browser tenant/customer inputs grant no identity authority.
 - Added immutable exact link revisions, source-customer retention, transaction-scoped projection guards, stable canonical-customer routing, value-conflict rejection, Auth-derived unlink/relink, a minimized no-selector customer read, and explicit zero-ledger boundaries.
-- Added strict contracts, server parsing/actions, an English responsive connected-stores experience, 53 planned pgTAP assertions, and an eighth concurrency probe covering simultaneous secondary proofs plus competing Auth subjects. Focused contracts and all 205 dashboard tests, affected typechecks, targeted lint, 64-migration/51-pgTAP validation, and diff checks pass locally; clean replay, concurrency execution, browser review, exact-head CI, and canary remain open.
+- Added strict contracts, server parsing/actions, an English responsive connected-stores experience, 53 focused pgTAP assertions, and an eighth concurrency probe covering simultaneous secondary proofs plus competing Auth subjects.
+- Playwright review found and corrected unreadable 8–11 px supporting type, a small destructive action, and a non-rendering color-mixed focus ring. The corrected real component passed desktop/mobile layout, long-name wrapping, required confirmation, keyboard focus, reduced motion, degraded state, zero overflow, and zero diagnostics.
+- Four database CI iterations failed closed on a reserved alias, legacy insert compatibility/ambiguous naming, test-role misuse, and a final temporary-fixture grant. The fixes preserved production authority. Exact-head run `32910582010` at `19c24a4` passed baseline, both images, clean 64-migration replay, all 51 pgTAP files with 2,716 assertions, all eight concurrency probes, and all four WooCommerce runtimes. M11-S06 owns production canary closeout.
+
+## 2026-08-26 — VM 971 backup-traffic follow-up
+
+- Re-established read-only operator access through the configured `s2-root` route and checked VM 971, bridge/tap counters, PVE RRD, active units, processes, sockets, timers, and Borg/rsync journals without mutating production.
+- Confirmed the 3.60 TB VM transmit counter is historical from the Aug 14 full-stream incident and persists across the VM's 12.6-day uptime. The active unit is the reviewed incremental `rrsync` implementation; the tar-over-stdin command exists only in a timestamped rollback copy.
+- The observed scheduled cycle transferred 50,108 bytes of new file content and 308,904 rsync wire bytes, while the direct tap counter rose about 383 KB. PVE's maximum VM outbound rate over both the last hour and last 24 hours was about 103 KB/s, with effectively zero disk reads. No other active timer or cron target referenced the database guest.
 
 ## 2026-08-25 — M11 explicit multi-store wallet scope
 

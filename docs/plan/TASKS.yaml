@@ -452,7 +452,6 @@ tasks:
       ]
     owner_inputs:
       - reviewed merge and immutable release approval for the stacked M04 through M09 branch chain
-      - restored non-interactive Proxmox operator access for the approved release
       - one explicitly approved Starfiniti-controlled or merchant-authorized WooCommerce canary store and test customer
     acceptance:
       [
@@ -1578,7 +1577,7 @@ tasks:
       ]
     slices:
       - id: M11-S01-EXPLICIT-MULTI-STORE-SHARING
-        status: in_progress
+        status: complete
         hypothesis: A reviewed exact workspace allowlist can extend one programme-group wallet boundary without treating organization membership as value-sharing authority.
         baseline: Programme groups and workspace links exist as mutable topology with no immutable policy revisions or merchant command.
         metrics:
@@ -1621,7 +1620,7 @@ tasks:
           - exact-head run 32905613578 at 3cb609d passes all seven jobs including clean replay all 50 pgTAP files the same-revision concurrency race both images and all four WooCommerce runtimes
           - disabled production deployment canary topology wallet connector reconciliation rollback and observation remain pending
       - id: M11-S02-EXPLICIT-CROSS-WORKSPACE-CUSTOMER-LINKING
-        status: in_progress
+        status: complete
         hypothesis: Two fresh store-signed customer proofs bound to one live Auth subject can safely establish shared-wallet identity without treating email organization membership or a browser selector as identity authority.
         baseline: One Auth subject can link only one customer record per organization and shared workspace policy does not prove that two store identities belong to one person.
         metrics:
@@ -1663,7 +1662,9 @@ tasks:
           - 53 focused pgTAP assertions cover grants RLS proof authority canonicalization conflicts immutability unlink relink privacy minimization and zero ledger effects
           - an eighth concurrency probe covers simultaneous second and third store proofs plus competing Auth subjects
           - focused contract and all 205 dashboard tests both affected typechecks targeted lint migration validation and diff checks pass locally
-          - clean replay concurrency execution production build browser review exact-head CI and disabled production canary remain pending
+          - Playwright desktop and 375-pixel mobile review passes readable typography required confirmation 40-pixel action target keyboard focus reduced motion degraded state zero overflow and zero diagnostics
+          - exact-head run 32910582010 at 19c24a4 passes all seven jobs including clean 64-migration replay all 51 pgTAP files with 2716 assertions all eight concurrency probes both images and all four WooCommerce runtimes
+          - disabled production deployment Starfiniti-only canary identity link wallet event reconciliation rollback and observation remain owned by M11-S06
       - id: M11-S03-MULTI-CURRENCY-EVIDENCE
         status: planned
         owner_inputs: [approved exchange-rate provider before live conversion]
