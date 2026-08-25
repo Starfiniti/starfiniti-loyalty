@@ -593,7 +593,10 @@ $cart->empty_cart();
 $cartItemKey = $cart->add_to_cart($productId, 1);
 starfiniti_runtime_assert(false !== $cartItemKey, 'classic cart fixture contains the product');
 $storeApiResponse = rest_do_request(new WP_REST_Request('GET', '/wc/store/v1/cart'));
-$storeApiPayload = $storeApiResponse->get_data();
+$storeApiEncoded = wp_json_encode($storeApiResponse->get_data());
+$storeApiPayload = is_string($storeApiEncoded)
+    ? json_decode($storeApiEncoded, true)
+    : null;
 $storeApiLoyalty = is_array($storeApiPayload)
     ? ($storeApiPayload['extensions']['starfiniti-loyalty'] ?? null)
     : null;
@@ -613,7 +616,10 @@ $staleSnapshot = [
 ];
 update_option('starfiniti_loyalty_snapshot_' . $customerId, $staleSnapshot, false);
 $staleStoreApiResponse = rest_do_request(new WP_REST_Request('GET', '/wc/store/v1/cart'));
-$staleStoreApiPayload = $staleStoreApiResponse->get_data();
+$staleStoreApiEncoded = wp_json_encode($staleStoreApiResponse->get_data());
+$staleStoreApiPayload = is_string($staleStoreApiEncoded)
+    ? json_decode($staleStoreApiEncoded, true)
+    : null;
 $staleStoreApiLoyalty = is_array($staleStoreApiPayload)
     ? ($staleStoreApiPayload['extensions']['starfiniti-loyalty'] ?? null)
     : null;
