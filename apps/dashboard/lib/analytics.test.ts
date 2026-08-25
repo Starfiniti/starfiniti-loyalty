@@ -7,6 +7,7 @@ import {
   formatAnalyticsPeriod,
   formatAnalyticsPoints,
   parseAnalyticsCommercePerformanceRow,
+  parseAnalyticsProgrammeOutcomeRow,
   parseAnalyticsValueTruthRow,
 } from "./analytics";
 
@@ -88,6 +89,69 @@ const commerceRow = {
   missing_customer_link_spend_minor: "0",
 };
 
+const outcomeRow = {
+  report_version: "1",
+  dictionary_version: "3",
+  report_as_of: "2026-08-26T00:00:00Z",
+  period_from: "2026-08-19T00:00:00Z",
+  period_to: "2026-08-26T00:00:00Z",
+  range_days: 7,
+  reward_requests: "10",
+  reward_captures: "8",
+  reward_captured_points: "9007199254740993",
+  reward_unresolved_at_as_of: "2",
+  reward_maturity_window_hours: 24,
+  reward_mature_cohort_from: "2026-08-18T00:00:00Z",
+  reward_mature_cohort_to: "2026-08-25T00:00:00Z",
+  reward_mature_requests: "8",
+  reward_mature_captures: "6",
+  reward_mature_unresolved: "1",
+  reward_mature_capture_rate_basis_points: "7500",
+  tier_decisions: "10",
+  tier_moved_members: "6",
+  tier_entry: "1",
+  tier_reentry: "1",
+  tier_upgrade: "2",
+  tier_grace: "1",
+  tier_downgrade: "1",
+  tier_manual: "1",
+  tier_none: "3",
+  referral_active_advocates: "4",
+  referral_attributions: "10",
+  referral_pending: "2",
+  referral_qualified: "5",
+  referral_rejected: "2",
+  referral_reversed: "1",
+  referral_qualification_rate_basis_points: "5000",
+  referral_issuances: "6",
+  referral_compensations: "1",
+  referral_advocate_points_issued: "600",
+  referral_friend_points_issued: "300",
+  referral_advocate_points_reversed: "100",
+  referral_friend_points_reversed: "50",
+  referral_advocate_points_net: "500",
+  referral_friend_points_net: "250",
+  campaign_currency_status: "available",
+  campaign_currency_code: "EUR",
+  campaign_currency_minor_unit_digits: 2,
+  campaign_currency_reason: null,
+  campaign_treatment_outcomes: "7",
+  campaign_control_outcomes: "3",
+  campaign_capacity_exhausted: "1",
+  campaign_suppressed: "1",
+  campaign_influenced_orders: "4",
+  campaign_influenced_members: "3",
+  campaign_influenced_eligible_spend_minor: "22000",
+  campaign_points_awarded_gross: "1000",
+  campaign_points_reversed: "200",
+  campaign_points_net: "800",
+  campaign_rewards_reserved: "2",
+  campaign_manual_review_jobs: "1",
+  campaign_incrementality_status: "unavailable",
+  campaign_incrementality_reason: "estimator_not_configured",
+  campaign_incremental_revenue_minor: null,
+};
+
 describe("analytics presentation", () => {
   it("maps snake-case RPC evidence into the strict value-truth contract", () => {
     const report = parseAnalyticsValueTruthRow(row);
@@ -162,6 +226,37 @@ describe("analytics presentation", () => {
       parseAnalyticsCommercePerformanceRow({
         ...commerceRow,
         participation_rate_basis_points: "5001",
+      }),
+    ).toThrow();
+  });
+
+  it("maps exact programme outcomes without coercing bigint values", () => {
+    const report = parseAnalyticsProgrammeOutcomeRow(outcomeRow);
+    expect(report.rewards.capturedPoints).toBe("9007199254740993");
+    expect(report.campaigns.incrementality).toEqual({
+      status: "unavailable",
+      reason: "estimator_not_configured",
+      incrementalRevenueMinor: null,
+    });
+    expect(
+      analyticsMetricDefinition("campaigns.incremental_revenue"),
+    ).toMatchObject({
+      availability: "unavailable",
+      causalClass: "unavailable",
+    });
+  });
+
+  it("rejects programme outcome funnel and reversal drift", () => {
+    expect(() =>
+      parseAnalyticsProgrammeOutcomeRow({
+        ...outcomeRow,
+        referral_pending: "3",
+      }),
+    ).toThrow();
+    expect(() =>
+      parseAnalyticsProgrammeOutcomeRow({
+        ...outcomeRow,
+        campaign_points_net: "801",
       }),
     ).toThrow();
   });

@@ -1,7 +1,8 @@
 import {
-  analyticsMetricDictionaryV2,
+  analyticsMetricDictionaryV3,
   type AnalyticsCommercePerformanceReportV1,
-  type AnalyticsMetricKeyV2,
+  type AnalyticsMetricKeyV3,
+  type AnalyticsProgrammeOutcomeReportV1,
   type AnalyticsValueTruthReportV1,
 } from "@starfiniti/contracts";
 import {
@@ -13,8 +14,11 @@ import {
   CalendarClock,
   CircleDollarSign,
   Clock3,
+  Crown,
   DatabaseZap,
+  Gift,
   Info,
+  Megaphone,
   Repeat2,
   RefreshCcw,
   ShieldCheck,
@@ -39,6 +43,7 @@ type AnalyticsState =
       kind: "ready";
       report: AnalyticsValueTruthReportV1;
       commerce: AnalyticsCommercePerformanceReportV1 | null;
+      outcomes: AnalyticsProgrammeOutcomeReportV1 | null;
     }>
   | Readonly<{ kind: "disabled" }>
   | Readonly<{ kind: "setup_required" }>
@@ -77,7 +82,11 @@ export function AnalyticsValueTruth({
       </header>
 
       {state.kind === "ready" ? (
-        <AnalyticsReport commerce={state.commerce} report={state.report} />
+        <AnalyticsReport
+          commerce={state.commerce}
+          outcomes={state.outcomes}
+          report={state.report}
+        />
       ) : (
         <AnalyticsUnavailable kind={state.kind} />
       )}
@@ -121,9 +130,11 @@ function AnalyticsUnavailable({
 
 function AnalyticsReport({
   commerce,
+  outcomes,
   report,
 }: Readonly<{
   commerce: AnalyticsCommercePerformanceReportV1 | null;
+  outcomes: AnalyticsProgrammeOutcomeReportV1 | null;
   report: AnalyticsValueTruthReportV1;
 }>) {
   const cards = [
@@ -178,6 +189,8 @@ function AnalyticsReport({
       </section>
 
       <CommercePerformance report={commerce} />
+
+      <ProgrammeOutcomes report={outcomes} />
 
       <header className="analytics-section-heading">
         <div>
@@ -376,6 +389,290 @@ function AnalyticsReport({
 
       <MetricDictionary />
     </>
+  );
+}
+
+function ProgrammeOutcomes({
+  report,
+}: Readonly<{ report: AnalyticsProgrammeOutcomeReportV1 | null }>) {
+  if (!report) {
+    return (
+      <section className="analytics-module-unavailable" role="status">
+        <AlertTriangle aria-hidden="true" />
+        <div>
+          <strong>
+            Programme outcomes stopped before showing uncertain data
+          </strong>
+          <p>
+            Commerce and point truth remain available. Reward, VIP, referral,
+            and campaign metrics return only after their independent transition
+            and reversal evidence reconciles.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  const campaignMoney =
+    report.campaigns.currency.status === "available" &&
+    report.campaigns.influencedEligibleSpendMinor !== null
+      ? formatAnalyticsCurrencyMinor(
+          report.campaigns.influencedEligibleSpendMinor,
+          report.campaigns.currency.code,
+          report.campaigns.currency.minorUnitDigits,
+        )
+      : "Unavailable";
+  const cards = [
+    {
+      icon: Gift,
+      key: "rewards.mature.capture_rate" as const,
+      label: "24-hour realization",
+      value: formatAnalyticsBasisPoints(
+        report.rewards.maturity.captureRateBasisPoints,
+      ),
+      note: `${formatCount(report.rewards.maturity.captures)} of ${formatCount(
+        report.rewards.maturity.requests,
+      )} mature requests`,
+      tone: "violet",
+    },
+    {
+      icon: Crown,
+      key: "tiers.movements.members" as const,
+      label: "Members changing tier",
+      value: formatCount(report.tiers.movedMembers),
+      note: `${formatCount(report.tiers.decisions)} qualification decisions`,
+      tone: "amber",
+    },
+    {
+      icon: UsersRound,
+      key: "referrals.qualified" as const,
+      label: "Qualified referrals",
+      value: formatCount(report.referrals.qualified),
+      note: `${formatAnalyticsBasisPoints(
+        report.referrals.qualificationRateBasisPoints,
+      )} observed qualification`,
+      tone: "green",
+    },
+    {
+      icon: Megaphone,
+      key: "campaigns.influenced_orders" as const,
+      label: "Influenced orders",
+      value: formatCount(report.campaigns.influencedOrders),
+      note: campaignMoney,
+      tone: "blue",
+    },
+  ];
+
+  return (
+    <section
+      className="analytics-performance analytics-outcomes"
+      aria-labelledby="outcomes-title"
+    >
+      <header className="analytics-section-heading">
+        <div>
+          <p className="login-eyebrow">Programme outcomes</p>
+          <h2 id="outcomes-title">Value customers actually reached</h2>
+          <p>
+            Requests, movements, referrals, and campaign effects remain tied to
+            immutable transitions, reversals, and their exact knowledge time.
+          </p>
+        </div>
+        <Gift aria-hidden="true" />
+      </header>
+
+      <div className="analytics-summary analytics-performance-summary">
+        {cards.map((card) => (
+          <article className={`analytics-kpi is-${card.tone}`} key={card.key}>
+            <span className="analytics-kpi-icon">
+              <card.icon aria-hidden="true" />
+            </span>
+            <div>
+              <span>{card.label}</span>
+              <strong>{card.value}</strong>
+              <small>{card.note}</small>
+            </div>
+            <MetricDefinitionButton metricKey={card.key} />
+          </article>
+        ))}
+      </div>
+
+      <div className="analytics-grid analytics-commerce-grid">
+        <section className="analytics-panel" aria-labelledby="rewards-title">
+          <PanelHeading
+            eyebrow="Realization"
+            icon={Gift}
+            id="rewards-title"
+            title="Reward delivery"
+          />
+          <dl className="analytics-ledger-list analytics-commerce-list">
+            <PerformanceRow
+              definition="rewards.requests"
+              label="Requests"
+              value={formatCount(report.rewards.requests)}
+            />
+            <PerformanceRow
+              definition="rewards.captures"
+              label="Captured"
+              value={formatCount(report.rewards.captures)}
+            />
+            <PerformanceRow
+              definition="rewards.captured_points"
+              label="Points captured"
+              value={formatAnalyticsPoints(report.rewards.capturedPoints)}
+            />
+            <PerformanceRow
+              definition="rewards.unresolved"
+              label="Unresolved now"
+              value={formatCount(report.rewards.unresolvedAtAsOf)}
+            />
+            <PerformanceRow
+              definition="rewards.mature.unresolved"
+              label="Unresolved after 24 hours"
+              value={formatCount(report.rewards.maturity.unresolved)}
+            />
+          </dl>
+        </section>
+
+        <section className="analytics-panel" aria-labelledby="tiers-title">
+          <PanelHeading
+            eyebrow="Progression"
+            icon={Crown}
+            id="tiers-title"
+            title="VIP movement"
+          />
+          <dl className="analytics-ledger-list analytics-commerce-list">
+            <PerformanceRow
+              definition="tiers.movements.entry"
+              label="Entries"
+              value={formatCount(report.tiers.entry)}
+            />
+            <PerformanceRow
+              definition="tiers.movements.upgrade"
+              label="Upgrades"
+              value={formatCount(report.tiers.upgrade)}
+            />
+            <PerformanceRow
+              definition="tiers.movements.grace"
+              label="Grace"
+              value={formatCount(report.tiers.grace)}
+            />
+            <PerformanceRow
+              definition="tiers.movements.downgrade"
+              label="Downgrades"
+              value={formatCount(report.tiers.downgrade)}
+            />
+            <PerformanceRow
+              definition="tiers.movements.manual"
+              label="Manual decisions"
+              value={formatCount(report.tiers.manual)}
+            />
+          </dl>
+        </section>
+      </div>
+
+      <div className="analytics-grid analytics-commerce-grid">
+        <section className="analytics-panel" aria-labelledby="referrals-title">
+          <PanelHeading
+            eyebrow={`${formatCount(report.referrals.activeAdvocates)} active advocates`}
+            icon={UsersRound}
+            id="referrals-title"
+            title="Referral funnel"
+          />
+          <dl className="analytics-ledger-list analytics-commerce-list">
+            <PerformanceRow
+              definition="referrals.attributions"
+              label="Attributed"
+              value={formatCount(report.referrals.attributions)}
+            />
+            <PerformanceRow
+              definition="referrals.pending"
+              label="Pending or cooling"
+              value={formatCount(report.referrals.pending)}
+            />
+            <PerformanceRow
+              definition="referrals.qualified"
+              label="Qualified"
+              value={formatCount(report.referrals.qualified)}
+            />
+            <PerformanceRow
+              definition="referrals.rejected"
+              label="Rejected"
+              value={formatCount(report.referrals.rejected)}
+            />
+            <PerformanceRow
+              definition="referrals.reversed"
+              label="Reversed"
+              value={formatCount(report.referrals.reversed)}
+            />
+          </dl>
+          <p className="analytics-panel-footnote">
+            Net referral value:{" "}
+            <strong>
+              {formatAnalyticsPoints(report.referrals.advocatePointsNet)}
+            </strong>{" "}
+            to advocates and{" "}
+            <strong>
+              {formatAnalyticsPoints(report.referrals.friendPointsNet)}
+            </strong>{" "}
+            to friends.
+          </p>
+        </section>
+
+        <section className="analytics-panel" aria-labelledby="campaign-title">
+          <PanelHeading
+            eyebrow="Direct attribution"
+            icon={Megaphone}
+            id="campaign-title"
+            title="Campaign influence"
+          />
+          <dl className="analytics-ledger-list analytics-commerce-list">
+            <PerformanceRow
+              definition="campaigns.treatment_outcomes"
+              label="Treatment outcomes"
+              value={formatCount(report.campaigns.treatmentOutcomes)}
+            />
+            <PerformanceRow
+              definition="campaigns.control_outcomes"
+              label="Control observations"
+              value={formatCount(report.campaigns.controlOutcomes)}
+            />
+            <PerformanceRow
+              definition="campaigns.influenced_eligible_spend"
+              label="Influenced eligible spend"
+              value={campaignMoney}
+            />
+            <PerformanceRow
+              definition="campaigns.points_net"
+              label="Net campaign points"
+              value={formatAnalyticsPoints(report.campaigns.pointsNet)}
+            />
+            <PerformanceRow
+              definition="campaigns.manual_review_jobs"
+              label="Manual review jobs"
+              value={formatCount(report.campaigns.manualReviewJobs)}
+            />
+          </dl>
+          <p className="analytics-panel-footnote">
+            <strong>Incremental revenue unavailable.</strong> Treatment/control
+            assignment alone is not an estimator. S03 must declare the
+            population, window, exclusions, samples, and formula first.
+          </p>
+        </section>
+      </div>
+
+      <div className="analytics-cohort-note">
+        <Clock3 aria-hidden="true" />
+        <div>
+          <strong>Reward realization has a complete observation window</strong>
+          <p>
+            Requests from {formatUtcDate(report.rewards.maturity.cohortFrom)}–
+            {formatUtcDate(report.rewards.maturity.cohortTo)} each had 24 hours
+            to reach a ledger-backed capture. Ambiguous issued work does not
+            count as realized.
+          </p>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -613,7 +910,7 @@ function PerformanceRow({
   label,
   value,
 }: Readonly<{
-  definition: AnalyticsMetricKeyV2;
+  definition: AnalyticsMetricKeyV3;
   label: string;
   value: string;
 }>) {
@@ -656,7 +953,7 @@ function LedgerRow({
   label,
   value,
 }: Readonly<{
-  keyName: AnalyticsMetricKeyV2;
+  keyName: AnalyticsMetricKeyV3;
   label: string;
   value: string;
 }>) {
@@ -677,7 +974,7 @@ function FlowValue({
   value,
 }: Readonly<{
   icon: typeof WalletCards;
-  keyName: AnalyticsMetricKeyV2;
+  keyName: AnalyticsMetricKeyV3;
   label: string;
   value: string;
 }>) {
@@ -697,7 +994,7 @@ function ExpiryBar({
   total,
   value,
 }: Readonly<{
-  keyName: AnalyticsMetricKeyV2;
+  keyName: AnalyticsMetricKeyV3;
   label: string;
   total: string;
   value: string;
@@ -724,7 +1021,7 @@ function ExpiryBar({
 
 function MetricDefinitionButton({
   metricKey,
-}: Readonly<{ metricKey: AnalyticsMetricKeyV2 }>) {
+}: Readonly<{ metricKey: AnalyticsMetricKeyV3 }>) {
   const definition = analyticsMetricDefinition(metricKey);
   return (
     <span
@@ -746,7 +1043,7 @@ function MetricDictionary() {
     >
       <header>
         <div>
-          <p className="login-eyebrow">Metric dictionary v2</p>
+          <p className="login-eyebrow">Metric dictionary v3</p>
           <h2 id="dictionary-title">Definitions behind every value</h2>
           <p>
             Formula, source, grain, UTC boundary, caveats, and causal class are
@@ -756,7 +1053,7 @@ function MetricDictionary() {
         <DatabaseZap aria-hidden="true" />
       </header>
       <div className="analytics-definition-list">
-        {analyticsMetricDictionaryV2.definitions.map((definition) => (
+        {analyticsMetricDictionaryV3.definitions.map((definition) => (
           <details key={definition.key}>
             <summary>
               <span>{definition.label}</span>

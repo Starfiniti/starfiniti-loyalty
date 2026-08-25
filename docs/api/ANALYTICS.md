@@ -49,6 +49,21 @@ Dictionary V2 is additive: it carries all V1 definitions and adds member activat
 
 Observed LTV is not gross merchandise value, predictive lifetime value, margin, or incrementality. Eligible spend follows the versioned loyalty exclusions that produced the immutable evaluation.
 
+## Dictionary V3 programme-outcome boundary
+
+Dictionary V3 is additive: it carries every V1/V2 definition and adds reward realization, VIP movement, referral-funnel/value, and campaign-outcome definitions. The programme-outcome report is independently fetched and validated, so an unavailable outcome source cannot hide point truth or commerce performance.
+
+- Reward requests use immutable reservation creation. Capture counts and captured points use the ledger-backed `captured` transition; unresolved work is reconstructed from the latest transition known at `asOf`.
+- The 24-hour reward-realization rate uses a shifted cohort `[periodFrom - 24 hours, periodTo - 24 hours)`. Every included request therefore has the same complete observation window. Issued but ambiguous connector work remains unresolved rather than being counted as realized.
+- VIP movement uses immutable tier decisions, the decision's `effective_at` for occurrence, and `created_at < asOf` for knowledge time. Current tier membership is not used to rewrite historical movement.
+- Referral flow uses first-attribution `captured_at` and the latest immutable transition known at `asOf`. Pending includes captured, cooling, and review states. Issuance and compensation values remain linked to the original period attribution and are reported gross, reversed, and net.
+- Campaign treatment/control/capacity/suppression results combine immutable purchase effects and trigger executions. A purchase execution batch contributes at most one influenced order and its eligible spend is reduced by the latest cumulative refund evidence known at `asOf`.
+- Campaign points are gross issuance less immutable purchase and trigger reversals. Reward reservations and current latest-attempt manual-review jobs are exposed as operational counts.
+- Influenced spend is descriptive direct attribution. Incremental revenue is explicitly `unavailable` until a versioned treatment/control estimator declares population, observation window, exclusions, and sample evidence.
+- Campaign monetary fields require one exact currency code and minor-unit precision across contributing historical programme versions. Mixed or invalid evidence returns an unavailable scope and `null` spend while count and point metrics remain usable.
+
+All point/count quantities remain decimal strings across the Data API and are checked with `BigInt`. The report contains no customer, wallet, order, referral, assignment, coupon, or connector identifiers.
+
 ## Liability terminology
 
 - **Outstanding point exposure:** current pending plus available plus reserved points. It is an operational promotional-unit obligation and may be signed if a programme permits attributable negative available balance.

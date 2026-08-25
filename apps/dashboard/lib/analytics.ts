@@ -1,10 +1,12 @@
 import {
   analyticsCommercePerformanceReportV1,
-  analyticsMetricDictionaryV2,
+  analyticsMetricDictionaryV3,
+  analyticsProgrammeOutcomeReportV1,
   analyticsValueTruthReportV1,
   type AnalyticsCommercePerformanceReportV1,
-  type AnalyticsMetricDefinitionV2,
-  type AnalyticsMetricKeyV2,
+  type AnalyticsMetricDefinitionV3,
+  type AnalyticsMetricKeyV3,
+  type AnalyticsProgrammeOutcomeReportV1,
   type AnalyticsValueTruthReportV1,
 } from "@starfiniti/contracts";
 import { formatExactInteger, type OverviewRange } from "./overview";
@@ -71,13 +73,99 @@ export function parseAnalyticsValueTruthRow(
 }
 
 export function analyticsMetricDefinition(
-  key: AnalyticsMetricKeyV2,
-): AnalyticsMetricDefinitionV2 {
-  const definition = analyticsMetricDictionaryV2.definitions.find(
+  key: AnalyticsMetricKeyV3,
+): AnalyticsMetricDefinitionV3 {
+  const definition = analyticsMetricDictionaryV3.definitions.find(
     (candidate) => candidate.key === key,
   );
   if (!definition) throw new Error("analytics_metric_definition_missing");
   return definition;
+}
+
+export function parseAnalyticsProgrammeOutcomeRow(
+  row: AnalyticsRow,
+): AnalyticsProgrammeOutcomeReportV1 {
+  return analyticsProgrammeOutcomeReportV1.parse({
+    reportVersion: row.report_version,
+    dictionaryVersion: row.dictionary_version,
+    asOf: row.report_as_of,
+    period: {
+      from: row.period_from,
+      to: row.period_to,
+      rangeDays: row.range_days,
+      timeZone: "UTC",
+    },
+    rewards: {
+      requests: row.reward_requests,
+      captures: row.reward_captures,
+      capturedPoints: row.reward_captured_points,
+      unresolvedAtAsOf: row.reward_unresolved_at_as_of,
+      maturity: {
+        windowHours: row.reward_maturity_window_hours,
+        cohortFrom: row.reward_mature_cohort_from,
+        cohortTo: row.reward_mature_cohort_to,
+        requests: row.reward_mature_requests,
+        captures: row.reward_mature_captures,
+        unresolved: row.reward_mature_unresolved,
+        captureRateBasisPoints: row.reward_mature_capture_rate_basis_points,
+      },
+    },
+    tiers: {
+      decisions: row.tier_decisions,
+      movedMembers: row.tier_moved_members,
+      entry: row.tier_entry,
+      reentry: row.tier_reentry,
+      upgrade: row.tier_upgrade,
+      grace: row.tier_grace,
+      downgrade: row.tier_downgrade,
+      manual: row.tier_manual,
+      none: row.tier_none,
+    },
+    referrals: {
+      activeAdvocates: row.referral_active_advocates,
+      attributions: row.referral_attributions,
+      pending: row.referral_pending,
+      qualified: row.referral_qualified,
+      rejected: row.referral_rejected,
+      reversed: row.referral_reversed,
+      qualificationRateBasisPoints:
+        row.referral_qualification_rate_basis_points,
+      issuances: row.referral_issuances,
+      compensations: row.referral_compensations,
+      advocatePointsIssued: row.referral_advocate_points_issued,
+      friendPointsIssued: row.referral_friend_points_issued,
+      advocatePointsReversed: row.referral_advocate_points_reversed,
+      friendPointsReversed: row.referral_friend_points_reversed,
+      advocatePointsNet: row.referral_advocate_points_net,
+      friendPointsNet: row.referral_friend_points_net,
+    },
+    campaigns: {
+      currency: {
+        status: row.campaign_currency_status,
+        code: row.campaign_currency_code,
+        minorUnitDigits: row.campaign_currency_minor_unit_digits,
+        reason: row.campaign_currency_reason,
+      },
+      treatmentOutcomes: row.campaign_treatment_outcomes,
+      controlOutcomes: row.campaign_control_outcomes,
+      capacityExhausted: row.campaign_capacity_exhausted,
+      suppressed: row.campaign_suppressed,
+      influencedOrders: row.campaign_influenced_orders,
+      influencedMembers: row.campaign_influenced_members,
+      influencedEligibleSpendMinor:
+        row.campaign_influenced_eligible_spend_minor,
+      pointsAwardedGross: row.campaign_points_awarded_gross,
+      pointsReversed: row.campaign_points_reversed,
+      pointsNet: row.campaign_points_net,
+      rewardsReserved: row.campaign_rewards_reserved,
+      manualReviewJobs: row.campaign_manual_review_jobs,
+      incrementality: {
+        status: row.campaign_incrementality_status,
+        reason: row.campaign_incrementality_reason,
+        incrementalRevenueMinor: row.campaign_incremental_revenue_minor,
+      },
+    },
+  });
 }
 
 export function parseAnalyticsCommercePerformanceRow(

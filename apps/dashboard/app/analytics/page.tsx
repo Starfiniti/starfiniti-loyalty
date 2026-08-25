@@ -8,6 +8,7 @@ import {
 import { parseOverviewRange } from "@/lib/overview";
 import {
   getAnalyticsCommercePerformanceReport,
+  getAnalyticsProgrammeOutcomeReport,
   getAnalyticsValueTruthReport,
 } from "@/lib/server/analytics";
 import { getEntitlementSnapshot } from "@/lib/server/entitlements";
@@ -54,16 +55,20 @@ export default async function AnalyticsPage({
   } else if (!analyticsEnabled) {
     state = { kind: "disabled" };
   } else {
-    const [valueResult, commerceResult] = await Promise.allSettled([
-      getAnalyticsValueTruthReport(tenant.context, range),
-      getAnalyticsCommercePerformanceReport(tenant.context, range),
-    ]);
+    const [valueResult, commerceResult, outcomeResult] =
+      await Promise.allSettled([
+        getAnalyticsValueTruthReport(tenant.context, range),
+        getAnalyticsCommercePerformanceReport(tenant.context, range),
+        getAnalyticsProgrammeOutcomeReport(tenant.context, range),
+      ]);
     if (valueResult.status === "fulfilled" && valueResult.value) {
       state = {
         kind: "ready",
         report: valueResult.value,
         commerce:
           commerceResult.status === "fulfilled" ? commerceResult.value : null,
+        outcomes:
+          outcomeResult.status === "fulfilled" ? outcomeResult.value : null,
       };
     } else {
       state = { kind: "unavailable" };

@@ -1447,8 +1447,21 @@ tasks:
           - id: M10-S02B-PROGRAMME-OUTCOME-PERFORMANCE
             status: in_progress
             acceptance:
-              - reward request capture and mature realization tier movement referral funnel and campaign treatment outcomes reconcile to immutable transitions and effects
-              - campaign-influenced eligible spend is descriptive and experimentally incremental revenue remains unavailable without a declared treatment-control estimator
+              - reward requests captures captured points unresolved work and a complete 24-hour mature request cohort reconcile from reservation and immutable transition evidence as known at report as-of
+              - entry re-entry upgrade grace downgrade and manual VIP movements use effective occurrence with immutable decision knowledge time and never infer movement from the current membership projection
+              - referral attribution latest-state funnel two-sided issuance compensation and net points reconcile without exposing advocate friend order or risk identity
+              - purchase and trigger campaign outcomes reconcile treatment control suppression capacity reward and point reversal evidence while each influenced purchase order is counted once
+              - campaign-influenced eligible spend is refund-compensated descriptive single-currency evidence and experimentally incremental revenue remains explicitly unavailable without a declared treatment-control estimator
+            failure_modes:
+              - current mutable reward referral or campaign state rewrites an earlier as-of result
+              - one purchase influenced by multiple campaign effects is counted multiple times
+              - unresolved or ambiguous native reward work is labelled realized
+              - referral compensation or campaign reversal is omitted from net value
+              - treatment assignment is presented as causal lift without estimator population exclusions window and sample evidence
+            verification:
+              - strict contract arithmetic mature-window dictionary-completeness currency and incrementality-state tests
+              - pgTAP for Auth scope grants tenancy revocation as-of knowledge transitions compensation deduplication and no source mutation
+              - exact-head baseline migration replay production images and WooCommerce matrix
       - id: M10-S03-COHORT-RETENTION-AND-CAUSAL-EVIDENCE
         status: planned
         acceptance:

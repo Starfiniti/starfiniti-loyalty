@@ -129,6 +129,7 @@ select is_empty(
           'get_connector_operation_summaries',
           'get_analytics_value_truth_v1',
           'get_analytics_commerce_performance_v1',
+          'get_analytics_programme_outcomes_v1',
           'get_overview_report',
           'get_public_loyalty_experience',
           'get_public_loyalty_experience_v2',
