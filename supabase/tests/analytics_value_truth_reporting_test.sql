@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(33);
+select plan(35);
 
 select ok(
   has_function_privilege(
@@ -277,6 +277,29 @@ select * from loyalty.get_analytics_value_truth_v1(
   '8b000000-0000-4000-8000-000000000101',
   '8b000000-0000-4000-8000-000000000110',
   7, '2026-08-26T00:00:00Z'
+);
+
+create temporary table analytics_overview_shadow as
+select * from loyalty.get_overview_report(
+  '8b000000-0000-4000-8000-000000000100',
+  '8b000000-0000-4000-8000-000000000101',
+  '8b000000-0000-4000-8000-000000000110',
+  7, '2026-08-26T00:00:00Z'
+);
+
+select results_eq(
+  $$ select overview.report_as_of::text || ':' || overview.range_days::text
+     from analytics_overview_shadow as overview $$,
+  $$ select analytics.report_as_of::text || ':' || analytics.range_days::text
+     from analytics_owner_report as analytics $$,
+  'overview and analytics shadow use one exact instant and range'
+);
+select results_eq(
+  $$ select overview.members_total || ':' || overview.outstanding_points
+     from analytics_overview_shadow as overview $$,
+  $$ select analytics.wallet_count || ':' || analytics.outstanding_points
+     from analytics_owner_report as analytics $$,
+  'overview members and outstanding points match reconciled analytics truth'
 );
 
 select results_eq(
