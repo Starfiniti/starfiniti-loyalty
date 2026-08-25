@@ -3855,7 +3855,7 @@ h1 {
 
 .member-linked-stores header p {
   color: var(--member-accent-strong);
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.09em;
   text-transform: uppercase;
@@ -3865,14 +3865,14 @@ h1 {
 .member-linked-stores.unavailable h3 {
   margin: 2px 0 4px;
   font-family: var(--member-font, inherit);
-  font-size: 14px;
+  font-size: 18px;
 }
 
 .member-linked-stores header small,
 .member-linked-stores.unavailable p,
 .member-linked-stores-safety {
   color: var(--member-muted);
-  font-size: 10px;
+  font-size: 13px;
   line-height: 1.5;
 }
 
@@ -3880,7 +3880,7 @@ h1 {
   margin-top: 12px !important;
   padding: 10px 12px;
   border-radius: 9px;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -3916,14 +3916,14 @@ h1 {
 }
 
 .member-linked-stores-summary strong {
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .member-linked-stores-summary span,
 .member-linked-stores-summary small {
   margin-top: 2px;
   color: var(--member-muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .member-linked-stores ul {
@@ -3968,13 +3968,13 @@ h1 {
 }
 
 .member-linked-stores li > div > strong {
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .member-linked-stores li > div > span {
   margin-top: 2px;
   color: var(--member-muted);
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .member-linked-store-home {
@@ -3982,7 +3982,7 @@ h1 {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 800;
 }
 
@@ -3993,22 +3993,24 @@ h1 {
 }
 
 .member-linked-stores form label {
+  min-height: 28px;
   display: inline-flex;
   align-items: center;
   gap: 5px;
   color: var(--member-muted);
-  font-size: 8px;
+  font-size: 12px;
+  cursor: pointer;
 }
 
 .member-linked-stores form input {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   accent-color: var(--member-accent);
 }
 
 .member-linked-stores button {
-  min-height: 32px;
-  padding: 7px 10px;
+  min-height: 40px;
+  padding: 9px 12px;
   border: 1px solid #fecaca;
   border-radius: 8px;
   color: #b42318;
@@ -4017,7 +4019,7 @@ h1 {
   align-items: center;
   gap: 6px;
   font: inherit;
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 800;
   cursor: pointer;
 }
@@ -4028,7 +4030,7 @@ h1 {
 
 .member-linked-stores button:focus-visible,
 .member-linked-stores form input:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--member-accent) 35%, transparent);
+  outline: 3px solid var(--member-accent, #6d5dfc);
   outline-offset: 2px;
 }
 
