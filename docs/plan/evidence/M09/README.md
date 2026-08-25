@@ -1,6 +1,6 @@
 # M09 Evidence — Storefront Experience
 
-Status: in progress. M09-S01 through M09-S04 are complete; M09-S05 presentation hardening and full accessibility/outage review are active. Canary evidence remains required for module closure.
+Status: in progress. M09-S01 through M09-S05 are complete; M09-S06 disabled deployment, Starfiniti canary, reconciliation, rollback, and scoring are active.
 
 ## S01 — Auth-derived customer experience contract
 
@@ -50,15 +50,18 @@ Status: in progress. M09-S01 through M09-S04 are complete; M09-S05 presentation 
 
 ## S05 — Controlled presentation and degraded delivery
 
-- Status: implementation complete; exact-head Linux replay and real-browser visual evidence remain open, so the slice is not yet marked complete.
+- Status: complete.
+- Commits: `125c3fea3f3bb1ce76bb90d3d0d2b592a44e2d30` and dark-theme hardening `4f8be7a55589d70710080a468f371b3fc9fe0533`.
+- Exact-head CI: [run 32875015095](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/32875015095).
+- Result: baseline, both production images, a clean 57-migration replay, all 44 pgTAP files with 2,441 assertions, every concurrency probe, and all four minimum/current HPOS/legacy WooCommerce runtime cells passed.
 - Architecture: ADR-0039 adds strict `ExperienceThemeDefinitionV2`, English-only copy, an exact seven-section order, reviewed Lucide asset keys, controlled density and optional visibility, one audited Auth-derived command, no-selector customer reads, and no-locale anonymous reads while retaining strict V1 contracts and functions.
 - Delivery: merchant preview covers member, public, and locally cached WooCommerce surfaces at desktop/mobile and ready/guest/offline/empty states. The hosted member and public DOM consume the exact persisted order, and only rewards, VIP, and referrals may be hidden. Overview, earning, history, privacy, and account access remain present.
 - Failure behavior: V2 readers fall back to V1 only when the additive RPC is absent. Malformed, unauthorized, or provider-failure responses render bounded no-store/no-customer recovery states. WooCommerce continues using its last valid snapshot, native coupons, no-script guidance, and zero synchronous Hub dependency.
 - Local verification: lint; all workspace typechecks; 177 dashboard, 97 worker, 234 contract, and 57 domain tests; CI/deployment/pilot/entitlement/architecture/accessibility/WooCommerce validators; production builds; secret scan; zero-vulnerability production audit; licence validation; changed-file formatting; `git diff --check`; and static validation of 57 migrations plus 44 pgTAP files passed.
-- Accessibility: fifteen main-landmark/skip-target surfaces, visible focus, reduced motion, controlled composition, English-only navigation, and 320-pixel reflow guards pass statically. The connected Chrome extension blocks local-app navigation with `ERR_BLOCKED_BY_CLIENT`; therefore keyboard, screen-reader, zoom, forced-colour, slow-network, and final visual evidence are not claimed yet.
+- Browser and accessibility: [the dated Chrome report](presentation-v2-browser-qa-2026-08-25.md) records desktop, mobile, 320-pixel, and 200%-scale review of the real components. The approved Hub composition, working previews/states, English-only DOM, anonymous-public privacy, keyboard focus, reduced motion, no horizontal overflow, and zero final diagnostics passed. The first dark-theme capture exposed low-contrast labels and white controls; the scoped repair and regression validator landed before the retained final capture.
+- Retained visual evidence: [editor desktop](experience-v2-editor-desktop.png), [editor mobile](experience-v2-editor-mobile.png), [editor dark](experience-v2-editor-dark.png), [member desktop](experience-v2-member-desktop.png), [member mobile](experience-v2-member-mobile.png), [public desktop](experience-v2-public-desktop.png), and [public mobile](experience-v2-public-mobile.png).
 - Rollback: application readers and writers can return to V1 while additive V2 columns/functions remain inert and auditable. Presentation reset uses `none`, `comfortable`, and canonical order; no rollback mutates programme versions, reservations, coupons, commerce facts, or ledger value.
 
 ## Remaining
 
-- S05 exact-head Linux database replay and real-browser accessibility/visual proof.
 - S06 disabled deployment, Starfiniti canary, reconciliation, rollback, and score.

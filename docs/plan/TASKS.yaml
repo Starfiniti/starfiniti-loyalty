@@ -1323,7 +1323,7 @@ tasks:
           - static and real-browser verification passed the 3821-byte source and 1177-byte gzip JavaScript plus 980-byte source and 430-byte gzip CSS budgets at desktop and mobile widths with fresh stale unsafe-link focus overflow and zero-diagnostic coverage
           - exact-head run 32859649418 at bf5ec90 passed baseline both images 56 migrations all 44 pgTAP files with 2392 assertions and every minimum/current HPOS/legacy WooCommerce runtime cell including staged flags actual Store API responses native coupons no-script and forced Hub failure
       - id: M09-S05-BRANDING-ACCESSIBILITY-AND-OUTAGE-HARDENING
-        status: in_progress
+        status: completed
         acceptance:
           - controlled assets copy spacing ordering preview states responsive layouts refresh labels and offline states are polished and bounded
           - keyboard screen-reader zoom reduced-motion contrast slow-network no-script and total-Hub-outage evidence passes
@@ -1340,9 +1340,11 @@ tasks:
           - merchant member and public compositions consume one strict persisted order filter only rewards VIP and referrals and retain overview earning history privacy and account access
           - focused tests cover exact saves forged stale locale input malformed and duplicate projections RPC-absence fallback controlled text strict English copy and optional-section order while the accessibility validator covers fifteen route surfaces
           - local lint all workspace typechecks 177 dashboard 97 worker 234 contract and 57 domain tests all non-Docker validators production build secret scan zero-vulnerability production audit licence validation and 57-migration 44-pgTAP static validation pass
-          - exact Linux database replay and visual Chrome evidence remain pending and are not claimed because the connected Chrome extension blocks local-app navigation
+          - exact-head run 32875015095 at 4f8be7a passed the complete baseline both production images a clean 57-migration replay all 44 pgTAP files with 2441 assertions every concurrency probe and all four minimum/current HPOS/legacy WooCommerce runtime cells
+          - Chrome review at 1512 by 982 390 by 844 320 pixels and 200-percent scale passed the approved Hub comparison interactive member public and WooCommerce previews English-only DOM anonymous-public privacy visible keyboard focus reduced motion zero horizontal overflow and zero final diagnostics
+          - the browser audit found low-contrast dark-theme form surfaces; commit 4f8be7a repaired the scoped editor colors and added deterministic accessibility-validator guards before final evidence was captured under docs/plan/evidence/M09
       - id: M09-S06-CANARY-AND-CLOSE
-        status: planned
+        status: in_progress
         acceptance:
           - exact-head CI disabled deployment Starfiniti hosted and WooCommerce canary checkout trace reconciliation rollback and module score at least 90 pass
     risks: [R-005, R-009, R-030]
