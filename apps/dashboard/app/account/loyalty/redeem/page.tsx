@@ -5,7 +5,6 @@ import { redeemCustomerReward } from "./actions";
 import {
   CUSTOMER_COPY,
   customerLocalePath,
-  resolveCustomerLocale,
   type CustomerLocale,
 } from "@/lib/customer-locale";
 import { isSelfServiceRewardKind } from "@/lib/customer-rewards";
@@ -21,11 +20,12 @@ export default async function CustomerRewardConfirmationPage({
     searchParams,
     getCustomerLoyaltyAccounts(),
   ]);
-  const locale = resolveCustomerLocale(search.lang);
+  const locale: CustomerLocale = "en";
   const copy = CUSTOMER_COPY[locale];
   if (state.kind === "unauthenticated") {
     redirect(customerLocalePath("/login?next=%2Faccount%2Floyalty", locale));
   }
+  if (state.kind === "unavailable") redirect("/account/loyalty");
   const accountId = typeof search.account === "string" ? search.account : "";
   const rewardCode = typeof search.reward === "string" ? search.reward : "";
   const account = state.accounts.find((item) => item.account_id === accountId);

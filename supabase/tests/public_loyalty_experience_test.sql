@@ -2,11 +2,51 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(26);
+select plan(36);
 
 select has_function(
   'loyalty', 'get_public_loyalty_experience', array['uuid', 'uuid', 'text'],
   'public hosted loyalty read model exists'
+);
+select has_function(
+  'loyalty', 'get_public_loyalty_experience_v2', array['uuid', 'uuid'],
+  'English-only V2 public loyalty read model exists'
+);
+select ok(
+  has_function_privilege(
+    'anon', 'loyalty.get_public_loyalty_experience_v2(uuid,uuid)', 'EXECUTE'
+  ),
+  'anonymous callers can enter the bounded V2 read model'
+);
+select ok(
+  has_function_privilege(
+    'authenticated',
+    'loyalty.get_public_loyalty_experience_v2(uuid,uuid)',
+    'EXECUTE'
+  ),
+  'signed-in customers may enter the same V2 public projection'
+);
+select results_eq(
+  $$ select routine.prosecdef
+     from pg_proc as routine
+     join pg_namespace as namespace on namespace.oid = routine.pronamespace
+     where namespace.nspname = 'loyalty'
+       and routine.proname = 'get_public_loyalty_experience_v2'
+       and exists (
+         select 1 from unnest(routine.proconfig) as setting
+         where setting = 'search_path=""'
+       ) $$,
+  array[true],
+  'V2 public projection is security definer with an empty search path'
+);
+select results_eq(
+  $$ select routine.pronargs::integer
+     from pg_proc as routine
+     join pg_namespace as namespace on namespace.oid = routine.pronamespace
+     where namespace.nspname = 'loyalty'
+       and routine.proname = 'get_public_loyalty_experience_v2' $$,
+  array[2],
+  'V2 accepts only public workspace and programme selectors and no locale authority'
 );
 select ok(
   has_function_privilege('anon', 'loyalty.get_public_loyalty_experience(uuid,uuid,text)', 'EXECUTE'),
@@ -179,6 +219,43 @@ select results_eq(
   'unsaved English translation retains legacy theme copy and safe defaults'
 );
 select results_eq(
+  $$ select requested_locale, resolved_locale,
+            presentation ->> 'version',
+            presentation #>> '{copy,locale}',
+            presentation #>> '{copy,heroText}'
+     from loyalty.get_public_loyalty_experience_v2(
+       '7b000000-0000-4000-8000-000000000110',
+       '7b000000-0000-4000-8000-000000000130') $$,
+  $$ values ('en'::text, 'en'::text, '2'::text, 'en'::text,
+             'Saved English hero'::text) $$,
+  'V2 emits only reviewed English copy in one strict nested presentation'
+);
+select results_eq(
+  $$ select presentation #>> '{theme,density}',
+            presentation #>> '{theme,heroAsset}',
+            (presentation #>> '{theme,showReferrals}')::boolean,
+            presentation #> '{theme,sectionOrder}'
+     from loyalty.get_public_loyalty_experience_v2(
+       '7b000000-0000-4000-8000-000000000110',
+       '7b000000-0000-4000-8000-000000000130') $$,
+  $$ values (
+    'comfortable'::text, 'sparkles'::text, true,
+    '["overview","earning","rewards","vip","referrals","history","account"]'::jsonb
+  ) $$,
+  'V2 supplies controlled defaults and every semantic section exactly once'
+);
+select results_eq(
+  $$ select tiers, rewards
+     from loyalty.get_public_loyalty_experience_v2(
+       '7b000000-0000-4000-8000-000000000110',
+       '7b000000-0000-4000-8000-000000000130') $$,
+  $$ values (
+    '[{"code":"rose","name":"Rose","minimumEligibleSpendMinor":"0","pointsPerMajorUnit":"5"}]'::jsonb,
+    '[{"code":"five-off","name":"€5 discount","kind":"fixed_discount","costPoints":"500"}]'::jsonb
+  ) $$,
+  'V2 preserves the bounded published tier and reward value contract'
+);
+select results_eq(
   $$ select tiers from loyalty.get_public_loyalty_experience(
        '7b000000-0000-4000-8000-000000000110',
        '7b000000-0000-4000-8000-000000000130', 'en') $$,
@@ -214,6 +291,13 @@ select results_eq(
   'other-tenant programme does not cross the linked workspace boundary'
 );
 select results_eq(
+  $$ select count(*)::bigint from loyalty.get_public_loyalty_experience_v2(
+       '7c000000-0000-4000-8000-000000000110',
+       '7b000000-0000-4000-8000-000000000130') $$,
+  array[0::bigint],
+  'V2 mixed-tenant selectors fail closed'
+);
+select results_eq(
   $$ select count(*)::bigint from loyalty.get_public_loyalty_experience(
        '00000000-0000-4000-8000-000000000000',
        '7b000000-0000-4000-8000-000000000130', 'en') $$,
@@ -231,6 +315,13 @@ select results_eq(
        '7b000000-0000-4000-8000-000000000130', 'en') $$,
   array[0::bigint],
   'suspended workspace removes the public document'
+);
+select results_eq(
+  $$ select count(*)::bigint from loyalty.get_public_loyalty_experience_v2(
+       '7b000000-0000-4000-8000-000000000110',
+       '7b000000-0000-4000-8000-000000000130') $$,
+  array[0::bigint],
+  'suspended workspace removes the V2 public document'
 );
 reset role;
 update loyalty.workspaces set status = 'active'

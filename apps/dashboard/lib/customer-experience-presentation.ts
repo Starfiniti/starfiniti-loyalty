@@ -2,6 +2,7 @@ import type {
   CustomerActivityV1,
   CustomerEarningMethodV1,
   CustomerRewardV1,
+  ExperienceThemeDefinitionV2,
 } from "@starfiniti/contracts";
 import type { CustomerLoyaltyAccount } from "@/lib/server/customer-account";
 
@@ -14,6 +15,20 @@ export const customerExperienceSections = [
   { id: "history", label: "History" },
   { id: "account", label: "Account" },
 ] as const;
+
+export function visibleCustomerExperienceSections(
+  theme: ExperienceThemeDefinitionV2,
+): ExperienceThemeDefinitionV2["sectionOrder"] {
+  return theme.sectionOrder.filter((section) =>
+    section === "rewards"
+      ? theme.showRewards
+      : section === "vip"
+        ? theme.showTier
+        : section === "referrals"
+          ? theme.showReferrals
+          : true,
+  );
+}
 
 export function selectCustomerAccount(
   accounts: readonly CustomerLoyaltyAccount[],

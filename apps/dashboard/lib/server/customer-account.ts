@@ -1,14 +1,18 @@
 import "server-only";
 import {
   customerLoyaltyExperienceV1,
+  customerLoyaltyExperienceV2,
   type CustomerActivityV1,
   type CustomerEarningMethodV1,
   type CustomerLoyaltyExperienceV1,
+  type CustomerLoyaltyExperienceV2,
   type CustomerReferralExperienceV1,
   type CustomerReservationV1,
   type CustomerRewardV1,
   type CustomerTierProgressV1,
+  type ExperiencePresentationV2,
 } from "@starfiniti/contracts";
+import { DEFAULT_EXPERIENCE_PRESENTATION_V2 } from "@/lib/experience-theme";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type CustomerReward = CustomerRewardV1;
@@ -37,11 +41,20 @@ export type CustomerLoyaltyAccount = Readonly<{
   activity: CustomerActivity[];
   tier_progress: CustomerTierProgressV1 | null;
   referral: CustomerReferralExperienceV1 | null;
+  presentation: ExperiencePresentationV2;
 }>;
 
 export type CustomerAccountState =
   | Readonly<{ kind: "unauthenticated" }>
+  | Readonly<{ kind: "unavailable" }>
   | Readonly<{ kind: "ready"; accounts: CustomerLoyaltyAccount[] }>;
+
+type ProjectionContainer = Readonly<{
+  account_id?: unknown;
+  experience?: unknown;
+}>;
+
+type ProjectionError = Readonly<{ code?: string | null }>;
 
 export async function getCustomerLoyaltyAccounts(): Promise<CustomerAccountState> {
   const supabase = await createSupabaseServerClient();
@@ -50,33 +63,64 @@ export async function getCustomerLoyaltyAccounts(): Promise<CustomerAccountState
     return { kind: "unauthenticated" };
   }
 
-  const result = await supabase
-    .schema("loyalty")
-    .rpc("get_my_loyalty_experiences_v1");
-  if (result.error) throw new Error("customer_account_unavailable");
+  const loyalty = supabase.schema("loyalty");
+  const v2 = await loyalty.rpc("get_my_loyalty_experiences_v2");
+  if (!v2.error) {
+    return mapProjection(v2.data, "2");
+  }
+  if (!isMissingProjection(v2.error)) return { kind: "unavailable" };
 
+  // During an additive rolling deploy, the previous immutable read model is
+  // safe to normalize with bounded defaults until every database has V2.
+  const v1 = await loyalty.rpc("get_my_loyalty_experiences_v1");
+  if (v1.error) return { kind: "unavailable" };
+  return mapProjection(v1.data, "1");
+}
+
+function mapProjection(
+  data: unknown,
+  version: "1" | "2",
+): CustomerAccountState {
+  if (!Array.isArray(data)) return { kind: "unavailable" };
   const accounts: CustomerLoyaltyAccount[] = [];
   const accountIds = new Set<string>();
-  for (const raw of (result.data ?? []) as ReadonlyArray<
-    Readonly<{ account_id?: unknown; experience?: unknown }>
-  >) {
-    const parsed = customerLoyaltyExperienceV1.safeParse(raw.experience);
+  for (const raw of data as ProjectionContainer[]) {
+    const parsed =
+      version === "2"
+        ? customerLoyaltyExperienceV2.safeParse(raw.experience)
+        : customerLoyaltyExperienceV1.safeParse(raw.experience);
     if (
       !parsed.success ||
       raw.account_id !== parsed.data.accountId ||
       accountIds.has(parsed.data.accountId)
     ) {
-      throw new Error("customer_account_unavailable");
+      return { kind: "unavailable" };
     }
     accountIds.add(parsed.data.accountId);
-    accounts.push(toCustomerLoyaltyAccount(parsed.data));
+    accounts.push(
+      version === "2"
+        ? toCustomerLoyaltyAccount(parsed.data as CustomerLoyaltyExperienceV2)
+        : toCustomerLoyaltyAccount(
+            parsed.data as CustomerLoyaltyExperienceV1,
+            DEFAULT_EXPERIENCE_PRESENTATION_V2,
+          ),
+    );
   }
   return { kind: "ready", accounts };
 }
 
+function isMissingProjection(error: ProjectionError): boolean {
+  return error.code === "PGRST202" || error.code === "42883";
+}
+
 function toCustomerLoyaltyAccount(
-  experience: CustomerLoyaltyExperienceV1,
+  experience: CustomerLoyaltyExperienceV1 | CustomerLoyaltyExperienceV2,
+  fallbackPresentation?: ExperiencePresentationV2,
 ): CustomerLoyaltyAccount {
+  const presentation =
+    "presentation" in experience
+      ? experience.presentation
+      : (fallbackPresentation ?? DEFAULT_EXPERIENCE_PRESENTATION_V2);
   return {
     account_id: experience.accountId,
     workspace_id: experience.workspaceId,
@@ -98,5 +142,6 @@ function toCustomerLoyaltyAccount(
     activity: experience.activity,
     tier_progress: experience.tierProgress,
     referral: experience.referral,
+    presentation,
   };
 }

@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(48);
+select plan(58);
 
 select has_function(
   'loyalty', 'get_my_loyalty_accounts', array[]::text[],
@@ -61,6 +61,35 @@ select results_eq(
        ) $$,
   array[true],
   'strict customer aggregate is security definer with an empty search path'
+);
+select has_function(
+  'loyalty', 'get_my_loyalty_experiences_v2', array[]::text[],
+  'strict controlled-presentation customer projection exists'
+);
+select ok(
+  has_function_privilege(
+    'authenticated', 'loyalty.get_my_loyalty_experiences_v2()', 'EXECUTE'
+  ),
+  'authenticated customers can read their V2 aggregate'
+);
+select ok(
+  not has_function_privilege(
+    'anon', 'loyalty.get_my_loyalty_experiences_v2()', 'EXECUTE'
+  ),
+  'anonymous sessions cannot read a V2 customer aggregate'
+);
+select results_eq(
+  $$ select routine.prosecdef
+     from pg_proc as routine
+     join pg_namespace as namespace on namespace.oid = routine.pronamespace
+     where namespace.nspname = 'loyalty'
+       and routine.proname = 'get_my_loyalty_experiences_v2'
+       and exists (
+         select 1 from unnest(routine.proconfig) as setting
+         where setting = 'search_path=""'
+       ) $$,
+  array[true],
+  'V2 customer aggregate is security definer with an empty search path'
 );
 
 insert into auth.users (id, email)
@@ -194,6 +223,30 @@ select
 from loyalty.organizations as organization
 join loyalty.workspaces as workspace on workspace.organization_id = organization.id
 join loyalty.programmes as programme on programme.organization_id = organization.id;
+insert into loyalty.experience_themes (
+  organization_id, workspace_id, programme_group_id, brand_color,
+  display_font, card_radius_px, hero_text, points_label, show_tier,
+  show_rewards, widget_position, density, hero_asset, show_referrals,
+  section_order
+)
+select link.organization_id, link.workspace_id, link.programme_group_id,
+  '#4f46e5', 'modern-serif', 22, 'Member rewards', 'Stars', false, true,
+  'left', 'compact', 'crown', false,
+  array['overview','rewards','earning','history','vip','referrals','account']::text[]
+from loyalty.programme_group_workspaces as link
+join loyalty.workspaces as workspace on workspace.id = link.workspace_id
+where workspace.public_id = '8c000000-0000-4000-8000-000000000110';
+insert into loyalty.experience_translations (
+  organization_id, workspace_id, programme_group_id, locale, hero_text,
+  points_label, balance_label, rewards_label, redeem_label, join_label,
+  earn_message
+)
+select link.organization_id, link.workspace_id, link.programme_group_id,
+  'en', 'Your loyalty home', 'Stars', 'Available stars', 'Choose a reward',
+  'Use reward', 'Join the programme', 'Earn Stars on eligible orders.'
+from loyalty.programme_group_workspaces as link
+join loyalty.workspaces as workspace on workspace.id = link.workspace_id
+where workspace.public_id = '8c000000-0000-4000-8000-000000000110';
 insert into loyalty.customers (public_id, organization_id, display_reference)
 select
   case slug when 'member-one' then '8c000000-0000-4000-8000-000000000150'::uuid
@@ -404,6 +457,34 @@ select ok(
    from loyalty.get_my_loyalty_experiences_v1()),
   'strict aggregate omits customer internals tenant internals contacts and evidence'
 );
+select results_eq(
+  $$ select experience ->> 'version',
+            (experience ->> 'accountId')::uuid = account_id,
+            experience #>> '{balances,available}'
+     from loyalty.get_my_loyalty_experiences_v2() $$,
+  $$ values ('2'::text, true, '9007199254740993'::text) $$,
+  'V2 nests presentation without changing exact customer value or link authority'
+);
+select results_eq(
+  $$ select experience #>> '{presentation,theme,density}',
+            experience #>> '{presentation,theme,heroAsset}',
+            (experience #>> '{presentation,theme,showReferrals}')::boolean,
+            experience #>> '{presentation,copy,locale}',
+            experience #>> '{presentation,copy,heroText}',
+            experience #> '{presentation,theme,sectionOrder}'
+     from loyalty.get_my_loyalty_experiences_v2() $$,
+  $$ values (
+    'compact'::text, 'crown'::text, false, 'en'::text,
+    'Your loyalty home'::text,
+    '["overview","rewards","earning","history","vip","referrals","account"]'::jsonb
+  ) $$,
+  'V2 returns the exact controlled English presentation and semantic order'
+);
+select ok(
+  (select experience::text !~* 'customerId|organization|auth_user|email|metadata|request_sha256|sl-SI'
+   from loyalty.get_my_loyalty_experiences_v2()),
+  'V2 omits private evidence tenant authority contacts and inactive locales'
+);
 reset role;
 select results_eq(
   $$ select count(*)::bigint from loyalty.ledger_transactions $$,
@@ -441,6 +522,14 @@ select results_eq(
   $$ values (false, '0'::text, 'ready_without_activity'::text) $$,
   'disabled enhancements preserve the honest core value and account state'
 );
+select results_eq(
+  $$ select count(*)::bigint,
+            min(experience ->> 'storeName'),
+            min(experience #>> '{balances,available}')
+     from loyalty.get_my_loyalty_experiences_v2() $$,
+  $$ values (1::bigint, 'Other Store'::text, '0'::text) $$,
+  'another customer receives only their own honest V2 account and value'
+);
 
 set local request.jwt.claim.sub = '8c000000-0000-4000-8000-000000000001';
 reset role;
@@ -456,6 +545,11 @@ select results_eq(
   $$ select count(*)::bigint from loyalty.get_my_loyalty_experiences_v1() $$,
   array[0::bigint],
   'revocation removes strict aggregate access immediately'
+);
+select results_eq(
+  $$ select count(*)::bigint from loyalty.get_my_loyalty_experiences_v2() $$,
+  array[0::bigint],
+  'revocation removes V2 aggregate access immediately'
 );
 
 reset role;
@@ -503,6 +597,13 @@ select is_empty(
        and specific_name like 'get_my_loyalty_experiences_v1_%'
        and parameter_mode = 'IN' $$,
   'strict aggregate accepts no tenant customer connection workspace programme or account selector'
+);
+select is_empty(
+  $$ select parameter_name from information_schema.parameters
+     where specific_schema = 'loyalty'
+       and specific_name like 'get_my_loyalty_experiences_v2_%'
+       and parameter_mode = 'IN' $$,
+  'V2 accepts no tenant customer connection workspace programme account or locale selector'
 );
 select ok(
   (select pg_get_functiondef('loyalty.get_my_loyalty_experiences_v1()'::regprocedure)

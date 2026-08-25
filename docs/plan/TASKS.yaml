@@ -1328,8 +1328,19 @@ tasks:
           - controlled assets copy spacing ordering preview states responsive layouts refresh labels and offline states are polished and bounded
           - keyboard screen-reader zoom reduced-motion contrast slow-network no-script and total-Hub-outage evidence passes
           - no active language switcher or non-English customer path is rendered
+          - strict additive V2 presentation commands and public/Auth-derived reads retain V1 compatibility while PostgreSQL independently rejects missing duplicate unknown or cross-tenant section and asset authority
+          - the canonical seven sections remain complete and reorderable while only rewards VIP and referrals are presentation-optional and core value history privacy and account access cannot be hidden
+          - merchant preview covers member public and WooCommerce panel compositions at desktop and mobile plus ready guest offline and empty states without persisting preview-only controls
+          - 320-pixel and 200-percent-reflow equivalents have no two-dimensional page scroll every keyboard focus indicator remains visible and no essential status depends on colour or motion alone
+          - hosted and public provider failures render bounded recovery states with no private evidence while WooCommerce retains last-valid local state native coupons no-script account access and zero synchronous Hub dependency
         rollout: Review real components at desktop and mobile widths in light and dark themes before tenant canary.
         rollback: Revert presentation tokens and optional assets while retaining semantic local content.
+        evidence:
+          - ADR-0039 binds controlled English V2 tokens exact semantic order reviewed Lucide assets strict Auth/public reads rolling V1 compatibility and independent degraded delivery without creating programme or value authority
+          - merchant member and public compositions consume one strict persisted order filter only rewards VIP and referrals and retain overview earning history privacy and account access
+          - focused tests cover exact saves forged stale locale input malformed and duplicate projections RPC-absence fallback controlled text strict English copy and optional-section order while the accessibility validator covers fifteen route surfaces
+          - local lint all workspace typechecks 177 dashboard 97 worker 234 contract and 57 domain tests all non-Docker validators production build secret scan zero-vulnerability production audit licence validation and 57-migration 44-pgTAP static validation pass
+          - exact Linux database replay and visual Chrome evidence remain pending and are not claimed because the connected Chrome extension blocks local-app navigation
       - id: M09-S06-CANARY-AND-CLOSE
         status: planned
         acceptance:
@@ -1342,6 +1353,7 @@ tasks:
         docs/architecture/ADR/0036-auth-derived-customer-experience-and-local-woocommerce-snapshots.md,
         docs/architecture/ADR/0037-demand-driven-woocommerce-snapshots-and-classic-placements.md,
         docs/architecture/ADR/0038-namespaced-store-api-and-flagged-blocks-panel.md,
+        docs/architecture/ADR/0039-controlled-english-presentation-v2-and-degraded-delivery.md,
       ]
     evidence: [docs/plan/evidence/M09/README.md]
 

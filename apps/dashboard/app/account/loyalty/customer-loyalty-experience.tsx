@@ -1,4 +1,7 @@
-import Link from "next/link";
+import type {
+  ExperienceHeroAssetV2,
+  ExperienceSectionV2,
+} from "@starfiniti/contracts";
 import type { LucideIcon } from "lucide-react";
 import {
   Activity,
@@ -30,20 +33,23 @@ import {
   UserRoundPlus,
   UsersRound,
 } from "lucide-react";
+import type { CSSProperties } from "react";
+import Link from "next/link";
 import { signOut } from "@/app/actions";
 import { TierProgress } from "@/components/tier-progress";
 import {
   activityPresentation,
   customerAccountStatus,
-  customerExperienceSections,
   earningCapLabel,
   earningEffectLabel,
   earningSourceLabel,
   formatCustomerDate,
   formatCustomerPoints,
   rewardKindLabel,
+  visibleCustomerExperienceSections,
 } from "@/lib/customer-experience-presentation";
 import { customerExportReauthenticationPath } from "@/lib/customer-export";
+import { experienceFontStack } from "@/lib/experience-theme";
 import { isSelfServiceRewardKind } from "@/lib/customer-rewards";
 import type {
   CustomerEarningMethod,
@@ -52,10 +58,7 @@ import type {
 } from "@/lib/server/customer-account";
 import { CustomerReferralPanel } from "./customer-referral-panel";
 
-const navigationIcons: Record<
-  (typeof customerExperienceSections)[number]["id"],
-  LucideIcon
-> = {
+const navigationIcons: Readonly<Record<ExperienceSectionV2, LucideIcon>> = {
   overview: LayoutDashboard,
   earning: Sparkles,
   rewards: Gift,
@@ -63,6 +66,23 @@ const navigationIcons: Record<
   referrals: UsersRound,
   history: History,
   account: UserRound,
+};
+
+const navigationLabels: Readonly<Record<ExperienceSectionV2, string>> = {
+  overview: "Overview",
+  earning: "Ways to earn",
+  rewards: "Rewards",
+  vip: "VIP status",
+  referrals: "Referrals",
+  history: "History",
+  account: "Account",
+};
+
+const heroIcons: Readonly<Record<ExperienceHeroAssetV2, LucideIcon | null>> = {
+  none: null,
+  sparkles: Sparkles,
+  gift: Gift,
+  crown: Crown,
 };
 
 const earningIcons: Record<CustomerEarningMethod["source"], LucideIcon> = {
@@ -96,14 +116,22 @@ export function CustomerLoyaltyExperience({
   >;
 }>) {
   const status = customerAccountStatus(account.account_status);
-  const ready = account.account_status === "ready";
   const programmeName = account.programme_name ?? "Loyalty programme";
-  const affordableRewards = account.rewards.filter(
-    (reward) => reward.affordable,
-  ).length;
+  const { theme } = account.presentation;
+  const visibleSections = visibleCustomerExperienceSections(theme);
+  const style = {
+    "--member-brand": theme.brandColor,
+    "--member-radius": `${theme.cardRadiusPx}px`,
+    "--member-font": experienceFontStack(theme.displayFont),
+  } as CSSProperties;
 
   return (
-    <main className="member-hub" id="main-content" tabIndex={-1}>
+    <main
+      className={`member-hub member-hub-v2 ${theme.density}`}
+      id="main-content"
+      style={style}
+      tabIndex={-1}
+    >
       <aside className="member-hub-sidebar" aria-label="Loyalty account">
         <Link className="member-hub-brand" href="/account/loyalty">
           <span aria-hidden="true">
@@ -139,18 +167,7 @@ export function CustomerLoyaltyExperience({
           </nav>
         ) : null}
 
-        <nav className="member-hub-navigation" aria-label="Loyalty sections">
-          <span>My loyalty</span>
-          {customerExperienceSections.map((item) => {
-            const Icon = navigationIcons[item.id];
-            return (
-              <a href={`#${item.id}`} key={item.id}>
-                <Icon aria-hidden="true" />
-                {item.label}
-              </a>
-            );
-          })}
-        </nav>
+        <MemberNavigation sections={visibleSections} />
 
         <div className="member-hub-sidebar-footer">
           <div>
@@ -179,17 +196,7 @@ export function CustomerLoyaltyExperience({
           </span>
         </header>
 
-        <nav className="member-hub-mobile-nav" aria-label="Loyalty sections">
-          {customerExperienceSections.map((item) => {
-            const Icon = navigationIcons[item.id];
-            return (
-              <a href={`#${item.id}`} key={item.id}>
-                <Icon aria-hidden="true" />
-                <span>{item.label}</span>
-              </a>
-            );
-          })}
-        </nav>
+        <MemberNavigation mobile sections={visibleSections} />
 
         <div className="member-hub-content">
           {messages.map((message, index) => (
@@ -207,297 +214,369 @@ export function CustomerLoyaltyExperience({
             </p>
           ))}
 
-          <section className="member-hub-overview" id="overview">
-            <div className="member-hub-page-heading">
-              <div className="member-hub-breadcrumb">
-                <span>My loyalty</span>
-                <ArrowRight aria-hidden="true" />
-                <strong>Overview</strong>
-              </div>
-              <h1>{programmeName}</h1>
-              <p>Your points, rewards, status, and progress at a glance.</p>
-            </div>
-            <div className="member-hub-hero">
-              <div>
-                <span className="member-hub-hero-eyebrow">
-                  <Sparkles aria-hidden="true" /> Your available balance
-                </span>
-                <div className="member-hub-balance">
-                  <strong>
-                    {formatCustomerPoints(account.available_points)}
-                  </strong>
-                  <span>points</span>
-                </div>
-                <p>
-                  {account.tier_name
-                    ? `${account.tier_name} member · keep earning toward your next milestone.`
-                    : "Your account is ready for its first tier milestone."}
-                </p>
-              </div>
-              <div className="member-hub-hero-mark" aria-hidden="true">
-                <Crown />
-              </div>
-              <div className="member-hub-orb member-hub-orb-one" />
-              <div className="member-hub-orb member-hub-orb-two" />
-            </div>
-
-            <div className="member-hub-summary-grid">
-              <SummaryCard
-                detail="Becomes available after the return window"
-                icon={Clock3}
-                label="Pending"
-                value={formatCustomerPoints(account.pending_points)}
-              />
-              <SummaryCard
-                detail="Held safely for rewards in progress"
-                icon={LockKeyhole}
-                label="Reserved"
-                value={formatCustomerPoints(account.reserved_points)}
-              />
-              <SummaryCard
-                detail={`${account.rewards.length} rewards in the current catalogue`}
-                icon={Gift}
-                label="Ready to redeem"
-                value={affordableRewards.toLocaleString("en-GB")}
-              />
-              <SummaryCard
-                detail={
-                  account.next_expiry_at
-                    ? `${formatCustomerPoints(account.next_expiry_points ?? "0")} points expire`
-                    : "No points are scheduled to expire"
-                }
-                icon={CalendarClock}
-                label="Next expiry"
-                value={
-                  account.next_expiry_at
-                    ? formatCustomerDate(account.next_expiry_at)
-                    : "None"
-                }
-              />
-            </div>
-
-            <p className={`member-hub-account-note ${status.tone}`}>
-              <ShieldCheck aria-hidden="true" />
-              <span>
-                <strong>{status.label}</strong>
-                {status.detail}
-              </span>
-            </p>
-          </section>
-
-          <ExperienceSection
-            description="See exactly how eligible activities add points to your account. Restrictions and limits are shown before you participate."
-            eyebrow="Build your balance"
-            icon={Sparkles}
-            id="earning"
-            title="Ways to earn"
-          >
-            {account.earning_methods.length ? (
-              <div className="member-earning-grid">
-                {account.earning_methods.map((method) => (
-                  <EarningMethodCard key={method.code} method={method} />
-                ))}
-              </div>
-            ) : (
-              <EmptyExperience
-                icon={ShoppingBag}
-                title="Earning methods are being prepared"
-              >
-                Eligible store activity will still appear in your history when
-                the programme publishes its customer catalogue.
-              </EmptyExperience>
-            )}
-          </ExperienceSection>
-
-          <ExperienceSection
-            description="Discover benefits you can afford now and see how many more points you need for the rest."
-            eyebrow="Use your points"
-            icon={Gift}
-            id="rewards"
-            title="Rewards"
-          >
-            {account.rewards.length ? (
-              <div className="member-reward-grid">
-                {account.rewards.map((reward) => (
-                  <RewardCard
-                    account={account}
-                    key={reward.code}
-                    ready={ready}
-                    reward={reward}
-                  />
-                ))}
-              </div>
-            ) : (
-              <EmptyExperience icon={Gift} title="No rewards published yet">
-                Your points remain available. The store will show new rewards
-                here as soon as they are published.
-              </EmptyExperience>
-            )}
-
-            {account.reservations.length ? (
-              <div className="member-reservation-strip">
-                <div>
-                  <TicketCheck aria-hidden="true" />
-                  <span>
-                    <strong>Rewards in progress</strong>
-                    <small>
-                      Native store benefits are prepared asynchronously.
-                    </small>
-                  </span>
-                </div>
-                <ul>
-                  {account.reservations.map((reservation) => (
-                    <li key={reservation.id}>
-                      <strong>{reservation.rewardName}</strong>
-                      <span>{reservation.state.replaceAll("_", " ")}</span>
-                      <small>
-                        {formatCustomerPoints(reservation.costPoints)} points ·
-                        expires {formatCustomerDate(reservation.expiresAt)}
-                      </small>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-          </ExperienceSection>
-
-          <ExperienceSection
-            description="Track your qualification window, next milestone, retention requirements, grace period, and immutable tier history."
-            eyebrow="Member progression"
-            icon={Crown}
-            id="vip"
-            title="VIP status"
-          >
-            {account.tier_progress ? (
-              <TierProgress
-                availablePoints={account.available_points}
-                mode="member"
-                nextExpiryAt={account.next_expiry_at}
-                nextExpiryPoints={account.next_expiry_points}
-                progress={account.tier_progress}
-              />
-            ) : (
-              <EmptyExperience icon={Crown} title="Tier evaluation pending">
-                Keep earning normally. Your first qualification decision will
-                appear here with its exact milestone evidence.
-              </EmptyExperience>
-            )}
-          </ExperienceSection>
-
-          <ExperienceSection
-            description="Share one private advocate link, follow qualification progress, and see issued or reversed referral rewards."
-            eyebrow="Give and get"
-            icon={UsersRound}
-            id="referrals"
-            title="Referrals"
-          >
-            {account.referral ? (
-              <CustomerReferralPanel
-                experience={account.referral}
-                operationId={crypto.randomUUID()}
-              />
-            ) : (
-              <EmptyExperience
-                icon={HeartHandshake}
-                title="Referrals are not active yet"
-              >
-                Your existing points and rewards are unaffected. Referral
-                sharing will appear here when the store publishes a policy.
-              </EmptyExperience>
-            )}
-          </ExperienceSection>
-
-          <ExperienceSection
-            description="Every change is backed by immutable loyalty evidence. Corrections add a new entry instead of rewriting history."
-            eyebrow="Your ledger"
-            icon={History}
-            id="history"
-            title="Points history"
-          >
-            {account.activity.length ? (
-              <ol className="member-history-list">
-                {account.activity.map((item) => {
-                  const presentation = activityPresentation(item);
-                  return (
-                    <li key={item.id}>
-                      <span
-                        className={`member-history-icon ${presentation.tone}`}
-                        aria-hidden="true"
-                      >
-                        <Activity />
-                      </span>
-                      <div>
-                        <strong>{presentation.label}</strong>
-                        <time dateTime={item.effectiveAt}>
-                          {formatCustomerDate(item.effectiveAt)}
-                        </time>
-                      </div>
-                      <b className={presentation.tone}>
-                        {presentation.sign}
-                        {formatCustomerPoints(item.points)}
-                      </b>
-                    </li>
-                  );
-                })}
-              </ol>
-            ) : (
-              <EmptyExperience icon={History} title="No points activity yet">
-                Your first eligible activity will appear here with its date and
-                exact points effect.
-              </EmptyExperience>
-            )}
-          </ExperienceSection>
-
-          <ExperienceSection
-            description="Manage this verified store connection and download a portable record of your loyalty data."
-            eyebrow="Connection and privacy"
-            icon={CircleUserRound}
-            id="account"
-            title="Account"
-          >
-            <div className="member-account-grid">
-              <article>
-                <span className="member-account-icon" aria-hidden="true">
-                  <Store />
-                </span>
-                <div>
-                  <small>Verified store</small>
-                  <h3>{account.store_name}</h3>
-                  <p>
-                    This account was connected using a signed one-time store
-                    link—not an email-address match.
-                  </p>
-                  {account.programme_id ? (
-                    <Link
-                      href={`/loyalty/${account.workspace_id}/${account.programme_id}`}
-                    >
-                      View public programme details{" "}
-                      <ArrowRight aria-hidden="true" />
-                    </Link>
-                  ) : null}
-                </div>
-              </article>
-              <article>
-                <span className="member-account-icon" aria-hidden="true">
-                  <ShieldCheck />
-                </span>
-                <div>
-                  <small>Privacy and portability</small>
-                  <h3>Your loyalty data</h3>
-                  <p>
-                    Download linked store identities, balances, tiers,
-                    reservations, and the complete immutable ledger as JSON.
-                  </p>
-                  <Link href={customerExportReauthenticationPath("en")}>
-                    Download my data <ArrowRight aria-hidden="true" />
-                  </Link>
-                </div>
-              </article>
-            </div>
-          </ExperienceSection>
+          {visibleSections.map((section) => (
+            <MemberExperienceArea
+              account={account}
+              key={section}
+              programmeName={programmeName}
+              section={section}
+            />
+          ))}
         </div>
       </div>
     </main>
+  );
+}
+
+function MemberNavigation({
+  mobile = false,
+  sections,
+}: Readonly<{ mobile?: boolean; sections: readonly ExperienceSectionV2[] }>) {
+  return (
+    <nav
+      className={mobile ? "member-hub-mobile-nav" : "member-hub-navigation"}
+      aria-label="Loyalty sections"
+    >
+      {mobile ? null : <span>My loyalty</span>}
+      {sections.map((section) => {
+        const Icon = navigationIcons[section];
+        return (
+          <a href={`#${section}`} key={section}>
+            <Icon aria-hidden="true" />
+            <span>{navigationLabels[section]}</span>
+          </a>
+        );
+      })}
+    </nav>
+  );
+}
+
+function MemberExperienceArea({
+  account,
+  programmeName,
+  section,
+}: Readonly<{
+  account: CustomerLoyaltyAccount;
+  programmeName: string;
+  section: ExperienceSectionV2;
+}>) {
+  const { copy, theme } = account.presentation;
+  if (section === "overview") {
+    const HeroIcon = heroIcons[theme.heroAsset];
+    const status = customerAccountStatus(account.account_status);
+    const affordableRewards = account.rewards.filter(
+      (reward) => reward.affordable,
+    ).length;
+    return (
+      <section className="member-hub-overview" id="overview">
+        <div className="member-hub-page-heading">
+          <div className="member-hub-breadcrumb">
+            <span>My loyalty</span>
+            <ArrowRight aria-hidden="true" />
+            <strong>Overview</strong>
+          </div>
+          <h1>{programmeName}</h1>
+          <p>Your points, rewards, status, and progress at a glance.</p>
+        </div>
+        <div className="member-hub-hero">
+          <div>
+            <span className="member-hub-hero-eyebrow">
+              <Sparkles aria-hidden="true" /> {copy.balanceLabel}
+            </span>
+            <div className="member-hub-balance">
+              <strong>{formatCustomerPoints(account.available_points)}</strong>
+              <span>{copy.pointsLabel}</span>
+            </div>
+            <p>
+              {account.tier_name
+                ? `${account.tier_name} member · keep earning toward your next milestone.`
+                : "Your account is ready for its first tier milestone."}
+            </p>
+          </div>
+          {HeroIcon ? (
+            <div className="member-hub-hero-mark" aria-hidden="true">
+              <HeroIcon />
+            </div>
+          ) : null}
+        </div>
+
+        <div className="member-hub-summary-grid">
+          <SummaryCard
+            detail="Becomes available after the return window"
+            icon={Clock3}
+            label="Pending"
+            value={formatCustomerPoints(account.pending_points)}
+          />
+          <SummaryCard
+            detail="Held safely for rewards in progress"
+            icon={LockKeyhole}
+            label="Reserved"
+            value={formatCustomerPoints(account.reserved_points)}
+          />
+          <SummaryCard
+            detail={`${account.rewards.length} rewards in the current catalogue`}
+            icon={Gift}
+            label="Ready to redeem"
+            value={affordableRewards.toLocaleString("en-GB")}
+          />
+          <SummaryCard
+            detail={
+              account.next_expiry_at
+                ? `${formatCustomerPoints(account.next_expiry_points ?? "0")} points expire`
+                : "No points are scheduled to expire"
+            }
+            icon={CalendarClock}
+            label="Next expiry"
+            value={
+              account.next_expiry_at
+                ? formatCustomerDate(account.next_expiry_at)
+                : "None"
+            }
+          />
+        </div>
+
+        <p className={`member-hub-account-note ${status.tone}`}>
+          <ShieldCheck aria-hidden="true" />
+          <span>
+            <strong>{status.label}</strong>
+            {status.detail}
+          </span>
+        </p>
+      </section>
+    );
+  }
+
+  if (section === "earning") {
+    return (
+      <ExperienceSection
+        description="See exactly how eligible activities add points to your account. Restrictions and limits are shown before you participate."
+        eyebrow="Build your balance"
+        icon={Sparkles}
+        id="earning"
+        title="Ways to earn"
+      >
+        {account.earning_methods.length ? (
+          <div className="member-earning-grid">
+            {account.earning_methods.map((method) => (
+              <EarningMethodCard key={method.code} method={method} />
+            ))}
+          </div>
+        ) : (
+          <EmptyExperience
+            icon={ShoppingBag}
+            title="Earning methods are being prepared"
+          >
+            Eligible store activity will still appear in your history when the
+            programme publishes its customer catalogue.
+          </EmptyExperience>
+        )}
+      </ExperienceSection>
+    );
+  }
+
+  if (section === "rewards") {
+    return (
+      <ExperienceSection
+        description="Discover benefits you can afford now and see how many more points you need for the rest."
+        eyebrow="Use your points"
+        icon={Gift}
+        id="rewards"
+        title={copy.rewardsLabel}
+      >
+        {account.rewards.length ? (
+          <div className="member-reward-grid">
+            {account.rewards.map((reward) => (
+              <RewardCard
+                account={account}
+                key={reward.code}
+                ready={account.account_status === "ready"}
+                redeemLabel={copy.redeemLabel}
+                reward={reward}
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyExperience icon={Gift} title="No rewards published yet">
+            Your points remain available. The store will show new rewards here
+            as soon as they are published.
+          </EmptyExperience>
+        )}
+
+        {account.reservations.length ? (
+          <div className="member-reservation-strip">
+            <div>
+              <TicketCheck aria-hidden="true" />
+              <span>
+                <strong>Rewards in progress</strong>
+                <small>
+                  Native store benefits are prepared asynchronously.
+                </small>
+              </span>
+            </div>
+            <ul>
+              {account.reservations.map((reservation) => (
+                <li key={reservation.id}>
+                  <strong>{reservation.rewardName}</strong>
+                  <span>{reservation.state.replaceAll("_", " ")}</span>
+                  <small>
+                    {formatCustomerPoints(reservation.costPoints)} points ·
+                    expires {formatCustomerDate(reservation.expiresAt)}
+                  </small>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </ExperienceSection>
+    );
+  }
+
+  if (section === "vip") {
+    return (
+      <ExperienceSection
+        description="Track your qualification window, next milestone, retention requirements, grace period, and immutable tier history."
+        eyebrow="Member progression"
+        icon={Crown}
+        id="vip"
+        title="VIP status"
+      >
+        {account.tier_progress ? (
+          <TierProgress
+            availablePoints={account.available_points}
+            mode="member"
+            nextExpiryAt={account.next_expiry_at}
+            nextExpiryPoints={account.next_expiry_points}
+            progress={account.tier_progress}
+          />
+        ) : (
+          <EmptyExperience icon={Crown} title="Tier evaluation pending">
+            Keep earning normally. Your first qualification decision will appear
+            here with its exact milestone evidence.
+          </EmptyExperience>
+        )}
+      </ExperienceSection>
+    );
+  }
+
+  if (section === "referrals") {
+    return (
+      <ExperienceSection
+        description="Share one private advocate link, follow qualification progress, and see issued or reversed referral rewards."
+        eyebrow="Give and get"
+        icon={UsersRound}
+        id="referrals"
+        title="Referrals"
+      >
+        {account.referral ? (
+          <CustomerReferralPanel
+            experience={account.referral}
+            operationId={crypto.randomUUID()}
+          />
+        ) : (
+          <EmptyExperience
+            icon={HeartHandshake}
+            title="Referrals are not active yet"
+          >
+            Your existing points and rewards are unaffected. Referral sharing
+            will appear here when the store publishes a policy.
+          </EmptyExperience>
+        )}
+      </ExperienceSection>
+    );
+  }
+
+  if (section === "history") {
+    return (
+      <ExperienceSection
+        description="Every change is backed by immutable loyalty evidence. Corrections add a new entry instead of rewriting history."
+        eyebrow="Your ledger"
+        icon={History}
+        id="history"
+        title="Points history"
+      >
+        {account.activity.length ? (
+          <ol className="member-history-list">
+            {account.activity.map((item) => {
+              const presentation = activityPresentation(item);
+              return (
+                <li key={item.id}>
+                  <span
+                    className={`member-history-icon ${presentation.tone}`}
+                    aria-hidden="true"
+                  >
+                    <Activity />
+                  </span>
+                  <div>
+                    <strong>{presentation.label}</strong>
+                    <time dateTime={item.effectiveAt}>
+                      {formatCustomerDate(item.effectiveAt)}
+                    </time>
+                  </div>
+                  <b className={presentation.tone}>
+                    {presentation.sign}
+                    {formatCustomerPoints(item.points)}
+                  </b>
+                </li>
+              );
+            })}
+          </ol>
+        ) : (
+          <EmptyExperience icon={History} title="No points activity yet">
+            Your first eligible activity will appear here with its date and
+            exact points effect.
+          </EmptyExperience>
+        )}
+      </ExperienceSection>
+    );
+  }
+
+  return (
+    <ExperienceSection
+      description="Manage this verified store connection and download a portable record of your loyalty data."
+      eyebrow="Connection and privacy"
+      icon={CircleUserRound}
+      id="account"
+      title="Account"
+    >
+      <div className="member-account-grid">
+        <article>
+          <span className="member-account-icon" aria-hidden="true">
+            <Store />
+          </span>
+          <div>
+            <small>Verified store</small>
+            <h3>{account.store_name}</h3>
+            <p>
+              This account was connected using a signed one-time store link—not
+              an email-address match.
+            </p>
+            {account.programme_id ? (
+              <Link
+                href={`/loyalty/${account.workspace_id}/${account.programme_id}`}
+              >
+                View public programme details <ArrowRight aria-hidden="true" />
+              </Link>
+            ) : null}
+          </div>
+        </article>
+        <article>
+          <span className="member-account-icon" aria-hidden="true">
+            <ShieldCheck />
+          </span>
+          <div>
+            <small>Privacy and portability</small>
+            <h3>Your loyalty data</h3>
+            <p>
+              Download linked store identities, balances, tiers, reservations,
+              and the complete immutable ledger as JSON.
+            </p>
+            <Link href={customerExportReauthenticationPath("en")}>
+              Download my data <ArrowRight aria-hidden="true" />
+            </Link>
+          </div>
+        </article>
+      </div>
+    </ExperienceSection>
   );
 }
 
@@ -538,7 +617,7 @@ function ExperienceSection({
   description: string;
   eyebrow: string;
   icon: LucideIcon;
-  id: string;
+  id: ExperienceSectionV2;
   title: string;
 }>) {
   return (
@@ -600,10 +679,12 @@ function EarningMethodCard({
 function RewardCard({
   account,
   ready,
+  redeemLabel,
   reward,
 }: Readonly<{
   account: CustomerLoyaltyAccount;
   ready: boolean;
+  redeemLabel: string;
   reward: CustomerReward;
 }>) {
   const Icon = rewardIcons[reward.kind];
@@ -629,7 +710,7 @@ function RewardCard({
           <Link
             href={`/account/loyalty/redeem?account=${account.account_id}&reward=${encodeURIComponent(reward.code)}`}
           >
-            Redeem reward <ArrowRight aria-hidden="true" />
+            {redeemLabel} <ArrowRight aria-hidden="true" />
           </Link>
         ) : (
           <span className="member-reward-ready">

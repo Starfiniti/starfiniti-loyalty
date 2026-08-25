@@ -14,9 +14,47 @@ import { getCustomerLoyaltyAccounts } from "./customer-account";
 
 const accountId = "88000000-0000-4000-8000-000000000001";
 
-function experience() {
+const presentation = {
+  version: "2",
+  theme: {
+    version: "2",
+    brandColor: "#7c2d4f",
+    displayFont: "editorial-serif",
+    cardRadiusPx: 14,
+    heroText: "Beauty that gives back",
+    pointsLabel: "Points",
+    showTier: true,
+    showRewards: true,
+    widgetPosition: "right",
+    density: "comfortable",
+    heroAsset: "sparkles",
+    showReferrals: true,
+    sectionOrder: [
+      "overview",
+      "earning",
+      "rewards",
+      "vip",
+      "referrals",
+      "history",
+      "account",
+    ],
+  },
+  copy: {
+    version: "2",
+    locale: "en",
+    heroText: "Beauty that gives back",
+    pointsLabel: "Points",
+    balanceLabel: "Your balance",
+    rewardsLabel: "Rewards",
+    redeemLabel: "Redeem",
+    joinLabel: "Join free",
+    earnMessage: "Earn on eligible purchases.",
+  },
+} as const;
+
+function experience(version: "1" | "2" = "2") {
   return {
-    version: "1",
+    version,
     asOf: "2026-08-25T10:00:00Z",
     accountId,
     workspaceId: "88000000-0000-4000-8000-000000000004",
@@ -34,6 +72,7 @@ function experience() {
     activity: [],
     tierProgress: null,
     referral: null,
+    ...(version === "2" ? { presentation } : {}),
   };
 }
 
@@ -51,7 +90,7 @@ describe("customer account aggregate", () => {
     });
   });
 
-  it("strictly parses and maps the one-statement no-selector aggregate", async () => {
+  it("strictly parses V2 and maps its controlled presentation", async () => {
     await expect(getCustomerLoyaltyAccounts()).resolves.toEqual({
       kind: "ready",
       accounts: [
@@ -60,15 +99,31 @@ describe("customer account aggregate", () => {
           available_points: "100",
           tier_name: "Rose",
           enhancements_enabled: true,
-          earning_methods: [],
+          presentation,
         }),
       ],
     });
     expect(rpc).toHaveBeenCalledTimes(1);
-    expect(rpc).toHaveBeenCalledWith("get_my_loyalty_experiences_v1");
+    expect(rpc).toHaveBeenCalledWith("get_my_loyalty_experiences_v2");
   });
 
-  it("fails closed on malformed, mismatched, or duplicate containers", async () => {
+  it("normalizes V1 only while an additive database deploy lacks V2", async () => {
+    rpc
+      .mockResolvedValueOnce({ data: null, error: { code: "PGRST202" } })
+      .mockResolvedValueOnce({
+        data: [{ account_id: accountId, experience: experience("1") }],
+        error: null,
+      });
+    const result = await getCustomerLoyaltyAccounts();
+    expect(result).toMatchObject({
+      kind: "ready",
+      accounts: [{ presentation: { version: "2" } }],
+    });
+    expect(rpc).toHaveBeenNthCalledWith(1, "get_my_loyalty_experiences_v2");
+    expect(rpc).toHaveBeenNthCalledWith(2, "get_my_loyalty_experiences_v1");
+  });
+
+  it("returns a bounded unavailable state for malformed containers", async () => {
     rpc.mockResolvedValueOnce({
       data: [
         {
@@ -81,9 +136,9 @@ describe("customer account aggregate", () => {
       ],
       error: null,
     });
-    await expect(getCustomerLoyaltyAccounts()).rejects.toThrow(
-      "customer_account_unavailable",
-    );
+    await expect(getCustomerLoyaltyAccounts()).resolves.toEqual({
+      kind: "unavailable",
+    });
 
     rpc.mockResolvedValueOnce({
       data: [
@@ -94,9 +149,9 @@ describe("customer account aggregate", () => {
       ],
       error: null,
     });
-    await expect(getCustomerLoyaltyAccounts()).rejects.toThrow(
-      "customer_account_unavailable",
-    );
+    await expect(getCustomerLoyaltyAccounts()).resolves.toEqual({
+      kind: "unavailable",
+    });
 
     rpc.mockResolvedValueOnce({
       data: [
@@ -105,34 +160,33 @@ describe("customer account aggregate", () => {
       ],
       error: null,
     });
-    await expect(getCustomerLoyaltyAccounts()).rejects.toThrow(
-      "customer_account_unavailable",
-    );
+    await expect(getCustomerLoyaltyAccounts()).resolves.toEqual({
+      kind: "unavailable",
+    });
   });
 
-  it("fails closed when the canonical projection is unavailable", async () => {
+  it("does not hide provider or malformed V2 failures behind legacy data", async () => {
     rpc.mockResolvedValue({
       data: null,
-      error: { message: "projection unavailable" },
+      error: { code: "57014", message: "projection unavailable" },
     });
-    await expect(getCustomerLoyaltyAccounts()).rejects.toThrow(
-      "customer_account_unavailable",
-    );
+    await expect(getCustomerLoyaltyAccounts()).resolves.toEqual({
+      kind: "unavailable",
+    });
+    expect(rpc).toHaveBeenCalledTimes(1);
   });
 
-  it("returns an honest empty state", async () => {
+  it("returns honest empty and unauthenticated states", async () => {
     rpc.mockResolvedValue({ data: [], error: null });
     await expect(getCustomerLoyaltyAccounts()).resolves.toEqual({
       kind: "ready",
       accounts: [],
     });
-  });
 
-  it("does not call a projection without an Auth subject", async () => {
     getClaims.mockResolvedValue({ data: null, error: { message: "missing" } });
     await expect(getCustomerLoyaltyAccounts()).resolves.toEqual({
       kind: "unauthenticated",
     });
-    expect(rpc).not.toHaveBeenCalled();
+    expect(rpc).toHaveBeenCalledTimes(1);
   });
 });

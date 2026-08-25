@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { customerLoyaltyExperienceV1 } from "./customer-experience";
+import {
+  customerLoyaltyExperienceV1,
+  customerLoyaltyExperienceV2,
+} from "./customer-experience";
+import { canonicalExperienceSectionOrderV2 } from "./experience";
 
 const accountId = "89000000-0000-4000-8000-000000000001";
 
@@ -58,6 +62,42 @@ function validExperience() {
     ],
     tierProgress: null,
     referral: null,
+  };
+}
+
+function validExperienceV2() {
+  return {
+    ...validExperience(),
+    version: "2" as const,
+    presentation: {
+      version: "2" as const,
+      theme: {
+        version: "2" as const,
+        brandColor: "#4f46e5",
+        displayFont: "modern-serif" as const,
+        cardRadiusPx: 14 as const,
+        heroText: "Rewards that move with you",
+        pointsLabel: "Points",
+        showTier: true,
+        showRewards: true,
+        widgetPosition: "right" as const,
+        density: "comfortable" as const,
+        heroAsset: "sparkles" as const,
+        showReferrals: true,
+        sectionOrder: [...canonicalExperienceSectionOrderV2],
+      },
+      copy: {
+        version: "2" as const,
+        locale: "en" as const,
+        heroText: "Rewards that move with you",
+        pointsLabel: "Points",
+        balanceLabel: "Your balance",
+        rewardsLabel: "Your rewards",
+        redeemLabel: "Redeem",
+        joinLabel: "Join free",
+        earnMessage: "Earn points on every eligible order.",
+      },
+    },
   };
 }
 
@@ -163,6 +203,50 @@ describe("CustomerLoyaltyExperienceV1", () => {
           available: "9223372036854775808",
           reserved: "0",
         },
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe("CustomerLoyaltyExperienceV2", () => {
+  it("adds one strict controlled presentation while retaining exact value data", () => {
+    const parsed = customerLoyaltyExperienceV2.parse(validExperienceV2());
+    expect(parsed.balances.available).toBe("9007199254740993");
+    expect(parsed.presentation.theme.sectionOrder).toEqual(
+      canonicalExperienceSectionOrderV2,
+    );
+    expect(
+      customerLoyaltyExperienceV1.safeParse(validExperienceV2()).success,
+    ).toBe(false);
+  });
+
+  it("rejects missing sections, non-English copy, and private extensions", () => {
+    const base = validExperienceV2();
+    expect(
+      customerLoyaltyExperienceV2.safeParse({
+        ...base,
+        presentation: {
+          ...base.presentation,
+          theme: {
+            ...base.presentation.theme,
+            sectionOrder: base.presentation.theme.sectionOrder.slice(0, -1),
+          },
+        },
+      }).success,
+    ).toBe(false);
+    expect(
+      customerLoyaltyExperienceV2.safeParse({
+        ...base,
+        presentation: {
+          ...base.presentation,
+          copy: { ...base.presentation.copy, locale: "sl-SI" },
+        },
+      }).success,
+    ).toBe(false);
+    expect(
+      customerLoyaltyExperienceV2.safeParse({
+        ...base,
+        presentation: { ...base.presentation, customCss: "body{}" },
       }).success,
     ).toBe(false);
   });

@@ -5,6 +5,7 @@ import {
   earningSourceV2,
 } from "./programme-v2";
 import { customerReferralExperienceV1 } from "./referral";
+import { experiencePresentationV2 } from "./experience";
 import { customerTierProgressV1, tierDescriptorV1 } from "./tier-progression";
 
 const POSTGRES_BIGINT_MAX = 9_223_372_036_854_775_807n;
@@ -110,9 +111,8 @@ export const customerActivityV1 = z
   })
   .strict();
 
-export const customerLoyaltyExperienceV1 = z
+const customerLoyaltyExperienceBase = z
   .object({
-    version: z.literal("1"),
     asOf: instant,
     accountId: z.uuid(),
     workspaceId: z.uuid(),
@@ -143,44 +143,47 @@ export const customerLoyaltyExperienceV1 = z
     tierProgress: customerTierProgressV1.nullable(),
     referral: customerReferralExperienceV1.nullable(),
   })
-  .strict()
-  .superRefine((experience, context) => {
-    const available = BigInt(experience.balances.available);
-    for (const [index, reward] of experience.rewards.entries()) {
-      if (reward.affordable !== BigInt(reward.costPoints) <= available) {
-        context.addIssue({
-          code: "custom",
-          message: "Reward affordability does not match the exact balance",
-          path: ["rewards", index, "affordable"],
-        });
-      }
-    }
-    for (const [index, method] of experience.earningMethods.entries()) {
-      const at = Date.parse(experience.asOf);
-      const availableNow =
-        (method.startsAt === null || Date.parse(method.startsAt) <= at) &&
-        (method.endsAt === null || Date.parse(method.endsAt) > at);
-      if (method.availableNow !== availableNow) {
-        context.addIssue({
-          code: "custom",
-          message: "Earning availability does not match the projection instant",
-          path: ["earningMethods", index, "availableNow"],
-        });
-      }
-    }
-    if (
-      experience.referral !== null &&
-      experience.referral.accountId !== experience.accountId
-    ) {
+  .strict();
+
+function validateCustomerLoyaltyExperience(
+  experience: z.infer<typeof customerLoyaltyExperienceBase>,
+  context: z.RefinementCtx,
+): void {
+  const available = BigInt(experience.balances.available);
+  for (const [index, reward] of experience.rewards.entries()) {
+    if (reward.affordable !== BigInt(reward.costPoints) <= available) {
       context.addIssue({
         code: "custom",
-        message: "Referral experience belongs to a different account",
-        path: ["referral", "accountId"],
+        message: "Reward affordability does not match the exact balance",
+        path: ["rewards", index, "affordable"],
       });
     }
-    const uniqueFields: ReadonlyArray<
-      readonly [string, ReadonlyArray<string>]
-    > = [
+  }
+  for (const [index, method] of experience.earningMethods.entries()) {
+    const at = Date.parse(experience.asOf);
+    const availableNow =
+      (method.startsAt === null || Date.parse(method.startsAt) <= at) &&
+      (method.endsAt === null || Date.parse(method.endsAt) > at);
+    if (method.availableNow !== availableNow) {
+      context.addIssue({
+        code: "custom",
+        message: "Earning availability does not match the projection instant",
+        path: ["earningMethods", index, "availableNow"],
+      });
+    }
+  }
+  if (
+    experience.referral !== null &&
+    experience.referral.accountId !== experience.accountId
+  ) {
+    context.addIssue({
+      code: "custom",
+      message: "Referral experience belongs to a different account",
+      path: ["referral", "accountId"],
+    });
+  }
+  const uniqueFields: ReadonlyArray<readonly [string, ReadonlyArray<string>]> =
+    [
       [
         "earningMethods",
         experience.earningMethods.map((method) => method.code),
@@ -192,16 +195,29 @@ export const customerLoyaltyExperienceV1 = z
       ],
       ["activity", experience.activity.map((activity) => activity.id)],
     ];
-    for (const [field, values] of uniqueFields) {
-      if (new Set(values).size !== values.length) {
-        context.addIssue({
-          code: "custom",
-          message: `${field} identifiers must be unique`,
-          path: [field],
-        });
-      }
+  for (const [field, values] of uniqueFields) {
+    if (new Set(values).size !== values.length) {
+      context.addIssue({
+        code: "custom",
+        message: `${field} identifiers must be unique`,
+        path: [field],
+      });
     }
-  });
+  }
+}
+
+export const customerLoyaltyExperienceV1 = customerLoyaltyExperienceBase
+  .extend({ version: z.literal("1") })
+  .strict()
+  .superRefine(validateCustomerLoyaltyExperience);
+
+export const customerLoyaltyExperienceV2 = customerLoyaltyExperienceBase
+  .extend({
+    version: z.literal("2"),
+    presentation: experiencePresentationV2,
+  })
+  .strict()
+  .superRefine(validateCustomerLoyaltyExperience);
 
 export type CustomerEarningMethodV1 = z.infer<typeof customerEarningMethodV1>;
 export type CustomerRewardV1 = z.infer<typeof customerRewardV1>;
@@ -209,4 +225,7 @@ export type CustomerReservationV1 = z.infer<typeof customerReservationV1>;
 export type CustomerActivityV1 = z.infer<typeof customerActivityV1>;
 export type CustomerLoyaltyExperienceV1 = z.infer<
   typeof customerLoyaltyExperienceV1
+>;
+export type CustomerLoyaltyExperienceV2 = z.infer<
+  typeof customerLoyaltyExperienceV2
 >;

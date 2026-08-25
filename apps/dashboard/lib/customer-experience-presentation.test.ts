@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { DEFAULT_EXPERIENCE_PRESENTATION_V2 } from "@/lib/experience-theme";
 import type { CustomerLoyaltyAccount } from "@/lib/server/customer-account";
 import {
   activityPresentation,
@@ -7,6 +8,7 @@ import {
   earningEffectLabel,
   formatCustomerPoints,
   selectCustomerAccount,
+  visibleCustomerExperienceSections,
 } from "./customer-experience-presentation";
 
 function account(accountId: string): CustomerLoyaltyAccount {
@@ -31,6 +33,7 @@ function account(accountId: string): CustomerLoyaltyAccount {
     activity: [],
     tier_progress: null,
     referral: null,
+    presentation: DEFAULT_EXPERIENCE_PRESENTATION_V2,
   };
 }
 
@@ -45,6 +48,26 @@ describe("customer experience presentation", () => {
       { id: "history", label: "History" },
       { id: "account", label: "Account" },
     ]);
+  });
+
+  it("keeps authored DOM order and hides only optional sections", () => {
+    expect(
+      visibleCustomerExperienceSections({
+        ...DEFAULT_EXPERIENCE_PRESENTATION_V2.theme,
+        showRewards: false,
+        showTier: true,
+        showReferrals: false,
+        sectionOrder: [
+          "account",
+          "history",
+          "referrals",
+          "vip",
+          "rewards",
+          "earning",
+          "overview",
+        ],
+      }),
+    ).toEqual(["account", "history", "vip", "earning", "overview"]);
   });
 
   it("selects only an account already returned by the authorized read", () => {

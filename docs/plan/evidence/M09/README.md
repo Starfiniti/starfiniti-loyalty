@@ -48,7 +48,17 @@ Status: in progress. M09-S01 through M09-S04 are complete; M09-S05 presentation 
 - Runtime contract: every minimum/current HPOS/legacy cell exercised default-off and staged flags, official integration handles, the no-script path, actual fresh/stale `/wc/store/v1/cart` responses, native classic/Store API coupons, and forced Hub failure. The current-HPOS lane also verified the real namespaced JSON wire payload and controller coupon behavior.
 - Rollback: disable the panel first and Blocks data second. No database migration or value-bearing WordPress data is introduced, and the existing local snapshot, native coupon, outbox, reservation, and canonical ledger boundaries remain unchanged.
 
+## S05 — Controlled presentation and degraded delivery
+
+- Status: implementation complete; exact-head Linux replay and real-browser visual evidence remain open, so the slice is not yet marked complete.
+- Architecture: ADR-0039 adds strict `ExperienceThemeDefinitionV2`, English-only copy, an exact seven-section order, reviewed Lucide asset keys, controlled density and optional visibility, one audited Auth-derived command, no-selector customer reads, and no-locale anonymous reads while retaining strict V1 contracts and functions.
+- Delivery: merchant preview covers member, public, and locally cached WooCommerce surfaces at desktop/mobile and ready/guest/offline/empty states. The hosted member and public DOM consume the exact persisted order, and only rewards, VIP, and referrals may be hidden. Overview, earning, history, privacy, and account access remain present.
+- Failure behavior: V2 readers fall back to V1 only when the additive RPC is absent. Malformed, unauthorized, or provider-failure responses render bounded no-store/no-customer recovery states. WooCommerce continues using its last valid snapshot, native coupons, no-script guidance, and zero synchronous Hub dependency.
+- Local verification: lint; all workspace typechecks; 177 dashboard, 97 worker, 234 contract, and 57 domain tests; CI/deployment/pilot/entitlement/architecture/accessibility/WooCommerce validators; production builds; secret scan; zero-vulnerability production audit; licence validation; changed-file formatting; `git diff --check`; and static validation of 57 migrations plus 44 pgTAP files passed.
+- Accessibility: fifteen main-landmark/skip-target surfaces, visible focus, reduced motion, controlled composition, English-only navigation, and 320-pixel reflow guards pass statically. The connected Chrome extension blocks local-app navigation with `ERR_BLOCKED_BY_CLIENT`; therefore keyboard, screen-reader, zoom, forced-colour, slow-network, and final visual evidence are not claimed yet.
+- Rollback: application readers and writers can return to V1 while additive V2 columns/functions remain inert and auditable. Presentation reset uses `none`, `comfortable`, and canonical order; no rollback mutates programme versions, reservations, coupons, commerce facts, or ledger value.
+
 ## Remaining
 
-- S05 branding, accessibility, and outage hardening.
+- S05 exact-head Linux database replay and real-browser accessibility/visual proof.
 - S06 disabled deployment, Starfiniti canary, reconciliation, rollback, and score.
