@@ -105,8 +105,9 @@ begin
 
   return query
   with date_spine as materialized (
-    select (cohort_from_local + offset)::date as local_date
-    from pg_catalog.generate_series(0, target_days - 1) as generated(offset)
+    select (cohort_from_local + day_offset)::date as local_date
+    from pg_catalog.generate_series(0, target_days - 1)
+      as generated(day_offset)
   ), scoped_wallets as materialized (
     select wallet.id, wallet.created_at,
       (wallet.created_at at time zone target_time_zone)::date as joined_date
