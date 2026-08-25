@@ -16,7 +16,7 @@ import {
   RefreshCcw,
   ShieldCheck,
 } from "lucide-react";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import {
   createAnalyticsExport,
   createAnalyticsReportSchedule,
@@ -50,28 +50,8 @@ export function AnalyticsExportOperations({
     createAnalyticsReportSchedule,
     idle,
   );
-  const [exportOperationId, setExportOperationId] = useState(
-    initialExportOperationId,
-  );
-  const [scheduleOperationId, setScheduleOperationId] = useState(
-    initialScheduleOperationId,
-  );
   const [timeZone, setTimeZone] = useState("UTC");
   const [frequency, setFrequency] = useState("weekly");
-  useEffect(() => {
-    const browserZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    if (browserZone) setTimeZone(browserZone);
-  }, []);
-  useEffect(() => {
-    if (exportState.kind === "success") {
-      setExportOperationId(crypto.randomUUID());
-    }
-  }, [exportState]);
-  useEffect(() => {
-    if (scheduleState.kind === "success") {
-      setScheduleOperationId(crypto.randomUUID());
-    }
-  }, [scheduleState]);
 
   const scopeFields = (
     <>
@@ -111,7 +91,11 @@ export function AnalyticsExportOperations({
             </div>
           </div>
           {scopeFields}
-          <input name="operationId" type="hidden" value={exportOperationId} />
+          <input
+            name="operationId"
+            type="hidden"
+            value={initialExportOperationId}
+          />
           <div className="analytics-export-fields">
             <label>
               Period
@@ -158,7 +142,11 @@ export function AnalyticsExportOperations({
             </div>
           </div>
           {scopeFields}
-          <input name="operationId" type="hidden" value={scheduleOperationId} />
+          <input
+            name="operationId"
+            type="hidden"
+            value={initialScheduleOperationId}
+          />
           <div className="analytics-export-fields is-schedule">
             <label>
               Cadence
