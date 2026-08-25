@@ -298,7 +298,7 @@ select results_eq(
 );
 select results_eq(
   $$ select wallet_count || ':' || wallet_account_count || ':' || ledger_entry_count || ':' || lot_count from analytics_owner_report $$,
-  array['1:6:9:3'::text], 'projection evidence counts are exact text'
+  array['1:6:14:3'::text], 'projection evidence counts are exact text'
 );
 select results_eq(
   $$ select pending_points || ':' || reserved_points from analytics_owner_report $$,
@@ -484,7 +484,7 @@ where balance.lot_id = (
 
 select loyalty_private.set_organization_entitlement(
   '8b000000-0000-4000-8000-000000000100', 'analytics', 'disabled', null,
-  'test', 'operator:test', 'Disable analytics for fail-closed verification',
+  'local_control', 'operator:test', 'Disable analytics for fail-closed verification',
   now() - interval '1 second', null
 );
 set local role authenticated;
