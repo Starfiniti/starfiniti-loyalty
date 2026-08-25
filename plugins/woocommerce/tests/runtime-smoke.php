@@ -40,6 +40,8 @@ starfiniti_runtime_assert(
 Outbox::install();
 global $wpdb;
 $outboxTable = $wpdb->prefix . 'starfiniti_loyalty_outbox';
+$claimConnectionId = '62000000-0000-4000-8000-000000000001';
+update_option('starfiniti_loyalty_connection_id', $claimConnectionId, false);
 starfiniti_runtime_assert(
     $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $outboxTable)) === $outboxTable,
     'plugin activation creates the durable local outbox'
@@ -279,7 +281,6 @@ update_option(
     'https://unreachable.invalid/api/v1/integrations/woocommerce/events',
     false
 );
-$claimConnectionId = '62000000-0000-4000-8000-000000000001';
 $claimKeyVersion = 'v1';
 $claimSigningKey = str_repeat("\x42", 32);
 $decodeConnectionPackage = new ReflectionMethod(Settings::class, 'decodeConnectionPackage');

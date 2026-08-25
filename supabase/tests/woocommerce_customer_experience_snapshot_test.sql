@@ -1,4 +1,13 @@
 begin;
+
+create extension if not exists pgtap with schema extensions;
+
+-- pg_prove uses the migration administrator. Keep exact NOINHERIT role
+-- switching and pgTAP access inside this rolled-back test transaction.
+grant loyalty_runtime to current_user;
+grant usage on schema extensions to loyalty_runtime;
+grant execute on all functions in schema extensions to loyalty_runtime;
+
 select plan(31);
 
 select has_table(
