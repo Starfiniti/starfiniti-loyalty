@@ -126,6 +126,24 @@ services:
       - ALL
     stop_grace_period: 75s
 
+  reporting-worker:
+    profiles: ["reporting"]
+    image: ${WORKER_IMAGE:?set WORKER_IMAGE to an immutable tag}
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    environment:
+      NODE_ENV: production
+      LOYALTY_WORKER_MODE: reporting
+      LOYALTY_WORKER_DATABASE_URL: ${LOYALTY_WORKER_DATABASE_URL:?required}
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    stop_grace_period: 75s
+
 secrets:
   woocommerce_signing_material:
     file: ${WOOCOMMERCE_SIGNING_MATERIAL_PATH:?required}

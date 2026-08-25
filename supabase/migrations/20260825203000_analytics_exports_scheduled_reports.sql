@@ -1203,9 +1203,9 @@ begin
     select request.id from loyalty.analytics_export_requests as request
     where request.state = 'expired' and request.expires_at <= target_as_of
   );
-  delete from loyalty_private.analytics_export_authorizations as authorization
-  where authorization.expires_at <= target_as_of
-     or authorization.request_id in (
+  delete from loyalty_private.analytics_export_authorizations as authz
+  where authz.expires_at <= target_as_of
+     or authz.request_id in (
        select request.id from loyalty.analytics_export_requests as request
        where request.state in ('expired', 'consumed', 'failed')
      );
@@ -1257,11 +1257,11 @@ begin
   if not found then
     raise exception using errcode = '42501', message = 'analytics export authorization denied';
   end if;
-  delete from loyalty_private.analytics_export_authorizations as authorization
-  where authorization.request_id = request.id
-    and authorization.auth_user_id = target_auth_user_id
-    and authorization.session_id = target_session_id
-    and authorization.used_at is null;
+  delete from loyalty_private.analytics_export_authorizations as authz
+  where authz.request_id = request.id
+    and authz.auth_user_id = target_auth_user_id
+    and authz.session_id = target_session_id
+    and authz.used_at is null;
   insert into loyalty_private.analytics_export_authorizations (
     request_id, token_sha256, auth_user_id, session_id, expires_at, created_at
   ) values (
@@ -1292,7 +1292,7 @@ set search_path = ''
 set statement_timeout = '15s'
 as $$
 declare
-  authorization loyalty_private.analytics_export_authorizations%rowtype;
+  export_authorization loyalty_private.analytics_export_authorizations%rowtype;
   request loyalty.analytics_export_requests%rowtype;
   payload loyalty_private.analytics_export_payloads%rowtype;
   consumed_time timestamptz := clock_timestamp();
@@ -1302,7 +1302,7 @@ begin
     or target_session_id is null then
     raise exception using errcode = '22023', message = 'invalid analytics export consumption';
   end if;
-  select candidate.* into authorization
+  select candidate.* into export_authorization
   from loyalty_private.analytics_export_authorizations as candidate
   join loyalty.analytics_export_requests as export on export.id = candidate.request_id
   where export.public_id = target_export_public_id
@@ -1312,8 +1312,8 @@ begin
     and candidate.auth_user_id = target_auth_user_id
     and candidate.session_id = target_session_id
   for update of candidate;
-  if authorization.id is null or authorization.used_at is not null
-    or authorization.expires_at <= consumed_time then
+  if export_authorization.id is null or export_authorization.used_at is not null
+    or export_authorization.expires_at <= consumed_time then
     raise exception using errcode = '42501', message = 'analytics export capability invalid';
   end if;
   select candidate.* into request
@@ -1322,7 +1322,7 @@ begin
     on membership.organization_id = candidate.organization_id
    and membership.user_id = target_auth_user_id and membership.revoked_at is null
    and membership.role in ('owner', 'admin', 'analyst', 'auditor')
-  where candidate.id = authorization.request_id
+  where candidate.id = export_authorization.request_id
     and candidate.state = 'ready' and candidate.expires_at > consumed_time
     and (membership.role in ('owner', 'admin')
       or candidate.requested_by_user_id = target_auth_user_id)
@@ -1335,7 +1335,7 @@ begin
   where candidate.request_id = request.id and candidate.expires_at > consumed_time
   for update;
   update loyalty_private.analytics_export_authorizations
-  set used_at = consumed_time where id = authorization.id;
+  set used_at = consumed_time where id = export_authorization.id;
   update loyalty.analytics_export_requests
   set state = 'consumed', consumed_at = consumed_time, updated_at = consumed_time
   where id = request.id;
@@ -1371,11 +1371,11 @@ begin
   where candidate.public_id = target_export_public_id
     and candidate.state = 'consumed'
     and exists (
-      select 1 from loyalty_private.analytics_export_authorizations as authorization
-      where authorization.request_id = candidate.id
-        and authorization.auth_user_id = target_auth_user_id
-        and authorization.session_id = target_session_id
-        and authorization.used_at = candidate.consumed_at
+      select 1 from loyalty_private.analytics_export_authorizations as authz
+      where authz.request_id = candidate.id
+        and authz.auth_user_id = target_auth_user_id
+        and authz.session_id = target_session_id
+        and authz.used_at = candidate.consumed_at
     );
   if not found then
     raise exception using errcode = '42501', message = 'analytics export download not authorized';

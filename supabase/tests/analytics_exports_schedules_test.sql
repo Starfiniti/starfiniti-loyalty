@@ -287,8 +287,8 @@ select results_eq(
     (select resource_public_id from owner_export),'reporting-test-worker') $$,
   array['ready'::text], 'leased worker generates one four-report aggregate source');
 select results_eq(
-  $$ select source_payload ->> 'schemaVersion' || ':' ||
-       jsonb_object_length(source_payload #> '{reports}')
+  $$ select (source_payload ->> 'schemaVersion') || ':' ||
+       (select count(*) from jsonb_object_keys(source_payload #> '{reports}'))::text
      from loyalty_private.analytics_export_payloads as payload
      join loyalty.analytics_export_requests as request on request.id = payload.request_id
      where request.public_id = (select resource_public_id from owner_export) $$,
