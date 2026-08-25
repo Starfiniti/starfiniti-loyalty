@@ -611,6 +611,8 @@ select * from loyalty_private.claim_woocommerce_customer_identity(
   extensions.digest('customer-link-beta-relink-proof', 'sha256')
 );
 
+grant select on beta_relink to authenticated;
+
 select results_eq(
   $$ select outcome from beta_relink $$,
   array['linked'::text],
