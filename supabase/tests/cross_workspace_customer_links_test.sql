@@ -518,6 +518,8 @@ select results_eq(
   array['unlinked:2:unlinked'::text],
   'the exact secondary account appends an unlinked revision'
 );
+
+reset role;
 select results_eq(
   $$
     select (link.revoked_at is not null)::text || ':' ||
@@ -546,6 +548,9 @@ select results_eq(
   array['true'::text],
   'the exact source identity is restored without guessing by email or customer number'
 );
+
+set local role authenticated;
+set local request.jwt.claim.sub = '93000000-0000-4000-8000-000000000001';
 select results_eq(
   $$
     select jsonb_array_length(document #> '{links,0,members}')::text || ':' ||
@@ -555,11 +560,16 @@ select results_eq(
   array['1:unlinked'::text],
   'the minimized read retains one canonical account after unlink'
 );
+
+reset role;
 select results_eq(
   $$ select count(*)::bigint from loyalty.ledger_transactions $$,
   array[0::bigint],
   'unlink writes no ledger value'
 );
+
+set local role authenticated;
+set local request.jwt.claim.sub = '93000000-0000-4000-8000-000000000001';
 select results_eq(
   $$
     select outcome || ':' || revision::text || ':' || state
@@ -571,11 +581,16 @@ select results_eq(
   array['duplicate:2:unlinked'::text],
   'an exact unlink retry returns the immutable result despite a new correlation ID'
 );
+
+reset role;
 select results_eq(
   $$ select count(*)::bigint from loyalty.customer_identity_link_versions $$,
   array[2::bigint],
   'an exact unlink retry appends no duplicate revision'
 );
+
+set local role authenticated;
+set local request.jwt.claim.sub = '93000000-0000-4000-8000-000000000001';
 select throws_ok(
   $$
     select * from loyalty.unlink_my_cross_workspace_customer_account_v1(
