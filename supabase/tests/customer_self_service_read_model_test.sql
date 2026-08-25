@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(27);
+select plan(48);
 
 select has_function(
   'loyalty', 'get_my_loyalty_accounts', array[]::text[],
@@ -36,6 +36,31 @@ select ok(
 select ok(
   not has_table_privilege('authenticated', 'loyalty.identity_link_decisions', 'SELECT'),
   'customers cannot enumerate identity-link evidence'
+);
+select has_function(
+  'loyalty', 'get_my_loyalty_experiences_v1', array[]::text[],
+  'strict customer loyalty experience projection exists'
+);
+select ok(
+  has_function_privilege('authenticated', 'loyalty.get_my_loyalty_experiences_v1()', 'EXECUTE'),
+  'authenticated customers can read their strict aggregate'
+);
+select ok(
+  not has_function_privilege('anon', 'loyalty.get_my_loyalty_experiences_v1()', 'EXECUTE'),
+  'anonymous sessions cannot read a customer aggregate'
+);
+select results_eq(
+  $$ select routine.prosecdef
+     from pg_proc as routine
+     join pg_namespace as namespace on namespace.oid = routine.pronamespace
+     where namespace.nspname = 'loyalty'
+       and routine.proname = 'get_my_loyalty_experiences_v1'
+       and exists (
+         select 1 from unnest(routine.proconfig) as setting
+         where setting = 'search_path=""'
+       ) $$,
+  array[true],
+  'strict customer aggregate is security definer with an empty search path'
 );
 
 insert into auth.users (id, email)
@@ -94,6 +119,51 @@ select organization_id, programme_group_id, id,
   'five-off', 'Five off', 'fixed_discount', 500
 from loyalty.programme_versions
 where organization_id = (select id from loyalty.organizations where slug = 'member-one');
+insert into loyalty.programme_earning_rules (
+  organization_id, programme_group_id, programme_version_id, code, name,
+  ordinal, source, enabled, priority, stackable, effect, conditions,
+  purchase_exclusions, cap
+)
+select version.organization_id, version.programme_group_id, version.id,
+  'purchase-base', 'Every purchase', 1, 'purchase', true, 0, false,
+  '{"kind":"base_rate","pointsPerMajorUnit":"5"}'::jsonb,
+  '{"productIds":[],"categoryIds":[],"currencyCodes":[],"markets":[],"channels":[],"activityCodes":[],"segmentCodes":[],"tierCodes":[],"startsAt":null,"endsAt":null}'::jsonb,
+  '{"productIds":[],"categoryIds":[],"shipping":true,"tax":true,"fees":true,"giftCardPayments":true,"storeCreditPayments":true,"discounts":true}'::jsonb,
+  '{"perEventPoints":null,"perMemberPoints":null,"memberPeriod":null,"rollingDays":null}'::jsonb
+from loyalty.programme_versions as version
+where version.organization_id = (
+  select id from loyalty.organizations where slug = 'member-one'
+);
+insert into loyalty.programme_earning_rules (
+  organization_id, programme_group_id, programme_version_id, code, name,
+  ordinal, source, enabled, priority, stackable, effect, conditions,
+  purchase_exclusions, cap
+)
+select version.organization_id, version.programme_group_id, version.id,
+  'birthday', 'Birthday bonus', 2, 'birthday', true, 10, true,
+  '{"kind":"fixed_bonus","points":"250"}'::jsonb,
+  '{"productIds":[],"categoryIds":[],"currencyCodes":[],"markets":[],"channels":[],"activityCodes":[],"segmentCodes":["private-segment"],"tierCodes":[],"startsAt":null,"endsAt":null}'::jsonb,
+  null,
+  '{"perEventPoints":"250","perMemberPoints":"250","memberPeriod":"calendar_year","rollingDays":null}'::jsonb
+from loyalty.programme_versions as version
+where version.organization_id = (
+  select id from loyalty.organizations where slug = 'member-one'
+);
+insert into loyalty.programme_earning_rules (
+  organization_id, programme_group_id, programme_version_id, code, name,
+  ordinal, source, enabled, priority, stackable, effect, conditions,
+  purchase_exclusions, cap
+)
+select version.organization_id, version.programme_group_id, version.id,
+  'unsafe-rule', '<script>unsafe</script>', 3, 'custom_activity', true, 0, true,
+  '{"kind":"fixed_bonus","points":"1"}'::jsonb,
+  '{"productIds":[],"categoryIds":[],"currencyCodes":[],"markets":[],"channels":[],"activityCodes":["unsafe"],"segmentCodes":[],"tierCodes":[],"startsAt":null,"endsAt":null}'::jsonb,
+  null,
+  '{"perEventPoints":"1","perMemberPoints":null,"memberPeriod":null,"rollingDays":null}'::jsonb
+from loyalty.programme_versions as version
+where version.organization_id = (
+  select id from loyalty.organizations where slug = 'member-one'
+);
 insert into loyalty.programme_rewards (
   organization_id, programme_group_id, programme_version_id,
   code, name, reward_kind, cost_points
@@ -139,6 +209,15 @@ select organization.id, customer.id,
 from loyalty.organizations as organization
 join loyalty.customers as customer on customer.organization_id = organization.id
 join loyalty.commerce_connections as connection on connection.organization_id = organization.id;
+insert into loyalty.organization_entitlements (
+  organization_id, catalogue_version, capability_key, state, source,
+  actor_reference, reason, effective_from
+)
+select id, 1, 'storefront.experience', 'disabled', 'local_control',
+  'test:customer-experience',
+  'Verify that disabled enhancements preserve the customer value container',
+  '2026-08-25 00:00:00+00'
+from loyalty.organizations where slug = 'member-two';
 
 select * from loyalty_private.award_points(
   (select id from loyalty.organizations where slug = 'member-one'),
@@ -269,6 +348,61 @@ select ok(
    from loyalty.get_my_loyalty_accounts()),
   'organization identity and private customer profile text are omitted'
 );
+select results_eq(
+  $$ select count(*)::bigint from loyalty.get_my_loyalty_experiences_v1() $$,
+  array[1::bigint],
+  'strict aggregate returns exactly the active linked account'
+);
+select results_eq(
+  $$ select experience ->> 'version',
+            (experience ->> 'accountId')::uuid = account_id
+     from loyalty.get_my_loyalty_experiences_v1() $$,
+  $$ values ('1'::text, true) $$,
+  'strict aggregate is versioned and bound to the public account link'
+);
+select results_eq(
+  $$ select experience #>> '{balances,available}'
+     from loyalty.get_my_loyalty_experiences_v1() $$,
+  array['9007199254740993'::text],
+  'strict aggregate preserves exact bigint balances'
+);
+select results_eq(
+  $$ select (experience ->> 'enhancementsEnabled')::boolean
+     from loyalty.get_my_loyalty_experiences_v1() $$,
+  array[true],
+  'self-hosted database authority enables storefront enhancements locally'
+);
+select results_eq(
+  $$ select jsonb_array_length(experience -> 'earningMethods'),
+            experience #>> '{earningMethods,0,name}',
+            experience #>> '{earningMethods,1,name}'
+     from loyalty.get_my_loyalty_experiences_v1() $$,
+  $$ values (2, 'Every purchase'::text, 'Birthday bonus'::text) $$,
+  'safe active earning methods are bounded and deterministically ordered'
+);
+select ok(
+  (select experience -> 'earningMethods' -> 1 ->> 'hasRestrictions' = 'true'
+      and experience::text !~ 'private-segment|productIds|categoryIds|tierCodes|activityCodes'
+   from loyalty.get_my_loyalty_experiences_v1()),
+  'earning summaries disclose a restriction indicator but no internal selectors'
+);
+select ok(
+  (select experience::text !~ 'unsafe-rule|script'
+   from loyalty.get_my_loyalty_experiences_v1()),
+  'markup-shaped earning names are excluded from customer output'
+);
+select results_eq(
+  $$ select experience #>> '{currentTier,name}',
+            experience #>> '{rewards,0,affordable}'
+     from loyalty.get_my_loyalty_experiences_v1() $$,
+  $$ values ('Rose'::text, 'true'::text) $$,
+  'tier and exact reward affordability share the canonical account container'
+);
+select ok(
+  (select experience::text !~* 'customerId|organization|auth_user|email|metadata|request_sha256'
+   from loyalty.get_my_loyalty_experiences_v1()),
+  'strict aggregate omits customer internals tenant internals contacts and evidence'
+);
 reset role;
 select results_eq(
   $$ select count(*)::bigint from loyalty.ledger_transactions $$,
@@ -288,6 +422,24 @@ select ok(
   (select every(store_name <> 'Rosy Store') from loyalty.get_my_loyalty_accounts()),
   'another customer cannot read the first tenant account'
 );
+select results_eq(
+  $$ select count(*)::bigint from loyalty.get_my_loyalty_experiences_v1() $$,
+  array[1::bigint],
+  'another customer receives one aggregate for their own active link'
+);
+select ok(
+  (select every(experience ->> 'storeName' <> 'Rosy Store')
+   from loyalty.get_my_loyalty_experiences_v1()),
+  'another customer cannot read the first tenant aggregate'
+);
+select results_eq(
+  $$ select (experience ->> 'enhancementsEnabled')::boolean,
+            experience #>> '{balances,available}',
+            experience ->> 'accountStatus'
+     from loyalty.get_my_loyalty_experiences_v1() $$,
+  $$ values (false, '0'::text, 'ready_without_activity'::text) $$,
+  'disabled enhancements preserve the honest core value and account state'
+);
 
 set local request.jwt.claim.sub = '8c000000-0000-4000-8000-000000000001';
 reset role;
@@ -298,6 +450,11 @@ select results_eq(
   $$ select count(*)::bigint from loyalty.get_my_loyalty_accounts() $$,
   array[0::bigint],
   'revocation removes customer self access immediately'
+);
+select results_eq(
+  $$ select count(*)::bigint from loyalty.get_my_loyalty_experiences_v1() $$,
+  array[0::bigint],
+  'revocation removes strict aggregate access immediately'
 );
 
 reset role;
@@ -317,6 +474,11 @@ select results_eq(
   array[0::bigint],
   'a missing authenticated subject fails closed'
 );
+select results_eq(
+  $$ select count(*)::bigint from loyalty.get_my_loyalty_experiences_v1() $$,
+  array[0::bigint],
+  'a missing authenticated subject cannot read a strict aggregate'
+);
 select is_empty(
   $$ select parameter_name from information_schema.parameters
      where specific_schema = 'loyalty'
@@ -333,6 +495,23 @@ select ok(
   (select pg_get_functiondef('loyalty.get_my_loyalty_accounts()'::regprocedure)
       ~ 'limit 20'),
   'account and reward output is explicitly bounded'
+);
+select is_empty(
+  $$ select parameter_name from information_schema.parameters
+     where specific_schema = 'loyalty'
+       and specific_name like 'get_my_loyalty_experiences_v1_%'
+       and parameter_mode = 'IN' $$,
+  'strict aggregate accepts no tenant customer connection workspace programme or account selector'
+);
+select ok(
+  (select pg_get_functiondef('loyalty.get_my_loyalty_experiences_v1()'::regprocedure)
+      !~* 'email'),
+  'strict aggregate contains no email matching path'
+);
+select ok(
+  (select pg_get_functiondef('loyalty.get_my_loyalty_experiences_v1()'::regprocedure)
+      ~ 'limit 24'),
+  'earning-method output is explicitly bounded'
 );
 
 select * from finish();

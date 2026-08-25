@@ -90,6 +90,7 @@ select is_empty(
           'loyalty.get_customer_tier_read_model(uuid,uuid)',
           'loyalty.get_campaign_results_v1(uuid,integer)',
           'loyalty.get_my_loyalty_accounts()',
+          'loyalty.get_my_loyalty_experiences_v1()',
           'loyalty.get_my_notification_preferences_v1()',
           'loyalty.get_notification_workspace_v1(uuid,integer)',
           'loyalty.get_my_referral_experiences_v1()',

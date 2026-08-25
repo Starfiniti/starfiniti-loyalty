@@ -115,6 +115,7 @@ select is_empty(
           'get_customer_tier_read_model',
           'get_campaign_results_v1',
           'get_my_loyalty_accounts',
+          'get_my_loyalty_experiences_v1',
           'get_my_notification_preferences_v1',
           'get_notification_workspace_v1',
           'get_my_referral_experiences_v1',

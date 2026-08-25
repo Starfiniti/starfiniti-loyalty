@@ -1,43 +1,29 @@
 import "server-only";
 import {
-  customerReferralExperienceV1,
-  customerTierProgressV1,
+  customerLoyaltyExperienceV1,
+  type CustomerActivityV1,
+  type CustomerEarningMethodV1,
+  type CustomerLoyaltyExperienceV1,
   type CustomerReferralExperienceV1,
+  type CustomerReservationV1,
+  type CustomerRewardV1,
   type CustomerTierProgressV1,
 } from "@starfiniti/contracts";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export type CustomerReward = Readonly<{
-  code: string;
-  name: string;
-  kind: string;
-  costPoints: string;
-  affordable: boolean;
-}>;
-
-export type CustomerReservation = Readonly<{
-  id: string;
-  rewardName: string;
-  state: string;
-  costPoints: string;
-  expiresAt: string;
-}>;
-
-export type CustomerActivity = Readonly<{
-  id: string;
-  kind: string;
-  points: string;
-  effectiveAt: string;
-}>;
+export type CustomerReward = CustomerRewardV1;
+export type CustomerReservation = CustomerReservationV1;
+export type CustomerActivity = CustomerActivityV1;
+export type CustomerEarningMethod = CustomerEarningMethodV1;
 
 export type CustomerLoyaltyAccount = Readonly<{
   account_id: string;
-  customer_id: string;
   workspace_id: string;
   programme_id: string | null;
   store_name: string;
   programme_name: string | null;
-  account_status: string;
+  account_status: CustomerLoyaltyExperienceV1["accountStatus"];
+  enhancements_enabled: boolean;
   pending_points: string;
   available_points: string;
   reserved_points: string;
@@ -45,6 +31,7 @@ export type CustomerLoyaltyAccount = Readonly<{
   tier_name: string | null;
   next_expiry_points: string | null;
   next_expiry_at: string | null;
+  earning_methods: CustomerEarningMethod[];
   rewards: CustomerReward[];
   reservations: CustomerReservation[];
   activity: CustomerActivity[];
@@ -62,76 +49,54 @@ export async function getCustomerLoyaltyAccounts(): Promise<CustomerAccountState
   if (claims.error || typeof claims.data?.claims?.sub !== "string") {
     return { kind: "unauthenticated" };
   }
-  const asOf = new Date().toISOString();
-  const [result, progressResult, referralResult] = await Promise.all([
-    supabase.schema("loyalty").rpc("get_my_loyalty_accounts"),
-    supabase
-      .schema("loyalty")
-      .rpc("get_my_tier_progress_v1", { target_as_of: asOf }),
-    supabase.schema("loyalty").rpc("get_my_referral_experiences_v1"),
-  ]);
-  if (result.error || progressResult.error) {
-    throw new Error("customer_account_unavailable");
-  }
-  const progressByAccount = new Map<string, CustomerTierProgressV1>();
-  for (const raw of (progressResult.data ?? []) as ReadonlyArray<
-    Readonly<{ account_id?: unknown; tier_progress?: unknown }>
+
+  const result = await supabase
+    .schema("loyalty")
+    .rpc("get_my_loyalty_experiences_v1");
+  if (result.error) throw new Error("customer_account_unavailable");
+
+  const accounts: CustomerLoyaltyAccount[] = [];
+  const accountIds = new Set<string>();
+  for (const raw of (result.data ?? []) as ReadonlyArray<
+    Readonly<{ account_id?: unknown; experience?: unknown }>
   >) {
-    if (typeof raw.account_id !== "string") {
+    const parsed = customerLoyaltyExperienceV1.safeParse(raw.experience);
+    if (
+      !parsed.success ||
+      raw.account_id !== parsed.data.accountId ||
+      accountIds.has(parsed.data.accountId)
+    ) {
       throw new Error("customer_account_unavailable");
     }
-    const parsed = customerTierProgressV1.safeParse(raw.tier_progress);
-    if (!parsed.success || progressByAccount.has(raw.account_id)) {
-      throw new Error("customer_account_unavailable");
-    }
-    progressByAccount.set(raw.account_id, parsed.data);
+    accountIds.add(parsed.data.accountId);
+    accounts.push(toCustomerLoyaltyAccount(parsed.data));
   }
-  const referralByAccount = new Map<string, CustomerReferralExperienceV1>();
-  if (!referralResult.error) {
-    try {
-      for (const raw of (referralResult.data ?? []) as ReadonlyArray<
-        Readonly<Record<string, unknown>>
-      >) {
-        const parsed = customerReferralExperienceV1.parse({
-          accountId: raw.account_id,
-          sharingState: raw.sharing_state,
-          shareUrl: raw.share_url,
-          advocateRewardPoints: raw.advocate_reward_points,
-          friendRewardPoints: raw.friend_reward_points,
-          minimumEligibleSpendMinor: raw.minimum_eligible_spend_minor,
-          currencyCode: raw.currency_code,
-          currencyMinorUnitDigits: raw.currency_minor_unit_digits,
-          qualificationStatus: raw.qualification_status,
-          coolingDays: raw.cooling_days,
-          counts: {
-            total: raw.total_count,
-            pending: raw.pending_count,
-            qualified: raw.qualified_count,
-            rejected: raw.rejected_count,
-            reversed: raw.reversed_count,
-          },
-          history: raw.history,
-        });
-        if (referralByAccount.has(parsed.accountId)) {
-          throw new Error("duplicate customer referral experience");
-        }
-        referralByAccount.set(parsed.accountId, parsed);
-      }
-    } catch {
-      referralByAccount.clear();
-    }
-  }
+  return { kind: "ready", accounts };
+}
+
+function toCustomerLoyaltyAccount(
+  experience: CustomerLoyaltyExperienceV1,
+): CustomerLoyaltyAccount {
   return {
-    kind: "ready",
-    accounts: (
-      (result.data ?? []) as Omit<
-        CustomerLoyaltyAccount,
-        "tier_progress" | "referral"
-      >[]
-    ).map((account) => ({
-      ...account,
-      tier_progress: progressByAccount.get(account.account_id) ?? null,
-      referral: referralByAccount.get(account.account_id) ?? null,
-    })),
+    account_id: experience.accountId,
+    workspace_id: experience.workspaceId,
+    programme_id: experience.programmeId,
+    store_name: experience.storeName,
+    programme_name: experience.programmeName,
+    account_status: experience.accountStatus,
+    enhancements_enabled: experience.enhancementsEnabled,
+    pending_points: experience.balances.pending,
+    available_points: experience.balances.available,
+    reserved_points: experience.balances.reserved,
+    tier_code: experience.currentTier?.code ?? null,
+    tier_name: experience.currentTier?.name ?? null,
+    next_expiry_points: experience.nextExpiry?.points ?? null,
+    next_expiry_at: experience.nextExpiry?.expiresAt ?? null,
+    earning_methods: experience.earningMethods,
+    rewards: experience.rewards,
+    reservations: experience.reservations,
+    activity: experience.activity,
+    tier_progress: experience.tierProgress,
+    referral: experience.referral,
   };
 }
