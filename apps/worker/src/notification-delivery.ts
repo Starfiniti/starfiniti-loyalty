@@ -17,6 +17,13 @@ type ClaimRow = Readonly<{
   lease_expires_at: string | Date;
 }>;
 
+type SmtpQueue = "notification" | "test";
+type SmtpClaim = Readonly<{
+  queue: SmtpQueue;
+  deliveryId: string;
+  leaseExpiresAt: string;
+}>;
+
 type AuthorizationRow = Readonly<{
   schema_version: string;
   delivery_public_id: string;
@@ -164,22 +171,10 @@ export async function runSmtpNotificationLifecycle(
   runtime: SmtpDeliveryRuntime,
   batchSize = 10,
 ): Promise<SmtpNotificationLifecycleResult> {
-  const claimRows = await sql<ClaimRow[]>`
-    select schema_version, delivery_public_id::text, lease_expires_at
-    from loyalty_private.claim_smtp_notification_deliveries_v1(
-      ${workerId}, ${batchSize}, 60
-    )
-  `;
-  if (claimRows.length > batchSize) {
-    throw new Error("smtp_claim_batch_exceeded");
-  }
-  const claims = claimRows.map((row) =>
-    smtpNotificationDeliveryClaimV1.parse({
-      schemaVersion: row.schema_version,
-      deliveryId: row.delivery_public_id,
-      leaseExpiresAt: instantString(row.lease_expires_at),
-    }),
-  );
+  const claims = [
+    ...(await claimDeliveries(sql, workerId, "notification", batchSize)),
+    ...(await claimDeliveries(sql, workerId, "test", batchSize)),
+  ];
   const totals = {
     claimed: claims.length,
     authorized: 0,
@@ -192,13 +187,18 @@ export async function runSmtpNotificationLifecycle(
   for (const claim of claims) {
     let authorization: SmtpNotificationDispatchAuthorizationV1;
     try {
-      authorization = await authorizeDelivery(sql, workerId, claim.deliveryId);
+      authorization = await authorizeDelivery(
+        sql,
+        workerId,
+        claim.deliveryId,
+        claim.queue,
+      );
     } catch (error) {
       if (
         error instanceof Error &&
         error.message === "smtp_authorization_invalid"
       ) {
-        await finishDelivery(sql, workerId, claim.deliveryId, {
+        await finishDelivery(sql, workerId, claim.deliveryId, claim.queue, {
           outcome: "dead_letter",
           responseCode: null,
           errorCode: "smtp_message_invalid",
@@ -231,6 +231,7 @@ export async function runSmtpNotificationLifecycle(
       sql,
       workerId,
       claim.deliveryId,
+      claim.queue,
       result,
     );
     if (finish.state === "delivered") totals.delivered += 1;
@@ -242,19 +243,65 @@ export async function runSmtpNotificationLifecycle(
   return totals;
 }
 
+async function claimDeliveries(
+  sql: Sql,
+  workerId: string,
+  queue: SmtpQueue,
+  batchSize: number,
+): Promise<SmtpClaim[]> {
+  const claimRows =
+    queue === "notification"
+      ? await sql<ClaimRow[]>`
+          select schema_version, delivery_public_id::text, lease_expires_at
+          from loyalty_private.claim_smtp_notification_deliveries_v1(
+            ${workerId}, ${batchSize}, 60
+          )
+        `
+      : await sql<ClaimRow[]>`
+          select schema_version, delivery_public_id::text, lease_expires_at
+          from loyalty_private.claim_smtp_notification_tests_v1(
+            ${workerId}, ${batchSize}, 60
+          )
+        `;
+  if (claimRows.length > batchSize) {
+    throw new Error("smtp_claim_batch_exceeded");
+  }
+  return claimRows.map((row) => {
+    const claim = smtpNotificationDeliveryClaimV1.parse({
+      schemaVersion: row.schema_version,
+      deliveryId: row.delivery_public_id,
+      leaseExpiresAt: instantString(row.lease_expires_at),
+    });
+    return { queue, ...claim };
+  });
+}
+
 async function authorizeDelivery(
   sql: Sql,
   workerId: string,
   deliveryId: string,
+  queue: SmtpQueue,
 ): Promise<SmtpNotificationDispatchAuthorizationV1> {
-  const rows = await sql<AuthorizationRow[]>`
-    select schema_version, delivery_public_id::text, outcome, attempt_count,
-      recipient_email, template_code, template_version, template_sha256,
-      subject_template, text_template, html_template, event
-    from loyalty_private.authorize_smtp_notification_delivery_v1(
-      ${deliveryId}::uuid, ${workerId}
-    )
-  `;
+  const rows =
+    queue === "notification"
+      ? await sql<AuthorizationRow[]>`
+          select schema_version, delivery_public_id::text, outcome,
+            attempt_count, recipient_email, template_code, template_version,
+            template_sha256, subject_template, text_template, html_template,
+            event
+          from loyalty_private.authorize_smtp_notification_delivery_v1(
+            ${deliveryId}::uuid, ${workerId}
+          )
+        `
+      : await sql<AuthorizationRow[]>`
+          select schema_version, delivery_public_id::text, outcome,
+            attempt_count, recipient_email, template_code, template_version,
+            template_sha256, subject_template, text_template, html_template,
+            event
+          from loyalty_private.authorize_smtp_notification_test_v1(
+            ${deliveryId}::uuid, ${workerId}
+          )
+        `;
   const row = rows[0];
   if (!row || rows.length !== 1) throw new Error("smtp_authorization_invalid");
   try {
@@ -289,15 +336,25 @@ async function finishDelivery(
   sql: Sql,
   workerId: string,
   deliveryId: string,
+  queue: SmtpQueue,
   result: SmtpResult,
 ): Promise<FinishRow> {
-  const rows = await sql<FinishRow[]>`
-    select state, outcome, scheduled_at
-    from loyalty_private.finish_smtp_notification_delivery_v1(
-      ${deliveryId}::uuid, ${workerId}, ${result.outcome},
-      ${result.responseCode}, ${result.errorCode}
-    )
-  `;
+  const rows =
+    queue === "notification"
+      ? await sql<FinishRow[]>`
+          select state, outcome, scheduled_at
+          from loyalty_private.finish_smtp_notification_delivery_v1(
+            ${deliveryId}::uuid, ${workerId}, ${result.outcome},
+            ${result.responseCode}, ${result.errorCode}
+          )
+        `
+      : await sql<FinishRow[]>`
+          select state, outcome, scheduled_at
+          from loyalty_private.finish_smtp_notification_test_v1(
+            ${deliveryId}::uuid, ${workerId}, ${result.outcome},
+            ${result.responseCode}, ${result.errorCode}
+          )
+        `;
   const row = rows[0];
   if (!row || rows.length !== 1 || row.state !== row.outcome) {
     throw new Error("smtp_finish_result_invalid");

@@ -96,8 +96,8 @@ alter table loyalty_private.notification_email_template_versions
     references auth.users(id) on delete restrict;
 
 alter table loyalty_private.notification_email_template_versions
-  drop constraint notification_email_template_versions_template_code_template_version_key,
-  drop constraint notification_email_template_versions_event_type_template_version_key,
+  drop constraint notification_email_template_versions_template_code_template_ver,
+  drop constraint notification_email_template_versions_event_type_template_versio,
   add constraint notification_email_template_versions_authority_check check (
     (organization_id is null and created_by_user_id is null)
     or (organization_id is not null and created_by_user_id is not null)

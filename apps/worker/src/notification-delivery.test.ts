@@ -4,6 +4,7 @@ import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { SmtpNotificationDispatchAuthorizationV1 } from "@starfiniti/contracts";
+import type { Sql } from "postgres";
 import { SMTPServer } from "smtp-server";
 import { afterEach, describe, expect, it } from "vitest";
 import {
@@ -11,6 +12,7 @@ import {
   createSmtpDeliveryRuntime,
   readSmtpDeliveryConfig,
   renderNotificationEmail,
+  runSmtpNotificationLifecycle,
   sendAuthorizedNotification,
   type SmtpDeliveryRuntime,
 } from "./notification-delivery.ts";
@@ -182,7 +184,7 @@ describe("SMTP notification delivery", () => {
     });
   });
 
-  it("delivers once to a real local SMTP sink with a deterministic message id", async () => {
+  it("delivers a visibly prefixed test to a real sink with a deterministic message id", async () => {
     const messages: string[] = [];
     const server = new SMTPServer({
       authOptional: true,
@@ -211,7 +213,9 @@ describe("SMTP notification delivery", () => {
       password: null,
       messageIdDomain: "example.test",
     });
-    const authorization = authorizedDispatch();
+    const authorization = authorizedDispatch(
+      "[Starfiniti test] Your {{points}} points are ready",
+    );
 
     await expect(
       sendAuthorizedNotification(runtime, authorization),
@@ -223,8 +227,115 @@ describe("SMTP notification delivery", () => {
       `Message-ID: <${event.eventId}@example.test>`,
     );
     expect(messages[0]).toContain("To: member@example.test");
-    expect(messages[0]).toContain("Subject: Your 25 points are ready");
+    expect(messages[0]).toContain(
+      "Subject: [Starfiniti test] Your 25 points are ready",
+    );
     expect(messages[0]).not.toContain("secret-value");
+  });
+
+  it("claims and finishes the isolated test queue through its own database boundary", async () => {
+    const authorization = authorizedDispatch(
+      "[Starfiniti test] Your {{points}} points are ready",
+    );
+    const queries: string[] = [];
+    const sql = (async (
+      strings: TemplateStringsArray,
+      ..._values: readonly unknown[]
+    ) => {
+      const query = strings.join("?");
+      queries.push(query);
+      if (query.includes("claim_smtp_notification_deliveries_v1")) return [];
+      if (query.includes("claim_smtp_notification_tests_v1")) {
+        return [
+          {
+            schema_version: "1",
+            delivery_public_id: authorization.deliveryId,
+            lease_expires_at: "2026-08-25T10:01:00Z",
+          },
+        ];
+      }
+      if (query.includes("authorize_smtp_notification_test_v1")) {
+        return [
+          {
+            schema_version: authorization.schemaVersion,
+            delivery_public_id: authorization.deliveryId,
+            outcome: authorization.outcome,
+            attempt_count: authorization.attempt,
+            recipient_email: authorization.recipientEmail,
+            template_code: authorization.templateCode,
+            template_version: authorization.templateVersion,
+            template_sha256: authorization.templateSha256,
+            subject_template: authorization.subjectTemplate,
+            text_template: authorization.textTemplate,
+            html_template: authorization.htmlTemplate,
+            event: authorization.event,
+          },
+        ];
+      }
+      if (query.includes("finish_smtp_notification_test_v1")) {
+        return [
+          { state: "delivered", outcome: "delivered", scheduled_at: null },
+        ];
+      }
+      throw new Error("unexpected_sql_boundary");
+    }) as unknown as Sql;
+    const runtime: SmtpDeliveryRuntime = {
+      config: {
+        host: "smtp.example.test",
+        port: 587,
+        security: "starttls",
+        fromAddress: "loyalty@example.test",
+        username: null,
+        password: null,
+        messageIdDomain: "example.test",
+      },
+      transporter: {
+        async sendMail() {
+          return {
+            accepted: [authorization.recipientEmail],
+            rejected: [],
+            pending: [],
+            response: "250 accepted",
+            envelope: {
+              from: "loyalty@example.test",
+              to: [authorization.recipientEmail],
+            },
+            messageId: `<${authorization.event.eventId}@example.test>`,
+            envelopeTime: 1,
+            messageTime: 1,
+            messageSize: 1,
+          };
+        },
+        close() {},
+      },
+    };
+
+    await expect(
+      runSmtpNotificationLifecycle(sql, "notification-worker", runtime, 10),
+    ).resolves.toEqual({
+      claimed: 1,
+      authorized: 1,
+      delivered: 1,
+      retryable: 0,
+      deadLetter: 0,
+      manualReview: 0,
+      withheld: 0,
+    });
+    expect(
+      queries.some((query) =>
+        query.includes("authorize_smtp_notification_test_v1"),
+      ),
+    ).toBe(true);
+    expect(
+      queries.some((query) =>
+        query.includes("finish_smtp_notification_test_v1"),
+      ),
+    ).toBe(true);
+    expect(
+      queries.some((query) =>
+        query.includes("authorize_smtp_notification_delivery_v1"),
+      ),
+    ).toBe(false);
   });
 
   it("fails closed before SMTP when template evidence does not match", async () => {
@@ -259,14 +370,13 @@ describe("SMTP notification delivery", () => {
   });
 });
 
-function authorizedDispatch(): Extract<
-  SmtpNotificationDispatchAuthorizationV1,
-  { outcome: "authorized" }
-> {
+function authorizedDispatch(
+  subjectTemplate = "Your {{points}} points are ready",
+): Extract<SmtpNotificationDispatchAuthorizationV1, { outcome: "authorized" }> {
   const template = {
     templateCode: "points_released",
     templateVersion: 1,
-    subjectTemplate: "Your {{points}} points are ready",
+    subjectTemplate,
     textTemplate: "Balance: {{availableBalance}}",
     htmlTemplate: "<p>Balance: {{availableBalance}}</p>",
   } as const;
