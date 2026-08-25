@@ -21,7 +21,7 @@ M08 is in progress. M08-S01 is complete: ADR-0031 defines strict provider-neutra
 - All 86 focused `notification_smtp_delivery_test.sql` assertions pass. They cover grants/RLS, the narrow migration-administrator-owned Auth contact bridge, event-to-delivery idempotency, ephemeral verified contact, withdrawal, feature rollback, explicit retry/dead-letter/manual-review outcomes, attempt exhaustion, pre/post-authorization crash recovery, unverified contact, template/attempt immutability, and zero ledger change.
 - Deployment remains disabled. No SMTP credentials are committed or active, and no production email has been sent.
 
-M08-S03 is complete. Its test-account canary, S04 signed webhook, S05 browser/health, and S06 deployment/canary evidence remain open. No Klaviyo, webhook, SMTP, or production notification delivery is active yet.
+M08-S03 is complete. Its real test-account canary remains an S06 owner-input gate. No Klaviyo, SMTP, or production notification delivery is active yet.
 
 ## M08-S03 — Tenant-bound managed Klaviyo synchronization
 
@@ -33,3 +33,16 @@ M08-S03 is complete. Its test-account canary, S04 signed webhook, S05 browser/he
 - Worker verification currently includes a real loopback HTTP sink, pinned revision/auth headers, minimized profile/event/consent bodies, provider-suppression parsing, bounded/cancelled response reads, `Retry-After`, and distinct ambiguity behavior for subscribe versus safe event/unsubscribe retries. PostgreSQL tests cover the tenant/key binding, grants/RLS, replay, late contact/consent/entitlement checks, provider suppression, supersession, profile mapping, accepted/retry/manual evidence, immutability, and zero ledger change.
 - The 67 focused Klaviyo pgTAP assertions all pass. The workspace also passes 57 worker tests, 198 contract tests, all typechecks/builds, architecture/deployment/workflow validators, secret scanning, and the disabled Compose profile check.
 - Production remains disabled with no connection or credential. A real Klaviyo test-account canary remains an S06 owner-input gate.
+
+## M08-S04 — Destination-restricted signed generic webhooks
+
+- Exact head: `ea9aa005900c85b64a3cdb775c069edfb3845c8c` on draft PR #32.
+- CI: run `32691991986` passed the complete baseline, both production images, a clean 51-migration replay, all 42 pgTAP files with 2,277 assertions, every concurrency probe, and all four minimum/current HPOS/legacy WooCommerce runtimes.
+- ADR-0034 selects Standard Webhooks v1 HMAC signing with one stable delivery UUID, exact transmitted bytes, a database-bound current secret fingerprint, and an optional time-bounded previous fingerprint for rotation. Secret material exists only in absolute mounted files; PostgreSQL and evidence retain fingerprints, never keys or signatures.
+- PostgreSQL owns endpoint subscriptions, immutable deliveries and attempts, bounded leases, a 1–600 deliveries-per-minute fixed window, dispatch-time entitlement/consent/suppression checks, response classification, ten-attempt exhaustion, and manual review. The worker cannot obtain destination or event data before authorization.
+- Production HTTPS destinations require public DNS hostnames, every resolved address to be public, and a socket-pinned lookup with TLS hostname verification. Redirects are disabled, request payloads are capped at 20 KiB, response reads at 64 KiB, and loopback HTTP exists only under the explicit test flag.
+- Verification includes 39 focused worker tests against a real loopback sink and 40 focused contract tests. Exact signatures, stable retries, dual-key rotation, 302/410/429/503 behavior, timeouts, response cancellation, mixed DNS, canonical IPv4/IPv6 reserved ranges, withheld authorization, and no-send outcomes pass. All 58 focused database assertions cover grants/RLS, tenant and fingerprint binding, consent/entitlement rechecks, subscriptions, rate limits, leases, retries, rotation, immutability, and zero ledger change.
+- The self-improving CI loop promoted the recurring PostgreSQL schema-qualified conditional-expression failure into migration validation. Fixture-only entitlement, timestamp, and immutability expectation failures were corrected before exact-head evidence was recorded.
+- Deployment remains disabled. No production endpoint, subscription, webhook secret, or delivery exists.
+
+M08-S01 through S04 are complete. S05 merchant template/test-delivery/health/suppression experience and S06 disabled deployment/provider canaries/reconciliation/scoring remain open.

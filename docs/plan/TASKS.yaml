@@ -1143,7 +1143,7 @@ tasks:
           - local HTTP sink tests for profile event subscribe unsubscribe 429 503 timeout bounded bodies and pre/post-action worker death
           - exact-head baseline database replay images WooCommerce matrix secret scan and disabled deployment smoke
       - id: M08-S04-SIGNED-WEBHOOKS
-        status: in_progress
+        status: completed
         acceptance:
           - generic outbound webhooks are destination-allowlisted HMAC-signed replay-safe rotatable rate-limited and payload-minimized
           - one endpoint-bound worker emits the Standard Webhooks v1 id timestamp and exact-body signatures with an optional time-bounded previous signature
@@ -1164,8 +1164,13 @@ tasks:
           - loopback HTTP sink tests for exact HMAC bytes stable replay dual signatures 2xx 302 410 429 503 timeout bounded response and worker death
           - pure destination-policy tests for private reserved mapped IPv4 and IPv6 rejection plus public address acceptance and socket pin selection
           - exact-head baseline database replay images WooCommerce matrix secret scan and disabled deployment smoke
+        evidence:
+          - ADR-0034 selects Standard Webhooks v1 HMAC signatures endpoint-bound secret fingerprints public-only DNS resolution socket pinning no redirects minimized payloads bounded responses fixed-window rate limits and ten-attempt manual-review exhaustion
+          - 39 focused worker tests use a real loopback sink for exact signatures stable delivery IDs dual-key rotation response classification timeout cancellation and private or reserved destination rejection while 40 focused contract tests verify the strict delivery boundary
+          - exact-head run 32691991986 at ea9aa00 passed the complete baseline both production images a clean 51-migration replay all 42 pgTAP files with 2277 assertions including all 58 focused webhook assertions every concurrency probe and all four WooCommerce runtime cells
+          - the worker profile remains disabled with no production endpoint secret subscription or delivery
       - id: M08-S05-TEMPLATES-AND-HEALTH
-        status: planned
+        status: in_progress
         acceptance:
           - merchants can manage versioned English templates send tests and inspect consent suppression retry and dead-letter health without contact or secret disclosure
       - id: M08-S06-CANARY-AND-CLOSE

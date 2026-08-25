@@ -18,6 +18,8 @@ M08-S02 is exact-head green at `604bbeb` on draft PR #32. ADR-0032 isolates an o
 
 M08-S03 is exact-head green at `a6bbf14` on draft PR #32. ADR-0033 binds every managed Klaviyo operation to one tenant connection and API-key fingerprint, resolves verified contact only after database authorization, pins API revision `2026-07-15`, minimizes profiles/events, treats provider suppression as stronger local authority, and stops ambiguous opt-in submission for review. Run `32689107286` passed the complete baseline, both production images, a clean 50-migration replay, all 41 pgTAP files with 2,219 assertions including all 67 focused Klaviyo assertions, every concurrency probe, and all four WooCommerce runtimes. The disabled worker profile has no production connection or credential; the real test-account canary remains an S06 gate.
 
+M08-S04 is exact-head green at `ea9aa00` on draft PR #32. ADR-0034 binds Standard Webhooks v1 exact-body HMAC signatures to a stable delivery ID and endpoint-specific current/previous secret fingerprints, rejects redirects and every private/reserved DNS answer, pins the validated socket address while retaining TLS hostname verification, and rechecks subscription, entitlement, consent, suppression, payload, rate, and lease authority immediately before dispatch. Run `32691991986` passed the complete baseline, both production images, a clean 51-migration replay, all 42 pgTAP files with 2,277 assertions including all 58 focused webhook assertions, every concurrency probe, and all four WooCommerce runtimes. The disabled worker profile has no production endpoint, subscription, secret, or delivery; S05 merchant template and delivery-health experience is active.
+
 M05-S01 through S05 are exact-head green. M05-S06 shadow comparison found and fixed a predeployment Rose/Bloom/Icon displayed-versus-executable rate mismatch; all 36 V1/V2 award comparisons now match, and exact-head run `31760806620` passed. Reviewed merge, disabled deployment, a fresh recovery point, Starfiniti-only canary, reconciliation, and scoring remain open.
 
 The active integrated baseline is released production commit `0ced4b666a55d836bd3d4927337fe057a71bb4ba` (`v0.1.11`). The previous local Phase 4 branch and its six modified planning files remain preserved in a named git stash and have not been mixed into this work.
@@ -45,7 +47,7 @@ The active integrated baseline is released production commit `0ced4b666a55d836bd
 
 ## Next safe work
 
-1. M08: implement S04 destination-restricted, signed, replay-safe generic outbound webhooks without activating production delivery.
+1. M08: implement S05 versioned English template management, test delivery, and consent/suppression/retry/dead-letter health without exposing contacts or secrets.
 2. M07: complete reviewed stacked merge, disabled deployment, fresh recovery point, Starfiniti-only canary, exact result/value reconciliation, smoke, and score in S06.
 3. M06: after reviewed stacked merges, deploy disabled, take a fresh recovery point, run the Starfiniti-only canary, reconcile, smoke, and score.
 4. M05: complete reviewed merge, disabled deployment, fresh recovery point, Starfiniti-only canary, zero-drift reconciliation, and score after the exact-green shadow gate.
