@@ -45,6 +45,9 @@ for (const required of [
   /\.login-card,\s*\.access-card\s*\{[^}]*width:\s*100%;[^}]*max-width:\s*430px;[^}]*min-width:\s*0;/u,
   /\.member-hub-v2 :where\(a, button\):focus-visible/u,
   /\.public-loyalty-v2 :where\(a, button\):focus-visible/u,
+  /html\[data-dashboard-theme="dark"\][\s\S]*?\.experience-editor-v2[\s\S]*?\.experience-fields[\s\S]*?select,/u,
+  /html\[data-dashboard-theme="dark"\][\s\S]*?\.experience-editor-v2[\s\S]*?\.experience-visibility-grid[\s\S]*?label[\s\S]*?strong,/u,
+  /html\[data-dashboard-theme="dark"\][\s\S]*?\.experience-preview-v2[\s\S]*?\.experience-preview-toolbar[\s\S]*?button\[aria-pressed="true"\]/u,
   /@media \(max-width: 420px\)/u,
 ]) {
   if (!required.test(styles)) {

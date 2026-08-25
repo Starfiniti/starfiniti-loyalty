@@ -11591,6 +11591,151 @@ html[data-dashboard-theme="dark"] {
   color: #067647;
 }
 
+html[data-dashboard-theme="dark"]
+  .experience-editor-v2
+  .experience-fields
+  > label
+  > span,
+html[data-dashboard-theme="dark"]
+  .experience-editor-v2
+  .experience-toggles
+  legend,
+html[data-dashboard-theme="dark"]
+  .experience-editor-v2
+  .experience-toggles
+  label,
+html[data-dashboard-theme="dark"]
+  .experience-editor-v2
+  .experience-visibility-grid
+  legend,
+html[data-dashboard-theme="dark"]
+  .experience-editor-v2
+  .experience-visibility-grid
+  label
+  strong,
+html[data-dashboard-theme="dark"]
+  .experience-editor-v2
+  .experience-section-order
+  legend,
+html[data-dashboard-theme="dark"]
+  .experience-editor-v2
+  .experience-section-order
+  li
+  strong,
+html[data-dashboard-theme="dark"] .experience-editor-v2 .color-field code {
+  color: var(--merchant-text);
+}
+
+html[data-dashboard-theme="dark"]
+  .experience-editor-v2
+  .experience-fields
+  input:not([type="checkbox"]):not([type="color"]),
+html[data-dashboard-theme="dark"]
+  .experience-editor-v2
+  .experience-fields
+  select,
+html[data-dashboard-theme="dark"] .experience-editor-v2 .color-field,
+html[data-dashboard-theme="dark"]
+  .experience-editor-v2
+  .experience-visibility-grid
+  label,
+html[data-dashboard-theme="dark"]
+  .experience-editor-v2
+  .experience-section-order
+  ol,
+html[data-dashboard-theme="dark"]
+  .experience-editor-v2
+  .experience-section-order
+  li,
+html[data-dashboard-theme="dark"]
+  .experience-editor-v2
+  .experience-order-actions
+  button,
+html[data-dashboard-theme="dark"]
+  .experience-preview-v2
+  .experience-preview-toolbar
+  button,
+html[data-dashboard-theme="dark"]
+  .experience-preview-v2
+  .experience-preview-states
+  button {
+  border-color: var(--merchant-border-strong);
+  color: var(--merchant-text);
+  background: #20201f;
+}
+
+html[data-dashboard-theme="dark"]
+  .experience-editor-v2
+  .experience-section-order
+  li
+  + li,
+html[data-dashboard-theme="dark"] .experience-editor-v2 .experience-save {
+  border-color: var(--merchant-border);
+}
+
+html[data-dashboard-theme="dark"]
+  .experience-editor-v2
+  .experience-fields
+  input:disabled,
+html[data-dashboard-theme="dark"]
+  .experience-editor-v2
+  .experience-fields
+  select:disabled {
+  color: var(--merchant-muted);
+  background: #242422;
+}
+
+html[data-dashboard-theme="dark"]
+  .experience-editor-v2
+  .experience-visibility-grid
+  label
+  small,
+html[data-dashboard-theme="dark"]
+  .experience-editor-v2
+  .experience-section-order
+  > p,
+html[data-dashboard-theme="dark"]
+  .experience-editor-v2
+  .experience-section-order
+  li
+  small,
+html[data-dashboard-theme="dark"]
+  .experience-preview-v2
+  .experience-preview-note {
+  color: var(--merchant-muted);
+}
+
+html[data-dashboard-theme="dark"]
+  .experience-editor-v2
+  .experience-fields
+  .contrast-pass,
+html[data-dashboard-theme="dark"]
+  .experience-preview-v2
+  .experience-preview-note
+  svg {
+  color: #6ee7b7;
+}
+
+html[data-dashboard-theme="dark"]
+  .experience-editor-v2
+  .experience-fields
+  .contrast-fail {
+  color: #fca5a5;
+}
+
+html[data-dashboard-theme="dark"]
+  .experience-preview-v2
+  .experience-preview-toolbar
+  button[aria-pressed="true"],
+html[data-dashboard-theme="dark"]
+  .experience-preview-v2
+  .experience-preview-states
+  button[aria-pressed="true"] {
+  border-color: #a997ff;
+  color: #ddd6fe;
+  background: #3c3553;
+}
+
 .member-hub-v2 {
   --member-accent: var(--member-brand);
   --member-accent-strong: var(--member-brand);
