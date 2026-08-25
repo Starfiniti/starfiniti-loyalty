@@ -1412,7 +1412,7 @@ tasks:
       ]
     slices:
       - id: M10-S01-METRIC-DICTIONARY-AND-VALUE-TRUTH
-        status: in_progress
+        status: complete
         acceptance:
           - a versioned metric dictionary names source fields formula grain time boundary currency policy ownership caveats and causal classification for every implemented value metric
           - one Auth-authorized report accepts only public organization workspace and programme selectors while PostgreSQL derives internal scope and returns exact point flows balances and expiry exposure from immutable ledger and lot evidence with projection reconciliation
@@ -1431,7 +1431,7 @@ tasks:
           - independent reconciliation query compares report buckets with immutable ledger entries and point-lot allocations
           - exact-head baseline database replay production images and WooCommerce matrix
       - id: M10-S02-COMMERCE-AND-PROGRAMME-PERFORMANCE
-        status: planned
+        status: in_progress
         acceptance:
           - activation participation eligible orders repeat purchase AOV LTV reward tier referral and campaign metrics use versioned fact-sourced definitions and exact currency scope
           - refunds reversals guest identity and missing linkage are explicit exclusions or compensations rather than silent denominator changes

@@ -1,6 +1,6 @@
 # M10 Evidence — Analytics
 
-Status: in progress. M10-S01 metric dictionary and exact value-truth reporting is active while M09 waits only on its reviewed production canary gate.
+Status: in progress. M10-S01 is complete and M10-S02 commerce and programme performance is active while M09 waits only on its reviewed production canary gate.
 
 ## Reconstructed baseline
 
@@ -16,3 +16,13 @@ Status: in progress. M10-S01 metric dictionary and exact value-truth reporting i
 - The first dictionary publishes only implemented metrics. Candidate business metrics are recorded in `docs/api/ANALYTICS.md` and enter a later dictionary version only with executable source/formula/reconciliation evidence.
 - Exact point exposure and flows are operational loyalty obligations. Monetary liability remains unavailable until an explicit immutable valuation policy exists; a reward catalogue or merchant-specific acceptance ratio is not substituted.
 - S01 completion requires contracts, additive PostgreSQL, pgTAP, server parsing, merchant-visible definitions, independent reconciliation, exact-head CI, and documented limitations.
+
+## M10-S01 completion evidence
+
+- Contracts publish 25 complete Dictionary V1 definitions and a strict `AnalyticsValueTruthReportV1`. Arithmetic checks reject mismatched periods, active buckets, manual net movement, and expiry horizons before browser rendering.
+- `loyalty.get_analytics_value_truth_v1` accepts only public organization, workspace, and programme selectors; PostgreSQL derives membership and internal scope, applies the server-side `analytics` entitlement, and returns exact decimal text.
+- The report reconstructs historical balances and flows from immutable ledger entries, reconstructs point-lot exposure at the requested instant, and raises deterministic `55000` errors when current wallet or lot projections disagree with immutable evidence.
+- Merchant `/analytics` exposes real ready, setup-required, disabled, and fail-closed states; uses `BigInt` formatting; provides responsive light/dark layouts; and places the formula-backed definition beside every displayed value. The route remains absent from navigation until the M10-S05 command-center rollout.
+- Existing Overview copy now says “Outstanding points” instead of implying an accounting-currency liability.
+- Exact-head Linux CI [run 32880474317](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/32880474317) passed at commit `3e644ab`: root `npm run check`, migration validation, secret/audit/license/package gates, clean database replay, all 2,473 pgTAP assertions including the 33 new analytics cases, both production images, and minimum/current WooCommerce with HPOS/legacy storage.
+- Intentional limitation: monetary liability remains `unavailable:valuation_policy_not_configured`; no Rosy ratio, reward face value, or current mutable configuration is converted into money.
