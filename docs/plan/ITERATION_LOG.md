@@ -1,5 +1,11 @@
 # Iteration Log
 
+## 2026-08-25 — M09 WooCommerce Blocks progressive panel
+
+- Closed M09-S04 with ADR-0038's PII-free `starfiniti-loyalty` Store API namespace, official WooCommerce Blocks integration handles, separately staged default-off data/panel flags, native no-script guidance, and zero render-time Hub dependency.
+- Static and real Chromium review passed exact 3,821-byte source/1,177-byte gzip JavaScript and 980-byte source/430-byte gzip CSS budgets, fresh/stale and unsafe-link states, visible focus, same-origin navigation, mobile overflow, and zero browser diagnostics.
+- Exact-head run `32859649418` at `bf5ec90` passed baseline, both images, a clean 56-migration replay, all 44 pgTAP files with 2,392 assertions, and every minimum/current HPOS/legacy runtime lane with staged flags, real namespaced Store API payloads, native coupons, no-script fallback, and forced Hub failure.
+
 ## 2026-08-14 — M01 backup transfer-amplification incident
 
 - Contained VM 971's recurring 200–235 MB/s internal transfer after Proxmox tap/bridge counters, SSH journal entries, systemd cadence, and Borg statistics proved the host was pulling the complete 22 GB PostgreSQL recovery tree every cycle.

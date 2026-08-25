@@ -1310,15 +1310,20 @@ tasks:
           - My Account product cart classic checkout and post-purchase hooks render only local data with zero connector JavaScript CSS or render-time Hub calls and retain native coupon and secure-account fallbacks
           - exact-head run 32853757058 at c2e2c82 passed baseline both images 56 migrations all 44 pgTAP files with 2392 assertions and all four minimum/current HPOS/legacy WooCommerce runtimes
       - id: M09-S04-BLOCKS-AND-PROGRESSIVE-PANEL
-        status: in_progress
+        status: completed
         acceptance:
           - namespaced Store API extension data and official SlotFill integration support Cart and Checkout Blocks without private data or live Hub calls
           - optional progressively enhanced panel preserves a complete no-script path and passes explicit compressed JavaScript and CSS budgets
           - minimum and current WooCommerce PHP HPOS legacy Blocks and classic cells pass
         rollout: Enable Blocks data before the separately flagged panel and observe asset and checkout telemetry.
         rollback: Dequeue the panel and remove Store API presentation data while retaining classic local fallbacks.
+        evidence:
+          - ADR-0038 binds one starfiniti-loyalty wc/store/cart extension to the logged-in user's strict local snapshot and the official IntegrationInterface plus ExperimentalOrderMeta without adding value authority or a live Hub dependency
+          - separate non-autoloaded Blocks-data and panel flags default off, the data canary can run independently, and disabling the panel preserves native coupons classic placements hosted access and no-script guidance
+          - static and real-browser verification passed the 3821-byte source and 1177-byte gzip JavaScript plus 980-byte source and 430-byte gzip CSS budgets at desktop and mobile widths with fresh stale unsafe-link focus overflow and zero-diagnostic coverage
+          - exact-head run 32859649418 at bf5ec90 passed baseline both images 56 migrations all 44 pgTAP files with 2392 assertions and every minimum/current HPOS/legacy WooCommerce runtime cell including staged flags actual Store API responses native coupons no-script and forced Hub failure
       - id: M09-S05-BRANDING-ACCESSIBILITY-AND-OUTAGE-HARDENING
-        status: planned
+        status: in_progress
         acceptance:
           - controlled assets copy spacing ordering preview states responsive layouts refresh labels and offline states are polished and bounded
           - keyboard screen-reader zoom reduced-motion contrast slow-network no-script and total-Hub-outage evidence passes
