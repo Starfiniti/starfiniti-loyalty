@@ -40,7 +40,10 @@ export async function GET(
     );
     return clearCapability(
       new NextResponse(exportResult.body, {
-        headers: analyticsExportHeaders(exportResult.document.generatedAt),
+        headers: analyticsExportHeaders(
+          exportResult.document.generatedAt,
+          exportResult.responseSha256,
+        ),
       }),
       downloadPath,
     );

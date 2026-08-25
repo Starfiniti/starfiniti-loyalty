@@ -35,6 +35,7 @@ type SourceRow = {
 export type PreparedAnalyticsExport = Readonly<{
   document: AnalyticsReportExportV1;
   body: string;
+  responseSha256: string;
 }>;
 
 export async function getAnalyticsExportWorkspace(
@@ -141,7 +142,7 @@ export async function consumeAnalyticsExport(
         ${responseSha256}, ${responseBytes}
       )
     `;
-    return { document, body };
+    return { document, body, responseSha256 };
   });
 }
 

@@ -137,7 +137,7 @@ export function AnalyticsExportOperations({
               <CalendarClock aria-hidden="true" />
             </span>
             <div>
-              <h3>Schedule delivery</h3>
+              <h3>Schedule reports</h3>
               <p>Daily, weekly, or monthly in the selected IANA zone.</p>
             </div>
           </div>

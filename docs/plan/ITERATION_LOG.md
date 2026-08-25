@@ -1,5 +1,13 @@
 # Iteration Log
 
+## 2026-08-25 — M10 controlled exports and scheduled reports
+
+- Closed M10-S04 with one strict Dictionary V4/four-report JSON bundle, exact request/generation/timezone/digest evidence, 24-hour private payloads, and five-minute subject/session-bound one-use downloads.
+- Added owner/admin scheduling plus analyst/auditor manual authority, daily/weekly/monthly IANA-local recurrence, atomic schedule/instant and command-idempotency fences, bounded lease/retry/expiry handling, and an isolated optional reporting worker with no loyalty-value authority.
+- The adversarial two-session probe proved concurrent manual and schedule retries return one created plus one duplicate result, one due occurrence materializes once, two workers claim distinct jobs, and one capability consumer wins exactly once.
+- Desktop/mobile Chromium review passed cadence interaction, keyboard focus, reduced motion, overflow, English-only output, private-operation copy, and zero diagnostics. Scheduled reports remain Hub downloads, not claimed email delivery, and the production profile remains stopped until S06.
+- Exact-head run `32897999942` at `4f97f3a` passed root checks, both images, a clean 62-migration replay, all 49 pgTAP files with 2,609 assertions, every concurrency probe, and all four WooCommerce runtimes.
+
 ## 2026-08-25 — M10 cohort retention and causal evidence
 
 - Closed M10-S03 with Dictionary V4's 103 exact definitions and an independently degradable mature-cohort/experiment report supporting IANA-local daily activation and exact elapsed-day 31–60 earning retention.

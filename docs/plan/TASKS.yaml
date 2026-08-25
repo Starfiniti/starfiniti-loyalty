@@ -1485,7 +1485,7 @@ tasks:
           - pgTAP for grants Auth scope tenancy revocation DST mature boundaries assignment reconciliation one-currency evidence sample floors and zero source mutation
           - exact-head baseline clean migration replay production images and all four WooCommerce runtimes
       - id: M10-S04-EXPORTS-AND-SCHEDULED-REPORTS
-        status: in_progress
+        status: complete
         acceptance:
           - tenant-scoped exports use bounded role checks one-use or expiring delivery audit privacy minimization and exact source definitions
           - scheduled reports are deduplicated retryable suppressible and cannot affect ledger value checkout or provider-neutral event processing
@@ -1520,7 +1520,7 @@ tasks:
           - route/action tests for fail-closed parsing cookie binding private headers filename and transaction rollback
           - exact-head baseline clean migration replay production images and all four WooCommerce runtimes
       - id: M10-S05-ANALYTICS-COMMAND-CENTER
-        status: planned
+        status: in_progress
         acceptance:
           - Hub-style desktop and mobile analytics exposes metric definitions filters empty loading error and stale states without fake data
           - keyboard screen-reader zoom contrast reduced-motion and large-table navigation have no critical issue
@@ -1535,6 +1535,7 @@ tasks:
         docs/architecture/ADR/0040-ledger-sourced-versioned-analytics-and-explicit-liability-valuation.md,
         docs/architecture/ADR/0041-bounded-aggregate-exports-and-isolated-report-scheduling.md,
         docs/api/ANALYTICS.md,
+        docs/operations/ANALYTICS_REPORTS.md,
       ]
     evidence: [docs/plan/evidence/M10/README.md]
 

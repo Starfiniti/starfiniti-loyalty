@@ -105,6 +105,18 @@ Unavailable campaigns return `null` for every monetary and rational field. Eligi
 - **Monetary liability/provision:** unavailable until an immutable valuation policy defines currency, precision, point ratio, effective scope, and breakage method. Reward face values and the Rosy Rewards acceptance ratio are not global substitutes.
 - **Breakage:** must use a declared matured issuance cohort and outcome window. A simple expired divided by issued lifetime ratio is not published as breakage.
 
+## Controlled exports and scheduled reports
+
+M10-S04 adds `starfiniti.analytics-report-export.v1`, a bounded aggregate JSON document. It contains Dictionary V4 plus the exact value-truth, commerce-performance, programme-outcome, and cohort-retention reports generated for one public organization/workspace/programme-group scope. The request range is restricted to 7, 30, or 90 days. Requested-as-of, generated-at, expiry, IANA timezone, source SHA-256, and final response SHA-256 remain explicit evidence.
+
+Authenticated owner, admin, analyst, and auditor roles may request a manual export. Only owners and admins may create, pause, or resume daily, weekly, or monthly schedules. PostgreSQL derives the live actor, tenant, active scope, entitlement, and internal IDs; the browser supplies only public selectors and command identity. Scheduled generation creates a report in the merchant history—it does not send an email attachment or grant a provider access path.
+
+Report source payloads are stored in private PostgreSQL tables for at most 24 hours. They contain the four aggregate report projections and no customer, wallet, order, assignment, payment, device, network, fraud, contact, coupon, or connector identity. Neither authenticated browser sessions nor the reporting worker has table access to the payload.
+
+A ready export requires a trusted dashboard-runtime call to mint a random five-minute capability bound to the current verified Auth subject and Supabase session. Only its SHA-256 digest is persisted. The capability travels in an `HttpOnly`, `SameSite=Strict`, exact-path cookie, never in the URL or browser state. Consumption locks and marks it used atomically, rechecks membership and scope, validates the complete strict contract, records final response digest/byte evidence, destroys the private payload, and returns a private/no-store JSON attachment with the same digest in `X-Starfiniti-Content-SHA256`. Replay, another session, expiry, revocation, or contract failure returns no content.
+
+The reporting worker is a separate process mode. It materializes due local-calendar instants with a unique schedule/instant fence, claims bounded jobs with `FOR UPDATE SKIP LOCKED`, reclaims expired leases, retries only deterministic safe classes up to five attempts, and records allowlisted failure codes without payloads. It has no loyalty-value mutation role; stopping it leaves ledger, refunds, reconciliation, notifications, connectors, and WooCommerce checkout operational.
+
 ## Causal terminology
 
 - `operational`: exact state or flow with no behavior claim.

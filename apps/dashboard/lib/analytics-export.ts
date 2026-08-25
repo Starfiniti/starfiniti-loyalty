@@ -13,7 +13,11 @@ export function analyticsExportFilename(generatedAt: string): string {
 
 export function analyticsExportHeaders(
   generatedAt: string,
+  responseSha256?: string,
 ): Readonly<Record<string, string>> {
+  if (responseSha256 !== undefined && !/^[a-f0-9]{64}$/u.test(responseSha256)) {
+    throw new Error("analytics_export_digest_invalid");
+  }
   return {
     "Cache-Control": "private, no-store",
     "Content-Disposition": `attachment; filename="${analyticsExportFilename(generatedAt)}"`,
@@ -24,5 +28,8 @@ export function analyticsExportHeaders(
     Vary: "Cookie",
     "X-Content-Type-Options": "nosniff",
     "X-Robots-Tag": "noindex, nofollow",
+    ...(responseSha256 !== undefined
+      ? { "X-Starfiniti-Content-SHA256": responseSha256 }
+      : {}),
   };
 }

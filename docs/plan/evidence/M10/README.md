@@ -1,6 +1,6 @@
 # M10 Evidence — Analytics
 
-Status: in progress. M10-S01 through M10-S03 are complete; M10-S04 controlled exports and scheduled reports is active while M09 waits only on its reviewed production canary gate.
+Status: in progress. M10-S01 through M10-S04 are complete; M10-S05 analytics command-center review is active while M09 waits only on its reviewed production canary gate.
 
 ## Reconstructed baseline
 
@@ -58,3 +58,15 @@ Status: in progress. M10-S01 through M10-S03 are complete; M10-S04 controlled ex
 - Merchant `/analytics` loads the cohort report independently and exposes mature activation, 31–60-day earning retention, cohort tables, experiment sample sizes, formula guidance, limitations, and unavailable states without synthetic fallback data.
 - Exact-head Linux CI [run 32893065219](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/32893065219) passed at commit `02f03a4`: root `npm run check`, migration validation, secret/audit/license/package gates, clean 61-migration replay, all 48 pgTAP files with 2,549 assertions including 25 focused cohort/retention/experiment cases, both production images, and minimum/current WooCommerce with HPOS/legacy storage.
 - Intentional limitations: the first estimator is a point estimate rather than a significance test, it measures eligible spend rather than gross or accounting revenue, report calls currently request UTC until organization timezone settings exist, mixed currencies are not converted, and production navigation/canary exposure remains deferred to M10-S05/S06.
+
+## M10-S04 completion evidence
+
+- `starfiniti.analytics-report-export.v1` binds Dictionary V4 and all four strict aggregate reports to one exact public tenant scope, 7/30/90-day period, requested-as-of instant, generation/expiry instants, IANA timezone, source SHA-256, and final response digest without row-level identity.
+- Manual requests allow live owner/admin/analyst/auditor roles; only owner/admin may manage daily, weekly, or monthly schedules. PostgreSQL re-derives actor, tenant, active scope, and entitlement at request, materialization, generation, authorization, and consumption.
+- Private payloads expire within 24 hours. Five-minute random capabilities are stored only as SHA-256, bound to subject/session, carried in an exact-path HttpOnly SameSite-strict cookie, atomically consumed once, and deleted after final contract validation and download-evidence recording.
+- A separate optional `reporting-worker` profile materializes unique schedule/instant jobs, claims with bounded leases and `SKIP LOCKED`, retries canonical failure classes at most five times, and has no payload-table or loyalty-value mutation access. Stopping it leaves checkout, ledger, refunds, reconciliation, connector, and provider workers independent.
+- Sixty focused pgTAP assertions cover grants, RLS, roles, tenant isolation, idempotency, IANA/DST cadence, schedule suppression, generation, minimization, session mismatch, replay, expiry, immutable evidence, payload cleanup, and zero ledger effects. The real two-session probe additionally proves concurrent manual/schedule created-plus-duplicate outcomes, one due materialization, distinct job leases, and exactly one capability consumer.
+- Eight focused worker tests cover bounded claims, generation, retry/terminal classification, hostile claim rejection, and failure-detail minimization. Dashboard tests cover a capability-free URL, private attachment headers, and safe filenames; the server assembles and validates the final bundle inside the same transaction that records delivery evidence.
+- [Desktop/mobile browser QA](analytics-exports-browser-qa-2026-08-25.md) exercised the real component at 1512 × 982 and 390 × 844, cadence changes, keyboard focus, reduced motion, English-only output, overflow, and fresh browser diagnostics. The temporary fixture was removed.
+- Exact-head Linux CI [run 32897999942](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/32897999942) passed at commit `4f97f3a`: root checks, both production images, a clean 62-migration replay, all 49 pgTAP files with 2,609 assertions, all six concurrency probes including the analytics race, and minimum/current WooCommerce with HPOS/legacy storage.
+- Intentional limitations: schedules generate downloadable Hub reports rather than sending email attachments; PostgreSQL remains the source because no measured load requires a warehouse; payloads are JSON only; the reporting profile remains disabled until the Starfiniti S06 canary.
