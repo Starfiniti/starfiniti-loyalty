@@ -176,8 +176,8 @@ select results_eq(
 );
 select results_eq(
   $$
-    select policy ->> 'version' || ':' || policy ->> 'mode' || ':' ||
-      policy ->> 'revision'
+    select (policy ->> 'version') || ':' || (policy ->> 'mode') || ':' ||
+      (policy ->> 'revision')
     from loyalty.get_programme_group_sharing_policy_v1(
       '91000000-0000-4000-8000-000000000301'
     )
