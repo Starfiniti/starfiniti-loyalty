@@ -1,6 +1,6 @@
 # M10 Evidence — Analytics
 
-Status: in progress. M10-S01 through M10-S02B are complete; M10-S03 cohort, retention, and causal evidence is active while M09 waits only on its reviewed production canary gate.
+Status: in progress. M10-S01 through M10-S03 are complete; M10-S04 controlled exports and scheduled reports is active while M09 waits only on its reviewed production canary gate.
 
 ## Reconstructed baseline
 
@@ -47,3 +47,14 @@ Status: in progress. M10-S01 through M10-S02B are complete; M10-S03 cohort, rete
 - Merchant `/analytics` loads programme outcomes independently from value and commerce reports and exposes responsive reward, VIP, referral, campaign, maturity, currency, reversal, and causal-state panels without synthetic fallback values.
 - Exact-head Linux CI [run 32889287858](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/32889287858) passed at commit `37998c6`: root `npm run check`, migration validation, secret/audit/license/package gates, clean 60-migration replay, all 47 pgTAP files with 2,524 assertions including 23 focused programme-outcome cases, both production images, and minimum/current WooCommerce with HPOS/legacy storage.
 - Intentional limitations: no causal lift is claimed, mixed-currency influenced spend is unavailable rather than converted, and production navigation/canary exposure remains deferred to M10-S05/S06.
+
+## M10-S03 completion evidence
+
+- Dictionary V4 additively publishes 103 complete definitions. The strict `AnalyticsCohortRetentionReportV1` validates report/dictionary bindings, IANA timezone periods, complete daily cohort series, mature denominators, exact rate arithmetic, experiment sample totals, and the available/unavailable causal shape before rendering.
+- Membership activation groups joins by requested local date and requires a release-backed earning within 30 elapsed days. Earning retention begins at the first released earning and requires another release after 30 and no later than 60 elapsed days; only fully observed cohorts enter aggregate rates.
+- Campaign evidence uses an intention-to-treat difference in means over every immutable treatment/control assignment, including members with zero eligible spend. The report exposes its exact integer numerator and denominator plus a rounded point estimate, and explicitly makes no statistical-significance or accounting-revenue claim.
+- Incrementality is available only for a completed purchase campaign with reconciled immutable assignment counts, valid purchase evidence, one exact currency/precision, and at least 30 members in each arm. Every failed gate returns a machine-readable unavailable reason and null estimates rather than inferred lift.
+- PostgreSQL derives live organization membership and the server-side analytics entitlement. The minimized projection returns only cohort counts/rates and campaign public IDs; customer, wallet, order, assignment, device, network, payment, and fraud-review identity remain private.
+- Merchant `/analytics` loads the cohort report independently and exposes mature activation, 31–60-day earning retention, cohort tables, experiment sample sizes, formula guidance, limitations, and unavailable states without synthetic fallback data.
+- Exact-head Linux CI [run 32893065219](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/32893065219) passed at commit `02f03a4`: root `npm run check`, migration validation, secret/audit/license/package gates, clean 61-migration replay, all 48 pgTAP files with 2,549 assertions including 25 focused cohort/retention/experiment cases, both production images, and minimum/current WooCommerce with HPOS/legacy storage.
+- Intentional limitations: the first estimator is a point estimate rather than a significance test, it measures eligible spend rather than gross or accounting revenue, report calls currently request UTC until organization timezone settings exist, mixed currencies are not converted, and production navigation/canary exposure remains deferred to M10-S05/S06.

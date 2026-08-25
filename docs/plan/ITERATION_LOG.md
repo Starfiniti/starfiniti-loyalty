@@ -1,5 +1,12 @@
 # Iteration Log
 
+## 2026-08-25 — M10 cohort retention and causal evidence
+
+- Closed M10-S03 with Dictionary V4's 103 exact definitions and an independently degradable mature-cohort/experiment report supporting IANA-local daily activation and exact elapsed-day 31–60 earning retention.
+- Added an evidence-gated campaign intention-to-treat difference-in-means estimator over every immutable assignment, including zero outcomes, with exact rational evidence, one-currency reconciliation, 30-member-per-arm floors, and deterministic unavailable reasons.
+- Preserved the causal boundary: eligible-spend lift is a point estimate rather than gross/accounting revenue or statistical significance, mixed currencies are not converted, and no customer, wallet, order, assignment, or fraud identity is exposed.
+- Exact-head run `32893065219` at `02f03a4` passed root checks, both images, a clean 61-migration replay, all 48 pgTAP files with 2,549 assertions including 25 focused cases, and every minimum/current HPOS/legacy WooCommerce runtime.
+
 ## 2026-08-25 — M10 programme outcome performance
 
 - Closed M10-S02B with Dictionary V3's 89 exact definitions and an independently degradable reward, VIP, referral, and campaign report sourced from immutable transitions, decisions, issuance/compensation facts, and purchase/trigger effects.
