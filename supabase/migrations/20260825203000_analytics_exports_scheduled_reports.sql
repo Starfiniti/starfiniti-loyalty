@@ -438,6 +438,10 @@ begin
     || '|' || target_format || '|' || target_range_days::text || '|' || target_time_zone,
     'utf8'
   ), 'sha256');
+  perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(
+    'analytics-export-idempotency|' || selected.organization_id::text || '|'
+    || actor_user_id::text || '|' || target_idempotency_key::text, 0
+  ));
   select request.* into existing_request
   from loyalty.analytics_export_requests as request
   where request.organization_id = selected.organization_id
@@ -562,6 +566,10 @@ begin
     || coalesce(target_day_of_week::text, '-') || '|'
     || coalesce(target_day_of_month::text, '-'), 'utf8'
   ), 'sha256');
+  perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(
+    'analytics-schedule-idempotency|' || selected.organization_id::text || '|'
+    || actor_user_id::text || '|' || target_idempotency_key::text, 0
+  ));
   select schedule.* into existing_schedule
   from loyalty.analytics_report_schedules as schedule
   where schedule.organization_id = selected.organization_id
