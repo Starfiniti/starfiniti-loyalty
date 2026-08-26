@@ -218,6 +218,7 @@ select results_eq(
   $$ values (true, true, true, true, true, true) $$,
   'all six protected loyalty paths remain available in self-hosted mode'
 );
+reset role;
 select results_eq(
   $$
     select
@@ -227,6 +228,8 @@ select results_eq(
   $$ values (0::bigint, 0::bigint) $$,
   'self-hosted reads require no private provider account or state'
 );
+set local role authenticated;
+set local request.jwt.claim.sub = 'a1000000-0000-4000-8000-000000000001';
 select results_eq(
   $$
     select count(*)::bigint
