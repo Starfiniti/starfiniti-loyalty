@@ -6,7 +6,7 @@ currentProduction:
   applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
 candidate:
   pullRequest: 38
-  commit: ff312bf2af193aa45faf10e463e730e858e3b09d
+  commit: 206385842bbe1e6800c95e6f27b9fd2b26986105
   approvedRelease: false
   operatorAccess: true
 publicBaseline:
@@ -35,7 +35,7 @@ score:
     - id: tests
       weight: 15
       score: 15
-      evidence: Candidate CI passed 687 workspace tests, 2,905 pgTAP assertions, eleven concurrency probes, both images, and all four WooCommerce runtimes.
+      evidence: Candidate CI passed 688 workspace tests, 2,905 pgTAP assertions, eleven concurrency probes, both images, and all four WooCommerce runtimes.
     - id: performance
       weight: 10
       score: 8
@@ -51,10 +51,10 @@ score:
 checks:
   - id: exact_head_ci
     status: passed
-    evidence: Run 32933122002 passed all seven jobs at candidate commit ff312bf after the authenticated webhook actor hardening and evidence update.
+    evidence: Run 32934487896 passed all seven jobs at candidate commit 2063858 after the Base64URL hint regression and secret-scanner correction.
   - id: migration_replay
     status: passed
-    evidence: Run 32933122002 cleanly replayed all 67 additive migrations and 54 pgTAP files with 2,905 assertions.
+    evidence: Run 32934487896 cleanly replayed all 67 additive migrations and 54 pgTAP files with 2,905 assertions.
   - id: contract_client_matrix
     status: passed
     evidence: Strict sharing, identity, currency, Service API, and webhook contracts plus TypeScript and PHP clients pass shared executable vectors.

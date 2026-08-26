@@ -7,6 +7,7 @@
 - Refreshed the read-only production baseline: canonical dashboard health/login returned 200, unauthenticated Supabase Auth/REST returned 401, DNS resolved, and the configured `s2-root` route confirmed VM 971 running. No production mutation occurred.
 - Eleven repository/public/operator checks pass and 30 production checks remain pending. The provisional total is 90/100, but operability is 3/10, so completion remains deterministically impossible until approved release, canaries, reconciliation, rollback, and observation pass.
 - The first exact-head Linux run exposed a random-alphabet contract defect: canonical Base64 signing material can place `/` or `+` in the six-character hint, while PostgreSQL correctly accepts only Base64URL hints. The generator now normalizes only the non-reusable hint, retains the documented canonical Base64 `whsec_` secret, and includes a deterministic all-`0xff` regression case.
+- Exact candidate run `32934487896` at `2063858` passed all seven jobs: the complete baseline and secret scan, both production images, clean 67-migration replay, all 54 pgTAP files with 2,905 assertions, all eleven concurrency probes, and all four WooCommerce runtimes.
 
 ## 2026-08-26 — M11 outbound webhooks, supported clients, and operations
 
