@@ -1,6 +1,6 @@
 # M11 Evidence — Ecosystem
 
-Status: M11-S01 through M11-S04 repository/browser gates are exact-head green on `codex/m11-multistore`; M11-S05 is active and M11-S06 retains disabled deployment and Starfiniti production-canary closeout.
+Status: M11-S01 through M11-S05 repository/browser gates are exact code-head green on `codex/m11-multistore`; M11-S06 is active for reviewed release, disabled deployment, Starfiniti production canaries, reconciliation, rollback, observation, and scoring.
 
 ## M11-S01 explicit multi-store sharing
 
@@ -35,7 +35,7 @@ Status: M11-S01 through M11-S04 repository/browser gates are exact-head green on
 
 - M11-S06 owns disabled deployment, read compatibility, Starfiniti-only canary, identity/link/wallet/event reconciliation, unlink/relink rollback rehearsal, and observation after reviewed stacked merge.
 
-Later evidence sections record each completed slice; webhook/client, integration-operations, and final canary results remain pending.
+Later evidence sections record each completed slice; final disabled deployment and canary results remain pending.
 
 ## M11-S03 multi-currency evidence
 
@@ -65,6 +65,17 @@ Later evidence sections record each completed slice; webhook/client, integration
 - Self-improvement evidence: five failed database runs exposed a reserved record name, security-inventory gaps, invalid V2 fixtures, missing harness-role membership, and a reserved test alias. Corrections tightened deterministic fixtures and independent inventories without relaxing production RLS, grants, scope, quota, credential, ledger, or checkout boundaries.
 - Production API routes remain disabled behind `ecosystem.api`. M11-S06 owns Starfiniti-only account issuance, live customer/activity replay, rotation/revocation, canonical-event/ledger reconciliation, rollback, and observation.
 
-## Pending M11-S05 and S06 closeout
+## M11-S05 outbound webhooks, supported clients, and operations
 
-- Versioned TypeScript/PHP clients, signed outbound webhook lifecycle/operations, and the final disabled Starfiniti ecosystem canary remain open.
+- Decision: ADR-0046 preserves the M08 minimized event and Standard Webhooks wire format while binding one endpoint to one separately mounted secret and one isolated worker. Activation remains an operator-reviewed deployment step rather than a browser/database shortcut.
+- Lifecycle: owners/admins create disabled endpoints and receive one 256-bit key once. Exact-signature authenticated wrappers derive the actor and tenant inside PostgreSQL and accept no caller actor/organization authority; private mutation primitives are unavailable to browser, runtime, and worker roles. PostgreSQL stores only SHA-256 fingerprints and six-character hints, permits bounded rotation only while disabled, stops authorization before disablement, and terminally scrubs the live destination while preserving deliveries, attempts, audit, and immutable revisions.
+- Health: the Auth-scoped read derives membership from live database state and exposes only safe state, subscriptions, rate, counts, last attempt/error, bounded hints, and next actions. It cannot expose fingerprints, payload/response bodies, contacts, or worker references; analysts remain read-only and cross-tenant reads fail closed.
+- Clients: `@starfiniti/loyalty-sdk` and the Composer package provide strict bounded customer/activity calls plus exact raw-body Standard Webhooks verification. TypeScript and PHP execute the same stable ID, timestamp, signature, and replay vector; receiver-owned replay storage is required before processing.
+- Verification: exact code-head run [`32932756596`](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/32932756596) at `a495433` passed all seven jobs: root baseline, both production images, clean 67-migration replay, all 54 pgTAP files with 2,905 assertions, all eleven concurrency probes, and minimum/current HPOS/legacy WooCommerce runtimes. The baseline includes 229 dashboard, 107 worker, 281 contract, 62 domain, and eight SDK tests plus nine PHP sources and executable vectors. The eleventh probe serialized two authenticated retries into one created/one duplicate result, one endpoint/revision/attributed audit, and zero ledger effects.
+- [Production-build desktop/mobile QA](webhook-browser-qa-2026-08-26.md) passed active/disabled/retired/degraded/read-only states, create/rotation reviews, dark mode, reduced motion, mobile navigation, 40-pixel actions, 3-pixel focus, English-only output, zero overflow, and zero diagnostics. The fixture was removed and the normal application rebuilt.
+- Self-improvement evidence: two failed database runs rejected non-callable schema-qualified SQL syntax, missing independent exposed-function inventories, and a private-table assertion still running under the runtime role. Corrections narrowed syntax and test authority without adding runtime table access or relaxing RLS, grants, endpoint authority, lifecycle, delivery, ledger, or checkout boundaries.
+- Production endpoints remain disabled. M11-S06 owns reviewed release, recovery point, isolated secret mount, Starfiniti-only API/webhook delivery and replay, rotation/retirement, exact reconciliation, rollback, observation, and module scoring.
+
+## Pending M11-S06 closeout
+
+- The disabled Starfiniti ecosystem canaries, exact cross-slice reconciliation, rollback/observation evidence, and final module score remain open.

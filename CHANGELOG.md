@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added endpoint-scoped outbound-webhook lifecycle operations with one-time 256-bit signing keys, digest-only storage, immutable revisions, disabled-only bounded rotation, disable-before-authorization, retirement scrubbing, and minimized merchant health.
+- Added supported dependency-light TypeScript and PHP 8.1 clients for strict Service API requests and exact raw-body Standard Webhooks verification with shared executable replay vectors.
 - Added M11 scoped Service APIs with digest-only one-time credentials, least-privilege customer/activity scopes, bounded rotation and immediate revocation, database-derived authority and fixed-minute quotas, opaque customer namespaces, canonical event/ledger reuse, and responsive owner/admin operations.
 - Repaired service-account confirmation contrast, action target sizes, and checkbox-label alignment after desktop/mobile dark-mode browser review.
 - Added M11 exact multi-currency evidence with immutable occurrence-time provider snapshots, rational conversion and PostgreSQL recomputation, original-snapshot refunds, source-currency rule visibility, exact retries, and an English policy/revision Operations control.

@@ -1,5 +1,16 @@
 # Iteration Log
 
+## 2026-08-26 — M11 outbound webhooks, supported clients, and operations
+
+- Accepted ADR-0046: each outbound endpoint owns one separately mounted secret and isolated worker; PostgreSQL owns lifecycle authority and retains only fingerprints/hints while the M08 event and Standard Webhooks wire contracts remain compatible.
+- Added disabled creation, disabled-only bounded rotation, disable-before-authorization, terminal destination scrubbing, immutable endpoint revisions, minimized endpoint health, and responsive owner/admin lifecycle controls with fail-closed analyst state.
+- Added supported dependency-light TypeScript and PHP 8.1 clients with strict bounded Service API requests, exact raw-body constant-time Standard Webhooks verification, timestamp tolerance, stable replay identity, and shared executable vectors.
+- Linux replay first rejected special `substring` syntax behind a schema-qualified call, then rejected missing independent function inventories and a private-table assertion executed under the runtime role. The fixes used callable syntax, explicitly reviewed the new read surface, and restored the test owner before private inspection without granting runtime table access.
+- Adversarial diff review removed the final trusted actor bridge: exact-signature authenticated wrappers derive the Auth subject and tenant in PostgreSQL, private primitives are not executable by browser/runtime/worker roles, and the eleventh two-session probe serialized concurrent retries into one endpoint, one revision, one attributed audit, and zero ledger effects.
+- Exact code-head run `32932756596` at `a495433` passed baseline, both images, clean 67-migration replay, all 54 pgTAP files with 2,905 assertions including 59 focused lifecycle cases, all eleven concurrency probes, and all four WooCommerce runtimes. The baseline includes 229 dashboard, 107 worker, 281 contract, 62 domain, and eight TypeScript SDK tests plus nine PHP sources and executable cross-language vectors.
+- Production-build desktop/mobile review passed active, disabled, retired, degraded, expanded lifecycle, and read-only states; dark mode; reduced motion; mobile navigation; 40-pixel actions; 3-pixel focus; English-only output; zero overflow; and zero diagnostics. The fixture was removed and the normal 26-route application rebuilt.
+- Production endpoints remain disabled. M11-S06 owns reviewed release, isolated secret mount, Starfiniti-only activation/delivery/replay/rotation/retirement, exact reconciliation, rollback, observation, and module scoring.
+
 ## 2026-08-26 — M11 scoped service accounts and inbound APIs
 
 - Accepted ADR-0045: the server parses one high-entropy opaque bearer credential, while PostgreSQL derives organization, workspace, programme, synthetic connection, scopes, entitlement, customer namespace, and quota authority from its digest.

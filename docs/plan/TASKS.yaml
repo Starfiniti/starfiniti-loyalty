@@ -1764,7 +1764,7 @@ tasks:
           - Playwright desktop mobile dark reduced-motion keyboard and diagnostic review passes 16.48-to-1 confirmation contrast 40-pixel actions aligned labels English-only output zero overflow and zero browser errors after repairing three deterministic visual defects
           - production issuance remains disabled and Starfiniti-only customer activity replay rotation revocation event-ledger reconciliation rollback and observation remain owned by M11-S06
       - id: M11-S05-OUTBOUND-WEBHOOKS-CLIENTS-AND-OPERATIONS
-        status: in_progress
+        status: complete
         hypothesis: Endpoint-scoped lifecycle commands, tested receiver helpers, and one evidence-backed health view let merchants operate provider-neutral integrations without exposing signing material or introducing another event/value path.
         baseline: The M08 worker already delivers a strict minimized NotificationEventV1 with Standard Webhooks HMAC, SSRF resistance, consent rechecks, bounded retries, and append-only attempt evidence, but endpoints are deployment-provisioned, lifecycle changes are unaudited manual SQL, no supported receiver or Service API client is packaged, and merchant health aggregates hide endpoint data flow.
         targets:
@@ -1788,7 +1788,7 @@ tasks:
           - SDK body drift status ambiguity unbounded response parsing or authorization leakage
           - webhook verification after JSON reserialization non-constant-time comparison stale timestamp acceptance or duplicate webhook processing
           - endpoint projection leaking fingerprints response bodies payloads contacts or worker references
-        security_boundary: The authenticated Next.js server generates raw webhook secrets and passes only a public workspace or endpoint selector, SHA-256 fingerprint, bounded hint, and reviewed command fields to private empty-search-path PostgreSQL functions. PostgreSQL derives organization role entitlement endpoint and lifecycle authority; receiver SDKs verify exact raw bytes and expose the stable webhook ID for caller-owned replay storage.
+        security_boundary: The authenticated Next.js server generates raw webhook secrets and passes only a public workspace or endpoint selector, SHA-256 fingerprint, bounded hint, and reviewed command fields to exact-signature authenticated wrappers. PostgreSQL derives the Auth actor, organization, role, entitlement, endpoint, and lifecycle authority; private mutation primitives are not executable by browser, runtime, or worker roles. Receiver SDKs verify exact raw bytes and expose the stable webhook ID for caller-owned replay storage.
         rollout: Deploy additive readers and commands with endpoint creation disabled by the notifications entitlement, create one disabled Starfiniti endpoint, mount its one-time secret in one isolated webhook worker, run receiver vectors, activate through the reviewed operator runbook, deliver and replay one event, disable, rotate with bounded overlap, reactivate, retire, and reconcile health/revisions/deliveries/attempts.
         rollback: Disable lifecycle actions, stop the endpoint-isolated worker, disable the endpoint, and retain endpoint revisions deliveries attempts events and audit evidence. Existing M08 delivery functions and wire format remain authoritative; forward fixes restore compatible management readers without rewriting history.
         verification:
@@ -1804,12 +1804,22 @@ tasks:
           security: reusable secret fingerprint payload response body contact and worker-reference projection occurrences equal zero
           reliability: deliveries authorized after disable or retirement and duplicate receiver effects equal zero
           operability: every endpoint exposes bounded state subscription outstanding failure and last-attempt evidence plus a documented next action
-        evidence: []
+        evidence:
+          - ADR-0046 selects endpoint-scoped digest-only lifecycle authority and dependency-light supported clients while preserving the M08 wire format and endpoint-isolated worker boundary
+          - additive private RLS revisions and exact-signature Auth-derived lifecycle wrappers create disabled endpoints rotate only while disabled stop authorization before disable or retirement scrub retired destinations and retain immutable delivery evidence while private primitives remain unavailable to application roles
+          - strict TypeScript and PHP 8.1 clients share exact Service API bodies Standard Webhooks raw-body verification bounded timestamp tolerance stable replay identity and executable cross-language vectors
+          - minimized merchant health and owner-admin controls expose safe lifecycle counts subscriptions last-attempt evidence and next actions while analyst and cross-tenant states fail closed
+          - exact code-head run 32932756596 at a495433 passes all seven jobs including baseline both images clean 67-migration replay all 54 pgTAP files with 2905 assertions all eleven concurrency probes and all four WooCommerce runtimes
+          - 59 focused lifecycle pgTAP assertions 229 dashboard 107 worker 281 contract 62 domain and eight TypeScript SDK tests plus nine PHP sources and executable vectors pass
+          - the eleventh two-session probe serializes two authenticated retries through PostgreSQL-derived actor and tenant authority into one endpoint revision attributed audit and zero ledger effects
+          - production-build desktop mobile dark reduced-motion keyboard and diagnostic review passes active disabled retired degraded and read-only states 40-pixel lifecycle actions three-pixel focus zero overflow and zero browser errors
+          - two Linux replay iterations failed closed on callable SQL syntax independent exposed-function inventories and a test-role boundary; narrow corrections preserved private-table denial and production grants
+          - production endpoints remain disabled and Starfiniti-only mount activation delivery replay rotation retirement reconciliation rollback and observation remain owned by M11-S06
       - id: M11-S06-SHADOW-CANARY-AND-CLOSE
-        status: planned
+        status: in_progress
         acceptance:
           - isolated and explicitly shared Starfiniti canaries reconcile wallets events currencies API requests and webhooks with module score at least 90 and every category above its floor
-    risks: [R-001, R-002, R-039, R-040, R-041, R-042]
+    risks: [R-001, R-002, R-039, R-040, R-041, R-042, R-043]
     docs:
       [
         docs/integrations/MERCHANT_API.md,
