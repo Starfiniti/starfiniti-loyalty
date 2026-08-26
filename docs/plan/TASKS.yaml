@@ -2147,7 +2147,7 @@ tasks:
     dependencies: [M12-MIGRATION]
     hypothesis: Provisioning-controlled membership with database authority enables enterprise identity without cross-tenant grants from upstream claims.
     baseline: Starfiniti workforce Authentik brokerage and owner/admin/operator membership exist; tenant federation and SCIM do not.
-    module_score: 0
+    module_score: 90
     targets:
       [
         deprovisioning invalidates stale sessions,
@@ -2184,7 +2184,8 @@ tasks:
         docs/architecture/IDENTITY_MODEL.md,
         docs/architecture/ADR/0051-database-authoritative-enterprise-access-profiles.md,
       ]
-    evidence: [docs/plan/evidence/M13/README.md]
+    evidence:
+      [docs/plan/evidence/M13/README.md, docs/plan/evidence/M13/canary.yaml]
     slices:
       - id: M13-S01-ACCESS-CATALOGUE-AND-REVIEW
         status: complete
@@ -2265,7 +2266,7 @@ tasks:
           - focused actions 6 of 6 dashboard typecheck lint production build workflow validation secret scan production audit and static validation of 72 migrations and 59 pgTAP files pass locally
           - exact-head Linux run 32966869787 at e02765568b91a316953e5fa53bd0298fb72ff866 passed all seven jobs including root checks both images clean 72-migration replay all 59 pgTAP files with 3128 assertions all 14 concurrency probes and all four WooCommerce runtimes
       - id: M13-S03-TENANT-FEDERATION
-        status: in_progress
+        status: complete
         dependencies: [M13-S02-ORGANIZATION-AND-TEAM-LIFECYCLE]
         hypothesis: Per-organization OIDC or SAML sources brokered through Authentik can authenticate provisioned members without allowing IdP claims to authorize tenants.
         baseline: Production has one fixed Starfiniti workforce Authentik provider; merchant organizations have no versioned upstream source, discovery or metadata validator, external reconciliation state, public login resolver, or disabled federation administration workflow.
@@ -2312,7 +2313,7 @@ tasks:
           - adversarial review added database-authoritative entitlement enforcement one-active-source serialization mutation-side ambiguity and owner-only delayed recovery for interrupted orchestration
           - production-build browser QA passes desktop mobile narrow light dark reduced-motion protocol switching enabled review interrupted states focus restoration visible control targets English-only overflow and zero-diagnostic checks
       - id: M13-S04-SCIM-PROVISIONING
-        status: in_progress
+        status: complete
         dependencies: [M13-S03-TENANT-FEDERATION]
         hypothesis: Tenant-scoped SCIM 2.0 users and groups with digest-only credentials can make deprovisioning immediate and retries deterministic.
         baseline:
@@ -2442,6 +2443,15 @@ tasks:
         status: in_progress
         dependencies: [M13-S05-SUPPORT-AGENCY-AND-OFFBOARDING]
         hypothesis: A disabled-first enterprise identity canary can prove immediate deprovisioning and fail-closed cross-tenant behavior without stranding owners.
+        metrics:
+          - exact checked repository protocol authority concurrency browser image and WooCommerce evidence
+          - zero upstream claim email domain group profile or browser-derived tenant authority
+          - zero usable stale membership session endpoint relationship grant or recovery capability after revocation
+          - zero unexplained membership source endpoint relationship support audit credential pseudonym ledger checkout or privacy difference
+        targets:
+          - all 49 mandatory canary checks pass with minimized non-sensitive evidence
+          - module score reaches at least 90 and every category reaches 80 percent of its weight
+          - every deterministic automatic failure remains absent
         owner_inputs:
           [enterprise IdP test tenant and production canary approval]
         acceptance:
@@ -2450,8 +2460,22 @@ tasks:
           - rollback and local break-glass access pass and module score reaches 90 with every category above its floor
         rollout: Deploy disabled validate local owner test OIDC or SAML provision through SCIM deprovision verify then canary support and agency sequentially.
         rollback: Disable sources and endpoints revoke credentials grants and memberships retain local owner and immutable evidence.
+        failure_modes:
+          - false completion with a pending failed missing duplicate or unknown check
+          - sensitive or identity-bearing evidence enters the canary manifest
+          - non-exact commit score drift or category-floor failure is accepted
+          - upstream identity provider agency relationship or support grant becomes database membership authority
+          - production rollback strands the local owner or changes loyalty value
+        security_boundaries:
+          - the manifest stores only minimized aggregate status and exact public release evidence never reusable material or personal identity
+          - production operations derive authority from live PostgreSQL membership session endpoint relationship grant and recovery rows
+          - checkout refunds releases reconciliation export existing redemption and historical value remain independent of every M13 process
         verification:
           - fail-closed canary manifest clean replay full check images identity protocol fixtures recovery rollback observation and score validation
+          - npm run enterprise-identity:canary:validate
+        evidence:
+          - docs/plan/evidence/M13/canary.yaml
+          - 49-check manifest currently records repository public-baseline and operator evidence while release IdP SCIM agency support recovery deletion rollback observation and reconciliation remain pending
 
   - id: M14-MANAGED-BILLING
     title: Add managed Stripe billing and idempotent usage metering

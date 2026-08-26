@@ -1,0 +1,215 @@
+schema: starfiniti.enterprise-identity-canary.v1
+status: in_progress
+observedAt: 2026-08-26T21:19:00Z
+currentProduction:
+  release: v0.1.11
+  applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
+candidate:
+  pullRequest: 45
+  commit: 2964394872a7502953fd5572321b5b7a458b9849
+  approvedRelease: false
+  operatorAccess: true
+  enterpriseIdentityApproved: false
+  canaryApproved: false
+publicBaseline:
+  dashboardHealth: 200
+  login: 200
+  authWithoutKey: 401
+  restWithoutKey: 401
+  canonicalDns: true
+score:
+  total: 90
+  target: 90
+  minimumCategoryRatio: 0.8
+  categories:
+    - id: correctness
+      weight: 20
+      score: 20
+      evidence: Organization lifecycle, federation, SCIM, bilateral agency, scoped support, recovery, export, offboarding, and deletion have versioned deterministic database outcomes.
+    - id: security
+      weight: 15
+      score: 15
+      evidence: PostgreSQL derives live tenant and subject authority; claims, email, domain, groups, labels, browser selectors, permanent support, and direct Auth-session table access grant nothing.
+    - id: ledger_reliability
+      weight: 15
+      score: 15
+      evidence: Enterprise identity and administration commands create no loyalty value, while offboarding and deletion preserve immutable ledger, programme, event, and audit evidence.
+    - id: tests
+      weight: 15
+      score: 15
+      evidence: Candidate evidence covers 3,349 pgTAP assertions, 16 concurrency probes, contracts, actions, browser states, both images, and all four WooCommerce runtimes.
+    - id: performance
+      weight: 10
+      score: 8
+      evidence: Protocol bodies, filters, pages, projections, histories, expiries, leases, and support scopes are bounded; production identity latency and load observation remain pending.
+    - id: operability
+      weight: 10
+      score: 3
+      evidence: Disabled-first deployment, recovery, reconciliation, rollback, and incident runbooks exist; live IdP, SCIM, agency, support, recovery, deletion, and observation evidence remain pending.
+    - id: maintainability
+      weight: 15
+      score: 14
+      evidence: Versioned contracts, additive migrations, ADRs, protocol docs, runbooks, tests, compatibility boundaries, and evidence are maintained; production closeout remains.
+checks:
+  - id: exact_head_ci
+    status: pending
+    evidence: The M13-S05 parent head is green; this fail-closed canary validator still requires its own exact-head seven-job CI run.
+  - id: migration_replay
+    status: passed
+    evidence: Run 33014200478 cleanly replayed all 75 additive migrations and all 62 pgTAP files with 3,349 assertions.
+  - id: contract_protocol_matrix
+    status: passed
+    evidence: Organization lifecycle, federation, SCIM discovery and resources, agency, support, recovery, export, and deletion contracts pass strict parsing and route/action tests.
+  - id: database_authority_matrix
+    status: passed
+    evidence: RLS, grants, fixed search paths, Auth-derived subjects, live membership and session checks, cross-tenant denial, immutable evidence, and zero-value boundaries pass.
+  - id: concurrency_matrix
+    status: passed
+    evidence: Sixteen two-session probes cover value, capacity, identity, lifecycle, SCIM, bilateral acceptance, support approval, and deletion serialization.
+  - id: woocommerce_runtime_matrix
+    status: passed
+    evidence: Minimum and current WordPress and WooCommerce pass with HPOS and legacy storage while enterprise administration remains outside checkout.
+  - id: browser_accessibility
+    status: passed
+    evidence: Production-build desktop, mobile, and narrow reviews pass English-only workflows, keyboard focus, dark mode, reduced motion, control targets, overflow, and diagnostics.
+  - id: checkout_independence_matrix
+    status: passed
+    evidence: The complete WooCommerce runtime matrix preserves local bounded checkout and native coupons with no synchronous identity, SCIM, agency, support, or recovery dependency.
+  - id: operations_documentation
+    status: passed
+    evidence: Federation, SCIM, agency/support/recovery, deployment, rollback, and security boundaries have versioned ADRs, API documentation, runbooks, and evidence locations.
+  - id: public_production_baseline
+    status: passed
+    evidence: Canonical DNS resolves; dashboard health and login return 200, while unauthenticated Supabase Auth and REST roots return 401.
+  - id: operator_access
+    status: passed
+    evidence: The approved s2-root route reached the production Proxmox node read-only and confirmed application VM 970 and database VM 971 running without mutation.
+  - id: approved_release
+    status: pending
+    evidence: PR 45 is not yet created or approved, and its stacked M13 parents remain draft repository candidates rather than an immutable production release.
+  - id: approved_enterprise_identity_fixture
+    status: pending
+    evidence: An approved enterprise OIDC and SAML test tenant with a controlled SCIM cohort has not been supplied.
+  - id: canary_approval
+    status: pending
+    evidence: No production owner has approved the identity, agency/support, recovery, offboarding, or disposable deletion canary window.
+  - id: pre_change_recovery_point
+    status: pending
+    evidence: A fresh verified PostgreSQL base, WAL position, encrypted incremental archive, and application configuration recovery point must precede deployment.
+  - id: production_source_baseline
+    status: pending
+    evidence: Public and VM health are current, but minimized organization, membership, source, endpoint, relationship, grant, audit, and zero-ledger counts require the approved window.
+  - id: administration_secret_mounts
+    status: pending
+    evidence: Reviewed Authentik and Supabase administration material must be mounted owner-only in the isolated dashboard boundary and excluded from browser, worker, database, and logs.
+  - id: authentik_egress_policy
+    status: pending
+    evidence: Production Authentik must reach only exact approved private dependencies while every other private, reserved, link-local, and metadata destination is denied.
+  - id: dns_rebinding_denial
+    status: pending
+    evidence: A controlled public-to-private DNS change must fail at socket-pinned validation and again immediately before enablement without recording a successful source state.
+  - id: disabled_deployment
+    status: pending
+    evidence: Candidate images and M13 migrations have not been deployed; tenant federation, SCIM, agency support, and recovery operations remain absent or disabled in production.
+  - id: migration_registration
+    status: pending
+    evidence: Production must record each M13 additive migration version and source hash exactly once before any enterprise identity command.
+  - id: identity_entitlement_canary
+    status: pending
+    evidence: Keep enterprise identity disabled globally, then enable only the approved Starfiniti test organization after disabled-deployment smoke passes.
+  - id: local_owner_recovery
+    status: pending
+    evidence: Prove one retained local owner can sign in, review state, disable federation, and recover while every upstream provider is unavailable.
+  - id: oidc_tenant_canary
+    status: pending
+    evidence: Validate, create, enable, link, log in, disable, rotate, and retire one approved organization OIDC source with exact issuer, subject, and immutable revision reconciliation.
+  - id: saml_tenant_canary
+    status: pending
+    evidence: Validate, create, enable, log in, disable, rotate, and retire one approved organization SAML source with signed response, audience, entity, and certificate evidence.
+  - id: scim_discovery_contract
+    status: pending
+    evidence: Run the approved client against ServiceProviderConfig, ResourceTypes, Schemas, filtering, pagination, media type, and conditional request behavior.
+  - id: scim_provisioning_canary
+    status: pending
+    evidence: Provision a controlled cohort through Users and Groups, reconcile opaque external resources, and prove exact Authentik hashed-subject correlation before access exists.
+  - id: group_role_allowlist
+    status: pending
+    evidence: Map one opaque approved Group to one non-owner role, leave an unmapped Group authority-free, and reject owner or conflicting role mappings.
+  - id: mapped_unmapped_login
+    status: pending
+    evidence: A correlated provisioned and mapped user gains only the approved live membership while unprovisioned, unmapped, and conflicting-role users remain denied.
+  - id: immediate_deprovisioning
+    status: pending
+    evidence: SCIM active-false, role removal, DELETE, and endpoint revocation each remove live membership on the same committed request with retained audit.
+  - id: stale_session_denial
+    status: pending
+    evidence: After membership, endpoint, grant, recovery, or Auth-session revocation, the next request from an older signed access token fails closed.
+  - id: endpoint_rotation_revocation
+    status: pending
+    evidence: Rotate the one-time SCIM credential, prove only a digest persists, reject the prior bearer immediately, then revoke and deny the current bearer.
+  - id: forged_claim_denial
+    status: pending
+    evidence: Forged email, domain, role, organization, IdP group, issuer, metadata, and JWT profile fields grant no membership, relationship, support, or recovery authority.
+  - id: cross_tenant_denial
+    status: pending
+    evidence: Substitute every public organization, source, endpoint, relationship, grant, and deletion selector from an unrelated subject and receive no data or effect.
+  - id: provider_outage_recovery
+    status: pending
+    evidence: Authentik, IdP, SCIM client, and dashboard outages fail independently; accepted sessions and local owner recovery follow the reviewed state without guessing external success.
+  - id: agency_bilateral_canary
+    status: pending
+    evidence: A consenting client owner issues one capability and a separate agency owner accepts it, producing one minimized relationship and zero membership or ledger effect.
+  - id: agency_revocation
+    status: pending
+    evidence: Revoke the disposable relationship from both perspectives in sequence and prove dependent requests and grants fail immediately while history remains visible.
+  - id: support_approval_separation
+    status: pending
+    evidence: An agency operator requests exact scopes and a separate client owner narrows and approves them; requester self-approval and changed retries fail.
+  - id: support_scope_use_audit
+    status: pending
+    evidence: Use each approved read scope once, reconcile only its minimized fields, and confirm exactly one tenant-visible immutable use event per projection.
+  - id: support_revocation_stale_session
+    status: pending
+    evidence: Grant revocation, relationship revocation, agency membership revocation, expiry, and Auth-session termination each deny the next support read.
+  - id: aal2_break_glass
+    status: pending
+    evidence: A retained owner opens one 30-minute recovery session only after fresh AAL2, records every use, and fails immediately after Auth-session termination.
+  - id: administration_export_reconciliation
+    status: pending
+    evidence: Export the bounded administration manifest and reconcile every resource, credential-state, immutable-evidence, ledger count, and exact net-zero field without PII.
+  - id: offboarding_credential_inventory
+    status: pending
+    evidence: Offboard a disposable organization and prove zero live membership except recovery owner, zero active credential path, webhook tombstones, and unchanged immutable value evidence.
+  - id: deletion_cooling_cancel
+    status: pending
+    evidence: Request deletion, prove completion fails before seven days, cancel once without restoring authority, then create a fresh exact case for the approved rehearsal.
+  - id: deletion_pseudonymization
+    status: pending
+    evidence: Complete only the disposable cooled case, reconcile organization and directory pseudonyms, zero memberships, retained tombstone, and unchanged immutable ledger and audit rows.
+  - id: production_outage_continuity
+    status: pending
+    evidence: Stop federation, SCIM, agency/support, and recovery application paths independently while checkout, ingestion, refunds, releases, redemption, export, and reconciliation continue.
+  - id: rollback_rehearsal
+    status: pending
+    evidence: Disable sources and entitlement, revoke endpoints, grants, and relationships, restore prior images, retain local owner and immutable evidence, then reconcile access and value.
+  - id: observation_window
+    status: pending
+    evidence: Observe the controlled identity and administration canaries after rollback rehearsal and record errors, retries, latency, load, audit, privacy, and access health.
+  - id: final_reconciliation
+    status: pending
+    evidence: Confirm zero unexplained membership, role, session, source, endpoint, relationship, grant, use, credential, pseudonym, audit, ledger, checkout, or privacy difference.
+automaticFails:
+  - email domain group name profile metadata browser input or upstream claim grants tenant authority
+  - uninvited unprovisioned unmapped conflicting or unrelated identity gains membership
+  - stale Auth or application session retains access after membership endpoint grant relationship or recovery revocation
+  - reusable plaintext federation SCIM agency support recovery or administration material persists outside its approved isolated handoff
+  - cross-organization source endpoint directory membership relationship grant export deletion audit or value access
+  - agency relationship creates membership customer sharing wallet sharing or product-command authority
+  - support is self-approved over-scoped writable hidden unaudited expired or usable after revocation
+  - break-glass works without a live owner signed AAL2 correlated Auth session short expiry and tenant-visible use evidence
+  - offboarding leaves an active credential session destination signing fingerprint schedule export payload or non-owner membership
+  - deletion completes before cooling without exact approval or rewrites ledger programme event provisioning or immutable audit history
+  - checkout ingestion refunds releases reconciliation export existing redemption or customer value depends on enterprise identity availability
+  - unexplained membership role source endpoint relationship grant use credential pseudonym audit ledger checkout or privacy difference
+  - approved release recovery point enterprise identity fixture canary rollback observation or final reconciliation evidence is absent
+  - critical security tenancy authorization privacy recovery accessibility data-loss or immutable-history finding remains unresolved
