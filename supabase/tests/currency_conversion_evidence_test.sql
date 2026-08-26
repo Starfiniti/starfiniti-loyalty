@@ -297,14 +297,55 @@ from loyalty_private.commerce_delivery_inbox as inbox
 where inbox.receipt_id = '95000000-0000-4000-8000-000000000800';
 
 grant loyalty_worker to current_user;
+create function pg_temp.currency_organization_ref()
+returns bigint
+language sql
+stable
+security definer
+set search_path = pg_catalog
+as $$
+  select organization.id
+  from loyalty.organizations as organization
+  where organization.slug = 'currency-one';
+$$;
+create function pg_temp.currency_programme_version_ref()
+returns bigint
+language sql
+stable
+security definer
+set search_path = pg_catalog
+as $$
+  select version.id
+  from loyalty.programme_versions as version
+  where version.public_id = '95000000-0000-4000-8000-000000000500';
+$$;
+create function pg_temp.currency_event_occurred_at(target_public_id uuid)
+returns timestamptz
+language sql
+stable
+security definer
+set search_path = pg_catalog
+as $$
+  select event.occurred_at
+  from loyalty_private.canonical_commerce_events as event
+  where event.public_id = target_public_id;
+$$;
+revoke all on function pg_temp.currency_organization_ref() from public;
+revoke all on function pg_temp.currency_programme_version_ref() from public;
+revoke all on function pg_temp.currency_event_occurred_at(uuid) from public;
+grant execute on function pg_temp.currency_organization_ref() to loyalty_worker;
+grant execute on function pg_temp.currency_programme_version_ref() to loyalty_worker;
+grant execute on function pg_temp.currency_event_occurred_at(uuid) to loyalty_worker;
+grant usage on schema extensions to loyalty_worker;
+set local search_path = extensions, pg_catalog, pg_temp;
 set local role loyalty_worker;
 
 create temporary table missing_rate_context as
 select * from loyalty_private.resolve_currency_conversion_context_v1(
-  (select id from loyalty.organizations where slug = 'currency-one'),
-  (select id from loyalty.programme_versions where public_id = '95000000-0000-4000-8000-000000000500'),
+  pg_temp.currency_organization_ref(),
+  pg_temp.currency_programme_version_ref(),
   'USD', 2,
-  (select occurred_at from loyalty_private.canonical_commerce_events where public_id = '95000000-0000-4000-8000-000000000810'),
+  pg_temp.currency_event_occurred_at('95000000-0000-4000-8000-000000000810'),
   null
 );
 reset role;
@@ -316,7 +357,7 @@ select is(
 set local role loyalty_worker;
 create temporary table rate_result as
 select * from loyalty_private.record_currency_rate_snapshot_v1(
-  (select id from loyalty.organizations where slug = 'currency-one'),
+  pg_temp.currency_organization_ref(),
   'verified-test-feed', 'usd-eur-2026-08-26-1', 'USD', 2, 'EUR', 2,
   85, 100, now() - interval '1 hour', now() - interval '1 hour',
   now() + interval '23 hours', decode(repeat('b', 64), 'hex')
@@ -326,18 +367,18 @@ select results_eq(
   array['created'::text], 'worker records one exact provider snapshot'
 );
 select results_eq(
-  $$ select outcome from loyalty_private.record_currency_rate_snapshot_v1((select id from loyalty.organizations where slug = 'currency-one'), 'verified-test-feed', 'usd-eur-2026-08-26-1', 'USD', 2, 'EUR', 2, 85, 100, now() - interval '1 hour', now() - interval '1 hour', now() + interval '23 hours', decode(repeat('b', 64), 'hex')) $$,
+  $$ select outcome from loyalty_private.record_currency_rate_snapshot_v1(pg_temp.currency_organization_ref(), 'verified-test-feed', 'usd-eur-2026-08-26-1', 'USD', 2, 'EUR', 2, 85, 100, now() - interval '1 hour', now() - interval '1 hour', now() + interval '23 hours', decode(repeat('b', 64), 'hex')) $$,
   array['duplicate'::text], 'exact provider retry returns one snapshot'
 );
 select throws_ok(
-  $$ select * from loyalty_private.record_currency_rate_snapshot_v1((select id from loyalty.organizations where slug = 'currency-one'), 'verified-test-feed', 'usd-eur-2026-08-26-1', 'USD', 2, 'EUR', 2, 86, 100, now() - interval '1 hour', now() - interval '1 hour', now() + interval '23 hours', decode(repeat('b', 64), 'hex')) $$,
+  $$ select * from loyalty_private.record_currency_rate_snapshot_v1(pg_temp.currency_organization_ref(), 'verified-test-feed', 'usd-eur-2026-08-26-1', 'USD', 2, 'EUR', 2, 86, 100, now() - interval '1 hour', now() - interval '1 hour', now() + interval '23 hours', decode(repeat('b', 64), 'hex')) $$,
   '23514', 'currency rate reference conflict', 'changed provider-reference retry fails closed'
 );
 create temporary table resolved_context as
 select * from loyalty_private.resolve_currency_conversion_context_v1(
-  (select id from loyalty.organizations where slug = 'currency-one'),
-  (select id from loyalty.programme_versions where public_id = '95000000-0000-4000-8000-000000000500'),
-  'USD', 2, (select occurred_at from loyalty_private.canonical_commerce_events where public_id = '95000000-0000-4000-8000-000000000810'), null
+  pg_temp.currency_organization_ref(),
+  pg_temp.currency_programme_version_ref(),
+  'USD', 2, pg_temp.currency_event_occurred_at('95000000-0000-4000-8000-000000000810'), null
 );
 select results_eq(
   $$ select (conversion_context -> 'snapshot' ->> 'providerKey') || ':' || (conversion_context -> 'snapshot' ->> 'rateNumerator') || '/' || (conversion_context -> 'snapshot' ->> 'rateDenominator') from resolved_context $$,
@@ -348,19 +389,19 @@ select results_eq(
   array['EUR:half_away_from_zero'::text], 'resolution binds base scope and rounding policy'
 );
 select is_empty(
-  $$ select * from loyalty_private.resolve_currency_conversion_context_v1((select id from loyalty.organizations where slug = 'currency-one'), (select id from loyalty.programme_versions where public_id = '95000000-0000-4000-8000-000000000500'), 'USD', 3, (select occurred_at from loyalty_private.canonical_commerce_events where public_id = '95000000-0000-4000-8000-000000000810'), null) $$,
+  $$ select * from loyalty_private.resolve_currency_conversion_context_v1(pg_temp.currency_organization_ref(), pg_temp.currency_programme_version_ref(), 'USD', 3, pg_temp.currency_event_occurred_at('95000000-0000-4000-8000-000000000810'), null) $$,
   'precision mismatch cannot resolve a snapshot'
 );
 select is_empty(
-  $$ select * from loyalty_private.resolve_currency_conversion_context_v1((select id from loyalty.organizations where slug = 'currency-one'), (select id from loyalty.programme_versions where public_id = '95000000-0000-4000-8000-000000000500'), 'USD', 2, now() + interval '2 days', null) $$,
+  $$ select * from loyalty_private.resolve_currency_conversion_context_v1(pg_temp.currency_organization_ref(), pg_temp.currency_programme_version_ref(), 'USD', 2, now() + interval '2 days', null) $$,
   'expired or stale snapshots remain unavailable'
 );
 
 create temporary table conversion_result as
 select * from loyalty_private.record_currency_conversion_evidence_v1(
-  (select id from loyalty.organizations where slug = 'currency-one'),
+  pg_temp.currency_organization_ref(),
   '95000000-0000-4000-8000-000000000810',
-  (select id from loyalty.programme_versions where public_id = '95000000-0000-4000-8000-000000000500'),
+  pg_temp.currency_programme_version_ref(),
   (select policy_version_public_id from currency_policy_result),
   (select rate_snapshot_public_id from rate_result),
   null,
@@ -371,6 +412,7 @@ select results_eq(
   $$ select outcome from conversion_result $$,
   array['created'::text], 'worker records one PostgreSQL-verified conversion batch'
 );
+reset role;
 select results_eq(
   $$ select count(*)::bigint from loyalty_private.currency_conversion_amounts $$,
   array[1::bigint], 'one normalized atomic amount backs the conversion batch'
@@ -379,20 +421,21 @@ select results_eq(
   $$ select source_amount_minor::text || ':' || base_amount_minor::text || ':' || rounding_delta_numerator::text from loyalty_private.currency_conversion_amounts $$,
   array['12345:10493:-2500'::text], 'atomic evidence retains exact source base and rounding delta'
 );
+set local role loyalty_worker;
 select results_eq(
-  $$ select outcome from loyalty_private.record_currency_conversion_evidence_v1((select id from loyalty.organizations where slug = 'currency-one'), '95000000-0000-4000-8000-000000000810', (select id from loyalty.programme_versions where public_id = '95000000-0000-4000-8000-000000000500'), (select policy_version_public_id from currency_policy_result), (select rate_snapshot_public_id from rate_result), null, '[{"amountKey":"line:0:gross","sourceAmountMinor":"12345","baseAmountMinor":"10493","exactNumerator":"104932500","exactDenominator":"10000","roundingDeltaNumerator":"-2500"}]'::jsonb, decode(repeat('c', 64), 'hex'), decode(repeat('d', 64), 'hex')) $$,
+  $$ select outcome from loyalty_private.record_currency_conversion_evidence_v1(pg_temp.currency_organization_ref(), '95000000-0000-4000-8000-000000000810', pg_temp.currency_programme_version_ref(), (select policy_version_public_id from currency_policy_result), (select rate_snapshot_public_id from rate_result), null, '[{"amountKey":"line:0:gross","sourceAmountMinor":"12345","baseAmountMinor":"10493","exactNumerator":"104932500","exactDenominator":"10000","roundingDeltaNumerator":"-2500"}]'::jsonb, decode(repeat('c', 64), 'hex'), decode(repeat('d', 64), 'hex')) $$,
   array['duplicate'::text], 'exact conversion retry returns its original batch'
 );
 select throws_ok(
-  $$ select * from loyalty_private.record_currency_conversion_evidence_v1((select id from loyalty.organizations where slug = 'currency-one'), '95000000-0000-4000-8000-000000000810', (select id from loyalty.programme_versions where public_id = '95000000-0000-4000-8000-000000000500'), (select policy_version_public_id from currency_policy_result), (select rate_snapshot_public_id from rate_result), null, '[{"amountKey":"line:0:gross","sourceAmountMinor":"12345","baseAmountMinor":"10493","exactNumerator":"104932500","exactDenominator":"10000","roundingDeltaNumerator":"-2500"}]'::jsonb, decode(repeat('e', 64), 'hex'), decode(repeat('d', 64), 'hex')) $$,
+  $$ select * from loyalty_private.record_currency_conversion_evidence_v1(pg_temp.currency_organization_ref(), '95000000-0000-4000-8000-000000000810', pg_temp.currency_programme_version_ref(), (select policy_version_public_id from currency_policy_result), (select rate_snapshot_public_id from rate_result), null, '[{"amountKey":"line:0:gross","sourceAmountMinor":"12345","baseAmountMinor":"10493","exactNumerator":"104932500","exactDenominator":"10000","roundingDeltaNumerator":"-2500"}]'::jsonb, decode(repeat('e', 64), 'hex'), decode(repeat('d', 64), 'hex')) $$,
   '23514', 'currency conversion event conflict', 'changed projection hash cannot reuse an event'
 );
 select throws_ok(
-  $$ select * from loyalty_private.record_currency_conversion_evidence_v1((select id from loyalty.organizations where slug = 'currency-one'), '95000000-0000-4000-8000-000000000810', (select id from loyalty.programme_versions where public_id = '95000000-0000-4000-8000-000000000500'), (select policy_version_public_id from currency_policy_result), (select rate_snapshot_public_id from rate_result), null, '[{"amountKey":"line:0:gross","sourceAmountMinor":"100","baseAmountMinor":"85","exactNumerator":"850000","exactDenominator":"10000","roundingDeltaNumerator":"0"}]'::jsonb, decode(repeat('c', 64), 'hex'), decode(repeat('d', 64), 'hex')) $$,
+  $$ select * from loyalty_private.record_currency_conversion_evidence_v1(pg_temp.currency_organization_ref(), '95000000-0000-4000-8000-000000000810', pg_temp.currency_programme_version_ref(), (select policy_version_public_id from currency_policy_result), (select rate_snapshot_public_id from rate_result), null, '[{"amountKey":"line:0:gross","sourceAmountMinor":"100","baseAmountMinor":"85","exactNumerator":"850000","exactDenominator":"10000","roundingDeltaNumerator":"0"}]'::jsonb, decode(repeat('c', 64), 'hex'), decode(repeat('d', 64), 'hex')) $$,
   '23514', 'currency conversion event conflict', 'changed atomic amount batch cannot reuse projection hashes'
 );
 select results_eq(
-  $$ select (conversion_context -> 'snapshot' ->> 'rateNumerator') || ':' || (conversion_context -> 'policy' ->> 'revision') from loyalty_private.resolve_currency_conversion_context_v1((select id from loyalty.organizations where slug = 'currency-one'), (select id from loyalty.programme_versions where public_id = '95000000-0000-4000-8000-000000000500'), 'USD', 2, now() + interval '30 days', (select conversion_evidence_public_id from conversion_result)) $$,
+  $$ select (conversion_context -> 'snapshot' ->> 'rateNumerator') || ':' || (conversion_context -> 'policy' ->> 'revision') from loyalty_private.resolve_currency_conversion_context_v1(pg_temp.currency_organization_ref(), pg_temp.currency_programme_version_ref(), 'USD', 2, now() + interval '30 days', (select conversion_evidence_public_id from conversion_result)) $$,
   array['85:1'::text], 'refund resolution reuses original evidence after current validity expires'
 );
 
@@ -427,14 +470,14 @@ where inbox.receipt_id = '95000000-0000-4000-8000-000000000802';
 
 set local role loyalty_worker;
 select throws_ok(
-  $$ select * from loyalty_private.record_currency_conversion_evidence_v1((select id from loyalty.organizations where slug = 'currency-one'), '95000000-0000-4000-8000-000000000812', (select id from loyalty.programme_versions where public_id = '95000000-0000-4000-8000-000000000500'), (select policy_version_public_id from currency_policy_result), (select rate_snapshot_public_id from rate_result), null, '[{"amountKey":"order:refunded","sourceAmountMinor":"100","baseAmountMinor":"85","exactNumerator":"850000","exactDenominator":"10000","roundingDeltaNumerator":"0"}]'::jsonb, decode(repeat('4', 64), 'hex'), decode(repeat('5', 64), 'hex')) $$,
+  $$ select * from loyalty_private.record_currency_conversion_evidence_v1(pg_temp.currency_organization_ref(), '95000000-0000-4000-8000-000000000812', pg_temp.currency_programme_version_ref(), (select policy_version_public_id from currency_policy_result), (select rate_snapshot_public_id from rate_result), null, '[{"amountKey":"order:refunded","sourceAmountMinor":"100","baseAmountMinor":"85","exactNumerator":"850000","exactDenominator":"10000","roundingDeltaNumerator":"0"}]'::jsonb, decode(repeat('4', 64), 'hex'), decode(repeat('5', 64), 'hex')) $$,
   '23514', 'foreign refund requires original conversion evidence', 'foreign refund cannot record a current-rate batch without its original award evidence'
 );
 create temporary table refund_conversion_result as
 select * from loyalty_private.record_currency_conversion_evidence_v1(
-  (select id from loyalty.organizations where slug = 'currency-one'),
+  pg_temp.currency_organization_ref(),
   '95000000-0000-4000-8000-000000000812',
-  (select id from loyalty.programme_versions where public_id = '95000000-0000-4000-8000-000000000500'),
+  pg_temp.currency_programme_version_ref(),
   (select policy_version_public_id from currency_policy_result),
   (select rate_snapshot_public_id from rate_result),
   (select conversion_evidence_public_id from conversion_result),
@@ -445,11 +488,11 @@ select results_eq(
   $$ select outcome from refund_conversion_result $$,
   array['created'::text], 'foreign refund records a new batch only with matching original evidence'
 );
+reset role;
 select results_eq(
   $$ select current_event.source_object_id || ':' || origin_event.source_object_id from loyalty_private.currency_conversion_evidence as current_evidence join loyalty_private.canonical_commerce_events as current_event on current_event.organization_id = current_evidence.organization_id and current_event.id = current_evidence.canonical_event_id join loyalty_private.currency_conversion_evidence as origin_evidence on origin_evidence.organization_id = current_evidence.organization_id and origin_evidence.id = current_evidence.origin_conversion_evidence_id join loyalty_private.canonical_commerce_events as origin_event on origin_event.organization_id = origin_evidence.organization_id and origin_event.id = origin_evidence.canonical_event_id where current_evidence.public_id = (select conversion_evidence_public_id from refund_conversion_result) $$,
   array['order-1:order-1'::text], 'refund evidence retains a database-enforced same-order origin link'
 );
-reset role;
 
 insert into loyalty_private.commerce_delivery_inbox (
   receipt_id, organization_id, connection_id, source_delivery_id,
@@ -480,7 +523,7 @@ where inbox.receipt_id = '95000000-0000-4000-8000-000000000801';
 
 set local role loyalty_worker;
 select throws_ok(
-  $$ select * from loyalty_private.record_currency_conversion_evidence_v1((select id from loyalty.organizations where slug = 'currency-one'), '95000000-0000-4000-8000-000000000811', (select id from loyalty.programme_versions where public_id = '95000000-0000-4000-8000-000000000500'), (select policy_version_public_id from currency_policy_result), (select rate_snapshot_public_id from rate_result), null, '[{"amountKey":"line:0:gross","sourceAmountMinor":"12345","baseAmountMinor":"10492","exactNumerator":"104932500","exactDenominator":"10000","roundingDeltaNumerator":"-12500"}]'::jsonb, decode(repeat('f', 64), 'hex'), decode(repeat('1', 64), 'hex')) $$,
+  $$ select * from loyalty_private.record_currency_conversion_evidence_v1(pg_temp.currency_organization_ref(), '95000000-0000-4000-8000-000000000811', pg_temp.currency_programme_version_ref(), (select policy_version_public_id from currency_policy_result), (select rate_snapshot_public_id from rate_result), null, '[{"amountKey":"line:0:gross","sourceAmountMinor":"12345","baseAmountMinor":"10492","exactNumerator":"104932500","exactDenominator":"10000","roundingDeltaNumerator":"-12500"}]'::jsonb, decode(repeat('f', 64), 'hex'), decode(repeat('1', 64), 'hex')) $$,
   '23514', 'currency conversion arithmetic mismatch', 'worker arithmetic is independently rejected when one base minor differs'
 );
 reset role;
@@ -491,7 +534,7 @@ select results_eq(
 set local role loyalty_worker;
 create temporary table stale_rate_result as
 select * from loyalty_private.record_currency_rate_snapshot_v1(
-  (select id from loyalty.organizations where slug = 'currency-one'),
+  pg_temp.currency_organization_ref(),
   'verified-test-feed', 'usd-eur-expired', 'USD', 2, 'EUR', 2,
   85, 100, now() - interval '3 hours', now() - interval '3 hours',
   now() - interval '2 hours', decode(repeat('7', 64), 'hex')
@@ -501,7 +544,7 @@ select results_eq(
   array['created'::text], 'historical provider evidence is retained after its validity window'
 );
 select throws_ok(
-  $$ select * from loyalty_private.record_currency_conversion_evidence_v1((select id from loyalty.organizations where slug = 'currency-one'), '95000000-0000-4000-8000-000000000811', (select id from loyalty.programme_versions where public_id = '95000000-0000-4000-8000-000000000500'), (select policy_version_public_id from currency_policy_result), (select rate_snapshot_public_id from stale_rate_result), null, '[{"amountKey":"line:0:gross","sourceAmountMinor":"100","baseAmountMinor":"85","exactNumerator":"850000","exactDenominator":"10000","roundingDeltaNumerator":"0"}]'::jsonb, decode(repeat('8', 64), 'hex'), decode(repeat('9', 64), 'hex')) $$,
+  $$ select * from loyalty_private.record_currency_conversion_evidence_v1(pg_temp.currency_organization_ref(), '95000000-0000-4000-8000-000000000811', pg_temp.currency_programme_version_ref(), (select policy_version_public_id from currency_policy_result), (select rate_snapshot_public_id from stale_rate_result), null, '[{"amountKey":"line:0:gross","sourceAmountMinor":"100","baseAmountMinor":"85","exactNumerator":"850000","exactDenominator":"10000","roundingDeltaNumerator":"0"}]'::jsonb, decode(repeat('8', 64), 'hex'), decode(repeat('9', 64), 'hex')) $$,
   '23514', 'currency conversion snapshot not valid at occurrence', 'recording cannot bypass occurrence-time snapshot validity'
 );
 reset role;
@@ -528,15 +571,15 @@ select results_eq(
 
 set local role loyalty_worker;
 select lives_ok(
-  $$ select * from loyalty_private.record_currency_rate_snapshot_v1((select id from loyalty.organizations where slug = 'currency-one'), 'verified-test-feed', 'usd-eur-overlap', 'USD', 2, 'EUR', 2, 851, 1000, now() - interval '30 minutes', now() - interval '30 minutes', now() + interval '30 minutes', decode(repeat('2', 64), 'hex')) $$,
+  $$ select * from loyalty_private.record_currency_rate_snapshot_v1(pg_temp.currency_organization_ref(), 'verified-test-feed', 'usd-eur-overlap', 'USD', 2, 'EUR', 2, 851, 1000, now() - interval '30 minutes', now() - interval '30 minutes', now() + interval '30 minutes', decode(repeat('2', 64), 'hex')) $$,
   'a second independently valid provider snapshot is retained rather than overwritten'
 );
 select throws_ok(
-  $$ select * from loyalty_private.resolve_currency_conversion_context_v1((select id from loyalty.organizations where slug = 'currency-one'), (select id from loyalty.programme_versions where public_id = '95000000-0000-4000-8000-000000000500'), 'USD', 2, (select occurred_at from loyalty_private.canonical_commerce_events where public_id = '95000000-0000-4000-8000-000000000810'), null) $$,
+  $$ select * from loyalty_private.resolve_currency_conversion_context_v1(pg_temp.currency_organization_ref(), pg_temp.currency_programme_version_ref(), 'USD', 2, pg_temp.currency_event_occurred_at('95000000-0000-4000-8000-000000000810'), null) $$,
   '55000', 'ambiguous currency rate snapshots', 'overlapping occurrence-time snapshots fail closed'
 );
 select throws_ok(
-  $$ select * from loyalty_private.record_currency_conversion_evidence_v1((select id from loyalty.organizations where slug = 'currency-one'), '95000000-0000-4000-8000-000000000811', (select id from loyalty.programme_versions where public_id = '95000000-0000-4000-8000-000000000500'), (select policy_version_public_id from currency_policy_result), (select rate_snapshot_public_id from rate_result), null, '[{"amountKey":"line:0:gross","sourceAmountMinor":"100","baseAmountMinor":"85","exactNumerator":"850000","exactDenominator":"10000","roundingDeltaNumerator":"0"}]'::jsonb, decode(repeat('a', 64), 'hex'), decode(repeat('b', 64), 'hex')) $$,
+  $$ select * from loyalty_private.record_currency_conversion_evidence_v1(pg_temp.currency_organization_ref(), '95000000-0000-4000-8000-000000000811', pg_temp.currency_programme_version_ref(), (select policy_version_public_id from currency_policy_result), (select rate_snapshot_public_id from rate_result), null, '[{"amountKey":"line:0:gross","sourceAmountMinor":"100","baseAmountMinor":"85","exactNumerator":"850000","exactDenominator":"10000","roundingDeltaNumerator":"0"}]'::jsonb, decode(repeat('a', 64), 'hex'), decode(repeat('b', 64), 'hex')) $$,
   '55000', 'ambiguous currency rate snapshots', 'recording cannot bypass ambiguous occurrence-time evidence'
 );
 reset role;
