@@ -10,6 +10,7 @@ const mainSources = [
   "apps/dashboard/app/customers/[customerId]/page.tsx",
   "apps/dashboard/app/operations/page.tsx",
   "apps/dashboard/app/migrations/page.tsx",
+  "apps/dashboard/app/billing/page.tsx",
   "apps/dashboard/app/experience/page.tsx",
   "apps/dashboard/app/loyalty/[workspaceId]/[programmeId]/page.tsx",
   "apps/dashboard/app/claim/woocommerce/page.tsx",

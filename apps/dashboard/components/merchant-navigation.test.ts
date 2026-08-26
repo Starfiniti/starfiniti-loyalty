@@ -44,4 +44,11 @@ describe("merchant programme navigation", () => {
     expect(access?.group).toBeUndefined();
     expect(access?.match("/organization/access")).toBe(true);
   });
+
+  it("exposes billing as a real Platform destination", () => {
+    const billing = merchantNavigation.find((item) => item.href === "/billing");
+    expect(billing?.label).toBe("Billing & plan");
+    expect(billing?.group).toBeUndefined();
+    expect(billing?.match("/billing/history")).toBe(true);
+  });
 });

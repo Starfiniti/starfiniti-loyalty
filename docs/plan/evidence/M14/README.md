@@ -1,3 +1,11 @@
 # M14 Evidence — Managed Billing
 
-Status: not started. Record self-hosted no-call, Stripe signature/replay/order, lifecycle, protected loyalty paths, usage/invoice reconciliation, and canary evidence here.
+Status: M14-S01 is active on `codex/m14-billing-foundation`. Production and the global `self_hosted` deployment mode are unchanged; no Stripe package, credential, request, customer, subscription, Price ID, or production billing state is introduced by this slice.
+
+## M14-S01 billing authority and self-hosted independence
+
+- ADR-0056 selects an append-only normalized PostgreSQL billing mirror over live Stripe authorization or one mutable provider row.
+- Official Stripe webhook, subscription, Checkout, Portal, usage, and test-clock behavior was reviewed on 2026-08-26. The design assumes duplicates, disorder, asynchronous lifecycle and usage, bounded provider idempotency, and raw-body signature requirements before later provider work begins.
+- The slice gate requires strict versioned merchant state, private provider references, immutable event-time ordering, live-membership tenant isolation, exact private retries, no payment/card storage, six always-available protected paths, and a structural return before provider construction in `self_hosted` mode.
+
+Repository, browser, adversarial, exact-head, and production-canary evidence remains pending.

@@ -2481,10 +2481,10 @@ tasks:
   - id: M14-MANAGED-BILLING
     title: Add managed Stripe billing and idempotent usage metering
     module: M14
-    status: planned
+    status: in_progress
     dependencies: [M13-ENTERPRISE-IDENTITY]
     hypothesis: Managed commercial state can fund the service without becoming loyalty-value authority or burdening self-hosted deployments.
-    baseline: No Stripe, subscription, entitlement catalogue, or usage metering exists.
+    baseline: Database-authoritative deployment entitlements and private provider Price-ID evidence exist, but no billing account mirror, subscription lifecycle, Stripe webhook inbox, checkout/portal flow, manual contract, or source-fact usage metering exists.
     targets:
       [
         self-hosted makes no Stripe call,
@@ -2519,8 +2519,155 @@ tasks:
         lifecycle browser/API tests,
       ]
     risks: [R-025, R-031]
-    docs: [docs/plan/ENTERPRISE_ROADMAP.md]
+    docs:
+      [
+        docs/plan/ENTERPRISE_ROADMAP.md,
+        docs/architecture/ADR/0010-database-authoritative-entitlements.md,
+        docs/architecture/ADR/0056-database-authoritative-managed-billing-mirror.md,
+      ]
     evidence: [docs/plan/evidence/M14/README.md]
+    slices:
+      - id: M14-S01-BILLING-AUTHORITY-AND-SELF-HOSTED-INDEPENDENCE
+        status: in_progress
+        dependencies: [M13-S06-CANARY-AND-CLOSE]
+        hypothesis: A private append-only provider mirror and structural self-hosted bypass can expose useful commercial state without making Stripe product or loyalty authority.
+        metrics:
+          - zero provider construction or network attempt in self-hosted mode
+          - zero provider customer subscription event payment or identity reference in browser output
+          - zero ledger customer programme connector coupon or checkout effect
+          - exact retry produces one private account or state revision and changed retry fails
+        targets:
+          - strict BillingSummaryV1 accepts only the nine reviewed commercial states and six always-true protected paths
+          - private account and normalized state evidence is immutable RLS-enabled tenant-bound and inaccessible to browser runtime and general workers
+          - late older normalized state evidence cannot regress the current merchant projection
+        owner_inputs: []
+        acceptance:
+          - self-hosted summary is locally available with billing unavailable unrestricted local growth and no private provider row
+          - managed unconfigured active grace suspended and cancelled states are deterministic and membership scoped
+          - provider IDs card data Auth claims and browser selectors grant or expose nothing
+        rollout: Add contracts and schema only; retain global self-hosted mode and make no Stripe call or production mutation.
+        rollback: Stop reading the additive summary and forward-fix; retain immutable private evidence and all protected paths.
+        failure_modes:
+          - provider factory is constructed before deployment mode is checked
+          - mutable latest-state row loses event order evidence
+          - a late older event regresses current commercial state
+          - public projection exposes provider or payment identity
+          - delinquency disables accepted value or checkout
+        security_boundaries:
+          - PostgreSQL derives organization live membership deployment mode current provider revision and protected access
+          - self-hosted code returns before provider construction and never requires Stripe configuration
+          - provider references and recording functions remain private with no browser runtime or general-worker grants
+        verification:
+          - billing contract and provider-boundary tests
+          - managed billing foundation pgTAP including RLS tenancy immutability exact retry event ordering and zero-ledger assertions
+          - npm run check and clean database replay
+        evidence:
+          - docs/architecture/ADR/0056-database-authoritative-managed-billing-mirror.md
+          - docs/plan/evidence/M14/README.md
+      - id: M14-S02-STRIPE-WEBHOOK-INBOX
+        status: planned
+        dependencies: [M14-S01-BILLING-AUTHORITY-AND-SELF-HOSTED-INDEPENDENCE]
+        hypothesis: Raw-body signature verification plus a durable idempotent inbox can absorb duplicate delayed and out-of-order Stripe events safely.
+        metrics:
+          - one stored event and one normalized effect per exact Stripe event ID
+          - zero unverified oversized stale or wrong-mode payload accepted
+          - bounded acknowledgement latency independent from lifecycle processing
+        targets:
+          - supported event allowlist raw signature clock tolerance replay and disorder tests pass
+          - raw bodies are private bounded short-lived and absent from logs and immutable long-term audit
+        owner_inputs: [Stripe sandbox webhook signing material]
+        acceptance:
+          - duplicate and out-of-order subscription and invoice events converge without state regression
+          - self-hosted and disabled managed deployments reject before provider processing
+        rollout: Local signed fixtures then Stripe CLI sandbox endpoint disabled in production.
+        rollback: Disable endpoint intake retain normalized event evidence and reconcile through reviewed provider fetch.
+        verification:
+          [raw signature replay ordering queue outage and recovery tests]
+      - id: M14-S03-CHECKOUT-PORTAL-AND-SUBSCRIPTION-LIFECYCLE
+        status: planned
+        dependencies: [M14-S02-STRIPE-WEBHOOK-INBOX]
+        hypothesis: Auth-derived server-created Checkout and short-lived Portal sessions let managed owners administer billing without exposing provider authority.
+        metrics:
+          - zero browser supplied customer organization or Price authority
+          - exact trial active past-due grace suspended cancelled and contract-managed transitions
+          - zero stored card or payment-method data
+        targets:
+          - checkout portal test-clock lifecycle and return-state reconciliation pass
+          - only externally configured effective Price IDs are selectable
+        owner_inputs: [Stripe sandbox credentials and approved test Price IDs]
+        acceptance:
+          - owner-only checkout and portal sessions are created on demand and cannot cross tenants
+          - provider success pages never grant access before webhook and database reconciliation
+        rollout: Stripe sandbox and test clocks then one disabled managed tenant candidate.
+        rollback: Disable new session creation preserve subscription evidence and existing loyalty access.
+        verification:
+          [
+            browser API test-clock lifecycle cross-tenant and provider-outage tests,
+          ]
+      - id: M14-S04-IDEMPOTENT-USAGE-METERING
+        status: planned
+        dependencies: [M14-S03-CHECKOUT-PORTAL-AND-SUBSCRIPTION-LIFECYCLE]
+        hypothesis: Immutable source facts and permanent local fences can reconcile billable usage even when Stripe provides only bounded duplicate enforcement.
+        metrics:
+          - exact orders active members messages and API usage per tenant period
+          - one meter dispatch per source fact and one permanent local effect per identifier
+          - zero loyalty value or checkout dependency on metering
+        targets:
+          - concurrent replay correction late fact provider outage and invoice reconciliation pass
+          - source totals equal exported and provider-reconciled totals exactly
+        owner_inputs: [approved billable unit definitions and sandbox meters]
+        acceptance:
+          - usage is bigint-safe UTC-bound attributable correctable and idempotent beyond provider windows
+          - metering failure queues independently and never changes loyalty behavior
+        rollout: Shadow local totals then sandbox meters then one managed tenant.
+        rollback: Stop dispatch retain source facts and reconciliation then forward-correct provider usage.
+        verification:
+          [
+            property concurrency replay correction outage and reconciliation tests,
+          ]
+      - id: M14-S05-DELINQUENCY-ENTITLEMENTS-AND-MANUAL-CONTRACTS
+        status: planned
+        dependencies: [M14-S04-IDEMPOTENT-USAGE-METERING]
+        hypothesis: Effective-dated local policy can restrict only new managed growth after grace while preserving all historical and protected value behavior.
+        metrics:
+          - zero protected path denial in every commercial state
+          - exact approver reason and effective interval for every manual contract override
+          - deterministic provider versus manual-contract precedence
+        targets:
+          - grace suspension recovery cancellation and contract tests preserve existing value account access export and checkout
+          - browser explains restrictions without hiding balances configuration history or invoices
+        owner_inputs: [approved delinquency and manual-contract policy]
+        acceptance:
+          - only new managed growth or configuration is restricted after grace
+          - refunds releases reconciliation promised redemption account access and exports always continue
+        rollout: Policy simulation then sandbox failure then one approved managed tenant.
+        rollback: Append an effective manual override or reopen growth; never edit commercial or loyalty history.
+        verification:
+          [state precedence protected-path browser audit and recovery tests]
+      - id: M14-S06-CANARY-AND-CLOSE
+        status: planned
+        dependencies: [M14-S05-DELINQUENCY-ENTITLEMENTS-AND-MANUAL-CONTRACTS]
+        hypothesis: A fail-closed Stripe sandbox and managed-tenant canary can prove subscription usage invoice and entitlement reconciliation without commercializing self-hosted installs.
+        metrics:
+          - zero unexplained subscription entitlement usage invoice or protected-path difference
+          - zero Stripe request from self-hosted deployment
+          - module score and every category meet mandatory floors
+        targets:
+          - every repository sandbox canary rollback observation and reconciliation check passes
+          - module score is at least 90 and every category reaches 80 percent of its weight
+        owner_inputs:
+          [
+            production Stripe credentials prices Price IDs delinquency approval and canary approval,
+          ]
+        acceptance:
+          - webhook replay disorder lifecycle metering invoice rollback and self-hosted no-call evidence passes
+          - no critical security tenancy privacy billing ledger recovery or data-loss failure remains
+        rollout: Deploy disabled recoverable canary one Starfiniti managed tenant observe reconcile and expand only with approval.
+        rollback: Disable new commercial operations preserve ingestion protected paths records exports and checkout.
+        verification:
+          [
+            fail-closed manifest exact CI Stripe sandbox canary reconciliation rollback and score validation,
+          ]
 
   - id: M15-GA-HARDENING
     title: Prove capacity, chaos, security, recovery, canary, and GA operations

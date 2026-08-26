@@ -16,6 +16,7 @@ export * from "./analytics-export";
 export * from "./experience";
 export * from "./customer-export";
 export * from "./entitlements";
+export * from "./billing";
 export * from "./activity";
 export * from "./referral";
 export * from "./audience";

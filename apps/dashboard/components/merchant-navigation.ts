@@ -12,6 +12,7 @@ import {
   Users,
   UsersRound,
   UserRoundPlus,
+  WalletCards,
   type LucideIcon,
 } from "lucide-react";
 
@@ -104,5 +105,11 @@ export const merchantNavigation: readonly MerchantNavigationItem[] = [
     href: "/organization/access",
     icon: UsersRound,
     match: (pathname) => pathname.startsWith("/organization/access"),
+  },
+  {
+    label: "Billing & plan",
+    href: "/billing",
+    icon: WalletCards,
+    match: (pathname) => pathname.startsWith("/billing"),
   },
 ];
