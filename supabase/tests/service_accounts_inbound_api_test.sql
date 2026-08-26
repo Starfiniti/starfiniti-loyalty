@@ -190,7 +190,7 @@ returns jsonb language sql immutable as $$
       "enabled":true,"priority":10,"stackable":true,
       "effect":{"kind":"fixed_bonus","points":"25"},
       "conditions":{"productIds":[],"categoryIds":[],"currencyCodes":[],"markets":[],"channels":[],"activityCodes":["consultation"],"segmentCodes":[],"tierCodes":[],"startsAt":null,"endsAt":null},
-      "purchaseExclusions":{"productIds":[],"categoryIds":[],"shipping":true,"tax":true,"fees":true,"giftCardPayments":true,"storeCreditPayments":true,"discounts":true},
+      "purchaseExclusions":null,
       "cap":{"perEventPoints":"25","perMemberPoints":null,"memberPeriod":null,"rollingDays":null}
     }]
   }'::jsonb;

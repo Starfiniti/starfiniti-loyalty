@@ -117,6 +117,7 @@ select is_empty(
           'get_my_loyalty_accounts',
           'get_my_loyalty_experiences_v1',
           'get_my_loyalty_experiences_v2',
+          'get_my_service_accounts_v1',
           'get_my_cross_workspace_customer_links_v1',
           'get_my_notification_preferences_v1',
           'get_notification_workspace_v1',
