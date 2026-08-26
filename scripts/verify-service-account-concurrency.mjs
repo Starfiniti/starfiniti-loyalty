@@ -299,9 +299,9 @@ try {
            where public_id = ${fixture.quotaAccount.service_account_public_id}
          )) as quota_identities,
       (select request_count
-       from loyalty_private.service_account_rate_windows as window
+       from loyalty_private.service_account_rate_windows as rate_window
        join loyalty_private.service_account_credentials as credential
-         on credential.id = window.credential_id
+         on credential.id = rate_window.credential_id
        where credential.public_id = ${fixture.quotaCredentialId}) as quota_count,
       (select count(*)::integer from loyalty.ledger_transactions
        where organization_id = ${fixture.organization.id}) as ledger_transactions
