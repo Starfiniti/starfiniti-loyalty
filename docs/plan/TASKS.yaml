@@ -2307,8 +2307,10 @@ tasks:
           - docs/architecture/ADR/0053-per-organization-authentik-federation-with-database-authoritative-membership.md
         evidence:
           - docs/plan/evidence/M13/README.md
+          - docs/plan/evidence/M13/tenant-federation-browser-qa-2026-08-26.md
           - official Authentik and Supabase documentation reviewed 2026-08-26; chosen topology avoids direct Supabase SAML and Authentik Enterprise Source Stage dependency
           - adversarial review added database-authoritative entitlement enforcement one-active-source serialization mutation-side ambiguity and owner-only delayed recovery for interrupted orchestration
+          - production-build browser QA passes desktop mobile narrow light dark reduced-motion protocol switching enabled review interrupted states focus restoration visible control targets English-only overflow and zero-diagnostic checks
       - id: M13-S04-SCIM-PROVISIONING
         status: planned
         dependencies: [M13-S03-TENANT-FEDERATION]
