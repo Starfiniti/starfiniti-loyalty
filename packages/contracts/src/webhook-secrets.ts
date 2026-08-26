@@ -14,9 +14,14 @@ export function issueWebhookSigningSecretV1(
   }
   const material = Buffer.from(bytes);
   const encoded = material.toString("base64");
+  const hint = encoded
+    .replace(/\+/gu, "-")
+    .replace(/\//gu, "_")
+    .replace(/=+$/u, "")
+    .slice(-6);
   return {
     secret: `whsec_${encoded}`,
     fingerprintSha256: createHash("sha256").update(material).digest("hex"),
-    hint: encoded.replace(/=+$/u, "").slice(-6),
+    hint,
   };
 }

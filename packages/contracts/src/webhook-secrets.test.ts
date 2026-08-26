@@ -14,4 +14,23 @@ describe("issueWebhookSigningSecretV1", () => {
       "32 bytes",
     );
   });
+
+  it("normalizes the non-reusable hint to the database-safe base64url alphabet", () => {
+    const slashIssued = issueWebhookSigningSecretV1(
+      new Uint8Array(32).fill(0xff),
+    );
+    expect(slashIssued.secret).toBe(
+      "whsec_//////////////////////////////////////////8=",
+    );
+    expect(slashIssued.hint).toBe("_____8");
+
+    const plusIssued = issueWebhookSigningSecretV1(
+      new Uint8Array(32).fill(0xf8),
+    );
+    expect(plusIssued.hint).toBe("Pj4-Pg");
+
+    for (const issued of [slashIssued, plusIssued]) {
+      expect(issued.hint).toMatch(/^[A-Za-z0-9_-]{6}$/u);
+    }
+  });
 });
