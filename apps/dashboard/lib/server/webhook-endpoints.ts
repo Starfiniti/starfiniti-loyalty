@@ -14,7 +14,6 @@ import {
   type RotateNotificationWebhookEndpointCommandV1,
 } from "@starfiniti/contracts";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { getDatabase } from "./database";
 
 type MutationRow = Readonly<{
   endpoint_public_id: string;
@@ -54,8 +53,23 @@ export async function getNotificationWebhookEndpoints(
   return notificationWebhookEndpointsDocumentV1.parse(row?.document);
 }
 
+async function mutateEndpoint(
+  functionName:
+    | "create_notification_webhook_endpoint_command_v1"
+    | "rotate_notification_webhook_endpoint_command_v1"
+    | "change_notification_webhook_endpoint_state_command_v1",
+  parameters: Record<string, unknown>,
+): Promise<NotificationWebhookEndpointMutationResultV1> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .schema("loyalty")
+    .rpc(functionName, parameters);
+  if (error) throw new Error(error.message);
+  const row = (Array.isArray(data) ? data[0] : data) as MutationRow | undefined;
+  return parseMutation(row);
+}
+
 export async function createNotificationWebhookEndpoint(
-  actorUserId: string,
   command: CreateNotificationWebhookEndpointCommandV1,
 ): Promise<
   Readonly<{
@@ -65,28 +79,24 @@ export async function createNotificationWebhookEndpoint(
 > {
   const issued = issueWebhookSigningSecretV1();
   const destination = new URL(command.destinationUrl);
-  const rows = await getDatabase()<MutationRow[]>`
-    select endpoint_public_id, endpoint_state, outcome,
-      prior_secret_expires_at
-    from loyalty_private.create_notification_webhook_endpoint_v1(
-      ${actorUserId}::uuid,
-      ${command.workspaceId}::uuid,
-      ${command.label},
-      ${destination.toString()},
-      ${Buffer.from(issued.fingerprintSha256, "hex")},
-      ${issued.hint},
-      ${command.eventTypes}::text[],
-      ${command.rateLimitPerMinute},
-      ${command.idempotencyKey},
-      ${command.correlationId}::uuid
-    )
-  `;
-  const result = parseMutation(rows[0]);
+  const result = await mutateEndpoint(
+    "create_notification_webhook_endpoint_command_v1",
+    {
+      target_workspace_public_id: command.workspaceId,
+      target_label: command.label,
+      target_destination_url: destination.toString(),
+      target_current_secret_sha256_hex: issued.fingerprintSha256,
+      target_current_secret_hint: issued.hint,
+      target_event_types: command.eventTypes,
+      target_rate_limit_per_minute: command.rateLimitPerMinute,
+      target_idempotency_key: command.idempotencyKey,
+      target_correlation_id: command.correlationId,
+    },
+  );
   return { result, issued: result.outcome === "created" ? issued : null };
 }
 
 export async function rotateNotificationWebhookEndpoint(
-  actorUserId: string,
   command: RotateNotificationWebhookEndpointCommandV1,
 ): Promise<
   Readonly<{
@@ -95,38 +105,31 @@ export async function rotateNotificationWebhookEndpoint(
   }>
 > {
   const issued = issueWebhookSigningSecretV1();
-  const rows = await getDatabase()<MutationRow[]>`
-    select endpoint_public_id, endpoint_state, outcome,
-      prior_secret_expires_at
-    from loyalty_private.rotate_notification_webhook_endpoint_v1(
-      ${actorUserId}::uuid,
-      ${command.endpointId}::uuid,
-      ${Buffer.from(issued.fingerprintSha256, "hex")},
-      ${issued.hint},
-      ${command.overlapSeconds},
-      ${command.idempotencyKey},
-      ${command.correlationId}::uuid
-    )
-  `;
-  const result = parseMutation(rows[0]);
+  const result = await mutateEndpoint(
+    "rotate_notification_webhook_endpoint_command_v1",
+    {
+      target_endpoint_public_id: command.endpointId,
+      target_current_secret_sha256_hex: issued.fingerprintSha256,
+      target_current_secret_hint: issued.hint,
+      target_overlap_seconds: command.overlapSeconds,
+      target_idempotency_key: command.idempotencyKey,
+      target_correlation_id: command.correlationId,
+    },
+  );
   return { result, issued: result.outcome === "rotated" ? issued : null };
 }
 
 export async function changeNotificationWebhookEndpointState(
-  actorUserId: string,
   command: ChangeNotificationWebhookEndpointStateCommandV1,
 ): Promise<NotificationWebhookEndpointMutationResultV1> {
-  const rows = await getDatabase()<MutationRow[]>`
-    select endpoint_public_id, endpoint_state, outcome,
-      prior_secret_expires_at
-    from loyalty_private.change_notification_webhook_endpoint_state_v1(
-      ${actorUserId}::uuid,
-      ${command.endpointId}::uuid,
-      ${command.action},
-      ${command.reason},
-      ${command.idempotencyKey},
-      ${command.correlationId}::uuid
-    )
-  `;
-  return parseMutation(rows[0]);
+  return mutateEndpoint(
+    "change_notification_webhook_endpoint_state_command_v1",
+    {
+      target_endpoint_public_id: command.endpointId,
+      target_action: command.action,
+      target_reason: command.reason,
+      target_idempotency_key: command.idempotencyKey,
+      target_correlation_id: command.correlationId,
+    },
+  );
 }

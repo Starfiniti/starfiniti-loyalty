@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(55);
+select plan(59);
 
 grant loyalty_runtime, loyalty_worker to current_user;
 grant usage on schema extensions to loyalty_runtime, loyalty_worker;
@@ -27,16 +27,28 @@ select has_trigger(
   'endpoint identity cannot be deleted'
 );
 select ok(
-  has_function_privilege('loyalty_runtime', 'loyalty_private.create_notification_webhook_endpoint_v1(uuid,uuid,text,text,bytea,text,text[],integer,text,uuid)', 'EXECUTE'),
-  'runtime can enter guarded endpoint creation'
+  not has_function_privilege('loyalty_runtime', 'loyalty_private.create_notification_webhook_endpoint_v1(uuid,uuid,text,text,bytea,text,text[],integer,text,uuid)', 'EXECUTE'),
+  'runtime cannot supply actor authority to endpoint creation'
 );
 select ok(
-  has_function_privilege('loyalty_runtime', 'loyalty_private.rotate_notification_webhook_endpoint_v1(uuid,uuid,bytea,text,integer,text,uuid)', 'EXECUTE'),
-  'runtime can enter guarded endpoint rotation'
+  not has_function_privilege('loyalty_runtime', 'loyalty_private.rotate_notification_webhook_endpoint_v1(uuid,uuid,bytea,text,integer,text,uuid)', 'EXECUTE'),
+  'runtime cannot supply actor authority to endpoint rotation'
 );
 select ok(
-  has_function_privilege('loyalty_runtime', 'loyalty_private.change_notification_webhook_endpoint_state_v1(uuid,uuid,text,text,text,uuid)', 'EXECUTE'),
-  'runtime can immediately disable or retire an endpoint'
+  not has_function_privilege('loyalty_runtime', 'loyalty_private.change_notification_webhook_endpoint_state_v1(uuid,uuid,text,text,text,uuid)', 'EXECUTE'),
+  'runtime cannot supply actor authority to endpoint lifecycle changes'
+);
+select ok(
+  has_function_privilege('authenticated', 'loyalty.create_notification_webhook_endpoint_command_v1(uuid,text,text,text,text,text[],integer,text,uuid)', 'EXECUTE'),
+  'authenticated sessions can enter Auth-derived endpoint creation'
+);
+select ok(
+  has_function_privilege('authenticated', 'loyalty.rotate_notification_webhook_endpoint_command_v1(uuid,text,text,integer,text,uuid)', 'EXECUTE'),
+  'authenticated sessions can enter Auth-derived endpoint rotation'
+);
+select ok(
+  has_function_privilege('authenticated', 'loyalty.change_notification_webhook_endpoint_state_command_v1(uuid,text,text,text,uuid)', 'EXECUTE'),
+  'authenticated sessions can enter Auth-derived endpoint lifecycle changes'
 );
 select ok(
   has_function_privilege('authenticated', 'loyalty.get_notification_webhook_endpoints_v1(uuid)', 'EXECUTE'),
@@ -49,6 +61,10 @@ select ok(
 select ok(
   not has_function_privilege('authenticated', 'loyalty_private.create_notification_webhook_endpoint_v1(uuid,uuid,text,text,bytea,text,text[],integer,text,uuid)', 'EXECUTE'),
   'browser sessions cannot submit a fingerprint directly'
+);
+select ok(
+  not has_function_privilege('anon', 'loyalty.create_notification_webhook_endpoint_command_v1(uuid,text,text,text,text,text[],integer,text,uuid)', 'EXECUTE'),
+  'anonymous callers cannot create a signing endpoint'
 );
 select ok(
   not has_table_privilege('loyalty_runtime', 'loyalty_private.notification_webhook_endpoint_revisions', 'SELECT'),
@@ -65,10 +81,13 @@ select results_eq(
         'create_notification_webhook_endpoint_v1',
         'rotate_notification_webhook_endpoint_v1',
         'change_notification_webhook_endpoint_state_v1',
+        'create_notification_webhook_endpoint_command_v1',
+        'rotate_notification_webhook_endpoint_command_v1',
+        'change_notification_webhook_endpoint_state_command_v1',
         'get_notification_webhook_endpoints_v1'
       ) and routine.prosecdef
   $$,
-  array[5::bigint], 'all endpoint lifecycle boundaries are security definer'
+  array[8::bigint], 'all endpoint lifecycle boundaries are security definer'
 );
 select results_eq(
   $$
@@ -81,22 +100,28 @@ select results_eq(
         'create_notification_webhook_endpoint_v1',
         'rotate_notification_webhook_endpoint_v1',
         'change_notification_webhook_endpoint_state_v1',
+        'create_notification_webhook_endpoint_command_v1',
+        'rotate_notification_webhook_endpoint_command_v1',
+        'change_notification_webhook_endpoint_state_command_v1',
         'get_notification_webhook_endpoints_v1'
       ) and exists (
         select 1 from unnest(routine.proconfig) as setting
         where setting = 'search_path=""'
       )
   $$,
-  array[5::bigint], 'all endpoint lifecycle boundaries pin an empty search path'
+  array[8::bigint], 'all endpoint lifecycle boundaries pin an empty search path'
 );
 select is_empty(
   $$
     select parameter_name from information_schema.parameters
-    where specific_schema = 'loyalty_private'
-      and specific_name like 'create_notification_webhook_endpoint_v1_%'
-      and parameter_name in ('organization_id', 'endpoint_id', 'state')
+    where specific_schema = 'loyalty'
+      and specific_name like '%notification_webhook_endpoint%command_v1_%'
+      and parameter_name in (
+        'actor_user_id', 'target_actor_user_id', 'organization_id',
+        'target_organization_id', 'tenant_id', 'target_tenant_id'
+      )
   $$,
-  'creation accepts no caller organization endpoint or state authority'
+  'merchant wrappers accept no caller actor organization or tenant authority'
 );
 select hasnt_column(
   'loyalty_private', 'notification_webhook_endpoint_revisions',
@@ -151,14 +176,14 @@ returns uuid language sql stable security definer set search_path = '' as $$
   order by endpoint.id desc limit 1;
 $$;
 
-set local role loyalty_runtime;
+set local role authenticated;
+set local request.jwt.claim.sub = 'd1000000-0000-4000-8000-000000000001';
 select results_eq(
   $$ select outcome || ':' || endpoint_state
-     from loyalty_private.create_notification_webhook_endpoint_v1(
-       'd1000000-0000-4000-8000-000000000001',
+     from loyalty.create_notification_webhook_endpoint_command_v1(
        'd1000000-0000-4000-8000-000000000200',
        'Lifecycle automation', 'https://hooks.example.test/starfiniti',
-       decode(repeat('11',32),'hex'), 'oldkey',
+       repeat('11',32), 'oldkey',
        array['loyalty.connector.health','loyalty.points.earned'], 60,
        'webhook:create:one', 'd1000000-0000-4000-8000-000000000700'
      ) $$,
@@ -166,44 +191,42 @@ select results_eq(
   'owner creates one disabled endpoint from non-secret evidence'
 );
 select results_eq(
-  $$ select outcome from loyalty_private.create_notification_webhook_endpoint_v1(
-       'd1000000-0000-4000-8000-000000000001',
+  $$ select outcome from loyalty.create_notification_webhook_endpoint_command_v1(
        'd1000000-0000-4000-8000-000000000200',
        'Lifecycle automation', 'https://hooks.example.test/starfiniti',
-       decode(repeat('22',32),'hex'), 'unused',
+       repeat('22',32), 'unused',
        array['loyalty.connector.health','loyalty.points.earned'], 60,
        'webhook:create:one', 'd1000000-0000-4000-8000-000000000701'
      ) $$,
   array['duplicate'::text], 'exact creation retry creates no second endpoint'
 );
 select throws_ok(
-  $$ select * from loyalty_private.create_notification_webhook_endpoint_v1(
-       'd1000000-0000-4000-8000-000000000001',
+  $$ select * from loyalty.create_notification_webhook_endpoint_command_v1(
        'd1000000-0000-4000-8000-000000000200',
        'Changed endpoint', 'https://hooks.example.test/changed',
-       decode(repeat('22',32),'hex'), 'change',
+       repeat('22',32), 'change',
        array['loyalty.connector.health'], 60,
        'webhook:create:one', 'd1000000-0000-4000-8000-000000000702'
      ) $$,
   '23514', 'notification webhook command idempotency conflict',
   'changed creation retry fails closed'
 );
+set local request.jwt.claim.sub = 'd1000000-0000-4000-8000-000000000003';
 select throws_ok(
-  $$ select * from loyalty_private.create_notification_webhook_endpoint_v1(
-       'd1000000-0000-4000-8000-000000000003',
+  $$ select * from loyalty.create_notification_webhook_endpoint_command_v1(
        'd1000000-0000-4000-8000-000000000200',
        'Operator endpoint', 'https://hooks.example.test/operator',
-       decode(repeat('33',32),'hex'), 'operat',
+       repeat('33',32), 'operat',
        array['loyalty.connector.health'], 60,
        'webhook:create:operator', 'd1000000-0000-4000-8000-000000000703'
      ) $$,
   '42501', 'notification webhook endpoint command not authorized',
   'operator cannot create a signing endpoint'
 );
+set local request.jwt.claim.sub = 'd2000000-0000-4000-8000-000000000001';
 select throws_ok(
-  $$ select * from loyalty_private.rotate_notification_webhook_endpoint_v1(
-       'd2000000-0000-4000-8000-000000000001', pg_temp.lifecycle_endpoint(),
-       decode(repeat('22',32),'hex'), 'newkey', 3600,
+  $$ select * from loyalty.rotate_notification_webhook_endpoint_command_v1(
+       pg_temp.lifecycle_endpoint(), repeat('22',32), 'newkey', 3600,
        'webhook:rotate:cross', 'd1000000-0000-4000-8000-000000000704'
      ) $$,
   '42501', 'notification webhook rotation not authorized',
@@ -235,11 +258,11 @@ select is_empty(
   'audit metadata retains a destination digest rather than the live URL'
 );
 
-set local role loyalty_runtime;
+set local role authenticated;
+set local request.jwt.claim.sub = 'd1000000-0000-4000-8000-000000000001';
 select results_eq(
-  $$ select outcome from loyalty_private.rotate_notification_webhook_endpoint_v1(
-       'd1000000-0000-4000-8000-000000000001', pg_temp.lifecycle_endpoint(),
-       decode(repeat('22',32),'hex'), 'newkey', 3600,
+  $$ select outcome from loyalty.rotate_notification_webhook_endpoint_command_v1(
+       pg_temp.lifecycle_endpoint(), repeat('22',32), 'newkey', 3600,
        'webhook:rotate:one', 'd1000000-0000-4000-8000-000000000710'
      ) $$,
   array['rotated'::text], 'disabled endpoint rotates to one new fingerprint'
@@ -265,19 +288,18 @@ select results_eq(
      where endpoint_id = (select id from loyalty_private.notification_webhook_endpoints where public_id = pg_temp.lifecycle_endpoint()) $$,
   array['created,rotated'::text], 'rotation appends immutable lifecycle evidence'
 );
-set local role loyalty_runtime;
+set local role authenticated;
+set local request.jwt.claim.sub = 'd1000000-0000-4000-8000-000000000001';
 select results_eq(
-  $$ select outcome from loyalty_private.rotate_notification_webhook_endpoint_v1(
-       'd1000000-0000-4000-8000-000000000001', pg_temp.lifecycle_endpoint(),
-       decode(repeat('33',32),'hex'), 'unused', 3600,
+  $$ select outcome from loyalty.rotate_notification_webhook_endpoint_command_v1(
+       pg_temp.lifecycle_endpoint(), repeat('33',32), 'unused', 3600,
        'webhook:rotate:one', 'd1000000-0000-4000-8000-000000000711'
      ) $$,
   array['duplicate'::text], 'exact rotation retry creates no additional key state'
 );
 select throws_ok(
-  $$ select * from loyalty_private.rotate_notification_webhook_endpoint_v1(
-       'd1000000-0000-4000-8000-000000000001', pg_temp.lifecycle_endpoint(),
-       decode(repeat('33',32),'hex'), 'change', 7200,
+  $$ select * from loyalty.rotate_notification_webhook_endpoint_command_v1(
+       pg_temp.lifecycle_endpoint(), repeat('33',32), 'change', 7200,
        'webhook:rotate:one', 'd1000000-0000-4000-8000-000000000712'
      ) $$,
   '23514', 'notification webhook rotation idempotency conflict',
@@ -295,12 +317,13 @@ select is(
   'active', 'reviewed operator activation remains an explicit deployment step'
 );
 
-set local role loyalty_runtime;
+set local role authenticated;
+set local request.jwt.claim.sub = 'd1000000-0000-4000-8000-000000000001';
 select results_eq(
   $$ select outcome || ':' || endpoint_state
-     from loyalty_private.change_notification_webhook_endpoint_state_v1(
-       'd1000000-0000-4000-8000-000000000001', pg_temp.lifecycle_endpoint(),
-       'disable', 'Receiver maintenance', 'webhook:disable:one',
+     from loyalty.change_notification_webhook_endpoint_state_command_v1(
+       pg_temp.lifecycle_endpoint(), 'disable', 'Receiver maintenance',
+       'webhook:disable:one',
        'd1000000-0000-4000-8000-000000000720'
      ) $$,
   array['disabled:disabled'::text], 'owner disables an active endpoint immediately'
@@ -318,20 +341,21 @@ select throws_ok(
 );
 reset role;
 
-set local role loyalty_runtime;
+set local role authenticated;
+set local request.jwt.claim.sub = 'd1000000-0000-4000-8000-000000000001';
 select results_eq(
-  $$ select outcome from loyalty_private.change_notification_webhook_endpoint_state_v1(
-       'd1000000-0000-4000-8000-000000000001', pg_temp.lifecycle_endpoint(),
-       'disable', 'Receiver maintenance', 'webhook:disable:one',
+  $$ select outcome from loyalty.change_notification_webhook_endpoint_state_command_v1(
+       pg_temp.lifecycle_endpoint(), 'disable', 'Receiver maintenance',
+       'webhook:disable:one',
        'd1000000-0000-4000-8000-000000000721'
      ) $$,
   array['duplicate'::text], 'exact disable retry returns its prior result'
 );
 select results_eq(
   $$ select outcome || ':' || endpoint_state
-     from loyalty_private.change_notification_webhook_endpoint_state_v1(
-       'd1000000-0000-4000-8000-000000000001', pg_temp.lifecycle_endpoint(),
-       'retire', 'Integration decommissioned', 'webhook:retire:one',
+     from loyalty.change_notification_webhook_endpoint_state_command_v1(
+       pg_temp.lifecycle_endpoint(), 'retire', 'Integration decommissioned',
+       'webhook:retire:one',
        'd1000000-0000-4000-8000-000000000722'
      ) $$,
   array['retired:retired'::text], 'disabled endpoint retires terminally'

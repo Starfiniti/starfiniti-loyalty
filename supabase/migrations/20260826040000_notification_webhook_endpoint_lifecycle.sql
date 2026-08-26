@@ -665,6 +665,124 @@ begin
 end;
 $$;
 
+create or replace function loyalty.create_notification_webhook_endpoint_command_v1(
+  target_workspace_public_id uuid,
+  target_label text,
+  target_destination_url text,
+  target_current_secret_sha256_hex text,
+  target_current_secret_hint text,
+  target_event_types text[],
+  target_rate_limit_per_minute integer,
+  target_idempotency_key text,
+  target_correlation_id uuid
+)
+returns table (
+  endpoint_public_id uuid,
+  endpoint_state text,
+  outcome text,
+  prior_secret_expires_at timestamptz
+)
+language plpgsql
+security definer
+set search_path = ''
+set statement_timeout = '5s'
+as $$
+declare
+  actor_user_id uuid := loyalty_private.request_user_id();
+begin
+  if actor_user_id is null
+    or target_current_secret_sha256_hex !~ '^[0-9a-f]{64}$' then
+    raise exception using errcode = '42501',
+      message = 'notification webhook endpoint command not authorized';
+  end if;
+  return query
+  select mutation.endpoint_public_id, mutation.endpoint_state,
+    mutation.outcome, mutation.prior_secret_expires_at
+  from loyalty_private.create_notification_webhook_endpoint_v1(
+    actor_user_id, target_workspace_public_id, target_label,
+    target_destination_url,
+    pg_catalog.decode(target_current_secret_sha256_hex, 'hex'),
+    target_current_secret_hint, target_event_types,
+    target_rate_limit_per_minute, target_idempotency_key,
+    target_correlation_id
+  ) as mutation;
+end;
+$$;
+
+create or replace function loyalty.rotate_notification_webhook_endpoint_command_v1(
+  target_endpoint_public_id uuid,
+  target_current_secret_sha256_hex text,
+  target_current_secret_hint text,
+  target_overlap_seconds integer,
+  target_idempotency_key text,
+  target_correlation_id uuid
+)
+returns table (
+  endpoint_public_id uuid,
+  endpoint_state text,
+  outcome text,
+  prior_secret_expires_at timestamptz
+)
+language plpgsql
+security definer
+set search_path = ''
+set statement_timeout = '5s'
+as $$
+declare
+  actor_user_id uuid := loyalty_private.request_user_id();
+begin
+  if actor_user_id is null
+    or target_current_secret_sha256_hex !~ '^[0-9a-f]{64}$' then
+    raise exception using errcode = '42501',
+      message = 'notification webhook rotation not authorized';
+  end if;
+  return query
+  select mutation.endpoint_public_id, mutation.endpoint_state,
+    mutation.outcome, mutation.prior_secret_expires_at
+  from loyalty_private.rotate_notification_webhook_endpoint_v1(
+    actor_user_id, target_endpoint_public_id,
+    pg_catalog.decode(target_current_secret_sha256_hex, 'hex'),
+    target_current_secret_hint, target_overlap_seconds,
+    target_idempotency_key, target_correlation_id
+  ) as mutation;
+end;
+$$;
+
+create or replace function loyalty.change_notification_webhook_endpoint_state_command_v1(
+  target_endpoint_public_id uuid,
+  target_action text,
+  target_reason text,
+  target_idempotency_key text,
+  target_correlation_id uuid
+)
+returns table (
+  endpoint_public_id uuid,
+  endpoint_state text,
+  outcome text,
+  prior_secret_expires_at timestamptz
+)
+language plpgsql
+security definer
+set search_path = ''
+set statement_timeout = '5s'
+as $$
+declare
+  actor_user_id uuid := loyalty_private.request_user_id();
+begin
+  if actor_user_id is null then
+    raise exception using errcode = '42501',
+      message = 'notification webhook lifecycle not authorized';
+  end if;
+  return query
+  select mutation.endpoint_public_id, mutation.endpoint_state,
+    mutation.outcome, mutation.prior_secret_expires_at
+  from loyalty_private.change_notification_webhook_endpoint_state_v1(
+    actor_user_id, target_endpoint_public_id, target_action, target_reason,
+    target_idempotency_key, target_correlation_id
+  ) as mutation;
+end;
+$$;
+
 create or replace function loyalty.get_notification_webhook_endpoints_v1(
   target_workspace_public_id uuid
 )
@@ -807,6 +925,15 @@ alter function loyalty_private.rotate_notification_webhook_endpoint_v1(
 alter function loyalty_private.change_notification_webhook_endpoint_state_v1(
   uuid, uuid, text, text, text, uuid
 ) owner to loyalty_owner;
+alter function loyalty.create_notification_webhook_endpoint_command_v1(
+  uuid, text, text, text, text, text[], integer, text, uuid
+) owner to loyalty_owner;
+alter function loyalty.rotate_notification_webhook_endpoint_command_v1(
+  uuid, text, text, integer, text, uuid
+) owner to loyalty_owner;
+alter function loyalty.change_notification_webhook_endpoint_state_command_v1(
+  uuid, text, text, text, uuid
+) owner to loyalty_owner;
 alter function loyalty.get_notification_webhook_endpoints_v1(uuid)
   owner to loyalty_owner;
 
@@ -825,17 +952,27 @@ revoke all on function
   ) from public, anon, authenticated, loyalty_runtime, loyalty_worker;
 revoke all on function loyalty.get_notification_webhook_endpoints_v1(uuid)
   from public, anon, authenticated, loyalty_runtime, loyalty_worker;
+revoke all on function
+  loyalty.create_notification_webhook_endpoint_command_v1(
+    uuid, text, text, text, text, text[], integer, text, uuid
+  ),
+  loyalty.rotate_notification_webhook_endpoint_command_v1(
+    uuid, text, text, integer, text, uuid
+  ),
+  loyalty.change_notification_webhook_endpoint_state_command_v1(
+    uuid, text, text, text, uuid
+  ) from public, anon, authenticated, loyalty_runtime, loyalty_worker;
 
 grant execute on function
-  loyalty_private.create_notification_webhook_endpoint_v1(
-    uuid, uuid, text, text, bytea, text, text[], integer, text, uuid
+  loyalty.create_notification_webhook_endpoint_command_v1(
+    uuid, text, text, text, text, text[], integer, text, uuid
   ),
-  loyalty_private.rotate_notification_webhook_endpoint_v1(
-    uuid, uuid, bytea, text, integer, text, uuid
+  loyalty.rotate_notification_webhook_endpoint_command_v1(
+    uuid, text, text, integer, text, uuid
   ),
-  loyalty_private.change_notification_webhook_endpoint_state_v1(
-    uuid, uuid, text, text, text, uuid
-  ) to loyalty_runtime;
+  loyalty.change_notification_webhook_endpoint_state_command_v1(
+    uuid, text, text, text, uuid
+  ) to authenticated;
 grant execute on function loyalty.get_notification_webhook_endpoints_v1(uuid)
   to authenticated;
 
@@ -850,5 +987,14 @@ comment on function loyalty_private.rotate_notification_webhook_endpoint_v1(
 comment on function loyalty_private.change_notification_webhook_endpoint_state_v1(
   uuid, uuid, text, text, text, uuid
 ) is 'Immediately disables or terminally retires one endpoint; retirement removes the live destination and signing fingerprints without deleting delivery evidence.';
+comment on function loyalty.create_notification_webhook_endpoint_command_v1(
+  uuid, text, text, text, text, text[], integer, text, uuid
+) is 'Creates one disabled endpoint through live Auth-derived owner/admin authority; the server supplies only a one-way signing-key fingerprint and bounded hint.';
+comment on function loyalty.rotate_notification_webhook_endpoint_command_v1(
+  uuid, text, text, integer, text, uuid
+) is 'Rotates one disabled endpoint through live Auth-derived owner/admin authority without accepting actor or tenant authority from the caller.';
+comment on function loyalty.change_notification_webhook_endpoint_state_command_v1(
+  uuid, text, text, text, uuid
+) is 'Disables or retires one endpoint through live Auth-derived owner/admin authority without accepting actor or tenant authority from the caller.';
 comment on function loyalty.get_notification_webhook_endpoints_v1(uuid) is
   'Returns a bounded Auth-scoped endpoint/data-flow health document without fingerprints, payloads, contacts, response bodies, signatures, or worker identities.';

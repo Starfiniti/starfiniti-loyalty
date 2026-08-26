@@ -102,11 +102,13 @@ select is_empty(
           'adjust_customer_points_command',
           'approve_campaign_version_command',
           'cancel_campaign_version_command',
+          'change_notification_webhook_endpoint_state_command_v1',
           'create_campaign_draft_command',
           'create_programme_command',
           'create_programme_draft_command',
           'create_audience_draft_command',
           'create_audience_snapshot_command',
+          'create_notification_webhook_endpoint_command_v1',
           'create_my_referral_link',
           'execute_bulk_customer_adjustment',
           'get_customer_adjustment_context',
@@ -169,7 +171,8 @@ select is_empty(
           'set_customer_tier_override_command',
           'start_reward_fulfilment_command',
           'resolve_reward_fulfilment_command',
-          'resolve_referral_review_command'
+          'resolve_referral_review_command',
+          'rotate_notification_webhook_endpoint_command_v1'
         )
       )
       and not exists (

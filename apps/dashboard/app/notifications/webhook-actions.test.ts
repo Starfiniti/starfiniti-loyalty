@@ -92,7 +92,6 @@ describe("notification webhook endpoint actions", () => {
       secret: "whsec_one_time",
     });
     expect(createEndpoint).toHaveBeenCalledWith(
-      actorId,
       expect.objectContaining({
         eventTypes: ["loyalty.connector.health", "loyalty.points.earned"],
         workspaceId,
@@ -140,7 +139,6 @@ describe("notification webhook endpoint actions", () => {
       secret: "whsec_rotated_once",
     });
     expect(rotateEndpoint).toHaveBeenCalledWith(
-      actorId,
       expect.objectContaining({ endpointId, overlapSeconds: 3600 }),
     );
   });
@@ -162,14 +160,13 @@ describe("notification webhook endpoint actions", () => {
       changeWebhookEndpointStateAction(idle, form),
     ).resolves.toMatchObject({ kind: "success", secret: null });
     expect(changeState).toHaveBeenCalledWith(
-      actorId,
       expect.objectContaining({
         endpointId,
         action: "retire",
         reason: "Integration decommissioned",
       }),
     );
-    expect(changeState.mock.calls[0]?.[1]).not.toHaveProperty("organizationId");
-    expect(changeState.mock.calls[0]?.[1]).not.toHaveProperty("actorUserId");
+    expect(changeState.mock.calls[0]?.[0]).not.toHaveProperty("organizationId");
+    expect(changeState.mock.calls[0]?.[0]).not.toHaveProperty("actorUserId");
   });
 });

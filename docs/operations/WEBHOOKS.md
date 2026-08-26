@@ -13,6 +13,8 @@ The generic webhook adapter is disabled by default and isolated from the value, 
 
 The merchant Notification studio now performs steps 2–3 through a reviewed owner/admin command and shows the raw secret once. It always creates the endpoint disabled. Transfer the secret immediately to the receiver and the owner-only worker secret file; losing the response requires a new disabled rotation.
 
+The authenticated command wrappers derive the actor from PostgreSQL request claims and the organization from the selected active workspace or endpoint. They accept no actor or tenant selector, and the private lifecycle primitives are not executable by the application runtime. Do not reintroduce a service-role or private-pool bridge that supplies actor authority.
+
 Activation remains an operator step. Before changing `state` to `active`, verify the endpoint ID, destination origin, current and optional prior fingerprint, secret-file ownership/mode, isolated service identity, receiver shared-vector result, subscription set, and entitlement. Set `updated_by_user_id = null` and a bounded `last_change_reason` for a deployment-owned activation; never impersonate a merchant actor.
 
 One worker profile represents one endpoint. Run additional instances through reviewed Compose overrides with distinct service names and secret mounts. Do not share one secret across endpoints or tenants.

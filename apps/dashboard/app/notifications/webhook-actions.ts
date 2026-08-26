@@ -76,10 +76,10 @@ export async function createWebhookEndpointAction(
       "Enter a public HTTPS destination, choose events, and use a 1–600 rate limit.",
     );
   }
-  const actor = await verifiedActor();
-  if (!actor) return errorState("Your verified session expired.");
+  if (!(await verifiedActor()))
+    return errorState("Your verified session expired.");
   try {
-    const created = await createNotificationWebhookEndpoint(actor, parsed.data);
+    const created = await createNotificationWebhookEndpoint(parsed.data);
     revalidatePath("/notifications");
     return created.issued
       ? {
@@ -115,10 +115,10 @@ export async function rotateWebhookEndpointAction(
   });
   if (!parsed.success)
     return errorState("Choose a valid 0–86400 second overlap.");
-  const actor = await verifiedActor();
-  if (!actor) return errorState("Your verified session expired.");
+  if (!(await verifiedActor()))
+    return errorState("Your verified session expired.");
   try {
-    const rotated = await rotateNotificationWebhookEndpoint(actor, parsed.data);
+    const rotated = await rotateNotificationWebhookEndpoint(parsed.data);
     revalidatePath("/notifications");
     return rotated.issued
       ? {
@@ -160,13 +160,10 @@ export async function changeWebhookEndpointStateAction(
   });
   if (!parsed.success)
     return errorState("Enter a single-line lifecycle reason.");
-  const actor = await verifiedActor();
-  if (!actor) return errorState("Your verified session expired.");
+  if (!(await verifiedActor()))
+    return errorState("Your verified session expired.");
   try {
-    const changed = await changeNotificationWebhookEndpointState(
-      actor,
-      parsed.data,
-    );
+    const changed = await changeNotificationWebhookEndpointState(parsed.data);
     revalidatePath("/notifications");
     return {
       kind: "success",

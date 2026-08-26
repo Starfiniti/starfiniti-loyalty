@@ -78,11 +78,13 @@ select is_empty(
           'loyalty.adjust_customer_points_command(uuid,uuid,uuid,bigint,text,text,timestamp with time zone,text,uuid)',
           'loyalty.approve_campaign_version_command(uuid,text,text,uuid)',
           'loyalty.cancel_campaign_version_command(uuid,text,text,uuid)',
+          'loyalty.change_notification_webhook_endpoint_state_command_v1(uuid,text,text,text,uuid)',
           'loyalty.create_campaign_draft_command(uuid,jsonb,text,uuid)',
           'loyalty.create_programme_command(uuid,text,text,text,uuid)',
           'loyalty.create_programme_draft_command(uuid,jsonb,text,uuid)',
           'loyalty.create_audience_draft_command(uuid,jsonb,text,uuid)',
           'loyalty.create_audience_snapshot_command(uuid,text,uuid)',
+          'loyalty.create_notification_webhook_endpoint_command_v1(uuid,text,text,text,text,text[],integer,text,uuid)',
           'loyalty.create_my_referral_link(uuid,uuid)',
           'loyalty.get_customer_adjustment_context(uuid,uuid)',
           'loyalty.get_customer_read_model(uuid,uuid)',
@@ -145,6 +147,7 @@ select is_empty(
           'loyalty.start_reward_fulfilment_command(uuid,text,uuid)',
           'loyalty.resolve_reward_fulfilment_command(uuid,text,text,text,text,uuid)',
           'loyalty.resolve_referral_review_command(uuid,text,text,text,uuid)',
+          'loyalty.rotate_notification_webhook_endpoint_command_v1(uuid,text,text,integer,text,uuid)',
           'loyalty.execute_bulk_customer_adjustment(uuid[],uuid,uuid,bigint,text,timestamp with time zone,text,text,uuid)'
         )
       )
