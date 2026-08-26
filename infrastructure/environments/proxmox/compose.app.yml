@@ -12,10 +12,16 @@ services:
       DASHBOARD_PUBLIC_ORIGIN: ${DASHBOARD_PUBLIC_ORIGIN:?required}
       DATABASE_URL: ${DATABASE_URL:?required}
       WOOCOMMERCE_SIGNING_MATERIAL_FILE: /run/secrets/woocommerce_signing_material
+      LOYALTY_FEDERATION_CONFIG_FILE: /run/secrets/federation_management_config
+      LOYALTY_AUTHENTIK_API_TOKEN_FILE: /run/secrets/authentik_federation_token
+      LOYALTY_SUPABASE_SERVICE_ROLE_KEY_FILE: /run/secrets/supabase_service_role_key
     extra_hosts:
       - "${SUPABASE_PUBLIC_HOST:?required}:${SUPABASE_INTERNAL_PROXY_IP:?required}"
     secrets:
       - woocommerce_signing_material
+      - federation_management_config
+      - authentik_federation_token
+      - supabase_service_role_key
     ports:
       - "${DASHBOARD_BIND_ADDRESS:?set a loopback or private IPv4 address}:3000:3000"
     security_opt:
@@ -147,3 +153,9 @@ services:
 secrets:
   woocommerce_signing_material:
     file: ${WOOCOMMERCE_SIGNING_MATERIAL_PATH:?required}
+  federation_management_config:
+    file: ${LOYALTY_FEDERATION_CONFIG_PATH:?required}
+  authentik_federation_token:
+    file: ${LOYALTY_AUTHENTIK_API_TOKEN_PATH:?required}
+  supabase_service_role_key:
+    file: ${LOYALTY_SUPABASE_SERVICE_ROLE_KEY_PATH:?required}

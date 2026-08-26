@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added disabled-first per-organization OIDC/SAML federation through Authentik with `openid`-only explicit Supabase identity linking, database-authoritative membership and entitlements, public socket-pinned metadata validation, digest-only immutable lifecycle evidence, one active source, ambiguity/compensation and interrupted-operation recovery, minimized login discovery, owner-only mounted administration credentials, and a Hub-style tenant identity workflow. Production egress and enterprise-IdP canaries remain mandatory.
 - Added M13 organization/team lifecycle with owner creation, digest-only one-use invitations, serialized owner quorum, immediate membership revocation, exact tenant state transitions, offboarding, minimized export, and a Hub-style administration workflow.
 - Added M13's database-authoritative Access V1 catalogue with six tenant membership roles, structurally grant-only support, active-organization permission enforcement, a minimized live access projection, forged-claim/revocation/cross-tenant pgTAP coverage, and a responsive Hub-style English Team & access review.
 - Added the M12 canonical migration and value-free dry-run foundation with strict source/identity/balance/lot/tier/referral/history contracts, explicit non-email identity resolution, deterministic exact-total fingerprints, immutable minimized PostgreSQL receipts, content/idempotency replay fences, and zero ledger effects.

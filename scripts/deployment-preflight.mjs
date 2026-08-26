@@ -24,6 +24,9 @@ const requiredVariables = [
   "DATABASE_URL",
   "LOYALTY_WORKER_DATABASE_URL",
   "WOOCOMMERCE_SIGNING_MATERIAL_PATH",
+  "LOYALTY_FEDERATION_CONFIG_PATH",
+  "LOYALTY_AUTHENTIK_API_TOKEN_PATH",
+  "LOYALTY_SUPABASE_SERVICE_ROLE_KEY_PATH",
 ];
 
 const referencePattern =
@@ -31,6 +34,8 @@ const referencePattern =
 const immutableImagePattern =
   /^(?:[a-z0-9.-]+(?::[0-9]+)?\/)?[a-z0-9._/-]+(?:@sha256:[0-9a-f]{64}|:[0-9a-f]{40})$/u;
 const dashboardRuntimeUid = 1001;
+const uuidPattern =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 
 function fail(message) {
   throw new Error(`Deployment preflight failed: ${message}`);
@@ -170,6 +175,114 @@ function validateSigningPool(path, enforcePermissions) {
   return entries.length;
 }
 
+function readOwnerOnlyFile(path, label, enforcePermissions) {
+  if (!isAbsolute(path)) fail(`${label} path must be absolute`);
+  let value;
+  let status;
+  try {
+    value = readFileSync(path, "utf8");
+    status = statSync(path);
+  } catch {
+    fail(`${label} is unreadable`);
+  }
+  if (!status.isFile()) fail(`${label} must be a regular file`);
+  if (status.size < 1 || status.size > 64 * 1024) {
+    fail(`${label} has an invalid size`);
+  }
+  if (enforcePermissions && (status.mode & 0o077) !== 0) {
+    fail(`${label} must not grant group or other access`);
+  }
+  if (enforcePermissions && status.uid !== dashboardRuntimeUid) {
+    fail(
+      `${label} must be owned by dashboard runtime UID ${dashboardRuntimeUid}`,
+    );
+  }
+  return value;
+}
+
+function validateFederationManagementFiles(environment, enforcePermissions) {
+  const paths = [
+    environment.LOYALTY_FEDERATION_CONFIG_PATH,
+    environment.LOYALTY_AUTHENTIK_API_TOKEN_PATH,
+    environment.LOYALTY_SUPABASE_SERVICE_ROLE_KEY_PATH,
+  ];
+  if (new Set(paths).size !== paths.length) {
+    fail("federation configuration and credentials must use distinct files");
+  }
+  const rawConfiguration = readOwnerOnlyFile(
+    paths[0],
+    "Federation management configuration",
+    enforcePermissions,
+  );
+  let configuration;
+  try {
+    configuration = JSON.parse(rawConfiguration);
+  } catch {
+    fail("Federation management configuration is not valid JSON");
+  }
+  const requiredKeys = [
+    "authentikOrigin",
+    "supabaseUrl",
+    "sourceAuthenticationFlowId",
+    "sourceEnrollmentFlowId",
+    "providerAuthorizationFlowId",
+    "providerInvalidationFlowId",
+    "providerSigningKeyId",
+    "providerOpenidPropertyMappingId",
+    "sourceUserPropertyMappingIds",
+  ];
+  if (
+    !configuration ||
+    typeof configuration !== "object" ||
+    Array.isArray(configuration) ||
+    Object.keys(configuration).length !== requiredKeys.length ||
+    requiredKeys.some((key) => !Object.hasOwn(configuration, key))
+  ) {
+    fail("Federation management configuration has an invalid shape");
+  }
+  validateHttpsOrigin(
+    "Federation Authentik origin",
+    configuration.authentikOrigin,
+  );
+  const configuredSupabase = validateHttpsOrigin(
+    "Federation Supabase origin",
+    configuration.supabaseUrl,
+  );
+  if (configuredSupabase.origin !== environment.NEXT_PUBLIC_SUPABASE_URL) {
+    fail("Federation Supabase origin must match NEXT_PUBLIC_SUPABASE_URL");
+  }
+  for (const key of requiredKeys.slice(2, 8)) {
+    if (!uuidPattern.test(configuration[key])) {
+      fail("Federation management configuration contains an invalid selector");
+    }
+  }
+  if (
+    !Array.isArray(configuration.sourceUserPropertyMappingIds) ||
+    configuration.sourceUserPropertyMappingIds.length < 1 ||
+    configuration.sourceUserPropertyMappingIds.length > 20 ||
+    configuration.sourceUserPropertyMappingIds.some(
+      (value) => typeof value !== "string" || !uuidPattern.test(value),
+    ) ||
+    new Set(configuration.sourceUserPropertyMappingIds).size !==
+      configuration.sourceUserPropertyMappingIds.length
+  ) {
+    fail("Federation source mappings are invalid");
+  }
+  for (const [path, label] of [
+    [paths[1], "Authentik federation API token"],
+    [paths[2], "Supabase service-role key"],
+  ]) {
+    const value = readOwnerOnlyFile(path, label, enforcePermissions).trim();
+    if (
+      value.length < 32 ||
+      value.length > 8_192 ||
+      /[\u0000-\u001f\u007f]/u.test(value)
+    ) {
+      fail(`${label} is malformed`);
+    }
+  }
+}
+
 export function validateDeploymentConfiguration(
   environment,
   { enforcePermissions = process.platform !== "win32" } = {},
@@ -246,10 +359,12 @@ export function validateDeploymentConfiguration(
   ) {
     fail("runtime and worker database credentials must use distinct logins");
   }
-  return validateSigningPool(
+  const poolSize = validateSigningPool(
     environment.WOOCOMMERCE_SIGNING_MATERIAL_PATH,
     enforcePermissions,
   );
+  validateFederationManagementFiles(environment, enforcePermissions);
+  return poolSize;
 }
 
 export function validateDeploymentAssets() {
@@ -299,6 +414,9 @@ function runSelfTest() {
   validateDeploymentAssets();
   const directory = mkdtempSync(join(tmpdir(), "starfiniti-preflight-"));
   const poolPath = join(directory, "signing-material.json");
+  const federationConfigPath = join(directory, "federation-management.json");
+  const authentikTokenPath = join(directory, "authentik-token");
+  const supabaseServiceKeyPath = join(directory, "supabase-service-role-key");
   const encodedKey = Buffer.alloc(32, 7).toString("base64");
   writeFileSync(
     poolPath,
@@ -307,6 +425,25 @@ function runSelfTest() {
     })}\n`,
     { mode: 0o600 },
   );
+  writeFileSync(
+    federationConfigPath,
+    `${JSON.stringify({
+      authentikOrigin: "https://auth.loyalty.invalid",
+      supabaseUrl: "https://api.loyalty.invalid",
+      sourceAuthenticationFlowId: "10000000-0000-4000-8000-000000000001",
+      sourceEnrollmentFlowId: "10000000-0000-4000-8000-000000000002",
+      providerAuthorizationFlowId: "10000000-0000-4000-8000-000000000003",
+      providerInvalidationFlowId: "10000000-0000-4000-8000-000000000004",
+      providerSigningKeyId: "10000000-0000-4000-8000-000000000005",
+      providerOpenidPropertyMappingId: "10000000-0000-4000-8000-000000000006",
+      sourceUserPropertyMappingIds: ["10000000-0000-4000-8000-000000000007"],
+    })}\n`,
+    { mode: 0o600 },
+  );
+  writeFileSync(authentikTokenPath, `${"t".repeat(64)}\n`, { mode: 0o600 });
+  writeFileSync(supabaseServiceKeyPath, `${"s".repeat(64)}\n`, {
+    mode: 0o600,
+  });
   const valid = {
     COMPOSE_PROJECT_NAME: "starfiniti-loyalty",
     DASHBOARD_IMAGE: `ghcr.io/starfiniti/loyalty-dashboard:${"a".repeat(40)}`,
@@ -322,6 +459,9 @@ function runSelfTest() {
     LOYALTY_WORKER_DATABASE_URL:
       "postgresql://loyalty_jobs:worker-password@10.0.0.2:5432/postgres",
     WOOCOMMERCE_SIGNING_MATERIAL_PATH: poolPath,
+    LOYALTY_FEDERATION_CONFIG_PATH: federationConfigPath,
+    LOYALTY_AUTHENTIK_API_TOKEN_PATH: authentikTokenPath,
+    LOYALTY_SUPABASE_SERVICE_ROLE_KEY_PATH: supabaseServiceKeyPath,
   };
   try {
     if (
@@ -376,6 +516,15 @@ function runSelfTest() {
         ),
       ),
       expectFailure(() => parseEnvironment("DUPLICATE=one\nDUPLICATE=two\n")),
+      expectFailure(() =>
+        validateDeploymentConfiguration(
+          {
+            ...valid,
+            LOYALTY_AUTHENTIK_API_TOKEN_PATH: supabaseServiceKeyPath,
+          },
+          { enforcePermissions: false },
+        ),
+      ),
     ];
     writeFileSync(poolPath, '{"invalid":"material"}\n', { mode: 0o600 });
     messages.push(
@@ -413,7 +562,7 @@ function runSelfTest() {
     rmSync(directory, { recursive: true, force: true });
   }
   console.log(
-    "Validated deployment asset parity, immutable selectors, credential separation, HTTPS origins, explicit dashboard binding, internal Supabase proxy mapping, signing-pool structure/ownership, and redacted failures.",
+    "Validated deployment asset parity, immutable selectors, credential separation, HTTPS origins, explicit dashboard binding, internal Supabase proxy mapping, signing-pool and federation-secret structure/ownership, and redacted failures.",
   );
 }
 

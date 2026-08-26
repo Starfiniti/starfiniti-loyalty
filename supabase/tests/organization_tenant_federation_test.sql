@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(76);
+select plan(88);
 
 grant loyalty_runtime to current_user;
 grant usage on schema extensions to loyalty_runtime;
@@ -31,13 +31,15 @@ select results_eq(
       ('loyalty_private', 'prepare_organization_federation_source_v1'),
       ('loyalty_private', 'record_organization_federation_validation_v1'),
       ('loyalty_private', 'begin_organization_federation_action_v1'),
+      ('loyalty_private', 'recover_organization_federation_pending_v1'),
       ('loyalty_private', 'complete_organization_federation_action_v1'),
+      ('loyalty_private', 'organization_federation_orchestration_v1'),
       ('loyalty', 'organization_federation_workspace_v1'),
       ('loyalty', 'resolve_organization_federation_login_v1')
     )
   $$,
-  array[6::bigint],
-  'six exact federation boundaries exist'
+  array[8::bigint],
+  'eight exact federation boundaries exist'
 );
 select ok(
   has_function_privilege(
@@ -48,6 +50,16 @@ select ok(
   and has_function_privilege(
     'loyalty_runtime',
     'loyalty_private.complete_organization_federation_action_v1(uuid,uuid,bigint,text,text,text,text,text,uuid)',
+    'EXECUTE'
+  )
+  and has_function_privilege(
+    'loyalty_runtime',
+    'loyalty_private.organization_federation_orchestration_v1(uuid,uuid,uuid)',
+    'EXECUTE'
+  )
+  and has_function_privilege(
+    'loyalty_runtime',
+    'loyalty_private.recover_organization_federation_pending_v1(uuid,uuid,uuid,bigint,text,text,uuid)',
     'EXECUTE'
   ),
   'only the trusted runtime may orchestrate external federation state'
@@ -62,8 +74,23 @@ select ok(
     'anon',
     'loyalty_private.complete_organization_federation_action_v1(uuid,uuid,bigint,text,text,text,text,text,uuid)',
     'EXECUTE'
+  )
+  and not has_function_privilege(
+    'loyalty_runtime',
+    'loyalty_private.organization_federation_entitlement_enabled_v1(bigint)',
+    'EXECUTE'
+  )
+  and not has_function_privilege(
+    'authenticated',
+    'loyalty_private.organization_federation_entitlement_enabled_v1(bigint)',
+    'EXECUTE'
+  )
+  and not has_function_privilege(
+    'authenticated',
+    'loyalty_private.recover_organization_federation_pending_v1(uuid,uuid,uuid,bigint,text,text,uuid)',
+    'EXECUTE'
   ),
-  'browser roles cannot enter trusted federation orchestration'
+  'browser and runtime roles cannot enter privileged federation helpers'
 );
 select ok(
   has_function_privilege(
@@ -82,7 +109,9 @@ select results_eq(
       ('loyalty_private', 'prepare_organization_federation_source_v1'),
       ('loyalty_private', 'record_organization_federation_validation_v1'),
       ('loyalty_private', 'begin_organization_federation_action_v1'),
+      ('loyalty_private', 'recover_organization_federation_pending_v1'),
       ('loyalty_private', 'complete_organization_federation_action_v1'),
+      ('loyalty_private', 'organization_federation_orchestration_v1'),
       ('loyalty', 'organization_federation_workspace_v1'),
       ('loyalty', 'resolve_organization_federation_login_v1')
     )
@@ -96,7 +125,7 @@ select results_eq(
         where setting like 'statement_timeout=%'
       )
   $$,
-  array[6::bigint],
+  array[8::bigint],
   'every exposed federation boundary fixes search path and timeout'
 );
 select results_eq(
@@ -169,7 +198,45 @@ select
   (select count(*) from loyalty.organization_memberships)::bigint as memberships,
   (select count(*) from loyalty.ledger_transactions)::bigint as ledger_transactions;
 
--- 13-26: exact source preparation, isolation, and capacity.
+do $$ begin
+  perform loyalty_private.set_organization_entitlement(
+    '9b000000-0000-4000-8000-000000000200',
+    'enterprise.identity', 'disabled', null, 'local_control',
+    'operator:federation-test',
+    'Prove tenant federation rollout denial independently',
+    clock_timestamp(), null
+  );
+end $$;
+set local role authenticated;
+set local request.jwt.claim.sub = '9b000000-0000-4000-8000-000000000004';
+select results_eq(
+  $$
+    select (loyalty.organization_federation_workspace_v1(
+      '9b000000-0000-4000-8000-000000000200'
+    ) ->> 'entitlementEnabled')::boolean
+  $$,
+  array[false],
+  'workspace exposes the database-authoritative tenant rollout state'
+);
+reset role;
+set local role loyalty_runtime;
+select throws_ok(
+  $$
+    select * from loyalty_private.prepare_organization_federation_source_v1(
+      '9b000000-0000-4000-8000-000000000004',
+      '9b000000-0000-4000-8000-000000000200',
+      'Disabled tenant source', 'saml', null, null,
+      'https://disabled.example.test/metadata', null, null,
+      'federation:create:disabled-tenant',
+      '9b000000-0000-4000-8000-000000000600'
+    )
+  $$,
+  '42501', 'enterprise identity entitlement not enabled',
+  'a tenant rollout denial blocks new federation configuration in PostgreSQL'
+);
+reset role;
+
+-- 13-28: exact source preparation, isolation, entitlement, and capacity.
 set local role loyalty_runtime;
 select results_eq(
   $$
@@ -349,7 +416,7 @@ select throws_ok(
 );
 reset role;
 
--- 27-38: minimized validation evidence and review projection.
+-- 29-41: minimized validation evidence and review projection.
 set local role loyalty_runtime;
 select throws_ok(
   $$
@@ -430,6 +497,24 @@ select throws_ok(
   '23514', 'federation command idempotency conflict',
   'changed validation evidence under one idempotency key fails closed'
 );
+select results_eq(
+  $$
+    select outcome from loyalty_private.record_organization_federation_validation_v1(
+      '9b000000-0000-4000-8000-000000000001',
+      (select public_id from loyalty.organization_federation_sources where display_name = 'Corporate SAML'),
+      1,
+      (select encode(configuration_sha256, 'hex') from loyalty.organization_federation_sources where display_name = 'Corporate SAML'),
+      repeat('5', 64), 'urn:example:test:tenant',
+      null, null, null, 'https://saml.example.test/sso',
+      array[repeat('6', 64)], repeat('7', 64),
+      '9b000000-0000-4000-8000-000000000703', 704,
+      'succeeded', 'validated', 'federation:validate:saml',
+      '9b000000-0000-4000-8000-000000000625'
+    )
+  $$,
+  array['updated'::text],
+  'trusted validation records one exact SAML result without a client secret'
+);
 reset role;
 select results_eq(
   $$
@@ -451,6 +536,39 @@ select results_eq(
   array[2::bigint],
   'validation appends the second immutable revision'
 );
+set local role loyalty_runtime;
+select results_eq(
+  $$
+    select protocol, status, lifecycle_revision,
+      authentik_source_slug ~ '^loyalty-[a-z0-9]{20}$',
+      supabase_provider_identifier ~ '^custom:loyalty-[a-z0-9]{20}$',
+      pending_action,
+      configuration_sha256 ~ '^[a-f0-9]{64}$',
+      configuration ->> 'protocol' = 'oidc',
+      validation_evidence ->> 'documentSha256' = repeat('1', 64)
+    from loyalty_private.organization_federation_orchestration_v1(
+      '9b000000-0000-4000-8000-000000000001',
+      '9b000000-0000-4000-8000-000000000100',
+      (select public_id from loyalty.organization_federation_sources where display_name = 'Corporate OIDC')
+    )
+  $$,
+  $$ values (
+    'oidc'::text, 'validated'::text, 2::bigint, true, true, null::text,
+    true, true, true
+  ) $$,
+  'trusted orchestration receives selectors and exact revalidation evidence after a live owner check'
+);
+select is_empty(
+  $$
+    select * from loyalty_private.organization_federation_orchestration_v1(
+      '9b000000-0000-4000-8000-000000000001',
+      '9b000000-0000-4000-8000-000000000200',
+      (select public_id from loyalty.organization_federation_sources where display_name = 'Corporate OIDC')
+    )
+  $$,
+  'an organization/source mismatch yields no orchestration selectors'
+);
+reset role;
 set local role authenticated;
 set local request.jwt.claim.sub = '9b000000-0000-4000-8000-000000000001';
 select results_eq(
@@ -515,7 +633,7 @@ select is_empty(
 );
 reset role;
 
--- 39-52: enablement requires recovery and remains non-public until completion.
+-- 42-57: enablement requires recovery and remains non-public until completion.
 set local role loyalty_runtime;
 select throws_ok(
   $$
@@ -546,6 +664,40 @@ select results_eq(
   $$,
   array['updated'::text],
   'enablement begins only after recovery is available'
+);
+select throws_ok(
+  $$
+    select * from loyalty_private.begin_organization_federation_action_v1(
+      '9b000000-0000-4000-8000-000000000001',
+      '9b000000-0000-4000-8000-000000000100',
+      (select public_id from loyalty.organization_federation_sources where display_name = 'Corporate SAML'),
+      2, 'enable', null, 'Do not activate a second company provider.',
+      'federation:enable:second-source', '9b000000-0000-4000-8000-000000000626'
+    )
+  $$,
+  '23514', 'another federation source requires disablement or review',
+  'the tenant lock permits only one active or activating login provider'
+);
+reset role;
+do $$ begin
+  perform loyalty_private.set_organization_entitlement(
+    '9b000000-0000-4000-8000-000000000100',
+    'enterprise.identity', 'disabled', null, 'local_control',
+    'operator:federation-test',
+    'Pause new identity growth after accepted enablement',
+    clock_timestamp(), null
+  );
+end $$;
+set local role authenticated;
+set local request.jwt.claim.sub = '9b000000-0000-4000-8000-000000000001';
+select results_eq(
+  $$
+    select (loyalty.organization_federation_workspace_v1(
+      '9b000000-0000-4000-8000-000000000100'
+    ) ->> 'entitlementEnabled')::boolean
+  $$,
+  array[false],
+  'accepted enablement observes a later rollout pause without losing review access'
 );
 reset role;
 select results_eq(
@@ -597,7 +749,7 @@ select results_eq(
     )
   $$,
   array['updated'::text],
-  'confirmed external enablement creates one enabled revision'
+  'accepted external enablement completes despite a later rollout pause'
 );
 reset role;
 select results_eq(
@@ -610,12 +762,12 @@ select results_eq(
 );
 set local role anon;
 select results_eq(
-  $$ select provider from loyalty.resolve_organization_federation_login_v1('federation-main') $$,
   $$
-    select supabase_provider_identifier from loyalty.organization_federation_sources
-    where display_name = 'Corporate OIDC'
+    select provider ~ '^custom:loyalty-[a-z0-9]{20}$'
+    from loyalty.resolve_organization_federation_login_v1('federation-main')
   $$,
-  'enabled login resolution returns only the opaque provider identifier'
+  array[true],
+  'rollout loss preserves the already-enabled opaque login route'
 );
 select is_empty(
   $$ select * from loyalty.resolve_organization_federation_login_v1('unknown-tenant') $$,
@@ -673,7 +825,7 @@ select throws_ok(
 );
 reset role;
 
--- 53-60: disablement hides login before external reconciliation.
+-- 58-65: disablement hides login before external reconciliation.
 set local role loyalty_runtime;
 select throws_ok(
   $$
@@ -699,7 +851,7 @@ select results_eq(
     )
   $$,
   array['updated'::text],
-  'owner disablement immediately changes database visibility'
+  'owner disablement remains available while the entitlement is disabled'
 );
 reset role;
 set local role anon;
@@ -764,7 +916,7 @@ select results_eq(
   'completed disablement preserves an exact reconciled state'
 );
 
--- 61-68: disabled-only rotation and retirement.
+-- 66-78: interrupted-operation recovery, entitlement-aware rotation, and retirement.
 set local role loyalty_runtime;
 select throws_ok(
   $$
@@ -778,6 +930,91 @@ select throws_ok(
   $$,
   '40001', 'federation lifecycle revision conflict',
   'SAML cannot enter the upstream client-secret rotation path'
+);
+select throws_ok(
+  $$
+    select * from loyalty_private.begin_organization_federation_action_v1(
+      '9b000000-0000-4000-8000-000000000001',
+      '9b000000-0000-4000-8000-000000000100',
+      (select public_id from loyalty.organization_federation_sources where display_name = 'Corporate OIDC'),
+      8, 'rotate_secret', repeat('f', 64), 'Blocked while rollout is paused.',
+      'federation:rotate:blocked', '9b000000-0000-4000-8000-000000000618'
+    )
+  $$,
+  '42501', 'enterprise identity entitlement not enabled',
+  'rollout denial blocks a new secret rotation before any external mutation'
+);
+reset role;
+do $$ begin
+  perform loyalty_private.set_organization_entitlement(
+    '9b000000-0000-4000-8000-000000000100',
+    'enterprise.identity', 'enabled', null, 'local_control',
+    'operator:federation-test',
+    'Resume the approved identity rollout after denial evidence',
+    clock_timestamp(), null
+  );
+end $$;
+set local role loyalty_runtime;
+select results_eq(
+  $$
+    select outcome from loyalty_private.begin_organization_federation_action_v1(
+      '9b000000-0000-4000-8000-000000000001',
+      '9b000000-0000-4000-8000-000000000100',
+      (select public_id from loyalty.organization_federation_sources where display_name = 'Corporate SAML'),
+      2, 'enable', null, 'Reserve a source before simulating process death.',
+      'federation:enable:interrupted', '9b000000-0000-4000-8000-000000000627'
+    )
+  $$,
+  array['updated'::text],
+  'a second source can reserve activation only after the first is fully disabled'
+);
+select throws_ok(
+  $$
+    select * from loyalty_private.recover_organization_federation_pending_v1(
+      '9b000000-0000-4000-8000-000000000001',
+      '9b000000-0000-4000-8000-000000000100',
+      (select public_id from loyalty.organization_federation_sources where display_name = 'Corporate SAML'),
+      3, 'Do not race an in-flight external operation.',
+      'federation:recover:early', '9b000000-0000-4000-8000-000000000628'
+    )
+  $$,
+  '40001', 'federation recovery window not reached',
+  'interrupted-operation recovery cannot race the five-minute safety window'
+);
+reset role;
+select set_config('loyalty.federation_command', 'on', true);
+update loyalty.organization_federation_sources
+set updated_at = statement_timestamp() - interval '6 minutes'
+where display_name = 'Corporate SAML';
+select set_config('loyalty.federation_command', 'off', true);
+set local role loyalty_runtime;
+select results_eq(
+  $$
+    select outcome, status
+    from loyalty_private.recover_organization_federation_pending_v1(
+      '9b000000-0000-4000-8000-000000000001',
+      '9b000000-0000-4000-8000-000000000100',
+      (select public_id from loyalty.organization_federation_sources where display_name = 'Corporate SAML'),
+      3, 'Recover the interrupted external operation for review.',
+      'federation:recover:interrupted', '9b000000-0000-4000-8000-000000000629'
+    )
+  $$,
+  $$ values ('updated'::text, 'review_required'::text) $$,
+  'a live owner converts stale pending work into immutable ambiguous review evidence'
+);
+select results_eq(
+  $$
+    select outcome, status
+    from loyalty_private.recover_organization_federation_pending_v1(
+      '9b000000-0000-4000-8000-000000000001',
+      '9b000000-0000-4000-8000-000000000100',
+      (select public_id from loyalty.organization_federation_sources where display_name = 'Corporate SAML'),
+      3, 'Recover the interrupted external operation for review.',
+      'federation:recover:interrupted', '9b000000-0000-4000-8000-000000000629'
+    )
+  $$,
+  $$ values ('duplicate'::text, 'review_required'::text) $$,
+  'an exact interrupted-operation recovery retry creates no second revision'
 );
 select results_eq(
   $$
@@ -861,7 +1098,7 @@ select results_eq(
   'retired source is terminal and retained for evidence'
 );
 
--- 69-76: history, no authority/value effects, guards, and revocation.
+-- 79-86: history, no authority/value effects, guards, and revocation.
 select results_eq(
   $$
     select count(*)::bigint, min(revision), max(revision), count(distinct revision)::bigint

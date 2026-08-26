@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   isPublicFederationAddress,
   validateOrganizationFederationConfiguration,
+  validateOrganizationFederationProvisioning,
   type FederationValidationRuntime,
 } from "./federation-validation";
 
@@ -58,6 +59,25 @@ describe("tenant federation discovery and metadata validation", () => {
     expect(
       lookupCalls.filter((host) => host === "idp.vendor.com"),
     ).toHaveLength(1);
+  });
+
+  it("returns only public OIDC provisioning material", async () => {
+    const result = await validateOrganizationFederationProvisioning(
+      oidcConfiguration,
+      configurationSha256,
+      oidcRuntime(),
+    );
+
+    expect(result.provisioning).toMatchObject({
+      protocol: "oidc",
+      userinfoEndpoint: "https://idp.vendor.com/oauth2/userinfo",
+      authorizationCodeAuthMethod: "basic_auth",
+      pkce: "S256",
+      jwks: { keys: [{ kty: oidcSigningJwk.kty, use: "sig" }] },
+    });
+    expect(JSON.stringify(result.provisioning)).not.toMatch(
+      /"(?:d|p|q|dp|dq|qi|oth|k)":/u,
+    );
   });
 
   it("rejects a private answer when another DNS answer is public", async () => {
@@ -261,6 +281,31 @@ describe("tenant federation discovery and metadata validation", () => {
     ]);
   });
 
+  it("keeps SAML provisioning certificate material out of persisted evidence", async () => {
+    const result = await validateOrganizationFederationProvisioning(
+      {
+        protocol: "saml",
+        metadataUrl: "https://metadata.vendor.com/idp.xml",
+        expectedEntityId: "urn:vendor:tenant:idp",
+      },
+      configurationSha256,
+      samlRuntime(),
+    );
+
+    expect(result.provisioning).toMatchObject({
+      protocol: "saml",
+      bindingType: "POST",
+      nameIdPolicy: "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
+    });
+    if (result.provisioning.protocol !== "saml") {
+      throw new Error("unexpected provisioning protocol");
+    }
+    expect(result.provisioning.verificationCertificatePem).toMatch(
+      /^-----BEGIN CERTIFICATE-----/u,
+    );
+    expect(JSON.stringify(result.evidence)).not.toContain("BEGIN CERTIFICATE");
+  });
+
   it.each([
     [
       "a DOCTYPE declaration",
@@ -378,12 +423,14 @@ function oidcDocument(): Record<string, unknown> {
     issuer: "https://idp.vendor.com/tenant",
     authorization_endpoint: "https://idp.vendor.com/oauth2/authorize",
     token_endpoint: "https://idp.vendor.com/oauth2/token",
+    userinfo_endpoint: "https://idp.vendor.com/oauth2/userinfo",
     jwks_uri: "https://keys.vendor-cdn.com/jwks",
     response_types_supported: ["code"],
     grant_types_supported: ["authorization_code"],
     subject_types_supported: ["public"],
     id_token_signing_alg_values_supported: ["RS256"],
     token_endpoint_auth_methods_supported: ["client_secret_basic"],
+    code_challenge_methods_supported: ["S256"],
     scopes_supported: ["openid", "email", "profile"],
   };
 }

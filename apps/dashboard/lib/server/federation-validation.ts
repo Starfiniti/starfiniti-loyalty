@@ -111,6 +111,29 @@ export type FederationValidationRuntime = Readonly<{
   now: () => Date;
 }>;
 
+export type FederationProvisioningMaterial =
+  | Readonly<{
+      protocol: "oidc";
+      userinfoEndpoint: string;
+      authorizationCodeAuthMethod: "basic_auth" | "post_body";
+      pkce: "S256" | "none";
+      jwks: Readonly<{ keys: readonly Record<string, unknown>[] }>;
+    }>
+  | Readonly<{
+      protocol: "saml";
+      bindingType: "POST" | "REDIRECT";
+      nameIdPolicy:
+        | "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent"
+        | "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress"
+        | "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified";
+      verificationCertificatePem: string;
+    }>;
+
+export type FederationValidationResult = Readonly<{
+  evidence: OrganizationFederationValidationEvidenceV1;
+  provisioning: FederationProvisioningMaterial;
+}>;
+
 const defaultRuntime: FederationValidationRuntime = {
   lookup: async (hostname) =>
     dnsLookup(hostname, { all: true, verbatim: true }),
@@ -123,6 +146,20 @@ export async function validateOrganizationFederationConfiguration(
   configurationSha256: string,
   runtime: FederationValidationRuntime = defaultRuntime,
 ): Promise<OrganizationFederationValidationEvidenceV1> {
+  return (
+    await validateOrganizationFederationProvisioning(
+      configurationInput,
+      configurationSha256,
+      runtime,
+    )
+  ).evidence;
+}
+
+export async function validateOrganizationFederationProvisioning(
+  configurationInput: OrganizationFederationSourceConfigurationV1,
+  configurationSha256: string,
+  runtime: FederationValidationRuntime = defaultRuntime,
+): Promise<FederationValidationResult> {
   const configuration =
     organizationFederationSourceConfigurationV1.parse(configurationInput);
   if (!/^[a-f0-9]{64}$/u.test(configurationSha256)) {
@@ -157,7 +194,7 @@ async function validateOidc(
   validatedAt: string,
   runtime: FederationValidationRuntime,
   dnsCache: Map<string, Address[]>,
-): Promise<OrganizationFederationValidationEvidenceV1> {
+): Promise<FederationValidationResult> {
   const discovery = await fetchFederationDocument(
     configuration.discoveryUrl,
     ["application/json"],
@@ -178,9 +215,10 @@ async function validateOidc(
   );
   const tokenEndpoint = requiredString(metadata, "token_endpoint");
   const jwksUri = requiredString(metadata, "jwks_uri");
+  const userinfoEndpoint = requiredString(metadata, "userinfo_endpoint");
   await Promise.all(
-    [issuer, authorizationEndpoint, tokenEndpoint].map((value) =>
-      assertPublicFederationUrl(value, runtime, dnsCache, true),
+    [issuer, authorizationEndpoint, tokenEndpoint, userinfoEndpoint].map(
+      (value) => assertPublicFederationUrl(value, runtime, dnsCache, true),
     ),
   );
   const responseTypes = requiredStringArray(
@@ -198,6 +236,10 @@ async function validateOidc(
     "token_endpoint_auth_methods_supported",
   );
   const scopes = optionalStringArray(metadata, "scopes_supported");
+  const codeChallengeMethods = optionalStringArray(
+    metadata,
+    "code_challenge_methods_supported",
+  );
   const supportedSigningAlgorithms = new Set([
     "EdDSA",
     "ES256",
@@ -234,20 +276,32 @@ async function validateOidc(
     runtime,
     dnsCache,
   );
-  const signingFingerprints = parseJwksFingerprints(jwks.body);
-  return organizationFederationValidationEvidenceV1.parse({
-    schemaVersion: "1",
-    protocol: "oidc",
-    configurationSha256,
-    documentSha256: sha256(discovery.body),
-    issuer,
-    authorizationEndpoint,
-    tokenEndpoint,
-    jwksUri,
-    ssoEndpoint: null,
-    signingFingerprints,
-    validatedAt,
-  });
+  const parsedJwks = parseJwks(jwks.body);
+  return {
+    evidence: organizationFederationValidationEvidenceV1.parse({
+      schemaVersion: "1",
+      protocol: "oidc",
+      configurationSha256,
+      documentSha256: sha256(discovery.body),
+      issuer,
+      authorizationEndpoint,
+      tokenEndpoint,
+      jwksUri,
+      ssoEndpoint: null,
+      signingFingerprints: parsedJwks.fingerprints,
+      validatedAt,
+    }),
+    provisioning: {
+      protocol: "oidc",
+      userinfoEndpoint,
+      authorizationCodeAuthMethod:
+        tokenAuthenticationMethods?.includes("client_secret_basic") === false
+          ? "post_body"
+          : "basic_auth",
+      pkce: codeChallengeMethods?.includes("S256") === true ? "S256" : "none",
+      jwks: { keys: parsedJwks.keys },
+    },
+  };
 }
 
 async function validateSaml(
@@ -259,7 +313,7 @@ async function validateSaml(
   validatedAt: string,
   runtime: FederationValidationRuntime,
   dnsCache: Map<string, Address[]>,
-): Promise<OrganizationFederationValidationEvidenceV1> {
+): Promise<FederationValidationResult> {
   const metadataDocument = await fetchFederationDocument(
     configuration.metadataUrl,
     ["application/samlmetadata+xml", "application/xml", "text/xml"],
@@ -380,24 +434,45 @@ async function validateSaml(
   if (!ssoEndpoint) {
     throw new FederationValidationError("federation_document_invalid");
   }
-  const signingFingerprints = samlCertificateFingerprints(
+  const signingCertificates = samlSigningCertificates(
     descriptor,
     runtime.now(),
   );
+  const signingFingerprints = signingCertificates.map(
+    ({ fingerprint }) => fingerprint,
+  );
+  if (signingCertificates.length !== 1) {
+    throw new FederationValidationError("federation_signing_key_invalid");
+  }
+  const verificationCertificate = signingCertificates[0];
+  if (!verificationCertificate) {
+    throw new FederationValidationError("federation_signing_key_invalid");
+  }
+  const nameIdPolicy = selectSamlNameIdPolicy(descriptor);
 
-  return organizationFederationValidationEvidenceV1.parse({
-    schemaVersion: "1",
-    protocol: "saml",
-    configurationSha256,
-    documentSha256: sha256(metadataDocument.body),
-    issuer: entityId,
-    authorizationEndpoint: null,
-    tokenEndpoint: null,
-    jwksUri: null,
-    ssoEndpoint,
-    signingFingerprints,
-    validatedAt,
-  });
+  return {
+    evidence: organizationFederationValidationEvidenceV1.parse({
+      schemaVersion: "1",
+      protocol: "saml",
+      configurationSha256,
+      documentSha256: sha256(metadataDocument.body),
+      issuer: entityId,
+      authorizationEndpoint: null,
+      tokenEndpoint: null,
+      jwksUri: null,
+      ssoEndpoint,
+      signingFingerprints,
+      validatedAt,
+    }),
+    provisioning: {
+      protocol: "saml",
+      bindingType: endpoints[0]?.binding.endsWith("HTTP-POST")
+        ? "POST"
+        : "REDIRECT",
+      nameIdPolicy,
+      verificationCertificatePem: verificationCertificate.pem,
+    },
+  };
 }
 
 async function fetchFederationDocument(
@@ -705,18 +780,22 @@ function optionalStringArray(
   return [...new Set(value as string[])];
 }
 
-function parseJwksFingerprints(body: Buffer): string[] {
+function parseJwks(body: Buffer): Readonly<{
+  fingerprints: string[];
+  keys: Record<string, unknown>[];
+}> {
   const document = parseJsonObject(body);
-  const keys = document.keys;
+  const documentKeys = document.keys;
   if (
-    !Array.isArray(keys) ||
-    keys.length === 0 ||
-    keys.length > MAX_JSON_KEYS
+    !Array.isArray(documentKeys) ||
+    documentKeys.length === 0 ||
+    documentKeys.length > MAX_JSON_KEYS
   ) {
     throw new FederationValidationError("federation_signing_key_invalid");
   }
   const fingerprints: string[] = [];
-  for (const candidate of keys) {
+  const publicKeys: Record<string, unknown>[] = [];
+  for (const candidate of documentKeys) {
     if (!isRecord(candidate)) {
       throw new FederationValidationError("federation_signing_key_invalid");
     }
@@ -731,8 +810,13 @@ function parseJwksFingerprints(body: Buffer): string[] {
     if (
       candidate.key_ops !== undefined &&
       (!Array.isArray(candidate.key_ops) ||
+        candidate.key_ops.length > 20 ||
         !candidate.key_ops.every(
-          (operation) => typeof operation === "string",
+          (operation) =>
+            typeof operation === "string" &&
+            operation.length > 0 &&
+            operation.length <= 64 &&
+            !/[\u0000-\u001f\u007f]/u.test(operation),
         ) ||
         !candidate.key_ops.includes("verify"))
     ) {
@@ -743,13 +827,42 @@ function parseJwksFingerprints(body: Buffer): string[] {
     if (canonical !== null) {
       assertStrongSigningPublicKey(canonical);
       fingerprints.push(sha256(Buffer.from(canonical)));
+      const canonicalKey = JSON.parse(canonical) as Record<string, unknown>;
+      publicKeys.push({
+        ...canonicalKey,
+        ...(safeOptionalJwkMember(candidate.kid) !== null
+          ? { kid: candidate.kid }
+          : {}),
+        ...(typeof candidate.alg === "string" &&
+        /^(?:EdDSA|(?:ES|PS|RS)(?:256|384|512))$/u.test(candidate.alg)
+          ? { alg: candidate.alg }
+          : {}),
+        ...(candidate.use === "sig" ? { use: "sig" } : {}),
+        ...(Array.isArray(candidate.key_ops)
+          ? { key_ops: [...candidate.key_ops] }
+          : {}),
+      });
     }
   }
   const unique = [...new Set(fingerprints)].sort();
   if (unique.length === 0 || unique.length > MAX_SIGNING_KEYS) {
     throw new FederationValidationError("federation_signing_key_invalid");
   }
-  return unique;
+  const publicSigningKeys = [
+    ...new Map(
+      publicKeys.map((key, index) => [fingerprints[index], key]),
+    ).values(),
+  ];
+  return { fingerprints: unique, keys: publicSigningKeys };
+}
+
+function safeOptionalJwkMember(value: unknown): string | null {
+  return typeof value === "string" &&
+    value.length > 0 &&
+    value.length <= 256 &&
+    !/[\u0000-\u001f\u007f]/u.test(value)
+    ? value
+    : null;
 }
 
 function canonicalJwk(key: Record<string, unknown>): string | null {
@@ -819,11 +932,11 @@ function base64UrlMember(key: Record<string, unknown>, name: string): string {
   return value;
 }
 
-function samlCertificateFingerprints(
+function samlSigningCertificates(
   descriptor: Record<string, unknown>,
   now: Date,
-): string[] {
-  const fingerprints: string[] = [];
+): Array<{ fingerprint: string; pem: string }> {
+  const certificates: Array<{ fingerprint: string; pem: string }> = [];
   let parsedCertificates = 0;
   for (const keyDescriptor of asRecords(descriptor.KeyDescriptor)) {
     const use = safeXmlString(keyDescriptor["@_use"]);
@@ -860,10 +973,17 @@ function samlCertificateFingerprints(
         throw new FederationValidationError("federation_signing_key_invalid");
       }
       if (now.getTime() < validFrom || now.getTime() > validTo) continue;
-      fingerprints.push(sha256(certificate.raw));
+      certificates.push({
+        fingerprint: sha256(certificate.raw),
+        pem: certificate.toString(),
+      });
     }
   }
-  const unique = [...new Set(fingerprints)].sort();
+  const unique = [
+    ...new Map(
+      certificates.map((certificate) => [certificate.fingerprint, certificate]),
+    ).values(),
+  ].sort((left, right) => left.fingerprint.localeCompare(right.fingerprint));
   if (unique.length === 0 && parsedCertificates > 0) {
     throw new FederationValidationError("federation_certificate_expired");
   }
@@ -871,6 +991,25 @@ function samlCertificateFingerprints(
     throw new FederationValidationError("federation_signing_key_invalid");
   }
   return unique;
+}
+
+function selectSamlNameIdPolicy(
+  descriptor: Record<string, unknown>,
+): Extract<
+  FederationProvisioningMaterial,
+  { protocol: "saml" }
+>["nameIdPolicy"] {
+  const values = collectNamedValues(descriptor, "NameIDFormat", 20)
+    .map(safeXmlString)
+    .filter((value): value is string => value !== null);
+  const supported = [
+    "urn:oasis:names:tc:SAML:2.0:nameid-format:persistent",
+    "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress",
+    "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified",
+  ] as const;
+  return (
+    supported.find((candidate) => values.includes(candidate)) ?? supported[2]
+  );
 }
 
 function assertStrongCertificatePublicKey(certificate: X509Certificate): void {

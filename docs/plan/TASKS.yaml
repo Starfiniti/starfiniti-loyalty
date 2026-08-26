@@ -2177,7 +2177,7 @@ tasks:
         cross-tenant forgery,
         audit,
       ]
-    risks: [R-029, R-023]
+    risks: [R-029, R-023, R-044]
     docs:
       [
         docs/architecture/ADR/0008-broker-workforce-authentik-through-supabase-auth.md,
@@ -2285,24 +2285,30 @@ tasks:
         failure_modes:
           - IdP initiated or forged issuer login bypasses provisioning
           - metadata endpoint creates SSRF or unsigned configuration
+          - Authentik resolves a previously public IdP hostname to a private or metadata destination after dashboard validation
           - source secret leaks through browser audit or logs
           - disabling federation strands the owner
           - undocumented or Enterprise-only Authentik source routing makes the open-source deployment incomplete
           - external timeout is mistaken for successful provisioning or activation
+          - process death leaves a permanent pending action or a second owner races an in-flight provider mutation
         security_boundaries:
           - Supabase issues the application session but PostgreSQL derives live organization membership on every protected request
           - browser organization selectors and opaque provider IDs choose only a login path and never tenant role or membership
           - fixed server-side Authentik and Supabase administration origins and mounted credentials cannot be supplied by a merchant
           - validation fetches pin public DNS answers retain TLS hostname verification reject redirects and store only minimized fingerprints
+          - Authentik egress allows exact private dependencies only and denies every other private reserved or metadata destination after DNS re-resolution
+          - enterprise.identity gates new configuration enablement and rotation but never existing login accepted completion disablement retirement or audit access
+          - owner-only recovery waits five minutes then converts interrupted pending work to immutable ambiguous review without changing confirmed credentials
         rollout: Configure disabled source validate metadata enable one provisioned Starfiniti test user then observe.
         rollback: Disable the tenant source in Loyalty and Authentik retain local owner access and preserve immutable configuration history.
         verification:
-          - Authentik sandbox OIDC SAML issuer audience subject mapping replay disable outage and cross-tenant login tests
+          - Authentik sandbox OIDC SAML issuer audience subject mapping replay disable outage entitlement and cross-tenant login tests plus controlled DNS rebinding denial
         docs:
           - docs/architecture/ADR/0053-per-organization-authentik-federation-with-database-authoritative-membership.md
         evidence:
           - docs/plan/evidence/M13/README.md
           - official Authentik and Supabase documentation reviewed 2026-08-26; chosen topology avoids direct Supabase SAML and Authentik Enterprise Source Stage dependency
+          - adversarial review added database-authoritative entitlement enforcement one-active-source serialization mutation-side ambiguity and owner-only delayed recovery for interrupted orchestration
       - id: M13-S04-SCIM-PROVISIONING
         status: planned
         dependencies: [M13-S03-TENANT-FEDERATION]

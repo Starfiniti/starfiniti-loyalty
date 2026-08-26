@@ -474,6 +474,7 @@ export const organizationFederationActionV1 = z.enum([
   "disable",
   "rotate_secret",
   "retire",
+  "recover",
 ]);
 
 export const organizationFederationSourceCommandV1 = z
@@ -558,6 +559,9 @@ export const organizationFederationSourceReadV1 = z
     configuration: organizationFederationSourceConfigurationV1,
     hasClientSecret: z.boolean(),
     validation: organizationFederationValidationEvidenceV1.nullable(),
+    pendingAction: z
+      .enum(["enable", "disable", "rotate_secret", "retire"])
+      .nullable(),
     lastOutcome: z
       .enum(["none", "succeeded", "failed", "ambiguous"])
       .default("none"),
@@ -584,6 +588,13 @@ export const organizationFederationSourceReadV1 = z
         message: "source protocol must match configuration and validation",
       });
     }
+    if (source.pendingAction !== null && source.status === "retired") {
+      context.addIssue({
+        code: "custom",
+        path: ["pendingAction"],
+        message: "retired sources cannot retain a pending action",
+      });
+    }
   });
 
 export const organizationFederationWorkspaceV1 = z
@@ -599,6 +610,7 @@ export const organizationFederationWorkspaceV1 = z
       .strict(),
     currentRole: organizationMembershipRoleV1,
     mayConfigure: z.boolean(),
+    entitlementEnabled: z.boolean(),
     localPasswordRecoveryAvailable: z.boolean(),
     sources: z.array(organizationFederationSourceReadV1).max(5),
   })

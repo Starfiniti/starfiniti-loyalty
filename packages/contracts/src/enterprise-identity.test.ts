@@ -9,6 +9,7 @@ import {
   organizationLifecycleCommandV1,
   organizationMemberCommandV1,
   organizationFederationLoginV1,
+  organizationFederationWorkspaceV1,
   organizationFederationSourceCommandV1,
   organizationFederationSourceReadV1,
   organizationFederationValidationEvidenceV1,
@@ -469,11 +470,48 @@ describe("enterprise identity contracts", () => {
         },
         hasClientSecret: true,
         validation: evidence,
+        pendingAction: null,
         lastOutcome: "succeeded",
         createdAt: "2026-08-26T11:00:00.000Z",
         updatedAt: "2026-08-26T12:00:00.000Z",
       }).success,
     ).toBe(true);
+
+    expect(
+      organizationFederationSourceCommandV1.safeParse({
+        version: "1",
+        organizationId: workspace.organization.id,
+        sourceId: "bf2247d8-893e-49ae-8363-8423928e9cd5",
+        expectedRevision: 3,
+        action: "recover",
+        clientSecretSha256: null,
+        reason: "Recover an interrupted external identity operation.",
+        idempotencyKey: "federation:recover:case-1",
+        correlationId: "bf2247d8-893e-49ae-8363-8423928e9cd6",
+      }).success,
+    ).toBe(true);
+
+    expect(
+      organizationFederationWorkspaceV1.safeParse({
+        schemaVersion: "1",
+        organization: workspace.organization,
+        currentRole: "owner",
+        mayConfigure: true,
+        entitlementEnabled: false,
+        localPasswordRecoveryAvailable: true,
+        sources: [],
+      }).success,
+    ).toBe(true);
+    expect(
+      organizationFederationWorkspaceV1.safeParse({
+        schemaVersion: "1",
+        organization: workspace.organization,
+        currentRole: "owner",
+        mayConfigure: true,
+        localPasswordRecoveryAvailable: true,
+        sources: [],
+      }).success,
+    ).toBe(false);
   });
 
   it("allows only opaque custom provider discovery", () => {

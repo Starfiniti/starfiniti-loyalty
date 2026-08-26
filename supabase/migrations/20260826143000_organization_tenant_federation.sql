@@ -294,6 +294,34 @@ revoke all on function loyalty_private.organization_has_local_owner_recovery_v1(
 grant execute on function loyalty_private.organization_has_local_owner_recovery_v1(bigint)
   to loyalty_owner;
 
+create or replace function loyalty_private.organization_federation_entitlement_enabled_v1(
+  target_organization_id bigint
+)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+set statement_timeout = '5s'
+as $$
+  select entitlement.enabled
+  from loyalty.organizations as organization
+  cross join lateral loyalty_private.resolve_organization_entitlement(
+    organization.id,
+    'enterprise.identity',
+    organization.public_id::text,
+    statement_timestamp()
+  ) as entitlement
+  where organization.id = target_organization_id;
+$$;
+
+alter function loyalty_private.organization_federation_entitlement_enabled_v1(bigint)
+  owner to loyalty_owner;
+revoke all on function loyalty_private.organization_federation_entitlement_enabled_v1(bigint)
+  from public, anon, authenticated, loyalty_runtime, loyalty_worker;
+grant execute on function loyalty_private.organization_federation_entitlement_enabled_v1(bigint)
+  to loyalty_owner;
+
 create or replace function loyalty_private.prepare_organization_federation_source_v1(
   target_actor_user_id uuid,
   target_organization_public_id uuid,
@@ -424,6 +452,13 @@ begin
       existing_source.supabase_provider_identifier,
       encode(existing_source.configuration_sha256, 'hex');
     return;
+  end if;
+
+  if not loyalty_private.organization_federation_entitlement_enabled_v1(
+    organization_row.id
+  ) then
+    raise exception using errcode = '42501',
+      message = 'enterprise identity entitlement not enabled';
   end if;
 
   if (
@@ -779,6 +814,27 @@ begin
     return;
   end if;
 
+  if require_active
+     and not loyalty_private.organization_federation_entitlement_enabled_v1(
+       organization_row.id
+     ) then
+    raise exception using errcode = '42501',
+      message = 'enterprise identity entitlement not enabled';
+  end if;
+  if target_action = 'enable' and exists (
+    select 1
+    from loyalty.organization_federation_sources as other_source
+    where other_source.organization_id = organization_row.id
+      and other_source.id <> source_row.id
+      and (
+        other_source.status in ('enabled', 'review_required')
+        or other_source.pending_action is not null
+      )
+  ) then
+    raise exception using errcode = '23514',
+      message = 'another federation source requires disablement or review';
+  end if;
+
   if source_row.lifecycle_revision <> target_expected_revision
      or source_row.pending_action is not null
      or source_row.status = 'retired'
@@ -851,6 +907,145 @@ begin
 
   return query select source_row.public_id, 'updated'::text,
     next_revision, next_status;
+end;
+$$;
+
+create or replace function loyalty_private.recover_organization_federation_pending_v1(
+  target_actor_user_id uuid,
+  target_organization_public_id uuid,
+  target_source_public_id uuid,
+  target_expected_revision bigint,
+  target_reason text,
+  target_idempotency_key text,
+  target_correlation_id uuid
+)
+returns table (source_public_id uuid, outcome text, revision bigint, status text)
+language plpgsql
+security definer
+set search_path = ''
+set statement_timeout = '5s'
+as $$
+declare
+  organization_row loyalty.organizations%rowtype;
+  source_row loyalty.organization_federation_sources%rowtype;
+  existing_audit loyalty.admin_audit_events%rowtype;
+  request_hash bytea;
+  next_revision bigint;
+begin
+  if target_actor_user_id is null
+     or target_organization_public_id is null
+     or target_source_public_id is null
+     or target_expected_revision is null or target_expected_revision < 1
+     or target_reason is null
+     or target_reason <> btrim(target_reason)
+     or length(target_reason) not between 8 and 500
+     or target_reason ~ '[[:cntrl:]]'
+     or target_idempotency_key is null
+     or target_idempotency_key <> btrim(target_idempotency_key)
+     or length(target_idempotency_key) not between 1 and 255
+     or target_correlation_id is null then
+    raise exception using errcode = '22023', message = 'invalid federation recovery command';
+  end if;
+
+  select organization.* into organization_row
+  from loyalty.organizations as organization
+  where organization.public_id = target_organization_public_id
+  for update;
+  select source.* into source_row
+  from loyalty.organization_federation_sources as source
+  where source.public_id = target_source_public_id
+    and source.organization_id = organization_row.id
+  for update;
+  if organization_row.id is null
+     or source_row.id is null
+     or not exists (
+       select 1
+       from loyalty.organization_memberships as membership
+       where membership.organization_id = organization_row.id
+         and membership.user_id = target_actor_user_id
+         and membership.role = 'owner'
+         and membership.revoked_at is null
+     ) then
+    raise exception using errcode = '42501', message = 'federation recovery not authorized';
+  end if;
+
+  request_hash := extensions.digest(convert_to(jsonb_build_object(
+    'organization', target_organization_public_id,
+    'source', target_source_public_id,
+    'expectedRevision', target_expected_revision,
+    'reason', target_reason
+  )::text, 'UTF8'), 'sha256');
+  select audit.* into existing_audit
+  from loyalty.admin_audit_events as audit
+  where audit.organization_id = organization_row.id
+    and audit.idempotency_key = target_idempotency_key;
+  if found then
+    if existing_audit.action <> 'federation.recover'
+       or existing_audit.resource_public_id <> target_source_public_id
+       or existing_audit.actor_user_id <> target_actor_user_id
+       or existing_audit.request_sha256 <> request_hash
+       or existing_audit.correlation_id <> target_correlation_id then
+      raise exception using errcode = '23514', message = 'federation command idempotency conflict';
+    end if;
+    return query select source_row.public_id, 'duplicate'::text,
+      source_row.lifecycle_revision, source_row.status;
+    return;
+  end if;
+
+  if source_row.lifecycle_revision <> target_expected_revision
+     or source_row.pending_action is null
+     or source_row.updated_at > statement_timestamp() - interval '5 minutes' then
+    raise exception using errcode = '40001', message = 'federation recovery window not reached';
+  end if;
+
+  next_revision := source_row.lifecycle_revision + 1;
+  perform set_config('loyalty.federation_command', 'on', true);
+  update loyalty.organization_federation_sources
+  set status = 'review_required',
+      lifecycle_revision = next_revision,
+      pending_action = null,
+      pending_actor_user_id = null,
+      pending_correlation_id = null,
+      pending_upstream_secret_sha256 = null,
+      external_outcome = 'ambiguous',
+      external_detail_code = 'orchestration_interrupted',
+      updated_by_user_id = target_actor_user_id,
+      updated_at = clock_timestamp()
+  where id = source_row.id;
+
+  insert into loyalty.organization_federation_source_revisions (
+    organization_id, source_id, revision, action, status,
+    configuration_sha256, document_sha256, upstream_secret_sha256,
+    broker_secret_sha256, external_outcome, actor_user_id,
+    idempotency_key, request_sha256, correlation_id
+  ) values (
+    organization_row.id, source_row.id, next_revision,
+    'federation.recover', 'review_required',
+    source_row.configuration_sha256, source_row.document_sha256,
+    source_row.upstream_secret_sha256, source_row.broker_secret_sha256,
+    'ambiguous', target_actor_user_id, target_idempotency_key,
+    request_hash, target_correlation_id
+  );
+
+  insert into loyalty.admin_audit_events (
+    organization_id, actor_user_id, action, resource_type,
+    resource_public_id, idempotency_key, request_sha256, correlation_id, metadata
+  ) values (
+    organization_row.id, target_actor_user_id, 'federation.recover',
+    'organization_federation_source', source_row.public_id,
+    target_idempotency_key, request_hash, target_correlation_id,
+    jsonb_build_object(
+      'revision', next_revision,
+      'status', 'review_required',
+      'interruptedAction', source_row.pending_action,
+      'externalOutcome', 'ambiguous',
+      'externalDetailCode', 'orchestration_interrupted',
+      'reason', target_reason
+    )
+  );
+
+  return query select source_row.public_id, 'updated'::text,
+    next_revision, 'review_required'::text;
 end;
 $$;
 
@@ -1023,6 +1218,69 @@ begin
 end;
 $$;
 
+create or replace function loyalty_private.organization_federation_orchestration_v1(
+  target_actor_user_id uuid,
+  target_organization_public_id uuid,
+  target_source_public_id uuid
+)
+returns table (
+  source_public_id uuid,
+  protocol text,
+  status text,
+  lifecycle_revision bigint,
+  authentik_source_slug text,
+  supabase_provider_identifier text,
+  pending_action text,
+  configuration_sha256 text,
+  configuration jsonb,
+  validation_evidence jsonb
+)
+language sql
+stable
+security definer
+set search_path = ''
+set statement_timeout = '5s'
+as $$
+  select source.public_id, source.protocol, source.status,
+    source.lifecycle_revision, source.authentik_source_slug,
+    source.supabase_provider_identifier, source.pending_action,
+    encode(source.configuration_sha256, 'hex'),
+    case when source.protocol = 'oidc'
+      then jsonb_build_object(
+        'protocol', 'oidc',
+        'discoveryUrl', source.discovery_url,
+        'clientId', source.client_id
+      )
+      else jsonb_build_object(
+        'protocol', 'saml',
+        'metadataUrl', source.metadata_url,
+        'expectedEntityId', source.expected_entity_id
+      )
+    end,
+    case when source.validated_at is null then null else jsonb_build_object(
+      'schemaVersion', '1',
+      'protocol', source.protocol,
+      'configurationSha256', encode(source.configuration_sha256, 'hex'),
+      'documentSha256', encode(source.document_sha256, 'hex'),
+      'issuer', source.validated_issuer,
+      'authorizationEndpoint', source.authorization_endpoint,
+      'tokenEndpoint', source.token_endpoint,
+      'jwksUri', source.jwks_uri,
+      'ssoEndpoint', source.saml_sso_endpoint,
+      'signingFingerprints', source.signing_fingerprints,
+      'validatedAt', source.validated_at
+    ) end
+  from loyalty.organizations as organization
+  join loyalty.organization_federation_sources as source
+    on source.organization_id = organization.id
+  where target_actor_user_id is not null
+    and organization.public_id = target_organization_public_id
+    and source.public_id = target_source_public_id
+    and loyalty_private.federation_actor_can_configure_v1(
+      target_actor_user_id, organization.id, false
+    );
+$$;
+
 create or replace function loyalty.organization_federation_workspace_v1(
   target_organization_public_id uuid
 )
@@ -1083,6 +1341,7 @@ begin
         'signingFingerprints', source.signing_fingerprints,
         'validatedAt', source.validated_at
       ) end,
+    'pendingAction', source.pending_action,
     'lastOutcome', source.external_outcome,
     'createdAt', source.created_at,
     'updatedAt', source.updated_at
@@ -1107,6 +1366,8 @@ begin
     'currentRole', membership_row.role,
     'mayConfigure', organization_row.status = 'active'
       and membership_row.role in ('owner', 'admin'),
+    'entitlementEnabled',
+      loyalty_private.organization_federation_entitlement_enabled_v1(organization_row.id),
     'localPasswordRecoveryAvailable',
       loyalty_private.organization_has_local_owner_recovery_v1(organization_row.id),
     'sources', source_documents
@@ -1150,8 +1411,14 @@ alter function loyalty_private.record_organization_federation_validation_v1(
 alter function loyalty_private.begin_organization_federation_action_v1(
   uuid, uuid, uuid, bigint, text, text, text, text, uuid
 ) owner to loyalty_owner;
+alter function loyalty_private.recover_organization_federation_pending_v1(
+  uuid, uuid, uuid, bigint, text, text, uuid
+) owner to loyalty_owner;
 alter function loyalty_private.complete_organization_federation_action_v1(
   uuid, uuid, bigint, text, text, text, text, text, uuid
+) owner to loyalty_owner;
+alter function loyalty_private.organization_federation_orchestration_v1(
+  uuid, uuid, uuid
 ) owner to loyalty_owner;
 alter function loyalty.organization_federation_workspace_v1(uuid)
   owner to loyalty_owner;
@@ -1168,8 +1435,14 @@ revoke all on function loyalty_private.record_organization_federation_validation
 revoke all on function loyalty_private.begin_organization_federation_action_v1(
   uuid, uuid, uuid, bigint, text, text, text, text, uuid
 ) from public, anon, authenticated, loyalty_runtime, loyalty_worker;
+revoke all on function loyalty_private.recover_organization_federation_pending_v1(
+  uuid, uuid, uuid, bigint, text, text, uuid
+) from public, anon, authenticated, loyalty_runtime, loyalty_worker;
 revoke all on function loyalty_private.complete_organization_federation_action_v1(
   uuid, uuid, bigint, text, text, text, text, text, uuid
+) from public, anon, authenticated, loyalty_runtime, loyalty_worker;
+revoke all on function loyalty_private.organization_federation_orchestration_v1(
+  uuid, uuid, uuid
 ) from public, anon, authenticated, loyalty_runtime, loyalty_worker;
 revoke all on function loyalty.organization_federation_workspace_v1(uuid)
   from public, anon, authenticated, loyalty_runtime, loyalty_worker;
@@ -1186,8 +1459,14 @@ grant execute on function loyalty_private.record_organization_federation_validat
 grant execute on function loyalty_private.begin_organization_federation_action_v1(
   uuid, uuid, uuid, bigint, text, text, text, text, uuid
 ) to loyalty_runtime;
+grant execute on function loyalty_private.recover_organization_federation_pending_v1(
+  uuid, uuid, uuid, bigint, text, text, uuid
+) to loyalty_runtime;
 grant execute on function loyalty_private.complete_organization_federation_action_v1(
   uuid, uuid, bigint, text, text, text, text, text, uuid
+) to loyalty_runtime;
+grant execute on function loyalty_private.organization_federation_orchestration_v1(
+  uuid, uuid, uuid
 ) to loyalty_runtime;
 grant execute on function loyalty.organization_federation_workspace_v1(uuid)
   to authenticated;
@@ -1196,3 +1475,9 @@ grant execute on function loyalty.resolve_organization_federation_login_v1(text)
 
 comment on function loyalty_private.organization_has_local_owner_recovery_v1(bigint) is
   'Migration-admin-owned narrow Auth bridge proving one active owner has a local password; callers receive only a boolean and runtime roles cannot execute it directly.';
+comment on function loyalty_private.organization_federation_entitlement_enabled_v1(bigint) is
+  'Database-authoritative enterprise.identity decision for new federation configuration, enablement, rotation, and merchant rollout visibility; existing login and recovery paths do not depend on it.';
+comment on function loyalty_private.recover_organization_federation_pending_v1(uuid, uuid, uuid, bigint, text, text, uuid) is
+  'Owner-only delayed recovery for an interrupted external federation orchestration; records an immutable ambiguous outcome, clears no confirmed secret, and exposes no login provider.';
+comment on function loyalty_private.organization_federation_orchestration_v1(uuid, uuid, uuid) is
+  'Trusted runtime projection of opaque external selectors, public source configuration, and exact revalidation evidence after a live owner/admin membership check; returns no secret, identity claim, email, domain, or group.';
