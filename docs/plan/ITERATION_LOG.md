@@ -1,5 +1,13 @@
 # Iteration Log
 
+## 2026-08-27 — M14 billing authority and self-hosted independence
+
+- Accepted ADR-0056: managed commercial state is an append-only normalized PostgreSQL mirror, while database entitlements and protected loyalty paths remain authoritative. Live Stripe reads and a mutable latest-subscription row were rejected because provider outage, disorder, or a late event must not become product authorization.
+- Added strict `BillingSummaryV1`, private account/state evidence, a live-membership minimized projection, deterministic event-time ordering, provider-event replay fencing independent from caller idempotency keys, and a structural return before provider construction in self-hosted mode.
+- Added the real English Billing & plan route to the existing merchant shell. It explains deployment, commercial state, new-configuration availability, the six permanent safeguards, and disabled provider controls without exposing fake checkout or portal actions.
+- Added 59 focused pgTAP assertions and a seventeenth two-session concurrency probe for grants, RLS, claims, revocation, exact/changed request and event replay, delayed evidence, immutability, tenant isolation, and zero ledger effects. Targeted lint, workspace tests/typechecks, client, workflow, entitlement, architecture, accessibility, and static database gates pass locally; clean Linux database replay and image/runtime gates are active on draft PR #46.
+- Production and the global self-hosted mode are unchanged. No Stripe package, credential, request, Price ID, customer, subscription, checkout, portal, webhook endpoint, metering, payment/card record, or billing enforcement was introduced.
+
 ## 2026-08-26 — M13 fail-closed enterprise identity canary gate
 
 - Added the exact-schema 50-check M13 production manifest and validator to the root repository gate. Completion requires every check, exact release/commit evidence, operator access, enterprise-identity and canary approval, a 90/100 module score, and at least 80% of every weighted category.
