@@ -131,6 +131,7 @@ try {
 
   const approvalIdempotencyKey = `agency-race:approve:${suffix}`;
   const approvalCorrelationId = randomUUID();
+  const approvalExpiresAt = new Date(Date.now() + 60 * 60 * 1000);
   const approve = (sql) =>
     asSubject(
       sql,
@@ -139,7 +140,7 @@ try {
         select * from loyalty.resolve_support_access_request_command_v1(
           ${fixture.client.public_id}, ${supportRequest.resource_public_id},
           1, 'approve', array['organization.summary.read']::text[],
-          statement_timestamp() + interval '1 hour',
+          ${approvalExpiresAt},
           'Owner approved the narrowed concurrent support request.',
           ${approvalIdempotencyKey}, ${approvalCorrelationId}
         )
