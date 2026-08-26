@@ -341,6 +341,9 @@ select results_eq(
   array['duplicate'::text],
   'exact correction retry is idempotent'
 );
+
+reset role;
+
 select throws_ok(
   $$ update loyalty.migration_import_items set source_row_ref = 'changed' $$,
   '55000', 'immutable loyalty history cannot be changed',
@@ -352,6 +355,7 @@ select throws_ok(
   'migration batches cannot be deleted'
 );
 
+set local role authenticated;
 set local request.jwt.claim.sub = '83000000-0000-4000-8000-000000000002';
 select throws_ok(
   $$ select * from loyalty.apply_migration_opening_balance_v1(
