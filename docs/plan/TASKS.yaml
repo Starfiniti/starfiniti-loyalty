@@ -2567,7 +2567,7 @@ tasks:
           - docs/architecture/ADR/0056-database-authoritative-managed-billing-mirror.md
           - docs/plan/evidence/M14/README.md
       - id: M14-S02-STRIPE-WEBHOOK-INBOX
-        status: in_progress
+        status: complete
         dependencies: [M14-S01-BILLING-AUTHORITY-AND-SELF-HOSTED-INDEPENDENCE]
         hypothesis: Raw-body signature verification plus a durable idempotent inbox can absorb duplicate delayed and out-of-order Stripe events safely.
         metrics:
@@ -2607,8 +2607,9 @@ tasks:
           - docs/api/BILLING.md
           - docs/operations/STRIPE_BILLING.md
           - docs/plan/evidence/M14/README.md
+          - exact-head run 33024281886 at 5b7ff263274fb609b8fd4b7989583da0915027d4 passes all seven jobs including clean 77-migration replay all 64 pgTAP files with 3477 assertions all 18 concurrency probes both production images and all four WooCommerce runtimes
       - id: M14-S03-CHECKOUT-PORTAL-AND-SUBSCRIPTION-LIFECYCLE
-        status: planned
+        status: in_progress
         dependencies: [M14-S02-STRIPE-WEBHOOK-INBOX]
         hypothesis: Auth-derived server-created Checkout and short-lived Portal sessions let managed owners administer billing without exposing provider authority.
         metrics:
