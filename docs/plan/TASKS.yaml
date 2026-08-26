@@ -2034,7 +2034,7 @@ tasks:
           - adversarial review removed evidence digests from row/identity equality authority and requires apply_default expiry even for zero-balance WPLoyalty and WooRewards exports
           - exact-head CI run 32943614310 at ba18b7d passed all seven jobs including root checks clean 69-migration replay 56 pgTAP files 3011 assertions 13 concurrency probes both images and four WooCommerce runtimes
       - id: M12-S04-YITH-AND-FORMAT-CHANGE-GATES
-        status: in_progress
+        status: complete
         hypothesis: Fixture fingerprints and explicit adapter versions can fail closed when a vendor publishes no stable export schema or changes it.
         baseline: S03 has three exact adapter implementations but no machine-readable support registry fixture provenance digest or common refusal contract for unavailable and changed formats.
         owner_inputs:
@@ -2068,10 +2068,27 @@ tasks:
         docs:
           - docs/architecture/ADR/0049-versioned-migration-adapter-registry.md
           - docs/integrations/MIGRATIONS.md
+        evidence:
+          - a strict four-source registry covers every canonical source once and gives supported entries exact immutable ID version fixture provenance expiry requirement and parser limits
+          - the domain root exposes only the registry-backed execution choke point while raw parser functions remain module-internal
+          - six focused registry tests prove exact selection all three allowlisted refusal reasons LF-normalized reference-fixture drift legitimate non-fixture merchant exports side-channel rejection and YITH refusal without hashing decoding or context validation
+          - exact-head CI run 32945462821 at 7e0c755 passed all seven jobs including root checks clean 69-migration replay 56 pgTAP files 3011 assertions 13 concurrency probes both images and four WooCommerce runtimes
       - id: M12-S05-MERCHANT-WORKFLOW-AND-RECONCILIATION
-        status: planned
+        status: in_progress
         hypothesis: A guided review workflow with exact mappings totals errors and before/after reports can make high-risk migrations understandable and operable.
+        baseline: Canonical parsing dry-run receipts opening-balance application correction and source selection exist as contracts/domain/database primitives but there is no Auth-scoped merchant workflow projection upload session approval surface progress or reconciliation report.
         owner_inputs: []
+        metrics:
+          - workflow commands accepting browser tenant actor wallet ledger or points authority = 0
+          - approved applications with unresolved or stale mapping evidence = 0
+          - progress states detached from immutable receipt/batch evidence = 0
+          - before/after customer balance expiry or liability differences unexplained = 0
+          - critical responsive accessibility privacy or recovery findings = 0
+        targets:
+          - one Auth-scoped workflow connects source selection bounded ephemeral parsing mapping dry run exact approval application progress correction and reports
+          - every approval shows receipt-bound row matched/create/unresolved available/pending/expiry/liability evidence and requires explicit confirmation
+          - database projection derives live organization actor programme and membership authority and exposes only minimized tenant-scoped history/report data
+          - worker restart and idempotent retry resume from immutable receipts/batches without replaying value
         acceptance:
           - upload source mapping dry run errors approval progress correction and reports are complete owner/admin tasks
           - approval displays exact row/matched/create/unresolved counts points expiry and liability impact bound to one database receipt
@@ -2081,6 +2098,12 @@ tasks:
           - UI claims approval while unresolved rows remain
           - totals are rounded hidden stale or detached from receipt
           - worker failure strands an ambiguous partially applied batch
+          - raw source files or identity values enter durable storage logs URLs analytics or error exports
+        security_boundaries:
+          - upload bytes remain request-local and are discarded after bounded adapter execution
+          - browser commands carry only public resource selectors receipt hashes idempotency keys correlation IDs and explicit non-email mapping choices
+          - PostgreSQL independently derives tenant actor customer wallet programme value and current approval authority under RLS
+          - history progress and reports remain readable after feature disablement while new application stays server-flagged and default off
         rollout: Expose read-only history then guided dry run and finally approved application for Starfiniti.
         rollback: Disable new uploads/approvals preserve history and continue reconciliation/correction access.
         verification:

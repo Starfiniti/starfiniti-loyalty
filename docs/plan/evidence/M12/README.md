@@ -1,6 +1,6 @@
 # M12 Evidence — Migration framework
 
-Status: M12-S01 through M12-S03 are exact-head green and complete on `codex/m12-migration`. M12-S04 format-version/refusal gates are active. There is no production enablement or imported production value.
+Status: M12-S01 through M12-S04 are exact-head green and complete on `codex/m12-migration`. M12-S05 merchant workflow and reconciliation are active. There is no production enablement or imported production value.
 
 ## M12-S01 canonical format and value-free dry run
 
@@ -33,8 +33,15 @@ Status: M12-S01 through M12-S03 are exact-head green and complete on `codex/m12-
 - Verification: ten focused domain tests plus twelve migration-contract tests cover deterministic reruns, grouped lot ordering/reconciliation, exact headers/properties, duplicate properties/identities/lots, changed ordering/case, invalid/numeric/nested JSON, BOM/UTF-8/line endings, bigint and file/row/issue bounds, formula injection, safe CSV export, forged context, and raw-value absence.
 - Exact-head evidence: [CI run 32943614310](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/32943614310) at `ba18b7db7016dc752e1adf2b85cd975a6fe0e970` passed all seven jobs: root checks, secret/audit/licence/package gates, both production images, clean replay of all 69 migrations, all 56 pgTAP files/3,011 assertions, all 13 concurrency probes, and minimum/current WooCommerce in HPOS/legacy modes.
 
+## M12-S04 source support, version, and refusal gate
+
+- Decision: ADR-0049 selects a metadata-only complete source registry and exact source/adapter/version resolution before bytes can reach a parser. Reference fixture digests detect repository drift but never act as merchant-export allowlists.
+- Catalogue: Generic CSV, WPLoyalty, YITH Points and Rewards, and WooRewards appear exactly once. The three supported entries declare immutable IDs/version, evidence/check date, LF-normalized fixture SHA-256, expiry requirement, and byte/row limits. YITH declares `fixture_required` and no parser authority.
+- Execution: the domain root exports the registry-backed dispatcher, not the three raw parser functions. Exact matches dispatch; YITH, unknown well-formed IDs, and changed positive versions return one of three allowlisted refusals with no echoed selector or source content.
+- Adversarial proof: contract tests reject forged source/adapter pairings and refused results carrying parser output. Six focused registry tests prove fixture provenance, exact deterministic selection, all refusal paths, valid non-fixture merchant files, authority/byte side-channel rejection, and YITH refusal without invoking hashes, decode, or context validation.
+- Exact-head evidence: [CI run 32945462821](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/32945462821) at `7e0c755f844292dad273f338bb8e9daae826885a` passed all seven jobs: root checks, secret/audit/licence/package gates, both production images, clean replay of all 69 migrations, all 56 pgTAP files/3,011 assertions, all 13 concurrency probes, and minimum/current WooCommerce in HPOS/legacy modes.
+
 ## Later slices
 
-- M12-S04 (active): machine-readable support/version/refusal gates; YITH plus any changed vendor format only after representative redacted fixtures, with no heuristic production parsing.
-- M12-S05: merchant dry-run/mapping/approval/reconciliation workflow and before/after reports.
+- M12-S05 (active): merchant dry-run/mapping/approval/reconciliation workflow and before/after reports.
 - M12-S06: disabled deployment, canary, rerun, reconciliation, rollback, observation, and score gate.
