@@ -95,6 +95,7 @@ select is_empty(
           'loyalty.get_my_service_accounts_v1(uuid)',
           'loyalty.get_my_cross_workspace_customer_links_v1()',
           'loyalty.get_my_notification_preferences_v1()',
+          'loyalty.get_notification_webhook_endpoints_v1(uuid)',
           'loyalty.get_notification_workspace_v1(uuid,integer)',
           'loyalty.get_programme_group_sharing_policy_v1(uuid)',
           'loyalty.get_my_referral_experiences_v1()',

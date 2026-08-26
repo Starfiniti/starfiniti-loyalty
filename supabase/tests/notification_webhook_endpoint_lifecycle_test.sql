@@ -244,6 +244,7 @@ select results_eq(
      ) $$,
   array['rotated'::text], 'disabled endpoint rotates to one new fingerprint'
 );
+reset role;
 select ok(
   (select previous_secret_expires_at > pg_catalog.clock_timestamp()
    from loyalty_private.notification_webhook_endpoints
@@ -264,6 +265,7 @@ select results_eq(
      where endpoint_id = (select id from loyalty_private.notification_webhook_endpoints where public_id = pg_temp.lifecycle_endpoint()) $$,
   array['created,rotated'::text], 'rotation appends immutable lifecycle evidence'
 );
+set local role loyalty_runtime;
 select results_eq(
   $$ select outcome from loyalty_private.rotate_notification_webhook_endpoint_v1(
        'd1000000-0000-4000-8000-000000000001', pg_temp.lifecycle_endpoint(),
