@@ -16,6 +16,8 @@ publicBaseline:
   login: 200
   authWithoutKey: 401
   restWithoutKey: 401
+  authentikLive: 200
+  authentikReady: 200
   canonicalDns: true
 score:
   total: 90
@@ -81,6 +83,9 @@ checks:
   - id: public_production_baseline
     status: passed
     evidence: Canonical DNS resolves; dashboard health and login return 200, while unauthenticated Supabase Auth and REST roots return 401.
+  - id: authentik_public_baseline
+    status: passed
+    evidence: The canonical Authentik public live and ready probes both return 200; no administration or identity data was requested.
   - id: operator_access
     status: passed
     evidence: The approved s2-root route reached the production Proxmox node read-only and confirmed application VM 970 and database VM 971 running without mutation.

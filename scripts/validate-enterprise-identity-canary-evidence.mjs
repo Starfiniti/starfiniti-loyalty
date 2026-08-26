@@ -22,6 +22,7 @@ const requiredChecks = new Set([
   "checkout_independence_matrix",
   "operations_documentation",
   "public_production_baseline",
+  "authentik_public_baseline",
   "operator_access",
   "approved_release",
   "approved_enterprise_identity_fixture",
@@ -206,6 +207,8 @@ const validateDocument = (candidateEvidence, candidateTasks = tasks) => {
     login: 200,
     authWithoutKey: 401,
     restWithoutKey: 401,
+    authentikLive: 200,
+    authentikReady: 200,
   })) {
     if (candidateEvidence.publicBaseline?.[name] !== expected) {
       fail(`unexpected public baseline ${name}`);

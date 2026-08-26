@@ -2449,7 +2449,7 @@ tasks:
           - zero usable stale membership session endpoint relationship grant or recovery capability after revocation
           - zero unexplained membership source endpoint relationship support audit credential pseudonym ledger checkout or privacy difference
         targets:
-          - all 49 mandatory canary checks pass with minimized non-sensitive evidence
+          - all 50 mandatory canary checks pass with minimized non-sensitive evidence
           - module score reaches at least 90 and every category reaches 80 percent of its weight
           - every deterministic automatic failure remains absent
         owner_inputs:
@@ -2475,7 +2475,7 @@ tasks:
           - npm run enterprise-identity:canary:validate
         evidence:
           - docs/plan/evidence/M13/canary.yaml
-          - 49-check manifest currently records repository public-baseline and operator evidence while release IdP SCIM agency support recovery deletion rollback observation and reconciliation remain pending
+          - 50-check manifest currently records repository public-baseline Authentik-health and operator evidence while release IdP SCIM agency support recovery deletion rollback observation and reconciliation remain pending
 
   - id: M14-MANAGED-BILLING
     title: Add managed Stripe billing and idempotent usage metering
