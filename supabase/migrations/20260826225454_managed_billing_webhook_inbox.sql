@@ -141,7 +141,8 @@ create table loyalty_private.managed_billing_webhook_attempts (
   started_at timestamptz not null,
   completed_at timestamptz not null,
   created_at timestamptz not null default now(),
-  unique (webhook_job_id, attempt_number),
+  constraint managed_billing_webhook_attempts_job_attempt_key
+    unique (webhook_job_id, attempt_number),
   foreign key (organization_id, webhook_job_id)
     references loyalty_private.managed_billing_webhook_jobs(
       organization_id, id
@@ -488,7 +489,8 @@ begin
       case when expired.attempt_count >= 10
         then 'dead_letter' else 'lease_expired' end,
       'billing_webhook_lease_expired', expired.locked_at, checked_at
-    ) on conflict (webhook_job_id, attempt_number) do nothing;
+    ) on conflict on constraint
+      managed_billing_webhook_attempts_job_attempt_key do nothing;
 
     update loyalty_private.managed_billing_webhook_jobs
     set state = case when expired.attempt_count >= 10

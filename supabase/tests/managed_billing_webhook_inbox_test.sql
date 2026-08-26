@@ -452,7 +452,7 @@ select throws_ok(
 reset role;
 select throws_ok(
   $$ update loyalty_private.managed_billing_webhook_events set event_type = 'invoice.paid' $$,
-  '55000', 'immutable evidence cannot be changed',
+  '55000', 'immutable loyalty history cannot be changed',
   'accepted receipt evidence is immutable'
 );
 set local role loyalty_runtime;
@@ -653,7 +653,7 @@ select results_eq(
 reset role;
 select throws_ok(
   $$ update loyalty_private.managed_billing_webhook_attempts set outcome = 'held' $$,
-  '55000', 'immutable evidence cannot be changed',
+  '55000', 'immutable loyalty history cannot be changed',
   'attempt history cannot be rewritten'
 );
 set local role loyalty_worker;
