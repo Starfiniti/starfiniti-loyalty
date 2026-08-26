@@ -422,25 +422,6 @@ begin
     'agencyOrganizationId', target_agency_organization_public_id,
     'tokenSha256', target_token_sha256
   )::text, 'UTF8'), 'sha256');
-  select event.* into event_row
-  from loyalty.organization_agency_events as event
-  where event.organization_id = agency_row.id
-    and event.idempotency_key = target_idempotency_key;
-  if event_row.id is not null then
-    if event_row.action <> 'agency.relationship.accept'
-       or event_row.request_sha256 <> request_hash
-       or event_row.actor_user_id <> request_actor
-       or event_row.correlation_id <> target_correlation_id then
-      raise exception using errcode = '23514', message = 'agency acceptance idempotency conflict';
-    end if;
-    select relationship.* into relationship_row
-    from loyalty.organization_agency_relationships as relationship
-    where relationship.id = event_row.relationship_id;
-    return query select relationship_row.public_id, 'duplicate'::text,
-      relationship_row.lifecycle_revision, relationship_row.status;
-    return;
-  end if;
-
   select invitation.* into invitation_row
   from loyalty.organization_agency_invitations as invitation
   where invitation.token_sha256 = decode(target_token_sha256, 'hex')
@@ -462,6 +443,28 @@ begin
   from loyalty.organizations as organization where organization.id = agency_row.id;
   select organization.* into client_row
   from loyalty.organizations as organization where organization.id = client_row.id;
+  -- The invitation and both organizations serialize acceptance. Re-read the
+  -- idempotency event only after those locks so an exact concurrent retry sees
+  -- the committed first effect and returns the same relationship.
+  select event.* into event_row
+  from loyalty.organization_agency_events as event
+  where event.organization_id = agency_row.id
+    and event.idempotency_key = target_idempotency_key;
+  if event_row.id is not null then
+    if event_row.action <> 'agency.relationship.accept'
+       or event_row.request_sha256 <> request_hash
+       or event_row.actor_user_id <> request_actor
+       or event_row.correlation_id <> target_correlation_id then
+      raise exception using errcode = '23514', message = 'agency acceptance idempotency conflict';
+    end if;
+    select relationship.* into relationship_row
+    from loyalty.organization_agency_relationships as relationship
+    where relationship.id = event_row.relationship_id;
+    return query select relationship_row.public_id, 'duplicate'::text,
+      relationship_row.lifecycle_revision, relationship_row.status;
+    return;
+  end if;
+
   if agency_row.id = client_row.id
      or agency_row.status <> 'active' or agency_row.offboarded_at is not null
      or client_row.status <> 'active' or client_row.offboarded_at is not null
@@ -1302,8 +1305,9 @@ begin
       raise exception using errcode = '23514', message = 'support decision idempotency conflict';
     end if;
     if event_row.grant_id is not null then
-      select grant.* into grant_row
-      from loyalty.support_access_grants as grant where grant.id = event_row.grant_id;
+      select access_grant.* into grant_row
+      from loyalty.support_access_grants as access_grant
+      where access_grant.id = event_row.grant_id;
       return query select grant_row.public_id, 'duplicate'::text,
         grant_row.lifecycle_revision, case when grant_row.revoked_at is null
           then 'active' else 'revoked' end;
@@ -1431,11 +1435,11 @@ begin
      ) then
     raise exception using errcode = '42501', message = 'support grant revocation not authorized';
   end if;
-  select grant.* into grant_row
-  from loyalty.support_access_grants as grant
-  where grant.organization_id = client_row.id
-    and grant.public_id = target_grant_public_id
-    and grant.grant_version = '1'
+  select access_grant.* into grant_row
+  from loyalty.support_access_grants as access_grant
+  where access_grant.organization_id = client_row.id
+    and access_grant.public_id = target_grant_public_id
+    and access_grant.grant_version = '1'
   for update;
   if grant_row.id is null then
     raise exception using errcode = '42501', message = 'support grant revocation not authorized';
@@ -1471,12 +1475,12 @@ begin
   end if;
 
   perform set_config('loyalty.support_command', 'on', true);
-  update loyalty.support_access_grants as grant
+  update loyalty.support_access_grants as access_grant
   set revoked_at = revoked_time, revoked_by_user_id = request_actor,
     revocation_reason = target_reason,
-    lifecycle_revision = grant.lifecycle_revision + 1,
+    lifecycle_revision = access_grant.lifecycle_revision + 1,
     updated_at = revoked_time
-  where grant.id = grant_row.id returning * into grant_row;
+  where access_grant.id = grant_row.id returning * into grant_row;
   update loyalty.organization_support_access_requests as request
   set status = 'revoked', decision_reason = target_reason,
     resolved_by_user_id = request_actor, resolved_at = revoked_time,
@@ -1516,23 +1520,25 @@ begin
   perform set_config('loyalty.support_command', 'on', true);
   for request_row in
     select request.id, request.public_id, request.status,
-      request.lifecycle_revision, grant.id as grant_id
+      request.lifecycle_revision, access_grant.id as grant_id
     from loyalty.organization_support_access_requests as request
-    left join loyalty.support_access_grants as grant
-      on grant.request_id = request.id and grant.grant_version = '1'
+    left join loyalty.support_access_grants as access_grant
+      on access_grant.request_id = request.id
+     and access_grant.grant_version = '1'
     where request.relationship_id = new.id
       and request.status in ('pending', 'approved')
     order by request.id
     for update of request
   loop
     if request_row.grant_id is not null then
-      update loyalty.support_access_grants as grant
+      update loyalty.support_access_grants as access_grant
       set revoked_at = revoked_time,
         revoked_by_user_id = new.revoked_by_user_id,
         revocation_reason = reason_text,
-        lifecycle_revision = grant.lifecycle_revision + 1,
+        lifecycle_revision = access_grant.lifecycle_revision + 1,
         updated_at = revoked_time
-      where grant.id = request_row.grant_id and grant.revoked_at is null;
+      where access_grant.id = request_row.grant_id
+        and access_grant.revoked_at is null;
     end if;
     update loyalty.organization_support_access_requests as request
     set status = 'revoked', decision_reason = reason_text,
@@ -1624,8 +1630,8 @@ begin
         'status', case
           when request.status = 'pending'
             and request.requested_expires_at <= statement_timestamp() then 'expired'
-          when request.status = 'approved' and grant.revoked_at is not null then 'revoked'
-          when request.status = 'approved' and grant.expires_at <= statement_timestamp() then 'expired'
+          when request.status = 'approved' and access_grant.revoked_at is not null then 'revoked'
+          when request.status = 'approved' and access_grant.expires_at <= statement_timestamp() then 'expired'
           else request.status end,
         'revision', request.lifecycle_revision,
         'requestedExpiresAt', request.requested_expires_at,
@@ -1653,30 +1659,31 @@ begin
       left join loyalty.organization_memberships as requester
         on requester.organization_id = request.agency_organization_id
        and requester.user_id = request.support_user_id
-      left join loyalty.support_access_grants as grant
-        on grant.request_id = request.id and grant.grant_version = '1'
+      left join loyalty.support_access_grants as access_grant
+        on access_grant.request_id = request.id
+       and access_grant.grant_version = '1'
     ), '[]'::jsonb),
     'grants', coalesce((
       select jsonb_agg(jsonb_build_object(
-        'id', grant.public_id,
+        'id', access_grant.public_id,
         'supportLabel', requester.display_label,
         'agencyName', agency.name,
-        'scopes', grant.scopes,
-        'reason', grant.reason,
+        'scopes', access_grant.scopes,
+        'reason', access_grant.reason,
         'status', case
-          when grant.revoked_at is not null then 'revoked'
-          when grant.expires_at <= statement_timestamp() then 'expired'
-          when grant.starts_at > statement_timestamp() then 'scheduled'
+          when access_grant.revoked_at is not null then 'revoked'
+          when access_grant.expires_at <= statement_timestamp() then 'expired'
+          when access_grant.starts_at > statement_timestamp() then 'scheduled'
           else 'active' end,
-        'revision', grant.lifecycle_revision,
-        'startsAt', grant.starts_at,
-        'expiresAt', grant.expires_at,
-        'revokedAt', grant.revoked_at,
+        'revision', access_grant.lifecycle_revision,
+        'startsAt', access_grant.starts_at,
+        'expiresAt', access_grant.expires_at,
+        'revokedAt', access_grant.revoked_at,
         'useCount', (select count(*) from loyalty.support_access_use_events as use
-          where use.grant_id = grant.id),
+          where use.grant_id = access_grant.id),
         'lastUsedAt', (select max(use.created_at) from loyalty.support_access_use_events as use
-          where use.grant_id = grant.id)
-      ) order by grant.created_at desc, grant.id desc)
+          where use.grant_id = access_grant.id)
+      ) order by access_grant.created_at desc, access_grant.id desc)
       from (
         select candidate.*
         from loyalty.support_access_grants as candidate
@@ -1690,20 +1697,20 @@ begin
         )
         order by candidate.created_at desc, candidate.id desc
         limit 200
-      ) as grant
+      ) as access_grant
       join loyalty.organization_support_access_requests as request
-        on request.id = grant.request_id
+        on request.id = access_grant.request_id
       join loyalty.organizations as agency
         on agency.id = request.agency_organization_id
       left join loyalty.organization_memberships as requester
         on requester.organization_id = request.agency_organization_id
-       and requester.user_id = grant.support_user_id
+       and requester.user_id = access_grant.support_user_id
     ), '[]'::jsonb),
     'recentUses', case
       when selected.role in ('owner', 'admin', 'auditor') then coalesce((
         select jsonb_agg(jsonb_build_object(
           'id', use.public_id,
-          'grantId', grant.public_id,
+          'grantId', access_grant.public_id,
           'scopes', use.scopes,
           'surface', use.surface,
           'createdAt', use.created_at
@@ -1715,7 +1722,8 @@ begin
           order by candidate.created_at desc, candidate.id desc
           limit 100
         ) as use
-        join loyalty.support_access_grants as grant on grant.id = use.grant_id
+        join loyalty.support_access_grants as access_grant
+          on access_grant.id = use.grant_id
       ), '[]'::jsonb)
       else '[]'::jsonb end
   );
@@ -1747,10 +1755,10 @@ begin
      or not loyalty_private.request_has_live_auth_session_v1() then
     return;
   end if;
-  select grant.* into grant_row
-  from loyalty.support_access_grants as grant
-  where grant.public_id = target_grant_public_id
-    and grant.grant_version = '1'
+  select access_grant.* into grant_row
+  from loyalty.support_access_grants as access_grant
+  where access_grant.public_id = target_grant_public_id
+    and access_grant.grant_version = '1'
   for update;
   if grant_row.id is null then return; end if;
   select request.* into support_request
@@ -2522,14 +2530,14 @@ begin
   get diagnostics changed_count = row_count;
   counts := counts || jsonb_build_object('agencyInvitations', changed_count);
 
-  update loyalty.support_access_grants as grant
+  update loyalty.support_access_grants as access_grant
   set revoked_at = target_changed_at,
     revoked_by_user_id = target_actor_user_id,
     revocation_reason = target_reason,
-    lifecycle_revision = grant.lifecycle_revision + 1,
+    lifecycle_revision = access_grant.lifecycle_revision + 1,
     updated_at = target_changed_at
-  where grant.organization_id = target_organization_id
-    and grant.revoked_at is null;
+  where access_grant.organization_id = target_organization_id
+    and access_grant.revoked_at is null;
   get diagnostics changed_count = row_count;
   counts := counts || jsonb_build_object('supportGrants', changed_count);
 

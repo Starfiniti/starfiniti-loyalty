@@ -516,7 +516,7 @@ select is_empty(
 );
 reset role;
 
--- 48-73: AAL2 break-glass, export, offboarding, cooling, and deletion.
+-- 48-70: AAL2 break-glass, export, offboarding, cooling, and deletion.
 set local role authenticated;
 set local request.jwt.claim.sub = '9d000000-0000-4000-8000-000000000001';
 set local request.jwt.claims = '{"sub":"9d000000-0000-4000-8000-000000000001","session_id":"9d000000-0000-4000-8000-000000000902","aal":"aal1"}';
