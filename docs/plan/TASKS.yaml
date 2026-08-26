@@ -2265,9 +2265,18 @@ tasks:
           - focused actions 6 of 6 dashboard typecheck lint production build workflow validation secret scan production audit and static validation of 72 migrations and 59 pgTAP files pass locally
           - exact-head Linux run 32966869787 at e02765568b91a316953e5fa53bd0298fb72ff866 passed all seven jobs including root checks both images clean 72-migration replay all 59 pgTAP files with 3128 assertions all 14 concurrency probes and all four WooCommerce runtimes
       - id: M13-S03-TENANT-FEDERATION
-        status: planned
+        status: in_progress
         dependencies: [M13-S02-ORGANIZATION-AND-TEAM-LIFECYCLE]
         hypothesis: Per-organization OIDC or SAML sources brokered through Authentik can authenticate provisioned members without allowing IdP claims to authorize tenants.
+        baseline: Production has one fixed Starfiniti workforce Authentik provider; merchant organizations have no versioned upstream source, discovery or metadata validator, external reconciliation state, public login resolver, or disabled federation administration workflow.
+        metrics:
+          - zero raw client secrets discovery documents JWKS documents SAML metadata assertions email domains or groups retained in Loyalty database audit browser projections or logs
+          - one immutable revision and one external reconciliation outcome for every exact lifecycle command
+          - zero memberships or ledger effects created by federation configuration validation discovery or login resolution
+        targets:
+          - OIDC and SAML validators reject every private reserved redirect oversized malformed unsigned expired or issuer-mismatched input before Authentik provisioning
+          - duplicate and concurrent source commands create one state transition while changed retries fail closed
+          - disabled suspended closed retired cross-tenant and unknown sources never resolve to a login provider
         owner_inputs: [enterprise IdP test tenant]
         acceptance:
           - exact OIDC and SAML configuration revisions secrets lifecycle discovery metadata validation and tested login are audited
@@ -2278,10 +2287,22 @@ tasks:
           - metadata endpoint creates SSRF or unsigned configuration
           - source secret leaks through browser audit or logs
           - disabling federation strands the owner
+          - undocumented or Enterprise-only Authentik source routing makes the open-source deployment incomplete
+          - external timeout is mistaken for successful provisioning or activation
+        security_boundaries:
+          - Supabase issues the application session but PostgreSQL derives live organization membership on every protected request
+          - browser organization selectors and opaque provider IDs choose only a login path and never tenant role or membership
+          - fixed server-side Authentik and Supabase administration origins and mounted credentials cannot be supplied by a merchant
+          - validation fetches pin public DNS answers retain TLS hostname verification reject redirects and store only minimized fingerprints
         rollout: Configure disabled source validate metadata enable one provisioned Starfiniti test user then observe.
         rollback: Disable the tenant source in Loyalty and Authentik retain local owner access and preserve immutable configuration history.
         verification:
           - Authentik sandbox OIDC SAML issuer audience subject mapping replay disable outage and cross-tenant login tests
+        docs:
+          - docs/architecture/ADR/0053-per-organization-authentik-federation-with-database-authoritative-membership.md
+        evidence:
+          - docs/plan/evidence/M13/README.md
+          - official Authentik and Supabase documentation reviewed 2026-08-26; chosen topology avoids direct Supabase SAML and Authentik Enterprise Source Stage dependency
       - id: M13-S04-SCIM-PROVISIONING
         status: planned
         dependencies: [M13-S03-TENANT-FEDERATION]

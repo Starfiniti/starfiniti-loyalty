@@ -3,10 +3,15 @@ import {
   acceptOrganizationInvitationCommandV1,
   createOrganizationCommandV1,
   createOrganizationInvitationCommandV1,
+  createOrganizationFederationSourceCommandV1,
   enterpriseAccessCatalogueV1,
   enterpriseAccessProfileV1,
   organizationLifecycleCommandV1,
   organizationMemberCommandV1,
+  organizationFederationLoginV1,
+  organizationFederationSourceCommandV1,
+  organizationFederationSourceReadV1,
+  organizationFederationValidationEvidenceV1,
   organizationAccessWorkspaceV1,
   organizationTeamWorkspaceV1,
 } from "./enterprise-identity";
@@ -327,6 +332,161 @@ describe("enterprise identity contracts", () => {
       organizationTeamWorkspaceV1.safeParse({
         ...document,
         actorUserId: "bf2247d8-893e-49ae-8363-8423928e9cc8",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("binds OIDC source creation to one write-only secret digest", () => {
+    const command = {
+      version: "1",
+      organizationId: workspace.organization.id,
+      displayName: "Corporate identity",
+      configuration: {
+        protocol: "oidc",
+        discoveryUrl:
+          "https://id.example.test/.well-known/openid-configuration",
+        clientId: "loyalty-production",
+      },
+      clientSecretSha256: "c".repeat(64),
+      idempotencyKey: "federation:create:case-1",
+      correlationId: "bf2247d8-893e-49ae-8363-8423928e9cd1",
+    } as const;
+    expect(
+      createOrganizationFederationSourceCommandV1.safeParse(command).success,
+    ).toBe(true);
+    expect(
+      createOrganizationFederationSourceCommandV1.safeParse({
+        ...command,
+        clientSecret: "must-never-enter-the-command",
+      }).success,
+    ).toBe(false);
+    expect(
+      createOrganizationFederationSourceCommandV1.safeParse({
+        ...command,
+        clientSecretSha256: null,
+      }).success,
+    ).toBe(false);
+  });
+
+  it("keeps SAML configuration secret-free and rejects insecure metadata", () => {
+    const command = {
+      version: "1",
+      organizationId: workspace.organization.id,
+      displayName: "Corporate SAML",
+      configuration: {
+        protocol: "saml",
+        metadataUrl: "https://id.example.test/saml/metadata",
+        expectedEntityId: "https://id.example.test/saml",
+      },
+      clientSecretSha256: null,
+      idempotencyKey: "federation:create:case-2",
+      correlationId: "bf2247d8-893e-49ae-8363-8423928e9cd2",
+    } as const;
+    expect(
+      createOrganizationFederationSourceCommandV1.safeParse(command).success,
+    ).toBe(true);
+    expect(
+      createOrganizationFederationSourceCommandV1.safeParse({
+        ...command,
+        configuration: {
+          ...command.configuration,
+          metadataUrl: "http://169.254.169.254/latest/meta-data",
+        },
+      }).success,
+    ).toBe(false);
+    expect(
+      createOrganizationFederationSourceCommandV1.safeParse({
+        ...command,
+        clientSecretSha256: "d".repeat(64),
+      }).success,
+    ).toBe(false);
+  });
+
+  it("requires exact secret rotation and lifecycle payloads", () => {
+    const command = {
+      version: "1",
+      organizationId: workspace.organization.id,
+      sourceId: "bf2247d8-893e-49ae-8363-8423928e9cd3",
+      expectedRevision: 2,
+      action: "rotate_secret",
+      clientSecretSha256: "e".repeat(64),
+      reason: "Scheduled upstream credential rotation.",
+      idempotencyKey: "federation:rotate:case-1",
+      correlationId: "bf2247d8-893e-49ae-8363-8423928e9cd4",
+    } as const;
+    expect(
+      organizationFederationSourceCommandV1.safeParse(command).success,
+    ).toBe(true);
+    expect(
+      organizationFederationSourceCommandV1.safeParse({
+        ...command,
+        action: "disable",
+      }).success,
+    ).toBe(false);
+    expect(
+      organizationFederationSourceCommandV1.safeParse({
+        ...command,
+        clientSecretSha256: null,
+      }).success,
+    ).toBe(false);
+  });
+
+  it("validates protocol-specific minimized evidence and reads", () => {
+    const evidence = {
+      schemaVersion: "1",
+      protocol: "oidc",
+      configurationSha256: "1".repeat(64),
+      documentSha256: "2".repeat(64),
+      issuer: "https://id.example.test/",
+      authorizationEndpoint: "https://id.example.test/authorize",
+      tokenEndpoint: "https://id.example.test/token",
+      jwksUri: "https://id.example.test/jwks",
+      ssoEndpoint: null,
+      signingFingerprints: ["3".repeat(64)],
+      validatedAt: "2026-08-26T12:00:00.000Z",
+    } as const;
+    expect(
+      organizationFederationValidationEvidenceV1.safeParse(evidence).success,
+    ).toBe(true);
+    expect(
+      organizationFederationValidationEvidenceV1.safeParse({
+        ...evidence,
+        tokenEndpoint: null,
+      }).success,
+    ).toBe(false);
+    expect(
+      organizationFederationSourceReadV1.safeParse({
+        id: "bf2247d8-893e-49ae-8363-8423928e9cd5",
+        displayName: "Corporate identity",
+        protocol: "oidc",
+        status: "validated",
+        revision: 2,
+        configuration: {
+          protocol: "oidc",
+          discoveryUrl:
+            "https://id.example.test/.well-known/openid-configuration",
+          clientId: "loyalty-production",
+        },
+        hasClientSecret: true,
+        validation: evidence,
+        lastOutcome: "succeeded",
+        createdAt: "2026-08-26T11:00:00.000Z",
+        updatedAt: "2026-08-26T12:00:00.000Z",
+      }).success,
+    ).toBe(true);
+  });
+
+  it("allows only opaque custom provider discovery", () => {
+    expect(
+      organizationFederationLoginV1.safeParse({
+        schemaVersion: "1",
+        provider: "custom:loyalty-0123456789abcdefghij",
+      }).success,
+    ).toBe(true);
+    expect(
+      organizationFederationLoginV1.safeParse({
+        schemaVersion: "1",
+        provider: "custom:starfiniti-example.com-admin",
       }).success,
     ).toBe(false);
   });
