@@ -291,6 +291,146 @@ export const canonicalMigrationDocumentV1 = z
     }
   });
 
+export const migrationAdapterIdV1 = z.enum([
+  "generic_csv_v1",
+  "wployalty_csv_v1",
+  "woorewards_json_v1",
+]);
+
+export const migrationAdapterContextV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    exportId: safeReference,
+    exportedAt: timestamp,
+    programmeGroupId: z.uuid(),
+    programmeVersionId: z.uuid(),
+    expiryPolicy: migrationExpiryPolicyV1,
+  })
+  .strict();
+
+export const migrationAdapterIssueCodeV1 = z.enum([
+  "empty_file",
+  "file_too_large",
+  "invalid_utf8",
+  "invalid_line_ending",
+  "invalid_csv",
+  "invalid_json",
+  "unsupported_header",
+  "unsupported_property",
+  "duplicate_property",
+  "too_many_rows",
+  "wrong_column_count",
+  "formula_like_value",
+  "invalid_field",
+  "invalid_points",
+  "duplicate_source_identity",
+  "duplicate_source_row",
+  "conflicting_source_row",
+  "duplicate_lot",
+  "invalid_document",
+]);
+
+export const migrationAdapterIssueFieldV1 = z.enum([
+  "file",
+  "header",
+  "row",
+  "object",
+  "property",
+  "email",
+  "points",
+  "referral_code",
+  "source_row_id",
+  "identity_kind",
+  "identity_value",
+  "available_points",
+  "pending_points",
+  "source_lot_id",
+  "lot_bucket",
+  "lot_points",
+  "available_at",
+  "expires_at",
+  "source_tier_code",
+  "tier_qualified_at",
+  "source_referral_id",
+  "referral_state",
+]);
+
+export const migrationAdapterIssueV1 = z
+  .object({
+    rowNumber: z.number().int().min(1).max(1_000_001),
+    code: migrationAdapterIssueCodeV1,
+    field: migrationAdapterIssueFieldV1,
+  })
+  .strict();
+
+export const migrationAdapterResultV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    adapterId: migrationAdapterIdV1,
+    adapterVersion: z.literal("1"),
+    status: z.enum(["valid", "invalid"]),
+    sourceExportSha256: sha256Hex.nullable(),
+    inputBytes: z.number().int().min(0),
+    physicalRowCount: z.number().int().min(0).max(25_001),
+    rowCount: z.number().int().min(0).max(500),
+    document: canonicalMigrationDocumentV1.nullable(),
+    canonicalDocumentSha256: sha256Hex.nullable(),
+    issueCount: z.number().int().min(0),
+    truncatedIssueCount: z.number().int().min(0),
+    issues: z.array(migrationAdapterIssueV1).max(100),
+  })
+  .strict()
+  .superRefine((result, context) => {
+    if (
+      result.issueCount !==
+      result.issues.length + result.truncatedIssueCount
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["issueCount"],
+        message: "adapter issue counts must reconcile",
+      });
+    }
+    if (
+      result.status === "valid" &&
+      (result.sourceExportSha256 === null ||
+        result.document === null ||
+        result.canonicalDocumentSha256 === null ||
+        result.issueCount !== 0 ||
+        result.rowCount < 1)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["status"],
+        message: "valid adapter results require a canonical document only",
+      });
+    }
+    if (
+      result.status === "invalid" &&
+      (result.document !== null ||
+        result.canonicalDocumentSha256 !== null ||
+        result.issueCount < 1)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["status"],
+        message: "invalid adapter results require minimized issues only",
+      });
+    }
+    if (
+      result.document !== null &&
+      (result.sourceExportSha256 === null ||
+        result.document.source.exportSha256 !== result.sourceExportSha256 ||
+        result.document.rows.length !== result.rowCount)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["document"],
+        message: "adapter result must reconcile to its canonical document",
+      });
+    }
+  });
+
 export const migrationIdentityResolutionV1 = z
   .object({
     sourceRowId: safeReference,
@@ -530,6 +670,18 @@ export const compensateMigrationBatchResultV1 = z
 export type CanonicalMigrationDocumentV1 = z.infer<
   typeof canonicalMigrationDocumentV1
 >;
+export type MigrationAdapterIdV1 = z.infer<typeof migrationAdapterIdV1>;
+export type MigrationAdapterContextV1 = z.infer<
+  typeof migrationAdapterContextV1
+>;
+export type MigrationAdapterIssueCodeV1 = z.infer<
+  typeof migrationAdapterIssueCodeV1
+>;
+export type MigrationAdapterIssueFieldV1 = z.infer<
+  typeof migrationAdapterIssueFieldV1
+>;
+export type MigrationAdapterIssueV1 = z.infer<typeof migrationAdapterIssueV1>;
+export type MigrationAdapterResultV1 = z.infer<typeof migrationAdapterResultV1>;
 export type MigrationIdentityResolutionV1 = z.infer<
   typeof migrationIdentityResolutionV1
 >;

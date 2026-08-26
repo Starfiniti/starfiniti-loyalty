@@ -2022,6 +2022,9 @@ tasks:
           - YITH remains unavailable in S03 because its official documentation does not publish a stable column contract
         rollout: Validate checked-in synthetic and redacted fixtures then canary one source at a time through S01/S02.
         rollback: Disable the affected adapter while keeping canonical validation and prior immutable migration evidence readable.
+        docs:
+          - docs/architecture/ADR/0048-strict-ephemeral-migration-source-adapters.md
+          - docs/integrations/MIGRATIONS.md
         verification:
           - official-format fixtures malformed/oversized/encoding/formula tests and deterministic canonical snapshots
           - privacy logging retention and error-export review

@@ -3,6 +3,8 @@ import {
   applyMigrationOpeningBalanceCommandV1,
   canonicalMigrationDocumentV1,
   compensateMigrationBatchCommandV1,
+  migrationAdapterContextV1,
+  migrationAdapterResultV1,
   migrationDryRunResultV1,
   migrationIdentityResolutionV1,
   recordMigrationDryRunCommandV1,
@@ -35,6 +37,61 @@ const baseDocument = {
 };
 
 describe("migration contracts", () => {
+  it("keeps adapter context versioned and free of tenant or value authority", () => {
+    const context = {
+      schemaVersion: "1",
+      exportId: "source-export-1",
+      exportedAt: "2026-08-26T08:00:00Z",
+      programmeGroupId: baseDocument.programmeGroupId,
+      programmeVersionId: baseDocument.programmeVersionId,
+      expiryPolicy: baseDocument.expiryPolicy,
+    };
+    expect(migrationAdapterContextV1.safeParse(context).success).toBe(true);
+    expect(
+      migrationAdapterContextV1.safeParse({
+        ...context,
+        organizationId: "bf2247d8-893e-49ae-8363-8423928e9cc9",
+        points: "999999",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("requires adapter documents and minimized issue counts to reconcile", () => {
+    const valid = {
+      schemaVersion: "1",
+      adapterId: "wployalty_csv_v1",
+      adapterVersion: "1",
+      status: "valid",
+      sourceExportSha256: baseDocument.source.exportSha256,
+      inputBytes: 42,
+      physicalRowCount: 1,
+      rowCount: 1,
+      document: baseDocument,
+      canonicalDocumentSha256: "b".repeat(64),
+      issueCount: 0,
+      truncatedIssueCount: 0,
+      issues: [],
+    };
+    expect(migrationAdapterResultV1.safeParse(valid).success).toBe(true);
+    expect(
+      migrationAdapterResultV1.safeParse({
+        ...valid,
+        status: "invalid",
+        document: null,
+        canonicalDocumentSha256: null,
+        issueCount: 2,
+        truncatedIssueCount: 0,
+        issues: [{ rowNumber: 2, code: "invalid_points", field: "points" }],
+      }).success,
+    ).toBe(false);
+    expect(
+      migrationAdapterResultV1.safeParse({
+        ...valid,
+        sourceExportSha256: "c".repeat(64),
+      }).success,
+    ).toBe(false);
+  });
+
   it("accepts a bounded vendor-neutral document without caller tenant authority", () => {
     expect(canonicalMigrationDocumentV1.safeParse(baseDocument).success).toBe(
       true,

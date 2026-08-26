@@ -1,0 +1,4 @@
+source_row_id,identity_kind,identity_value,available_points,pending_points,source_lot_id,lot_bucket,lot_points,available_at,expires_at,source_tier_code,tier_qualified_at,source_referral_id,referral_state
+row-a,email,ada@example.test,100,40,available-a,available,100,2026-08-26T06:00:00Z,2027-08-26T06:00:00Z,icon,2026-08-01T08:00:00Z,ref-a,active
+row-a,email,ada@example.test,100,40,pending-a,pending,40,2026-08-27T06:00:00Z,2027-08-27T06:00:00Z,icon,2026-08-01T08:00:00Z,ref-a,active
+row-b,woocommerce_customer_id,42,25,0,available-b,available,25,2026-08-25T06:00:00Z,2027-08-25T06:00:00Z,,,,

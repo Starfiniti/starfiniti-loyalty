@@ -9,3 +9,4 @@ export * from "./referral";
 export * from "./campaign-v1";
 export * from "./currency-v1";
 export * from "./migration-v1";
+export * from "./migration-adapters-v1";
