@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(45);
+select plan(56);
 
 select has_table('loyalty', 'migration_import_batches',
   'migration application batches retain immutable approval evidence');
@@ -344,6 +344,179 @@ select results_eq(
 
 reset role;
 
+with identity as (
+  select encode(extensions.digest(convert_to(
+    '{"identity":{"kind":"email","value":"pending@example.test"},"schemaVersion":"1"}',
+    'UTF8'
+  ), 'sha256'), 'hex') as sha
+), fixture as (
+  select
+    '{"expiryPolicy":{"mode":"preserve_exact"},"programmeGroupId":"83000000-0000-4000-8000-000000000110","programmeVersionId":"83000000-0000-4000-8000-000000000130","rows":[{"balance":{"availablePoints":"60","lots":[{"availableAt":"2026-08-26T06:00:00Z","bucket":"available","expiresAt":"2027-08-27T08:00:00Z","points":"60","sourceLotId":"available-1"},{"availableAt":"2026-08-27T08:00:00Z","bucket":"pending","expiresAt":"2027-08-27T08:00:00Z","points":"40","sourceLotId":"pending-1"}],"pendingPoints":"40"},"identity":{"kind":"email","value":"pending@example.test"},"referral":null,"sourceHistory":[],"sourceRowId":"row-pending","tier":null}],"schemaVersion":"1","source":{"exportId":"export-pending","exportSha256":"' || repeat('b', 64) || '","exportedAt":"2026-08-26T06:00:00Z","system":"generic_csv"}}' as document_text,
+    '[{"basis":"explicit_create","identitySha256":"' || identity.sha || '","outcome":"create_new","sourceRowId":"row-pending","targetCustomerId":null}]' as resolutions_text
+  from identity
+)
+insert into migration_application_fixture (
+  name, document_text, resolutions_text, document_sha, resolution_sha
+)
+select 'pending', document_text, resolutions_text,
+  encode(extensions.digest(convert_to(document_text, 'UTF8'), 'sha256'), 'hex'),
+  encode(extensions.digest(convert_to(resolutions_text, 'UTF8'), 'sha256'), 'hex')
+from fixture;
+
+set local role authenticated;
+set local request.jwt.claim.sub = '83000000-0000-4000-8000-000000000001';
+
+with created as (
+  select * from loyalty.record_migration_dry_run_v1(
+    '83000000-0000-4000-8000-000000000110',
+    '83000000-0000-4000-8000-000000000130',
+    'valid', 'generic_csv', repeat('b', 64),
+    (select document_sha from migration_application_fixture where name = 'pending'),
+    (select resolution_sha from migration_application_fixture where name = 'pending'),
+    repeat('e', 64), 1, 0, 1, 0, 60, 40, '{}'::jsonb,
+    'migration:pending:dry-run:1',
+    '83000000-0000-4000-8000-000000000211'
+  )
+)
+update migration_application_fixture as fixture
+set dry_run_id = created.dry_run_public_id,
+  approval_sha = created.approval_sha256
+from created where fixture.name = 'pending';
+
+with applied as (
+  select * from loyalty.apply_migration_opening_balance_v1(
+    (select dry_run_id from migration_application_fixture where name = 'pending'),
+    (select approval_sha from migration_application_fixture where name = 'pending'),
+    (select document_text from migration_application_fixture where name = 'pending'),
+    (select resolutions_text from migration_application_fixture where name = 'pending'),
+    null, 'migration:pending:application:1',
+    '83000000-0000-4000-8000-000000000212'
+  )
+)
+update migration_application_fixture as fixture
+set batch_id = applied.batch_public_id
+from applied where fixture.name = 'pending';
+
+select results_eq(
+  $$ select available_points || ':' || pending_points
+     from loyalty.migration_import_batches
+     where public_id = (
+       select batch_id from migration_application_fixture where name = 'pending'
+     ) $$,
+  array['60:40'::text],
+  'preserve-exact application persists separate available and pending totals'
+);
+select results_eq(
+  $$ select account_kind || ':' || points
+     from loyalty.migration_import_items as item
+     join loyalty.wallet_balances as balance
+       on balance.organization_id = item.organization_id
+      and balance.wallet_id = item.wallet_id
+     where item.source_row_ref = 'row-pending' and balance.points <> 0
+     order by account_kind $$,
+  array['available:60'::text, 'pending:40'::text],
+  'pending source value remains pending before its exact availability time'
+);
+
+reset role;
+set local role loyalty_worker;
+
+select results_eq(
+  $$ select released_lots || ':' || released_points
+     from loyalty_private.release_due_migration_lots_v1(
+       '2026-08-27T07:59:59Z'::timestamptz, 10
+     ) $$,
+  array['0:0'::text],
+  'pending import lot cannot release before its source availability time'
+);
+select results_eq(
+  $$ select released_lots || ':' || released_points
+     from loyalty_private.release_due_migration_lots_v1(
+       '2026-08-27T08:00:00Z'::timestamptz, 10
+     ) $$,
+  array['1:40'::text],
+  'pending import lot releases once at its exact source availability time'
+);
+select results_eq(
+  $$ select released_lots || ':' || released_points
+     from loyalty_private.release_due_migration_lots_v1(
+       '2026-08-28T08:00:00Z'::timestamptz, 10
+     ) $$,
+  array['0:0'::text],
+  'pending import release retry creates no second value effect'
+);
+
+reset role;
+
+select results_eq(
+  $$ select (released_at = '2026-08-27T08:00:00Z'::timestamptz)::text ||
+       ':' || points
+     from loyalty.migration_pending_lot_releases as release
+     join loyalty.migration_import_lots as import_lot
+       on import_lot.organization_id = release.organization_id
+      and import_lot.id = release.import_lot_id $$,
+  array['true:40'::text],
+  'pending release evidence retains the exact source timestamp and points'
+);
+select results_eq(
+  $$ select account_kind || ':' || points
+     from loyalty.migration_import_items as item
+     join loyalty.wallet_balances as balance
+       on balance.organization_id = item.organization_id
+      and balance.wallet_id = item.wallet_id
+     where item.source_row_ref = 'row-pending' and balance.points <> 0 $$,
+  array['available:100'::text],
+  'released pending value moves atomically into the available account'
+);
+select results_eq(
+  $$ select initial_points || ':' || remaining_points || ':' ||
+       (available_at = '2026-08-27T08:00:00Z'::timestamptz)::text || ':' ||
+       (expires_at = '2027-08-27T08:00:00Z'::timestamptz)::text
+     from loyalty.migration_pending_lot_releases as release
+     join loyalty.point_lots as lot
+       on lot.organization_id = release.organization_id
+      and lot.id = release.point_lot_id
+     join loyalty.point_lot_balances as balance on balance.lot_id = lot.id $$,
+  array['40:40:true:true'::text],
+  'released pending value becomes an exact expiring FIFO lot'
+);
+
+set local role authenticated;
+set local request.jwt.claim.sub = '83000000-0000-4000-8000-000000000001';
+
+select results_eq(
+  $$ select outcome from loyalty.compensate_migration_batch_v1(
+    (select batch_id from migration_application_fixture where name = 'pending'),
+    'Rollback released pending migration canary',
+    'migration:pending:correction:1',
+    '83000000-0000-4000-8000-000000000213'
+  ) $$,
+  array['created'::text],
+  'released pending import can be corrected without rewriting its history'
+);
+select results_eq(
+  $$ select corrected_pending_points || ':' || corrected_available_points
+     from loyalty.migration_correction_items as correction
+     join loyalty.migration_import_items as item
+       on item.organization_id = correction.organization_id
+      and item.id = correction.original_item_id
+     where item.source_row_ref = 'row-pending' $$,
+  array['0:100'::text],
+  'correction classifies released pending points as available value'
+);
+select results_eq(
+  $$ select count(*)::bigint
+     from loyalty.migration_import_items as item
+     join loyalty.wallet_balances as balance
+       on balance.organization_id = item.organization_id
+      and balance.wallet_id = item.wallet_id
+     where item.source_row_ref = 'row-pending' and balance.points <> 0 $$,
+  array[0::bigint],
+  'pending import correction removes all projected value exactly once'
+);
+
+reset role;
+
 select throws_ok(
   $$ update loyalty.migration_import_items set source_row_ref = 'changed' $$,
   '55000', 'immutable loyalty history cannot be changed',
@@ -393,26 +566,26 @@ reset role;
 
 select results_eq(
   $$ select count(*)::bigint from loyalty.migration_import_batches $$,
-  array[1::bigint],
-  'adversarial attempts leave one explained application batch'
+  array[2::bigint],
+  'adversarial attempts leave only the two explained application batches'
 );
 select results_eq(
   $$ select count(*)::bigint from loyalty.migration_import_items $$,
-  array[1::bigint],
-  'adversarial attempts leave one explained source-row fence'
+  array[2::bigint],
+  'adversarial attempts leave only the two explained source-row fences'
 );
 select results_eq(
   $$ select count(*)::bigint from loyalty.migration_correction_batches $$,
-  array[1::bigint],
-  'adversarial attempts leave one explained correction batch'
+  array[2::bigint],
+  'both application batches retain an explained correction batch'
 );
 select results_eq(
   $$ select count(*)::bigint from loyalty.admin_audit_events
      where action in (
        'migration.opening_balance.apply', 'migration.batch.compensate'
      ) $$,
-  array[2::bigint],
-  'both value changes retain actor and correlation audit evidence'
+  array[4::bigint],
+  'both applications and both corrections retain actor and correlation audit evidence'
 );
 select is_empty(
   $$ select id from loyalty.admin_audit_events
