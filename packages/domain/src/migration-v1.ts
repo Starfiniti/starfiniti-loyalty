@@ -16,22 +16,25 @@ type CanonicalValue =
   | readonly CanonicalValue[]
   | { readonly [key: string]: CanonicalValue };
 
-function canonicalJson(value: unknown): string {
+export function canonicalMigrationJsonV1(value: unknown): string {
   if (value === null || typeof value !== "object") {
     return JSON.stringify(value);
   }
   if (Array.isArray(value)) {
-    return `[${value.map((item) => canonicalJson(item)).join(",")}]`;
+    return `[${value.map((item) => canonicalMigrationJsonV1(item)).join(",")}]`;
   }
   const record = value as Record<string, unknown>;
   return `{${Object.keys(record)
     .sort()
-    .map((key) => `${JSON.stringify(key)}:${canonicalJson(record[key])}`)
+    .map(
+      (key) =>
+        `${JSON.stringify(key)}:${canonicalMigrationJsonV1(record[key])}`,
+    )
     .join(",")}}`;
 }
 
 function hashCanonical(sha256: MigrationSha256, value: unknown): string {
-  const digest = sha256(canonicalJson(value as CanonicalValue));
+  const digest = sha256(canonicalMigrationJsonV1(value as CanonicalValue));
   if (!/^[a-f0-9]{64}$/u.test(digest)) {
     throw new Error("migration SHA-256 provider returned an invalid digest");
   }
@@ -42,6 +45,49 @@ function compareOpaqueReferences(left: string, right: string): number {
   if (left < right) return -1;
   if (left > right) return 1;
   return 0;
+}
+
+function canonicalizeMigrationInputV1(untrustedInput: unknown): {
+  document: MigrationDryRunInputV1["document"];
+  resolutions: MigrationDryRunInputV1["resolutions"];
+} {
+  const input = migrationDryRunInputV1.parse(untrustedInput);
+  return {
+    document: {
+      ...input.document,
+      rows: [...input.document.rows]
+        .sort((left, right) =>
+          compareOpaqueReferences(left.sourceRowId, right.sourceRowId),
+        )
+        .map((row) => ({
+          ...row,
+          balance: {
+            ...row.balance,
+            lots: [...row.balance.lots].sort((left, right) =>
+              compareOpaqueReferences(left.sourceLotId, right.sourceLotId),
+            ),
+          },
+          sourceHistory: [...row.sourceHistory].sort((left, right) =>
+            compareOpaqueReferences(left.sourceEntryId, right.sourceEntryId),
+          ),
+        })),
+    },
+    resolutions: [...input.resolutions].sort((left, right) =>
+      compareOpaqueReferences(left.sourceRowId, right.sourceRowId),
+    ),
+  };
+}
+
+export function canonicalizeMigrationApplicationV1(untrustedInput: unknown): {
+  canonicalDocumentJson: string;
+  canonicalResolutionsJson: string;
+} {
+  const { document, resolutions } =
+    canonicalizeMigrationInputV1(untrustedInput);
+  return {
+    canonicalDocumentJson: canonicalMigrationJsonV1(document),
+    canonicalResolutionsJson: canonicalMigrationJsonV1(resolutions),
+  };
 }
 
 export function fingerprintMigrationIdentityV1(
@@ -55,29 +101,8 @@ export function previewMigrationDryRunV1(
   untrustedInput: unknown,
   sha256: MigrationSha256,
 ): MigrationDryRunResultV1 {
-  const input = migrationDryRunInputV1.parse(untrustedInput);
-  const document = {
-    ...input.document,
-    rows: [...input.document.rows]
-      .sort((left, right) =>
-        compareOpaqueReferences(left.sourceRowId, right.sourceRowId),
-      )
-      .map((row) => ({
-        ...row,
-        balance: {
-          ...row.balance,
-          lots: [...row.balance.lots].sort((left, right) =>
-            compareOpaqueReferences(left.sourceLotId, right.sourceLotId),
-          ),
-        },
-        sourceHistory: [...row.sourceHistory].sort((left, right) =>
-          compareOpaqueReferences(left.sourceEntryId, right.sourceEntryId),
-        ),
-      })),
-  };
-  const canonicalResolutions = [...input.resolutions].sort((left, right) =>
-    compareOpaqueReferences(left.sourceRowId, right.sourceRowId),
-  );
+  const { document, resolutions: canonicalResolutions } =
+    canonicalizeMigrationInputV1(untrustedInput);
   const issues: Array<{
     code: MigrationDryRunIssueCodeV1;
     sourceRowId: string;

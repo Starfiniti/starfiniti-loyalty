@@ -6,7 +6,8 @@
 - Accepted ADR-0047: every source translates to one strict canonical V1 document, email is transient evidence rather than match authority, every row needs an explicit resolution, exact lots reconcile per bucket, and a receipt can never directly authorize value.
 - Added strict migration contracts and a pure deterministic engine covering exact totals, resolution-order independence, identity/target duplicates, fingerprint drift, unresolved/ambiguous states, bounded PII-free issues, and changed approval inputs.
 - Added an immutable tenant-RLS PostgreSQL receipt with live Auth owner/admin, published-programme and migration-entitlement authority, database-derived approval, content/idempotency replay, minimized audit, and zero customer/ledger/connector effects. The focused pgTAP file plans 50 adversarial assertions and a twelfth two-session probe covers concurrent equal content under different idempotency keys.
-- Seven contract and six domain cases, both affected typechecks, targeted formatting, and static validation of 68 migrations/55 pgTAP files pass. Clean Linux replay, exact-head full CI, and adversarial diff closeout remain before M12-S01 can be marked complete.
+- Seven contract and six domain cases, both affected typechecks, targeted formatting, and static validation passed. Exact-head run `32937499899` at `d8d223a` subsequently passed all seven jobs, clean 68-migration replay, 55 pgTAP files/2,955 assertions, 12 concurrency probes, both images, and all four WooCommerce runtimes; M12-S01 is complete.
+- M12-S02 began with strict application/correction contracts, exact canonical JSON re-presentation, explicit opening-balance ledger semantics, pending-lot release before expiry, source-row fences, and immutable correction batches. Database replay and adversarial S02 closeout remain active before any production enablement.
 
 ## 2026-08-26 — M11 fail-closed production closeout gate
 

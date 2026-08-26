@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Added the M12 canonical migration and value-free dry-run foundation with strict source/identity/balance/lot/tier/referral/history contracts, explicit non-email identity resolution, deterministic exact-total fingerprints, immutable minimized PostgreSQL receipts, content/idempotency replay fences, and zero ledger effects.
+- Started M12 receipt-bound opening-balance application with exact canonical revalidation, source-row and lot attribution, pending-lot release ordering, and append-only correction evidence; production value remains disabled pending clean database verification.
 - Added the M11 ecosystem closeout manifest and validator with 41 exact repository/production checks, deterministic seven-category scoring, an 80% category floor, sensitive-evidence rejection, and false-completion self-tests.
 - Normalized outbound-webhook secret hints to the database-safe Base64URL alphabet while retaining the canonical Base64 `whsec_` secret wire format.
 - Added endpoint-scoped outbound-webhook lifecycle operations with one-time 256-bit signing keys, digest-only storage, immutable revisions, disabled-only bounded rotation, disable-before-authorization, retirement scrubbing, and minimized merchant health.

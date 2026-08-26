@@ -185,6 +185,11 @@ export function activityPresentation(item: CustomerActivityV1): Readonly<{
       sign: "",
       tone: "neutral",
     },
+    opening_balance: {
+      label: "Imported opening balance",
+      sign: "+",
+      tone: "positive",
+    },
   };
   return presentations[item.kind];
 }

@@ -452,6 +452,81 @@ export const recordMigrationDryRunResultV1 = z
   })
   .strict();
 
+export const applyMigrationOpeningBalanceCommandV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    dryRunId: z.uuid(),
+    approvalSha256: sha256Hex,
+    document: canonicalMigrationDocumentV1,
+    resolutions: z.array(migrationIdentityResolutionV1).min(1).max(500),
+    commerceConnectionId: z.uuid().nullable(),
+    idempotencyKey: safeReference,
+    correlationId: z.uuid(),
+  })
+  .strict()
+  .superRefine((command, context) => {
+    if (command.resolutions.length !== command.document.rows.length) {
+      context.addIssue({
+        code: "custom",
+        path: ["resolutions"],
+        message: "application requires exactly one resolution per source row",
+      });
+    }
+    if (
+      command.resolutions.some(({ outcome }) =>
+        ["unresolved", "ambiguous"].includes(outcome),
+      )
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["resolutions"],
+        message: "unresolved identities cannot enter value application",
+      });
+    }
+    if (
+      command.resolutions.some(
+        ({ basis }) => basis === "verified_woocommerce_id",
+      ) &&
+      command.commerceConnectionId === null
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["commerceConnectionId"],
+        message: "verified WooCommerce resolutions require a store connection",
+      });
+    }
+  });
+
+export const applyMigrationOpeningBalanceResultV1 = z
+  .object({
+    batchId: z.uuid(),
+    outcome: z.enum(["created", "duplicate"]),
+    customerCount: z.number().int().min(1).max(500),
+    createdCustomerCount: z.number().int().min(0).max(500),
+    availablePoints: exactNonNegativeInteger,
+    pendingPoints: exactNonNegativeInteger,
+  })
+  .strict();
+
+export const compensateMigrationBatchCommandV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    batchId: z.uuid(),
+    reason: z.string().trim().min(8).max(500),
+    idempotencyKey: safeReference,
+    correlationId: z.uuid(),
+  })
+  .strict();
+
+export const compensateMigrationBatchResultV1 = z
+  .object({
+    correctionBatchId: z.uuid(),
+    originalBatchId: z.uuid(),
+    outcome: z.enum(["created", "duplicate"]),
+    correctedPoints: exactNonNegativeInteger,
+  })
+  .strict();
+
 export type CanonicalMigrationDocumentV1 = z.infer<
   typeof canonicalMigrationDocumentV1
 >;
@@ -465,4 +540,16 @@ export type MigrationDryRunIssueCodeV1 = z.infer<
 export type MigrationDryRunResultV1 = z.infer<typeof migrationDryRunResultV1>;
 export type RecordMigrationDryRunCommandV1 = z.infer<
   typeof recordMigrationDryRunCommandV1
+>;
+export type ApplyMigrationOpeningBalanceCommandV1 = z.infer<
+  typeof applyMigrationOpeningBalanceCommandV1
+>;
+export type ApplyMigrationOpeningBalanceResultV1 = z.infer<
+  typeof applyMigrationOpeningBalanceResultV1
+>;
+export type CompensateMigrationBatchCommandV1 = z.infer<
+  typeof compensateMigrationBatchCommandV1
+>;
+export type CompensateMigrationBatchResultV1 = z.infer<
+  typeof compensateMigrationBatchResultV1
 >;

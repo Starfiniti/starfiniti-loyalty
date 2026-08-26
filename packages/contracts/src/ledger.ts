@@ -20,6 +20,7 @@ export const ledgerOperationKind = z.enum([
   "expire",
   "refund_reversal",
   "manual_adjustment",
+  "opening_balance",
 ]);
 
 const commandIdentity = z.object({

@@ -31,6 +31,7 @@ const exportLedgerTransactionV1 = z
       "expire",
       "refund_reversal",
       "manual_adjustment",
+      "opening_balance",
     ]),
     effectiveAt: timestamp,
     createdAt: timestamp,

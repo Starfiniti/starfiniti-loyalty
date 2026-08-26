@@ -10,6 +10,7 @@ import {
   calculateCumulativeRefundPlanV2,
   evidenceSha256,
   expireDueTierOverrides,
+  releaseDueMigrationPendingLots,
   runCampaignTriggerLifecycle,
   runPointExpiryLifecycle,
   runReferralRewardLifecycle,
@@ -363,6 +364,23 @@ describe("WooCommerce effect worker", () => {
     ]) as unknown as Sql;
     await expect(runPointExpiryLifecycle(invalidSql)).rejects.toThrow(
       "invalid_point_expiry_lifecycle_result",
+    );
+  });
+
+  it("releases bounded imported pending lots before the expiry sweep", async () => {
+    const validSql = (async () => [
+      { released_lots: "2", released_points: "9223372036854775807" },
+    ]) as unknown as Sql;
+    await expect(releaseDueMigrationPendingLots(validSql)).resolves.toEqual({
+      releasedLots: 2,
+      releasedPoints: "9223372036854775807",
+    });
+
+    const invalidSql = (async () => [
+      { released_lots: "101", released_points: "-1" },
+    ]) as unknown as Sql;
+    await expect(releaseDueMigrationPendingLots(invalidSql)).rejects.toThrow(
+      "invalid_migration_pending_release_result",
     );
   });
 

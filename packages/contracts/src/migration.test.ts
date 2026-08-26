@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  applyMigrationOpeningBalanceCommandV1,
   canonicalMigrationDocumentV1,
+  compensateMigrationBatchCommandV1,
   migrationDryRunResultV1,
   migrationIdentityResolutionV1,
   recordMigrationDryRunCommandV1,
@@ -241,6 +243,99 @@ describe("migration contracts", () => {
       recordMigrationDryRunCommandV1.safeParse({
         ...command,
         actorId: "forged-owner",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("requires a complete approved resolution set before value application", () => {
+    const common = {
+      schemaVersion: "1" as const,
+      dryRunId: "bf2247d8-893e-49ae-8363-8423928e9cc4",
+      approvalSha256: "e".repeat(64),
+      document: baseDocument,
+      commerceConnectionId: null,
+      idempotencyKey: "migration-application-1",
+      correlationId: "bf2247d8-893e-49ae-8363-8423928e9cc5",
+    };
+    expect(
+      applyMigrationOpeningBalanceCommandV1.safeParse({
+        ...common,
+        resolutions: [
+          {
+            sourceRowId: "row-0001",
+            identitySha256: "b".repeat(64),
+            outcome: "create_new",
+            basis: "explicit_create",
+            targetCustomerId: null,
+          },
+        ],
+      }).success,
+    ).toBe(true);
+    expect(
+      applyMigrationOpeningBalanceCommandV1.safeParse({
+        ...common,
+        resolutions: [
+          {
+            sourceRowId: "row-0001",
+            identitySha256: "b".repeat(64),
+            outcome: "unresolved",
+            basis: null,
+            targetCustomerId: null,
+          },
+        ],
+      }).success,
+    ).toBe(false);
+  });
+
+  it("requires a store selector for verified WooCommerce authority", () => {
+    expect(
+      applyMigrationOpeningBalanceCommandV1.safeParse({
+        schemaVersion: "1",
+        dryRunId: "bf2247d8-893e-49ae-8363-8423928e9cc4",
+        approvalSha256: "e".repeat(64),
+        document: {
+          ...baseDocument,
+          rows: [
+            {
+              ...baseDocument.rows[0]!,
+              identity: { kind: "woocommerce_customer_id", value: "42" },
+            },
+          ],
+        },
+        resolutions: [
+          {
+            sourceRowId: "row-0001",
+            identitySha256: "b".repeat(64),
+            outcome: "matched_existing",
+            basis: "verified_woocommerce_id",
+            targetCustomerId: "bf2247d8-893e-49ae-8363-8423928e9cc3",
+          },
+        ],
+        commerceConnectionId: null,
+        idempotencyKey: "migration-application-1",
+        correlationId: "bf2247d8-893e-49ae-8363-8423928e9cc5",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("keeps compensating corrections bounded and caller-authority free", () => {
+    expect(
+      compensateMigrationBatchCommandV1.safeParse({
+        schemaVersion: "1",
+        batchId: "bf2247d8-893e-49ae-8363-8423928e9cc4",
+        reason: "Rollback approved migration canary",
+        idempotencyKey: "migration-correction-1",
+        correlationId: "bf2247d8-893e-49ae-8363-8423928e9cc5",
+      }).success,
+    ).toBe(true);
+    expect(
+      compensateMigrationBatchCommandV1.safeParse({
+        schemaVersion: "1",
+        batchId: "bf2247d8-893e-49ae-8363-8423928e9cc4",
+        reason: "Rollback approved migration canary",
+        idempotencyKey: "migration-correction-1",
+        correlationId: "bf2247d8-893e-49ae-8363-8423928e9cc5",
+        organizationId: "bf2247d8-893e-49ae-8363-8423928e9cc6",
       }).success,
     ).toBe(false);
   });

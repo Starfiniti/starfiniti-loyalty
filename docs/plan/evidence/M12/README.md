@@ -1,6 +1,6 @@
 # M12 Evidence — Migration framework
 
-Status: M12-S01 repository implementation is active on `codex/m12-migration`; clean Linux replay and exact-head CI evidence are not recorded yet. No production migration is enabled and no loyalty value has been imported.
+Status: M12-S01 is exact-head green and complete on `codex/m12-migration`. M12-S02 opening-balance application is active and has no production enablement or imported production value.
 
 ## M12-S01 canonical format and value-free dry run
 
@@ -10,17 +10,18 @@ Status: M12-S01 repository implementation is active on `codex/m12-migration`; cl
 - Domain: deterministic canonical hashing, exact `BigInt` totals, order-independent resolution evidence, source-identity and target-customer duplicate detection, fingerprint mismatch rejection, unresolved/ambiguous failure, and PII-free output.
 - Database: additive immutable tenant-RLS receipt evidence with exact role/grant boundaries, live owner/admin Auth authority, published-programme and migration-entitlement checks, database-derived approval hash, content-addressed and idempotency-key replay, minimized audit, and no raw rows or identities.
 - Value isolation: the S01 function does not create or update customers, identities, wallets, balances, ledger transactions, entries, lots, tiers, referrals, coupons, commerce events, connector commands, or provider work.
-- Local evidence currently passing: seven focused contract tests, six focused domain tests, both affected typechecks, formatting, and static validation of 68 migrations/55 pgTAP files. The focused database file plans 50 grant/RLS/role/tenancy/entitlement/idempotency/immutability/privacy/minimization/no-ledger assertions, and a twelfth two-session probe covers concurrent content deduplication.
+- Exact-head evidence: [CI run 32937499899](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/32937499899) at `d8d223a633604ef0021ee9392ccc4f19036b8dde` passed all seven jobs: root `npm run check`, secret/audit/licence/package gates, both production images, clean replay of all 68 migrations, all 55 pgTAP files/2,955 assertions, all 12 concurrency probes, and minimum/current WooCommerce in HPOS/legacy modes.
+- The first run correctly failed because two independent exposed-function inventories had not reviewed the new command. The exact signature/name were added without relaxing either query; the full rerun then passed.
 
-## Pending S01 closeout
+## M12-S02 opening-balance application — active
 
-- Clean 68-migration replay and all 55 pgTAP files on Linux CI.
-- Adversarial diff review, exact-head root baseline, both production images, concurrency suite, and WooCommerce matrix.
-- Update this evidence with exact run/commit and only then mark M12-S01 complete.
+- Contracts now distinguish complete application and compensating-correction commands and reject unresolved identities or missing WooCommerce store authority.
+- The domain emits stable exact canonical document/resolution JSON for PostgreSQL hash revalidation after input reordering.
+- The additive database implementation under verification derives tenant/actor/programme/customer/wallet authority, fences source rows, posts explicit immutable opening-balance transactions and FIFO lots, schedules exact pending-lot releases before expiry, and appends correction batches instead of rewriting value.
+- S02 remains incomplete until clean migration replay, its full pgTAP/adversarial matrix, two-session concurrency, projection/liability reconciliation, and exact-head CI pass.
 
 ## Later slices
 
-- M12-S02: explicit identity mapping, exact revalidation, opening-balance ledger application, source-row idempotency, lots/expiry, and compensating correction batches.
 - M12-S03: generic CSV, WPLoyalty, and WooRewards adapters with official-format fixtures and bounded error export.
 - M12-S04: YITH plus any changed vendor format only after representative redacted fixtures; no heuristic production parsing.
 - M12-S05: merchant dry-run/mapping/approval/reconciliation workflow and before/after reports.

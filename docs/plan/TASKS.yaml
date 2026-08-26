@@ -1914,7 +1914,7 @@ tasks:
       ]
     slices:
       - id: M12-S01-CANONICAL-IMPORT-AND-DRY-RUN
-        status: in_progress
+        status: complete
         hypothesis: A vendor-neutral canonical document plus explicit identity resolutions can produce one deterministic value-free approval receipt without retaining raw exports or merging customers by email.
         baseline: The repository has immutable ledger and bounded bulk-adjustment primitives but no migration contracts domain validation source fingerprints receipt persistence or adapter boundary.
         owner_inputs: []
@@ -1961,8 +1961,9 @@ tasks:
         evidence:
           - docs/architecture/ADR/0047-content-addressed-canonical-migration-and-explicit-identity-resolution.md
           - docs/plan/evidence/M12/README.md
+          - exact-head CI run 32937499899 at d8d223a passed all seven jobs including clean 68-migration replay 55 pgTAP files 2955 assertions 12 concurrency probes both images root checks and four WooCommerce runtimes
       - id: M12-S02-OPENING-BALANCE-LEDGER-APPLICATION
-        status: planned
+        status: in_progress
         hypothesis: Exact receipt-bound row revalidation and source-row fences can apply imported value once through attributable opening-balance ledger transactions and preserved expiry lots.
         owner_inputs: []
         acceptance:

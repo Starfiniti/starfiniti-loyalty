@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  canonicalizeMigrationApplicationV1,
   fingerprintMigrationIdentityV1,
   previewMigrationDryRunV1,
 } from "./migration-v1";
@@ -68,6 +69,15 @@ const resolutions = document.rows.map((row, index) => ({
 }));
 
 describe("canonical migration dry run", () => {
+  it("emits stable exact application documents after input reordering", () => {
+    expect(
+      canonicalizeMigrationApplicationV1({
+        document: { ...document, rows: [...document.rows].reverse() },
+        resolutions: [...resolutions].reverse(),
+      }),
+    ).toEqual(canonicalizeMigrationApplicationV1({ document, resolutions }));
+  });
+
   it("produces a deterministic, fully reconciled approval fingerprint", () => {
     const first = previewMigrationDryRunV1({ document, resolutions }, sha256);
     const reordered = previewMigrationDryRunV1(
