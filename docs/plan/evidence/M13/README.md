@@ -1,6 +1,6 @@
 # M13 Evidence — Enterprise identity
 
-Status: M13-S01 access catalogue and review is complete on draft PR #40. M13-S02 organization and team lifecycle is next. Tenant federation, SCIM, support, agency, and production identity changes remain disabled and unimplemented.
+Status: M13-S01 access catalogue and review is complete on draft PR #40. M13-S02 organization and team lifecycle is implementation-complete and awaiting exact-head Linux CI on draft PR #41. Tenant federation, SCIM, support, agency, and production identity changes remain disabled and unimplemented.
 
 ## M13-S01 access catalogue and review
 
@@ -29,10 +29,11 @@ No production identity state changed.
 
 ## M13-S02 organization and team lifecycle
 
-Status: implementation and adversarial verification are in progress on `codex/m13-org-lifecycle`; no production identity mutation is enabled.
+Status: implementation and adversarial/browser verification are complete on `codex/m13-org-lifecycle`; exact-head Linux CI remains before slice closure and no production identity mutation is enabled.
 
 - ADR-0052 selects 256-bit one-use capabilities with digest-only storage instead of email/domain matching or administrator-entered Auth UUIDs.
-- Additive organization and membership revisions support exact rename, suspend, restore, close, offboard, role-change, and revoke state machines. The stable organization row serializes actor rechecks and owner quorum.
+- Additive organization and membership revisions support exact rename, suspend, restore, close, offboard, role-change, and revoke state machines. The stable organization row serializes actor rechecks and owner quorum. Suspension blocks the shared merchant mutation role gate; offboarding retains only the initiating recovery owner.
 - The accepting request's live Supabase subject becomes the membership. Revoked members fail the next team projection request even while an old JWT remains valid.
-- The Hub-style Team & access workflow covers organization creation, invitation issuance/acceptance/revocation, member roles, lifecycle controls, bounded audit history, suspended-owner recovery, and a minimized JSON administration export.
-- Static validation currently covers 72 migrations and 59 pgTAP files; exact-head Linux replay, 62 focused lifecycle assertions, the fourteenth two-session probe, full browser QA, and final slice scoring remain pending.
+- The Hub-style Team & access workflow covers organization creation, invitation issuance/acceptance/revocation, member roles, lifecycle controls, bounded audit history, suspended-owner recovery, and a limit-declared minimized JSON identity snapshot.
+- Browser QA evidence is recorded in `organization-team-browser-qa-2026-08-26.md`: desktop/mobile/narrow, light/dark, keyboard trap and restoration, inert background, reduced motion, 44-pixel controls, English-only, zero overflow, and zero diagnostics pass after deterministic repairs.
+- Local verification passes focused actions 6/6, dashboard typecheck, zero-warning lint, static 72-migration/59-pgTAP validation, production build, workflow validation, secret scan, and zero-high production dependency audit. The 70 focused lifecycle assertions, fourteenth two-session probe, clean replay, and final exact-head gate await Linux CI.

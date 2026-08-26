@@ -571,3 +571,10 @@
 - Preserved original-lot expiry through reward reservations and cancellation, scheduled nearest-relevant 30/14/7 reminders behind durable deduplication fences, revoked worker access to the low-level expiry primitive, and exposed only minimized aggregate liability evidence.
 - Exact-head run `31756142529` passed a clean 34-migration replay, all 32 pgTAP files and 1,472 assertions, both concurrency probes, both production images, and all four WooCommerce runtime variants.
 - A temporary production-build Playwright fixture exercised the real merchant shell and expiry editor at 1440 by 1000 and 390 by 844. Reminder filtering, liability evidence, mobile navigation, and responsive layout passed with no horizontal overflow or browser diagnostics; the fixture was removed after verification.
+
+## 2026-08-26 — M13-S02 organization/team lifecycle candidate
+
+- Added capability-bound organization creation/invitation/acceptance/revocation, optimistic team member changes, exact organization state transitions, owner quorum, suspended-owner recovery, bounded identity evidence, and a Hub-style responsive Team & access workflow.
+- Adversarial review repaired retry-time expiry drift, repeat-form operation reuse, revoked-capability replay, delegated pending capabilities after administrator authority removal, shared-role mutation access during suspension, multiple retained owners after offboarding, stale lock-entry expiry time, and owner omission at the bounded projection limit.
+- Production-build browser review passed light/dark desktop, 390-pixel mobile, 320-pixel narrow, keyboard drawer trapping/restoration, inert background, desktop-breakpoint recovery, reduced motion, English-only output, 44-pixel controls, zero overflow, and zero final diagnostics after dark-surface and mobile accessibility repairs.
+- Local focused tests, lint, typecheck, production build, workflow/static migration validation, secret scan, and production dependency audit pass. The clean Linux replay, 70 focused pgTAP assertions, fourteenth concurrency probe, container builds, and WooCommerce matrix remain the exact-head closure gate.

@@ -2228,6 +2228,15 @@ tasks:
         status: in_progress
         dependencies: [M13-S01-ACCESS-CATALOGUE-AND-REVIEW]
         hypothesis: Invitation and provisioning-bound membership plus audited lifecycle commands can add and remove tenant authority immediately without email or domain auto-join.
+        baseline: Organizations have no self-service lifecycle, invitation capability, optimistic member revision, owner-quorum command, minimized team view, or recovery identity snapshot.
+        metrics:
+          - seven exact public lifecycle boundaries and zero browser runtime or worker table DML grants
+          - one accepted effect for every exact retry and one active owner after every concurrent/offboard path
+          - zero Auth UUID email domain group claim raw token digest or loyalty value field in the team projection
+        targets:
+          - all lifecycle invitation and membership transitions append attributable audit and preserve zero ledger effects
+          - revocation suspension capability replay stale revision and cross-tenant selectors fail on the next request
+          - desktop mobile narrow keyboard reduced-motion dark-theme and 44-pixel checks have no critical failure
         owner_inputs: []
         acceptance:
           - owner-controlled organization creation rename suspension restore closure export and offboarding have exact state machines and audit
@@ -2238,6 +2247,13 @@ tasks:
           - email or domain grants membership
           - suspended tenant continues new configuration or value issuance
           - invitation replay or changed role succeeds
+          - revoked administrators retain pending capabilities they issued
+          - offboarding retains additional co-owner authority
+          - retry-time expiry drift conflicts under one idempotency key
+        security_boundaries:
+          - PostgreSQL derives actor organization membership and owner quorum after the stable organization lock
+          - invitation plaintext exists only in the browser and trusted server action while PostgreSQL retains SHA-256 only
+          - suspension blocks shared merchant mutation authority while one live initiating owner retains recovery/export evidence
         rollout: Enable invitations and lifecycle for one Starfiniti organization after compatibility shadow checks.
         rollback: Disable new lifecycle commands preserve memberships and audit and restore only through an explicit compensating transition.
         verification:
@@ -2245,6 +2261,9 @@ tasks:
         evidence:
           - docs/architecture/ADR/0052-capability-bound-organization-invitations-and-owner-quorum.md
           - docs/plan/evidence/M13/README.md
+          - docs/plan/evidence/M13/organization-team-browser-qa-2026-08-26.md
+          - focused actions 6 of 6 dashboard typecheck lint production build workflow validation secret scan production audit and static validation of 72 migrations and 59 pgTAP files pass locally
+          - lifecycle pgTAP plan contains 70 assertions and exact-head Linux replay concurrency containers and WooCommerce matrix are pending
       - id: M13-S03-TENANT-FEDERATION
         status: planned
         dependencies: [M13-S02-ORGANIZATION-AND-TEAM-LIFECYCLE]
