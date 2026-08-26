@@ -1,6 +1,6 @@
 # M11 Evidence — Ecosystem
 
-Status: M11-S01 through M11-S03 repository/browser gates are exact-head green on `codex/m11-multistore`; M11-S04 is active and M11-S06 retains disabled deployment and Starfiniti production-canary closeout.
+Status: M11-S01 through M11-S04 repository/browser gates are exact-head green on `codex/m11-multistore`; M11-S05 is active and M11-S06 retains disabled deployment and Starfiniti production-canary closeout.
 
 ## M11-S01 explicit multi-store sharing
 
@@ -35,7 +35,7 @@ Status: M11-S01 through M11-S03 repository/browser gates are exact-head green on
 
 - M11-S06 owns disabled deployment, read compatibility, Starfiniti-only canary, identity/link/wallet/event reconciliation, unlink/relink rollback rehearsal, and observation after reviewed stacked merge.
 
-Later evidence sections will record service-account/API, webhook/client, integration-operations, and final canary results.
+Later evidence sections record each completed slice; webhook/client, integration-operations, and final canary results remain pending.
 
 ## M11-S03 multi-currency evidence
 
@@ -51,3 +51,20 @@ Later evidence sections will record service-account/API, webhook/client, integra
 - The ninth race serialized two evidence writers into one created and one duplicate identity, rejected changed projection and atomic batches, and reconciled one evidence row, one atomic amount, and zero ledger effects.
 - Self-improvement evidence: Linux replay exposed stale allowlists, a wall-clock-dependent analytics fixture, invalid legacy canonical-event shortcuts, worker-role test lookups, and an unauthorised race-harness role assumption. Each fix made fixtures deterministic or narrowed test authority; production RLS, grants, rate authority, arithmetic, ledger, and checkout boundaries were not relaxed.
 - Production conversion remains disabled. Approved provider selection/credentials, isolated adapter ingestion, Starfiniti source-currency canary, exact source→snapshot→amount→evaluation→ledger→analytics reconciliation, rollback rehearsal, and observation remain M11-S06 owner/production gates.
+
+## M11-S04 scoped service accounts and inbound APIs
+
+- Decision: ADR-0045 preserves the legacy signed Merchant Activity boundary and adds organization/workspace/programme-scoped opaque service credentials whose tenant, connection, programme, scopes, entitlement, and quota authority are derived inside PostgreSQL.
+- Credential safety: a 256-bit secret is returned once as `sflt_v1_<credential-id>_<secret>`. Only its SHA-256 digest, six-character hint, lifecycle timestamps, and bounded overlap are retained; malformed and unknown tokens share one minimized `401` response.
+- Customer identity: every service account has a separate random HMAC pepper and opaque external namespace. Email, profile claims, organization membership, and caller selectors cannot merge customers or choose a wallet.
+- Value path: customer synchronization writes no ledger value. Signed custom activities enter the existing canonical commerce pipeline, so programme evaluation, caps, event/effect idempotency, ledger attribution, and historical explanations remain unchanged.
+- Operations: owners/admins can create least-privilege accounts, set a fixed-minute quota, issue/rotate a one-time secret, and immediately revoke a credential. Entitlement disablement stops new growth while credential revocation and minimized history remain available.
+- Verification: 26 focused contract cases within 277 contract tests, strict route/server/action cases within 223 dashboard tests, all 107 worker and 62 domain regression tests, 72 focused pgTAP assertions, and a tenth two-session probe cover token parsing, scopes, tenancy, roles, revocation, overlap, idempotency conflicts, concurrent customer creation, quota serialization, immutable receipts, and zero ledger effects.
+- Exact-head run [`32927596360`](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/32927596360) at `479f605` passed all seven jobs after the browser-driven repair: root checks, both production images, clean 66-migration replay, all 53 pgTAP files with 2,846 assertions, all ten concurrency probes, and minimum/current HPOS/legacy WooCommerce runtimes.
+- [Playwright desktop/mobile QA](service-accounts-browser-qa-2026-08-26.md) found and corrected dark-theme confirmation contrast, undersized actions, and displaced checkbox labels. The corrected component passed 16.48:1 dark review contrast, 40-pixel actions, aligned confirmations, English-only output, mobile navigation, reduced motion, keyboard focus, zero overflow, and zero diagnostics.
+- Self-improvement evidence: five failed database runs exposed a reserved record name, security-inventory gaps, invalid V2 fixtures, missing harness-role membership, and a reserved test alias. Corrections tightened deterministic fixtures and independent inventories without relaxing production RLS, grants, scope, quota, credential, ledger, or checkout boundaries.
+- Production API routes remain disabled behind `ecosystem.api`. M11-S06 owns Starfiniti-only account issuance, live customer/activity replay, rotation/revocation, canonical-event/ledger reconciliation, rollback, and observation.
+
+## Pending M11-S05 and S06 closeout
+
+- Versioned TypeScript/PHP clients, signed outbound webhook lifecycle/operations, and the final disabled Starfiniti ecosystem canary remain open.

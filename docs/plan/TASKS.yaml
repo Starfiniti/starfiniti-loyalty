@@ -1715,7 +1715,7 @@ tasks:
           - the currency race returns one created and one duplicate identity rejects changed projection and atomic batches and reconciles one evidence row one atomic amount and zero ledger effects
           - production conversion remains disabled and provider selection credentials Starfiniti canary exact reconciliation rollback and observation remain owned by M11-S06
       - id: M11-S04-SERVICE-ACCOUNTS-AND-INBOUND-APIS
-        status: in_progress
+        status: complete
         hypothesis: Organization-scoped opaque credentials with database-derived authority let merchants integrate external systems without distributing platform secrets or creating a second loyalty-value path.
         baseline: The signed Merchant Activity endpoint has bounded HMAC verification and canonical-event idempotency but uses deployment-managed connector keys and has no merchant-scoped service-account lifecycle customer namespace or database-authoritative quota.
         targets:
@@ -1754,7 +1754,15 @@ tasks:
           security: reusable secret occurrences outside the one-time response equal zero
           reliability: quota overshoot and revoked-request acceptance equal zero
           operability: request results expose bounded request correlation quota remaining and safe error codes
-        evidence: []
+        evidence:
+          - ADR-0045 retains the legacy signed activity boundary and selects scoped opaque 256-bit credentials whose SHA-256 digest six-character hint lifecycle and randomized customer-namespace pepper are the only retained secret evidence
+          - additive private RLS tables synthetic service_api connection strict grants and empty-search-path functions derive tenant workspace programme connection scope entitlement and fixed-minute quota without accepting caller authority
+          - strict customer and activity routes return bounded cache-safe correlation and RateLimit evidence while customer synchronization remains value-free and custom activity reuses the canonical commerce event effect cap and ledger pipeline
+          - owners and admins receive server-rendered create one-time issue bounded-overlap rotation and immediate credential-revocation controls while operator cross-tenant expired malformed and changed-idempotency cases fail closed
+          - 26 focused contract cases strict route and action cases all 223 dashboard 107 worker and 62 domain regression tests 72 focused pgTAP assertions and the tenth two-session probe pass
+          - exact-head run 32927596360 at 479f605 passes all seven jobs after the browser-driven repair including clean 66-migration replay all 53 pgTAP files with 2846 assertions all ten concurrency probes both images and all four WooCommerce runtimes
+          - Playwright desktop mobile dark reduced-motion keyboard and diagnostic review passes 16.48-to-1 confirmation contrast 40-pixel actions aligned labels English-only output zero overflow and zero browser errors after repairing three deterministic visual defects
+          - production issuance remains disabled and Starfiniti-only customer activity replay rotation revocation event-ledger reconciliation rollback and observation remain owned by M11-S06
       - id: M11-S05-OUTBOUND-WEBHOOKS-CLIENTS-AND-OPERATIONS
         status: planned
         acceptance:
@@ -1764,7 +1772,7 @@ tasks:
         status: planned
         acceptance:
           - isolated and explicitly shared Starfiniti canaries reconcile wallets events currencies API requests and webhooks with module score at least 90 and every category above its floor
-    risks: [R-001, R-002, R-039, R-041]
+    risks: [R-001, R-002, R-039, R-040, R-041, R-042]
     docs:
       [
         docs/integrations/MERCHANT_API.md,

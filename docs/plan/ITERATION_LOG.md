@@ -1,5 +1,14 @@
 # Iteration Log
 
+## 2026-08-26 — M11 scoped service accounts and inbound APIs
+
+- Accepted ADR-0045: the server parses one high-entropy opaque bearer credential, while PostgreSQL derives organization, workspace, programme, synthetic connection, scopes, entitlement, customer namespace, and quota authority from its digest.
+- Added one-time credential issuance, bounded-overlap rotation, immediate revocation, minimized owner/admin operations, customer synchronization without email merging, and signed custom activity through the existing canonical event/effect/ledger pipeline.
+- Added 72 focused pgTAP assertions and a tenth two-session probe for concurrent customer identity and fixed-minute quota serialization. Exact-head run `32927596360` at `479f605` passed baseline, both images, clean 66-migration replay, all 53 pgTAP files with 2,846 assertions, all ten concurrency probes, and all four WooCommerce runtimes after the browser-driven repair.
+- Linux self-improvement runs exposed a reserved record name, incomplete security inventories, invalid V2 fixtures, missing harness-role membership, and a reserved test alias; narrow corrections made tests deterministic without relaxing production authority.
+- Playwright desktop/mobile review found hard-coded dark confirmation colors, undersized review actions, and checkbox grid displacement. Tokenized colors, 40-pixel actions, and an explicit flex label passed 16.48:1 dark contrast, aligned review states, English-only output, reduced motion, keyboard focus, zero overflow, and zero browser diagnostics.
+- Production API issuance remains disabled until M11-S06. M11-S05 now owns versioned TypeScript/PHP clients, outbound webhook lifecycle, and integrated health/deletion operations.
+
 ## 2026-08-26 — M11 exact multi-currency evidence
 
 - Accepted ADR-0044: only immutable provider evidence selected at the canonical commerce occurrence can convert a foreign V2 order; WooCommerce, the browser, and worker timing never supply the rate.
