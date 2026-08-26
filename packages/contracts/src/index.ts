@@ -27,6 +27,7 @@ export * from "./currency";
 export * from "./service-api";
 export * from "./migration";
 export * from "./enterprise-identity";
+export * from "./enterprise-administration";
 export * from "./scim";
 
 export const commerceEnvelopeV1 = z.object({

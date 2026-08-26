@@ -2369,9 +2369,27 @@ tasks:
           - exact-head Linux run 33000243629 at 9a247ff8f4e04a3209e944f48252483121aefa15 passes all seven jobs including root checks both images clean 74-migration replay all 61 pgTAP files with 3276 assertions all 15 concurrency probes and all four WooCommerce runtimes
           - the exact-head loop added the reviewed SCIM functions to both global security allowlists repaired the constraint-invalid federation recovery fixture and made the owner invitation concurrency probe deterministic on the serialized surviving owner
       - id: M13-S05-SUPPORT-AGENCY-AND-OFFBOARDING
-        status: planned
+        status: in_progress
         dependencies: [M13-S04-SCIM-PROVISIONING]
         hypothesis: Explicit portfolios and short approved support grants can serve agencies and operations without hidden impersonation or permanent cross-tenant access.
+        baseline: The unused foundation grant table has free-form scopes and direct subject/admin reads; no request approval use audit bilateral agency relationship AAL2 break-glass organization deletion case or comprehensive credential revocation exists.
+        metrics:
+          - accepted agency relationships per exact bilateral approval
+          - effective support grants per approved request
+          - unlogged support or break-glass projections
+          - active credentials after terminal offboarding
+          - ledger programme or audit rows changed by offboarding or deletion
+        targets:
+          - one relationship and one immutable audit effect under retries and concurrency
+          - zero self-approved expired revoked sessionless cross-tenant or over-scoped support reads
+          - zero support or break-glass reads without a tenant-visible use event
+          - zero active organization credential path after offboarding or deletion completion
+          - zero destructive value or immutable-evidence changes
+        security_boundaries:
+          - relationship is never membership or product authority
+          - support derives subject session relationship grant and scope inside PostgreSQL
+          - break-glass requires signed AAL2 and a live auth.sessions row
+          - deletion pseudonymizes mutable identity while retaining value and immutable evidence
         owner_inputs: []
         acceptance:
           - agency portfolios require explicit bilateral organization assignment and never share customer wallets or tenant data
@@ -2387,6 +2405,32 @@ tasks:
         rollback: Revoke grants and portfolio assignments immediately retain tenant-visible history and keep local owner recovery.
         verification:
           - approval separation expiry revocation scope use-audit portfolio isolation pseudonymization export and recovery tests
+        slices:
+          - id: M13-S05A-BILATERAL-AGENCY-PORTFOLIOS
+            status: in_progress
+            acceptance:
+              - digest-only one-use client invitation and agency-owner acceptance create one relationship without tenant authority
+              - either organization owner can revoke and both portfolios retain minimized immutable history
+            verification:
+              - pgTAP retry changed-reuse cross-tenant and two-session acceptance race
+          - id: M13-S05B-SCOPED-SUPPORT-AND-BREAK-GLASS
+            status: planned
+            acceptance:
+              - exact read-only support scopes require separate tenant-owner approval maximum four-hour expiry live relationship agency membership and live Auth session
+              - every support projection and AAL2 thirty-minute owner recovery projection appends tenant-visible use evidence
+            verification:
+              - pgTAP self-approval scope expiry revocation stale-session AAL and zero-value assertions
+          - id: M13-S05C-OFFBOARDING-EXPORT-AND-DELETION
+            status: planned
+            acceptance:
+              - versioned minimized administrative export reconciles resource and ledger counts without secrets or PII
+              - offboarding revokes every supported credential path and deletion completion pseudonymizes mutable identity without editing immutable value or evidence
+            verification:
+              - pgTAP credential inventory export pseudonymization cancellation cooling-period and immutable-row assertions
+        references:
+          - docs/architecture/ADR/0055-bilateral-agency-and-explicit-support-authority.md
+        evidence:
+          - docs/plan/evidence/M13/README.md
       - id: M13-S06-CANARY-AND-CLOSE
         status: planned
         dependencies: [M13-S05-SUPPORT-AGENCY-AND-OFFBOARDING]
