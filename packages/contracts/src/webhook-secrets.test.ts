@@ -20,7 +20,7 @@ describe("issueWebhookSigningSecretV1", () => {
       new Uint8Array(32).fill(0xff),
     );
     expect(slashIssued.secret).toBe(
-      "whsec_//////////////////////////////////////////8=",
+      `whsec_${Buffer.alloc(32, 0xff).toString("base64")}`,
     );
     expect(slashIssued.hint).toBe("_____8");
 
