@@ -14,6 +14,18 @@ let managedModeSet = false;
 const eventAt = new Date(Date.now() + 1_000);
 const conflictEventAt = new Date(Date.now() + 2_000);
 const currentPeriodEnd = new Date(Date.now() + 86_400_000);
+const accountEffectiveAt = new Date(Date.now());
+
+function recordAccount(sql, organizationId, idempotencyKey) {
+  return sql`
+    select loyalty_private.record_managed_billing_account_v1(
+      ${organizationId}, ${`cus_BillingRace${suffix}`}, false,
+      'probe:billing-concurrency',
+      'Create isolated managed billing concurrency account',
+      ${accountEffectiveAt}, ${idempotencyKey}
+    ) as public_id
+  `;
+}
 
 function recordState(
   sql,
@@ -50,21 +62,27 @@ try {
     values (${`billing-race-${suffix}`}, 'Billing Concurrency Probe')
     returning id, public_id
   `;
-  const [account] = await admin`
-    select loyalty_private.record_managed_billing_account_v1(
-      ${organization.public_id}, ${`cus_BillingRace${suffix}`}, false,
-      'probe:billing-concurrency',
-      'Create isolated managed billing concurrency account',
-      statement_timestamp(), ${randomUUID()}
-    ) as public_id
-  `;
+  const exactAccountReplay = await Promise.allSettled([
+    recordAccount(first, organization.public_id, randomUUID()),
+    recordAccount(second, organization.public_id, randomUUID()),
+  ]);
+  if (
+    exactAccountReplay.some((result) => result.status !== "fulfilled") ||
+    exactAccountReplay[0].value[0]?.public_id !==
+      exactAccountReplay[1].value[0]?.public_id
+  ) {
+    throw new Error(
+      `exact provider account replay diverged: ${JSON.stringify(exactAccountReplay)}`,
+    );
+  }
+  const accountId = exactAccountReplay[0].value[0].public_id;
 
   const replayEventId = `evt_BillingReplay${suffix}`;
   const exactReplay = await Promise.allSettled([
     recordState(
       first,
       organization.public_id,
-      account.public_id,
+      accountId,
       replayEventId,
       "active",
       eventAt,
@@ -73,7 +91,7 @@ try {
     recordState(
       second,
       organization.public_id,
-      account.public_id,
+      accountId,
       replayEventId,
       "active",
       eventAt,
@@ -94,7 +112,7 @@ try {
     recordState(
       first,
       organization.public_id,
-      account.public_id,
+      accountId,
       conflictEventId,
       "active",
       conflictEventAt,
@@ -103,7 +121,7 @@ try {
     recordState(
       second,
       organization.public_id,
-      account.public_id,
+      accountId,
       conflictEventId,
       "suspended",
       conflictEventAt,
@@ -123,6 +141,9 @@ try {
   const [state] = await admin`
     select
       (select count(*)::integer
+       from loyalty_private.managed_billing_account_versions
+       where organization_id = ${organization.id}) as accounts,
+      (select count(*)::integer
        from loyalty_private.managed_billing_state_revisions
        where organization_id = ${organization.id}) as revisions,
       (select count(*)::integer
@@ -141,6 +162,7 @@ try {
   if (
     changedSuccesses.length !== 1 ||
     changedFailures.length !== 1 ||
+    state.accounts !== 1 ||
     state.revisions !== 2 ||
     state.replay_revisions !== 1 ||
     state.conflict_revisions !== 1 ||
@@ -152,7 +174,7 @@ try {
   }
 
   console.log(
-    "Managed billing concurrency probe passed: exact provider-event races returned one revision, changed races failed one caller closed, and no loyalty ledger value changed.",
+    "Managed billing concurrency probe passed: exact provider-account and provider-event races converged, changed event races failed one caller closed, and no loyalty ledger value changed.",
   );
 } finally {
   if (managedModeSet) {

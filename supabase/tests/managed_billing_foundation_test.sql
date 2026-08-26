@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(59);
+select plan(61);
 
 -- 1-14: schema, grants, RLS, and minimized authority.
 select has_table(
@@ -331,6 +331,19 @@ select results_eq(
   'exact managed account retry returns the original effect'
 );
 select results_eq(
+  $$
+    select loyalty_private.record_managed_billing_account_v1(
+      'a1000000-0000-4000-8000-000000000100',
+      'cus_BillingCustomer0001', false, 'operator:m14',
+      'Create isolated managed billing account evidence',
+      '2031-01-01 01:00:00+00',
+      'a1000000-0000-4000-8000-000000000599'
+    )
+  $$,
+  $$ select account_public_id from billing_test_refs $$,
+  'provider account replay with a different request key returns the original effect'
+);
+select results_eq(
   $$ select count(*)::bigint from loyalty_private.managed_billing_account_versions $$,
   array[1::bigint],
   'exact account retry stores one immutable version'
@@ -347,6 +360,19 @@ select throws_ok(
   $$,
   '23505', 'managed billing account idempotency conflict',
   'changed account retry fails closed'
+);
+select throws_ok(
+  $$
+    select loyalty_private.record_managed_billing_account_v1(
+      'a1000000-0000-4000-8000-000000000100',
+      'cus_BillingCustomer0001', false, 'operator:m14',
+      'Attempt a changed provider customer replay',
+      '2031-01-01 01:00:00+00',
+      'a1000000-0000-4000-8000-000000000598'
+    )
+  $$,
+  '23505', 'managed billing provider account conflict',
+  'changed provider account replay with a different request key fails closed'
 );
 select throws_ok(
   $$

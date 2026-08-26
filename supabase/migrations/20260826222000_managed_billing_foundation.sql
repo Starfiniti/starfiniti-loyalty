@@ -166,6 +166,14 @@ begin
     )
   );
 
+  perform pg_catalog.pg_advisory_xact_lock(
+    pg_catalog.hashtextextended(
+      'stripe:' || target_live_mode::text || ':billing-customer:' ||
+        target_provider_customer_id,
+      0
+    )
+  );
+
   select account.* into existing
   from loyalty_private.managed_billing_account_versions as account
   where account.organization_id = target_organization_id
@@ -176,6 +184,19 @@ begin
       return existing.public_id;
     end if;
     raise exception using errcode = '23505', message = 'managed billing account idempotency conflict';
+  end if;
+
+  select account.* into existing
+  from loyalty_private.managed_billing_account_versions as account
+  where account.provider = 'stripe'
+    and account.live_mode = target_live_mode
+    and account.provider_customer_id = target_provider_customer_id;
+
+  if existing.id is not null then
+    if existing.request_fingerprint = target_fingerprint then
+      return existing.public_id;
+    end if;
+    raise exception using errcode = '23505', message = 'managed billing provider account conflict';
   end if;
 
   insert into loyalty_private.managed_billing_account_versions (

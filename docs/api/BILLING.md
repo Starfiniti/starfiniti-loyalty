@@ -34,7 +34,7 @@ Only new managed growth may be restricted. Balance reads, refunds, reconciliatio
 
 `loyalty_private.record_managed_billing_account_v1` and `loyalty_private.record_managed_billing_state_v1` are security-definer functions with an empty search path. M14-S01 grants them to no browser, runtime, or general worker role.
 
-Recording is append-only and exact-idempotent. A matching retry returns the original public evidence selector. The same request key or provider event with changed normalized content fails with SQLSTATE `23505`. The provider event itself remains a replay fence even when a caller changes the request idempotency key.
+Recording is append-only and exact-idempotent. A matching retry returns the original public evidence selector. The same request key, provider customer linkage, or provider event with changed normalized content fails with SQLSTATE `23505`. Provider customer and event identities remain replay fences even when a caller changes the request idempotency key.
 
 ## Error and privacy behavior
 

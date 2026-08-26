@@ -2535,7 +2535,7 @@ tasks:
           - zero provider construction or network attempt in self-hosted mode
           - zero provider customer subscription event payment or identity reference in browser output
           - zero ledger customer programme connector coupon or checkout effect
-          - exact retry produces one private account or state revision and changed retry fails
+          - exact retry produces one private account or state revision and changed request provider customer or event replay fails
         targets:
           - strict BillingSummaryV1 accepts only the nine reviewed commercial states and six always-true protected paths
           - private account and normalized state evidence is immutable RLS-enabled tenant-bound and inaccessible to browser runtime and general workers

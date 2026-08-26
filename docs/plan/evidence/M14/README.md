@@ -11,7 +11,7 @@ Status: M14-S01 is active on `codex/m14-billing-foundation`. Production and the 
 ### Initial repository evidence
 
 - Initial implementation head: `ae08f07e726b9332148829e25f61dbd1f86a7a39`; stacked draft PR: [#46](https://github.com/Starfiniti/starfiniti-loyalty/pull/46).
-- Local lint, all workspace typechecks/tests, client contracts, workflow, entitlement, architecture, accessibility, migration and pgTAP static validation pass. The focused suites include 11 contract cases, four presentation cases, four server/provider cases, 59 planned pgTAP assertions, and one two-session billing replay probe.
+- Local lint, all workspace typechecks/tests, client contracts, workflow, entitlement, architecture, accessibility, migration and pgTAP static validation pass. The focused suites include 11 contract cases, four presentation cases, four server/provider cases, 61 planned pgTAP assertions, and one two-session billing replay probe. The final adversarial pass added caller-key-independent provider-customer replay fencing and races it alongside provider-event identity.
 - Real-component Chromium review passed at 1440×1000 and 390×844 in light and dark themes: one focusable main landmark, correct current navigation, no horizontal overflow, no browser errors, visible mobile destination, initial close-button focus, and menu-button focus restoration after Escape. Review found the dark warning badge was too muted; its corrected foreground computes to 8.25:1 against the mixed dark surface.
 - Windows repository-wide Prettier remains affected by the pre-existing CRLF checkout baseline, so clean Linux CI is the formatting/build and database-replay authority. No unrelated files were reformatted.
 
