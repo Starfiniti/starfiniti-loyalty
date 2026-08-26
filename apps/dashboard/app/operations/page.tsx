@@ -1,11 +1,13 @@
 import { redirect } from "next/navigation";
 import {
   Activity,
+  BadgeDollarSign,
   GitFork,
   PlugZap,
   ShieldCheck,
   TriangleAlert,
 } from "lucide-react";
+import { programmeDefinitionV2 } from "@starfiniti/contracts";
 import { MerchantShell } from "@/components/merchant-shell";
 import {
   canRetryConnectorEffect,
@@ -22,6 +24,7 @@ import {
 } from "@/lib/merchant-locale";
 import { hasEntitlement } from "@/lib/entitlements";
 import { getConnectorOperations } from "@/lib/server/connector-operations";
+import { getProgrammeCurrencyPolicies } from "@/lib/server/currency-policies";
 import { getEntitlementSnapshot } from "@/lib/server/entitlements";
 import { getProgrammeGroupSharingPolicy } from "@/lib/server/ecosystem";
 import { getMerchantProgrammeState } from "@/lib/server/programme";
@@ -30,6 +33,7 @@ import { buildSupportDiagnostics } from "@/lib/support-diagnostics";
 import { RetryEffectForm } from "./retry-effect-form";
 import { ActivitySourceProvisioningForm } from "./activity-source-provisioning-form";
 import { ConnectorProvisioningForm } from "./connector-provisioning-form";
+import { CurrencyPolicyForm } from "./currency-policy-form";
 import { ReconciliationForm } from "./reconciliation-form";
 import { ProgrammeSharingForm } from "./programme-sharing-form";
 import { SupportDiagnosticsDownload } from "./support-diagnostics-download";
@@ -85,6 +89,18 @@ export default async function OperationsPage({
       "version" in version.configuration &&
       version.configuration.version === "2",
   );
+  const publishedV2Version = programme.versions.find(
+    (version) =>
+      version.status === "published" &&
+      programmeDefinitionV2.safeParse(version.configuration).success,
+  );
+  const publishedV2Definition = publishedV2Version
+    ? programmeDefinitionV2.safeParse(publishedV2Version.configuration)
+    : null;
+  const currencyPolicies = publishedV2Version
+    ? await getProgrammeCurrencyPolicies(publishedV2Version.id)
+    : ({ kind: "unavailable" } as const);
+  const ecosystemEnabled = hasEntitlement(entitlements, "ecosystem.api");
   const wooConnections = connections.filter(
     (connection) => connection.platform === "woocommerce",
   );
@@ -151,6 +167,34 @@ export default async function OperationsPage({
             </div>
           </section>
         )}
+
+        {publishedV2Version && publishedV2Definition?.success ? (
+          currencyPolicies.kind === "ready" ? (
+            <CurrencyPolicyForm
+              baseCurrencyCode={publishedV2Definition.data.currencyCode}
+              baseMinorUnitDigits={
+                publishedV2Definition.data.currencyMinorUnitDigits
+              }
+              configurationEnabled={ecosystemEnabled}
+              mayConfigure={mayProvision}
+              policies={currencyPolicies.value.policies}
+              programmeVersionId={publishedV2Version.id}
+              programmeVersionNumber={publishedV2Version.versionNumber}
+            />
+          ) : (
+            <section className="customer-panel sharing-policy-unavailable">
+              <BadgeDollarSign aria-hidden="true" />
+              <div>
+                <h2>Currency conversion evidence unavailable</h2>
+                <p>
+                  The minimized policy projection could not be verified.
+                  Existing balances, refunds, reconciliation, and checkout are
+                  unaffected.
+                </p>
+              </div>
+            </section>
+          )
+        ) : null}
 
         {wooConnections.length === 0 ? (
           mayProvision &&

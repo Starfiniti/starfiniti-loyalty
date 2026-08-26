@@ -23,6 +23,7 @@ export * from "./campaign";
 export * from "./notification";
 export * from "./customer-experience";
 export * from "./ecosystem";
+export * from "./currency";
 
 export const commerceEnvelopeV1 = z.object({
   version: z.literal("1"),

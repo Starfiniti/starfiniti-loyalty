@@ -11,7 +11,8 @@
     "./campaign": "./src/campaign.ts",
     "./notification": "./src/notification.ts",
     "./referral": "./src/referral.ts",
-    "./tier-policy-v2": "./src/tier-policy-v2.ts"
+    "./tier-policy-v2": "./src/tier-policy-v2.ts",
+    "./currency": "./src/currency.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
