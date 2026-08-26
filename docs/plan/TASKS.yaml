@@ -2312,25 +2312,57 @@ tasks:
           - adversarial review added database-authoritative entitlement enforcement one-active-source serialization mutation-side ambiguity and owner-only delayed recovery for interrupted orchestration
           - production-build browser QA passes desktop mobile narrow light dark reduced-motion protocol switching enabled review interrupted states focus restoration visible control targets English-only overflow and zero-diagnostic checks
       - id: M13-S04-SCIM-PROVISIONING
-        status: planned
+        status: in_progress
         dependencies: [M13-S03-TENANT-FEDERATION]
         hypothesis: Tenant-scoped SCIM 2.0 users and groups with digest-only credentials can make deprovisioning immediate and retries deterministic.
+        baseline:
+          - no inbound SCIM endpoint credential resource or directory projection exists
+          - tenant federation uses a disabled Authentik user UUID subject that cannot correlate to Authentik default SCIM externalId
+          - memberships can be created only by organization creation or a one-use invitation
+        targets:
+          - exact Authentik SCIM externalId and hashed OIDC subject correlation creates or reactivates one membership only after both proofs exist
+          - active false DELETE role loss endpoint revocation and conflicting mapped roles revoke the live membership in the same transaction
+          - all endpoint credentials are 256-bit one-time values with digest-only persistence and immediate rotation
+          - supported RFC 7643/7644 discovery user group filter pagination PUT PATCH DELETE behavior passes contracts and official-client fixtures
+          - zero email username domain group-name JWT-metadata or browser selector can grant organization authority
         owner_inputs: [enterprise IdP SCIM test credential]
         acceptance:
           - ServiceProviderConfig ResourceTypes Users Groups filtering pagination PUT PATCH and DELETE cover the supported profile
           - credentials are one-time organization-scoped rotated and stored only as digests
           - external IDs are unique within provisioning source and allowlisted groups map to roles without direct claim authority
           - active false or DELETE revokes live membership immediately while preserving audit
+          - unprovisioned SSO provisioned-but-unmapped users and multi-role conflicts remain authority-free
+          - supported Authentik backchannel externalId equals the verified hashed OIDC subject and no email profile or group claim is requested
         failure_modes:
           - reusable plaintext credential persists
           - cross-source external ID collision
           - arbitrary group name becomes role
           - retry duplicates user group or membership
           - deprovisioned session retains tenant access
+          - SCIM email or username links an unrelated Supabase Auth principal
+          - multiple mapped roles resolve by privilege escalation instead of failing closed
+          - endpoint rotation or revocation leaves the old token or membership usable
+        security_boundaries:
+          - PostgreSQL derives endpoint organization federation source credential status current Auth subject provider identity and live membership
+          - Authentik hashed OIDC subject plus a prior active SCIM externalId record are both required before membership reconciliation
+          - only opaque Group resources explicitly allowlisted by owner or admin map to non-owner database roles
+          - directory PII raw bodies bearer headers and credential plaintext never enter audit logs or merchant projections
+          - SCIM has no ledger customer checkout notification billing or cross-tenant grants
         rollout: Enable one disabled organization endpoint run official client fixtures provision one test cohort deprovision and reconcile.
         rollback: Revoke endpoint credentials disable new provisioning preserve local owners and retain provisioning/audit history.
         verification:
-          - RFC 7643/7644 contract filter pagination patch idempotency concurrency credential rotation group allowlist stale-session and cross-tenant tests
+          - RFC 7643/7644 discovery schema media type filter pagination patch ETag idempotency concurrency credential rotation quota group allowlist stale-session and cross-tenant tests
+          - Authentik hashed-subject correlation fixture plus unprovisioned unmapped conflicting-role email-collision and endpoint-revocation adversarial cases
+        docs:
+          - docs/architecture/ADR/0054-authentik-correlated-scim-and-live-membership-reconciliation.md
+          - docs/operations/TENANT_SCIM.md
+        evidence:
+          - docs/plan/evidence/M13/README.md
+          - docs/plan/evidence/M13/tenant-scim-browser-qa-2026-08-26.md
+          - official RFC Editor Authentik and Supabase documentation reviewed 2026-08-26
+          - fresh isolated Supabase PostgreSQL 17 replay passes all 74 migrations and all 49 focused SCIM pgTAP assertions
+          - two-session endpoint retry and group-role race probe passes with one effect one stale failure exact audit and zero ledger value
+          - local Chromium browser QA passes desktop mobile light dark reduced-motion interaction overflow English-only and zero-diagnostic checks
       - id: M13-S05-SUPPORT-AGENCY-AND-OFFBOARDING
         status: planned
         dependencies: [M13-S04-SCIM-PROVISIONING]

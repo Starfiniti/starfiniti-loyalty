@@ -1,8 +1,19 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { randomUUID } from "node:crypto";
 import { safeAppPath } from "@/lib/safe-navigation";
+import { claimOrganizationScimMembership } from "@/lib/server/enterprise-identity";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { dashboardPublicUrl, workforceSsoFlowId } from "@/lib/workforce-sso";
+
+const ORGANIZATION_ID =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
+const SCIM_CLAIM_OUTCOMES = new Set([
+  "created",
+  "updated",
+  "unchanged",
+  "manual_membership",
+]);
 
 function privateRedirect(target: URL): NextResponse {
   const response = NextResponse.redirect(target);
@@ -32,8 +43,11 @@ export async function GET(request: Request) {
   }
 
   const code = requestUrl.searchParams.get("code");
+  const organizationId = requestUrl.searchParams.get("organization");
   let failureReason = code ? "exchange_failed" : "code_missing";
-  if (code) {
+  if (organizationId !== null && !ORGANIZATION_ID.test(organizationId)) {
+    failureReason = "federation_context_invalid";
+  } else if (code) {
     const supabase = await createSupabaseServerClient();
     const flowId = workforceSsoFlowId(
       requestUrl.searchParams.get("sb_flow_id"),
@@ -49,12 +63,33 @@ export async function GET(request: Request) {
       flowId ? { flowId } : undefined,
     );
     if (!error) {
-      return privateRedirect(
-        dashboardPublicUrl(
-          publicOrigin,
-          safeAppPath(requestUrl.searchParams.get("next")),
-        ),
-      );
+      if (organizationId !== null) {
+        try {
+          const claim = await claimOrganizationScimMembership(
+            organizationId,
+            randomUUID(),
+          );
+          if (!SCIM_CLAIM_OUTCOMES.has(claim.outcome)) {
+            failureReason = "federation_membership_unavailable";
+          } else {
+            return privateRedirect(
+              dashboardPublicUrl(
+                publicOrigin,
+                safeAppPath(requestUrl.searchParams.get("next")),
+              ),
+            );
+          }
+        } catch {
+          failureReason = "federation_membership_unavailable";
+        }
+      } else {
+        return privateRedirect(
+          dashboardPublicUrl(
+            publicOrigin,
+            safeAppPath(requestUrl.searchParams.get("next")),
+          ),
+        );
+      }
     }
   }
 

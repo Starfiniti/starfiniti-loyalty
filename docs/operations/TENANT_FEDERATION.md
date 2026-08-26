@@ -1,5 +1,10 @@
 # Tenant federation operations
 
+SCIM provisioning for the same tenant source is documented separately in
+[`TENANT_SCIM.md`](./TENANT_SCIM.md). Federation authentication cannot create
+tenant authority by itself; an enterprise user must be invited manually or
+correlated through active SCIM provisioning and one reviewed group-role map.
+
 This runbook enables per-organization OIDC or SAML through Authentik while Supabase Auth continues to issue application sessions. PostgreSQL membership remains the authorization authority. Do not treat an IdP email, domain, group, role, NameID, or JWT claim as organization access.
 
 ## Production prerequisites
@@ -24,7 +29,7 @@ Create a dedicated service account and a non-expiring API token held only in the
 - OAuth2/OIDC providers;
 - applications.
 
-The runtime calls only fixed `/api/v3/` paths on the configured Authentik origin. It creates deterministic `loyalty-<opaque>` objects, a dedicated authentication flow restricted to exactly one source, a hidden application, and a downstream OIDC provider. Both OIDC hops request only `openid`. Do not add Authentik email, profile, or group mappings to the downstream provider. `providerOpenidPropertyMappingId` must identify only the built-in OpenID subject scope mapping. Every `sourceUserPropertyMappingIds` entry must be a reviewed tenant-federation mapping that derives the local identifier from the stable upstream subject and does not require or copy email, profile, domain, role, or group claims.
+The runtime calls only fixed `/api/v3/` paths on the configured Authentik origin. It creates deterministic `loyalty-<opaque>` objects, a dedicated authentication flow restricted to exactly one source, a hidden application, and a downstream OIDC provider. Both OIDC hops request only `openid`. Do not add Authentik email, profile, or group mappings to the downstream provider. `providerOpenidPropertyMappingId` must identify only the built-in OpenID subject scope mapping. The downstream provider must use Authentik's `hashed_user_id` subject mode: its opaque `sub` then matches Authentik's default outbound SCIM `externalId` without copying email, username, domain, role, group, or an arbitrary claim. Every `sourceUserPropertyMappingIds` entry must be a reviewed tenant-federation mapping that derives the local identifier from the stable upstream subject and does not require or copy email, profile, domain, role, or group claims.
 
 Record the UUIDs of these existing Authentik objects:
 

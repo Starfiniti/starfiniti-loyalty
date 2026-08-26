@@ -21,8 +21,11 @@ describe("tenant federation navigation", () => {
       tenantFederationLoginCallbackUrl(
         "https://loyalty.starfiniti.com",
         "//evil.test",
+        "20000000-0000-4000-8000-000000000001",
       ),
-    ).toBe("https://loyalty.starfiniti.com/auth/callback?next=%2F");
+    ).toBe(
+      "https://loyalty.starfiniti.com/auth/callback?organization=20000000-0000-4000-8000-000000000001&next=%2F",
+    );
   });
 
   it("accepts only the exact Supabase endpoint, mode, and provider", () => {

@@ -20,8 +20,13 @@ export function tenantFederationLinkCallbackUrl(
 export function tenantFederationLoginCallbackUrl(
   publicOrigin: string,
   nextPath: unknown,
+  organizationId: string,
 ): string {
+  if (!ORGANIZATION_ID.test(organizationId)) {
+    throw new Error("federation_organization_invalid");
+  }
   const callback = dashboardPublicUrl(publicOrigin, "/auth/callback");
+  callback.searchParams.set("organization", organizationId);
   callback.searchParams.set("next", safeAppPath(nextPath));
   return callback.toString();
 }

@@ -7,8 +7,10 @@ import {
   getOrganizationTeamWorkspace,
 } from "@/lib/server/enterprise-identity";
 import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
+import { getOrganizationScimWorkspace } from "@/lib/server/scim-management";
 import { AccessReview } from "./access-review";
 import { FederationLifecycle } from "./federation-lifecycle";
+import { ScimLifecycle } from "./scim-lifecycle";
 import { TeamLifecycle } from "./team-lifecycle";
 
 export default async function OrganizationAccessPage({
@@ -26,13 +28,26 @@ export default async function OrganizationAccessPage({
   let workspace = null;
   let teamWorkspace = null;
   let federationWorkspace = null;
+  let scimWorkspace = null;
   let unavailable = false;
   try {
-    [workspace, teamWorkspace, federationWorkspace] = await Promise.all([
-      getOrganizationAccessWorkspace(tenant.context.organization.public_id),
-      getOrganizationTeamWorkspace(tenant.context.organization.public_id),
-      getOrganizationFederationWorkspace(tenant.context.organization.public_id),
-    ]);
+    workspace = await getOrganizationAccessWorkspace(
+      tenant.context.organization.public_id,
+    );
+    const [teamResult, federationResult, scimResult] = await Promise.allSettled(
+      [
+        getOrganizationTeamWorkspace(tenant.context.organization.public_id),
+        getOrganizationFederationWorkspace(
+          tenant.context.organization.public_id,
+        ),
+        getOrganizationScimWorkspace(tenant.context.organization.public_id),
+      ],
+    );
+    if (teamResult.status === "fulfilled") teamWorkspace = teamResult.value;
+    if (federationResult.status === "fulfilled") {
+      federationWorkspace = federationResult.value;
+    }
+    if (scimResult.status === "fulfilled") scimWorkspace = scimResult.value;
   } catch {
     unavailable = true;
   }
@@ -69,6 +84,12 @@ export default async function OrganizationAccessPage({
                     : null
                 }
                 workspace={federationWorkspace}
+              />
+            ) : null}
+            {scimWorkspace && federationWorkspace ? (
+              <ScimLifecycle
+                federationSources={federationWorkspace.sources}
+                workspace={scimWorkspace}
               />
             ) : null}
           </>

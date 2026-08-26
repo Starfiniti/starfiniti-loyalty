@@ -36,7 +36,11 @@ describe("tenant federation link callback", () => {
     getWorkspace.mockResolvedValue({
       organization: { slug: "acme" },
     });
-    resolveLogin.mockResolvedValue({ schemaVersion: "1", provider });
+    resolveLogin.mockResolvedValue({
+      schemaVersion: "2",
+      organizationId,
+      provider,
+    });
     getUserIdentities.mockResolvedValue({
       data: { identities: [{ provider }] },
       error: null,

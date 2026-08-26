@@ -56,7 +56,11 @@ export async function signInWithTenantSso(formData: FormData): Promise<never> {
       const result = await supabase.auth.signInWithOAuth({
         provider: provider as `custom:${string}`,
         options: {
-          redirectTo: tenantFederationLoginCallbackUrl(publicOrigin, nextPath),
+          redirectTo: tenantFederationLoginCallbackUrl(
+            publicOrigin,
+            nextPath,
+            login.organizationId,
+          ),
           scopes: "openid",
           skipBrowserRedirect: true,
         },
