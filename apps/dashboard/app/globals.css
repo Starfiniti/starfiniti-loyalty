@@ -13339,6 +13339,7 @@ html[data-dashboard-theme="dark"]
 .access-current-card,
 .access-role-section,
 .access-trust-boundary,
+.access-partial-unavailable,
 .access-unavailable {
   border: 1px solid var(--merchant-border, #e4e4e7);
   border-radius: 12px;
@@ -13686,6 +13687,34 @@ html[data-dashboard-theme="dark"]
   align-items: center;
   gap: 15px;
   padding: 20px 22px;
+}
+
+.access-partial-unavailable {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 15px 17px;
+  border-color: color-mix(in srgb, #c97700 32%, var(--merchant-border));
+  background: color-mix(in srgb, #fff2dd 76%, var(--merchant-surface));
+}
+
+.access-partial-unavailable > svg {
+  width: 19px;
+  height: 19px;
+  flex: 0 0 auto;
+  color: #a96000;
+}
+
+.access-partial-unavailable h2 {
+  color: var(--merchant-text, #18181b);
+  font-size: 12px;
+}
+
+.access-partial-unavailable p {
+  margin-top: 4px;
+  color: var(--merchant-muted, #71717a);
+  font-size: 10px;
+  line-height: 1.55;
 }
 
 .access-trust-boundary > svg,

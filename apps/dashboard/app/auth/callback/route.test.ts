@@ -100,6 +100,23 @@ describe("workforce SSO callback", () => {
     );
   });
 
+  it("accepts an existing live invitation membership without changing its provenance", async () => {
+    exchangeCodeForSession.mockResolvedValue({ error: null });
+    claimMembership.mockResolvedValue({
+      outcome: "manual_membership",
+      role: "analyst",
+      revision: 2,
+    });
+    const response = await GET(
+      new Request(
+        "https://0.0.0.0:3000/auth/callback?organization=20000000-0000-4000-8000-000000000001&code=one-time-code&sb_flow_id=bc0f26282e6abeac61d7b21c49683e6a&next=%2Fanalytics",
+      ),
+    );
+    expect(response.headers.get("location")).toBe(
+      "https://loyalty.starfiniti.com/analytics",
+    );
+  });
+
   it("fails closed when provisioning is missing or role mapping conflicts", async () => {
     exchangeCodeForSession.mockResolvedValue({ error: null });
     claimMembership.mockResolvedValue({

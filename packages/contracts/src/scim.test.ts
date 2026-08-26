@@ -3,6 +3,7 @@ import {
   createOrganizationScimEndpointCommandV1,
   organizationScimEndpointCommandV1,
   organizationScimWorkspaceV1,
+  organizationScimMembershipClaimV1,
   organizationScimRoleMappingCommandV1,
   SCIM_CORE_GROUP_SCHEMA,
   SCIM_CORE_USER_SCHEMA,
@@ -133,6 +134,30 @@ describe("SCIM V1 contracts", () => {
       organizationScimRoleMappingCommandV1.safeParse({
         ...command,
         role: "owner",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("requires accepted membership claims to carry exact live authority", () => {
+    expect(
+      organizationScimMembershipClaimV1.safeParse({
+        outcome: "manual_membership",
+        role: "analyst",
+        revision: 2,
+      }).success,
+    ).toBe(true);
+    expect(
+      organizationScimMembershipClaimV1.safeParse({
+        outcome: "created",
+        role: null,
+        revision: null,
+      }).success,
+    ).toBe(false);
+    expect(
+      organizationScimMembershipClaimV1.safeParse({
+        outcome: "unavailable",
+        role: "admin",
+        revision: null,
       }).success,
     ).toBe(false);
   });

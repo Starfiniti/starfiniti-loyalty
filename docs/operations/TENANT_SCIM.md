@@ -91,6 +91,13 @@ blindly retrying.
   SCIM-managed membership in the same database transaction.
 - Existing sessions fail on their next live tenant-context check. Database RLS
   is authoritative even if an application cookie has not expired.
+- A live invitation-created membership remains valid after authentication by
+  the exact organization provider and is not silently converted to SCIM. A
+  revoked manual membership remains revoked.
+- Repeated User or Group DELETE returns 204 without another state change. If
+  Authentik later reprovisions the same `externalId`, Loyalty reactivates the
+  same immutable resource ID at a higher revision. A restored Group has no role
+  mapping until an owner or admin reviews it again.
 
 ## Rotate or revoke
 
@@ -113,7 +120,10 @@ visible for reconstruction.
 
 - A successful discovery request returns `application/scim+json`, `no-store`,
   and bounded rate-limit headers.
-- Replayed creates return one resource. Stale `If-Match` changes return HTTP 412. Invalid/revoked tokens return HTTP 401 without revealing endpoint state.
+- Replayed creates return one resource, DELETE retry remains a 204 success, and
+  tombstone reprovisioning preserves resource identity. Stale `If-Match`
+  changes return HTTP 412. Invalid/revoked tokens return HTTP 401 without
+  revealing endpoint state.
 - Reconcile Authentik selected users/groups, Starfiniti active records, bound
   members, approved mappings, and minimized recent activity.
 - For suspected credential exposure, revoke first. Do not rotate when the

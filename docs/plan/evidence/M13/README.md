@@ -85,8 +85,9 @@ Status: repository candidate; production remains disabled and unchanged.
   group names cannot grant authority. SCIM can never map `owner`.
 - The RFC 7643/7644 profile implements discovery, Users, Groups, exact filters,
   bounded pagination, POST/PUT/PATCH/DELETE, weak ETags, immediate rotation and
-  revocation, deterministic create retry, quotas, and 512 KiB/2,000-member
-  limits. PostgreSQL independently rejects nested undeclared attributes.
+  revocation, deterministic create/delete retry, tombstone reprovisioning,
+  quotas, and 512 KiB/2,000-member limits. PostgreSQL independently rejects
+  nested undeclared attributes.
 - `active: false`, deletion, last-role removal, conflicting roles, and endpoint
   revocation reconcile the live membership in the same transaction. Existing
   sessions fail their next database-authoritative tenant-context check.
@@ -94,22 +95,31 @@ Status: repository candidate; production remains disabled and unchanged.
   rotation/revocation, synchronized counts, opaque group review, role mapping,
   and minimized recent activity. The operational handoff is in
   `docs/operations/TENANT_SCIM.md`.
+- Exact tenant-provider authentication preserves a live invitation-created
+  membership without changing its provenance; a revoked manual membership and
+  mismatched SCIM provenance fail closed.
 
 ### Repository verification
 
 - Fresh isolated `supabase/postgres:17.6.1.136` replay passed all 74 additive
   migrations as `supabase_admin`; the harness added only the minimal GoTrue
   schema fields absent from the bare database image. Production was untouched.
-- `organization_scim_provisioning_test.sql` passes 49/49 assertions covering
+- `organization_scim_provisioning_test.sql` passes 60/60 assertions covering
   grants/RLS, digest-only lifecycle, discovery, resources, filtering,
   pagination, exact subject correlation, owner prohibition, deprovisioning,
-  multi-role failure, immutable external IDs, rotation, and revocation.
+  multi-role failure, invitation/SCIM separation, immutable external IDs,
+  idempotent DELETE, safe tombstone reprovisioning, fresh rotation, and
+  revocation.
 - `verify-scim-concurrency.mjs` passes two-session exact endpoint creation and
   competing group-role mapping: one endpoint effect, one role winner, one stale
   failure, exact audits, and zero ledger transactions.
 - Focused contract, database-boundary, action, callback, and SCIM route tests
   pass. Group PATCH, optimistic `If-Match`, request-size rejection, and
   plaintext-token exclusion are explicit cases.
+- Adversarial review found and fixed active credential reuse, loss/reuse of a
+  one-time credential across refreshed forms, silently hidden partial identity
+  failures, permanent tombstones, non-idempotent DELETE retry, and a tenant-SSO
+  regression that incorrectly required SCIM for an already invited member.
 - Chromium browser QA passes desktop `1440 × 1100` and mobile `390 × 844`
   across light/dark, reduced motion, action-state copy, responsive grids,
   English-only output, zero overflow, and zero browser diagnostics. Evidence is

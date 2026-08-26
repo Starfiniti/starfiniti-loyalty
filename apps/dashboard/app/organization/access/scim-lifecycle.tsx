@@ -72,6 +72,13 @@ export function ScimLifecycle({
   const mappedGroups = workspace.groups.filter(
     ({ mappedRole }) => mappedRole !== null,
   ).length;
+  const [createState, createAction, createPending] = useActionState(
+    createScimEndpointAction,
+    idle,
+  );
+  const createFormKey = `${workspace.endpoints.length}:${availableSources
+    .map(({ id }) => id)
+    .join(",")}`;
 
   return (
     <section className="scim-lifecycle" aria-labelledby="scim-title">
@@ -132,12 +139,14 @@ export function ScimLifecycle({
         </div>
       ) : null}
 
-      {workspace.mayConfigure &&
-      workspace.entitlementEnabled &&
-      availableSources.length > 0 &&
-      workspace.endpoints.length < 5 ? (
+      {workspace.mayConfigure && workspace.entitlementEnabled ? (
         <ScimCreateForm
+          key={createFormKey}
+          action={createAction}
+          atLimit={workspace.endpoints.length >= 5}
           organizationId={workspace.organization.id}
+          pending={createPending}
+          state={createState}
           sources={availableSources}
         />
       ) : null}
@@ -239,18 +248,23 @@ function SummaryMetric({
 }
 
 function ScimCreateForm({
+  action,
+  atLimit,
   organizationId,
+  pending,
+  state,
   sources,
 }: Readonly<{
+  action: (payload: FormData) => void;
+  atLimit: boolean;
   organizationId: string;
+  pending: boolean;
+  state: ScimActionState;
   sources: readonly OrganizationFederationSourceReadV1[];
 }>) {
   const [operationId] = useState(() => crypto.randomUUID());
   const [credential] = useState(generateScimCredential);
-  const [state, action, pending] = useActionState(
-    createScimEndpointAction,
-    idle,
-  );
+  const canCreate = !atLimit && sources.length > 0;
   return (
     <form action={action} className="scim-create-form" autoComplete="off">
       <input name="organizationId" type="hidden" value={organizationId} />
@@ -269,9 +283,18 @@ function ScimCreateForm({
       </div>
       <label>
         <span>Identity provider</span>
-        <select name="federationSourceId" required defaultValue="">
+        <select
+          disabled={!canCreate}
+          name="federationSourceId"
+          required
+          defaultValue=""
+        >
           <option disabled value="">
-            Choose a validated provider
+            {atLimit
+              ? "Endpoint limit reached"
+              : sources.length === 0
+                ? "No unused validated provider"
+                : "Choose a validated provider"}
           </option>
           {sources.map((source) => (
             <option key={source.id} value={source.id}>
@@ -283,6 +306,7 @@ function ScimCreateForm({
       <label>
         <span>Directory name</span>
         <input
+          disabled={!canCreate}
           maxLength={120}
           name="displayName"
           placeholder="Authentik workforce directory"
@@ -291,6 +315,7 @@ function ScimCreateForm({
       </label>
       <label className="scim-confirmation">
         <input
+          disabled={!canCreate}
           name="confirmation"
           required
           type="checkbox"
@@ -301,7 +326,7 @@ function ScimCreateForm({
           group and map it to a non-owner role.
         </span>
       </label>
-      <button disabled={pending} type="submit">
+      <button disabled={pending || !canCreate} type="submit">
         {pending ? (
           <RefreshCw className="spin" aria-hidden="true" />
         ) : (
@@ -326,9 +351,6 @@ function ScimEndpointCard({
   mayConfigure: boolean;
   organizationId: string;
 }>) {
-  const [operationId] = useState(() => crypto.randomUUID());
-  const [credential] = useState(generateScimCredential);
-  const [selected, setSelected] = useState<"rotate" | "revoke" | null>(null);
   const [state, action, pending] = useActionState(
     updateScimEndpointAction,
     idle,
@@ -361,71 +383,93 @@ function ScimEndpointCard({
         <Metric label="Revision" value={endpoint.revision} />
       </div>
       {canRotate || canRevoke ? (
-        <form
+        <ScimEndpointActionForm
+          key={endpoint.revision}
           action={action}
-          className="scim-endpoint-actions"
-          autoComplete="off"
-        >
-          <input name="organizationId" type="hidden" value={organizationId} />
-          <input name="endpointId" type="hidden" value={endpoint.id} />
-          <input
-            name="expectedRevision"
-            type="hidden"
-            value={endpoint.revision}
-          />
-          <input name="operationId" type="hidden" value={operationId} />
-          <input name="credential" type="hidden" value={credential} />
-          <label>
-            <span>Action</span>
-            <select
-              name="scimAction"
-              onChange={(event) =>
-                setSelected(event.target.value as "rotate" | "revoke")
-              }
-              required
-              value={selected ?? ""}
-            >
-              <option disabled value="">
-                Choose an action
-              </option>
-              {canRotate ? (
-                <option value="rotate">Rotate credential</option>
-              ) : null}
-              {canRevoke ? (
-                <option value="revoke">Revoke endpoint</option>
-              ) : null}
-            </select>
-          </label>
-          <label className="scim-action-reason">
-            <span>Audited reason</span>
-            <input maxLength={500} minLength={8} name="reason" required />
-          </label>
-          <label className="scim-confirmation">
-            <input
-              name="confirmation"
-              required
-              type="checkbox"
-              value="scim-endpoint-lifecycle"
-            />
-            <span>
-              {selected === "revoke"
-                ? "I understand this revokes SCIM-managed memberships immediately."
-                : "I understand the previous credential stops working immediately."}
-            </span>
-          </label>
-          <button
-            className={selected === "revoke" ? "danger" : "secondary"}
-            disabled={pending || selected === null}
-            type="submit"
-          >
-            {pending ? <RefreshCw className="spin" aria-hidden="true" /> : null}
-            {pending ? "Applying…" : "Apply action"}
-          </button>
-          <ScimActionMessage state={state} />
-          <CredentialSetup state={state} />
-        </form>
+          canRevoke={canRevoke}
+          canRotate={canRotate}
+          endpoint={endpoint}
+          organizationId={organizationId}
+          pending={pending}
+          state={state}
+        />
       ) : null}
     </article>
+  );
+}
+
+function ScimEndpointActionForm({
+  action,
+  canRevoke,
+  canRotate,
+  endpoint,
+  organizationId,
+  pending,
+  state,
+}: Readonly<{
+  action: (payload: FormData) => void;
+  canRevoke: boolean;
+  canRotate: boolean;
+  endpoint: OrganizationScimEndpointReadV1;
+  organizationId: string;
+  pending: boolean;
+  state: ScimActionState;
+}>) {
+  const [operationId] = useState(() => crypto.randomUUID());
+  const [credential] = useState(generateScimCredential);
+  const [selected, setSelected] = useState<"rotate" | "revoke" | null>(null);
+  return (
+    <form action={action} className="scim-endpoint-actions" autoComplete="off">
+      <input name="organizationId" type="hidden" value={organizationId} />
+      <input name="endpointId" type="hidden" value={endpoint.id} />
+      <input name="expectedRevision" type="hidden" value={endpoint.revision} />
+      <input name="operationId" type="hidden" value={operationId} />
+      <input name="credential" type="hidden" value={credential} />
+      <label>
+        <span>Action</span>
+        <select
+          name="scimAction"
+          onChange={(event) =>
+            setSelected(event.target.value as "rotate" | "revoke")
+          }
+          required
+          value={selected ?? ""}
+        >
+          <option disabled value="">
+            Choose an action
+          </option>
+          {canRotate ? <option value="rotate">Rotate credential</option> : null}
+          {canRevoke ? <option value="revoke">Revoke endpoint</option> : null}
+        </select>
+      </label>
+      <label className="scim-action-reason">
+        <span>Audited reason</span>
+        <input maxLength={500} minLength={8} name="reason" required />
+      </label>
+      <label className="scim-confirmation">
+        <input
+          name="confirmation"
+          required
+          type="checkbox"
+          value="scim-endpoint-lifecycle"
+        />
+        <span>
+          {selected === "revoke"
+            ? "I understand this revokes SCIM-managed memberships immediately."
+            : "I understand the previous credential stops working immediately."}
+        </span>
+      </label>
+      <button
+        className={selected === "revoke" ? "danger" : "secondary"}
+        disabled={pending || selected === null}
+        type="submit"
+      >
+        {pending ? <RefreshCw className="spin" aria-hidden="true" /> : null}
+        {pending ? "Applying…" : "Apply action"}
+      </button>
+      <ScimActionMessage state={state} />
+      <CredentialSetup state={state} />
+    </form>
   );
 }
 

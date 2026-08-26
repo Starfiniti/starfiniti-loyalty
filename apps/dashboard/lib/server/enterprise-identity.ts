@@ -4,6 +4,7 @@ import { createHash } from "node:crypto";
 
 import {
   enterpriseIdentityMutationResultV1,
+  organizationScimMembershipClaimV1,
   organizationAccessWorkspaceV1,
   organizationFederationLoginV2,
   organizationFederationWorkspaceV1,
@@ -14,6 +15,7 @@ import {
   type EnterpriseIdentityMutationResultV1,
   type OrganizationLifecycleCommandV1,
   type OrganizationMemberCommandV1,
+  type OrganizationScimMembershipClaimV1,
   type OrganizationAccessWorkspaceV1,
   type OrganizationFederationWorkspaceV1,
   type OrganizationFederationLoginV2,
@@ -151,9 +153,7 @@ export async function resolveOrganizationFederationLogin(
 export async function claimOrganizationScimMembership(
   organizationId: string,
   correlationId: string,
-): Promise<
-  Readonly<{ outcome: string; role: string | null; revision: number | null }>
-> {
+): Promise<OrganizationScimMembershipClaimV1> {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .schema("loyalty")
@@ -167,7 +167,7 @@ export async function claimOrganizationScimMembership(
     role?: unknown;
     membership_revision?: unknown;
   }> | null;
-  if (!row || typeof row.outcome !== "string") {
+  if (!row) {
     throw new Error("organization_scim_claim_invalid");
   }
   const revision =
@@ -177,11 +177,13 @@ export async function claimOrganizationScimMembership(
   if (revision !== null && (!Number.isInteger(revision) || revision < 1)) {
     throw new Error("organization_scim_claim_invalid");
   }
-  return {
+  const parsed = organizationScimMembershipClaimV1.safeParse({
     outcome: row.outcome,
     role: typeof row.role === "string" ? row.role : null,
     revision,
-  };
+  });
+  if (!parsed.success) throw new Error("organization_scim_claim_invalid");
+  return parsed.data;
 }
 
 export async function createOrganization(command: CreateOrganizationCommandV1) {

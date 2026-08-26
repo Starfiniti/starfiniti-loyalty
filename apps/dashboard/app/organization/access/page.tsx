@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { LockKeyhole } from "lucide-react";
+import { LockKeyhole, TriangleAlert } from "lucide-react";
 import { MerchantShell } from "@/components/merchant-shell";
 import {
   getOrganizationAccessWorkspace,
@@ -29,25 +29,38 @@ export default async function OrganizationAccessPage({
   let teamWorkspace = null;
   let federationWorkspace = null;
   let scimWorkspace = null;
+  let identityControlsUnavailable = false;
   let unavailable = false;
   try {
     workspace = await getOrganizationAccessWorkspace(
       tenant.context.organization.public_id,
     );
-    const [teamResult, federationResult, scimResult] = await Promise.allSettled(
-      [
-        getOrganizationTeamWorkspace(tenant.context.organization.public_id),
-        getOrganizationFederationWorkspace(
-          tenant.context.organization.public_id,
-        ),
-        getOrganizationScimWorkspace(tenant.context.organization.public_id),
-      ],
-    );
-    if (teamResult.status === "fulfilled") teamWorkspace = teamResult.value;
-    if (federationResult.status === "fulfilled") {
-      federationWorkspace = federationResult.value;
+    if (workspace) {
+      const [teamResult, federationResult, scimResult] =
+        await Promise.allSettled([
+          getOrganizationTeamWorkspace(tenant.context.organization.public_id),
+          getOrganizationFederationWorkspace(
+            tenant.context.organization.public_id,
+          ),
+          getOrganizationScimWorkspace(tenant.context.organization.public_id),
+        ]);
+      const mayReviewDirectory = ["owner", "admin", "auditor"].includes(
+        workspace.currentAccess.role,
+      );
+      if (teamResult.status === "fulfilled") teamWorkspace = teamResult.value;
+      if (federationResult.status === "fulfilled") {
+        federationWorkspace = federationResult.value;
+      }
+      if (scimResult.status === "fulfilled") scimWorkspace = scimResult.value;
+      identityControlsUnavailable =
+        federationResult.status === "rejected" ||
+        federationResult.value === null ||
+        (mayReviewDirectory &&
+          (teamResult.status === "rejected" ||
+            teamResult.value === null ||
+            scimResult.status === "rejected" ||
+            scimResult.value === null));
     }
-    if (scimResult.status === "fulfilled") scimWorkspace = scimResult.value;
   } catch {
     unavailable = true;
   }
@@ -74,6 +87,18 @@ export default async function OrganizationAccessPage({
         {workspace ? (
           <>
             <AccessReview workspace={workspace} />
+            {identityControlsUnavailable ? (
+              <section className="access-partial-unavailable" role="status">
+                <TriangleAlert aria-hidden="true" />
+                <div>
+                  <h2>Some identity controls are temporarily unavailable</h2>
+                  <p>
+                    Existing memberships remain authoritative. Retry before
+                    making a team, SSO, or directory access decision.
+                  </p>
+                </div>
+              </section>
+            ) : null}
             {teamWorkspace ? <TeamLifecycle workspace={teamWorkspace} /> : null}
             {federationWorkspace ? (
               <FederationLifecycle

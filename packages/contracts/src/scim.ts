@@ -362,6 +362,44 @@ export const organizationScimRoleMappingResultV1 = z
   })
   .strict();
 
+export const organizationScimMembershipClaimV1 = z
+  .object({
+    outcome: z.enum([
+      "created",
+      "updated",
+      "unchanged",
+      "manual_membership",
+      "unavailable",
+      "unbound",
+      "revoked",
+      "role_conflict",
+    ]),
+    role: z
+      .enum(["owner", "admin", "marketer", "operator", "analyst", "auditor"])
+      .nullable(),
+    revision: z.number().int().min(1).nullable(),
+  })
+  .strict()
+  .superRefine((claim, context) => {
+    const accepted = [
+      "created",
+      "updated",
+      "unchanged",
+      "manual_membership",
+    ].includes(claim.outcome);
+    if (
+      (accepted && (claim.role === null || claim.revision === null)) ||
+      (!accepted && claim.role !== null)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["outcome"],
+        message:
+          "only an accepted claim carries live role and revision authority",
+      });
+    }
+  });
+
 export type ScimUserWriteV1 = z.infer<typeof scimUserWriteV1>;
 export type ScimGroupWriteV1 = z.infer<typeof scimGroupWriteV1>;
 export type ScimPatchRequestV1 = z.infer<typeof scimPatchRequestV1>;
@@ -392,4 +430,7 @@ export type OrganizationScimEndpointMutationResultV1 = z.infer<
 >;
 export type OrganizationScimRoleMappingResultV1 = z.infer<
   typeof organizationScimRoleMappingResultV1
+>;
+export type OrganizationScimMembershipClaimV1 = z.infer<
+  typeof organizationScimMembershipClaimV1
 >;

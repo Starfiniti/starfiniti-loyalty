@@ -38,6 +38,7 @@ type ScimDatabaseRow = Readonly<{
 type ScimTarget = Readonly<{
   resourceType: ScimResourceType;
   resourceId: string | null;
+  discoveryId: string | null;
 }>;
 
 function scimError(
@@ -136,9 +137,46 @@ function parseTarget(resource: readonly string[]): ScimTarget | null {
   ) {
     return null;
   }
-  if (id && type !== "Users" && type !== "Groups") return null;
-  if (id && !ENDPOINT_ID.test(id)) return null;
-  return { resourceType: type, resourceId: id ?? null };
+  if (!id) {
+    return { resourceType: type, resourceId: null, discoveryId: null };
+  }
+  if (type === "Users" || type === "Groups") {
+    return ENDPOINT_ID.test(id)
+      ? { resourceType: type, resourceId: id, discoveryId: null }
+      : null;
+  }
+  if (type === "ResourceTypes" && ["User", "Group"].includes(id)) {
+    return { resourceType: type, resourceId: null, discoveryId: id };
+  }
+  if (
+    type === "Schemas" &&
+    [SCIM_CORE_USER_SCHEMA, SCIM_CORE_GROUP_SCHEMA].includes(
+      id as typeof SCIM_CORE_USER_SCHEMA,
+    )
+  ) {
+    return { resourceType: type, resourceId: null, discoveryId: id };
+  }
+  return null;
+}
+
+function selectDiscoveryResource(
+  document: unknown,
+  id: string,
+): unknown | null {
+  if (!document || typeof document !== "object" || Array.isArray(document)) {
+    return null;
+  }
+  const resources = (document as { Resources?: unknown }).Resources;
+  if (!Array.isArray(resources)) return null;
+  return (
+    resources.find(
+      (resource) =>
+        resource !== null &&
+        typeof resource === "object" &&
+        !Array.isArray(resource) &&
+        (resource as { id?: unknown }).id === id,
+    ) ?? null
+  );
 }
 
 function positiveInteger(
@@ -425,14 +463,22 @@ export async function handleScimRequest(
     }
     if (row.http_status === 204)
       return new Response(null, { status: 204, headers });
+    const selectedDiscovery = target.discoveryId
+      ? selectDiscoveryResource(row.response_document, target.discoveryId)
+      : null;
+    if (target.discoveryId && selectedDiscovery === null) {
+      return scimError(
+        404,
+        "The SCIM resource was not found.",
+        undefined,
+        headers,
+      );
+    }
+    const responseDocument = selectedDiscovery ?? row.response_document;
     const document =
       target.resourceType === "Users" || target.resourceType === "Groups"
-        ? hydrateResource(
-            row.response_document,
-            target.resourceType,
-            scimBaseUrl,
-          )
-        : row.response_document;
+        ? hydrateResource(responseDocument, target.resourceType, scimBaseUrl)
+        : responseDocument;
     if (
       row.http_status === 201 &&
       document &&

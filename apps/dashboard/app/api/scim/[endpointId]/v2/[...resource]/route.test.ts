@@ -103,6 +103,53 @@ describe("organization SCIM API", () => {
     });
   });
 
+  it("selects individual ResourceType and Schema documents from authorized discovery", async () => {
+    for (const [resourceType, id, document] of [
+      [
+        "ResourceTypes",
+        "User",
+        {
+          schemas: ["urn:ietf:params:scim:schemas:core:2.0:ResourceType"],
+          id: "User",
+          name: "User",
+          endpoint: "/Users",
+          schema: SCIM_CORE_USER_SCHEMA,
+        },
+      ],
+      [
+        "Schemas",
+        SCIM_CORE_GROUP_SCHEMA,
+        {
+          schemas: ["urn:ietf:params:scim:schemas:core:2.0:Schema"],
+          id: SCIM_CORE_GROUP_SCHEMA,
+          name: "Group",
+          attributes: [],
+        },
+      ],
+    ] as const) {
+      databaseReturning({
+        http_status: 200,
+        response_document: {
+          schemas: [SCIM_LIST_RESPONSE_SCHEMA],
+          totalResults: 1,
+          startIndex: 1,
+          itemsPerPage: 1,
+          Resources: [document],
+        },
+        response_etag: null,
+        quota_limit: 300,
+        quota_remaining: 299,
+        quota_reset_at: new Date(Date.now() + 30_000).toISOString(),
+      });
+      const response = await GET(
+        request("GET", `${resourceType}/${id}`),
+        context([resourceType, id]),
+      );
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual(document);
+    }
+  });
+
   it("normalizes a created User and publishes an exact resource location", async () => {
     const query = databaseReturning({
       http_status: 201,

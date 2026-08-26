@@ -680,6 +680,10 @@ begin
     raise exception using errcode = '40001', message = 'SCIM endpoint revision conflict';
   end if;
   if target_action = 'rotate'
+     and target_credential_sha256 = endpoint_row.credential_sha256 then
+    raise exception using errcode = '23514', message = 'SCIM credential must change';
+  end if;
+  if target_action = 'rotate'
      and not loyalty_private.organization_federation_entitlement_enabled_v1(
        organization_row.id
      ) then
@@ -938,6 +942,21 @@ begin
     return query select 'unavailable'::text, null::text, null::bigint;
     return;
   end if;
+  select membership.* into membership_row
+  from loyalty.organization_memberships as membership
+  where membership.organization_id = organization_row.id
+    and membership.user_id = request_actor
+  for update;
+  if membership_row.id is not null and membership_row.scim_user_id is null then
+    if membership_row.revoked_at is null then
+      return query select 'manual_membership'::text, membership_row.role,
+        membership_row.lifecycle_revision;
+    else
+      return query select 'unavailable'::text, null::text,
+        membership_row.lifecycle_revision;
+    end if;
+    return;
+  end if;
   select endpoint.* into endpoint_row
   from loyalty.organization_scim_endpoints as endpoint
   where endpoint.organization_id = organization_row.id
@@ -957,14 +976,9 @@ begin
     return;
   end if;
 
-  select membership.* into membership_row
-  from loyalty.organization_memberships as membership
-  where membership.organization_id = organization_row.id
-    and membership.user_id = request_actor
-  for update;
   if membership_row.id is not null
      and membership_row.scim_user_id is distinct from scim_user_row.id then
-    return query select 'manual_membership'::text, membership_row.role,
+    return query select 'unavailable'::text, null::text,
       membership_row.lifecycle_revision;
     return;
   end if;
@@ -1345,6 +1359,7 @@ begin
       'totalResults', 2, 'startIndex', 1, 'itemsPerPage', 2,
       'Resources', jsonb_build_array(
         jsonb_build_object(
+          'schemas', jsonb_build_array('urn:ietf:params:scim:schemas:core:2.0:Schema'),
           'id', 'urn:ietf:params:scim:schemas:core:2.0:User',
           'name', 'User', 'description', 'Starfiniti Loyalty provisioned user',
           'attributes', jsonb_build_array(
@@ -1354,6 +1369,7 @@ begin
           )
         ),
         jsonb_build_object(
+          'schemas', jsonb_build_array('urn:ietf:params:scim:schemas:core:2.0:Schema'),
           'id', 'urn:ietf:params:scim:schemas:core:2.0:Group',
           'name', 'Group', 'description', 'Starfiniti Loyalty provisioned group',
           'attributes', jsonb_build_array(
@@ -1644,16 +1660,31 @@ begin
             authorization_row.quota_reset_at;
           return;
         end if;
-        raise exception using errcode = '23505', message = 'SCIM externalId conflict';
+        if existing_user.deleted_at is null then
+          raise exception using errcode = '23505', message = 'SCIM externalId conflict';
+        end if;
+        update loyalty.organization_scim_users as current_scim_user
+        set user_name = new_user_name, display_name = new_display_name,
+          name_document = new_name, emails_document = new_emails,
+          active = new_active, deleted_at = null,
+          representation_sha256 = request_hash,
+          lifecycle_revision = current_scim_user.lifecycle_revision + 1,
+          updated_at = changed_at
+        where current_scim_user.id = existing_user.id
+        returning * into user_row;
+        perform * from loyalty_private.reconcile_organization_scim_user_v1(
+          user_row.id, changed_at
+        );
+      else
+        insert into loyalty.organization_scim_users (
+          organization_id, endpoint_id, external_id, user_name, display_name,
+          name_document, emails_document, active, representation_sha256
+        ) values (
+          authorization_row.organization_id, authorization_row.endpoint_id,
+          new_external_id, new_user_name, new_display_name, new_name,
+          new_emails, new_active, request_hash
+        ) returning * into user_row;
       end if;
-      insert into loyalty.organization_scim_users (
-        organization_id, endpoint_id, external_id, user_name, display_name,
-        name_document, emails_document, active, representation_sha256
-      ) values (
-        authorization_row.organization_id, authorization_row.endpoint_id,
-        new_external_id, new_user_name, new_display_name, new_name,
-        new_emails, new_active, request_hash
-      ) returning * into user_row;
       result_status := 201;
       result_outcome := 'created';
     else
@@ -1708,10 +1739,15 @@ begin
     where scim_user.organization_id = authorization_row.organization_id
       and scim_user.endpoint_id = authorization_row.endpoint_id
       and scim_user.public_id = target_resource_public_id
-      and scim_user.deleted_at is null
     for update;
     if user_row.id is null then
       return query select 404, null::jsonb, null::text,
+        authorization_row.quota_limit, authorization_row.quota_remaining,
+        authorization_row.quota_reset_at;
+      return;
+    end if;
+    if user_row.deleted_at is not null then
+      return query select 204, null::jsonb, null::text,
         authorization_row.quota_limit, authorization_row.quota_remaining,
         authorization_row.quota_reset_at;
       return;
@@ -1955,15 +1991,26 @@ begin
             authorization_row.quota_reset_at;
           return;
         end if;
-        raise exception using errcode = '23505', message = 'SCIM externalId conflict';
+        if existing_group.deleted_at is null then
+          raise exception using errcode = '23505', message = 'SCIM externalId conflict';
+        end if;
+        update loyalty.organization_scim_groups as current_group
+        set display_name = new_display_name,
+          mapped_role = null, mapped_by_user_id = null, mapped_at = null,
+          deleted_at = null, representation_sha256 = request_hash,
+          lifecycle_revision = current_group.lifecycle_revision + 1,
+          updated_at = changed_at
+        where current_group.id = existing_group.id
+        returning * into group_row;
+      else
+        insert into loyalty.organization_scim_groups (
+          organization_id, endpoint_id, external_id, display_name,
+          representation_sha256
+        ) values (
+          authorization_row.organization_id, authorization_row.endpoint_id,
+          new_external_id, new_display_name, request_hash
+        ) returning * into group_row;
       end if;
-      insert into loyalty.organization_scim_groups (
-        organization_id, endpoint_id, external_id, display_name,
-        representation_sha256
-      ) values (
-        authorization_row.organization_id, authorization_row.endpoint_id,
-        new_external_id, new_display_name, request_hash
-      ) returning * into group_row;
       result_status := 201;
       result_outcome := 'created';
       removed_member_ids := array[]::bigint[];
@@ -2054,10 +2101,15 @@ begin
     where scim_group.organization_id = authorization_row.organization_id
       and scim_group.endpoint_id = authorization_row.endpoint_id
       and scim_group.public_id = target_resource_public_id
-      and scim_group.deleted_at is null
     for update;
     if group_row.id is null then
       return query select 404, null::jsonb, null::text,
+        authorization_row.quota_limit, authorization_row.quota_remaining,
+        authorization_row.quota_reset_at;
+      return;
+    end if;
+    if group_row.deleted_at is not null then
+      return query select 204, null::jsonb, null::text,
         authorization_row.quota_limit, authorization_row.quota_remaining,
         authorization_row.quota_reset_at;
       return;

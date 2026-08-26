@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(49);
+select plan(60);
 
 grant loyalty_runtime to current_user;
 grant usage on schema extensions to loyalty_runtime;
@@ -109,7 +109,8 @@ values
   ('9c000000-0000-4000-8000-000000000001', 'scim-owner@example.test', 'owner-password'),
   ('9c000000-0000-4000-8000-000000000002', 'scim-member@example.test', null),
   ('9c000000-0000-4000-8000-000000000003', 'scim-unprovisioned@example.test', null),
-  ('9c000000-0000-4000-8000-000000000004', 'scim-other-owner@example.test', 'other-password');
+  ('9c000000-0000-4000-8000-000000000004', 'scim-other-owner@example.test', 'other-password'),
+  ('9c000000-0000-4000-8000-000000000005', 'scim-invited@example.test', null);
 
 insert into auth.identities (
   id, user_id, provider_id, identity_data, provider,
@@ -128,6 +129,13 @@ insert into auth.identities (
     'authentik-hashed-subject-unprovisioned',
     '{"sub":"authentik-hashed-subject-unprovisioned"}'::jsonb,
     'custom:loyalty-scimsource0000000001', now(), now(), now()
+  ),
+  (
+    '9c000000-0000-4000-8000-000000000023',
+    '9c000000-0000-4000-8000-000000000005',
+    'authentik-hashed-subject-invited',
+    '{"sub":"authentik-hashed-subject-invited"}'::jsonb,
+    'custom:loyalty-scimsource0000000001', now(), now(), now()
   );
 
 insert into loyalty.organizations (public_id, slug, name)
@@ -145,6 +153,12 @@ from (values
     '9c000000-0000-4000-8000-000000000004'::uuid, 'Other owner'::text)
 ) as member(slug, public_id, user_id, label)
 join loyalty.organizations as organization on organization.slug = member.slug;
+insert into loyalty.organization_memberships (
+  public_id, organization_id, user_id, role, display_label
+)
+select '9c000000-0000-4000-8000-000000000102', organization.id,
+  '9c000000-0000-4000-8000-000000000005', 'analyst', 'Invited analyst'
+from loyalty.organizations as organization where organization.slug = 'scim-main';
 
 insert into loyalty.organization_federation_sources (
   public_id, organization_id, display_name, protocol, status,
@@ -239,6 +253,36 @@ select set_config('test.scim_endpoint', (
 ), false);
 select set_config('test.scim_credential', repeat('1', 64), false);
 
+set local role authenticated;
+set local request.jwt.claim.sub = '9c000000-0000-4000-8000-000000000005';
+select results_eq(
+  $$
+    select outcome, role from loyalty.claim_organization_scim_membership_v1(
+      '9c000000-0000-4000-8000-000000000100',
+      '9c000000-0000-4000-8000-000000000610'
+    )
+  $$,
+  $$ values ('manual_membership'::text, 'analyst'::text) $$,
+  'an exact tenant IdP login preserves an active invitation-created membership'
+);
+reset role;
+update loyalty.organization_memberships
+set revoked_at = now(), lifecycle_revision = lifecycle_revision + 1, updated_at = now()
+where public_id = '9c000000-0000-4000-8000-000000000102';
+set local role authenticated;
+set local request.jwt.claim.sub = '9c000000-0000-4000-8000-000000000005';
+select results_eq(
+  $$
+    select outcome from loyalty.claim_organization_scim_membership_v1(
+      '9c000000-0000-4000-8000-000000000100',
+      '9c000000-0000-4000-8000-000000000611'
+    )
+  $$,
+  array['unavailable'::text],
+  'a revoked invitation-created membership cannot be revived by tenant IdP login'
+);
+reset role;
+
 create or replace function pg_temp.scim_request(
   target_method text,
   target_resource_type text,
@@ -269,11 +313,26 @@ grant execute on function pg_temp.scim_request(
 
 set local role loyalty_runtime;
 
--- 17-23: discovery and retry-safe resources.
+-- 17-24: discovery and retry-safe resources.
 select results_eq(
   $$ select http_status from pg_temp.scim_request('GET', 'ServiceProviderConfig') $$,
   array[200],
   'digest-authenticated discovery succeeds'
+);
+select results_eq(
+  $$
+    select jsonb_array_length(response_document->'Resources') = 2
+      and not exists (
+        select 1
+        from jsonb_array_elements(response_document->'Resources') as schema_resource(value)
+        where schema_resource.value->'schemas' <> jsonb_build_array(
+          'urn:ietf:params:scim:schemas:core:2.0:Schema'
+        )
+      )
+    from pg_temp.scim_request('GET', 'Schemas')
+  $$,
+  array[true],
+  'schema discovery returns two individually addressable SCIM Schema resources'
 );
 select results_eq(
   $$
@@ -636,11 +695,108 @@ select throws_ok(
   'a provisioned subject cannot be rebound by mutation'
 );
 
+select set_config('test.scim_repro_user', (
+  select response_document->>'id' from pg_temp.scim_request(
+    'POST', 'Users', null,
+    jsonb_build_object(
+      'schemas', jsonb_build_array('urn:ietf:params:scim:schemas:core:2.0:User'),
+      'externalId', 'tombstone-subject', 'userName', 'tombstone.user',
+      'displayName', 'Tombstone user', 'emails', '[]'::jsonb, 'active', true
+    )
+  )
+), false);
+select set_config('test.scim_repro_group', (
+  select response_document->>'id' from pg_temp.scim_request(
+    'POST', 'Groups', null,
+    jsonb_build_object(
+      'schemas', jsonb_build_array('urn:ietf:params:scim:schemas:core:2.0:Group'),
+      'externalId', 'tombstone-group', 'displayName', 'Tombstone group',
+      'members', jsonb_build_array(jsonb_build_object(
+        'value', current_setting('test.scim_repro_user')
+      ))
+    )
+  )
+), false);
+select results_eq(
+  $$
+    select http_status from pg_temp.scim_request(
+      'DELETE', 'Groups', current_setting('test.scim_repro_group')::uuid
+    )
+  $$,
+  array[204],
+  'directory Group deletion creates a recoverable tombstone'
+);
+select results_eq(
+  $$
+    select http_status from pg_temp.scim_request(
+      'DELETE', 'Users', current_setting('test.scim_repro_user')::uuid
+    )
+  $$,
+  array[204],
+  'directory User deletion creates a recoverable tombstone'
+);
+select results_eq(
+  $$
+    select http_status from pg_temp.scim_request(
+      'DELETE', 'Groups', current_setting('test.scim_repro_group')::uuid
+    )
+  $$,
+  array[204],
+  'a retried Group deletion is an idempotent success'
+);
+select results_eq(
+  $$
+    select http_status from pg_temp.scim_request(
+      'DELETE', 'Users', current_setting('test.scim_repro_user')::uuid
+    )
+  $$,
+  array[204],
+  'a retried User deletion is an idempotent success'
+);
+select ok(
+  (select http_status = 201
+      and response_document->>'id' = current_setting('test.scim_repro_user')
+    from pg_temp.scim_request(
+      'POST', 'Users', null,
+      jsonb_build_object(
+        'schemas', jsonb_build_array('urn:ietf:params:scim:schemas:core:2.0:User'),
+        'externalId', 'tombstone-subject', 'userName', 'tombstone.user.restored',
+        'displayName', 'Restored user', 'emails', '[]'::jsonb, 'active', true
+      )
+    )),
+  'a deleted User can be reprovisioned with the same immutable resource identity'
+);
+select ok(
+  (select http_status = 201
+      and response_document->>'id' = current_setting('test.scim_repro_group')
+    from pg_temp.scim_request(
+      'POST', 'Groups', null,
+      jsonb_build_object(
+        'schemas', jsonb_build_array('urn:ietf:params:scim:schemas:core:2.0:Group'),
+        'externalId', 'tombstone-group', 'displayName', 'Restored group',
+        'members', jsonb_build_array(jsonb_build_object(
+          'value', current_setting('test.scim_repro_user')
+        ))
+      )
+    )),
+  'a deleted Group can be reprovisioned with the same immutable resource identity'
+);
+reset role;
+select results_eq(
+  $$
+    select mapped_role is null, deleted_at is null
+    from loyalty.organization_scim_groups
+    where public_id = current_setting('test.scim_repro_group')::uuid
+  $$,
+  $$ values (true, true) $$,
+  'Group reprovisioning never revives its prior reviewed role authority'
+);
+
 reset role;
 set local role authenticated;
 set local request.jwt.claim.sub = '9c000000-0000-4000-8000-000000000001';
 
--- 43-48: rotation, revocation, stale sessions, and minimized review.
+-- 54-60: rotation, revocation, stale sessions, and minimized review.
 select results_eq(
   $$
     select outcome from loyalty.update_organization_scim_endpoint_command_v1(
@@ -652,6 +808,18 @@ select results_eq(
   $$,
   array['rotate'::text],
   'credential rotation accepts one new digest'
+);
+select throws_ok(
+  $$
+    select * from loyalty.update_organization_scim_endpoint_command_v1(
+      '9c000000-0000-4000-8000-000000000100',
+      current_setting('test.scim_endpoint')::uuid, 2, 'rotate',
+      decode(repeat('2', 64), 'hex'), 'Reject reuse of the active canary credential.',
+      'scim:endpoint:rotate:reuse', '9c000000-0000-4000-8000-000000000609'
+    )
+  $$,
+  '23514', 'SCIM credential must change',
+  'a new rotation command cannot reuse the active credential digest'
 );
 reset role;
 set local role loyalty_runtime;

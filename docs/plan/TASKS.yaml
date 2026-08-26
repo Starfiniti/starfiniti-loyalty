@@ -2338,10 +2338,12 @@ tasks:
           - cross-source external ID collision
           - arbitrary group name becomes role
           - retry duplicates user group or membership
+          - DELETE retry changes outcome or a retained tombstone prevents legitimate reprovisioning
           - deprovisioned session retains tenant access
           - SCIM email or username links an unrelated Supabase Auth principal
           - multiple mapped roles resolve by privilege escalation instead of failing closed
           - endpoint rotation or revocation leaves the old token or membership usable
+          - an active invitation-created member is incorrectly forced through SCIM or a revoked manual membership is revived
         security_boundaries:
           - PostgreSQL derives endpoint organization federation source credential status current Auth subject provider identity and live membership
           - Authentik hashed OIDC subject plus a prior active SCIM externalId record are both required before membership reconciliation
@@ -2360,9 +2362,10 @@ tasks:
           - docs/plan/evidence/M13/README.md
           - docs/plan/evidence/M13/tenant-scim-browser-qa-2026-08-26.md
           - official RFC Editor Authentik and Supabase documentation reviewed 2026-08-26
-          - fresh isolated Supabase PostgreSQL 17 replay passes all 74 migrations and all 49 focused SCIM pgTAP assertions
+          - fresh isolated Supabase PostgreSQL 17 replay passes all 74 migrations and all 60 focused SCIM pgTAP assertions
           - two-session endpoint retry and group-role race probe passes with one effect one stale failure exact audit and zero ledger value
           - local Chromium browser QA passes desktop mobile light dark reduced-motion interaction overflow English-only and zero-diagnostic checks
+          - adversarial review rejects active credential reuse preserves one-time secret display across refreshed forms keeps active invitation membership authoritative fails revoked manual membership closed and makes DELETE retry plus tombstone reprovision deterministic without reviving Group role authority
       - id: M13-S05-SUPPORT-AGENCY-AND-OFFBOARDING
         status: planned
         dependencies: [M13-S04-SCIM-PROVISIONING]
