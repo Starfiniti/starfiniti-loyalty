@@ -283,7 +283,8 @@ begin
       message = 'invalid notification webhook endpoint command';
   end if;
   target_allowed_origin := pg_catalog.substring(
-    target_destination_url from '^(https://[^/]+)'
+    target_destination_url,
+    '^(https://[^/]+)'
   );
   select workspace.* into target_workspace
   from loyalty.workspaces as workspace
