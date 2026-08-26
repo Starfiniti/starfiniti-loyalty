@@ -1963,7 +1963,7 @@ tasks:
           - docs/plan/evidence/M12/README.md
           - exact-head CI run 32937499899 at d8d223a passed all seven jobs including clean 68-migration replay 55 pgTAP files 2955 assertions 12 concurrency probes both images root checks and four WooCommerce runtimes
       - id: M12-S02-OPENING-BALANCE-LEDGER-APPLICATION
-        status: in_progress
+        status: complete
         hypothesis: Exact receipt-bound row revalidation and source-row fences can apply imported value once through attributable opening-balance ledger transactions and preserved expiry lots.
         owner_inputs: []
         acceptance:
@@ -1982,13 +1982,31 @@ tasks:
           - two-session batch and source-row concurrency probes
           - pgTAP ledger zero-sum lot identity tenancy role idempotency compensation and partial-failure matrix
           - before/after customer balance expiry and liability reconciliation
+        evidence:
+          - receipt-bound exact document and resolution revalidation derives live Auth tenant programme customer wallet and value authority in PostgreSQL
+          - additive application evidence traces every point to one batch source row identity decision opening transaction entry and exact available or pending lot
+          - deterministic source-row advisory and uniqueness fences make different receipts racing one source row produce one effect before any losing customer wallet or ledger mutation
+          - pending lots remain pending before source availability release once at the exact instant preserve FIFO expiry and remain compensatable without rewriting history
+          - exact-head CI run 32940585673 at dc8ea3c passed all seven jobs including clean 69-migration replay 56 pgTAP files 3011 assertions 13 concurrency probes both images root checks and four WooCommerce runtimes
       - id: M12-S03-STABLE-SOURCE-ADAPTERS
-        status: planned
+        status: in_progress
         hypothesis: Published source formats translated through strict versioned adapters can reduce setup effort without granting vendor data application authority.
+        baseline: S01 and S02 accept only a strict canonical document and explicit resolutions; no source-file parser error export stable-format fixture or adapter-version boundary exists.
         owner_inputs:
           [
             representative redacted exports when published examples do not prove the exact production shape,
           ]
+        metrics:
+          - unknown or duplicate source columns/properties accepted = 0
+          - formula-like cells invalid UTF-8 ambiguous line endings or unsupported JSON types accepted = 0
+          - raw source values included in adapter errors logs or retained fixtures = 0
+          - identical source bytes and context producing different canonical digests = 0
+          - adapter paths capable of applying loyalty value = 0
+        targets:
+          - generic CSV WPLoyalty CSV and WooRewards JSON each declare one exact immutable adapter ID and shape version
+          - source files and physical records are byte and count bounded before canonical validation
+          - every failure is bounded to allowlisted code field and one-based source row without echoing source content
+          - official synthetic fixtures and adversarial mutations prove deterministic fail-closed behavior
         acceptance:
           - generic CSV WPLoyalty and WooRewards parse only exact allowlisted columns/types into CanonicalMigrationDocumentV1
           - dry-run error export is bounded row-addressable and contains no unrelated columns or retained source payload
@@ -1997,6 +2015,11 @@ tasks:
           - heuristic column guessing silently changes meaning
           - spreadsheet formula injection or encoding ambiguity reaches an export
           - adapter logs raw identities or retains source files
+        security_boundaries:
+          - adapters are pure transient translators with no database connector provider filesystem or loyalty-value capability
+          - source hashes are computed from exact bytes while canonical hashes use the shared deterministic serializer
+          - only strict UTF-8 with an optional UTF-8 BOM is accepted and error exports contain fixed safe fields only
+          - YITH remains unavailable in S03 because its official documentation does not publish a stable column contract
         rollout: Validate checked-in synthetic and redacted fixtures then canary one source at a time through S01/S02.
         rollback: Disable the affected adapter while keeping canonical validation and prior immutable migration evidence readable.
         verification:
