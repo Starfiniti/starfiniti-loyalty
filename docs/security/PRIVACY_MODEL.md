@@ -71,3 +71,9 @@ Backups are encrypted and access-controlled. Individual row deletion is not rewr
 ## Privacy verification
 
 Implemented tests cover exact grants/search paths, tenant and lease binding, PII-free deletion payloads, immutable private cases and peppers, repeat and pre-import deletion, live-link revocation, channel/customer pseudonymization, raw/canonical event scrubbing, import suppression, and zero ledger effects. Forty-three hosted-export assertions additionally cover private privileges, hashed one-use authorization, subject/session binding, expiry, tenant minimization, complete exact ledger output, active-scope failure, immutable payload-free audit, and no value effects. Backup restore plus deletion replay, consent withdrawal, and prolonged connector outage remain required before their respective release gates close.
+
+## Service API customer references
+
+The Service API accepts one merchant-chosen opaque external customer reference solely to maintain an account-scoped synchronization namespace. PostgreSQL immediately derives HMAC-SHA256 with a private random per-service-account pepper; only that digest and the internal customer relationship are retained. The raw reference is not logged, audited, returned after request processing, copied into canonical activity payloads, or used to infer an email/profile match.
+
+Credential digests and identity peppers are restricted machine-security data, not customer contact data, and are unavailable to browser roles. Correlation/idempotency references must remain opaque and must not contain email, names, addresses, coupon text, or other personal data. Organization export/offboarding and erasure must revoke credentials first and preserve the minimum immutable receipts and ledger attribution required by legal/reconciliation policy; M13 defines the final deletion/pseudonymization workflow.

@@ -16,6 +16,14 @@ The strict v1 envelope contains `version`, `deliveryId`, `sourceId`, `eventId`, 
 
 The public customer ID remains only a selector. PostgreSQL derives tenant and programme from the active source; the worker resolves that customer inside the same organization, evaluates the immutable published V2 version, enters serialized cap accounting, and appends evaluation plus ledger effects atomically. Duplicate events create one effect. Signature/provider outage does not affect WooCommerce checkout or previously accepted value.
 
+## Scoped Service API v1
+
+`POST /api/v1/service/customers` and `POST /api/v1/service/activities` are the merchant-scoped server-to-server customer/activity boundary. They complement rather than replace the deployment-managed signed Merchant Activity endpoint. Owners/admins create a workspace/programme-bound service account behind `ecosystem.api`, select only `customers:write` and/or `activities:write`, and issue one high-entropy bearer token that is shown once.
+
+The trusted runtime parses the public credential selector and passes it plus the complete-token SHA-256 digest to private PostgreSQL commands. PostgreSQL resolves live organization, workspace, programme, connection, entitlement, scope, credential lifecycle, and fixed-minute quota. The API body never accepts those authorities or any points, wallet, rule, tier, or reward selector. Raw external customer references are retained only as HMAC-SHA256 values under a private random per-account pepper and are never matched by email.
+
+Customer synchronization is idempotent and must precede activity submission. Activity acceptance reuses the existing commerce inbox, normalization, canonical-event, worker, immutable evaluation, cap, effect-receipt, and ledger path; a `202` response is acceptance evidence rather than an award claim. Exact retries create one effect, changed reuse fails closed, rotation overlap is bounded, and revocation fails on the next request. The full contract, retry/error behavior, quota headers, and compromise procedure are documented in `SERVICE_API.md`; ADR-0045 records the decision.
+
 ## Read models
 
 The programme page reads these RLS-protected relations:

@@ -16,7 +16,7 @@ export type ConnectorIssue = Readonly<{
 
 export type ConnectorOperationSummary = Readonly<{
   id: string;
-  platform: "woocommerce" | "merchant_activity";
+  platform: "woocommerce" | "merchant_activity" | "service_api";
   displayName: string;
   status: string;
   lastSeenAt: string | null;
@@ -96,10 +96,13 @@ export async function getConnectorOperations(
 
   return summaries.map((summary, index) => ({
     id: summary.connection_public_id,
-    platform:
-      platforms.get(summary.connection_public_id) === "merchant_activity"
-        ? "merchant_activity"
-        : "woocommerce",
+    platform: (() => {
+      const platform = platforms.get(summary.connection_public_id);
+      if (platform === "merchant_activity" || platform === "service_api") {
+        return platform;
+      }
+      return "woocommerce";
+    })(),
     displayName: summary.display_name,
     status: summary.connection_status,
     lastSeenAt: summary.last_seen_at,

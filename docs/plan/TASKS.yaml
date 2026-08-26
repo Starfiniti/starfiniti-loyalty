@@ -1716,9 +1716,45 @@ tasks:
           - production conversion remains disabled and provider selection credentials Starfiniti canary exact reconciliation rollback and observation remain owned by M11-S06
       - id: M11-S04-SERVICE-ACCOUNTS-AND-INBOUND-APIS
         status: in_progress
+        hypothesis: Organization-scoped opaque credentials with database-derived authority let merchants integrate external systems without distributing platform secrets or creating a second loyalty-value path.
+        baseline: The signed Merchant Activity endpoint has bounded HMAC verification and canonical-event idempotency but uses deployment-managed connector keys and has no merchant-scoped service-account lifecycle customer namespace or database-authoritative quota.
+        targets:
+          - every accepted request resolves one live organization workspace programme and scope from the credential rather than request authority
+          - exact customer and activity retries create one customer identity and one canonical event effect
+          - concurrent quota consumers never exceed the configured fixed-window limit
+          - rotation supports a bounded overlap while revocation fails on the next request
+          - stored and browser-visible projections contain no reusable credential secret
+        owner_inputs: []
         acceptance:
           - scoped hashed service credentials support rotation revocation rate limits and idempotent activity/customer commands
-          - browser clients never receive server credentials or caller-selected tenant authority
+          - one-time issued credentials are shown only to the authorized owner or admin and are never persisted or returned again
+          - API callers submit no organization actor connection programme or wallet authority
+          - existing Merchant Activity clients and historical events remain compatible
+        failure_modes:
+          - raw credential persistence logging browser hydration or audit leakage
+          - cross-tenant credential or public-selector substitution
+          - revoked or expired credential acceptance
+          - rotation gap or indefinite overlap
+          - rate-limit overshoot under concurrency
+          - idempotency-key reuse with changed customer or activity content
+          - email-derived customer merging or duplicate customer creation under race
+          - entitlement or service-account disablement mutating balances history refunds reconciliation or checkout
+        security_boundary: The Next.js server parses one high-entropy bearer credential and passes only its public credential selector plus SHA-256 digest to a private empty-search-path PostgreSQL authorizer. PostgreSQL derives tenant workspace programme connection scopes entitlement and quota; browser roles have no credential digest or private API command grants.
+        rollout: Ship disabled behind ecosystem.api, create one Starfiniti pilot service account, exercise customer then activity replay and rotation, revoke it, reconcile canonical events and ledger effects, then enable per tenant.
+        rollback: Disable new service-account issuance and inbound routes, revoke pilot credentials, preserve immutable receipts canonical events customer mappings and audit evidence, and leave the legacy signed Merchant Activity route unchanged.
+        verification:
+          - contract and route tests for bounded bodies token parsing minimized responses status mapping and secret-safe failures
+          - pgTAP grants RLS roles scopes entitlement lifecycle tenant isolation idempotency immutability and no-ledger assertions
+          - two-session customer upsert and quota concurrency probes
+          - browser desktop mobile keyboard dark-mode one-time-secret and degraded-authority review
+          - full check migration replay secret scan production images and WooCommerce matrix
+        metrics:
+          activation: service account created credential issued customer synchronized and activity accepted
+          correctness: duplicate customer and activity business effects equal zero
+          security: reusable secret occurrences outside the one-time response equal zero
+          reliability: quota overshoot and revoked-request acceptance equal zero
+          operability: request results expose bounded request correlation quota remaining and safe error codes
+        evidence: []
       - id: M11-S05-OUTBOUND-WEBHOOKS-CLIENTS-AND-OPERATIONS
         status: planned
         acceptance:
@@ -1732,11 +1768,13 @@ tasks:
     docs:
       [
         docs/integrations/MERCHANT_API.md,
+        docs/integrations/SERVICE_API.md,
         docs/integrations/CURRENCY_CONVERSION.md,
         docs/api/WEBHOOKS.md,
         docs/architecture/ADR/0042-versioned-explicit-programme-group-sharing.md,
         docs/architecture/ADR/0043-verified-canonical-customer-link-revisions.md,
         docs/architecture/ADR/0044-immutable-provider-rate-snapshots-and-exact-currency-conversion.md,
+        docs/architecture/ADR/0045-hashed-service-accounts-and-database-authoritative-inbound-api.md,
       ]
     evidence: [docs/plan/evidence/M11/README.md]
 

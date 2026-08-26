@@ -12,7 +12,8 @@
     "./notification": "./src/notification.ts",
     "./referral": "./src/referral.ts",
     "./tier-policy-v2": "./src/tier-policy-v2.ts",
-    "./currency": "./src/currency.ts"
+    "./currency": "./src/currency.ts",
+    "./service-api": "./src/service-api.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

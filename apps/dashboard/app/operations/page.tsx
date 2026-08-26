@@ -28,6 +28,7 @@ import { getProgrammeCurrencyPolicies } from "@/lib/server/currency-policies";
 import { getEntitlementSnapshot } from "@/lib/server/entitlements";
 import { getProgrammeGroupSharingPolicy } from "@/lib/server/ecosystem";
 import { getMerchantProgrammeState } from "@/lib/server/programme";
+import { getServiceAccounts } from "@/lib/server/service-accounts";
 import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
 import { buildSupportDiagnostics } from "@/lib/support-diagnostics";
 import { RetryEffectForm } from "./retry-effect-form";
@@ -37,6 +38,7 @@ import { CurrencyPolicyForm } from "./currency-policy-form";
 import { ReconciliationForm } from "./reconciliation-form";
 import { ProgrammeSharingForm } from "./programme-sharing-form";
 import { SupportDiagnosticsDownload } from "./support-diagnostics-download";
+import { ServiceAccountsPanel } from "./service-accounts-panel";
 
 function formatDate(value: string | null, locale: MerchantLocale): string {
   if (!value) return merchantText(locale, "Never");
@@ -65,19 +67,25 @@ export default async function OperationsPage({
     );
   }
   if (tenant.kind === "unassigned") redirect(merchantLocalePath("/", locale));
-  const [connections, programme, entitlements, sharing] = await Promise.all([
-    getConnectorOperations(tenant.context),
-    getMerchantProgrammeState(tenant.context),
-    getEntitlementSnapshot(tenant.context),
-    tenant.context.programmeGroup
-      ? getProgrammeGroupSharingPolicy(tenant.context.programmeGroup.public_id)
-      : Promise.resolve({ kind: "not_configured" } as const),
-  ]);
-  const programmeV2Enabled = hasEntitlement(entitlements, "programme.v2");
-  const mayRetry = canRetryConnectorEffect(tenant.context.membershipRole);
   const mayProvision = ["owner", "admin"].includes(
     tenant.context.membershipRole,
   );
+  const [connections, programme, entitlements, sharing, serviceAccounts] =
+    await Promise.all([
+      getConnectorOperations(tenant.context),
+      getMerchantProgrammeState(tenant.context),
+      getEntitlementSnapshot(tenant.context),
+      tenant.context.programmeGroup
+        ? getProgrammeGroupSharingPolicy(
+            tenant.context.programmeGroup.public_id,
+          )
+        : Promise.resolve({ kind: "not_configured" } as const),
+      mayProvision
+        ? getServiceAccounts(tenant.context.organization.public_id)
+        : Promise.resolve(null),
+    ]);
+  const programmeV2Enabled = hasEntitlement(entitlements, "programme.v2");
+  const mayRetry = canRetryConnectorEffect(tenant.context.membershipRole);
   const hasPublishedProgramme = programme.versions.some(
     (version) => version.status === "published",
   );
@@ -195,6 +203,16 @@ export default async function OperationsPage({
             </section>
           )
         ) : null}
+
+        <ServiceAccountsPanel
+          accounts={serviceAccounts?.serviceAccounts ?? []}
+          configurationEnabled={ecosystemEnabled}
+          mayConfigure={mayProvision}
+          programmeId={programme.programme?.id ?? null}
+          programmeName={programme.programme?.name ?? null}
+          workspaceId={tenant.context.workspace?.public_id ?? null}
+          workspaceName={tenant.context.workspace?.name ?? null}
+        />
 
         {wooConnections.length === 0 ? (
           mayProvision &&

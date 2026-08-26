@@ -282,3 +282,11 @@ Ledger, programme versions, business effects, approvals, and audit evidence foll
 6. Reservations, tiers, audit, and privacy workflows.
 
 Each migration is forward compatible with the previous application version. Destructive changes use expand/migrate/contract and verified backup/restore evidence.
+
+## Service accounts and inbound API namespaces
+
+`service_accounts` is the minimized RLS-protected organization/workspace/programme projection used by owner/admin operations. Each row binds one private `service_api` commerce connection, an allowlisted scope array, a fixed-minute quota, and lifecycle state. Browser reads expose public selectors, names, scope/quota, status, and bounded credential descriptors only.
+
+Reusable authorization material remains in `loyalty_private.service_account_credentials`: public selector, complete-token SHA-256 digest, display hint, lifecycle, and creator. The raw bearer token is never a column. `service_account_identity_peppers` holds one random private 256-bit HMAC key per account. `service_customer_identities` maps the resulting external-reference HMAC to one same-tenant customer; raw external identifiers, email, and profile data are absent. Immutable command receipts bind idempotency keys to request digests and original outcomes. Fixed-minute quota counters are operational state and never loyalty/value evidence.
+
+The composite customer and activity functions derive every internal key from the credential under row locks. Customer synchronization creates one blank channel-neutral customer and mapping. Activity acceptance requires that mapping and reuses the existing commerce delivery, normalization, canonical-event, worker, evaluation, effect-receipt, and immutable ledger model. No Service API table can represent points or mutate a wallet directly. See ADR-0045 and `docs/integrations/SERVICE_API.md`.
