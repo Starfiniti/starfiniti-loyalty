@@ -22,6 +22,7 @@ import {
   enqueueExpiredWooCommerceCouponCancellations,
   expireDueTierOverrides,
   processWooCommerceEffect,
+  releaseDueMigrationPendingLots,
   runCampaignTriggerLifecycle,
   runPointExpiryLifecycle,
   runReferralRewardLifecycle,
@@ -105,6 +106,7 @@ if (workerMode === "notification") {
     if (Date.now() >= nextCancellationSweepAt) {
       await enqueueExpiredWooCommerceCouponCancellations(sql);
       await expireDueTierOverrides(sql);
+      await releaseDueMigrationPendingLots(sql);
       await runPointExpiryLifecycle(sql);
       await runReferralRewardLifecycle(sql, workerId);
       await advanceCampaignLifecycle(sql);

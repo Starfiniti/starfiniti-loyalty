@@ -1,0 +1,166 @@
+schema: starfiniti.migration-canary.v1
+status: in_progress
+observedAt: 2026-08-26T09:21:36.308Z
+currentProduction:
+  release: v0.1.11
+  applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
+candidate:
+  pullRequest: 39
+  commit: e85fa78cf4a1faf5b7eb95507f0ba523c2fa318b
+  approvedRelease: false
+  operatorAccess: true
+  sourceApproved: false
+  canaryApproved: false
+publicBaseline:
+  dashboardHealth: 200
+  login: 200
+  authWithoutKey: 401
+  restWithoutKey: 401
+  canonicalDns: true
+score:
+  total: 90
+  target: 90
+  minimumCategoryRatio: 0.8
+  categories:
+    - id: correctness
+      weight: 20
+      score: 20
+      evidence: Strict canonical rows, deterministic receipts, exact adapter versions, explicit identity decisions, and reconciliation projections have one defined outcome.
+    - id: security
+      weight: 15
+      score: 15
+      evidence: PostgreSQL derives tenant, actor, role, programme, customer, wallet, and value authority while source bytes remain request-local and minimized.
+    - id: ledger_reliability
+      weight: 15
+      score: 15
+      evidence: Opening balances, exact pending releases, FIFO lots, source fences, idempotent reruns, and compensating corrections preserve immutable value.
+    - id: tests
+      weight: 15
+      score: 15
+      evidence: Candidate CI passed 70 migrations, 57 pgTAP files with 3029 assertions, thirteen concurrency probes, both images, and four WooCommerce runtimes.
+    - id: performance
+      weight: 10
+      score: 8
+      evidence: Files, rows, issues, mappings, history, request bodies, statements, and browser layouts are bounded; production batch timing remains pending.
+    - id: operability
+      weight: 10
+      score: 3
+      evidence: Guided dry run, immutable progress, correction, disabled-first rollout, and rollback contracts exist; the approved real-source canary remains pending.
+    - id: maintainability
+      weight: 15
+      score: 14
+      evidence: Versioned contracts, pure adapters, additive SQL, ADRs, tests, integration docs, UI evidence, and living plans are maintained; production closeout remains.
+checks:
+  - id: exact_head_ci
+    status: passed
+    evidence: Run 32953368405 passed all seven jobs at exact canary-gate candidate commit e85fa78.
+  - id: migration_replay
+    status: passed
+    evidence: Run 32953368405 cleanly replayed all 70 additive migrations and 57 pgTAP files with 3029 assertions.
+  - id: contract_adapter_matrix
+    status: passed
+    evidence: Canonical, registry, inspection, workflow, application, correction, and reconciliation contracts plus strict source adapters pass bounded adversarial tests.
+  - id: database_authority_matrix
+    status: passed
+    evidence: RLS, exact grants, live roles, entitlement boundaries, public-selector substitution, revocation, tenancy, minimization, and immutable effects pass.
+  - id: concurrency_matrix
+    status: passed
+    evidence: Thirteen two-session probes include competing receipt and application reruns with one source-row and value effect.
+  - id: woocommerce_runtime_matrix
+    status: passed
+    evidence: Minimum and current WordPress and WooCommerce pass in HPOS and legacy modes while migration remains outside checkout.
+  - id: browser_accessibility
+    status: passed
+    evidence: Production-build desktop and mobile checks pass reflow, 44-pixel mobile controls, focus, reduced motion, dark mode, English-only output, and zero diagnostics.
+  - id: privacy_retention_matrix
+    status: passed
+    evidence: Source bytes and identities are request-local; receipts, reports, errors, URLs, logs, and captures retain only minimized hashes, counts, and opaque references.
+  - id: checkout_independence_matrix
+    status: passed
+    evidence: Migration adds no WooCommerce checkout request, render dependency, coupon path, or synchronous hub availability requirement.
+  - id: public_production_baseline
+    status: passed
+    evidence: Canonical DNS resolves; dashboard health and login return 200 while unauthenticated Supabase Auth and REST roots return 401.
+  - id: operator_access
+    status: passed
+    evidence: The approved production Proxmox route was previously revalidated read-only for the current release without mutating the loyalty guest.
+  - id: approved_release
+    status: pending
+    evidence: PR 39 is a green stacked draft and has not been approved as one immutable production release.
+  - id: pre_change_recovery_point
+    status: pending
+    evidence: A fresh verified database base and encrypted incremental archive must complete immediately before migration deployment.
+  - id: production_source_baseline
+    status: pending
+    evidence: Current public health is known, but minimized customer balance lot expiry liability and migration counts require the approved deployment window.
+  - id: disabled_deployment
+    status: pending
+    evidence: Candidate migrations and images have not been deployed and migration capability remains unavailable in production.
+  - id: migration_registration
+    status: pending
+    evidence: Production must record each M12 additive migration version and source hash exactly once before canary inspection.
+  - id: migration_entitlement_canary
+    status: pending
+    evidence: Keep migration disabled globally, then enable only the Starfiniti organization after disabled-deployment smoke passes.
+  - id: approved_redacted_source
+    status: pending
+    evidence: No representative production-source export has been supplied and approved for transient canary processing.
+  - id: adapter_fingerprint_rerun
+    status: pending
+    evidence: Re-run the approved source through its exact registry adapter and prove stable source, canonical, engine, and approval evidence.
+  - id: dry_run_zero_value
+    status: pending
+    evidence: Record invalid then valid production dry runs and confirm neither changes customers, wallets, lots, ledger, coupons, events, or connectors.
+  - id: mapping_approval_binding
+    status: pending
+    evidence: Review every opaque row as explicit match or create, leave none unresolved, and confirm the database receipt binds the exact decisions and totals.
+  - id: small_batch_application
+    status: pending
+    evidence: Apply only the approved bounded Starfiniti canary batch after the exact dry-run receipt and owner confirmation.
+  - id: application_rerun
+    status: pending
+    evidence: Repeat and race the approved application request and confirm one batch, one effect per source row, and no duplicate customer or value.
+  - id: customer_count_reconciliation
+    status: pending
+    evidence: Reconcile matched created unresolved and applied customer counts exactly before and after the canary.
+  - id: balance_reconciliation
+    status: pending
+    evidence: Reconcile source available and pending totals to batch items lots opening transactions entries releases corrections and wallet projections.
+  - id: expiry_reconciliation
+    status: pending
+    evidence: Reconcile every preserved or reviewed expiry instant to immutable FIFO lots without truncation or timezone drift.
+  - id: liability_reconciliation
+    status: pending
+    evidence: Reconcile before and after outstanding points and liability with zero unexplained difference outside the approved opening value.
+  - id: traceability_reconciliation
+    status: pending
+    evidence: Trace every imported point from opaque source reference through receipt batch item resolution programme version transaction entry and lot.
+  - id: pending_release_reconciliation
+    status: pending
+    evidence: Release one eligible pending canary lot once at its source instant and reconcile available pending released and expiry evidence.
+  - id: correction_compensation
+    status: pending
+    evidence: Append one approved full-batch correction and confirm history remains immutable while projections and liability return exactly.
+  - id: outage_recovery
+    status: pending
+    evidence: Interrupt the dashboard or application request and prove retry resumes from immutable receipt and batch evidence without ambiguous or duplicate value.
+  - id: rollback_rehearsal
+    status: pending
+    evidence: Disable new migration work, compensate the canary, restore prior images, retain additive evidence, and reconcile customer access and loyalty value.
+  - id: observation_window
+    status: pending
+    evidence: Observe the controlled canary after rollback rehearsal and record errors, retries, database load, privacy, balance, expiry, and liability health.
+  - id: final_reconciliation
+    status: pending
+    evidence: Confirm zero unexplained customer, identity, balance, lot, expiry, liability, transaction, receipt, batch, audit, checkout, or privacy difference.
+automaticFails:
+  - duplicate customer wallet lot ledger entry opening transaction receipt batch release correction or business effect
+  - customer authority inferred from email name address domain profile metadata or browser input
+  - cross-organization source receipt customer wallet programme ledger or migration access
+  - raw source bytes identity contact or unrelated columns retained in database logs URLs analytics errors captures or evidence
+  - receipt approval application or correction proceeds with unresolved stale changed or mismatched evidence
+  - imported balance overwrites or edits an existing ledger transaction lot wallet projection or source history
+  - checkout ingestion refunds releases reconciliation or existing redemption depends on migration availability
+  - unexplained customer balance expiry liability transaction lot receipt batch audit or privacy difference
+  - approved release recovery point source canary correction rollback observation or final reconciliation evidence is absent
+  - critical security tenancy ledger privacy recovery accessibility or data-loss finding remains unresolved

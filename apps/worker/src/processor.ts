@@ -711,6 +711,36 @@ export async function expireDueTierOverrides(sql: Sql): Promise<number> {
   return expiredCount;
 }
 
+export type MigrationPendingReleaseResult = Readonly<{
+  releasedLots: number;
+  releasedPoints: string;
+}>;
+
+export async function releaseDueMigrationPendingLots(
+  sql: Sql,
+): Promise<MigrationPendingReleaseResult> {
+  const rows = await sql<
+    { released_lots: number | string; released_points: string }[]
+  >`
+    select released_lots, released_points::text
+    from loyalty_private.release_due_migration_lots_v1(
+      clock_timestamp(), 100
+    )
+  `;
+  const row = rows[0];
+  if (!row) throw new Error("migration_pending_release_result_unavailable");
+  const releasedLots = Number(row.released_lots);
+  if (
+    !Number.isSafeInteger(releasedLots) ||
+    releasedLots < 0 ||
+    releasedLots > 100 ||
+    !/^(?:0|[1-9][0-9]*)$/u.test(row.released_points)
+  ) {
+    throw new Error("invalid_migration_pending_release_result");
+  }
+  return { releasedLots, releasedPoints: row.released_points };
+}
+
 export type PointExpiryLifecycleResult = Readonly<{
   expiryBatches: number;
   expiredLots: number;

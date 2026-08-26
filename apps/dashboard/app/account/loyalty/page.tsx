@@ -366,6 +366,7 @@ function activityLabel(item: CustomerActivity, locale: CustomerLocale): string {
     expire: copy.pointsExpired,
     refund_reversal: copy.refundAdjustment,
     manual_adjustment: copy.accountAdjustment,
+    opening_balance: "Imported opening balance",
   };
   return labels[item.kind] ?? copy.loyaltyActivity;
 }

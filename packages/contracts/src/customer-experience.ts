@@ -105,6 +105,7 @@ export const customerActivityV1 = z
       "expire",
       "refund_reversal",
       "manual_adjustment",
+      "opening_balance",
     ]),
     points: positivePoints,
     effectiveAt: instant,

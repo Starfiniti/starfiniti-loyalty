@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Added the M12 canonical migration and value-free dry-run foundation with strict source/identity/balance/lot/tier/referral/history contracts, explicit non-email identity resolution, deterministic exact-total fingerprints, immutable minimized PostgreSQL receipts, content/idempotency replay fences, and zero ledger effects.
+- Completed M12 receipt-bound opening-balance application with exact canonical revalidation, deterministic cross-receipt source-row serialization, immutable ledger/lot attribution, exact once-only pending release, projection reconciliation, and append-only correction evidence; production value remains disabled.
+- Added strict versioned Generic CSV, WPLoyalty CSV, and WooRewards JSON migration adapters with bounded transient parsing, exact source/canonical digests, official synthetic fixtures, fail-closed format/encoding/formula checks, privacy-safe bounded error export, and no database or value capability; YITH remains unavailable pending a reviewed redacted export.
+- Added the versioned migration adapter support registry and public execution choke point with exact source/ID/version selection, reference-fixture drift evidence, typed privacy-safe refusals, and a proven no-hash/no-parse YITH gate.
+- Added the M12 migration centre with request-local source inspection, explicit no-email customer mapping, authoritative minimized dry-run receipts, exact file/mapping re-presentation before opening-balance application, entitlement-independent compensating corrections, and tenant-scoped bigint-safe reconciliation history; migration writes remain disabled pending pilot canary.
+- Repaired migration form target sizes after production-build desktop/mobile browser review and added a 34-check fail-closed M12 canary validator with sensitive-evidence rejection, exact score/category floors, and mandatory release, source, value, reconciliation, rollback, and observation gates.
 - Added the M11 ecosystem closeout manifest and validator with 41 exact repository/production checks, deterministic seven-category scoring, an 80% category floor, sensitive-evidence rejection, and false-completion self-tests.
 - Normalized outbound-webhook secret hints to the database-safe Base64URL alphabet while retaining the canonical Base64 `whsec_` secret wire format.
 - Added endpoint-scoped outbound-webhook lifecycle operations with one-time 256-bit signing keys, digest-only storage, immutable revisions, disabled-only bounded rotation, disable-before-authorization, retirement scrubbing, and minimized merchant health.
