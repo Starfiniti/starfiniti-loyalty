@@ -9,6 +9,9 @@ import {
   migrationAdapterResultV1,
   migrationDryRunResultV1,
   migrationIdentityResolutionV1,
+  migrationSourceInspectionV1,
+  migrationWorkflowMappingV1,
+  migrationWorkspaceV1,
   recordMigrationDryRunCommandV1,
   resolveMigrationAdapterRequestV1,
   resolveMigrationAdapterResultV1,
@@ -495,6 +498,131 @@ describe("migration contracts", () => {
         idempotencyKey: "migration-correction-1",
         correlationId: "bf2247d8-893e-49ae-8363-8423928e9cc5",
         organizationId: "bf2247d8-893e-49ae-8363-8423928e9cc6",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("keeps transient inspection exact and mapping authority explicit", () => {
+    expect(
+      migrationSourceInspectionV1.safeParse({
+        schemaVersion: "1",
+        sourceSystem: "wployalty",
+        adapterId: "wployalty_csv_v1",
+        adapterVersion: "1",
+        sourceExportSha256: "a".repeat(64),
+        inputBytes: 42,
+        rowCount: 1,
+        availablePoints: "250",
+        pendingPoints: "0",
+        rows: [
+          {
+            sourceRowId: "row-0001",
+            identity: { kind: "email", value: "member@example.test" },
+            availablePoints: "250",
+            pendingPoints: "0",
+          },
+        ],
+      }).success,
+    ).toBe(true);
+    expect(
+      migrationWorkflowMappingV1.safeParse({
+        sourceRowId: "row-0001",
+        decision: "matched_existing",
+        targetCustomerId: null,
+      }).success,
+    ).toBe(false);
+  });
+
+  it("reconciles migration workspace evidence and derives write access", () => {
+    const workspace = {
+      schemaVersion: "1",
+      programmeGroupId: baseDocument.programmeGroupId,
+      membershipRole: "owner",
+      entitlementEnabled: true,
+      canConfigure: true,
+      canCorrect: true,
+      dryRuns: [
+        {
+          publicId: "bf2247d8-893e-49ae-8363-8423928e9cc4",
+          status: "valid",
+          sourceSystem: "wployalty",
+          sourceExportSha256: "a".repeat(64),
+          canonicalDocumentSha256: "b".repeat(64),
+          engineSha256: "c".repeat(64),
+          approvalSha256: "d".repeat(64),
+          rowCount: 1,
+          matchedCount: 0,
+          createCount: 1,
+          unresolvedCount: 0,
+          availablePoints: "250",
+          pendingPoints: "0",
+          issueCounts: {},
+          applicationBatchId: "bf2247d8-893e-49ae-8363-8423928e9cc5",
+          createdAt: "2026-08-26T08:00:00Z",
+        },
+      ],
+      batches: [
+        {
+          publicId: "bf2247d8-893e-49ae-8363-8423928e9cc5",
+          dryRunId: "bf2247d8-893e-49ae-8363-8423928e9cc4",
+          sourceSystem: "wployalty",
+          customerCount: 1,
+          createdCustomerCount: 1,
+          availablePoints: "250",
+          pendingPoints: "0",
+          createdAt: "2026-08-26T08:01:00Z",
+          reconciliation: {
+            status: "reconciled",
+            itemCount: 1,
+            itemAvailablePoints: "250",
+            itemPendingPoints: "0",
+            lotCount: 1,
+            lotPoints: "250",
+            openingTransactionCount: 1,
+            openingCreditEntryCount: 1,
+            pendingReleaseCount: 0,
+            releasedPendingPoints: "0",
+            correctedPoints: "0",
+          },
+          correction: null,
+          items: [
+            {
+              publicId: "bf2247d8-893e-49ae-8363-8423928e9cc6",
+              sourceRowRef: "row-0001",
+              customerId: "bf2247d8-893e-49ae-8363-8423928e9cc7",
+              customerReference: "Imported 0123456789ab",
+              resolutionBasis: "explicit_create",
+              createdCustomer: true,
+              availablePoints: "250",
+              pendingPoints: "0",
+              lotCount: 1,
+              lotPoints: "250",
+              releasedPendingPoints: "0",
+            },
+          ],
+          itemsTruncated: false,
+        },
+      ],
+    };
+    expect(migrationWorkspaceV1.safeParse(workspace).success).toBe(true);
+    expect(
+      migrationWorkspaceV1.safeParse({
+        ...workspace,
+        entitlementEnabled: false,
+      }).success,
+    ).toBe(false);
+    expect(
+      migrationWorkspaceV1.safeParse({
+        ...workspace,
+        batches: [
+          {
+            ...workspace.batches[0],
+            reconciliation: {
+              ...workspace.batches[0]!.reconciliation,
+              itemAvailablePoints: "249",
+            },
+          },
+        ],
       }).success,
     ).toBe(false);
   });

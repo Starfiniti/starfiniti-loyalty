@@ -881,9 +881,269 @@ export const compensateMigrationBatchResultV1 = z
   })
   .strict();
 
+export const migrationWorkflowMappingV1 = z
+  .object({
+    sourceRowId: safeReference,
+    decision: z.enum(["create_new", "matched_existing", "unresolved"]),
+    targetCustomerId: z.uuid().nullable(),
+  })
+  .strict()
+  .superRefine((mapping, context) => {
+    if (
+      (mapping.decision === "matched_existing") !==
+      (mapping.targetCustomerId !== null)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["targetCustomerId"],
+        message: "only an explicit existing-customer decision carries a target",
+      });
+    }
+  });
+
+export const migrationSourceInspectionV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    sourceSystem: migrationSourceSystemV1,
+    adapterId: migrationAdapterIdV1,
+    adapterVersion: migrationAdapterVersion,
+    sourceExportSha256: sha256Hex,
+    inputBytes: z
+      .number()
+      .int()
+      .min(1)
+      .max(5 * 1024 * 1024),
+    rowCount: z.number().int().min(1).max(500),
+    availablePoints: exactNonNegativeInteger,
+    pendingPoints: exactNonNegativeInteger,
+    rows: z
+      .array(
+        z
+          .object({
+            sourceRowId: safeReference,
+            identity: migrationIdentityV1,
+            availablePoints: exactNonNegativeInteger,
+            pendingPoints: exactNonNegativeInteger,
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(500),
+  })
+  .strict()
+  .superRefine((inspection, context) => {
+    const available = inspection.rows.reduce(
+      (sum, row) => sum + BigInt(row.availablePoints),
+      0n,
+    );
+    const pending = inspection.rows.reduce(
+      (sum, row) => sum + BigInt(row.pendingPoints),
+      0n,
+    );
+    if (
+      inspection.rows.length !== inspection.rowCount ||
+      available.toString() !== inspection.availablePoints ||
+      pending.toString() !== inspection.pendingPoints
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["rows"],
+        message: "inspection rows must reconcile to exact source totals",
+      });
+    }
+  });
+
+const migrationWorkflowDryRunV1 = z
+  .object({
+    publicId: z.uuid(),
+    status: z.enum(["valid", "invalid"]),
+    sourceSystem: migrationSourceSystemV1,
+    sourceExportSha256: sha256Hex,
+    canonicalDocumentSha256: sha256Hex,
+    engineSha256: sha256Hex,
+    approvalSha256: sha256Hex,
+    rowCount: z.number().int().min(1).max(500),
+    matchedCount: z.number().int().min(0).max(500),
+    createCount: z.number().int().min(0).max(500),
+    unresolvedCount: z.number().int().min(0).max(500),
+    availablePoints: exactNonNegativeInteger,
+    pendingPoints: exactNonNegativeInteger,
+    issueCounts: z.partialRecord(
+      migrationDryRunIssueCodeV1,
+      z.number().int().min(1).max(1000),
+    ),
+    applicationBatchId: z.uuid().nullable(),
+    createdAt: timestamp,
+  })
+  .strict()
+  .superRefine((receipt, context) => {
+    if (
+      receipt.matchedCount + receipt.createCount + receipt.unresolvedCount !==
+      receipt.rowCount
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["rowCount"],
+        message: "dry-run resolution counts must reconcile",
+      });
+    }
+    if (
+      (receipt.status === "valid") !==
+      (receipt.unresolvedCount === 0 &&
+        Object.keys(receipt.issueCounts).length === 0)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["status"],
+        message: "dry-run status must reconcile to issue evidence",
+      });
+    }
+  });
+
+const migrationWorkflowCorrectionV1 = z
+  .object({
+    publicId: z.uuid(),
+    reason: z.string().trim().min(8).max(500),
+    correctedPoints: exactNonNegativeInteger,
+    createdAt: timestamp,
+  })
+  .strict();
+
+const migrationWorkflowItemV1 = z
+  .object({
+    publicId: z.uuid(),
+    sourceRowRef: safeReference,
+    customerId: z.uuid(),
+    customerReference: z.string().trim().min(1).max(200),
+    resolutionBasis: z.enum([
+      "verified_woocommerce_id",
+      "explicit_customer",
+      "explicit_create",
+    ]),
+    createdCustomer: z.boolean(),
+    availablePoints: exactNonNegativeInteger,
+    pendingPoints: exactNonNegativeInteger,
+    lotCount: z.number().int().min(0).max(50),
+    lotPoints: exactNonNegativeInteger,
+    releasedPendingPoints: exactNonNegativeInteger,
+  })
+  .strict()
+  .refine(
+    (item) =>
+      BigInt(item.lotPoints) ===
+      BigInt(item.availablePoints) + BigInt(item.pendingPoints),
+    {
+      path: ["lotPoints"],
+      message: "item lots must reconcile to source value",
+    },
+  );
+
+const migrationWorkflowReconciliationV1 = z
+  .object({
+    status: z.enum(["reconciled", "difference"]),
+    itemCount: z.number().int().min(0).max(500),
+    itemAvailablePoints: exactNonNegativeInteger,
+    itemPendingPoints: exactNonNegativeInteger,
+    lotCount: z.number().int().min(0).max(25_000),
+    lotPoints: exactNonNegativeInteger,
+    openingTransactionCount: z.number().int().min(0).max(25_000),
+    openingCreditEntryCount: z.number().int().min(0).max(25_000),
+    pendingReleaseCount: z.number().int().min(0).max(25_000),
+    releasedPendingPoints: exactNonNegativeInteger,
+    correctedPoints: exactNonNegativeInteger,
+  })
+  .strict();
+
+const migrationWorkflowBatchV1 = z
+  .object({
+    publicId: z.uuid(),
+    dryRunId: z.uuid(),
+    sourceSystem: migrationSourceSystemV1,
+    customerCount: z.number().int().min(1).max(500),
+    createdCustomerCount: z.number().int().min(0).max(500),
+    availablePoints: exactNonNegativeInteger,
+    pendingPoints: exactNonNegativeInteger,
+    createdAt: timestamp,
+    reconciliation: migrationWorkflowReconciliationV1,
+    correction: migrationWorkflowCorrectionV1.nullable(),
+    items: z.array(migrationWorkflowItemV1).max(50),
+    itemsTruncated: z.boolean(),
+  })
+  .strict()
+  .superRefine((batch, context) => {
+    const reconciled =
+      batch.reconciliation.itemCount === batch.customerCount &&
+      batch.reconciliation.itemAvailablePoints === batch.availablePoints &&
+      batch.reconciliation.itemPendingPoints === batch.pendingPoints &&
+      BigInt(batch.reconciliation.lotPoints) ===
+        BigInt(batch.availablePoints) + BigInt(batch.pendingPoints) &&
+      batch.reconciliation.openingTransactionCount ===
+        batch.reconciliation.lotCount &&
+      batch.reconciliation.openingCreditEntryCount ===
+        batch.reconciliation.lotCount;
+    if ((batch.reconciliation.status === "reconciled") !== reconciled) {
+      context.addIssue({
+        code: "custom",
+        path: ["reconciliation", "status"],
+        message: "batch reconciliation status must match exact evidence",
+      });
+    }
+    if (batch.itemsTruncated !== batch.items.length < batch.customerCount) {
+      context.addIssue({
+        code: "custom",
+        path: ["itemsTruncated"],
+        message: "item truncation flag must match returned evidence",
+      });
+    }
+  });
+
+export const migrationWorkspaceV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    programmeGroupId: z.uuid(),
+    membershipRole: z.enum([
+      "owner",
+      "admin",
+      "operator",
+      "analyst",
+      "auditor",
+    ]),
+    entitlementEnabled: z.boolean(),
+    canConfigure: z.boolean(),
+    canCorrect: z.boolean(),
+    dryRuns: z.array(migrationWorkflowDryRunV1).max(50),
+    batches: z.array(migrationWorkflowBatchV1).max(50),
+  })
+  .strict()
+  .superRefine((workspace, context) => {
+    if (
+      workspace.canConfigure !==
+      (workspace.entitlementEnabled &&
+        ["owner", "admin"].includes(workspace.membershipRole))
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["canConfigure"],
+        message:
+          "migration write access must derive from live role and entitlement",
+      });
+    }
+    if (
+      workspace.canCorrect !==
+      ["owner", "admin"].includes(workspace.membershipRole)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["canCorrect"],
+        message: "compensating access must remain independent from entitlement",
+      });
+    }
+  });
+
 export type CanonicalMigrationDocumentV1 = z.infer<
   typeof canonicalMigrationDocumentV1
 >;
+export type MigrationSourceSystemV1 = z.infer<typeof migrationSourceSystemV1>;
 export type MigrationAdapterIdV1 = z.infer<typeof migrationAdapterIdV1>;
 export type MigrationAdapterContextV1 = z.infer<
   typeof migrationAdapterContextV1
@@ -940,3 +1200,10 @@ export type CompensateMigrationBatchCommandV1 = z.infer<
 export type CompensateMigrationBatchResultV1 = z.infer<
   typeof compensateMigrationBatchResultV1
 >;
+export type MigrationWorkflowMappingV1 = z.infer<
+  typeof migrationWorkflowMappingV1
+>;
+export type MigrationSourceInspectionV1 = z.infer<
+  typeof migrationSourceInspectionV1
+>;
+export type MigrationWorkspaceV1 = z.infer<typeof migrationWorkspaceV1>;

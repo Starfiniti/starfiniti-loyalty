@@ -100,3 +100,15 @@ All values come from fixed enums or bounded integers. No source column value is 
 ## Verification
 
 Checked-in synthetic fixtures use reserved `example.test` identities. Contract/domain tests cover exact valid formats, deterministic reruns, source/canonical hashes, grouped lot ordering, expiry reconciliation, header/property drift, duplicate keys/identities/lots, row conflicts, missing/numeric/nested JSON values, UTF-8/BOM/line endings, points overflow, formula injection, 5 MiB and 500-row bounds, 100-issue truncation, safe CSV export, and rejection of caller tenant/actor/value fields.
+
+## Merchant workflow
+
+The `/migrations` route exposes a three-step English workflow to owners and admins when the tenant migration entitlement is enabled:
+
+1. Choose a pinned source format, export reference and timestamp, expiry policy, optional WooCommerce identity store, and one file up to 5 MiB. Inspection parses request-local bytes and returns source rows only to the authenticated review; it writes nothing.
+2. Explicitly choose `create_new`, an existing customer public ID, or `unresolved` for every opaque source row. The server re-parses the file, derives identity fingerprints and resolution bases, runs the canonical engine, and stores a minimized dry-run receipt. It never matches by email.
+3. Review exact matched/new/unresolved counts, point totals, and approval digest. Application requires explicit confirmation and re-presents the same file and mappings. The server and PostgreSQL independently recompute and verify the receipt before any opening-balance ledger entry is appended.
+
+The file must be selected again after a refresh. This is intentional: uploads, canonical rows, source identities, and mappings are not stored in the database, local storage, cookies, URLs, or analytics. Server Action transport allows 6 MiB only for multipart overhead; the adapter still rejects more than 5 MiB.
+
+The route retains read-only receipt and batch history after feature disable. Reconciliation exposes exact item, lot, transaction, credit-entry, pending-release, and correction counts/totals without source identities. A correction appends compensating transactions and never edits imported history.

@@ -3,6 +3,7 @@ import {
   Coins,
   Gem,
   Gift,
+  FileUp,
   LayoutDashboard,
   MailCheck,
   Megaphone,
@@ -84,6 +85,12 @@ export const merchantNavigation: readonly MerchantNavigationItem[] = [
     icon: MailCheck,
     group: "PLATFORM",
     match: (pathname) => pathname.startsWith("/notifications"),
+  },
+  {
+    label: "Migrations",
+    href: "/migrations",
+    icon: FileUp,
+    match: (pathname) => pathname.startsWith("/migrations"),
   },
   {
     label: "Customer experience",
