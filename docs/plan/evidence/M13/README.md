@@ -1,6 +1,6 @@
 # M13 Evidence — Enterprise identity
 
-Status: M13-S01 access catalogue and review is complete on draft PR #40. M13-S02 organization and team lifecycle is next. Tenant federation, SCIM, support, agency, and production identity changes remain disabled and unimplemented.
+Status: M13-S01 access catalogue and review is complete on draft PR #40. M13-S02 organization and team lifecycle is complete on draft PR #41. Tenant federation, SCIM, support, agency, and production identity changes remain disabled and unimplemented.
 
 ## M13-S01 access catalogue and review
 
@@ -26,3 +26,16 @@ Status: M13-S01 access catalogue and review is complete on draft PR #40. M13-S02
 - Review found and repaired a real narrow-screen implicit-grid row collapse that clipped the hero. The production page now uses max-content rows aligned to the start.
 
 No production identity state changed.
+
+## M13-S02 organization and team lifecycle
+
+Status: complete on `codex/m13-org-lifecycle`; no production identity mutation is enabled.
+
+- ADR-0052 selects 256-bit one-use capabilities with digest-only storage instead of email/domain matching or administrator-entered Auth UUIDs.
+- Additive organization and membership revisions support exact rename, suspend, restore, close, offboard, role-change, and revoke state machines. The stable organization row serializes actor rechecks and owner quorum. Suspension blocks the shared merchant mutation role gate; offboarding retains only the initiating recovery owner.
+- The accepting request's live Supabase subject becomes the membership. Revoked members fail the next team projection request even while an old JWT remains valid.
+- The Hub-style Team & access workflow covers organization creation, invitation issuance/acceptance/revocation, member roles, lifecycle controls, bounded audit history, suspended-owner recovery, and a limit-declared minimized JSON identity snapshot.
+- Browser QA evidence is recorded in `organization-team-browser-qa-2026-08-26.md`: desktop/mobile/narrow, light/dark, keyboard trap and restoration, inert background, reduced motion, 44-pixel controls, English-only, zero overflow, and zero diagnostics pass after deterministic repairs.
+- Local verification passes focused actions 6/6, dashboard typecheck, zero-warning lint, static 72-migration/59-pgTAP validation, production build, workflow validation, secret scan, and zero-high production dependency audit.
+- Exact-head Linux run `32966869787` at `e02765568b91a316953e5fa53bd0298fb72ff866` passed all seven jobs: the complete repository baseline, both production images, a clean 72-migration replay, all 59 pgTAP files with 3,128 assertions including all 70 focused lifecycle assertions, all 14 concurrency probes, and the minimum/current × HPOS/legacy WooCommerce matrix.
+- The self-improving loop first rejected a non-identical invitation retry fixture in run `32966574974`: separate `statement_timestamp()` calls intentionally produced changed expiry input under one idempotency key. Commit `e027655` bound the exact-retry fixture to one transaction timestamp while retaining the changed-expiry conflict case; the corrected exact head passed.

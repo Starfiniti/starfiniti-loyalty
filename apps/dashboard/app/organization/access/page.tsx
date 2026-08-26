@@ -1,9 +1,13 @@
 import { redirect } from "next/navigation";
 import { LockKeyhole } from "lucide-react";
 import { MerchantShell } from "@/components/merchant-shell";
-import { getOrganizationAccessWorkspace } from "@/lib/server/enterprise-identity";
+import {
+  getOrganizationAccessWorkspace,
+  getOrganizationTeamWorkspace,
+} from "@/lib/server/enterprise-identity";
 import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
 import { AccessReview } from "./access-review";
+import { TeamLifecycle } from "./team-lifecycle";
 
 export default async function OrganizationAccessPage() {
   const tenant = await getAuthenticatedTenantState();
@@ -13,11 +17,13 @@ export default async function OrganizationAccessPage() {
   if (tenant.kind === "unassigned") redirect("/");
 
   let workspace = null;
+  let teamWorkspace = null;
   let unavailable = false;
   try {
-    workspace = await getOrganizationAccessWorkspace(
-      tenant.context.organization.public_id,
-    );
+    [workspace, teamWorkspace] = await Promise.all([
+      getOrganizationAccessWorkspace(tenant.context.organization.public_id),
+      getOrganizationTeamWorkspace(tenant.context.organization.public_id),
+    ]);
   } catch {
     unavailable = true;
   }
@@ -42,7 +48,10 @@ export default async function OrganizationAccessPage() {
         tabIndex={-1}
       >
         {workspace ? (
-          <AccessReview workspace={workspace} />
+          <>
+            <AccessReview workspace={workspace} />
+            {teamWorkspace ? <TeamLifecycle workspace={teamWorkspace} /> : null}
+          </>
         ) : (
           <section
             className="access-unavailable"

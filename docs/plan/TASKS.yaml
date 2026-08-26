@@ -2225,9 +2225,18 @@ tasks:
           - production-build browser review passes desktop dark keyboard 390-pixel mobile 320-pixel narrow 44-pixel controls English-only zero-overflow and zero-diagnostic checks after repairing mobile hero clipping
           - exact-head Linux run 32957971079 at 6284412b620c2a3b65480c3638c0c46691f21d03 passes all seven jobs including root checks both images clean 71-migration replay 58 pgTAP files with 3058 assertions all 13 concurrency probes and all four WooCommerce runtimes
       - id: M13-S02-ORGANIZATION-AND-TEAM-LIFECYCLE
-        status: planned
+        status: complete
         dependencies: [M13-S01-ACCESS-CATALOGUE-AND-REVIEW]
         hypothesis: Invitation and provisioning-bound membership plus audited lifecycle commands can add and remove tenant authority immediately without email or domain auto-join.
+        baseline: Organizations have no self-service lifecycle, invitation capability, optimistic member revision, owner-quorum command, minimized team view, or recovery identity snapshot.
+        metrics:
+          - seven exact public lifecycle boundaries and zero browser runtime or worker table DML grants
+          - one accepted effect for every exact retry and one active owner after every concurrent/offboard path
+          - zero Auth UUID email domain group claim raw token digest or loyalty value field in the team projection
+        targets:
+          - all lifecycle invitation and membership transitions append attributable audit and preserve zero ledger effects
+          - revocation suspension capability replay stale revision and cross-tenant selectors fail on the next request
+          - desktop mobile narrow keyboard reduced-motion dark-theme and 44-pixel checks have no critical failure
         owner_inputs: []
         acceptance:
           - owner-controlled organization creation rename suspension restore closure export and offboarding have exact state machines and audit
@@ -2238,10 +2247,23 @@ tasks:
           - email or domain grants membership
           - suspended tenant continues new configuration or value issuance
           - invitation replay or changed role succeeds
+          - revoked administrators retain pending capabilities they issued
+          - offboarding retains additional co-owner authority
+          - retry-time expiry drift conflicts under one idempotency key
+        security_boundaries:
+          - PostgreSQL derives actor organization membership and owner quorum after the stable organization lock
+          - invitation plaintext exists only in the browser and trusted server action while PostgreSQL retains SHA-256 only
+          - suspension blocks shared merchant mutation authority while one live initiating owner retains recovery/export evidence
         rollout: Enable invitations and lifecycle for one Starfiniti organization after compatibility shadow checks.
         rollback: Disable new lifecycle commands preserve memberships and audit and restore only through an explicit compensating transition.
         verification:
           - role transition owner quorum invitation replay concurrency stale-session protected-value and tenant-isolation tests
+        evidence:
+          - docs/architecture/ADR/0052-capability-bound-organization-invitations-and-owner-quorum.md
+          - docs/plan/evidence/M13/README.md
+          - docs/plan/evidence/M13/organization-team-browser-qa-2026-08-26.md
+          - focused actions 6 of 6 dashboard typecheck lint production build workflow validation secret scan production audit and static validation of 72 migrations and 59 pgTAP files pass locally
+          - exact-head Linux run 32966869787 at e02765568b91a316953e5fa53bd0298fb72ff866 passed all seven jobs including root checks both images clean 72-migration replay all 59 pgTAP files with 3128 assertions all 14 concurrency probes and all four WooCommerce runtimes
       - id: M13-S03-TENANT-FEDERATION
         status: planned
         dependencies: [M13-S02-ORGANIZATION-AND-TEAM-LIFECYCLE]

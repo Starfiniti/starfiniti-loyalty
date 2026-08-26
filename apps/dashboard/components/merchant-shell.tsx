@@ -6,6 +6,7 @@ import { LogOut, Menu, Moon, RefreshCw, Sparkles, Sun, X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   useEffect,
+  useRef,
   useState,
   useSyncExternalStore,
   useTransition,
@@ -67,6 +68,9 @@ export function MerchantShell({
   tenant: MerchantShellTenant;
 }>) {
   const [navigationOpen, setNavigationOpen] = useState(false);
+  const closeNavigationButton = useRef<HTMLButtonElement>(null);
+  const openNavigationButton = useRef<HTMLButtonElement>(null);
+  const navigationPanel = useRef<HTMLElement>(null);
   const darkMode = useSyncExternalStore(
     subscribeToTheme,
     getThemeSnapshot,
@@ -83,6 +87,63 @@ export function MerchantShell({
       : "light";
   }, [darkMode]);
 
+  useEffect(() => {
+    if (!navigationOpen) return;
+    closeNavigationButton.current?.focus();
+
+    function restoreMenuFocus() {
+      setNavigationOpen(false);
+      window.requestAnimationFrame(() => openNavigationButton.current?.focus());
+    }
+
+    function retainNavigationFocus(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        restoreMenuFocus();
+        return;
+      }
+      if (event.key !== "Tab") return;
+
+      const focusable = Array.from(
+        navigationPanel.current?.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ) ?? [],
+      ).filter((element) => element.getClientRects().length > 0);
+      const first = focusable[0];
+      const last = focusable.at(-1);
+      if (!first || !last) return;
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    const desktopLayout = window.matchMedia("(min-width: 801px)");
+    function closeForDesktop(event: MediaQueryListEvent) {
+      if (!event.matches) return;
+      setNavigationOpen(false);
+      window.requestAnimationFrame(() =>
+        document.querySelector<HTMLElement>("#main-content")?.focus(),
+      );
+    }
+
+    window.addEventListener("keydown", retainNavigationFocus);
+    desktopLayout.addEventListener("change", closeForDesktop);
+    return () => {
+      window.removeEventListener("keydown", retainNavigationFocus);
+      desktopLayout.removeEventListener("change", closeForDesktop);
+    };
+  }, [navigationOpen]);
+
+  function closeNavigation() {
+    setNavigationOpen(false);
+    window.requestAnimationFrame(() => openNavigationButton.current?.focus());
+  }
+
   function toggleTheme() {
     const next = !darkMode;
     window.localStorage.setItem(themeStorageKey, next ? "dark" : "light");
@@ -95,6 +156,7 @@ export function MerchantShell({
       <aside
         aria-label={text("Merchant navigation")}
         className={`merchant-sidebar ${navigationOpen ? "is-open" : ""}`}
+        ref={navigationPanel}
       >
         <div className="merchant-brand-lockup">
           <Image alt="" height={38} priority src={starfinitiIcon} width={38} />
@@ -105,7 +167,8 @@ export function MerchantShell({
           <button
             aria-label={text("Close navigation")}
             className="merchant-mobile-close ui-icon-button"
-            onClick={() => setNavigationOpen(false)}
+            onClick={closeNavigation}
+            ref={closeNavigationButton}
             type="button"
           >
             <X aria-hidden="true" />
@@ -162,18 +225,23 @@ export function MerchantShell({
         <button
           aria-label={text("Close navigation")}
           className="merchant-scrim"
-          onClick={() => setNavigationOpen(false)}
+          onClick={closeNavigation}
           type="button"
         />
       ) : null}
 
-      <div className="merchant-workspace">
+      <div
+        aria-hidden={navigationOpen || undefined}
+        className="merchant-workspace"
+        inert={navigationOpen}
+      >
         <header className="merchant-commandbar">
           <div className="merchant-commandbar-title">
             <button
               aria-label={text("Open navigation")}
               className="merchant-mobile-menu ui-icon-button"
               onClick={() => setNavigationOpen(true)}
+              ref={openNavigationButton}
               type="button"
             >
               <Menu aria-hidden="true" />
