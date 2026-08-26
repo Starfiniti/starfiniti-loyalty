@@ -232,6 +232,7 @@ select throws_ok(
   $$ select * from loyalty.configure_programme_currency_policy_v1('95000000-0000-4000-8000-000000000500', 'USD', 2, 'other-feed', 86400, 'enabled', 0, 'currency:policy:usd:1', '95000000-0000-4000-8000-000000000700') $$,
   '23514', 'currency policy idempotency conflict', 'changed policy retry fails closed'
 );
+reset role;
 select results_eq(
   $$ select count(*)::bigint from loyalty_private.currency_conversion_policy_versions where organization_id = (select id from loyalty.organizations where slug = 'currency-one') $$,
   array[1::bigint], 'policy retry creates one immutable revision'
@@ -240,6 +241,8 @@ select results_eq(
   $$ select count(*)::bigint from loyalty.admin_audit_events where action = 'programme.currency_policy.configure' $$,
   array[1::bigint], 'policy command appends one audit event'
 );
+set local role authenticated;
+set local request.jwt.claim.sub = '95000000-0000-4000-8000-000000000001';
 select throws_ok(
   $$ select * from loyalty.configure_programme_currency_policy_v1('95000000-0000-4000-8000-000000000500', 'EUR', 2, 'verified-test-feed', 86400, 'enabled', 0, 'currency:policy:eur:1', '95000000-0000-4000-8000-000000000701') $$,
   '22023', 'currency policy source must differ from programme base', 'same-currency policy is rejected'

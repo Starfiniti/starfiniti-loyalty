@@ -973,6 +973,7 @@ security definer
 set search_path = ''
 as $$
 declare
+  target_event_type text;
   source_currency_code text;
   source_minor_unit_digits integer;
   base_currency_code text;
@@ -980,11 +981,12 @@ declare
   evidence_selector text;
   committed record;
 begin
-  select event.payload -> 'order' ->> 'currency',
+  select event.event_type,
+    event.payload -> 'order' ->> 'currency',
     (event.payload -> 'order' ->> 'currencyMinorUnitDigits')::integer,
     version.configuration ->> 'currencyCode',
     (version.configuration ->> 'currencyMinorUnitDigits')::integer
-  into strict source_currency_code, source_minor_unit_digits,
+  into target_event_type, source_currency_code, source_minor_unit_digits,
     base_currency_code, base_minor_unit_digits
   from loyalty_private.canonical_commerce_events as event
   join loyalty.programme_versions as version
@@ -995,8 +997,19 @@ begin
 
   evidence_selector := target_explanation
     -> 'currencyConversion' ->> 'evidenceId';
-  if source_currency_code <> base_currency_code
-    or source_minor_unit_digits <> base_minor_unit_digits then
+  if target_event_type = 'commerce.order.status_changed'
+    and (
+      source_currency_code is null
+      or source_minor_unit_digits is null
+      or base_currency_code is null
+      or base_minor_unit_digits is null
+    ) then
+    raise exception using errcode = '23514', message = 'commerce award currency scope unavailable';
+  elsif target_event_type = 'commerce.order.status_changed'
+    and (
+      source_currency_code <> base_currency_code
+      or source_minor_unit_digits <> base_minor_unit_digits
+    ) then
     if coalesce(evidence_selector, '') !~
       '^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
       or not exists (
@@ -1015,8 +1028,11 @@ begin
       ) then
       raise exception using errcode = '23514', message = 'foreign award lacks exact conversion evidence';
     end if;
-  elsif evidence_selector is not null then
+  elsif target_event_type = 'commerce.order.status_changed'
+    and evidence_selector is not null then
     raise exception using errcode = '23514', message = 'same-currency award cannot attach conversion evidence';
+  elsif target_event_type is not null and evidence_selector is not null then
+    raise exception using errcode = '23514', message = 'non-commerce award cannot attach conversion evidence';
   end if;
 
   select * into strict committed

@@ -113,6 +113,8 @@ select is_empty(
           'loyalty.create_analytics_export_command(uuid,uuid,uuid,text,integer,text,uuid,uuid)',
           'loyalty.create_analytics_report_schedule_command(uuid,uuid,uuid,text,integer,text,text,integer,integer,integer,uuid,uuid)',
           'loyalty.configure_programme_group_sharing_v1(uuid,text,uuid[],integer,text,uuid)',
+          'loyalty.configure_programme_currency_policy_v1(uuid,text,integer,text,integer,text,integer,text,uuid)',
+          'loyalty.get_programme_currency_policies_v1(uuid)',
           'loyalty.set_analytics_report_schedule_state_command(uuid,text,uuid,uuid)',
           'loyalty.get_overview_report(uuid,uuid,uuid,integer,timestamp with time zone)',
           'loyalty.list_customer_summaries(uuid,uuid,text)',
