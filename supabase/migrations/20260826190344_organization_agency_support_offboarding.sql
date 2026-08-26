@@ -1,9 +1,6 @@
 -- M13-S05: bilateral agency portfolios, explicit support grants, AAL2
 -- break-glass recovery, and terminal organization offboarding/deletion.
 
-grant usage on schema auth to loyalty_owner;
-grant select (id, user_id) on auth.sessions to loyalty_owner;
-
 create or replace function loyalty_private.request_session_id_v1()
 returns uuid
 language sql
@@ -53,13 +50,17 @@ $$;
 
 alter function loyalty_private.request_session_id_v1() owner to loyalty_owner;
 alter function loyalty_private.request_aal_v1() owner to loyalty_owner;
-alter function loyalty_private.request_has_live_auth_session_v1() owner to loyalty_owner;
 revoke all on function loyalty_private.request_session_id_v1()
   from public, anon, authenticated, loyalty_runtime, loyalty_worker;
 revoke all on function loyalty_private.request_aal_v1()
   from public, anon, authenticated, loyalty_runtime, loyalty_worker;
 revoke all on function loyalty_private.request_has_live_auth_session_v1()
   from public, anon, authenticated, loyalty_runtime, loyalty_worker;
+-- Supabase Auth restores its schema ACL when the Auth container starts. Keep
+-- this boolean-only bridge owned by the migration administrator, which already
+-- has Auth access, instead of granting any loyalty role access to auth.sessions.
+grant execute on function loyalty_private.request_has_live_auth_session_v1()
+  to loyalty_owner;
 
 create table loyalty.organization_agency_invitations (
   id bigint generated always as identity primary key,

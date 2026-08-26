@@ -141,12 +141,22 @@ select results_eq(
   'administration storage contains no raw token secret identity claims or request body'
 );
 select ok(
-  has_schema_privilege('loyalty_owner', 'auth', 'USAGE')
-  and has_column_privilege('loyalty_owner', 'auth.sessions', 'id', 'SELECT')
-  and has_column_privilege('loyalty_owner', 'auth.sessions', 'user_id', 'SELECT')
+  not has_schema_privilege('loyalty_owner', 'auth', 'USAGE')
+  and not has_column_privilege('loyalty_owner', 'auth.sessions', 'id', 'SELECT')
+  and not has_column_privilege('loyalty_owner', 'auth.sessions', 'user_id', 'SELECT')
   and not has_table_privilege('loyalty_owner', 'auth.sessions', 'SELECT')
-  and not has_table_privilege('authenticated', 'auth.sessions', 'SELECT'),
-  'the private owner receives only the two Auth columns required for live-session truth'
+  and not has_table_privilege('authenticated', 'auth.sessions', 'SELECT')
+  and has_function_privilege(
+    'loyalty_owner',
+    'loyalty_private.request_has_live_auth_session_v1()',
+    'EXECUTE'
+  )
+  and (
+    select pg_get_userbyid(proowner) <> 'loyalty_owner'
+    from pg_proc
+    where oid = 'loyalty_private.request_has_live_auth_session_v1()'::regprocedure
+  ),
+  'the private owner receives only the boolean live-session bridge, never Auth schema access'
 );
 
 insert into auth.users (id, email)
