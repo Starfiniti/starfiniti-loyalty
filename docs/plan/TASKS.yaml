@@ -2143,10 +2143,11 @@ tasks:
   - id: M13-ENTERPRISE-IDENTITY
     title: Complete enterprise administration, tenant SSO, SCIM, and agency access
     module: M13
-    status: planned
+    status: in_progress
     dependencies: [M12-MIGRATION]
     hypothesis: Provisioning-controlled membership with database authority enables enterprise identity without cross-tenant grants from upstream claims.
     baseline: Starfiniti workforce Authentik brokerage and owner/admin/operator membership exist; tenant federation and SCIM do not.
+    module_score: 0
     targets:
       [
         deprovisioning invalidates stale sessions,
@@ -2181,8 +2182,136 @@ tasks:
       [
         docs/architecture/ADR/0008-broker-workforce-authentik-through-supabase-auth.md,
         docs/architecture/IDENTITY_MODEL.md,
+        docs/architecture/ADR/0051-database-authoritative-enterprise-access-profiles.md,
       ]
     evidence: [docs/plan/evidence/M13/README.md]
+    slices:
+      - id: M13-S01-ACCESS-CATALOGUE-AND-REVIEW
+        status: in_progress
+        dependencies: []
+        hypothesis: One versioned database-authoritative vocabulary for six tenant membership roles plus grant-only support makes access review understandable without weakening existing live membership checks.
+        baseline: Five free-text membership roles exist and there is no marketer profile no seven-role catalogue and no minimized merchant access review.
+        metrics:
+          - seven exact role profiles with assignment kind and permission matrix
+          - one Auth-derived tenant projection with zero Auth UUID email domain group or JWT metadata fields
+          - every rejected role revoked membership and cross-tenant selector returns no tenant data
+        targets:
+          - all seven profiles are represented exactly once
+          - current role permission and active role counts reconcile to live rows
+          - owner admin marketer operator analyst auditor use membership while support remains grant-only
+        owner_inputs: []
+        acceptance:
+          - contracts expose versioned roles permissions assignment kinds organization state current access and minimized counts
+          - PostgreSQL derives actor tenant membership and permissions and accepts only one public organization selector
+          - support cannot be inserted as a permanent organization membership and upstream claims grant no authority
+          - responsive English Team and access UI explains effective separation of duties without exposing member identity
+        failure_modes:
+          - role label becomes authorization without a live database row
+          - support gains permanent tenant membership
+          - suspended revoked or cross-tenant subject receives an active permission
+          - access review exposes email Auth UUID external group domain token or secret
+          - catalogue and projection disagree
+        security_boundaries:
+          - only live organization membership is tenant authority and M13 permissions apply only to M13 administration commands
+          - support is represented as a grant-only profile and receives no access until M13-S05 implements an approved scoped expiring grant
+          - database roles own catalogue and projection while browser runtime and worker receive no direct mutation grant
+        rollout: Add the immutable catalogue and read-only Team and access projection first; enable no identity mutation until its owning later slice passes.
+        rollback: Hide the route and drop only the additive projection/catalogue objects; retain existing membership rows and legacy role behavior.
+        verification:
+          - contract and projection tests role count reconciliation RLS grants revoked membership forged claims cross-tenant selectors responsive browser accessibility and clean replay
+        evidence:
+          - docs/plan/evidence/M13/README.md
+          - focused contract and dashboard tests pass 5 and 7 assertions respectively and static validation covers 71 migrations plus 58 pgTAP files
+          - production-build browser review passes desktop dark keyboard 390-pixel mobile 320-pixel narrow 44-pixel controls English-only zero-overflow and zero-diagnostic checks after repairing mobile hero clipping
+      - id: M13-S02-ORGANIZATION-AND-TEAM-LIFECYCLE
+        status: planned
+        dependencies: [M13-S01-ACCESS-CATALOGUE-AND-REVIEW]
+        hypothesis: Invitation and provisioning-bound membership plus audited lifecycle commands can add and remove tenant authority immediately without email or domain auto-join.
+        owner_inputs: []
+        acceptance:
+          - owner-controlled organization creation rename suspension restore closure export and offboarding have exact state machines and audit
+          - invitations are one-use expiring organization-bound capabilities and membership role changes preserve owner quorum
+          - revoke and deprovision fail on the next database request even with a live access token
+        failure_modes:
+          - last owner removed
+          - email or domain grants membership
+          - suspended tenant continues new configuration or value issuance
+          - invitation replay or changed role succeeds
+        rollout: Enable invitations and lifecycle for one Starfiniti organization after compatibility shadow checks.
+        rollback: Disable new lifecycle commands preserve memberships and audit and restore only through an explicit compensating transition.
+        verification:
+          - role transition owner quorum invitation replay concurrency stale-session protected-value and tenant-isolation tests
+      - id: M13-S03-TENANT-FEDERATION
+        status: planned
+        dependencies: [M13-S02-ORGANIZATION-AND-TEAM-LIFECYCLE]
+        hypothesis: Per-organization OIDC or SAML sources brokered through Authentik can authenticate provisioned members without allowing IdP claims to authorize tenants.
+        owner_inputs: [enterprise IdP test tenant]
+        acceptance:
+          - exact OIDC and SAML configuration revisions secrets lifecycle discovery metadata validation and tested login are audited
+          - IdP subject links only a pre-invited or provisioned Auth principal and never creates membership from email domain or group
+          - disable rollback and local break-glass owner paths work
+        failure_modes:
+          - IdP initiated or forged issuer login bypasses provisioning
+          - metadata endpoint creates SSRF or unsigned configuration
+          - source secret leaks through browser audit or logs
+          - disabling federation strands the owner
+        rollout: Configure disabled source validate metadata enable one provisioned Starfiniti test user then observe.
+        rollback: Disable the tenant source in Loyalty and Authentik retain local owner access and preserve immutable configuration history.
+        verification:
+          - Authentik sandbox OIDC SAML issuer audience subject mapping replay disable outage and cross-tenant login tests
+      - id: M13-S04-SCIM-PROVISIONING
+        status: planned
+        dependencies: [M13-S03-TENANT-FEDERATION]
+        hypothesis: Tenant-scoped SCIM 2.0 users and groups with digest-only credentials can make deprovisioning immediate and retries deterministic.
+        owner_inputs: [enterprise IdP SCIM test credential]
+        acceptance:
+          - ServiceProviderConfig ResourceTypes Users Groups filtering pagination PUT PATCH and DELETE cover the supported profile
+          - credentials are one-time organization-scoped rotated and stored only as digests
+          - external IDs are unique within provisioning source and allowlisted groups map to roles without direct claim authority
+          - active false or DELETE revokes live membership immediately while preserving audit
+        failure_modes:
+          - reusable plaintext credential persists
+          - cross-source external ID collision
+          - arbitrary group name becomes role
+          - retry duplicates user group or membership
+          - deprovisioned session retains tenant access
+        rollout: Enable one disabled organization endpoint run official client fixtures provision one test cohort deprovision and reconcile.
+        rollback: Revoke endpoint credentials disable new provisioning preserve local owners and retain provisioning/audit history.
+        verification:
+          - RFC 7643/7644 contract filter pagination patch idempotency concurrency credential rotation group allowlist stale-session and cross-tenant tests
+      - id: M13-S05-SUPPORT-AGENCY-AND-OFFBOARDING
+        status: planned
+        dependencies: [M13-S04-SCIM-PROVISIONING]
+        hypothesis: Explicit portfolios and short approved support grants can serve agencies and operations without hidden impersonation or permanent cross-tenant access.
+        owner_inputs: []
+        acceptance:
+          - agency portfolios require explicit bilateral organization assignment and never share customer wallets or tenant data
+          - support grants require approver reason exact scopes short expiry revocation and tenant-visible use history
+          - break-glass owner access is separately controlled and every use is visible
+          - export deletion restore closure and offboarding preserve required immutable value and audit while removing access and PII safely
+        failure_modes:
+          - portfolio implies tenant authority
+          - support grant self-approval hidden use overbroad scope or expiry bypass
+          - deletion destroys ledger explanation
+          - offboarded credential or session remains active
+        rollout: Canary one agency-to-Starfiniti portfolio and one read-only support grant before any mutation scope.
+        rollback: Revoke grants and portfolio assignments immediately retain tenant-visible history and keep local owner recovery.
+        verification:
+          - approval separation expiry revocation scope use-audit portfolio isolation pseudonymization export and recovery tests
+      - id: M13-S06-CANARY-AND-CLOSE
+        status: planned
+        dependencies: [M13-S05-SUPPORT-AGENCY-AND-OFFBOARDING]
+        hypothesis: A disabled-first enterprise identity canary can prove immediate deprovisioning and fail-closed cross-tenant behavior without stranding owners.
+        owner_inputs:
+          [enterprise IdP test tenant and production canary approval]
+        acceptance:
+          - stale sessions fail after deprovisioning and forged domain group metadata issuer and tenant selectors grant nothing
+          - OIDC SAML SCIM support and agency canaries reconcile exactly with complete tenant-visible audit
+          - rollback and local break-glass access pass and module score reaches 90 with every category above its floor
+        rollout: Deploy disabled validate local owner test OIDC or SAML provision through SCIM deprovision verify then canary support and agency sequentially.
+        rollback: Disable sources and endpoints revoke credentials grants and memberships retain local owner and immutable evidence.
+        verification:
+          - fail-closed canary manifest clean replay full check images identity protocol fixtures recovery rollback observation and score validation
 
   - id: M14-MANAGED-BILLING
     title: Add managed Stripe billing and idempotent usage metering

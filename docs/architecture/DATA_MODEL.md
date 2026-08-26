@@ -57,7 +57,11 @@ Security/billing tenant. Suspension blocks new mutations but never hides or dele
 
 ### `organization_memberships`
 
-Unique `(organization_id, user_id)`. Roles are `owner`, `admin`, `operator`, `analyst`, and `auditor`; permissions are mapped in code/database helpers, not taken from user-editable JWT metadata. Revocation has `revoked_at`; sensitive commands check live membership.
+Unique `(organization_id, user_id)`. Roles are `owner`, `admin`, `marketer`, `operator`, `analyst`, and `auditor`; permissions are mapped through the versioned database catalogue and command-specific database helpers, not taken from user-editable JWT metadata. `support` is deliberately excluded because support authority must use a separately approved grant. Revocation has `revoked_at`; sensitive commands check live membership and active organization state.
+
+### `enterprise_access_profiles` and `enterprise_access_profile_permissions`
+
+Immutable Access V1 definitions for owner, admin, marketer, operator, support, analyst, and auditor plus their M13 administration permissions and assignment kind. Six roles are live memberships; support is structurally `support_grant` only. The tables have RLS and no direct application-role grants. `get_organization_access_workspace_v1` accepts one public organization selector, derives the Auth subject and live membership inside PostgreSQL, and returns only public organization state, the assigned profile/effective state, the seven-role catalogue, and aggregate role counts. It excludes member identities, email, domain, upstream groups/claims, tokens, and secrets. A suspended organization remains reviewable at the database boundary, but the assigned profile is explicitly ineffective and cannot authorize commands.
 
 ### `workspaces`
 

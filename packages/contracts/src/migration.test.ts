@@ -608,6 +608,14 @@ describe("migration contracts", () => {
     expect(
       migrationWorkspaceV1.safeParse({
         ...workspace,
+        membershipRole: "marketer",
+        canConfigure: false,
+        canCorrect: false,
+      }).success,
+    ).toBe(true);
+    expect(
+      migrationWorkspaceV1.safeParse({
+        ...workspace,
         entitlementEnabled: false,
       }).success,
     ).toBe(false);

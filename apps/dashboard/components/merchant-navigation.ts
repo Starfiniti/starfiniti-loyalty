@@ -10,6 +10,7 @@ import {
   Palette,
   Star,
   Users,
+  UsersRound,
   UserRoundPlus,
   type LucideIcon,
 } from "lucide-react";
@@ -97,5 +98,11 @@ export const merchantNavigation: readonly MerchantNavigationItem[] = [
     href: "/experience",
     icon: Palette,
     match: (pathname) => pathname.startsWith("/experience"),
+  },
+  {
+    label: "Team & access",
+    href: "/organization/access",
+    icon: UsersRound,
+    match: (pathname) => pathname.startsWith("/organization/access"),
   },
 ];

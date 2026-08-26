@@ -1,5 +1,6 @@
-export type MembershipRole =
-  "owner" | "admin" | "operator" | "analyst" | "auditor";
+import type { OrganizationMembershipRoleV1 } from "@starfiniti/contracts";
+
+export type MembershipRole = OrganizationMembershipRoleV1;
 
 export type MembershipRow = Readonly<{
   organization_id: number;

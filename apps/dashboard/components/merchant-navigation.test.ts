@@ -35,4 +35,13 @@ describe("merchant programme navigation", () => {
     expect(campaign?.label).toBe("Campaigns");
     expect(campaign?.match("/campaigns/history")).toBe(true);
   });
+
+  it("exposes enterprise access as a real Platform destination", () => {
+    const access = merchantNavigation.find(
+      (item) => item.href === "/organization/access",
+    );
+    expect(access?.label).toBe("Team & access");
+    expect(access?.group).toBeUndefined();
+    expect(access?.match("/organization/access")).toBe(true);
+  });
 });

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added M13's database-authoritative Access V1 catalogue with six tenant membership roles, structurally grant-only support, active-organization permission enforcement, a minimized live access projection, forged-claim/revocation/cross-tenant pgTAP coverage, and a responsive Hub-style English Team & access review.
 - Added the M12 canonical migration and value-free dry-run foundation with strict source/identity/balance/lot/tier/referral/history contracts, explicit non-email identity resolution, deterministic exact-total fingerprints, immutable minimized PostgreSQL receipts, content/idempotency replay fences, and zero ledger effects.
 - Completed M12 receipt-bound opening-balance application with exact canonical revalidation, deterministic cross-receipt source-row serialization, immutable ledger/lot attribution, exact once-only pending release, projection reconciliation, and append-only correction evidence; production value remains disabled.
 - Added strict versioned Generic CSV, WPLoyalty CSV, and WooRewards JSON migration adapters with bounded transient parsing, exact source/canonical digests, official synthetic fixtures, fail-closed format/encoding/formula checks, privacy-safe bounded error export, and no database or value capability; YITH remains unavailable pending a reviewed redacted export.
