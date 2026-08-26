@@ -419,7 +419,6 @@ select results_eq(
 );
 
 reset role;
-set local role loyalty_worker;
 
 select results_eq(
   $$ select released_lots || ':' || released_points
