@@ -15189,7 +15189,7 @@ html[data-dashboard-theme="dark"] .analytics-integrity-mark.is-stale {
 .migration-table select,
 .migration-correction-form textarea {
   min-width: 0;
-  min-height: 39px;
+  min-height: 42px;
   border: 1px solid var(--merchant-border-strong, #d4d4d8);
   border-radius: 8px;
   padding: 8px 10px;
@@ -15621,8 +15621,15 @@ html[data-dashboard-theme="dark"] .analytics-integrity-mark.is-stale {
 }
 
 .migration-confirmation input {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
   margin-top: 1px;
   accent-color: var(--merchant-violet, #5b43e6);
+}
+
+.migration-page .ui-button {
+  min-height: 42px;
 }
 
 .migration-safe-issues {
@@ -16024,6 +16031,32 @@ html[data-dashboard-theme="dark"] .analytics-integrity-mark.is-stale {
   .migration-dry-run-bar > .ui-button,
   .migration-approval-footer > .ui-button {
     width: 100%;
+  }
+  .migration-config-grid label,
+  .migration-correction-form label {
+    font-size: 12px;
+  }
+  .migration-config-grid input,
+  .migration-config-grid select,
+  .migration-table select,
+  .migration-correction-form textarea,
+  .migration-page .ui-button {
+    min-height: 44px;
+    font-size: 13px;
+  }
+  .migration-confirmation {
+    min-height: 44px;
+    align-items: center;
+    font-size: 12px !important;
+  }
+  .migration-confirmation input {
+    margin-top: 0;
+  }
+  .migration-item-details > summary,
+  .migration-correction-form > summary {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
   }
   .migration-resolution-actions {
     justify-content: flex-start;

@@ -1880,6 +1880,7 @@ tasks:
     title: Add traceable, idempotent loyalty migration
     module: M12
     status: in_progress
+    module_score: 90
     dependencies: [M11-ECOSYSTEM]
     hypothesis: Fingerprinted dry runs and opening-balance ledger effects migrate customers without duplicate or untraceable value.
     baseline: No supported import framework or competitor adapter exists.
@@ -2074,7 +2075,7 @@ tasks:
           - six focused registry tests prove exact selection all three allowlisted refusal reasons LF-normalized reference-fixture drift legitimate non-fixture merchant exports side-channel rejection and YITH refusal without hashing decoding or context validation
           - exact-head CI run 32945462821 at 7e0c755 passed all seven jobs including root checks clean 69-migration replay 56 pgTAP files 3011 assertions 13 concurrency probes both images and four WooCommerce runtimes
       - id: M12-S05-MERCHANT-WORKFLOW-AND-RECONCILIATION
-        status: in_progress
+        status: complete
         hypothesis: A guided review workflow with exact mappings totals errors and before/after reports can make high-risk migrations understandable and operable.
         baseline: Canonical parsing dry-run receipts opening-balance application correction and source selection exist as contracts/domain/database primitives but there is no Auth-scoped merchant workflow projection upload session approval surface progress or reconciliation report.
         owner_inputs: []
@@ -2108,8 +2109,14 @@ tasks:
         rollback: Disable new uploads/approvals preserve history and continue reconciliation/correction access.
         verification:
           - server/action/worker contract tests browser desktop/mobile keyboard screen-reader slow/outage review and exact report reconciliation
+        evidence:
+          - an Auth-scoped Hub-style merchant workflow connects strict transient source inspection explicit non-email row mapping authoritative dry-run receipt exact re-presentation approval and immutable reconciliation history
+          - the bounded read projection derives live owner admin or auditor access exposes no source identity and keeps correction available to owners and admins after entitlement disablement
+          - six action tests prove strict no-database refusal live role and entitlement gates exact source re-presentation minimized browser authority and protected correction access; eight dashboard migration and navigation tests pass
+          - production-build browser review passed desktop mobile light dark reduced-motion keyboard 44-pixel mobile controls English-only zero-overflow and zero-diagnostic checks after repairing undersized migration targets
+          - exact-head CI run 32951060390 at b137c1f passed all seven jobs including root checks clean 70-migration replay 57 pgTAP files 3029 assertions 13 concurrency probes both images and four WooCommerce runtimes
       - id: M12-S06-CANARY-AND-CLOSE
-        status: planned
+        status: in_progress
         hypothesis: A rerunnable real-source canary with exact customer/value/expiry/liability reconciliation can prove migrations are safe and operable.
         owner_inputs:
           [approved redacted source export and production canary approval]
@@ -2127,7 +2134,8 @@ tasks:
         docs/plan/ENTERPRISE_ROADMAP.md,
         docs/architecture/ADR/0047-content-addressed-canonical-migration-and-explicit-identity-resolution.md,
       ]
-    evidence: [docs/plan/evidence/M12/README.md]
+    evidence:
+      [docs/plan/evidence/M12/README.md, docs/plan/evidence/M12/canary.yaml]
 
   - id: M13-ENTERPRISE-IDENTITY
     title: Complete enterprise administration, tenant SSO, SCIM, and agency access

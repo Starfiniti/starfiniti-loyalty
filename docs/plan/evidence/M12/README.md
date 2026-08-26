@@ -1,6 +1,6 @@
 # M12 Evidence — Migration framework
 
-Status: M12-S01 through M12-S04 are exact-head green and complete on `codex/m12-migration`. M12-S05 merchant workflow and reconciliation are active. There is no production enablement or imported production value.
+Status: M12-S01 through M12-S05 are exact-head green and complete on `codex/m12-migration`. M12-S06 disabled deployment, approved-source canary, reconciliation, rollback, and observation are active. There is no production enablement or imported production value.
 
 ## M12-S01 canonical format and value-free dry run
 
@@ -41,7 +41,18 @@ Status: M12-S01 through M12-S04 are exact-head green and complete on `codex/m12-
 - Adversarial proof: contract tests reject forged source/adapter pairings and refused results carrying parser output. Six focused registry tests prove fixture provenance, exact deterministic selection, all refusal paths, valid non-fixture merchant files, authority/byte side-channel rejection, and YITH refusal without invoking hashes, decode, or context validation.
 - Exact-head evidence: [CI run 32945462821](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/32945462821) at `7e0c755f844292dad273f338bb8e9daae826885a` passed all seven jobs: root checks, secret/audit/licence/package gates, both production images, clean replay of all 69 migrations, all 56 pgTAP files/3,011 assertions, all 13 concurrency probes, and minimum/current WooCommerce in HPOS/legacy modes.
 
-## Later slices
+## M12-S05 merchant workflow and reconciliation
 
-- M12-S05 (active): merchant dry-run/mapping/approval/reconciliation workflow and before/after reports.
-- M12-S06: disabled deployment, canary, rerun, reconciliation, rollback, observation, and score gate.
+- The English-only Hub surface at `/migrations` guides an owner/admin from a strict registry source through request-local file inspection, explicit per-row match/create decisions, a PostgreSQL-authoritative dry-run receipt, exact source/mapping re-presentation, opening-balance application, immutable history, and compensating correction. It accepts no browser tenant, actor, wallet, ledger, or points authority.
+- `get_migration_workspace_v1` derives live role, entitlement, programme group, receipts, batches, opaque items, lots, opening transactions, pending releases, and corrections under a five-second statement timeout. Owners/admins retain correction access after entitlement disablement; auditors retain minimized read access; all other, revoked, and cross-tenant users receive no row.
+- Source bytes, source identities, canonical documents, and contacts stay request-local. The browser receives bounded hashes, counts, totals, opaque references, customer display references, and exact reconciliation evidence only; URLs, logs, storage, and analytics receive none of the source payload.
+- Six focused action tests cover valid transient inspection, fixed-enum formula refusal, exact record/apply re-presentation, live role/entitlement rejection before parsing, protected correction after entitlement disablement, and the absence of browser organization/actor/points fields. Navigation and action coverage totals eight dashboard tests.
+- [Production-build browser QA](migration-workspace-browser-qa-2026-08-26.md) passed desktop/mobile, light/dark, reduced motion, keyboard focus, English-only output, zero overflow, and zero diagnostics. It found and repaired undersized new controls; mobile migration fields/actions now measure 44 pixels and confirmation controls measure 18 pixels.
+- Exact-head [CI run 32951060390](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/32951060390) at `b137c1fde151ad3ee0f8c73c6fad335e2cdb3543` passed all seven jobs: full repository checks, both production images, clean replay of all 70 migrations, all 57 pgTAP files/3,029 assertions, all 13 concurrency probes, and minimum/current WooCommerce in HPOS/legacy modes.
+
+## M12-S06 canary and close
+
+- [Machine-readable canary evidence](canary.yaml) contains 34 mandatory checks, exact candidate/production identity, seven-category score arithmetic, an 80% category floor, sensitive-key rejection, and deterministic false-completion self-tests.
+- Eleven repository, browser, privacy, checkout, public-baseline, and operator-access checks pass. Twenty-three release, recovery, deployment, source approval, rerun, value, reconciliation, correction, outage, rollback, and observation checks remain pending.
+- The provisional module score is 90/100, but operability is 3/10 and below its mandatory floor. The validator therefore rejects completion regardless of the total score.
+- Production migration remains disabled. Applying real loyalty value requires an approved exact release, a fresh recovery point, an approved redacted source export, and explicit canary approval.
