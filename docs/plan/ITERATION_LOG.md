@@ -1,5 +1,13 @@
 # Iteration Log
 
+## 2026-08-27 — M14 verified Stripe inbox and isolated normalization
+
+- Accepted ADR-0057 after comparing synchronous processing, raw-event persistence, a minimized durable inbox, and a full provider client. Exact bounded bytes are verified in memory; only a digest-bound allowlisted projection is retained and lifecycle processing is independently leased.
+- Added a managed-only route that asks PostgreSQL for the deployment/entitlement gate before reading the request body or mounted secret. It verifies Stripe's HMAC-SHA256 format, multiple `v1` rotation signatures, five-minute tolerance, strict JSON/lifecycle shape, and a 256 KiB ceiling without logging or storing raw provider material.
+- Added immutable receipt and attempt evidence, a private mutable job lease, exact provider-event replay fencing, entitlement checks at intake/claim/effect, invoice-observation semantics, capped lease recovery, and an isolated `billing` worker with no Stripe credential, API client, or network behavior.
+- Added 16 focused dashboard cases, three worker cases, 67 planned pgTAP assertions, and an eighteenth two-session concurrency probe. Local contracts, route/worker tests, all workspace typechecks, worker build, static 77-migration/64-pgTAP validation, CI workflow validation, and deployment asset self-tests pass.
+- Added a disabled Compose profile and optional regular-file secret mount plus managed billing API/operations documentation. Production and global `self_hosted` mode remain unchanged; no provider endpoint, credential, Price, checkout, portal, usage, payment, or loyalty value is live. Clean replay and exact-head CI remain pending.
+
 ## 2026-08-27 — M14 billing authority and self-hosted independence
 
 - Accepted ADR-0056: managed commercial state is an append-only normalized PostgreSQL mirror, while database entitlements and protected loyalty paths remain authoritative. Live Stripe reads and a mutable latest-subscription row were rejected because provider outage, disorder, or a late event must not become product authorization.

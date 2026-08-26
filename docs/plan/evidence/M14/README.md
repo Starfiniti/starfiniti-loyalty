@@ -1,6 +1,6 @@
 # M14 Evidence — Managed Billing
 
-Status: M14-S01 is repository-complete on `codex/m14-billing-foundation`; M14-S02 is active. Production and the global `self_hosted` deployment mode are unchanged; no Stripe package, credential, request, customer, subscription, Price ID, or production billing state is introduced by S01.
+Status: M14-S01 is repository-complete on `codex/m14-billing-foundation`; M14-S02 is implemented locally and awaiting clean replay/exact-head CI. Production and the global `self_hosted` deployment mode are unchanged; no Stripe API credential, request, customer, subscription, Price ID, or production billing state is introduced by either slice.
 
 ## M14-S01 billing authority and self-hosted independence
 
@@ -16,4 +16,14 @@ Status: M14-S01 is repository-complete on `codex/m14-billing-foundation`; M14-S0
 - Windows repository-wide Prettier remains affected by the pre-existing CRLF checkout baseline, so clean Linux CI is the formatting/build and database-replay authority. No unrelated files were reformatted.
 - Exact-head Linux run [`33020484560`](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/33020484560) at `68479f1347e212b046ae99c5750fd27a0d05f6e8` passed all seven jobs: the complete repository check, both production images, a clean 76-migration replay, all 63 pgTAP files with 3,410 assertions including all 61 focused billing cases, all 17 concurrency probes, and the minimum/current × HPOS/legacy WooCommerce matrix. The managed-billing probe proved exact provider-account and provider-event races converge under different caller keys, changed provider-event races fail one caller closed, one account/two normalized revisions remain, and zero ledger value changes.
 
-S01 has no production rollout: production remains unchanged and no Stripe runtime exists. M14-S02 will add a disabled managed-only signature/inbox boundary with local fixtures; Stripe sandbox and production canaries remain pending their later gates.
+S01 has no production rollout. S02 adds only a disabled managed-only signature/inbox boundary with local fixtures; Stripe sandbox and production canaries remain pending their later gates.
+
+## M14-S02 verified webhook inbox and isolated normalization
+
+- ADR-0057 selects exact in-memory HMAC verification plus an immutable minimized receipt and independently leased normalization job. Synchronous lifecycle processing, raw provider-event storage, and construction of a broad Stripe provider client solely for HMAC were rejected.
+- The route calls the PostgreSQL deployment/entitlement gate before body or secret access. It then enforces JSON media type, a 256 KiB streamed ceiling, exact `{timestamp}.{raw-body}` HMAC-SHA256, constant-time comparison, one to eight `v1` rotation signatures, and a five-minute tolerance.
+- The strict internal contract reconstructs only allowlisted subscription/invoice evidence. Raw bodies, signature headers, contact, metadata, invoice bodies, payment instruments, cards, secrets, and provider responses are absent from schema, logs, worker inputs, and public responses.
+- PostgreSQL derives tenant authority from one current private account plus its stable-subject `managed.billing` entitlement. Exact Stripe event retries return one receipt; body or lifecycle drift under the same event ID fails. Entitlement is rechecked at intake, claim, and effect.
+- The optional `billing` worker profile has only `loyalty_worker` database authority and no Stripe secret, API key, SDK client, or provider network action. Subscription events append through the S01 event-time boundary; invoice events are immutable observations only. Leases are bounded, recover after expiry, cap at ten attempts, and append immutable outcomes.
+- Local evidence passes: 11 billing contract cases, 16 focused verifier/route cases, three focused worker cases, all workspace typechecks, the worker production bundle, static 77-migration/64-pgTAP validation, workflow validation, deployment self-tests, and formatting checks. The new database suite plans 67 assertions, and the eighteenth concurrency probe races exact/changed provider events plus two worker claims. Clean Docker replay and exact-head Linux CI remain pending.
+- The Compose secret path and `billing` profile default disabled. No production file, endpoint, entitlement, worker, Stripe request, or loyalty-value effect exists. The external Stripe sandbox secret and endpoint remain an M14 canary input, not a repository blocker.

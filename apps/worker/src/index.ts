@@ -1,6 +1,7 @@
 import { hostname } from "node:os";
 import postgres from "postgres";
 import { runAnalyticsExportLifecycle } from "./analytics-export.ts";
+import { runBillingWebhookLifecycle } from "./billing-webhook.ts";
 import {
   createKlaviyoDeliveryRuntime,
   readKlaviyoDeliveryConfig,
@@ -101,6 +102,11 @@ if (workerMode === "notification") {
     const result = await runAnalyticsExportLifecycle(sql, workerId);
     if (result.claimed === 0) await delay(1_000);
   }
+} else if (workerMode === "billing") {
+  while (!stopping) {
+    const result = await runBillingWebhookLifecycle(sql, workerId);
+    if (result.claimed === 0) await delay(1_000);
+  }
 } else {
   while (!stopping) {
     if (Date.now() >= nextCancellationSweepAt) {
@@ -129,17 +135,18 @@ function delay(milliseconds: number): Promise<void> {
 
 function readWorkerMode(
   value: string | undefined,
-): "value" | "notification" | "klaviyo" | "webhook" | "reporting" {
+): "value" | "notification" | "klaviyo" | "webhook" | "reporting" | "billing" {
   const mode = value ?? "value";
   if (
     mode !== "value" &&
     mode !== "notification" &&
     mode !== "klaviyo" &&
     mode !== "webhook" &&
-    mode !== "reporting"
+    mode !== "reporting" &&
+    mode !== "billing"
   ) {
     throw new Error(
-      "LOYALTY_WORKER_MODE must be value, notification, klaviyo, webhook, or reporting",
+      "LOYALTY_WORKER_MODE must be value, notification, klaviyo, webhook, reporting, or billing",
     );
   }
   return mode;

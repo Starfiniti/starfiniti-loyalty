@@ -15,6 +15,7 @@ services:
       LOYALTY_FEDERATION_CONFIG_FILE: /run/secrets/federation_management_config
       LOYALTY_AUTHENTIK_API_TOKEN_FILE: /run/secrets/authentik_federation_token
       LOYALTY_SUPABASE_SERVICE_ROLE_KEY_FILE: /run/secrets/supabase_service_role_key
+      LOYALTY_STRIPE_WEBHOOK_SECRET_FILE: /run/secrets/stripe_webhook_secret
     extra_hosts:
       - "${SUPABASE_PUBLIC_HOST:?required}:${SUPABASE_INTERNAL_PROXY_IP:?required}"
     secrets:
@@ -22,6 +23,8 @@ services:
       - federation_management_config
       - authentik_federation_token
       - supabase_service_role_key
+    volumes:
+      - ${LOYALTY_STRIPE_WEBHOOK_SECRET_PATH:-/dev/null}:/run/secrets/stripe_webhook_secret:ro
     ports:
       - "${DASHBOARD_BIND_ADDRESS:?set a loopback or private IPv4 address}:3000:3000"
     security_opt:
@@ -143,6 +146,24 @@ services:
     environment:
       NODE_ENV: production
       LOYALTY_WORKER_MODE: reporting
+      LOYALTY_WORKER_DATABASE_URL: ${LOYALTY_WORKER_DATABASE_URL:?required}
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    stop_grace_period: 75s
+
+  billing-worker:
+    profiles: ["billing"]
+    image: ${WORKER_IMAGE:?set WORKER_IMAGE to an immutable tag}
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    environment:
+      NODE_ENV: production
+      LOYALTY_WORKER_MODE: billing
       LOYALTY_WORKER_DATABASE_URL: ${LOYALTY_WORKER_DATABASE_URL:?required}
     security_opt:
       - no-new-privileges:true

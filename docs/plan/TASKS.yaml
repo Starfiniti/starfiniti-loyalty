@@ -2524,6 +2524,8 @@ tasks:
         docs/plan/ENTERPRISE_ROADMAP.md,
         docs/architecture/ADR/0010-database-authoritative-entitlements.md,
         docs/architecture/ADR/0056-database-authoritative-managed-billing-mirror.md,
+        docs/architecture/ADR/0057-verified-stripe-inbox-and-isolated-normalization.md,
+        docs/operations/STRIPE_BILLING.md,
       ]
     evidence: [docs/plan/evidence/M14/README.md]
     slices:
@@ -2579,10 +2581,32 @@ tasks:
         acceptance:
           - duplicate and out-of-order subscription and invoice events converge without state regression
           - self-hosted and disabled managed deployments reject before provider processing
+          - invoice events remain observations and cannot grant subscription or tenant authority
         rollout: Local signed fixtures then Stripe CLI sandbox endpoint disabled in production.
         rollback: Disable endpoint intake retain normalized event evidence and reconcile through reviewed provider fetch.
+        failure_modes:
+          - parsed or transformed bytes are verified instead of the exact raw request body
+          - raw body signature contact metadata invoice or payment data is persisted or logged
+          - signed provider customer or browser input selects a tenant or entitlement
+          - acknowledgement waits for lifecycle processing or a provider request
+          - duplicate changed or out-of-order event creates a second effect or regresses current state
+          - self-hosted mode reads a Stripe secret or constructs provider behavior
+        security_boundaries:
+          - runtime database gate returns before body and secret access in self-hosted or disabled mode
+          - Node verifies bounded exact bytes with five-minute HMAC tolerance and stores only a minimized digest-bound projection
+          - PostgreSQL derives account organization and entitlement then fences provider event identity independent from delivery
+          - isolated billing worker has no Stripe credential or network client and rechecks entitlement before one state effect
+          - browser runtime worker and private tables have distinct least-privilege grants with RLS and immutable evidence
         verification:
-          [raw signature replay ordering queue outage and recovery tests]
+          - strict contract verifier route and isolated-worker tests
+          - 67-assertion managed billing webhook pgTAP grant RLS minimization replay lease entitlement and zero-ledger matrix
+          - two-session exact and changed provider-event race plus competing claim probe
+          - clean migration replay npm run check both production images and WooCommerce matrix
+        evidence:
+          - docs/architecture/ADR/0057-verified-stripe-inbox-and-isolated-normalization.md
+          - docs/api/BILLING.md
+          - docs/operations/STRIPE_BILLING.md
+          - docs/plan/evidence/M14/README.md
       - id: M14-S03-CHECKOUT-PORTAL-AND-SUBSCRIPTION-LIFECYCLE
         status: planned
         dependencies: [M14-S02-STRIPE-WEBHOOK-INBOX]

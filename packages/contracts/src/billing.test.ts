@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { billingSummaryV1 } from "./billing";
+import {
+  billingSummaryV1,
+  managedBillingWebhookProcessingResultV1,
+  stripeBillingWebhookEventV1,
+} from "./billing";
 
 const organizationId = "a1000000-0000-4000-8000-000000000100";
 const protectedAccess = {
@@ -126,5 +130,92 @@ describe("billing summary v1", () => {
         }),
       ).toThrow();
     }
+  });
+});
+
+describe("Stripe billing webhook v1", () => {
+  const subscriptionEvent = {
+    schemaVersion: "1",
+    eventId: "evt_BillingContract0001",
+    eventType: "customer.subscription.updated",
+    liveMode: false,
+    objectId: "sub_BillingContract0001",
+    customerId: "cus_BillingContract0001",
+    subscriptionId: "sub_BillingContract0001",
+    subscriptionStatus: "trialing",
+    eventCreatedAt: "2026-08-26T20:00:00Z",
+    currentPeriodEndsAt: "2026-09-26T20:00:00Z",
+    trialEndsAt: "2026-09-02T20:00:00Z",
+    signatureCreatedAt: "2026-08-26T20:00:01Z",
+    bodySha256: "a".repeat(64),
+  } as const;
+
+  it("accepts minimized subscription and invoice observations", () => {
+    expect(
+      stripeBillingWebhookEventV1.parse(subscriptionEvent).subscriptionStatus,
+    ).toBe("trialing");
+    expect(
+      stripeBillingWebhookEventV1.parse({
+        ...subscriptionEvent,
+        eventId: "evt_BillingContract0002",
+        eventType: "invoice.payment_failed",
+        objectId: "in_BillingContract0002",
+        subscriptionStatus: null,
+        currentPeriodEndsAt: null,
+        trialEndsAt: null,
+      }).eventType,
+    ).toBe("invoice.payment_failed");
+  });
+
+  it("rejects invoice state assertions and mismatched subscription identity", () => {
+    expect(() =>
+      stripeBillingWebhookEventV1.parse({
+        ...subscriptionEvent,
+        eventType: "invoice.paid",
+        objectId: "in_BillingContract0003",
+      }),
+    ).toThrow(/invoice observations/u);
+    expect(() =>
+      stripeBillingWebhookEventV1.parse({
+        ...subscriptionEvent,
+        subscriptionId: "sub_BillingContractChanged",
+      }),
+    ).toThrow(/identity/u);
+  });
+
+  it("rejects incomplete trial evidence, stale periods, and expanded fields", () => {
+    expect(() =>
+      stripeBillingWebhookEventV1.parse({
+        ...subscriptionEvent,
+        trialEndsAt: null,
+      }),
+    ).toThrow(/trial deadline/u);
+    expect(() =>
+      stripeBillingWebhookEventV1.parse({
+        ...subscriptionEvent,
+        currentPeriodEndsAt: subscriptionEvent.eventCreatedAt,
+      }),
+    ).toThrow(/current period/u);
+    expect(() =>
+      stripeBillingWebhookEventV1.parse({
+        ...subscriptionEvent,
+        customerEmail: "forbidden@example.test",
+      }),
+    ).toThrow();
+  });
+
+  it("binds state revision identity only to state effects", () => {
+    expect(
+      managedBillingWebhookProcessingResultV1.parse({
+        outcome: "state_recorded",
+        stateRevisionId: organizationId,
+      }).outcome,
+    ).toBe("state_recorded");
+    expect(() =>
+      managedBillingWebhookProcessingResultV1.parse({
+        outcome: "invoice_observed",
+        stateRevisionId: organizationId,
+      }),
+    ).toThrow(/only state-recorded/u);
   });
 });

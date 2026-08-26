@@ -16,6 +16,28 @@ export const managedBillingCommercialState = z.enum([
 
 export const managedBillingRestriction = z.enum(["none", "new_growth_only"]);
 
+export const stripeBillingWebhookEventTypeV1 = z.enum([
+  "customer.subscription.created",
+  "customer.subscription.updated",
+  "customer.subscription.deleted",
+  "customer.subscription.paused",
+  "customer.subscription.resumed",
+  "invoice.paid",
+  "invoice.payment_failed",
+  "invoice.payment_action_required",
+]);
+
+export const stripeSubscriptionStatusV1 = z.enum([
+  "incomplete",
+  "incomplete_expired",
+  "trialing",
+  "active",
+  "past_due",
+  "canceled",
+  "unpaid",
+  "paused",
+]);
+
 export const billingProtectedAccessV1 = z
   .object({
     balanceRead: z.literal(true),
@@ -140,6 +162,126 @@ export const billingSummaryV1 = z
     }
   });
 
+const stripeEventId = z.string().regex(/^evt_[A-Za-z0-9]{8,120}$/u);
+const stripeCustomerId = z.string().regex(/^cus_[A-Za-z0-9]{8,120}$/u);
+const stripeSubscriptionId = z.string().regex(/^sub_[A-Za-z0-9]{8,120}$/u);
+const stripeInvoiceId = z.string().regex(/^in_[A-Za-z0-9]{8,120}$/u);
+
+export const stripeBillingWebhookEventV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    eventId: stripeEventId,
+    eventType: stripeBillingWebhookEventTypeV1,
+    liveMode: z.boolean(),
+    objectId: z.union([stripeSubscriptionId, stripeInvoiceId]),
+    customerId: stripeCustomerId,
+    subscriptionId: stripeSubscriptionId.nullable(),
+    subscriptionStatus: stripeSubscriptionStatusV1.nullable(),
+    eventCreatedAt: z.iso.datetime({ offset: true }),
+    currentPeriodEndsAt: z.iso.datetime({ offset: true }).nullable(),
+    trialEndsAt: z.iso.datetime({ offset: true }).nullable(),
+    signatureCreatedAt: z.iso.datetime({ offset: true }),
+    bodySha256: z.string().regex(/^[a-f0-9]{64}$/u),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    const subscriptionEvent = value.eventType.startsWith(
+      "customer.subscription.",
+    );
+    const addIssue = (path: string, message: string) =>
+      context.addIssue({ code: "custom", path: [path], message });
+
+    if (subscriptionEvent) {
+      if (!value.objectId.startsWith("sub_")) {
+        addIssue("objectId", "subscription event requires subscription object");
+      }
+      if (value.subscriptionId !== value.objectId) {
+        addIssue(
+          "subscriptionId",
+          "subscription event identity must match its object",
+        );
+      }
+      if (value.subscriptionStatus === null) {
+        addIssue("subscriptionStatus", "subscription event requires a status");
+      }
+    } else {
+      if (!value.objectId.startsWith("in_")) {
+        addIssue("objectId", "invoice event requires invoice object");
+      }
+      if (
+        value.subscriptionStatus !== null ||
+        value.currentPeriodEndsAt !== null ||
+        value.trialEndsAt !== null
+      ) {
+        addIssue(
+          "subscriptionStatus",
+          "invoice observations cannot assert subscription state",
+        );
+      }
+    }
+
+    if (
+      value.currentPeriodEndsAt !== null &&
+      Date.parse(value.currentPeriodEndsAt) <= Date.parse(value.eventCreatedAt)
+    ) {
+      addIssue(
+        "currentPeriodEndsAt",
+        "current period end must follow the provider event",
+      );
+    }
+    if (value.subscriptionStatus === "trialing") {
+      if (
+        value.trialEndsAt === null ||
+        Date.parse(value.trialEndsAt) <= Date.parse(value.eventCreatedAt)
+      ) {
+        addIssue(
+          "trialEndsAt",
+          "trialing subscription requires a future trial deadline",
+        );
+      }
+    } else if (value.trialEndsAt !== null) {
+      addIssue(
+        "trialEndsAt",
+        "non-trialing event cannot assert a trial deadline",
+      );
+    }
+  });
+
+export const managedBillingWebhookReceiptV1 = z
+  .object({
+    receiptId: z.uuid(),
+    outcome: z.enum(["accepted", "duplicate"]),
+  })
+  .strict();
+
+export const managedBillingWebhookClaimV1 = z
+  .object({
+    receiptId: z.uuid(),
+    leaseToken: z.uuid(),
+    eventType: stripeBillingWebhookEventTypeV1,
+    attemptNumber: z.number().int().min(1).max(10),
+  })
+  .strict();
+
+export const managedBillingWebhookProcessingResultV1 = z
+  .object({
+    outcome: z.enum(["state_recorded", "invoice_observed", "held"]),
+    stateRevisionId: z.uuid().nullable(),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if (
+      (value.outcome === "state_recorded") !==
+      (value.stateRevisionId !== null)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["stateRevisionId"],
+        message: "only state-recorded outcomes contain a state revision",
+      });
+    }
+  });
+
 export type ManagedBillingCommercialState = z.infer<
   typeof managedBillingCommercialState
 >;
@@ -148,3 +290,21 @@ export type ManagedBillingRestriction = z.infer<
 >;
 export type BillingProtectedAccessV1 = z.infer<typeof billingProtectedAccessV1>;
 export type BillingSummaryV1 = z.infer<typeof billingSummaryV1>;
+export type StripeBillingWebhookEventTypeV1 = z.infer<
+  typeof stripeBillingWebhookEventTypeV1
+>;
+export type StripeSubscriptionStatusV1 = z.infer<
+  typeof stripeSubscriptionStatusV1
+>;
+export type StripeBillingWebhookEventV1 = z.infer<
+  typeof stripeBillingWebhookEventV1
+>;
+export type ManagedBillingWebhookReceiptV1 = z.infer<
+  typeof managedBillingWebhookReceiptV1
+>;
+export type ManagedBillingWebhookClaimV1 = z.infer<
+  typeof managedBillingWebhookClaimV1
+>;
+export type ManagedBillingWebhookProcessingResultV1 = z.infer<
+  typeof managedBillingWebhookProcessingResultV1
+>;
