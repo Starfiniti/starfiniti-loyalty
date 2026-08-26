@@ -535,6 +535,34 @@ begin
       message = 'invalid migration application rows';
   end if;
 
+  perform pg_advisory_xact_lock(hashtextextended(
+    concat_ws('|', 'migration-source-row', target_receipt.organization_id::text,
+      target_receipt.source_system,
+      encode(target_receipt.source_export_sha256, 'hex'),
+      row.value ->> 'sourceRowId'),
+    0
+  ))
+  from jsonb_array_elements(document_rows) as row(value)
+  order by row.value ->> 'sourceRowId';
+  if exists (
+    select 1
+    from jsonb_array_elements(document_rows) as row(value)
+    join loyalty.migration_import_items as imported
+      on imported.organization_id = target_receipt.organization_id
+     and imported.source_system = target_receipt.source_system
+     and imported.source_export_sha256 = target_receipt.source_export_sha256
+     and imported.source_row_ref = row.value ->> 'sourceRowId'
+    where not exists (
+      select 1 from loyalty.migration_import_batches as prior_batch
+      where prior_batch.organization_id = imported.organization_id
+        and prior_batch.id = imported.batch_id
+        and prior_batch.idempotency_key = target_idempotency_key
+    )
+  ) then
+    raise exception using errcode = '23505',
+      message = 'migration source row already applied';
+  end if;
+
   request_hash := extensions.digest(
     convert_to(
       concat_ws('|', target_dry_run_public_id::text, target_approval_sha256,
