@@ -126,6 +126,15 @@ select has_trigger(
   'current federation state is command-guarded'
 );
 
+-- pgTAP evaluates dynamic SQL after SET ROLE. This rolled-back, column-only
+-- policy lets test expressions resolve the random public selector and digest;
+-- the assertions above prove that deployed runtime has no table access.
+grant select (public_id, display_name, configuration_sha256)
+  on loyalty.organization_federation_sources to loyalty_runtime;
+create policy organization_federation_runtime_test_lookup
+  on loyalty.organization_federation_sources
+  for select to loyalty_runtime using (true);
+
 insert into auth.users (id, email, encrypted_password)
 values
   ('9b000000-0000-4000-8000-000000000001', 'federation-owner@example.test', null),
