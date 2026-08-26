@@ -13,7 +13,7 @@ Status: M13-S01 access catalogue and review is in progress on `codex/m13-enterpr
 ### Repository verification
 
 - `npm run db:validate`: 71 additive migrations and 58 pgTAP files validate.
-- `enterprise_access_catalogue_test.sql`: 28 focused assertions cover catalogue shape, grants, fixed search path/timeout, support exclusion, minimized output, active/suspended effectiveness, live revocation, tenant isolation, and forged claims.
+- `enterprise_access_catalogue_test.sql`: 29 focused assertions cover catalogue shape, grants, fixed search path/timeout, support exclusion, minimized output, active/suspended effectiveness, live revocation, tenant isolation, and forged claims.
 - Focused contracts: 5/5 tests pass; focused dashboard model/navigation: 7/7 tests pass.
 - Full exact-head Linux replay and image/runtime matrix are pending the branch CI run; S01 stays in progress until that deterministic gate passes.
 
