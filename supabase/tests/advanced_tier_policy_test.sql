@@ -623,7 +623,12 @@ begin
   )
   select organization.id, connection.id, created_inbox_id,
     'm05-event-' || target_number, 'v1', target_event_type,
-    'order-m05-1', target_occurred_at, '{}'::jsonb
+    'order-m05-1', target_occurred_at,
+    case
+      when target_event_type = 'commerce.order.status_changed'
+        then '{"order":{"currency":"EUR","currencyMinorUnitDigits":2}}'::jsonb
+      else '{}'::jsonb
+    end
   from loyalty.organizations as organization
   join loyalty.commerce_connections as connection
     on connection.organization_id = organization.id

@@ -299,8 +299,9 @@ where inbox.receipt_id = '95000000-0000-4000-8000-000000000800';
 grant loyalty_worker to current_user;
 set local role loyalty_worker;
 
-select is_empty(
-  $$ select * from loyalty_private.resolve_currency_conversion_context_v1((select id from loyalty.organizations where slug = 'currency-one'), (select id from loyalty.programme_versions where public_id = '95000000-0000-4000-8000-000000000500'), 'USD', 2, (select occurred_at from loyalty_private.canonical_commerce_events where public_id = '95000000-0000-4000-8000-000000000810'), null) $$,
+select is(
+  (select count(*)::bigint from loyalty_private.resolve_currency_conversion_context_v1((select id from loyalty.organizations where slug = 'currency-one'), (select id from loyalty.programme_versions where public_id = '95000000-0000-4000-8000-000000000500'), 'USD', 2, (select occurred_at from loyalty_private.canonical_commerce_events where public_id = '95000000-0000-4000-8000-000000000810'), null)),
+  0::bigint,
   'policy without a provider snapshot remains unavailable'
 );
 create temporary table rate_result as
