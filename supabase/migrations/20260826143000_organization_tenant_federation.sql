@@ -289,10 +289,10 @@ as $$
   );
 $$;
 
-alter function loyalty_private.organization_has_local_owner_recovery_v1(bigint)
-  owner to loyalty_owner;
 revoke all on function loyalty_private.organization_has_local_owner_recovery_v1(bigint)
   from public, anon, authenticated, loyalty_runtime, loyalty_worker;
+grant execute on function loyalty_private.organization_has_local_owner_recovery_v1(bigint)
+  to loyalty_owner;
 
 create or replace function loyalty_private.prepare_organization_federation_source_v1(
   target_actor_user_id uuid,
@@ -1193,3 +1193,6 @@ grant execute on function loyalty.organization_federation_workspace_v1(uuid)
   to authenticated;
 grant execute on function loyalty.resolve_organization_federation_login_v1(text)
   to anon, authenticated;
+
+comment on function loyalty_private.organization_has_local_owner_recovery_v1(bigint) is
+  'Migration-admin-owned narrow Auth bridge proving one active owner has a local password; callers receive only a boolean and runtime roles cannot execute it directly.';
