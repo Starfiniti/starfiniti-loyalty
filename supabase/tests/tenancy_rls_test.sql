@@ -146,6 +146,7 @@ select is_empty(
           'record_migration_dry_run_v1',
           'apply_migration_opening_balance_v1',
           'compensate_migration_batch_v1',
+          'get_migration_workspace_v1',
           'set_analytics_report_schedule_state_command',
           'get_overview_report',
           'get_public_loyalty_experience',

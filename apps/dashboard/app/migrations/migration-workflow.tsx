@@ -76,11 +76,7 @@ export function MigrationWorkflow({
   const [exportedAt, setExportedAt] = useState("");
   const [expiryMode, setExpiryMode] = useState<
     "apply_default" | "preserve_exact"
-  >(
-    source?.requiredExpiryPolicy === "merchant_selected"
-      ? "preserve_exact"
-      : "apply_default",
-  );
+  >("apply_default");
   const [expiresAt, setExpiresAt] = useState("");
   const [connectionId, setConnectionId] = useState("");
   const [inspection, setInspection] =
@@ -330,14 +326,7 @@ export function MigrationWorkflow({
             onChange={(event) => {
               const next = event.target.value as MigrationSourceSystemV1;
               setSourceSystem(next);
-              const option = sources.find(
-                (candidate) => candidate.sourceSystem === next,
-              );
-              setExpiryMode(
-                option?.requiredExpiryPolicy === "apply_default"
-                  ? "apply_default"
-                  : "preserve_exact",
-              );
+              setExpiryMode("apply_default");
               resetReview();
             }}
           >
