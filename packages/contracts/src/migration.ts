@@ -1104,6 +1104,7 @@ export const migrationWorkspaceV1 = z
     membershipRole: z.enum([
       "owner",
       "admin",
+      "marketer",
       "operator",
       "analyst",
       "auditor",

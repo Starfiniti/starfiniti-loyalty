@@ -123,6 +123,7 @@ select is_empty(
           'loyalty.apply_migration_opening_balance_v1(uuid,text,text,text,uuid,text,uuid)',
           'loyalty.compensate_migration_batch_v1(uuid,text,text,uuid)',
           'loyalty.get_migration_workspace_v1(uuid,integer)',
+          'loyalty.get_organization_access_workspace_v1(uuid)',
           'loyalty.set_analytics_report_schedule_state_command(uuid,text,uuid,uuid)',
           'loyalty.get_overview_report(uuid,uuid,uuid,integer,timestamp with time zone)',
           'loyalty.list_customer_summaries(uuid,uuid,text)',

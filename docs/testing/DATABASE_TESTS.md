@@ -42,6 +42,8 @@ The last two checks are durable guards: they fail automatically when future migr
 
 `initial_tenant_bootstrap_test.sql` adds 30 assertions for the deployment-only function boundary, absent browser/runtime/worker privileges, atomic tenant scope and owner creation, exact idempotent retry, changed-request and existing-slug denial, existing Auth identity, canonical inputs, minimized immutable audit evidence, and separation from authenticated programme launch.
 
+`enterprise_access_catalogue_test.sql` adds 29 assertions for the immutable seven-profile catalogue, six exact membership roles, grant-only support, private tables/helpers, one-selector minimized projection, active-versus-suspended effectiveness, aggregate-count reconciliation, marketer least privilege, stale-JWT revocation, cross-tenant denial, and forged email/domain/group/role/organization-claim rejection.
+
 `expanded_reward_fulfilment_test.sql` adds 90 assertions for V2 reward publication, entitlement denial, WooCommerce capability negotiation, atomic points/quantity/budget reservation, per-customer limits, native capture, manual-case role separation, exactly-once fulfilment capture, definitive-rejection compensation, uncertainty preservation, private source tables, immutable transitions, and tenant isolation.
 
 `scripts/verify-ledger-concurrency.mjs` opens two independent PostgreSQL sessions. One holds an 80-point reservation on a 100-point wallet while the other competes for the same 80 points. Exactly one commits. It then runs 20 deterministic adjust/reserve/capture/cancel sequences with retry probes and verifies every transaction remains balanced and every projection remains exact.
