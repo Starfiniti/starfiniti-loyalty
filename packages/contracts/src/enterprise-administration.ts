@@ -190,8 +190,9 @@ export const supportRequestReadV1 = z
 export const supportGrantReadV1 = z
   .object({
     id: z.uuid(),
+    perspective: z.enum(["client", "agency"]),
+    counterpartName: z.string().trim().min(1).max(200),
     supportLabel: safeLabelV1.nullable(),
-    agencyName: z.string().trim().min(1).max(200),
     scopes: exactSupportScopesV1,
     reason: safeReasonV1,
     status: z.enum(["active", "scheduled", "expired", "revoked"]),
@@ -403,6 +404,7 @@ export const organizationRecoveryWorkspaceV1 = z
         id: z.uuid(),
         name: z.string().trim().min(1).max(200),
         status: z.enum(["active", "suspended", "closed"]),
+        lifecycleRevision: z.number().int().min(1),
         offboardedAt: timestampV1.nullable(),
         deletionCompletedAt: timestampV1.nullable(),
       })
@@ -442,6 +444,8 @@ export type RevokeSupportAccessGrantCommandV1 = z.infer<
 export type SupportAdministrationWorkspaceV1 = z.infer<
   typeof supportAdministrationWorkspaceV1
 >;
+export type SupportRequestReadV1 = z.infer<typeof supportRequestReadV1>;
+export type SupportGrantReadV1 = z.infer<typeof supportGrantReadV1>;
 export type SupportWorkspaceV1 = z.infer<typeof supportWorkspaceV1>;
 export type StartOrganizationBreakGlassCommandV1 = z.infer<
   typeof startOrganizationBreakGlassCommandV1
@@ -454,6 +458,9 @@ export type OrganizationDeletionCommandV1 = z.infer<
 >;
 export type OrganizationDeletionCaseReadV1 = z.infer<
   typeof organizationDeletionCaseReadV1
+>;
+export type OrganizationBreakGlassSessionReadV1 = z.infer<
+  typeof organizationBreakGlassSessionReadV1
 >;
 export type OrganizationRecoveryWorkspaceV1 = z.infer<
   typeof organizationRecoveryWorkspaceV1

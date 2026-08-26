@@ -2,6 +2,11 @@ import { redirect } from "next/navigation";
 import { LockKeyhole, TriangleAlert } from "lucide-react";
 import { MerchantShell } from "@/components/merchant-shell";
 import {
+  getAgencyPortfolioWorkspace,
+  getOrganizationRecoveryWorkspace,
+  getSupportAdministrationWorkspace,
+} from "@/lib/server/enterprise-administration";
+import {
   getOrganizationAccessWorkspace,
   getOrganizationFederationWorkspace,
   getOrganizationTeamWorkspace,
@@ -9,7 +14,9 @@ import {
 import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
 import { getOrganizationScimWorkspace } from "@/lib/server/scim-management";
 import { AccessReview } from "./access-review";
+import { AgencySupportLifecycle } from "./agency-support-lifecycle";
 import { FederationLifecycle } from "./federation-lifecycle";
+import { RecoveryLifecycle } from "./recovery-lifecycle";
 import { ScimLifecycle } from "./scim-lifecycle";
 import { TeamLifecycle } from "./team-lifecycle";
 
@@ -29,6 +36,9 @@ export default async function OrganizationAccessPage({
   let teamWorkspace = null;
   let federationWorkspace = null;
   let scimWorkspace = null;
+  let agencyWorkspace = null;
+  let supportWorkspace = null;
+  let recoveryWorkspace = null;
   let identityControlsUnavailable = false;
   let unavailable = false;
   try {
@@ -36,14 +46,25 @@ export default async function OrganizationAccessPage({
       tenant.context.organization.public_id,
     );
     if (workspace) {
-      const [teamResult, federationResult, scimResult] =
-        await Promise.allSettled([
-          getOrganizationTeamWorkspace(tenant.context.organization.public_id),
-          getOrganizationFederationWorkspace(
-            tenant.context.organization.public_id,
-          ),
-          getOrganizationScimWorkspace(tenant.context.organization.public_id),
-        ]);
+      const [
+        teamResult,
+        federationResult,
+        scimResult,
+        agencyResult,
+        supportResult,
+        recoveryResult,
+      ] = await Promise.allSettled([
+        getOrganizationTeamWorkspace(tenant.context.organization.public_id),
+        getOrganizationFederationWorkspace(
+          tenant.context.organization.public_id,
+        ),
+        getOrganizationScimWorkspace(tenant.context.organization.public_id),
+        getAgencyPortfolioWorkspace(tenant.context.organization.public_id),
+        getSupportAdministrationWorkspace(
+          tenant.context.organization.public_id,
+        ),
+        getOrganizationRecoveryWorkspace(tenant.context.organization.public_id),
+      ]);
       const mayReviewDirectory = ["owner", "admin", "auditor"].includes(
         workspace.currentAccess.role,
       );
@@ -52,6 +73,15 @@ export default async function OrganizationAccessPage({
         federationWorkspace = federationResult.value;
       }
       if (scimResult.status === "fulfilled") scimWorkspace = scimResult.value;
+      if (agencyResult.status === "fulfilled") {
+        agencyWorkspace = agencyResult.value;
+      }
+      if (supportResult.status === "fulfilled") {
+        supportWorkspace = supportResult.value;
+      }
+      if (recoveryResult.status === "fulfilled") {
+        recoveryWorkspace = recoveryResult.value;
+      }
       identityControlsUnavailable =
         federationResult.status === "rejected" ||
         federationResult.value === null ||
@@ -59,7 +89,13 @@ export default async function OrganizationAccessPage({
           (teamResult.status === "rejected" ||
             teamResult.value === null ||
             scimResult.status === "rejected" ||
-            scimResult.value === null));
+            scimResult.value === null ||
+            agencyResult.status === "rejected" ||
+            agencyResult.value === null ||
+            supportResult.status === "rejected" ||
+            supportResult.value === null ||
+            recoveryResult.status === "rejected" ||
+            recoveryResult.value === null));
     }
   } catch {
     unavailable = true;
@@ -94,12 +130,19 @@ export default async function OrganizationAccessPage({
                   <h2>Some identity controls are temporarily unavailable</h2>
                   <p>
                     Existing memberships remain authoritative. Retry before
-                    making a team, SSO, or directory access decision.
+                    making a team, agency, support, recovery, SSO, or directory
+                    access decision.
                   </p>
                 </div>
               </section>
             ) : null}
             {teamWorkspace ? <TeamLifecycle workspace={teamWorkspace} /> : null}
+            {agencyWorkspace && supportWorkspace ? (
+              <AgencySupportLifecycle
+                portfolio={agencyWorkspace}
+                support={supportWorkspace}
+              />
+            ) : null}
             {federationWorkspace ? (
               <FederationLifecycle
                 linkOutcome={
@@ -116,6 +159,9 @@ export default async function OrganizationAccessPage({
                 federationSources={federationWorkspace.sources}
                 workspace={scimWorkspace}
               />
+            ) : null}
+            {recoveryWorkspace ? (
+              <RecoveryLifecycle workspace={recoveryWorkspace} />
             ) : null}
           </>
         ) : (

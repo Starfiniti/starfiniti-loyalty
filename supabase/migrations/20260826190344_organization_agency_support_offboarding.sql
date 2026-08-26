@@ -1666,8 +1666,13 @@ begin
     'grants', coalesce((
       select jsonb_agg(jsonb_build_object(
         'id', access_grant.public_id,
+        'perspective', case
+          when access_grant.organization_id = selected.organization_id
+            then 'client' else 'agency' end,
+        'counterpartName', case
+          when access_grant.organization_id = selected.organization_id
+            then agency.name else client.name end,
         'supportLabel', requester.display_label,
-        'agencyName', agency.name,
         'scopes', access_grant.scopes,
         'reason', access_grant.reason,
         'status', case
@@ -1702,6 +1707,8 @@ begin
         on request.id = access_grant.request_id
       join loyalty.organizations as agency
         on agency.id = request.agency_organization_id
+      join loyalty.organizations as client
+        on client.id = request.client_organization_id
       left join loyalty.organization_memberships as requester
         on requester.organization_id = request.agency_organization_id
        and requester.user_id = access_grant.support_user_id
@@ -2348,6 +2355,7 @@ begin
     organization.public_id as organization_public_id,
     organization.name as organization_name,
     organization.status,
+    organization.lifecycle_revision,
     organization.offboarded_at,
     organization.deletion_completed_at,
     membership.role
@@ -2368,6 +2376,7 @@ begin
       'id', selected.organization_public_id,
       'name', selected.organization_name,
       'status', selected.status,
+      'lifecycleRevision', selected.lifecycle_revision,
       'offboardedAt', selected.offboarded_at,
       'deletionCompletedAt', selected.deletion_completed_at
     ),
@@ -2679,12 +2688,12 @@ begin
   set state = 'expired', updated_at = target_changed_at
   where export.organization_id = target_organization_id
     and export.state = 'ready';
-  update loyalty_private.analytics_export_authorizations as authorization
-  set used_at = coalesce(authorization.used_at, target_changed_at)
-  where authorization.request_id in (
+  update loyalty_private.analytics_export_authorizations as export_authorization
+  set used_at = coalesce(export_authorization.used_at, target_changed_at)
+  where export_authorization.request_id in (
     select export.id from loyalty.analytics_export_requests as export
     where export.organization_id = target_organization_id
-  ) and authorization.used_at is null;
+  ) and export_authorization.used_at is null;
   delete from loyalty_private.analytics_export_payloads as payload
   using loyalty.analytics_export_requests as export
   where payload.request_id = export.id
