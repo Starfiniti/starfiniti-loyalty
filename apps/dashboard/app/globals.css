@@ -19658,6 +19658,18 @@ html[data-dashboard-theme="dark"] .analytics-integrity-mark.is-stale {
   background: var(--merchant-canvas, #f7f8fb);
 }
 
+html[data-dashboard-theme="dark"] .billing-state-badge.is-positive {
+  color: #6ee7b7;
+}
+
+html[data-dashboard-theme="dark"] .billing-state-badge.is-warning {
+  color: #fcd34d;
+}
+
+html[data-dashboard-theme="dark"] .billing-state-badge.is-restricted {
+  color: #fca5a5;
+}
+
 .billing-summary-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
