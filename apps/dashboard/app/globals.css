@@ -13815,6 +13815,7 @@ html[data-dashboard-theme="dark"]
   border: 1px solid var(--merchant-border-strong, #d4d4d8);
   border-radius: 8px;
   color: var(--merchant-text, #18181b);
+  background: var(--merchant-surface, #fff);
   text-decoration: none;
   white-space: nowrap;
 }
@@ -14228,7 +14229,7 @@ button.danger:hover:not(:disabled) {
   padding: 20px;
   border: 1px solid var(--border);
   border-radius: 12px;
-  background: #fff;
+  background: var(--merchant-surface, var(--surface, #fff));
 }
 
 .organization-onboarding-icon {
@@ -14300,6 +14301,9 @@ button.danger:hover:not(:disabled) {
 }
 
 @media (max-width: 800px) {
+  .merchant-nav-item {
+    min-height: 44px;
+  }
   .team-lifecycle-heading,
   .team-panel > header,
   .team-invitation-row {
@@ -14328,8 +14332,23 @@ button.danger:hover:not(:disabled) {
   }
   .team-member-actions button,
   .team-invitation-row button,
-  .team-export-link {
+  .team-export-link,
+  .team-one-time-token button,
+  .team-invite-form > button,
+  .team-lifecycle-form > button,
+  .team-invite-form input:not([type="hidden"], [type="checkbox"]),
+  .team-invite-form select,
+  .team-lifecycle-form input:not([type="hidden"], [type="checkbox"]),
+  .team-lifecycle-form select,
+  .team-member-actions input:not([type="hidden"], [type="checkbox"]),
+  .team-member-actions select,
+  .team-invitation-row form input:not([type="hidden"], [type="checkbox"]) {
     min-height: 44px;
+  }
+  .organization-confirmation,
+  .team-inline-confirm {
+    min-height: 44px;
+    align-items: center;
   }
   .team-one-time-token {
     align-items: stretch;
