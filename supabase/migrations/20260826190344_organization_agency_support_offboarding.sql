@@ -1,6 +1,7 @@
 -- M13-S05: bilateral agency portfolios, explicit support grants, AAL2
 -- break-glass recovery, and terminal organization offboarding/deletion.
 
+grant usage on schema auth to loyalty_owner;
 grant select (id, user_id) on auth.sessions to loyalty_owner;
 
 create or replace function loyalty_private.request_session_id_v1()

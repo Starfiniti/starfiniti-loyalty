@@ -141,7 +141,8 @@ select results_eq(
   'administration storage contains no raw token secret identity claims or request body'
 );
 select ok(
-  has_column_privilege('loyalty_owner', 'auth.sessions', 'id', 'SELECT')
+  has_schema_privilege('loyalty_owner', 'auth', 'USAGE')
+  and has_column_privilege('loyalty_owner', 'auth.sessions', 'id', 'SELECT')
   and has_column_privilege('loyalty_owner', 'auth.sessions', 'user_id', 'SELECT')
   and not has_table_privilege('loyalty_owner', 'auth.sessions', 'SELECT')
   and not has_table_privilege('authenticated', 'auth.sessions', 'SELECT'),
