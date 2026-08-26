@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(62);
+select plan(70);
 
 select has_table('loyalty', 'organization_invitations', 'organization invitations exist');
 select has_table('loyalty_private', 'organization_creation_receipts', 'creation receipts exist');
@@ -192,6 +192,28 @@ select results_eq(
   $$,
   array['created'::text],
   'an admin creates a bounded non-owner invitation'
+);
+select results_eq(
+  $$
+    select outcome from loyalty.create_organization_invitation_command_v1(
+      '9a000000-0000-4000-8000-000000000100', 'Campaign specialist', 'marketer',
+      statement_timestamp() + interval '2 days', repeat('a', 64),
+      'invitation:create:marketer', '9a000000-0000-4000-8000-000000000602'
+    )
+  $$,
+  array['duplicate'::text],
+  'an exact invitation creation retry returns the original receipt'
+);
+select throws_ok(
+  $$
+    select * from loyalty.create_organization_invitation_command_v1(
+      '9a000000-0000-4000-8000-000000000100', 'Campaign specialist', 'marketer',
+      statement_timestamp() + interval '3 days', repeat('a', 64),
+      'invitation:create:marketer', '9a000000-0000-4000-8000-000000000602'
+    )
+  $$,
+  '23514', 'organization invitation idempotency conflict',
+  'changed expiry under one invitation idempotency key fails closed'
 );
 reset role;
 select results_eq(
@@ -480,6 +502,66 @@ select results_eq(
   'a member is revoked through one audited command'
 );
 set local request.jwt.claim.sub = '9a000000-0000-4000-8000-000000000003';
+select throws_ok(
+  $$
+    select * from loyalty.accept_organization_invitation_command_v1(
+      repeat('a', 64), 'invitation:accept:marketer',
+      '9a000000-0000-4000-8000-000000000604'
+    )
+  $$,
+  '42501', 'organization invitation unavailable',
+  'a revoked accepted member cannot replay the old capability as active access'
+);
+set local request.jwt.claim.sub = '9a000000-0000-4000-8000-000000000002';
+select results_eq(
+  $$
+    select outcome from loyalty.create_organization_invitation_command_v1(
+      '9a000000-0000-4000-8000-000000000100', 'Delegated access', 'operator',
+      statement_timestamp() + interval '2 days', repeat('f', 64),
+      'invitation:create:delegated', '9a000000-0000-4000-8000-000000000624'
+    )
+  $$,
+  array['created'::text],
+  'an active admin may issue a bounded delegated capability'
+);
+set local request.jwt.claim.sub = '9a000000-0000-4000-8000-000000000001';
+select results_eq(
+  $$
+    select outcome from loyalty.update_organization_member_command_v1(
+      '9a000000-0000-4000-8000-000000000100',
+      '9a000000-0000-4000-8000-000000000102', 1, 'change_role', 'operator',
+      'Remove delegated administration authority.', 'membership:role:admin-remove',
+      '9a000000-0000-4000-8000-000000000625'
+    )
+  $$,
+  array['updated'::text],
+  'removing an admin role succeeds through the owner boundary'
+);
+set local request.jwt.claim.sub = '9a000000-0000-4000-8000-000000000006';
+select throws_ok(
+  $$
+    select * from loyalty.accept_organization_invitation_command_v1(
+      repeat('f', 64), 'invitation:accept:delegated',
+      '9a000000-0000-4000-8000-000000000626'
+    )
+  $$,
+  '42501', 'organization invitation unavailable',
+  'removing an administrator also removes every pending capability they issued'
+);
+set local request.jwt.claim.sub = '9a000000-0000-4000-8000-000000000001';
+select results_eq(
+  $$
+    select outcome from loyalty.update_organization_member_command_v1(
+      '9a000000-0000-4000-8000-000000000100',
+      '9a000000-0000-4000-8000-000000000102', 2, 'change_role', 'admin',
+      'Restore approved administration authority.', 'membership:role:admin-restore',
+      '9a000000-0000-4000-8000-000000000627'
+    )
+  $$,
+  array['updated'::text],
+  'an owner can restore the reviewed admin role without restoring old capabilities'
+);
+set local request.jwt.claim.sub = '9a000000-0000-4000-8000-000000000003';
 select is_empty(
   $$ select * from loyalty.get_organization_team_workspace_v1('9a000000-0000-4000-8000-000000000100') $$,
   'revocation fails on the next request even with a live token'
@@ -538,6 +620,13 @@ select ok(
   ),
   'suspension disables new enterprise commands'
 );
+select ok(
+  not loyalty_private.has_organization_role(
+    (select id from loyalty.organizations where slug = 'lifecycle-main'),
+    array['owner', 'admin']::text[]
+  ),
+  'suspension disables shared-role merchant configuration commands'
+);
 set local role authenticated;
 set local request.jwt.claim.sub = '9a000000-0000-4000-8000-000000000001';
 select results_eq(
@@ -573,6 +662,14 @@ select results_eq(
   array['created'::text],
   'a pending invitation exists for offboarding verification'
 );
+reset role;
+insert into loyalty.organization_memberships (
+  organization_id, user_id, role, display_label
+)
+select id, '9a000000-0000-4000-8000-000000000005', 'owner', 'Secondary recovery owner'
+from loyalty.organizations where slug = 'lifecycle-main';
+set local role authenticated;
+set local request.jwt.claim.sub = '9a000000-0000-4000-8000-000000000001';
 select results_eq(
   $$
     select status from loyalty.update_organization_lifecycle_command_v1(
@@ -600,10 +697,11 @@ select results_eq(
   $$
     select count(*)::bigint from loyalty.organization_memberships
     where organization_id = (select id from loyalty.organizations where slug = 'lifecycle-main')
-      and role <> 'owner' and revoked_at is null
+      and user_id <> '9a000000-0000-4000-8000-000000000001'
+      and revoked_at is null
   $$,
   array[0::bigint],
-  'offboarding revokes every non-owner membership'
+  'offboarding revokes every membership except the initiating recovery owner'
 );
 select results_eq(
   $$
@@ -644,6 +742,7 @@ select results_eq(
   array[1::bigint],
   'the final team projection preserves one recovery owner'
 );
+reset role;
 select results_eq(
   $$
     select count(*)::bigint from loyalty.admin_audit_events
@@ -655,10 +754,9 @@ select results_eq(
         'membership.revoke'
       )
   $$,
-  array[14::bigint],
+  array[17::bigint],
   'successful lifecycle effects remain attributable in immutable audit history'
 );
-reset role;
 set local loyalty.identity_command = 'off';
 select throws_ok(
   $$

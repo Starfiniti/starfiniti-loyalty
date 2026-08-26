@@ -51,7 +51,11 @@ const membershipId = "9b000000-0000-4000-8000-000000000002";
 const operationId = "9b000000-0000-4000-8000-000000000003";
 const token = `stfi_v1_${"A".repeat(43)}`;
 const idle = { kind: "idle", message: "" } as const;
-const invitationIdle = { ...idle, token: null } as const;
+const invitationIdle = {
+  ...idle,
+  token: null,
+  completedOperationId: null,
+} as const;
 
 function baseForm(confirmation: string): FormData {
   const form = new FormData();
@@ -115,13 +119,18 @@ describe("organization lifecycle actions", () => {
     form.set("organizationId", organizationId);
     form.set("displayLabel", "Jane — Marketing");
     form.set("role", "marketer");
-    form.set("expiresDays", "7");
+    form.set("expiresAt", new Date(Date.now() + 7 * 86_400_000).toISOString());
     form.set("invitationToken", token);
     await expect(
       createOrganizationInvitationAction(invitationIdle, form),
-    ).resolves.toMatchObject({ kind: "success", token });
+    ).resolves.toMatchObject({
+      kind: "success",
+      token,
+      completedOperationId: operationId,
+    });
     const command = createOrganizationInvitation.mock.calls[0]?.[0];
     expect(command.tokenSha256).toMatch(/^[a-f0-9]{64}$/u);
+    expect(command.expiresAt).toBe(form.get("expiresAt"));
     expect(command.correlationId).toBe(operationId);
     expect(command).not.toHaveProperty("token");
     expect(command).not.toHaveProperty("email");
@@ -138,11 +147,15 @@ describe("organization lifecycle actions", () => {
     form.set("organizationId", organizationId);
     form.set("displayLabel", "Jane — Marketing");
     form.set("role", "marketer");
-    form.set("expiresDays", "7");
+    form.set("expiresAt", new Date(Date.now() + 7 * 86_400_000).toISOString());
     form.set("invitationToken", token);
     await expect(
       createOrganizationInvitationAction(invitationIdle, form),
-    ).resolves.toMatchObject({ kind: "success", token: null });
+    ).resolves.toMatchObject({
+      kind: "success",
+      token: null,
+      completedOperationId: operationId,
+    });
   });
 
   it("accepts an invitation and selects the database-returned organization", async () => {

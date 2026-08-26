@@ -136,6 +136,52 @@ revoke all on loyalty.organization_invitations,
   loyalty_private.organization_creation_receipts
   from public, anon, authenticated, loyalty_runtime, loyalty_worker;
 
+-- M13 makes organization suspension an effective boundary for every existing
+-- merchant command that uses the shared live-role helper. Basic tenant reads
+-- continue through is_organization_member; recovery lifecycle and export paths
+-- recheck the owner directly below so a suspended tenant cannot strand them.
+create or replace function loyalty_private.has_organization_role(
+  target_organization_id bigint,
+  allowed_roles text[]
+)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select (
+      select coalesce(
+        nullif(current_setting('request.jwt.claim.sub', true), ''),
+        nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub'
+      )::uuid
+    ) is not null
+    and coalesce(cardinality(allowed_roles), 0) > 0
+    and exists (
+      select 1
+      from loyalty.organizations as organization
+      join loyalty.organization_memberships as membership
+        on membership.organization_id = organization.id
+      where organization.id = target_organization_id
+        and organization.status = 'active'
+        and membership.user_id = (
+          select coalesce(
+            nullif(current_setting('request.jwt.claim.sub', true), ''),
+            nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub'
+          )::uuid
+        )
+        and membership.role = any(allowed_roles)
+        and membership.revoked_at is null
+    );
+$$;
+
+alter function loyalty_private.has_organization_role(bigint, text[])
+  owner to loyalty_owner;
+revoke all on function loyalty_private.has_organization_role(bigint, text[])
+  from public, anon, authenticated, loyalty_runtime, loyalty_worker;
+grant execute on function loyalty_private.has_organization_role(bigint, text[])
+  to authenticated;
+
 create or replace function loyalty.create_organization_command_v1(
   target_slug text,
   target_name text,
@@ -362,7 +408,7 @@ begin
       lifecycle_revision = membership.lifecycle_revision + 1,
       updated_at = transition_time
     where membership.organization_id = organization_row.id
-      and membership.role <> 'owner'
+      and membership.user_id <> request_actor_user_id
       and membership.revoked_at is null;
     perform set_config('loyalty.identity_command', 'on', true);
     update loyalty.organization_invitations as invitation
@@ -433,8 +479,6 @@ begin
      or target_display_label ~ '[[:cntrl:]]'
      or target_role not in ('owner', 'admin', 'marketer', 'operator', 'analyst', 'auditor')
      or target_expires_at is null
-     or target_expires_at < creation_time + interval '1 hour'
-     or target_expires_at > creation_time + interval '30 days'
      or target_token_sha256 is null or target_token_sha256 !~ '^[a-f0-9]{64}$'
      or target_idempotency_key is null or target_idempotency_key <> btrim(target_idempotency_key)
      or length(target_idempotency_key) not between 1 and 255
@@ -484,6 +528,11 @@ begin
     return;
   end if;
 
+  if target_expires_at < creation_time + interval '1 hour'
+     or target_expires_at > creation_time + interval '30 days' then
+    raise exception using errcode = '22023', message = 'invalid organization invitation command';
+  end if;
+
   insert into loyalty.organization_invitations (
     organization_id, token_sha256, display_label, role,
     created_by_user_id, expires_at
@@ -531,7 +580,7 @@ declare
   membership_row loyalty.organization_memberships%rowtype;
   existing_audit loyalty.admin_audit_events%rowtype;
   request_hash bytea;
-  acceptance_time timestamptz := clock_timestamp();
+  acceptance_time timestamptz;
   accepted_outcome text;
   candidate_invitation_id bigint;
   candidate_organization_id bigint;
@@ -570,6 +619,7 @@ begin
   if not found then
     raise exception using errcode = '42501', message = 'organization invitation unavailable';
   end if;
+  acceptance_time := clock_timestamp();
 
   request_hash := extensions.digest(convert_to(jsonb_build_object(
     'invitation', invitation_row.public_id,
@@ -587,15 +637,30 @@ begin
        or existing_audit.correlation_id <> target_correlation_id then
       raise exception using errcode = '23514', message = 'organization invitation idempotency conflict';
     end if;
+    if organization_row.status <> 'active' or not exists (
+      select 1 from loyalty.organization_memberships as membership
+      where membership.organization_id = organization_row.id
+        and membership.public_id = (existing_audit.metadata ->> 'membershipPublicId')::uuid
+        and membership.user_id = request_actor_user_id
+        and membership.revoked_at is null
+    ) then
+      raise exception using errcode = '42501', message = 'organization invitation unavailable';
+    end if;
     return query select organization_row.public_id, 'duplicate'::text,
       (existing_audit.metadata ->> 'membershipRevision')::bigint, 'accepted'::text;
     return;
+  end if;
+  if organization_row.status <> 'active' then
+    raise exception using errcode = '42501', message = 'organization invitation unavailable';
   end if;
   if invitation_row.status = 'accepted' then
     if invitation_row.accepted_by_user_id = request_actor_user_id then
       select membership.* into membership_row
       from loyalty.organization_memberships as membership
       where membership.id = invitation_row.accepted_membership_id;
+      if membership_row.revoked_at is not null then
+        raise exception using errcode = '42501', message = 'organization invitation unavailable';
+      end if;
       return query select organization_row.public_id, 'duplicate'::text,
         membership_row.lifecycle_revision, 'accepted'::text;
       return;
@@ -603,8 +668,7 @@ begin
     raise exception using errcode = '42501', message = 'organization invitation unavailable';
   end if;
   if invitation_row.status <> 'pending'
-     or invitation_row.expires_at <= acceptance_time
-     or organization_row.status <> 'active' then
+     or invitation_row.expires_at <= acceptance_time then
     raise exception using errcode = '42501', message = 'organization invitation unavailable';
   end if;
 
@@ -782,6 +846,7 @@ declare
   existing_audit loyalty.admin_audit_events%rowtype;
   request_hash bytea;
   previous_role text;
+  revoked_invitation_count integer := 0;
   mutation_time timestamptz := clock_timestamp();
 begin
   if request_actor_user_id is null or target_organization_public_id is null
@@ -884,6 +949,15 @@ begin
     where id = membership_row.id
     returning * into membership_row;
   end if;
+  if previous_role in ('owner', 'admin') then
+    perform set_config('loyalty.identity_command', 'on', true);
+    update loyalty.organization_invitations as invitation
+    set status = 'revoked', revoked_at = mutation_time, updated_at = mutation_time
+    where invitation.organization_id = organization_row.id
+      and invitation.created_by_user_id = membership_row.user_id
+      and invitation.status = 'pending';
+    get diagnostics revoked_invitation_count = row_count;
+  end if;
   insert into loyalty.admin_audit_events (
     organization_id, actor_user_id, action, resource_type,
     resource_public_id, idempotency_key, request_sha256, correlation_id, metadata
@@ -895,6 +969,7 @@ begin
       'role', membership_row.role,
       'membershipRevision', membership_row.lifecycle_revision,
       'status', case when membership_row.revoked_at is null then 'active' else 'revoked' end,
+      'revokedPendingInvitations', revoked_invitation_count,
       'reason', target_reason
     )
   );
@@ -958,11 +1033,17 @@ begin
       'revision', membership.lifecycle_revision,
       'createdAt', membership.created_at,
       'revokedAt', membership.revoked_at
-    ) order by (membership.revoked_at is null) desc, membership.created_at, membership.id), '[]'::jsonb) as value
+    ) order by (membership.revoked_at is null) desc,
+        (membership.revoked_at is null and membership.role = 'owner') desc,
+        (membership.user_id = request_actor_user_id) desc,
+        membership.created_at, membership.id), '[]'::jsonb) as value
     from (
       select membership.* from loyalty.organization_memberships as membership
       where membership.organization_id = selected.organization_id
-      order by (membership.revoked_at is null) desc, membership.created_at, membership.id
+      order by (membership.revoked_at is null) desc,
+        (membership.revoked_at is null and membership.role = 'owner') desc,
+        (membership.user_id = request_actor_user_id) desc,
+        membership.created_at, membership.id
       limit 500
     ) as membership
   ), invitations as (

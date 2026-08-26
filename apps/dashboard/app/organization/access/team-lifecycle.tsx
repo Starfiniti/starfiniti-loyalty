@@ -30,6 +30,7 @@ const invitationIdle: InvitationActionState = {
   kind: "idle",
   message: "",
   token: null,
+  completedOperationId: null,
 };
 const roles: readonly OrganizationMembershipRoleV1[] = [
   "owner",
@@ -53,6 +54,7 @@ function inviteToken(): string {
 function title(value: string): string {
   return value
     .replaceAll("_", " ")
+    .replaceAll(".", " ")
     .replace(/^./u, (letter) => letter.toUpperCase());
 }
 
@@ -98,7 +100,7 @@ export function TeamLifecycle({
             href="/organization/access/export"
           >
             <Download aria-hidden="true" />
-            Export snapshot
+            Export identity snapshot
           </a>
         ) : null}
       </header>
@@ -149,7 +151,7 @@ export function TeamLifecycle({
         <div className="team-member-list">
           {workspace.members.map((member) => (
             <MemberCard
-              key={member.id}
+              key={`${member.id}:${member.revision}`}
               mayManage={workspace.mayManageMembers}
               member={member}
               actorRole={workspace.currentRole}
@@ -184,7 +186,10 @@ export function TeamLifecycle({
       </section>
 
       {workspace.mayManageLifecycle ? (
-        <LifecycleForm workspace={workspace} />
+        <LifecycleForm
+          key={`${workspace.organization.id}:${workspace.organization.lifecycleRevision}`}
+          workspace={workspace}
+        />
       ) : null}
 
       <section className="team-panel" aria-labelledby="identity-events-heading">
@@ -224,17 +229,48 @@ function InvitationForm({
   actorRole: OrganizationMembershipRoleV1;
   organizationId: string;
 }>) {
-  const [operationId] = useState(() => crypto.randomUUID());
-  const [token] = useState(inviteToken);
   const [state, action, pending] = useActionState(
     createOrganizationInvitationAction,
     invitationIdle,
   );
   return (
+    <InvitationDraft
+      action={action}
+      actorRole={actorRole}
+      key={state.completedOperationId ?? "current-invitation-draft"}
+      organizationId={organizationId}
+      pending={pending}
+      state={state}
+    />
+  );
+}
+
+function InvitationDraft({
+  action,
+  actorRole,
+  organizationId,
+  pending,
+  state,
+}: Readonly<{
+  action: (payload: FormData) => void;
+  actorRole: OrganizationMembershipRoleV1;
+  organizationId: string;
+  pending: boolean;
+  state: InvitationActionState;
+}>) {
+  const [operationId] = useState(() => crypto.randomUUID());
+  const [token] = useState(inviteToken);
+  const [draftedAt] = useState(() => Date.now());
+  const [expiresDays, setExpiresDays] = useState(7);
+  const expiresAt = new Date(
+    draftedAt + expiresDays * 86_400_000,
+  ).toISOString();
+  return (
     <form action={action} className="team-invite-form" autoComplete="off">
       <input name="organizationId" type="hidden" value={organizationId} />
       <input name="operationId" type="hidden" value={operationId} />
       <input name="invitationToken" type="hidden" value={token} />
+      <input name="expiresAt" type="hidden" value={expiresAt} />
       <div className="team-form-icon">
         <UserPlus aria-hidden="true" />
       </div>
@@ -266,7 +302,11 @@ function InvitationForm({
       </label>
       <label>
         <span>Expires</span>
-        <select defaultValue="7" name="expiresDays">
+        <select
+          aria-label="Invitation expiry"
+          onChange={(event) => setExpiresDays(Number(event.target.value))}
+          value={expiresDays}
+        >
           <option value="1">In 1 day</option>
           <option value="7">In 7 days</option>
           <option value="14">In 14 days</option>
@@ -281,36 +321,52 @@ function InvitationForm({
         {pending ? "Creating…" : "Create invitation"}
       </button>
       {state.kind !== "idle" ? <ActionMessage state={state} /> : null}
-      {state.token ? <OneTimeToken token={state.token} /> : null}
+      {state.token ? (
+        <OneTimeToken key={state.token} token={state.token} />
+      ) : null}
     </form>
   );
 }
 
 function OneTimeToken({ token }: Readonly<{ token: string }>) {
-  const [copied, setCopied] = useState(false);
+  const [copyState, setCopyState] = useState<"ready" | "copied" | "error">(
+    "ready",
+  );
   return (
     <div className="team-one-time-token" role="status">
       <div>
         <strong>Copy now</strong>
         <code>{token}</code>
         <small>
-          Recipient opens /organization/join and signs in before accepting.
+          {copyState === "error"
+            ? "Copy failed. Select the token above and copy it manually."
+            : "Recipient opens /organization/join and signs in before accepting."}
         </small>
       </div>
       <button
         className="secondary"
         onClick={() => {
-          void navigator.clipboard.writeText(token);
-          setCopied(true);
+          if (!navigator.clipboard) {
+            setCopyState("error");
+            return;
+          }
+          void navigator.clipboard.writeText(token).then(
+            () => setCopyState("copied"),
+            () => setCopyState("error"),
+          );
         }}
         type="button"
       >
-        {copied ? (
+        {copyState === "copied" ? (
           <Check aria-hidden="true" />
         ) : (
           <Clipboard aria-hidden="true" />
         )}
-        {copied ? "Copied" : "Copy"}
+        {copyState === "copied"
+          ? "Copied"
+          : copyState === "error"
+            ? "Try copy again"
+            : "Copy"}
       </button>
     </div>
   );
@@ -514,8 +570,8 @@ function LifecycleForm({
         <h3>Organization state</h3>
         <p>
           Suspension is reversible. Closure is terminal; offboarding then
-          revokes non-owner access and pending invitations while preserving one
-          owner for export and recovery evidence.
+          revokes every other membership and pending invitation while preserving
+          you as the single owner for export and recovery evidence.
         </p>
       </div>
       {options.length ? (

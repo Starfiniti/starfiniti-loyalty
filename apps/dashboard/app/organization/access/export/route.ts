@@ -33,6 +33,15 @@ export async function GET() {
       schemaVersion: "1",
       generatedAt: new Date().toISOString(),
       source: "immutable administration evidence and live membership state",
+      scope: {
+        kind: "bounded_identity_administration_snapshot",
+        limits: { members: 500, invitations: 200, recentEvents: 50 },
+        mayBeTruncated: {
+          members: workspace.members.length === 500,
+          invitations: workspace.invitations.length === 200,
+          recentEvents: workspace.recentEvents.length === 50,
+        },
+      },
       workspace,
     },
     null,

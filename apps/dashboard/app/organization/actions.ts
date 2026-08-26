@@ -26,7 +26,10 @@ export type IdentityActionState = Readonly<{
 }>;
 
 export type InvitationActionState = IdentityActionState &
-  Readonly<{ token: string | null }>;
+  Readonly<{
+    token: string | null;
+    completedOperationId: string | null;
+  }>;
 
 const UUID_V4 =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
@@ -119,19 +122,22 @@ export async function createOrganizationInvitationAction(
 ): Promise<InvitationActionState> {
   const operation = operationId(formData);
   const rawToken = String(formData.get("invitationToken") ?? "");
-  const days = Number(formData.get("expiresDays"));
+  const expiresAt = String(formData.get("expiresAt") ?? "");
+  const expiryTime = Date.parse(expiresAt);
+  const now = Date.now();
   if (
     formData.get("confirmation") !== "invite" ||
     !operation ||
     !RAW_INVITATION.test(rawToken) ||
-    !Number.isInteger(days) ||
-    days < 1 ||
-    days > 30
+    !Number.isFinite(expiryTime) ||
+    expiryTime < now + 3_600_000 ||
+    expiryTime > now + 30 * 86_400_000
   ) {
     return {
       kind: "error",
       message: "Review the role, expiry, and invitation.",
       token: null,
+      completedOperationId: null,
     };
   }
   const command = createOrganizationInvitationCommandV1.safeParse({
@@ -139,7 +145,7 @@ export async function createOrganizationInvitationAction(
     organizationId: formData.get("organizationId"),
     displayLabel: formData.get("displayLabel"),
     role: formData.get("role"),
-    expiresAt: new Date(Date.now() + days * 86_400_000).toISOString(),
+    expiresAt,
     tokenSha256: hashOrganizationInvitationTokenV1(rawToken),
     idempotencyKey: `organization:invitation:create:${operation}`,
     correlationId: operation,
@@ -149,6 +155,7 @@ export async function createOrganizationInvitationAction(
       kind: "error",
       message: "Enter a label and choose a membership role.",
       token: null,
+      completedOperationId: null,
     };
   }
   try {
@@ -159,12 +166,14 @@ export async function createOrganizationInvitationAction(
           kind: "success",
           message: "Invitation created. Copy this token now; it is not stored.",
           token: rawToken,
+          completedOperationId: operation,
         }
       : {
           kind: "success",
           message:
             "This invitation was already created. Its token cannot be shown again.",
           token: null,
+          completedOperationId: operation,
         };
   } catch (error) {
     return {
@@ -174,6 +183,7 @@ export async function createOrganizationInvitationAction(
         "The invitation could not be created safely.",
       ),
       token: null,
+      completedOperationId: null,
     };
   }
 }
