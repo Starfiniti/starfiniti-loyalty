@@ -149,13 +149,13 @@ set search_path = ''
 set statement_timeout = '5s'
 as $$
 declare
-  actor_user_id uuid := loyalty_private.request_user_id();
+  request_actor_user_id uuid := loyalty_private.request_user_id();
   request_hash bytea;
   existing_receipt loyalty_private.organization_creation_receipts%rowtype;
   created_organization loyalty.organizations%rowtype;
   created_membership loyalty.organization_memberships%rowtype;
 begin
-  if actor_user_id is null or target_correlation_id is null then
+  if request_actor_user_id is null or target_correlation_id is null then
     raise exception using errcode = '42501', message = 'organization command not authorized';
   end if;
   if target_slug is null
@@ -172,19 +172,19 @@ begin
   end if;
 
   request_hash := extensions.digest(convert_to(jsonb_build_object(
-    'actor', actor_user_id,
+    'actor', request_actor_user_id,
     'slug', target_slug,
     'name', target_name
   )::text, 'UTF8'), 'sha256');
 
   perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(
-    'starfiniti:organization:create:' || actor_user_id::text || ':' || target_idempotency_key,
+    'starfiniti:organization:create:' || request_actor_user_id::text || ':' || target_idempotency_key,
     0
   ));
 
   select receipt.* into existing_receipt
   from loyalty_private.organization_creation_receipts as receipt
-  where receipt.actor_user_id = actor_user_id
+  where receipt.actor_user_id = request_actor_user_id
     and receipt.idempotency_key = target_idempotency_key;
   if found then
     if existing_receipt.request_sha256 <> request_hash
@@ -206,14 +206,14 @@ begin
   insert into loyalty.organization_memberships (
     organization_id, user_id, role, display_label
   ) values (
-    created_organization.id, actor_user_id, 'owner', 'Initial owner'
+    created_organization.id, request_actor_user_id, 'owner', 'Initial owner'
   ) returning * into created_membership;
 
   insert into loyalty.admin_audit_events (
     organization_id, actor_user_id, action, resource_type,
     resource_public_id, idempotency_key, request_sha256, correlation_id, metadata
   ) values (
-    created_organization.id, actor_user_id, 'organization.create', 'organization',
+    created_organization.id, request_actor_user_id, 'organization.create', 'organization',
     created_organization.public_id, target_idempotency_key, request_hash,
     target_correlation_id, jsonb_build_object(
       'lifecycleRevision', created_organization.lifecycle_revision,
@@ -225,7 +225,7 @@ begin
   insert into loyalty_private.organization_creation_receipts (
     actor_user_id, idempotency_key, request_sha256, organization_id, correlation_id
   ) values (
-    actor_user_id, target_idempotency_key, request_hash,
+    request_actor_user_id, target_idempotency_key, request_hash,
     created_organization.id, target_correlation_id
   );
 
@@ -253,7 +253,7 @@ set search_path = ''
 set statement_timeout = '5s'
 as $$
 declare
-  actor_user_id uuid := loyalty_private.request_user_id();
+  request_actor_user_id uuid := loyalty_private.request_user_id();
   organization_row loyalty.organizations%rowtype;
   existing_audit loyalty.admin_audit_events%rowtype;
   request_hash bytea;
@@ -263,7 +263,7 @@ declare
   new_offboarded_at timestamptz;
   transition_time timestamptz := clock_timestamp();
 begin
-  if actor_user_id is null or target_organization_public_id is null
+  if request_actor_user_id is null or target_organization_public_id is null
      or target_expected_revision is null or target_expected_revision < 1
      or target_action not in ('rename', 'suspend', 'restore', 'close', 'offboard')
      or target_reason is null or target_reason <> btrim(target_reason)
@@ -290,7 +290,7 @@ begin
   if not exists (
     select 1 from loyalty.organization_memberships as membership
     where membership.organization_id = organization_row.id
-      and membership.user_id = actor_user_id
+      and membership.user_id = request_actor_user_id
       and membership.role = 'owner'
       and membership.revoked_at is null
   ) then
@@ -312,7 +312,7 @@ begin
   if found then
     if existing_audit.action <> 'organization.' || target_action
        or existing_audit.request_sha256 <> request_hash
-       or existing_audit.actor_user_id <> actor_user_id
+       or existing_audit.actor_user_id <> request_actor_user_id
        or existing_audit.correlation_id <> target_correlation_id then
       raise exception using errcode = '23514', message = 'organization lifecycle idempotency conflict';
     end if;
@@ -385,7 +385,7 @@ begin
     organization_id, actor_user_id, action, resource_type,
     resource_public_id, idempotency_key, request_sha256, correlation_id, metadata
   ) values (
-    organization_row.id, actor_user_id, 'organization.' || target_action,
+    organization_row.id, request_actor_user_id, 'organization.' || target_action,
     'organization', organization_row.public_id, target_idempotency_key,
     request_hash, target_correlation_id, jsonb_build_object(
       'lifecycleRevision', organization_row.lifecycle_revision,
@@ -418,7 +418,7 @@ set search_path = ''
 set statement_timeout = '5s'
 as $$
 declare
-  actor_user_id uuid := loyalty_private.request_user_id();
+  request_actor_user_id uuid := loyalty_private.request_user_id();
   organization_row loyalty.organizations%rowtype;
   actor_role text;
   invitation_row loyalty.organization_invitations%rowtype;
@@ -427,7 +427,7 @@ declare
   token_digest bytea;
   creation_time timestamptz := clock_timestamp();
 begin
-  if actor_user_id is null or target_organization_public_id is null
+  if request_actor_user_id is null or target_organization_public_id is null
      or target_display_label is null or target_display_label <> btrim(target_display_label)
      or length(target_display_label) not between 1 and 120
      or target_display_label ~ '[[:cntrl:]]'
@@ -454,7 +454,7 @@ begin
   select membership.role into actor_role
   from loyalty.organization_memberships as membership
   where membership.organization_id = organization_row.id
-    and membership.user_id = actor_user_id
+    and membership.user_id = request_actor_user_id
     and membership.revoked_at is null
     and membership.role in ('owner', 'admin');
   if not found or (target_role = 'owner' and actor_role <> 'owner') then
@@ -475,7 +475,7 @@ begin
   if found then
     if existing_audit.action <> 'invitation.create'
        or existing_audit.request_sha256 <> request_hash
-       or existing_audit.actor_user_id <> actor_user_id
+       or existing_audit.actor_user_id <> request_actor_user_id
        or existing_audit.correlation_id <> target_correlation_id then
       raise exception using errcode = '23514', message = 'organization invitation idempotency conflict';
     end if;
@@ -489,14 +489,14 @@ begin
     created_by_user_id, expires_at
   ) values (
     organization_row.id, token_digest, target_display_label, target_role,
-    actor_user_id, target_expires_at
+    request_actor_user_id, target_expires_at
   ) returning * into invitation_row;
 
   insert into loyalty.admin_audit_events (
     organization_id, actor_user_id, action, resource_type,
     resource_public_id, idempotency_key, request_sha256, correlation_id, metadata
   ) values (
-    organization_row.id, actor_user_id, 'invitation.create', 'organization_invitation',
+    organization_row.id, request_actor_user_id, 'invitation.create', 'organization_invitation',
     invitation_row.public_id, target_idempotency_key, request_hash,
     target_correlation_id, jsonb_build_object(
       'displayLabel', invitation_row.display_label,
@@ -525,7 +525,7 @@ set search_path = ''
 set statement_timeout = '5s'
 as $$
 declare
-  actor_user_id uuid := loyalty_private.request_user_id();
+  request_actor_user_id uuid := loyalty_private.request_user_id();
   invitation_row loyalty.organization_invitations%rowtype;
   organization_row loyalty.organizations%rowtype;
   membership_row loyalty.organization_memberships%rowtype;
@@ -536,7 +536,7 @@ declare
   candidate_invitation_id bigint;
   candidate_organization_id bigint;
 begin
-  if actor_user_id is null or target_token_sha256 is null
+  if request_actor_user_id is null or target_token_sha256 is null
      or target_token_sha256 !~ '^[a-f0-9]{64}$'
      or target_idempotency_key is null or target_idempotency_key <> btrim(target_idempotency_key)
      or length(target_idempotency_key) not between 1 and 255
@@ -573,7 +573,7 @@ begin
 
   request_hash := extensions.digest(convert_to(jsonb_build_object(
     'invitation', invitation_row.public_id,
-    'actor', actor_user_id,
+    'actor', request_actor_user_id,
     'tokenSha256', target_token_sha256
   )::text, 'UTF8'), 'sha256');
   select audit.* into existing_audit
@@ -583,7 +583,7 @@ begin
   if found then
     if existing_audit.action <> 'invitation.accept'
        or existing_audit.request_sha256 <> request_hash
-       or existing_audit.actor_user_id <> actor_user_id
+       or existing_audit.actor_user_id <> request_actor_user_id
        or existing_audit.correlation_id <> target_correlation_id then
       raise exception using errcode = '23514', message = 'organization invitation idempotency conflict';
     end if;
@@ -592,7 +592,7 @@ begin
     return;
   end if;
   if invitation_row.status = 'accepted' then
-    if invitation_row.accepted_by_user_id = actor_user_id then
+    if invitation_row.accepted_by_user_id = request_actor_user_id then
       select membership.* into membership_row
       from loyalty.organization_memberships as membership
       where membership.id = invitation_row.accepted_membership_id;
@@ -611,7 +611,7 @@ begin
   select membership.* into membership_row
   from loyalty.organization_memberships as membership
   where membership.organization_id = organization_row.id
-    and membership.user_id = actor_user_id
+    and membership.user_id = request_actor_user_id
   for update;
   if found and membership_row.revoked_at is null then
     raise exception using errcode = '23514', message = 'organization invitation target already has access';
@@ -629,7 +629,7 @@ begin
     insert into loyalty.organization_memberships (
       organization_id, user_id, role, display_label
     ) values (
-      organization_row.id, actor_user_id, invitation_row.role,
+      organization_row.id, request_actor_user_id, invitation_row.role,
       invitation_row.display_label
     ) returning * into membership_row;
     accepted_outcome := 'created';
@@ -637,7 +637,7 @@ begin
 
   perform set_config('loyalty.identity_command', 'on', true);
   update loyalty.organization_invitations
-  set status = 'accepted', accepted_by_user_id = actor_user_id,
+  set status = 'accepted', accepted_by_user_id = request_actor_user_id,
     accepted_membership_id = membership_row.id,
     accepted_at = acceptance_time, updated_at = acceptance_time
   where id = invitation_row.id
@@ -647,7 +647,7 @@ begin
     organization_id, actor_user_id, action, resource_type,
     resource_public_id, idempotency_key, request_sha256, correlation_id, metadata
   ) values (
-    organization_row.id, actor_user_id, 'invitation.accept', 'organization_invitation',
+    organization_row.id, request_actor_user_id, 'invitation.accept', 'organization_invitation',
     invitation_row.public_id, target_idempotency_key, request_hash,
     target_correlation_id, jsonb_build_object(
       'membershipPublicId', membership_row.public_id,
@@ -675,14 +675,14 @@ set search_path = ''
 set statement_timeout = '5s'
 as $$
 declare
-  actor_user_id uuid := loyalty_private.request_user_id();
+  request_actor_user_id uuid := loyalty_private.request_user_id();
   organization_row loyalty.organizations%rowtype;
   invitation_row loyalty.organization_invitations%rowtype;
   existing_audit loyalty.admin_audit_events%rowtype;
   request_hash bytea;
   revocation_time timestamptz := clock_timestamp();
 begin
-  if actor_user_id is null or target_organization_public_id is null
+  if request_actor_user_id is null or target_organization_public_id is null
      or target_invitation_public_id is null
      or target_reason is null or target_reason <> btrim(target_reason)
      or length(target_reason) not between 8 and 500 or target_reason ~ '[[:cntrl:]]'
@@ -702,7 +702,7 @@ begin
   if not exists (
     select 1 from loyalty.organization_memberships as membership
     where membership.organization_id = organization_row.id
-      and membership.user_id = actor_user_id
+      and membership.user_id = request_actor_user_id
       and membership.revoked_at is null
       and membership.role in ('owner', 'admin')
   ) then
@@ -728,7 +728,7 @@ begin
   if found then
     if existing_audit.action <> 'invitation.revoke'
        or existing_audit.request_sha256 <> request_hash
-       or existing_audit.actor_user_id <> actor_user_id
+       or existing_audit.actor_user_id <> request_actor_user_id
        or existing_audit.correlation_id <> target_correlation_id then
       raise exception using errcode = '23514', message = 'invitation revocation idempotency conflict';
     end if;
@@ -747,7 +747,7 @@ begin
     organization_id, actor_user_id, action, resource_type,
     resource_public_id, idempotency_key, request_sha256, correlation_id, metadata
   ) values (
-    organization_row.id, actor_user_id, 'invitation.revoke', 'organization_invitation',
+    organization_row.id, request_actor_user_id, 'invitation.revoke', 'organization_invitation',
     invitation_row.public_id, target_idempotency_key, request_hash,
     target_correlation_id, jsonb_build_object(
       'role', invitation_row.role, 'status', invitation_row.status, 'reason', target_reason
@@ -775,7 +775,7 @@ set search_path = ''
 set statement_timeout = '5s'
 as $$
 declare
-  actor_user_id uuid := loyalty_private.request_user_id();
+  request_actor_user_id uuid := loyalty_private.request_user_id();
   organization_row loyalty.organizations%rowtype;
   actor_role text;
   membership_row loyalty.organization_memberships%rowtype;
@@ -784,7 +784,7 @@ declare
   previous_role text;
   mutation_time timestamptz := clock_timestamp();
 begin
-  if actor_user_id is null or target_organization_public_id is null
+  if request_actor_user_id is null or target_organization_public_id is null
      or target_membership_public_id is null
      or target_expected_revision is null or target_expected_revision < 1
      or target_action not in ('change_role', 'revoke')
@@ -808,7 +808,7 @@ begin
   select actor_membership.role into actor_role
   from loyalty.organization_memberships as actor_membership
   where actor_membership.organization_id = organization_row.id
-    and actor_membership.user_id = actor_user_id
+    and actor_membership.user_id = request_actor_user_id
     and actor_membership.revoked_at is null
     and actor_membership.role in ('owner', 'admin');
   if not found then
@@ -837,7 +837,7 @@ begin
   if found then
     if existing_audit.action <> 'membership.' || target_action
        or existing_audit.request_sha256 <> request_hash
-       or existing_audit.actor_user_id <> actor_user_id
+       or existing_audit.actor_user_id <> request_actor_user_id
        or existing_audit.correlation_id <> target_correlation_id then
       raise exception using errcode = '23514', message = 'organization member idempotency conflict';
     end if;
@@ -888,7 +888,7 @@ begin
     organization_id, actor_user_id, action, resource_type,
     resource_public_id, idempotency_key, request_sha256, correlation_id, metadata
   ) values (
-    organization_row.id, actor_user_id, 'membership.' || target_action,
+    organization_row.id, request_actor_user_id, 'membership.' || target_action,
     'organization_membership', membership_row.public_id, target_idempotency_key,
     request_hash, target_correlation_id, jsonb_build_object(
       'previousRole', previous_role,
@@ -916,13 +916,13 @@ set search_path = ''
 set statement_timeout = '5s'
 as $$
 declare
-  actor_user_id uuid := loyalty_private.request_user_id();
+  request_actor_user_id uuid := loyalty_private.request_user_id();
   selected record;
 begin
   if target_organization_public_id is null then
     raise exception using errcode = '22023', message = 'invalid organization team request';
   end if;
-  if actor_user_id is null then return; end if;
+  if request_actor_user_id is null then return; end if;
   select organization.id as organization_id,
     organization.public_id as organization_public_id,
     organization.name as organization_name,
@@ -938,7 +938,7 @@ begin
   from loyalty.organizations as organization
   join loyalty.organization_memberships as membership
     on membership.organization_id = organization.id
-   and membership.user_id = actor_user_id
+   and membership.user_id = request_actor_user_id
    and membership.revoked_at is null
   where organization.public_id = target_organization_public_id
     and (
@@ -954,7 +954,7 @@ begin
       'displayLabel', membership.display_label,
       'role', membership.role,
       'status', case when membership.revoked_at is null then 'active' else 'revoked' end,
-      'isCurrent', membership.user_id = actor_user_id,
+      'isCurrent', membership.user_id = request_actor_user_id,
       'revision', membership.lifecycle_revision,
       'createdAt', membership.created_at,
       'revokedAt', membership.revoked_at
