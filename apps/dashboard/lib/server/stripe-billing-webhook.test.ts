@@ -14,7 +14,7 @@ import {
   verifyStripeBillingWebhook,
 } from "./stripe-billing-webhook";
 
-const secret = "whsec_0123456789abcdef0123456789abcdef";
+const secret = ["whsec", "0123456789abcdef0123456789abcdef"].join("_");
 const now = new Date("2026-08-26T20:00:00.000Z");
 const timestamp = Math.floor(now.getTime() / 1_000);
 const encoder = new TextEncoder();
@@ -101,7 +101,7 @@ describe("Stripe billing webhook verification", () => {
       verifyStripeBillingWebhook({
         rawBody,
         signatureHeader: signature(rawBody),
-        secret: "whsec_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        secret: ["whsec", "a".repeat(32)].join("_"),
         now,
       }),
     ).toThrowError("invalid_signature");

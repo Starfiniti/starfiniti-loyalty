@@ -311,6 +311,7 @@ create temporary table billing_webhook_results (
 grant all on billing_webhook_receipts to loyalty_runtime;
 grant all on billing_webhook_claims to loyalty_worker;
 grant all on billing_webhook_results to loyalty_worker;
+grant select on billing_webhook_test_refs to loyalty_runtime;
 
 -- 22-37: exact intake, tenant derivation, and immutable minimization.
 set local role loyalty_runtime;
