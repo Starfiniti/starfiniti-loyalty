@@ -1764,10 +1764,47 @@ tasks:
           - Playwright desktop mobile dark reduced-motion keyboard and diagnostic review passes 16.48-to-1 confirmation contrast 40-pixel actions aligned labels English-only output zero overflow and zero browser errors after repairing three deterministic visual defects
           - production issuance remains disabled and Starfiniti-only customer activity replay rotation revocation event-ledger reconciliation rollback and observation remain owned by M11-S06
       - id: M11-S05-OUTBOUND-WEBHOOKS-CLIENTS-AND-OPERATIONS
-        status: planned
+        status: in_progress
+        hypothesis: Endpoint-scoped lifecycle commands, tested receiver helpers, and one evidence-backed health view let merchants operate provider-neutral integrations without exposing signing material or introducing another event/value path.
+        baseline: The M08 worker already delivers a strict minimized NotificationEventV1 with Standard Webhooks HMAC, SSRF resistance, consent rechecks, bounded retries, and append-only attempt evidence, but endpoints are deployment-provisioned, lifecycle changes are unaudited manual SQL, no supported receiver or Service API client is packaged, and merchant health aggregates hide endpoint data flow.
+        targets:
+          - endpoint creation and rotation return one unique 256-bit secret exactly once while PostgreSQL retains only its SHA-256 fingerprint and bounded hint
+          - disablement takes effect before the next authorization and terminal retirement removes the live destination while retaining immutable delivery evidence
+          - exact command retries create one endpoint or rotation and changed reuse fails closed
+          - TypeScript and PHP clients produce identical Service API bodies and verify the same raw-body Standard Webhooks signature and replay identity
+          - every endpoint health row reconciles to its canonical deliveries and append-only attempts without exposing payload response body worker identity or reusable secret
+        owner_inputs: []
         acceptance:
           - signed minimized outbound webhooks have replay protection bounded retries rotation and deletion controls
           - published TypeScript and PHP contracts plus integration health views match tested runtime behavior
+          - activation remains an explicit reviewed deployment step because one isolated worker and mounted secret belong to one endpoint
+          - existing M08 endpoints deliveries attempts wire signatures and receiver behavior remain backward compatible
+        failure_modes:
+          - raw signing secret persistence logging browser hydration replay or duplicate command disclosure
+          - tenant endpoint substitution or role escalation
+          - active delivery after disablement retirement consent withdrawal entitlement removal or subscription removal
+          - rotation without bounded prior-key expiry or an unrecoverable secret/worker mismatch
+          - retirement deleting immutable delivery or attempt evidence
+          - SDK body drift status ambiguity unbounded response parsing or authorization leakage
+          - webhook verification after JSON reserialization non-constant-time comparison stale timestamp acceptance or duplicate webhook processing
+          - endpoint projection leaking fingerprints response bodies payloads contacts or worker references
+        security_boundary: The authenticated Next.js server generates raw webhook secrets and passes only a public workspace or endpoint selector, SHA-256 fingerprint, bounded hint, and reviewed command fields to private empty-search-path PostgreSQL functions. PostgreSQL derives organization role entitlement endpoint and lifecycle authority; receiver SDKs verify exact raw bytes and expose the stable webhook ID for caller-owned replay storage.
+        rollout: Deploy additive readers and commands with endpoint creation disabled by the notifications entitlement, create one disabled Starfiniti endpoint, mount its one-time secret in one isolated webhook worker, run receiver vectors, activate through the reviewed operator runbook, deliver and replay one event, disable, rotate with bounded overlap, reactivate, retire, and reconcile health/revisions/deliveries/attempts.
+        rollback: Disable lifecycle actions, stop the endpoint-isolated worker, disable the endpoint, and retain endpoint revisions deliveries attempts events and audit evidence. Existing M08 delivery functions and wire format remain authoritative; forward fixes restore compatible management readers without rewriting history.
+        verification:
+          - contract property and vector tests for secret format exact request bodies bounded responses signature tolerance rotation and replay identity
+          - PHP 8.1-compatible syntax and executable vectors shared with TypeScript
+          - pgTAP for grants RLS tenant/role/entitlement authority idempotency lifecycle immutability retirement minimization and exact health counts
+          - worker regression tests for retries SSRF rotation signatures consent and disable-before-authorization
+          - dashboard action/server tests plus desktop mobile keyboard dark-mode one-time-secret and degraded/retired states
+          - full check migration replay secret/license scans images and WooCommerce matrix
+        metrics:
+          activation: one disabled endpoint one mounted worker one accepted signed event and one reconciled health row
+          correctness: command replay differences and endpoint health reconciliation differences equal zero
+          security: reusable secret fingerprint payload response body contact and worker-reference projection occurrences equal zero
+          reliability: deliveries authorized after disable or retirement and duplicate receiver effects equal zero
+          operability: every endpoint exposes bounded state subscription outstanding failure and last-attempt evidence plus a documented next action
+        evidence: []
       - id: M11-S06-SHADOW-CANARY-AND-CLOSE
         status: planned
         acceptance:
@@ -1783,6 +1820,7 @@ tasks:
         docs/architecture/ADR/0043-verified-canonical-customer-link-revisions.md,
         docs/architecture/ADR/0044-immutable-provider-rate-snapshots-and-exact-currency-conversion.md,
         docs/architecture/ADR/0045-hashed-service-accounts-and-database-authoritative-inbound-api.md,
+        docs/architecture/ADR/0046-endpoint-scoped-webhook-lifecycle-and-supported-clients.md,
       ]
     evidence: [docs/plan/evidence/M11/README.md]
 

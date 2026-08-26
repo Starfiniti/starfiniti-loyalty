@@ -22,8 +22,10 @@ import {
 } from "@/lib/merchant-locale";
 import { getMerchantProgrammeState } from "@/lib/server/programme";
 import { getNotificationWorkspace } from "@/lib/server/notifications";
+import { getNotificationWebhookEndpoints } from "@/lib/server/webhook-endpoints";
 import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
 import { NotificationTemplateStudio } from "./template-studio";
+import { WebhookEndpointsPanel } from "./webhook-endpoints-panel";
 
 export default async function NotificationsPage({
   searchParams,
@@ -43,13 +45,16 @@ export default async function NotificationsPage({
   const programme = await getMerchantProgrammeState(tenant.context);
   const workspace = tenant.context.workspace;
   let notificationWorkspace: MerchantNotificationWorkspaceV1 | null = null;
+  let webhookEndpoints = null;
   if (workspace) {
     try {
-      notificationWorkspace = await getNotificationWorkspace(
-        workspace.public_id,
-      );
+      [notificationWorkspace, webhookEndpoints] = await Promise.all([
+        getNotificationWorkspace(workspace.public_id),
+        getNotificationWebhookEndpoints(workspace.public_id),
+      ]);
     } catch {
       notificationWorkspace = null;
+      webhookEndpoints = null;
     }
   }
   const canManage = ["owner", "admin"].includes(tenant.context.membershipRole);
@@ -102,6 +107,25 @@ export default async function NotificationsPage({
               testOperationId={crypto.randomUUID()}
               workspaceId={workspace.public_id}
             />
+            {webhookEndpoints ? (
+              <WebhookEndpointsPanel
+                document={webhookEndpoints}
+                operationIds={{
+                  create: crypto.randomUUID(),
+                  endpoints: Object.fromEntries(
+                    webhookEndpoints.endpoints.map((endpoint) => [
+                      endpoint.endpointId,
+                      {
+                        disable: crypto.randomUUID(),
+                        rotate: crypto.randomUUID(),
+                        retire: crypto.randomUUID(),
+                      },
+                    ]),
+                  ),
+                }}
+                workspaceId={workspace.public_id}
+              />
+            ) : null}
             <NotificationIssues workspace={notificationWorkspace} />
           </>
         )}

@@ -32,6 +32,17 @@ Return any `2xx` only after the receiver has durably accepted the stable `webhoo
 
 After ten authorized attempts, work stops for manual review. A manual replay must first reconcile whether the receiver already accepted the stable ID.
 
+## Supported receiver libraries
+
+The repository ships two tested V1 receiver contracts:
+
+- `@starfiniti/loyalty-sdk` for server-side TypeScript/Node.js.
+- `starfiniti/loyalty-sdk` for PHP 8.1+ with Composer PSR-4 autoloading.
+
+Both consume the exact raw body, require the three Standard Webhooks headers, enforce a configurable 1–900 second tolerance (300 seconds by default), compare HMAC bytes in constant time, validate the minimized event envelope only after the signature, and return the stable ID. Their `verifyAndClaim` helpers require an application-supplied atomic replay store. The shared vector is `packages/webhook-test-vectors/v1.json`.
+
+Never acknowledge from an in-memory duplicate check. The replay store must atomically claim `webhook-id` and retain it through at least the accepted timestamp window; business handling may retain it longer.
+
 ## Event subscriptions and consent
 
 Each endpoint has an explicit allowlist drawn from the nine `NotificationEventV1` event types. PostgreSQL creates at most one delivery for each endpoint/event and rechecks the subscription and `notifications` entitlement before every attempt.

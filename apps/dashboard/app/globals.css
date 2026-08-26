@@ -2733,6 +2733,371 @@ h1 {
   }
 }
 
+/* M11 endpoint-scoped webhook operations */
+.notification-webhook-panel {
+  width: min(100%, 1240px);
+  margin-inline: auto;
+  padding: 22px;
+  border: 1px solid var(--merchant-border);
+  border-radius: 11px;
+  background: var(--merchant-surface);
+  box-shadow: var(--merchant-shadow);
+}
+
+.notification-webhook-create {
+  margin-bottom: 18px;
+  border: 1px solid var(--merchant-border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--merchant-violet) 3%, transparent);
+}
+
+.notification-webhook-create > summary,
+.notification-webhook-actions summary {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 13px;
+  color: var(--merchant-text);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+
+.notification-webhook-create summary::-webkit-details-marker,
+.notification-webhook-actions summary::-webkit-details-marker {
+  display: none;
+}
+
+.notification-webhook-create summary svg,
+.notification-webhook-actions summary svg {
+  width: 15px;
+  height: 15px;
+  color: var(--merchant-violet);
+}
+
+.notification-webhook-create form,
+.notification-webhook-actions form {
+  display: grid;
+  gap: 13px;
+  padding: 16px;
+  border-top: 1px solid var(--merchant-border);
+}
+
+.notification-webhook-fields {
+  display: grid;
+  grid-template-columns: 0.8fr 1.5fr 0.55fr;
+  gap: 12px;
+}
+
+.notification-webhook-fields label,
+.notification-webhook-actions
+  form
+  > label:not(.notification-webhook-confirmation) {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+  color: var(--merchant-muted);
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.notification-webhook-fields input,
+.notification-webhook-actions input:not([type="checkbox"]) {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 11px;
+  border: 1px solid var(--merchant-border-strong);
+  border-radius: 8px;
+  color: var(--merchant-text);
+  background: var(--merchant-surface);
+  font: inherit;
+}
+
+.notification-webhook-fields input:focus,
+.notification-webhook-actions input:focus {
+  border-color: var(--merchant-violet);
+  outline: 3px solid color-mix(in srgb, var(--merchant-violet) 18%, transparent);
+}
+
+.notification-webhook-events {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px 14px;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--merchant-border);
+  border-radius: 8px;
+}
+
+.notification-webhook-events legend {
+  padding-inline: 5px;
+  color: var(--merchant-muted);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.notification-webhook-events label,
+.notification-webhook-confirmation {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: var(--merchant-text);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.notification-webhook-events input,
+.notification-webhook-confirmation input {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  margin: 0;
+  accent-color: var(--merchant-violet);
+}
+
+.notification-webhook-readonly,
+.notification-webhook-next-step {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 16px;
+  padding: 11px 13px;
+  border: 1px solid
+    color-mix(in srgb, var(--merchant-violet) 18%, var(--merchant-border));
+  border-radius: 8px;
+  color: var(--merchant-muted);
+  background: color-mix(in srgb, var(--merchant-violet) 5%, transparent);
+  font-size: 10px;
+}
+
+.notification-webhook-readonly svg {
+  width: 15px;
+  height: 15px;
+  color: var(--merchant-violet);
+}
+
+.notification-webhook-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.notification-webhook-card {
+  min-width: 0;
+  display: grid;
+  gap: 14px;
+  padding: 17px;
+  border: 1px solid var(--merchant-border);
+  border-radius: 10px;
+  background: var(--merchant-surface);
+}
+
+.notification-webhook-card.is-retired {
+  opacity: 0.82;
+  background: color-mix(
+    in srgb,
+    var(--merchant-muted) 4%,
+    var(--merchant-surface)
+  );
+}
+
+.notification-webhook-card-heading {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 10px;
+}
+
+.notification-webhook-icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  color: var(--merchant-violet);
+  background: color-mix(in srgb, var(--merchant-violet) 9%, transparent);
+}
+
+.notification-webhook-icon svg {
+  width: 17px;
+  height: 17px;
+}
+
+.notification-webhook-card-heading h3,
+.notification-webhook-card-heading p {
+  margin: 0;
+}
+
+.notification-webhook-card-heading h3 {
+  font-size: 13px;
+}
+
+.notification-webhook-card-heading p {
+  margin-top: 3px;
+  overflow: hidden;
+  color: var(--merchant-muted);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notification-webhook-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.notification-webhook-metrics > div {
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--merchant-muted) 5%, transparent);
+}
+
+.notification-webhook-metrics dt {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--merchant-muted);
+  font-size: 9px;
+}
+
+.notification-webhook-metrics svg {
+  width: 12px;
+  height: 12px;
+}
+
+.notification-webhook-metrics dd {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 750;
+}
+
+.notification-webhook-metrics .is-alert dd,
+.notification-webhook-error,
+.notification-webhook-actions summary.is-destructive {
+  color: #b42318;
+}
+
+.notification-webhook-evidence {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  color: var(--merchant-muted);
+  font-size: 9px;
+}
+
+.notification-webhook-evidence span {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.notification-webhook-evidence svg {
+  width: 12px;
+  height: 12px;
+}
+
+.notification-webhook-error {
+  margin: 0;
+  font-size: 10px;
+}
+
+.notification-webhook-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--merchant-border);
+}
+
+.notification-webhook-actions > details {
+  flex: 1 1 180px;
+  border: 1px solid var(--merchant-border);
+  border-radius: 8px;
+}
+
+.notification-webhook-notice {
+  padding: 11px;
+  border: 1px solid var(--merchant-border);
+  border-radius: 8px;
+  font-size: 10px;
+}
+
+.notification-webhook-notice.is-success {
+  border-color: color-mix(in srgb, #159b6b 35%, var(--merchant-border));
+  background: color-mix(in srgb, #159b6b 8%, var(--merchant-surface));
+}
+
+.notification-webhook-notice.is-error {
+  border-color: color-mix(in srgb, #b42318 35%, var(--merchant-border));
+  background: color-mix(in srgb, #b42318 7%, var(--merchant-surface));
+}
+
+.notification-webhook-notice p {
+  margin: 0;
+}
+
+.notification-webhook-secret {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  margin-top: 9px;
+}
+
+.notification-webhook-secret code {
+  min-width: 0;
+  padding: 9px;
+  overflow: auto;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--merchant-text) 7%, transparent);
+  white-space: nowrap;
+}
+
+.notification-webhook-secret .button,
+.notification-webhook-panel .button {
+  min-height: 40px;
+}
+
+@media (max-width: 860px) {
+  .notification-webhook-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .notification-webhook-fields,
+  .notification-webhook-events {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .notification-webhook-panel {
+    padding: 16px;
+  }
+
+  .notification-webhook-card-heading {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .notification-webhook-card-heading > .ui-badge {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .notification-webhook-metrics,
+  .notification-webhook-evidence,
+  .notification-webhook-secret {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Hosted customer loyalty hub */
 .member-hub {
   --member-accent: #5b43e6;

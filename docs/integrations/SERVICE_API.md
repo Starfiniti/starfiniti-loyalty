@@ -1,5 +1,11 @@
 # Service API v1
 
+## Supported clients
+
+Use `@starfiniti/loyalty-sdk` for server-side TypeScript/Node.js or `starfiniti/loyalty-sdk` for PHP 8.1+. Both implement the exact customer and activity V1 routes, validate commands and bounded responses, send the opaque credential only as `Authorization: Bearer`, refuse redirects in the included transport, and expose retryable problem state without logging credentials or bodies.
+
+The packages are maintained from `packages/sdk-typescript` and `packages/sdk-php`. Their executable contract gate is `npm run clients:validate`; the PHP and TypeScript webhook verifiers share `packages/webhook-test-vectors/v1.json`.
+
 ## Purpose and availability
 
 The Service API lets a merchant backend synchronize opaque customer references and submit authoritative non-purchase activity facts. It is not a browser API and it cannot directly award points, choose a tenant, or select a wallet. PostgreSQL derives the organization, workspace, published ProgrammeDefinitionV2, connector, scope, entitlement, customer, and quota from the live credential. Accepted activities continue asynchronously through the canonical event, immutable evaluation, effect-receipt, and ledger path.

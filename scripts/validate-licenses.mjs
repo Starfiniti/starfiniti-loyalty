@@ -51,6 +51,12 @@ const wooComposer = readJson(
 if (!wooComposer.license?.includes(connectorLicense)) {
   throw new Error(`WooCommerce connector must declare ${connectorLicense}`);
 }
+const phpSdkComposer = readJson(
+  join(repositoryRoot, "packages", "sdk-php", "composer.json"),
+);
+if (!phpSdkComposer.license?.includes(platformLicense)) {
+  throw new Error(`PHP SDK must declare ${platformLicense}`);
+}
 const wooPluginHeader = readFileSync(
   join(repositoryRoot, "plugins", "woocommerce", "starfiniti-loyalty.php"),
   "utf8",
@@ -60,5 +66,5 @@ if (!wooPluginHeader.includes(`License: ${connectorLicense}`)) {
 }
 
 console.log(
-  `Validated ${packagePaths.length} npm package license declarations, the full AGPL text, and both WooCommerce GPL declarations.`,
+  `Validated ${packagePaths.length} npm package license declarations, PHP SDK AGPL, the full AGPL text, and both WooCommerce GPL declarations.`,
 );

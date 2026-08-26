@@ -1,0 +1,7 @@
+{
+  "secretBase64": "ERERERERERERERERERERERERERERERERERERERERERE=",
+  "id": "94000000-0000-4000-8000-000000000002",
+  "timestamp": "1787558400",
+  "rawBody": "{\"schemaVersion\":\"1\",\"eventId\":\"94000000-0000-4000-8000-000000000002\",\"eventType\":\"loyalty.connector.health\",\"organizationId\":\"94000000-0000-4000-8000-000000000003\",\"programmeGroupId\":null,\"locale\":\"en\",\"occurredAt\":\"2026-08-24T00:00:00.000Z\",\"purpose\":\"merchant_operational\",\"subject\":{\"kind\":\"merchant\"},\"payload\":{\"connectionId\":\"94000000-0000-4000-8000-000000000004\",\"state\":\"healthy\",\"errorCode\":null}}",
+  "signature": "v1,P48D0Enq59zo568sxZsNz/2NHD34iXkjwFcgqhO1r0M="
+}

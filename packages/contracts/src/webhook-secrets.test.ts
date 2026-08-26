@@ -1,0 +1,17 @@
+import { describe, expect, it } from "vitest";
+import { issueWebhookSigningSecretV1 } from "./webhook-secrets";
+
+describe("issueWebhookSigningSecretV1", () => {
+  it("issues a canonical 256-bit secret and only non-reusable evidence", () => {
+    const issued = issueWebhookSigningSecretV1(new Uint8Array(32).fill(0x11));
+    expect(issued).toEqual({
+      secret: `whsec_${"ERERERERERERERERERERERERERERERERERERERERERE="}`,
+      fingerprintSha256:
+        "02d449a31fbb267c8f352e9968a79e3e5fc95c1bbeaa502fd6454ebde5a4bedc",
+      hint: "RERERE",
+    });
+    expect(() => issueWebhookSigningSecretV1(new Uint8Array(31))).toThrow(
+      "32 bytes",
+    );
+  });
+});

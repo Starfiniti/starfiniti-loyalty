@@ -10,6 +10,7 @@
     "./audience": "./src/audience.ts",
     "./campaign": "./src/campaign.ts",
     "./notification": "./src/notification.ts",
+    "./webhook-secrets": "./src/webhook-secrets.ts",
     "./referral": "./src/referral.ts",
     "./tier-policy-v2": "./src/tier-policy-v2.ts",
     "./currency": "./src/currency.ts",
