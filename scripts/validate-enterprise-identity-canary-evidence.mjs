@@ -220,6 +220,8 @@ const validateDocument = (candidateEvidence, candidateTasks = tasks) => {
 
   const forbiddenKey =
     /(password|passphrase|secret|private.?key|access.?token|refresh.?token|bearer|credential.?value|capability.?value|scim.?token|saml.?assertion|raw.?body|email|auth.?uuid|external.?id|subject|customer.?id|order.?id|tenant.?id|wallet.?id|connection.?id)/i;
+  const forbiddenValue =
+    /(-----BEGIN [A-Z ]*PRIVATE KEY-----|\bBearer\s+[A-Za-z0-9._~+/=-]{12,}|\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b|\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b|\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b)/i;
   const inspectKeys = (value, path = "evidence") => {
     if (Array.isArray(value)) {
       value.forEach((item, index) => inspectKeys(item, `${path}[${index}]`));
@@ -232,6 +234,10 @@ const validateDocument = (candidateEvidence, candidateTasks = tasks) => {
         }
         inspectKeys(nested, `${path}.${key}`);
       }
+      return;
+    }
+    if (typeof value === "string" && forbiddenValue.test(value)) {
+      fail(`forbidden sensitive value at ${path}`);
     }
   };
   inspectKeys(candidateEvidence);
@@ -328,12 +334,23 @@ if (process.argv.includes("--self-test")) {
     fail(`self-test accepted ${label}`);
   };
 
-  const falseCompletion = structuredClone(evidence);
-  falseCompletion.status = "complete";
+  const unapprovedCompletion = structuredClone(evidence);
+  unapprovedCompletion.status = "complete";
   expectRejected(
-    falseCompletion,
-    "complete evidence requires",
-    "incomplete evidence as complete",
+    unapprovedCompletion,
+    "release, operator, enterprise identity, and canary approval",
+    "unapproved evidence as complete",
+  );
+
+  const pendingCompletion = structuredClone(evidence);
+  pendingCompletion.status = "complete";
+  pendingCompletion.candidate.approvedRelease = true;
+  pendingCompletion.candidate.enterpriseIdentityApproved = true;
+  pendingCompletion.candidate.canaryApproved = true;
+  expectRejected(
+    pendingCompletion,
+    "complete evidence has non-passing checks",
+    "pending evidence as complete",
   );
 
   const sensitiveEvidence = structuredClone(evidence);
@@ -342,6 +359,15 @@ if (process.argv.includes("--self-test")) {
     sensitiveEvidence,
     "forbidden sensitive key",
     "a sensitive evidence key",
+  );
+
+  const sensitiveValue = structuredClone(evidence);
+  sensitiveValue.checks[0].evidence =
+    "Unsafe identity evidence for alice@example.invalid must be rejected.";
+  expectRejected(
+    sensitiveValue,
+    "forbidden sensitive value",
+    "a sensitive evidence value",
   );
 
   const missingCheck = structuredClone(evidence);

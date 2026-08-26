@@ -1,6 +1,6 @@
 # M13 Evidence — Enterprise identity
 
-Status: M13-S01 access catalogue and review is complete on draft PR #40. M13-S02 organization and team lifecycle is complete on draft PR #41. M13-S03 tenant federation is implemented on draft PR #42 with production disabled; production-build browser evidence passes while Authentik egress proof and the enterprise-IdP canary remain open. M13-S04 SCIM is a disabled repository candidate on draft PR #43 with fresh isolated database, browser, adversarial, and exact-head CI evidence; the approved enterprise IdP/SCIM canary remains open. M13-S05 bilateral agency, scoped support, owner recovery, export, offboarding, and deletion is a disabled repository candidate on draft PR #44 with exact database, concurrency, browser, contract, action, image, and WooCommerce evidence. M13-S06 production canaries remain open and production is unchanged.
+Status: M13-S01 through M13-S05 are repository-complete on stacked draft PRs #40 through #44, with every production capability disabled. M13-S06 is active on draft PR #45 with a fail-closed 50-check manifest: 12 repository, public-baseline, Authentik-health, and operator checks pass; 38 production checks remain pending. Its provisional score is 90/100, but operability is 3/10 and below the mandatory 8/10 category floor. Production is unchanged.
 
 ## M13-S01 access catalogue and review
 
@@ -42,7 +42,7 @@ Status: complete on `codex/m13-org-lifecycle`; no production identity mutation i
 
 ## M13-S03 tenant federation
 
-Status: repository candidate implemented on `codex/m13-tenant-federation`; no production identity source, secret, application, custom provider, Auth setting, entitlement, or network policy changed.
+Status: repository implementation complete on `codex/m13-tenant-federation`; no production identity source, secret, application, custom provider, Auth setting, entitlement, or network policy changed. The live federation gate is owned by M13-S06.
 
 - ADR-0053 selects per-organization Authentik OIDC/SAML sources feeding one opaque downstream OIDC provider per source while Supabase continues to issue application sessions and PostgreSQL remains the tenant authority.
 - OIDC and SAML metadata validation is HTTPS-only, public-address socket-pinned, redirect-free, bounded, issuer/entity exact, cryptographically constrained, and raw-document-free. New enablement repeats that validation and requires exact document, endpoint, issuer/entity, and signing-evidence continuity before reserving activation. SAML V1 accepts one current certificate and disables IdP-initiated login.
@@ -61,19 +61,19 @@ Status: repository candidate implemented on `codex/m13-tenant-federation`; no pr
 - `npm run db:validate` validates 73 additive migrations and 60 pgTAP files. `organization_tenant_federation_test.sql` declares and statically reconciles to 88 focused assertions across grants, tenancy, validation, entitlements, one-source activation, idempotency, recovery, lifecycle, minimization, membership, and ledger neutrality.
 - `npm run check` on this Windows working copy stops at the repository-wide Prettier gate because 223 pre-existing files are checked out with CRLF. Every changed supported file passes targeted Prettier, and `git diff --check` passes; clean Linux CI remains the authoritative formatting gate.
 - Production-build browser QA passes at `1440 × 1100`, `390 × 844`, and `320 × 720` across light/dark, reduced motion, OIDC/SAML switching, enabled/review/interrupted states, mobile navigation focus restoration, visible control targets, English-only output, inner-scroll overflow, and zero browser diagnostics. Evidence is recorded in `tenant-federation-browser-qa-2026-08-26.md`.
-- Local Windows cannot run the Docker/Supabase replay. Exact 73-migration replay and all 88 focused pgTAP assertions remain pending on Linux CI; no deterministic failure is waived.
+- Later exact-head Linux runs for the stacked S04, S05, and S06 candidates cleanly replay all inherited federation migrations and assertions. No deterministic database failure is waived.
 
-### Remaining production gate
+### Production gate owned by M13-S06
 
 - Mount reviewed service credentials and exact Authentik flow/key/mapping selectors without exposing them to the browser or worker.
 - Prove the Authentik private/reserved egress denial and controlled DNS-rebinding test.
 - Enable manual Supabase identity linking in staging, retain disabled signup, and verify exact callback allowlists.
 - Run one approved enterprise OIDC or SAML tenant through disabled provisioning, explicit invited-account linking, login, forged-claim denial, stale-session revocation, IdP outage, local recovery, disable, rotation, interrupted-operation recovery, reconciliation, rollback, and log minimization.
-- Retain redacted Linux CI, network, and external-canary evidence before marking M13-S03 complete.
+- Retain the redacted network and external-canary evidence required by the M13-S06 fail-closed manifest before production enablement.
 
 ## M13-S04 SCIM provisioning
 
-Status: repository candidate; production remains disabled and unchanged.
+Status: repository implementation complete; production remains disabled and unchanged. The approved enterprise IdP/SCIM canary is owned by M13-S06.
 
 - ADR-0054 requires the Authentik hashed OIDC subject to equal its outbound
   SCIM `externalId`. PostgreSQL creates or reactivates access only when that
@@ -223,3 +223,13 @@ deletion state changed.
   grant/revocation and stale-session proof, a disposable AAL2 recovery/export/
   offboarding/deletion rehearsal, exact audit and zero-ledger reconciliation,
   rollback, observation, category-floor scoring, and explicit canary approval.
+
+## M13-S06 enterprise identity canary and close
+
+Status: active on `codex/m13-canary-close` and draft PR #45; production remains unchanged.
+
+- The exact-schema `starfiniti.enterprise-identity-canary.v1` manifest defines 50 mandatory checks and seven weighted categories. Completion fails closed for a pending, failed, missing, duplicate, or unknown check; a short or non-exact commit; score drift; a category below 80% of its weight; an incomplete prerequisite slice; unsafe public status; sensitive evidence; hollow automatic-failure claims; or absent release, operator, enterprise-identity, and canary approvals.
+- Validator self-tests deliberately corrupt completion, evidence keys, check membership, score arithmetic, commit identity, automatic-failure evidence, public baseline, prerequisite status, and category floors. Each corruption is rejected.
+- Exact candidate run `33015108404` at `94c702a69f7fb8e923fc83203f1600b10544db42` passed all seven jobs: the root baseline with the canary validator, both production images, a clean 75-migration replay, all 62 pgTAP files with 3,349 assertions, all 16 concurrency probes, and all four WooCommerce runtimes.
+- Fresh read-only public probes returned `200` for dashboard health/login and Authentik live/ready, `401` for unauthenticated Supabase Auth/REST, and canonical DNS resolution. The approved `s2-root` route confirmed production VMs 970 and 971 running. No identity, application, database, network-policy, secret, organization, or customer state was changed.
+- Twelve checks pass and 38 remain pending. The provisional module score is 90/100, but operability is 3/10 and therefore below its mandatory 8/10 floor. The gate cannot complete until an immutable approved release, recovery point, reviewed private-egress policy, mounted administration material, approved enterprise OIDC/SAML and SCIM fixture, agency/support and AAL2 recovery/deletion rehearsals, exact reconciliation, rollback, observation, and explicit owner approval all pass.

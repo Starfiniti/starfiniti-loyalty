@@ -6,7 +6,7 @@ currentProduction:
   applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
 candidate:
   pullRequest: 45
-  commit: 2964394872a7502953fd5572321b5b7a458b9849
+  commit: 94c702a69f7fb8e923fc83203f1600b10544db42
   approvedRelease: false
   operatorAccess: true
   enterpriseIdentityApproved: false
@@ -54,8 +54,8 @@ score:
       evidence: Versioned contracts, additive migrations, ADRs, protocol docs, runbooks, tests, compatibility boundaries, and evidence are maintained; production closeout remains.
 checks:
   - id: exact_head_ci
-    status: pending
-    evidence: The M13-S05 parent head is green; this fail-closed canary validator still requires its own exact-head seven-job CI run.
+    status: passed
+    evidence: Run 33015108404 at 94c702a69f7fb8e923fc83203f1600b10544db42 passed root checks, both production images, 75 migrations, 62 pgTAP files with 3,349 assertions, 16 concurrency probes, and all four WooCommerce runtimes.
   - id: migration_replay
     status: passed
     evidence: Run 33014200478 cleanly replayed all 75 additive migrations and all 62 pgTAP files with 3,349 assertions.
@@ -91,7 +91,7 @@ checks:
     evidence: The approved s2-root route reached the production Proxmox node read-only and confirmed application VM 970 and database VM 971 running without mutation.
   - id: approved_release
     status: pending
-    evidence: PR 45 is not yet created or approved, and its stacked M13 parents remain draft repository candidates rather than an immutable production release.
+    evidence: Draft PR 45 exists, but it and its stacked M13 parents are not an approved immutable production release.
   - id: approved_enterprise_identity_fixture
     status: pending
     evidence: An approved enterprise OIDC and SAML test tenant with a controlled SCIM cohort has not been supplied.
