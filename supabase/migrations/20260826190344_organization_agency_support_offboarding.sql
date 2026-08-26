@@ -2671,9 +2671,18 @@ begin
   counts := counts || jsonb_build_object('klaviyoConnections', changed_count);
 
   update loyalty_private.notification_webhook_endpoints as endpoint
-  set state = 'retired', retired_at = target_changed_at,
-    previous_secret_sha256 = null, previous_secret_expires_at = null,
+  set state = 'retired',
+    destination_url = 'https://retired.invalid/webhook/' || endpoint.public_id::text,
+    allowed_origin = 'https://retired.invalid',
+    current_secret_sha256 = extensions.digest(pg_catalog.convert_to(
+      'retired|' || endpoint.public_id::text || '|' || target_changed_at::text,
+      'UTF8'
+    ), 'sha256'),
+    current_secret_hint = null,
+    previous_secret_sha256 = null,
+    previous_secret_expires_at = null,
     previous_secret_hint = null,
+    retired_at = target_changed_at,
     updated_by_user_id = target_actor_user_id,
     last_change_reason = 'Organization offboarded',
     updated_at = target_changed_at

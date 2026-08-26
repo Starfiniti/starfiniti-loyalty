@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(72);
+select plan(73);
 
 -- 1-22: schema, privilege, and authority boundaries.
 select has_table('loyalty', 'organization_agency_invitations', 'agency invitations exist');
@@ -282,12 +282,16 @@ select '9d000000-0000-4000-8000-000000000160', id,
 from loyalty.organizations where slug = 'agency-client';
 insert into loyalty_private.notification_webhook_endpoints (
   public_id, organization_id, destination_url, allowed_origin,
-  current_secret_sha256, event_types, state, label,
+  current_secret_sha256, current_secret_hint,
+  previous_secret_sha256, previous_secret_hint, previous_secret_expires_at,
+  event_types, state, label,
   created_by_user_id, updated_by_user_id
 )
 select '9d000000-0000-4000-8000-000000000161', id,
   'https://hooks.example.test/loyalty', 'https://hooks.example.test',
-  decode(repeat('e', 64), 'hex'), array['loyalty.points.earned']::text[],
+  decode(repeat('e', 64), 'hex'), 'ABC123',
+  decode(repeat('f', 64), 'hex'), 'DEF456', clock_timestamp() + interval '1 hour',
+  array['loyalty.points.earned']::text[],
   'active', 'Offboard webhook',
   '9d000000-0000-4000-8000-000000000001',
   '9d000000-0000-4000-8000-000000000001'
@@ -668,6 +672,21 @@ select results_eq(
       where organization.public_id = '9d000000-0000-4000-8000-000000000100'
         and endpoint.state = 'active') $$,
   array[0::bigint], 'offboarding disables every managed notification credential path'
+);
+select results_eq(
+  $$ select endpoint.destination_url, endpoint.allowed_origin,
+       endpoint.current_secret_hint,
+       encode(endpoint.current_secret_sha256, 'hex') <> repeat('e', 64),
+       endpoint.previous_secret_sha256 is null,
+       endpoint.previous_secret_hint is null,
+       endpoint.previous_secret_expires_at is null
+     from loyalty_private.notification_webhook_endpoints as endpoint
+     where endpoint.public_id = '9d000000-0000-4000-8000-000000000161' $$,
+  $$ values (
+       'https://retired.invalid/webhook/9d000000-0000-4000-8000-000000000161'::text,
+       'https://retired.invalid'::text, null::text, true, true, true, true
+     ) $$,
+  'offboarding removes every live webhook destination and signing fingerprint'
 );
 select results_eq(
   $$ select count(*)::bigint from loyalty_private.organization_offboarding_receipts as receipt
