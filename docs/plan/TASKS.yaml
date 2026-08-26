@@ -2128,6 +2128,9 @@ tasks:
         rollback: Disable new migration work compensate the canary batch retain all evidence and reconcile again.
         verification:
           - fail-closed canary manifest clean replay full check images WooCommerce matrix source rerun correction recovery and observation
+        evidence:
+          - exact canary-gate CI run 32953368405 at e85fa78 passed all seven jobs including root checks clean 70-migration replay 57 pgTAP files 3029 assertions both images and all four WooCommerce runtimes
+          - eleven repository public and operator checks pass while twenty-three production checks remain pending and the operability floor blocks false completion
     risks: [R-028]
     docs:
       [

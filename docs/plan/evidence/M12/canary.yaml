@@ -6,7 +6,7 @@ currentProduction:
   applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
 candidate:
   pullRequest: 39
-  commit: b137c1fde151ad3ee0f8c73c6fad335e2cdb3543
+  commit: e85fa78cf4a1faf5b7eb95507f0ba523c2fa318b
   approvedRelease: false
   operatorAccess: true
   sourceApproved: false
@@ -53,10 +53,10 @@ score:
 checks:
   - id: exact_head_ci
     status: passed
-    evidence: Run 32951060390 passed all seven jobs at candidate commit b137c1f after the formatting and exposed-function inventory corrections.
+    evidence: Run 32953368405 passed all seven jobs at exact canary-gate candidate commit e85fa78.
   - id: migration_replay
     status: passed
-    evidence: Run 32951060390 cleanly replayed all 70 additive migrations and 57 pgTAP files with 3029 assertions.
+    evidence: Run 32953368405 cleanly replayed all 70 additive migrations and 57 pgTAP files with 3029 assertions.
   - id: contract_adapter_matrix
     status: passed
     evidence: Canonical, registry, inspection, workflow, application, correction, and reconciliation contracts plus strict source adapters pass bounded adversarial tests.

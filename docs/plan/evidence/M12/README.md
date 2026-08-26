@@ -53,6 +53,7 @@ Status: M12-S01 through M12-S05 are exact-head green and complete on `codex/m12-
 ## M12-S06 canary and close
 
 - [Machine-readable canary evidence](canary.yaml) contains 34 mandatory checks, exact candidate/production identity, seven-category score arithmetic, an 80% category floor, sensitive-key rejection, and deterministic false-completion self-tests.
+- Exact canary-gate [CI run 32953368405](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/32953368405) at `e85fa78cf4a1faf5b7eb95507f0ba523c2fa318b` passed all seven jobs, including clean 70-migration replay, all 57 pgTAP files/3,029 assertions, both images, and all four WooCommerce runtime cells.
 - Eleven repository, browser, privacy, checkout, public-baseline, and operator-access checks pass. Twenty-three release, recovery, deployment, source approval, rerun, value, reconciliation, correction, outage, rollback, and observation checks remain pending.
 - The provisional module score is 90/100, but operability is 3/10 and below its mandatory floor. The validator therefore rejects completion regardless of the total score.
 - Production migration remains disabled. Applying real loyalty value requires an approved exact release, a fresh recovery point, an approved redacted source export, and explicit canary approval.
