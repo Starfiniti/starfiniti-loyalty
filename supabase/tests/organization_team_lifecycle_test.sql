@@ -186,7 +186,7 @@ select results_eq(
   $$
     select outcome from loyalty.create_organization_invitation_command_v1(
       '9a000000-0000-4000-8000-000000000100', 'Campaign specialist', 'marketer',
-      statement_timestamp() + interval '2 days', repeat('a', 64),
+      transaction_timestamp() + interval '2 days', repeat('a', 64),
       'invitation:create:marketer', '9a000000-0000-4000-8000-000000000602'
     )
   $$,
@@ -197,7 +197,7 @@ select results_eq(
   $$
     select outcome from loyalty.create_organization_invitation_command_v1(
       '9a000000-0000-4000-8000-000000000100', 'Campaign specialist', 'marketer',
-      statement_timestamp() + interval '2 days', repeat('a', 64),
+      transaction_timestamp() + interval '2 days', repeat('a', 64),
       'invitation:create:marketer', '9a000000-0000-4000-8000-000000000602'
     )
   $$,
@@ -208,7 +208,7 @@ select throws_ok(
   $$
     select * from loyalty.create_organization_invitation_command_v1(
       '9a000000-0000-4000-8000-000000000100', 'Campaign specialist', 'marketer',
-      statement_timestamp() + interval '3 days', repeat('a', 64),
+      transaction_timestamp() + interval '3 days', repeat('a', 64),
       'invitation:create:marketer', '9a000000-0000-4000-8000-000000000602'
     )
   $$,
