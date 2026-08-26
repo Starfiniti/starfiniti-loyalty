@@ -923,19 +923,6 @@ select throws_ok(
     select * from loyalty_private.begin_organization_federation_action_v1(
       '9b000000-0000-4000-8000-000000000001',
       '9b000000-0000-4000-8000-000000000100',
-      (select public_id from loyalty.organization_federation_sources where display_name = 'Corporate SAML'),
-      1, 'rotate_secret', repeat('f', 64), 'Invalid SAML secret rotation.',
-      'federation:rotate:saml', '9b000000-0000-4000-8000-000000000619'
-    )
-  $$,
-  '40001', 'federation lifecycle revision conflict',
-  'SAML cannot enter the upstream client-secret rotation path'
-);
-select throws_ok(
-  $$
-    select * from loyalty_private.begin_organization_federation_action_v1(
-      '9b000000-0000-4000-8000-000000000001',
-      '9b000000-0000-4000-8000-000000000100',
       (select public_id from loyalty.organization_federation_sources where display_name = 'Corporate OIDC'),
       8, 'rotate_secret', repeat('f', 64), 'Blocked while rollout is paused.',
       'federation:rotate:blocked', '9b000000-0000-4000-8000-000000000618'
@@ -955,6 +942,19 @@ do $$ begin
   );
 end $$;
 set local role loyalty_runtime;
+select throws_ok(
+  $$
+    select * from loyalty_private.begin_organization_federation_action_v1(
+      '9b000000-0000-4000-8000-000000000001',
+      '9b000000-0000-4000-8000-000000000100',
+      (select public_id from loyalty.organization_federation_sources where display_name = 'Corporate SAML'),
+      2, 'rotate_secret', repeat('f', 64), 'Invalid SAML secret rotation.',
+      'federation:rotate:saml', '9b000000-0000-4000-8000-000000000619'
+    )
+  $$,
+  '40001', 'federation lifecycle revision conflict',
+  'SAML cannot enter the upstream client-secret rotation path'
+);
 select results_eq(
   $$
     select outcome from loyalty_private.begin_organization_federation_action_v1(
@@ -1140,7 +1140,7 @@ select throws_ok(
     set status = 'enabled'
     where id = (select min(id) from loyalty.organization_federation_source_revisions)
   $$,
-  '55000', 'immutable history cannot be updated or deleted',
+  '55000', 'immutable loyalty history cannot be changed',
   'federation revision history rejects rewriting'
 );
 reset role;
