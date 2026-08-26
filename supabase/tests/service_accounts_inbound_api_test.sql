@@ -4,6 +4,10 @@ create extension if not exists pgtap with schema extensions;
 
 select plan(72);
 
+grant loyalty_runtime to current_user;
+grant usage on schema extensions to loyalty_runtime;
+grant execute on all functions in schema extensions to loyalty_runtime;
+
 select results_eq(
   $$ select relrowsecurity from pg_class where oid = 'loyalty.service_accounts'::regclass $$,
   array[true], 'service accounts have RLS enabled'
