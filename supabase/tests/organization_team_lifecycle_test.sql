@@ -287,7 +287,14 @@ select results_eq(
   $$
     select outcome from loyalty.revoke_organization_invitation_command_v1(
       '9a000000-0000-4000-8000-000000000100',
-      (select public_id from loyalty.organization_invitations where token_sha256 = decode(repeat('c', 64), 'hex')),
+      (
+        select (entry.value ->> 'id')::uuid
+        from loyalty.get_organization_team_workspace_v1(
+          '9a000000-0000-4000-8000-000000000100'
+        ) as team,
+        lateral jsonb_array_elements(team.workspace -> 'invitations') as entry(value)
+        where entry.value ->> 'displayLabel' = 'Temporary operator'
+      ),
       'The role is no longer required.', 'invitation:revoke:operator',
       '9a000000-0000-4000-8000-000000000607'
     )
@@ -299,7 +306,14 @@ select results_eq(
   $$
     select outcome from loyalty.revoke_organization_invitation_command_v1(
       '9a000000-0000-4000-8000-000000000100',
-      (select public_id from loyalty.organization_invitations where token_sha256 = decode(repeat('c', 64), 'hex')),
+      (
+        select (entry.value ->> 'id')::uuid
+        from loyalty.get_organization_team_workspace_v1(
+          '9a000000-0000-4000-8000-000000000100'
+        ) as team,
+        lateral jsonb_array_elements(team.workspace -> 'invitations') as entry(value)
+        where entry.value ->> 'displayLabel' = 'Temporary operator'
+      ),
       'The role is no longer required.', 'invitation:revoke:operator',
       '9a000000-0000-4000-8000-000000000607'
     )
