@@ -472,6 +472,13 @@ begin
      or invitation_row.expires_at <= accepted_time
      or not exists (
        select 1 from loyalty.organization_memberships as membership
+       where membership.organization_id = client_row.id
+         and membership.user_id = invitation_row.created_by_user_id
+         and membership.role = 'owner'
+         and membership.revoked_at is null
+     )
+     or not exists (
+       select 1 from loyalty.organization_memberships as membership
        where membership.organization_id = agency_row.id
          and membership.user_id = request_actor
          and membership.role = 'owner'
@@ -2885,6 +2892,21 @@ begin
     'action', target_action,
     'reason', target_reason
   )::text, 'UTF8'), 'sha256');
+  select organization.* into organization_row
+  from loyalty.organizations as organization
+  where organization.id = organization_row.id for update;
+  if organization_row.status <> 'closed'
+     or organization_row.offboarded_at is null
+     or organization_row.deletion_completed_at is not null then
+    raise exception using errcode = '42501', message = 'organization deletion not authorized';
+  end if;
+  perform loyalty_private.authorize_organization_break_glass_v1(
+    organization_row.id, target_break_glass_session_public_id,
+    'deletion_command'
+  );
+
+  -- Serialize exact retries behind the organization lock and recheck the
+  -- recovery capability before revealing a prior deletion result.
   select event.* into event_row
   from loyalty.organization_deletion_events as event
   where event.organization_id = organization_row.id
@@ -2903,19 +2925,6 @@ begin
       deletion_row.lifecycle_revision, deletion_row.status;
     return;
   end if;
-
-  select organization.* into organization_row
-  from loyalty.organizations as organization
-  where organization.id = organization_row.id for update;
-  if organization_row.status <> 'closed'
-     or organization_row.offboarded_at is null
-     or organization_row.deletion_completed_at is not null then
-    raise exception using errcode = '42501', message = 'organization deletion not authorized';
-  end if;
-  perform loyalty_private.authorize_organization_break_glass_v1(
-    organization_row.id, target_break_glass_session_public_id,
-    'deletion_command'
-  );
 
   if target_action = 'request' then
     if organization_row.lifecycle_revision <> target_expected_revision then

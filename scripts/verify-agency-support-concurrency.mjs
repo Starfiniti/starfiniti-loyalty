@@ -8,6 +8,7 @@ const connectionString =
 const suffix = randomUUID().replaceAll("-", "").slice(0, 12);
 const clientOwnerId = randomUUID();
 const agencyOwnerId = randomUUID();
+const clientAuthSessionId = randomUUID();
 const admin = postgres(connectionString, { max: 1, onnotice: () => {} });
 const first = postgres(connectionString, { max: 1, onnotice: () => {} });
 const second = postgres(connectionString, { max: 1, onnotice: () => {} });
@@ -20,6 +21,15 @@ async function asSubject(sql, subjectId, callback) {
   });
 }
 
+async function asAal2Subject(sql, subjectId, sessionId, callback) {
+  return sql.begin(async (transaction) => {
+    await transaction`set local role authenticated`;
+    await transaction`select set_config('request.jwt.claim.sub', ${subjectId}, true)`;
+    await transaction`select set_config('request.jwt.claims', ${JSON.stringify({ sub: subjectId, session_id: sessionId, aal: "aal2" })}, true)`;
+    return callback(transaction);
+  });
+}
+
 try {
   const fixture = await admin.begin(async (sql) => {
     await sql`
@@ -27,6 +37,10 @@ try {
       values
         (${clientOwnerId}, ${`agency-client-owner-${suffix}@example.test`}),
         (${agencyOwnerId}, ${`agency-provider-owner-${suffix}@example.test`})
+    `;
+    await sql`
+      insert into auth.sessions (id, user_id)
+      values (${clientAuthSessionId}, ${clientOwnerId})
     `;
     const [client] = await sql`
       insert into loyalty.organizations (slug, name)
@@ -238,8 +252,92 @@ try {
     );
   }
 
+  await asSubject(
+    admin,
+    clientOwnerId,
+    (transaction) => transaction`
+      select * from loyalty.update_organization_lifecycle_command_v1(
+        ${fixture.client.public_id}, 1, 'close', null,
+        'Concurrent deletion probe closed the organization.',
+        ${`agency-race:close:${suffix}`}, ${randomUUID()}
+      )
+    `,
+  );
+  await asSubject(
+    admin,
+    clientOwnerId,
+    (transaction) => transaction`
+      select * from loyalty.update_organization_lifecycle_command_v1(
+        ${fixture.client.public_id}, 2, 'offboard', null,
+        'Concurrent deletion probe offboarded the organization.',
+        ${`agency-race:offboard:${suffix}`}, ${randomUUID()}
+      )
+    `,
+  );
+  const [breakGlass] = await asAal2Subject(
+    admin,
+    clientOwnerId,
+    clientAuthSessionId,
+    (transaction) => transaction`
+      select * from loyalty.start_organization_break_glass_command_v1(
+        ${fixture.client.public_id},
+        'Concurrent deletion request recovery capability.',
+        ${`agency-race:break-glass:${suffix}`}, ${randomUUID()}
+      )
+    `,
+  );
+  const deletionIdempotencyKey = `agency-race:deletion-request:${suffix}`;
+  const deletionCorrelationId = randomUUID();
+  const requestDeletion = (sql) =>
+    asAal2Subject(
+      sql,
+      clientOwnerId,
+      clientAuthSessionId,
+      (transaction) => transaction`
+        select * from loyalty.organization_deletion_command_v1(
+          ${fixture.client.public_id}, ${breakGlass.resource_public_id}, null,
+          3, 'request', 'Concurrent exact deletion request exercise.',
+          ${deletionIdempotencyKey}, ${deletionCorrelationId}
+        )
+      `,
+    );
+  const [firstDeletion, secondDeletion] = await Promise.all([
+    requestDeletion(first),
+    requestDeletion(second),
+  ]);
+  const deletionOutcomes = [
+    firstDeletion[0]?.outcome,
+    secondDeletion[0]?.outcome,
+  ].sort();
+  const [deletionState] = await admin`
+    select
+      (select count(*)::integer
+       from loyalty.organization_deletion_cases
+       where organization_id = ${fixture.client.id}) as cases,
+      (select count(*)::integer
+       from loyalty.organization_deletion_events
+       where organization_id = ${fixture.client.id}
+         and action = 'organization.deletion.request') as request_events,
+      (select count(*)::integer
+       from loyalty.ledger_transactions
+       where organization_id in (${fixture.client.id}, ${fixture.agency.id})) as ledger_transactions
+  `;
+  if (
+    JSON.stringify(deletionOutcomes) !==
+      JSON.stringify(["created", "duplicate"]) ||
+    firstDeletion[0]?.resource_public_id !==
+      secondDeletion[0]?.resource_public_id ||
+    deletionState.cases !== 1 ||
+    deletionState.request_events !== 1 ||
+    deletionState.ledger_transactions !== 0
+  ) {
+    throw new Error(
+      `organization deletion request did not serialize exactly once: ${JSON.stringify({ firstDeletion, secondDeletion, deletionState })}`,
+    );
+  }
+
   console.log(
-    "Agency/support concurrency probe passed: exact acceptance and approval retries created one effect, competing bilateral revocations had one winner, support authority was revoked atomically, no membership was implied, and no ledger value changed.",
+    "Agency/support concurrency probe passed: exact acceptance, approval, and deletion retries created one effect; competing bilateral revocations had one winner; support authority was revoked atomically; no membership was implied; and no ledger value changed.",
   );
 } finally {
   await Promise.allSettled([admin.end(), first.end(), second.end()]);

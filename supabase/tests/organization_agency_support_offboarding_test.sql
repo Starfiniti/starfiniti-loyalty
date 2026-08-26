@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(70);
+select plan(72);
 
 -- 1-22: schema, privilege, and authority boundaries.
 select has_table('loyalty', 'organization_agency_invitations', 'agency invitations exist');
@@ -308,6 +308,27 @@ select results_eq(
      where agency_label = 'Starfiniti support' $$,
   array[32::bigint], 'only the agency capability digest is retained'
 );
+update loyalty.organization_memberships as membership
+set role = 'admin'
+where membership.organization_id = (
+  select id from loyalty.organizations where slug = 'agency-client'
+) and membership.user_id = '9d000000-0000-4000-8000-000000000001';
+set local role authenticated;
+set local request.jwt.claim.sub = '9d000000-0000-4000-8000-000000000003';
+select throws_ok(
+  $$ select * from loyalty.accept_organization_agency_invitation_command_v1(
+    '9d000000-0000-4000-8000-000000000200', repeat('1', 64),
+    'agency:accept:revoked-client-owner', '9d000000-0000-4000-8000-000000000699'
+  ) $$,
+  '42501', 'agency acceptance not authorized',
+  'an invitation loses authority when its approving client owner is no longer live'
+);
+reset role;
+update loyalty.organization_memberships as membership
+set role = 'owner'
+where membership.organization_id = (
+  select id from loyalty.organizations where slug = 'agency-client'
+) and membership.user_id = '9d000000-0000-4000-8000-000000000001';
 set local role authenticated;
 set local request.jwt.claim.sub = '9d000000-0000-4000-8000-000000000003';
 select results_eq(
@@ -680,6 +701,16 @@ select results_eq(
     'organization:deletion:request', '9d000000-0000-4000-8000-000000000614'
   ) $$,
   array['cooling'::text], 'deletion starts in an explicit seven-day cooling state'
+);
+select results_eq(
+  $$ select outcome from loyalty.organization_deletion_command_v1(
+    '9d000000-0000-4000-8000-000000000100',
+    current_setting('test.m13_delete_break_glass')::uuid, null, 3, 'request',
+    'Contract ended after verified organization export.',
+    'organization:deletion:request', '9d000000-0000-4000-8000-000000000614'
+  ) $$,
+  array['duplicate'::text],
+  'an exact deletion request retry returns the one serialized cooling case'
 );
 reset role;
 select set_config('test.m13_deletion_case', (

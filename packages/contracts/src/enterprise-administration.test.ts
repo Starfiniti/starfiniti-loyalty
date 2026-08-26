@@ -249,8 +249,11 @@ describe("enterprise administration contracts", () => {
     expect(organizationRecoveryWorkspaceV1.safeParse(workspace).success).toBe(
       true,
     );
-    const { completionAvailable: _omitted, ...untrustedCase } =
-      workspace.deletionCase;
+    const untrustedCase = Object.fromEntries(
+      Object.entries(workspace.deletionCase).filter(
+        ([key]) => key !== "completionAvailable",
+      ),
+    );
     expect(
       organizationRecoveryWorkspaceV1.safeParse({
         ...workspace,
