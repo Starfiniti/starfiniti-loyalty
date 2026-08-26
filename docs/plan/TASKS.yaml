@@ -2528,7 +2528,7 @@ tasks:
     evidence: [docs/plan/evidence/M14/README.md]
     slices:
       - id: M14-S01-BILLING-AUTHORITY-AND-SELF-HOSTED-INDEPENDENCE
-        status: in_progress
+        status: complete
         dependencies: [M13-S06-CANARY-AND-CLOSE]
         hypothesis: A private append-only provider mirror and structural self-hosted bypass can expose useful commercial state without making Stripe product or loyalty authority.
         metrics:
@@ -2565,7 +2565,7 @@ tasks:
           - docs/architecture/ADR/0056-database-authoritative-managed-billing-mirror.md
           - docs/plan/evidence/M14/README.md
       - id: M14-S02-STRIPE-WEBHOOK-INBOX
-        status: planned
+        status: in_progress
         dependencies: [M14-S01-BILLING-AUTHORITY-AND-SELF-HOSTED-INDEPENDENCE]
         hypothesis: Raw-body signature verification plus a durable idempotent inbox can absorb duplicate delayed and out-of-order Stripe events safely.
         metrics:

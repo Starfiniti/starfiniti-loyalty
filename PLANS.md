@@ -6,7 +6,7 @@ Deliver the enterprise WooCommerce roadmap in `docs/plan/ENTERPRISE_ROADMAP.md` 
 
 ## Current module
 
-M14 — managed billing is the active dependency-safe repository module while M04–M13 retain reviewed merge/deployment/canary/reconciliation closeout. M00, M02, and M03 are complete; M01 remains active at its approved-real-store and full-service-recovery external gates. M14-S01 is implemented on draft PR #46 without Stripe calls or production mutation; its exact Linux repository gate is active.
+M14 — managed billing is the active dependency-safe repository module while M04–M13 retain reviewed merge/deployment/canary/reconciliation closeout. M00, M02, and M03 are complete; M01 remains active at its approved-real-store and full-service-recovery external gates. M14-S01 is repository-complete on draft PR #46 without Stripe calls or production mutation after exact-head run `33020484560`; M14-S02's disabled signed webhook inbox is next.
 
 M06-S01 through S05 are exact-head green on draft PR #31. Runs `31763563259`, `31764805380`, `31766887239`, `31768294674`, and `31770764870` passed strict policy, signed offline capture, first attribution, historical qualification/cooling, two-sided exactly-once issuance/compensation, Auth-derived reversible fraud review, customer sharing/progress/history, and a fact-sourced merchant funnel. The latest passed a clean 41-migration/1,700-assertion replay, all three concurrency probes, both images, baseline, 126 dashboard tests, 136 contract tests, and all four WooCommerce runtimes. Production-build desktop/mobile browser review passed with no critical accessibility, overflow, or diagnostic issue. M06-S06 reviewed merge, disabled deployment, Starfiniti canary, reconciliation, and scoring is active.
 
@@ -69,7 +69,7 @@ The active integrated baseline is released production commit `0ced4b666a55d836bd
 
 ## Next safe work
 
-1. M14: close S01's exact Linux database/browser evidence, then implement the disabled raw-body Stripe webhook inbox in S02 without granting provider authority to self-hosted installations.
+1. M14: implement the disabled raw-body Stripe webhook inbox in S02 without granting provider authority to self-hosted installations.
 2. M13: complete S06's enterprise IdP/SCIM, Authentik private-egress, bilateral agency/support, stale-session, AAL2 recovery/export/deletion, rollback, reconciliation, observation, and category-floor gates when their approved external inputs are available.
 3. M11/M10: complete their reviewed releases, disabled deployments, isolated Starfiniti canaries, exact reconciliation, rollback, observation, and category-floor scoring.
 4. M09/M08: complete reviewed releases, disabled deployments, provider/store outage proof, exact reconciliation, observation, and scoring as external inputs permit.

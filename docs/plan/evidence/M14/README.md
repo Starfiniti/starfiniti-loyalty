@@ -1,6 +1,6 @@
 # M14 Evidence — Managed Billing
 
-Status: M14-S01 is active on `codex/m14-billing-foundation`. Production and the global `self_hosted` deployment mode are unchanged; no Stripe package, credential, request, customer, subscription, Price ID, or production billing state is introduced by this slice.
+Status: M14-S01 is repository-complete on `codex/m14-billing-foundation`; M14-S02 is active. Production and the global `self_hosted` deployment mode are unchanged; no Stripe package, credential, request, customer, subscription, Price ID, or production billing state is introduced by S01.
 
 ## M14-S01 billing authority and self-hosted independence
 
@@ -14,5 +14,6 @@ Status: M14-S01 is active on `codex/m14-billing-foundation`. Production and the 
 - Local lint, all workspace typechecks/tests, client contracts, workflow, entitlement, architecture, accessibility, migration and pgTAP static validation pass. The focused suites include 11 contract cases, four presentation cases, four server/provider cases, 61 planned pgTAP assertions, and one two-session billing replay probe. The final adversarial pass added caller-key-independent provider-customer replay fencing and races it alongside provider-event identity.
 - Real-component Chromium review passed at 1440×1000 and 390×844 in light and dark themes: one focusable main landmark, correct current navigation, no horizontal overflow, no browser errors, visible mobile destination, initial close-button focus, and menu-button focus restoration after Escape. Review found the dark warning badge was too muted; its corrected foreground computes to 8.25:1 against the mixed dark surface.
 - Windows repository-wide Prettier remains affected by the pre-existing CRLF checkout baseline, so clean Linux CI is the formatting/build and database-replay authority. No unrelated files were reformatted.
+- Exact-head Linux run [`33020484560`](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/33020484560) at `68479f1347e212b046ae99c5750fd27a0d05f6e8` passed all seven jobs: the complete repository check, both production images, a clean 76-migration replay, all 63 pgTAP files with 3,410 assertions including all 61 focused billing cases, all 17 concurrency probes, and the minimum/current × HPOS/legacy WooCommerce matrix. The managed-billing probe proved exact provider-account and provider-event races converge under different caller keys, changed provider-event races fail one caller closed, one account/two normalized revisions remain, and zero ledger value changes.
 
-Clean replay/pgTAP/concurrency, production image, WooCommerce matrix, adversarial exact-head, and production-canary evidence remains pending.
+S01 has no production rollout: production remains unchanged and no Stripe runtime exists. M14-S02 will add a disabled managed-only signature/inbox boundary with local fixtures; Stripe sandbox and production canaries remain pending their later gates.
