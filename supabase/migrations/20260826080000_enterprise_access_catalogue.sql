@@ -148,8 +148,7 @@ set statement_timeout = '5s'
 as $$
 declare
   actor_user_id uuid := loyalty_private.request_user_id();
-  target_organization loyalty.organizations%rowtype;
-  actor_role text;
+  selected record;
 begin
   if target_organization_public_id is null then
     raise exception using errcode = '22023', message = 'invalid organization access request';
@@ -158,8 +157,13 @@ begin
     return;
   end if;
 
-  select organization, membership.role
-  into target_organization, actor_role
+  select organization.id as organization_id,
+    organization.public_id as organization_public_id,
+    organization.name as organization_name,
+    organization.slug as organization_slug,
+    organization.status as organization_status,
+    membership.role
+  into selected
   from loyalty.organizations as organization
   join loyalty.organization_memberships as membership
     on membership.organization_id = organization.id
@@ -167,7 +171,7 @@ begin
    and membership.revoked_at is null
   where organization.public_id = target_organization_public_id;
   if not found
-     or actor_role = 'support' then
+     or selected.role = 'support' then
     return;
   end if;
 
@@ -196,7 +200,7 @@ begin
     ) as value
     from loyalty.enterprise_access_profile_permissions as permission
     where permission.catalog_version = '1'
-      and permission.role = actor_role
+      and permission.role = selected.role
   ), membership_counts as (
     select jsonb_agg(
       jsonb_build_object(
@@ -208,7 +212,7 @@ begin
     left join lateral (
       select count(*)::integer as value
       from loyalty.organization_memberships as membership
-      where membership.organization_id = target_organization.id
+      where membership.organization_id = selected.organization_id
         and membership.role = profile.role
         and membership.revoked_at is null
     ) as role_count on true
@@ -218,15 +222,15 @@ begin
   select jsonb_build_object(
     'schemaVersion', '1',
     'organization', jsonb_build_object(
-      'id', target_organization.public_id,
-      'name', target_organization.name,
-      'slug', target_organization.slug,
-      'status', target_organization.status
+      'id', selected.organization_public_id,
+      'name', selected.organization_name,
+      'slug', selected.organization_slug,
+      'status', selected.organization_status
     ),
     'currentAccess', jsonb_build_object(
-      'role', actor_role,
+      'role', selected.role,
       'assignmentKind', 'membership',
-      'effective', target_organization.status = 'active',
+      'effective', selected.organization_status = 'active',
       'permissions', current_permissions.value
     ),
     'catalogue', jsonb_build_object(
