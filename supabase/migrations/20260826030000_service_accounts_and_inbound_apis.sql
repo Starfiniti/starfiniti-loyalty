@@ -807,7 +807,7 @@ set search_path = ''
 set statement_timeout = '5s'
 as $$
 declare
-  authorization record;
+  auth_context record;
   identity_pepper bytea;
   external_hash bytea;
   request_hash bytea;
@@ -827,59 +827,59 @@ begin
     or target_correlation_id is null then
     raise exception using errcode = '22023', message = 'invalid service customer command';
   end if;
-  select * into strict authorization
+  select * into strict auth_context
   from loyalty_private.authorize_service_account_request_v1(
     target_credential_public_id, target_token_sha256, 'customers:write'
   );
   select secret.pepper into strict identity_pepper
   from loyalty_private.service_account_identity_peppers as secret
-  where secret.organization_id = authorization.organization_id
-    and secret.service_account_id = authorization.service_account_id;
+  where secret.organization_id = auth_context.organization_id
+    and secret.service_account_id = auth_context.service_account_id;
   external_hash := extensions.hmac(
     convert_to(target_external_customer_id, 'UTF8'), identity_pepper, 'sha256'
   );
   request_hash := extensions.digest(convert_to(
-    'service-customer.upsert|' || authorization.service_account_public_id::text ||
+    'service-customer.upsert|' || auth_context.service_account_public_id::text ||
       '|' || encode(external_hash, 'hex'),
     'UTF8'
   ), 'sha256');
   perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(
-    'service-customer-idempotency|' || authorization.service_account_id::text ||
+    'service-customer-idempotency|' || auth_context.service_account_id::text ||
       '|' || target_idempotency_key,
-    authorization.organization_id
+    auth_context.organization_id
   ));
   select receipt.* into existing_receipt
   from loyalty_private.service_customer_command_receipts as receipt
-  where receipt.organization_id = authorization.organization_id
-    and receipt.service_account_id = authorization.service_account_id
+  where receipt.organization_id = auth_context.organization_id
+    and receipt.service_account_id = auth_context.service_account_id
     and receipt.idempotency_key = target_idempotency_key;
   if found then
     if existing_receipt.request_sha256 <> request_hash then
       raise exception using errcode = '23514', message = 'service customer idempotency conflict';
     end if;
     return query select customer.public_id, 'duplicate'::text,
-      authorization.quota_limit, authorization.quota_remaining,
-      authorization.quota_reset_at
+      auth_context.quota_limit, auth_context.quota_remaining,
+      auth_context.quota_reset_at
     from loyalty.customers as customer
-    where customer.organization_id = authorization.organization_id
+    where customer.organization_id = auth_context.organization_id
       and customer.id = existing_receipt.customer_id;
     return;
   end if;
 
   perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(
-    'service-customer|' || authorization.service_account_id::text || '|' ||
+    'service-customer|' || auth_context.service_account_id::text || '|' ||
       encode(external_hash, 'hex'),
-    authorization.organization_id
+    auth_context.organization_id
   ));
   select identity.* into target_identity
   from loyalty_private.service_customer_identities as identity
-  where identity.organization_id = authorization.organization_id
-    and identity.service_account_id = authorization.service_account_id
+  where identity.organization_id = auth_context.organization_id
+    and identity.service_account_id = auth_context.service_account_id
     and identity.external_customer_sha256 = external_hash;
   if found then
     select customer.* into target_customer
     from loyalty.customers as customer
-    where customer.organization_id = authorization.organization_id
+    where customer.organization_id = auth_context.organization_id
       and customer.id = target_identity.customer_id
       and customer.status = 'active';
     if not found then
@@ -888,13 +888,13 @@ begin
     command_outcome := 'existing';
   else
     insert into loyalty.customers (organization_id, display_reference, created_at, updated_at)
-    values (authorization.organization_id, null, command_time, command_time)
+    values (auth_context.organization_id, null, command_time, command_time)
     returning * into strict target_customer;
     insert into loyalty_private.service_customer_identities (
       organization_id, service_account_id, customer_id,
       external_customer_sha256, created_at
     ) values (
-      authorization.organization_id, authorization.service_account_id,
+      auth_context.organization_id, auth_context.service_account_id,
       target_customer.id, external_hash, command_time
     );
     command_outcome := 'created';
@@ -904,13 +904,13 @@ begin
     external_customer_sha256, idempotency_key, request_sha256,
     original_outcome, correlation_id, created_at
   ) values (
-    authorization.organization_id, authorization.service_account_id,
+    auth_context.organization_id, auth_context.service_account_id,
     target_customer.id, external_hash, target_idempotency_key,
     request_hash, command_outcome, target_correlation_id, command_time
   );
   return query select target_customer.public_id, command_outcome,
-    authorization.quota_limit, authorization.quota_remaining,
-    authorization.quota_reset_at;
+    auth_context.quota_limit, auth_context.quota_remaining,
+    auth_context.quota_reset_at;
 end;
 $$;
 
@@ -942,7 +942,7 @@ set search_path = ''
 set statement_timeout = '5s'
 as $$
 declare
-  authorization record;
+  auth_context record;
   identity_pepper bytea;
   external_hash bytea;
   target_identity loyalty_private.service_customer_identities%rowtype;
@@ -989,42 +989,42 @@ begin
     )) then
     raise exception using errcode = '22023', message = 'invalid service activity command';
   end if;
-  select * into strict authorization
+  select * into strict auth_context
   from loyalty_private.authorize_service_account_request_v1(
     target_credential_public_id, target_token_sha256, 'activities:write'
   );
   select secret.pepper into strict identity_pepper
   from loyalty_private.service_account_identity_peppers as secret
-  where secret.organization_id = authorization.organization_id
-    and secret.service_account_id = authorization.service_account_id;
+  where secret.organization_id = auth_context.organization_id
+    and secret.service_account_id = auth_context.service_account_id;
   external_hash := extensions.hmac(
     convert_to(target_external_customer_id, 'UTF8'), identity_pepper, 'sha256'
   );
   select identity.* into target_identity
   from loyalty_private.service_customer_identities as identity
-  where identity.organization_id = authorization.organization_id
-    and identity.service_account_id = authorization.service_account_id
+  where identity.organization_id = auth_context.organization_id
+    and identity.service_account_id = auth_context.service_account_id
     and identity.external_customer_sha256 = external_hash;
   if not found then
     raise exception using errcode = 'P0002', message = 'service customer not found';
   end if;
   select customer.* into target_customer
   from loyalty.customers as customer
-  where customer.organization_id = authorization.organization_id
+  where customer.organization_id = auth_context.organization_id
     and customer.id = target_identity.customer_id
     and customer.status = 'active';
   if not found then
     raise exception using errcode = '23514', message = 'service customer unavailable';
   end if;
 
-  source_delivery_id := 'service-api:' || authorization.service_account_public_id::text ||
+  source_delivery_id := 'service-api:' || auth_context.service_account_public_id::text ||
     ':' || encode(extensions.digest(convert_to(target_idempotency_key, 'UTF8'), 'sha256'), 'hex');
-  source_event_id := 'service-api:' || authorization.service_account_public_id::text ||
+  source_event_id := 'service-api:' || auth_context.service_account_public_id::text ||
     ':' || encode(extensions.digest(convert_to(target_event_id, 'UTF8'), 'sha256'), 'hex');
   raw_body := jsonb_build_object(
     'version', '1',
     'deliveryId', source_delivery_id,
-    'sourceId', authorization.connection_public_id,
+    'sourceId', auth_context.connection_public_id,
     'eventId', source_event_id,
     'occurredAt', target_occurred_at,
     'deliveredAt', target_occurred_at,
@@ -1041,18 +1041,18 @@ begin
   body_sha256 := encode(extensions.digest(convert_to(raw_body::text, 'UTF8'), 'sha256'), 'hex');
   select * into strict accepted
   from loyalty_private.accept_commerce_delivery(
-    authorization.organization_id, authorization.connection_id,
+    auth_context.organization_id, auth_context.connection_id,
     source_delivery_id, '1', source_event_id,
     'commerce.activity.recorded', target_customer.public_id::text, null,
     target_occurred_at, command_time, 'v1',
-    authorization.credential_public_id::text, body_sha256, raw_body
+    auth_context.credential_public_id::text, body_sha256, raw_body
   );
   select * into strict normalized
   from loyalty_private.normalize_commerce_delivery(accepted.receipt_id, 'v1');
   return query select accepted.receipt_id, accepted.outcome,
     normalized.canonical_event_id, normalized.outcome,
-    authorization.quota_limit, authorization.quota_remaining,
-    authorization.quota_reset_at;
+    auth_context.quota_limit, auth_context.quota_remaining,
+    auth_context.quota_reset_at;
 end;
 $$;
 
