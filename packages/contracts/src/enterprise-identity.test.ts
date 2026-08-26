@@ -376,7 +376,7 @@ describe("enterprise identity contracts", () => {
       configuration: {
         protocol: "saml",
         metadataUrl: "https://id.example.test/saml/metadata",
-        expectedEntityId: "https://id.example.test/saml",
+        expectedEntityId: "urn:example:test:tenant",
       },
       clientSecretSha256: null,
       idempotencyKey: "federation:create:case-2",

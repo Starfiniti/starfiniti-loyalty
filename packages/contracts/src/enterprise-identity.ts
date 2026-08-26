@@ -414,6 +414,13 @@ const federationClientIdV1 = z
   .max(512)
   .regex(/^[^\u0000-\u001f\u007f]+$/u);
 
+const federationIssuerV1 = z
+  .string()
+  .trim()
+  .min(1)
+  .max(2_048)
+  .regex(/^[^\u0000-\u001f\u007f]+$/u);
+
 export const organizationOidcSourceConfigurationV1 = z
   .object({
     protocol: z.literal("oidc"),
@@ -426,7 +433,7 @@ export const organizationSamlSourceConfigurationV1 = z
   .object({
     protocol: z.literal("saml"),
     metadataUrl: federationHttpsUrlV1,
-    expectedEntityId: federationHttpsUrlV1.nullable(),
+    expectedEntityId: federationIssuerV1.nullable(),
   })
   .strict();
 
@@ -501,7 +508,7 @@ export const organizationFederationValidationEvidenceV1 = z
     protocol: organizationFederationProtocolV1,
     configurationSha256: sha256HexV1,
     documentSha256: sha256HexV1,
-    issuer: federationHttpsUrlV1,
+    issuer: federationIssuerV1,
     authorizationEndpoint: federationHttpsUrlV1.nullable(),
     tokenEndpoint: federationHttpsUrlV1.nullable(),
     jwksUri: federationHttpsUrlV1.nullable(),
@@ -512,6 +519,13 @@ export const organizationFederationValidationEvidenceV1 = z
   .strict()
   .superRefine((evidence, context) => {
     const isOidc = evidence.protocol === "oidc";
+    if (isOidc && !evidence.issuer.startsWith("https://")) {
+      context.addIssue({
+        code: "custom",
+        path: ["issuer"],
+        message: "OIDC issuer must use HTTPS",
+      });
+    }
     for (const field of [
       "authorizationEndpoint",
       "tokenEndpoint",
