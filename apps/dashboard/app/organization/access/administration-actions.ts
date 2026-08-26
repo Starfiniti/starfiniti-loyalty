@@ -130,6 +130,7 @@ export async function acceptAgencyInvitationAction(
     revalidateAdministration();
     return success(
       "Agency relationship accepted. It grants no tenant membership or data access.",
+      { completedOperationId: operation },
     );
   } catch (error) {
     return failure(administrationFailureMessage(error));
@@ -166,6 +167,7 @@ export async function revokeAgencyRelationshipAction(
     revalidateAdministration();
     return success(
       "Agency relationship and every dependent support grant were revoked.",
+      { completedOperationId: operation },
     );
   } catch (error) {
     return failure(administrationFailureMessage(error));
@@ -209,6 +211,7 @@ export async function createSupportRequestAction(
     revalidateAdministration();
     return success(
       "Support requested. A separate client owner must approve the exact scope and expiry.",
+      { completedOperationId: operation },
     );
   } catch (error) {
     return failure(administrationFailureMessage(error));
@@ -261,6 +264,7 @@ export async function resolveSupportRequestAction(
       action === "approve"
         ? "Support grant approved for the exact scope and expiry."
         : "Support request rejected with an immutable decision record.",
+      { completedOperationId: operation },
     );
   } catch (error) {
     return failure(administrationFailureMessage(error));
@@ -295,7 +299,9 @@ export async function revokeSupportGrantAction(
   try {
     await revokeSupportAccessGrant(command.data);
     revalidateAdministration();
-    return success("Support grant revoked immediately.");
+    return success("Support grant revoked immediately.", {
+      completedOperationId: operation,
+    });
   } catch (error) {
     return failure(administrationFailureMessage(error));
   }
@@ -305,9 +311,10 @@ export async function openSupportWorkspaceAction(
   _previous: AdministrationActionState,
   formData: FormData,
 ): Promise<AdministrationActionState> {
+  const operation = operationId(formData);
   if (
     formData.get("confirmation") !== "open-support" ||
-    !operationId(formData) ||
+    !operation ||
     !UUID.test(String(formData.get("grantId") ?? ""))
   ) {
     return failure("Confirm the audited support workspace use.");
@@ -321,6 +328,7 @@ export async function openSupportWorkspaceAction(
     }
     return success("Support workspace opened and its use was recorded.", {
       supportWorkspace: workspace,
+      completedOperationId: operation,
     });
   } catch (error) {
     return failure(administrationFailureMessage(error));
@@ -348,7 +356,9 @@ export async function startBreakGlassAction(
   try {
     await startOrganizationBreakGlass(command.data);
     revalidateAdministration();
-    return success("Thirty-minute AAL2 recovery session started.");
+    return success("Thirty-minute AAL2 recovery session started.", {
+      completedOperationId: operation,
+    });
   } catch (error) {
     return failure(administrationFailureMessage(error));
   }
@@ -423,6 +433,7 @@ export async function updateOrganizationDeletionAction(
         : action === "cancel"
           ? "Organization deletion cancelled."
           : `Organization deletion completed at revision ${result.revision}; immutable value evidence remains.`,
+      { completedOperationId: operation },
     );
   } catch (error) {
     return failure(administrationFailureMessage(error));

@@ -402,10 +402,10 @@ select results_eq(
   array[3::bigint],
   'tenant owner can review active and revoked membership evidence in its tenant'
 );
-select results_eq(
+select throws_ok(
   'select count(*)::bigint from loyalty.support_access_grants',
-  array[1::bigint],
-  'tenant owner can review its support grant'
+  '42501', 'permission denied for table support_access_grants',
+  'legacy raw support grants require the minimized administration projection'
 );
 
 set local request.jwt.claim.sub = '22222222-2222-4222-8222-222222222222';
@@ -457,10 +457,10 @@ select results_eq(
 
 set local request.jwt.claim.sub = '66666666-6666-4666-8666-666666666666';
 
-select results_eq(
+select throws_ok(
   'select count(*)::bigint from loyalty.support_access_grants',
-  array[1::bigint],
-  'support subject can see only its scoped grant'
+  '42501', 'permission denied for table support_access_grants',
+  'support subjects cannot bypass the live-session audited projection'
 );
 select results_eq(
   'select count(*)::bigint from loyalty.organizations',

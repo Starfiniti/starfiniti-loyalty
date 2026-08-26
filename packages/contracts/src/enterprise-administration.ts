@@ -376,6 +376,7 @@ export const organizationDeletionCaseReadV1 = z
     id: z.uuid(),
     status: z.enum(["cooling", "cancelled", "completed"]),
     revision: z.number().int().min(1),
+    completionAvailable: z.boolean(),
     dueAt: timestampV1,
     createdAt: timestampV1,
     cancelledAt: timestampV1.nullable(),

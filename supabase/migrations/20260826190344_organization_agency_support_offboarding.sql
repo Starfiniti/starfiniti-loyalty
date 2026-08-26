@@ -2418,6 +2418,8 @@ begin
         'id', deletion.public_id,
         'status', deletion.status,
         'revision', deletion.lifecycle_revision,
+        'completionAvailable', deletion.status = 'cooling'
+          and deletion.due_at <= statement_timestamp(),
         'dueAt', deletion.due_at,
         'createdAt', deletion.created_at,
         'cancelledAt', deletion.cancelled_at,

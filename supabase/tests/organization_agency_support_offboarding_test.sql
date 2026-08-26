@@ -141,9 +141,11 @@ select results_eq(
   'administration storage contains no raw token secret identity claims or request body'
 );
 select ok(
-  has_table_privilege('loyalty_owner', 'auth.sessions', 'SELECT')
+  has_column_privilege('loyalty_owner', 'auth.sessions', 'id', 'SELECT')
+  and has_column_privilege('loyalty_owner', 'auth.sessions', 'user_id', 'SELECT')
+  and not has_table_privilege('loyalty_owner', 'auth.sessions', 'SELECT')
   and not has_table_privilege('authenticated', 'auth.sessions', 'SELECT'),
-  'only the private owner can reduce a signed session ID to live-session truth'
+  'the private owner receives only the two Auth columns required for live-session truth'
 );
 
 insert into auth.users (id, email)
@@ -328,6 +330,9 @@ select results_eq(
      where status = 'active' $$,
   array[1::bigint], 'bilateral approval creates exactly one active relationship'
 );
+select set_config('test.m13_relationship', (
+  select public_id::text from loyalty.organization_agency_relationships limit 1
+), false);
 set local role authenticated;
 set local request.jwt.claim.sub = '9d000000-0000-4000-8000-000000000003';
 select is_empty(
@@ -351,7 +356,7 @@ set local request.jwt.claim.sub = '9d000000-0000-4000-8000-000000000005';
 select throws_ok(
   $$ select * from loyalty.revoke_organization_agency_relationship_command_v1(
     '9d000000-0000-4000-8000-000000000300',
-    (select public_id from loyalty.organization_agency_relationships limit 1),
+    current_setting('test.m13_relationship')::uuid,
     1, 'Unauthorized unrelated revocation.', 'agency:revoke:other',
     '9d000000-0000-4000-8000-000000000603'
   ) $$,
@@ -392,6 +397,10 @@ select results_eq(
   $$ values (array['audit.summary.read', 'organization.summary.read']::text[]) $$,
   'the database retains the canonical exact scope set'
 );
+select set_config('test.m13_support_request', (
+  select public_id::text from loyalty.organization_support_access_requests
+  where reason = 'Investigate tenant identity and audit health.'
+), false);
 set local role authenticated;
 set local request.jwt.claim.sub = '9d000000-0000-4000-8000-000000000004';
 select throws_ok(
@@ -410,8 +419,7 @@ set local request.jwt.claim.sub = '9d000000-0000-4000-8000-000000000002';
 select throws_ok(
   $$ select * from loyalty.resolve_support_access_request_command_v1(
     '9d000000-0000-4000-8000-000000000100',
-    (select public_id from loyalty.organization_support_access_requests
-      where reason = 'Investigate tenant identity and audit health.'),
+    current_setting('test.m13_support_request')::uuid,
     1, 'approve', array['organization.summary.read']::text[],
     transaction_timestamp() + interval '1 hour',
     'Admin must not approve support grants.', 'support:approve:admin',
@@ -424,8 +432,7 @@ set local request.jwt.claim.sub = '9d000000-0000-4000-8000-000000000001';
 select results_eq(
   $$ select outcome from loyalty.resolve_support_access_request_command_v1(
     '9d000000-0000-4000-8000-000000000100',
-    (select public_id from loyalty.organization_support_access_requests
-      where reason = 'Investigate tenant identity and audit health.'),
+    current_setting('test.m13_support_request')::uuid,
     1, 'approve', array['organization.summary.read']::text[],
     transaction_timestamp() + interval '1 hour',
     'Owner approved one narrowed diagnostic scope.', 'support:approve:test',
@@ -436,8 +443,7 @@ select results_eq(
 select results_eq(
   $$ select outcome from loyalty.resolve_support_access_request_command_v1(
     '9d000000-0000-4000-8000-000000000100',
-    (select public_id from loyalty.organization_support_access_requests
-      where reason = 'Investigate tenant identity and audit health.'),
+    current_setting('test.m13_support_request')::uuid,
     1, 'approve', array['organization.summary.read']::text[],
     transaction_timestamp() + interval '1 hour',
     'Owner approved one narrowed diagnostic scope.', 'support:approve:test',
@@ -493,7 +499,7 @@ set local request.jwt.claim.sub = '9d000000-0000-4000-8000-000000000001';
 select results_eq(
   $$ select outcome from loyalty.revoke_organization_agency_relationship_command_v1(
     '9d000000-0000-4000-8000-000000000100',
-    (select public_id from loyalty.organization_agency_relationships limit 1),
+    current_setting('test.m13_relationship')::uuid,
     1, 'Client ended the agency relationship.', 'agency:revoke:test',
     '9d000000-0000-4000-8000-000000000608'
   ) $$,
@@ -675,11 +681,18 @@ select results_eq(
   ) $$,
   array['cooling'::text], 'deletion starts in an explicit seven-day cooling state'
 );
+reset role;
+select set_config('test.m13_deletion_case', (
+  select public_id::text from loyalty.organization_deletion_cases where status = 'cooling'
+), false);
+set local role authenticated;
+set local request.jwt.claim.sub = '9d000000-0000-4000-8000-000000000001';
+set local request.jwt.claims = '{"sub":"9d000000-0000-4000-8000-000000000001","session_id":"9d000000-0000-4000-8000-000000000902","aal":"aal2"}';
 select throws_ok(
   $$ select * from loyalty.organization_deletion_command_v1(
     '9d000000-0000-4000-8000-000000000100',
     current_setting('test.m13_delete_break_glass')::uuid,
-    (select public_id from loyalty.organization_deletion_cases where status = 'cooling'),
+    current_setting('test.m13_deletion_case')::uuid,
     1, 'complete', 'Attempt completion before cooling finishes.',
     'organization:deletion:early', '9d000000-0000-4000-8000-000000000615'
   ) $$,
@@ -690,7 +703,7 @@ select results_eq(
   $$ select status from loyalty.organization_deletion_command_v1(
     '9d000000-0000-4000-8000-000000000100',
     current_setting('test.m13_delete_break_glass')::uuid,
-    (select public_id from loyalty.organization_deletion_cases where status = 'cooling'),
+    current_setting('test.m13_deletion_case')::uuid,
     1, 'cancel', 'Owner cancelled deletion during cooling.',
     'organization:deletion:cancel', '9d000000-0000-4000-8000-000000000616'
   ) $$,

@@ -14,7 +14,13 @@ import {
   ShieldX,
   Trash2,
 } from "lucide-react";
-import { useActionState, useState, type ReactNode } from "react";
+import {
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import type {
   OrganizationAdministrationExportV1,
   OrganizationBreakGlassSessionReadV1,
@@ -218,10 +224,16 @@ function StartBreakGlassForm({
     startBreakGlassAction,
     administrationIdle,
   );
+  const operationInput = useFreshOperationInput(state);
   return (
     <form action={action} className="break-glass-form">
       <input name="organizationId" type="hidden" value={organizationId} />
-      <input name="operationId" type="hidden" value={operationId} />
+      <input
+        defaultValue={operationId}
+        name="operationId"
+        ref={operationInput}
+        type="hidden"
+      />
       <span className="break-glass-icon" aria-hidden="true">
         <Fingerprint />
       </span>
@@ -306,10 +318,16 @@ function AdministrationExportForm({
     exportOrganizationAdministrationAction,
     administrationIdle,
   );
+  const operationInput = useFreshOperationInput(state);
   return (
     <form action={action} className="administration-export-form">
       <input name="organizationId" type="hidden" value={organizationId} />
-      <input name="operationId" type="hidden" value={operationId} />
+      <input
+        defaultValue={operationId}
+        name="operationId"
+        ref={operationInput}
+        type="hidden"
+      />
       <header>
         <span aria-hidden="true">
           <Download />
@@ -397,8 +415,7 @@ function DeletionForm({
   const revision =
     deletionCase?.revision ?? workspace.organization.lifecycleRevision;
   const coolingActive =
-    deletionCase?.status === "cooling" &&
-    Date.parse(deletionCase.dueAt) > Date.now();
+    deletionCase?.status === "cooling" && !deletionCase.completionAvailable;
   return (
     <div className="deletion-control-grid">
       {deletionCase?.status === "cooling" ? (
@@ -448,6 +465,7 @@ function DeletionActionForm({
     updateOrganizationDeletionAction,
     administrationIdle,
   );
+  const operationInput = useFreshOperationInput(state);
   const destructive = actionName !== "cancel";
   return (
     <form action={action} className={`deletion-action-form is-${actionName}`}>
@@ -463,7 +481,12 @@ function DeletionActionForm({
       />
       <input name="expectedRevision" type="hidden" value={revision} />
       <input name="deletionAction" type="hidden" value={actionName} />
-      <input name="operationId" type="hidden" value={operationId} />
+      <input
+        defaultValue={operationId}
+        name="operationId"
+        ref={operationInput}
+        type="hidden"
+      />
       <h4>
         {actionName === "request"
           ? "Start deletion cooling"
@@ -552,4 +575,14 @@ function downloadExport(document: OrganizationAdministrationExportV1) {
   link.download = `starfiniti-administration-${document.organization.slug}-${document.generatedAt.slice(0, 10)}.json`;
   link.click();
   URL.revokeObjectURL(url);
+}
+
+function useFreshOperationInput(state: AdministrationActionState) {
+  const input = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (input.current && state.completedOperationId === input.current.value) {
+      input.current.value = crypto.randomUUID();
+    }
+  }, [state.completedOperationId]);
+  return input;
 }

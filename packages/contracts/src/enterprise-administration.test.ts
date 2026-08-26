@@ -6,6 +6,7 @@ import {
   createSupportAccessRequestCommandV1,
   organizationAdministrationExportV1,
   organizationDeletionCommandV1,
+  organizationRecoveryWorkspaceV1,
   resolveSupportAccessRequestCommandV1,
   supportWorkspaceV1,
 } from "./enterprise-administration";
@@ -215,6 +216,45 @@ describe("enterprise administration contracts", () => {
       organizationAdministrationExportV1.safeParse({
         ...document,
         ledger: { ...document.ledger, netAmount: "1" },
+      }).success,
+    ).toBe(false);
+  });
+
+  it("takes deletion cooling readiness only from the server projection", () => {
+    const workspace = {
+      schemaVersion: "1",
+      organization: {
+        id: organizationId,
+        name: "Pilot merchant",
+        status: "closed",
+        lifecycleRevision: 3,
+        offboardedAt: "2026-08-26T20:00:00.000Z",
+        deletionCompletedAt: null,
+      },
+      assuranceLevel: "aal2",
+      hasLiveAuthSession: true,
+      mayStartBreakGlass: true,
+      sessions: [],
+      deletionCase: {
+        id: agencyId,
+        status: "cooling",
+        revision: 1,
+        completionAvailable: false,
+        dueAt: "2026-09-02T20:00:00.000Z",
+        createdAt: "2026-08-26T20:00:00.000Z",
+        cancelledAt: null,
+        completedAt: null,
+      },
+    } as const;
+    expect(organizationRecoveryWorkspaceV1.safeParse(workspace).success).toBe(
+      true,
+    );
+    const { completionAvailable: _omitted, ...untrustedCase } =
+      workspace.deletionCase;
+    expect(
+      organizationRecoveryWorkspaceV1.safeParse({
+        ...workspace,
+        deletionCase: untrustedCase,
       }).success,
     ).toBe(false);
   });

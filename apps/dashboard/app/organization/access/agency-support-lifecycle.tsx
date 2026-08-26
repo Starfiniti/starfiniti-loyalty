@@ -12,9 +12,14 @@ import {
   RefreshCw,
   ShieldCheck,
   ShieldX,
-  UsersRound,
 } from "lucide-react";
-import { useActionState, useState, type ReactNode } from "react";
+import {
+  useActionState,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import type {
   AgencyPortfolioWorkspaceV1,
   OrganizationSupportScopeV1,
@@ -323,17 +328,34 @@ function CreateAgencyInvitationForm({
 }: Readonly<{ organizationId: string }>) {
   const [operationId] = useState(() => crypto.randomUUID());
   const [token] = useState(agencyToken);
-  const [expiry, setExpiry] = useState(() => expiresIn(7 * 24));
   const [state, action, pending] = useActionState(
     createAgencyInvitationAction,
     administrationIdle,
   );
+  const operationInput = useFreshOperationInput(state);
+  const tokenInput = useRef<HTMLInputElement>(null);
+  const [expiry, setExpiry] = useState(() => expiresIn(7 * 24));
+  useEffect(() => {
+    if (state.completedOperationId && tokenInput.current) {
+      tokenInput.current.value = agencyToken();
+    }
+  }, [state.completedOperationId]);
   return (
     <form action={action} className="agency-entry-card">
       <input name="organizationId" type="hidden" value={organizationId} />
-      <input name="invitationToken" type="hidden" value={token} />
+      <input
+        defaultValue={token}
+        name="invitationToken"
+        ref={tokenInput}
+        type="hidden"
+      />
       <input name="expiresAt" type="hidden" value={expiry} />
-      <input name="operationId" type="hidden" value={operationId} />
+      <input
+        defaultValue={operationId}
+        name="operationId"
+        ref={operationInput}
+        type="hidden"
+      />
       <div className="agency-entry-title">
         <span aria-hidden="true">
           <Handshake />
@@ -392,10 +414,16 @@ function AcceptAgencyInvitationForm({
     acceptAgencyInvitationAction,
     administrationIdle,
   );
+  const operationInput = useFreshOperationInput(state);
   return (
     <form action={action} className="agency-entry-card">
       <input name="organizationId" type="hidden" value={organizationId} />
-      <input name="operationId" type="hidden" value={operationId} />
+      <input
+        defaultValue={operationId}
+        name="operationId"
+        ref={operationInput}
+        type="hidden"
+      />
       <div className="agency-entry-title">
         <span aria-hidden="true">
           <Building2 />
@@ -454,12 +482,18 @@ function RevokeRelationshipForm({
     revokeAgencyRelationshipAction,
     administrationIdle,
   );
+  const operationInput = useFreshOperationInput(state);
   return (
     <form action={action} className="agency-inline-action">
       <input name="organizationId" type="hidden" value={organizationId} />
       <input name="relationshipId" type="hidden" value={relationshipId} />
       <input name="expectedRevision" type="hidden" value={revision} />
-      <input name="operationId" type="hidden" value={operationId} />
+      <input
+        defaultValue={operationId}
+        name="operationId"
+        ref={operationInput}
+        type="hidden"
+      />
       <label>
         <span>Audited reason</span>
         <input maxLength={500} minLength={8} name="reason" required />
@@ -492,11 +526,12 @@ function CreateSupportRequestForm({
       perspective === "agency" && status === "active",
   );
   const [operationId] = useState(() => crypto.randomUUID());
-  const [expiry, setExpiry] = useState(() => expiresIn(2));
   const [state, action, pending] = useActionState(
     createSupportRequestAction,
     administrationIdle,
   );
+  const operationInput = useFreshOperationInput(state);
+  const [expiry, setExpiry] = useState(() => expiresIn(2));
   return (
     <form action={action} className="support-request-form">
       <input
@@ -505,7 +540,12 @@ function CreateSupportRequestForm({
         value={portfolio.organization.id}
       />
       <input name="expiresAt" type="hidden" value={expiry} />
-      <input name="operationId" type="hidden" value={operationId} />
+      <input
+        defaultValue={operationId}
+        name="operationId"
+        ref={operationInput}
+        type="hidden"
+      />
       <header>
         <span aria-hidden="true">
           <Eye />
@@ -617,18 +657,24 @@ function SupportDecisionForm({
   request,
 }: Readonly<{ organizationId: string; request: SupportRequestReadV1 }>) {
   const [operationId] = useState(() => crypto.randomUUID());
-  const [expiry, setExpiry] = useState(() => expiresIn(1));
   const [state, action, pending] = useActionState(
     resolveSupportRequestAction,
     administrationIdle,
   );
+  const operationInput = useFreshOperationInput(state);
+  const [expiry, setExpiry] = useState(() => expiresIn(1));
   return (
     <form action={action} className="support-decision-form">
       <input name="organizationId" type="hidden" value={organizationId} />
       <input name="requestId" type="hidden" value={request.id} />
       <input name="expectedRevision" type="hidden" value={request.revision} />
       <input name="expiresAt" type="hidden" value={expiry} />
-      <input name="operationId" type="hidden" value={operationId} />
+      <input
+        defaultValue={operationId}
+        name="operationId"
+        ref={operationInput}
+        type="hidden"
+      />
       <label>
         <span>Decision</span>
         <select name="supportAction" required>
@@ -728,10 +774,16 @@ function OpenSupportWorkspaceForm({
     openSupportWorkspaceAction,
     administrationIdle,
   );
+  const operationInput = useFreshOperationInput(state);
   return (
     <form action={action} className="support-open-form">
       <input name="grantId" type="hidden" value={grant.id} />
-      <input name="operationId" type="hidden" value={operationId} />
+      <input
+        defaultValue={operationId}
+        name="operationId"
+        ref={operationInput}
+        type="hidden"
+      />
       <input name="confirmation" type="hidden" value="open-support" />
       <button disabled={pending} type="submit">
         <Eye aria-hidden="true" />
@@ -807,12 +859,18 @@ function RevokeSupportGrantForm({
     revokeSupportGrantAction,
     administrationIdle,
   );
+  const operationInput = useFreshOperationInput(state);
   return (
     <form action={action} className="support-revoke-form">
       <input name="organizationId" type="hidden" value={organizationId} />
       <input name="grantId" type="hidden" value={grant.id} />
       <input name="expectedRevision" type="hidden" value={grant.revision} />
-      <input name="operationId" type="hidden" value={operationId} />
+      <input
+        defaultValue={operationId}
+        name="operationId"
+        ref={operationInput}
+        type="hidden"
+      />
       <label>
         <span>Revocation reason</span>
         <input maxLength={500} minLength={8} name="reason" required />
@@ -939,4 +997,14 @@ function ActionMessage({
       {state.message}
     </p>
   );
+}
+
+function useFreshOperationInput(state: AdministrationActionState) {
+  const input = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (input.current && state.completedOperationId === input.current.value) {
+      input.current.value = crypto.randomUUID();
+    }
+  }, [state.completedOperationId]);
+  return input;
 }
