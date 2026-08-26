@@ -1,6 +1,6 @@
 # M13 Evidence — Enterprise identity
 
-Status: M13-S01 access catalogue and review is complete on draft PR #40. M13-S02 organization and team lifecycle is complete on draft PR #41. M13-S03 tenant federation is implemented on draft PR #42 with production disabled; production-build browser evidence passes while Authentik egress proof and the enterprise-IdP canary remain open. M13-S04 SCIM is a disabled repository candidate on draft PR #43 with fresh isolated database, browser, adversarial, and exact-head CI evidence; the approved enterprise IdP/SCIM canary remains open. Support and agency administration remain unimplemented.
+Status: M13-S01 access catalogue and review is complete on draft PR #40. M13-S02 organization and team lifecycle is complete on draft PR #41. M13-S03 tenant federation is implemented on draft PR #42 with production disabled; production-build browser evidence passes while Authentik egress proof and the enterprise-IdP canary remain open. M13-S04 SCIM is a disabled repository candidate on draft PR #43 with fresh isolated database, browser, adversarial, and exact-head CI evidence; the approved enterprise IdP/SCIM canary remains open. M13-S05 bilateral agency, scoped support, owner recovery, export, offboarding, and deletion is a disabled repository candidate on draft PR #44 with exact database, concurrency, browser, contract, action, image, and WooCommerce evidence. M13-S06 production canaries remain open and production is unchanged.
 
 ## M13-S01 access catalogue and review
 
@@ -142,3 +142,84 @@ Status: repository candidate; production remains disabled and unchanged.
   cohort through Authentik, prove exact hashed-subject correlation, mapped and
   unmapped login, active-false/delete/stale-session revocation, token rotation,
   provider outage independence, reconciliation, rollback, and log minimization.
+
+## M13-S05 agency, support, recovery, and offboarding
+
+Status: repository candidate complete on `codex/m13-support-agency`; no
+production organization, relationship, grant, recovery, export, credential, or
+deletion state changed.
+
+- ADR-0055 chooses bilateral client-issued, agency-accepted relationships over
+  implicit agency membership. A relationship exposes only a minimized
+  portfolio and grants no customer, wallet, programme, ledger, connector, SCIM,
+  or tenant-command authority.
+- Agency support is a separately approved, maximum-four-hour grant over exactly
+  four allowlisted read-only scopes. The requester cannot approve it; every
+  projection rechecks the live Auth session, agency membership, relationship,
+  request, grant, scope, expiry, and revocation before appending a tenant-visible
+  immutable use event.
+- Break-glass is owner recovery rather than support impersonation. It requires
+  a signed `aal2` claim and a boolean-only live-session check owned outside
+  `loyalty_owner`; Loyalty roles receive no direct `auth.sessions` privilege.
+  Every recovery projection appends immutable tenant-visible evidence and the
+  capability expires after 30 minutes.
+- The administration export is bounded, versioned, identifier/count based, and
+  reconciles ledger entries exactly without customer PII, raw audit metadata,
+  credentials, or private payloads. Deletion requires closed/offboarded state,
+  exact optimistic revision, an AAL2 recovery session, and a seven-day cooling
+  period before mutable organization identity is pseudonymized and the last
+  membership is revoked.
+- Terminal offboarding revokes every supported agency, support, federation,
+  SCIM, service-account, commerce, notification, schedule, and aggregate-export
+  path. Webhook retirement now replaces the live destination/origin and current
+  fingerprint with terminal tombstones, clears current/previous hints and the
+  previous fingerprint/overlap, and retains immutable lifecycle/delivery
+  evidence. The ledger, programme history, canonical events, and audit evidence
+  are never edited or deleted.
+
+### Repository verification
+
+- `npm run db:validate` validates 75 additive migrations and 62 pgTAP files.
+  `organization_agency_support_offboarding_test.sql` passes 73 focused
+  assertions covering privileges/RLS, bilateral replay, approval separation,
+  exact scopes, expiry/revocation, live sessions, AAL2, use evidence, bounded
+  export, cooling/cancellation, credential inventory, webhook tombstones,
+  pseudonymization, immutable history, and zero ledger drift.
+- `verify-agency-support-concurrency.mjs`, the sixteenth database concurrency
+  probe, serializes competing bilateral acceptance, exact support approval, and
+  terminal deletion completion. Each produces one accepted effect; stale or
+  conflicting work fails closed and value remains unchanged.
+- Focused enterprise-administration contracts pass 8/8 and dashboard
+  server-action tests pass 9/9. Dashboard typecheck, lint, production build,
+  migration validation, workflow validation, secret scan, production audit,
+  licences, and diff checks pass through the exact Linux baseline.
+- Exact-head Linux run `33013504755` at
+  `8587841d9a0e41afa00a94af506e2cddf5740422` passes all seven jobs: root
+  checks, both production images, a clean 75-migration replay, all 62 pgTAP
+  files with 3,349 assertions, all 16 concurrency probes, and the
+  minimum/current × HPOS/legacy WooCommerce matrix.
+- Adversarial review repaired relationship/support/deletion serialization,
+  changed-retry drift, post-approval relationship races, live Auth-session
+  privilege isolation, cross-owner support projection fixtures, immutable-error
+  expectations, and terminal webhook destination/fingerprint survival. No
+  deterministic failure was waived.
+
+### Production-build browser review
+
+- Evidence is recorded in
+  `agency-support-recovery-browser-qa-2026-08-26.md`. Real production
+  `MerchantShell`, `AgencySupportLifecycle`, and `RecoveryLifecycle` components
+  passed optimized Chromium rendering at desktop, mobile, and 320-pixel narrow
+  widths in light/dark and reduced-motion states.
+- All visible controls had accessible names; mobile targets were at least 44
+  pixels, keyboard focus used the visible three-pixel Hub ring, drawer Escape
+  restored focus, cooling-period deletion remained disabled, and every case had
+  zero overflow, console/page errors, or important failed responses.
+
+### Remaining production gate
+
+- M13-S06 requires the approved enterprise IdP/SCIM test tenant, reviewed
+  Authentik private-egress policy, a consenting client/agency pair, live support
+  grant/revocation and stale-session proof, a disposable AAL2 recovery/export/
+  offboarding/deletion rehearsal, exact audit and zero-ledger reconciliation,
+  rollback, observation, category-floor scoring, and explicit canary approval.

@@ -1,5 +1,14 @@
 # Iteration Log
 
+## 2026-08-26 — M13 agency, support, recovery, and terminal offboarding
+
+- Accepted ADR-0055: agency portfolios require one digest-only client invitation and a separate agency-owner acceptance but never create tenant membership or product authority. Exact read-only support requires a separate client-owner approval, a maximum four-hour grant, a live agency relationship/membership/Auth session, and one tenant-visible immutable event for every use.
+- Added signed-AAL2 plus live-session owner recovery without granting Loyalty roles access to `auth.sessions`, a bounded PII/secret-free administration export, comprehensive credential offboarding, and seven-day cooled deletion that pseudonymizes mutable identity while retaining immutable value and audit evidence.
+- Added versioned contracts, Auth-derived server actions, Hub-style agency/support/recovery workflows, a 75th additive migration, 73 focused pgTAP assertions, and a sixteenth concurrency probe covering competing agency acceptance, exact support approval, and terminal deletion completion.
+- Production-build browser review passed desktop/mobile/narrow, light/dark, keyboard focus and drawer restoration, reduced motion, 44-pixel mobile controls, cooling-period denial, English-only output, zero overflow, and zero browser diagnostics.
+- The adversarial loop closed relationship/support/deletion serialization, changed-retry drift, post-approval revocation, live-session privilege isolation, fixture authority, and exact retry timing. Its final pass found that offboarding retired webhooks without removing the live destination/current fingerprint; terminal cleanup now applies the approved webhook tombstones and the focused suite proves every reusable field is removed.
+- Exact-head Linux run `33013504755` at `8587841d9a0e41afa00a94af506e2cddf5740422` passed all seven jobs: root checks, both production images, a clean 75-migration replay, all 62 pgTAP files with 3,349 assertions, all 16 concurrency probes, and all four WooCommerce runtimes. M13-S06 production canaries remain open and production is unchanged.
+
 # 2026-08-26 — M12 canonical migration and value-free dry run
 
 - Reconstructed the current ledger, bulk-adjustment, privacy, entitlement, and identity boundaries and reviewed official WPLoyalty, WooRewards, and YITH migration evidence. WPLoyalty publishes CSV `email`/`points`/optional referral fields and WooRewards publishes JSON `email`/`points`; YITH publishes no stable column contract and is therefore redacted-fixture gated.

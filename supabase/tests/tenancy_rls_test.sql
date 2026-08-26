@@ -157,6 +157,19 @@ select is_empty(
           'update_organization_scim_endpoint_command_v1',
           'map_organization_scim_group_role_command_v1',
           'claim_organization_scim_membership_v1',
+          'create_organization_agency_invitation_command_v1',
+          'accept_organization_agency_invitation_command_v1',
+          'revoke_organization_agency_relationship_command_v1',
+          'get_organization_agency_portfolio_v1',
+          'create_support_access_request_command_v1',
+          'resolve_support_access_request_command_v1',
+          'revoke_support_access_grant_command_v1',
+          'get_support_administration_workspace_v1',
+          'get_support_workspace_v1',
+          'start_organization_break_glass_command_v1',
+          'get_organization_recovery_workspace_v1',
+          'get_organization_administration_export_v1',
+          'organization_deletion_command_v1',
           'create_organization_command_v1',
           'update_organization_lifecycle_command_v1',
           'create_organization_invitation_command_v1',
@@ -389,10 +402,10 @@ select results_eq(
   array[3::bigint],
   'tenant owner can review active and revoked membership evidence in its tenant'
 );
-select results_eq(
+select throws_ok(
   'select count(*)::bigint from loyalty.support_access_grants',
-  array[1::bigint],
-  'tenant owner can review its support grant'
+  '42501', 'permission denied for table support_access_grants',
+  'legacy raw support grants require the minimized administration projection'
 );
 
 set local request.jwt.claim.sub = '22222222-2222-4222-8222-222222222222';
@@ -444,10 +457,10 @@ select results_eq(
 
 set local request.jwt.claim.sub = '66666666-6666-4666-8666-666666666666';
 
-select results_eq(
+select throws_ok(
   'select count(*)::bigint from loyalty.support_access_grants',
-  array[1::bigint],
-  'support subject can see only its scoped grant'
+  '42501', 'permission denied for table support_access_grants',
+  'support subjects cannot bypass the live-session audited projection'
 );
 select results_eq(
   'select count(*)::bigint from loyalty.organizations',

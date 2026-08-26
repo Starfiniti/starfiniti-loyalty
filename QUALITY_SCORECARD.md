@@ -27,7 +27,7 @@ Engineering quality and product completeness are deliberately separate. The mach
 | Customer value        |      15 |       5 | Discovery, progress, referrals, communications, and full store placements              |
 | Reliability           |      15 |      13 | Real-store outage and full recovery proof                                              |
 | Operations            |      10 |       8 | Capacity and clean-room application/Auth/secret recovery                               |
-| Enterprise/commercial |      10 |       4 | Tenant SSO/SCIM, agency controls, metering, and managed billing                        |
+| Enterprise/commercial |      10 |       4 | Production SSO/SCIM/agency canary, metering, and managed billing                       |
 | **Total**             | **100** |  **51** | Enterprise finish requires at least 90                                                 |
 
 Every module also requires at least 90/100 and at least 80% of every relevant category. Unexplained value differences, cross-tenant access, duplicate effects, checkout dependency, missing recovery/canary evidence, or unresolved critical/high findings fail the gate regardless of score.

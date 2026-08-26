@@ -16,6 +16,7 @@ Every runbook records incident/change owner, environment, start/end, commands, e
 | Database restore                | Loss/corruption/drill             | Isolate, select recovery point, follow `BACKUP_RESTORE.md`, verify before exposure                               |
 | Privacy request                 | Verified case                     | Freeze scope/identity evidence, run idempotent export/deletion workflow, audit completion                        |
 | Suspected tenant exposure       | Security signal/report            | Revoke affected credentials/sessions, preserve logs, contain route, notify incident owner, do not alter evidence |
+| Agency/support recovery         | Approved case                     | Follow `AGENCY_SUPPORT_RECOVERY.md`; require separate approval, AAL2/live session, and retained use evidence     |
 | Ledger mismatch                 | Projection/reconciliation failure | Stop affected value commands, snapshot evidence, rebuild comparison, compensate—never edit ledger                |
 | Support diagnostic collection   | Merchant support case             | Download sanitized bundle, verify schema/scope, and use separate approval for restricted evidence                |
 | Proxmox host loss               | Host/storage monitoring           | Protect surviving replicas/backups, provision isolated replacement, restore; do not rely only on VM snapshot     |
