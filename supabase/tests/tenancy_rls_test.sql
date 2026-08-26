@@ -143,6 +143,7 @@ select is_empty(
           'configure_programme_group_sharing_v1',
           'configure_programme_currency_policy_v1',
           'get_programme_currency_policies_v1',
+          'record_migration_dry_run_v1',
           'set_analytics_report_schedule_state_command',
           'get_overview_report',
           'get_public_loyalty_experience',
