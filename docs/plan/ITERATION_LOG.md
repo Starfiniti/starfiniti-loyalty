@@ -1,5 +1,12 @@
 # Iteration Log
 
+## 2026-08-26 — M11 fail-closed production closeout gate
+
+- Added a 41-check machine-readable ecosystem canary manifest covering exact release identity, recovery, disabled deployment, explicit topology, verified identity, immutable currency evidence, scoped API replay/quota, endpoint-isolated webhooks, checkout outage continuity, reconciliation, rollback, and observation.
+- Added immutable seven-category arithmetic, a 90/100 target, an 80% per-category floor, ten deterministic automatic failures, prohibited evidence-key scanning, and self-tests that reject false completion and sensitive evidence keys.
+- Refreshed the read-only production baseline: canonical dashboard health/login returned 200, unauthenticated Supabase Auth/REST returned 401, DNS resolved, and the configured `s2-root` route confirmed VM 971 running. No production mutation occurred.
+- Eleven repository/public/operator checks pass and 30 production checks remain pending. The provisional total is 90/100, but operability is 3/10, so completion remains deterministically impossible until approved release, canaries, reconciliation, rollback, and observation pass.
+
 ## 2026-08-26 — M11 outbound webhooks, supported clients, and operations
 
 - Accepted ADR-0046: each outbound endpoint owns one separately mounted secret and isolated worker; PostgreSQL owns lifecycle authority and retains only fingerprints/hints while the M08 event and Standard Webhooks wire contracts remain compatible.

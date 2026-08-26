@@ -78,4 +78,8 @@ Later evidence sections record each completed slice; final disabled deployment a
 
 ## Pending M11-S06 closeout
 
-- The disabled Starfiniti ecosystem canaries, exact cross-slice reconciliation, rollback/observation evidence, and final module score remain open.
+- [`canary.yaml`](canary.yaml) is now the authoritative fail-closed M11 production gate. It records 41 exact checks, seven fixed score categories, an immutable 90/100 target, an 80% per-category floor, automatic failures, exact release identities, and minimized evidence only.
+- Eleven checks pass: exact candidate CI, clean migration replay, strict contracts/clients, database authority, all eleven concurrency probes, four WooCommerce runtimes, browser/accessibility evidence, checkout-independence regression, public production baseline, read-only operator access, and cross-language client vectors.
+- Thirty production checks remain pending: approved immutable release, fresh recovery point/source baseline, disabled deployment and migration registration, Starfiniti-only entitlement, topology/identity/currency/API/webhook canaries, outage continuity, exact reconciliation, rollback, and observation.
+- The provisional module score is 90/100, but operability is 3/10 and below the mandatory 80% category floor. The validator therefore rejects any completion claim despite the total score.
+- Public health was refreshed on 2026-08-26: canonical dashboard health/login returned 200, unauthenticated Supabase Auth/REST returned 401, canonical DNS resolved, and the approved `s2-root` path confirmed VM 971 running without a production mutation.

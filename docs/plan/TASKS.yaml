@@ -1543,6 +1543,7 @@ tasks:
     title: Add multi-store policy, currencies, service APIs, and ecosystem operations
     module: M11
     status: in_progress
+    module_score: 90
     dependencies: [M10-ANALYTICS]
     hypothesis: Explicit sharing and scoped APIs enable larger merchants without implicit cross-tenant authority or currency ambiguity.
     baseline: One isolated workspace/programme link and signed WooCommerce integration exist.
@@ -1817,9 +1818,49 @@ tasks:
           - production endpoints remain disabled and Starfiniti-only mount activation delivery replay rotation retirement reconciliation rollback and observation remain owned by M11-S06
       - id: M11-S06-SHADOW-CANARY-AND-CLOSE
         status: in_progress
+        hypothesis: A disabled-first Starfiniti canary with exact cross-slice reconciliation can prove the ecosystem foundation is production-operable without allowing a failed integration to affect checkout or historical value.
+        baseline: M11-S01 through M11-S05 have exact code-head repository, database, concurrency, WooCommerce, client, and browser evidence, while production remains on v0.1.11 with every M11 capability undeployed or disabled.
+        targets:
+          - every required repository and production check is passed with minimized evidence and no automatic failure
+          - one isolated and one explicitly shared topology reconcile to immutable policy and existing wallets with zero unexplained difference
+          - one verified identity, foreign order and refund, API customer and activity replay, and webhook lifecycle reconcile exactly
+          - checkout, ingestion, refunds, releases, existing redemption, and reconciliation continue while each M11 canary process is unavailable
+          - module score is at least 90 and every category reaches 80 percent of its available score
+        metrics:
+          - unexplained topology identity wallet currency event ledger quota endpoint delivery audit checkout or privacy differences = 0
+          - implicit wallet shares email-derived links caller-supplied rates duplicate effects and reusable material disclosures = 0
+          - production checks passed = 41 before closeout
+          - score total >= 90 and each category ratio >= 0.8
         acceptance:
           - isolated and explicitly shared Starfiniti canaries reconcile wallets events currencies API requests and webhooks with module score at least 90 and every category above its floor
-    risks: [R-001, R-002, R-039, R-040, R-041, R-042, R-043]
+          - approved immutable release fresh recovery point disabled deployment exact migration registration and production source baseline precede any value-producing canary
+          - self-hosted and non-canary tenants remain disabled while the Starfiniti entitlement is enabled one capability at a time
+          - rollback disables new ecosystem effects and revokes canary authority without deleting versioned configuration immutable evidence customer access or loyalty value
+          - the machine-readable canary gate rejects missing checks sensitive evidence keys false completion non-exact commits score drift and category-floor failure
+        failure_modes:
+          - a stacked draft or mutable branch is treated as an approved release
+          - production checks begin before a verified recovery point source baseline or migration registration
+          - provider credential endpoint secret or API credential appears in a public projection database evidence log or peer process
+          - an outage blocks WooCommerce checkout or an existing loyalty-value obligation
+          - a canary effect cannot be reconciled to immutable source and authority evidence
+          - subjective scoring hides a deterministic failed or pending gate
+        security_boundaries:
+          - canary evidence stores no reusable material personal identity tenant key wallet key connection key order key coupon or raw payload
+          - PostgreSQL remains the authority for tenant actor identity value rate quota and endpoint lifecycle throughout canary operations
+          - only the Starfiniti organization receives temporary M11 entitlements and every provider or endpoint worker has an isolated mount
+          - release approval and production operator access are both required but neither substitutes for live database authorization
+        rollout: Merge the reviewed M10 and M11 stack into an immutable release, take a fresh recovery point and source baseline, deploy disabled, register migrations, then enable topology, identity, currency, API, and webhook capabilities sequentially for only Starfiniti with reconciliation after each effect.
+        rollback: Disable M11 entitlements, revoke canary service credentials, disable and stop isolated provider and webhook workers, restore prior application images, preserve additive migrations and immutable evidence, then reconcile checkout and all loyalty value before observation.
+        verification:
+          - npm run ecosystem:canary:validate
+          - exact-head root baseline both production images clean migration replay all pgTAP files all two-session probes and all four WooCommerce runtimes
+          - fresh read-only production health source topology identity conversion event ledger quota endpoint delivery and audit snapshots
+          - controlled outage rollback and observation evidence with zero unexplained reconciliation difference
+        evidence:
+          - docs/plan/evidence/M11/canary.yaml
+          - docs/plan/evidence/M11/README.md
+          - current provisional score is 90 of 100 but operability is 3 of 10 and therefore below the required category floor until release canaries rollback and observation pass
+    risks: [R-001, R-002, R-030, R-039, R-040, R-041, R-042, R-043]
     docs:
       [
         docs/integrations/MERCHANT_API.md,
@@ -1832,7 +1873,8 @@ tasks:
         docs/architecture/ADR/0045-hashed-service-accounts-and-database-authoritative-inbound-api.md,
         docs/architecture/ADR/0046-endpoint-scoped-webhook-lifecycle-and-supported-clients.md,
       ]
-    evidence: [docs/plan/evidence/M11/README.md]
+    evidence:
+      [docs/plan/evidence/M11/README.md, docs/plan/evidence/M11/canary.yaml]
 
   - id: M12-MIGRATION
     title: Add traceable, idempotent loyalty migration
