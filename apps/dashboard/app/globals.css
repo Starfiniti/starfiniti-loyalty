@@ -8725,9 +8725,14 @@ html[data-dashboard-theme="dark"] .tier-preview-icon {
   display: grid;
   gap: 12px;
   padding: 15px;
-  border: 1px solid #c7d2fe;
+  border: 1px solid color-mix(in srgb, var(--primary) 35%, var(--border));
   border-radius: 12px;
-  background: #f7f5ff;
+  color: var(--text);
+  background: color-mix(
+    in srgb,
+    var(--primary) 8%,
+    var(--merchant-surface, #fff)
+  );
 }
 .connector-provisioning-confirmation > label {
   display: flex;
@@ -8738,6 +8743,12 @@ html[data-dashboard-theme="dark"] .tier-preview-icon {
 }
 .connector-provisioning-confirmation .primary {
   justify-self: start;
+  min-height: 40px;
+  padding: 9px 14px;
+  border-radius: 9px;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
 }
 .connector-provisioning-result textarea {
   width: 100%;
@@ -8901,6 +8912,12 @@ html[data-dashboard-theme="dark"] .tier-preview-icon {
 .service-account-create > button,
 .service-credential-issue > button {
   justify-self: start;
+  min-height: 40px;
+  padding: 9px 14px;
+  border-radius: 9px;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
 }
 .service-credential-issue {
   display: grid;
@@ -8911,6 +8928,13 @@ html[data-dashboard-theme="dark"] .tier-preview-icon {
 .service-credential-issue .connector-provisioning-confirmation,
 .service-credential-issue + .action-message {
   grid-column: 1 / -1;
+}
+.service-account-create .connector-provisioning-confirmation > label,
+.service-credential-issue .connector-provisioning-confirmation > label {
+  display: flex;
+  align-items: center;
+  min-height: 24px;
+  gap: 8px;
 }
 .service-account-card .connector-provisioning-result {
   box-shadow: none;
