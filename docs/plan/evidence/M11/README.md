@@ -1,6 +1,6 @@
 # M11 Evidence — Ecosystem
 
-Status: M11-S01 and M11-S02 repository/browser gates are exact-head green on `codex/m11-multistore`; M11-S03 is next and M11-S06 retains disabled deployment and Starfiniti production-canary closeout.
+Status: M11-S01 through M11-S03 repository/browser gates are exact-head green on `codex/m11-multistore`; M11-S04 is active and M11-S06 retains disabled deployment and Starfiniti production-canary closeout.
 
 ## M11-S01 explicit multi-store sharing
 
@@ -35,9 +35,9 @@ Status: M11-S01 and M11-S02 repository/browser gates are exact-head green on `co
 
 - M11-S06 owns disabled deployment, read compatibility, Starfiniti-only canary, identity/link/wallet/event reconciliation, unlink/relink rollback rehearsal, and observation after reviewed stacked merge.
 
-Later evidence sections will record currency conversion, service-account/API, webhook/client, integration-operations, and final canary results.
+Later evidence sections will record service-account/API, webhook/client, integration-operations, and final canary results.
 
-## M11-S03 multi-currency evidence — implementation checkpoint
+## M11-S03 multi-currency evidence
 
 - Decision: ADR-0044 rejects store-supplied and processing-time rates in favor of one immutable provider snapshot selected at canonical commerce occurrence time, exact rational arithmetic, atomic half-away rounding, and original-snapshot refund reuse.
 - Contracts/domain: strict policy, snapshot, context, evidence, merchant command, and minimized read schemas pair with BigInt conversion over 0–6 decimal precisions and canonical decimal-string bounds.
@@ -47,5 +47,7 @@ Later evidence sections will record currency conversion, service-account/API, we
 - Adversarial improvement: final diff review found that a privileged caller could present policy/snapshot selectors without record-time occurrence revalidation, exact retries did not bind the atomic batch itself, and one successful merchant save could strand the next edit on its prior idempotency key. Database reselection/ambiguity checks, a canonical amount-batch digest, focused pgTAP/concurrency cases, and per-review operation rotation close those gaps.
 - Verification currently passing locally: five focused contract cases, eight currency-domain cases within the 16 affected domain tests, two new worker scenarios within all 32 processor tests, seven server/action cases, all 654 workspace tests, every workspace typecheck, targeted lint, production dashboard/worker builds, validators, 65-migration/52-pgTAP static validation, exact 58-assertion plan accounting, formatting, and diff checks.
 - [Production-build browser QA](currency-browser-qa-2026-08-26.md) passed desktop/mobile responsive layout, exact review state, required confirmation, English-only output, dark mode, mobile navigation, 3 px keyboard focus, zero overflow, and zero diagnostics after correcting 18 px legacy buttons and a masked focus ring.
-- Docker-backed clean replay, all 58 focused pgTAP assertions, the ninth two-session concurrency probe, both images, all four WooCommerce runtimes, and exact-head CI remain pending before repository closeout.
+- Exact-head run [`32918516110`](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/32918516110) at `6bf137c` passed all seven jobs: root checks, both production images, clean 65-migration replay, all 52 pgTAP files with 2,774 assertions including all 58 focused currency cases, all nine concurrency probes, and minimum/current HPOS/legacy WooCommerce runtimes.
+- The ninth race serialized two evidence writers into one created and one duplicate identity, rejected changed projection and atomic batches, and reconciled one evidence row, one atomic amount, and zero ledger effects.
+- Self-improvement evidence: Linux replay exposed stale allowlists, a wall-clock-dependent analytics fixture, invalid legacy canonical-event shortcuts, worker-role test lookups, and an unauthorised race-harness role assumption. Each fix made fixtures deterministic or narrowed test authority; production RLS, grants, rate authority, arithmetic, ledger, and checkout boundaries were not relaxed.
 - Production conversion remains disabled. Approved provider selection/credentials, isolated adapter ingestion, Starfiniti source-currency canary, exact source→snapshot→amount→evaluation→ledger→analytics reconciliation, rollback rehearsal, and observation remain M11-S06 owner/production gates.

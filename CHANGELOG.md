@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added M11 exact multi-currency evidence with immutable occurrence-time provider snapshots, rational conversion and PostgreSQL recomputation, original-snapshot refunds, source-currency rule visibility, exact retries, and an English policy/revision Operations control.
 - Added M11 verified cross-workspace customer linking with independent signed-store proofs, immutable source/canonical revisions, value-conflict rejection, protected reversible projections, Auth-derived unlink, and a responsive connected-stores customer experience.
 - Added M11's explicit multi-store wallet-scope foundation with immutable programme-group sharing revisions, exact isolated/shared workspace allowlists, Auth-derived owner/admin entitlement authority, optimistic idempotent commands, projection-drift detection, connector-removal protection, and a responsive review-before-save Operations control.
 - Completed the M10 analytics command-center slice with one explicit cross-report snapshot instant, fail-closed divergence/future checks, current/stale integrity states, section navigation, honest loading/empty/partial-error states, and keyboard-focusable responsive cohort tables.

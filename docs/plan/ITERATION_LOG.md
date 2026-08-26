@@ -1,5 +1,13 @@
 # Iteration Log
 
+## 2026-08-26 — M11 exact multi-currency evidence
+
+- Accepted ADR-0044: only immutable provider evidence selected at the canonical commerce occurrence can convert a foreign V2 order; WooCommerce, the browser, and worker timing never supply the rate.
+- Added strict contracts and exact BigInt conversion, four private immutable/RLS evidence tables, independent PostgreSQL recomputation, exact retry binding, source-currency rule visibility, original-snapshot refunds, and an English review-before-save Operations policy surface.
+- Production-build desktop/mobile review passed exact confirmation, dark mode, mobile navigation, keyboard focus, English-only output, zero overflow, and zero diagnostics after correcting undersized legacy actions and a masked focus ring.
+- Linux self-improvement runs exposed and fixed stale security allowlists, wall-clock fixtures, invalid canonical-event shortcuts, test-role lookups, and the race harness membership assumption without relaxing production authority.
+- Exact-head run `32918516110` at `6bf137c` passed baseline, both images, clean 65-migration replay, all 52 pgTAP files with 2,774 assertions, all nine concurrency probes, and all four WooCommerce runtimes. Production conversion remains disabled until M11-S06 receives an approved provider and completes canary reconciliation.
+
 ## 2026-08-26 — M11 verified cross-workspace customer identity
 
 - Accepted ADR-0043: one live Auth subject must present a separate fresh WooCommerce HMAC proof for every store; email, profile attributes, organization membership, and browser tenant/customer inputs grant no identity authority.
