@@ -16,6 +16,7 @@ async function assumeWorker(sql) {
 }
 
 try {
+  await admin`grant loyalty_worker to current_user`;
   const fixture = await admin.begin(async (sql) => {
     const actorId = randomUUID();
     await sql`
@@ -330,5 +331,6 @@ try {
     "Currency conversion concurrency probe passed: two exact evidence writers serialized on one canonical event, returned one created plus one duplicate identity, conflicting projection and atomic batches failed closed, and evidence, atomic amounts, and zero ledger effects reconcile.",
   );
 } finally {
+  await Promise.allSettled([admin`revoke loyalty_worker from current_user`]);
   await Promise.allSettled([admin.end(), first.end(), second.end()]);
 }
