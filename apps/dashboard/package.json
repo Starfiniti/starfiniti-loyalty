@@ -15,6 +15,8 @@
     "@starfiniti/domain": "0.0.0",
     "@supabase/ssr": "0.12.4",
     "@supabase/supabase-js": "2.112.3",
+    "fast-xml-parser": "^5.11.0",
+    "fast-xml-validator": "^1.4.2",
     "geist": "1.7.2",
     "lucide-react": "1.31.0",
     "next": "16.3.0",
