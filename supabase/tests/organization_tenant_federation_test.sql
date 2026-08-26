@@ -362,7 +362,7 @@ select throws_ok(
       'https://id.example.test/authorize', 'https://id.example.test/token',
       null, null, array[repeat('2', 64)], repeat('3', 64),
       '9b000000-0000-4000-8000-000000000701',
-      '9b000000-0000-4000-8000-000000000702',
+      702,
       'succeeded', 'validated', 'federation:validate:invalid',
       '9b000000-0000-4000-8000-000000000610'
     )
@@ -382,7 +382,7 @@ select results_eq(
       'https://id.example.test/jwks', null, array[repeat('2', 64)],
       repeat('3', 64),
       '9b000000-0000-4000-8000-000000000701',
-      '9b000000-0000-4000-8000-000000000702',
+      702,
       'succeeded', 'validated', 'federation:validate:oidc',
       '9b000000-0000-4000-8000-000000000611'
     )
@@ -402,7 +402,7 @@ select results_eq(
       'https://id.example.test/jwks', null, array[repeat('2', 64)],
       repeat('3', 64),
       '9b000000-0000-4000-8000-000000000701',
-      '9b000000-0000-4000-8000-000000000702',
+      702,
       'succeeded', 'validated', 'federation:validate:oidc',
       '9b000000-0000-4000-8000-000000000611'
     )
@@ -422,7 +422,7 @@ select throws_ok(
       'https://id.example.test/jwks', null, array[repeat('2', 64)],
       repeat('3', 64),
       '9b000000-0000-4000-8000-000000000701',
-      '9b000000-0000-4000-8000-000000000702',
+      702,
       'succeeded', 'changed', 'federation:validate:oidc',
       '9b000000-0000-4000-8000-000000000611'
     )
@@ -436,7 +436,7 @@ select results_eq(
     select status, lifecycle_revision, octet_length(document_sha256)::bigint,
       octet_length(broker_secret_sha256)::bigint,
       authentik_source_public_id is not null,
-      authentik_provider_public_id is not null
+      authentik_provider_id = 702
     from loyalty.organization_federation_sources where display_name = 'Corporate OIDC'
   $$,
   $$ values ('validated'::text, 2::bigint, 32::bigint, 32::bigint, true, true) $$,
@@ -469,7 +469,7 @@ select results_eq(
     select not (
       loyalty.organization_federation_workspace_v1(
         '9b000000-0000-4000-8000-000000000100'
-      )::text ~* '(secret_sha256|authentik_source_public_id|authentik_provider_public_id|email|domain|group|claims)'
+      )::text ~* '(secret_sha256|authentik_source_public_id|authentik_provider_id|email|domain|group|claims)'
     )
   $$,
   array[true],

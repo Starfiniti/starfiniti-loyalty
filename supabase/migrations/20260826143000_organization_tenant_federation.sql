@@ -32,7 +32,7 @@ create table loyalty.organization_federation_sources (
   validated_at timestamptz,
   authentik_source_slug text not null unique,
   authentik_source_public_id uuid,
-  authentik_provider_public_id uuid,
+  authentik_provider_id bigint,
   supabase_provider_identifier text not null unique,
   pending_action text check (pending_action in (
     'enable', 'disable', 'rotate_secret', 'retire'
@@ -126,7 +126,7 @@ create table loyalty.organization_federation_sources (
       validated_at is not null
       and broker_secret_sha256 is not null
       and authentik_source_public_id is not null
-      and authentik_provider_public_id is not null
+      and authentik_provider_id is not null
     )
   ),
   check (external_detail_code is null or (
@@ -494,7 +494,7 @@ create or replace function loyalty_private.record_organization_federation_valida
   target_signing_fingerprints text[],
   target_broker_secret_sha256 text,
   target_authentik_source_public_id uuid,
-  target_authentik_provider_public_id uuid,
+  target_authentik_provider_id bigint,
   target_external_outcome text,
   target_external_detail_code text,
   target_idempotency_key text,
@@ -542,7 +542,7 @@ begin
      or target_broker_secret_sha256 !~ '^[a-f0-9]{64}$'
      or (target_external_outcome = 'succeeded' and (
        target_authentik_source_public_id is null
-       or target_authentik_provider_public_id is null
+       or target_authentik_provider_id is null
      )) then
     raise exception using errcode = '22023', message = 'invalid federation validation evidence';
   end if;
@@ -593,7 +593,7 @@ begin
     'signingFingerprints', fingerprint_json,
     'brokerSecretSha256', target_broker_secret_sha256,
     'authentikSourcePublicId', target_authentik_source_public_id,
-    'authentikProviderPublicId', target_authentik_provider_public_id,
+    'authentikProviderId', target_authentik_provider_id,
     'externalOutcome', target_external_outcome,
     'externalDetailCode', target_external_detail_code
   )::text, 'UTF8'), 'sha256');
@@ -638,7 +638,7 @@ begin
       validated_at = clock_timestamp(),
       broker_secret_sha256 = decode(target_broker_secret_sha256, 'hex'),
       authentik_source_public_id = target_authentik_source_public_id,
-      authentik_provider_public_id = target_authentik_provider_public_id,
+      authentik_provider_id = target_authentik_provider_id,
       external_outcome = target_external_outcome,
       external_detail_code = target_external_detail_code,
       updated_by_user_id = target_actor_user_id,
@@ -1145,7 +1145,7 @@ alter function loyalty_private.prepare_organization_federation_source_v1(
 ) owner to loyalty_owner;
 alter function loyalty_private.record_organization_federation_validation_v1(
   uuid, uuid, bigint, text, text, text, text, text, text, text,
-  text[], text, uuid, uuid, text, text, text, uuid
+  text[], text, uuid, bigint, text, text, text, uuid
 ) owner to loyalty_owner;
 alter function loyalty_private.begin_organization_federation_action_v1(
   uuid, uuid, uuid, bigint, text, text, text, text, uuid
@@ -1163,7 +1163,7 @@ revoke all on function loyalty_private.prepare_organization_federation_source_v1
 ) from public, anon, authenticated, loyalty_runtime, loyalty_worker;
 revoke all on function loyalty_private.record_organization_federation_validation_v1(
   uuid, uuid, bigint, text, text, text, text, text, text, text,
-  text[], text, uuid, uuid, text, text, text, uuid
+  text[], text, uuid, bigint, text, text, text, uuid
 ) from public, anon, authenticated, loyalty_runtime, loyalty_worker;
 revoke all on function loyalty_private.begin_organization_federation_action_v1(
   uuid, uuid, uuid, bigint, text, text, text, text, uuid
@@ -1181,7 +1181,7 @@ grant execute on function loyalty_private.prepare_organization_federation_source
 ) to loyalty_runtime;
 grant execute on function loyalty_private.record_organization_federation_validation_v1(
   uuid, uuid, bigint, text, text, text, text, text, text, text,
-  text[], text, uuid, uuid, text, text, text, uuid
+  text[], text, uuid, bigint, text, text, text, uuid
 ) to loyalty_runtime;
 grant execute on function loyalty_private.begin_organization_federation_action_v1(
   uuid, uuid, uuid, bigint, text, text, text, text, uuid
