@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added M13 organization/team lifecycle with owner creation, digest-only one-use invitations, serialized owner quorum, immediate membership revocation, exact tenant state transitions, offboarding, minimized export, and a Hub-style administration workflow.
 - Added M13's database-authoritative Access V1 catalogue with six tenant membership roles, structurally grant-only support, active-organization permission enforcement, a minimized live access projection, forged-claim/revocation/cross-tenant pgTAP coverage, and a responsive Hub-style English Team & access review.
 - Added the M12 canonical migration and value-free dry-run foundation with strict source/identity/balance/lot/tier/referral/history contracts, explicit non-email identity resolution, deterministic exact-total fingerprints, immutable minimized PostgreSQL receipts, content/idempotency replay fences, and zero ledger effects.
 - Completed M12 receipt-bound opening-balance application with exact canonical revalidation, deterministic cross-receipt source-row serialization, immutable ledger/lot attribution, exact once-only pending release, projection reconciliation, and append-only correction evidence; production value remains disabled.

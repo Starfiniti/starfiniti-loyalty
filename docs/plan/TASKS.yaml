@@ -2225,7 +2225,7 @@ tasks:
           - production-build browser review passes desktop dark keyboard 390-pixel mobile 320-pixel narrow 44-pixel controls English-only zero-overflow and zero-diagnostic checks after repairing mobile hero clipping
           - exact-head Linux run 32957971079 at 6284412b620c2a3b65480c3638c0c46691f21d03 passes all seven jobs including root checks both images clean 71-migration replay 58 pgTAP files with 3058 assertions all 13 concurrency probes and all four WooCommerce runtimes
       - id: M13-S02-ORGANIZATION-AND-TEAM-LIFECYCLE
-        status: planned
+        status: in_progress
         dependencies: [M13-S01-ACCESS-CATALOGUE-AND-REVIEW]
         hypothesis: Invitation and provisioning-bound membership plus audited lifecycle commands can add and remove tenant authority immediately without email or domain auto-join.
         owner_inputs: []
@@ -2242,6 +2242,9 @@ tasks:
         rollback: Disable new lifecycle commands preserve memberships and audit and restore only through an explicit compensating transition.
         verification:
           - role transition owner quorum invitation replay concurrency stale-session protected-value and tenant-isolation tests
+        evidence:
+          - docs/architecture/ADR/0052-capability-bound-organization-invitations-and-owner-quorum.md
+          - docs/plan/evidence/M13/README.md
       - id: M13-S03-TENANT-FEDERATION
         status: planned
         dependencies: [M13-S02-ORGANIZATION-AND-TEAM-LIFECYCLE]

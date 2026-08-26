@@ -98,4 +98,27 @@ describe("tenant context resolution", () => {
   it("returns no context without an active membership", () => {
     expect(resolveTenantContext({ ...snapshot, memberships: [] })).toBeNull();
   });
+
+  it("keeps suspended and closed memberships available for owner recovery", () => {
+    const inactive = {
+      ...snapshot,
+      organizations: snapshot.organizations.map((organization) =>
+        organization.id === 10
+          ? { ...organization, status: "suspended" }
+          : organization.id === 20
+            ? { ...organization, status: "closed" }
+            : organization,
+      ),
+    };
+    const context = resolveTenantContext(
+      inactive,
+      "10000000-0000-4000-8000-000000000000",
+    );
+    expect(context?.organization.status).toBe("suspended");
+    expect(context?.workspace).toBeNull();
+    expect(context?.availableOrganizations.map(({ slug }) => slug)).toEqual([
+      "alpha",
+      "beta",
+    ]);
+  });
 });

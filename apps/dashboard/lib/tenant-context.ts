@@ -59,6 +59,12 @@ function byNameThenId<T extends { name: string; id: number }>(a: T, b: T) {
   return a.name.localeCompare(b.name) || a.id - b.id;
 }
 
+function byLifecycleThenName(a: OrganizationRow, b: OrganizationRow): number {
+  const rank = (status: string) =>
+    status === "active" ? 0 : status === "suspended" ? 1 : 2;
+  return rank(a.status) - rank(b.status) || byNameThenId(a, b);
+}
+
 export function resolveTenantContext(
   snapshot: TenantSnapshot,
   preferredOrganizationPublicId?: string,
@@ -70,12 +76,8 @@ export function resolveTenantContext(
     ]),
   );
   const organizations = [...snapshot.organizations]
-    .filter(
-      (organization) =>
-        organization.status === "active" &&
-        membershipByOrganization.has(organization.id),
-    )
-    .sort(byNameThenId);
+    .filter((organization) => membershipByOrganization.has(organization.id))
+    .sort(byLifecycleThenName);
   if (organizations.length === 0) return null;
 
   const organization =
@@ -92,6 +94,7 @@ export function resolveTenantContext(
       .filter(
         (candidate) =>
           candidate.organization_id === organization.id &&
+          organization.status === "active" &&
           candidate.status === "active",
       )
       .sort(byNameThenId)[0] ?? null;

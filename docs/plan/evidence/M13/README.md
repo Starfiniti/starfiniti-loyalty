@@ -26,3 +26,13 @@ Status: M13-S01 access catalogue and review is complete on draft PR #40. M13-S02
 - Review found and repaired a real narrow-screen implicit-grid row collapse that clipped the hero. The production page now uses max-content rows aligned to the start.
 
 No production identity state changed.
+
+## M13-S02 organization and team lifecycle
+
+Status: implementation and adversarial verification are in progress on `codex/m13-org-lifecycle`; no production identity mutation is enabled.
+
+- ADR-0052 selects 256-bit one-use capabilities with digest-only storage instead of email/domain matching or administrator-entered Auth UUIDs.
+- Additive organization and membership revisions support exact rename, suspend, restore, close, offboard, role-change, and revoke state machines. The stable organization row serializes actor rechecks and owner quorum.
+- The accepting request's live Supabase subject becomes the membership. Revoked members fail the next team projection request even while an old JWT remains valid.
+- The Hub-style Team & access workflow covers organization creation, invitation issuance/acceptance/revocation, member roles, lifecycle controls, bounded audit history, suspended-owner recovery, and a minimized JSON administration export.
+- Static validation currently covers 72 migrations and 59 pgTAP files; exact-head Linux replay, 62 focused lifecycle assertions, the fourteenth two-session probe, full browser QA, and final slice scoring remain pending.

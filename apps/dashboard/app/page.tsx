@@ -12,6 +12,7 @@ import {
   merchantText,
   resolveMerchantLocale,
 } from "@/lib/merchant-locale";
+import { OrganizationOnboarding } from "./organization/organization-onboarding";
 
 function merchantGreeting(): string {
   const hourPart = new Intl.DateTimeFormat("en-GB", {
@@ -52,14 +53,15 @@ export default async function HomePage({
         lang={locale}
         tabIndex={-1}
       >
-        <section className="access-card">
+        <section className="access-card organization-access-onboarding">
           <p className="login-eyebrow">Starfiniti Loyalty</p>
           <h1>{text("No organization access")}</h1>
           <p>
             {text(
-              "Your identity is valid, but it has no active organization membership. An owner must provision membership before tenant data is visible.",
+              "Your identity is valid, but it has no organization membership. Create a tenant or accept a one-use invitation before tenant data is visible.",
             )}
           </p>
+          <OrganizationOnboarding />
           <form action={signOut}>
             <input name="lang" type="hidden" value={locale} />
             <button className="secondary" type="submit">
@@ -72,6 +74,9 @@ export default async function HomePage({
   }
 
   const { context } = state;
+  if (context.organization.status !== "active") {
+    redirect("/organization/access");
+  }
   const [report, programmeState, connections] = await Promise.all([
     getOverviewReport(context, range),
     getMerchantProgrammeState(context),
