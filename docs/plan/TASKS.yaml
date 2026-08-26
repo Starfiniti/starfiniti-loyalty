@@ -2225,7 +2225,7 @@ tasks:
           - production-build browser review passes desktop dark keyboard 390-pixel mobile 320-pixel narrow 44-pixel controls English-only zero-overflow and zero-diagnostic checks after repairing mobile hero clipping
           - exact-head Linux run 32957971079 at 6284412b620c2a3b65480c3638c0c46691f21d03 passes all seven jobs including root checks both images clean 71-migration replay 58 pgTAP files with 3058 assertions all 13 concurrency probes and all four WooCommerce runtimes
       - id: M13-S02-ORGANIZATION-AND-TEAM-LIFECYCLE
-        status: in_progress
+        status: complete
         dependencies: [M13-S01-ACCESS-CATALOGUE-AND-REVIEW]
         hypothesis: Invitation and provisioning-bound membership plus audited lifecycle commands can add and remove tenant authority immediately without email or domain auto-join.
         baseline: Organizations have no self-service lifecycle, invitation capability, optimistic member revision, owner-quorum command, minimized team view, or recovery identity snapshot.
@@ -2263,7 +2263,7 @@ tasks:
           - docs/plan/evidence/M13/README.md
           - docs/plan/evidence/M13/organization-team-browser-qa-2026-08-26.md
           - focused actions 6 of 6 dashboard typecheck lint production build workflow validation secret scan production audit and static validation of 72 migrations and 59 pgTAP files pass locally
-          - lifecycle pgTAP plan contains 70 assertions and exact-head Linux replay concurrency containers and WooCommerce matrix are pending
+          - exact-head Linux run 32966869787 at e02765568b91a316953e5fa53bd0298fb72ff866 passed all seven jobs including root checks both images clean 72-migration replay all 59 pgTAP files with 3128 assertions all 14 concurrency probes and all four WooCommerce runtimes
       - id: M13-S03-TENANT-FEDERATION
         status: planned
         dependencies: [M13-S02-ORGANIZATION-AND-TEAM-LIFECYCLE]

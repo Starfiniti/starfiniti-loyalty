@@ -38,7 +38,7 @@
 
 - Focused dashboard action suite: 6/6 passing.
 - Dashboard typecheck, zero-warning lint, static validation of 72 migrations and 59 pgTAP files, production build, workflow validation, secret scan, and production dependency audit pass.
-- The lifecycle pgTAP plan now contains 70 focused assertions. Docker-backed replay/pgTAP and the fourteenth two-session concurrency probe require Linux CI on the candidate commit.
+- Exact-head Linux run `32966869787` at `e02765568b91a316953e5fa53bd0298fb72ff866` passed the clean 72-migration replay, all 59 pgTAP files with 3,128 assertions including the 70 focused lifecycle assertions, all 14 two-session concurrency probes, both production images, root checks, and all four WooCommerce runtimes.
 - Repository-wide Windows `npm run check` reaches the known tracked CRLF/Prettier baseline (227 untouched files); every changed parseable file passes targeted Prettier and Linux clean-checkout CI is authoritative.
 
 No production identity mutation or deployment occurred.
