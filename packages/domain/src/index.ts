@@ -7,3 +7,4 @@ export * from "./audience-v1";
 export * from "./tier-policy-v2";
 export * from "./referral";
 export * from "./campaign-v1";
+export * from "./currency-v1";

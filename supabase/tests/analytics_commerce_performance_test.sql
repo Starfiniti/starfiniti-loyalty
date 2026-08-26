@@ -254,6 +254,24 @@ select * from loyalty_private.release_points(
   '2026-08-10T00:00:00Z'
 );
 
+-- This is a deliberately historical bitemporal fixture. Pin its system-time
+-- evidence before the fixed report as-of instead of depending on wall clock.
+alter table loyalty.ledger_transactions disable trigger ledger_transactions_immutable;
+alter table loyalty.point_lots disable trigger point_lots_immutable;
+update loyalty.ledger_transactions
+set created_at = '2026-08-10T00:00:01Z'
+where organization_id = (
+    select id from loyalty.organizations where slug = 'commerce-analytics-one'
+  )
+  and idempotency_key = 'analytics-commerce:activation-release';
+update loyalty.point_lots
+set created_at = '2026-08-10T00:00:02Z'
+where organization_id = (
+    select id from loyalty.organizations where slug = 'commerce-analytics-one'
+  );
+alter table loyalty.ledger_transactions enable trigger ledger_transactions_immutable;
+alter table loyalty.point_lots enable trigger point_lots_immutable;
+
 insert into loyalty_private.commerce_delivery_inbox (
   receipt_id, organization_id, connection_id, source_delivery_id,
   envelope_version, source_event_id, event_type, source_object_id,

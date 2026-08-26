@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  changeNotificationWebhookEndpointStateCommandV1,
+  createNotificationWebhookEndpointCommandV1,
   klaviyoNotificationActionAuthorizationV1,
   klaviyoNotificationOperationClaimV1,
   klaviyoNotificationPreparationV1,
@@ -9,9 +11,11 @@ import {
   merchantSendNotificationTestCommandV1,
   notificationEmailTemplateContentV1,
   notificationEventV1,
+  notificationWebhookEndpointsDocumentV1,
   notificationPreferenceV1,
   smtpNotificationDeliveryClaimV1,
   smtpNotificationDispatchAuthorizationV1,
+  rotateNotificationWebhookEndpointCommandV1,
   webhookDestinationUrlV1,
   webhookNotificationDeliveryClaimV1,
   webhookNotificationDispatchAuthorizationV1,
@@ -154,6 +158,106 @@ describe("notificationEventV1", () => {
           points: "9223372036854775808",
           availableBalance: "0",
         },
+      }).success,
+    ).toBe(false);
+  });
+});
+
+describe("notification webhook endpoint lifecycle contracts", () => {
+  const operation = {
+    idempotencyKey: "notification:webhook:operation:1",
+    correlationId: "94000000-0000-4000-8000-000000000090",
+  };
+
+  it("accepts only sorted production endpoint creation", () => {
+    const command = {
+      version: "1",
+      workspaceId: "94000000-0000-4000-8000-000000000091",
+      label: "Lifecycle automation",
+      destinationUrl: "https://hooks.example.test/starfiniti",
+      eventTypes: ["loyalty.connector.health", "loyalty.points.earned"],
+      rateLimitPerMinute: 60,
+      ...operation,
+    };
+    expect(createNotificationWebhookEndpointCommandV1.parse(command)).toEqual(
+      command,
+    );
+    expect(
+      createNotificationWebhookEndpointCommandV1.safeParse({
+        ...command,
+        destinationUrl: "http://127.0.0.1:8080/sink",
+      }).success,
+    ).toBe(false);
+    expect(
+      createNotificationWebhookEndpointCommandV1.safeParse({
+        ...command,
+        eventTypes: [...command.eventTypes].reverse(),
+      }).success,
+    ).toBe(false);
+  });
+
+  it("bounds rotation and terminal lifecycle commands", () => {
+    expect(
+      rotateNotificationWebhookEndpointCommandV1.safeParse({
+        version: "1",
+        endpointId: "94000000-0000-4000-8000-000000000092",
+        overlapSeconds: 86_400,
+        ...operation,
+      }).success,
+    ).toBe(true);
+    expect(
+      changeNotificationWebhookEndpointStateCommandV1.safeParse({
+        version: "1",
+        endpointId: "94000000-0000-4000-8000-000000000092",
+        action: "retire",
+        reason: "Integration decommissioned",
+        ...operation,
+      }).success,
+    ).toBe(true);
+  });
+
+  it("parses minimized endpoint health without accepting fingerprints", () => {
+    const endpoint = {
+      schemaVersion: "1",
+      endpointId: "94000000-0000-4000-8000-000000000092",
+      label: "Lifecycle automation",
+      state: "disabled",
+      destinationUrl: "https://hooks.example.test/starfiniti",
+      eventTypes: ["loyalty.connector.health"],
+      rateLimitPerMinute: 60,
+      currentSecretHint: "abc123",
+      previousSecretHint: null,
+      previousSecretExpiresAt: null,
+      counts: {
+        pending: "1",
+        processing: "0",
+        retryable: "0",
+        held: "0",
+        completed: "2",
+        suppressed: "0",
+        deadLetter: "0",
+        manualReview: "0",
+      },
+      lastAttemptAt: null,
+      lastErrorCode: null,
+      createdAt: "2026-08-26T06:00:00Z",
+      updatedAt: "2026-08-26T06:00:00Z",
+      retiredAt: null,
+    };
+    expect(
+      notificationWebhookEndpointsDocumentV1.parse({
+        schemaVersion: "1",
+        generatedAt: "2026-08-26T06:00:00Z",
+        canManage: true,
+        endpoints: [endpoint],
+      }).endpoints[0]?.counts.completed,
+    ).toBe("2");
+    expect(
+      notificationWebhookEndpointsDocumentV1.safeParse({
+        schemaVersion: "1",
+        generatedAt: "2026-08-26T06:00:00Z",
+        canManage: true,
+        endpoints: [{ ...endpoint, currentSecretSha256: "a".repeat(64) }],
       }).success,
     ).toBe(false);
   });

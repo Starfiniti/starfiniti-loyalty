@@ -41,6 +41,19 @@ export async function confirmWooCommerceCustomerClaim(
     ) {
       redirect(customerLocalePath("/account/loyalty?linked=1", locale));
     }
+    if (result.outcome === "rejected_value_conflict") {
+      redirect(
+        customerLocalePath("/claim/woocommerce?status=value-conflict", locale),
+      );
+    }
+    if (result.outcome === "rejected_sharing_scope") {
+      redirect(
+        customerLocalePath(
+          "/claim/woocommerce?status=sharing-unavailable",
+          locale,
+        ),
+      );
+    }
     redirect(customerLocalePath("/claim/woocommerce?status=conflict", locale));
   } catch (error) {
     if (isRedirect(error)) throw error;

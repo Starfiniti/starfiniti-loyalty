@@ -1,0 +1,31 @@
+{
+  "name": "@starfiniti/loyalty-sdk",
+  "version": "0.1.0",
+  "description": "Supported server-side TypeScript client and webhook verifier for Starfiniti Loyalty.",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "prepack": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.3",
+    "typescript": "6.0.3",
+    "vitest": "4.1.10"
+  }
+}

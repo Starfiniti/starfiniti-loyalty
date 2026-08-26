@@ -1213,7 +1213,7 @@ insert into loyalty_private.canonical_commerce_events (
 select '8b000000-0000-4000-8000-000000000601', inbox.organization_id,
   inbox.connection_id, inbox.id, 'm07-capacity-event', 'v1',
   'commerce.order.status_changed', 'order-1', pg_temp.m07_event_time(),
-  '{}'::jsonb
+  '{"order":{"currency":"EUR","currencyMinorUnitDigits":2}}'::jsonb
 from loyalty_private.commerce_delivery_inbox as inbox
 where inbox.source_delivery_id = 'm07-capacity-delivery';
 

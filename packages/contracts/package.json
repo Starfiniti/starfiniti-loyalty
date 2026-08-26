@@ -10,8 +10,11 @@
     "./audience": "./src/audience.ts",
     "./campaign": "./src/campaign.ts",
     "./notification": "./src/notification.ts",
+    "./webhook-secrets": "./src/webhook-secrets.ts",
     "./referral": "./src/referral.ts",
-    "./tier-policy-v2": "./src/tier-policy-v2.ts"
+    "./tier-policy-v2": "./src/tier-policy-v2.ts",
+    "./currency": "./src/currency.ts",
+    "./service-api": "./src/service-api.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

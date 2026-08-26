@@ -36,3 +36,11 @@ The host service used `borg create --content-from-command` and obtained one tar 
 ## Rollback and follow-up
 
 Timestamped copies of the prior guest `authorized_keys` entry, host script, service, and timer remain on their respective machines. The timer can be disabled immediately without affecting PostgreSQL or local recovery files. Legacy tar-stream archives remain readable during retention; restore procedures must recognize both layouts. Capacity and transfer-size anomaly monitoring remain part of the unfinished M01 operational gate.
+
+## Live follow-up — 2026-08-26
+
+- Read-only inspection through the configured `s2-root` operator route confirmed VM 971 running with about 12.6 days uptime and a cumulative 3,603,568,607,883-byte outbound counter. That counter includes the Aug 14 incident and has not reset.
+- The active timer still invokes the incremental `rrsync` stage. The old `--content-from-command` PostgreSQL script exists only as the timestamped pre-incremental rollback copy; no second active timer or cron job targets `10.10.10.71`.
+- A live scheduled cycle transferred three new files: 50,108 bytes of file content, 308,904 bytes received by rsync, and about 383 KB added to the VM tap counter. It completed successfully in roughly four seconds.
+- PVE RRD reported a maximum VM outbound rate of 102,968 bytes/s over both the last hour and last 24 hours. The last-hour disk-read maximum was zero and the 24-hour maximum was 1,843 bytes/s. The former 200–235 MB/s, 22 GB-per-cycle behavior is not active.
+- No production mutation was required; the healthy recovery timer remained enabled.

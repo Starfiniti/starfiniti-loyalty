@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Added the M11 ecosystem closeout manifest and validator with 41 exact repository/production checks, deterministic seven-category scoring, an 80% category floor, sensitive-evidence rejection, and false-completion self-tests.
+- Normalized outbound-webhook secret hints to the database-safe Base64URL alphabet while retaining the canonical Base64 `whsec_` secret wire format.
+- Added endpoint-scoped outbound-webhook lifecycle operations with one-time 256-bit signing keys, digest-only storage, immutable revisions, disabled-only bounded rotation, disable-before-authorization, retirement scrubbing, and minimized merchant health.
+- Added supported dependency-light TypeScript and PHP 8.1 clients for strict Service API requests and exact raw-body Standard Webhooks verification with shared executable replay vectors.
+- Added M11 scoped Service APIs with digest-only one-time credentials, least-privilege customer/activity scopes, bounded rotation and immediate revocation, database-derived authority and fixed-minute quotas, opaque customer namespaces, canonical event/ledger reuse, and responsive owner/admin operations.
+- Repaired service-account confirmation contrast, action target sizes, and checkbox-label alignment after desktop/mobile dark-mode browser review.
+- Added M11 exact multi-currency evidence with immutable occurrence-time provider snapshots, rational conversion and PostgreSQL recomputation, original-snapshot refunds, source-currency rule visibility, exact retries, and an English policy/revision Operations control.
+- Added M11 verified cross-workspace customer linking with independent signed-store proofs, immutable source/canonical revisions, value-conflict rejection, protected reversible projections, Auth-derived unlink, and a responsive connected-stores customer experience.
+- Added M11's explicit multi-store wallet-scope foundation with immutable programme-group sharing revisions, exact isolated/shared workspace allowlists, Auth-derived owner/admin entitlement authority, optimistic idempotent commands, projection-drift detection, connector-removal protection, and a responsive review-before-save Operations control.
 - Completed the M10 analytics command-center slice with one explicit cross-report snapshot instant, fail-closed divergence/future checks, current/stale integrity states, section navigation, honest loading/empty/partial-error states, and keyboard-focusable responsive cohort tables.
 - Added the fail-closed M10 analytics closeout manifest and validator with 29 repository/production checks, exact seven-category scoring, an 80% category floor, sensitive-evidence rejection, false-completion self-test, and a read-only legacy Overview compatibility shadow.
 

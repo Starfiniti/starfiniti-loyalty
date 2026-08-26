@@ -1,0 +1,185 @@
+schema: starfiniti.ecosystem-canary.v1
+status: in_progress
+observedAt: 2026-08-26T05:20:00Z
+currentProduction:
+  release: v0.1.11
+  applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
+candidate:
+  pullRequest: 38
+  commit: 206385842bbe1e6800c95e6f27b9fd2b26986105
+  approvedRelease: false
+  operatorAccess: true
+publicBaseline:
+  dashboardHealth: 200
+  login: 200
+  authWithoutKey: 401
+  restWithoutKey: 401
+  canonicalDns: true
+score:
+  total: 90
+  target: 90
+  minimumCategoryRatio: 0.8
+  categories:
+    - id: correctness
+      weight: 20
+      score: 20
+      evidence: Explicit topology, verified identity, immutable conversion, scoped API, and webhook lifecycle contracts have deterministic database-backed outcomes.
+    - id: security
+      weight: 15
+      score: 15
+      evidence: PostgreSQL derives tenant, actor, identity, value, rate, quota, and endpoint authority; strict RLS, grants, minimization, and secret boundaries pass.
+    - id: ledger_reliability
+      weight: 15
+      score: 15
+      evidence: Sharing and identity commands are value-free, foreign value uses one immutable snapshot, and API activities reuse the canonical idempotent ledger pipeline.
+    - id: tests
+      weight: 15
+      score: 15
+      evidence: Candidate CI passed 688 workspace tests, 2,905 pgTAP assertions, eleven concurrency probes, both images, and all four WooCommerce runtimes.
+    - id: performance
+      weight: 10
+      score: 8
+      evidence: Cardinality, payloads, quotas, retries, timestamps, rates, and reads are bounded; production latency and capacity observation remain pending.
+    - id: operability
+      weight: 10
+      score: 3
+      evidence: Disabled-first rollout, health views, rotation, retirement, rollback, and runbooks exist; release, canaries, reconciliation, and observation remain pending.
+    - id: maintainability
+      weight: 15
+      score: 14
+      evidence: Versioned contracts, additive migrations, supported clients, ADRs, tests, runbooks, and V1 compatibility are maintained; production closeout remains.
+checks:
+  - id: exact_head_ci
+    status: passed
+    evidence: Run 32934487896 passed all seven jobs at candidate commit 2063858 after the Base64URL hint regression and secret-scanner correction.
+  - id: migration_replay
+    status: passed
+    evidence: Run 32934487896 cleanly replayed all 67 additive migrations and 54 pgTAP files with 2,905 assertions.
+  - id: contract_client_matrix
+    status: passed
+    evidence: Strict sharing, identity, currency, Service API, and webhook contracts plus TypeScript and PHP clients pass shared executable vectors.
+  - id: database_authority_matrix
+    status: passed
+    evidence: Independent inventories, RLS, grants, live membership, public-selector substitution, revocation, immutable evidence, and zero-value boundaries pass.
+  - id: concurrency_matrix
+    status: passed
+    evidence: Eleven two-session probes cover value, capacity, referrals, campaigns, exports, topology, identity, conversion, quotas, and webhook lifecycle serialization.
+  - id: woocommerce_runtime_matrix
+    status: passed
+    evidence: Minimum and current WordPress and WooCommerce pass with HPOS and legacy storage while ecosystem features remain outside checkout.
+  - id: browser_accessibility
+    status: passed
+    evidence: Production-build desktop and mobile reviews pass English-only responsive layouts, keyboard focus, dark mode, reduced motion, contrast, and zero diagnostics.
+  - id: checkout_independence_matrix
+    status: passed
+    evidence: WooCommerce runtime and connector regression suites preserve bounded local checkout behavior with no new synchronous ecosystem dependency.
+  - id: public_production_baseline
+    status: passed
+    evidence: Canonical DNS resolves; dashboard health and login return 200, while unauthenticated Supabase Auth and REST roots return 401.
+  - id: approved_release
+    status: pending
+    evidence: PR 38 is a clean green stacked draft based on unmerged PR 37 and is not an approved immutable production release.
+  - id: operator_access
+    status: passed
+    evidence: The configured s2-root route reached the production Proxmox node read-only and confirmed VM 971 running without mutating production.
+  - id: pre_change_recovery_point
+    status: pending
+    evidence: A fresh verified database base and encrypted incremental archive must complete immediately before the reviewed deployment.
+  - id: production_source_baseline
+    status: pending
+    evidence: Public and infrastructure health are current, but minimized topology, identity, currency, event, quota, delivery, and ledger counts require the approved release window.
+  - id: disabled_deployment
+    status: pending
+    evidence: Candidate images and migrations have not been deployed; every M11 capability remains absent or disabled in production.
+  - id: migration_registration
+    status: pending
+    evidence: Production must record each M11 additive migration version and source hash exactly once before any canary command.
+  - id: ecosystem_entitlement_canary
+    status: pending
+    evidence: Keep ecosystem capabilities disabled globally, then enable only the Starfiniti organization after disabled-deployment smoke passes.
+  - id: isolated_topology_reconciliation
+    status: pending
+    evidence: Reconcile the existing isolated Starfiniti group, workspace membership, connector protection, wallets, and zero command-created ledger effects.
+  - id: shared_topology_reconciliation
+    status: pending
+    evidence: Add one explicitly approved Starfiniti workspace, reconcile the immutable revision and projection, then return to the reviewed scope.
+  - id: connector_removal_protection
+    status: pending
+    evidence: Prove a workspace with connector history cannot be removed and that the rejected command changes no topology or loyalty value.
+  - id: verified_customer_link_canary
+    status: pending
+    evidence: Link one approved second-store identity through fresh signed proof and reconcile Auth, source identity, canonical customer, wallet, and event reads.
+  - id: unlink_relink_rollback
+    status: pending
+    evidence: Unlink and relink only a value-free secondary identity, preserving immutable revisions, provenance, wallet value, and customer access.
+  - id: approved_rate_provider
+    status: pending
+    evidence: Production conversion requires owner approval of one provider identifier, allowed source currency, evidence age, direction, and precision policy.
+  - id: provider_adapter_isolation
+    status: pending
+    evidence: Mount provider material only in the isolated ingestion process and prove browser, worker peers, database evidence, and logs contain none.
+  - id: foreign_order_conversion
+    status: pending
+    evidence: Process one approved foreign order and reconcile source amount, occurrence snapshot, exact base amount, programme evaluation, and ledger effect.
+  - id: foreign_refund_snapshot_reuse
+    status: pending
+    evidence: Refund the canary order and prove the original award snapshot is reused with no current-rate lookup or unexplained point difference.
+  - id: currency_analytics_reconciliation
+    status: pending
+    evidence: Reconcile source, rate, rounding, base amount, award, refund, liability, and analytics currency definitions exactly.
+  - id: service_account_issuance
+    status: pending
+    evidence: Issue one least-privilege Starfiniti credential once, verify only its digest and hint persist, and record the bounded scope and quota.
+  - id: customer_sync_replay
+    status: pending
+    evidence: Replay one opaque external customer command and reconcile one identity, one receipt, no email merge, and zero ledger effects.
+  - id: activity_event_ledger_replay
+    status: pending
+    evidence: Replay one signed custom activity and reconcile one canonical event, effect, explanation, cap decision, and ledger transaction.
+  - id: credential_rotation_revocation
+    status: pending
+    evidence: Exercise bounded-overlap rotation and immediate revocation while proving the prior credential fails after its exact authority window.
+  - id: quota_concurrency_observation
+    status: pending
+    evidence: Drive concurrent canary requests to the fixed-minute boundary and confirm accepted plus rejected counts exactly match the configured quota.
+  - id: client_package_vectors
+    status: passed
+    evidence: Dependency-light TypeScript and PHP 8.1 packages pass identical request, raw-body signature, timestamp, and stable replay-identity vectors.
+  - id: webhook_secret_mount_isolation
+    status: pending
+    evidence: Create one disabled endpoint and mount its one-time material in only one endpoint-isolated worker with no database or log disclosure.
+  - id: webhook_delivery_replay
+    status: pending
+    evidence: Deliver and replay one minimized signed event while receiver-owned replay storage permits exactly one business effect.
+  - id: webhook_disable_rotation_reactivation
+    status: pending
+    evidence: Disable before authorization, rotate only while disabled, reactivate after the reviewed mount update, and reconcile exact revisions and attempts.
+  - id: webhook_retirement_reconciliation
+    status: pending
+    evidence: Retire the canary endpoint, scrub its live destination, stop new authorization, and retain exact immutable delivery and audit evidence.
+  - id: production_outage_continuity
+    status: pending
+    evidence: Stop the canary API, conversion adapter, and webhook worker independently while checkout, ingestion, refunds, releases, and reconciliation continue.
+  - id: latency_capacity_observation
+    status: pending
+    evidence: Record production command and read latency, quota behavior, queue depth, provider timing, worker resource use, and bounded failure responses.
+  - id: rollback_rehearsal
+    status: pending
+    evidence: Disable every M11 entitlement, revoke canary credentials, stop isolated workers, restore prior images, and retain additive evidence and loyalty value.
+  - id: observation_window
+    status: pending
+    evidence: Observe the controlled canaries after rollback rehearsal and record health, errors, retries, rates, quotas, deliveries, privacy, and reconciliation.
+  - id: final_reconciliation
+    status: pending
+    evidence: Confirm zero unexplained topology, identity, wallet, currency, event, ledger, quota, endpoint, delivery, audit, checkout, or privacy difference.
+automaticFails:
+  - implicit wallet sharing or identity authority from email domain organization membership claims or browser selectors
+  - cross-organization workspace customer rate credential endpoint or value authority
+  - duplicate customer event ledger transaction quota receipt endpoint delivery or receiver business effect
+  - mutable caller-supplied processing-time or refund-time rate changes historical value
+  - raw reusable API webhook or provider material appears in database browser logs evidence or another process
+  - connector removal unlink retirement or rollback strands history value customer access or immutable evidence
+  - checkout ingestion refunds releases reconciliation or existing redemption depend on ecosystem or provider availability
+  - unexplained topology identity currency event ledger quota delivery audit or analytical difference
+  - approved release recovery point rollback observation or final reconciliation evidence is absent
+  - critical security tenancy ledger privacy recovery accessibility or data-loss finding remains unresolved

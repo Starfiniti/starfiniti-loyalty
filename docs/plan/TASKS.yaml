@@ -452,7 +452,6 @@ tasks:
       ]
     owner_inputs:
       - reviewed merge and immutable release approval for the stacked M04 through M09 branch chain
-      - restored non-interactive Proxmox operator access for the approved release
       - one explicitly approved Starfiniti-controlled or merchant-authorized WooCommerce canary store and test customer
     acceptance:
       [
@@ -1543,7 +1542,8 @@ tasks:
   - id: M11-ECOSYSTEM
     title: Add multi-store policy, currencies, service APIs, and ecosystem operations
     module: M11
-    status: planned
+    status: in_progress
+    module_score: 90
     dependencies: [M10-ANALYTICS]
     hypothesis: Explicit sharing and scoped APIs enable larger merchants without implicit cross-tenant authority or currency ambiguity.
     baseline: One isolated workspace/programme link and signed WooCommerce integration exist.
@@ -1576,9 +1576,305 @@ tasks:
         currency property/reconciliation,
         TypeScript/PHP contracts,
       ]
-    risks: [R-001, R-002]
-    docs: [docs/integrations/MERCHANT_API.md, docs/api/WEBHOOKS.md]
-    evidence: [docs/plan/evidence/M11/README.md]
+    slices:
+      - id: M11-S01-EXPLICIT-MULTI-STORE-SHARING
+        status: complete
+        hypothesis: A reviewed exact workspace allowlist can extend one programme-group wallet boundary without treating organization membership as value-sharing authority.
+        baseline: Programme groups and workspace links exist as mutable topology with no immutable policy revisions or merchant command.
+        metrics:
+          - implicit workspace links created = 0
+          - cross-tenant workspace selectors accepted = 0
+          - exact command retries creating another version = 0
+          - sharing commands creating ledger effects = 0
+          - connector-history workspaces removed = 0
+        acceptance:
+          - isolated mode retains exactly one active workspace and explicit shared mode requires 2 through 25 unique active workspace selectors
+          - PostgreSQL derives tenant actor role entitlement programme group and internal workspace keys from live Auth and public selectors
+          - every accepted change appends one immutable policy version exact workspace membership and minimized audit event while current topology remains reconciled
+          - owners and admins receive a responsive review-before-save merchant control while all other members receive a read-only minimized policy
+          - a workspace with a provisioned connector for this programme group cannot be removed by the sharing command
+          - policy changes never mutate a customer wallet ledger lot programme version connector event or WooCommerce checkout path
+        failure_modes:
+          - same-organization workspace is linked implicitly
+          - mutable link projection diverges from latest immutable policy
+          - stale revision or changed idempotency reuse overwrites topology
+          - suspended cross-tenant duplicate or caller-expanded workspace authority is accepted
+          - connected workspace removal strands connector and customer history
+          - unbounded workspace projection reaches the browser
+        security_boundaries:
+          - browser roles have no direct table access to immutable sharing history and no direct DML over current topology
+          - only a live owner/admin with ecosystem.api may execute the security-definer command
+          - the read model returns public group/workspace selectors names slugs link state revision entitlement and connector removal protection only
+          - group and selected workspace rows are locked before revision comparison and topology mutation
+        rollout: Deploy additive version tables and command first, verify migrated projection parity, expose read-only policy, then enable owner/admin controls for only the Starfiniti tenant.
+        rollback: Hide the control and stop new policy commands while retaining the last exact topology immutable revisions connector links customer access and all loyalty value.
+        verification:
+          - strict contract tests for isolated/shared cardinality unique selectors and minimized response shape
+          - pgTAP for RLS grants Auth roles tenancy revocation idempotency optimistic revision drift connector protection audit immutability and zero ledger mutation
+          - two-session same-group revision race proves at most one accepted next revision
+          - Hub-style desktop mobile keyboard contrast reduced-motion loading unavailable and protected-workspace browser review
+          - exact-head baseline clean migration replay production images and all four WooCommerce runtimes
+        evidence:
+          - additive contracts migration read and command boundaries plus 52 planned pgTAP assertions are implemented on codex/m11-multistore
+          - all 626 workspace tests every workspace typecheck targeted lint production build validators migration validation formatting and diff checks pass locally
+          - native Chrome desktop/mobile review passes protected-state shared-scope interaction exact review keyboard focus reduced motion English-only output mobile stacking zero overflow and zero unexpected diagnostics
+          - exact-head run 32905613578 at 3cb609d passes all seven jobs including clean replay all 50 pgTAP files the same-revision concurrency race both images and all four WooCommerce runtimes
+          - disabled production deployment canary topology wallet connector reconciliation rollback and observation remain pending
+      - id: M11-S02-EXPLICIT-CROSS-WORKSPACE-CUSTOMER-LINKING
+        status: complete
+        hypothesis: Two fresh store-signed customer proofs bound to one live Auth subject can safely establish shared-wallet identity without treating email organization membership or a browser selector as identity authority.
+        baseline: One Auth subject can link only one customer record per organization and shared workspace policy does not prove that two store identities belong to one person.
+        metrics:
+          - links created from email or domain matching = 0
+          - secondary customers with pre-existing wallet value canonicalized = 0
+          - exact proof retries creating another link revision = 0
+          - cross-tenant or unlinked-workspace identities accepted = 0
+          - link or unlink commands creating ledger effects = 0
+          - unresolved identity or Auth projection drift = 0
+        acceptance:
+          - shared wallets require an explicit verified cross-workspace identity link and never merge by email alone
+          - unlinking preserves immutable value provenance and produces a reversible audited state
+          - each additional store requires its own fresh WooCommerce HMAC proof while PostgreSQL derives tenant programme group workspace customer and Auth authority
+          - canonicalization is permitted only when at most one member already owns a wallet and the secondary customer has no wallet value state to strand
+          - every accepted link or unlink appends one immutable revision with exact source identity customer connection workspace Auth and canonical-customer evidence
+          - all current customer and worker paths resolve the canonical customer through protected projections while historical claim and commerce evidence retain source provenance
+        failure_modes:
+          - email name address domain organization membership or JWT metadata links customers
+          - one signed store proof silently links another workspace
+          - two existing wallets are merged copied or hidden
+          - concurrent claims choose different canonical customers or create duplicate revisions
+          - unlink rewrites ledger history or leaves an identity mapped to an unauthorized wallet
+          - privacy erasure export or customer access omits a linked source identity
+        security_boundaries:
+          - raw link tables and immutable versions have RLS and no browser runtime or worker table grants
+          - only the server-only HMAC-verified claim command may add a store identity and the customer unlink command derives the live Auth subject
+          - exact source identity and canonical projections are changed only under transaction-scoped private authorization checked by triggers
+          - shared linking requires the latest explicit workspace allowlist and fails closed on topology or projection drift
+        rollout: Deploy disabled with read-only link-state inspection first then enable verified second-store claims for the Starfiniti tenant and reconcile identities links wallets events and customer reads.
+        rollback: Stop new link and unlink commands; retain immutable revisions and the last protected canonical projection. Reverse only a value-free secondary identity through an audited unlink revision; never rewrite ledger history.
+        verification:
+          - strict contracts for bounded minimized link state and unlink commands
+          - pgTAP for proof authority topology tenancy wallet conflicts RLS grants immutable revisions projection guards retries unlink and zero ledger effects
+          - two-session races for two secondary claims and competing Auth subjects
+          - worker award and customer read redemption privacy and outage regression checks
+          - responsive keyboard screen-reader reduced-motion and mobile customer link-state review
+        evidence:
+          - ADR-0043 strict contracts additive protected projection migration Auth-derived read and unlink server actions and connected-store customer UI are implemented on codex/m11-multistore
+          - 53 focused pgTAP assertions cover grants RLS proof authority canonicalization conflicts immutability unlink relink privacy minimization and zero ledger effects
+          - an eighth concurrency probe covers simultaneous second and third store proofs plus competing Auth subjects
+          - focused contract and all 205 dashboard tests both affected typechecks targeted lint migration validation and diff checks pass locally
+          - Playwright desktop and 375-pixel mobile review passes readable typography required confirmation 40-pixel action target keyboard focus reduced motion degraded state zero overflow and zero diagnostics
+          - exact-head run 32910582010 at 19c24a4 passes all seven jobs including clean 64-migration replay all 51 pgTAP files with 2716 assertions all eight concurrency probes both images and all four WooCommerce runtimes
+          - disabled production deployment Starfiniti-only canary identity link wallet event reconciliation rollback and observation remain owned by M11-S06
+      - id: M11-S03-MULTI-CURRENCY-EVIDENCE
+        status: complete
+        hypothesis: A historical provider snapshot selected at commerce occurrence and applied with exact rational arithmetic can make foreign-currency earning replayable without granting WooCommerce or processing time rate authority.
+        baseline: V2 correctly rejects every order whose currency or precision differs from the published programme and no conversion provenance exists.
+        owner_inputs: [approved exchange-rate provider before live conversion]
+        metrics:
+          - browser or WooCommerce supplied rates accepted = 0
+          - retries selecting another snapshot or base amount = 0
+          - refunds using a later rate = 0
+          - accepted conversions with arithmetic or projection drift = 0
+          - foreign-currency events processed without one exact policy and snapshot = 0
+          - conversion commands creating ledger effects = 0
+        acceptance:
+          - every conversion stores source amount currency rate provider timestamp rounding base amount and policy version
+          - mixed-currency analytics and liability remain unavailable until exact reconciliation passes
+          - same-currency V1 and V2 behavior remains byte-compatible while foreign-currency V2 facts retain source scope and evaluate in the immutable programme base currency
+          - every atomic base amount is independently recomputed in PostgreSQL from an exact positive rational rate and declared minor-unit precisions
+          - cumulative and full refunds reuse the original award snapshot and never resolve a current rate
+          - missing stale overlapping wrong-direction precision-mismatched or unapproved evidence fails closed without affecting checkout
+        failure_modes:
+          - a store plugin or browser becomes exchange-rate authority
+          - worker retry timing changes points
+          - line rounding cannot reconcile to retained evidence
+          - a refund uses a different policy or snapshot
+          - mixed source amounts appear as native programme currency without provenance
+        security_boundaries:
+          - conversion policies snapshots and amount evidence have RLS and no browser table grants
+          - only the isolated worker role can ingest provider snapshots or bind a conversion batch to a canonical event
+          - programme customer tenant connection and base currency authority are derived from existing database relations
+          - provider credentials and raw provider payloads are never stored in public schemas logs or conversion evidence
+        rollout: Deploy additive tables and functions disabled then canary one approved provider and source currency for the Starfiniti tenant before enabling foreign-currency effects.
+        rollback: Stop new foreign-currency policy resolution while retaining immutable rate conversion evaluation and ledger history; same-currency value and checkout continue.
+        verification:
+          - contract and domain property tests cover zero three and six decimal precisions large integers ties exact division direction and invalid rates
+          - pgTAP covers RLS grants immutability policy/snapshot selection staleness overlap precision tenancy independent recomputation idempotency refund reuse and zero ledger effects
+          - two-session probe proves one canonical conversion batch and one award effect for concurrent duplicate delivery
+          - worker contract tests cover same-currency compatibility foreign conversion missing evidence retry and refund snapshot reuse
+          - exact-head baseline clean replay images and all four WooCommerce runtimes
+        evidence:
+          - ADR-0044 selects immutable occurrence-time provider snapshots exact rational arithmetic atomic half-away rounding and original-snapshot refund reuse
+          - strict policy rate context batch and evidence contracts plus BigInt domain conversion cover exact direction precision canonical integers and bounded arithmetic
+          - additive private RLS tables expose one owner/admin minimized policy command/read while exact worker-only functions ingest snapshots reselect and reject ambiguous occurrence-time context independently verify every atomic amount and bind one event evidence and exact-batch digest
+          - the V2 worker converts gross paid refunded shipping tax and fee facts before evaluation retains source scope for rule conditions and reuses original award evidence for refunds
+          - Operations provides an English responsive review-before-save source-policy control that exposes no tenant key provider credential rate or raw provider payload
+          - all 654 workspace tests every workspace typecheck targeted lint production builds validators static 65-migration and 52-pgTAP validation exact 58-assertion accounting and diff checks pass locally
+          - production-build browser QA passes responsive desktop mobile exact review required confirmation English-only output dark mode mobile navigation keyboard focus zero overflow and zero diagnostics after correcting undersized legacy actions and their masked focus ring
+          - exact-head run 32918516110 at 6bf137c passes all seven jobs including clean 65-migration replay all 52 pgTAP files with 2774 assertions all nine concurrency probes both images and all four WooCommerce runtimes
+          - the currency race returns one created and one duplicate identity rejects changed projection and atomic batches and reconciles one evidence row one atomic amount and zero ledger effects
+          - production conversion remains disabled and provider selection credentials Starfiniti canary exact reconciliation rollback and observation remain owned by M11-S06
+      - id: M11-S04-SERVICE-ACCOUNTS-AND-INBOUND-APIS
+        status: complete
+        hypothesis: Organization-scoped opaque credentials with database-derived authority let merchants integrate external systems without distributing platform secrets or creating a second loyalty-value path.
+        baseline: The signed Merchant Activity endpoint has bounded HMAC verification and canonical-event idempotency but uses deployment-managed connector keys and has no merchant-scoped service-account lifecycle customer namespace or database-authoritative quota.
+        targets:
+          - every accepted request resolves one live organization workspace programme and scope from the credential rather than request authority
+          - exact customer and activity retries create one customer identity and one canonical event effect
+          - concurrent quota consumers never exceed the configured fixed-window limit
+          - rotation supports a bounded overlap while revocation fails on the next request
+          - stored and browser-visible projections contain no reusable credential secret
+        owner_inputs: []
+        acceptance:
+          - scoped hashed service credentials support rotation revocation rate limits and idempotent activity/customer commands
+          - one-time issued credentials are shown only to the authorized owner or admin and are never persisted or returned again
+          - API callers submit no organization actor connection programme or wallet authority
+          - existing Merchant Activity clients and historical events remain compatible
+        failure_modes:
+          - raw credential persistence logging browser hydration or audit leakage
+          - cross-tenant credential or public-selector substitution
+          - revoked or expired credential acceptance
+          - rotation gap or indefinite overlap
+          - rate-limit overshoot under concurrency
+          - idempotency-key reuse with changed customer or activity content
+          - email-derived customer merging or duplicate customer creation under race
+          - entitlement or service-account disablement mutating balances history refunds reconciliation or checkout
+        security_boundary: The Next.js server parses one high-entropy bearer credential and passes only its public credential selector plus SHA-256 digest to a private empty-search-path PostgreSQL authorizer. PostgreSQL derives tenant workspace programme connection scopes entitlement and quota; browser roles have no credential digest or private API command grants.
+        rollout: Ship disabled behind ecosystem.api, create one Starfiniti pilot service account, exercise customer then activity replay and rotation, revoke it, reconcile canonical events and ledger effects, then enable per tenant.
+        rollback: Disable new service-account issuance and inbound routes, revoke pilot credentials, preserve immutable receipts canonical events customer mappings and audit evidence, and leave the legacy signed Merchant Activity route unchanged.
+        verification:
+          - contract and route tests for bounded bodies token parsing minimized responses status mapping and secret-safe failures
+          - pgTAP grants RLS roles scopes entitlement lifecycle tenant isolation idempotency immutability and no-ledger assertions
+          - two-session customer upsert and quota concurrency probes
+          - browser desktop mobile keyboard dark-mode one-time-secret and degraded-authority review
+          - full check migration replay secret scan production images and WooCommerce matrix
+        metrics:
+          activation: service account created credential issued customer synchronized and activity accepted
+          correctness: duplicate customer and activity business effects equal zero
+          security: reusable secret occurrences outside the one-time response equal zero
+          reliability: quota overshoot and revoked-request acceptance equal zero
+          operability: request results expose bounded request correlation quota remaining and safe error codes
+        evidence:
+          - ADR-0045 retains the legacy signed activity boundary and selects scoped opaque 256-bit credentials whose SHA-256 digest six-character hint lifecycle and randomized customer-namespace pepper are the only retained secret evidence
+          - additive private RLS tables synthetic service_api connection strict grants and empty-search-path functions derive tenant workspace programme connection scope entitlement and fixed-minute quota without accepting caller authority
+          - strict customer and activity routes return bounded cache-safe correlation and RateLimit evidence while customer synchronization remains value-free and custom activity reuses the canonical commerce event effect cap and ledger pipeline
+          - owners and admins receive server-rendered create one-time issue bounded-overlap rotation and immediate credential-revocation controls while operator cross-tenant expired malformed and changed-idempotency cases fail closed
+          - 26 focused contract cases strict route and action cases all 223 dashboard 107 worker and 62 domain regression tests 72 focused pgTAP assertions and the tenth two-session probe pass
+          - exact-head run 32927596360 at 479f605 passes all seven jobs after the browser-driven repair including clean 66-migration replay all 53 pgTAP files with 2846 assertions all ten concurrency probes both images and all four WooCommerce runtimes
+          - Playwright desktop mobile dark reduced-motion keyboard and diagnostic review passes 16.48-to-1 confirmation contrast 40-pixel actions aligned labels English-only output zero overflow and zero browser errors after repairing three deterministic visual defects
+          - production issuance remains disabled and Starfiniti-only customer activity replay rotation revocation event-ledger reconciliation rollback and observation remain owned by M11-S06
+      - id: M11-S05-OUTBOUND-WEBHOOKS-CLIENTS-AND-OPERATIONS
+        status: complete
+        hypothesis: Endpoint-scoped lifecycle commands, tested receiver helpers, and one evidence-backed health view let merchants operate provider-neutral integrations without exposing signing material or introducing another event/value path.
+        baseline: The M08 worker already delivers a strict minimized NotificationEventV1 with Standard Webhooks HMAC, SSRF resistance, consent rechecks, bounded retries, and append-only attempt evidence, but endpoints are deployment-provisioned, lifecycle changes are unaudited manual SQL, no supported receiver or Service API client is packaged, and merchant health aggregates hide endpoint data flow.
+        targets:
+          - endpoint creation and rotation return one unique 256-bit secret exactly once while PostgreSQL retains only its SHA-256 fingerprint and bounded hint
+          - disablement takes effect before the next authorization and terminal retirement removes the live destination while retaining immutable delivery evidence
+          - exact command retries create one endpoint or rotation and changed reuse fails closed
+          - TypeScript and PHP clients produce identical Service API bodies and verify the same raw-body Standard Webhooks signature and replay identity
+          - every endpoint health row reconciles to its canonical deliveries and append-only attempts without exposing payload response body worker identity or reusable secret
+        owner_inputs: []
+        acceptance:
+          - signed minimized outbound webhooks have replay protection bounded retries rotation and deletion controls
+          - published TypeScript and PHP contracts plus integration health views match tested runtime behavior
+          - activation remains an explicit reviewed deployment step because one isolated worker and mounted secret belong to one endpoint
+          - existing M08 endpoints deliveries attempts wire signatures and receiver behavior remain backward compatible
+        failure_modes:
+          - raw signing secret persistence logging browser hydration replay or duplicate command disclosure
+          - tenant endpoint substitution or role escalation
+          - active delivery after disablement retirement consent withdrawal entitlement removal or subscription removal
+          - rotation without bounded prior-key expiry or an unrecoverable secret/worker mismatch
+          - retirement deleting immutable delivery or attempt evidence
+          - SDK body drift status ambiguity unbounded response parsing or authorization leakage
+          - webhook verification after JSON reserialization non-constant-time comparison stale timestamp acceptance or duplicate webhook processing
+          - endpoint projection leaking fingerprints response bodies payloads contacts or worker references
+        security_boundary: The authenticated Next.js server generates raw webhook secrets and passes only a public workspace or endpoint selector, SHA-256 fingerprint, bounded hint, and reviewed command fields to exact-signature authenticated wrappers. PostgreSQL derives the Auth actor, organization, role, entitlement, endpoint, and lifecycle authority; private mutation primitives are not executable by browser, runtime, or worker roles. Receiver SDKs verify exact raw bytes and expose the stable webhook ID for caller-owned replay storage.
+        rollout: Deploy additive readers and commands with endpoint creation disabled by the notifications entitlement, create one disabled Starfiniti endpoint, mount its one-time secret in one isolated webhook worker, run receiver vectors, activate through the reviewed operator runbook, deliver and replay one event, disable, rotate with bounded overlap, reactivate, retire, and reconcile health/revisions/deliveries/attempts.
+        rollback: Disable lifecycle actions, stop the endpoint-isolated worker, disable the endpoint, and retain endpoint revisions deliveries attempts events and audit evidence. Existing M08 delivery functions and wire format remain authoritative; forward fixes restore compatible management readers without rewriting history.
+        verification:
+          - contract property and vector tests for secret format exact request bodies bounded responses signature tolerance rotation and replay identity
+          - PHP 8.1-compatible syntax and executable vectors shared with TypeScript
+          - pgTAP for grants RLS tenant/role/entitlement authority idempotency lifecycle immutability retirement minimization and exact health counts
+          - worker regression tests for retries SSRF rotation signatures consent and disable-before-authorization
+          - dashboard action/server tests plus desktop mobile keyboard dark-mode one-time-secret and degraded/retired states
+          - full check migration replay secret/license scans images and WooCommerce matrix
+        metrics:
+          activation: one disabled endpoint one mounted worker one accepted signed event and one reconciled health row
+          correctness: command replay differences and endpoint health reconciliation differences equal zero
+          security: reusable secret fingerprint payload response body contact and worker-reference projection occurrences equal zero
+          reliability: deliveries authorized after disable or retirement and duplicate receiver effects equal zero
+          operability: every endpoint exposes bounded state subscription outstanding failure and last-attempt evidence plus a documented next action
+        evidence:
+          - ADR-0046 selects endpoint-scoped digest-only lifecycle authority and dependency-light supported clients while preserving the M08 wire format and endpoint-isolated worker boundary
+          - additive private RLS revisions and exact-signature Auth-derived lifecycle wrappers create disabled endpoints rotate only while disabled stop authorization before disable or retirement scrub retired destinations and retain immutable delivery evidence while private primitives remain unavailable to application roles
+          - strict TypeScript and PHP 8.1 clients share exact Service API bodies Standard Webhooks raw-body verification bounded timestamp tolerance stable replay identity and executable cross-language vectors
+          - minimized merchant health and owner-admin controls expose safe lifecycle counts subscriptions last-attempt evidence and next actions while analyst and cross-tenant states fail closed
+          - exact code-head run 32932756596 at a495433 passes all seven jobs including baseline both images clean 67-migration replay all 54 pgTAP files with 2905 assertions all eleven concurrency probes and all four WooCommerce runtimes
+          - 59 focused lifecycle pgTAP assertions 229 dashboard 107 worker 281 contract 62 domain and eight TypeScript SDK tests plus nine PHP sources and executable vectors pass
+          - the eleventh two-session probe serializes two authenticated retries through PostgreSQL-derived actor and tenant authority into one endpoint revision attributed audit and zero ledger effects
+          - production-build desktop mobile dark reduced-motion keyboard and diagnostic review passes active disabled retired degraded and read-only states 40-pixel lifecycle actions three-pixel focus zero overflow and zero browser errors
+          - two Linux replay iterations failed closed on callable SQL syntax independent exposed-function inventories and a test-role boundary; narrow corrections preserved private-table denial and production grants
+          - production endpoints remain disabled and Starfiniti-only mount activation delivery replay rotation retirement reconciliation rollback and observation remain owned by M11-S06
+      - id: M11-S06-SHADOW-CANARY-AND-CLOSE
+        status: in_progress
+        hypothesis: A disabled-first Starfiniti canary with exact cross-slice reconciliation can prove the ecosystem foundation is production-operable without allowing a failed integration to affect checkout or historical value.
+        baseline: M11-S01 through M11-S05 have exact code-head repository, database, concurrency, WooCommerce, client, and browser evidence, while production remains on v0.1.11 with every M11 capability undeployed or disabled.
+        targets:
+          - every required repository and production check is passed with minimized evidence and no automatic failure
+          - one isolated and one explicitly shared topology reconcile to immutable policy and existing wallets with zero unexplained difference
+          - one verified identity, foreign order and refund, API customer and activity replay, and webhook lifecycle reconcile exactly
+          - checkout, ingestion, refunds, releases, existing redemption, and reconciliation continue while each M11 canary process is unavailable
+          - module score is at least 90 and every category reaches 80 percent of its available score
+        metrics:
+          - unexplained topology identity wallet currency event ledger quota endpoint delivery audit checkout or privacy differences = 0
+          - implicit wallet shares email-derived links caller-supplied rates duplicate effects and reusable material disclosures = 0
+          - production checks passed = 41 before closeout
+          - score total >= 90 and each category ratio >= 0.8
+        acceptance:
+          - isolated and explicitly shared Starfiniti canaries reconcile wallets events currencies API requests and webhooks with module score at least 90 and every category above its floor
+          - approved immutable release fresh recovery point disabled deployment exact migration registration and production source baseline precede any value-producing canary
+          - self-hosted and non-canary tenants remain disabled while the Starfiniti entitlement is enabled one capability at a time
+          - rollback disables new ecosystem effects and revokes canary authority without deleting versioned configuration immutable evidence customer access or loyalty value
+          - the machine-readable canary gate rejects missing checks sensitive evidence keys false completion non-exact commits score drift and category-floor failure
+        failure_modes:
+          - a stacked draft or mutable branch is treated as an approved release
+          - production checks begin before a verified recovery point source baseline or migration registration
+          - provider credential endpoint secret or API credential appears in a public projection database evidence log or peer process
+          - an outage blocks WooCommerce checkout or an existing loyalty-value obligation
+          - a canary effect cannot be reconciled to immutable source and authority evidence
+          - subjective scoring hides a deterministic failed or pending gate
+        security_boundaries:
+          - canary evidence stores no reusable material personal identity tenant key wallet key connection key order key coupon or raw payload
+          - PostgreSQL remains the authority for tenant actor identity value rate quota and endpoint lifecycle throughout canary operations
+          - only the Starfiniti organization receives temporary M11 entitlements and every provider or endpoint worker has an isolated mount
+          - release approval and production operator access are both required but neither substitutes for live database authorization
+        rollout: Merge the reviewed M10 and M11 stack into an immutable release, take a fresh recovery point and source baseline, deploy disabled, register migrations, then enable topology, identity, currency, API, and webhook capabilities sequentially for only Starfiniti with reconciliation after each effect.
+        rollback: Disable M11 entitlements, revoke canary service credentials, disable and stop isolated provider and webhook workers, restore prior application images, preserve additive migrations and immutable evidence, then reconcile checkout and all loyalty value before observation.
+        verification:
+          - npm run ecosystem:canary:validate
+          - exact-head root baseline both production images clean migration replay all pgTAP files all two-session probes and all four WooCommerce runtimes
+          - fresh read-only production health source topology identity conversion event ledger quota endpoint delivery and audit snapshots
+          - controlled outage rollback and observation evidence with zero unexplained reconciliation difference
+        evidence:
+          - docs/plan/evidence/M11/canary.yaml
+          - docs/plan/evidence/M11/README.md
+          - current provisional score is 90 of 100 but operability is 3 of 10 and therefore below the required category floor until release canaries rollback and observation pass
+    risks: [R-001, R-002, R-030, R-039, R-040, R-041, R-042, R-043]
+    docs:
+      [
+        docs/integrations/MERCHANT_API.md,
+        docs/integrations/SERVICE_API.md,
+        docs/integrations/CURRENCY_CONVERSION.md,
+        docs/api/WEBHOOKS.md,
+        docs/architecture/ADR/0042-versioned-explicit-programme-group-sharing.md,
+        docs/architecture/ADR/0043-verified-canonical-customer-link-revisions.md,
+        docs/architecture/ADR/0044-immutable-provider-rate-snapshots-and-exact-currency-conversion.md,
+        docs/architecture/ADR/0045-hashed-service-accounts-and-database-authoritative-inbound-api.md,
+        docs/architecture/ADR/0046-endpoint-scoped-webhook-lifecycle-and-supported-clients.md,
+      ]
+    evidence:
+      [docs/plan/evidence/M11/README.md, docs/plan/evidence/M11/canary.yaml]
 
   - id: M12-MIGRATION
     title: Add traceable, idempotent loyalty migration

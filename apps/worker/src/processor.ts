@@ -7,6 +7,9 @@ import {
   campaignPurchaseCandidateV1,
   campaignTriggerExecutionV1,
   campaignTriggerJobV1,
+  currencyConversionBatchV1,
+  currencyConversionContextV1,
+  currencyConversionEvidenceSummaryV1,
   wooCommerceCouponCapturedPayloadV1,
   wooCommerceCustomerCreatedPayloadV1,
   wooCommerceCustomerDeletedPayloadV1,
@@ -17,9 +20,11 @@ import {
   type ProgrammeDefinitionV2,
   type CampaignPurchaseCandidateV1,
   type CampaignTriggerExecutionV1,
+  type CurrencyConversionEvidenceSummaryV1,
 } from "@starfiniti/contracts";
 import {
   calculateRefundReversal,
+  convertCurrencyMinorBatchV1,
   evaluateOrderAward,
   evaluateEarningV2,
   evaluatePurchaseCampaignsV1,
@@ -173,9 +178,24 @@ type OriginalAwardRow = {
   programme_group_id: string;
   programme_version_id: string;
   result: Record<string, unknown>;
+  explanation: Record<string, unknown>;
   origin_entry_public_id: string | null;
   already_reversed_points: string;
 };
+
+type CurrencyConversionContextRow = {
+  conversion_context: unknown;
+};
+
+type CurrencyConversionEvidenceRow = {
+  conversion_evidence_public_id: string;
+  outcome: string;
+};
+
+type PreparedPurchaseFactV2 = Readonly<{
+  fact: PurchaseEarningFactV2;
+  conversion: CurrencyConversionEvidenceSummaryV1 | null;
+}>;
 
 type LegacyProgrammeContext = Readonly<{
   definitionVersion: "1";
@@ -541,13 +561,6 @@ export async function processWooCommerceEffect(
       return;
     }
     if (context.definitionVersion === "2") {
-      if (
-        effect.order.currency !== context.programme.currencyCode ||
-        effect.order.currencyMinorUnitDigits !==
-          context.programme.currencyMinorUnitDigits
-      ) {
-        throw new PermanentEffectError("programme_currency_mismatch");
-      }
       await commitAwardV2(
         sql,
         workerId,
@@ -1074,6 +1087,7 @@ async function processRefund(
       evaluation.programme_group_id::text,
       evaluation.programme_version_id::text,
       evaluation.result,
+      evaluation.explanation,
       origin_entry.public_id::text as origin_entry_public_id,
       coalesce((
         select sum(reversal_entry.points)::bigint
@@ -1220,16 +1234,21 @@ async function processRefundV2(
     event.organization_id,
     original.programme_version_id,
   );
-  if (
-    context.definitionVersion !== "2" ||
-    effect.order.currency !== context.programme.currencyCode ||
-    effect.order.currencyMinorUnitDigits !==
-      context.programme.currencyMinorUnitDigits
-  ) {
+  if (context.definitionVersion !== "2") {
     throw new PermanentEffectError("programme_currency_mismatch");
   }
+  const prepared = await preparePurchaseCurrencyV1(
+    sql,
+    event,
+    context,
+    effect.order,
+    originalTierCode,
+    {},
+    true,
+    originalConversionEvidenceId(original.explanation),
+  );
   const orderFact = {
-    ...toPurchaseEarningFactV2(effect.order, event, originalTierCode, {}, true),
+    ...prepared.fact,
     eventId: originalEventId,
     occurredAt: new Date(originalOccurredAt).toISOString(),
   } satisfies PurchaseEarningFactV2;
@@ -1250,6 +1269,7 @@ async function processRefundV2(
     originalEligibleSpend,
     originalAwardedPoints,
     alreadyReversedPoints: original.already_reversed_points,
+    currencyConversion: prepared.conversion,
     ...plan,
   });
 }
@@ -1538,6 +1558,219 @@ export function toPurchaseEarningFactV2(
   };
 }
 
+function originalConversionEvidenceId(
+  explanation: Record<string, unknown>,
+): string | null {
+  const conversion = explanation.currencyConversion;
+  if (
+    conversion === null ||
+    typeof conversion !== "object" ||
+    Array.isArray(conversion)
+  ) {
+    return null;
+  }
+  const evidenceId = (conversion as Record<string, unknown>).evidenceId;
+  return typeof evidenceId === "string" ? evidenceId : null;
+}
+
+function currencyMonetaryProjection(fact: PurchaseEarningFactV2): unknown {
+  return {
+    currencyCode: fact.currencyCode,
+    lines: fact.lines.map((line) => ({
+      lineId: line.lineId,
+      grossMinor: line.grossMinor,
+      paidMinor: (
+        BigInt(line.grossMinor) - BigInt(line.discountMinor)
+      ).toString(),
+      refundedMinor: line.refundedMinor,
+    })),
+    shippingMinor: fact.shippingMinor,
+    shippingRefundedMinor: fact.shippingRefundedMinor,
+    taxMinor: fact.taxMinor,
+    taxRefundedMinor: fact.taxRefundedMinor,
+    feeMinor: fact.feeMinor,
+    feeRefundedMinor: fact.feeRefundedMinor,
+  };
+}
+
+export async function preparePurchaseCurrencyV1(
+  sql: Sql | TransactionSql,
+  event: ClaimedEffect,
+  context: V2ProgrammeContext,
+  order: WooCommerceOrderFactV1,
+  tierSnapshot: string,
+  memberRuleUsage: Readonly<Record<string, string>>,
+  includeRefunds: boolean,
+  originEvidenceId: string | null = null,
+): Promise<PreparedPurchaseFactV2> {
+  const sourceFact = toPurchaseEarningFactV2(
+    order,
+    event,
+    tierSnapshot,
+    memberRuleUsage,
+    includeRefunds,
+  );
+  if (
+    order.currency === context.programme.currencyCode &&
+    order.currencyMinorUnitDigits === context.programme.currencyMinorUnitDigits
+  ) {
+    if (originEvidenceId !== null) {
+      throw new PermanentEffectError("original_currency_conversion_mismatch");
+    }
+    return { fact: sourceFact, conversion: null };
+  }
+  if (order.currency === context.programme.currencyCode) {
+    throw new PermanentEffectError("programme_currency_precision_mismatch");
+  }
+
+  const contextRows = await sql<CurrencyConversionContextRow[]>`
+    select conversion_context
+    from loyalty_private.resolve_currency_conversion_context_v1(
+      ${event.organization_id}::bigint,
+      ${context.programmeVersionId}::bigint,
+      ${order.currency},
+      ${order.currencyMinorUnitDigits},
+      ${event.occurred_at}::timestamptz,
+      ${originEvidenceId}::uuid
+    )
+  `;
+  const conversionContext = currencyConversionContextV1.safeParse(
+    contextRows[0]?.conversion_context,
+  );
+  if (!conversionContext.success) {
+    throw new PermanentEffectError("currency_conversion_evidence_unavailable");
+  }
+
+  const amountInputs: { amountKey: string; sourceAmountMinor: string }[] = [];
+  sourceFact.lines.forEach((line, index) => {
+    amountInputs.push(
+      {
+        amountKey: `line:${index}:gross`,
+        sourceAmountMinor: line.grossMinor,
+      },
+      {
+        amountKey: `line:${index}:paid`,
+        sourceAmountMinor: (
+          BigInt(line.grossMinor) - BigInt(line.discountMinor)
+        ).toString(),
+      },
+      {
+        amountKey: `line:${index}:refunded`,
+        sourceAmountMinor: line.refundedMinor,
+      },
+    );
+  });
+  amountInputs.push(
+    {
+      amountKey: "order:shipping",
+      sourceAmountMinor: sourceFact.shippingMinor,
+    },
+    {
+      amountKey: "order:shipping_refunded",
+      sourceAmountMinor: sourceFact.shippingRefundedMinor,
+    },
+    { amountKey: "order:tax", sourceAmountMinor: sourceFact.taxMinor },
+    {
+      amountKey: "order:tax_refunded",
+      sourceAmountMinor: sourceFact.taxRefundedMinor,
+    },
+    { amountKey: "order:fee", sourceAmountMinor: sourceFact.feeMinor },
+    {
+      amountKey: "order:fee_refunded",
+      sourceAmountMinor: sourceFact.feeRefundedMinor,
+    },
+  );
+  const amounts = convertCurrencyMinorBatchV1({
+    context: conversionContext.data,
+    amounts: amountInputs,
+  });
+  const amountByKey = new Map(
+    amounts.map((amount) => [amount.amountKey, amount.baseAmountMinor]),
+  );
+  const baseAmount = (key: string): string => {
+    const amount = amountByKey.get(key);
+    if (amount === undefined) {
+      throw new Error("currency_conversion_amount_unavailable");
+    }
+    return amount;
+  };
+  const baseFactWithoutEvidence: PurchaseEarningFactV2 = {
+    ...sourceFact,
+    currencyCode: context.programme.currencyCode,
+    lines: sourceFact.lines.map((line, index) => {
+      const grossMinor = baseAmount(`line:${index}:gross`);
+      const paidMinor = baseAmount(`line:${index}:paid`);
+      if (BigInt(paidMinor) > BigInt(grossMinor)) {
+        throw new PermanentEffectError("currency_conversion_line_invariant");
+      }
+      return {
+        ...line,
+        grossMinor,
+        discountMinor: (BigInt(grossMinor) - BigInt(paidMinor)).toString(),
+        refundedMinor: baseAmount(`line:${index}:refunded`),
+      };
+    }),
+    shippingMinor: baseAmount("order:shipping"),
+    shippingRefundedMinor: baseAmount("order:shipping_refunded"),
+    taxMinor: baseAmount("order:tax"),
+    taxRefundedMinor: baseAmount("order:tax_refunded"),
+    feeMinor: baseAmount("order:fee"),
+    feeRefundedMinor: baseAmount("order:fee_refunded"),
+  };
+  const batch = currencyConversionBatchV1.parse({
+    version: "1",
+    context: conversionContext.data,
+    amounts,
+  });
+  const sourceProjection = currencyMonetaryProjection(sourceFact);
+  const baseProjection = currencyMonetaryProjection(baseFactWithoutEvidence);
+  const sourceProjectionHash = evidenceSha256(sourceProjection);
+  const baseProjectionHash = evidenceSha256(baseProjection);
+  const evidenceRows = await sql<CurrencyConversionEvidenceRow[]>`
+    select conversion_evidence_public_id::text, outcome
+    from loyalty_private.record_currency_conversion_evidence_v1(
+      ${event.organization_id}::bigint,
+      ${event.canonical_event_public_id}::uuid,
+      ${context.programmeVersionId}::bigint,
+      ${batch.context.policy.policyVersionId}::uuid,
+      ${batch.context.snapshot.rateSnapshotId}::uuid,
+      ${originEvidenceId}::uuid,
+      ${JSON.stringify(batch.amounts)}::jsonb,
+      ${Buffer.from(sourceProjectionHash, "hex")},
+      ${Buffer.from(baseProjectionHash, "hex")}
+    )
+  `;
+  const evidenceId = evidenceRows[0]?.conversion_evidence_public_id;
+  if (!evidenceId) {
+    throw new Error("currency_conversion_record_failed");
+  }
+  const conversion = currencyConversionEvidenceSummaryV1.parse({
+    version: "1",
+    evidenceId,
+    policyVersionId: batch.context.policy.policyVersionId,
+    rateSnapshotId: batch.context.snapshot.rateSnapshotId,
+    providerKey: batch.context.snapshot.providerKey,
+    providerRateReference: batch.context.snapshot.providerRateReference,
+    sourceCurrencyCode: batch.context.snapshot.sourceCurrencyCode,
+    sourceMinorUnitDigits: batch.context.snapshot.sourceMinorUnitDigits,
+    baseCurrencyCode: batch.context.snapshot.baseCurrencyCode,
+    baseMinorUnitDigits: batch.context.snapshot.baseMinorUnitDigits,
+    rateNumerator: batch.context.snapshot.rateNumerator,
+    rateDenominator: batch.context.snapshot.rateDenominator,
+    observedAt: batch.context.snapshot.observedAt,
+    roundingMode: batch.context.policy.roundingMode,
+  });
+  return {
+    fact: {
+      ...baseFactWithoutEvidence,
+      sourceCurrencyCode: order.currency,
+      sourceCurrencyMinorUnitDigits: order.currencyMinorUnitDigits,
+      currencyConversion: conversion,
+    },
+    conversion,
+  };
+}
+
 export function calculateCumulativeRefundPlanV2(
   input: Readonly<{
     originalEligibleSpend: string;
@@ -1635,14 +1868,6 @@ async function recordReferralQualificationV1(
   ) {
     throw new PermanentEffectError("referral_qualification_policy_mismatch");
   }
-  if (
-    order.currency !== historicalContext.programme.currencyCode ||
-    order.currencyMinorUnitDigits !==
-      historicalContext.programme.currencyMinorUnitDigits
-  ) {
-    throw new PermanentEffectError("referral_qualification_currency_mismatch");
-  }
-
   const operation = `connection:${event.connection_id}:event:${event.canonical_event_public_id}`;
   const evaluationKey = `woo:evaluation:referral-qualification:${operation}`;
   const usageRows = await sql<MemberRuleUsageRow[]>`
@@ -1656,15 +1881,18 @@ async function recordReferralQualificationV1(
       ${evaluationKey}
     )
   `;
-  const orderFact = toPurchaseEarningFactV2(
-    order,
+  const prepared = await preparePurchaseCurrencyV1(
+    sql,
     event,
+    historicalContext,
+    order,
     historicalContext.tierCode,
     Object.fromEntries(
       usageRows.map((row) => [row.rule_code, row.consumed_points]),
     ),
     false,
   );
+  const orderFact = prepared.fact;
   const evaluation = evaluateEarningV2(historicalContext.programme, orderFact);
   const inputHash = evidenceSha256({
     version: "2",
@@ -1681,7 +1909,10 @@ async function recordReferralQualificationV1(
       ${Buffer.from(inputHash, "hex")},
       ${Buffer.from(resultHash, "hex")},
       ${JSON.stringify(evaluation)}::jsonb,
-      ${JSON.stringify({ lines: evaluation.lines })}::jsonb,
+      ${JSON.stringify({
+        lines: evaluation.lines,
+        currencyConversion: prepared.conversion,
+      })}::jsonb,
       ${evaluatedAt}::timestamptz
     )
   `;
@@ -1719,13 +1950,16 @@ async function commitAwardV2(
     const memberRuleUsage = Object.fromEntries(
       usageRows.map((row) => [row.rule_code, row.consumed_points]),
     );
-    const orderFact = toPurchaseEarningFactV2(
-      order,
+    const prepared = await preparePurchaseCurrencyV1(
+      transaction,
       event,
+      context,
+      order,
       context.tierCode,
       memberRuleUsage,
       false,
     );
+    const orderFact = prepared.fact;
     const campaignRows = await transaction<CampaignPurchaseContextRow[]>`
       select campaign_version_public_id::text, campaign_code, assignment,
         behavior, remaining_global_effects, remaining_member_effects,
@@ -1773,6 +2007,7 @@ async function commitAwardV2(
     const explanation = {
       lines: evaluation.lines,
       tierMultiplierBasisPoints: tierPurchaseMultiplier(context),
+      currencyConversion: prepared.conversion,
     };
     let awards: (V2AwardRow | CampaignPurchaseCommitRow)[];
     if (campaignResult === null) {
@@ -2150,6 +2385,7 @@ async function commitRefundV2(
     cumulativeRefundedEligibleSpend: string;
     alreadyReversedPoints: string;
     reversalPoints: string;
+    currencyConversion: CurrencyConversionEvidenceSummaryV1 | null;
   }>,
 ): Promise<void> {
   const orderId = context.orderFact.eventId;
@@ -2188,7 +2424,10 @@ async function commitRefundV2(
         ${Buffer.from(inputHash, "hex")},
         ${Buffer.from(resultHash, "hex")},
         ${JSON.stringify(result)}::jsonb,
-        ${JSON.stringify({ lines: context.currentEvaluation.lines })}::jsonb,
+        ${JSON.stringify({
+          lines: context.currentEvaluation.lines,
+          currencyConversion: context.currencyConversion,
+        })}::jsonb,
         ${evaluatedAt}::timestamptz
       )
   `;

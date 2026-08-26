@@ -16,6 +16,14 @@ The strict v1 envelope contains `version`, `deliveryId`, `sourceId`, `eventId`, 
 
 The public customer ID remains only a selector. PostgreSQL derives tenant and programme from the active source; the worker resolves that customer inside the same organization, evaluates the immutable published V2 version, enters serialized cap accounting, and appends evaluation plus ledger effects atomically. Duplicate events create one effect. Signature/provider outage does not affect WooCommerce checkout or previously accepted value.
 
+## Scoped Service API v1
+
+`POST /api/v1/service/customers` and `POST /api/v1/service/activities` are the merchant-scoped server-to-server customer/activity boundary. They complement rather than replace the deployment-managed signed Merchant Activity endpoint. Owners/admins create a workspace/programme-bound service account behind `ecosystem.api`, select only `customers:write` and/or `activities:write`, and issue one high-entropy bearer token that is shown once.
+
+The trusted runtime parses the public credential selector and passes it plus the complete-token SHA-256 digest to private PostgreSQL commands. PostgreSQL resolves live organization, workspace, programme, connection, entitlement, scope, credential lifecycle, and fixed-minute quota. The API body never accepts those authorities or any points, wallet, rule, tier, or reward selector. Raw external customer references are retained only as HMAC-SHA256 values under a private random per-account pepper and are never matched by email.
+
+Customer synchronization is idempotent and must precede activity submission. Activity acceptance reuses the existing commerce inbox, normalization, canonical-event, worker, immutable evaluation, cap, effect-receipt, and ledger path; a `202` response is acceptance evidence rather than an award claim. Exact retries create one effect, changed reuse fails closed, rotation overlap is bounded, and revocation fails on the next request. The full contract, retry/error behavior, quota headers, and compromise procedure are documented in `SERVICE_API.md`; ADR-0045 records the decision.
+
 ## Read models
 
 The programme page reads these RLS-protected relations:
@@ -57,6 +65,24 @@ The wrapper does not return customer or channel identifiers, raw commerce payloa
 ## Programme commands
 
 All commands are `SECURITY DEFINER`, owned by the `NOLOGIN` `loyalty_owner` role, use an empty search path, schema-qualify every object, revoke default `PUBLIC` execution, and expose `EXECUTE` only to `authenticated`.
+
+### Programme-group workspace sharing V1
+
+`get_programme_group_sharing_policy_v1(target_programme_group_public_id)` returns one minimized, reconciled policy to a live organization member. It exposes the public programme-group selector/name, immutable revision, `isolated` or `explicit-workspace-allowlist` mode, current entitlement state, and at most 100 active workspace selectors/names/slugs with exact link and connector-removal-protection flags. It exposes no organization key, actor, customer, wallet, ledger, connector credential, source identity, or commerce payload. Unknown, revoked, cross-tenant, inactive, empty, over-limit, or projection-drift scope returns no document or fails closed.
+
+`configure_programme_group_sharing_v1(target_programme_group_public_id, target_sharing_mode, target_workspace_public_ids, target_expected_revision, target_idempotency_key, target_correlation_id)` is an owner/admin-only browser command gated by the database-authoritative `ecosystem.api` entitlement. Isolated mode requires exactly one active same-tenant workspace; explicit sharing requires 2–25 unique exact workspace selectors. PostgreSQL derives organization, actor, internal group/workspace keys, locks the scope, enforces optimistic revision and idempotency, and atomically writes the current link projection, one immutable policy version, exact version membership, and a minimized audit event.
+
+A workspace with a provisioned commerce connection for a programme inside the group is removal-protected. The command never copies or merges wallets, never links customers by email, writes no ledger value, and issues no WooCommerce command. Same-organization workspaces remain isolated unless their public IDs are present in an accepted exact allowlist. See ADR-0042; M11-S02 owns explicit verified cross-workspace customer linking.
+
+### Verified cross-workspace customer linking V1
+
+Cross-workspace customer linking is customer-initiated and does not add a general merchant merge API. The existing server-only WooCommerce claim consumes one fresh five-minute store-key HMAC proof for one exact registered customer and one live Supabase Auth subject. A second store must supply its own independent proof. Email, name, address, domain, organization membership, JWT metadata, and browser-supplied tenant/customer/channel keys are never matching authority.
+
+When both connections belong to the latest reconciled `explicit-workspace-allowlist` policy and `ecosystem.api` is enabled, PostgreSQL serializes the Auth subject and source customer, selects one stable canonical customer, and appends an immutable exact link revision. The source customer remains recorded separately while the protected identity/Auth-link projection points all verified store paths to the canonical customer and existing programme-group wallet. If the secondary customer already has any wallet in the group, the claim returns `rejected_value_conflict`; no account, identity, or value is changed and a traceable M12 migration is required.
+
+`get_my_cross_workspace_customer_links_v1()` accepts no selector. It derives the Auth subject and returns at most 20 link sets with at most 25 public account/workspace selectors, display names, one canonical marker, safe unlink state, revision, and status. It exposes no organization key, internal customer, channel customer number, email, proof hash, identity decision, wallet, balance, ledger, or connector secret and fails closed on projection drift.
+
+`unlink_my_cross_workspace_customer_account_v1(target_account_public_id, target_idempotency_key, target_correlation_id)` derives all tenant, subject, identity, connection, workspace, programme-group, and canonical-customer authority. Only an active non-canonical account may be disconnected. The command restores the exact source identity, revokes that store's Auth link, appends an immutable revision, and does not update ledger transactions, entries, lots, reservations, tier history, commerce events, or WooCommerce. The canonical account cannot be removed while shared value depends on it. See ADR-0043.
 
 ### `create_programme_command`
 

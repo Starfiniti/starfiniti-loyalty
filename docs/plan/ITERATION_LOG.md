@@ -1,5 +1,64 @@
 # Iteration Log
 
+## 2026-08-26 — M11 fail-closed production closeout gate
+
+- Added a 41-check machine-readable ecosystem canary manifest covering exact release identity, recovery, disabled deployment, explicit topology, verified identity, immutable currency evidence, scoped API replay/quota, endpoint-isolated webhooks, checkout outage continuity, reconciliation, rollback, and observation.
+- Added immutable seven-category arithmetic, a 90/100 target, an 80% per-category floor, ten deterministic automatic failures, prohibited evidence-key scanning, and self-tests that reject false completion and sensitive evidence keys.
+- Refreshed the read-only production baseline: canonical dashboard health/login returned 200, unauthenticated Supabase Auth/REST returned 401, DNS resolved, and the configured `s2-root` route confirmed VM 971 running. No production mutation occurred.
+- Eleven repository/public/operator checks pass and 30 production checks remain pending. The provisional total is 90/100, but operability is 3/10, so completion remains deterministically impossible until approved release, canaries, reconciliation, rollback, and observation pass.
+- The first exact-head Linux run exposed a random-alphabet contract defect: canonical Base64 signing material can place `/` or `+` in the six-character hint, while PostgreSQL correctly accepts only Base64URL hints. The generator now normalizes only the non-reusable hint, retains the documented canonical Base64 `whsec_` secret, and includes a deterministic all-`0xff` regression case.
+- Exact candidate run `32934487896` at `2063858` passed all seven jobs: the complete baseline and secret scan, both production images, clean 67-migration replay, all 54 pgTAP files with 2,905 assertions, all eleven concurrency probes, and all four WooCommerce runtimes.
+
+## 2026-08-26 — M11 outbound webhooks, supported clients, and operations
+
+- Accepted ADR-0046: each outbound endpoint owns one separately mounted secret and isolated worker; PostgreSQL owns lifecycle authority and retains only fingerprints/hints while the M08 event and Standard Webhooks wire contracts remain compatible.
+- Added disabled creation, disabled-only bounded rotation, disable-before-authorization, terminal destination scrubbing, immutable endpoint revisions, minimized endpoint health, and responsive owner/admin lifecycle controls with fail-closed analyst state.
+- Added supported dependency-light TypeScript and PHP 8.1 clients with strict bounded Service API requests, exact raw-body constant-time Standard Webhooks verification, timestamp tolerance, stable replay identity, and shared executable vectors.
+- Linux replay first rejected special `substring` syntax behind a schema-qualified call, then rejected missing independent function inventories and a private-table assertion executed under the runtime role. The fixes used callable syntax, explicitly reviewed the new read surface, and restored the test owner before private inspection without granting runtime table access.
+- Adversarial diff review removed the final trusted actor bridge: exact-signature authenticated wrappers derive the Auth subject and tenant in PostgreSQL, private primitives are not executable by browser/runtime/worker roles, and the eleventh two-session probe serialized concurrent retries into one endpoint, one revision, one attributed audit, and zero ledger effects.
+- Exact code-head run `32932756596` at `a495433` passed baseline, both images, clean 67-migration replay, all 54 pgTAP files with 2,905 assertions including 59 focused lifecycle cases, all eleven concurrency probes, and all four WooCommerce runtimes. The baseline includes 229 dashboard, 107 worker, 281 contract, 62 domain, and eight TypeScript SDK tests plus nine PHP sources and executable cross-language vectors.
+- Production-build desktop/mobile review passed active, disabled, retired, degraded, expanded lifecycle, and read-only states; dark mode; reduced motion; mobile navigation; 40-pixel actions; 3-pixel focus; English-only output; zero overflow; and zero diagnostics. The fixture was removed and the normal 26-route application rebuilt.
+- Production endpoints remain disabled. M11-S06 owns reviewed release, isolated secret mount, Starfiniti-only activation/delivery/replay/rotation/retirement, exact reconciliation, rollback, observation, and module scoring.
+
+## 2026-08-26 — M11 scoped service accounts and inbound APIs
+
+- Accepted ADR-0045: the server parses one high-entropy opaque bearer credential, while PostgreSQL derives organization, workspace, programme, synthetic connection, scopes, entitlement, customer namespace, and quota authority from its digest.
+- Added one-time credential issuance, bounded-overlap rotation, immediate revocation, minimized owner/admin operations, customer synchronization without email merging, and signed custom activity through the existing canonical event/effect/ledger pipeline.
+- Added 72 focused pgTAP assertions and a tenth two-session probe for concurrent customer identity and fixed-minute quota serialization. Exact-head run `32927596360` at `479f605` passed baseline, both images, clean 66-migration replay, all 53 pgTAP files with 2,846 assertions, all ten concurrency probes, and all four WooCommerce runtimes after the browser-driven repair.
+- Linux self-improvement runs exposed a reserved record name, incomplete security inventories, invalid V2 fixtures, missing harness-role membership, and a reserved test alias; narrow corrections made tests deterministic without relaxing production authority.
+- Playwright desktop/mobile review found hard-coded dark confirmation colors, undersized review actions, and checkbox grid displacement. Tokenized colors, 40-pixel actions, and an explicit flex label passed 16.48:1 dark contrast, aligned review states, English-only output, reduced motion, keyboard focus, zero overflow, and zero browser diagnostics.
+- Production API issuance remains disabled until M11-S06. M11-S05 now owns versioned TypeScript/PHP clients, outbound webhook lifecycle, and integrated health/deletion operations.
+
+## 2026-08-26 — M11 exact multi-currency evidence
+
+- Accepted ADR-0044: only immutable provider evidence selected at the canonical commerce occurrence can convert a foreign V2 order; WooCommerce, the browser, and worker timing never supply the rate.
+- Added strict contracts and exact BigInt conversion, four private immutable/RLS evidence tables, independent PostgreSQL recomputation, exact retry binding, source-currency rule visibility, original-snapshot refunds, and an English review-before-save Operations policy surface.
+- Production-build desktop/mobile review passed exact confirmation, dark mode, mobile navigation, keyboard focus, English-only output, zero overflow, and zero diagnostics after correcting undersized legacy actions and a masked focus ring.
+- Linux self-improvement runs exposed and fixed stale security allowlists, wall-clock fixtures, invalid canonical-event shortcuts, test-role lookups, and the race harness membership assumption without relaxing production authority.
+- Exact-head run `32918516110` at `6bf137c` passed baseline, both images, clean 65-migration replay, all 52 pgTAP files with 2,774 assertions, all nine concurrency probes, and all four WooCommerce runtimes. Production conversion remains disabled until M11-S06 receives an approved provider and completes canary reconciliation.
+
+## 2026-08-26 — M11 verified cross-workspace customer identity
+
+- Accepted ADR-0043: one live Auth subject must present a separate fresh WooCommerce HMAC proof for every store; email, profile attributes, organization membership, and browser tenant/customer inputs grant no identity authority.
+- Added immutable exact link revisions, source-customer retention, transaction-scoped projection guards, stable canonical-customer routing, value-conflict rejection, Auth-derived unlink/relink, a minimized no-selector customer read, and explicit zero-ledger boundaries.
+- Added strict contracts, server parsing/actions, an English responsive connected-stores experience, 53 focused pgTAP assertions, and an eighth concurrency probe covering simultaneous secondary proofs plus competing Auth subjects.
+- Playwright review found and corrected unreadable 8–11 px supporting type, a small destructive action, and a non-rendering color-mixed focus ring. The corrected real component passed desktop/mobile layout, long-name wrapping, required confirmation, keyboard focus, reduced motion, degraded state, zero overflow, and zero diagnostics.
+- Four database CI iterations failed closed on a reserved alias, legacy insert compatibility/ambiguous naming, test-role misuse, and a final temporary-fixture grant. The fixes preserved production authority. Exact-head run `32910582010` at `19c24a4` passed baseline, both images, clean 64-migration replay, all 51 pgTAP files with 2,716 assertions, all eight concurrency probes, and all four WooCommerce runtimes. M11-S06 owns production canary closeout.
+
+## 2026-08-26 — VM 971 backup-traffic follow-up
+
+- Re-established read-only operator access through the configured `s2-root` route and checked VM 971, bridge/tap counters, PVE RRD, active units, processes, sockets, timers, and Borg/rsync journals without mutating production.
+- Confirmed the 3.60 TB VM transmit counter is historical from the Aug 14 full-stream incident and persists across the VM's 12.6-day uptime. The active unit is the reviewed incremental `rrsync` implementation; the tar-over-stdin command exists only in a timestamped rollback copy.
+- The observed scheduled cycle transferred 50,108 bytes of new file content and 308,904 rsync wire bytes, while the direct tap counter rose about 383 KB. PVE's maximum VM outbound rate over both the last hour and last 24 hours was about 103 KB/s, with effectively zero disk reads. No other active timer or cron target referenced the database guest.
+
+## 2026-08-25 — M11 explicit multi-store wallet scope
+
+- Accepted ADR-0042: programme groups remain the wallet boundary, same-organization membership grants no implicit link, and cross-workspace customer identity waits for an explicit verified M11-S02 workflow rather than email matching.
+- Added immutable sharing revisions and exact workspace membership, migration parity checks, RLS with revoked direct grants, a minimized member projection, and an owner/admin `ecosystem.api` command with group/workspace locks, optimistic revision, idempotency, audit, and connector-history removal protection.
+- Added strict public-selector contracts and a responsive Hub-style Operations control for isolated/shared modes, exact store selection, protected connector states, unavailable handling, and review-before-save English copy.
+- All 626 workspace tests, every workspace typecheck, targeted lint, production build, validators, 63-migration/50-pgTAP static validation, formatting, and diff checks pass. Native Chrome desktop/mobile review passed isolated-to-shared interaction, connector lock, exact review, keyboard focus, reduced motion, English-only output, mobile stacking, zero overflow, and zero unexpected diagnostics.
+- First exact-head run `32905188833` correctly rejected two new `SECURITY DEFINER` functions missing from independent reviewed allowlists plus one ambiguous JSON-operator expression. The narrow fix added exact signatures and explicit parentheses without relaxing any migration, grant, policy, or authority. Run `32905613578` at `3cb609d` then passed all seven jobs: clean replay, all 50 pgTAP files and 52 focused assertions, all seven concurrency probes, both images, baseline, and all four WooCommerce runtimes. Only disabled production deployment/canary closeout remains for S01.
+
 ## 2026-08-25 — M10 shadow and canary gate
 
 - Added a 29-check machine-readable analytics closeout gate with exact category arithmetic, a 90/100 target, an 80% per-category floor, sensitive-key rejection, deterministic automatic failures, and a self-test that rejects false completion.

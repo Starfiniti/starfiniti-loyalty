@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { Sql } from "postgres";
 import {
+  programmeDefinitionV2,
+  wooCommerceOrderFactV1,
+} from "@starfiniti/contracts";
+import {
   advanceCampaignLifecycle,
   calculateCumulativeRefundPlan,
   calculateCumulativeRefundPlanV2,
@@ -10,6 +14,7 @@ import {
   runPointExpiryLifecycle,
   runReferralRewardLifecycle,
   parseWooCommerceEffect,
+  preparePurchaseCurrencyV1,
   processWooCommerceEffect,
   toOrderAwardFact,
   toPurchaseEarningFactV2,
@@ -123,6 +128,215 @@ const referralProgrammeConfiguration = {
 } as const;
 
 describe("WooCommerce effect worker", () => {
+  it("converts foreign facts once and reuses the award evidence for refunds", async () => {
+    const conversionContext = {
+      version: "1",
+      policy: {
+        version: "1",
+        policyVersionId: "99000000-0000-4000-8000-000000000001",
+        revision: 1,
+        programmeVersionId: "99000000-0000-4000-8000-000000000002",
+        state: "enabled",
+        providerKey: "verified-test-feed",
+        sourceCurrencyCode: "USD",
+        sourceMinorUnitDigits: 2,
+        baseCurrencyCode: "EUR",
+        baseMinorUnitDigits: 2,
+        maxRateAgeSeconds: 86_400,
+        roundingMode: "half_away_from_zero",
+        effectiveFrom: "2026-08-12T00:00:00.000Z",
+      },
+      snapshot: {
+        version: "1",
+        rateSnapshotId: "99000000-0000-4000-8000-000000000003",
+        providerKey: "verified-test-feed",
+        providerRateReference: "usd-eur-2026-08-12",
+        sourceCurrencyCode: "USD",
+        sourceMinorUnitDigits: 2,
+        baseCurrencyCode: "EUR",
+        baseMinorUnitDigits: 2,
+        rateNumerator: "85",
+        rateDenominator: "100",
+        observedAt: "2026-08-12T09:00:00.000Z",
+        validFrom: "2026-08-12T09:00:00.000Z",
+        validUntil: "2026-08-13T09:00:00.000Z",
+        payloadSha256: "a".repeat(64),
+      },
+    } as const;
+    const recordedValues: unknown[][] = [];
+    const resolvedValues: unknown[][] = [];
+    const query = async (
+      strings: TemplateStringsArray,
+      ...values: unknown[]
+    ) => {
+      const text = strings.join("?");
+      if (text.includes("resolve_currency_conversion_context_v1")) {
+        resolvedValues.push(values);
+        expect(values).toContain("USD");
+        return [{ conversion_context: conversionContext }];
+      }
+      if (text.includes("record_currency_conversion_evidence_v1")) {
+        recordedValues.push(values);
+        return [
+          {
+            conversion_evidence_public_id:
+              recordedValues.length === 1
+                ? "99000000-0000-4000-8000-000000000004"
+                : "99000000-0000-4000-8000-000000000005",
+            outcome: "created",
+          },
+        ];
+      }
+      throw new Error(`Unexpected query: ${text}`);
+    };
+    const order = wooCommerceOrderFactV1.parse({
+      kind: "order",
+      orderId: "42",
+      status: "completed",
+      currency: "USD",
+      currencyMinorUnitDigits: 2,
+      market: "US",
+      customer: { kind: "registered", externalCustomerId: "7" },
+      paymentKind: "money",
+      lines: [
+        {
+          lineId: "1",
+          productId: "10",
+          variationId: null,
+          quantity: "1",
+          categoryIds: ["20"],
+          collectionIds: [],
+          subtotal: "10.00",
+          total: "8.00",
+          refundedTotal: "1.00",
+        },
+      ],
+      shippingTotal: "2.00",
+      shippingRefundedTotal: "0.50",
+      taxTotal: "1.00",
+      taxRefundedTotal: "0.00",
+      feeTotal: "0.00",
+      feeRefundedTotal: "0.00",
+      discountTotal: "2.00",
+      refundedTotal: "1.50",
+    });
+    const prepared = await preparePurchaseCurrencyV1(
+      query as unknown as Sql,
+      event,
+      {
+        definitionVersion: "2",
+        programmeGroupId: "1",
+        programmeVersionId: "2",
+        tierCode: "rose",
+        programme: programmeDefinitionV2.parse(referralProgrammeConfiguration),
+      },
+      order,
+      "rose",
+      {},
+      true,
+    );
+
+    expect(prepared.fact).toMatchObject({
+      currencyCode: "EUR",
+      sourceCurrencyCode: "USD",
+      sourceCurrencyMinorUnitDigits: 2,
+      shippingMinor: "170",
+      shippingRefundedMinor: "43",
+      taxMinor: "85",
+      lines: [
+        {
+          grossMinor: "850",
+          discountMinor: "170",
+          refundedMinor: "85",
+        },
+      ],
+    });
+    expect(prepared.conversion).toMatchObject({
+      evidenceId: "99000000-0000-4000-8000-000000000004",
+      sourceCurrencyCode: "USD",
+      baseCurrencyCode: "EUR",
+      rateNumerator: "85",
+      rateDenominator: "100",
+    });
+    expect(recordedValues).toHaveLength(1);
+    const serializedAmounts = recordedValues[0]?.find(
+      (value) => typeof value === "string" && value.includes("line:0:gross"),
+    );
+    expect(serializedAmounts).toEqual(expect.any(String));
+    expect(JSON.parse(String(serializedAmounts))).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          amountKey: "line:0:gross",
+          sourceAmountMinor: "1000",
+          baseAmountMinor: "850",
+        }),
+        expect.objectContaining({
+          amountKey: "order:shipping_refunded",
+          sourceAmountMinor: "50",
+          baseAmountMinor: "43",
+        }),
+      ]),
+    );
+
+    const refundPrepared = await preparePurchaseCurrencyV1(
+      query as unknown as Sql,
+      {
+        ...event,
+        canonical_event_id: "2",
+        canonical_event_public_id: "99000000-0000-4000-8000-000000000006",
+        event_type: "commerce.order.refunded",
+        source_event_id: "order:42:refund:one",
+      },
+      {
+        definitionVersion: "2",
+        programmeGroupId: "1",
+        programmeVersionId: "2",
+        tierCode: "rose",
+        programme: programmeDefinitionV2.parse(referralProgrammeConfiguration),
+      },
+      order,
+      "rose",
+      {},
+      true,
+      "99000000-0000-4000-8000-000000000004",
+    );
+    expect(refundPrepared.conversion?.evidenceId).toBe(
+      "99000000-0000-4000-8000-000000000005",
+    );
+    expect(resolvedValues).toHaveLength(2);
+    expect(resolvedValues[1]).toContain("99000000-0000-4000-8000-000000000004");
+    expect(recordedValues).toHaveLength(2);
+    expect(recordedValues[1]).toContain("99000000-0000-4000-8000-000000000004");
+  });
+
+  it("fails closed before value evaluation when foreign evidence is unavailable", async () => {
+    const query = (async () => []) as unknown as Sql;
+    const order = wooCommerceOrderFactV1.parse({
+      ...(event.payload as { order: Record<string, unknown> }).order,
+      currency: "USD",
+      currencyMinorUnitDigits: 2,
+    });
+    await expect(
+      preparePurchaseCurrencyV1(
+        query,
+        event,
+        {
+          definitionVersion: "2",
+          programmeGroupId: "1",
+          programmeVersionId: "2",
+          tierCode: "rose",
+          programme: programmeDefinitionV2.parse(
+            referralProgrammeConfiguration,
+          ),
+        },
+        order,
+        "rose",
+        {},
+        false,
+      ),
+    ).rejects.toThrow("currency_conversion_evidence_unavailable");
+  });
+
   it("runs the bounded point expiry lifecycle and validates aggregate output", async () => {
     const validSql = (async () => [
       {
@@ -759,6 +973,7 @@ describe("WooCommerce effect worker", () => {
               tierCodeSnapshot: "rose",
               pendingAt: event.occurred_at,
             },
+            explanation: { lines: [] },
             origin_entry_public_id: "00000000-0000-4000-8000-000000000022",
             already_reversed_points: "0",
           },

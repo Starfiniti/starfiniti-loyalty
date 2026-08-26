@@ -102,6 +102,8 @@ Initial programme onboarding uses the same command boundary: the browser supplie
 
 Merchant customer reads enter exact-signature stable wrappers that validate public UUIDs, recheck live membership, apply literal bounded reference search and fixed result ceilings, and mask external channel identifiers before they leave PostgreSQL. Wallet and ledger bigints cross the Data API as text. The customer timeline exposes wallet-side ledger evidence and correlation context but omits raw commerce payloads, ledger metadata/reasons/request hashes, actor IDs, contact attributes, and unrelated identities.
 
+Outbound webhook lifecycle mutations use exact-signature authenticated wrappers that derive the actor from PostgreSQL request claims and derive the organization from an active workspace or endpoint. They accept no actor, organization, or tenant input. The private primitives are not executable by browser, runtime, or worker roles, so a trusted server bridge cannot substitute actor authority. Creation and rotation receive only a one-way secret fingerprint and bounded hint; raw signing material remains confined to the one-time server response and isolated worker mount.
+
 Customer tier visibility is a separate one-row wrapper over the current membership interval and its immutable decision. It exposes current/qualified labels, transition, exact eligible-spend minor units, and timing only; internal explanations, command identities, request hashes, actors, and unrelated history remain inaccessible. Active tenant/group and live membership checks fail closed for revoked, suspended, mismatched, and cross-tenant requests.
 
 Merchant connector reads enter exact-signature security-definer wrappers because queue tables are private. The wrappers recheck live tenant membership and return only bounded state, count, attempt, error-code, event/topic, and watermark fields. They never return queue payloads, raw bodies, source object identifiers, coupon codes, signing references, or customer attributes. Effect replay is restricted to live owner/admin/operator roles, dead-letter canonical effects, a bounded reason, and immutable audit evidence. Quarantined work and compensated coupon commands cannot be replayed through this surface.
@@ -131,3 +133,14 @@ Separate environments/credentials, encrypted off-host backups, tested restore, i
 ## Residual risk and gate result
 
 All critical threats have a concrete preventive/detective control and executable verification assigned to a build phase. None requires an unresolved product decision. The controls are not yet all implemented, so production readiness remains an automatic fail; Phase 2's design gate passes only after these documents and ADRs are reviewed by CI/diff evidence.
+
+## Service-account bearer and namespace threats
+
+- **Credential disclosure:** a 256-bit token is returned once and stored only as a SHA-256 digest plus six-character hint. Management reads, audit, logs, support bundles, browser hydration, and errors exclude it. HTTPS and a sender-side secret manager are mandatory; compromise is contained by immediate database revocation.
+- **Selector or tenant substitution:** the request carries only the token-derived public credential selector and strict activity/customer fields. PostgreSQL resolves and locks credential, organization, account, workspace, programme, connection, entitlement, scope, customer, and quota. A public UUID is never authority by itself.
+- **Cross-customer or email merge:** raw external references are HMACed under one private random account pepper. Namespace uniqueness is database-enforced and email/domain/profile attributes are neither accepted nor queried.
+- **Replay and changed reuse:** immutable request hashes, account-scoped idempotency constraints, canonical source event identity, and existing effect receipts return exact duplicates and reject content drift.
+- **Rotation race, expired key, or quota overshoot:** credential/account locks make lifecycle checks and fixed-window increments atomic. Two-session probes cover customer creation and concurrent quota consumers; revocation fails on the next request.
+- **Alternative value path:** activity acceptance writes only the canonical commerce ingress. Programme evaluation, caps, worker authorization, effect receipts, and immutable ledger transactions remain authoritative. Service API/entitlement failure cannot affect checkout, refunds, reconciliation, or existing balances.
+
+The existing Merchant Activity HMAC boundary remains purpose-separated and compatible. Its key cannot authenticate a Service API request, and a Service API bearer cannot authenticate WooCommerce or Merchant Activity delivery.

@@ -708,6 +708,136 @@ export const merchantSendNotificationTestResultV1 = z
   })
   .strict();
 
+const webhookEndpointLabelV1 = z
+  .string()
+  .min(1)
+  .max(120)
+  .refine(
+    (value) => value === value.trim() && !/[\u0000-\u001F\u007F]/u.test(value),
+    { message: "Webhook endpoint label must be a trimmed single line" },
+  );
+const webhookLifecycleReasonV1 = z
+  .string()
+  .min(1)
+  .max(200)
+  .refine(
+    (value) => value === value.trim() && !/[\u0000-\u001F\u007F]/u.test(value),
+    { message: "Webhook lifecycle reason must be a trimmed single line" },
+  );
+const productionWebhookDestinationV1 = webhookDestinationUrlV1.refine(
+  (value) => new URL(value).protocol === "https:",
+  "Merchant webhook destinations must use HTTPS",
+);
+const webhookEventSubscriptionsV1 = z
+  .array(notificationEventTypeV1)
+  .min(1)
+  .max(9)
+  .refine(
+    (items) =>
+      items.every((item, index) => index === 0 || items[index - 1]! < item),
+    "Webhook event subscriptions must be unique and sorted",
+  );
+
+export const createNotificationWebhookEndpointCommandV1 = z
+  .object({
+    version: z.literal("1"),
+    workspaceId: z.uuid(),
+    label: webhookEndpointLabelV1,
+    destinationUrl: productionWebhookDestinationV1,
+    eventTypes: webhookEventSubscriptionsV1,
+    rateLimitPerMinute: z.number().int().min(1).max(600),
+    idempotencyKey: commandKey,
+    correlationId: z.uuid(),
+  })
+  .strict();
+
+export const rotateNotificationWebhookEndpointCommandV1 = z
+  .object({
+    version: z.literal("1"),
+    endpointId: z.uuid(),
+    overlapSeconds: z.number().int().min(0).max(86_400),
+    idempotencyKey: commandKey,
+    correlationId: z.uuid(),
+  })
+  .strict();
+
+export const changeNotificationWebhookEndpointStateCommandV1 = z
+  .object({
+    version: z.literal("1"),
+    endpointId: z.uuid(),
+    action: z.enum(["disable", "retire"]),
+    reason: webhookLifecycleReasonV1,
+    idempotencyKey: commandKey,
+    correlationId: z.uuid(),
+  })
+  .strict();
+
+export const notificationWebhookEndpointMutationResultV1 = z
+  .object({
+    endpointId: z.uuid(),
+    state: z.enum(["disabled", "active", "retired"]),
+    outcome: z.enum([
+      "created",
+      "rotated",
+      "disabled",
+      "retired",
+      "already_disabled",
+      "already_retired",
+      "duplicate",
+    ]),
+    priorSecretExpiresAt: instant.nullable(),
+  })
+  .strict();
+
+const notificationWebhookEndpointCountsV1 = z
+  .object({
+    pending: nonNegativeBigint,
+    processing: nonNegativeBigint,
+    retryable: nonNegativeBigint,
+    held: nonNegativeBigint,
+    completed: nonNegativeBigint,
+    suppressed: nonNegativeBigint,
+    deadLetter: nonNegativeBigint,
+    manualReview: nonNegativeBigint,
+  })
+  .strict();
+
+export const notificationWebhookEndpointReadV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    endpointId: z.uuid(),
+    label: webhookEndpointLabelV1,
+    state: z.enum(["disabled", "active", "retired"]),
+    destinationUrl: productionWebhookDestinationV1.nullable(),
+    eventTypes: webhookEventSubscriptionsV1,
+    rateLimitPerMinute: z.number().int().min(1).max(600),
+    currentSecretHint: z
+      .string()
+      .regex(/^[A-Za-z0-9_-]{6}$/u)
+      .nullable(),
+    previousSecretHint: z
+      .string()
+      .regex(/^[A-Za-z0-9_-]{6}$/u)
+      .nullable(),
+    previousSecretExpiresAt: instant.nullable(),
+    counts: notificationWebhookEndpointCountsV1,
+    lastAttemptAt: instant.nullable(),
+    lastErrorCode: code.nullable(),
+    createdAt: instant,
+    updatedAt: instant,
+    retiredAt: instant.nullable(),
+  })
+  .strict();
+
+export const notificationWebhookEndpointsDocumentV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    generatedAt: instant,
+    canManage: z.boolean(),
+    endpoints: z.array(notificationWebhookEndpointReadV1).max(50),
+  })
+  .strict();
+
 export const notificationPreferenceV1 = z
   .object({
     schemaVersion: z.literal("1"),
@@ -772,4 +902,22 @@ export type MerchantSendNotificationTestCommandV1 = z.infer<
 >;
 export type MerchantSendNotificationTestResultV1 = z.infer<
   typeof merchantSendNotificationTestResultV1
+>;
+export type CreateNotificationWebhookEndpointCommandV1 = z.infer<
+  typeof createNotificationWebhookEndpointCommandV1
+>;
+export type RotateNotificationWebhookEndpointCommandV1 = z.infer<
+  typeof rotateNotificationWebhookEndpointCommandV1
+>;
+export type ChangeNotificationWebhookEndpointStateCommandV1 = z.infer<
+  typeof changeNotificationWebhookEndpointStateCommandV1
+>;
+export type NotificationWebhookEndpointMutationResultV1 = z.infer<
+  typeof notificationWebhookEndpointMutationResultV1
+>;
+export type NotificationWebhookEndpointReadV1 = z.infer<
+  typeof notificationWebhookEndpointReadV1
+>;
+export type NotificationWebhookEndpointsDocumentV1 = z.infer<
+  typeof notificationWebhookEndpointsDocumentV1
 >;
