@@ -14,7 +14,8 @@
     "./referral": "./src/referral.ts",
     "./tier-policy-v2": "./src/tier-policy-v2.ts",
     "./currency": "./src/currency.ts",
-    "./service-api": "./src/service-api.ts"
+    "./service-api": "./src/service-api.ts",
+    "./migration": "./src/migration.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

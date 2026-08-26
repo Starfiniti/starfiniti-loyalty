@@ -6,7 +6,7 @@ Deliver the enterprise WooCommerce roadmap in `docs/plan/ENTERPRISE_ROADMAP.md` 
 
 ## Current module
 
-M11 — multi-store, currency, API, and ecosystem is the active dependency-safe repository module while M04–M10 retain reviewed merge/deployment/canary/reconciliation closeout. M00, M02, and M03 are complete; M01 remains active at its approved-real-store and full-service-recovery external gates.
+M12 — traceable migration is the active dependency-safe repository module while M04–M11 retain reviewed merge/deployment/canary/reconciliation closeout. M00, M02, and M03 are complete; M01 remains active at its approved-real-store and full-service-recovery external gates.
 
 M06-S01 through S05 are exact-head green on draft PR #31. Runs `31763563259`, `31764805380`, `31766887239`, `31768294674`, and `31770764870` passed strict policy, signed offline capture, first attribution, historical qualification/cooling, two-sided exactly-once issuance/compensation, Auth-derived reversible fraud review, customer sharing/progress/history, and a fact-sourced merchant funnel. The latest passed a clean 41-migration/1,700-assertion replay, all three concurrency probes, both images, baseline, 126 dashboard tests, 136 contract tests, and all four WooCommerce runtimes. Production-build desktop/mobile browser review passed with no critical accessibility, overflow, or diagnostic issue. M06-S06 reviewed merge, disabled deployment, Starfiniti canary, reconciliation, and scoring is active.
 
@@ -38,6 +38,8 @@ M11-S05 repository and browser gates are complete under ADR-0046. Endpoint-scope
 
 M11-S06 now enforces a 41-check fail-closed ecosystem canary manifest with exact candidate/release identities, seven-category arithmetic, an 80% category floor, prohibited-evidence-key scanning, and self-tests for false completion and sensitive-key leakage. The first Linux run exposed random ordinary-Base64 characters in a database-constrained webhook hint; the generator now normalizes only that non-reusable hint and exact candidate run `32934487896` at `2063858` passed all seven jobs. Eleven repository/public/operator checks pass and 30 production checks remain pending. The provisional score is 90/100, but operability is 3/10; an approved immutable release, fresh recovery point, disabled deployment, provider approval, sequential Starfiniti canaries, exact reconciliation, rollback, and observation are required before completion.
 
+M12-S01 is active under ADR-0047. Official WPLoyalty and WooRewards formats plus YITH's undocumented column boundary led to a vendor-neutral canonical V1 document rather than direct plugin-table access or guessed adapters. Strict contracts and a pure deterministic engine bind source provenance, exact balances/lots/expiry, tier/referral/history, explicit identity decisions, duplicate detection, and PII-free issues into one engine digest. An additive Auth-derived owner/admin command records only immutable RLS hashes, counts, totals, aggregate issues, audit/correlation, and a separate PostgreSQL approval hash; exact content and idempotency retries converge and every dry-run path remains value-free. Focused tests and static 68-migration/55-pgTAP validation pass; clean Linux replay and exact-head CI remain before S01 closeout, after which S02 will add independently revalidated opening-balance ledger application.
+
 M05-S01 through S05 are exact-head green. M05-S06 shadow comparison found and fixed a predeployment Rose/Bloom/Icon displayed-versus-executable rate mismatch; all 36 V1/V2 award comparisons now match, and exact-head run `31760806620` passed. Reviewed merge, disabled deployment, a fresh recovery point, Starfiniti-only canary, reconciliation, and scoring remain open.
 
 The active integrated baseline is released production commit `0ced4b666a55d836bd3d4927337fe057a71bb4ba` (`v0.1.11`). The previous local Phase 4 branch and its six modified planning files remain preserved in a named git stash and have not been mixed into this work.
@@ -65,11 +67,12 @@ The active integrated baseline is released production commit `0ced4b666a55d836bd
 
 ## Next safe work
 
-1. M11: complete S06 reviewed release, disabled deployment, isolated Starfiniti clients/API/webhook canaries, exact topology/identity/currency/request/delivery reconciliation, rollback, observation, and category-floor scoring for S01–S05.
-2. M10: complete S06 reviewed release, disabled deployment, Starfiniti canary, reconciliation, rollback, observation, and category-floor scoring.
-3. M09/M08: complete reviewed releases, disabled deployments, provider/store outage proof, exact reconciliation, observation, and scoring as external inputs permit.
-4. M07/M06/M05: complete reviewed stacked merges, disabled deployments, fresh recovery points, Starfiniti-only canaries, exact reconciliation, smoke, and scores.
-5. M01: connect an approved real WooCommerce store when access is supplied and complete its value, outage, rotation, alert, and clean-room recovery gate.
+1. M12: close S01 clean replay/exact-head gates, then implement receipt-bound identity mapping and opening-balance ledger application in S02.
+2. M11: complete S06 reviewed release, disabled deployment, isolated Starfiniti clients/API/webhook canaries, exact topology/identity/currency/request/delivery reconciliation, rollback, observation, and category-floor scoring for S01–S05.
+3. M10: complete S06 reviewed release, disabled deployment, Starfiniti canary, reconciliation, rollback, observation, and category-floor scoring.
+4. M09/M08: complete reviewed releases, disabled deployments, provider/store outage proof, exact reconciliation, observation, and scoring as external inputs permit.
+5. M07/M06/M05: complete reviewed stacked merges, disabled deployments, fresh recovery points, Starfiniti-only canaries, exact reconciliation, smoke, and scores.
+6. M01: connect an approved real WooCommerce store when access is supplied and complete its value, outage, rotation, alert, and clean-room recovery gate.
 
 ## External inputs
 

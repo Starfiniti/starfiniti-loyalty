@@ -25,6 +25,7 @@ export * from "./customer-experience";
 export * from "./ecosystem";
 export * from "./currency";
 export * from "./service-api";
+export * from "./migration";
 
 export const commerceEnvelopeV1 = z.object({
   version: z.literal("1"),

@@ -1879,7 +1879,7 @@ tasks:
   - id: M12-MIGRATION
     title: Add traceable, idempotent loyalty migration
     module: M12
-    status: planned
+    status: in_progress
     dependencies: [M11-ECOSYSTEM]
     hypothesis: Fingerprinted dry runs and opening-balance ledger effects migrate customers without duplicate or untraceable value.
     baseline: No supported import framework or competitor adapter exists.
@@ -1912,8 +1912,147 @@ tasks:
         privacy and tenant tests,
         adapter fixtures,
       ]
+    slices:
+      - id: M12-S01-CANONICAL-IMPORT-AND-DRY-RUN
+        status: in_progress
+        hypothesis: A vendor-neutral canonical document plus explicit identity resolutions can produce one deterministic value-free approval receipt without retaining raw exports or merging customers by email.
+        baseline: The repository has immutable ledger and bounded bulk-adjustment primitives but no migration contracts domain validation source fingerprints receipt persistence or adapter boundary.
+        owner_inputs: []
+        metrics:
+          - duplicate source identities accepted = 0
+          - duplicate existing-customer targets accepted = 0
+          - email-derived automatic matches = 0
+          - raw source identities persisted in receipt or audit = 0
+          - dry-run ledger customer wallet lot tier referral coupon connector or event effects = 0
+          - exact reruns creating another content receipt = 0
+        targets:
+          - canonical documents and resolutions are bounded versioned and deterministic
+          - all row counts bucket totals exact lots and disposition counts reconcile
+          - PostgreSQL derives actor tenant role programme version entitlement and final receipt hash
+          - invalid unresolved ambiguous duplicated or fingerprint-drifted documents fail closed before approval
+        acceptance:
+          - V1 represents source provenance identities available and pending balances exact lots/expiry tier referral and bounded source history
+          - preserve_exact requires lot reconciliation while apply_default binds one reviewed future expiry and rejects mixed lot evidence
+          - email can exist only as transient source evidence and no resolution basis can grant authority from email matching
+          - the domain dry run is independent of resolution input order and changes when any document balance identity mapping or policy changes
+          - immutable RLS receipts retain only hashes counts totals aggregate issue codes actor/correlation and database approval evidence
+          - exact idempotency and content retries return one receipt changed reuse conflicts and every path creates zero loyalty value
+        failure_modes:
+          - vendor format becomes the internal database schema
+          - caller supplies organization actor customer wallet or ledger authority
+          - same person is inferred from email name address domain or profile metadata
+          - source rows or target customers appear more than once
+          - approval hash omits expiry mapping balance issue or programme evidence
+          - raw export identity history or errors enter PostgreSQL audit logs or browser results
+          - a dry run calls a value customer connector or provider mutation
+        security_boundaries:
+          - raw vendor and canonical row payloads exist only transiently in bounded server validation and never in S01 database evidence
+          - PostgreSQL accepts public programme selectors and minimized deterministic results then derives live Auth organization role entitlement and published version
+          - only live owner/admin can record while auditor is RLS read-only and all other or revoked/cross-tenant roles fail closed
+          - a receipt cannot authorize value; S02 must re-present and independently verify every exact row and mapping
+        rollout: Deploy the additive receipt boundary disabled for managed tenants, record invalid then valid Starfiniti documents, verify minimization and zero effects, and enable later application separately.
+        rollback: Stop the record command and hide the workflow while preserving immutable value-free receipts and audits; no customer or ledger compensation is required for S01.
+        verification:
+          - strict contract tests for bounds exact integers lots expiry history resolution authority minimized results and caller-authority rejection
+          - pure domain tests for deterministic hashes exact totals order independence duplicates mismatch unresolved ambiguity privacy and changed approval inputs
+          - pgTAP for exact grants RLS roles revocation tenancy entitlement programme binding idempotency content dedupe immutability minimization and zero value effects
+          - clean migration replay root check both production images concurrency suite and four WooCommerce runtimes
+          - adversarial diff review confirms receipt evidence cannot become an unchecked value command
+        evidence:
+          - docs/architecture/ADR/0047-content-addressed-canonical-migration-and-explicit-identity-resolution.md
+          - docs/plan/evidence/M12/README.md
+      - id: M12-S02-OPENING-BALANCE-LEDGER-APPLICATION
+        status: planned
+        hypothesis: Exact receipt-bound row revalidation and source-row fences can apply imported value once through attributable opening-balance ledger transactions and preserved expiry lots.
+        owner_inputs: []
+        acceptance:
+          - every applied point traces to import batch source row identity decision programme version opening transaction and lot policy
+          - concurrent or repeated application creates one effect per source row and batch totals reconcile before commit
+          - corrections append approved compensating batches linked to originals and never edit import or ledger history
+          - customer creation and verified WooCommerce identity attachment derive tenant and programme authority in PostgreSQL
+        failure_modes:
+          - receipt aggregate is trusted without exact row revalidation
+          - partial batch commits or duplicate application
+          - imported balance overwrites an existing projection
+          - correction rewrites an opening transaction or source row
+        rollout: Apply one small valid Starfiniti batch disabled from storefront discovery then reconcile every source row transaction entry lot wallet and aggregate before expansion.
+        rollback: Stop new application and append one exact compensating batch for the canary while retaining source receipts opening transactions lots and audits.
+        verification:
+          - two-session batch and source-row concurrency probes
+          - pgTAP ledger zero-sum lot identity tenancy role idempotency compensation and partial-failure matrix
+          - before/after customer balance expiry and liability reconciliation
+      - id: M12-S03-STABLE-SOURCE-ADAPTERS
+        status: planned
+        hypothesis: Published source formats translated through strict versioned adapters can reduce setup effort without granting vendor data application authority.
+        owner_inputs:
+          [
+            representative redacted exports when published examples do not prove the exact production shape,
+          ]
+        acceptance:
+          - generic CSV WPLoyalty and WooRewards parse only exact allowlisted columns/types into CanonicalMigrationDocumentV1
+          - dry-run error export is bounded row-addressable and contains no unrelated columns or retained source payload
+          - adapter reruns generate the same canonical document digest and never apply value directly
+        failure_modes:
+          - heuristic column guessing silently changes meaning
+          - spreadsheet formula injection or encoding ambiguity reaches an export
+          - adapter logs raw identities or retains source files
+        rollout: Validate checked-in synthetic and redacted fixtures then canary one source at a time through S01/S02.
+        rollback: Disable the affected adapter while keeping canonical validation and prior immutable migration evidence readable.
+        verification:
+          - official-format fixtures malformed/oversized/encoding/formula tests and deterministic canonical snapshots
+          - privacy logging retention and error-export review
+      - id: M12-S04-YITH-AND-FORMAT-CHANGE-GATES
+        status: planned
+        hypothesis: Fixture fingerprints and explicit adapter versions can fail closed when a vendor publishes no stable export schema or changes it.
+        owner_inputs:
+          [representative redacted YITH export and later changed-format samples]
+        acceptance:
+          - YITH is unavailable until a redacted current export establishes exact columns semantics and version evidence
+          - every adapter declares recognized shape version and refusal reason without heuristic fallback
+          - format changes require new fixtures contracts migration notes and compatibility tests
+        failure_modes:
+          - documentation-level import/export claim is mistaken for a stable column contract
+          - new vendor version is parsed by an older permissive adapter
+        rollout: Enable the exact reviewed YITH fixture version for only its requesting tenant then reconcile the full dry run and application.
+        rollback: Disable that adapter version without affecting canonical imports or prior applied ledger evidence.
+        verification:
+          - fixture fingerprint version mismatch unknown column duplicate column and semantic-boundary tests
+      - id: M12-S05-MERCHANT-WORKFLOW-AND-RECONCILIATION
+        status: planned
+        hypothesis: A guided review workflow with exact mappings totals errors and before/after reports can make high-risk migrations understandable and operable.
+        owner_inputs: []
+        acceptance:
+          - upload source mapping dry run errors approval progress correction and reports are complete owner/admin tasks
+          - approval displays exact row/matched/create/unresolved counts points expiry and liability impact bound to one database receipt
+          - exports expire are audited and preserve privacy while progress survives worker restart
+          - responsive accessible English states cover large batches partial errors disabled authority and recovery
+        failure_modes:
+          - UI claims approval while unresolved rows remain
+          - totals are rounded hidden stale or detached from receipt
+          - worker failure strands an ambiguous partially applied batch
+        rollout: Expose read-only history then guided dry run and finally approved application for Starfiniti.
+        rollback: Disable new uploads/approvals preserve history and continue reconciliation/correction access.
+        verification:
+          - server/action/worker contract tests browser desktop/mobile keyboard screen-reader slow/outage review and exact report reconciliation
+      - id: M12-S06-CANARY-AND-CLOSE
+        status: planned
+        hypothesis: A rerunnable real-source canary with exact customer/value/expiry/liability reconciliation can prove migrations are safe and operable.
+        owner_inputs:
+          [approved redacted source export and production canary approval]
+        acceptance:
+          - rerunning dry run and application duplicates nothing and every imported point traces to source row and immutable batch evidence
+          - before/after counts balances expiry and liability reconcile with zero unexplained difference
+          - correction rollback recovery outage and observation pass with module score at least 90 and every category above its floor
+        rollout: Deploy disabled take recovery point dry run one approved source apply a small Starfiniti batch reconcile expand observe and approve.
+        rollback: Disable new migration work compensate the canary batch retain all evidence and reconcile again.
+        verification:
+          - fail-closed canary manifest clean replay full check images WooCommerce matrix source rerun correction recovery and observation
     risks: [R-028]
-    docs: [docs/plan/ENTERPRISE_ROADMAP.md]
+    docs:
+      [
+        docs/plan/ENTERPRISE_ROADMAP.md,
+        docs/architecture/ADR/0047-content-addressed-canonical-migration-and-explicit-identity-resolution.md,
+      ]
     evidence: [docs/plan/evidence/M12/README.md]
 
   - id: M13-ENTERPRISE-IDENTITY
