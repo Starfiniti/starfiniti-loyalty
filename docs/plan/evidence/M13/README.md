@@ -1,6 +1,6 @@
 # M13 Evidence — Enterprise identity
 
-Status: M13-S01 access catalogue and review is in progress on `codex/m13-enterprise-identity`. Tenant federation, SCIM, support, agency, and production identity changes remain disabled and unimplemented.
+Status: M13-S01 access catalogue and review is complete on draft PR #40. M13-S02 organization and team lifecycle is next. Tenant federation, SCIM, support, agency, and production identity changes remain disabled and unimplemented.
 
 ## M13-S01 access catalogue and review
 
@@ -15,7 +15,8 @@ Status: M13-S01 access catalogue and review is in progress on `codex/m13-enterpr
 - `npm run db:validate`: 71 additive migrations and 58 pgTAP files validate.
 - `enterprise_access_catalogue_test.sql`: 29 focused assertions cover catalogue shape, grants, fixed search path/timeout, support exclusion, minimized output, active/suspended effectiveness, live revocation, tenant isolation, and forged claims.
 - Focused contracts: 5/5 tests pass; focused dashboard model/navigation: 7/7 tests pass.
-- Full exact-head Linux replay and image/runtime matrix are pending the branch CI run; S01 stays in progress until that deterministic gate passes.
+- Exact-head Linux run `32957971079` at `6284412b620c2a3b65480c3638c0c46691f21d03` passed all seven jobs: the complete repository baseline, both production images, a clean 71-migration replay, all 58 pgTAP files with 3,058 assertions including all 29 focused access assertions, all 13 concurrency probes, and the minimum/current × HPOS/legacy WooCommerce matrix.
+- The self-improving loop caught two deterministic defects before closure. Run `32957336128` exposed an invalid mixed record/scalar `INTO` target during clean migration replay; commit `ac218a8` replaced it with one explicit scalar projection record. Run `32957637429` then executed all 29 focused assertions successfully but failed because the file still declared a 28-test plan; commit `6284412` aligned the plan to the verified suite.
 
 ### Production-build browser review
 

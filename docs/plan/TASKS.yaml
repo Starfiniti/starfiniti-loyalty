@@ -2187,7 +2187,7 @@ tasks:
     evidence: [docs/plan/evidence/M13/README.md]
     slices:
       - id: M13-S01-ACCESS-CATALOGUE-AND-REVIEW
-        status: in_progress
+        status: complete
         dependencies: []
         hypothesis: One versioned database-authoritative vocabulary for six tenant membership roles plus grant-only support makes access review understandable without weakening existing live membership checks.
         baseline: Five free-text membership roles exist and there is no marketer profile no seven-role catalogue and no minimized merchant access review.
@@ -2223,6 +2223,7 @@ tasks:
           - docs/plan/evidence/M13/README.md
           - focused contract and dashboard tests pass 5 and 7 assertions respectively and static validation covers 71 migrations plus 58 pgTAP files
           - production-build browser review passes desktop dark keyboard 390-pixel mobile 320-pixel narrow 44-pixel controls English-only zero-overflow and zero-diagnostic checks after repairing mobile hero clipping
+          - exact-head Linux run 32957971079 at 6284412b620c2a3b65480c3638c0c46691f21d03 passes all seven jobs including root checks both images clean 71-migration replay 58 pgTAP files with 3058 assertions all 13 concurrency probes and all four WooCommerce runtimes
       - id: M13-S02-ORGANIZATION-AND-TEAM-LIFECYCLE
         status: planned
         dependencies: [M13-S01-ACCESS-CATALOGUE-AND-REVIEW]
