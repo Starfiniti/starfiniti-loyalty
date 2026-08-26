@@ -431,6 +431,220 @@ export const migrationAdapterResultV1 = z
     }
   });
 
+export const migrationAdapterSupportStatusV1 = z.enum([
+  "supported",
+  "fixture_required",
+]);
+
+export const migrationAdapterEvidenceKindV1 = z.enum([
+  "internal_contract",
+  "official_documentation",
+  "owner_fixture_required",
+]);
+
+export const migrationAdapterRequiredExpiryPolicyV1 = z.enum([
+  "merchant_selected",
+  "apply_default",
+]);
+
+const migrationAdapterVersion = z.string().regex(/^[1-9][0-9]{0,5}$/u);
+
+export const migrationAdapterRegistryEntryV1 = z
+  .object({
+    sourceSystem: migrationSourceSystemV1,
+    supportStatus: migrationAdapterSupportStatusV1,
+    adapterId: migrationAdapterIdV1.nullable(),
+    adapterVersion: migrationAdapterVersion.nullable(),
+    format: z.enum(["csv", "json"]),
+    evidenceKind: migrationAdapterEvidenceKindV1,
+    evidenceReference: z.string().trim().min(1).max(500),
+    evidenceCheckedAt: z.iso.date(),
+    referenceFixtureSha256: sha256Hex.nullable(),
+    requiredExpiryPolicy: migrationAdapterRequiredExpiryPolicyV1.nullable(),
+    maxInputBytes: z
+      .number()
+      .int()
+      .positive()
+      .max(5 * 1024 * 1024)
+      .nullable(),
+    maxPhysicalRows: z.number().int().positive().max(25_000).nullable(),
+    maxCanonicalRows: z.number().int().positive().max(500).nullable(),
+  })
+  .strict()
+  .superRefine((entry, context) => {
+    const parserFields = [
+      entry.adapterId,
+      entry.adapterVersion,
+      entry.referenceFixtureSha256,
+      entry.requiredExpiryPolicy,
+      entry.maxInputBytes,
+      entry.maxPhysicalRows,
+      entry.maxCanonicalRows,
+    ];
+    if (
+      entry.supportStatus === "supported" &&
+      (parserFields.some((value) => value === null) ||
+        entry.evidenceKind === "owner_fixture_required")
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["supportStatus"],
+        message: "supported adapters require complete reviewed parser evidence",
+      });
+    }
+    if (
+      entry.supportStatus === "fixture_required" &&
+      (parserFields.some((value) => value !== null) ||
+        entry.evidenceKind !== "owner_fixture_required")
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["supportStatus"],
+        message: "fixture-required sources cannot advertise parser authority",
+      });
+    }
+  });
+
+export const migrationAdapterRegistryV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    entries: z
+      .array(migrationAdapterRegistryEntryV1)
+      .length(migrationSourceSystemV1.options.length),
+  })
+  .strict()
+  .superRefine((registry, context) => {
+    const sourceSystems = registry.entries.map(
+      ({ sourceSystem }) => sourceSystem,
+    );
+    if (new Set(sourceSystems).size !== sourceSystems.length) {
+      context.addIssue({
+        code: "custom",
+        path: ["entries"],
+        message: "migration adapter registry source systems must be unique",
+      });
+    }
+    for (const sourceSystem of migrationSourceSystemV1.options) {
+      if (!sourceSystems.includes(sourceSystem)) {
+        context.addIssue({
+          code: "custom",
+          path: ["entries"],
+          message: "migration adapter registry must cover every source system",
+        });
+      }
+    }
+    const supportedAdapterIds = registry.entries.flatMap(({ adapterId }) =>
+      adapterId === null ? [] : [adapterId],
+    );
+    if (new Set(supportedAdapterIds).size !== supportedAdapterIds.length) {
+      context.addIssue({
+        code: "custom",
+        path: ["entries"],
+        message: "supported migration adapter IDs must be unique",
+      });
+    }
+  });
+
+const migrationAdapterSelector = z.string().regex(/^[a-z][a-z0-9_]{2,79}$/u);
+
+export const resolveMigrationAdapterRequestV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    sourceSystem: migrationSourceSystemV1,
+    requestedAdapterId: migrationAdapterSelector,
+    requestedAdapterVersion: migrationAdapterVersion,
+  })
+  .strict();
+
+export const migrationAdapterRefusalReasonV1 = z.enum([
+  "source_fixture_required",
+  "adapter_id_mismatch",
+  "adapter_version_mismatch",
+]);
+
+const supportedMigrationAdapterBySourceV1 = {
+  generic_csv: { adapterId: "generic_csv_v1", adapterVersion: "1" },
+  wployalty: { adapterId: "wployalty_csv_v1", adapterVersion: "1" },
+  yith_points_and_rewards: null,
+  woorewards: { adapterId: "woorewards_json_v1", adapterVersion: "1" },
+} as const;
+
+export const resolveMigrationAdapterResultV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    registryVersion: z.literal("1"),
+    sourceSystem: migrationSourceSystemV1,
+    status: z.enum(["selected", "refused"]),
+    adapterId: migrationAdapterIdV1.nullable(),
+    adapterVersion: migrationAdapterVersion.nullable(),
+    refusalReason: migrationAdapterRefusalReasonV1.nullable(),
+  })
+  .strict()
+  .superRefine((result, context) => {
+    const supported = supportedMigrationAdapterBySourceV1[result.sourceSystem];
+    if (
+      result.status === "selected" &&
+      (result.adapterId === null ||
+        result.adapterVersion === null ||
+        result.refusalReason !== null ||
+        supported === null ||
+        supported.adapterId !== result.adapterId ||
+        supported.adapterVersion !== result.adapterVersion)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["status"],
+        message: "selected migration adapters require an exact ID and version",
+      });
+    }
+    if (
+      result.status === "refused" &&
+      (result.adapterId !== null ||
+        result.adapterVersion !== null ||
+        result.refusalReason === null)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["status"],
+        message: "refused migration adapters expose only an allowlisted reason",
+      });
+    }
+  });
+
+export const migrationAdapterExecutionResultV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    selection: resolveMigrationAdapterResultV1,
+    adapterResult: migrationAdapterResultV1.nullable(),
+  })
+  .strict()
+  .superRefine((execution, context) => {
+    if (
+      execution.selection.status === "refused" &&
+      execution.adapterResult !== null
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["adapterResult"],
+        message: "refused selections cannot parse a source",
+      });
+    }
+    if (
+      execution.selection.status === "selected" &&
+      (execution.adapterResult === null ||
+        execution.selection.adapterId !== execution.adapterResult.adapterId ||
+        execution.selection.adapterVersion !==
+          execution.adapterResult.adapterVersion)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["adapterResult"],
+        message:
+          "adapter execution must match the exact selected ID and version",
+      });
+    }
+  });
+
 export const migrationIdentityResolutionV1 = z
   .object({
     sourceRowId: safeReference,
@@ -682,6 +896,27 @@ export type MigrationAdapterIssueFieldV1 = z.infer<
 >;
 export type MigrationAdapterIssueV1 = z.infer<typeof migrationAdapterIssueV1>;
 export type MigrationAdapterResultV1 = z.infer<typeof migrationAdapterResultV1>;
+export type MigrationAdapterSupportStatusV1 = z.infer<
+  typeof migrationAdapterSupportStatusV1
+>;
+export type MigrationAdapterRegistryEntryV1 = z.infer<
+  typeof migrationAdapterRegistryEntryV1
+>;
+export type MigrationAdapterRegistryV1 = z.infer<
+  typeof migrationAdapterRegistryV1
+>;
+export type ResolveMigrationAdapterRequestV1 = z.infer<
+  typeof resolveMigrationAdapterRequestV1
+>;
+export type MigrationAdapterRefusalReasonV1 = z.infer<
+  typeof migrationAdapterRefusalReasonV1
+>;
+export type ResolveMigrationAdapterResultV1 = z.infer<
+  typeof resolveMigrationAdapterResultV1
+>;
+export type MigrationAdapterExecutionResultV1 = z.infer<
+  typeof migrationAdapterExecutionResultV1
+>;
 export type MigrationIdentityResolutionV1 = z.infer<
   typeof migrationIdentityResolutionV1
 >;

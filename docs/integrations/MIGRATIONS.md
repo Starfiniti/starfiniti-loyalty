@@ -71,6 +71,22 @@ YITH is unavailable until a representative redacted current export establishes e
 
 A supported format change requires a new adapter ID/version, official or approved redacted fixtures, compatibility and privacy tests, migration notes, and an explicit rollout/rollback decision. Existing adapter behavior and historical canonical/ledger evidence are never changed in place.
 
+## Support registry and selection
+
+`MigrationAdapterRegistryV1` is the machine-readable source of adapter availability. It covers Generic CSV, WPLoyalty, YITH Points and Rewards, and WooRewards exactly once. Supported entries publish the exact adapter ID/version, reviewed evidence, LF-normalized reference-fixture SHA-256, expiry requirement, and parser limits. YITH publishes `fixture_required` and no parser authority.
+
+Selection accepts only `sourceSystem`, `requestedAdapterId`, and `requestedAdapterVersion`. It happens before upload bytes enter a parser and rejects any tenant, actor, customer, wallet, points, or source-byte side channel. Exact selections return the recognized ID/version. Refusals return one of:
+
+- `source_fixture_required`
+- `adapter_id_mismatch`
+- `adapter_version_mismatch`
+
+Refusals never echo the requested selector or a source value. Reference-fixture hashes detect changes to reviewed repository examples; they are not merchant-export allowlists. Structurally valid exports with different rows and byte hashes remain valid and receive their own exact source digest.
+
+Callers execute parsing through `adaptMigrationSourceV1`. It resolves the registry request first and dispatches only the exact selected adapter. A refusal returns `adapterResult: null` without hashing, decoding, or validating the untrusted payload/context. The raw vendor parser functions are deliberately absent from the domain package's public root export.
+
+Changing a supported format requires a new immutable adapter ID/version, reference fixture, contract and privacy tests, migration note, and rollout/rollback review. To enable YITH, provide a representative redacted current export containing reserved or irreversibly anonymized identities; the review must establish exact column order, balance meaning, integer rules, expiry evidence, encoding, limits, and any referral/tier semantics before code is added.
+
 ## Minimized issue export
 
 The safe error CSV contains only:

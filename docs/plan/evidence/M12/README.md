@@ -1,6 +1,6 @@
 # M12 Evidence — Migration framework
 
-Status: M12-S01 and M12-S02 are exact-head green and complete on `codex/m12-migration`. M12-S03 strict stable-source adapters are active. There is no production enablement or imported production value.
+Status: M12-S01 through M12-S03 are exact-head green and complete on `codex/m12-migration`. M12-S04 format-version/refusal gates are active. There is no production enablement or imported production value.
 
 ## M12-S01 canonical format and value-free dry run
 
@@ -23,9 +23,18 @@ Status: M12-S01 and M12-S02 are exact-head green and complete on `codex/m12-migr
 - Exact-head evidence: [CI run 32940585673](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/32940585673) at `dc8ea3cefd0f1feee8b68e32d3bb7904d3c9f2ac` passed all seven jobs: root checks, secret/audit/licence/package gates, both production images, clean replay of all 69 migrations, all 56 pgTAP files/3,011 assertions, all 13 concurrency probes, and minimum/current WooCommerce in HPOS/legacy modes.
 - The first lifecycle test run stopped because the CI database owner correctly cannot impersonate the no-login worker role. Behavior continues under the privileged test owner while the separate ACL assertion proves only `loyalty_worker` receives production execute authority; the exact-head rerun passed without relaxing grants.
 
+## M12-S03 strict stable-source adapters
+
+- Decision: ADR-0048 selects pure ephemeral exact-shape translators rather than heuristic field mapping or raw-upload persistence. Immutable IDs are `generic_csv_v1`, `wployalty_csv_v1`, and `woorewards_json_v1`; YITH remains unavailable without a representative redacted current export.
+- Contracts: strict adapter context contains only public migration selectors and expiry policy. Results contain either a validated canonical document with exact byte/canonical SHA-256 evidence or at most 100 allowlisted row-addressable issues with reconciled total/truncation counts—never both.
+- Bounds and privacy: adapters reject inputs over 5 MiB before hashing/decoding, accept strict UTF-8 with optional BOM and LF/CRLF, cap canonical rows at 500 and Generic physical rows at 25,000, reject formulas/control characters/ambiguous types, and export no cells, identities, raw JSON, or arbitrary exception text.
+- Semantics: WPLoyalty accepts exactly the documented lowercase two/three-column CSV; WooRewards accepts exactly a JSON array of string `email`/integer-string `points` objects; both require `apply_default` expiry even for zero balances. Generic CSV supports exact available/pending lots, tier/referral state, and only identical repeated customer fields for grouped lots.
+- Adversarial repair: row conflicts and duplicate identities compare canonical representations, never caller-supplied evidence digests. Tests prove rejection still works with a deliberately constant digest provider.
+- Verification: ten focused domain tests plus twelve migration-contract tests cover deterministic reruns, grouped lot ordering/reconciliation, exact headers/properties, duplicate properties/identities/lots, changed ordering/case, invalid/numeric/nested JSON, BOM/UTF-8/line endings, bigint and file/row/issue bounds, formula injection, safe CSV export, forged context, and raw-value absence.
+- Exact-head evidence: [CI run 32943614310](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/32943614310) at `ba18b7db7016dc752e1adf2b85cd975a6fe0e970` passed all seven jobs: root checks, secret/audit/licence/package gates, both production images, clean replay of all 69 migrations, all 56 pgTAP files/3,011 assertions, all 13 concurrency probes, and minimum/current WooCommerce in HPOS/legacy modes.
+
 ## Later slices
 
-- M12-S03 (active): generic CSV, WPLoyalty, and WooRewards adapters with official-format fixtures and bounded error export.
-- M12-S04: YITH plus any changed vendor format only after representative redacted fixtures; no heuristic production parsing.
+- M12-S04 (active): machine-readable support/version/refusal gates; YITH plus any changed vendor format only after representative redacted fixtures, with no heuristic production parsing.
 - M12-S05: merchant dry-run/mapping/approval/reconciliation workflow and before/after reports.
 - M12-S06: disabled deployment, canary, rerun, reconciliation, rollback, observation, and score gate.

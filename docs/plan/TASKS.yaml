@@ -1989,7 +1989,7 @@ tasks:
           - pending lots remain pending before source availability release once at the exact instant preserve FIFO expiry and remain compensatable without rewriting history
           - exact-head CI run 32940585673 at dc8ea3c passed all seven jobs including clean 69-migration replay 56 pgTAP files 3011 assertions 13 concurrency probes both images root checks and four WooCommerce runtimes
       - id: M12-S03-STABLE-SOURCE-ADAPTERS
-        status: in_progress
+        status: complete
         hypothesis: Published source formats translated through strict versioned adapters can reduce setup effort without granting vendor data application authority.
         baseline: S01 and S02 accept only a strict canonical document and explicit resolutions; no source-file parser error export stable-format fixture or adapter-version boundary exists.
         owner_inputs:
@@ -2028,11 +2028,27 @@ tasks:
         verification:
           - official-format fixtures malformed/oversized/encoding/formula tests and deterministic canonical snapshots
           - privacy logging retention and error-export review
+        evidence:
+          - ADR-0048 fixes pure bounded adapters for generic_csv_v1 wployalty_csv_v1 and woorewards_json_v1 with no database filesystem network connector or value capability
+          - ten focused adapter tests cover official synthetic fixtures deterministic source/canonical hashes exact headers/properties grouped lots formulas duplicate identities encoding line endings bigint limits row/file/issue bounds privacy and invalid context
+          - adversarial review removed evidence digests from row/identity equality authority and requires apply_default expiry even for zero-balance WPLoyalty and WooRewards exports
+          - exact-head CI run 32943614310 at ba18b7d passed all seven jobs including root checks clean 69-migration replay 56 pgTAP files 3011 assertions 13 concurrency probes both images and four WooCommerce runtimes
       - id: M12-S04-YITH-AND-FORMAT-CHANGE-GATES
-        status: planned
+        status: in_progress
         hypothesis: Fixture fingerprints and explicit adapter versions can fail closed when a vendor publishes no stable export schema or changes it.
+        baseline: S03 has three exact adapter implementations but no machine-readable support registry fixture provenance digest or common refusal contract for unavailable and changed formats.
         owner_inputs:
           [representative redacted YITH export and later changed-format samples]
+        metrics:
+          - unavailable or changed formats parsed heuristically = 0
+          - supported adapter versions lacking fixture provenance and compatibility evidence = 0
+          - format refusal results containing source values = 0
+          - historical adapter behavior loosened in place = 0
+        targets:
+          - one versioned registry declares support status source evidence fixture digest limits and required expiry policy for every migration source
+          - unavailable YITH and unknown adapter/version requests return deterministic allowlisted refusal reasons before parsing source bytes
+          - exact fixture fingerprints detect changed supported examples while real exports continue through strict structural validation rather than fixture-byte allowlisting
+          - adding a changed format requires a new immutable adapter ID fixtures contract tests migration notes rollout and rollback fields
         acceptance:
           - YITH is unavailable until a redacted current export establishes exact columns semantics and version evidence
           - every adapter declares recognized shape version and refusal reason without heuristic fallback
@@ -2040,10 +2056,18 @@ tasks:
         failure_modes:
           - documentation-level import/export claim is mistaken for a stable column contract
           - new vendor version is parsed by an older permissive adapter
+          - fixture hashes become an allowlist that rejects semantically valid merchant exports
+        security_boundaries:
+          - registry and refusal logic accept no source bytes identities tenant actor customer wallet or value authority
+          - only immutable adapter IDs and allowlisted reason/source/status metadata cross the discovery boundary
+          - YITH support stays unavailable without the owner-supplied redacted export and a new reviewed versioned adapter
         rollout: Enable the exact reviewed YITH fixture version for only its requesting tenant then reconcile the full dry run and application.
         rollback: Disable that adapter version without affecting canonical imports or prior applied ledger evidence.
         verification:
           - fixture fingerprint version mismatch unknown column duplicate column and semantic-boundary tests
+        docs:
+          - docs/architecture/ADR/0049-versioned-migration-adapter-registry.md
+          - docs/integrations/MIGRATIONS.md
       - id: M12-S05-MERCHANT-WORKFLOW-AND-RECONCILIATION
         status: planned
         hypothesis: A guided review workflow with exact mappings totals errors and before/after reports can make high-risk migrations understandable and operable.

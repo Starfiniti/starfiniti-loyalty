@@ -4,10 +4,14 @@ import {
   canonicalMigrationDocumentV1,
   compensateMigrationBatchCommandV1,
   migrationAdapterContextV1,
+  migrationAdapterExecutionResultV1,
+  migrationAdapterRegistryEntryV1,
   migrationAdapterResultV1,
   migrationDryRunResultV1,
   migrationIdentityResolutionV1,
   recordMigrationDryRunCommandV1,
+  resolveMigrationAdapterRequestV1,
+  resolveMigrationAdapterResultV1,
 } from "./migration";
 
 const baseDocument = {
@@ -88,6 +92,104 @@ describe("migration contracts", () => {
       migrationAdapterResultV1.safeParse({
         ...valid,
         sourceExportSha256: "c".repeat(64),
+      }).success,
+    ).toBe(false);
+  });
+
+  it("keeps adapter support metadata and selection results internally consistent", () => {
+    const supportedEntry = {
+      sourceSystem: "wployalty",
+      supportStatus: "supported",
+      adapterId: "wployalty_csv_v1",
+      adapterVersion: "1",
+      format: "csv",
+      evidenceKind: "official_documentation",
+      evidenceReference: "https://docs.example.test/wployalty",
+      evidenceCheckedAt: "2026-08-26",
+      referenceFixtureSha256: "a".repeat(64),
+      requiredExpiryPolicy: "apply_default",
+      maxInputBytes: 5 * 1024 * 1024,
+      maxPhysicalRows: 500,
+      maxCanonicalRows: 500,
+    };
+    expect(
+      migrationAdapterRegistryEntryV1.safeParse(supportedEntry).success,
+    ).toBe(true);
+    expect(
+      migrationAdapterRegistryEntryV1.safeParse({
+        ...supportedEntry,
+        supportStatus: "fixture_required",
+        evidenceKind: "owner_fixture_required",
+      }).success,
+    ).toBe(false);
+
+    const request = {
+      schemaVersion: "1",
+      sourceSystem: "wployalty",
+      requestedAdapterId: "wployalty_csv_v1",
+      requestedAdapterVersion: "1",
+    };
+    expect(resolveMigrationAdapterRequestV1.safeParse(request).success).toBe(
+      true,
+    );
+    expect(
+      resolveMigrationAdapterRequestV1.safeParse({
+        ...request,
+        sourceBytes: "email,points",
+        actorUserId: "bf2247d8-893e-49ae-8363-8423928e9cc9",
+      }).success,
+    ).toBe(false);
+
+    expect(
+      resolveMigrationAdapterResultV1.safeParse({
+        schemaVersion: "1",
+        registryVersion: "1",
+        sourceSystem: "wployalty",
+        status: "refused",
+        adapterId: "wployalty_csv_v1",
+        adapterVersion: "1",
+        refusalReason: "adapter_version_mismatch",
+      }).success,
+    ).toBe(false);
+    expect(
+      resolveMigrationAdapterResultV1.safeParse({
+        schemaVersion: "1",
+        registryVersion: "1",
+        sourceSystem: "yith_points_and_rewards",
+        status: "selected",
+        adapterId: "wployalty_csv_v1",
+        adapterVersion: "1",
+        refusalReason: null,
+      }).success,
+    ).toBe(false);
+
+    expect(
+      migrationAdapterExecutionResultV1.safeParse({
+        schemaVersion: "1",
+        selection: {
+          schemaVersion: "1",
+          registryVersion: "1",
+          sourceSystem: "wployalty",
+          status: "refused",
+          adapterId: null,
+          adapterVersion: null,
+          refusalReason: "adapter_version_mismatch",
+        },
+        adapterResult: {
+          schemaVersion: "1",
+          adapterId: "wployalty_csv_v1",
+          adapterVersion: "1",
+          status: "invalid",
+          sourceExportSha256: null,
+          inputBytes: 0,
+          physicalRowCount: 0,
+          rowCount: 0,
+          document: null,
+          canonicalDocumentSha256: null,
+          issueCount: 1,
+          truncatedIssueCount: 0,
+          issues: [{ rowNumber: 1, code: "empty_file", field: "file" }],
+        },
       }).success,
     ).toBe(false);
   });
