@@ -186,6 +186,13 @@ returns jsonb language sql immutable as $$
     "tiers":[{"code":"rose","name":"Rose","minimumEligibleSpendMinor":"0","pointsPerMajorUnit":"5"}],
     "rewards":[],
     "earningRules":[{
+      "code":"purchase-base","name":"Base purchase points","source":"purchase",
+      "enabled":true,"priority":0,"stackable":false,
+      "effect":{"kind":"base_rate","pointsPerMajorUnit":"5"},
+      "conditions":{"productIds":[],"categoryIds":[],"currencyCodes":[],"markets":[],"channels":[],"activityCodes":[],"segmentCodes":[],"tierCodes":[],"startsAt":null,"endsAt":null},
+      "purchaseExclusions":{"productIds":[],"categoryIds":[],"shipping":true,"tax":true,"fees":true,"giftCardPayments":true,"storeCreditPayments":true,"discounts":true},
+      "cap":{"perEventPoints":null,"perMemberPoints":null,"memberPeriod":null,"rollingDays":null}
+    },{
       "code":"consultation","name":"Consultation","source":"custom_activity",
       "enabled":true,"priority":10,"stackable":true,
       "effect":{"kind":"fixed_bonus","points":"25"},
