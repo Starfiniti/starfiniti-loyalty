@@ -2366,6 +2366,8 @@ tasks:
           - two-session endpoint retry and group-role race probe passes with one effect one stale failure exact audit and zero ledger value
           - local Chromium browser QA passes desktop mobile light dark reduced-motion interaction overflow English-only and zero-diagnostic checks
           - adversarial review rejects active credential reuse preserves one-time secret display across refreshed forms keeps active invitation membership authoritative fails revoked manual membership closed and makes DELETE retry plus tombstone reprovision deterministic without reviving Group role authority
+          - exact-head Linux run 33000243629 at 9a247ff8f4e04a3209e944f48252483121aefa15 passes all seven jobs including root checks both images clean 74-migration replay all 61 pgTAP files with 3276 assertions all 15 concurrency probes and all four WooCommerce runtimes
+          - the exact-head loop added the reviewed SCIM functions to both global security allowlists repaired the constraint-invalid federation recovery fixture and made the owner invitation concurrency probe deterministic on the serialized surviving owner
       - id: M13-S05-SUPPORT-AGENCY-AND-OFFBOARDING
         status: planned
         dependencies: [M13-S04-SCIM-PROVISIONING]

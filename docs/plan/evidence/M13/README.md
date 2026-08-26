@@ -1,6 +1,6 @@
 # M13 Evidence — Enterprise identity
 
-Status: M13-S01 access catalogue and review is complete on draft PR #40. M13-S02 organization and team lifecycle is complete on draft PR #41. M13-S03 tenant federation is implemented on draft PR #42 with production disabled; production-build browser evidence passes while exact-head CI, Authentik egress proof, and the enterprise-IdP canary remain open. M13-S04 SCIM is a repository candidate on `codex/m13-scim` with fresh isolated database and browser evidence; the approved enterprise IdP/SCIM canary remains open. Support and agency administration remain unimplemented.
+Status: M13-S01 access catalogue and review is complete on draft PR #40. M13-S02 organization and team lifecycle is complete on draft PR #41. M13-S03 tenant federation is implemented on draft PR #42 with production disabled; production-build browser evidence passes while Authentik egress proof and the enterprise-IdP canary remain open. M13-S04 SCIM is a disabled repository candidate on draft PR #43 with fresh isolated database, browser, adversarial, and exact-head CI evidence; the approved enterprise IdP/SCIM canary remains open. Support and agency administration remain unimplemented.
 
 ## M13-S01 access catalogue and review
 
@@ -124,10 +124,20 @@ Status: repository candidate; production remains disabled and unchanged.
   across light/dark, reduced motion, action-state copy, responsive grids,
   English-only output, zero overflow, and zero browser diagnostics. Evidence is
   recorded in `tenant-scim-browser-qa-2026-08-26.md`.
+- Exact-head Linux run `33000243629` at
+  `9a247ff8f4e04a3209e944f48252483121aefa15` passes all seven jobs: root
+  checks, both production images, a clean 74-migration replay, all 61 pgTAP
+  files with 3,276 assertions, all 15 concurrency probes, and the
+  minimum/current × HPOS/legacy WooCommerce matrix.
+- The exact-head loop exposed and fixed three integration weaknesses outside
+  the focused SCIM suite: global security-function allowlists omitted the six
+  reviewed SCIM/federation boundaries, the federation recovery fixture tried
+  to violate its own timestamp constraint, and the organization lifecycle
+  race created an invitation from an owner who could subsequently be revoked.
+  The final probe creates that invitation from the serialized surviving owner.
 
 ### Remaining production gate
 
-- Exact-head clean Linux CI and the full repository gate must pass.
 - An approved enterprise IdP/SCIM test tenant must synchronize a controlled
   cohort through Authentik, prove exact hashed-subject correlation, mapped and
   unmapped login, active-false/delete/stale-session revocation, token rotation,
