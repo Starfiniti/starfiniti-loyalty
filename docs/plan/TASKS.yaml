@@ -2369,7 +2369,7 @@ tasks:
           - exact-head Linux run 33000243629 at 9a247ff8f4e04a3209e944f48252483121aefa15 passes all seven jobs including root checks both images clean 74-migration replay all 61 pgTAP files with 3276 assertions all 15 concurrency probes and all four WooCommerce runtimes
           - the exact-head loop added the reviewed SCIM functions to both global security allowlists repaired the constraint-invalid federation recovery fixture and made the owner invitation concurrency probe deterministic on the serialized surviving owner
       - id: M13-S05-SUPPORT-AGENCY-AND-OFFBOARDING
-        status: in_progress
+        status: complete
         dependencies: [M13-S04-SCIM-PROVISIONING]
         hypothesis: Explicit portfolios and short approved support grants can serve agencies and operations without hidden impersonation or permanent cross-tenant access.
         baseline: The unused foundation grant table has free-form scopes and direct subject/admin reads; no request approval use audit bilateral agency relationship AAL2 break-glass organization deletion case or comprehensive credential revocation exists.
@@ -2407,21 +2407,21 @@ tasks:
           - approval separation expiry revocation scope use-audit portfolio isolation pseudonymization export and recovery tests
         slices:
           - id: M13-S05A-BILATERAL-AGENCY-PORTFOLIOS
-            status: in_progress
+            status: complete
             acceptance:
               - digest-only one-use client invitation and agency-owner acceptance create one relationship without tenant authority
               - either organization owner can revoke and both portfolios retain minimized immutable history
             verification:
               - pgTAP retry changed-reuse cross-tenant and two-session acceptance race
           - id: M13-S05B-SCOPED-SUPPORT-AND-BREAK-GLASS
-            status: planned
+            status: complete
             acceptance:
               - exact read-only support scopes require separate tenant-owner approval maximum four-hour expiry live relationship agency membership and live Auth session
               - every support projection and AAL2 thirty-minute owner recovery projection appends tenant-visible use evidence
             verification:
               - pgTAP self-approval scope expiry revocation stale-session AAL and zero-value assertions
           - id: M13-S05C-OFFBOARDING-EXPORT-AND-DELETION
-            status: planned
+            status: complete
             acceptance:
               - versioned minimized administrative export reconciles resource and ledger counts without secrets or PII
               - offboarding revokes every supported credential path and deletion completion pseudonymizes mutable identity without editing immutable value or evidence
@@ -2429,10 +2429,17 @@ tasks:
               - pgTAP credential inventory export pseudonymization cancellation cooling-period and immutable-row assertions
         references:
           - docs/architecture/ADR/0055-bilateral-agency-and-explicit-support-authority.md
+          - docs/api/ENTERPRISE_ADMINISTRATION.md
+          - docs/operations/AGENCY_SUPPORT_RECOVERY.md
         evidence:
           - docs/plan/evidence/M13/README.md
+          - docs/plan/evidence/M13/agency-support-recovery-browser-qa-2026-08-26.md
+          - focused contracts pass 8 of 8 and dashboard server-action tests pass 9 of 9
+          - organization_agency_support_offboarding_test.sql passes 73 focused assertions including terminal webhook destination and signing-fingerprint scrubbing
+          - the sixteenth two-session probe serializes bilateral acceptance support approval and deletion completion with one exact effect and zero ledger drift
+          - exact-head Linux run 33013504755 at 8587841d9a0e41afa00a94af506e2cddf5740422 passes all seven jobs including root checks both images clean 75-migration replay all 62 pgTAP files with 3349 assertions all 16 concurrency probes and all four WooCommerce runtimes
       - id: M13-S06-CANARY-AND-CLOSE
-        status: planned
+        status: in_progress
         dependencies: [M13-S05-SUPPORT-AGENCY-AND-OFFBOARDING]
         hypothesis: A disabled-first enterprise identity canary can prove immediate deprovisioning and fail-closed cross-tenant behavior without stranding owners.
         owner_inputs:
