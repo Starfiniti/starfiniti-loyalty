@@ -2476,7 +2476,7 @@ tasks:
         evidence:
           - docs/plan/evidence/M13/canary.yaml
           - 50-check manifest records 12 passed repository public-baseline Authentik-health and operator checks with 38 release IdP SCIM agency support recovery deletion rollback observation and reconciliation checks pending
-          - exact candidate run 33015108404 at 94c702a69f7fb8e923fc83203f1600b10544db42 passes all seven jobs including root checks both images clean 75-migration replay all 62 pgTAP files with 3349 assertions all 16 concurrency probes and all four WooCommerce runtimes
+          - exact candidate run 33015769949 at 6f1c1790f672f9aecfef61a581592313d5d67610 passes all seven jobs including root checks both images clean 75-migration replay all 62 pgTAP files with 3349 assertions all 16 concurrency probes and all four WooCommerce runtimes
 
   - id: M14-MANAGED-BILLING
     title: Add managed Stripe billing and idempotent usage metering

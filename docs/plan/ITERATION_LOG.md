@@ -5,7 +5,7 @@
 - Added the exact-schema 50-check M13 production manifest and validator to the root repository gate. Completion requires every check, exact release/commit evidence, operator access, enterprise-identity and canary approval, a 90/100 module score, and at least 80% of every weighted category.
 - Added deterministic adversarial self-tests for false completion, sensitive evidence, missing checks, score drift, short commits, hollow automatic-failure claims, unsafe public status, incomplete prerequisite slices, and category-floor failures.
 - Fresh read-only production probes passed dashboard, login, Supabase unauthorized, Authentik live/ready, canonical DNS, Proxmox access, and VM 970/971 health without mutating production.
-- Exact candidate run `33015108404` at `94c702a69f7fb8e923fc83203f1600b10544db42` passed all seven jobs: root checks, both images, a clean 75-migration replay, all 62 pgTAP files with 3,349 assertions, all 16 concurrency probes, and all four WooCommerce runtimes.
+- Exact candidate run `33015769949` at `6f1c1790f672f9aecfef61a581592313d5d67610` passed all seven jobs: root checks, both images, a clean 75-migration replay, all 62 pgTAP files with 3,349 assertions, all 16 concurrency probes, and all four WooCommerce runtimes.
 - The manifest now records 12 passed and 38 pending checks. Its provisional score is 90/100, but operability is 3/10 and below the mandatory 8/10 floor; approved release/fixtures, private-egress, live identity/SCIM/agency/support/recovery/deletion, reconciliation, rollback, observation, and owner approval remain mandatory.
 
 ## 2026-08-26 — M13 agency, support, recovery, and terminal offboarding

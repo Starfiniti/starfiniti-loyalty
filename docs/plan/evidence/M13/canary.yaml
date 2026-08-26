@@ -6,7 +6,7 @@ currentProduction:
   applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
 candidate:
   pullRequest: 45
-  commit: 94c702a69f7fb8e923fc83203f1600b10544db42
+  commit: 6f1c1790f672f9aecfef61a581592313d5d67610
   approvedRelease: false
   operatorAccess: true
   enterpriseIdentityApproved: false
@@ -55,7 +55,7 @@ score:
 checks:
   - id: exact_head_ci
     status: passed
-    evidence: Run 33015108404 at 94c702a69f7fb8e923fc83203f1600b10544db42 passed root checks, both production images, 75 migrations, 62 pgTAP files with 3,349 assertions, 16 concurrency probes, and all four WooCommerce runtimes.
+    evidence: Run 33015769949 at 6f1c1790f672f9aecfef61a581592313d5d67610 passed root checks, both production images, 75 migrations, 62 pgTAP files with 3,349 assertions, 16 concurrency probes, and all four WooCommerce runtimes.
   - id: migration_replay
     status: passed
     evidence: Run 33014200478 cleanly replayed all 75 additive migrations and all 62 pgTAP files with 3,349 assertions.
