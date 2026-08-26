@@ -507,12 +507,15 @@ select results_eq(
   $$ select count(*)::bigint from loyalty.support_access_use_events $$,
   array[1::bigint], 'a successful support projection atomically records one use'
 );
+set local role authenticated;
+set local request.jwt.claim.sub = '9d000000-0000-4000-8000-000000000001';
 select ok(
   not ((select workspace from loyalty.get_support_administration_workspace_v1(
     '9d000000-0000-4000-8000-000000000100'
   ))::text ~* 'email|customer|wallet|token|secret'),
   'support administration projections exclude PII value and credential material'
 );
+reset role;
 delete from auth.sessions where id = '9d000000-0000-4000-8000-000000000901';
 set local role authenticated;
 set local request.jwt.claim.sub = '9d000000-0000-4000-8000-000000000003';
@@ -809,7 +812,7 @@ select throws_ok(
   $$ update loyalty.organization_deletion_events
      set outcome = 'cancelled'
      where action = 'organization.deletion.complete' $$,
-  '55000', 'immutable data cannot be changed',
+  '55000', 'immutable loyalty history cannot be changed',
   'terminal deletion evidence cannot be rewritten'
 );
 
