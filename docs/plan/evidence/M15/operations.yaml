@@ -81,8 +81,8 @@ checks:
     status: passed
     evidence: Deterministic self-tests reject alert drift forbidden labels unsafe completion stale routes duplicate exercises unexplained value differences and missing approvals.
   - id: exact_head_ci
-    status: pending
-    evidence: Exact-head GitHub CI and Security runs remain required after implementation review.
+    status: passed
+    evidence: GitHub CI run 33065803812 passed all seven jobs and Security run 33065803818 passed CodeQL supply-chain image SBOM secret policy and isolated DAST jobs at exact documentation head 05c0c203f6bd07b231507f840f4b38c15563cde2 containing implementation candidate c2a6fd5ceb80ae4a8b564e19f148d4a63cc85872.
   - id: approved_monitoring_environment
     status: pending
     evidence: Production monitoring hosts networks retention and a bounded activation window require owner approval.
