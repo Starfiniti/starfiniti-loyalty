@@ -1,0 +1,195 @@
+name: Security
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 3 * * 2"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  codeql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
+        with:
+          languages: javascript-typescript
+          build-mode: none
+          queries: security-extended
+      - name: Analyze JavaScript and TypeScript
+        uses: github/codeql-action/analyze@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
+        with:
+          category: "/language:javascript-typescript"
+
+  supply-chain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 24
+          cache: npm
+      - name: Audit complete development and production dependency tree
+        run: npm audit --audit-level=high
+      - name: Build deployable dashboard image
+        run: docker build --file apps/dashboard/Dockerfile --tag starfiniti-dashboard:security .
+      - name: Build deployable worker image
+        run: docker build --file apps/worker/Dockerfile --tag starfiniti-worker:security .
+      - name: Verify exact worker runtime modules
+        run: docker run --rm --entrypoint node starfiniti-worker:security --input-type=module --eval "await Promise.all(['nodemailer','postgres','zod'].map((name) => import(name)))"
+      - name: Prepare minimized security artifact directory
+        run: mkdir -p dist/security
+      - name: Scan repository secrets and misconfiguration
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: secret,misconfig
+          exit-code: "1"
+          format: table
+          timeout: 10m
+          version: v0.74.0
+      - name: Generate minimized dashboard review report
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: starfiniti-dashboard:security
+          scanners: vuln,misconfig,license
+          severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+          ignore-unfixed: "false"
+          exit-code: "0"
+          format: json
+          output: dist/security/dashboard-trivy.json
+          timeout: 10m
+          trivy-config: infrastructure/testing/security/trivy.yaml
+          version: v0.74.0
+      - name: Generate minimized worker review report
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: starfiniti-worker:security
+          scanners: vuln,misconfig,license
+          severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+          ignore-unfixed: "false"
+          exit-code: "0"
+          format: json
+          output: dist/security/worker-trivy.json
+          timeout: 10m
+          trivy-config: infrastructure/testing/security/trivy.yaml
+          version: v0.74.0
+      - name: Enforce deployable dashboard image policy
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: starfiniti-dashboard:security
+          scanners: vuln,secret,misconfig,license
+          severity: UNKNOWN,HIGH,CRITICAL
+          ignore-unfixed: "false"
+          exit-code: "1"
+          format: table
+          timeout: 10m
+          trivy-config: infrastructure/testing/security/trivy.yaml
+          version: v0.74.0
+      - name: Enforce deployable worker image policy
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: starfiniti-worker:security
+          scanners: vuln,secret,misconfig,license
+          severity: UNKNOWN,HIGH,CRITICAL
+          ignore-unfixed: "false"
+          exit-code: "1"
+          format: table
+          timeout: 10m
+          trivy-config: infrastructure/testing/security/trivy.yaml
+          version: v0.74.0
+      - name: Generate dashboard CycloneDX SBOM
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        with:
+          image: starfiniti-dashboard:security
+          format: cyclonedx-json
+          output-file: dist/security/dashboard.cdx.json
+          syft-version: v1.51.0
+          upload-artifact: "false"
+          upload-release-assets: "false"
+      - name: Generate worker CycloneDX SBOM
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        with:
+          image: starfiniti-worker:security
+          format: cyclonedx-json
+          output-file: dist/security/worker.cdx.json
+          syft-version: v1.51.0
+          upload-artifact: "false"
+          upload-release-assets: "false"
+      - name: Upload minimized supply-chain evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: security-supply-chain-${{ github.sha }}
+          path: |
+            dist/security/*-trivy.json
+            dist/security/*.cdx.json
+          if-no-files-found: error
+          retention-days: 30
+
+  dast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - name: Build disposable DAST target
+        run: docker build --file apps/dashboard/Dockerfile --tag starfiniti-dashboard:dast .
+      - name: Pull pinned ZAP scanner before isolation
+        run: docker pull ghcr.io/zaproxy/zaproxy@sha256:781a2bdaea47324e7bab583e2263f21d257b0aee61ed51521a5be45f5f5081ef
+      - name: Start isolated disposable target
+        shell: bash
+        run: |
+          docker network create --internal starfiniti-dast
+          docker run --detach --name starfiniti-dast-target --network starfiniti-dast \
+            --label com.starfiniti.disposable=true \
+            --label com.starfiniti.environment=dast \
+            --env NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321 \
+            --env NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_dast_ci \
+            starfiniti-dashboard:dast
+          for attempt in $(seq 1 30); do
+            if docker exec starfiniti-dast-target node -e "fetch('http://127.0.0.1:3000/login').then(r=>{if(r.status!==200)process.exit(1)}).catch(()=>process.exit(1))"; then
+              exit 0
+            fi
+            sleep 1
+          done
+          docker logs starfiniti-dast-target
+          exit 1
+      - name: Run bounded ZAP Automation Framework scan
+        shell: bash
+        run: |
+          mkdir -p dist/security
+          chmod 0777 dist/security
+          docker run --rm --network starfiniti-dast \
+            --volume "$PWD:/zap/wrk:rw" \
+            ghcr.io/zaproxy/zaproxy@sha256:781a2bdaea47324e7bab583e2263f21d257b0aee61ed51521a5be45f5f5081ef \
+            zap.sh -cmd -autorun /zap/wrk/infrastructure/testing/security/zap-automation.yaml
+      - name: Upload DAST report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: security-dast-${{ github.sha }}
+          path: dist/security/zap-report.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Remove disposable DAST target and network
+        if: always()
+        shell: bash
+        run: |
+          docker rm --force starfiniti-dast-target 2>/dev/null || true
+          docker network rm starfiniti-dast 2>/dev/null || true

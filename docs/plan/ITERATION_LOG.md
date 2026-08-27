@@ -1,5 +1,14 @@
 # Iteration Log
 
+## 2026-08-27 — M15 deployable security, SBOM, provenance, and isolated DAST
+
+- Accepted ADR-0064 after comparing one repository-wide dependency result, exact deployable-image scans with a separately retained development advisory, hosted production DAST, and bounded internal disposable DAST. Production images are the release boundary; R-032 stays open and still blocks the module.
+- Added a separate three-job Security workflow: CodeQL `security-extended`; Trivy repository secret/misconfiguration and exact dashboard/worker vulnerability/secret/misconfiguration/licence scans; Syft CycloneDX image SBOMs; and ZAP 2.17.0 active testing on an internal Docker network with no published port or external route.
+- Rechecked the full development audit when WordPress published `@wordpress/env` 11.14.0. The exact upgrade removes vulnerable `extract-zip`, installs patched `adm-zip` 0.6.0, and changes the complete npm audit from two High findings to zero. The Security workflow now runs that full audit, while the exact-head four-cell Linux WooCommerce matrix remains the final R-032 compatibility proof.
+- Extended tagged releases to record exact pushed image digests, generate and checksum both SBOMs, attest all four release files, attest both registry image digests, and publish the SBOMs beside the WooCommerce package. Every action and the ZAP image uses an immutable reviewed input.
+- Added a 25-check fail-closed manifest and validator. It binds exact workflow/plan digests, enforces the six-job DAST sequence and bounds, rejects sensitive evidence/false completion/task drift/public targets, and requires fresh exact-head scans, tagged-release verification, approved non-destructive production review, independent penetration test plus retest, zero Critical/High findings, R-032 resolution, and named owner approval.
+- Local workflow and security validation pass with six repository controls proven and 19 execution/external checks pending. No production scan, external dynamic target, provider credential, customer data, or loyalty-value mutation was used.
+
 ## 2026-08-27 — M15 disposable fault control and retry bounds
 
 - Accepted ADR-0063 after comparing ad hoc Compose/network commands, a standing in-cluster chaos daemon, and a short-lived local controller on an approved disposable host. The local controller avoids permanent Docker/orchestrator authority and still requires independent value reconciliation.

@@ -2852,7 +2852,7 @@ tasks:
         incident exercise,
         final npm and database/plugin/image/deploy gates,
       ]
-    risks: [R-004, R-005, R-008, R-030, R-045]
+    risks: [R-004, R-005, R-008, R-030, R-032, R-045, R-046, R-047]
     docs:
       [
         docs/operations/BACKUP_RESTORE.md,
@@ -2959,8 +2959,59 @@ tasks:
           ]
       - id: M15-S03-SUPPLY-CHAIN-AND-SECURITY
         title: Complete security scanning SBOM and DAST gates
-        status: planned
+        status: in_progress
         dependencies: [M15-S01-CAPACITY-ENVELOPE]
+        hypothesis: Exact deployable-image scans isolated dynamic testing SBOMs provenance and independent review expose release risk without granting a scanner production mutation authority.
+        baseline: Baseline tests production npm audit secret scan licence inventory and pinned container builds exist without CodeQL deployable-image SBOM provenance DAST or independent penetration-test evidence.
+        targets:
+          [
+            zero unresolved Critical or High finding across automated and independent sources,
+            both exact deployable images have verified CycloneDX inventories and registry-backed provenance,
+            dynamic testing cannot route outside a disposable no-egress target,
+            every Medium and false-positive disposition is owned expiring and reproducible,
+          ]
+        owner_inputs:
+          [
+            approved non-destructive production configuration review window,
+            independent penetration test and remediation retest,
+            named security-owner final approval,
+          ]
+        acceptance:
+          [
+            CodeQL repository and both deployable-image scans pass on the exact candidate,
+            the worker image imports only its exact external nodemailer postgres and zod packages and carries no root-workspace dependency tree,
+            dashboard and worker SBOMs reconcile to exact image digests,
+            bounded disposable ZAP scan passes with no High alert and retained report,
+            tagged release checksum and file plus image attestations verify,
+            production review and independent penetration test have zero unresolved Critical or High issue,
+            development-only R-032 is resolved and the full development audit passes,
+          ]
+        failure_modes:
+          [
+            scanner action image or database input is mutable or stale,
+            development risk is hidden by a production-only result,
+            dynamic scan reaches production or retains a mutable target,
+            release SBOM does not match the published image,
+            a deterministic finding is suppressed by severity exclusion or blanket waiver,
+            penetration scope or remediation retest is incomplete,
+          ]
+        rollout: Run automated scans on pull requests main and weekly; perform production review only in an approved non-destructive window and keep independent testing outside application authority.
+        rollback: Remove the additive workflow from new runs and pin the last reviewed scanner versions while preserving immutable scan attestation and finding history; never erase published attestations or suppress findings to restore a green status.
+        verification:
+          [
+            npm run ci:validate,
+            npm run security:validate,
+            GitHub Security workflow on the exact candidate,
+            tagged release checksum SBOM and attestation verification,
+            independent penetration-test and retest summary validation,
+          ]
+        evidence:
+          [
+            docs/plan/evidence/M15/security.yaml,
+            docs/architecture/ADR/0064-deployable-artifact-security-and-isolated-dast.md,
+            docs/operations/SECURITY_SCANNING.md,
+            infrastructure/testing/security/trivy.yaml,
+          ]
       - id: M15-S04-CLEAN-ROOM-RECOVERY
         title: Prove clean-room recovery and failover
         status: planned

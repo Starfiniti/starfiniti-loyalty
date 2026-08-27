@@ -1,0 +1,139 @@
+schema: starfiniti.security-evidence.v1
+status: in_progress
+observedAt: 2026-08-27T09:14:38Z
+currentProduction:
+  release: v0.1.11
+  applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
+candidate:
+  branch: codex/m15-security-supply-chain
+  commit: 2a27fc6a8bf9577ccf2f1ffb3475fffbdbb52440
+  securityOwnerApproved: false
+inputs:
+  securityWorkflow:
+    path: .github/workflows/security.yml
+    sha256: 859809e7f2059b375138d0aa0ac1d4e143ddeaef38d118c8da529d432ea8e6f8
+  releaseWorkflow:
+    path: .github/workflows/release.yml
+    sha256: 379bd17a50780ff043af30d724c1b51d1774a12d8d10c4cc5ba282a7ad434892
+  dastPlan:
+    path: infrastructure/testing/security/zap-automation.yaml
+    sha256: af8478c13983e575522077f7a8452d39c55cb1ec7386470bca1241f4fc2f0aff
+  licensePolicy:
+    path: infrastructure/testing/security/trivy.yaml
+    sha256: 1eed0cc5db61226b7c2ac79615169aac01c6fadfedc64d6ef3caf784a07143c3
+  tools:
+    codeqlAction: 4.37.9
+    trivyAction: 0.36.0
+    trivy: 0.74.0
+    sbomAction: 0.24.0
+    syft: 1.51.0
+    zap: 2.17.0
+    uploadArtifactAction: 7.0.1
+    attestBuildProvenanceAction: 4.2.2
+artifacts:
+  securityRunPath: null
+  securityRunSha256: null
+  releaseVerificationPath: null
+  releaseVerificationSha256: null
+  productionReviewPath: null
+  productionReviewSha256: null
+  penetrationTestPath: null
+  penetrationTestSha256: null
+  findingRegisterPath: null
+  findingRegisterSha256: null
+checks:
+  - id: workflow_contract
+    status: passed
+    evidence: The separate bounded workflow has exact pull request main weekly and manual triggers with read-only default authority.
+  - id: immutable_tool_inputs
+    status: passed
+    evidence: Every action uses a full reviewed commit and the ZAP image uses the exact reviewed multi-platform manifest digest.
+  - id: deployable_image_boundary
+    status: passed
+    evidence: Both production images receive vulnerability secret misconfiguration and explicit no-ignore AGPL-compatible licence scans that fail on every Unknown High or Critical result.
+  - id: isolated_dast_plan
+    status: passed
+    evidence: The canonical ZAP plan targets only the named disposable container with bounded crawl active-scan wait report and High-alert exit jobs.
+  - id: release_evidence_contract
+    status: passed
+    evidence: The tagged release workflow generates two CycloneDX files checksums file provenance and registry-backed image attestations.
+  - id: fail_closed_manifest
+    status: passed
+    evidence: The repository validator rejects drift sensitive evidence false completion missing checks task mismatch and unsafe DAST or release controls.
+  - id: exact_head_ci
+    status: passed
+    evidence: GitHub Actions CI run 33057428413 completed successfully at head 2a27fc6a8bf9577ccf2f1ffb3475fffbdbb52440 across baseline, database replay and pgTAP, both images, the worker runtime import probe, and all four minimum/current HPOS/legacy WooCommerce jobs.
+  - id: codeql_sast
+    status: passed
+    evidence: Security run 33057428402 completed CodeQL security-extended successfully at the exact candidate head; the GitHub code-scanning API returned zero open alerts for the pull-request merge ref at review time.
+  - id: repository_secret_misconfiguration_scan
+    status: passed
+    evidence: Security run 33057428402 completed its fail-closed Trivy 0.74.0 repository secret and misconfiguration scan without a finding.
+  - id: dashboard_image_scan
+    status: passed
+    evidence: Security run 33057428402 enforced zero Unknown High or Critical findings on dashboard image sha256:f9744f644af35335292f35bfff61512ce9d0465ba3c86f9f041c167beaeca8f2; its secret-free full report has SHA-256 98f786ce8cf1787317da11c3b5f840f30fc7b488bf032902672846e34fc59769.
+  - id: worker_image_scan
+    status: passed
+    evidence: Security run 33057428402 imported the exact three external modules and enforced zero Unknown High or Critical findings on worker image sha256:cbf457cbf91b794f9554927b235883494547817fec23bcaa03d860da09bd4698; its review report has SHA-256 cfc7f6bf776e2aefb5d05a71ebafc17ac7f9e7af72d5149adc1887239d98a96c.
+  - id: dashboard_sbom
+    status: passed
+    evidence: Security run 33057428402 generated a valid CycloneDX 1.7 dashboard inventory with 238 components and SHA-256 bdca342bcc62c8ef7b0071d98a89092c0d6b6966dc686819a865b867a11b288d.
+  - id: worker_sbom
+    status: passed
+    evidence: Security run 33057428402 generated a valid CycloneDX 1.7 worker inventory with 108 operating-system runtime and external-package components and SHA-256 05171375f0d06eb6dfbaa2f98f8051202200696cab3f115f547cb102e328e20c.
+  - id: disposable_dast
+    status: passed
+    evidence: Security run 33057428402 completed bounded ZAP 2.17.0 against one internal no-port disposable target with zero High alert; artifact 9640284697 has archive digest 1f2f720069b94be9ad6f148a470627346a60c0ddbe3711967458fbf4998f8705 and report SHA-256 cbfc112cff41ae1c50c8f542ab4a2f3daae1f020e97b7f4c6ac4a60bd3cd75df.
+  - id: scanner_database_freshness
+    status: pending
+    evidence: CodeQL Trivy ZAP and package-advisory databases must be current inside the approved evidence age at final review.
+  - id: release_sbom_verification
+    status: pending
+    evidence: A tagged release must publish both SBOMs and all three downloaded release payloads must match the signed checksum file.
+  - id: release_file_attestations
+    status: pending
+    evidence: GitHub CLI verification must accept provenance for the connector package both SBOMs and the exact checksum file.
+  - id: release_image_attestations
+    status: pending
+    evidence: GitHub CLI verification must accept registry-backed provenance for the exact dashboard and worker release image digests.
+  - id: production_configuration_review
+    status: pending
+    evidence: An approved non-destructive production configuration and passive exposure review must find no Critical or High issue.
+  - id: independent_penetration_test
+    status: pending
+    evidence: An independent tester must complete the agreed application tenancy authorization connector and infrastructure scope.
+  - id: penetration_retest
+    status: pending
+    evidence: The independent tester must verify every Critical or High remediation and issue an explicit zero-open retest conclusion.
+  - id: critical_high_findings_zero
+    status: pending
+    evidence: Exact-head automated sources contain zero unresolved Critical or High item; the final reconciled register also needs the production review and independent penetration-test sources.
+  - id: medium_and_false_positive_review
+    status: pending
+    evidence: The exact reports contain 30 reciprocal Medium image-licence findings and two Medium ZAP alerts; each needs owned technical triage plus any false-positive expiry and regression or remediation link.
+  - id: development_advisory_resolved
+    status: passed
+    evidence: Exact-head Security audit found zero complete-tree vulnerabilities, and CI run 33057428413 passed all four Linux minimum/current HPOS/legacy WooCommerce cells with @wordpress/env 11.14.0, patched adm-zip 0.6.0, and no extract-zip package.
+  - id: security_owner_approval
+    status: pending
+    evidence: The named security owner must review exact artifacts findings residual risks and rollback guidance before accepting the module.
+automaticFails:
+  - Any Critical or High automated scan result remains unresolved or is hidden by a broad ignore rule, path exclusion, or severity reduction.
+  - CodeQL analysis does not cover the exact JavaScript and TypeScript candidate or runs with broader authority than the reviewed workflow.
+  - A repository secret or reusable credential appears in source history workflow output a scanner report an SBOM or committed evidence.
+  - Either deployable image is not identified by the exact candidate digest or is scanned with stale incomplete or selectively disabled scanners.
+  - The worker image contains a root-workspace dependency tree or cannot import every declared external package from its exact built runtime.
+  - A prohibited or restricted production-image licence finding is suppressed without an exact package legal decision and independent review.
+  - An SBOM is missing malformed generated from a different image or cannot be reconciled to the released image and candidate commit.
+  - Release files or container images lack verifiable repository-scoped provenance for their exact checksum or registry digest.
+  - The dynamic scanner can route outside its internal disposable Docker network or can reach any public staging or production origin.
+  - The dynamic scan receives authentication secrets customer data provider credentials production configuration or a mutable value-bearing database.
+  - The disposable target publishes a host port uses host networking omits cleanup or survives a failed or cancelled security workflow.
+  - ZAP does not complete bounded spider passive active report and exit jobs or reports any unresolved High alert.
+  - Scanner advisory databases exceed the approved freshness bound or their versions and update timestamps are absent from evidence.
+  - Production review uses active mutation without explicit approval or omits edge proxy headers TLS cookies egress and secret-mount controls.
+  - The independent penetration test omits tenant isolation authorization ledger connector SSO SCIM billing or infrastructure scope without owner acceptance.
+  - Any independent Critical or High finding lacks a completed remediation and tester-performed retest on the exact corrected release candidate.
+  - A Medium or false-positive decision lacks reproducible technical evidence named ownership expiry and a regression or remediation link.
+  - The development-only R-032 High advisory remains installed unresolved or silently excluded when the module is marked complete.
+  - Security completion is claimed while any mandatory check artifact digest task state or named security-owner approval is missing or inconsistent.

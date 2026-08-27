@@ -1,0 +1,57 @@
+env:
+  contexts:
+    - name: starfiniti-disposable-dashboard
+      urls:
+        - http://starfiniti-dast-target:3000/login
+      includePaths:
+        - http://starfiniti-dast-target:3000/login.*
+      excludePaths:
+        - http://starfiniti-dast-target:3000/auth/.*
+        - http://starfiniti-dast-target:3000/api/.*
+  parameters:
+    failOnError: true
+    failOnWarning: false
+    progressToStdout: true
+
+jobs:
+  - type: spider
+    parameters:
+      context: starfiniti-disposable-dashboard
+      url: http://starfiniti-dast-target:3000/login
+      maxDuration: 2
+      maxDepth: 3
+      maxChildren: 50
+  - type: passiveScan-wait
+    parameters:
+      maxDuration: 2
+  - type: activeScan
+    parameters:
+      context: starfiniti-disposable-dashboard
+      url: http://starfiniti-dast-target:3000/login
+      defaultStrength: Low
+      defaultThreshold: Medium
+      maxRuleDurationInMins: 1
+      maxScanDurationInMins: 5
+      delayInMs: 50
+      handleAntiCSRFTokens: true
+  - type: passiveScan-wait
+    parameters:
+      maxDuration: 2
+  - type: report
+    parameters:
+      template: traditional-json
+      reportDir: /zap/wrk/dist/security
+      reportFile: zap-report.json
+      reportTitle: Starfiniti disposable dashboard DAST
+      reportDescription: Bounded CI scan of the isolated unauthenticated login surface.
+      displayReport: false
+    risks: [high, medium, low, info]
+    confidences: [high, medium]
+  - type: exitStatus
+    alwaysRun: true
+    parameters:
+      errorLevel: High
+      warnLevel: Medium
+      okExitValue: 0
+      errorExitValue: 1
+      warnExitValue: 0
