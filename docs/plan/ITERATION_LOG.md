@@ -7,6 +7,7 @@
 - Added evidence scanning for secret-bearing keys, personal data, reusable credentials, and raw Stripe resource patterns. Self-tests corrupt approvals, checks, score arithmetic, commit identity, public access, prerequisites, category floors, and evidence to prove false completion is rejected.
 - Revalidated the canonical public baseline without authentication or mutation: dashboard health and login return 200, Supabase Auth and REST without a key return 401, and DNS resolves. Production remains globally `self_hosted` with no Stripe configuration or request.
 - Thirteen checks pass and 35 remain pending. The provisional module score is 90/100, but operability is 3/10 and below its mandatory 8/10 floor; approved release, sandbox/catalogue/policy inputs, recovery point, deployment, lifecycle/usage/invoice canaries, reconciliation, rollback, observation, and owner approval remain mandatory.
+- Exact implementation-head run `33044421620` at `b02fabee5ad1cd236e65a0b19a1a9675bf4d6c22` passed all seven jobs: 950 workspace tests, both images, 81 migrations, all 68 pgTAP files with 3,701 assertions, all 22 concurrency probes, and all four WooCommerce runtime cells.
 
 ## 2026-08-27 — M14 managed-billing merchant closeout
 

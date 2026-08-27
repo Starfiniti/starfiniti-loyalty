@@ -6,7 +6,7 @@ currentProduction:
   applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
 candidate:
   pullRequest: 49
-  commit: f7a4def55ae5d4cd646ac6cad26004992f498d2b
+  commit: b02fabee5ad1cd236e65a0b19a1a9675bf4d6c22
   approvedRelease: false
   operatorAccess: true
   stripeSandboxApproved: false
@@ -54,10 +54,10 @@ score:
 checks:
   - id: exact_head_ci
     status: passed
-    evidence: Run 33043411759 at f7a4def55ae5d4cd646ac6cad26004992f498d2b passed all seven jobs with 950 workspace tests, both production images, and all four WooCommerce runtimes.
+    evidence: Run 33044421620 at b02fabee5ad1cd236e65a0b19a1a9675bf4d6c22 passed all seven jobs with 950 workspace tests, both production images, and all four WooCommerce runtimes.
   - id: migration_replay
     status: passed
-    evidence: Run 33043411759 cleanly replayed all 81 additive migrations and all 68 pgTAP files with 3,701 assertions.
+    evidence: Run 33044421620 cleanly replayed all 81 additive migrations and all 68 pgTAP files with 3,701 assertions.
   - id: contract_provider_matrix
     status: passed
     evidence: Strict public summaries, signed webhook intake, Checkout and Portal reservations, provider adapters, usage dispatch, and commercial-policy contracts pass bounded adversarial tests.
