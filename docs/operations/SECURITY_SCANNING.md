@@ -18,9 +18,9 @@ The DAST network has no published port and no external route. The target is buil
 
 The repository misconfiguration scan is intentionally strict at every severity. Both deployable Dockerfiles therefore carry image-level health checks: dashboard readiness uses `/api/healthz`, while the multi-mode worker verifies its unprivileged PID 1 process without coupling container health to a database or provider outage. Do not suppress `DS-0026` or add a blanket Trivy ignore.
 
-`infrastructure/testing/security/trivy.yaml` is the explicit AGPL-compatible licence policy. AGPL/GPL/LGPL findings remain visible as Medium reciprocal obligations; incompatible non-commercial, Commons Clause, Business Source, SSPL, Elastic, and other restricted terms fail. Unknown licences also fail. The policy contains no ignored licence IDs.
+`infrastructure/testing/security/trivy.yaml` is the explicit AGPL-compatible licence policy. AGPL/GPL/LGPL findings remain visible as Medium reciprocal obligations; reviewed MIT-0 and SIL Open Font License identifiers are permissive Low findings; incompatible non-commercial, Commons Clause, Business Source, SSPL, Elastic, and other restricted terms fail. Unknown licences also fail. The policy contains no ignored licence IDs.
 
-Full-severity dashboard and worker JSON review reports exclude the secret scanner and are uploaded with both SBOMs. Secret detection remains enabled in the fail-closed table scan only, preventing a raw secret match from being copied into downloadable evidence. Runtime stages remove npm, npx, Corepack, and Yarn after the build and pin the reviewed Alpine OpenSSL security revision.
+Full-severity dashboard and worker JSON review reports exclude the secret scanner and are uploaded with both SBOMs. Secret detection remains enabled in the fail-closed table scan only, preventing a raw secret match from being copied into downloadable evidence. Runtime stages remove npm, npx, Corepack, and Yarn after the build and pin the reviewed Alpine OpenSSL security revision. The worker bundle leaves only `nodemailer`, `postgres`, and `zod` external, copies only those exact package directories, and imports all three from the built image before the scan. This prevents a root-workspace prune from silently shipping dashboard or build dependencies while keeping the SBOM aware of every external worker package.
 
 ## Release boundary
 

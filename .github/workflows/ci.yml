@@ -18,6 +18,8 @@ jobs:
         run: docker build --file apps/dashboard/Dockerfile --tag starfiniti-dashboard:ci .
       - name: Build pinned worker image
         run: docker build --file apps/worker/Dockerfile --tag starfiniti-worker:ci .
+      - name: Verify exact worker runtime modules
+        run: docker run --rm --entrypoint node starfiniti-worker:ci --input-type=module --eval "await Promise.all(['nodemailer','postgres','zod'].map((name) => import(name)))"
 
   baseline:
     runs-on: ubuntu-latest

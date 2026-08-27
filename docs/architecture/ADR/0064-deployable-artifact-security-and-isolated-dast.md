@@ -34,6 +34,7 @@ Reviewed tool inputs are CodeQL Action 4.37.9, Trivy Action 0.36.0 with Trivy 0.
 9. Keep image-level health checks in both deployable images. The dashboard probes its private readiness endpoint. The multi-mode worker probes only its unprivileged PID 1 runtime: database and provider outages are retried by the worker and must not turn a transient dependency failure into an orchestrator restart loop.
 10. Classify AGPL/GPL/LGPL and other reviewed copyleft licences as reciprocal rather than forbidden because the application itself is distributed under AGPL-3.0-or-later. Non-commercial, Commons Clause, Business Source, SSPL, Elastic, and other incompatible terms remain forbidden or restricted. The exact policy is digest-bound evidence; it has no ignored licences.
 11. Remove npm, npx, Corepack, and Yarn from the runtime stages and apply the exact Alpine OpenSSL security revision available for every supported image architecture. Build stages retain npm; runtime stages contain only Node and application dependencies.
+12. Keep the worker bundle's three third-party runtime imports (`nodemailer`, `postgres`, and `zod`) external and copy only those exact package directories into the runtime image. CI imports all three from the built image before scanning. This preserves complete package/SBOM evidence without shipping dashboard-only or build-tool dependencies. Classify the reviewed MIT-0 and SIL Open Font License identifiers as permissive Low findings; unfamiliar licence strings remain Unknown and fail.
 
 ## Alternatives considered
 
@@ -66,6 +67,7 @@ This records contents but not who built which exact release. Rejected. SBOMs and
 - Pull requests gain three bounded jobs: CodeQL, supply-chain, and disposable DAST.
 - Deployable images expose bounded health metadata even outside the reference Compose file; Compose may override intervals but must not disable the checks.
 - Runtime images do not ship the unused global package-management toolchain, reducing attack surface and removing its independent advisory stream.
+- The worker runtime does not inherit the monorepo's pruned root dependency tree; its image inventory is limited to the three external packages actually resolved by the built worker.
 - Weekly execution refreshes vulnerability evidence even without source changes.
 - Security reports and SBOMs are short-lived CI artifacts; release SBOMs and attestations are durable release assets/metadata.
 - R-032 remains pending until exact-candidate Linux runtime evidence confirms the patched dependency transition. No deterministic finding may be changed to passing through subjective acceptance.

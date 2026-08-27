@@ -11,7 +11,7 @@ candidate:
 inputs:
   securityWorkflow:
     path: .github/workflows/security.yml
-    sha256: 08268d271b26fea784a7251c85b0ded87a10a0d5f6fea735c5a0a94b67ceb757
+    sha256: 859809e7f2059b375138d0aa0ac1d4e143ddeaef38d118c8da529d432ea8e6f8
   releaseWorkflow:
     path: .github/workflows/release.yml
     sha256: 379bd17a50780ff043af30d724c1b51d1774a12d8d10c4cc5ba282a7ad434892
@@ -20,7 +20,7 @@ inputs:
     sha256: af8478c13983e575522077f7a8452d39c55cb1ec7386470bca1241f4fc2f0aff
   licensePolicy:
     path: infrastructure/testing/security/trivy.yaml
-    sha256: c35b31bfd84a179cbc33f99909c110057640e51cef8e95c1adffb774e3ce8795
+    sha256: 1eed0cc5db61226b7c2ac79615169aac01c6fadfedc64d6ef3caf784a07143c3
   tools:
     codeqlAction: 4.37.9
     trivyAction: 0.36.0
@@ -122,6 +122,7 @@ automaticFails:
   - CodeQL analysis does not cover the exact JavaScript and TypeScript candidate or runs with broader authority than the reviewed workflow.
   - A repository secret or reusable credential appears in source history workflow output a scanner report an SBOM or committed evidence.
   - Either deployable image is not identified by the exact candidate digest or is scanned with stale incomplete or selectively disabled scanners.
+  - The worker image contains a root-workspace dependency tree or cannot import every declared external package from its exact built runtime.
   - A prohibited or restricted production-image licence finding is suppressed without an exact package legal decision and independent review.
   - An SBOM is missing malformed generated from a different image or cannot be reconciled to the released image and candidate commit.
   - Release files or container images lack verifiable repository-scoped provenance for their exact checksum or registry digest.

@@ -2979,6 +2979,7 @@ tasks:
         acceptance:
           [
             CodeQL repository and both deployable-image scans pass on the exact candidate,
+            the worker image imports only its exact external nodemailer postgres and zod packages and carries no root-workspace dependency tree,
             dashboard and worker SBOMs reconcile to exact image digests,
             bounded disposable ZAP scan passes with no High alert and retained report,
             tagged release checksum and file plus image attestations verify,

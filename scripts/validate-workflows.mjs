@@ -105,6 +105,44 @@ requireCondition(
   ),
   "worker image health check must verify the unprivileged PID 1 runtime",
 );
+const workerDockerfile = readFileSync("apps/worker/Dockerfile", "utf8");
+const workerRunnerStage = workerDockerfile.split(/\sAS runner\s/iu)[1] ?? "";
+const exactWorkerRuntimePackages = ["nodemailer", "postgres", "zod"];
+const workerRuntimeCopies = workerRunnerStage
+  .split(/\r?\n/u)
+  .filter((line) => line.startsWith("COPY ") && line.includes("node_modules/"));
+requireCondition(
+  !workerRunnerStage.includes("/app/node_modules ./node_modules") &&
+    workerRuntimeCopies.length === exactWorkerRuntimePackages.length &&
+    exactWorkerRuntimePackages.every(
+      (name) =>
+        workerRuntimeCopies.filter((line) =>
+          line.endsWith(`/app/node_modules/${name} ./node_modules/${name}`),
+        ).length === 1,
+    ),
+  "worker runtime must copy only its three externally resolved production packages",
+);
+const workerBuildCommand = JSON.parse(
+  readFileSync("apps/worker/package.json", "utf8"),
+).scripts?.build;
+requireCondition(
+  [...(workerBuildCommand?.matchAll(/--external:([^\s]+)/gu) ?? [])]
+    .map((match) => match[1])
+    .sort()
+    .join(",") === exactWorkerRuntimePackages.join(","),
+  "worker bundle must leave exactly the image-inventoried runtime packages external",
+);
+const workerRuntimeProbe =
+  "await Promise.all(['nodemailer','postgres','zod'].map((name) => import(name)))";
+requireCondition(
+  containerSteps.some(
+    (step) =>
+      step.name === "Verify exact worker runtime modules" &&
+      step.run?.includes("starfiniti-worker:ci") &&
+      step.run.includes(workerRuntimeProbe),
+  ),
+  "containers job must import every exact worker runtime package from the built image",
+);
 
 requireCondition(
   releaseWorkflow?.on?.push?.tags?.includes("v*.*.*"),
@@ -360,12 +398,13 @@ const policyCategories = [
   ...(license?.forbidden ?? []),
   ...(license?.restricted ?? []),
   ...(license?.reciprocal ?? []),
+  ...(license?.permissive ?? []),
 ];
 requireCondition(
   Object.keys(license ?? {})
     .sort()
     .join(",") ===
-    "confidenceLevel,forbidden,full,ignored,reciprocal,restricted" &&
+    "confidenceLevel,forbidden,full,ignored,permissive,reciprocal,restricted" &&
     license?.confidenceLevel === 0.9 &&
     license?.full === false &&
     Array.isArray(license?.ignored) &&
@@ -377,8 +416,20 @@ requireCondition(
         !license.forbidden?.includes(id) &&
         !license.restricted?.includes(id),
     ) &&
+    ["MIT-0", "SIL OPEN FONT LICENSE"].every((id) =>
+      license.permissive?.includes(id),
+    ) &&
     prohibitedLicenses.every((id) => license.forbidden?.includes(id)),
   `${trivyPolicyPath}: explicit AGPL-compatible reciprocal and prohibited licence policy is required`,
+);
+requireCondition(
+  supplySteps.some(
+    (step) =>
+      step.name === "Verify exact worker runtime modules" &&
+      step.run?.includes("starfiniti-worker:security") &&
+      step.run.includes(workerRuntimeProbe),
+  ),
+  `${securityWorkflowPath}: built worker image must import every exact runtime package before scanning`,
 );
 const sbomSteps = supplySteps.filter(
   (step) =>

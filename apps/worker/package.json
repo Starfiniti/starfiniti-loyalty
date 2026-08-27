@@ -5,7 +5,7 @@
   "type": "module",
   "license": "AGPL-3.0-or-later",
   "scripts": {
-    "build": "esbuild src/index.ts --bundle --platform=node --target=node24 --format=esm --outfile=dist/index.mjs --external:postgres",
+    "build": "esbuild src/index.ts --bundle --platform=node --target=node24 --format=esm --outfile=dist/index.mjs --external:nodemailer --external:postgres --external:zod",
     "start": "node dist/index.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"

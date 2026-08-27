@@ -46,6 +46,8 @@ jobs:
         run: docker build --file apps/dashboard/Dockerfile --tag starfiniti-dashboard:security .
       - name: Build deployable worker image
         run: docker build --file apps/worker/Dockerfile --tag starfiniti-worker:security .
+      - name: Verify exact worker runtime modules
+        run: docker run --rm --entrypoint node starfiniti-worker:security --input-type=module --eval "await Promise.all(['nodemailer','postgres','zod'].map((name) => import(name)))"
       - name: Prepare minimized security artifact directory
         run: mkdir -p dist/security
       - name: Scan repository secrets and misconfiguration
