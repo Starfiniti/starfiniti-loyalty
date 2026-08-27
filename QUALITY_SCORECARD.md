@@ -31,3 +31,5 @@ Engineering quality and product completeness are deliberately separate. The mach
 | **Total**             | **100** |  **51** | Enterprise finish requires at least 90                                                 |
 
 Every module also requires at least 90/100 and at least 80% of every relevant category. Unexplained value differences, cross-tenant access, duplicate effects, checkout dependency, missing recovery/canary evidence, or unresolved critical/high findings fail the gate regardless of score.
+
+M15-S03 currently proves six of 25 repository security controls. It is intentionally unscored for completion while exact-head automated results, release SBOM/provenance verification, production configuration review, independent penetration test/retest, R-032 resolution, and named approval remain open; the existing whole-product score cannot override those deterministic gates.

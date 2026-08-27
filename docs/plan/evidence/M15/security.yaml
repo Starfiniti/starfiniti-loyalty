@@ -1,0 +1,135 @@
+schema: starfiniti.security-evidence.v1
+status: in_progress
+observedAt: 2026-08-27T07:40:25Z
+currentProduction:
+  release: v0.1.11
+  applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
+candidate:
+  branch: codex/m15-security-supply-chain
+  commit: f3c5f904fe1ae8015d9f40648f196e079698b3ac
+  securityOwnerApproved: false
+inputs:
+  securityWorkflow:
+    path: .github/workflows/security.yml
+    sha256: 4a69b506c9970340ed026e1482eba01e47d5141ab25df89bfd980057d1f472dd
+  releaseWorkflow:
+    path: .github/workflows/release.yml
+    sha256: 379bd17a50780ff043af30d724c1b51d1774a12d8d10c4cc5ba282a7ad434892
+  dastPlan:
+    path: infrastructure/testing/security/zap-automation.yaml
+    sha256: af8478c13983e575522077f7a8452d39c55cb1ec7386470bca1241f4fc2f0aff
+  tools:
+    codeqlAction: 4.37.9
+    trivyAction: 0.36.0
+    trivy: 0.74.0
+    sbomAction: 0.24.0
+    syft: 1.51.0
+    zap: 2.17.0
+    uploadArtifactAction: 7.0.1
+    attestBuildProvenanceAction: 4.2.2
+artifacts:
+  securityRunPath: null
+  securityRunSha256: null
+  releaseVerificationPath: null
+  releaseVerificationSha256: null
+  productionReviewPath: null
+  productionReviewSha256: null
+  penetrationTestPath: null
+  penetrationTestSha256: null
+  findingRegisterPath: null
+  findingRegisterSha256: null
+checks:
+  - id: workflow_contract
+    status: passed
+    evidence: The separate bounded workflow has exact pull request main weekly and manual triggers with read-only default authority.
+  - id: immutable_tool_inputs
+    status: passed
+    evidence: Every action uses a full reviewed commit and the ZAP image uses the exact reviewed multi-platform manifest digest.
+  - id: deployable_image_boundary
+    status: passed
+    evidence: Both production images receive vulnerability secret misconfiguration and licence scans that fail on every High or Critical result.
+  - id: isolated_dast_plan
+    status: passed
+    evidence: The canonical ZAP plan targets only the named disposable container with bounded crawl active-scan wait report and High-alert exit jobs.
+  - id: release_evidence_contract
+    status: passed
+    evidence: The tagged release workflow generates two CycloneDX files checksums file provenance and registry-backed image attestations.
+  - id: fail_closed_manifest
+    status: passed
+    evidence: The repository validator rejects drift sensitive evidence false completion missing checks task mismatch and unsafe DAST or release controls.
+  - id: exact_head_ci
+    status: pending
+    evidence: A Linux CI run for the exact implementation commit must pass every baseline database container and WooCommerce runtime job.
+  - id: codeql_sast
+    status: pending
+    evidence: The exact candidate requires a completed CodeQL security-extended analysis with no unresolved Critical or High result.
+  - id: repository_secret_misconfiguration_scan
+    status: pending
+    evidence: The exact candidate requires a fresh Trivy repository scan with no secret or material misconfiguration finding.
+  - id: dashboard_image_scan
+    status: pending
+    evidence: The exact deployable dashboard image requires a fresh High and Critical vulnerability secret misconfiguration and licence scan.
+  - id: worker_image_scan
+    status: pending
+    evidence: The exact deployable worker image requires a fresh High and Critical vulnerability secret misconfiguration and licence scan.
+  - id: dashboard_sbom
+    status: pending
+    evidence: The exact deployable dashboard image requires a valid CycloneDX JSON inventory with a recorded nonzero content digest.
+  - id: worker_sbom
+    status: pending
+    evidence: The exact deployable worker image requires a valid CycloneDX JSON inventory with a recorded nonzero content digest.
+  - id: disposable_dast
+    status: pending
+    evidence: The exact candidate requires the bounded isolated ZAP scan to complete with no High alert and a retained review report.
+  - id: scanner_database_freshness
+    status: pending
+    evidence: CodeQL Trivy ZAP and package-advisory databases must be current inside the approved evidence age at final review.
+  - id: release_sbom_verification
+    status: pending
+    evidence: A tagged release must publish both SBOMs and all three downloaded release payloads must match the signed checksum file.
+  - id: release_file_attestations
+    status: pending
+    evidence: GitHub CLI verification must accept provenance for the connector package both SBOMs and the exact checksum file.
+  - id: release_image_attestations
+    status: pending
+    evidence: GitHub CLI verification must accept registry-backed provenance for the exact dashboard and worker release image digests.
+  - id: production_configuration_review
+    status: pending
+    evidence: An approved non-destructive production configuration and passive exposure review must find no Critical or High issue.
+  - id: independent_penetration_test
+    status: pending
+    evidence: An independent tester must complete the agreed application tenancy authorization connector and infrastructure scope.
+  - id: penetration_retest
+    status: pending
+    evidence: The independent tester must verify every Critical or High remediation and issue an explicit zero-open retest conclusion.
+  - id: critical_high_findings_zero
+    status: pending
+    evidence: The reconciled finding register must contain zero unresolved Critical or High items across every automated and independent source.
+  - id: medium_and_false_positive_review
+    status: pending
+    evidence: Every Medium item and false-positive disposition requires an owner expiry technical basis and linked regression or remediation.
+  - id: development_advisory_resolved
+    status: pending
+    evidence: The candidate complete dependency audit is clean after the exact WordPress runtime upgrade; all four Linux runtime cells must confirm compatibility.
+  - id: security_owner_approval
+    status: pending
+    evidence: The named security owner must review exact artifacts findings residual risks and rollback guidance before accepting the module.
+automaticFails:
+  - Any Critical or High automated scan result remains unresolved or is hidden by a broad ignore rule, path exclusion, or severity reduction.
+  - CodeQL analysis does not cover the exact JavaScript and TypeScript candidate or runs with broader authority than the reviewed workflow.
+  - A repository secret or reusable credential appears in source history workflow output a scanner report an SBOM or committed evidence.
+  - Either deployable image is not identified by the exact candidate digest or is scanned with stale incomplete or selectively disabled scanners.
+  - A prohibited or restricted production-image licence finding is suppressed without an exact package legal decision and independent review.
+  - An SBOM is missing malformed generated from a different image or cannot be reconciled to the released image and candidate commit.
+  - Release files or container images lack verifiable repository-scoped provenance for their exact checksum or registry digest.
+  - The dynamic scanner can route outside its internal disposable Docker network or can reach any public staging or production origin.
+  - The dynamic scan receives authentication secrets customer data provider credentials production configuration or a mutable value-bearing database.
+  - The disposable target publishes a host port uses host networking omits cleanup or survives a failed or cancelled security workflow.
+  - ZAP does not complete bounded spider passive active report and exit jobs or reports any unresolved High alert.
+  - Scanner advisory databases exceed the approved freshness bound or their versions and update timestamps are absent from evidence.
+  - Production review uses active mutation without explicit approval or omits edge proxy headers TLS cookies egress and secret-mount controls.
+  - The independent penetration test omits tenant isolation authorization ledger connector SSO SCIM billing or infrastructure scope without owner acceptance.
+  - Any independent Critical or High finding lacks a completed remediation and tester-performed retest on the exact corrected release candidate.
+  - A Medium or false-positive decision lacks reproducible technical evidence named ownership expiry and a regression or remediation link.
+  - The development-only R-032 High advisory remains installed unresolved or silently excluded when the module is marked complete.
+  - Security completion is claimed while any mandatory check artifact digest task state or named security-owner approval is missing or inconsistent.
