@@ -1,6 +1,6 @@
 # M12 Evidence — Migration framework
 
-Status: M12-S01 through M12-S05 are exact-head green and complete on `codex/m12-migration`. M12-S06 disabled deployment, approved-source canary, reconciliation, rollback, and observation are active. There is no production enablement or imported production value.
+Status: M12-S01 through M12-S05 are complete on the integrated enterprise branch. M12-S06 disabled deployment, approved-source canary, reconciliation, rollback, and observation are active. There is no production enablement or imported production value.
 
 ## M12-S01 canonical format and value-free dry run
 
@@ -52,8 +52,10 @@ Status: M12-S01 through M12-S05 are exact-head green and complete on `codex/m12-
 
 ## M12-S06 canary and close
 
-- [Machine-readable canary evidence](canary.yaml) contains 34 mandatory checks, exact candidate/production identity, seven-category score arithmetic, an 80% category floor, sensitive-key rejection, and deterministic false-completion self-tests.
-- Exact canary-gate [CI run 32953368405](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/32953368405) at `e85fa78cf4a1faf5b7eb95507f0ba523c2fa318b` passed all seven jobs, including clean 70-migration replay, all 57 pgTAP files/3,029 assertions, both images, and all four WooCommerce runtime cells.
-- Eleven repository, browser, privacy, checkout, public-baseline, and operator-access checks pass. Twenty-three release, recovery, deployment, source approval, rerun, value, reconciliation, correction, outage, rollback, and observation checks remain pending.
+- [Machine-readable canary evidence](canary.yaml) contains 36 mandatory checks, four synchronized approvals, seven fixed score categories, an immutable 90/100 target, an 80% category floor, thirteen fixed automatic failures, and nine unique path- and SHA-256-bound production artifacts.
+- Verified production files must be minimized JSON under the M12 production evidence root, safely opened descriptor-first as bounded regular files, unique by path/digest, candidate-commit and check-coverage exact, and free of identities, source rows, reusable capabilities, raw source/payloads, coupons, and ledger metadata.
+- Adversarial fixtures reject approval drift, missing/duplicate/forward-looking checks, score drift, short commits, sensitive values, weakened failure rules, missing/unsafe/reused/digest-drifted artifacts, unsafe public baselines, incomplete prerequisite slices, prose-only closure, and category-floor bypass; a positive fixture proves valid closure remains attainable.
+- Eleven repository, browser, privacy, checkout, public-baseline, and operator-access checks pass. Twenty-five release, recovery, deployment, source/batch approval, isolation, rerun, value, reconciliation, correction, outage, rollback, and observation checks remain pending.
 - The provisional module score is 90/100, but operability is 3/10 and below its mandatory floor. The validator therefore rejects completion regardless of the total score.
 - Production migration remains disabled. Applying real loyalty value requires an approved exact release, a fresh recovery point, an approved redacted source export, and explicit canary approval.
+- Integrated exact-head [CI run 33102977731](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/33102977731) and [Security run 33102977636](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/33102977636) passed candidate `16753b2691bc175c324d8f236677e5fc89874463` across all eleven checks.

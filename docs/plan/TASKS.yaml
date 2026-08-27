@@ -1938,7 +1938,11 @@ tasks:
         totals and counts reconcile,
         every point traces to batch and source row,
       ]
-    owner_inputs: [representative redacted exports for each approved adapter]
+    owner_inputs:
+      [
+        approved release and bounded migration canary window,
+        approved representative redacted source export,
+      ]
     acceptance:
       [
         canonical format dry run mapping approval error export opening balances four priority adapters corrections and reports pass,
@@ -2167,7 +2171,10 @@ tasks:
         status: in_progress
         hypothesis: A rerunnable real-source canary with exact customer/value/expiry/liability reconciliation can prove migrations are safe and operable.
         owner_inputs:
-          [approved redacted source export and production canary approval]
+          [
+            approved redacted source export,
+            approved bounded batch value ceiling and production canary window,
+          ]
         acceptance:
           - rerunning dry run and application duplicates nothing and every imported point traces to source row and immutable batch evidence
           - before/after counts balances expiry and liability reconcile with zero unexplained difference
@@ -2177,8 +2184,9 @@ tasks:
         verification:
           - fail-closed canary manifest clean replay full check images WooCommerce matrix source rerun correction recovery and observation
         evidence:
-          - exact canary-gate CI run 32953368405 at e85fa78 passed all seven jobs including root checks clean 70-migration replay 57 pgTAP files 3029 assertions both images and all four WooCommerce runtimes
-          - eleven repository public and operator checks pass while twenty-three production checks remain pending and the operability floor blocks false completion
+          - integrated exact-head CI run 33102977731 and Security run 33102977636 passed at 16753b2 with all eleven checks green
+          - docs/plan/evidence/M12/canary.yaml records 36 checks four synchronized approvals nine path and digest bound production artifacts thirteen fixed automatic failures and deterministic false-completion self-tests
+          - eleven repository and read-only controls pass while twenty-five approved release source deployment batch reconciliation rollback observation and operability controls remain pending
     risks: [R-028]
     docs:
       [

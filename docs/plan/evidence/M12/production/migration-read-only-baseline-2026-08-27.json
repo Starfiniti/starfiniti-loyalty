@@ -1,0 +1,22 @@
+{
+  "schema": "starfiniti.migration-canary-artifact.v1",
+  "artifactId": "read_only_baseline",
+  "candidateCommit": "16753b2691bc175c324d8f236677e5fc89874463",
+  "observedAt": "2026-08-27T18:27:29Z",
+  "result": "verified",
+  "summary": "The canonical public endpoints and approved read-only Proxmox route passed the migration pre-canary availability and isolation baseline without mutation.",
+  "checks": ["public_production_baseline", "operator_access"],
+  "details": {
+    "dashboardHealth": 200,
+    "login": 200,
+    "authWithoutKey": 401,
+    "restWithoutKey": 401,
+    "canonicalDns": true,
+    "applicationVm": 970,
+    "databaseVm": 971,
+    "applicationVmState": "running",
+    "databaseVmState": "running",
+    "scope": "read_only",
+    "mutationCount": 0
+  }
+}

@@ -1,5 +1,14 @@
 # Iteration Log
 
+## 2026-08-27 — M12 digest-bound migration closeout hardening
+
+- Adversarially reviewed the 34-check migration gate and found no production artifacts, mutable failure prose, key-only sensitive scanning, unsynchronized approval booleans, stale operator evidence, and only false-completion/sensitive-key tests despite irreversible-value risk.
+- Replaced it with a 36-check gate adding explicit canary approval and non-canary isolation while retaining every source, fingerprint, dry-run, mapping, batch, rerun, count, balance, expiry, liability, traceability, release, correction, outage, rollback, observation, and final reconciliation boundary.
+- Added nine unique path- and SHA-256-bound minimized JSON artifacts, descriptor-first bounded reads, exact candidate/check coverage, forbidden sensitive keys/values, thirteen fixed automatic failures, five completed prerequisite slices, task/score synchronization, four synchronized approvals, and an attainable positive fixture.
+- Corruption fixtures reject approval drift, missing/duplicate/forward-looking checks, score drift, short commits, sensitive material, weakened rules, missing/unsafe/reused/digest-drifted artifacts, unsafe public baselines, incomplete slices, prose-only closure, and category-floor bypass.
+- Integrated candidate `16753b2` passed CI `33102977731` and Security `33102977636`; a fresh read-only artifact records public/Auth/REST availability and running application/Supabase VMs without mutation.
+- The honest M12 score remains 90/100, with 11 controls passed and 25 pending. Operability is 3/10 and blocks completion until approved release/source/batch inputs, recovery, disabled deployment, exact reconciliation, rollback, and observation pass.
+
 ## 2026-08-27 — M11 digest-bound ecosystem closeout hardening
 
 - Adversarially reviewed the 41-check ecosystem gate and found no production artifacts, mutable failure prose, only two approvals, key-only sensitive scanning, and narrow false-completion/sensitive-key tests despite broad topology, identity, currency, API, webhook, and client functionality.
