@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { randomUUID } from "node:crypto";
 import type { ManagedBillingPlanOptionV1 } from "@starfiniti/contracts";
+import type { Metadata } from "next";
 
 import { MerchantShell } from "@/components/merchant-shell";
 import {
@@ -12,6 +13,10 @@ import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
 
 import { BillingOverview } from "./billing-overview";
 import { startManagedBillingSessionAction } from "./actions";
+
+export const metadata: Metadata = {
+  title: "Billing & plan · Starfiniti Loyalty",
+};
 
 export default async function BillingPage() {
   const tenant = await getAuthenticatedTenantState();

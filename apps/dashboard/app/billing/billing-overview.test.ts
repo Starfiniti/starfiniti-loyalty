@@ -2,6 +2,8 @@ import type { BillingSummaryV2 } from "@starfiniti/contracts";
 import { describe, expect, it } from "vitest";
 
 import {
+  billingProviderControlsPresentation,
+  billingRecoveryGuidance,
   billingStatePresentation,
   formatBillingInstant,
   formatUsageCount,
@@ -131,6 +133,111 @@ describe("billingStatePresentation", () => {
 
     expect(presentation.description).toContain("grace period has ended");
     expect(presentation.description).toContain("promised rewards remain");
+  });
+
+  it("gives an owner a provider-safe recovery path without treating redirects as authority", () => {
+    const guidance = billingRecoveryGuidance(
+      managedSummary({
+        commercialState: "suspended",
+        growthConfigurationAllowed: false,
+        restriction: "new_growth_only",
+        restrictionReason: "provider_suspended",
+      }),
+      true,
+    );
+
+    expect(guidance?.title).toBe("Restore new configuration");
+    expect(guidance?.description).toContain("verified lifecycle evidence");
+    expect(guidance?.steps.join(" ")).toContain("programme history");
+  });
+
+  it("keeps recovery guidance useful for a non-owner during grace", () => {
+    const guidance = billingRecoveryGuidance(
+      managedSummary({
+        commercialState: "grace",
+        restrictionReason: "payment_past_due",
+        graceEndsAt: "2030-12-15T00:00:00.000Z",
+      }),
+      false,
+    );
+
+    expect(guidance?.title).toContain("grace window");
+    expect(guidance?.steps.join(" ")).toContain("organization owner");
+    expect(guidance?.steps.join(" ")).toContain("promised rewards");
+  });
+
+  it("does not show recovery guidance for healthy or self-hosted states", () => {
+    expect(billingRecoveryGuidance(managedSummary(), true)).toBeNull();
+    expect(
+      billingRecoveryGuidance(
+        managedSummary({
+          deploymentMode: "self_hosted",
+          commercialState: "self_hosted",
+          stateSource: "self_hosted",
+          billingAvailable: false,
+          providerLinked: false,
+          subscriptionPresent: false,
+          currentPeriodEndsAt: null,
+          stateUpdatedAt: null,
+        }),
+        true,
+      ),
+    ).toBeNull();
+  });
+
+  it("describes live owner controls instead of claiming they are unavailable", () => {
+    expect(
+      billingProviderControlsPresentation(managedSummary(), true, 0),
+    ).toMatchObject({ title: "Secure billing portal available" });
+    expect(
+      billingProviderControlsPresentation(
+        managedSummary({
+          commercialState: "unconfigured",
+          stateSource: "unconfigured",
+          restrictionReason: "billing_unconfigured",
+          providerLinked: false,
+          subscriptionPresent: false,
+          growthConfigurationAllowed: false,
+          restriction: "new_growth_only",
+          currentPeriodEndsAt: null,
+          stateUpdatedAt: null,
+        }),
+        true,
+        2,
+      ),
+    ).toMatchObject({ title: "Secure plan checkout available" });
+  });
+
+  it("does not promise an unpublished plan or self-serve contract management", () => {
+    const unconfigured = managedSummary({
+      commercialState: "unconfigured",
+      stateSource: "unconfigured",
+      restrictionReason: "billing_unconfigured",
+      providerLinked: false,
+      subscriptionPresent: false,
+      growthConfigurationAllowed: false,
+      restriction: "new_growth_only",
+      currentPeriodEndsAt: null,
+      stateUpdatedAt: null,
+    });
+    expect(billingRecoveryGuidance(unconfigured, true, 0)).toMatchObject({
+      title: "Managed plan setup is unavailable",
+    });
+    expect(
+      billingRecoveryGuidance(unconfigured, true, 0)?.steps.join(" "),
+    ).not.toContain("Choose an available managed plan");
+
+    const contract = managedSummary({
+      commercialState: "contract_managed",
+      stateSource: "manual_contract",
+      providerLinked: false,
+      subscriptionPresent: false,
+      currentPeriodEndsAt: null,
+      contractEndsAt: "2031-12-01T00:00:00.000Z",
+    });
+    expect(
+      billingProviderControlsPresentation(contract, true, 2),
+    ).toMatchObject({ title: "Approved enterprise contract" });
   });
 });
 
