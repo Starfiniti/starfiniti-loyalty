@@ -2820,7 +2820,7 @@ tasks:
   - id: M15-GA-HARDENING
     title: Prove capacity, chaos, security, recovery, canary, and GA operations
     module: M15
-    status: planned
+    status: in_progress
     dependencies: [M14-MANAGED-BILLING]
     hypothesis: Measured capacity, recovery, security, and a reconciled canary make GA claims independently verifiable.
     baseline: Strong CI and production deployment exist without declared capacity, independent penetration test, full recovery, or 30-day canary.
@@ -2852,7 +2852,7 @@ tasks:
         incident exercise,
         final npm and database/plugin/image/deploy gates,
       ]
-    risks: [R-004, R-005, R-008, R-030]
+    risks: [R-004, R-005, R-008, R-030, R-045]
     docs:
       [
         docs/operations/BACKUP_RESTORE.md,
@@ -2860,6 +2860,82 @@ tasks:
         docs/testing/TEST_STRATEGY.md,
       ]
     evidence: [docs/plan/evidence/M15/README.md]
+    slices:
+      - id: M15-S01-CAPACITY-ENVELOPE
+        title: Declare and measure the supported capacity envelope
+        status: in_progress
+        dependencies: []
+        hypothesis: A fixed-arrival workload bound to exact infrastructure, data shape, code, and reconciliation evidence prevents unsupported capacity claims and exposes overload before customer value drifts.
+        baseline: Product SLO targets exist but there is no reproducible mixed-workload runner or fail-closed capacity evidence contract.
+        targets:
+          [
+            every measured phase meets its latency error lag and concurrency thresholds,
+            event-to-ledger p95 remains below 10 seconds,
+            customer wallet read p95 remains below 300 milliseconds,
+            emitted accepted canonical ledger and connector totals reconcile exactly,
+          ]
+        owner_inputs:
+          [
+            approved production-like disposable environment window,
+            exact environment inventory and monitoring export,
+          ]
+        acceptance:
+          [
+            versioned workload and thresholds validate,
+            runner self-test proves fixed scheduling signing bounds secret minimization and nonzero failure exits,
+            approved measured run is bound to full candidate and configuration digests,
+            driver saturation and target saturation are distinguished,
+            reconciliation and two-run repeatability pass before a capacity limit is published,
+          ]
+        failure_modes:
+          [
+            coordinated omission hides overload,
+            driver saturation is mistaken for target capacity,
+            production is mutated without a bound approval,
+            request or credential material leaks into evidence,
+            API acceptance is mistaken for ledger completion,
+            unmatched workload or hardware evidence is reused,
+          ]
+        rollout: Run only on an approved disposable production-like environment, then observe the read-only production canary below the proven envelope.
+        rollback: Stop the load driver, revoke its service and connector credentials, remove generated test tenants/customers through the approved test teardown, and preserve the immutable report and reconciliation evidence.
+        verification:
+          [
+            npm run capacity:validate,
+            npm run capacity:run -- --config infrastructure/testing/capacity/workload.yaml --origin-file <absolute-file> --credential-dir <absolute-directory> --approval-file <absolute-file> --out <absolute-file>,
+          ]
+        evidence:
+          [
+            docs/plan/evidence/M15/capacity.yaml,
+            infrastructure/testing/capacity/workload.yaml,
+            docs/operations/CAPACITY_AND_LOAD.md,
+          ]
+      - id: M15-S02-FAULT-INJECTION
+        title: Bound chaos recovery and retry storms
+        status: planned
+        dependencies: [M15-S01-CAPACITY-ENVELOPE]
+      - id: M15-S03-SUPPLY-CHAIN-AND-SECURITY
+        title: Complete security scanning SBOM and DAST gates
+        status: planned
+        dependencies: [M15-S01-CAPACITY-ENVELOPE]
+      - id: M15-S04-CLEAN-ROOM-RECOVERY
+        title: Prove clean-room recovery and failover
+        status: planned
+        dependencies: [M15-S01-CAPACITY-ENVELOPE]
+      - id: M15-S05-OPERATIONS-AND-INCIDENTS
+        title: Complete observability ownership and incident exercises
+        status: planned
+        dependencies: [M15-S02-FAULT-INJECTION, M15-S04-CLEAN-ROOM-RECOVERY]
+      - id: M15-S06-GA-CANARY-AND-CLOSE
+        title: Reconcile the 30-day canary and close the GA gate
+        status: planned
+        dependencies:
+          [
+            M15-S01-CAPACITY-ENVELOPE,
+            M15-S02-FAULT-INJECTION,
+            M15-S03-SUPPLY-CHAIN-AND-SECURITY,
+            M15-S04-CLEAN-ROOM-RECOVERY,
+            M15-S05-OPERATIONS-AND-INCIDENTS,
+          ]
 
   - id: M16-CONTINUOUS-IMPROVEMENT
     title: Institutionalize evidence-ranked product and operational improvement
