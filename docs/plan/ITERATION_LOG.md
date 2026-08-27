@@ -1,5 +1,12 @@
 # Iteration Log
 
+## 2026-08-27 — M12 semantic production-evidence hardening
+
+- Reproduced a false-proof path: replacing the verified migration read-only artifact's complete observations with `{}` and rebinding its exact SHA-256 digest still left all eleven current M12 controls passing.
+- Replaced byte-authentication-only acceptance with nine exact minimized details schemas. Release, recovery, population/value baselines, bounded canary records, dry-run neutrality, correction, reconciliation, rollback, and observation are now machine-checked with unique source digests and zero-difference assertions.
+- Final approval binds every other artifact and release. Approved export, mapping, and value-total digests bind approval to journal; applied record counts bind journal to reconciliation. Canonical UTC chronology requires approvals/release/recovery/baseline before canary, rollback after canary end, at least 24 hours of covering observation, and final approval after all evidence.
+- Added adversarial fixtures for empty/extra fields, nonzero value reconciliation, different applied counts, approval rebinding, release-after-start, early rollback, late approval, and short observation while retaining a positive complete fixture. Production, source data, customer value, checkout, and deployment remain unchanged.
+
 ## 2026-08-27 — M13 semantic production-evidence hardening
 
 - Reproduced a false-proof path: after replacing the verified read-only artifact's complete observations with `{}` and rebinding its exact SHA-256 digest, the M13 validator still reported the public, Authentik, and operator baselines passed.

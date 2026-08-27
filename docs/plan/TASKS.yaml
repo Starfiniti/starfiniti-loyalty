@@ -2185,7 +2185,8 @@ tasks:
           - fail-closed canary manifest clean replay full check images WooCommerce matrix source rerun correction recovery and observation
         evidence:
           - integrated exact-head CI run 33102977731 and Security run 33102977636 passed at 16753b2 with all eleven checks green
-          - docs/plan/evidence/M12/canary.yaml records 36 checks four synchronized approvals nine path and digest bound production artifacts thirteen fixed automatic failures and deterministic false-completion self-tests
+          - docs/plan/evidence/M12/canary.yaml records 36 checks four synchronized approvals nine path digest and semantic bound production artifacts thirteen fixed automatic failures and deterministic false-completion self-tests
+          - docs/plan/evidence/M12/ARTIFACT_CONTRACT.md defines exact record and value reconciliation schemas zero-difference assertions chronology and cross-artifact final approval binding
           - eleven repository and read-only controls pass while twenty-five approved release source deployment batch reconciliation rollback observation and operability controls remain pending
     risks: [R-028]
     docs:
