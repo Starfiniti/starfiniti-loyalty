@@ -185,7 +185,8 @@ create table loyalty_private.managed_billing_usage_dispatch_attempts (
   completed_at timestamptz not null,
   created_at timestamptz not null default now(),
   unique (organization_id, id),
-  unique (dispatch_id, attempt_number),
+  constraint managed_billing_usage_dispatch_attempt_identity
+    unique (dispatch_id, attempt_number),
   foreign key (organization_id, dispatch_id)
     references loyalty_private.managed_billing_usage_dispatches(
       organization_id, id
@@ -747,7 +748,8 @@ begin
   from loyalty_private.managed_billing_usage_dispatches as dispatch
   where dispatch.state = 'processing'
     and dispatch.lease_expires_at <= target_at
-  on conflict (dispatch_id, attempt_number) do nothing;
+  on conflict on constraint managed_billing_usage_dispatch_attempt_identity
+    do nothing;
 
   update loyalty_private.managed_billing_usage_dispatches as dispatch
   set state = case when dispatch.authorized_at is null
