@@ -16,6 +16,7 @@ services:
       LOYALTY_AUTHENTIK_API_TOKEN_FILE: /run/secrets/authentik_federation_token
       LOYALTY_SUPABASE_SERVICE_ROLE_KEY_FILE: /run/secrets/supabase_service_role_key
       LOYALTY_STRIPE_WEBHOOK_SECRET_FILE: /run/secrets/stripe_webhook_secret
+      LOYALTY_STRIPE_API_KEY_FILE: /run/secrets/stripe_api_key
     extra_hosts:
       - "${SUPABASE_PUBLIC_HOST:?required}:${SUPABASE_INTERNAL_PROXY_IP:?required}"
     secrets:
@@ -25,6 +26,7 @@ services:
       - supabase_service_role_key
     volumes:
       - ${LOYALTY_STRIPE_WEBHOOK_SECRET_PATH:-/dev/null}:/run/secrets/stripe_webhook_secret:ro
+      - ${LOYALTY_STRIPE_API_KEY_PATH:-/dev/null}:/run/secrets/stripe_api_key:ro
     ports:
       - "${DASHBOARD_BIND_ADDRESS:?set a loopback or private IPv4 address}:3000:3000"
     security_opt:

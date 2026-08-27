@@ -1,5 +1,6 @@
 import type {
   BillingSummaryV1,
+  ManagedBillingPlanOptionV1,
   ManagedBillingCommercialState,
 } from "@starfiniti/contracts";
 import {
@@ -14,6 +15,7 @@ import {
   TriangleAlert,
   WalletCards,
 } from "lucide-react";
+import { randomUUID } from "node:crypto";
 
 type BillingTone = "positive" | "warning" | "restricted" | "neutral";
 
@@ -111,7 +113,19 @@ const protectedOperations = [
 
 export function BillingOverview({
   summary,
-}: Readonly<{ summary: BillingSummaryV1 | null }>) {
+  plans = [],
+  organizationId = "00000000-0000-4000-8000-000000000000",
+  portalOperationId = "00000000-0000-4000-8000-000000000001",
+  canManage = false,
+  startSessionAction,
+}: Readonly<{
+  summary: BillingSummaryV1 | null;
+  plans?: readonly ManagedBillingPlanOptionV1[];
+  organizationId?: string;
+  portalOperationId?: string;
+  canManage?: boolean;
+  startSessionAction: (formData: FormData) => Promise<never>;
+}>) {
   if (!summary) {
     return (
       <section className="billing-unavailable" role="alert">
@@ -216,6 +230,17 @@ export function BillingOverview({
         </div>
       </section>
 
+      {summary.deploymentMode === "managed" ? (
+        <ManagedBillingControls
+          canManage={canManage}
+          organizationId={organizationId}
+          plans={plans}
+          portalOperationId={portalOperationId}
+          providerLinked={summary.providerLinked}
+          startSessionAction={startSessionAction}
+        />
+      ) : null}
+
       <div className="billing-boundary-grid">
         <section>
           <span className="billing-panel-icon" aria-hidden="true">
@@ -257,6 +282,104 @@ export function BillingOverview({
       </div>
     </div>
   );
+}
+
+function ManagedBillingControls({
+  canManage,
+  organizationId,
+  plans,
+  portalOperationId,
+  providerLinked,
+  startSessionAction,
+}: Readonly<{
+  canManage: boolean;
+  organizationId: string;
+  plans: readonly ManagedBillingPlanOptionV1[];
+  portalOperationId: string;
+  providerLinked: boolean;
+  startSessionAction: (formData: FormData) => Promise<never>;
+}>) {
+  return (
+    <section
+      className="billing-plan-panel"
+      aria-labelledby="billing-plans-title"
+    >
+      <header>
+        <div>
+          <p className="login-eyebrow">Managed subscription</p>
+          <h2 id="billing-plans-title">Plan &amp; payment settings</h2>
+          <p>
+            Checkout opens on Stripe. Subscription access changes only after a
+            separately verified webhook reaches the database.
+          </p>
+        </div>
+        {providerLinked && canManage ? (
+          <form action={startSessionAction}>
+            <input type="hidden" name="organizationId" value={organizationId} />
+            <input type="hidden" name="billingAction" value="portal" />
+            <input type="hidden" name="operationId" value={portalOperationId} />
+            <button className="ui-button ui-button-secondary" type="submit">
+              Open billing portal
+              <ExternalLink aria-hidden="true" />
+            </button>
+          </form>
+        ) : null}
+      </header>
+
+      {!canManage ? (
+        <p className="billing-plan-empty">
+          Only an active organization owner can change the managed plan or open
+          payment settings.
+        </p>
+      ) : plans.length === 0 ? (
+        <p className="billing-plan-empty">
+          No managed plans are currently available for this tenant. Existing
+          loyalty value and protected operations are unaffected.
+        </p>
+      ) : (
+        <div className="billing-plan-grid">
+          {plans.map((plan) => (
+            <article key={plan.planId}>
+              <div>
+                <span>{plan.name}</span>
+                <strong>{formatPlanPrice(plan)}</strong>
+                <p>{plan.description}</p>
+                {plan.trialDays > 0 ? (
+                  <small>{plan.trialDays}-day trial</small>
+                ) : null}
+              </div>
+              <form action={startSessionAction}>
+                <input
+                  type="hidden"
+                  name="organizationId"
+                  value={organizationId}
+                />
+                <input type="hidden" name="billingAction" value="checkout" />
+                <input type="hidden" name="planId" value={plan.planId} />
+                <input type="hidden" name="operationId" value={randomUUID()} />
+                <button className="ui-button ui-button-primary" type="submit">
+                  Choose {plan.name}
+                  <ExternalLink aria-hidden="true" />
+                </button>
+              </form>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function formatPlanPrice(plan: ManagedBillingPlanOptionV1): string {
+  const amount = new Intl.NumberFormat("en", {
+    style: "currency",
+    currency: plan.currency,
+  }).format(plan.unitAmountMinor / 100);
+  const interval =
+    plan.intervalCount === 1
+      ? plan.interval
+      : `${plan.intervalCount} ${plan.interval}s`;
+  return `${amount} / ${interval}`;
 }
 
 function SummaryCard({

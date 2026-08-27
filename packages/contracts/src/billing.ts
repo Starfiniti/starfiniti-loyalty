@@ -38,6 +38,42 @@ export const stripeSubscriptionStatusV1 = z.enum([
   "paused",
 ]);
 
+export const managedBillingSessionActionV1 = z.enum(["checkout", "portal"]);
+
+export const managedBillingPlanOptionV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    planId: z.uuid(),
+    key: z.string().regex(/^[a-z][a-z0-9_]{1,63}$/u),
+    name: z.string().trim().min(2).max(80),
+    description: z.string().trim().min(8).max(240),
+    currency: z.string().regex(/^[A-Z]{3}$/u),
+    unitAmountMinor: z.number().int().positive().max(1_000_000_000),
+    interval: z.enum(["month", "year"]),
+    intervalCount: z.number().int().min(1).max(12),
+    trialDays: z.number().int().min(0).max(90),
+  })
+  .strict();
+
+export const managedBillingSessionRequestV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    organizationId: z.uuid(),
+    action: managedBillingSessionActionV1,
+    planId: z.uuid().nullable(),
+    operationId: z.uuid(),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if ((value.action === "checkout") !== (value.planId !== null)) {
+      context.addIssue({
+        code: "custom",
+        path: ["planId"],
+        message: "checkout requires one plan and portal forbids plan input",
+      });
+    }
+  });
+
 export const billingProtectedAccessV1 = z
   .object({
     balanceRead: z.literal(true),
@@ -295,6 +331,15 @@ export type StripeBillingWebhookEventTypeV1 = z.infer<
 >;
 export type StripeSubscriptionStatusV1 = z.infer<
   typeof stripeSubscriptionStatusV1
+>;
+export type ManagedBillingSessionActionV1 = z.infer<
+  typeof managedBillingSessionActionV1
+>;
+export type ManagedBillingPlanOptionV1 = z.infer<
+  typeof managedBillingPlanOptionV1
+>;
+export type ManagedBillingSessionRequestV1 = z.infer<
+  typeof managedBillingSessionRequestV1
 >;
 export type StripeBillingWebhookEventV1 = z.infer<
   typeof stripeBillingWebhookEventV1
