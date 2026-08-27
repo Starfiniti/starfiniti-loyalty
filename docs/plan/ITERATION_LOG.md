@@ -1,5 +1,14 @@
 # Iteration Log
 
+## 2026-08-27 — M10 digest-bound analytics closeout hardening
+
+- Adversarially reviewed the legacy M10 closeout and found no production artifacts, mutable automatic-failure prose, only two approvals, key-only sensitive scanning, stale operator evidence, and a narrow false-completion test.
+- Replaced it with a 32-check gate covering immutable value truth, commerce, programme outcomes, cohorts, causal limits, shared snapshots, legacy shadowing, exports, subject/session one-use downloads, schedules, reporting-worker isolation, latency/load, reconciliation, rollback, observation, and final zero-difference closure.
+- Added four synchronized approvals, nine unique path- and SHA-256-bound minimized JSON artifacts, bounded descriptor-first reads, exact candidate and check coverage, forbidden sensitive keys/values, sixteen fixed automatic failures, five completed prerequisite slices, task/score synchronization, and an attainable positive fixture.
+- Corruption fixtures reject approval drift, missing/duplicate/forward-looking checks, score drift, short commits, sensitive material, weakened rules, missing/unsafe/reused/digest-drifted artifacts, unsafe public baselines, incomplete slices, prose-only closure, and category-floor bypass.
+- Exact integrated candidate `b760cec` passed CI `33101099338` and Security `33101099291`; the read-only baseline records only public/Auth/REST availability and running application/Supabase VMs without production mutation.
+- The honest M10 score remains 90/100, with 11 controls passed and 21 pending. Operability is 3/10 and blocks completion until approved release/pilot inputs, recovery, disabled deployment, bounded canaries, exact reconciliation, rollback, and observation pass.
+
 ## 2026-08-27 — M09 digest-bound storefront closeout hardening
 
 - Adversarially reviewed the legacy M09 closeout and found that it had no production artifacts, only one false-completion self-test, two loosely checked approvals, key-only secret scanning, mutable automatic-failure prose, stale operator status, and no binding between a passed production claim and exact evidence.

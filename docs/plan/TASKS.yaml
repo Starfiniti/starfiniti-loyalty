@@ -1423,6 +1423,7 @@ tasks:
         incremental revenue is never inferred from influence,
       ]
     owner_inputs:
+      - approved release and bounded analytics canary window
       - approved non-zero real-store activity is required only for the final production reconciliation and canary gate
     acceptance:
       [
@@ -1563,6 +1564,10 @@ tasks:
         status: in_progress
         acceptance:
           - read-only shadow comparison exact-head CI disabled deployment Starfiniti canary reconciliation rollback and module score at least 90 pass
+        evidence:
+          - integrated exact-head CI run 33101099338 and Security run 33101099291 passed at b760cec with all eleven checks green
+          - docs/plan/evidence/M10/canary.yaml records 32 checks four approvals nine path and digest bound production artifacts fixed automatic failures and deterministic false-completion self-tests
+          - eleven repository and read-only controls pass at provisional score 90 while approved deployment canary reconciliation rollback observation and the operability floor remain pending
     risks: [R-001, R-030, R-037, R-038]
     docs:
       [
