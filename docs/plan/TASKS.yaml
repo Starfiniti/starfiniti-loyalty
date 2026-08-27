@@ -2747,7 +2747,7 @@ tasks:
               - exact implementation-head run 33038559023 at 877f7e91de2d3eb4c047f0ff5edaa74877045d52 passes all seven jobs including clean 80-migration replay all 67 pgTAP files with 3658 assertions all 21 concurrency probes 945 workspace tests both production images and all four WooCommerce runtimes
               - production-rendered restricted grace and contract-managed browser review passes 1440 by 1000 and 390 by 844 light and dark reduced motion exact bigint display current navigation drawer focus restoration zero overflow and zero real diagnostics
           - id: M14-S05B-GROWTH-CONFIGURATION-ENFORCEMENT
-            status: in_progress
+            status: completed
             dependencies: [M14-S05A-COMMERCIAL-POLICY-CORE]
             hypothesis: Explicit checks at authoring boundaries can restrict new managed growth without changing operational or historical behavior.
             acceptance:
@@ -2758,8 +2758,15 @@ tasks:
               - executable command matrix in every commercial state
               - structural allowlist proving protected and operational functions do not call the growth authorization function
               - concurrency retry and historical-version compatibility tests
+            evidence:
+              - docs/architecture/ADR/0061-table-bound-managed-growth-authorization.md
+              - docs/api/BILLING.md
+              - docs/operations/STRIPE_BILLING.md
+              - exact implementation-head run 33041473615 at 100c164361a9a9c5fed026b92592f4df70d44546 passes all seven jobs including clean 81-migration replay all 68 pgTAP files with 3701 assertions all 22 concurrency probes 945 workspace tests both production images and all four WooCommerce runtimes
+              - the reviewed inventory binds 23 growth or configuration table roots to separate product capability and managed billing policy while protected value operational checkout access and export roots remain structurally absent
+              - adversarial Linux iterations repaired global managed activation legacy-validation masking mixed V1/V2 product authority request-claim privilege confusion and subjectless loyalty runtime compatibility before the exact-head pass
           - id: M14-S05C-MERCHANT-EXPERIENCE-AND-CLOSE
-            status: planned
+            status: in_progress
             dependencies: [M14-S05B-GROWTH-CONFIGURATION-ENFORCEMENT]
             hypothesis: A minimized live projection can explain restriction recovery and contract term without leaking private billing evidence.
             acceptance:

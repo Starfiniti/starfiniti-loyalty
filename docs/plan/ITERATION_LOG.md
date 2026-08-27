@@ -1,5 +1,15 @@
 # Iteration Log
 
+## 2026-08-27 — M14 table-bound managed growth enforcement
+
+- Accepted ADR-0061 after comparing a global entitlement substitution, explicit command calls, UI-only denial, and table-bound guards. A private immutable inventory now covers 23 reviewed mutable growth/configuration roots while protected value, commerce, customer access, export, organization-access, correction, and checkout roots remain structurally absent.
+- Kept product entitlement and commercial policy independent. Existing commands and contract validators continue to decide each product capability; the ordered guard checks only tenant-canary `managed.billing`, so mixed immutable V1/V2 history and established deterministic errors remain compatible.
+- Self-hosted installations and managed tenants without the billing canary retain their prior product behavior. Trial, active, grace, and effective contract-managed states allow new configuration; unconfigured, suspended, and cancelled states deny it without hiding immutable history or restricting safe lifecycle reduction.
+- Database-role privilege is resolved before request metadata. Operator/worker lifecycle and recovery paths cannot be commercialized by stale JWT claims, `loyalty_runtime` remains policy-evaluated behind its private actor-validating functions, and ordinary subjectless roles fail closed.
+- Added the twenty-second two-session database probe. Concurrent exact authoring creates one effect; the exact historical retry remains readable after restriction; changed growth is denied; active recovery reopens configuration; and the loyalty ledger remains unchanged.
+- Linux run `33040086022` found a PL/pgSQL record-name parse error. Run `33040384316` then exposed overbroad activation and validation-order masking. Run `33040993138` exposed invalid structural-test syntax, duplicated product authority, and request-claim privilege confusion. Run `33041269073` isolated the remaining subjectless `loyalty_runtime` compatibility case. All were repaired at the authority boundary rather than waived.
+- Exact implementation-head run `33041473615` at `100c164361a9a9c5fed026b92592f4df70d44546` passed all seven jobs: 945 workspace tests, both production images, a clean 81-migration replay, all 68 pgTAP files with 3,701 assertions, all 22 concurrency probes, and all four WooCommerce runtime cells. S05B is repository-complete; S05C merchant experience and closeout is active with production unchanged.
+
 ## 2026-08-27 — M14 deterministic commercial-policy core
 
 - Accepted ADR-0060 after comparing live provider authorization with effective-dated local evidence. PostgreSQL deterministically combines deployment, immutable provider occurrence, append-only delinquency policy, and approved manual-contract evidence without changing the general entitlement resolver.
