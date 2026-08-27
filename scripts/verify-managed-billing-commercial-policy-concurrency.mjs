@@ -11,7 +11,9 @@ const first = postgres(connectionString, { max: 1, onnotice: () => {} });
 const second = postgres(connectionString, { max: 1, onnotice: () => {} });
 let managedModeSet = false;
 
-const effectiveAt = new Date(Date.now() - 500);
+const modeEffectiveAt = new Date(Date.now() + 60_000);
+const effectiveAt = new Date(modeEffectiveAt.getTime() + 1_000);
+const restoreEffectiveAt = new Date(modeEffectiveAt.getTime() + 10_000);
 
 function recordPolicy(sql, graceDays, idempotencyKey) {
   return sql`
@@ -64,7 +66,7 @@ try {
     select loyalty_private.set_deployment_mode(
       'managed', 1, 'probe:commercial-policy',
       'Enable isolated commercial policy concurrency probe',
-      statement_timestamp() - interval '1 second'
+      ${modeEffectiveAt}
     )
   `;
   managedModeSet = true;
@@ -172,7 +174,7 @@ try {
       select loyalty_private.set_deployment_mode(
         'self_hosted', 1, 'probe:commercial-policy',
         'Restore self-hosted mode after commercial policy probe',
-        statement_timestamp()
+        ${restoreEffectiveAt}
       )
     `.catch(() => undefined);
   }
