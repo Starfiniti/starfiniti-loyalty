@@ -6,7 +6,7 @@ currentProduction:
   applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
 candidate:
   branch: codex/m15-ga-canary
-  commit: eaf50ece268083320252a672e11df6f6ee94a00f
+  commit: 900ffbc1a9add4e5a4af3cb6e8396b4870cb1273
   release: null
   approvedRelease: false
   canaryApproved: false
