@@ -1,5 +1,14 @@
 # Iteration Log
 
+## 2026-08-27 — M14 database-reserved Checkout and Portal sessions
+
+- Accepted ADR-0058 after comparing browser/provider session creation, a broad Stripe SDK, and a narrow server-owned REST adapter. PostgreSQL reserves and reauthorizes each operation; verified webhooks remain the only commercial lifecycle authority.
+- Added strict public plan/session contracts, immutable private provider configuration and plan versions, serialized per-tenant customer provisioning, stable customer/session idempotency keys, minimized attempt evidence, historical Price retention, and recoverable ambiguous/held states with zero loyalty ledger effects.
+- Added a regular-file secret/restricted-key boundary plus fixed HTTPS origin, pinned Stripe API version, POST-only methods, no redirects, bounded time/body, official redirect validation, and no persisted provider response, return, contact, payment, card, or secret material.
+- Added owner-only managed plan and Portal actions to the existing Hub Billing experience. Production-rendered desktop/mobile review passed owner, read-only, and unavailable states; responsive reflow; drawer focus restoration; English-only output; zero overflow; and zero diagnostics.
+- The first database gate found that raising after a hold update rolled the update back. Authorization now commits the recoverable hold and returns no provider authority; a server regression proves the Stripe key and client remain untouched. Three metadata/fixture assertions were corrected without relaxing production grants or behavior.
+- Exact-head run `33029143332` at `873ed92cbb61783aaa4335df403c1494e5e7d9f3` passed all seven jobs: root checks with 925 tests, both production images, a clean 78-migration replay, all 65 pgTAP files with 3,532 assertions, all 19 concurrency probes, and all four WooCommerce runtimes. Production/global `self_hosted` mode remain unchanged; M14-S04 shadow usage metering is active.
+
 ## 2026-08-27 — M14 verified Stripe inbox and isolated normalization
 
 - Accepted ADR-0057 after comparing synchronous processing, raw-event persistence, a minimized durable inbox, and a full provider client. Exact bounded bytes are verified in memory; only a digest-bound allowlisted projection is retained and lifecycle processing is independently leased.
