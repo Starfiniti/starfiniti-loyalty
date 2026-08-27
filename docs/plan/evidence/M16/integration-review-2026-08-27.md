@@ -1,12 +1,12 @@
 # Enterprise integration review evidence
 
 Date: 2026-08-27
-Status: integration candidate verified; final evidence-record head CI pending
-Scope: `origin/main...78bb5ed34f786a6cc1a13f1127ad59be8a7dc4aa`
+Status: security-remediated integration candidate verified; PR #57 current-head checks are authoritative
+Scope: `origin/main...82f644cdf707f9dca2a719d9024ec33cfc3acbb9`
 
 ## Review scope
 
-The consolidated M04–M16 integration candidate contains 346 commits and changes 705 files. Five independent review axes covered unnecessary complexity, security, billing and metering, project idioms, and implementation cruft. Every blocker or should-fix candidate received a separate adversarial verification before implementation. No blocker survived review.
+The consolidated M04–M16 security-remediated integration candidate contains 350 commits and changes 705 files. Five independent review axes covered unnecessary complexity, security, billing and metering, project idioms, and implementation cruft. Every blocker or should-fix candidate received a separate adversarial verification before implementation. No blocker survived review.
 
 ## Verified corrections
 
@@ -15,6 +15,7 @@ The consolidated M04–M16 integration candidate contains 346 commits and change
 - The isolated usage-meter worker accepts only Stripe restricted keys (`rk_test_` or `rk_live_`); broad secret keys are rejected from both direct configuration and mounted files.
 - Migration adapter byte and row limits now come from one immutable executable descriptor shared by the parsers and public support registry.
 - Capacity, fault, and security closeout validators open completion artifacts without following the final symlink, require one stable regular file, and enforce explicit byte limits before allocating or parsing.
+- Stripe session, Stripe webhook, billing-usage, capacity, and fault inputs now use bounded descriptor-first reads with inode and stability checks rather than check-then-read paths. The fixed-length webhook hint removes an avoidable polynomial padding expression.
 - Three historical Markdown whitespace defects and one stale recovery-gate count were corrected.
 
 ## Focused verification
@@ -27,7 +28,7 @@ The consolidated M04–M16 integration candidate contains 346 commits and change
 - `npm run ci:validate` and `npm run db:validate` remain green for four CI jobs, three security jobs, 81 migrations, and 68 pgTAP files.
 - Targeted Prettier and `git diff --check` pass.
 
-The full local `npm run check`, independent database/secret/audit/licence gates, GitHub CI, Security workflow, external CodeQL, and mergeability checks passed for the integration candidate. The final evidence-record commit must repeat the exact-head remote checks before this evidence is finalized.
+The full local `npm run check`, independent database/secret/audit/licence gates, GitHub CI, Security workflow, external CodeQL, and mergeability checks passed for the security-remediated candidate. PR #57's current-head rollup remains authoritative; no documentation-only successor may be handed off while any required check is non-green.
 
 ## Integration candidate evidence
 
@@ -37,6 +38,15 @@ The full local `npm run check`, independent database/secret/audit/licence gates,
 - Security run `33082415262` passed CodeQL, isolated DAST, complete dependency audit, repository/image scanning, runtime enforcement, and SBOM generation.
 - External CodeQL check `98553236301` passed.
 - GitHub reported the candidate `CLEAN` and `MERGEABLE` with all eleven required checks green.
+
+## External CodeQL follow-up
+
+- Documentation head `fa1885d20e6be2ffeb9eeef3b615649342e41481` caused external CodeQL check `98555612391` to surface seven previously unreported High alerts across the large integration diff. The check remained a deterministic blocker even though the repository Security workflow was green.
+- Five real check-then-read races and one polynomial padding expression were corrected. The subsequent analyzer reduced the result to two false positives.
+- Alert #15 classified `openSync(path, "r")` as temporary-file creation even though the fault runner only opens an existing owner-controlled input read-only and then verifies descriptor/path inode, type, size, stability, and permissions before use. It was dismissed as `false positive` with that audit comment.
+- Alert #16 classified a deterministic SHA-256 fingerprint of a high-entropy Klaviyo API key as password storage. The fingerprint is non-secret tenant/connection binding evidence, performs no authentication, and must remain compatible with separately provisioned database evidence. It was dismissed as `false positive` with that audit comment.
+- Security-remediated head: `82f644cdf707f9dca2a719d9024ec33cfc3acbb9`.
+- CI run `33084847238`, Security run `33084847239`, and external CodeQL check `98562118454` all passed. GitHub reported PR #57 `CLEAN` and `MERGEABLE` with all eleven checks green and zero open Critical/High code-scanning alerts.
 
 ## Authority and remaining gates
 
