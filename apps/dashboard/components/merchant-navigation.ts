@@ -7,6 +7,7 @@ import {
   Palette,
   Star,
   Users,
+  UserRoundPlus,
   type LucideIcon,
 } from "lucide-react";
 
@@ -56,6 +57,12 @@ export const merchantNavigation: readonly MerchantNavigationItem[] = [
     icon: Users,
     group: "GROW",
     match: (pathname) => pathname.startsWith("/customers"),
+  },
+  {
+    label: "Referrals",
+    href: "/referrals",
+    icon: UserRoundPlus,
+    match: (pathname) => pathname.startsWith("/referrals"),
   },
   {
     label: "Connector operations",

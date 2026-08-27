@@ -835,7 +835,7 @@ tasks:
   - id: M06-REFERRALS
     title: Add referrals with minimized fraud review and reversible decisions
     module: M06
-    status: planned
+    status: in_progress
     dependencies: [M05-VIP-AND-EXPIRY]
     hypothesis: Cooling-period attribution and reversible review grow acquisition without granting value from self-referral or replay.
     baseline: Referral earning, attribution, fraud review, and customer sharing are absent.
@@ -845,7 +845,8 @@ tasks:
         no reward bypasses ledger,
         uncertain cases retain reversible review state,
       ]
-    owner_inputs: []
+    owner_inputs:
+      - approved real WooCommerce store access for the final canary only
     acceptance:
       [
         opaque links attribution window cooling rewards fraud signals review customer progress and funnel views pass,
@@ -865,8 +866,72 @@ tasks:
         replay self-referral refund duplicate identity concurrency privacy and tenant tests,
         browser flow,
       ]
+    slices:
+      - id: M06-S01-POLICY-AND-FIRST-ATTRIBUTION
+        status: completed
+        acceptance:
+          - strict versioned referral policy publishes only behind database-authoritative entitlement
+          - one Auth-linked customer receives one opaque non-authoritative advocate code and HTTPS share URL
+          - signed WooCommerce evidence resolves first attribution without raw identity network payment or address data leaving WordPress
+          - replay competing advocates self-referral retention tenancy and rollback fail closed
+        evidence:
+          - contracts and pure domain decisions cover 1 to 90 day windows first attribution self-referral monthly caps velocity evidence and reversible review routing
+          - PostgreSQL derives Auth tenant connection programme advocate and friend scope and serializes the first eligible attribution with immutable transitions
+          - WooCommerce captures locally emits only purpose-separated keyed fingerprints and preserves zero synchronous hub calls at checkout
+          - local lint all workspace typechecks 305 unit tests 37-migration static validation WooCommerce validation and architecture validation pass
+          - exact-head run 31763563259 passed baseline both images clean 37-migration replay all 33 pgTAP files with 1549 assertions both concurrency probes and all four WooCommerce runtime cells
+      - id: M06-S02-QUALIFICATION-AND-COOLING
+        status: completed
+        acceptance:
+          - only the configured paid status minimum spend new-customer rule and return-cooling window can qualify an attribution
+          - delayed status changes and refunds append deterministic transitions without rewriting attribution
+        evidence:
+          - worker reloads the attribution original immutable V2 version and reuses the exact purchase evaluator instead of current policy or a second SQL rules engine
+          - PostgreSQL verifies signed event status identity and time derives prior paid-order history and appends cooling deterministic rejection or review-held evidence without ledger value
+          - exact-head run 31764805380 passed baseline both images clean 38-migration replay all 34 pgTAP files with 1592 assertions including 43 focused qualification and cooling assertions both concurrency probes and all four WooCommerce runtime cells
+      - id: M06-S03-GIVE-GET-LEDGER
+        status: completed
+        acceptance:
+          - advocate and friend points issue through immutable exactly-once ledger effects only after qualification and cooling
+          - refund and rejection compensate each side exactly once without deleting history
+        evidence:
+          - PostgreSQL claims bounded leased jobs with deterministic SKIP LOCKED ordering then derives both wallets policy points expiry and canonical evidence before one atomic two-sided issue or compensation transaction
+          - exact-head run 31766887239 passed baseline both images clean 39-migration replay all 34 pgTAP files with 1635 assertions including 86 focused referral qualification cooling and ledger assertions all three concurrency probes and all four WooCommerce runtime cells
+      - id: M06-S04-FRAUD-REVIEW
+        status: completed
+        acceptance:
+          - uncertain cases remain value-neutral until authorized approval or rejection
+          - owner admin and operator review commands are tenant-derived reversible reason-bound idempotent and audited
+        evidence:
+          - ADR-0019 preserves immutable automated review evidence exposes only allowlisted risk codes and gives owner admin and operator one Auth-derived audited decision boundary
+          - exhausted atomic jobs require an audited review and receive at most four additional bounded ten-attempt cycles with cumulative attempt identities
+          - exact-head run 31768294674 passed baseline both images clean 40-migration replay all 34 pgTAP files with 1668 assertions including 119 focused referral assertions all three concurrency probes and all four WooCommerce runtime cells
+      - id: M06-S05-CUSTOMER-AND-MERCHANT-EXPERIENCE
+        status: completed
+        acceptance:
+          - customers can share and inspect minimized progress and history while merchants can inspect funnel and fraud operations
+          - desktop mobile keyboard screen-reader and outage review has no critical issue
+        evidence:
+          - ADR-0020 selects a no-selector Auth-derived customer projection and tenant-derived canonical merchant funnel while rejecting raw-table reads and fabricated browser metrics
+          - customer sharing exposes one opaque HTTPS URL and identity-free history while merchant performance reconciles current immutable outcomes issued points top advocates and recent canonical orders
+          - projection outages fail independently without hiding balances rewards tiers accepted review cases or other loyalty value
+          - exact-head run 31770764870 passed baseline both images clean 41-migration replay all 35 pgTAP files with 1700 assertions including 151 focused referral assertions all three concurrency probes and all four WooCommerce runtime cells
+          - production-build browser review passed desktop mobile keyboard landmark focus copy share fallback navigation overflow and zero-diagnostic checks
+      - id: M06-S06-CANARY-AND-CLOSE
+        status: in_progress
+        acceptance:
+          - exact-head CI disabled deployment Starfiniti canary full reconciliation and score at least 90 pass
     risks: [R-026]
-    docs: [docs/security/PRIVACY_MODEL.md]
+    docs:
+      [
+        docs/api/REFERRALS.md,
+        docs/architecture/ADR/0016-first-attribution-and-minimized-referral-risk.md,
+        docs/security/PRIVACY_MODEL.md,
+        docs/architecture/ADR/0017-historical-referral-qualification-and-cooling.md,
+        docs/architecture/ADR/0018-leased-atomic-referral-reward-lifecycle.md,
+        docs/architecture/ADR/0019-auth-derived-reversible-referral-review.md,
+        docs/architecture/ADR/0020-auth-derived-referral-experience-and-fact-sourced-funnel.md,
+      ]
     evidence: [docs/plan/evidence/M06/README.md]
 
   - id: M07-CAMPAIGNS

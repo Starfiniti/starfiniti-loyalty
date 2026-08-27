@@ -6,9 +6,11 @@ Deliver the enterprise WooCommerce roadmap in `docs/plan/ENTERPRISE_ROADMAP.md` 
 
 ## Current module
 
-M05 — advanced VIP qualification, benefits, expiry, and member progression. M00, M02, and M03 are complete; M01 remains active at its approved-real-store and full-service-recovery external gates, while M04-S04 remains at browser/deployment/canary/reconciliation closeout.
+M06 — referrals with minimized fraud review and reversible decisions. M00, M02, and M03 are complete; M01 remains active at its approved-real-store and full-service-recovery external gates, while M04 and M05 retain reviewed merge/deployment/canary/reconciliation closeout.
 
-M05-S01 through S05 are exact-head green: strict policy contracts, event-time qualification, immutable facts, original-time refund compensation, executable tier benefits, audited overrides, earned-date expiry, progression/history/performance projections, and responsive merchant/customer experiences passed clean replay and the complete runtime matrix. M05-S06 shadow comparison then found and fixed a predeployment Rose/Bloom/Icon displayed-versus-executable rate mismatch; all 36 V1/V2 award comparisons now match, and exact-head run `31760806620` passed. Reviewed merge, disabled deployment, a fresh recovery point, Starfiniti-only canary, reconciliation, and scoring remain open.
+M06-S01 through S05 are exact-head green on draft PR #31. Runs `31763563259`, `31764805380`, `31766887239`, `31768294674`, and `31770764870` passed strict policy, signed offline capture, first attribution, historical qualification/cooling, two-sided exactly-once issuance/compensation, Auth-derived reversible fraud review, customer sharing/progress/history, and a fact-sourced merchant funnel. The latest passed a clean 41-migration/1,700-assertion replay, all three concurrency probes, both images, baseline, 126 dashboard tests, 136 contract tests, and all four WooCommerce runtimes. Production-build desktop/mobile browser review passed with no critical accessibility, overflow, or diagnostic issue. M06-S06 reviewed merge, disabled deployment, Starfiniti canary, reconciliation, and scoring is active.
+
+M05-S01 through S05 are exact-head green. M05-S06 shadow comparison found and fixed a predeployment Rose/Bloom/Icon displayed-versus-executable rate mismatch; all 36 V1/V2 award comparisons now match, and exact-head run `31760806620` passed. Reviewed merge, disabled deployment, a fresh recovery point, Starfiniti-only canary, reconciliation, and scoring remain open.
 
 The active integrated baseline is released production commit `0ced4b666a55d836bd3d4927337fe057a71bb4ba` (`v0.1.11`). The previous local Phase 4 branch and its six modified planning files remain preserved in a named git stash and have not been mixed into this work.
 
@@ -35,9 +37,9 @@ The active integrated baseline is released production commit `0ced4b666a55d836bd
 
 ## Next safe work
 
-1. M05: complete reviewed merge, disabled deployment, fresh recovery point, Starfiniti-only canary, zero-drift reconciliation, and score after the exact-green shadow gate.
-2. M01: connect an approved real WooCommerce store when access is supplied and complete its value, outage, rotation, alert, and clean-room recovery gate.
-3. Close M04 browser/deployment/canary evidence without weakening accepted manual fulfilment, then deliver M06–M16 sequentially in versioned vertical slices.
+1. M06: complete reviewed merge, disabled deployment, fresh recovery point, Starfiniti-only canary, zero-drift reconciliation, production smoke, and module score.
+2. M05: complete reviewed merge, disabled deployment, fresh recovery point, Starfiniti-only canary, zero-drift reconciliation, and score after the exact-green shadow gate.
+3. M01: connect an approved real WooCommerce store when access is supplied and complete its value, outage, rotation, alert, and clean-room recovery gate.
 
 ## External inputs
 

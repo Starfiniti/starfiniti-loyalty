@@ -15,6 +15,7 @@ import {
 import { customerExportReauthenticationPath } from "@/lib/customer-export";
 import { isSelfServiceRewardKind } from "@/lib/customer-rewards";
 import { TierProgress } from "@/components/tier-progress";
+import { CustomerReferralPanel } from "./customer-referral-panel";
 
 export default async function CustomerLoyaltyPage({
   searchParams,
@@ -155,6 +156,12 @@ function AccountCard({
           nextExpiryAt={account.next_expiry_at}
           nextExpiryPoints={account.next_expiry_points}
           progress={account.tier_progress}
+        />
+      ) : null}
+      {account.referral ? (
+        <CustomerReferralPanel
+          experience={account.referral}
+          operationId={crypto.randomUUID()}
         />
       ) : null}
       <div className="member-columns">

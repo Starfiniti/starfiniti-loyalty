@@ -34,6 +34,12 @@ Workforce and customer authentication remain distinct presentation and lifecycle
 
 An external ID can be re-used only if the source platform contract proves reuse semantics and the original identity is explicitly retired; otherwise conflicts quarantine for review.
 
+## Referral identity
+
+A referral advocate code is a random UUID identifier bound to one existing customer and programme group. It is not authentication, does not reveal an external customer ID, and never grants tenant, wallet, reward, or ledger authority. Customers obtain it only through an active Auth/customer link; PostgreSQL derives the store origin and programme scope and returns a URL containing only `stf_ref=<opaque UUID>`.
+
+The referred friend is resolved from the signed canonical WooCommerce order's exact connection-scoped registered or guest identity. Email, domain, cookie, IP address, device, payment, and shipping similarity never merge customers or select an advocate. A database lock and unique first-attribution constraint make the first eligible advocate authoritative for that friend/programme group; later codes become immutable conflict evidence rather than rewriting identity.
+
 ## Channel claim flow
 
 ```mermaid

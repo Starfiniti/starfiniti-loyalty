@@ -8,6 +8,19 @@
 - Seeded the stage from the last valid encrypted archive. The first delta run transferred 269,360,503 guest bytes, the warm run transferred 16,871,892 bytes in three seconds, and a scheduled run transferred 50,602,257 bytes and completed Borg work in 0.50 seconds instead of retransmitting 22 GB.
 - Rejected arbitrary-command use of the pull key, validated systemd and sudoers policy, extracted and byte-compared one base plus one WAL file from the new archive, and recorded ADR-0013, rollback copies, and R-033. Negotiated zstd then reduced a measured 50,331,648 bytes of new WAL to 45,178 guest-interface bytes without increasing the three-second cycle. Transfer anomaly alerting and the wider M01 full-service restore gate remain open.
 
+## 2026-08-14 - M06 qualification and value-neutral cooling
+
+- Closed M06-S01 at exact-head run `31763563259`: clean 37-migration replay, all 33 pgTAP files with 1,549 assertions, both concurrency probes/images, and all four minimum/current HPOS/legacy WooCommerce runtimes.
+- Accepted ADR-0017 after comparing current-policy evaluation, a second SQL rules engine, and historical shared-evaluator evidence. Qualification now reloads the attribution's immutable V2 version so delayed publication cannot change paid-status, eligible-spend, or cooling meaning.
+- Added private immutable qualification facts and worker-only context/record boundaries. PostgreSQL verifies canonical event identity/time, derives prior paid-order history and minimum-spend outcome, and appends cooling, deterministic rejection, or review-held evidence without issuing value.
+- Added conservative source-refund rejection for captured/review/cooling states and an explicit `compensation_required` outcome after qualification. Exact-head run `31764805380` passed baseline, both images, a clean 38-migration replay, all 34 pgTAP files with 1,592 assertions including 43 focused qualification/cooling assertions, both concurrency probes, and all four WooCommerce runtimes.
+
+## 2026-08-14 — M06 first-attribution foundation
+
+- Reviewed current official Smile, LoyaltyLion, and Yotpo referral behavior and accepted ADR-0016: first eligible attribution from signed WooCommerce evidence, no synchronous hub call, no browser identity authority, and only purpose-separated expiring HMAC evidence for ambiguous risk review.
+- Added the strict referral policy, one opaque Auth-linked advocate code, local WooCommerce capture, database-serialized first attribution, deterministic self-referral blocking, append-only review states, bounded fingerprint purge, and entitlement rollback. Attribution remains value-neutral until qualification and cooling pass.
+- Added 55 focused pgTAP assertions plus contract/domain/worker/runtime coverage. Exact-head run `31763563259` passed clean replay, 1,549 total assertions, both images/probes, and all four WooCommerce runtime cells.
+
 ## 2026-08-14 — M05 progression and predeployment shadow gate
 
 - Completed bigint-safe merchant and customer tier progress, immutable history, exact next/retention/re-entry milestones, aggregate tier performance, and the responsive advanced policy builder/simulator. Exact-head run `31759304542` passed 35 migrations, 1,491 pgTAP assertions, both images, and all four WooCommerce runtimes.

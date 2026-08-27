@@ -6,6 +6,7 @@ import {
   expireDueTierOverrides,
   processWooCommerceEffect,
   runPointExpiryLifecycle,
+  runReferralRewardLifecycle,
 } from "./processor.ts";
 
 const connectionString = process.env.LOYALTY_WORKER_DATABASE_URL;
@@ -34,6 +35,7 @@ while (!stopping) {
     await enqueueExpiredWooCommerceCouponCancellations(sql);
     await expireDueTierOverrides(sql);
     await runPointExpiryLifecycle(sql);
+    await runReferralRewardLifecycle(sql, workerId);
     nextCancellationSweepAt = Date.now() + 60_000;
   }
   const events = await claimWooCommerceEffects(sql, workerId);

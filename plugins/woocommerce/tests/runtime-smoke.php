@@ -6,6 +6,7 @@ use Starfiniti\Loyalty\Commands;
 use Starfiniti\Loyalty\CustomerClaim;
 use Starfiniti\Loyalty\Outbox;
 use Starfiniti\Loyalty\Plugin;
+use Starfiniti\Loyalty\Referrals;
 use Starfiniti\Loyalty\Settings;
 
 defined('ABSPATH') || exit(1);
@@ -386,6 +387,22 @@ $cart->empty_cart();
 $order = wc_create_order(['customer_id' => $customerId]);
 starfiniti_runtime_assert(! is_wp_error($order), 'order fixture is created through WooCommerce CRUD');
 $order->add_product($product, 1);
+$referralCode = '64000000-0000-4000-8000-000000000001';
+$referralCapturedAt = gmdate('c', time() - HOUR_IN_SECONDS);
+$referralFingerprint = str_repeat('a1', 32);
+$order->update_meta_data('_starfiniti_referral_code', $referralCode);
+$order->update_meta_data('_starfiniti_referral_captured_at', $referralCapturedAt);
+$order->update_meta_data('_starfiniti_referral_network', $referralFingerprint);
+$order->update_meta_data('_starfiniti_referral_device', str_repeat('b2', 32));
+$order->update_meta_data('_starfiniti_referral_payment', str_repeat('c3', 32));
+$order->update_meta_data('_starfiniti_referral_shipping', str_repeat('d4', 32));
+$referralEvidence = Referrals::orderEvidence($order);
+starfiniti_runtime_assert(
+    is_array($referralEvidence)
+    && ($referralEvidence['advocateCode'] ?? null) === $referralCode
+    && ($referralEvidence['sourceNetworkFingerprint'] ?? null) === $referralFingerprint,
+    'order referral evidence contains only the opaque advocate code and keyed fingerprints'
+);
 $applyResult = $order->apply_coupon($couponCode);
 starfiniti_runtime_assert(! is_wp_error($applyResult), 'native coupon applies through WooCommerce core');
 starfiniti_runtime_assert(
@@ -400,6 +417,24 @@ $orderId = $order->get_id();
 starfiniti_runtime_assert(
     wc_get_order($orderId) instanceof WC_Order,
     'completed order round-trips through WooCommerce CRUD getters'
+);
+$orderStatusPayload = (string) $wpdb->get_var($wpdb->prepare(
+    "SELECT event_payload FROM {$outboxTable} WHERE event_type = %s AND source_object_id = %s ORDER BY id DESC LIMIT 1",
+    'commerce.order.status_changed',
+    (string) $orderId
+));
+$decodedOrderStatusPayload = json_decode($orderStatusPayload, true);
+$emittedReferral = is_array($decodedOrderStatusPayload)
+    ? ($decodedOrderStatusPayload['order']['referral'] ?? null)
+    : null;
+starfiniti_runtime_assert(
+    is_array($emittedReferral)
+    && ($emittedReferral['advocateCode'] ?? null) === $referralCode
+    && ($emittedReferral['sourceNetworkFingerprint'] ?? null) === $referralFingerprint
+    && ! str_contains($orderStatusPayload, 'runtime-smoke@example.test')
+    && ! str_contains($orderStatusPayload, '127.0.0.1')
+    && ! str_contains($orderStatusPayload, 'Runtime customer'),
+    'signed order fact emits privacy-minimized referral evidence without raw identity or network data'
 );
 
 $reviewId = wp_insert_comment([
