@@ -2,7 +2,7 @@
 
 ## Implementation status
 
-The tenancy, WooCommerce event/effect, ledger, programme-engine, merchant command/read-model, controlled customer experience, public delivery, authenticated customer link, controlled redemption, customer data export, guided connector provisioning, initial tenant bootstrap, and WooCommerce customer-erasure portions below are implemented in twenty-five versioned migrations. The ledger uses immutable transaction headers/entries, six wallet buckets, programme control accounts, original-attribution lots, signed compensating allocations, same-transaction projections, tenant RLS, and narrow worker commands. Programme publication, materialized tiers/rewards, reward reservations, tier history, evaluation evidence, expiry-notification fences, WooCommerce order/refund effects, native coupon settlement, audited merchant mutations, revisioned experience tokens/copy, customer self-service reads, Auth-derived native-coupon redemption and export, guided WooCommerce provisioning, deployment-only tenant bootstrap, and source-originated identity erasure are implemented.
+The tenancy, WooCommerce event/effect, ledger, programme-engine, merchant command/read-model, controlled customer experience, public delivery, authenticated customer link, controlled redemption, customer data export, guided connector provisioning, initial tenant bootstrap, WooCommerce customer erasure, and provider-neutral notification portions below are implemented through additive versioned migrations. The ledger uses immutable transaction headers/entries, six wallet buckets, programme control accounts, original-attribution lots, signed compensating allocations, same-transaction projections, tenant RLS, and narrow worker commands. Programme publication, materialized tiers/rewards, reward reservations, tier history, evaluation evidence, expiry-notification fences, WooCommerce order/refund effects, native coupon settlement, audited merchant mutations, revisioned experience tokens/copy, customer self-service reads, Auth-derived native-coupon redemption and export, guided WooCommerce provisioning, deployment-only tenant bootstrap, source-originated identity erasure, purpose consent/suppression, and isolated SMTP/Klaviyo/webhook delivery evidence are implemented.
 
 ## Database boundaries
 
@@ -81,6 +81,33 @@ Time-limited, reason-bound, approved grants for platform support. Stores support
 ### `admin_audit_events`
 
 Immutable tenant-scoped evidence for administration commands: request-derived actor, action, resource public ID, tenant idempotency key, canonical request hash, correlation ID, bounded metadata, and creation time. Only owners, admins, and auditors can read programme administration evidence through RLS. No authenticated role receives direct insert/update/delete privileges.
+
+### Audiences and campaign targeting
+
+- `audiences`: immutable stable audience code within one organization and programme group.
+- `audience_versions`: independently validated allowlisted predicates with immutable draft/published/superseded history, exact definition hash, and one published version per audience.
+- `audience_snapshots`: PostgreSQL-timed aggregate evidence for one published version. The browser can inspect bounded counts and history through tenant RLS but cannot supply scope, time, or members.
+- `loyalty_private.audience_snapshot_members`: private included customer/wallet keys plus exact condition decisions. It has no browser, anonymous, runtime, connector, or worker grant until a later campaign executor receives a narrower reviewed boundary.
+
+Current audience metrics are derived from wallet balances, immutable tier-qualification facts, active tier intervals, and customer creation evidence. Arbitrary SQL, browser tags, PII predicates, and caller-supplied member lists are not part of the contract. New targeting is gated by the database-authoritative `campaigns` entitlement; rollback preserves versions, completed snapshots, and accepted retry evidence.
+
+- `campaigns`: stable tenant/programme-group identity for one campaign code, bound to the exact programme selected by the authenticated draft command.
+- `campaign_versions`: immutable strict behavior, audience/exclusion snapshot references, explicit-instant/IANA schedule evidence, hard effect/points/liability ceilings, aggregate assignment counts/hash, and draft/scheduled/active/paused/cancelled/completed lifecycle.
+- `loyalty_private.campaign_controls`: one private 32-byte random assignment salt plus aggregate assignment hash for an approved version.
+- `loyalty_private.campaign_assignments`: one immutable eligible wallet/customer treatment-or-control row with its assignment evidence hash. Browser/runtime roles cannot enumerate it.
+- `loyalty_private.campaign_capacity_counters`: serialized mutable projections of reserved/committed effects, points, and monetary liability for one immutable campaign version.
+- `loyalty_private.campaign_execution_batches`: immutable purchase operation, original candidate context, baseline/final evaluation, and programme-evaluation/transaction evidence used for exact retry.
+- `loyalty_private.campaign_effects`: one immutable control, exhausted, suppressed, or awarded decision per matched purchase campaign, with awarded decisions linked to their exact ledger transaction and pending origin entry.
+- `loyalty_private.campaign_capacity_allocations`: one-way `reserved -> committed|released` evidence for milestone, win-back, tier, referral, and limited-reward capacity.
+- `loyalty_private.campaign_trigger_jobs`: canonical programme-bound milestone, win-back, tier, referral, and limited work with minimized evidence, treatment/control assignment, bounded lease state, and an optional original job for compensation.
+- `loyalty_private.campaign_trigger_job_attempts`: immutable claim, retry, lease-expiry, and manual-review evidence, capped at ten attempts.
+- `loyalty_private.campaign_trigger_executions`: immutable source-to-capacity-to-ledger-or-native-reservation outcomes, including zero-value control/exhaustion and linked compensation evidence.
+
+Approval materializes inclusion minus exclusions and the treatment/control split in one transaction before a version becomes scheduled. One accepted-version partial unique index prevents overlap for a stable campaign. Purchase execution locks operation, member, and campaign capacity in a stable order; reserves capacity; calls the existing programme award boundary; appends separately attributed campaign awards; and commits counters in one transaction. Original context is replayed on exact retry.
+
+Canonical qualification, tier, referral, and limited-assignment facts enqueue private programme-bound work. The worker receives only bounded scheduling, claim, execution, and retry functions. One execution transaction verifies the lease/evidence, reserves capacity, appends point value or a campaign-funded native reward reservation, and records immutable completion. Definitive native cancellation compensates internal campaign funding; ambiguous outcomes retain reservations and committed capacity for inspection. Entitlement disablement stops new issue jobs but preserves accepted jobs and reversals.
+
+`get_campaign_results_v1(programmeId, limit)` is the only browser-facing projection over private campaign execution evidence. It derives tenant access from live membership, binds the exact programme, returns bounded exact aggregate decimal text, and excludes assignments, identities, sources, errors, salts, and raw evidence. Its measurement contract labels directly attributed outcomes as influenced and explicitly records that experimental incrementality is not measured.
 
 ### `experience_themes`
 
@@ -192,6 +219,17 @@ The reservation holds programme version, wallet, reward, points, expiry, idempot
 - `experience_translations` stores one current revision of bounded customer-facing copy per linked workspace/programme group and locale. The launch runtime/editor use only `en`; the released `sl-SI` key remains for migration compatibility and is non-selectable. The table is separate from theme tokens and customer identity, uses composite tenant keys plus member-read RLS, allows no direct browser DML, and appends minimized immutable locale/revision audit evidence for every owner/admin save.
 - `get_public_loyalty_experience` is a read-only anonymous projection, not a public table policy. It resolves one active workspace/programme-group link and current published programme, caps tiers at 12 and rewards at 20, emits exact bigint values as text plus approved theme/copy fields, and excludes organization identity, customers, ledgers, raw configuration, reward configuration, audit, integrations, and commerce evidence.
 - Merchant Overview reporting is a read model, not a mutable analytics truth table. It joins one authorized workspace/programme scope to scoped wallets, immutable live evaluation evidence, and wallet-side ledger/projection rows; returns exact text-form aggregates and bounded UTC daily buckets; and withholds private evaluation, commerce, identity, and ledger evidence.
+
+## Notification delivery tables
+
+- Provider-neutral `notification_events` and append-only purpose preference/suppression evidence contain strict versioned loyalty facts without contact data, coupon plaintext, arbitrary properties, provider bodies, secrets, or ledger metadata. Provider adapters cannot create or mutate loyalty value.
+- Private SMTP and Klaviyo delivery/attempt tables own bounded leases, exact provider-specific operation state, dispatch-time authorization evidence, and minimized canonical outcomes. Verified Auth contact is resolved ephemerally only after authorization and is never stored in delivery or attempt rows.
+- `notification_email_template_versions` stores immutable global and organization-owned English subject/plain-text/deterministically escaped HTML versions. A private organization/event binding selects one active version; each accepted delivery retains its exact template UUID, version, and hash independently of later publication.
+- `notification_smtp_test_deliveries` and immutable test attempts are separate from normal event delivery. They bind the requesting Auth actor and active template at command time, accept no recipient, and release the actor's verified Auth email only after a live owner/admin, entitlement, lease, and template-integrity recheck.
+- `notification_webhook_endpoints` stores a tenant-bound exact HTTPS destination, event subscription, rate limit, status, and current/optional previous SHA-256 secret fingerprints; raw HMAC keys never enter PostgreSQL.
+- `notification_webhook_deliveries` binds one immutable event to one endpoint and one stable public delivery UUID. `notification_webhook_attempts` is immutable minimized outcome evidence, and `notification_webhook_rate_windows` enforces the endpoint fixed-window dispatch ceiling. All four tables are private, RLS-enabled, and grant no direct access to browser, runtime, or worker roles.
+- The webhook worker receives destination and a strict payload only from the private authorization function after current endpoint, lease, deployment entitlement, event subscription, customer/link, purpose consent, and suppression checks. It returns only canonical response evidence to the finish command; no network call occurs inside PostgreSQL.
+- The authenticated notification workspace read is an aggregate projection rather than table access. It emits six active templates, three exact provider totals, consent/suppression counts, and at most 100 canonical issues while excluding contacts, customers, payloads, destinations, secrets/fingerprints, signatures, worker/lease identity, raw provider responses, and arbitrary error text.
 
 ## Deployment and entitlement authority
 

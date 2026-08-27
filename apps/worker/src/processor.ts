@@ -4,6 +4,9 @@ import {
   tierMetricSnapshotV2,
   tierQualificationEvaluationV2,
   merchantActivityPayloadV1,
+  campaignPurchaseCandidateV1,
+  campaignTriggerExecutionV1,
+  campaignTriggerJobV1,
   wooCommerceCouponCapturedPayloadV1,
   wooCommerceCustomerCreatedPayloadV1,
   wooCommerceCustomerDeletedPayloadV1,
@@ -12,11 +15,14 @@ import {
   wooCommerceVerifiedProductReviewPayloadV1,
   type WooCommerceOrderFactV1,
   type ProgrammeDefinitionV2,
+  type CampaignPurchaseCandidateV1,
+  type CampaignTriggerExecutionV1,
 } from "@starfiniti/contracts";
 import {
   calculateRefundReversal,
   evaluateOrderAward,
   evaluateEarningV2,
+  evaluatePurchaseCampaignsV1,
   evaluateTierQualificationSnapshotV2,
   minorUnit,
   points,
@@ -118,6 +124,19 @@ type V2AwardRow = {
   transaction_public_id: string | null;
   outcome: string;
 };
+type CampaignPurchaseContextRow = {
+  campaign_version_public_id: string;
+  campaign_code: string;
+  assignment: "treatment" | "control";
+  behavior: CampaignPurchaseCandidateV1["behavior"];
+  remaining_global_effects: string;
+  remaining_member_effects: string;
+  remaining_points: string;
+};
+type CampaignPurchaseCommitRow = V2AwardRow & {
+  campaign_batch_public_id: string;
+  campaign_points: string;
+};
 type ReferralQualificationContextRow = {
   attribution_id: string | null;
   programme_version_id: string | null;
@@ -143,9 +162,10 @@ type TierQualificationContextRow = {
   previously_held_tier_codes: string[];
   below_threshold_since: string | Date | null;
 };
-type TierRefundFactRow = {
-  fact_public_id: string;
+type CampaignRefundRow = {
   customer_id: string;
+  affected_effects: string;
+  reversed_points: string;
   outcome: string;
 };
 type OriginalAwardRow = {
@@ -818,6 +838,213 @@ export async function runReferralRewardLifecycle(
     claimed: jobs.length,
     completed,
     cancelled,
+    retryable,
+    manualReview,
+  };
+}
+
+type ClaimedCampaignTriggerJob = Readonly<{
+  job_id: string;
+  campaign_version_id: string;
+  trigger_kind: string;
+  action: string;
+  source_reference: string;
+  occurred_at: string | Date;
+  attempt_count: number | string;
+}>;
+
+type CampaignLifecycleTransitionRow = Readonly<{
+  campaign_version_id: string;
+  from_status: string;
+  to_status: string;
+  transitioned_at: string | Date;
+}>;
+
+export type CampaignLifecycleAdvanceResult = Readonly<{
+  activated: number;
+  completed: number;
+}>;
+
+export async function advanceCampaignLifecycle(
+  sql: Sql,
+): Promise<CampaignLifecycleAdvanceResult> {
+  const rows = await sql<CampaignLifecycleTransitionRow[]>`
+    select campaign_version_id::text, from_status, to_status, transitioned_at
+    from loyalty_private.advance_campaign_lifecycle_v1(100)
+  `;
+  if (rows.length > 100) {
+    throw new Error("invalid_campaign_lifecycle_result");
+  }
+  let activated = 0;
+  let completed = 0;
+  for (const row of rows) {
+    const transitionedAt =
+      row.transitioned_at instanceof Date
+        ? row.transitioned_at
+        : new Date(row.transitioned_at);
+    const validTransition =
+      (row.from_status === "scheduled" && row.to_status === "active") ||
+      (["scheduled", "active", "paused"].includes(row.from_status) &&
+        row.to_status === "completed");
+    if (
+      !isUuid(row.campaign_version_id) ||
+      !validTransition ||
+      Number.isNaN(transitionedAt.valueOf())
+    ) {
+      throw new Error("invalid_campaign_lifecycle_result");
+    }
+    if (row.to_status === "active") activated += 1;
+    else completed += 1;
+  }
+  return { activated, completed };
+}
+
+type CampaignTriggerExecutionRow = Readonly<{
+  job_id: string;
+  campaign_version_id: string;
+  action: string;
+  outcome: string;
+  allocation_id: string | null;
+  transaction_id: string | null;
+  reward_reservation_id: string | null;
+}>;
+
+export type CampaignTriggerLifecycleResult = Readonly<{
+  enqueued: number;
+  claimed: number;
+  completed: number;
+  reversed: number;
+  controls: number;
+  capacityExhausted: number;
+  retryable: number;
+  manualReview: number;
+}>;
+
+export async function runCampaignTriggerLifecycle(
+  sql: Sql,
+  workerId: string,
+): Promise<CampaignTriggerLifecycleResult> {
+  const enqueuedRows = await sql<{ enqueued: number | string }[]>`
+    select loyalty_private.enqueue_due_limited_campaigns_v1(
+      clock_timestamp(), 100
+    ) as enqueued
+  `;
+  const enqueued = Number(enqueuedRows[0]?.enqueued);
+  if (!Number.isSafeInteger(enqueued) || enqueued < 0 || enqueued > 100) {
+    throw new Error("invalid_limited_campaign_enqueue_result");
+  }
+  const rows = await sql<ClaimedCampaignTriggerJob[]>`
+    select job_id::text, campaign_version_id::text, trigger_kind, action,
+      source_reference, occurred_at, attempt_count
+    from loyalty_private.claim_due_campaign_trigger_jobs_v1(
+      ${workerId}, 25, 60
+    )
+  `;
+  if (rows.length > 25) {
+    throw new Error("invalid_campaign_trigger_claim_result");
+  }
+  const jobs = rows.map((row) =>
+    campaignTriggerJobV1.parse({
+      schemaVersion: "1",
+      jobId: row.job_id,
+      campaignVersionId: row.campaign_version_id,
+      triggerKind: row.trigger_kind,
+      action: row.action,
+      sourceReference: row.source_reference,
+      occurredAt:
+        row.occurred_at instanceof Date
+          ? row.occurred_at.toISOString()
+          : row.occurred_at,
+      attemptCount: Number(row.attempt_count),
+    }),
+  );
+  let completed = 0;
+  let reversed = 0;
+  let controls = 0;
+  let capacityExhausted = 0;
+  let retryable = 0;
+  let manualReview = 0;
+  for (const job of jobs) {
+    try {
+      const executions = await sql<CampaignTriggerExecutionRow[]>`
+        select job_id::text, campaign_version_id::text, action, outcome,
+          allocation_id::text, transaction_id::text,
+          reward_reservation_id::text
+        from loyalty_private.execute_campaign_trigger_job_v1(
+          ${job.jobId}::uuid, ${workerId}
+        )
+      `;
+      const row = executions[0];
+      if (!row) throw new Error("campaign_trigger_execution_unavailable");
+      const execution: CampaignTriggerExecutionV1 =
+        campaignTriggerExecutionV1.parse({
+          schemaVersion: "1",
+          jobId: row.job_id,
+          campaignVersionId: row.campaign_version_id,
+          action: row.action,
+          outcome: row.outcome,
+          allocationId: row.allocation_id,
+          transactionId: row.transaction_id,
+          rewardReservationId: row.reward_reservation_id,
+        });
+      if (
+        execution.jobId !== job.jobId ||
+        execution.campaignVersionId !== job.campaignVersionId ||
+        execution.action !== job.action
+      ) {
+        throw new Error("campaign_trigger_execution_identity_mismatch");
+      }
+      completed += 1;
+      if (
+        execution.outcome === "points_reversed" ||
+        (execution.outcome.startsWith("reward_") &&
+          execution.outcome !== "reward_reserved")
+      ) {
+        reversed += 1;
+      }
+      if (execution.outcome === "control") controls += 1;
+      if (execution.outcome === "capacity_exhausted") {
+        capacityExhausted += 1;
+      }
+    } catch (error) {
+      const errorCode = databaseCode(error);
+      const deterministicFailure = [
+        "22003",
+        "22023",
+        "23514",
+        "P0002",
+        "P0003",
+      ].includes(errorCode ?? "");
+      const finishes = await sql<{ state: string; outcome: string }[]>`
+        select state, outcome
+        from loyalty_private.finish_campaign_trigger_job_v1(
+          ${job.jobId}::uuid,
+          ${workerId},
+          ${
+            deterministicFailure
+              ? errorCode === "22023" || errorCode === "22003"
+                ? "campaign_trigger_input_invalid"
+                : "campaign_trigger_contract_failed"
+              : "campaign_trigger_execution_failed"
+          },
+          ${retryDelay(job.attemptCount)}
+        )
+      `;
+      const finish = finishes[0];
+      if (!finish || !["retryable", "manual_review"].includes(finish.state)) {
+        throw new Error("invalid_campaign_trigger_finish_result");
+      }
+      if (finish.state === "manual_review") manualReview += 1;
+      else retryable += 1;
+    }
+  }
+  return {
+    enqueued,
+    claimed: jobs.length,
+    completed,
+    reversed,
+    controls,
+    capacityExhausted,
     retryable,
     manualReview,
   };
@@ -1499,37 +1726,120 @@ async function commitAwardV2(
       memberRuleUsage,
       false,
     );
-    const evaluation = evaluateEarningV2(context.programme, orderFact);
+    const campaignRows = await transaction<CampaignPurchaseContextRow[]>`
+      select campaign_version_public_id::text, campaign_code, assignment,
+        behavior, remaining_global_effects, remaining_member_effects,
+        remaining_points
+      from loyalty_private.get_purchase_campaign_context_v1(
+        ${event.organization_id}::bigint,
+        ${context.programmeGroupId}::bigint,
+        ${context.programmeVersionId}::bigint,
+        ${customerId}::bigint,
+        ${event.occurred_at}::timestamptz,
+        ${operation}
+      )
+    `;
+    const campaignContext = campaignRows.map((row) =>
+      campaignPurchaseCandidateV1.parse({
+        schemaVersion: "1",
+        campaignVersionId: row.campaign_version_public_id,
+        campaignCode: row.campaign_code,
+        assignment: row.assignment,
+        behavior: row.behavior,
+        remainingGlobalEffects: row.remaining_global_effects,
+        remainingMemberEffects: row.remaining_member_effects,
+        remainingPoints: row.remaining_points,
+      }),
+    );
+    const campaignResult =
+      campaignContext.length === 0
+        ? null
+        : evaluatePurchaseCampaignsV1(
+            context.programme,
+            orderFact,
+            campaignContext,
+          );
+    const baselineEvaluation =
+      campaignResult?.baselineProgrammeEvaluation ??
+      evaluateEarningV2(context.programme, orderFact);
+    const evaluation =
+      campaignResult?.programmeEvaluation ?? baselineEvaluation;
     const inputHash = evidenceSha256({
       version: "2",
       programmeVersionId: context.programmeVersionId,
       order: orderFact,
     });
     const resultHash = evidenceSha256(evaluation);
-    const awards = await transaction<V2AwardRow[]>`
-      select evaluation_public_id::text,
-        transaction_public_id::text,
-        outcome
-      from loyalty_private.commit_programme_v2_award(
-        ${event.organization_id}::bigint,
-        ${context.programmeGroupId}::bigint,
-        ${context.programmeVersionId}::bigint,
-        ${event.canonical_event_id}::bigint,
-        ${customerId}::bigint,
-        ${`woocommerce:order:${order.orderId}`},
-        ${evaluationKey},
-        ${awardKey},
-        ${Buffer.from(inputHash, "hex")},
-        ${Buffer.from(resultHash, "hex")},
-        ${JSON.stringify(evaluation)}::jsonb,
-        ${JSON.stringify({
-          lines: evaluation.lines,
-          tierMultiplierBasisPoints: tierPurchaseMultiplier(context),
-        })}::jsonb,
-        ${event.occurred_at}::timestamptz,
-        ${evaluatedAt}::timestamptz
-      )
-    `;
+    const explanation = {
+      lines: evaluation.lines,
+      tierMultiplierBasisPoints: tierPurchaseMultiplier(context),
+    };
+    let awards: (V2AwardRow | CampaignPurchaseCommitRow)[];
+    if (campaignResult === null) {
+      awards = await transaction<V2AwardRow[]>`
+        select evaluation_public_id::text,
+          transaction_public_id::text,
+          outcome
+        from loyalty_private.commit_programme_v2_award(
+          ${event.organization_id}::bigint,
+          ${context.programmeGroupId}::bigint,
+          ${context.programmeVersionId}::bigint,
+          ${event.canonical_event_id}::bigint,
+          ${customerId}::bigint,
+          ${`woocommerce:order:${order.orderId}`},
+          ${evaluationKey},
+          ${awardKey},
+          ${Buffer.from(inputHash, "hex")},
+          ${Buffer.from(resultHash, "hex")},
+          ${JSON.stringify(evaluation)}::jsonb,
+          ${JSON.stringify(explanation)}::jsonb,
+          ${event.occurred_at}::timestamptz,
+          ${evaluatedAt}::timestamptz
+        )
+      `;
+    } else {
+      const campaignInputHash = evidenceSha256({
+        version: "1",
+        operation,
+        programmeVersionId: context.programmeVersionId,
+        order: orderFact,
+        candidates: campaignContext,
+      });
+      const campaignResultHash = evidenceSha256({
+        baselineProgrammeEvaluation: campaignResult.baselineProgrammeEvaluation,
+        programmeEvaluation: campaignResult.programmeEvaluation,
+        campaignEvaluation: campaignResult.campaignEvaluation,
+      });
+      awards = await transaction<CampaignPurchaseCommitRow[]>`
+        select evaluation_public_id::text,
+          transaction_public_id::text,
+          campaign_batch_public_id::text,
+          campaign_points,
+          outcome
+        from loyalty_private.commit_purchase_campaign_execution_v1(
+          ${event.organization_id}::bigint,
+          ${context.programmeGroupId}::bigint,
+          ${context.programmeVersionId}::bigint,
+          ${event.canonical_event_id}::bigint,
+          ${customerId}::bigint,
+          ${`woocommerce:order:${order.orderId}`},
+          ${evaluationKey},
+          ${awardKey},
+          ${Buffer.from(inputHash, "hex")},
+          ${Buffer.from(resultHash, "hex")},
+          ${JSON.stringify(evaluation)}::jsonb,
+          ${JSON.stringify(explanation)}::jsonb,
+          ${operation},
+          ${Buffer.from(campaignInputHash, "hex")},
+          ${Buffer.from(campaignResultHash, "hex")},
+          ${JSON.stringify(campaignContext)}::jsonb,
+          ${JSON.stringify(campaignResult.baselineProgrammeEvaluation)}::jsonb,
+          ${JSON.stringify(campaignResult.campaignEvaluation)}::jsonb,
+          ${event.occurred_at}::timestamptz,
+          ${evaluatedAt}::timestamptz
+        )
+      `;
+    }
     const award = awards[0];
     if (!award) throw new Error("v2_award_record_failed");
     await applyAdvancedTierQualificationV2(
@@ -1541,7 +1851,9 @@ async function commitAwardV2(
     );
     const resultReference = award.transaction_public_id
       ? `ledger-transaction:${award.transaction_public_id}`
-      : `evaluation:${award.evaluation_public_id}`;
+      : "campaign_batch_public_id" in award
+        ? `campaign-execution:${award.campaign_batch_public_id}`
+        : `evaluation:${award.evaluation_public_id}`;
     await transaction`
       select * from loyalty_private.finish_commerce_effect(
         ${event.canonical_event_public_id}::uuid,
@@ -1903,16 +2215,21 @@ async function commitRefundV2(
     if (!transactionId) throw new Error("refund_reversal_record_failed");
     resultReference = `ledger-transaction:${transactionId}`;
   }
-  const facts = await sql<TierRefundFactRow[]>`
-      select fact_public_id::text, customer_id::text, outcome
-      from loyalty_private.record_tier_refund_fact_v2(
+  const campaignRefunds = await sql<CampaignRefundRow[]>`
+      select customer_id::text, affected_effects::text,
+        reversed_points::text, outcome
+      from loyalty_private.record_purchase_campaign_refund_v1(
         ${event.organization_id}::bigint,
         ${context.originalEvaluationPublicId}::uuid,
         ${evaluationId}::uuid
       )
   `;
-  const customerId = facts[0]?.customer_id;
-  if (!customerId) throw new Error("refund_tier_fact_record_failed");
+  const campaignRefund = campaignRefunds[0];
+  const customerId = campaignRefund?.customer_id;
+  if (!customerId) throw new Error("campaign_refund_record_failed");
+  if (BigInt(campaignRefund.reversed_points) > 0n) {
+    resultReference = `campaign-refund:${evaluationId}`;
+  }
   if (event.programme_id !== null) {
     const currentProgramme = await loadProgrammeContext(
       sql,

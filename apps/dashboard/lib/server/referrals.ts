@@ -39,8 +39,10 @@ export async function getReferralReviewCases(
       target_kind: null,
       target_limit: 100,
     });
-  if (error) throw new Error("referral_review_read_unavailable");
-  const rows = Array.isArray(data) ? (data as UnknownRow[]) : [];
+  if (error || !Array.isArray(data)) {
+    throw new Error("referral_review_read_unavailable");
+  }
+  const rows = data as UnknownRow[];
   return rows.map(reviewCaseFromRow);
 }
 

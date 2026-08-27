@@ -4,6 +4,8 @@ import {
   Gem,
   Gift,
   LayoutDashboard,
+  MailCheck,
+  Megaphone,
   Palette,
   Star,
   Users,
@@ -65,16 +67,28 @@ export const merchantNavigation: readonly MerchantNavigationItem[] = [
     match: (pathname) => pathname.startsWith("/referrals"),
   },
   {
+    label: "Campaigns",
+    href: "/campaigns",
+    icon: Megaphone,
+    match: (pathname) => pathname.startsWith("/campaigns"),
+  },
+  {
     label: "Connector operations",
     href: "/operations",
     icon: Activity,
     match: (pathname) => pathname.startsWith("/operations"),
   },
   {
+    label: "Notifications",
+    href: "/notifications",
+    icon: MailCheck,
+    group: "PLATFORM",
+    match: (pathname) => pathname.startsWith("/notifications"),
+  },
+  {
     label: "Customer experience",
     href: "/experience",
     icon: Palette,
-    group: "PLATFORM",
     match: (pathname) => pathname.startsWith("/experience"),
   },
 ];

@@ -83,6 +83,21 @@ const acceptedAdrs = [
   "0018-leased-atomic-referral-reward-lifecycle.md",
   "0019-auth-derived-reversible-referral-review.md",
   "0020-auth-derived-referral-experience-and-fact-sourced-funnel.md",
+  "0021-allowlisted-audiences-and-immutable-snapshots.md",
+  "0022-explicit-instant-campaign-schedules-and-bound-control-assignment.md",
+  "0023-atomic-campaign-capacity-and-attributed-value.md",
+  "0024-canonical-campaign-triggers-and-campaign-funded-rewards.md",
+  "0025-minimized-campaign-results-and-honest-attribution.md",
+  "0026-cumulative-purchase-campaign-refund-compensation.md",
+  "0027-derived-fixed-discount-campaign-liability.md",
+  "0028-statement-consistent-audience-snapshots.md",
+  "0029-database-timed-campaign-lifecycle.md",
+  "0030-published-programme-campaign-selector-authority.md",
+  "0031-provider-neutral-notification-events-and-local-consent-authority.md",
+  "0032-isolated-database-authorized-smtp-delivery.md",
+  "0033-tenant-bound-klaviyo-projection-and-consent-sync.md",
+  "0034-standard-hmac-webhooks-with-pinned-public-destinations.md",
+  "0035-immutable-tenant-email-templates-and-actor-bound-tests.md",
 ];
 
 for (const adr of acceptedAdrs) {

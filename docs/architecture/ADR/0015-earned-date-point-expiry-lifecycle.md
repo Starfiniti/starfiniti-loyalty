@@ -24,6 +24,8 @@ Keep `pointsExpireAfterDays` for wire compatibility and add an optional strict `
 
 Publication materializes one immutable, tenant-scoped policy per programme version. Lots remain the value authority. Refund and reservation compensation restores the original allocation to the original lot; it never creates a fresh deadline. If that lot is already due, the next lifecycle sweep expires it immediately.
 
+Every award source derives `available_at` and `expires_at` from its immutable earned or accepted-value instant rather than from asynchronous worker execution time. Campaign trigger points therefore use the canonical trigger `occurred_at` for immediate availability and add the historical programme policy duration to that same instant. A delayed worker may create an already-due lot, which the next expiry sweep handles normally; delay never extends customer value.
+
 The worker calls one bounded `run_point_expiry_lifecycle_v2` boundary every minute. A transaction-scoped advisory lock makes the maintenance pass single-flight. The sweep groups due lots by organization, wallet, and original programme version and calls the low-level ledger command separately for each group. The low-level command independently verifies the wallet/version relationship and filters every allocation by that exact version. Worker access to the low-level primitive is revoked.
 
 Reminder scheduling writes one existing `(organization, lot, lead-day)` fence and one transactional-outbox event. At any instant it selects only the nearest still-relevant configured lead. A delayed worker therefore catches up with one useful reminder instead of sending several stale reminders together. Provider delivery remains outside the value transaction and will be completed by M08.

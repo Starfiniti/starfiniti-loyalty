@@ -17,6 +17,11 @@ for (const file of migrations) {
   if (/service_role|secret_key|password\s*=/iu.test(sql)) {
     throw new Error(`Possible credential in migration: ${file}`);
   }
+  if (/\bpg_catalog\.(?:coalesce|greatest|least|nullif)\s*\(/iu.test(sql)) {
+    throw new Error(
+      `PostgreSQL conditional expressions cannot be schema-qualified: ${file}`,
+    );
+  }
 }
 
 console.log(`Validated ${migrations.length} migration file(s).`);

@@ -2,10 +2,19 @@ import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 
 const suspicious = [
-  "SUPABASE_SECRET_KEY=ey",
-  "SUPABASE_SERVICE_ROLE_KEY=ey",
-  "consumer_secret=ck_",
-  "whsec_",
+  {
+    label: "SUPABASE_SECRET_KEY=ey",
+    pattern: /SUPABASE_SECRET_KEY=ey/u,
+  },
+  {
+    label: "SUPABASE_SERVICE_ROLE_KEY=ey",
+    pattern: /SUPABASE_SERVICE_ROLE_KEY=ey/u,
+  },
+  { label: "consumer_secret=ck_", pattern: /consumer_secret=ck_/u },
+  {
+    label: "whsec_<base64-secret>",
+    pattern: /whsec_[A-Za-z0-9+/]{32,}={0,2}/u,
+  },
 ];
 
 const files = execFileSync(
@@ -27,7 +36,7 @@ for (const file of files) {
     continue;
   }
   for (const marker of suspicious) {
-    if (content.includes(marker)) leaks.push(`${file}: ${marker}`);
+    if (marker.pattern.test(content)) leaks.push(`${file}: ${marker.label}`);
   }
 }
 

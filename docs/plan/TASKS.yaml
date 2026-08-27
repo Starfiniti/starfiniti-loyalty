@@ -823,7 +823,7 @@ tasks:
           - contract PostgreSQL and editor boundaries require every displayed tier rate to equal the executable base-rate multiplier and fail closed on incomplete or inexact legacy migration
           - exact-head run 31760806620 passed a clean 36-migration replay all 32 pgTAP files and 1,494 assertions plus both concurrency probes both images and all four WooCommerce runtimes
           - merge disabled deployment fresh recovery point Starfiniti-only canary zero-drift reconciliation and module score remain open
-    risks: [R-002, R-020, R-033, R-034, R-035]
+    risks: [R-002, R-020, R-034, R-035, R-036]
     docs:
       [
         docs/api/PROGRAMME_ENGINE.md,
@@ -937,7 +937,7 @@ tasks:
   - id: M07-CAMPAIGNS
     title: Add allowlisted audiences, segments, and campaigns
     module: M07
-    status: planned
+    status: in_progress
     dependencies: [M06-REFERRALS]
     hypothesis: Snapshot-based campaigns increase participation while atomic budgets cap liability.
     baseline: No segment or campaign engine exists.
@@ -968,14 +968,103 @@ tasks:
         liability reconciliation,
         browser calendar,
       ]
-    risks: [R-026, R-020]
-    docs: [docs/plan/ENTERPRISE_ROADMAP.md]
+    slices:
+      - id: M07-S01-AUDIENCE-AUTHORITY
+        status: complete
+        acceptance:
+          - versioned allowlisted audience definitions and exact pure PostgreSQL parity reject arbitrary SQL browser tags and unsupported facts
+          - tenant-derived publication and database-timed immutable snapshots retain bounded condition evidence without exposing member identities
+          - entitlement rollback blocks new targeting but preserves definitions snapshots accepted work value history and reconciliation
+          - cross-tenant idempotency conflict null-recency rolling-boundary and two-session snapshot tests pass
+        evidence:
+          - exact-head run 31773939480 passed baseline both images 42 migrations 36 pgTAP files 1770 assertions and all four WooCommerce runtime cells at 8192dd7
+          - 70 focused assertions plus the two-session probe cover storage lifecycle tenant commands exact retries rollback candidate bounds and one-snapshot concurrency
+          - adversarial security tenancy correctness complexity idiom and cruft review has no remaining blocker or should-fix finding
+      - id: M07-S02-CAMPAIGN-CONTRACT-AND-SCHEDULE
+        status: complete
+        acceptance:
+          - seven strict campaign types bind immutable audiences rewards schedules timezone exclusions caps budgets liability and control assignment
+          - preview approval pause and cancellation commands are role-derived audited idempotent and fail closed across DST boundaries
+        evidence:
+          - ADR-0022 selects explicit instants plus timezone local evidence and approval-bound private deterministic wallet assignment
+          - 14 focused contract tests cover all seven behaviors budgets liabilities offset chronology DST gaps overlaps empty-preview reconciliation exact integers and single-line command reasons
+          - additive migration 20260814081000 and 81 focused pgTAP assertions pass exact-head clean replay
+          - exact-head run 31777177961 passed baseline both images 43 migrations 37 pgTAP files 1851 assertions all four concurrency probes and all four WooCommerce runtime cells at e92f52d
+          - adversarial review replaced probabilistic control thresholds with exact salted-hash ranks aligned public and database reason validation preserved exact RPC integers and accepted empty previews without allowing empty approval
+      - id: M07-S03-ATOMIC-CAPACITY-AND-EXECUTION
+        status: complete
+        acceptance:
+          - limited quantity points budgets and per-member caps reserve atomically before any value effect
+          - highest-priority multiplier and explicitly additive bonuses retain snapshot explanation and exactly-once ledger evidence
+        evidence:
+          - ADR-0023 selects stable operation/member/campaign lock order, private counters, atomic programme/campaign ledger commits, and immutable original-context replay
+          - additive migration 20260814082000 and 62 focused pgTAP assertions pass exact-head clean replay
+          - exact-head run 32662380030 passed baseline, both images, 44 migrations, 38 pgTAP files, 1914 assertions, all four concurrency probes, and all four WooCommerce runtime cells at c82f3ed
+          - the two-session campaign probe proves one last-budget reservation wins, the competitor observes exhaustion, exact retry is idempotent, and counters reconcile
+      - id: M07-S04-MILESTONE-WINBACK-TIER-REFERRAL
+        status: complete
+        acceptance:
+          - milestone win-back tier referral and limited campaign triggers use canonical facts and bounded leased processing
+          - retries refunds cancellation and control groups cannot duplicate reverse or over-issue value
+        evidence:
+          - ADR-0024 binds campaign purchase context and canonical trigger history to one exact programme and keeps campaign-funded native rewards out of member available points
+          - additive migration 20260823200509 and 115 focused pgTAP assertions pass exact-head clean replay
+          - exact-head run 32667482144 passed baseline both images 45 migrations 38 pgTAP files 1967 assertions all five concurrency probes and all four WooCommerce runtime cells at 0b60d1b
+          - bounded lease recovery stops at ten attempts private queue inspection remains denied to the worker and rollout disablement blocks only new issue work while accepted work and reversals remain
+      - id: M07-S05-MERCHANT-EXPERIENCE-AND-RESULTS
+        status: complete
+        acceptance:
+          - merchants can build audiences forecast liability approve schedule pause cancel and inspect exact results in a responsive accessible calendar
+          - every metric defines its canonical fact and influenced results remain distinct from experimental incrementality
+        evidence:
+          - ADR-0025 selects one Auth-derived minimized exact aggregate projection and prohibits causal incrementality claims without an experiment metric contract
+          - the Hub-style command center supports multi-condition audiences all seven campaign behaviors immutable editing database-timed snapshots arbitrary valid IANA zones explicit liability confirmation calendar pause cancel and independent exact results
+          - production-build browser review passed at 1440x1000 and 390x844 with keyboard bypass mobile navigation dark mode dynamic builders no horizontal overflow and zero browser diagnostics
+          - exact-head run 32671197966 passed baseline both images 46 migrations 38 pgTAP files 1975 assertions including 123 focused campaign assertions all five concurrency probes and all four WooCommerce runtime cells at fcb1f3c
+      - id: M07-S06-CANARY-AND-CLOSE
+        status: in_progress
+        acceptance:
+          - exact-head CI disabled deployment Starfiniti canary full reconciliation and score at least 90 pass
+          - partial and full purchase refunds compensate every campaign ledger origin cumulatively without rewriting gross capacity or accepted history
+          - hard monetary campaign ceilings derive exact face value currency and precision from a fixed discount in the exact published programme
+          - every immutable audience membership set is evaluated from one bounded PostgreSQL statement snapshot rather than mixed READ COMMITTED statements
+          - accepted versions advance scheduled active paused and completed states from database time without blocking historical value or successor versions
+          - delayed campaign execution cannot extend point lifetime because availability and expiry derive from the canonical trigger instant
+          - native campaigns preflight an active exact-programme connector and deterministic execution failures stop after one rolled-back attempt while transient failures remain bounded retries
+          - campaign rule and tier selectors come from the exact published programme and incompatible future programme publication fails atomically while accepted work exists
+        evidence:
+          - ADR-0026 defines append-only per-origin cumulative campaign refund compensation; exact-head run 32674872811 passed and partial/full refund canary evidence remains pending
+          - ADR-0027 rejects merchant-declared per-effect valuation unsupported native kinds unpublished rewards and same-group cross-programme reward references; exact-head run 32674872811 passed and canary evidence remains pending
+          - ADR-0028 selects one materialized candidate and decision statement with STABLE nested evaluators; exact-head run 32674872811 passed and concurrent source-change canary evidence remains pending
+          - ADR-0029 selects bounded database-timed lifecycle transitions with append-only evidence; exact-head run 32675181455 passed 2007 pgTAP assertions and lifecycle canary evidence remains pending
+          - ADR-0015 and ADR-0024 require campaign point lots to retain canonical earned-date availability and expiry; exact-head run 32675527696 passed 2008 pgTAP assertions and all repository/runtime gates
+          - ADR-0024 separates first-attempt deterministic manual review from transient retries and blocks native approval before assignment when no active exact-programme connector exists; exact-head run 32676129608 passed 2010 pgTAP assertions and every repository/runtime gate
+          - ADR-0030 removes hard-coded selector placeholders, validates direct RPC drafts and approvals against the exact published programme, serializes campaign approval with programme publication, and blocks incompatible publication atomically; exact-head run 32677551229 passed 47 migrations 38 pgTAP files 2016 assertions the two-session selector race every repository and image gate and all four WooCommerce runtime cells at a9e75f2
+          - merchant results expose reserved capacity purchase reversals control and suppression trigger fulfilment and reversal outcomes plus bounded queue health through a keyboard-operable responsive disclosure; focused desktop and mobile browser evidence has zero page overflow and diagnostics
+          - exact-head run 32679145086 passed baseline database both images and all four WooCommerce runtime cells for the merchant result disclosure at 1b1406b
+    risks: [R-026, R-020, R-035]
+    docs:
+      [
+        docs/plan/ENTERPRISE_ROADMAP.md,
+        docs/architecture/ADR/0021-allowlisted-audiences-and-immutable-snapshots.md,
+        docs/architecture/ADR/0022-explicit-instant-campaign-schedules-and-bound-control-assignment.md,
+        docs/architecture/ADR/0023-atomic-campaign-capacity-and-attributed-value.md,
+        docs/architecture/ADR/0024-canonical-campaign-triggers-and-campaign-funded-rewards.md,
+        docs/architecture/ADR/0025-minimized-campaign-results-and-honest-attribution.md,
+        docs/architecture/ADR/0026-cumulative-purchase-campaign-refund-compensation.md,
+        docs/architecture/ADR/0027-derived-fixed-discount-campaign-liability.md,
+        docs/architecture/ADR/0028-statement-consistent-audience-snapshots.md,
+        docs/architecture/ADR/0029-database-timed-campaign-lifecycle.md,
+        docs/architecture/ADR/0030-published-programme-campaign-selector-authority.md,
+        docs/api/CAMPAIGNS.md,
+        docs/architecture/DATA_MODEL.md,
+      ]
     evidence: [docs/plan/evidence/M07/README.md]
 
   - id: M08-NOTIFICATIONS
     title: Add provider-neutral notifications, SMTP, Klaviyo, and webhooks
     module: M08
-    status: planned
+    status: in_progress
     dependencies: [M07-CAMPAIGNS]
     hypothesis: Consent-aware asynchronous messages improve activation without coupling providers to value processing.
     baseline: Expiry notification scheduling exists without provider delivery; Klaviyo is deferred in current docs.
@@ -1011,8 +1100,131 @@ tasks:
         webhook verification,
         template browser QA,
       ]
+    slices:
+      - id: M08-S01-EVENT-CONSENT-AUTHORITY
+        status: completed
+        acceptance:
+          - strict English-only provider-neutral events cover points rewards tiers referrals campaigns connector health and billing without arbitrary properties PII coupon plaintext or ledger metadata
+          - Auth-derived customer preferences separate loyalty transactional and loyalty marketing purposes while private provider suppression remains independently authoritative
+          - exact event and preference retries are idempotent conflicts fail closed customer erasure suppresses both purposes and point-expiry scheduling appends one canonical notification event
+          - direct table access cross-tenant selectors unsupported state transitions malformed payloads and attempts to clear provider suppression from a customer session fail closed
+        evidence:
+          - docs/architecture/ADR/0031-provider-neutral-notification-events-and-local-consent-authority.md records current official Supabase PostgreSQL and Klaviyo research alternatives and rollback consequences
+          - NotificationEventV1 and PostgreSQL independently enforce nine exact English event payloads Auth-derived purpose preferences stronger trusted suppression immutable idempotency privacy-erasure suppression and point-expiry dual-write without external delivery
+          - exact-head run 32682221777 at 33e0396 passed the complete baseline both images clean 48-migration replay all 39 pgTAP files with 2066 assertions including 50 focused notification assertions every concurrency probe and all four WooCommerce runtime cells after a transient upstream package-download 504 was retried
+      - id: M08-S02-SMTP-DELIVERY
+        status: completed
+        acceptance:
+          - self-hosted transactional email uses verified contact resolution versioned English templates bounded leases and a real local SMTP sink
+          - withdrawal and suppression are rechecked at dispatch authorization duplicate events send once and provider outage never affects value processing
+        evidence:
+          - ADR-0032 selects a separate optional notification worker database-owned lease and retry state late verified Auth contact resolution immutable English templates and manual review for ambiguous SMTP acceptance
+          - exact-head run 32686442063 at 604bbeb passed the complete baseline both production images a clean 49-migration replay all 40 pgTAP files with 2152 assertions including all 86 focused SMTP assertions every concurrency probe and all four WooCommerce runtime cells
+          - 46 worker tests include 16 focused SMTP tests and a real loopback SMTP sink with deterministic event Message-ID dispatch-time authority conservative ambiguity handling and terminal classification for deterministic local message failures
+      - id: M08-S03-KLAVIYO
+        status: completed
+        acceptance:
+          - managed Klaviyo profile event and consent synchronization pins an API revision unique IDs retry-after handling and minimized fields without becoming authority
+          - one managed organization is bound to one provider connection and API key fingerprint before verified contact can leave the database
+          - local consent withdrawal is rechecked at action authorization provider suppression can only tighten local eligibility and ambiguous opt-in never auto-retries
+          - exact event and unsubscribe retries converge duplicate provider events use the immutable event UUID and provider outage cannot affect value processing or checkout
+        failure_modes:
+          - tenant selector and provider key are mismatched
+          - browser or Auth metadata becomes provider or tenant authority
+          - provider unsubscribe or suppression is silently cleared
+          - subscribe ambiguity sends repeated double-opt-in messages
+          - 202 is reported as delivered rather than accepted
+          - raw contact event secret or provider error body is persisted or logged
+        rollout: Deploy private schema and disabled worker first then bind one managed pilot tenant to a least-scope test key and reconcile a bounded canary.
+        rollback: Stop the isolated worker or disable its connection while retaining provider-neutral facts and immutable provider evidence; never reverse consent remotely during rollback.
+        verification:
+          - contract tests for minimized claims authorizations provider responses and contact-smuggling rejection
+          - pgTAP for grants tenant-key binding late consent and entitlement checks supersession suppression lease expiry replay and immutable evidence
+          - local HTTP sink tests for profile event subscribe unsubscribe 429 503 timeout bounded bodies and pre/post-action worker death
+          - exact-head baseline database replay images WooCommerce matrix secret scan and disabled deployment smoke
+      - id: M08-S04-SIGNED-WEBHOOKS
+        status: completed
+        acceptance:
+          - generic outbound webhooks are destination-allowlisted HMAC-signed replay-safe rotatable rate-limited and payload-minimized
+          - one endpoint-bound worker emits the Standard Webhooks v1 id timestamp and exact-body signatures with an optional time-bounded previous signature
+          - HTTPS destination DNS answers are public and socket-pinned redirects are rejected and loopback HTTP exists only in explicit test mode
+          - current entitlement purpose consent endpoint subscription lease payload size and secret fingerprints are rechecked immediately before dispatch
+        failure_modes:
+          - tenant endpoint or current and previous secret fingerprints are mismatched
+          - DNS rebinding redirect or encoded private address reaches an internal service
+          - retry changes the webhook id or signs bytes different from those transmitted
+          - withdrawn or suppressed customer events leave the database
+          - endpoint throughput payload response or retry schedule is unbounded
+          - raw destination payload response signature contact or secret appears in logs or evidence
+        rollout: Deploy private schema and disabled endpoint-isolated worker first then verify an exact local sink before any reviewed HTTPS receiver is enabled.
+        rollback: Stop or disable the endpoint while retaining immutable events delivery attempts and stable delivery IDs; reconcile manual-review attempts before replay.
+        verification:
+          - contract tests for strict event envelopes claims authorizations URL constraints and contact-smuggling rejection
+          - pgTAP for grants RLS endpoint-key binding event subscription consent entitlement dedupe rate limiting leases retries rotation and immutability
+          - loopback HTTP sink tests for exact HMAC bytes stable replay dual signatures 2xx 302 410 429 503 timeout bounded response and worker death
+          - pure destination-policy tests for private reserved mapped IPv4 and IPv6 rejection plus public address acceptance and socket pin selection
+          - exact-head baseline database replay images WooCommerce matrix secret scan and disabled deployment smoke
+        evidence:
+          - ADR-0034 selects Standard Webhooks v1 HMAC signatures endpoint-bound secret fingerprints public-only DNS resolution socket pinning no redirects minimized payloads bounded responses fixed-window rate limits and ten-attempt manual-review exhaustion
+          - 39 focused worker tests use a real loopback sink for exact signatures stable delivery IDs dual-key rotation response classification timeout cancellation and private or reserved destination rejection while 40 focused contract tests verify the strict delivery boundary
+          - exact-head run 32691991986 at ea9aa00 passed the complete baseline both production images a clean 51-migration replay all 42 pgTAP files with 2277 assertions including all 58 focused webhook assertions every concurrency probe and all four WooCommerce runtime cells
+          - the worker profile remains disabled with no production endpoint secret subscription or delivery
+      - id: M08-S05-TEMPLATES-AND-HEALTH
+        status: completed
+        hypothesis: Safe tenant-owned message control and exact delivery health reduce launch mistakes without expanding contact or provider authority.
+        baseline: Six immutable system SMTP templates exist but merchants cannot customize or test them and no merchant notification-health projection exists.
+        targets:
+          - every accepted delivery retains one exact immutable system or tenant template version
+          - test delivery accepts no recipient and resolves only the requesting merchant's verified Auth email at dispatch authorization
+          - health and suppression reads contain zero contact payload destination secret signature provider body worker identity or arbitrary error text
+        acceptance:
+          - merchants can manage versioned English templates send tests and inspect consent suppression retry and dead-letter health without contact or secret disclosure
+          - owner/admin publication is Auth-derived idempotent token-allowlisted audited and cannot mutate accepted or historical content
+          - safe text authoring generates deterministic escaped HTML while arbitrary markup scripts styles URLs files and remote assets fail closed
+          - test email uses the isolated SMTP queue and existing bounded retry or ambiguity policy without blocking normal delivery or value processing
+          - aggregate consent and provider health plus bounded canonical issue evidence remain inspectable when rollout is disabled
+        failure_modes:
+          - browser chooses organization actor recipient version hash active binding or sample value
+          - mutable content changes an accepted delivery after retry
+          - unknown token markup URL or control character survives publication
+          - analyst auditor operator or revoked member publishes content or sends a test
+          - malformed read container is presented as empty healthy state
+          - queue health leaks contact payload destination fingerprint worker reference or provider response
+        rollout: Deploy private version, test-queue, and read boundary disabled first; verify a local SMTP sink and responsive browser fixture before a single reviewed self-hosted tenant test.
+        rollback: Block new versions and tests while retaining system fallback, active binding, historical content, accepted deliveries, immutable attempts, health reads, and every value path.
+        verification:
+          - contract tests for content tokens generated HTML commands exact aggregates and minimized issues
+          - pgTAP for grants RLS Auth roles entitlement idempotency conflicts immutable versions exact delivery binding verified-actor test resolution retries ambiguity and no ledger change
+          - real SMTP sink worker tests for visible test prefix exact active version no arbitrary recipient timeout duplicate and post-authorization ambiguity
+          - server read/action tests for malformed containers role failures and independent catalogue/health degradation
+          - desktop and mobile browser tests for keyboard template editing preview test status consent summary health table dark mode and zero diagnostics
+          - exact-head baseline database replay images WooCommerce matrix secret scan and disabled deployment smoke
+        evidence:
+          - ADR-0035 selects immutable global and tenant template versions, one private active binding, Auth-derived owner/admin publication, deterministic escaped HTML, and an isolated actor-bound SMTP test queue
+          - exact-head run 32836814262 at a377ef7 passed the complete baseline, both production images, a clean 54-migration replay, all 43 pgTAP files with 2340 assertions including all 63 focused template/health assertions, every concurrency probe, and all four WooCommerce runtime cells
+          - focused contracts and worker tests verify exact event tokens, immutable active versions, visible test prefix, no arbitrary recipient, separate normal/test claim routes, deterministic lifecycle outcomes, and real loopback SMTP acceptance
+          - server read/action tests fail closed on malformed containers and role errors while the Hub-style notification studio exposes six templates, safe preview, consent/provider aggregates, and bounded canonical issues
+          - real-component Playwright review passed template switching, dark theme, mobile navigation, key actions, and zero browser diagnostics; synthetic screenshots are retained under docs/plan/evidence/M08
+      - id: M08-S06-CANARY-AND-CLOSE
+        status: in_progress
+        acceptance:
+          - exact-head CI disabled deployment local SMTP sink test-provider canary reconciliation rollback and score at least 90 pass
     risks: [R-027]
-    docs: [docs/integrations/KLAVIYO.md, docs/security/PRIVACY_MODEL.md]
+    docs:
+      [
+        docs/api/NOTIFICATIONS.md,
+        docs/integrations/KLAVIYO.md,
+        docs/security/PRIVACY_MODEL.md,
+        docs/architecture/ADR/0031-provider-neutral-notification-events-and-local-consent-authority.md,
+        docs/architecture/ADR/0032-isolated-database-authorized-smtp-delivery.md,
+        docs/architecture/ADR/0033-tenant-bound-klaviyo-projection-and-consent-sync.md,
+        docs/architecture/ADR/0034-standard-hmac-webhooks-with-pinned-public-destinations.md,
+        docs/architecture/ADR/0035-immutable-tenant-email-templates-and-actor-bound-tests.md,
+        docs/api/OUTBOUND_WEBHOOKS.md,
+        docs/operations/SMTP.md,
+        docs/operations/KLAVIYO.md,
+        docs/operations/WEBHOOKS.md,
+      ]
     evidence: [docs/plan/evidence/M08/README.md]
 
   - id: M09-STOREFRONT-EXPERIENCE
