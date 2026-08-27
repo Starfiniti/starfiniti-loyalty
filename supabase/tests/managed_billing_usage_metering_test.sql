@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(57);
+select plan(59);
 
 grant loyalty_runtime, loyalty_worker to current_user;
 grant usage on schema extensions to loyalty_runtime, loyalty_worker;
@@ -462,7 +462,33 @@ select results_eq($$
   where fact.meter_key = 'api_requests'
 $$, array['rejected'::text], 'permanent provider rejection requires reconciliation');
 
--- 47-50: corrections compensate and remain exact beyond provider retry windows.
+create temporary table usage_held_claim (
+  dispatch_public_id uuid primary key,
+  lease_token uuid not null,
+  attempt_number integer not null
+) on commit drop;
+insert into usage_held_claim
+select * from loyalty_private.claim_managed_billing_usage_dispatches_v1(
+  'billing-usage-worker', 1, 60, '2041-01-05 00:00:50+00'
+);
+select authority.provider_event_name
+from usage_held_claim as claim
+cross join lateral loyalty_private.authorize_managed_billing_usage_dispatch_v1(
+  claim.dispatch_public_id, claim.lease_token, 'billing-usage-worker',
+  '2041-01-05 00:00:51+00'
+) as authority;
+select results_eq($$
+  select result.state, result.next_attempt_at
+  from usage_held_claim as claim
+  cross join lateral loyalty_private.finish_managed_billing_usage_dispatch_v1(
+    claim.dispatch_public_id, claim.lease_token, 'billing-usage-worker',
+    'held', 'policy', null, 'stripe_usage_provider_config_unavailable',
+    '2041-01-05 00:00:52+00'
+  ) as result
+$$, $$ values ('held'::text, '2041-01-05 00:05:52+00'::timestamptz) $$,
+  'policy-held provider attempts cool before another bounded claim');
+
+-- 48-52: corrections compensate and remain exact beyond provider retry windows.
 create temporary table usage_correction_ref (public_id uuid) on commit drop;
 insert into usage_correction_ref select
   loyalty_private.record_managed_billing_usage_correction_v1(
@@ -503,8 +529,17 @@ select throws_ok($$
     'c1000000-0000-4000-8000-000000000502')
 $$, '22003', 'managed billing usage correction total invalid',
   'cumulative corrected source usage cannot become negative');
+select throws_ok($$
+  select loyalty_private.record_managed_billing_usage_correction_v1(
+    (select public_id from loyalty_private.managed_billing_usage_facts
+      where meter_key = 'orders' and source_kind = 'commerce_order'),
+    1, 'operator:m14', 'Reject correction in another UTC billing month',
+    '2041-02-01 00:00:00+00',
+    'c1000000-0000-4000-8000-000000000503')
+$$, '22023', 'managed billing usage correction period invalid',
+  'provider correction timestamp cannot drift from its immutable UTC period');
 
--- 51-57: tenant summary, privacy, immutability, and final zero-ledger proof.
+-- 53-59: tenant summary, privacy, immutability, and final zero-ledger proof.
 set local role authenticated;
 select set_config('request.jwt.claim.sub',
   'c1000000-0000-4000-8000-000000000001', true);

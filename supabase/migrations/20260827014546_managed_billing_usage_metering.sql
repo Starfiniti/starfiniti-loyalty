@@ -621,6 +621,11 @@ begin
     raise exception using errcode = '22023',
       message = 'managed billing usage source fact unavailable';
   end if;
+  if target_effective_at < original.usage_period_start
+    or target_effective_at >= original.usage_period_end then
+    raise exception using errcode = '22023',
+      message = 'managed billing usage correction period invalid';
+  end if;
 
   select * into strict entitlement
   from loyalty_private.resolve_organization_entitlement(
@@ -1103,6 +1108,9 @@ begin
   elsif target_outcome = 'retryable' then
     final_state := 'held';
     final_detail := 'billing_usage_attempt_limit_exhausted';
+  elsif target_outcome = 'held' then
+    final_state := 'held';
+    retry_at := target_at + interval '5 minutes';
   else
     final_state := target_outcome;
   end if;

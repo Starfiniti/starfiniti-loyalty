@@ -4,7 +4,7 @@
 
 `BillingSummaryV1` is the minimized merchant-readable projection for deployment and commercial state. It is not a payment API, subscription mutation API, or entitlement authority. PostgreSQL derives the organization from a public selector plus the authenticated user's current live membership.
 
-M14-S03 adds disabled managed-only Checkout and Customer Portal session creation. It makes no provider request in self-hosted mode, exposes no Stripe customer or Price identifier to the browser, and does not treat a provider redirect or return page as subscription authority. Invoices and metering remain outside this slice.
+M14-S03 adds disabled managed-only Checkout and Customer Portal session creation. M14-S04 adds managed-only immutable source-fact usage metering and a minimized tenant summary. Neither slice makes a provider request in self-hosted mode, exposes Stripe customer, meter, or Price identifiers to the browser, or treats a provider redirect, aggregate, or invoice as application authority.
 
 ## Read contract
 
@@ -79,6 +79,25 @@ The server reserves the operation in `loyalty_private.reserve_managed_billing_se
 Immediately before each customer or session request, `authorize_managed_billing_session_attempt_v1` rechecks membership, entitlement, and provider mode. The narrow client can POST only to Stripe's fixed API origin, pins reviewed API version `2026-02-25.clover`, uses a stable database-derived idempotency key, pins success/cancel/return navigation to `DASHBOARD_PUBLIC_ORIGIN`, limits responses to 32 KiB, and accepts redirects only from Stripe Checkout or Billing Portal origins. Customer creation sends only the opaque operation ID and no email.
 
 `record_managed_billing_session_attempt_v1` appends minimized succeeded, rejected, ambiguous, or held evidence. It stores no redirect URL, provider response, contact, card, payment method, body, or secret. Customer success binds one private account; Checkout or Portal success stores only its provider resource fence. Subscription state and entitlements change only after separately verified webhook processing.
+
+## Managed usage contracts V1
+
+`ManagedBillingUsageSummaryV1` contains one exact UTC month, measurement time, `shadow` or `configured` dispatch mode, and exactly four reviewed meters: orders ingested, ledger-active members, delivered messages, and accepted Service API commands. Quantities and queue counts are decimal strings so JavaScript never narrows PostgreSQL integers. The public projection contains no provider customer, event name, source identity, contact, Price, payload, or response evidence.
+
+PostgreSQL derives one immutable private fact for each reviewed source identity. A duplicate source creates no second fact. A correction is a non-zero compensating fact linked to the original, retains a provider timestamp inside the original UTC period, and cannot make cumulative usage for one source negative. Facts, corrections, provider attempts, and dispatch identity are immutable and create no loyalty ledger effect.
+
+`record_managed_billing_usage_meter_v1` stores externally supplied append-only event-name configuration only in managed mode. It contains no price. `capture_managed_billing_usage_facts_v1` returns before scanning product sources in self-hosted mode. It recognizes:
+
+- the first canonical event for one tenant, commerce connection, and order object;
+- one customer with an immutable loyalty ledger transaction per UTC month;
+- one delivered SMTP message or completed Klaviyo event operation; and
+- one accepted customer command receipt or signed Service API activity event.
+
+The isolated billing worker claims only a public dispatch selector and lease. `authorize_managed_billing_usage_dispatch_v1` then rechecks deployment mode, `managed.billing`, current account, provider mode, current meter version, provider timestamp window, worker, and lease before returning one minimized provider payload. Only after that row exists does the worker read its separate regular-file restricted key and construct the fixed-origin Stripe client.
+
+Each fact has one permanent `m14u_…` identifier used as both the Stripe meter-event identifier and HTTP idempotency key. Exact duplicate responses are accepted. Temporary HTTP failures receive bounded retries; policy holds cool for five minutes; a timeout or interrupted response is retained as ambiguous for reconciliation instead of being replayed after Stripe's bounded duplicate-enforcement window. Signed negative quantities are used only for append-only compensation, which Stripe documents for correcting usage.
+
+The provider is an asynchronous sink. Provider acceptance never changes tenant authority, subscription state, entitlement, loyalty value, refunds, redemption, reconciliation, export, or checkout behavior.
 
 ## Error and privacy behavior
 

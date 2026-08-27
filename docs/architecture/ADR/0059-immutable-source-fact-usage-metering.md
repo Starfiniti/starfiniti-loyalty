@@ -25,12 +25,12 @@ Use immutable source-fact metering with PostgreSQL as the authority.
 - One message fact is created for each accepted SMTP delivery or completed Klaviyo event operation. Suppressed, failed, test, profile, consent, and generic webhook operations are excluded.
 - One API fact is created for each immutable service-customer command receipt or accepted service-API activity event. Duplicate command retries do not create another fact.
 - Source identifiers are reduced to private UUID evidence and SHA-256 identities. Raw commerce object IDs, API keys, idempotency keys, customer contact data, payloads, and provider response bodies are not copied.
-- A correction appends a non-zero compensating fact linked to the original. Existing facts and successful dispatch evidence are never edited.
+- A correction appends a non-zero compensating fact linked to the original and retains an effective timestamp inside the original UTC usage period. Existing facts and successful dispatch evidence are never edited.
 - Usage periods are exact UTC calendar months. Quantities use PostgreSQL `bigint` and public contracts use decimal strings.
 - Dispatch configuration is append-only and externally supplied. No Stripe event name, meter ID, Price ID, or price is seeded by the application.
 - A database lease claims only a public dispatch selector. A second authorization step rechecks managed deployment mode, effective `managed.billing` entitlement, provider configuration, meter version, billing account, live mode, and lease before returning the minimized provider payload.
 - The billing worker reads a regular-file restricted Stripe key only after that authorization returns one row. It uses a fixed Stripe origin, a pinned API version, POST-only requests, bounded responses, timeouts, and no redirects.
-- Provider timeouts become ambiguous and require reconciliation; they are not blindly retried outside the provider's bounded duplicate window. Duplicate-identifier responses are recorded as accepted.
+- Provider timeouts become ambiguous and require reconciliation; they are not blindly retried outside the provider's bounded duplicate window. Duplicate-identifier responses are recorded as accepted. Policy holds cool for five minutes before another bounded claim.
 - Local capture, dispatch, failure, and reconciliation remain isolated from every loyalty-value and checkout path.
 
 The first rollout is shadow mode: facts and summaries are produced while no meter configuration or worker credential exists. Sandbox meter names, aggregation formulas, price bindings, and invoice comparisons remain explicit canary inputs.
