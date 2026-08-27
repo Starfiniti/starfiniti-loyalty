@@ -1,0 +1,164 @@
+schema: starfiniti.operations-evidence.v1
+status: in_progress
+observedAt: 2026-08-27T10:40:35Z
+currentProduction:
+  release: v0.1.11
+  applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
+  monitoringServicesActive: false
+  observedServices:
+    [prometheus, alertmanager, grafana, loki, promtail, node-exporter]
+  historicalVm971TransmitBytes: 3603840581426
+  recentVm971MaximumNetoutBytesPerSecond: 6807
+  interpretation: The VM counter is cumulative evidence from the contained full-stream backup incident; the latest twelve one-minute samples are quiet and no active monitoring plane exists.
+candidate:
+  branch: codex/m15-operations-incidents
+  commit: c2a6fd5ceb80ae4a8b564e19f148d4a63cc85872
+  approvedEnvironment: false
+  operationsClaimApproved: false
+assets:
+  catalog:
+    path: infrastructure/observability/catalog.yaml
+    sha256: 454dd4f2962dd93763e2df739761bf83a0bf5c093785f3ea66fa1b5bc2912582
+  prometheusRules:
+    path: infrastructure/observability/prometheus/rules.yaml
+    sha256: 32696ece562d74bc09f53a797604e9ed2d2edc99fcbfa61121e00774523bcb2b
+  routingPolicy:
+    path: infrastructure/observability/routing-policy.yaml
+    sha256: 9485c0a3a6a1a3e2cce9ba2e64cd221edd6fac2cbd2a41cc14e86efb3751a9f9
+  dashboard:
+    path: infrastructure/observability/grafana/provisioning/starfiniti-dashboards/starfiniti-operations.json
+    sha256: 93dc65b4c9ddf29fbc939c089d0f364940b9ef562b00dcaff0dcb4793ac68940
+claim:
+  enabled: false
+  monitoringActivated: false
+  alertRoutingActivated: false
+  incidentExercisesApproved: false
+  sourceInventoryPath: null
+  sourceInventorySha256: null
+  routeTestPath: null
+  routeTestSha256: null
+  primaryExercisePath: null
+  primaryExerciseSha256: null
+  repeatExercisePath: null
+  repeatExerciseSha256: null
+  reconciliationPath: null
+  reconciliationSha256: null
+checks:
+  - id: production_reality
+    status: passed
+    evidence: Read-only Proxmox inspection found no active Prometheus Alertmanager Grafana Loki Promtail or node-exporter unit; VM 971 cumulative transmit is historical while recent one-minute egress is quiet.
+  - id: catalog_contract
+    status: passed
+    evidence: The versioned catalogue defines twenty-four bounded signals twenty-three alerts four owner roles four billing-independent routes and exact source boundaries.
+  - id: prometheus_rule_parity
+    status: passed
+    evidence: Every catalogue alert has one exact Prometheus rule with matching expression duration owner route severity runbook dashboard and summary.
+  - id: grafana_dashboard_contract
+    status: passed
+    evidence: A locked source-provisioned operations dashboard covers service value tenancy checkout WAL queues workers database backup amplification and evidence freshness without tenant variables.
+  - id: routing_policy_contract
+    status: passed
+    evidence: A vendor-neutral route policy enforces bounded grouping acknowledgement escalation last-known-good reload and independently controlled destinations without storing receiver identity or credentials.
+  - id: bounded_label_guard
+    status: passed
+    evidence: Catalogue and validator allow only bounded operational labels and reject tenant organization workspace customer member order email coupon credential token payload and correlation labels.
+  - id: protected_value_pages
+    status: passed
+    evidence: Ledger tenant privacy checkout WAL-RPO security and ambiguous native-value failures page immediately and cannot be inhibited by billing or entitlement state.
+  - id: backup_amplification_guard
+    status: passed
+    evidence: The backup alert combines more than four-times transfer amplification with more than one GiB transferred; OPS-008 distinguishes cumulative counters internal bridge traffic and active rates.
+  - id: runbook_coverage
+    status: passed
+    evidence: Every alert maps to one of seventeen safe first-action runbooks with explicit immutable-ledger privacy tenancy checkout and recovery boundaries.
+  - id: incident_state_machine
+    status: passed
+    evidence: SEV0 through SEV2 ownership monotonic states communication cadence handoff evidence closure and independent-review rules are explicit.
+  - id: postmortem_contract
+    status: passed
+    evidence: The postmortem template records exact fingerprints timing impact integrity reconciliation failed safeguards owners due dates and durable regression controls.
+  - id: validator_selftest
+    status: passed
+    evidence: Deterministic self-tests reject alert drift forbidden labels unsafe completion stale routes duplicate exercises unexplained value differences and missing approvals.
+  - id: exact_head_ci
+    status: passed
+    evidence: GitHub CI run 33065803812 passed all seven jobs and Security run 33065803818 passed CodeQL supply-chain image SBOM secret policy and isolated DAST jobs at exact documentation head 05c0c203f6bd07b231507f840f4b38c15563cde2 containing implementation candidate c2a6fd5ceb80ae4a8b564e19f148d4a63cc85872.
+  - id: approved_monitoring_environment
+    status: pending
+    evidence: Production monitoring hosts networks retention and a bounded activation window require owner approval.
+  - id: source_inventory
+    status: pending
+    evidence: Exact application worker PostgreSQL backup host edge security and exercise sources must be bound to the candidate and asset digests.
+  - id: source_freshness
+    status: pending
+    evidence: Every required series must be present current and an external dead-man switch must page when the monitoring plane itself disappears.
+  - id: prometheus_targets
+    status: pending
+    evidence: All required production scrape and synthetic targets must be healthy with retention and clock synchronization recorded.
+  - id: alert_rules_loaded
+    status: pending
+    evidence: The exact rules digest must load successfully and a failed reload must preserve the last known-good rules.
+  - id: grafana_provisioned
+    status: pending
+    evidence: The exact locked dashboard digest must be provisioned and independently query every critical signal.
+  - id: owner_roster
+    status: pending
+    evidence: Named primary secondary incident communications security value-integrity and recovery owners plus handoff coverage remain outside Git and require approval.
+  - id: receiver_binding
+    status: pending
+    evidence: Each route class must bind to approved environment-owned destinations without adding receiver credentials or identities to Git.
+  - id: primary_secondary_delivery
+    status: pending
+    evidence: Protected-value and security pages must reach two independently controlled destinations.
+  - id: acknowledgement_escalation
+    status: pending
+    evidence: Test alerts must prove acknowledgement escalation repeat and durable-ticket timing for every route.
+  - id: inhibition_guard
+    status: pending
+    evidence: Live routing must prove billing entitlement and symptom inhibition cannot suppress ledger tenant privacy checkout WAL or ambiguous-value pages.
+  - id: backup_amplification_exercise
+    status: pending
+    evidence: A safe synthetic metrics exercise must trigger OPS-008 without streaming a production database or changing backup sources.
+  - id: fault_signal_coverage
+    status: pending
+    evidence: Approved worker death database delay duplicate delivery provider outage retry storm and recovery exercises must trigger the expected alerts without retry amplification.
+  - id: checkout_independence
+    status: pending
+    evidence: Monitoring alerting dashboard and incident-system outage must leave native WooCommerce checkout and coupons operational.
+  - id: ledger_queue_reconciliation
+    status: pending
+    evidence: Exercise facts effects ledger transactions wallets lots queues leases retries and dead letters require zero unexplained difference.
+  - id: tenant_privacy_reconciliation
+    status: pending
+    evidence: Exercise membership RLS session revocation and privacy replay must fail closed and reconcile without exposing identity evidence.
+  - id: primary_incident_exercise
+    status: pending
+    evidence: The first independently reviewed SEV1 or higher exercise must traverse every incident state and communication cadence.
+  - id: repeat_incident_exercise
+    status: pending
+    evidence: A distinct second exercise with different source evidence and reviewer must pass the same gate.
+  - id: postmortem_actions
+    status: pending
+    evidence: Both exercises require completed postmortems and at least one verified durable regression control for every failed safeguard.
+  - id: independent_reconciliation
+    status: pending
+    evidence: An independent summary must bind source route and both exercise digests with zero value tenant privacy checkout or evidence difference.
+  - id: owner_approval
+    status: pending
+    evidence: Product operations security and value-integrity owners must approve the completed operational gate.
+automaticFails:
+  - monitoring alerting dashboard or incident-system availability becomes a synchronous dependency for checkout or protected loyalty operations
+  - loss of Prometheus or Alertmanager cannot trigger an independently hosted dead-man page
+  - a required signal is absent stale or silently coerced to healthy zero
+  - a metric label dashboard variable annotation or evidence record contains tenant organization workspace customer member order email coupon credential token payload or correlation identity
+  - browser WordPress tenant or billing state supplies monitoring authority owner routing severity suppression or protected-value alert decisions
+  - a ledger tenant privacy checkout WAL-RPO security or ambiguous-value alert is delayed by a for interval or inhibited by billing entitlement or symptom routing
+  - Prometheus rules dashboard routing policy source inventory or exercise evidence does not match its exact digest
+  - receiver credentials destination identities customer data raw payloads unrestricted topology or incident secrets enter Git or general incident evidence
+  - backup transfer amplification is inferred from a cumulative VM counter alone or tested by sending a production database stream
+  - page delivery acknowledgement escalation handoff or secondary destination evidence is absent stale or simulated only in repository tests
+  - an incident is closed from service readiness without ledger queue WooCommerce tenant privacy checkout and recovery reconciliation
+  - an immutable effect is edited deleted duplicated or hidden to clear an alert or reconcile an exercise
+  - either exercise reuses the same report source inventory incident identity reviewer or restricted evidence digest
+  - a Critical or High security tenancy ledger privacy recovery data-loss or checkout failure remains unresolved
+  - completion is claimed without two independent exercises completed postmortems durable regression controls and all owner approvals

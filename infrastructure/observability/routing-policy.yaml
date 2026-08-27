@@ -1,0 +1,37 @@
+schema: starfiniti.alert-routing-policy.v1
+status: requires-environment-binding
+groupBy: [service, severity, route]
+groupWaitSeconds: 30
+groupIntervalSeconds: 300
+routes:
+  - id: protected-value-page
+    match: { route: protected-value-page }
+    receiverClass: primary-and-secondary-pager
+    continue: true
+    acknowledgementMinutes: 5
+    escalationMinutes: 10
+  - id: security-page
+    match: { route: security-page }
+    receiverClass: security-and-owner-pager
+    continue: true
+    acknowledgementMinutes: 5
+    escalationMinutes: 10
+  - id: platform-page
+    match: { route: platform-page }
+    receiverClass: primary-platform-pager
+    continue: true
+    acknowledgementMinutes: 10
+    escalationMinutes: 20
+  - id: operations-ticket
+    match: { route: operations-ticket }
+    receiverClass: durable-operations-queue
+    continue: false
+    acknowledgementMinutes: 240
+    escalationMinutes: 480
+requirements:
+  - Environment-owned Alertmanager configuration binds each receiver class to at least two independently controlled destinations for page routes.
+  - Receiver URLs credentials phone numbers email addresses and person identities remain outside source control.
+  - Billing subscription and entitlement labels are not routing conditions for protected-value security recovery or checkout alerts.
+  - Inhibition may suppress symptom alerts only while the root alert is firing; it may never suppress ledger tenant privacy checkout or WAL-RPO alerts.
+  - Configuration validation and test-alert delivery must pass before reload; a failed reload leaves the last known-good configuration active.
+  - The monitoring plane sends a continuous heartbeat to an independently hosted dead-man switch; missing heartbeat pages the platform route without depending on Prometheus or Alertmanager availability.

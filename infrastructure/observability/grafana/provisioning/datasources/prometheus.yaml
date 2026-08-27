@@ -1,0 +1,18 @@
+apiVersion: 1
+deleteDatasources:
+  - name: Starfiniti Prometheus
+    orgId: 1
+datasources:
+  - name: Starfiniti Prometheus
+    uid: starfiniti-prometheus
+    type: prometheus
+    access: proxy
+    url: ${STARFINITI_PROMETHEUS_URL}
+    editable: false
+    isDefault: true
+    jsonData:
+      httpMethod: POST
+      manageAlerts: false
+      prometheusType: Prometheus
+      prometheusVersion: 3.5.0
+      timeInterval: 30s

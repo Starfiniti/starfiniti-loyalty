@@ -3076,8 +3076,68 @@ tasks:
           ]
       - id: M15-S05-OPERATIONS-AND-INCIDENTS
         title: Complete observability ownership and incident exercises
-        status: planned
+        status: in_progress
         dependencies: [M15-S02-FAULT-INJECTION, M15-S04-CLEAN-ROOM-RECOVERY]
+        hypothesis: A versioned bounded-label signal catalogue with exact Prometheus rules locked dashboards independent paging and monotonic incident evidence can detect every protected-value failure without turning monitoring into value authority or checkout dependency.
+        baseline: Production has application readiness and backup service checks but no active Prometheus Alertmanager Grafana Loki Promtail or node-exporter service; the historical 3.60 TB VM 971 transmit counter required manual diagnosis and no measured alert delivery escalation or incident exercise exists.
+        targets:
+          [
+            every availability latency queue provider database WAL backup ledger tenant privacy checkout security and evidence-freshness signal has one bounded source owner route runbook threshold and dashboard,
+            ledger tenant privacy checkout WAL-RPO security and ambiguous-value failures page immediately through billing-independent routes,
+            every required series is present and fresh and every page route proves primary secondary acknowledgement escalation repeat and handoff behavior,
+            two distinct incident exercises traverse every state and reconcile ledger queues WooCommerce tenancy privacy checkout and recovery with zero unexplained difference,
+          ]
+        owner_inputs:
+          [
+            approved production monitoring hosts network retention and activation window,
+            named primary secondary incident communications security value-integrity and recovery roster outside Git,
+            environment-owned receiver destinations and credentials,
+            approved synthetic alert and incident exercise windows plus independent reviewers,
+          ]
+        acceptance:
+          [
+            the exact catalogue rules routing policy and locked Grafana dashboard validate and every alert maps to a bounded signal owner route severity runbook and summary,
+            telemetry contains no tenant customer order coupon credential token payload or correlation labels and missing time series never become healthy zero,
+            backup amplification detects both more than four-times changed-byte transfer and more than one GiB without relying on cumulative VM counters,
+            production sources routes dashboards owners and last-known-good reload behavior bind to exact candidate and asset digests,
+            an independently hosted dead-man switch pages when the monitoring plane itself stops,
+            protected pages reach two independent destinations and prove acknowledgement escalation repeat inhibition safety and handoff timing,
+            monitoring and incident-system outages preserve WooCommerce checkout refunds releases redemption account access exports and reconciliation,
+            two independently reviewed exercises and postmortems bind distinct evidence and prove zero ledger queue WooCommerce tenant privacy checkout or recovery difference,
+            every failed safeguard creates a verified durable regression control and product operations security and value-integrity owners approve closure,
+          ]
+        failure_modes:
+          [
+            monitoring becomes value authority or a synchronous checkout dependency,
+            absent or stale telemetry is coerced to zero or a critical alert is delayed or inhibited by billing state,
+            high-cardinality or identifying labels leak tenant customer commerce credential or payload data,
+            rules dashboards sources routes or exercises drift from their approved digests,
+            an alert reaches one destination but acknowledgement escalation secondary coverage or handoff is unproved,
+            a cumulative network counter is mistaken for an active transfer or a backup alert test streams production data,
+            service readiness closes an incident before immutable value tenant privacy checkout and recovery reconciliation,
+            repeated exercises reuse evidence reviewers or incident identity and conceal an unresolved safeguard,
+          ]
+        security_boundary: Metrics are aggregate evidence with a fixed bounded label allowlist and never authorize value tenant membership severity owner routing or incident closure. Receiver destinations credentials and named people remain outside Git. Browser WordPress tenant and billing inputs provide no monitoring authority. Critical protected-value alerts are billing-independent and their evidence is digest-bound minimized and independently reviewed.
+        rollout: Deploy sources rules routing and dashboards disabled from production mutation; validate configuration then canary synthetic probes and each route before enabling paging. Exercise backup amplification only through synthetic metrics and run two approved non-production fault/incident windows before the operations claim.
+        rollback: Disable new scrape and notification targets and restore the last known-good validated configuration while preserving historical alerts incidents postmortems and evidence; never delete a finding weaken a threshold or suppress a protected alert to regain green status.
+        verification:
+          [
+            npm run operations:validate,
+            npm run check,
+            exact-head GitHub Actions CI and Security workflows,
+            approved production source route dashboard and two-exercise evidence plus independent reconciliation,
+          ]
+        evidence:
+          [
+            docs/plan/evidence/M15/operations.yaml,
+            infrastructure/observability/catalog.yaml,
+            infrastructure/observability/prometheus/rules.yaml,
+            infrastructure/observability/routing-policy.yaml,
+            infrastructure/observability/grafana/provisioning/starfiniti-dashboards/starfiniti-operations.json,
+            docs/architecture/ADR/0066-bounded-observability-and-independent-incident-evidence.md,
+            docs/operations/INCIDENT_MANAGEMENT.md,
+            docs/operations/RUNBOOKS.md,
+          ]
       - id: M15-S06-GA-CANARY-AND-CLOSE
         title: Reconcile the 30-day canary and close the GA gate
         status: planned
