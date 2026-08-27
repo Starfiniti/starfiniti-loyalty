@@ -527,7 +527,7 @@ begin
       source.organization_id,
       'managed.billing',
       source.source_subject_public_id::text,
-      target_observed_at
+      source.occurred_at
     ) as entitlement
     where entitlement.deployment_mode = 'managed'
       and entitlement.enabled
@@ -1144,6 +1144,7 @@ declare
   target_period_end timestamptz;
   target_dispatch_mode text := 'shadow';
   target_live_mode boolean;
+  entitlement record;
 begin
   if target_period_start is null or target_at is null
     or target_period_start <> pg_catalog.date_trunc(
@@ -1163,6 +1164,12 @@ begin
     return;
   end if;
 
+  select * into strict entitlement
+  from loyalty_private.resolve_organization_entitlement(
+    target_organization_id, 'managed.billing',
+    target_organization_public_id::text, target_at
+  );
+
   select account.live_mode into target_live_mode
   from loyalty_private.managed_billing_account_versions as account
   where account.organization_id = target_organization_id
@@ -1171,7 +1178,8 @@ begin
   order by account.effective_from desc, account.id desc
   limit 1;
 
-  if target_live_mode is not null
+  if entitlement.deployment_mode = 'managed' and entitlement.enabled
+    and target_live_mode is not null
     and coalesce((
       select candidate.enabled
         and candidate.live_mode = target_live_mode

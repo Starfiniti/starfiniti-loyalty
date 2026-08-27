@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(60);
+select plan(62);
 
 grant loyalty_runtime, loyalty_worker to current_user;
 grant usage on schema extensions to loyalty_runtime, loyalty_worker;
@@ -144,7 +144,7 @@ select ok(
 select results_eq($$ select count(*)::bigint from loyalty.ledger_transactions $$,
   array[0::bigint], 'usage schema creates no loyalty ledger effect');
 
--- 25-27: self-hosted exits before source or provider evidence.
+-- 25-26: self-hosted exits before source or provider evidence.
 set local role loyalty_worker;
 select results_eq($$
   select count(*)::bigint
@@ -263,6 +263,73 @@ select results_eq($$
   select count(*)::bigint from loyalty_private.managed_billing_account_versions
 $$, array[1::bigint], 'usage tenant has one private provider account');
 
+insert into loyalty.workspaces (organization_id, slug, name)
+select id, 'usage-shop', 'Usage source-time shop'
+from loyalty.organizations where slug = 'billing-usage-one';
+insert into loyalty.commerce_connections (
+  public_id, organization_id, workspace_id, external_store_id, display_name,
+  current_key_version, signing_material_ref
+)
+select 'c1000000-0000-4000-8000-000000000420', organization.id,
+  workspace.id, 'billing-usage-source-time-store', 'Usage source-time store',
+  'v1', 'vault://billing-usage-source-time'
+from loyalty.organizations as organization
+join loyalty.workspaces as workspace
+  on workspace.organization_id = organization.id
+where organization.slug = 'billing-usage-one'
+  and workspace.slug = 'usage-shop';
+insert into loyalty_private.commerce_delivery_inbox (
+  receipt_id, organization_id, connection_id, source_delivery_id,
+  envelope_version, source_event_id, event_type, source_object_id,
+  occurred_at, delivered_at, key_version, nonce, body_sha256, raw_body,
+  state, accepted_at, last_received_at
+)
+select source.receipt_id, organization.id, connection.id,
+  source.delivery_id, '1', source.event_id,
+  'commerce.order.status_changed', source.object_id,
+  source.source_at, source.source_at, 'v1', source.nonce, repeat('a', 64),
+  '{}'::jsonb, 'applied', source.source_at, source.source_at
+from loyalty.organizations as organization
+join loyalty.commerce_connections as connection
+  on connection.organization_id = organization.id
+cross join (values
+  ('c1000000-0000-4000-8000-000000000421'::uuid,
+    'usage-before-activation', 'usage-event-before-activation',
+    'usage-order-before-activation', 'usage-nonce-before-activation',
+    '2040-12-31 23:59:59+00'::timestamptz),
+  ('c1000000-0000-4000-8000-000000000422'::uuid,
+    'usage-after-activation', 'usage-event-after-activation',
+    'usage-order-after-activation', 'usage-nonce-after-activation',
+    '2041-01-05 00:00:00+00'::timestamptz)
+) as source(receipt_id, delivery_id, event_id, object_id, nonce, source_at)
+where organization.slug = 'billing-usage-one';
+insert into loyalty_private.canonical_commerce_events (
+  public_id, organization_id, connection_id, delivery_inbox_id,
+  source_event_id, normalization_version, event_type, source_object_id,
+  occurred_at, payload, effect_state, effect_processed_at, created_at
+)
+select source.public_id, inbox.organization_id, inbox.connection_id, inbox.id,
+  inbox.source_event_id, 'v1', inbox.event_type, inbox.source_object_id,
+  inbox.occurred_at, '{}'::jsonb, 'applied', source.source_at,
+  source.source_at
+from loyalty_private.commerce_delivery_inbox as inbox
+join (values
+  ('usage-before-activation'::text,
+    'c1000000-0000-4000-8000-000000000423'::uuid,
+    '2040-12-31 23:59:59+00'::timestamptz),
+  ('usage-after-activation'::text,
+    'c1000000-0000-4000-8000-000000000424'::uuid,
+    '2041-01-05 00:00:00+00'::timestamptz)
+) as source(delivery_id, public_id, source_at)
+  on source.delivery_id = inbox.source_delivery_id;
+select results_eq($$
+  select meter_key, captured_count
+  from loyalty_private.capture_managed_billing_usage_facts_v1(
+    100, '2041-01-05 00:00:01+00'
+  )
+$$, $$ values ('orders'::text, 1::bigint) $$,
+  'capture bills only the immutable order source after managed activation');
+
 insert into loyalty_private.managed_billing_usage_facts (
   organization_id, meter_key, source_kind, source_subject_public_id,
   source_evidence_public_id, source_reference_sha256, quantity,
@@ -279,9 +346,6 @@ select organization.id, source.meter_key, source.source_kind,
   '2041-01-05 00:00:00+00'
 from loyalty.organizations as organization
 cross join (values
-  ('orders'::text, 'commerce_order'::text,
-    'c1000000-0000-4000-8000-000000000401'::uuid,
-    'c1000000-0000-4000-8000-000000000411'::uuid),
   ('active_members'::text, 'active_member_month'::text,
     'c1000000-0000-4000-8000-000000000402'::uuid,
     'c1000000-0000-4000-8000-000000000412'::uuid),
@@ -539,7 +603,7 @@ select throws_ok($$
 $$, '22023', 'managed billing usage correction period invalid',
   'provider correction timestamp cannot drift from its immutable UTC period');
 
--- 53-60: tenant summary, privacy, immutability, and final zero-ledger proof.
+-- 54-62: tenant summary, privacy, immutability, and final zero-ledger proof.
 set local role authenticated;
 select set_config('request.jwt.claim.sub',
   'c1000000-0000-4000-8000-000000000001', true);
@@ -561,8 +625,28 @@ select results_eq($$
   )
 $$, array[0::bigint], 'membership cannot read another tenant usage summary');
 reset role;
+select loyalty_private.set_organization_entitlement(
+  'c1000000-0000-4000-8000-000000000100', 'managed.billing', 'disabled', null,
+  'canary', 'operator:m14', 'Disable usage dispatch for projection test',
+  '2041-01-05 00:04:01+00', null);
+set local role authenticated;
+select set_config('request.jwt.claim.sub',
+  'c1000000-0000-4000-8000-000000000001', true);
+select results_eq($$
+  select usage_summary ->> 'dispatchMode'
+  from loyalty.get_my_managed_billing_usage_summary_v1(
+    'c1000000-0000-4000-8000-000000000100',
+    '2041-01-01 00:00:00+00', '2041-01-05 00:04:02+00'
+  )
+$$, array['shadow'::text],
+  'disabled effective tenant entitlement returns usage to shadow mode');
+reset role;
+select loyalty_private.set_organization_entitlement(
+  'c1000000-0000-4000-8000-000000000100', 'managed.billing', 'enabled', null,
+  'canary', 'operator:m14', 'Restore usage dispatch for provider-mode test',
+  '2041-01-05 00:04:03+00', null);
 select loyalty_private.record_managed_billing_provider_configuration_v1(
-  false, false, '2041-01-05 00:04:01+00', 'operator:m14',
+  false, false, '2041-01-05 00:04:04+00', 'operator:m14',
   'Disable provider after usage projection test',
   'c1000000-0000-4000-8000-000000000504');
 set local role authenticated;
@@ -572,7 +656,7 @@ select results_eq($$
   select usage_summary ->> 'dispatchMode'
   from loyalty.get_my_managed_billing_usage_summary_v1(
     'c1000000-0000-4000-8000-000000000100',
-    '2041-01-01 00:00:00+00', '2041-01-05 00:04:02+00'
+    '2041-01-01 00:00:00+00', '2041-01-05 00:04:05+00'
   )
 $$, array['shadow'::text],
   'disabled effective provider configuration returns usage to shadow mode');

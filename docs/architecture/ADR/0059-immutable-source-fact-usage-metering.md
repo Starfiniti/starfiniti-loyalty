@@ -24,6 +24,7 @@ Use immutable source-fact metering with PostgreSQL as the authority.
 - One active-member fact is created for each distinct tenant customer and UTC month containing an immutable loyalty ledger transaction for that customer.
 - One message fact is created for each accepted SMTP delivery or completed Klaviyo event operation. Suppressed, failed, test, profile, consent, and generic webhook operations are excluded.
 - One API fact is created for each immutable service-customer command receipt or accepted service-API activity event. Duplicate command retries do not create another fact.
+- Source eligibility resolves managed deployment and tenant entitlement at the immutable source occurrence time; enabling billing later never backfills activity from before activation.
 - Source identifiers are reduced to private UUID evidence and SHA-256 identities. Raw commerce object IDs, API keys, idempotency keys, customer contact data, payloads, and provider response bodies are not copied.
 - A correction appends a non-zero compensating fact linked to the original and retains an effective timestamp inside the original UTC usage period. Existing facts and successful dispatch evidence are never edited.
 - Usage periods are exact UTC calendar months. Quantities use PostgreSQL `bigint` and public contracts use decimal strings.
