@@ -1594,7 +1594,12 @@ tasks:
         replay creates one effect,
         currency reconciliation is exact,
       ]
-    owner_inputs: [approved exchange-rate provider before live multi-currency]
+    owner_inputs:
+      [
+        approved release and bounded ecosystem canary window,
+        approved real multi-store WooCommerce pilot,
+        approved exchange-rate provider before live multi-currency,
+      ]
     acceptance:
       [
         groups rate evidence service accounts keys limits webhooks clients and integration operations pass,
@@ -1869,7 +1874,7 @@ tasks:
         metrics:
           - unexplained topology identity wallet currency event ledger quota endpoint delivery audit checkout or privacy differences = 0
           - implicit wallet shares email-derived links caller-supplied rates duplicate effects and reusable material disclosures = 0
-          - production checks passed = 41 before closeout
+          - production checks passed = 44 before closeout
           - score total >= 90 and each category ratio >= 0.8
         acceptance:
           - isolated and explicitly shared Starfiniti canaries reconcile wallets events currencies API requests and webhooks with module score at least 90 and every category above its floor
@@ -1897,6 +1902,9 @@ tasks:
           - fresh read-only production health source topology identity conversion event ledger quota endpoint delivery and audit snapshots
           - controlled outage rollback and observation evidence with zero unexplained reconciliation difference
         evidence:
+          - integrated exact-head CI run 33101922228 and Security run 33101922223 passed at f171770 with all eleven checks green
+          - docs/plan/evidence/M11/canary.yaml records 44 checks four approvals nine path and digest bound production artifacts fixed automatic failures and deterministic false-completion self-tests
+          - eleven repository and read-only controls pass at provisional score 90 while approved provider deployment canaries reconciliation rollback observation and the operability floor remain pending
           - docs/plan/evidence/M11/canary.yaml
           - docs/plan/evidence/M11/README.md
           - current provisional score is 90 of 100 but operability is 3 of 10 and therefore below the required category floor until release canaries rollback and observation pass

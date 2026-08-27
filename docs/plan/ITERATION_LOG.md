@@ -1,5 +1,14 @@
 # Iteration Log
 
+## 2026-08-27 — M11 digest-bound ecosystem closeout hardening
+
+- Adversarially reviewed the 41-check ecosystem gate and found no production artifacts, mutable failure prose, only two approvals, key-only sensitive scanning, and narrow false-completion/sensitive-key tests despite broad topology, identity, currency, API, webhook, and client functionality.
+- Replaced it with a 44-check gate adding explicit pilot/canary approvals and non-canary isolation while retaining every topology, connector, link, rate, order/refund, service account, replay, quota, client, webhook, outage, latency, rollback, observation, and final reconciliation boundary.
+- Added nine unique path- and SHA-256-bound minimized JSON artifacts, descriptor-first bounded reads, exact candidate/check coverage, forbidden sensitive keys/values, sixteen fixed automatic failures, five completed prerequisite slices, task/score synchronization, four approval booleans, and an attainable positive fixture.
+- Corruption fixtures reject approval drift, missing/duplicate/forward-looking checks, scores, short commits, sensitive material, weakened rules, missing/unsafe/reused/digest-drifted artifacts, unsafe public baselines, incomplete slices, prose-only closure, and category-floor bypass.
+- Exact integrated candidate `f171770` passed CI `33101922228` and Security `33101922223`; the read-only artifact records only public/Auth/REST availability and running application/Supabase VMs without mutation.
+- The honest M11 score remains 90/100, with 11 controls passed and 33 pending. Operability is 3/10 and blocks completion until approved release/pilot/provider inputs, recovery, disabled deployment, sequential canaries, exact reconciliation, rollback, and observation pass.
+
 ## 2026-08-27 — M10 digest-bound analytics closeout hardening
 
 - Adversarially reviewed the legacy M10 closeout and found no production artifacts, mutable automatic-failure prose, only two approvals, key-only sensitive scanning, stale operator evidence, and a narrow false-completion test.
