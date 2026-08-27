@@ -2852,7 +2852,20 @@ tasks:
         incident exercise,
         final npm and database/plugin/image/deploy gates,
       ]
-    risks: [R-004, R-005, R-008, R-030, R-032, R-045, R-046, R-047, R-048]
+    risks:
+      [
+        R-004,
+        R-005,
+        R-008,
+        R-030,
+        R-032,
+        R-045,
+        R-046,
+        R-047,
+        R-048,
+        R-049,
+        R-050,
+      ]
     docs:
       [
         docs/operations/BACKUP_RESTORE.md,
@@ -3140,7 +3153,7 @@ tasks:
           ]
       - id: M15-S06-GA-CANARY-AND-CLOSE
         title: Reconcile the 30-day canary and close the GA gate
-        status: planned
+        status: in_progress
         dependencies:
           [
             M15-S01-CAPACITY-ENVELOPE,
@@ -3148,6 +3161,63 @@ tasks:
             M15-S03-SUPPLY-CHAIN-AND-SECURITY,
             M15-S04-CLEAN-ROOM-RECOVERY,
             M15-S05-OPERATIONS-AND-INCIDENTS,
+          ]
+        hypothesis: One immutable release observed for at least 720 consecutive UTC hours with thirty complete daily intervals exact cross-module reconciliation evidence-bound claims category floors and independent approval can establish GA without turning elapsed time or a weighted score into safety authority.
+        baseline: Repository controls are extensive but every M15 live manifest remains in progress production runs v0.1.11 no approved real WooCommerce pilot has completed and no thirty-day canary claim review or GA approval exists.
+        targets:
+          [
+            one approved Starfiniti pilot tenant completes at least thirty consecutive UTC daily intervals on one immutable release with no unreconstructable evidence gap,
+            every daily and final ledger queue WooCommerce tenant privacy checkout data-loss provider and cross-module difference is zero,
+            capacity SLO RPO RTO security incident operations and recovery claims bind current exact-release evidence,
+            M00 through M15 reach at least 90 of 100 with every relevant category at least 80 percent and no deterministic failure,
+            every publishable product claim maps to exact evidence and six independent owner roles approve GA,
+          ]
+        owner_inputs:
+          [
+            approved immutable release one Starfiniti pilot tenant and 30-day exposure window,
+            approved production recovery point rollback authority monitoring routes and daily evidence store,
+            completed capacity fault security recovery operations and all prior module closeouts,
+            independent final reviewer and product engineering security operations value-integrity and owner approvals,
+          ]
+        acceptance:
+          [
+            canonical plan claims catalogue ADR runbook and 50-check manifest validate and reject false completion,
+            exact release images connector migrations configuration and five prerequisite manifests bind to one release inventory,
+            a 720-hour or longer journal contains at least thirty complete consecutive UTC daily observations with one pilot tenant complete fresh sources and zero protected differences,
+            disabled deployment isolation public baseline self-hosted independence WooCommerce matrix checkout outages rollback rehearsal and rollback decision exercise pass,
+            final events effects ledger queues native coupons referrals campaigns notifications analytics ecosystem migration identity billing incidents and data-loss reconciliation is exact,
+            all modules prerequisite manifests scores category floors findings claims independent review M16 handoff and owner approvals pass before status becomes complete,
+          ]
+        failure_modes:
+          [
+            a calendar timer substitutes for daily fresh evidence or an evidence gap is treated as healthy,
+            release configuration value entitlement or monitoring drift occurs without restarting the window,
+            a score or resolved availability symptom overrides value tenancy privacy recovery checkout data-loss or security failure,
+            a stale incomplete reused mutable unsafe or sensitive artifact supports completion,
+            a public claim exceeds exact evidence or conceals Shopify English-only and stored-value limitations,
+            rollback loses accepted facts edits immutable value blocks protected paths or hides failed evidence,
+          ]
+        security_boundary: Canary telemetry manifests scores and approvals are evidence only and grant no tenant membership value release rollback claim or GA authority. PostgreSQL and exact owner-controlled release processes remain authoritative. Repository artifacts contain no tenant customer order coupon credential receiver contact payload or reusable identity data. Billing entitlement browser WordPress email domain and IdP metadata cannot suppress protected gates.
+        rollout: Merge the exact reviewed stack create a fresh recovery point deploy disabled prove provenance baseline monitoring and rollback then enable one approved Starfiniti tenant. Start the measured window only after all prerequisites pass. Stop and restart on material drift deterministic failure or unreconstructable evidence loss.
+        rollback: Disable the tenant canary and immutable images while preserving accepted ingestion refunds releases redemption reconciliation account access exports checkout audit and all failed evidence. Restore the exact last known-good release and forward-fix additive migrations; never rewrite history to recover a green gate.
+        verification:
+          [
+            npm run ga:validate,
+            npm run check,
+            npm run db:validate,
+            npm run secrets:scan,
+            npm run audit:prod,
+            npm run licenses,
+            exact-head GitHub Actions CI and Security workflows,
+            approved 30-day journal five digest-bound artifacts independent reconciliation and all owner approvals,
+          ]
+        evidence:
+          [
+            docs/plan/evidence/M15/ga-canary.yaml,
+            infrastructure/testing/ga-canary/plan.yaml,
+            docs/product/GA_CLAIMS.yaml,
+            docs/operations/GA_CANARY.md,
+            docs/architecture/ADR/0067-evidence-bound-thirty-day-ga-canary.md,
           ]
 
   - id: M16-CONTINUOUS-IMPROVEMENT

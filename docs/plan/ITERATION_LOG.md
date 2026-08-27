@@ -1,5 +1,14 @@
 # Iteration Log
 
+## 2026-08-27 — M15 evidence-bound GA canary and claims
+
+- Accepted ADR-0067 after comparing calendar uptime, broad rollout/support-volume observation, score substitution, and pre-evidence marketing claims with a one-pilot evidence-bound canary. Primary Google SRE and NIST SSDF guidance informs exact-release canarying, evaluation, rollback, audit trail, and provenance.
+- Added a canonical one-pilot, immutable-release GA plan: at least 720 consecutive UTC hours, thirty complete daily intervals, restart on material release/configuration/value/entitlement/monitoring drift, eleven daily and fifteen final zero-difference fields, six approval roles, five exact artifacts, and deterministic automatic failures.
+- Added thirteen default-non-publishable product claims mapped to exact evidence. Shopify stays deferred, English stays the only active language, and store credit, gift cards, cash redemption, and cash-like stored value stay excluded.
+- Added the GA runbook for prerequisite closure, daily observations, disabled-first exposure, outage and rollback proof, full cross-module reconciliation, claims review, M15 and whole-product score/category floors, independent review, owner approval, and M16 handoff.
+- Added a 50-check fail-closed manifest and validator. Its positive fixture proves completion is attainable; adversarial cases reject pending completion, a short or missing day, material drift, nonzero ledger differences, open High findings, category-floor failure, non-publishable claims, unsafe/reused artifacts, incomplete modules, and missing approvals.
+- Repository evidence honestly records four passed controls, 46 pending live/module/approval gates, and a provisional M15 score of 77/100 with performance and operability below their floors. No release, deployment, tenant enablement, public claim, approval, checkout path, or loyalty value changed.
+
 ## 2026-08-27 — M15 bounded observability and incident evidence
 
 - Reconstructed production read-only: Prometheus, Alertmanager, Grafana, Loki, Promtail, and node-exporter units are inactive; VM 971's approximately 3.60 TB transmit value is cumulative incident history, while the latest twelve one-minute samples peak below 7 KB/s. Monitoring absence and cumulative counters are now explicit evidence states rather than health conclusions.
