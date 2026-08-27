@@ -2,7 +2,6 @@
 
 import {
   programmeDefinitionV2,
-  programmeRewardDefinitionV2,
   type ProgrammeRewardDefinitionV2,
   type RewardAvailabilityV2,
 } from "@starfiniti/contracts";
@@ -20,9 +19,21 @@ import {
   Truck,
   Users,
 } from "lucide-react";
-import { useActionState, useMemo, useState } from "react";
+import {
+  type FormEvent,
+  useActionState,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { saveProgrammeDraft, type ProgrammeActionState } from "./actions";
 import { initialProgrammeDefinitionV2 } from "./earning-rules-model";
+import {
+  expandedRewardValidationIssues,
+  isVersionedRewardCandidate,
+  replaceCollapsedRewardIssues,
+  validationPathHasIssue,
+} from "./expanded-rewards-validation";
 
 type RewardTemplate =
   | "fixed_discount"
@@ -38,6 +49,7 @@ type ManualReward = Extract<
 type NativeReward = Exclude<ProgrammeRewardDefinitionV2, ManualReward>;
 
 const idle: ProgrammeActionState = { kind: "idle", message: "" };
+const validationSummaryId = "expanded-rewards-validation-summary";
 
 const templates: ReadonlyArray<
   Readonly<{
@@ -229,7 +241,7 @@ function rewardIcon(kind: RewardTemplate) {
 function isExpandedReward(
   value: unknown,
 ): value is ProgrammeRewardDefinitionV2 {
-  return programmeRewardDefinitionV2.safeParse(value).success;
+  return isVersionedRewardCandidate(value);
 }
 
 function isManualReward(
@@ -261,8 +273,13 @@ export function ExpandedRewardsEditor({
   );
   const [rewards, setRewards] = useState(initial.definition.rewards);
   const [state, action, pending] = useActionState(saveProgrammeDraft, idle);
+  const formRef = useRef<HTMLFormElement>(null);
   const definition = { ...initial.definition, rewards };
   const validation = programmeDefinitionV2.safeParse(definition);
+  const rewardIssues = expandedRewardValidationIssues(rewards);
+  const validationIssues = validation.success
+    ? []
+    : replaceCollapsedRewardIssues(validation.error.issues, rewardIssues);
   const expandedRewards = rewards.filter(isExpandedReward);
   const manualCount = expandedRewards.filter(
     (reward) => reward.configuration.fulfilmentMode === "manual",
@@ -312,10 +329,47 @@ export function ExpandedRewardsEditor({
     } as ProgrammeRewardDefinitionV2);
   }
 
+  function validationField(path: string) {
+    const invalid =
+      !validation.success && validationPathHasIssue(validationIssues, path);
+
+    return {
+      "aria-describedby": invalid ? validationSummaryId : undefined,
+      "aria-invalid": invalid || undefined,
+      "data-validation-path": path,
+    };
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    if (validation.success) return;
+
+    event.preventDefault();
+    const issuePath = validationIssues[0]?.path.join(".") ?? "";
+    const fields = Array.from(
+      formRef.current?.querySelectorAll<HTMLElement>(
+        "[data-validation-path]",
+      ) ?? [],
+    );
+    const firstInvalidField = fields.find((field) => {
+      const fieldPath = field.dataset.validationPath ?? "";
+      return (
+        issuePath === fieldPath ||
+        issuePath.startsWith(`${fieldPath}.`) ||
+        fieldPath.startsWith(`${issuePath}.`)
+      );
+    });
+
+    (
+      firstInvalidField ?? document.getElementById(validationSummaryId)
+    )?.focus();
+  }
+
   return (
     <form
       action={action}
       className="programme-workflow expanded-rewards-workflow"
+      onSubmit={handleSubmit}
+      ref={formRef}
     >
       <input name="programmeId" type="hidden" value={programmeId} />
       <input name="operationId" type="hidden" value={operationId} />
@@ -418,7 +472,10 @@ export function ExpandedRewardsEditor({
                 const nativeReward = isNativeReward(reward) ? reward : null;
                 const manual = manualReward !== null;
                 return (
-                  <fieldset className="expanded-reward-card" key={reward.code}>
+                  <fieldset
+                    className="expanded-reward-card"
+                    key={`${index}:${reward.kind}`}
+                  >
                     <legend>Reward {index + 1}</legend>
                     <div className="expanded-reward-card-heading">
                       <div className="reward-kind-icon" aria-hidden="true">
@@ -457,6 +514,7 @@ export function ExpandedRewardsEditor({
                       <label>
                         <span>Customer-facing name</span>
                         <input
+                          {...validationField(`rewards.${index}.name`)}
                           disabled={!canEdit}
                           maxLength={200}
                           value={reward.name}
@@ -471,6 +529,7 @@ export function ExpandedRewardsEditor({
                       <label>
                         <span>Internal code</span>
                         <input
+                          {...validationField(`rewards.${index}.code`)}
                           disabled={!canEdit}
                           maxLength={80}
                           value={reward.code}
@@ -485,6 +544,7 @@ export function ExpandedRewardsEditor({
                       <label>
                         <span>Points cost</span>
                         <input
+                          {...validationField(`rewards.${index}.costPoints`)}
                           disabled={!canEdit}
                           min="1"
                           step="1"
@@ -502,6 +562,9 @@ export function ExpandedRewardsEditor({
                         <label>
                           <span>Coupon validity (days)</span>
                           <input
+                            {...validationField(
+                              `rewards.${index}.configuration.validityDays`,
+                            )}
                             disabled={!canEdit}
                             max="365"
                             min="1"
@@ -522,6 +585,9 @@ export function ExpandedRewardsEditor({
                         <label>
                           <span>Fulfilment SLA (days)</span>
                           <input
+                            {...validationField(
+                              `rewards.${index}.configuration.fulfilmentSlaDays`,
+                            )}
                             disabled={!canEdit}
                             max="90"
                             min="1"
@@ -545,6 +611,9 @@ export function ExpandedRewardsEditor({
                       <label className="expanded-reward-inline-field">
                         <span>Discount value (minor currency units)</span>
                         <input
+                          {...validationField(
+                            `rewards.${index}.configuration.amountMinor`,
+                          )}
                           disabled={!canEdit}
                           min="1"
                           type="number"
@@ -565,6 +634,9 @@ export function ExpandedRewardsEditor({
                       <label className="expanded-reward-inline-field">
                         <span>Discount percentage</span>
                         <input
+                          {...validationField(
+                            `rewards.${index}.configuration.percentageBasisPoints`,
+                          )}
                           disabled={!canEdit}
                           max="100"
                           min="0.01"
@@ -595,6 +667,9 @@ export function ExpandedRewardsEditor({
                         <label>
                           <span>WooCommerce product ID</span>
                           <input
+                            {...validationField(
+                              `rewards.${index}.configuration.productId`,
+                            )}
                             disabled={!canEdit}
                             inputMode="numeric"
                             value={reward.configuration.productId}
@@ -612,6 +687,9 @@ export function ExpandedRewardsEditor({
                         <label>
                           <span>Free quantity</span>
                           <input
+                            {...validationField(
+                              `rewards.${index}.configuration.quantity`,
+                            )}
                             disabled={!canEdit}
                             max="10"
                             min="1"
@@ -634,6 +712,9 @@ export function ExpandedRewardsEditor({
                       <label className="expanded-reward-instructions">
                         <span>Fulfilment instructions</span>
                         <textarea
+                          {...validationField(
+                            `rewards.${index}.configuration.fulfilmentInstructions`,
+                          )}
                           disabled={!canEdit}
                           maxLength={2000}
                           rows={4}
@@ -666,6 +747,9 @@ export function ExpandedRewardsEditor({
                         <label>
                           <span>Starts (UTC date, optional)</span>
                           <input
+                            {...validationField(
+                              `rewards.${index}.configuration.availability.startsAt`,
+                            )}
                             disabled={!canEdit}
                             type="date"
                             value={dateValue(
@@ -681,6 +765,9 @@ export function ExpandedRewardsEditor({
                         <label>
                           <span>Ends (UTC date, optional)</span>
                           <input
+                            {...validationField(
+                              `rewards.${index}.configuration.availability.endsAt`,
+                            )}
                             disabled={!canEdit}
                             type="date"
                             value={dateValue(
@@ -696,6 +783,9 @@ export function ExpandedRewardsEditor({
                         <label>
                           <span>Eligible tier codes</span>
                           <input
+                            {...validationField(
+                              `rewards.${index}.configuration.availability.tierCodes`,
+                            )}
                             disabled={!canEdit}
                             placeholder="rose, bloom"
                             value={reward.configuration.availability.tierCodes.join(
@@ -711,6 +801,9 @@ export function ExpandedRewardsEditor({
                         <label>
                           <span>Per-member claims</span>
                           <input
+                            {...validationField(
+                              `rewards.${index}.configuration.availability.perCustomerLimit`,
+                            )}
                             disabled={!canEdit}
                             max="1000"
                             min="1"
@@ -732,6 +825,9 @@ export function ExpandedRewardsEditor({
                         <label>
                           <span>Global quantity</span>
                           <input
+                            {...validationField(
+                              `rewards.${index}.configuration.availability.globalQuantity`,
+                            )}
                             disabled={!canEdit}
                             min="1"
                             placeholder="Unlimited"
@@ -752,6 +848,9 @@ export function ExpandedRewardsEditor({
                         <label>
                           <span>Points liability budget</span>
                           <input
+                            {...validationField(
+                              `rewards.${index}.configuration.availability.pointsBudget`,
+                            )}
                             disabled={!canEdit}
                             min="1"
                             placeholder="Unlimited"
@@ -788,6 +887,9 @@ export function ExpandedRewardsEditor({
                           <label>
                             <span>Minimum spend (minor units)</span>
                             <input
+                              {...validationField(
+                                `rewards.${index}.configuration.restrictions.minimumSpendMinor`,
+                              )}
                               disabled={!canEdit}
                               min="0"
                               placeholder="No minimum"
@@ -819,6 +921,9 @@ export function ExpandedRewardsEditor({
                               <label>
                                 <span>Included product IDs</span>
                                 <input
+                                  {...validationField(
+                                    `rewards.${index}.configuration.restrictions.productIds`,
+                                  )}
                                   disabled={!canEdit}
                                   placeholder="42, 84"
                                   value={nativeReward.configuration.restrictions.productIds.join(
@@ -844,6 +949,9 @@ export function ExpandedRewardsEditor({
                               <label>
                                 <span>Excluded product IDs</span>
                                 <input
+                                  {...validationField(
+                                    `rewards.${index}.configuration.restrictions.excludedProductIds`,
+                                  )}
                                   disabled={!canEdit}
                                   placeholder="18, 29"
                                   value={nativeReward.configuration.restrictions.excludedProductIds.join(
@@ -869,6 +977,9 @@ export function ExpandedRewardsEditor({
                               <label>
                                 <span>Included category IDs</span>
                                 <input
+                                  {...validationField(
+                                    `rewards.${index}.configuration.restrictions.categoryIds`,
+                                  )}
                                   disabled={!canEdit}
                                   placeholder="7, 12"
                                   value={nativeReward.configuration.restrictions.categoryIds.join(
@@ -894,6 +1005,9 @@ export function ExpandedRewardsEditor({
                               <label>
                                 <span>Excluded category IDs</span>
                                 <input
+                                  {...validationField(
+                                    `rewards.${index}.configuration.restrictions.excludedCategoryIds`,
+                                  )}
                                   disabled={!canEdit}
                                   placeholder="3, 6"
                                   value={nativeReward.configuration.restrictions.excludedCategoryIds.join(
@@ -921,6 +1035,9 @@ export function ExpandedRewardsEditor({
                           <label>
                             <span>Coupon stacking</span>
                             <select
+                              {...validationField(
+                                `rewards.${index}.configuration.restrictions.stacking`,
+                              )}
                               disabled={!canEdit}
                               value={
                                 nativeReward.configuration.restrictions.stacking
@@ -946,6 +1063,9 @@ export function ExpandedRewardsEditor({
                           </label>
                           <label className="programme-check-row">
                             <input
+                              {...validationField(
+                                `rewards.${index}.configuration.restrictions.excludeSaleItems`,
+                              )}
                               checked={
                                 nativeReward.configuration.restrictions
                                   .excludeSaleItems
@@ -1034,8 +1154,12 @@ export function ExpandedRewardsEditor({
               {state.message}
             </p>
             {!validation.success ? (
-              <ul className="programme-validation-list">
-                {validation.error.issues.slice(0, 6).map((issue) => (
+              <ul
+                className="programme-validation-list"
+                id={validationSummaryId}
+                tabIndex={-1}
+              >
+                {validationIssues.slice(0, 6).map((issue) => (
                   <li key={`${issue.path.join(".")}:${issue.message}`}>
                     {issue.path.join(" → ")}: {issue.message}
                   </li>
@@ -1045,7 +1169,7 @@ export function ExpandedRewardsEditor({
           </div>
           <button
             className="ui-button ui-button-primary programme-save-button"
-            disabled={pending || !validation.success}
+            disabled={pending}
             type="submit"
           >
             {pending ? "Saving…" : "Save rewards as new draft"}

@@ -721,17 +721,19 @@ tasks:
         evidence:
           - docs/plan/evidence/M04/native-rewards-2026-08-13.md
       - id: M04-S03-MERCHANT-WORKFLOWS
-        status: implemented_pending_browser
+        status: completed
         acceptance:
           - templates restrictions availability preview fulfilment operations and summaries pass responsive accessibility review
         evidence:
           - docs/plan/evidence/M04/native-rewards-2026-08-13.md
+          - docs/plan/evidence/M04/rewards-browser-qa-2026-08-27.md
       - id: M04-S04-CANARY-AND-CLOSE
         status: in_progress
         acceptance:
           - exact-head CI runtime matrix disabled deployment Starfiniti canary reconciliation and score at least 90 pass
         evidence:
           - PR 29 is merge-clean at 30fb2f98a74f70390b6d664678614e14b377b03f and CI run 33073236099 passed baseline containers clean database replay and all four WooCommerce runtime variants
+          - M04-S03 production-component desktop mobile and 320 pixel browser accessibility evidence passes without production mutation
           - merge disabled deployment Starfiniti canary reconciliation observation and module score remain open
     docs:
       [

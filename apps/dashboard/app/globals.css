@@ -6214,6 +6214,20 @@ h1 {
   margin-top: 18px;
 }
 
+.expanded-rewards-workflow input:not([type="hidden"]),
+.expanded-rewards-workflow select,
+.expanded-rewards-workflow textarea,
+.programme-fulfilment-section input,
+.programme-fulfilment-section select,
+.programme-fulfilment-section textarea {
+  font-size: 12px;
+}
+
+.expanded-rewards-workflow .ui-badge,
+.programme-fulfilment-section .ui-badge {
+  font-size: 11px;
+}
+
 .expanded-reward-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 306px;
@@ -6289,13 +6303,13 @@ h1 {
 }
 
 .expanded-reward-templates button strong {
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .expanded-reward-templates button small {
   margin-top: 3px;
   color: var(--merchant-muted);
-  font-size: 9px;
+  font-size: 11px;
   line-height: 1.35;
 }
 
@@ -6321,7 +6335,7 @@ h1 {
 .expanded-reward-card legend {
   padding: 0 7px;
   color: var(--merchant-muted);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -6363,7 +6377,7 @@ h1 {
 .expanded-reward-card-heading div > span {
   margin-top: 3px;
   color: var(--merchant-muted);
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .expanded-reward-inline-field,
@@ -6375,14 +6389,14 @@ h1 {
 
 .expanded-reward-inline-field > span,
 .expanded-reward-instructions > span {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 650;
 }
 
 .expanded-reward-inline-field small,
 .expanded-reward-instructions small {
   color: var(--merchant-muted);
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .expanded-reward-details {
@@ -6395,7 +6409,7 @@ h1 {
   align-items: center;
   gap: 7px;
   padding: 13px 0 10px;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   cursor: pointer;
 }
@@ -6412,7 +6426,7 @@ h1 {
   margin-top: 10px;
   padding: 10px;
   color: var(--merchant-muted);
-  font-size: 9px;
+  font-size: 11px;
   line-height: 1.5;
   background: var(--programme-soft);
   border-radius: 8px;
@@ -6474,7 +6488,7 @@ h1 {
 
 .fulfilment-summary-grid span {
   color: var(--merchant-muted);
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .fulfilment-summary-grid strong {
@@ -6541,7 +6555,7 @@ h1 {
 .fulfilment-case-heading div > span {
   margin-top: 3px;
   color: var(--merchant-muted);
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .fulfilment-status.fulfilled {
@@ -6577,7 +6591,7 @@ h1 {
 
 .fulfilment-case-meta span {
   color: var(--merchant-muted);
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .fulfilment-case-meta strong,
@@ -6585,7 +6599,7 @@ h1 {
 .fulfilment-case-meta code {
   margin-top: 4px;
   color: var(--merchant-text);
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .fulfilment-case-meta a svg {
@@ -6615,7 +6629,7 @@ h1 {
 .fulfilment-terminal-note strong,
 .fulfilment-terminal-note span {
   display: block;
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .fulfilment-instructions span,
@@ -6625,7 +6639,7 @@ h1 {
 
 .fulfilment-instructions p {
   margin: 4px 0 0;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.55;
 }
 
@@ -6646,7 +6660,7 @@ h1 {
 .fulfilment-case-actions > p {
   margin: 0;
   color: var(--merchant-muted);
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.5;
 }
 
@@ -6664,13 +6678,13 @@ h1 {
 }
 
 .fulfilment-resolution-form label > span {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 650;
 }
 
 .fulfilment-resolution-form label > small {
   color: var(--merchant-muted);
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .fulfilment-resolution-buttons,
@@ -6698,7 +6712,7 @@ h1 {
 .fulfilment-resolution-warning {
   margin: 0;
   color: var(--warning);
-  font-size: 9px;
+  font-size: 11px;
   line-height: 1.5;
 }
 
@@ -6725,6 +6739,30 @@ h1 {
 }
 
 @media (max-width: 720px) {
+  .expanded-reward-templates button,
+  .expanded-rewards-workflow .ui-button,
+  .expanded-rewards-workflow .ui-icon-button,
+  .programme-fulfilment-section .ui-button,
+  .programme-fulfilment-section .ui-icon-button,
+  .programme-check-row {
+    min-height: 44px;
+  }
+
+  .expanded-rewards-workflow .ui-icon-button,
+  .programme-fulfilment-section .ui-icon-button {
+    min-width: 44px;
+  }
+
+  .expanded-rewards-workflow input:not([type="hidden"]):not([type="checkbox"]),
+  .expanded-rewards-workflow select,
+  .expanded-rewards-workflow textarea,
+  .programme-fulfilment-section
+    input:not([type="hidden"]):not([type="checkbox"]),
+  .programme-fulfilment-section select,
+  .programme-fulfilment-section textarea {
+    min-height: 44px;
+  }
+
   .expanded-reward-templates,
   .expanded-reward-list,
   .fulfilment-case-list {
@@ -6773,7 +6811,7 @@ h1 {
   }
 
   .expanded-reward-card-heading {
-    grid-template-columns: 34px minmax(0, 1fr) 30px;
+    grid-template-columns: 34px minmax(0, 1fr) 44px;
   }
 
   .expanded-reward-card-heading > .ui-badge {
