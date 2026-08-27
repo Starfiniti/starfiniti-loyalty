@@ -258,13 +258,13 @@ begin
   );
   perform loyalty_private.set_organization_entitlement(
     'c1000000-0000-4000-8000-000000000100', 'programme.v2',
-    'enabled', null, 'test_policy', 'operator:m14',
+    'enabled', null, 'manual_override', 'operator:m14',
     'Enable programme authoring for commercial policy test',
     '2042-01-01 00:00:00+00', null
   );
   perform loyalty_private.set_organization_entitlement(
     'c2000000-0000-4000-8000-000000000100', 'programme.v2',
-    'enabled', null, 'test_policy', 'operator:m14',
+    'enabled', null, 'manual_override', 'operator:m14',
     'Enable second programme for commercial policy test',
     '2042-01-01 00:00:00+00', null
   );
