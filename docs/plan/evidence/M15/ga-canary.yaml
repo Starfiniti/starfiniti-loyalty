@@ -1,0 +1,249 @@
+schema: starfiniti.ga-canary.v1
+status: in_progress
+observedAt: 2026-08-27T11:14:00Z
+currentProduction:
+  release: v0.1.11
+  applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
+candidate:
+  branch: codex/m15-ga-canary
+  commit: 900ffbc1a9add4e5a4af3cb6e8396b4870cb1273
+  release: null
+  approvedRelease: false
+  canaryApproved: false
+  gaApproved: false
+plan:
+  path: infrastructure/testing/ga-canary/plan.yaml
+  sha256: 073ed9e4c68181a0cd4e0f163f584f5dd5ee97a7132dbcf32a62fe4861465e4b
+claimsCatalogue:
+  path: docs/product/GA_CLAIMS.yaml
+  sha256: df50bfb80ac0391539f944fd9dae0b13923ebc5611a626938198103327c05b38
+prerequisiteEvidence:
+  - id: capacity
+    path: docs/plan/evidence/M15/capacity.yaml
+    sha256: null
+  - id: fault-injection
+    path: docs/plan/evidence/M15/fault-injection.yaml
+    sha256: null
+  - id: security
+    path: docs/plan/evidence/M15/security.yaml
+    sha256: null
+  - id: recovery
+    path: docs/plan/evidence/M15/recovery.yaml
+    sha256: null
+  - id: operations
+    path: docs/plan/evidence/M15/operations.yaml
+    sha256: null
+canary:
+  timezone: UTC
+  minimumWindowHours: 720
+  minimumDailyIntervals: 30
+  pilotTenantCount: 1
+  start: null
+  end: null
+artifacts:
+  releaseInventoryPath: null
+  releaseInventorySha256: null
+  canaryJournalPath: null
+  canaryJournalSha256: null
+  finalReconciliationPath: null
+  finalReconciliationSha256: null
+  claimsReviewPath: null
+  claimsReviewSha256: null
+  approvalRecordPath: null
+  approvalRecordSha256: null
+score:
+  total: 77
+  target: 90
+  minimumCategoryRatio: 0.8
+  categories:
+    - id: correctness
+      weight: 20
+      score: 17
+      evidence: Versioned contracts and repository gates are broad, but the complete pilot value reconciliation remains pending.
+    - id: security
+      weight: 15
+      score: 12
+      evidence: Automated security gates pass; independent penetration closeout and production review remain pending.
+    - id: ledger_reliability
+      weight: 15
+      score: 12
+      evidence: Immutable exact-once controls pass; thirty-day live ledger, coupon, queue, and value reconciliation remains pending.
+    - id: tests
+      weight: 15
+      score: 15
+      evidence: The stacked candidate passes workspace, database, concurrency, image, security, and WooCommerce matrix gates.
+    - id: performance
+      weight: 10
+      score: 5
+      evidence: Bounded drivers and plans exist; no supported measured capacity envelope is yet published.
+    - id: operability
+      weight: 10
+      score: 2
+      evidence: Runbooks and fail-closed evidence contracts exist; live monitoring, recovery, incident, rollback, and canary proof remain pending.
+    - id: maintainability
+      weight: 15
+      score: 14
+      evidence: Additive migrations, strict contracts, ADRs, validators, minimized evidence, and rollback implications are maintained.
+checks:
+  - id: repository_contract
+    status: passed
+    evidence: The canonical plan fixes one pilot tenant, a 720-hour UTC window, thirty daily intervals, immutable release bindings, five artifacts, zero-difference fields, approvals, scoring, and automatic failures.
+  - id: claims_catalogue
+    status: passed
+    evidence: Thirteen evidence-bound claims default to non-publishable and the catalogue explicitly classifies Shopify, languages beyond English, and cash-like stored value as limitations.
+  - id: task_graph_binding
+    status: passed
+    evidence: M15-S06 declares every M15 prerequisite, measurable acceptance, external inputs, rollout, rollback, verification, and evidence paths.
+  - id: validator_selftest
+    status: passed
+    evidence: The validator proves a valid synthetic closeout and rejects false completion, short or missing days, drift, unsafe or reused artifacts, nonzero differences, score failures, unapproved claims, incomplete modules, and missing approvals.
+  - id: exact_head_ci
+    status: passed
+    evidence: Documentation head 6b57148e03edf39fc184fa7fd00eb85bbd9af11a passed CI run 33068012282 with all seven jobs, Security run 33068012381 with all three jobs, and the external CodeQL policy check.
+  - id: module_closeout
+    status: pending
+    evidence: M00 through M14 and the M15 prerequisite slices are not all complete against production evidence.
+  - id: m15_prerequisite_manifests
+    status: pending
+    evidence: Capacity, fault, security, recovery, and operations manifests still contain approved live checks.
+  - id: approved_release
+    status: pending
+    evidence: No immutable GA release and stacked merge approval are recorded.
+  - id: release_provenance
+    status: pending
+    evidence: Exact image, connector, migration, configuration, prerequisite, SBOM, and attestation digests require the approved release.
+  - id: pre_change_recovery_point
+    status: pending
+    evidence: A fresh verified database, WAL, Auth, application, configuration, signing, and connector recovery point must precede exposure.
+  - id: canary_approval
+    status: pending
+    evidence: The pilot tenant, exposure window, owners, reviewer, rollback authority, and monitoring routes await approval.
+  - id: disabled_deployment
+    status: pending
+    evidence: The exact release has not been deployed disabled and smoke-tested in production.
+  - id: pilot_tenant_isolation
+    status: pending
+    evidence: Only one approved Starfiniti pilot tenant may receive the canary while unrelated tenants remain unchanged.
+  - id: public_baseline
+    status: pending
+    evidence: Exact public DNS, TLS, health, login, unauthenticated denial, and checkout baseline must bind the release window.
+  - id: self_hosted_independence
+    status: pending
+    evidence: Deployed self-hosted mode must prove zero Stripe or remote licence dependency through the full window.
+  - id: woocommerce_matrix
+    status: pending
+    evidence: The exact release must pass the supported WordPress, WooCommerce, PHP, HPOS, legacy, Blocks, and classic matrix.
+  - id: monitoring_coverage
+    status: pending
+    evidence: Every required production series, dashboard, protected alert, route, dead-man, owner, and runbook must be active and fresh.
+  - id: thirty_day_continuity
+    status: pending
+    evidence: Thirty complete consecutive UTC daily observations on one immutable release have not occurred.
+  - id: daily_source_freshness
+    status: pending
+    evidence: Every daily interval must prove complete fresh source coverage without coercing absent series to zero.
+  - id: slo_error_budget
+    status: pending
+    evidence: Availability, latency, queue, event-to-ledger, WAL, checkout, and protected-value SLOs require measured window results.
+  - id: capacity_claim
+    status: pending
+    evidence: The exact supported capacity claim must be within the independently reproduced measured envelope.
+  - id: recovery_claim
+    status: pending
+    evidence: Current exact-release clean-room RPO and full-service RTO must satisfy their approved objectives twice.
+  - id: independent_security_close
+    status: pending
+    evidence: Production review, penetration test, retest, tagged attestation, triage, and zero open Critical or High findings remain required.
+  - id: operations_ownership
+    status: pending
+    evidence: Named operations, security, recovery, value-integrity, incident, communications, and product ownership remains outside Git and unapproved.
+  - id: protected_alert_delivery
+    status: pending
+    evidence: Primary, secondary, acknowledgement, escalation, repeat, handoff, inhibition, and dead-man behavior require live proof.
+  - id: checkout_independence
+    status: pending
+    evidence: The pilot must prove native checkout during hub, worker, monitoring, incident-system, and provider outages.
+  - id: event_effect_reconciliation
+    status: pending
+    evidence: Canonical commerce and activity inputs must reconcile to exactly one accepted event and business effect.
+  - id: ledger_reconciliation
+    status: pending
+    evidence: Transactions, wallets, lots, tiers, rewards, reservations, expiries, reversals, and liability must reconcile exactly.
+  - id: queue_reconciliation
+    status: pending
+    evidence: Inbox, outbox, lease, retry, dead-letter, provider ambiguity, and committed-fact queues must have zero unexplained difference.
+  - id: pilot_value_reconciliation
+    status: pending
+    evidence: Awards, releases, redemptions, coupons, partial and full refunds, expiry, and compensations must reconcile end to end.
+  - id: tenant_privacy_reconciliation
+    status: pending
+    evidence: RLS, memberships, revocation, consent, suppression, deletion, pseudonymization, and retained evidence must fail closed.
+  - id: woocommerce_coupon_reconciliation
+    status: pending
+    evidence: Every reservation, issued native coupon, captured order use, ambiguity recovery, refund, and release must reconcile exactly.
+  - id: referral_campaign_reconciliation
+    status: pending
+    evidence: Attribution, fraud decisions, audiences, budgets, control groups, effects, cancellations, refunds, and reversals must reconcile.
+  - id: notification_reconciliation
+    status: pending
+    evidence: Provider-neutral events, consent, suppression, deduplication, retries, dead letters, and deliveries must reconcile without affecting value.
+  - id: customer_experience_canary
+    status: pending
+    evidence: Hosted and WooCommerce experiences require desktop, mobile, accessibility, slow, offline, and outage proof on the exact release.
+  - id: analytics_reconciliation
+    status: pending
+    evidence: Ledger, liability, participation, cohort, campaign, referral, export, and report aggregates must match their versioned definitions.
+  - id: ecosystem_reconciliation
+    status: pending
+    evidence: Multi-store policy, currencies, service accounts, APIs, webhooks, clients, rotations, retries, and deletions must reconcile.
+  - id: migration_reconciliation
+    status: pending
+    evidence: Every production import and correction, if used, must remain idempotent and trace to its batch and source row.
+  - id: identity_reconciliation
+    status: pending
+    evidence: Organization lifecycle, tenant SSO, SCIM, deprovisioning, break-glass, agency, and support history require live fail-closed proof.
+  - id: managed_billing_reconciliation
+    status: pending
+    evidence: Managed subscription, entitlement, usage, invoice, grace, protected-path, and recovery results require exact sandbox and pilot evidence.
+  - id: incident_reconciliation
+    status: pending
+    evidence: Every canary incident must close monotonically with postmortem, durable control, and zero protected difference.
+  - id: rollback_rehearsal
+    status: pending
+    evidence: The exact release rollback path and forward-fix migration strategy must be rehearsed before the window.
+  - id: rollback_decision_exercise
+    status: pending
+    evidence: An approved production decision exercise must prove stop authority, evidence capture, recovery point, protected continuity, and reconciliation.
+  - id: data_loss_zero
+    status: pending
+    evidence: The window and final reconstruction must show zero unexplained loss of accepted commerce, value, identity, privacy, usage, or audit facts.
+  - id: claims_review
+    status: pending
+    evidence: Every product and marketing claim must bind its required exact-release evidence and preserve declared limitations.
+  - id: product_score
+    status: pending
+    evidence: The whole-product score is 51/100 and cannot close until it reaches 90 with every category floor.
+  - id: m15_score
+    status: pending
+    evidence: M15 is provisionally 77/100 and performance and operability remain below their mandatory category floors.
+  - id: independent_final_review
+    status: pending
+    evidence: An independent reviewer must bind the release, journal, reconciliation, claims, scores, incidents, findings, and prerequisite digests.
+  - id: owner_ga_approval
+    status: pending
+    evidence: Product, engineering, security, operations, value-integrity, and owner approvals remain unissued.
+  - id: post_ga_handoff
+    status: pending
+    evidence: M16 monthly review and quarterly exercise ownership and first scheduled dates must be recorded before GA close.
+automaticFails:
+  - the canary is shorter than 720 consecutive hours has fewer than thirty complete UTC daily intervals or contains an unreconstructable evidence gap
+  - a release image connector migration value contract entitlement catalogue monitoring contract or configuration changes without restarting the window
+  - any required source is absent stale or represented as healthy zero or a protected alert is delayed inhibited by billing or delivered to only one unproved route
+  - any unexplained value coupon queue tenant privacy checkout data-loss or provider-ambiguity difference is nonzero
+  - a duplicate or delayed input creates more than one canonical event immutable effect native benefit or billed usage effect
+  - a Critical or High security tenancy ledger privacy recovery data-loss or checkout issue remains unresolved
+  - M00 through M14 or any M15 prerequisite manifest remains incomplete stale unbound or below its score or category floor
+  - an artifact is missing reused mutable unsafe sensitive larger than its bound or not digest-bound to the exact release and reviewer
+  - a product claim becomes publishable without every declared evidence check independent review and owner approval
+  - billing entitlement monitoring browser WordPress email domain or identity metadata suppresses a protected path or grants tenant value release or approval authority
+  - completion is claimed without exact final reconciliation zero data loss current capacity SLO RPO RTO security and operations evidence all score floors and all approvals

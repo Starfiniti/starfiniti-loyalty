@@ -1,0 +1,108 @@
+schema: starfiniti.ga-claims.v1
+policy:
+  defaultPublishable: false
+  evidenceRequired: true
+  exactReleaseRequired: true
+  ownerApprovalRequired: true
+claims:
+  - id: open-source-self-hosted
+    statement: Starfiniti Loyalty can be self-hosted under AGPL without Stripe or remote licence enforcement.
+    publishable: false
+    evidenceChecks:
+      [self_hosted_independence, release_provenance, owner_ga_approval]
+  - id: woocommerce-ga
+    statement: Starfiniti Loyalty supports the documented minimum and current WooCommerce matrix across HPOS and legacy order storage.
+    publishable: false
+    evidenceChecks:
+      [woocommerce_matrix, pilot_value_reconciliation, owner_ga_approval]
+  - id: checkout-independent
+    statement: WooCommerce checkout remains operational when the Loyalty Hub, workers, and providers are unavailable.
+    publishable: false
+    evidenceChecks:
+      [checkout_independence, incident_reconciliation, owner_ga_approval]
+  - id: immutable-exact-value
+    statement: Loyalty value is immutable and attributable, and duplicate or delayed commerce events create one business effect.
+    publishable: false
+    evidenceChecks:
+      [
+        ledger_reconciliation,
+        queue_reconciliation,
+        pilot_value_reconciliation,
+        owner_ga_approval,
+      ]
+  - id: tenant-isolation
+    statement: Tenant authority is database-derived and tenant-owned data is isolated by PostgreSQL RLS.
+    publishable: false
+    evidenceChecks:
+      [
+        tenant_privacy_reconciliation,
+        independent_security_close,
+        owner_ga_approval,
+      ]
+  - id: earning-rewards-vip
+    statement: Versioned earning rules, rewards, expiry, and VIP progression are production-supported within the documented boundaries.
+    publishable: false
+    evidenceChecks:
+      [module_closeout, pilot_value_reconciliation, owner_ga_approval]
+  - id: referrals-campaigns
+    statement: Referrals, audiences, and campaigns are production-supported with bounded budgets and reversible value effects.
+    publishable: false
+    evidenceChecks:
+      [module_closeout, pilot_value_reconciliation, owner_ga_approval]
+  - id: communications-experience
+    statement: Provider-neutral communications and the hosted and WooCommerce customer experience are production-supported.
+    publishable: false
+    evidenceChecks:
+      [module_closeout, customer_experience_canary, owner_ga_approval]
+  - id: analytics-liability
+    statement: Published loyalty and liability reporting reconciles to immutable ledger and commerce evidence.
+    publishable: false
+    evidenceChecks:
+      [module_closeout, analytics_reconciliation, owner_ga_approval]
+  - id: ecosystem-migration
+    statement: Documented multi-store, API, webhook, currency, and migration capabilities are production-supported within their approved provider boundaries.
+    publishable: false
+    evidenceChecks:
+      [
+        module_closeout,
+        ecosystem_reconciliation,
+        migration_reconciliation,
+        owner_ga_approval,
+      ]
+  - id: enterprise-identity
+    statement: Organization administration, tenant SSO, SCIM, agency access, and support grants fail closed against live database membership.
+    publishable: false
+    evidenceChecks:
+      [
+        module_closeout,
+        identity_reconciliation,
+        independent_security_close,
+        owner_ga_approval,
+      ]
+  - id: managed-billing
+    statement: Managed deployments support the approved Stripe lifecycle and usage catalogue without placing existing loyalty value or checkout behind billing.
+    publishable: false
+    evidenceChecks:
+      [module_closeout, managed_billing_reconciliation, owner_ga_approval]
+  - id: measured-enterprise-readiness
+    statement: Published capacity, SLO, RPO, RTO, security, and operational-readiness claims match exact current evidence.
+    publishable: false
+    evidenceChecks:
+      [
+        capacity_claim,
+        slo_error_budget,
+        recovery_claim,
+        independent_security_close,
+        operations_ownership,
+        owner_ga_approval,
+      ]
+limitations:
+  - id: shopify
+    state: deferred
+    statement: Shopify is not an active or supported runtime integration.
+  - id: language
+    state: english-only
+    statement: English is the only active merchant and customer language.
+  - id: stored-value
+    state: excluded
+    statement: Store credit, gift cards, cash redemption, and cash-like stored value are not supported.
