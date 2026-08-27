@@ -239,46 +239,52 @@ function safeArtifactPath(relativePath, artifactId) {
   const allowed = resolve(root, "docs/plan/evidence/M16/runs") + sep;
   if (!resolved.startsWith(allowed))
     fail(`${artifactId} escapes evidence root`);
+  return resolved;
 }
 
 function readBoundArtifact(relativePath, expectedDigest, artifactId) {
-  safeArtifactPath(relativePath, artifactId);
   if (!digestPattern.test(expectedDigest) || /^0{64}$/u.test(expectedDigest)) {
     fail(`${artifactId} digest is invalid`);
   }
-  const absolute = join(root, relativePath);
-  const stat = lstatSync(absolute);
-  if (!stat.isFile() || stat.isSymbolicLink() || stat.size > 256 * 1024) {
-    fail(`${artifactId} is not a bounded regular file`);
-  }
-  const descriptor = openSync(
-    absolute,
-    constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0),
-  );
+  const absolute = safeArtifactPath(relativePath, artifactId);
+  let descriptor;
+  let raw;
   try {
-    const opened = fstatSync(descriptor);
-    if (!opened.isFile() || opened.size !== stat.size) {
-      fail(`${artifactId} changed while opening`);
+    descriptor = openSync(
+      absolute,
+      constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0),
+    );
+    const status = fstatSync(descriptor);
+    const linkStatus = lstatSync(absolute);
+    if (
+      !status.isFile() ||
+      !linkStatus.isFile() ||
+      status.dev !== linkStatus.dev ||
+      status.ino !== linkStatus.ino ||
+      status.size < 2 ||
+      status.size > 256 * 1024
+    ) {
+      fail(`${artifactId} is not a bounded stable file`);
     }
-    const buffer = Buffer.alloc(opened.size);
+    raw = Buffer.alloc(status.size);
     let offset = 0;
-    while (offset < buffer.length) {
+    while (offset < raw.length) {
       const count = readSync(
         descriptor,
-        buffer,
+        raw,
         offset,
-        buffer.length - offset,
+        raw.length - offset,
+        offset,
       );
-      if (count === 0) break;
+      if (count === 0) fail(`${artifactId} changed while reading`);
       offset += count;
     }
-    if (offset !== buffer.length) fail(`${artifactId} was truncated`);
-    const raw = buffer.toString("utf8");
-    if (digest(raw) !== expectedDigest) fail(`${artifactId} digest differs`);
-    return JSON.parse(raw);
   } finally {
-    closeSync(descriptor);
+    if (descriptor !== undefined) closeSync(descriptor);
   }
+  const text = raw.toString("utf8");
+  if (digest(text) !== expectedDigest) fail(`${artifactId} digest differs`);
+  return JSON.parse(text);
 }
 
 function scanMinimized(value, label, path = "$") {
