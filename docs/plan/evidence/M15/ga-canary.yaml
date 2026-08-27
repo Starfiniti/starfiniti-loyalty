@@ -98,8 +98,8 @@ checks:
     status: passed
     evidence: The validator proves a valid synthetic closeout and rejects false completion, short or missing days, drift, unsafe or reused artifacts, nonzero differences, score failures, unapproved claims, incomplete modules, and missing approvals.
   - id: exact_head_ci
-    status: pending
-    evidence: Exact-head CI and Security results for this slice have not yet been recorded.
+    status: passed
+    evidence: Documentation head 6b57148e03edf39fc184fa7fd00eb85bbd9af11a passed CI run 33068012282 with all seven jobs, Security run 33068012381 with all three jobs, and the external CodeQL policy check.
   - id: module_closeout
     status: pending
     evidence: M00 through M14 and the M15 prerequisite slices are not all complete against production evidence.
