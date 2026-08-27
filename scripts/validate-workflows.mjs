@@ -77,7 +77,25 @@ for (const dockerfile of [
     fromLines.every((line) => /@sha256:[0-9a-f]{64}(?:\s|$)/u.test(line)),
     `${dockerfile} base images must be pinned by digest`,
   );
+  const dockerfileText = readFileSync(dockerfile, "utf8");
+  requireCondition(
+    dockerfileText.includes("HEALTHCHECK --interval=30s --timeout=5s") &&
+      dockerfileText.includes("--start-period=30s --retries=3"),
+    `${dockerfile} must retain the bounded image-level health check`,
+  );
 }
+requireCondition(
+  readFileSync("apps/dashboard/Dockerfile", "utf8").includes(
+    "http://127.0.0.1:3000/api/healthz",
+  ),
+  "dashboard image health check must use the private readiness endpoint",
+);
+requireCondition(
+  readFileSync("apps/worker/Dockerfile", "utf8").includes(
+    'node -e "process.kill(1, 0)"',
+  ),
+  "worker image health check must verify the unprivileged PID 1 runtime",
+);
 
 requireCondition(
   releaseWorkflow?.on?.push?.tags?.includes("v*.*.*"),

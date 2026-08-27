@@ -16,6 +16,8 @@ The `Security` workflow runs on pull requests, `main`, Tuesdays at 03:17 UTC, an
 
 The DAST network has no published port and no external route. The target is built from the candidate commit, labelled disposable, contains no live credentials or customer data, and is removed in an `always()` cleanup step. Never change its origin to a public, staging, or production host in a pull request.
 
+The repository misconfiguration scan is intentionally strict at every severity. Both deployable Dockerfiles therefore carry image-level health checks: dashboard readiness uses `/api/healthz`, while the multi-mode worker verifies its unprivileged PID 1 process without coupling container health to a database or provider outage. Do not suppress `DS-0026` or add a blanket Trivy ignore.
+
 ## Release boundary
 
 For a signed `vMAJOR.MINOR.PATCH` tag, the release workflow:

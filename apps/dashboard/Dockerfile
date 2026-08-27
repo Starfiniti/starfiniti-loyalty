@@ -21,5 +21,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/apps/dashboard/.next/static ./app
 USER nextjs
 EXPOSE 3000
 ENV PORT=3000 HOSTNAME=0.0.0.0
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD wget --spider --quiet http://127.0.0.1:3000/api/healthz || exit 1
 CMD ["node", "apps/dashboard/server.js"]
 

@@ -21,4 +21,6 @@ ENV NODE_ENV=production
 COPY --from=production-dependencies /app/node_modules ./node_modules
 COPY --from=builder /app/apps/worker/dist ./apps/worker/dist
 USER node
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD node -e "process.kill(1, 0)" || exit 1
 CMD ["node", "apps/worker/dist/index.mjs"]

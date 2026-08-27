@@ -29,6 +29,7 @@ Reviewed tool inputs are CodeQL Action 4.37.9, Trivy Action 0.36.0 with Trivy 0.
 6. Upgrade the exact WordPress test runtime to `@wordpress/env` 11.14.0. Its patched `adm-zip` 0.6.0 path removes R-032 only after the complete audit and all four Linux WooCommerce runtime cells pass on the exact candidate.
 7. Do not use CI DAST as penetration-test evidence. An independent penetration test, review of every non-High finding/false-positive decision, current vulnerability databases, and a production configuration scan remain deterministic completion requirements.
 8. Store only minimized evidence references and sanitized reports. Do not commit request/response bodies, credentials, cookies, customer identifiers, production origins, raw infrastructure inventory, or exploit material.
+9. Keep image-level health checks in both deployable images. The dashboard probes its private readiness endpoint. The multi-mode worker probes only its unprivileged PID 1 runtime: database and provider outages are retried by the worker and must not turn a transient dependency failure into an orchestrator restart loop.
 
 ## Alternatives considered
 
@@ -59,6 +60,7 @@ This records contents but not who built which exact release. Rejected. SBOMs and
 ## Operational effects
 
 - Pull requests gain three bounded jobs: CodeQL, supply-chain, and disposable DAST.
+- Deployable images expose bounded health metadata even outside the reference Compose file; Compose may override intervals but must not disable the checks.
 - Weekly execution refreshes vulnerability evidence even without source changes.
 - Security reports and SBOMs are short-lived CI artifacts; release SBOMs and attestations are durable release assets/metadata.
 - R-032 remains pending until exact-candidate Linux runtime evidence confirms the patched dependency transition. No deterministic finding may be changed to passing through subjective acceptance.
