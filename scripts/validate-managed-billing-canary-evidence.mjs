@@ -1,5 +1,14 @@
-import { readFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { createHash } from "node:crypto";
+import {
+  closeSync,
+  constants,
+  fstatSync,
+  lstatSync,
+  openSync,
+  readFileSync,
+  readSync,
+} from "node:fs";
+import { dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import YAML from "yaml";
@@ -35,6 +44,7 @@ const requiredChecks = new Set([
   "secret_mounts",
   "disabled_deployment",
   "migration_registration",
+  "non_canary_disabled",
   "self_hosted_runtime_no_call",
   "managed_entitlement_canary",
   "checkout_session_canary",
@@ -70,6 +80,134 @@ const categoryWeights = new Map([
   ["operability", 10],
   ["maintainability", 15],
 ]);
+const requiredArtifacts = new Set([
+  "read_only_baseline",
+  "release_inventory",
+  "approval_record",
+  "recovery_point",
+  "production_baseline",
+  "canary_journal",
+  "reconciliation_report",
+  "rollback_report",
+  "observation_report",
+]);
+const requiredAutomaticFails = new Map([
+  [
+    "sensitive_provider_data",
+    "card payment contact redirect provider response raw webhook or reusable authority material is stored logged exported shown in support output or copied into evidence",
+  ],
+  [
+    "self_hosted_provider_call",
+    "self-hosted mode reads a Stripe key scans billable sources constructs a provider client starts a billing worker or makes a Stripe request",
+  ],
+  [
+    "browser_or_provider_authority",
+    "browser input Auth claims provider metadata navigation return or mutable response grants tenant customer Price meter subscription entitlement or commercial authority",
+  ],
+  [
+    "unverified_webhook",
+    "unsigned stale oversized malformed unsupported or changed replay input enters the verified provider inbox or changes commercial state",
+  ],
+  [
+    "provider_replay_regression",
+    "duplicate delayed changed or out-of-order provider delivery creates another receipt effect entitlement revision or regresses event-time commercial state",
+  ],
+  [
+    "duplicate_usage_effect",
+    "duplicate source retry concurrency correction or dispatch creates another billable unit loses source period account or meter attribution or makes usage negative",
+  ],
+  [
+    "premature_reconciliation",
+    "asynchronous provider usage invoice subscription or ambiguity evidence is declared reconciled before bounded convergence polling and exact local comparison succeed",
+  ],
+  [
+    "protected_path_block",
+    "delinquency contract provider outage billing worker failure or commercial restriction blocks checkout ingestion refunds releases redemption reconciliation export account access or promised value",
+  ],
+  [
+    "manual_contract_bypass",
+    "a manual contract is self-approved unbounded unaudited backdated over conflicting evidence mutable in place or effective outside its exact interval",
+  ],
+  [
+    "cross_tenant_exposure",
+    "an unrelated organization account plan operation event usage policy contract summary provider or protected-path selector becomes visible mutable or externally actionable",
+  ],
+  [
+    "credential_or_resource_leak",
+    "reusable Stripe keys signatures raw provider resource identifiers payment values or secret mounts appear in repository browser database logs support output or canary artifacts",
+  ],
+  [
+    "ambiguous_outcome_guess",
+    "an ambiguous provider outcome is retried as success released for changed reuse discarded or used as entitlement authority without exact reconciliation",
+  ],
+  [
+    "unsafe_rollout",
+    "managed billing Price meter policy contract Checkout Portal webhook or usage dispatch is enabled outside the approved tenant before recovery baseline disabled deployment and isolation pass",
+  ],
+  [
+    "reconciliation_gap",
+    "subscription entitlement Price meter usage invoice policy contract attempt protected-path checkout or ledger evidence differs from immutable source facts",
+  ],
+  [
+    "score_or_approval_bypass",
+    "module status completion approval catalogue policy artifact score total or category floor is changed without exact synchronized evidence",
+  ],
+  [
+    "unexplained_or_unapproved_close",
+    "any billing lifecycle usage invoice protected-path privacy approval artifact score floor or critical security tenancy ledger recovery accessibility data-loss finding remains unresolved",
+  ],
+]);
+const checkArtifactBindings = new Map([
+  ["public_production_baseline", ["read_only_baseline"]],
+  ["operator_access", ["read_only_baseline"]],
+  ["approved_release", ["approval_record"]],
+  ["approved_stripe_sandbox", ["approval_record"]],
+  ["approved_catalogue", ["approval_record"]],
+  ["approved_commercial_policy", ["approval_record"]],
+  ["canary_approval", ["approval_record"]],
+  ["pre_change_recovery_point", ["recovery_point"]],
+  ["production_billing_baseline", ["production_baseline"]],
+  ["secret_mounts", ["release_inventory", "canary_journal"]],
+  ["disabled_deployment", ["release_inventory", "canary_journal"]],
+  ["migration_registration", ["release_inventory", "canary_journal"]],
+  ["non_canary_disabled", ["canary_journal"]],
+  ["self_hosted_runtime_no_call", ["canary_journal", "observation_report"]],
+  ["managed_entitlement_canary", ["canary_journal"]],
+  ["checkout_session_canary", ["canary_journal"]],
+  ["portal_session_canary", ["canary_journal"]],
+  ["verified_webhook_intake", ["canary_journal"]],
+  ["webhook_replay_disorder", ["canary_journal", "reconciliation_report"]],
+  [
+    "subscription_trial_activation",
+    ["canary_journal", "reconciliation_report"],
+  ],
+  ["subscription_renewal", ["canary_journal", "reconciliation_report"]],
+  ["payment_failure_grace", ["canary_journal", "reconciliation_report"]],
+  ["suspension_cancellation", ["canary_journal", "reconciliation_report"]],
+  ["subscription_recovery", ["canary_journal", "reconciliation_report"]],
+  ["usage_source_capture", ["canary_journal", "reconciliation_report"]],
+  ["usage_dispatch_replay", ["canary_journal", "reconciliation_report"]],
+  ["usage_correction", ["canary_journal", "reconciliation_report"]],
+  ["provider_usage_reconciliation", ["reconciliation_report"]],
+  ["invoice_reconciliation", ["reconciliation_report"]],
+  ["manual_contract_override", ["canary_journal", "reconciliation_report"]],
+  ["protected_operations_matrix", ["canary_journal", "reconciliation_report"]],
+  ["provider_outage_recovery", ["canary_journal", "rollback_report"]],
+  ["worker_outage_recovery", ["canary_journal", "rollback_report"]],
+  ["return_navigation_no_authority", ["canary_journal"]],
+  ["cross_tenant_denial", ["canary_journal"]],
+  ["rollback_rehearsal", ["rollback_report"]],
+  ["observation_window", ["observation_report"]],
+  ["final_reconciliation", ["reconciliation_report"]],
+]);
+const artifactCheckBindings = new Map(
+  [...requiredArtifacts].map((artifactId) => [artifactId, []]),
+);
+for (const [checkId, artifactIds] of checkArtifactBindings) {
+  for (const artifactId of artifactIds) {
+    artifactCheckBindings.get(artifactId).push(checkId);
+  }
+}
 const allowedStatuses = new Set(["passed", "pending", "failed"]);
 const completionApprovals = [
   "approvedRelease",
@@ -82,7 +220,78 @@ const fail = (message) => {
   throw new Error(`Managed billing canary evidence invalid: ${message}`);
 };
 
-const validateDocument = (candidateEvidence, candidateTasks = tasks) => {
+const digest = (value) => createHash("sha256").update(value).digest("hex");
+const digestPattern = /^[0-9a-f]{64}$/u;
+const safeArtifactPath = (relativePath, artifactId) => {
+  const artifactStem = artifactId.replaceAll("_", "-");
+  const pattern = new RegExp(
+    `^docs/plan/evidence/M14/production/billing-${artifactStem}-[a-z0-9][a-z0-9-]{2,79}\\.json$`,
+    "u",
+  );
+  if (typeof relativePath !== "string" || !pattern.test(relativePath)) {
+    fail(`${artifactId} artifact path is unsafe`);
+  }
+  const absolute = resolve(root, relativePath);
+  const allowed = `${resolve(root, "docs/plan/evidence/M14/production")}${sep}`;
+  if (!absolute.startsWith(allowed))
+    fail(`${artifactId} artifact escapes its root`);
+  return absolute;
+};
+
+const readBoundArtifact = (relativePath, expectedDigest, artifactId) => {
+  if (!digestPattern.test(expectedDigest) || /^0{64}$/u.test(expectedDigest)) {
+    fail(`${artifactId} artifact digest must be exact and nonzero`);
+  }
+  const absolute = safeArtifactPath(relativePath, artifactId);
+  let descriptor;
+  let raw;
+  try {
+    descriptor = openSync(
+      absolute,
+      constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0),
+    );
+    const opened = fstatSync(descriptor);
+    const linked = lstatSync(absolute);
+    if (
+      !opened.isFile() ||
+      !linked.isFile() ||
+      opened.dev !== linked.dev ||
+      opened.ino !== linked.ino ||
+      opened.size < 2 ||
+      opened.size > 256 * 1024
+    ) {
+      fail(`${artifactId} artifact is not one stable bounded regular file`);
+    }
+    raw = Buffer.alloc(opened.size);
+    let offset = 0;
+    while (offset < raw.length) {
+      const count = readSync(
+        descriptor,
+        raw,
+        offset,
+        raw.length - offset,
+        offset,
+      );
+      if (count === 0) fail(`${artifactId} artifact changed while reading`);
+      offset += count;
+    }
+  } finally {
+    if (descriptor !== undefined) closeSync(descriptor);
+  }
+  if (digest(raw) !== expectedDigest)
+    fail(`${artifactId} artifact digest differs`);
+  try {
+    return JSON.parse(raw.toString("utf8"));
+  } catch {
+    fail(`${artifactId} artifact must be valid JSON`);
+  }
+};
+
+const validateDocument = (
+  candidateEvidence,
+  candidateTasks = tasks,
+  artifactReader = readBoundArtifact,
+) => {
   if (candidateEvidence.schema !== "starfiniti.managed-billing-canary.v1") {
     fail("unexpected schema");
   }
@@ -284,17 +493,92 @@ const validateDocument = (candidateEvidence, candidateTasks = tasks) => {
   };
   inspectEvidence(candidateEvidence);
 
+  if (!Array.isArray(candidateEvidence.artifacts)) {
+    fail("artifacts must be an array");
+  }
+  const artifactIds = new Set();
+  const verifiedArtifactPaths = new Set();
+  const verifiedArtifactDigests = new Set();
+  for (const artifact of candidateEvidence.artifacts) {
+    if (!requiredArtifacts.has(artifact.id))
+      fail(`unknown artifact ${artifact.id}`);
+    if (artifactIds.has(artifact.id)) fail(`duplicate artifact ${artifact.id}`);
+    if (!new Set(["pending", "verified"]).has(artifact.status)) {
+      fail(`invalid artifact status for ${artifact.id}`);
+    }
+    artifactIds.add(artifact.id);
+    if (artifact.status === "pending") {
+      if (artifact.path !== null || artifact.sha256 !== null) {
+        fail(`pending artifact ${artifact.id} must not claim a path or digest`);
+      }
+      continue;
+    }
+    if (verifiedArtifactPaths.has(artifact.path)) {
+      fail("verified artifacts reuse one evidence path");
+    }
+    if (verifiedArtifactDigests.has(artifact.sha256)) {
+      fail("verified artifacts reuse one evidence digest");
+    }
+    verifiedArtifactPaths.add(artifact.path);
+    verifiedArtifactDigests.add(artifact.sha256);
+    const document = artifactReader(
+      artifact.path,
+      artifact.sha256,
+      artifact.id,
+    );
+    if (
+      document?.schema !== "starfiniti.managed-billing-canary-artifact.v1" ||
+      document.artifactId !== artifact.id ||
+      document.candidateCommit !== candidateEvidence.candidate.commit ||
+      document.result !== "verified" ||
+      typeof document.summary !== "string" ||
+      document.summary.length < 20 ||
+      document.summary !== document.summary.trim() ||
+      typeof document.observedAt !== "string" ||
+      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/u.test(document.observedAt) ||
+      Number.isNaN(Date.parse(document.observedAt)) ||
+      Date.parse(document.observedAt) > Date.parse(candidateEvidence.observedAt)
+    ) {
+      fail(`${artifact.id} artifact contract differs`);
+    }
+    const expectedChecks = artifactCheckBindings.get(artifact.id);
+    if (
+      !Array.isArray(document.checks) ||
+      document.checks.length !== expectedChecks.length ||
+      new Set(document.checks).size !== document.checks.length ||
+      expectedChecks.some((checkId) => !document.checks.includes(checkId))
+    ) {
+      fail(`${artifact.id} artifact check coverage differs`);
+    }
+    inspectEvidence(document, `artifact.${artifact.id}`);
+  }
+  for (const artifactId of requiredArtifacts) {
+    if (!artifactIds.has(artifactId)) fail(`missing artifact ${artifactId}`);
+  }
+  for (const check of candidateEvidence.checks) {
+    if (check.status !== "passed") continue;
+    for (const artifactId of checkArtifactBindings.get(check.id) ?? []) {
+      const artifact = candidateEvidence.artifacts.find(
+        (candidate) => candidate.id === artifactId,
+      );
+      if (artifact?.status !== "verified") {
+        fail(`passed check ${check.id} lacks verified artifact ${artifactId}`);
+      }
+    }
+  }
+
   if (
     !Array.isArray(candidateEvidence.automaticFails) ||
-    candidateEvidence.automaticFails.length < 14 ||
+    candidateEvidence.automaticFails.length !== requiredAutomaticFails.size ||
     candidateEvidence.automaticFails.some(
       (rule) =>
-        typeof rule !== "string" || rule.length < 20 || rule !== rule.trim(),
+        !requiredAutomaticFails.has(rule.id) ||
+        rule.rule !== requiredAutomaticFails.get(rule.id),
     ) ||
-    new Set(candidateEvidence.automaticFails).size !==
-      candidateEvidence.automaticFails.length
+    new Set(candidateEvidence.automaticFails.map((rule) => rule.id)).size !==
+      requiredAutomaticFails.size
   ) {
-    fail("automatic failures must contain at least fourteen unique rules");
+    fail("automatic failures must contain every required unique rule ID");
   }
 
   const m14 = candidateTasks.tasks.find(
@@ -358,6 +642,14 @@ const validateDocument = (candidateEvidence, candidateTasks = tasks) => {
         `complete evidence has non-passing checks: ${incomplete.map((check) => check.id).join(", ")}`,
       );
     }
+    const incompleteArtifacts = candidateEvidence.artifacts.filter(
+      (artifact) => artifact.status !== "verified",
+    );
+    if (incompleteArtifacts.length > 0) {
+      fail(
+        `complete evidence has unverified artifacts: ${incompleteArtifacts.map((artifact) => artifact.id).join(", ")}`,
+      );
+    }
     if (calculatedScore < candidateEvidence.score.target || belowFloor.length) {
       fail("complete evidence does not meet score and category floors");
     }
@@ -379,14 +671,75 @@ if (process.argv.includes("--self-test")) {
     check.evidence =
       "Verified immutable canary evidence reconciles this mandatory result exactly.";
   };
+  const buildCompleteFixture = () => {
+    const candidateEvidence = structuredClone(evidence);
+    const candidateTasks = structuredClone(tasks);
+    candidateEvidence.status = "complete";
+    completionApprovals.forEach((approval) => {
+      candidateEvidence.candidate[approval] = true;
+    });
+    candidateEvidence.checks.forEach(markPassed);
+    const operability = candidateEvidence.score.categories.find(
+      (category) => category.id === "operability",
+    );
+    operability.score = 8;
+    operability.evidence =
+      "Release, recovery, approved Stripe sandbox, bounded billing canary, rollback, observation, and exact final reconciliation evidence are verified and digest-bound.";
+    candidateEvidence.score.total = candidateEvidence.score.categories.reduce(
+      (total, category) => total + category.score,
+      0,
+    );
+    const m14 = candidateTasks.tasks.find(
+      (task) => task.id === "M14-MANAGED-BILLING",
+    );
+    m14.status = "complete";
+    m14.module_score = candidateEvidence.score.total;
+    m14.slices.find((slice) => slice.id === "M14-S06-CANARY-AND-CLOSE").status =
+      "complete";
+
+    const bindings = new Map();
+    candidateEvidence.artifacts.forEach((artifact) => {
+      const document = {
+        schema: "starfiniti.managed-billing-canary-artifact.v1",
+        artifactId: artifact.id,
+        candidateCommit: candidateEvidence.candidate.commit,
+        observedAt: candidateEvidence.observedAt,
+        result: "verified",
+        summary: `Synthetic self-test evidence verifies the exact ${artifact.id} completion boundary.`,
+        checks: artifactCheckBindings.get(artifact.id),
+        details: { fixture: true, mutationCount: 0 },
+      };
+      const raw = JSON.stringify(document);
+      artifact.status = "verified";
+      artifact.path = `docs/plan/evidence/M14/production/billing-${artifact.id.replaceAll("_", "-")}-self-test.json`;
+      artifact.sha256 = digest(raw);
+      bindings.set(artifact.id, {
+        artifact: structuredClone(artifact),
+        document,
+      });
+    });
+    const artifactReader = (relativePath, expectedDigest, artifactId) => {
+      const binding = bindings.get(artifactId);
+      if (
+        !binding ||
+        binding.artifact.path !== relativePath ||
+        binding.artifact.sha256 !== expectedDigest
+      ) {
+        fail(`${artifactId} fixture binding differs`);
+      }
+      return structuredClone(binding.document);
+    };
+    return { candidateEvidence, candidateTasks, artifactReader };
+  };
   const expectRejected = (
     candidateEvidence,
     messagePart,
     label,
     candidateTasks = tasks,
+    artifactReader = readBoundArtifact,
   ) => {
     try {
-      validateDocument(candidateEvidence, candidateTasks);
+      validateDocument(candidateEvidence, candidateTasks, artifactReader);
     } catch (error) {
       if (error instanceof Error && error.message.includes(messagePart)) return;
       throw error;
@@ -402,24 +755,16 @@ if (process.argv.includes("--self-test")) {
     "unapproved evidence as complete",
   );
 
-  const pendingCompletion = structuredClone(evidence);
-  pendingCompletion.status = "complete";
-  completionApprovals.forEach((approval) => {
-    pendingCompletion.candidate[approval] = true;
-  });
-  for (const checkId of [
-    "approved_release",
-    "operator_access",
-    "approved_stripe_sandbox",
-    "approved_commercial_policy",
-    "canary_approval",
-  ]) {
-    markPassed(pendingCompletion.checks.find((check) => check.id === checkId));
-  }
+  const pendingCompletion = buildCompleteFixture();
+  pendingCompletion.candidateEvidence.checks.find(
+    (check) => check.id === "managed_entitlement_canary",
+  ).status = "pending";
   expectRejected(
-    pendingCompletion,
+    pendingCompletion.candidateEvidence,
     "complete evidence has non-passing checks",
     "pending evidence as complete",
+    pendingCompletion.candidateTasks,
+    pendingCompletion.artifactReader,
   );
 
   const sensitiveKey = structuredClone(evidence);
@@ -485,11 +830,82 @@ if (process.argv.includes("--self-test")) {
   expectRejected(nonExactCommit, "full lowercase Git SHA", "a short commit");
 
   const shortAutomaticFailure = structuredClone(evidence);
-  shortAutomaticFailure.automaticFails[0] = "too short";
+  shortAutomaticFailure.automaticFails[0].rule = "too short";
   expectRejected(
     shortAutomaticFailure,
-    "at least fourteen unique rules",
+    "every required unique rule ID",
     "a hollow automatic failure rule",
+  );
+
+  const missingAutomaticFailure = structuredClone(evidence);
+  missingAutomaticFailure.automaticFails[0].id = "replacement_rule";
+  expectRejected(
+    missingAutomaticFailure,
+    "every required unique rule ID",
+    "a replaced automatic failure boundary",
+  );
+
+  const passedWithoutArtifact = structuredClone(evidence);
+  const baselineArtifact = passedWithoutArtifact.artifacts.find(
+    (artifact) => artifact.id === "read_only_baseline",
+  );
+  baselineArtifact.status = "pending";
+  baselineArtifact.path = null;
+  baselineArtifact.sha256 = null;
+  expectRejected(
+    passedWithoutArtifact,
+    "lacks verified artifact",
+    "a passed production check without a verified artifact",
+  );
+
+  const artifactDigestDrift = structuredClone(evidence);
+  artifactDigestDrift.artifacts.find(
+    (artifact) => artifact.id === "read_only_baseline",
+  ).sha256 = "f".repeat(64);
+  expectRejected(
+    artifactDigestDrift,
+    "artifact digest differs",
+    "artifact digest drift",
+  );
+
+  const unsafeArtifactPath = structuredClone(evidence);
+  unsafeArtifactPath.artifacts.find(
+    (artifact) => artifact.id === "read_only_baseline",
+  ).path = "docs/plan/evidence/M14/canary.yaml";
+  expectRejected(
+    unsafeArtifactPath,
+    "artifact path is unsafe",
+    "an unsafe artifact path",
+  );
+
+  const reusedPathFixture = buildCompleteFixture();
+  const reusedPathArtifacts = reusedPathFixture.candidateEvidence.artifacts;
+  reusedPathArtifacts.find(
+    (artifact) => artifact.id === "observation_report",
+  ).path = reusedPathArtifacts.find(
+    (artifact) => artifact.id === "rollback_report",
+  ).path;
+  expectRejected(
+    reusedPathFixture.candidateEvidence,
+    "reuse one evidence path",
+    "a reused production evidence path",
+    reusedPathFixture.candidateTasks,
+    reusedPathFixture.artifactReader,
+  );
+
+  const reusedDigestFixture = buildCompleteFixture();
+  const reusedDigestArtifacts = reusedDigestFixture.candidateEvidence.artifacts;
+  reusedDigestArtifacts.find(
+    (artifact) => artifact.id === "observation_report",
+  ).sha256 = reusedDigestArtifacts.find(
+    (artifact) => artifact.id === "rollback_report",
+  ).sha256;
+  expectRejected(
+    reusedDigestFixture.candidateEvidence,
+    "reuse one evidence digest",
+    "a reused production evidence digest",
+    reusedDigestFixture.candidateTasks,
+    reusedDigestFixture.artifactReader,
   );
 
   const baselineDrift = structuredClone(evidence);
@@ -530,18 +946,60 @@ if (process.argv.includes("--self-test")) {
     incompleteNestedSliceTasks,
   );
 
-  const belowFloorCompletion = structuredClone(evidence);
-  belowFloorCompletion.status = "complete";
-  completionApprovals.forEach((approval) => {
-    belowFloorCompletion.candidate[approval] = true;
-  });
-  belowFloorCompletion.checks.forEach((check) => {
-    markPassed(check);
-  });
+  const taskScoreDrift = structuredClone(tasks);
+  taskScoreDrift.tasks.find(
+    (task) => task.id === "M14-MANAGED-BILLING",
+  ).module_score += 1;
   expectRejected(
-    belowFloorCompletion,
+    evidence,
+    "module score must match",
+    "task and evidence score drift",
+    taskScoreDrift,
+  );
+
+  const falseCompletion = buildCompleteFixture();
+  const missingProductionArtifact =
+    falseCompletion.candidateEvidence.artifacts.find(
+      (artifact) => artifact.id === "reconciliation_report",
+    );
+  missingProductionArtifact.status = "pending";
+  missingProductionArtifact.path = null;
+  missingProductionArtifact.sha256 = null;
+  expectRejected(
+    falseCompletion.candidateEvidence,
+    "lacks verified artifact",
+    "prose-only completion without bound production evidence",
+    falseCompletion.candidateTasks,
+    falseCompletion.artifactReader,
+  );
+
+  const belowFloorCompletion = buildCompleteFixture();
+  const belowFloorOperability =
+    belowFloorCompletion.candidateEvidence.score.categories.find(
+      (category) => category.id === "operability",
+    );
+  belowFloorOperability.score = 3;
+  belowFloorCompletion.candidateEvidence.score.total =
+    belowFloorCompletion.candidateEvidence.score.categories.reduce(
+      (total, category) => total + category.score,
+      0,
+    );
+  belowFloorCompletion.candidateTasks.tasks.find(
+    (task) => task.id === "M14-MANAGED-BILLING",
+  ).module_score = belowFloorCompletion.candidateEvidence.score.total;
+  expectRejected(
+    belowFloorCompletion.candidateEvidence,
     "score and category floors",
     "completion below a category floor",
+    belowFloorCompletion.candidateTasks,
+    belowFloorCompletion.artifactReader,
+  );
+
+  const completeFixture = buildCompleteFixture();
+  validateDocument(
+    completeFixture.candidateEvidence,
+    completeFixture.candidateTasks,
+    completeFixture.artifactReader,
   );
 }
 

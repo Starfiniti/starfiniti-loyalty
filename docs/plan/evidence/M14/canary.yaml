@@ -1,12 +1,12 @@
 schema: starfiniti.managed-billing-canary.v1
 status: in_progress
-observedAt: 2026-08-27T05:51:30Z
+observedAt: 2026-08-27T18:52:44Z
 currentProduction:
   release: v0.1.11
   applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
 candidate:
-  pullRequest: 49
-  commit: b02fabee5ad1cd236e65a0b19a1a9675bf4d6c22
+  pullRequest: 57
+  commit: 9bea3d4d210dd222d739495d3b1741c62462c7a2
   approvedRelease: false
   operatorAccess: true
   stripeSandboxApproved: false
@@ -38,7 +38,7 @@ score:
     - id: tests
       weight: 15
       score: 15
-      evidence: Candidate evidence covers 3,701 pgTAP assertions, 22 concurrency probes, 950 workspace tests, both images, and all four WooCommerce runtimes.
+      evidence: "Exact candidate evidence covers 958 workspace tests, 81 migrations, 68 pgTAP files, the full concurrency matrix, both images, and all four WooCommerce runtimes."
     - id: performance
       weight: 10
       score: 8
@@ -54,10 +54,10 @@ score:
 checks:
   - id: exact_head_ci
     status: passed
-    evidence: Run 33044421620 at b02fabee5ad1cd236e65a0b19a1a9675bf4d6c22 passed all seven jobs with 950 workspace tests, both production images, and all four WooCommerce runtimes.
+    evidence: "CI run 33105154521 and Security run 33105155321 passed at integrated candidate commit 9bea3d4d210dd222d739495d3b1741c62462c7a2 with all eleven PR checks green."
   - id: migration_replay
     status: passed
-    evidence: Run 33044421620 cleanly replayed all 81 additive migrations and all 68 pgTAP files with 3,701 assertions.
+    evidence: "Exact candidate CI replayed all 81 additive migration files and all 68 pgTAP files with the complete database and concurrency boundary green."
   - id: contract_provider_matrix
     status: passed
     evidence: Strict public summaries, signed webhook intake, Checkout and Portal reservations, provider adapters, usage dispatch, and commercial-policy contracts pass bounded adversarial tests.
@@ -66,7 +66,7 @@ checks:
     evidence: RLS, grants, live membership, deployment, entitlement, account, plan, meter, policy, contract, minimization, immutability, and zero-value boundaries pass.
   - id: concurrency_matrix
     status: passed
-    evidence: Twenty-two two-session probes cover loyalty value plus billing account, event, session, usage, policy, contract, and growth-command convergence.
+    evidence: "The complete repository two-session matrix covers loyalty value plus billing account, event, session, usage, policy, contract, migration, identity, and growth-command convergence."
   - id: woocommerce_runtime_matrix
     status: passed
     evidence: Minimum and current WordPress and WooCommerce pass with HPOS and legacy storage while managed billing remains outside checkout.
@@ -93,7 +93,7 @@ checks:
     evidence: Server, worker, database, Compose, contract, and adapter tests return before Stripe key reads, source scans, provider construction, or provider requests in self-hosted mode.
   - id: approved_release
     status: pending
-    evidence: Draft PR 49 and its stacked M14 parents are not yet an approved immutable production release.
+    evidence: "Draft PR 57 is exact-head green but explicit merge, immutable release, and deployment approval remain required."
   - id: approved_stripe_sandbox
     status: pending
     evidence: A reviewed Stripe sandbox, three purpose-separated test credentials, and an exact webhook endpoint have not been approved for the canary.
@@ -121,6 +121,9 @@ checks:
   - id: migration_registration
     status: pending
     evidence: Production must record each additive M14 migration version and source hash exactly once before any managed-billing enablement.
+  - id: non_canary_disabled
+    status: pending
+    evidence: "Unrelated organizations, accounts, plans, subscriptions, Prices, meters, policies, contracts, provider events, sessions, and workers must receive no managed-billing capability or provider call."
   - id: self_hosted_runtime_no_call
     status: pending
     evidence: Capture network and file-access evidence from deployed disabled images proving zero Stripe request, key read, source scan, or billing-worker construction in self-hosted mode.
@@ -196,19 +199,73 @@ checks:
   - id: final_reconciliation
     status: pending
     evidence: Confirm zero unexplained subscription, entitlement, Price, meter, usage, invoice, policy, contract, attempt, protected-path, checkout, or ledger difference.
+artifacts:
+  - id: read_only_baseline
+    status: verified
+    path: docs/plan/evidence/M14/production/billing-read-only-baseline-2026-08-27.json
+    sha256: 5cbd2629d1d3f431e467c29a06a63f62e429f41b69d52af7441d4400db974696
+  - id: release_inventory
+    status: pending
+    path: null
+    sha256: null
+  - id: approval_record
+    status: pending
+    path: null
+    sha256: null
+  - id: recovery_point
+    status: pending
+    path: null
+    sha256: null
+  - id: production_baseline
+    status: pending
+    path: null
+    sha256: null
+  - id: canary_journal
+    status: pending
+    path: null
+    sha256: null
+  - id: reconciliation_report
+    status: pending
+    path: null
+    sha256: null
+  - id: rollback_report
+    status: pending
+    path: null
+    sha256: null
+  - id: observation_report
+    status: pending
+    path: null
+    sha256: null
 automaticFails:
-  - card payment contact redirect provider response or raw webhook material is stored logged exported or copied into evidence
-  - self-hosted mode reads a Stripe key scans billable sources constructs a provider client or makes a Stripe request
-  - browser input Auth claims or provider metadata grant tenant customer Price meter return subscription entitlement or commercial authority
-  - unsigned stale oversized malformed or changed replay input enters the verified provider inbox
-  - duplicate delayed changed or out-of-order provider delivery creates a second effect or regresses current commercial state
-  - provider state or navigation return overrides committed event-time PostgreSQL evidence
-  - duplicate source or dispatch creates another billable unit or a correction loses source period account or meter attribution
-  - asynchronous provider usage or invoice evidence is declared reconciled before bounded convergence polling succeeds
-  - delinquency contract or billing outage blocks checkout ingestion refunds releases redemption reconciliation export account access or promised value
-  - a manual contract is self-approved unbounded unaudited backdated over conflicting evidence or effective outside its exact interval
-  - cross-tenant account plan operation event usage policy contract summary or provider evidence is visible or mutable
-  - reusable Stripe keys signatures or raw provider resource identifiers appear in repository browser database logs support output or canary evidence
-  - ambiguous provider outcome is retried as success released for changed reuse or discarded without reconciliation
-  - approved release sandbox catalogue policy recovery point canary rollback observation or final reconciliation evidence is absent
-  - module score or any category floor is missed or a critical security tenancy privacy billing ledger recovery accessibility data-loss or immutable-history finding remains
+  - id: sensitive_provider_data
+    rule: "card payment contact redirect provider response raw webhook or reusable authority material is stored logged exported shown in support output or copied into evidence"
+  - id: self_hosted_provider_call
+    rule: "self-hosted mode reads a Stripe key scans billable sources constructs a provider client starts a billing worker or makes a Stripe request"
+  - id: browser_or_provider_authority
+    rule: "browser input Auth claims provider metadata navigation return or mutable response grants tenant customer Price meter subscription entitlement or commercial authority"
+  - id: unverified_webhook
+    rule: "unsigned stale oversized malformed unsupported or changed replay input enters the verified provider inbox or changes commercial state"
+  - id: provider_replay_regression
+    rule: "duplicate delayed changed or out-of-order provider delivery creates another receipt effect entitlement revision or regresses event-time commercial state"
+  - id: duplicate_usage_effect
+    rule: "duplicate source retry concurrency correction or dispatch creates another billable unit loses source period account or meter attribution or makes usage negative"
+  - id: premature_reconciliation
+    rule: "asynchronous provider usage invoice subscription or ambiguity evidence is declared reconciled before bounded convergence polling and exact local comparison succeed"
+  - id: protected_path_block
+    rule: "delinquency contract provider outage billing worker failure or commercial restriction blocks checkout ingestion refunds releases redemption reconciliation export account access or promised value"
+  - id: manual_contract_bypass
+    rule: "a manual contract is self-approved unbounded unaudited backdated over conflicting evidence mutable in place or effective outside its exact interval"
+  - id: cross_tenant_exposure
+    rule: "an unrelated organization account plan operation event usage policy contract summary provider or protected-path selector becomes visible mutable or externally actionable"
+  - id: credential_or_resource_leak
+    rule: "reusable Stripe keys signatures raw provider resource identifiers payment values or secret mounts appear in repository browser database logs support output or canary artifacts"
+  - id: ambiguous_outcome_guess
+    rule: "an ambiguous provider outcome is retried as success released for changed reuse discarded or used as entitlement authority without exact reconciliation"
+  - id: unsafe_rollout
+    rule: "managed billing Price meter policy contract Checkout Portal webhook or usage dispatch is enabled outside the approved tenant before recovery baseline disabled deployment and isolation pass"
+  - id: reconciliation_gap
+    rule: "subscription entitlement Price meter usage invoice policy contract attempt protected-path checkout or ledger evidence differs from immutable source facts"
+  - id: score_or_approval_bypass
+    rule: "module status completion approval catalogue policy artifact score total or category floor is changed without exact synchronized evidence"
+  - id: unexplained_or_unapproved_close
+    rule: "any billing lifecycle usage invoice protected-path privacy approval artifact score floor or critical security tenancy ledger recovery accessibility data-loss finding remains unresolved"

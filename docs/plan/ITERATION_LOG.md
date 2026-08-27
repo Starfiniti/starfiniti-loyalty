@@ -1,5 +1,14 @@
 # Iteration Log
 
+## 2026-08-27 — M14 digest-bound managed-billing closeout hardening
+
+- Adversarially reviewed the 48-check billing gate and found no production artifacts, mutable automatic-failure prose, no explicit non-canary isolation, and incomplete corruption coverage despite Stripe lifecycle, usage, invoice, manual-contract, protected-path, and outage risk.
+- Replaced it with a 49-check gate retaining every self-hosted no-call, sandbox, catalogue, subscription, usage, correction, invoice, policy, contract, protected-path, outage, rollback, observation, and reconciliation boundary while adding explicit non-canary isolation.
+- Added nine unique path- and SHA-256-bound minimized JSON artifacts, descriptor-first bounded reads, exact candidate/check coverage, provider-specific sensitive-key/value/card rejection, sixteen fixed automatic failures, five completed prerequisite slices plus nested S05 slices, task/score synchronization, five synchronized approvals, and an attainable positive fixture.
+- Corruption fixtures reject approval drift, missing/duplicate/forward-looking checks, score drift, short commits, sensitive provider material, weakened rules, missing/unsafe/reused/digest-drifted artifacts, unsafe public baselines, incomplete slices, prose-only closure, and category-floor bypass. The final review also caught a prefix-correct but otherwise invalid full candidate SHA; Git and both GitHub runs now agree on the exact 40-character commit before artifact hashing.
+- Integrated candidate `9bea3d4` passed CI `33105154521` and Security `33105155321`; a fresh read-only artifact confirms canonical public/Auth/REST behavior and running application/Supabase VMs without mutation.
+- The honest M14 score remains 90/100, with 13 controls passed and 36 pending. Operability is 3/10 and blocks completion until approved release/Stripe/catalogue/policy inputs, recovery, disabled isolated deployment, lifecycle/usage/invoice canary, exact reconciliation, rollback, and observation pass.
+
 ## 2026-08-27 — M13 digest-bound enterprise identity closeout hardening
 
 - Adversarially reviewed the 50-check identity gate and found no production artifacts, mutable failure prose, unsynchronized approvals, no explicit non-canary isolation, and incomplete corruption coverage despite high-risk federation, SCIM, support, recovery, and deletion operations.
