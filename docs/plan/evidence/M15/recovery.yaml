@@ -1,12 +1,12 @@
 schema: starfiniti.recovery-evidence.v1
 status: in_progress
-observedAt: 2026-08-27T10:13:13Z
+observedAt: 2026-08-27T10:21:14Z
 currentProduction:
   release: v0.1.11
   applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
 candidate:
   branch: codex/m15-clean-room-recovery
-  commit: aa990c137a06b2f0718e718e4ec2f37fd33bf959
+  commit: 007ede2017bea02df35b241191b45251ff79e665
   approvedDrill: false
   reconciliationApproved: false
 plan:
@@ -48,7 +48,7 @@ checks:
     evidence: The report retains controller-measured stage duration, control and observation digests, aggregate RPO/RTO, failure, and cleanup facts without paths origins credentials identities or raw recovery observations.
   - id: exact_head_ci
     status: passed
-    evidence: Exact commit aa990c137a06b2f0718e718e4ec2f37fd33bf959 passed CI run 33061625916 with all seven baseline database image and WooCommerce jobs and Security run 33061625968 with all three jobs.
+    evidence: Exact commit 007ede2017bea02df35b241191b45251ff79e665 passed CI run 33062421018 with all seven jobs, Security run 33062421028 with all three jobs, and CodeQL policy check 98484528475.
   - id: approved_drill_window
     status: pending
     evidence: A named owner must approve the disposable infrastructure window driver digest source set and teardown authority for both recovery runs.
