@@ -7,6 +7,7 @@
 - The current base-backup and incremental PostgreSQL Borg services last exited successfully. The latest successful nightly Proxmox Borg inventory contains archives for both VM 970 and 971, replacing the stale “first run pending” statement.
 - Hardened the previously shape-light M01 validator with exact root/store/VM/public/aggregate/recovery/check schemas, canonical UTC and immutable-release identity, reconciled container accounting, approval and restore/check equivalence, bounded minimized text, obvious secret/identity rejection, complete-state health/recovery floors, and eleven deterministic corruption fixtures.
 - Kept `application_auth_secret_restore` pending: an archive is not a restored service. The manifest remains one of 22 checks passed until an isolated application/Auth/Authentik/configuration/signing smoke, an approved real-store value/outage sequence, alerts, exact reconciliation, and approvals exist.
+- Exact integration head `657cacab3c9e114307780135106a9963a30b22e4` passed CI `33127298348`, Security `33127298345`, and external CodeQL with all eleven checks green; draft PR #57 remained merge-clean and production remained unchanged.
 
 ## 2026-08-28 — Disabled-first tenant-federation credential boundary
 

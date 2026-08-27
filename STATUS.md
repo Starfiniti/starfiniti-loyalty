@@ -132,18 +132,18 @@
 
 ## Database migration state
 
-The active M16 branch validates 81 versioned migrations and 68 pgTAP files; exact-head CI run `33071504559` passed clean replay, all concurrency probes, both production images, and all four WooCommerce runtime variants. Production has applied twenty-eight migrations through `20260813200000`, contains the audited initial Starfiniti owner scope and explicit `programme.v2` canary, and still has no customer or loyalty-ledger value.
+The active integration branch validates 81 versioned migrations and 68 pgTAP files; exact-head CI run `33127298348` at `657caca` passed clean replay, all concurrency probes, both production images, and all four WooCommerce runtime variants. Production has applied twenty-eight migrations through `20260813200000`, contains the audited initial Starfiniti owner scope and explicit `programme.v2` canary, and still has no customer or loyalty-ledger value.
 
 ## Git state
 
 Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 WooCommerce pipeline, PR `#7` merged Phase 9, PR `#9` merged Authentik workforce SSO, PR `#10` merged the English-only launch presentation, PR `#17` merged the Hub-style redesign, PR `#20` merged the focused Programme workflows, PR `#26` merged M03, and PR `#27` versioned the production-backup repair. Release `v0.1.11` runs the exact M03/recovery commit in production. GitHub recognizes the repository license as GNU AGPLv3.
 
-The active stacked implementation branch is `codex/m16-continuous-improvement`, based on exact-green M15-S06 head `fd77db4`; draft PR #56 targets that branch and is merge-clean. Stale Phase 4 local planning changes remain preserved as `preserve stale phase-4 planning state before enterprise roadmap 2026-08-13` and are not part of this branch.
+The active implementation branch is `codex/enterprise-roadmap-integration`; draft PR #57 targets `main`, consolidates M04–M16, and is merge-clean at verified candidate `657caca`. Stale Phase 4 local planning changes remain preserved as `preserve stale phase-4 planning state before enterprise roadmap 2026-08-13` and are not part of this branch.
 
 ## Last verification
 
-- M16 implementation/evidence head `88a9ef0` passed CI `33071504559`, Security `33071504623`, and external CodeQL with all eleven checks green; PR #56 is merge-clean.
-- Exact-head delivery repairs passed all seven CI jobs on PR #29 (`30fb2f9`, run `33073236099`), PR #30 (`48c8784`, run `33074423308`), PR #31 (`f16d6b2`, run `33075109579`), PR #32 (`847f16e`, run `33075499745`), and PR #42 (`56e854a`, run `33073430984`). A fresh GitHub audit found every open roadmap PR from #29 through #56 merge-clean with zero failed or pending checks.
+- Consolidated integration candidate `657caca` passed CI `33127298348`, Security `33127298345`, and external CodeQL with all eleven checks green; draft PR #57 is merge-clean against `main`.
+- M13 credential-boundary commit `945c92f` independently passed CI `33126151633`, Security `33126151639`, and external CodeQL before the M01 evidence refresh was added.
 - `npm run ci:validate` — passed locally for four baseline jobs, three security jobs, release SBOM/provenance, immutable action inputs, and container boundaries.
 - `npm run security:validate` — passed its corruption matrix for 25 security checks and the isolated six-job ZAP plan; 15 exact repository/execution controls pass and ten external/final-review gates remain deliberately non-passing.
 - `npm run recovery:validate` — passed its corruption and controller self-tests for 32 checks and fourteen exact stages; seven repository controls pass and 25 environment/exercise/reconciliation gates remain deliberately non-passing.
@@ -220,7 +220,7 @@ The active stacked implementation branch is `codex/m16-continuous-improvement`, 
 
 ## Next recommended task
 
-Review and merge the now-clean stacked chain in dependency order, then activate only approved external closeouts: the real WooCommerce pilot, monitoring/recovery/security exercises, module canaries, the thirty-day GA window, and the real monthly/quarterly M16 cadence. Do not substitute repository fixtures or green merge checks for production or elapsed evidence.
+Review and merge draft PR #57, then activate only approved external closeouts: the real WooCommerce pilot, monitoring/recovery/security exercises, module canaries, the thirty-day GA window, and the real monthly/quarterly M16 cadence. Do not substitute repository fixtures or green merge checks for production or elapsed evidence.
 
 ## Blockers
 
