@@ -1,5 +1,43 @@
 # Iteration Log
 
+## 2026-08-27 — M14 fail-closed canary gate
+
+- Added the exact-schema 48-check M14 manifest and validator to the root repository gate. Completion requires exact release/commit evidence, five explicit approvals, all checks passing, a 90/100 module score, at least 80% of every category, completed prerequisite task state, and no deterministic automatic failure.
+- Covered recovery, disabled deployment, runtime self-hosted no-call evidence, one-tenant enablement, owner-only Checkout/Portal, verified webhook replay/disorder, official test-clock lifecycle, immutable source-fact usage/correction, bounded asynchronous provider convergence, invoice reconciliation, commercial recovery, protected paths, provider/worker outage, rollback, observation, and final reconciliation.
+- Added evidence scanning for secret-bearing keys, personal data, reusable credentials, and raw Stripe resource patterns. Self-tests corrupt approvals, checks, score arithmetic, commit identity, public access, prerequisites, category floors, and evidence to prove false completion is rejected.
+- Revalidated the canonical public baseline without authentication or mutation: dashboard health and login return 200, Supabase Auth and REST without a key return 401, and DNS resolves. Production remains globally `self_hosted` with no Stripe configuration or request.
+- Thirteen checks pass and 35 remain pending. The provisional module score is 90/100, but operability is 3/10 and below its mandatory 8/10 floor; approved release, sandbox/catalogue/policy inputs, recovery point, deployment, lifecycle/usage/invoice canaries, reconciliation, rollback, observation, and owner approval remain mandatory.
+- Exact implementation-head run `33044421620` at `b02fabee5ad1cd236e65a0b19a1a9675bf4d6c22` passed all seven jobs: 950 workspace tests, both images, 81 migrations, all 68 pgTAP files with 3,701 assertions, all 22 concurrency probes, and all four WooCommerce runtime cells.
+
+## 2026-08-27 — M14 managed-billing merchant closeout
+
+- Completed the Billing recovery experience across unconfigured, grace, restricted, cancelled, active, and manual-contract authority. Every state now explains who can act, what action is available, and which balances, history, operations, exports, reconciliation, checkout, and promised rewards remain protected.
+- Bound Checkout, Portal, plan selection, and manual-contract presentation to the minimized database-authoritative projection. Manual contracts no longer imply self-serve provider authority, zero-plan configurations fail honestly to an operator dependency, non-owners receive owner-directed guidance, and browser redirects remain navigation only.
+- Added semantic operational-continuity navigation, exact friendly restriction reasons, responsive 4→2→1 layout, 40/44 px controls, route metadata, and the existing Starfiniti application icon.
+- Adversarial production-browser review repaired contradictory controls/copy and a skip-link pointer collision over the mobile menu. The final 1440×1000, 720×700, 390×844, and 320×900 light/dark reduced-motion matrix passed landmarks, keyboard/drawer focus, Escape restoration, reflow, overflow, exact bigint usage, diagnostics, and measured 4.5:1-or-better contrast.
+- Local `npm run check` passed 950 workspace tests and the 32-route production build. Exact implementation-head run `33043411759` at `f7a4def55ae5d4cd646ac6cad26004992f498d2b` passed all seven jobs: 81 migrations, all 68 pgTAP files with 3,701 assertions, all 22 concurrency probes, both images, and all four WooCommerce runtime cells. M14-S05 is repository-complete; S06 canary and closeout is active with production unchanged.
+
+## 2026-08-27 — M14 table-bound managed growth enforcement
+
+- Accepted ADR-0061 after comparing a global entitlement substitution, explicit command calls, UI-only denial, and table-bound guards. A private immutable inventory now covers 23 reviewed mutable growth/configuration roots while protected value, commerce, customer access, export, organization-access, correction, and checkout roots remain structurally absent.
+- Kept product entitlement and commercial policy independent. Existing commands and contract validators continue to decide each product capability; the ordered guard checks only tenant-canary `managed.billing`, so mixed immutable V1/V2 history and established deterministic errors remain compatible.
+- Self-hosted installations and managed tenants without the billing canary retain their prior product behavior. Trial, active, grace, and effective contract-managed states allow new configuration; unconfigured, suspended, and cancelled states deny it without hiding immutable history or restricting safe lifecycle reduction.
+- Database-role privilege is resolved before request metadata. Operator/worker lifecycle and recovery paths cannot be commercialized by stale JWT claims, `loyalty_runtime` remains policy-evaluated behind its private actor-validating functions, and ordinary subjectless roles fail closed.
+- Added the twenty-second two-session database probe. Concurrent exact authoring creates one effect; the exact historical retry remains readable after restriction; changed growth is denied; active recovery reopens configuration; and the loyalty ledger remains unchanged.
+- Linux run `33040086022` found a PL/pgSQL record-name parse error. Run `33040384316` then exposed overbroad activation and validation-order masking. Run `33040993138` exposed invalid structural-test syntax, duplicated product authority, and request-claim privilege confusion. Run `33041269073` isolated the remaining subjectless `loyalty_runtime` compatibility case. All were repaired at the authority boundary rather than waived.
+- Exact implementation-head run `33041473615` at `100c164361a9a9c5fed026b92592f4df70d44546` passed all seven jobs: 945 workspace tests, both production images, a clean 81-migration replay, all 68 pgTAP files with 3,701 assertions, all 22 concurrency probes, and all four WooCommerce runtime cells. S05B is repository-complete; S05C merchant experience and closeout is active with production unchanged.
+
+## 2026-08-27 — M14 deterministic commercial-policy core
+
+- Accepted ADR-0060 after comparing live provider authorization with effective-dated local evidence. PostgreSQL deterministically combines deployment, immutable provider occurrence, append-only delinquency policy, and approved manual-contract evidence without changing the general entitlement resolver.
+- Added strict minimized `BillingSummaryV2` while retaining V1 compatibility, plus a separate private growth/configuration authorization helper that always preserves protected value paths and returns locally in `self_hosted`.
+- Added append-only, RLS-private policy and contract versions with separate actor/approver, bounded reason and interval, exact idempotency, semantic convergence across caller keys, and conflicting same-instant failure independent of lock acquisition order.
+- Bound past-due grace to policy effective and already recorded at provider occurrence time. Explicit stored grace wins; later-observed backdated policy cannot retroactively alter an old provider event. Manual `allow_growth` wins only while effective, and `defer_to_provider` explicitly ends the override.
+- The billing experience now explains authority source, restriction cause, grace deadline, and contract term while keeping balances, usage, history, protected-operation guidance, and private provider evidence separated.
+- Adversarial review repaired one status-copy selector regression, same-instant authority nondeterminism, retroactive policy selection, a pgTAP role-context mistake, an invalid entitlement fixture, and a concurrency probe interval crossing prior append-only deployment history.
+- Production-rendered Chromium passed restricted/grace/contract states at desktop/mobile in light/dark with reduced motion, exact bigint display, responsive card reflow, current navigation, drawer focus restoration, zero overflow, and zero real diagnostics.
+- Exact implementation-head run `33038559023` at `877f7e91de2d3eb4c047f0ff5edaa74877045d52` passed all seven jobs: 945 workspace tests, both images, 80 migrations, all 67 pgTAP files with 3,658 assertions, all 21 concurrency probes, and all four WooCommerce runtime cells. S05A is repository-complete; S05B explicit command enforcement is active with production unchanged.
+
 ## 2026-08-27 — M14 immutable source-fact usage metering
 
 - Accepted ADR-0059 after comparing mutable daily/monthly aggregates with immutable source facts. PostgreSQL remains authoritative; Stripe is an asynchronous managed-only sink with bounded duplicate enforcement, while corrections append signed compensating facts.

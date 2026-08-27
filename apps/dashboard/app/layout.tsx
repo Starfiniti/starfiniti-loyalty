@@ -4,11 +4,15 @@ import { Suspense } from "react";
 import "geist/font/sans";
 import { LocalizedSkipLink } from "@/components/localized-skip-link";
 import { merchantText, resolveMerchantLocale } from "@/lib/merchant-locale";
+import starfinitiIcon from "../../../docs/design/prototype-source/assets/images/starfiniti-icon.png";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Starfiniti Loyalty",
   description: "Self-hosted loyalty operations for WooCommerce.",
+  icons: {
+    icon: [{ url: starfinitiIcon.src, type: "image/png" }],
+  },
 };
 
 export default async function RootLayout({

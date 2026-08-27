@@ -16,6 +16,22 @@ export const managedBillingCommercialState = z.enum([
 
 export const managedBillingRestriction = z.enum(["none", "new_growth_only"]);
 
+export const managedBillingStateSourceV2 = z.enum([
+  "self_hosted",
+  "unconfigured",
+  "provider",
+  "manual_contract",
+]);
+
+export const managedBillingRestrictionReasonV2 = z.enum([
+  "none",
+  "billing_unconfigured",
+  "payment_past_due",
+  "grace_expired",
+  "provider_suspended",
+  "provider_cancelled",
+]);
+
 export const stripeBillingWebhookEventTypeV1 = z.enum([
   "customer.subscription.created",
   "customer.subscription.updated",
@@ -201,9 +217,8 @@ export const billingProtectedAccessV1 = z
 
 const optionalInstant = z.iso.datetime({ offset: true }).nullable();
 
-export const billingSummaryV1 = z
+const billingSummaryBase = z
   .object({
-    schemaVersion: z.literal("1"),
     organizationId: z.uuid(),
     deploymentMode,
     commercialState: managedBillingCommercialState,
@@ -219,18 +234,123 @@ export const billingSummaryV1 = z
     stateUpdatedAt: optionalInstant,
     protectedAccess: billingProtectedAccessV1,
   })
+  .strict();
+
+type BillingSummaryBase = z.infer<typeof billingSummaryBase>;
+
+function validateBillingSummaryCore(
+  value: BillingSummaryBase,
+  context: z.RefinementCtx,
+) {
+  const addIssue = (path: string, message: string) =>
+    context.addIssue({ code: "custom", path: [path], message });
+  const growthStates = new Set([
+    "self_hosted",
+    "trialing",
+    "active",
+    "grace",
+    "contract_managed",
+  ]);
+  const providerSubscriptionStates = new Set([
+    "trialing",
+    "active",
+    "past_due",
+    "grace",
+    "suspended",
+    "cancelled",
+  ]);
+  const expectedGrowth = growthStates.has(value.commercialState);
+
+  if (value.growthConfigurationAllowed !== expectedGrowth) {
+    addIssue(
+      "growthConfigurationAllowed",
+      "growth configuration does not match commercial state",
+    );
+  }
+  if (value.restriction !== (expectedGrowth ? "none" : "new_growth_only")) {
+    addIssue("restriction", "restriction does not match commercial state");
+  }
+  if (value.billingAvailable !== (value.deploymentMode === "managed")) {
+    addIssue(
+      "billingAvailable",
+      "billing availability must follow deployment mode",
+    );
+  }
+  if (
+    (value.deploymentMode === "self_hosted") !==
+    (value.commercialState === "self_hosted")
+  ) {
+    addIssue(
+      "commercialState",
+      "self-hosted state and deployment mode must agree",
+    );
+  }
+  if (
+    value.commercialState === "self_hosted" &&
+    (value.providerLinked ||
+      value.subscriptionPresent ||
+      value.trialEndsAt !== null ||
+      value.currentPeriodEndsAt !== null ||
+      value.graceEndsAt !== null ||
+      value.stateUpdatedAt !== null)
+  ) {
+    addIssue(
+      "providerLinked",
+      "self-hosted state cannot contain provider lifecycle evidence",
+    );
+  }
+  if (value.commercialState === "unconfigured" && value.subscriptionPresent) {
+    addIssue(
+      "subscriptionPresent",
+      "unconfigured managed state cannot contain a subscription",
+    );
+  }
+  if (
+    providerSubscriptionStates.has(value.commercialState) &&
+    (!value.providerLinked || !value.subscriptionPresent)
+  ) {
+    addIssue(
+      "subscriptionPresent",
+      "provider lifecycle state requires private account and subscription evidence",
+    );
+  }
+  if (!value.providerLinked && value.subscriptionPresent) {
+    addIssue(
+      "subscriptionPresent",
+      "subscription evidence requires provider linkage",
+    );
+  }
+  if (value.commercialState === "trialing" && value.trialEndsAt === null) {
+    addIssue("trialEndsAt", "trialing state requires a trial deadline");
+  }
+  if (value.commercialState === "grace") {
+    if (
+      value.graceEndsAt === null ||
+      Date.parse(value.graceEndsAt) <= Date.parse(value.evaluatedAt)
+    ) {
+      addIssue("graceEndsAt", "grace state requires a future grace deadline");
+    }
+  }
+}
+
+export const billingSummaryV1 = billingSummaryBase
+  .extend({ schemaVersion: z.literal("1") })
+  .strict()
+  .superRefine(validateBillingSummaryCore);
+
+export const billingSummaryV2 = billingSummaryBase
+  .extend({
+    schemaVersion: z.literal("2"),
+    stateSource: managedBillingStateSourceV2,
+    restrictionReason: managedBillingRestrictionReasonV2,
+    contractEndsAt: optionalInstant,
+  })
   .strict()
   .superRefine((value, context) => {
+    validateBillingSummaryCore(value, context);
     const addIssue = (path: string, message: string) =>
       context.addIssue({ code: "custom", path: [path], message });
-    const growthStates = new Set([
-      "self_hosted",
-      "trialing",
-      "active",
-      "grace",
-      "contract_managed",
-    ]);
-    const providerSubscriptionStates = new Set([
+    const providerStates = new Set([
       "trialing",
       "active",
       "past_due",
@@ -238,77 +358,82 @@ export const billingSummaryV1 = z
       "suspended",
       "cancelled",
     ]);
-    const expectedGrowth = growthStates.has(value.commercialState);
+    const expectedReason = {
+      self_hosted: "none",
+      unconfigured: "billing_unconfigured",
+      trialing: "none",
+      active: "none",
+      past_due: "payment_past_due",
+      grace: "payment_past_due",
+      suspended: null,
+      cancelled: "provider_cancelled",
+      contract_managed: "none",
+    } as const;
+    const validReason =
+      value.restrictionReason === expectedReason[value.commercialState] ||
+      (value.commercialState === "suspended" &&
+        ["grace_expired", "provider_suspended"].includes(
+          value.restrictionReason,
+        ));
 
-    if (value.growthConfigurationAllowed !== expectedGrowth) {
+    if (!validReason) {
       addIssue(
-        "growthConfigurationAllowed",
-        "growth configuration does not match commercial state",
-      );
-    }
-    if (value.restriction !== (expectedGrowth ? "none" : "new_growth_only")) {
-      addIssue("restriction", "restriction does not match commercial state");
-    }
-    if (value.billingAvailable !== (value.deploymentMode === "managed")) {
-      addIssue(
-        "billingAvailable",
-        "billing availability must follow deployment mode",
+        "restrictionReason",
+        "restriction reason does not match commercial state",
       );
     }
     if (
-      (value.deploymentMode === "self_hosted") !==
+      (value.stateSource === "self_hosted") !==
       (value.commercialState === "self_hosted")
     ) {
+      addIssue("stateSource", "self-hosted state requires its local source");
+    }
+    if (
+      (value.stateSource === "unconfigured") !==
+      (value.commercialState === "unconfigured")
+    ) {
       addIssue(
-        "commercialState",
-        "self-hosted state and deployment mode must agree",
+        "stateSource",
+        "unconfigured state requires its unconfigured source",
       );
     }
     if (
-      value.commercialState === "self_hosted" &&
-      (value.providerLinked ||
-        value.subscriptionPresent ||
-        value.trialEndsAt !== null ||
-        value.currentPeriodEndsAt !== null ||
-        value.graceEndsAt !== null ||
-        value.stateUpdatedAt !== null)
+      (value.stateSource === "manual_contract") !==
+      (value.commercialState === "contract_managed")
     ) {
       addIssue(
-        "providerLinked",
-        "self-hosted state cannot contain provider lifecycle evidence",
-      );
-    }
-    if (value.commercialState === "unconfigured" && value.subscriptionPresent) {
-      addIssue(
-        "subscriptionPresent",
-        "unconfigured managed state cannot contain a subscription",
+        "stateSource",
+        "contract-managed state requires manual contract authority",
       );
     }
     if (
-      providerSubscriptionStates.has(value.commercialState) &&
-      (!value.providerLinked || !value.subscriptionPresent)
+      (value.stateSource === "provider") !==
+      providerStates.has(value.commercialState)
     ) {
       addIssue(
-        "subscriptionPresent",
-        "provider lifecycle state requires private account and subscription evidence",
+        "stateSource",
+        "provider lifecycle state requires provider authority",
       );
     }
-    if (!value.providerLinked && value.subscriptionPresent) {
-      addIssue(
-        "subscriptionPresent",
-        "subscription evidence requires provider linkage",
-      );
-    }
-    if (value.commercialState === "trialing" && value.trialEndsAt === null) {
-      addIssue("trialEndsAt", "trialing state requires a trial deadline");
-    }
-    if (value.commercialState === "grace") {
+    if (value.contractEndsAt !== null) {
       if (
-        value.graceEndsAt === null ||
-        Date.parse(value.graceEndsAt) <= Date.parse(value.evaluatedAt)
+        value.stateSource !== "manual_contract" ||
+        Date.parse(value.contractEndsAt) <= Date.parse(value.evaluatedAt)
       ) {
-        addIssue("graceEndsAt", "grace state requires a future grace deadline");
+        addIssue(
+          "contractEndsAt",
+          "contract end requires a currently effective manual contract",
+        );
       }
+    }
+    if (
+      value.stateSource === "manual_contract" &&
+      value.stateUpdatedAt === null
+    ) {
+      addIssue(
+        "stateUpdatedAt",
+        "manual contract state requires an effective decision time",
+      );
     }
   });
 
@@ -440,6 +565,13 @@ export type ManagedBillingRestriction = z.infer<
 >;
 export type BillingProtectedAccessV1 = z.infer<typeof billingProtectedAccessV1>;
 export type BillingSummaryV1 = z.infer<typeof billingSummaryV1>;
+export type ManagedBillingStateSourceV2 = z.infer<
+  typeof managedBillingStateSourceV2
+>;
+export type ManagedBillingRestrictionReasonV2 = z.infer<
+  typeof managedBillingRestrictionReasonV2
+>;
+export type BillingSummaryV2 = z.infer<typeof billingSummaryV2>;
 export type StripeBillingWebhookEventTypeV1 = z.infer<
   typeof stripeBillingWebhookEventTypeV1
 >;

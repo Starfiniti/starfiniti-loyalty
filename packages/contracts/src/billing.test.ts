@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   billingSummaryV1,
+  billingSummaryV2,
   managedBillingUsageDispatchAuthorityV1,
   managedBillingUsageDispatchClaimV1,
   managedBillingUsageDispatchResultV1,
@@ -135,6 +136,93 @@ describe("billing summary v1", () => {
           protectedAccess: { ...protectedAccess, [key]: false },
         }),
       ).toThrow();
+    }
+  });
+});
+
+describe("billing summary v2", () => {
+  function v2Fixture() {
+    return {
+      ...managedFixture(),
+      schemaVersion: "2",
+      stateSource: "provider",
+      restrictionReason: "none",
+      contractEndsAt: null,
+    } as const;
+  }
+
+  it("adds a deterministic source and reason without expanding private evidence", () => {
+    expect(billingSummaryV2.parse(v2Fixture())).toMatchObject({
+      commercialState: "active",
+      stateSource: "provider",
+      restrictionReason: "none",
+    });
+    expect(() =>
+      billingSummaryV2.parse({
+        ...v2Fixture(),
+        approverReference: "operator:private",
+      }),
+    ).toThrow();
+  });
+
+  it("accepts a current manual contract with an optional future term", () => {
+    expect(
+      billingSummaryV2.parse({
+        ...v2Fixture(),
+        commercialState: "contract_managed",
+        stateSource: "manual_contract",
+        providerLinked: false,
+        subscriptionPresent: false,
+        currentPeriodEndsAt: null,
+        stateUpdatedAt: "2026-08-26T19:30:00Z",
+        contractEndsAt: "2027-08-26T20:00:00Z",
+      }).stateSource,
+    ).toBe("manual_contract");
+  });
+
+  it("rejects mismatched state sources reasons and expired contract terms", () => {
+    expect(() =>
+      billingSummaryV2.parse({
+        ...v2Fixture(),
+        stateSource: "manual_contract",
+      }),
+    ).toThrow(/contract-managed state/u);
+    expect(() =>
+      billingSummaryV2.parse({
+        ...v2Fixture(),
+        commercialState: "past_due",
+        growthConfigurationAllowed: false,
+        restriction: "new_growth_only",
+      }),
+    ).toThrow(/restriction reason/u);
+    expect(() =>
+      billingSummaryV2.parse({
+        ...v2Fixture(),
+        commercialState: "contract_managed",
+        stateSource: "manual_contract",
+        providerLinked: false,
+        subscriptionPresent: false,
+        currentPeriodEndsAt: null,
+        stateUpdatedAt: "2026-08-26T19:30:00Z",
+        contractEndsAt: "2026-08-26T20:00:00Z",
+      }),
+    ).toThrow(/currently effective/u);
+  });
+
+  it("distinguishes provider suspension from an expired local grace period", () => {
+    for (const restrictionReason of [
+      "provider_suspended",
+      "grace_expired",
+    ] as const) {
+      expect(
+        billingSummaryV2.parse({
+          ...v2Fixture(),
+          commercialState: "suspended",
+          growthConfigurationAllowed: false,
+          restriction: "new_growth_only",
+          restrictionReason,
+        }).restrictionReason,
+      ).toBe(restrictionReason);
     }
   });
 });
