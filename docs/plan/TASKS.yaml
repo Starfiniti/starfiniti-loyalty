@@ -2955,6 +2955,7 @@ tasks:
             docs/plan/evidence/M15/fault-injection.yaml,
             infrastructure/testing/fault-injection/plan.yaml,
             docs/operations/FAULT_INJECTION.md,
+            exact-head GitHub Actions run 33049635069 at adf6d9d6bfbd13c6c892e574b2339f3172bc8075 passed all seven jobs,
           ]
       - id: M15-S03-SUPPLY-CHAIN-AND-SECURITY
         title: Complete security scanning SBOM and DAST gates

@@ -1,12 +1,12 @@
 schema: starfiniti.fault-evidence.v1
 status: in_progress
-observedAt: 2026-08-27T07:05:00Z
+observedAt: 2026-08-27T07:27:57Z
 currentProduction:
   release: v0.1.11
   applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
 candidate:
   branch: codex/m15-fault-injection
-  commit: f0ec5258b55cf3b40ba846153c0b2d462c488479
+  commit: adf6d9d6bfbd13c6c892e574b2339f3172bc8075
   approvedEnvironment: false
   reconciliationApproved: false
 plan:
@@ -39,8 +39,8 @@ checks:
     status: passed
     evidence: Reports contain aggregate probe replay restoration and digest evidence without origins paths headers bodies selectors credentials customer data or provider material.
   - id: exact_head_ci
-    status: pending
-    evidence: The implementation branch requires an exact full-head seven-job CI result after adversarial review.
+    status: passed
+    evidence: GitHub Actions run 33049635069 passed all seven jobs at exact implementation commit adf6d9d6bfbd13c6c892e574b2339f3172bc8075 after adversarial review.
   - id: approved_environment
     status: pending
     evidence: A production-like disposable Compose project and bounded exercise window require explicit approval.
