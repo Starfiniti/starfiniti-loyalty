@@ -291,9 +291,10 @@ begin
   request_actor_user_id := loyalty_private.request_user_id();
 
   -- The server runtime still passes through policy because it executes some
-  -- merchant configuration functions on behalf of an already validated actor.
+  -- private merchant commands that derive and validate an explicit actor.
   -- Unknown and browser roles without a subject fail closed.
-  if request_actor_user_id is null then
+  if request_actor_user_id is null
+     and request_role is distinct from 'loyalty_runtime' then
     raise exception using errcode = '42501',
       message = 'managed growth configuration actor is required';
   end if;
