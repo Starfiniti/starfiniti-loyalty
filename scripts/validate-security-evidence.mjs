@@ -422,6 +422,7 @@ export function validateDocument(
     ["securityWorkflow", ".github/workflows/security.yml"],
     ["releaseWorkflow", ".github/workflows/release.yml"],
     ["dastPlan", "infrastructure/testing/security/zap-automation.yaml"],
+    ["licensePolicy", "infrastructure/testing/security/trivy.yaml"],
   ];
   for (const [id, path] of exactInputs) {
     if (

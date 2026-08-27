@@ -3009,6 +3009,7 @@ tasks:
             docs/plan/evidence/M15/security.yaml,
             docs/architecture/ADR/0064-deployable-artifact-security-and-isolated-dast.md,
             docs/operations/SECURITY_SCANNING.md,
+            infrastructure/testing/security/trivy.yaml,
           ]
       - id: M15-S04-CLEAN-ROOM-RECOVERY
         title: Prove clean-room recovery and failover

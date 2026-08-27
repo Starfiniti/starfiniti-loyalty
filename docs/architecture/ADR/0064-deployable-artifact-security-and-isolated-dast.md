@@ -16,6 +16,8 @@ Primary guidance reviewed on 2026-08-27:
 - Trivy repository, image, secret, misconfiguration, licence, and SBOM scanning: <https://trivy.dev/latest/docs/target/repository/> and <https://trivy.dev/latest/docs/scanner/license/>
 - Anchore Syft formats and CycloneDX generation: <https://github.com/anchore/syft>
 - ZAP Automation Framework sequencing, bounded active scanning, passive-scan wait, reporting, and exit status: <https://www.zaproxy.org/docs/desktop/addons/automation-framework/>, <https://www.zaproxy.org/docs/desktop/addons/automation-framework/job-ascan/>, and <https://www.zaproxy.org/docs/desktop/addons/automation-framework/job-exitstatus/>
+- Official Node container composition and Alpine runtime trade-offs: <https://github.com/nodejs/docker-node> and <https://github.com/nodejs/docker-node/blob/main/docs/BestPractices.md>
+- Alpine 3.24 OpenSSL package revision for every supported image architecture: <https://pkgs.alpinelinux.org/package/v3.24/main/x86_64/libcrypto3>
 
 Reviewed tool inputs are CodeQL Action 4.37.9, Trivy Action 0.36.0 with Trivy 0.74.0, Anchore SBOM Action 0.24.0 with Syft 1.51.0, ZAP 2.17.0, Upload Artifact 7.0.1, and Attest Build Provenance 4.2.2. Actions and the ZAP image are pinned by immutable commit or digest.
 
@@ -23,13 +25,15 @@ Reviewed tool inputs are CodeQL Action 4.37.9, Trivy Action 0.36.0 with Trivy 0.
 
 1. Add a separate `Security` workflow for pull requests, `main`, a weekly schedule, and manual runs. Keeping it separate preserves the existing seven-job baseline as a stable compatibility signal while allowing security jobs to evolve independently.
 2. Run CodeQL `security-extended` analysis for JavaScript/TypeScript with only the required `contents: read` and job-local `security-events: write` permissions.
-3. Run the complete npm development/production audit, scan repository files for secrets and misconfiguration, and scan both exact production images for vulnerabilities, secrets, misconfiguration, and prohibited/restricted licences. Every High or Critical result fails whether or not a fix exists.
+3. Run the complete npm development/production audit, scan repository files for secrets and misconfiguration, and scan both exact production images for vulnerabilities, secrets, misconfiguration, and prohibited/restricted licences. Every Unknown, High, or Critical image result fails whether or not a fix exists. Retain full-severity vulnerability, misconfiguration, and licence review reports, but omit secret results from uploaded artifacts so a detection cannot become a second disclosure.
 4. Generate CycloneDX JSON SBOMs from both production images. Tagged releases ship the WooCommerce package, both SBOMs, and checksums; GitHub build-provenance attestations bind every release file and both pushed image digests.
 5. Run ZAP only against a newly built disposable dashboard container on an internal Docker network. The target has no published port and the network has no external route. The plan limits crawl depth/count, scan duration, per-rule duration, delay, context paths, and failure threshold. High alerts fail; Medium/Low/Informational alerts remain in the retained review report.
 6. Upgrade the exact WordPress test runtime to `@wordpress/env` 11.14.0. Its patched `adm-zip` 0.6.0 path removes R-032 only after the complete audit and all four Linux WooCommerce runtime cells pass on the exact candidate.
 7. Do not use CI DAST as penetration-test evidence. An independent penetration test, review of every non-High finding/false-positive decision, current vulnerability databases, and a production configuration scan remain deterministic completion requirements.
 8. Store only minimized evidence references and sanitized reports. Do not commit request/response bodies, credentials, cookies, customer identifiers, production origins, raw infrastructure inventory, or exploit material.
 9. Keep image-level health checks in both deployable images. The dashboard probes its private readiness endpoint. The multi-mode worker probes only its unprivileged PID 1 runtime: database and provider outages are retried by the worker and must not turn a transient dependency failure into an orchestrator restart loop.
+10. Classify AGPL/GPL/LGPL and other reviewed copyleft licences as reciprocal rather than forbidden because the application itself is distributed under AGPL-3.0-or-later. Non-commercial, Commons Clause, Business Source, SSPL, Elastic, and other incompatible terms remain forbidden or restricted. The exact policy is digest-bound evidence; it has no ignored licences.
+11. Remove npm, npx, Corepack, and Yarn from the runtime stages and apply the exact Alpine OpenSSL security revision available for every supported image architecture. Build stages retain npm; runtime stages contain only Node and application dependencies.
 
 ## Alternatives considered
 
@@ -61,6 +65,7 @@ This records contents but not who built which exact release. Rejected. SBOMs and
 
 - Pull requests gain three bounded jobs: CodeQL, supply-chain, and disposable DAST.
 - Deployable images expose bounded health metadata even outside the reference Compose file; Compose may override intervals but must not disable the checks.
+- Runtime images do not ship the unused global package-management toolchain, reducing attack surface and removing its independent advisory stream.
 - Weekly execution refreshes vulnerability evidence even without source changes.
 - Security reports and SBOMs are short-lived CI artifacts; release SBOMs and attestations are durable release assets/metadata.
 - R-032 remains pending until exact-candidate Linux runtime evidence confirms the patched dependency transition. No deterministic finding may be changed to passing through subjective acceptance.

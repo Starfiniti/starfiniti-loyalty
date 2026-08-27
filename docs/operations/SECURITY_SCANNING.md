@@ -10,13 +10,17 @@ The `Security` workflow runs on pull requests, `main`, Tuesdays at 03:17 UTC, an
 
 - CodeQL analyzes JavaScript/TypeScript with `security-extended` queries.
 - The complete npm dependency tree fails on every High or Critical advisory, including development-only tooling.
-- Trivy scans repository secrets/misconfiguration and both deployable images for High/Critical vulnerability, secret, misconfiguration, and licence findings.
+- Trivy scans repository secrets/misconfiguration and both deployable images for Unknown/High/Critical vulnerability, secret, misconfiguration, and policy-classified licence findings.
 - Syft produces CycloneDX JSON SBOMs for both images.
 - ZAP 2.17.0 runs a bounded active scan against `starfiniti-dast-target` on the internal `starfiniti-dast` Docker network.
 
 The DAST network has no published port and no external route. The target is built from the candidate commit, labelled disposable, contains no live credentials or customer data, and is removed in an `always()` cleanup step. Never change its origin to a public, staging, or production host in a pull request.
 
 The repository misconfiguration scan is intentionally strict at every severity. Both deployable Dockerfiles therefore carry image-level health checks: dashboard readiness uses `/api/healthz`, while the multi-mode worker verifies its unprivileged PID 1 process without coupling container health to a database or provider outage. Do not suppress `DS-0026` or add a blanket Trivy ignore.
+
+`infrastructure/testing/security/trivy.yaml` is the explicit AGPL-compatible licence policy. AGPL/GPL/LGPL findings remain visible as Medium reciprocal obligations; incompatible non-commercial, Commons Clause, Business Source, SSPL, Elastic, and other restricted terms fail. Unknown licences also fail. The policy contains no ignored licence IDs.
+
+Full-severity dashboard and worker JSON review reports exclude the secret scanner and are uploaded with both SBOMs. Secret detection remains enabled in the fail-closed table scan only, preventing a raw secret match from being copied into downloadable evidence. Runtime stages remove npm, npx, Corepack, and Yarn after the build and pin the reviewed Alpine OpenSSL security revision.
 
 ## Release boundary
 

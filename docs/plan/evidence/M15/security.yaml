@@ -11,13 +11,16 @@ candidate:
 inputs:
   securityWorkflow:
     path: .github/workflows/security.yml
-    sha256: 4a69b506c9970340ed026e1482eba01e47d5141ab25df89bfd980057d1f472dd
+    sha256: 08268d271b26fea784a7251c85b0ded87a10a0d5f6fea735c5a0a94b67ceb757
   releaseWorkflow:
     path: .github/workflows/release.yml
     sha256: 379bd17a50780ff043af30d724c1b51d1774a12d8d10c4cc5ba282a7ad434892
   dastPlan:
     path: infrastructure/testing/security/zap-automation.yaml
     sha256: af8478c13983e575522077f7a8452d39c55cb1ec7386470bca1241f4fc2f0aff
+  licensePolicy:
+    path: infrastructure/testing/security/trivy.yaml
+    sha256: c35b31bfd84a179cbc33f99909c110057640e51cef8e95c1adffb774e3ce8795
   tools:
     codeqlAction: 4.37.9
     trivyAction: 0.36.0
@@ -47,7 +50,7 @@ checks:
     evidence: Every action uses a full reviewed commit and the ZAP image uses the exact reviewed multi-platform manifest digest.
   - id: deployable_image_boundary
     status: passed
-    evidence: Both production images receive vulnerability secret misconfiguration and licence scans that fail on every High or Critical result.
+    evidence: Both production images receive vulnerability secret misconfiguration and explicit no-ignore AGPL-compatible licence scans that fail on every Unknown High or Critical result.
   - id: isolated_dast_plan
     status: passed
     evidence: The canonical ZAP plan targets only the named disposable container with bounded crawl active-scan wait report and High-alert exit jobs.
@@ -68,10 +71,10 @@ checks:
     evidence: The exact candidate requires a fresh Trivy repository scan with no secret or material misconfiguration finding.
   - id: dashboard_image_scan
     status: pending
-    evidence: The exact deployable dashboard image requires a fresh High and Critical vulnerability secret misconfiguration and licence scan.
+    evidence: The exact deployable dashboard image requires a fresh Unknown High and Critical vulnerability secret misconfiguration and policy-classified licence scan.
   - id: worker_image_scan
     status: pending
-    evidence: The exact deployable worker image requires a fresh High and Critical vulnerability secret misconfiguration and licence scan.
+    evidence: The exact deployable worker image requires a fresh Unknown High and Critical vulnerability secret misconfiguration and policy-classified licence scan.
   - id: dashboard_sbom
     status: pending
     evidence: The exact deployable dashboard image requires a valid CycloneDX JSON inventory with a recorded nonzero content digest.

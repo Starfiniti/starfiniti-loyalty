@@ -7,6 +7,8 @@ const releaseWorkflowPath = ".github/workflows/release.yml";
 const releaseWorkflow = parse(readFileSync(releaseWorkflowPath, "utf8"));
 const securityWorkflowPath = ".github/workflows/security.yml";
 const securityWorkflow = parse(readFileSync(securityWorkflowPath, "utf8"));
+const trivyPolicyPath = "infrastructure/testing/security/trivy.yaml";
+const trivyPolicy = parse(readFileSync(trivyPolicyPath, "utf8"));
 
 function requireCondition(condition, message) {
   if (!condition) throw new Error(`${workflowPath}: ${message}`);
@@ -78,10 +80,17 @@ for (const dockerfile of [
     `${dockerfile} base images must be pinned by digest`,
   );
   const dockerfileText = readFileSync(dockerfile, "utf8");
+  const runnerStage = dockerfileText.split(/\sAS runner\s/iu)[1] ?? "";
   requireCondition(
-    dockerfileText.includes("HEALTHCHECK --interval=30s --timeout=5s") &&
-      dockerfileText.includes("--start-period=30s --retries=3"),
+    runnerStage.includes("HEALTHCHECK --interval=30s --timeout=5s") &&
+      runnerStage.includes("--start-period=30s --retries=3"),
     `${dockerfile} must retain the bounded image-level health check`,
+  );
+  requireCondition(
+    runnerStage.includes("libcrypto3=3.5.8-r0") &&
+      runnerStage.includes("libssl3=3.5.8-r0") &&
+      runnerStage.includes("rm -rf /usr/local/lib/node_modules"),
+    `${dockerfile} runtime must retain the reviewed Alpine fix and exclude the unused global Node package toolchain`,
   );
 }
 requireCondition(
@@ -272,34 +281,104 @@ const trivySteps = supplySteps.filter(
     "aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25",
 );
 requireCondition(
-  trivySteps.length === 3 &&
-    trivySteps.every(
-      (step) =>
-        step.with?.version === "v0.74.0" && step.with?.["exit-code"] === "1",
-    ),
-  `${securityWorkflowPath}: three fail-closed scans with the reviewed Trivy version are required`,
+  trivySteps.length === 5 &&
+    trivySteps.every((step) => step.with?.version === "v0.74.0"),
+  `${securityWorkflowPath}: five scans with the reviewed Trivy version are required`,
 );
-const imageScans = trivySteps.filter(
-  (step) => step.with?.["scan-type"] === "image",
+const imageReports = trivySteps.filter(
+  (step) =>
+    step.with?.["scan-type"] === "image" && step.with?.["exit-code"] === "0",
 );
 requireCondition(
-  imageScans.length === 2 &&
-    imageScans.every(
+  imageReports.length === 2 &&
+    imageReports
+      .map((step) => step.with?.["image-ref"])
+      .sort()
+      .join(",") ===
+      "starfiniti-dashboard:security,starfiniti-worker:security" &&
+    imageReports.every(
+      (step) =>
+        step.with?.scanners === "vuln,misconfig,license" &&
+        step.with?.severity === "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL" &&
+        step.with?.["ignore-unfixed"] === "false" &&
+        step.with?.format === "json" &&
+        /^dist\/security\/(?:dashboard|worker)-trivy\.json$/u.test(
+          step.with?.output ?? "",
+        ) &&
+        step.with?.["trivy-config"] === trivyPolicyPath,
+    ),
+  `${securityWorkflowPath}: both deployable images require full-severity secret-free review reports`,
+);
+const imageEnforcement = trivySteps.filter(
+  (step) =>
+    step.with?.["scan-type"] === "image" && step.with?.["exit-code"] === "1",
+);
+requireCondition(
+  imageEnforcement.length === 2 &&
+    imageEnforcement
+      .map((step) => step.with?.["image-ref"])
+      .sort()
+      .join(",") ===
+      "starfiniti-dashboard:security,starfiniti-worker:security" &&
+    imageEnforcement.every(
       (step) =>
         step.with?.scanners === "vuln,secret,misconfig,license" &&
-        step.with?.severity === "HIGH,CRITICAL" &&
-        step.with?.["ignore-unfixed"] === "false",
+        step.with?.severity === "UNKNOWN,HIGH,CRITICAL" &&
+        step.with?.["ignore-unfixed"] === "false" &&
+        step.with?.format === "table" &&
+        step.with?.["trivy-config"] === trivyPolicyPath,
     ),
-  `${securityWorkflowPath}: both deployable images must fail on high or critical vulnerability secret misconfiguration and license findings`,
+  `${securityWorkflowPath}: both deployable images must fail on unknown high or critical vulnerability secret misconfiguration and policy-classified licence findings`,
 );
 requireCondition(
   trivySteps.some(
     (step) =>
       step.with?.["scan-type"] === "fs" &&
       step.with?.["scan-ref"] === "." &&
-      step.with?.scanners === "secret,misconfig",
+      step.with?.scanners === "secret,misconfig" &&
+      step.with?.["exit-code"] === "1" &&
+      step.with?.format === "table",
   ),
   `${securityWorkflowPath}: repository secret and misconfiguration scan is required`,
+);
+const license = trivyPolicy?.license;
+const acceptedCopyleft = [
+  "AGPL-3.0-or-later",
+  "GPL-2.0-only",
+  "GPL-2.0-or-later",
+  "GPL-3.0-only",
+  "GPL-3.0-or-later",
+  "LGPL-3.0-or-later",
+];
+const prohibitedLicenses = [
+  "BUSL-1.1",
+  "Commons-Clause",
+  "Elastic-2.0",
+  "SSPL-1.0",
+];
+const policyCategories = [
+  ...(license?.forbidden ?? []),
+  ...(license?.restricted ?? []),
+  ...(license?.reciprocal ?? []),
+];
+requireCondition(
+  Object.keys(license ?? {})
+    .sort()
+    .join(",") ===
+    "confidenceLevel,forbidden,full,ignored,reciprocal,restricted" &&
+    license?.confidenceLevel === 0.9 &&
+    license?.full === false &&
+    Array.isArray(license?.ignored) &&
+    license.ignored.length === 0 &&
+    policyCategories.length === new Set(policyCategories).size &&
+    acceptedCopyleft.every(
+      (id) =>
+        license.reciprocal?.includes(id) &&
+        !license.forbidden?.includes(id) &&
+        !license.restricted?.includes(id),
+    ) &&
+    prohibitedLicenses.every((id) => license.forbidden?.includes(id)),
+  `${trivyPolicyPath}: explicit AGPL-compatible reciprocal and prohibited licence policy is required`,
 );
 const sbomSteps = supplySteps.filter(
   (step) =>
@@ -316,6 +395,18 @@ requireCondition(
         step.with?.["upload-release-assets"] === "false",
     ),
   `${securityWorkflowPath}: exact pinned dashboard and worker CycloneDX generation is required`,
+);
+requireCondition(
+  supplySteps.some(
+    (step) =>
+      step.name === "Upload minimized supply-chain evidence" &&
+      step.if === "always()" &&
+      step.with?.name === "security-supply-chain-${{ github.sha }}" &&
+      step.with?.path?.includes("dist/security/*-trivy.json") &&
+      step.with?.path?.includes("dist/security/*.cdx.json") &&
+      step.with?.["if-no-files-found"] === "error",
+  ),
+  `${securityWorkflowPath}: minimized review reports and SBOMs must upload even when enforcement fails`,
 );
 
 const dastText = securityWorkflow.jobs.dast.steps
