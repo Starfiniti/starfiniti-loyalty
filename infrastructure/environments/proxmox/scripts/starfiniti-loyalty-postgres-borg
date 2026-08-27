@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+umask 077
+
+source /etc/starfiniti-backup/pve-borg.env
+export BORG_REPO BORG_RSH BORG_PASSCOMMAND
+export BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK=no
+export BORG_RELOCATED_REPO_ACCESS_IS_OK=no
+
+readonly guest_host="${STARFINITI_POSTGRES_GUEST_HOST:-10.10.10.71}"
+readonly stage_root="${STARFINITI_POSTGRES_STAGE_ROOT:-/var/lib/starfiniti-postgres-backup-stage}"
+readonly lock_file="/run/lock/starfiniti-pve-borg.lock"
+
+exec 9>"$lock_file"
+flock -n 9 || {
+  printf 'starfiniti-loyalty-postgres-borg: another backup holds the lock\n'
+  exit 0
+}
+
+install -d -m 0700 "$stage_root"
+
+# The remote forced command exposes only a read-only rrsync view. Rsync writes
+# each immutable file atomically on the Proxmox host, preserves timestamps for
+# Borg's files cache, and removes local staging files only after the source no
+# longer retains them. It never deletes or writes a file on the database VM.
+export RSYNC_RSH="ssh -i /root/.ssh/starfiniti-loyalty-backup-pull -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=/etc/starfiniti-backup/loyalty-guest-known-hosts"
+rsync \
+  --archive \
+  --chmod=D700,F600 \
+  --chown=root:root \
+  --compress-choice=zstd \
+  --compress-level=3 \
+  --delete-delay \
+  --exclude='*.partial' \
+  --ignore-existing \
+  --stats \
+  --timeout=120 \
+  "vault-admin@${guest_host}:/" \
+  "$stage_root/"
+
+if [[ ! -d "$stage_root/base" || ! -d "$stage_root/wal" ]]; then
+  printf 'starfiniti-loyalty-postgres-borg: staged backup set unavailable\n' >&2
+  exit 1
+fi
+
+stamp=$(date -u +%Y%m%dT%H%M%SZ)
+readonly archive="loyalty-postgres-$stamp"
+
+ionice -c2 -n7 nice -n 10 borg create \
+  --remote-path "$BORG_REMOTE_PATH" \
+  --compression "$BORG_COMPRESSION" \
+  --files-cache ctime,size,inode \
+  --one-file-system \
+  --show-rc \
+  --stats \
+  "${BORG_REPO}::${archive}" \
+  "$stage_root"
+
+printf 'starfiniti-loyalty-postgres-borg: created %s\n' "$archive"

@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+umask 077
+
+readonly backup_root="/opt/starfiniti/supabase-prod/backups"
+
+if [[ ! -d "$backup_root/base" || ! -d "$backup_root/wal" ]]; then
+  printf 'starfiniti-postgres-backup-rsync: backup set unavailable\n' >&2
+  exit 1
+fi
+
+# The forced SSH identity starts this wrapper without arguments. Root access is
+# required only because PostgreSQL's completed base/WAL files are owner-only.
+# Pass the original rsync server command as one opaque argument; rrsync parses
+# and constrains it to a read-only view of backup_root.
+if (( EUID != 0 )); then
+  if [[ $# -ne 0 || -z "${SSH_ORIGINAL_COMMAND:-}" ]]; then
+    printf 'starfiniti-postgres-backup-rsync: forced rsync command required\n' >&2
+    exit 1
+  fi
+
+  exec sudo -n "$0" "$SSH_ORIGINAL_COMMAND"
+fi
+
+if [[ $# -ne 1 ]]; then
+  printf 'starfiniti-postgres-backup-rsync: invalid privileged invocation\n' >&2
+  exit 1
+fi
+
+export SSH_ORIGINAL_COMMAND="$1"
+exec /usr/bin/rrsync -ro "$backup_root"
