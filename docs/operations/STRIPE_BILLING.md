@@ -28,6 +28,10 @@ The database gate runs before body or secret access. Self-hosted usage capture r
 - A current `allow_growth` contract overrides delayed provider state. Append open-ended `defer_to_provider` to end local precedence early; otherwise a bounded contract falls through when its term ends. Never update or delete history.
 - Delinquency grace is bound to policy already recorded at provider occurrence. Backdating a later policy cannot alter an old event. Provider `past_due` remains restricted when no approved policy existed.
 - Commercial recovery changes only new growth/configuration authorization. Verify all six protected paths and normal ingestion/release/reversal/redemption/reconciliation/export/checkout processing independently before and after every change.
+- Treat `managed_growth_configuration_boundaries` as a security inventory, not a merchant configuration table. Adding a mutable authoring root requires its capability, operations, command names, trigger, risk-reducing states, full commercial-state matrix, and protected-function structural check in one change.
+- Do not add ledger, wallet, lot, reward-reservation, commerce, customer-access, analytics-export, migration-correction, membership, SCIM-provisioning, or checkout relations to the inventory. Those paths must remain usable in every commercial state.
+- A restricted merchant must still be able to pause/cancel campaigns, disable/retire webhooks, pause report schedules, revoke service credentials, isolate sharing, disable currency conversion, disable/retire/recover federation, rotate/revoke an existing SCIM credential, export data, and complete already-started external recovery.
+- Test exact retries separately from new requests. A retry that resolves immutable prior evidence should remain readable; a changed or new request must reach the guarded root and fail atomically.
 
 ## Sandbox enablement
 

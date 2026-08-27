@@ -36,6 +36,16 @@ Only new managed growth may be restricted. Balance reads, refunds, reconciliatio
 
 `loyalty_private.authorize_managed_growth_configuration_v1` is a separate internal decision for reviewed merchant authoring commands. It combines the ordinary capability entitlement with commercial state. It is deliberately not substituted for the general entitlement resolver, so ingestion, releases, refunds, redemption, reconciliation, export, customer access, connector recovery, and checkout have no commercial-denial dependency.
 
+## Growth/configuration enforcement
+
+`loyalty_private.managed_growth_configuration_boundaries` is the private immutable command inventory. Each entry names one tenant-owned mutation root, its ordinary capability, guarded operations, known command functions, and any exact risk-reducing states. Twenty-three roots cover programme and experience authoring, VIP overrides, audiences/campaigns, notification configuration/tests, scheduled analytics, ecosystem sharing/currency/service credentials, federation/SCIM creation, and migration preparation/application.
+
+`enforce_managed_growth_boundary_v1` runs before a registered mutation. It derives the organization from the row, requires an authenticated browser subject, and evaluates server-runtime merchant operations too. It accepts no browser-supplied organization, commercial state, entitlement, provider status, or approval. Unknown or malformed boundaries fail closed. Dedicated workers and migration administration retain narrow subjectless paths; operational relations are not in the inventory.
+
+`evaluate_managed_growth_boundary_v1` makes risk-reducing state changes available before the commercial decision. Pause, cancel, disable, retire, revoke, isolated sharing, disabled currency policy, and already-started federation recovery/completion therefore remain possible while new growth is restricted. Existing SCIM updates/provisioning remain outside the guard so account recovery and immediate deprovisioning continue.
+
+An exact command retry that resolves existing immutable evidence before another write keeps its historical result. A new or changed command reaches the guarded root. Restricted denial is atomic and creates no partial configuration, audit, billing usage, or ledger effect.
+
 ## Private recording boundary
 
 `loyalty_private.record_managed_billing_account_v1` and `loyalty_private.record_managed_billing_state_v1` are security-definer functions with an empty search path. M14-S01 grants them to no browser, runtime, or general worker role.

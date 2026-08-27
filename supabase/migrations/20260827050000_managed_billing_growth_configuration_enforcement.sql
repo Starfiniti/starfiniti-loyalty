@@ -170,7 +170,7 @@ set search_path = ''
 as $$
 declare
   boundary loyalty_private.managed_growth_configuration_boundaries%rowtype;
-  authorization record;
+  authorization_row record;
 begin
   select candidate.* into boundary
   from loyalty_private.managed_growth_configuration_boundaries as candidate
@@ -206,7 +206,7 @@ begin
     return;
   end if;
 
-  select * into strict authorization
+  select * into strict authorization_row
   from loyalty_private.authorize_managed_growth_configuration_v1(
     target_organization_id,
     boundary.capability_key,
@@ -215,9 +215,9 @@ begin
     target_at
   );
 
-  allowed := authorization.allowed;
-  commercial_state := authorization.commercial_state;
-  reason_code := authorization.reason_code;
+  allowed := authorization_row.allowed;
+  commercial_state := authorization_row.commercial_state;
+  reason_code := authorization_row.reason_code;
   return next;
 end;
 $$;
