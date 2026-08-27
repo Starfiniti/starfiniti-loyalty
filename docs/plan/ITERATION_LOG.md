@@ -1,5 +1,13 @@
 # Iteration Log
 
+## 2026-08-28 — M01 read-only production evidence refresh
+
+- Reconstructed the current public, release, VM, container, database, Auth-count, migration, PostgreSQL-backup, and whole-VM Borg baseline without reading reusable material or mutating production.
+- Production runs v0.1.11 at `0ced4b666a55d836bd3d4927337fe057a71bb4ba`; public health/login and Authentik readiness pass; the workforce provider redirects correctly; both application containers run; all eleven Supabase containers are healthy; and every commerce/value aggregate remains zero.
+- The current base-backup and incremental PostgreSQL Borg services last exited successfully. The latest successful nightly Proxmox Borg inventory contains archives for both VM 970 and 971, replacing the stale “first run pending” statement.
+- Hardened the previously shape-light M01 validator with exact root/store/VM/public/aggregate/recovery/check schemas, canonical UTC and immutable-release identity, reconciled container accounting, approval and restore/check equivalence, bounded minimized text, obvious secret/identity rejection, complete-state health/recovery floors, and eleven deterministic corruption fixtures.
+- Kept `application_auth_secret_restore` pending: an archive is not a restored service. The manifest remains one of 22 checks passed until an isolated application/Auth/Authentik/configuration/signing smoke, an approved real-store value/outage sequence, alerts, exact reconciliation, and approvals exist.
+
 ## 2026-08-28 — Disabled-first tenant-federation credential boundary
 
 - Read-only public and VM inspection proved that workforce SSO is already live through Supabase custom provider `custom:starfiniti-sso`, while production v0.1.11 correctly has no per-organization federation configuration, Authentik administration token, or Supabase service-role file.

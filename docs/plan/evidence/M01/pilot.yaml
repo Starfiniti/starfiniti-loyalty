@@ -1,8 +1,8 @@
 schema: starfiniti.production-pilot.v1
 status: in_progress
-observedAt: 2026-08-13T19:47:50Z
-release: v0.1.10
-applicationCommit: 4713c65e4ca47c0a97264854afea46f6a8730a3a
+observedAt: 2026-08-27T23:30:35Z
+release: v0.1.11
+applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
 store:
   approved: false
   origin: null
@@ -11,7 +11,9 @@ productionBaseline:
   applicationVm:
     vmId: 970
     status: running
-    containersHealthy: 2
+    containersRunning: 2
+    containersHealthy: 1
+    containersWithoutHealthcheck: 1
   supabaseVm:
     vmId: 971
     status: running
@@ -20,6 +22,8 @@ productionBaseline:
     dashboardHealth: 200
     login: 200
     unsignedWooEvents: 401
+    authentikReady: 200
+    workforceSsoRedirect: 302
     tlsVerified: true
   aggregates:
     organizations: 1
@@ -36,14 +40,17 @@ productionBaseline:
     canonicalEvents: 0
     businessEffects: 0
     transactionalOutbox: 0
+    authUsers: 1
+    authIdentities: 2
+    migrations: 28
   recovery:
     walArchive: passed
     archiveTimeout: 1 minute
     baseBackup: passed
     postgresOffHostBorg: passed
     isolatedDatabaseWalRestore: passed
-    wholeVmBorg: pending first completed run
-    applicationAuthSigningEscrowRestore: pending
+    wholeVmBorg: passed archive creation for VM 970 and VM 971 in one successful nightly run
+    applicationAuthSigningEscrowRestore: pending isolated restoration and full smoke
 checks:
   - id: store_owner_approval
     status: pending
@@ -104,7 +111,7 @@ checks:
     evidence: Isolated encrypted Borg restore replayed WAL, promoted in 9 seconds, and retained all 26 production migrations; after repairing a live recursive-export race, a fresh base plus forced WAL switch and the next timer-driven archive completed successfully.
   - id: application_auth_secret_restore
     status: pending
-    evidence: Whole-VM job is configured but has not completed its first run; full smoke is absent.
+    evidence: The successful nightly Borg run contains both production VM archives, but no isolated application Auth configuration and signing-material restoration smoke has run.
   - id: alert_coverage
     status: pending
     evidence: Existing health and queue views are not yet proven to alert every pilot stage.

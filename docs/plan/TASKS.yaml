@@ -537,8 +537,10 @@ tasks:
       - docs/plan/evidence/M01/README.md
       - docs/plan/evidence/M01/pilot.yaml
       - docs/plan/evidence/M01/production-baseline-2026-08-13.md
+      - docs/plan/evidence/M01/production-baseline-2026-08-28.md
       - docs/plan/evidence/M01/backup-export-repair-2026-08-13.md
       - docs/plan/evidence/M01/backup-transfer-amplification-2026-08-14.md
+      - the exact M01 validator rejects schema drift future timestamps mutable release selectors contradictory store or restore authority unreconciled container counts negative aggregates duplicate checks obvious sensitive values and false completion through eleven adversarial fixtures
 
   - id: M02-ENTITLEMENTS-AND-FLAGS
     title: Add deployment modes, entitlements, limits, and tenant rollout controls
