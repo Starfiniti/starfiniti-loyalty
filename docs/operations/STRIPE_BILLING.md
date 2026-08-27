@@ -14,7 +14,7 @@ The endpoint accepts only Stripe-signed JSON up to 256 KiB. A successful new or 
 
 - Leave `LOYALTY_STRIPE_WEBHOOK_SECRET_PATH`, `LOYALTY_STRIPE_API_KEY_PATH`, and `LOYALTY_STRIPE_USAGE_API_KEY_PATH` empty for self-hosted and unapproved managed deployments. Compose mounts `/dev/null`; each runtime reader rejects it because it is not a regular secret file.
 - Do not start the `billing` Compose profile.
-- Keep the global deployment mode `self_hosted`, or keep `managed.billing` disabled for every account.
+- Keep the global deployment mode `self_hosted`, or keep `managed.billing` disabled for every account. The database authoring guard treats this tenant entitlement as the commercial-enforcement canary switch, so managed feature tests and pre-canary tenants retain ordinary entitlement behavior.
 - The self-hosted database reservation returns before API-key access or provider construction and requires no Stripe configuration.
 
 The database gate runs before body or secret access. Self-hosted usage capture returns before reading source tables, claim returns no dispatch, and no usage-key file or provider client is touched.

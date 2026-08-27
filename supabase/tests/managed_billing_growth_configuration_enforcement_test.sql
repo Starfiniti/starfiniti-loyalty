@@ -2,9 +2,9 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(40);
+select plan(43);
 
--- 1-18: the immutable command inventory is private, complete, and excludes
+-- 1-20: the immutable command inventory is private, complete, and excludes
 -- protected/operational roots by construction.
 select has_table(
   'loyalty_private', 'managed_growth_configuration_boundaries',
@@ -64,6 +64,33 @@ select results_eq($$
     and routine.proname = 'enforce_managed_growth_boundary_v1'
     and not trigger_row.tgisinternal
 $$, array[23::bigint], 'exactly twenty-three relations use the growth guard');
+select results_eq($$
+  select count(*)::bigint
+  from pg_catalog.pg_trigger as trigger_row
+  join pg_catalog.pg_proc as routine on routine.oid = trigger_row.tgfoid
+  join pg_catalog.pg_namespace as namespace on namespace.oid = routine.pronamespace
+  where namespace.nspname = 'loyalty_private'
+    and routine.proname = 'enforce_managed_growth_boundary_v1'
+    and trigger_row.tgname like 'zz_managed_growth_%'
+    and not trigger_row.tgisinternal
+$$, array[23::bigint],
+  'commercial guards sort after established contract validation triggers');
+select ok((
+  select pg_catalog.position(
+      'request.jwt.claim.role' in pg_catalog.lower(
+        pg_catalog.pg_get_functiondef(routine.oid)
+      )
+    ) = 0
+    and pg_catalog.position(
+      'session_user' in pg_catalog.lower(
+        pg_catalog.pg_get_functiondef(routine.oid)
+      )
+    ) > 0
+  from pg_catalog.pg_proc as routine
+  join pg_catalog.pg_namespace as namespace on namespace.oid = routine.pronamespace
+  where namespace.nspname = 'loyalty_private'
+    and routine.proname = 'enforce_managed_growth_boundary_v1'
+), 'trusted bypasses derive from database role and never JWT metadata');
 select results_eq($$
   select count(*)::bigint
   from loyalty_private.managed_growth_configuration_boundaries as boundary
@@ -222,7 +249,7 @@ join loyalty.workspaces as workspace
   on workspace.organization_id = organization.id
 where organization.slug = 'boundary-live';
 
--- 19-29: every registered root follows the same deterministic state matrix.
+-- 21-32: every registered root follows the same deterministic state matrix.
 select results_eq($$
   select count(*)::bigint
   from loyalty_private.managed_growth_configuration_boundaries as boundary
@@ -254,6 +281,26 @@ begin
   end loop;
 end;
 $$;
+
+select results_eq($$
+  select count(*)::bigint
+  from loyalty_private.managed_growth_configuration_boundaries as boundary
+  cross join lateral loyalty_private.evaluate_managed_growth_boundary_v1(
+    (select id from loyalty.organizations where slug = 'boundary-matrix'),
+    boundary.boundary_key, boundary.guarded_operations[1], null, '__growth__',
+    '2044-01-01 00:00:00.500001+00'
+  ) as decision
+  where decision.allowed
+    and decision.reason_code = 'commercial_enforcement_disabled'
+$$, array[23::bigint],
+  'managed billing canary disabled leaves ordinary entitled authoring unchanged');
+
+select loyalty_private.set_organization_entitlement(
+  'd1000000-0000-4000-8000-000000000100', 'managed.billing',
+  'enabled', null, 'canary', 'operator:m14-boundary',
+  'Enable commercial enforcement for deterministic boundary matrix',
+  '2044-01-01 00:00:00.750001+00', null
+);
 
 select results_eq($$
   select count(*)::bigint
@@ -437,7 +484,7 @@ select throws_ok($$
 $$, '22023', 'invalid managed growth boundary evaluation',
   'unknown authoring boundaries fail closed');
 
--- 30-40: the live command boundary preserves exact retries and recovers only
+-- 33-43: the live command boundary preserves exact retries and recovers only
 -- from newer commercial evidence; no ledger row is created.
 select loyalty_private.set_deployment_mode(
   'managed', 1, 'operator:m14-live',
@@ -448,6 +495,12 @@ select loyalty_private.set_organization_entitlement(
   'd2000000-0000-4000-8000-000000000100', 'programme.v2',
   'enabled', null, 'manual_override', 'operator:m14-live',
   'Enable programme authoring for live boundary integration',
+  (select live_base_time + interval '1 minute' from managed_boundary_refs), null
+);
+select loyalty_private.set_organization_entitlement(
+  'd2000000-0000-4000-8000-000000000100', 'managed.billing',
+  'enabled', null, 'canary', 'operator:m14-live',
+  'Enable commercial enforcement for live boundary integration',
   (select live_base_time + interval '1 minute' from managed_boundary_refs), null
 );
 update managed_boundary_refs

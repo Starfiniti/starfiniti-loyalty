@@ -44,7 +44,7 @@ Only new managed growth may be restricted. Balance reads, refunds, reconciliatio
 
 `evaluate_managed_growth_boundary_v1` makes risk-reducing state changes available before the commercial decision. Pause, cancel, disable, retire, revoke, isolated sharing, disabled currency policy, and already-started federation recovery/completion therefore remain possible while new growth is restricted. Existing SCIM updates/provisioning remain outside the guard so account recovery and immediate deprovisioning continue.
 
-An exact command retry that resolves existing immutable evidence before another write keeps its historical result. A new or changed command reaches the guarded root. Restricted denial is atomic and creates no partial configuration, audit, billing usage, or ledger effect.
+Commercial enforcement at those roots is disabled by default and activates only for a managed tenant with an effective `managed.billing` canary entitlement. Without that server-side flag, established feature entitlements and validation behavior remain unchanged. An exact command retry that resolves existing immutable evidence before another write keeps its historical result. A new or changed command reaches the guarded root. Restricted denial is atomic and creates no partial configuration, audit, billing usage, or ledger effect.
 
 ## Private recording boundary
 

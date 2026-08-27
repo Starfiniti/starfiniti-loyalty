@@ -171,6 +171,7 @@ as $$
 declare
   boundary loyalty_private.managed_growth_configuration_boundaries%rowtype;
   authorization_row record;
+  billing_rollout record;
 begin
   select candidate.* into boundary
   from loyalty_private.managed_growth_configuration_boundaries as candidate
@@ -215,6 +216,29 @@ begin
     target_at
   );
 
+  -- Managed commercial enforcement is itself a tenant-canary capability.
+  -- Until managed.billing is explicitly enabled, preserve the ordinary
+  -- feature-entitlement decision and do not commercialize the tenant.
+  if authorization_row.deployment_mode = 'managed' then
+    select * into strict billing_rollout
+    from loyalty_private.resolve_organization_entitlement(
+      target_organization_id,
+      'managed.billing',
+      'managed-growth-enforcement:' || target_organization_id::text,
+      target_at
+    );
+    if not billing_rollout.enabled then
+      allowed := authorization_row.entitlement_enabled;
+      commercial_state := authorization_row.commercial_state;
+      reason_code := case when authorization_row.entitlement_enabled
+        then 'commercial_enforcement_disabled'
+        else 'entitlement_disabled'
+      end;
+      return next;
+      return;
+    end if;
+  end if;
+
   allowed := authorization_row.allowed;
   commercial_state := authorization_row.commercial_state;
   reason_code := authorization_row.reason_code;
@@ -256,12 +280,10 @@ begin
   end if;
 
   request_actor_user_id := loyalty_private.request_user_id();
-  request_role := coalesce(
-    nullif(pg_catalog.current_setting('request.jwt.claim.role', true), ''),
-    nullif(pg_catalog.current_setting('request.jwt.claims', true), '')::jsonb
-      ->> 'role',
-    nullif(pg_catalog.current_setting('role', true), '')
-  );
+  request_role := nullif(pg_catalog.current_setting('role', true), '');
+  if request_role is null or request_role = 'none' then
+    request_role := session_user;
+  end if;
 
   -- Trusted migrations and dedicated workers have no end-user subject.
   -- The server runtime still passes through policy because it executes some
@@ -333,117 +355,117 @@ revoke all on function loyalty_private.evaluate_managed_growth_boundary_v1(
 ), loyalty_private.enforce_managed_growth_boundary_v1()
   from public, anon, authenticated, loyalty_runtime, loyalty_worker;
 
-create trigger managed_growth_programmes
+create trigger zz_managed_growth_programmes
 before insert on loyalty.programmes
 for each row execute function loyalty_private.enforce_managed_growth_boundary_v1(
   'programme.root'
 );
-create trigger managed_growth_programme_versions
+create trigger zz_managed_growth_programme_versions
 before insert or update on loyalty.programme_versions
 for each row execute function loyalty_private.enforce_managed_growth_boundary_v1(
   'programme.version'
 );
-create trigger managed_growth_experience_themes
+create trigger zz_managed_growth_experience_themes
 before insert or update on loyalty.experience_themes
 for each row execute function loyalty_private.enforce_managed_growth_boundary_v1(
   'experience.theme'
 );
-create trigger managed_growth_experience_translations
+create trigger zz_managed_growth_experience_translations
 before insert or update on loyalty.experience_translations
 for each row execute function loyalty_private.enforce_managed_growth_boundary_v1(
   'experience.copy'
 );
-create trigger managed_growth_tier_manual_overrides
+create trigger zz_managed_growth_tier_manual_overrides
 before insert on loyalty.tier_manual_overrides
 for each row execute function loyalty_private.enforce_managed_growth_boundary_v1(
   'vip.manual_override'
 );
-create trigger managed_growth_audiences
+create trigger zz_managed_growth_audiences
 before insert on loyalty.audiences
 for each row execute function loyalty_private.enforce_managed_growth_boundary_v1(
   'campaign.audience'
 );
-create trigger managed_growth_audience_versions
+create trigger zz_managed_growth_audience_versions
 before insert or update on loyalty.audience_versions
 for each row execute function loyalty_private.enforce_managed_growth_boundary_v1(
   'campaign.audience_version'
 );
-create trigger managed_growth_audience_snapshots
+create trigger zz_managed_growth_audience_snapshots
 before insert or update on loyalty.audience_snapshots
 for each row execute function loyalty_private.enforce_managed_growth_boundary_v1(
   'campaign.audience_snapshot'
 );
-create trigger managed_growth_campaigns
+create trigger zz_managed_growth_campaigns
 before insert on loyalty.campaigns
 for each row execute function loyalty_private.enforce_managed_growth_boundary_v1(
   'campaign.root'
 );
-create trigger managed_growth_campaign_versions
+create trigger zz_managed_growth_campaign_versions
 before insert or update on loyalty.campaign_versions
 for each row execute function loyalty_private.enforce_managed_growth_boundary_v1(
   'campaign.version'
 );
-create trigger managed_growth_notification_template_versions
+create trigger zz_managed_growth_notification_template_versions
 before insert on loyalty_private.notification_email_template_versions
 for each row execute function loyalty_private.enforce_managed_growth_boundary_v1(
   'notification.template_version'
 );
-create trigger managed_growth_notification_template_bindings
+create trigger zz_managed_growth_notification_template_bindings
 before insert or update on loyalty_private.notification_email_template_bindings
 for each row execute function loyalty_private.enforce_managed_growth_boundary_v1(
   'notification.template_binding'
 );
-create trigger managed_growth_notification_test_deliveries
+create trigger zz_managed_growth_notification_test_deliveries
 before insert on loyalty_private.notification_smtp_test_deliveries
 for each row execute function loyalty_private.enforce_managed_growth_boundary_v1(
   'notification.test_delivery'
 );
-create trigger managed_growth_notification_webhook_endpoints
+create trigger zz_managed_growth_notification_webhook_endpoints
 before insert or update on loyalty_private.notification_webhook_endpoints
 for each row execute function loyalty_private.enforce_managed_growth_boundary_v1(
   'notification.webhook_endpoint'
 );
-create trigger managed_growth_analytics_report_schedules
+create trigger zz_managed_growth_analytics_report_schedules
 before insert or update on loyalty.analytics_report_schedules
 for each row execute function loyalty_private.enforce_managed_growth_boundary_v1(
   'analytics.report_schedule'
 );
-create trigger managed_growth_programme_group_sharing_versions
+create trigger zz_managed_growth_programme_group_sharing_versions
 before insert on loyalty.programme_group_sharing_versions
 for each row execute function loyalty_private.enforce_managed_growth_boundary_v1(
   'ecosystem.sharing_policy'
 );
-create trigger managed_growth_currency_conversion_policy_versions
+create trigger zz_managed_growth_currency_conversion_policy_versions
 before insert on loyalty_private.currency_conversion_policy_versions
 for each row execute function loyalty_private.enforce_managed_growth_boundary_v1(
   'ecosystem.currency_policy'
 );
-create trigger managed_growth_service_accounts
+create trigger zz_managed_growth_service_accounts
 before insert on loyalty.service_accounts
 for each row execute function loyalty_private.enforce_managed_growth_boundary_v1(
   'ecosystem.service_account'
 );
-create trigger managed_growth_service_account_credentials
+create trigger zz_managed_growth_service_account_credentials
 before insert or update on loyalty_private.service_account_credentials
 for each row execute function loyalty_private.enforce_managed_growth_boundary_v1(
   'ecosystem.service_credential'
 );
-create trigger managed_growth_organization_federation_source_revisions
+create trigger zz_managed_growth_organization_federation_source_revisions
 before insert on loyalty.organization_federation_source_revisions
 for each row execute function loyalty_private.enforce_managed_growth_boundary_v1(
   'identity.federation_revision'
 );
-create trigger managed_growth_organization_scim_endpoints
+create trigger zz_managed_growth_organization_scim_endpoints
 before insert on loyalty.organization_scim_endpoints
 for each row execute function loyalty_private.enforce_managed_growth_boundary_v1(
   'identity.scim_endpoint_create'
 );
-create trigger managed_growth_migration_dry_runs
+create trigger zz_managed_growth_migration_dry_runs
 before insert on loyalty.migration_dry_runs
 for each row execute function loyalty_private.enforce_managed_growth_boundary_v1(
   'migration.dry_run'
 );
-create trigger managed_growth_migration_import_batches
+create trigger zz_managed_growth_migration_import_batches
 before insert on loyalty.migration_import_batches
 for each row execute function loyalty_private.enforce_managed_growth_boundary_v1(
   'migration.import_batch'
