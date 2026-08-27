@@ -2881,6 +2881,7 @@ tasks:
           ]
         evidence:
           - docs/plan/evidence/M14/canary.yaml
+          - docs/plan/evidence/M14/ARTIFACT_CONTRACT.md defines exact semantic artifact schemas zero-difference assertions chronology and cross-artifact final approval binding
           - nine unique path and SHA-256 bound artifacts plus sixteen fixed automatic failures make every release approval recovery deployment sandbox lifecycle metering invoice policy rollback observation and reconciliation claim independently reconstructable
           - 49-check manifest records 13 passed repository public-baseline and operator checks with 36 approval deployment isolation sandbox lifecycle metering invoice policy rollback observation and reconciliation checks pending
           - provisional module score is 90 of 100 but operability is 3 of 10 and below the mandatory 8 of 10 category floor
