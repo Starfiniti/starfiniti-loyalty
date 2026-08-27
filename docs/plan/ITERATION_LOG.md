@@ -1,5 +1,14 @@
 # Iteration Log
 
+## 2026-08-27 — Stacked delivery-chain reconciliation
+
+- Reconstructed every open roadmap PR from #29 through #56 against its live GitHub base. The only non-external blockers were historical backup-repair ancestry conflicts in M04–M07 and a constraint-invalid stale timestamp fixture in M13 tenant federation.
+- M04 PR #29 now contains current `main` and the incremental-backup repair without losing reward evidence; exact head `30fb2f9` passed all seven jobs in CI run `33073236099` and reports `CLEAN`.
+- M05 PR #30 and M06 PR #31 carry the same repair with one unique R-001–R-036 register and both module histories preserved. Exact heads `48c8784` and `f16d6b2` passed all seven jobs in runs `33074423308` and `33075109579` and report `CLEAN`.
+- M07 PR #32 already contained the repaired product tree, so the reconciliation added only the missing parent relationship. Exact head `847f16e` passed all seven jobs in run `33075499745` and reports `CLEAN`.
+- M13 federation PR #42 now backdates both `created_at` and `updated_at` under the guarded fixture trigger, preserving table constraints while proving stale recovery. Exact head `56e854a` passed all seven jobs in run `33073430984` and reports `CLEAN`; dependent PR #43 remains clean.
+- A final GitHub audit found every open roadmap PR from #29 through #56 merge-clean with zero failed or pending checks. No PR was merged, no draft was promoted, and no deployment, tenant flag, provider, production data, checkout path, or loyalty value changed; every real-store, canary, reconciliation, exercise, elapsed-cadence, and approval gate remains explicit.
+
 ## 2026-08-27 — M16 evidence-bound continuous improvement
 
 - Accepted ADR-0068 after comparing informal owner review, ticket/dependency automation, event-driven-only review, and fixed cadence plus event escalation with immutable evidence. Official Supabase, PostgreSQL, WooCommerce, Stripe, Authentik, Klaviyo, and Node.js change sources form the review catalogue.
@@ -11,6 +20,7 @@
 - Adversarial review additionally bound every review/exercise to exact governance and backlog digests, constrained quarterly closeout to thirty days, required current accepted-risk evidence for incomplete Critical/High work, added source and exercise approval/environment/input digests, and made the final approval bind the other four artifacts plus future schedules.
 - Implementation candidate `c84e836` includes the external-CodeQL-driven open-first descriptor repair. Its inherited local gate passes `npm run check` with 950 workspace tests, every repository and canary validator, both builds, and WooCommerce contract checks. All 81 migrations and 68 pgTAP files validate; secret scan, zero-vulnerability production audit, licences, formatting, lint, and diff checks pass.
 - Documentation head `d61139d` passed CI run `33071077688` with all seven jobs, Security run `33071077786` with all three jobs, and external CodeQL. Repository evidence honestly records seven passed controls, 32 pending elapsed-cadence/live/approval gates, and a provisional 77/100 with performance and operability below their floors. No review schedule, owner identity, provider upgrade, experiment, exercise, deployment, production mutation, checkout path, or loyalty value changed.
+- Final implementation/evidence head `88a9ef0` passed CI run `33071504559`, Security run `33071504623`, and external CodeQL with all eleven checks green; draft PR #56 is merge-clean. The elapsed monthly, quarterly, live-source, reconciliation, review, and approval gates remain unchanged and open.
 
 ## 2026-08-27 — M15 evidence-bound GA canary and claims
 

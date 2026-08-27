@@ -727,9 +727,12 @@ tasks:
         evidence:
           - docs/plan/evidence/M04/native-rewards-2026-08-13.md
       - id: M04-S04-CANARY-AND-CLOSE
-        status: planned
+        status: in_progress
         acceptance:
           - exact-head CI runtime matrix disabled deployment Starfiniti canary reconciliation and score at least 90 pass
+        evidence:
+          - PR 29 is merge-clean at 30fb2f98a74f70390b6d664678614e14b377b03f and CI run 33073236099 passed baseline containers clean database replay and all four WooCommerce runtime variants
+          - merge disabled deployment Starfiniti canary reconciliation observation and module score remain open
     docs:
       [
         docs/architecture/ADR/0013-capability-negotiated-native-reward-fulfilment.md,
@@ -824,6 +827,7 @@ tasks:
           - deterministic V1 V2 shadow comparison proves all 36 Rose Bloom Icon point-award cases are identical across floor threshold and large-order boundaries
           - contract PostgreSQL and editor boundaries require every displayed tier rate to equal the executable base-rate multiplier and fail closed on incomplete or inexact legacy migration
           - exact-head run 31760806620 passed a clean 36-migration replay all 32 pgTAP files and 1,494 assertions plus both concurrency probes both images and all four WooCommerce runtimes
+          - PR 30 is merge-clean at 48c87846d1be5e4c05c1858b331ef083afa8020b and CI run 33074423308 passed baseline containers clean database replay and all four WooCommerce runtime variants
           - merge disabled deployment fresh recovery point Starfiniti-only canary zero-drift reconciliation and module score remain open
     risks: [R-002, R-020, R-034, R-035, R-036]
     docs:
@@ -923,6 +927,9 @@ tasks:
         status: in_progress
         acceptance:
           - exact-head CI disabled deployment Starfiniti canary full reconciliation and score at least 90 pass
+        evidence:
+          - PR 31 is merge-clean at f16d6b2f0e524c3647f78ba9d3ee501c51ec74b7 and CI run 33075109579 passed baseline containers clean 41-migration replay all 35 pgTAP files and all four WooCommerce runtime variants
+          - merge disabled deployment Starfiniti canary full reconciliation observation and module score remain open
     risks: [R-026]
     docs:
       [
@@ -1044,6 +1051,7 @@ tasks:
           - ADR-0030 removes hard-coded selector placeholders, validates direct RPC drafts and approvals against the exact published programme, serializes campaign approval with programme publication, and blocks incompatible publication atomically; exact-head run 32677551229 passed 47 migrations 38 pgTAP files 2016 assertions the two-session selector race every repository and image gate and all four WooCommerce runtime cells at a9e75f2
           - merchant results expose reserved capacity purchase reversals control and suppression trigger fulfilment and reversal outcomes plus bounded queue health through a keyboard-operable responsive disclosure; focused desktop and mobile browser evidence has zero page overflow and diagnostics
           - exact-head run 32679145086 passed baseline database both images and all four WooCommerce runtime cells for the merchant result disclosure at 1b1406b
+          - PR 32 is merge-clean at 847f16e2b321c77c6fffd6d2a5924c327d893d84 and CI run 33075499745 passed baseline containers clean database replay and all four WooCommerce runtime variants on the unchanged reviewed product tree
     risks: [R-026, R-020, R-035]
     docs:
       [
@@ -2312,6 +2320,7 @@ tasks:
           - official Authentik and Supabase documentation reviewed 2026-08-26; chosen topology avoids direct Supabase SAML and Authentik Enterprise Source Stage dependency
           - adversarial review added database-authoritative entitlement enforcement one-active-source serialization mutation-side ambiguity and owner-only delayed recovery for interrupted orchestration
           - production-build browser QA passes desktop mobile narrow light dark reduced-motion protocol switching enabled review interrupted states focus restoration visible control targets English-only overflow and zero-diagnostic checks
+          - PR 42 is merge-clean at 56e854afb91b2b6e9edfd621b72d8fea1fda0a39 and CI run 33073430984 passed baseline containers clean database replay and all four WooCommerce runtime variants after repairing the constraint-valid stale federation fixture
       - id: M13-S04-SCIM-PROVISIONING
         status: complete
         dependencies: [M13-S03-TENANT-FEDERATION]
@@ -3291,4 +3300,6 @@ tasks:
         docs/plan/evidence/M16/README.md,
         docs/plan/evidence/M16/continuous-improvement.yaml,
         infrastructure/governance/continuous-improvement.yaml,
+        exact implementation and evidence head 88a9ef023a8e30c52a8728cc89fc026ba7514b8e passed CI run 33071504559 Security run 33071504623 and external CodeQL with all eleven checks green,
+        delivery-chain audit found every open roadmap PR from 29 through 56 merge-clean with zero failed or pending checks after exact-head repairs to PRs 29 30 31 32 and 42,
       ]
