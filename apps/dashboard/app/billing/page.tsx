@@ -3,7 +3,10 @@ import { randomUUID } from "node:crypto";
 import type { ManagedBillingPlanOptionV1 } from "@starfiniti/contracts";
 
 import { MerchantShell } from "@/components/merchant-shell";
-import { getBillingSummary } from "@/lib/server/billing";
+import {
+  getBillingSummary,
+  getManagedBillingUsageSummary,
+} from "@/lib/server/billing";
 import { listManagedBillingPlans } from "@/lib/server/managed-billing-sessions";
 import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
 
@@ -18,9 +21,19 @@ export default async function BillingPage() {
   if (tenant.kind === "unassigned") redirect("/");
 
   let summary = null;
+  let usageSummary = null;
   let plans: readonly ManagedBillingPlanOptionV1[] = [];
   try {
     summary = await getBillingSummary(tenant.context.organization.public_id);
+    if (summary.deploymentMode === "managed") {
+      try {
+        usageSummary = await getManagedBillingUsageSummary(
+          tenant.context.organization.public_id,
+        );
+      } catch {
+        // Usage health is independent from commercial authority and value paths.
+      }
+    }
     if (
       summary.deploymentMode === "managed" &&
       tenant.context.membershipRole === "owner"
@@ -59,6 +72,7 @@ export default async function BillingPage() {
           portalOperationId={randomUUID()}
           startSessionAction={startManagedBillingSessionAction}
           summary={summary}
+          usageSummary={usageSummary}
           canManage={tenant.context.membershipRole === "owner"}
         />
       </main>

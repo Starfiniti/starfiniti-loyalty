@@ -2,6 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import {
   billingSummaryV1,
+  managedBillingUsageDispatchAuthorityV1,
+  managedBillingUsageDispatchClaimV1,
+  managedBillingUsageDispatchResultV1,
+  managedBillingUsageSummaryV1,
   managedBillingPlanOptionV1,
   managedBillingSessionRequestV1,
   managedBillingWebhookProcessingResultV1,
@@ -299,6 +303,158 @@ describe("managed billing session contracts v1", () => {
         customerId: "cus_forbidden",
         priceId: "price_forbidden",
         returnUrl: "https://attacker.example.test",
+      }),
+    ).toThrow();
+  });
+});
+
+describe("managed billing usage summary v1", () => {
+  const usage = {
+    schemaVersion: "1",
+    organizationId,
+    periodStart: "2026-08-01T00:00:00Z",
+    periodEnd: "2026-09-01T00:00:00Z",
+    measuredAt: "2026-08-27T01:00:00Z",
+    dispatchMode: "shadow",
+    meters: [
+      {
+        meterKey: "orders",
+        label: "Orders ingested",
+        quantity: "9223372036854775807",
+        dispatchedQuantity: "0",
+        factCount: "1",
+        pendingCount: "1",
+        attentionCount: "0",
+      },
+      {
+        meterKey: "active_members",
+        label: "Active members",
+        quantity: "24",
+        dispatchedQuantity: "24",
+        factCount: "24",
+        pendingCount: "0",
+        attentionCount: "0",
+      },
+      {
+        meterKey: "messages",
+        label: "Messages delivered",
+        quantity: "120",
+        dispatchedQuantity: "118",
+        factCount: "120",
+        pendingCount: "2",
+        attentionCount: "0",
+      },
+      {
+        meterKey: "api_requests",
+        label: "Accepted API commands",
+        quantity: "300",
+        dispatchedQuantity: "300",
+        factCount: "300",
+        pendingCount: "0",
+        attentionCount: "0",
+      },
+    ],
+  } as const;
+
+  it("keeps bigint quantities as exact decimal strings", () => {
+    const parsed = managedBillingUsageSummaryV1.parse(usage);
+    expect(parsed.meters[0]?.quantity).toBe("9223372036854775807");
+  });
+
+  it("requires all four unique reviewed meters and a forward period", () => {
+    expect(() =>
+      managedBillingUsageSummaryV1.parse({
+        ...usage,
+        meters: [
+          usage.meters[0],
+          usage.meters[0],
+          usage.meters[2],
+          usage.meters[3],
+        ],
+      }),
+    ).toThrow(/each meter exactly once/u);
+    expect(() =>
+      managedBillingUsageSummaryV1.parse({
+        ...usage,
+        periodEnd: usage.periodStart,
+      }),
+    ).toThrow(/exactly one UTC month/u);
+    expect(() =>
+      managedBillingUsageSummaryV1.parse({
+        ...usage,
+        periodStart: "2026-08-01T01:00:00Z",
+      }),
+    ).toThrow(/UTC month boundary/u);
+  });
+
+  it("rejects provider identity, unsafe numbers, and unreviewed meters", () => {
+    expect(() =>
+      managedBillingUsageSummaryV1.parse({
+        ...usage,
+        providerCustomerId: "cus_forbidden",
+      }),
+    ).toThrow();
+    expect(() =>
+      managedBillingUsageSummaryV1.parse({
+        ...usage,
+        meters: usage.meters.map((meter, index) =>
+          index === 0 ? { ...meter, pendingCount: "-1" } : meter,
+        ),
+      }),
+    ).toThrow();
+    expect(() =>
+      managedBillingUsageSummaryV1.parse({
+        ...usage,
+        meters: usage.meters.map((meter, index) =>
+          index === 0 ? { ...meter, quantity: 9_007_199_254_740_993 } : meter,
+        ),
+      }),
+    ).toThrow();
+    expect(() =>
+      managedBillingUsageSummaryV1.parse({
+        ...usage,
+        meters: usage.meters.map((meter, index) =>
+          index === 0 ? { ...meter, meterKey: "storage" } : meter,
+        ),
+      }),
+    ).toThrow();
+  });
+
+  it("validates minimized worker claims, authority, and classified results", () => {
+    expect(
+      managedBillingUsageDispatchClaimV1.parse({
+        dispatchId: "a4000000-0000-4000-8000-000000000100",
+        leaseToken: "a4000000-0000-4000-8000-000000000101",
+        attemptNumber: 1,
+      }).attemptNumber,
+    ).toBe(1);
+    expect(
+      managedBillingUsageDispatchAuthorityV1.parse({
+        eventName: "starfiniti_orders",
+        customerId: "cus_BillingFixture001",
+        identifier: "m14u_a4000000000040008000000000000100",
+        quantity: "-1",
+        occurredAt: "2026-08-27T01:00:00Z",
+        liveMode: false,
+      }).quantity,
+    ).toBe("-1");
+    expect(
+      managedBillingUsageDispatchResultV1.parse({
+        outcome: "accepted",
+        responseClass: "duplicate",
+        responseCode: 400,
+        errorCode: null,
+      }).responseClass,
+    ).toBe("duplicate");
+    expect(() =>
+      managedBillingUsageDispatchAuthorityV1.parse({
+        eventName: "starfiniti_orders",
+        customerId: "cus_BillingFixture001",
+        identifier: "m14u_a4000000000040008000000000000100",
+        quantity: "1",
+        occurredAt: "2026-08-27T01:00:00Z",
+        liveMode: false,
+        sourceCustomerEmail: "forbidden@example.test",
       }),
     ).toThrow();
   });
