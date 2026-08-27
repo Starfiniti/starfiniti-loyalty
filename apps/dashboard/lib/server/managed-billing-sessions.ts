@@ -95,21 +95,25 @@ export async function createManagedBillingSession(
     throw new Error("billing_session_unavailable");
   }
 
-  const config = stripeBillingSessionConfig({
-    apiKey: readStripeBillingApiKey(),
-    liveMode: requiredBoolean(reserved.live_mode),
-  });
-  const client = new StripeBillingSessionClient(config);
-
-  if (
+  const customerRequired =
     reserved.operation_state === "customer_required" ||
-    (reserved.operation_state === "ambiguous" && !reserved.provider_customer_id)
-  ) {
+    (reserved.operation_state === "ambiguous" &&
+      !reserved.provider_customer_id);
+  let config: ReturnType<typeof stripeBillingSessionConfig>;
+  let client: StripeBillingSessionClient;
+  let sessionAuthority: AuthorizationRow;
+
+  if (customerRequired) {
     const authority = await authorize(
       actorUserId,
       command.operationId,
       "customer",
     );
+    config = stripeBillingSessionConfig({
+      apiKey: readStripeBillingApiKey(),
+      liveMode: requiredBoolean(reserved.live_mode),
+    });
+    client = new StripeBillingSessionClient(config);
     const attemptId = randomUUID();
     let customerId: string;
     try {
@@ -137,13 +141,23 @@ export async function createManagedBillingSession(
       customerId,
       "customer_created",
     );
+    sessionAuthority = await authorize(
+      actorUserId,
+      command.operationId,
+      "session",
+    );
+  } else {
+    sessionAuthority = await authorize(
+      actorUserId,
+      command.operationId,
+      "session",
+    );
+    config = stripeBillingSessionConfig({
+      apiKey: readStripeBillingApiKey(),
+      liveMode: requiredBoolean(reserved.live_mode),
+    });
+    client = new StripeBillingSessionClient(config);
   }
-
-  const sessionAuthority = await authorize(
-    actorUserId,
-    command.operationId,
-    "session",
-  );
   const customerId = requiredText(sessionAuthority.provider_customer_id);
   const attemptId = randomUUID();
   let redirect: StripeBillingRedirect;

@@ -78,6 +78,7 @@ select results_eq($$
   select count(*)::bigint from information_schema.parameters
   where specific_schema = 'loyalty_private'
     and specific_name like 'reserve_managed_billing_session_v1%'
+    and parameter_mode = 'IN'
     and parameter_name ~ '(provider_customer|provider_price|live_mode|return|success|cancel|email|claims)'
 $$, array[0::bigint], 'reservation accepts no provider return contact or claims authority');
 select ok(
@@ -185,11 +186,13 @@ select results_eq($$
     '2040-01-02 00:00:00+00')
 $$, $$ values ('growth'::text, 'Growth'::text, 'EUR'::text, 4900::bigint, 'month'::text, 1, 14) $$,
   'owner sees the current minimized plan');
+reset role;
 select results_eq($$
   select count(*)::bigint from information_schema.columns
   where table_schema = 'loyalty_private' and table_name = 'managed_billing_plan_versions'
     and column_name = 'provider_price_id'
 $$, array[1::bigint], 'provider Price exists only in the private catalogue');
+set local role loyalty_runtime;
 select results_eq($$
   select count(*)::bigint from loyalty_private.list_managed_billing_plans_v1(
     'b1000000-0000-4000-8000-000000000002', 'b1000000-0000-4000-8000-000000000100',
@@ -340,11 +343,11 @@ select loyalty_private.set_organization_entitlement(
   'manual_override', 'operator:m14', 'Disable tenant billing after canary test',
   '2040-01-05 00:00:00+00', null);
 set local role loyalty_runtime;
-select throws_ok($$
-  select * from loyalty_private.authorize_managed_billing_session_attempt_v1(
+select results_eq($$
+  select count(*)::bigint from loyalty_private.authorize_managed_billing_session_attempt_v1(
     'b1000000-0000-4000-8000-000000000001', 'b1000000-0000-4000-8000-000000000301',
     'session', '2040-01-06 00:00:00+00')
-$$, '42501', 'managed billing operation unavailable', 'entitlement disablement prevents the next provider request');
+$$, array[0::bigint], 'entitlement disablement returns no provider authority');
 reset role;
 select results_eq($$
   select state, last_detail_code from loyalty_private.managed_billing_session_operations
@@ -355,7 +358,8 @@ select throws_ok($$
   update loyalty_private.managed_billing_session_attempts set detail_code = 'rewritten'
   where operation_id = (select id from loyalty_private.managed_billing_session_operations
     where public_id = 'b1000000-0000-4000-8000-000000000300')
-$$, '55000', 'immutable record', 'provider attempt evidence cannot be rewritten');
+$$, '55000', 'immutable loyalty history cannot be changed',
+  'provider attempt evidence cannot be rewritten');
 select results_eq($$
   select count(*)::bigint from information_schema.columns
   where table_schema = 'loyalty_private'

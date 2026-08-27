@@ -552,7 +552,7 @@ begin
     update loyalty_private.managed_billing_session_operations
     set state = 'held', last_detail_code = 'billing_session_disabled', updated_at = checked_at
     where id = operation.id;
-    raise exception using errcode = '42501', message = 'managed billing operation unavailable';
+    return;
   end if;
   select configuration.* into provider_configuration
   from loyalty_private.managed_billing_provider_configuration_versions as configuration
@@ -563,7 +563,7 @@ begin
     update loyalty_private.managed_billing_session_operations
     set state = 'held', last_detail_code = 'billing_provider_disabled', updated_at = checked_at
     where id = operation.id;
-    raise exception using errcode = '42501', message = 'managed billing operation unavailable';
+    return;
   end if;
   if (target_stage = 'customer' and (operation.state not in ('customer_required', 'ambiguous') or operation.provider_customer_id is not null))
      or (target_stage = 'session' and (operation.state not in ('ready', 'ambiguous') or operation.provider_customer_id is null)) then

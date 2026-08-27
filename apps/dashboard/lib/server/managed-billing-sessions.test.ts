@@ -88,6 +88,39 @@ describe("managed billing session orchestration", () => {
     expect(mocks.statements).toHaveLength(1);
   });
 
+  it("does not read a provider key when the database returns no live authority", async () => {
+    mocks.rows.push(
+      [
+        {
+          deployment_mode: "managed",
+          operation_id: operationId,
+          operation_state: "ready",
+          provider_customer_id: "cus_BillingSession0001",
+          provider_price_id: "price_BillingSession0001",
+          live_mode: false,
+          customer_idempotency_key: `m14:customer:${operationId}`,
+          session_idempotency_key: `m14:checkout:${operationId}`,
+        },
+      ],
+      [],
+    );
+
+    await expect(
+      createManagedBillingSession(actorUserId, {
+        schemaVersion: "1",
+        organizationId,
+        action: "checkout",
+        planId,
+        operationId,
+      }),
+    ).rejects.toThrow();
+    expect(mocks.readKey).not.toHaveBeenCalled();
+    expect(mocks.customer).not.toHaveBeenCalled();
+    expect(mocks.checkout).not.toHaveBeenCalled();
+    expect(mocks.portal).not.toHaveBeenCalled();
+    expect(mocks.statements).toHaveLength(2);
+  });
+
   it("reserves then records a customer before creating one fixed-authority Checkout", async () => {
     mocks.rows.push(
       [
