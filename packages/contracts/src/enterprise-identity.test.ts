@@ -9,6 +9,7 @@ import {
   organizationLifecycleCommandV1,
   organizationMemberCommandV1,
   organizationFederationLoginV1,
+  organizationFederationLoginV2,
   organizationFederationWorkspaceV1,
   organizationFederationSourceCommandV1,
   organizationFederationSourceReadV1,
@@ -525,6 +526,20 @@ describe("enterprise identity contracts", () => {
       organizationFederationLoginV1.safeParse({
         schemaVersion: "1",
         provider: "custom:starfiniti-example.com-admin",
+      }).success,
+    ).toBe(false);
+    expect(
+      organizationFederationLoginV2.safeParse({
+        schemaVersion: "2",
+        organizationId: workspace.organization.id,
+        provider: "custom:loyalty-0123456789abcdefghij",
+      }).success,
+    ).toBe(true);
+    expect(
+      organizationFederationLoginV2.safeParse({
+        schemaVersion: "2",
+        organizationId: "example.com",
+        provider: "custom:loyalty-0123456789abcdefghij",
       }).success,
     ).toBe(false);
   });

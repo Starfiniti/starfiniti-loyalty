@@ -55,18 +55,6 @@ try {
     };
   });
 
-  const [invitation] = await asSubject(
-    admin,
-    fixture.ownerOne,
-    (transaction) => transaction`
-    select * from loyalty.create_organization_invitation_command_v1(
-      ${fixture.organization.public_id}, 'Concurrent invitee', 'operator',
-      statement_timestamp() + interval '2 days', ${fixture.tokenSha256},
-      ${`lifecycle-race:invite:${suffix}`}, ${randomUUID()}
-    )
-  `,
-  );
-
   const membershipByUser = new Map(
     fixture.memberships.map((membership) => [membership.user_id, membership]),
   );
@@ -96,6 +84,25 @@ try {
     (result) =>
       result.status === "rejected" &&
       ["42501", "23514"].includes(result.reason?.code),
+  );
+
+  const [survivingOwner] = await admin`
+    select user_id
+    from loyalty.organization_memberships
+    where organization_id = ${fixture.organization.id}
+      and role = 'owner'
+      and revoked_at is null
+  `;
+  const [invitation] = await asSubject(
+    admin,
+    survivingOwner.user_id,
+    (transaction) => transaction`
+    select * from loyalty.create_organization_invitation_command_v1(
+      ${fixture.organization.public_id}, 'Concurrent invitee', 'operator',
+      statement_timestamp() + interval '2 days', ${fixture.tokenSha256},
+      ${`lifecycle-race:invite:${suffix}`}, ${randomUUID()}
+    )
+  `,
   );
 
   const acceptInvite = (sql, actor, key) =>

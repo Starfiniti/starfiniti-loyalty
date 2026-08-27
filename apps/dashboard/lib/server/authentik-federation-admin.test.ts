@@ -103,7 +103,7 @@ describe("Authentik tenant federation reconciliation", () => {
       client_secret: oidcInput.brokerClientSecret,
       grant_types: ["authorization_code"],
       issuer_mode: "per_provider",
-      sub_mode: "user_uuid",
+      sub_mode: "hashed_user_id",
       redirect_uris: [
         {
           matching_mode: "strict",

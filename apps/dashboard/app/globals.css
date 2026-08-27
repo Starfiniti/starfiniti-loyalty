@@ -13339,6 +13339,7 @@ html[data-dashboard-theme="dark"]
 .access-current-card,
 .access-role-section,
 .access-trust-boundary,
+.access-partial-unavailable,
 .access-unavailable {
   border: 1px solid var(--merchant-border, #e4e4e7);
   border-radius: 12px;
@@ -13686,6 +13687,34 @@ html[data-dashboard-theme="dark"]
   align-items: center;
   gap: 15px;
   padding: 20px 22px;
+}
+
+.access-partial-unavailable {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 15px 17px;
+  border-color: color-mix(in srgb, #c97700 32%, var(--merchant-border));
+  background: color-mix(in srgb, #fff2dd 76%, var(--merchant-surface));
+}
+
+.access-partial-unavailable > svg {
+  width: 19px;
+  height: 19px;
+  flex: 0 0 auto;
+  color: #a96000;
+}
+
+.access-partial-unavailable h2 {
+  color: var(--merchant-text, #18181b);
+  font-size: 12px;
+}
+
+.access-partial-unavailable p {
+  margin-top: 4px;
+  color: var(--merchant-muted, #71717a);
+  font-size: 10px;
+  line-height: 1.55;
 }
 
 .access-trust-boundary > svg,
@@ -14946,6 +14975,623 @@ button.danger:hover:not(:disabled) {
 
   .federation-confirmation {
     min-height: 44px;
+  }
+}
+
+/* M13 reviewed SCIM directory provisioning */
+.scim-lifecycle {
+  display: grid;
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.scim-heading,
+.scim-create-form,
+.scim-endpoint-panel,
+.scim-group-panel,
+.scim-activity {
+  border: 1px solid var(--merchant-border, #e4e4e7);
+  border-radius: 12px;
+  background: var(--merchant-surface, #fff);
+  box-shadow: var(--merchant-shadow, 0 1px 2px rgb(15 23 42 / 4%));
+}
+
+.scim-heading {
+  min-height: 132px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px 26px;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, transparent 0 72%, rgb(91 67 230 / 4%) 72%),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 39px,
+      rgb(91 67 230 / 5%) 39px 40px
+    ),
+    var(--merchant-surface, #fff);
+}
+
+.scim-heading h2,
+.scim-create-form h3,
+.scim-endpoint-panel h3,
+.scim-group-panel h3,
+.scim-activity h3 {
+  margin: 5px 0 0;
+  color: var(--merchant-text, #18181b);
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+
+.scim-heading p:not(.login-eyebrow),
+.scim-form-heading p,
+.scim-endpoint-panel > header p,
+.scim-group-panel > header p {
+  max-width: 780px;
+  margin: 7px 0 0;
+  color: var(--merchant-muted, #71717a);
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.scim-heading-icon {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid rgb(91 67 230 / 20%);
+  border-radius: 14px;
+  color: var(--merchant-violet, #5b43e6);
+  background: var(--merchant-violet-soft, #f0edff);
+  box-shadow:
+    0 0 0 6px rgb(91 67 230 / 4%),
+    0 16px 32px rgb(91 67 230 / 12%);
+}
+
+.scim-heading-icon svg {
+  width: 27px;
+  height: 27px;
+}
+
+.scim-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.scim-summary article {
+  min-height: 70px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 14px 16px;
+  border: 1px solid var(--merchant-border, #e4e4e7);
+  border-radius: 10px;
+  background: var(--merchant-surface, #fff);
+}
+
+.scim-summary article > span {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  color: var(--merchant-violet, #5b43e6);
+  background: var(--merchant-violet-soft, #f0edff);
+}
+
+.scim-summary svg {
+  width: 16px;
+}
+
+.scim-summary small,
+.scim-summary strong {
+  display: block;
+}
+
+.scim-summary small,
+.scim-endpoint-metrics small {
+  color: var(--merchant-muted, #71717a);
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.scim-summary strong {
+  margin-top: 2px;
+  color: var(--merchant-text, #18181b);
+  font-size: 16px;
+}
+
+.scim-trust-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 13px 15px;
+  border: 1px solid #c7d2fe;
+  border-left: 3px solid var(--merchant-violet, #5b43e6);
+  border-radius: 8px;
+  color: #3730a3;
+  background: #eef2ff;
+}
+
+.scim-trust-note svg {
+  width: 17px;
+  flex: 0 0 auto;
+}
+
+.scim-trust-note p {
+  margin: 0;
+  font-size: 9px;
+  line-height: 1.55;
+}
+
+.scim-create-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  align-items: end;
+  gap: 14px;
+  padding: 20px 22px;
+}
+
+.scim-form-heading {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.scim-panel-icon,
+.scim-endpoint-icon,
+.scim-group-identity > span:first-child {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  color: var(--merchant-violet, #5b43e6);
+  background: var(--merchant-violet-soft, #f0edff);
+}
+
+.scim-panel-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+}
+
+.scim-panel-icon svg {
+  width: 19px;
+}
+
+.scim-create-form > label:not(.scim-confirmation),
+.scim-endpoint-actions > label:not(.scim-confirmation),
+.scim-group-actions > label:not(.scim-confirmation) {
+  display: grid;
+  gap: 6px;
+  color: var(--merchant-muted, #71717a);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.scim-create-form input:not([type="hidden"], [type="checkbox"]),
+.scim-create-form select,
+.scim-endpoint-actions input:not([type="hidden"], [type="checkbox"]),
+.scim-endpoint-actions select,
+.scim-group-actions input:not([type="hidden"], [type="checkbox"]),
+.scim-group-actions select {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--merchant-border-strong, #d4d4d8);
+  border-radius: 8px;
+  color: var(--merchant-text, #18181b);
+  background: var(--merchant-surface, #fff);
+  font: inherit;
+}
+
+.scim-create-form input:focus,
+.scim-create-form select:focus,
+.scim-endpoint-actions input:focus,
+.scim-endpoint-actions select:focus,
+.scim-group-actions input:focus,
+.scim-group-actions select:focus {
+  border-color: var(--merchant-violet, #5b43e6);
+  outline: 3px solid
+    color-mix(in srgb, var(--merchant-violet, #5b43e6) 18%, transparent);
+}
+
+.scim-confirmation {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--merchant-text, #18181b);
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.scim-confirmation input {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  accent-color: var(--merchant-violet, #5b43e6);
+}
+
+.scim-create-form > button,
+.scim-endpoint-actions > button,
+.scim-group-actions > button {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.scim-create-form > button svg,
+.scim-endpoint-actions > button svg,
+.scim-group-actions > button svg {
+  width: 14px;
+}
+
+.scim-create-form > .action-message,
+.scim-create-form > .scim-credential {
+  grid-column: 1 / -1;
+}
+
+.scim-endpoint-panel,
+.scim-group-panel,
+.scim-activity {
+  padding: 22px;
+}
+
+.scim-endpoint-panel > header,
+.scim-group-panel > header,
+.scim-activity > header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 15px;
+}
+
+.scim-endpoint-panel > header > span,
+.scim-group-panel > header > span {
+  color: var(--merchant-muted, #71717a);
+  font-size: 9px;
+}
+
+.scim-endpoint-list,
+.scim-group-list {
+  display: grid;
+  gap: 10px;
+}
+
+.scim-endpoint,
+.scim-group-card {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--merchant-border, #e4e4e7);
+  border-radius: 10px;
+  background: color-mix(
+    in srgb,
+    var(--merchant-canvas, #f7f8fb) 30%,
+    var(--merchant-surface, #fff)
+  );
+}
+
+.scim-endpoint.is-revoked {
+  opacity: 0.78;
+}
+
+.scim-endpoint > header,
+.scim-group-identity {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.scim-endpoint-icon,
+.scim-group-identity > span:first-child {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+}
+
+.scim-endpoint.is-revoked .scim-endpoint-icon {
+  color: #71717a;
+  background: #f4f4f5;
+}
+
+.scim-endpoint-icon svg,
+.scim-group-identity svg {
+  width: 17px;
+}
+
+.scim-endpoint h4,
+.scim-endpoint p,
+.scim-group-card h4,
+.scim-group-card p {
+  margin: 0;
+}
+
+.scim-endpoint h4,
+.scim-group-card h4 {
+  color: var(--merchant-text, #18181b);
+  font-size: 12px;
+}
+
+.scim-endpoint header p,
+.scim-group-card p {
+  margin-top: 3px;
+  color: var(--merchant-muted, #71717a);
+  font-size: 8px;
+}
+
+.scim-status,
+.scim-role {
+  padding: 5px 8px;
+  border-radius: 999px;
+  color: #52525b;
+  background: #f4f4f5;
+  font-size: 8px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.scim-status.is-active,
+.scim-role.is-mapped {
+  color: #047857;
+  background: #d1fae5;
+}
+
+.scim-endpoint-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 13px;
+}
+
+.scim-endpoint-metrics > div {
+  padding: 10px 11px;
+  border: 1px solid
+    color-mix(in srgb, var(--merchant-border, #e4e4e7) 70%, transparent);
+  border-radius: 8px;
+  background: var(--merchant-surface, #fff);
+}
+
+.scim-endpoint-metrics strong {
+  display: block;
+  margin-top: 3px;
+  color: var(--merchant-text, #18181b);
+  font-size: 13px;
+}
+
+.scim-endpoint-actions,
+.scim-group-actions {
+  display: grid;
+  grid-template-columns: minmax(140px, 0.55fr) minmax(220px, 1fr) auto auto;
+  align-items: end;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--merchant-border, #e4e4e7);
+}
+
+.scim-endpoint-actions > .action-message,
+.scim-endpoint-actions > .scim-credential,
+.scim-group-actions > .action-message {
+  grid-column: 1 / -1;
+}
+
+.scim-empty {
+  display: grid;
+  justify-items: center;
+  padding: 32px 20px;
+  border: 1px dashed var(--merchant-border-strong, #d4d4d8);
+  border-radius: 10px;
+  text-align: center;
+}
+
+.scim-empty.compact {
+  padding: 24px 20px;
+}
+
+.scim-empty svg {
+  width: 25px;
+  color: var(--merchant-violet, #5b43e6);
+}
+
+.scim-empty h4 {
+  margin: 9px 0 0;
+  font-size: 12px;
+}
+
+.scim-empty p {
+  max-width: 560px;
+  margin: 6px 0 0;
+  color: var(--merchant-muted, #71717a);
+  font-size: 9px;
+  line-height: 1.55;
+}
+
+.scim-credential {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid #a7f3d0;
+  border-radius: 10px;
+  color: #065f46;
+  background: #ecfdf5;
+}
+
+.scim-credential > div:first-child {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.scim-credential > div:first-child svg {
+  width: 16px;
+  flex: 0 0 auto;
+}
+
+.scim-credential p {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.scim-copy-row {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+}
+
+.scim-copy-row > span,
+.scim-copy-row code {
+  font-size: 9px;
+}
+
+.scim-copy-row code {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scim-copy-row button {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+
+.scim-copy-row button svg {
+  width: 14px;
+}
+
+.scim-activity > header {
+  align-items: center;
+}
+
+.scim-activity > header > svg {
+  width: 20px;
+  color: var(--merchant-violet, #5b43e6);
+}
+
+.scim-activity ol {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scim-activity li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid var(--merchant-border, #e4e4e7);
+}
+
+.scim-activity li > span {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--merchant-violet, #5b43e6);
+  box-shadow: 0 0 0 4px var(--merchant-violet-soft, #f0edff);
+}
+
+.scim-activity li strong {
+  color: var(--merchant-text, #18181b);
+  font-size: 10px;
+}
+
+.scim-activity li p,
+.scim-activity time,
+.scim-activity-empty {
+  color: var(--merchant-muted, #71717a);
+  font-size: 8px;
+}
+
+.scim-activity li p {
+  margin: 2px 0 0;
+}
+
+.scim-activity-empty {
+  margin: 0;
+  padding: 18px 0 4px;
+  border-top: 1px solid var(--merchant-border, #e4e4e7);
+}
+
+@media (max-width: 1080px) {
+  .scim-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .scim-create-form,
+  .scim-endpoint-actions,
+  .scim-group-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 800px) {
+  .scim-heading,
+  .scim-endpoint-panel > header,
+  .scim-group-panel > header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .scim-summary,
+  .scim-create-form,
+  .scim-endpoint-metrics,
+  .scim-endpoint-actions,
+  .scim-group-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .scim-create-form > button,
+  .scim-endpoint-actions > button,
+  .scim-group-actions > button {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .scim-confirmation {
+    min-height: 44px;
+  }
+
+  .scim-endpoint > header,
+  .scim-group-identity,
+  .scim-copy-row {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .scim-status,
+  .scim-role,
+  .scim-copy-row code,
+  .scim-copy-row button {
+    grid-column: 2;
+  }
+
+  .scim-activity li {
+    align-items: start;
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .scim-activity time {
+    grid-column: 2;
   }
 }
 

@@ -388,7 +388,7 @@ export class AuthentikFederationAdmin {
       ],
       logout_uri: "",
       logout_method: "frontchannel",
-      sub_mode: "user_uuid",
+      sub_mode: "hashed_user_id",
       issuer_mode: "per_provider",
       jwt_federation_sources: [],
       jwt_federation_providers: [],

@@ -1,6 +1,6 @@
 # M13 Evidence — Enterprise identity
 
-Status: M13-S01 access catalogue and review is complete on draft PR #40. M13-S02 organization and team lifecycle is complete on draft PR #41. M13-S03 tenant federation is implemented on draft PR #42 with production disabled; production-build browser evidence passes while Linux database replay, Authentik egress proof, and the enterprise-IdP canary remain open. SCIM, support, and agency administration remain unimplemented.
+Status: M13-S01 access catalogue and review is complete on draft PR #40. M13-S02 organization and team lifecycle is complete on draft PR #41. M13-S03 tenant federation is implemented on draft PR #42 with production disabled; production-build browser evidence passes while Authentik egress proof and the enterprise-IdP canary remain open. M13-S04 SCIM is a disabled repository candidate on draft PR #43 with fresh isolated database, browser, adversarial, and exact-head CI evidence; the approved enterprise IdP/SCIM canary remains open. Support and agency administration remain unimplemented.
 
 ## M13-S01 access catalogue and review
 
@@ -47,6 +47,7 @@ Status: repository candidate implemented on `codex/m13-tenant-federation`; no pr
 - ADR-0053 selects per-organization Authentik OIDC/SAML sources feeding one opaque downstream OIDC provider per source while Supabase continues to issue application sessions and PostgreSQL remains the tenant authority.
 - OIDC and SAML metadata validation is HTTPS-only, public-address socket-pinned, redirect-free, bounded, issuer/entity exact, cryptographically constrained, and raw-document-free. New enablement repeats that validation and requires exact document, endpoint, issuer/entity, and signing-evidence continuity before reserving activation. SAML V1 accepts one current certificate and disables IdP-initiated login.
 - Both OIDC hops request only `openid`. Supabase providers are email-optional with an empty claims allowlist, and the Authentik downstream provider has only the OpenID subject mapping. Existing invited members link explicitly from an authenticated session; email, domain, group, role, source, and JWT metadata grant no organization authority.
+- M13-S04 replaces the still-disabled downstream subject mode with Authentik's documented `hashed_user_id`, whose opaque OIDC subject matches the default outbound SCIM `externalId`. A prior active SCIM User, the exact brokered subject, and one explicit opaque Group-to-non-owner-role mapping are all required before PostgreSQL creates or reactivates a membership. Email, username, domain, group name, and arbitrary claims remain non-authoritative.
 - PostgreSQL retains additive tenant current state, immutable revisions, minimized evidence, digest-only upstream/broker secret fingerprints, exact idempotency, one-active-source serialization, public resolver minimization, owner recovery, and zero membership or ledger effects.
 - The database-authoritative `enterprise.identity` entitlement blocks new creation, enablement, and rotation while preserving accepted completion, exact retries, existing login, disablement, retirement, recovery, and audit access.
 - Mutating network/408/429/5xx/oversized/malformed outcomes are ambiguous, and Authentik response reads have a streaming 512 KiB ceiling. Resolver visibility is removed before disablement, Supabase enable precedes Authentik with compensation, uncertain compensation supersedes a definite rejection, and owner-only five-minute recovery converts an interrupted pending operation to immutable review evidence without guessing external state.
@@ -69,3 +70,75 @@ Status: repository candidate implemented on `codex/m13-tenant-federation`; no pr
 - Enable manual Supabase identity linking in staging, retain disabled signup, and verify exact callback allowlists.
 - Run one approved enterprise OIDC or SAML tenant through disabled provisioning, explicit invited-account linking, login, forged-claim denial, stale-session revocation, IdP outage, local recovery, disable, rotation, interrupted-operation recovery, reconciliation, rollback, and log minimization.
 - Retain redacted Linux CI, network, and external-canary evidence before marking M13-S03 complete.
+
+## M13-S04 SCIM provisioning
+
+Status: repository candidate; production remains disabled and unchanged.
+
+- ADR-0054 requires the Authentik hashed OIDC subject to equal its outbound
+  SCIM `externalId`. PostgreSQL creates or reactivates access only when that
+  verified subject, one active SCIM User, and exactly one owner/admin-reviewed
+  opaque Group-to-non-owner-role mapping agree.
+- Additive RLS storage covers organization/source-bound endpoints, Users,
+  Groups, memberships, digest-only credential revisions, and minimized audit.
+  Email, username, domain, display name, token claims, browser selectors, and
+  group names cannot grant authority. SCIM can never map `owner`.
+- The RFC 7643/7644 profile implements discovery, Users, Groups, exact filters,
+  bounded pagination, POST/PUT/PATCH/DELETE, weak ETags, immediate rotation and
+  revocation, deterministic create/delete retry, tombstone reprovisioning,
+  quotas, and 512 KiB/2,000-member limits. PostgreSQL independently rejects
+  nested undeclared attributes.
+- `active: false`, deletion, last-role removal, conflicting roles, and endpoint
+  revocation reconcile the live membership in the same transaction. Existing
+  sessions fail their next database-authoritative tenant-context check.
+- Team & access now includes endpoint creation with one-time token handoff,
+  rotation/revocation, synchronized counts, opaque group review, role mapping,
+  and minimized recent activity. The operational handoff is in
+  `docs/operations/TENANT_SCIM.md`.
+- Exact tenant-provider authentication preserves a live invitation-created
+  membership without changing its provenance; a revoked manual membership and
+  mismatched SCIM provenance fail closed.
+
+### Repository verification
+
+- Fresh isolated `supabase/postgres:17.6.1.136` replay passed all 74 additive
+  migrations as `supabase_admin`; the harness added only the minimal GoTrue
+  schema fields absent from the bare database image. Production was untouched.
+- `organization_scim_provisioning_test.sql` passes 60/60 assertions covering
+  grants/RLS, digest-only lifecycle, discovery, resources, filtering,
+  pagination, exact subject correlation, owner prohibition, deprovisioning,
+  multi-role failure, invitation/SCIM separation, immutable external IDs,
+  idempotent DELETE, safe tombstone reprovisioning, fresh rotation, and
+  revocation.
+- `verify-scim-concurrency.mjs` passes two-session exact endpoint creation and
+  competing group-role mapping: one endpoint effect, one role winner, one stale
+  failure, exact audits, and zero ledger transactions.
+- Focused contract, database-boundary, action, callback, and SCIM route tests
+  pass. Group PATCH, optimistic `If-Match`, request-size rejection, and
+  plaintext-token exclusion are explicit cases.
+- Adversarial review found and fixed active credential reuse, loss/reuse of a
+  one-time credential across refreshed forms, silently hidden partial identity
+  failures, permanent tombstones, non-idempotent DELETE retry, and a tenant-SSO
+  regression that incorrectly required SCIM for an already invited member.
+- Chromium browser QA passes desktop `1440 × 1100` and mobile `390 × 844`
+  across light/dark, reduced motion, action-state copy, responsive grids,
+  English-only output, zero overflow, and zero browser diagnostics. Evidence is
+  recorded in `tenant-scim-browser-qa-2026-08-26.md`.
+- Exact-head Linux run `33000243629` at
+  `9a247ff8f4e04a3209e944f48252483121aefa15` passes all seven jobs: root
+  checks, both production images, a clean 74-migration replay, all 61 pgTAP
+  files with 3,276 assertions, all 15 concurrency probes, and the
+  minimum/current × HPOS/legacy WooCommerce matrix.
+- The exact-head loop exposed and fixed three integration weaknesses outside
+  the focused SCIM suite: global security-function allowlists omitted the six
+  reviewed SCIM/federation boundaries, the federation recovery fixture tried
+  to violate its own timestamp constraint, and the organization lifecycle
+  race created an invitation from an owner who could subsequently be revoked.
+  The final probe creates that invitation from the serialized surviving owner.
+
+### Remaining production gate
+
+- An approved enterprise IdP/SCIM test tenant must synchronize a controlled
+  cohort through Authentik, prove exact hashed-subject correlation, mapped and
+  unmapped login, active-false/delete/stale-session revocation, token rotation,
+  provider outage independence, reconciliation, rollback, and log minimization.

@@ -623,6 +623,14 @@ export const organizationFederationLoginV1 = z
   })
   .strict();
 
+export const organizationFederationLoginV2 = z
+  .object({
+    schemaVersion: z.literal("2"),
+    organizationId: z.uuid(),
+    provider: z.string().regex(/^custom:loyalty-[a-z0-9]{20}$/u),
+  })
+  .strict();
+
 export type EnterpriseAccessRoleV1 = z.infer<typeof enterpriseAccessRoleV1>;
 export type OrganizationMembershipRoleV1 = z.infer<
   typeof organizationMembershipRoleV1
@@ -693,4 +701,7 @@ export type OrganizationFederationWorkspaceV1 = z.infer<
 >;
 export type OrganizationFederationLoginV1 = z.infer<
   typeof organizationFederationLoginV1
+>;
+export type OrganizationFederationLoginV2 = z.infer<
+  typeof organizationFederationLoginV2
 >;

@@ -29,6 +29,7 @@ vi.mock("@/lib/server/enterprise-identity", () => ({
 import { signInWithTenantSso } from "./actions";
 
 const provider = "custom:loyalty-0123456789abcdefghij";
+const organizationId = "20000000-0000-4000-8000-000000000001";
 
 describe("tenant SSO login start", () => {
   const originalOrigin = process.env.DASHBOARD_PUBLIC_ORIGIN;
@@ -36,7 +37,11 @@ describe("tenant SSO login start", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.DASHBOARD_PUBLIC_ORIGIN = "https://loyalty.starfiniti.com";
-    resolveLogin.mockResolvedValue({ schemaVersion: "1", provider });
+    resolveLogin.mockResolvedValue({
+      schemaVersion: "2",
+      organizationId,
+      provider,
+    });
     signInWithOAuth.mockResolvedValue({
       data: {
         url: `https://api.loyalty.starfiniti.com/auth/v1/authorize?provider=${encodeURIComponent(provider)}`,
@@ -65,8 +70,7 @@ describe("tenant SSO login start", () => {
     expect(signInWithOAuth).toHaveBeenCalledWith({
       provider,
       options: {
-        redirectTo:
-          "https://loyalty.starfiniti.com/auth/callback?next=%2Fprogramme",
+        redirectTo: `https://loyalty.starfiniti.com/auth/callback?organization=${organizationId}&next=%2Fprogramme`,
         scopes: "openid",
         skipBrowserRedirect: true,
       },

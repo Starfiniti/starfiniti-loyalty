@@ -4,8 +4,9 @@ import { createHash } from "node:crypto";
 
 import {
   enterpriseIdentityMutationResultV1,
+  organizationScimMembershipClaimV1,
   organizationAccessWorkspaceV1,
-  organizationFederationLoginV1,
+  organizationFederationLoginV2,
   organizationFederationWorkspaceV1,
   organizationTeamWorkspaceV1,
   type AcceptOrganizationInvitationCommandV1,
@@ -14,9 +15,10 @@ import {
   type EnterpriseIdentityMutationResultV1,
   type OrganizationLifecycleCommandV1,
   type OrganizationMemberCommandV1,
+  type OrganizationScimMembershipClaimV1,
   type OrganizationAccessWorkspaceV1,
   type OrganizationFederationWorkspaceV1,
-  type OrganizationFederationLoginV1,
+  type OrganizationFederationLoginV2,
   type OrganizationTeamWorkspaceV1,
   type RevokeOrganizationInvitationCommandV1,
 } from "@starfiniti/contracts";
@@ -121,20 +123,66 @@ export async function getOrganizationFederationWorkspace(
 
 export async function resolveOrganizationFederationLogin(
   organizationSlug: string,
-): Promise<OrganizationFederationLoginV1 | null> {
+): Promise<OrganizationFederationLoginV2 | null> {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .schema("loyalty")
-    .rpc("resolve_organization_federation_login_v1", {
+    .rpc("resolve_organization_federation_login_v2", {
       target_organization_slug: organizationSlug,
     });
   if (error) throw new Error("organization_federation_login_unavailable");
   const row = Array.isArray(data) ? data[0] : data;
   if (!row) return null;
-  const parsed = organizationFederationLoginV1.safeParse(row);
+  const parsed = organizationFederationLoginV2.safeParse({
+    schemaVersion: "2",
+    organizationId:
+      typeof row === "object" && row !== null && "organization_id" in row
+        ? (row as Record<string, unknown>).organization_id
+        : null,
+    provider:
+      typeof row === "object" && row !== null && "provider" in row
+        ? (row as Record<string, unknown>).provider
+        : null,
+  });
   if (!parsed.success) {
     throw new Error("organization_federation_login_invalid");
   }
+  return parsed.data;
+}
+
+export async function claimOrganizationScimMembership(
+  organizationId: string,
+  correlationId: string,
+): Promise<OrganizationScimMembershipClaimV1> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .schema("loyalty")
+    .rpc("claim_organization_scim_membership_v1", {
+      target_organization_public_id: organizationId,
+      target_correlation_id: correlationId,
+    });
+  if (error) throw new Error("organization_scim_claim_unavailable");
+  const row = (Array.isArray(data) ? data[0] : data) as Readonly<{
+    outcome?: unknown;
+    role?: unknown;
+    membership_revision?: unknown;
+  }> | null;
+  if (!row) {
+    throw new Error("organization_scim_claim_invalid");
+  }
+  const revision =
+    row.membership_revision === null || row.membership_revision === undefined
+      ? null
+      : Number(row.membership_revision);
+  if (revision !== null && (!Number.isInteger(revision) || revision < 1)) {
+    throw new Error("organization_scim_claim_invalid");
+  }
+  const parsed = organizationScimMembershipClaimV1.safeParse({
+    outcome: row.outcome,
+    role: typeof row.role === "string" ? row.role : null,
+    revision,
+  });
+  if (!parsed.success) throw new Error("organization_scim_claim_invalid");
   return parsed.data;
 }
 
