@@ -816,7 +816,11 @@ begin
     )
   order by fact.occurred_at, fact.id
   limit (target_batch_size * 4)
-  on conflict (organization_id, usage_fact_id) do nothing;
+  -- Concurrent claimers can race on either the fact identity or its derived
+  -- provider identifier. Both unique constraints describe the same immutable
+  -- dispatch, so ignore either conflict and let the leasing query below select
+  -- the committed row exactly once.
+  on conflict do nothing;
 
   return query
   with candidates as (

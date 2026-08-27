@@ -19931,7 +19931,7 @@ html[data-dashboard-theme="dark"] .billing-state-badge.is-restricted {
   border-radius: 999px;
   color: var(--merchant-violet, #5b43e6);
   background: var(--merchant-violet-soft, #f0edff);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 750;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -19968,7 +19968,7 @@ html[data-dashboard-theme="dark"] .billing-state-badge.is-restricted {
 
 .billing-usage-grid small {
   color: var(--merchant-muted, #71717a);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
