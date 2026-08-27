@@ -960,6 +960,7 @@ tasks:
     title: Add allowlisted audiences, segments, and campaigns
     module: M07
     status: in_progress
+    module_score: 90
     dependencies: [M06-REFERRALS]
     hypothesis: Snapshot-based campaigns increase participation while atomic budgets cap liability.
     baseline: No segment or campaign engine exists.
@@ -968,7 +969,9 @@ tasks:
         concurrency cannot exceed budget or quantity,
         every effect retains audience and explanation evidence,
       ]
-    owner_inputs: []
+    owner_inputs:
+      - approved real WooCommerce store for the final canary
+      - approved release and bounded campaign canary window
     acceptance:
       [
         allowlisted segments seven campaign types schedules snapshots caps budgets controls approvals and results pass,
@@ -1055,6 +1058,7 @@ tasks:
           - native campaigns preflight an active exact-programme connector and deterministic execution failures stop after one rolled-back attempt while transient failures remain bounded retries
           - campaign rule and tier selectors come from the exact published programme and incompatible future programme publication fails atomically while accepted work exists
         evidence:
+          - docs/plan/evidence/M07/canary.yaml records 51 exact checks, nine named path- and SHA-256-bound production artifacts, and a deterministic seven-category provisional score of 90 with operability below its floor
           - ADR-0026 defines append-only per-origin cumulative campaign refund compensation; exact-head run 32674872811 passed and partial/full refund canary evidence remains pending
           - ADR-0027 rejects merchant-declared per-effect valuation unsupported native kinds unpublished rewards and same-group cross-programme reward references; exact-head run 32674872811 passed and canary evidence remains pending
           - ADR-0028 selects one materialized candidate and decision statement with STABLE nested evaluators; exact-head run 32674872811 passed and concurrent source-change canary evidence remains pending
@@ -1065,6 +1069,7 @@ tasks:
           - merchant results expose reserved capacity purchase reversals control and suppression trigger fulfilment and reversal outcomes plus bounded queue health through a keyboard-operable responsive disclosure; focused desktop and mobile browser evidence has zero page overflow and diagnostics
           - exact-head run 32679145086 passed baseline database both images and all four WooCommerce runtime cells for the merchant result disclosure at 1b1406b
           - PR 32 is merge-clean at 847f16e2b321c77c6fffd6d2a5924c327d893d84 and CI run 33075499745 passed baseline containers clean database replay and all four WooCommerce runtime variants on the unchanged reviewed product tree
+          - approved release pilot store disabled deployment Starfiniti canary full capacity value refund native reward result reconciliation rollback observation and final scoring remain open
     risks: [R-026, R-020, R-035]
     docs:
       [

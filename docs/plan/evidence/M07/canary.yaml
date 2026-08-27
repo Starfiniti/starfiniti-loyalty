@@ -1,0 +1,275 @@
+schema: starfiniti.campaign-canary.v1
+status: in_progress
+observedAt: 2026-08-27T16:16:45Z
+currentProduction:
+  release: v0.1.11
+  applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
+candidate:
+  pullRequest: 57
+  commit: 045423382421932614ec2812d12319ae2e6d0b5d
+  approvedRelease: false
+  operatorAccess: true
+  pilotStoreApproved: false
+  canaryApproved: false
+publicBaseline:
+  dashboardHealth: 200
+  login: 200
+  unsignedWooCommerceIngress: 401
+  canonicalDns: true
+score:
+  total: 90
+  target: 90
+  minimumCategoryRatio: 0.8
+  categories:
+    - id: correctness
+      weight: 20
+      score: 20
+      evidence: "Allowlisted immutable audiences, explicit schedules, seven campaign behaviors, lifecycle, controls, caps, value, refunds, and results have one deterministic outcome."
+    - id: security
+      weight: 15
+      score: 15
+      evidence: "PostgreSQL derives tenant, programme, audience, campaign, assignment, customer, capacity, wallet, reward, job, and value authority behind explicit grants and RLS."
+    - id: ledger_reliability
+      weight: 15
+      score: 15
+      evidence: "Atomic capacity-before-value, attributable ledger effects, trigger-time lots, native reservation, cumulative compensation, exact retries, and accepted-work continuity preserve value."
+    - id: tests
+      weight: 15
+      score: 15
+      evidence: "Exact candidate checks cover 958 workspace tests, 81 migration files, 68 pgTAP files, all concurrency probes, both images, and four WooCommerce runtimes."
+    - id: performance
+      weight: 10
+      score: 8
+      evidence: "Bounded candidates, statement snapshots, schedules, leases, counters, projections, and local checkout pass; production latency and sustained observation remain pending."
+    - id: operability
+      weight: 10
+      score: 3
+      evidence: "Disabled-first rollout, lifecycle, manual review, recovery, reconciliation, and rollback boundaries exist; release, pilot, rehearsal, and observation remain pending."
+    - id: maintainability
+      weight: 15
+      score: 14
+      evidence: "Versioned contracts, additive migrations, selector authority, exact metric definitions, ADRs, regression tests, runbooks, and living evidence remain synchronized."
+checks:
+  - id: exact_head_ci
+    status: passed
+    evidence: "CI run 33097966442 and Security run 33097966435 passed at integrated candidate commit 045423382421932614ec2812d12319ae2e6d0b5d with all eleven PR checks green."
+  - id: contract_campaign_matrix
+    status: passed
+    evidence: "Strict contracts cover allowlisted audiences, seven campaign behaviors, schedules, timezones, exclusions, caps, points and monetary budgets, liability, controls, approval, lifecycle, and results."
+  - id: database_authority_matrix
+    status: passed
+    evidence: "PostgreSQL derives tenant, programme, audience, campaign, assignment, capacity, customer, wallet, reward, job, lifecycle, and value authority behind explicit grants, RLS, and private helpers."
+  - id: audience_snapshot_concurrency
+    status: passed
+    evidence: "One bounded PostgreSQL statement snapshot evaluates candidates and decisions while two-session tests preserve one immutable membership set across retries and concurrent source changes."
+  - id: capacity_concurrency
+    status: passed
+    evidence: "Stable lock order and atomic counters prove one last quantity, points, liability, and member-cap reservation wins while its competitor observes exhaustion and exact retry is idempotent."
+  - id: execution_refund_matrix
+    status: passed
+    evidence: "Canonical triggers, campaign-attributed ledger effects, native reservations, cumulative per-origin partial and full refund compensation, cancellation, and trigger-time expiry pass."
+  - id: lifecycle_selector_matrix
+    status: passed
+    evidence: "Database-timed scheduled, active, paused, completed, and cancelled transitions plus exact published programme rule, tier, reward, and connector selectors fail closed."
+  - id: browser_accessibility
+    status: passed
+    evidence: "Production components pass desktop and mobile audience building, seven behavior templates, calendar, liability confirmation, lifecycle, result disclosures, keyboard, dark mode, overflow, and diagnostic review."
+  - id: privacy_minimization
+    status: passed
+    evidence: "Merchant, worker, audit, support, results, logs, and evidence omit assignments, customer identities, salts, source references, coupon material, raw errors, and private ledger metadata."
+  - id: checkout_independence
+    status: passed
+    evidence: "WooCommerce checkout uses native local state and never waits for Hub audience evaluation, campaign scheduling, worker, entitlement, or native campaign reward outcome."
+  - id: rollback_compatibility_repository
+    status: passed
+    evidence: "Pause, cancel, disablement, and prior-image rollback block new work while accepted assignments, capacity, value, native states, reversals, history, and results remain recoverable."
+  - id: operations_documentation
+    status: passed
+    evidence: "Campaign, programme, rewards, WooCommerce, deployment, backup, reconciliation, dead-letter, incident, and rollback documentation define deterministic operator boundaries."
+  - id: public_production_baseline
+    status: passed
+    evidence: "Canonical DNS resolves; dashboard health and login return HTTP 200 with no-store or private caching, and unsigned WooCommerce ingestion returns HTTP 401."
+  - id: operator_access
+    status: passed
+    evidence: "The approved read-only Proxmox route confirms application VM 970 and Supabase VM 971 are running without changing service, configuration, data, or value."
+  - id: approved_release
+    status: pending
+    evidence: "Draft PR 57 is exact-head green but explicit merge, immutable release, and deployment approval remain required."
+  - id: approved_pilot_store
+    status: pending
+    evidence: "One real WooCommerce store and bounded audience, customer, order, refund, reward, tier, referral, schedule, control, and capacity fixtures require owner approval."
+  - id: canary_approval
+    status: pending
+    evidence: "No approved maintenance window, exact pilot scope, campaign value ceiling, observation interval, stop condition, or rollback decision owner is recorded."
+  - id: pre_change_recovery_point
+    status: pending
+    evidence: "A fresh verified PostgreSQL base, WAL position, incremental off-host archive, application configuration snapshot, and signing-reference inventory must precede deployment."
+  - id: production_value_baseline
+    status: pending
+    evidence: "Read-only programme, audience, snapshot, campaign, assignment, capacity, job, ledger, lot, reward, lifecycle, result, and connector aggregates require capture."
+  - id: disabled_deployment
+    status: pending
+    evidence: "Candidate images and additive migrations have not been deployed with campaigns disabled."
+  - id: migration_registration
+    status: pending
+    evidence: "Production must record every candidate migration version and source digest exactly once before campaigns can be enabled."
+  - id: non_canary_disabled
+    status: pending
+    evidence: "Unrelated organizations, workspaces, programmes, audiences, campaigns, customers, connectors, and sessions must receive no campaign capability."
+  - id: audience_snapshot_canary
+    status: pending
+    evidence: "One allowlisted multi-condition audience must preview, publish, snapshot, and retain one immutable exact membership set without arbitrary SQL or identity exposure."
+  - id: preview_liability_canary
+    status: pending
+    evidence: "Audience size, exclusions, points, quantity, monetary liability, member caps, and maximum exposure must match the published definition before approval."
+  - id: approval_control_canary
+    status: pending
+    evidence: "An authorized approval must bind one immutable snapshot, exact treatment and control assignment, confirmed liability, schedule, programme selectors, and audit evidence."
+  - id: schedule_dst_canary
+    status: pending
+    evidence: "Explicit instants and one valid IANA timezone must pass normal, daylight-saving gap, overlap, and boundary evidence without server-timezone drift."
+  - id: lifecycle_canary
+    status: pending
+    evidence: "Database time must advance scheduled, active, paused, completed, and cancelled states once while allowing compatible successor versions."
+  - id: bonus_points_canary
+    status: pending
+    evidence: "A bonus-point campaign must reserve capacity and append one attributable award and release at the canonical trigger instant."
+  - id: multiplier_canary
+    status: pending
+    evidence: "Only the highest-priority eligible programme-or-campaign multiplier may apply while explicitly additive fixed bonuses retain separate attribution."
+  - id: milestone_canary
+    status: pending
+    evidence: "A milestone campaign must use one canonical allowlisted fact, control assignment, exact cap, and exactly-once effect."
+  - id: winback_canary
+    status: pending
+    evidence: "A win-back campaign must use bounded historical inactivity evidence and issue no effect outside its immutable snapshot and schedule."
+  - id: tier_campaign_canary
+    status: pending
+    evidence: "A tier campaign must use the exact published programme tier selector and reject unknown, disabled, or later-incompatible programme changes."
+  - id: referral_campaign_canary
+    status: pending
+    evidence: "A referral campaign must use canonical referral facts and create no duplicate or identity-derived effect."
+  - id: limited_quantity_canary
+    status: pending
+    evidence: "A limited-quantity campaign must reserve before value, accept the last available unit, reject the next claim, and never partially allocate."
+  - id: native_fixed_discount_canary
+    status: pending
+    evidence: "A campaign-funded fixed discount must derive exact face value, currency, precision, and active exact-programme connector capability before assignment."
+  - id: last_capacity_canary
+    status: pending
+    evidence: "Concurrent treatment claims at the final quantity, points, and liability boundary must produce one winner, one exhausted outcome, and exact counters."
+  - id: member_cap_canary
+    status: pending
+    evidence: "Concurrent and replayed effects for one member must enforce the immutable per-member cap without alternate trigger or ordering bypass."
+  - id: control_group_canary
+    status: pending
+    evidence: "Deterministic private control assignment must create no value while treatment and control populations reconcile to the approved snapshot."
+  - id: partial_full_refund_canary
+    status: pending
+    evidence: "Partial then full purchase refunds must cumulatively compensate every campaign ledger origin exactly once without refilling gross capacity."
+  - id: audience_source_change_canary
+    status: pending
+    evidence: "A concurrent qualifying source change must fall entirely before or after one materialized audience statement snapshot and never mix decisions."
+  - id: deterministic_failure_canary
+    status: pending
+    evidence: "A controlled selector, authority, contract, or native-capability failure must roll back and enter immediate minimized manual review after one attempt."
+  - id: transient_retry_canary
+    status: pending
+    evidence: "A controlled transient infrastructure failure must retain accepted capacity, recover through bounded leased retries, and create one final effect."
+  - id: programme_selector_compatibility
+    status: pending
+    evidence: "Campaign approval and competing programme publication must serialize so incompatible rule, tier, reward, or connector changes fail atomically."
+  - id: cross_tenant_denial
+    status: pending
+    evidence: "Unrelated organization, programme, audience, campaign, assignment, capacity, job, wallet, reward, result, and connector selectors must reveal nothing and create no effect."
+  - id: capacity_reconciliation
+    status: pending
+    evidence: "Quantity, points, liability, per-member use, treatment, control, reserved, fulfilled, reversed, exhausted, and suppressed counters must reconcile exactly."
+  - id: ledger_reconciliation
+    status: pending
+    evidence: "Every point award, multiplier, bonus, release, lot, refund compensation, tier fact, balance, and campaign attribution must reconcile to canonical triggers."
+  - id: native_reward_reconciliation
+    status: pending
+    evidence: "Every native command, fixed discount, reservation, capture, cancellation, redemption, retry, expiry, ambiguity, and monetary face value must reconcile exactly."
+  - id: queue_result_reconciliation
+    status: pending
+    evidence: "No trigger job may be lost, duplicated, leased indefinitely, retried past bounds, hidden by disablement, or absent from exact minimized campaign results."
+  - id: rollback_rehearsal
+    status: pending
+    evidence: "Pause and disable campaigns, drain or hold accepted work, restore prior images, and retain additive snapshots, assignments, capacity, value, native states, reversals, and results."
+  - id: observation_window
+    status: pending
+    evidence: "Observe the bounded canary after rollback rehearsal and record schedule, audience, capacity, value, refund, native, queue, checkout, privacy, and reconciliation health."
+  - id: final_reconciliation
+    status: pending
+    evidence: "Confirm zero unexplained audience, snapshot, campaign, assignment, capacity, control, value, refund, native reward, queue, result, checkout, tenancy, or privacy difference."
+artifacts:
+  - id: read_only_baseline
+    status: verified
+    path: docs/plan/evidence/M07/production/campaign-read-only-baseline-2026-08-27.json
+    sha256: a93d24593f7cac8f7d44301b3d7589c7dee64ae9e915f0d360bb8f17e48619fa
+  - id: release_inventory
+    status: pending
+    path: null
+    sha256: null
+  - id: approval_record
+    status: pending
+    path: null
+    sha256: null
+  - id: recovery_point
+    status: pending
+    path: null
+    sha256: null
+  - id: production_baseline
+    status: pending
+    path: null
+    sha256: null
+  - id: canary_journal
+    status: pending
+    path: null
+    sha256: null
+  - id: reconciliation_report
+    status: pending
+    path: null
+    sha256: null
+  - id: rollback_report
+    status: pending
+    path: null
+    sha256: null
+  - id: observation_report
+    status: pending
+    path: null
+    sha256: null
+automaticFails:
+  - id: arbitrary_audience_sql
+    rule: "an audience accepts arbitrary SQL browser tags unsupported facts unbounded candidates or customer-selected authority"
+  - id: mixed_audience_snapshot
+    rule: "one immutable audience snapshot mixes separately committed source states or changes historical membership after publication"
+  - id: dst_schedule_drift
+    rule: "campaign schedule or lifecycle changes because an invalid ambiguous or execution-time timezone instant is accepted"
+  - id: budget_oversubscription
+    rule: "global quantity points budget monetary liability or per-member capacity oversubscribes or partially allocates"
+  - id: multiplier_stack_violation
+    rule: "more than the highest-priority eligible multiplier applies or a fixed bonus stacks without explicit published permission"
+  - id: duplicate_campaign_effect
+    rule: "duplicate replay delayed delivery or concurrent processing creates another assignment capacity value native reward or reversal effect"
+  - id: refund_compensation_gap
+    rule: "a partial or full refund leaves any campaign ledger origin spendable or rewrites gross capacity or accepted history"
+  - id: liability_understatement
+    rule: "merchant-declared or stale monetary liability differs from the exact published fixed-discount face value currency or precision"
+  - id: trigger_time_expiry_drift
+    rule: "worker delay changes campaign point availability expiry qualification or historical programme evidence from the canonical trigger instant"
+  - id: deterministic_retry_storm
+    rule: "a deterministic contract authority selector or native-capability failure enters transient audience-wide retries instead of manual review"
+  - id: selector_authority_drift
+    rule: "a campaign uses unknown disabled cross-programme or later-incompatible rule tier reward or connector selectors"
+  - id: cross_tenant_exposure
+    rule: "an unrelated tenant programme audience campaign assignment capacity job ledger native reward or evidence becomes visible or mutable"
+  - id: checkout_dependency
+    rule: "WooCommerce checkout synchronously depends on the Hub worker entitlement audience campaign or native reward outcome"
+  - id: accepted_work_stranded
+    rule: "pausing disabling cancelling or rolling back campaigns hides or strands accepted assignments capacity value native work or required reversals"
+  - id: sensitive_evidence
+    rule: "reusable signing material coupon plaintext raw payload personal data assignments salts source references or private ledger metadata enters logs support output or evidence"
+  - id: unexplained_or_unapproved_close
+    rule: "any audience capacity campaign value refund native reward queue result tenancy or privacy difference approval artifact score floor or critical finding remains unresolved"

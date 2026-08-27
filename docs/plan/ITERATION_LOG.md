@@ -1,5 +1,14 @@
 # Iteration Log
 
+## 2026-08-27 — M07 fail-closed campaign canary gate
+
+- Reconstructed M07 after its five repository slices and seven release-hardening ADRs and confirmed S06 still lacked a machine-enforced production closeout.
+- Added a 51-check manifest covering exact candidate evidence, Supabase/PostgreSQL authority, allowlisted statement-consistent audiences, liability preview, approval/control assignment, IANA/DST schedules, lifecycle, all seven behavior families, capacity/member caps, native fixed discounts, cumulative refunds, source-change concurrency, deterministic/manual-review versus transient retry, published selector compatibility, cross-tenant denial, four reconciliation domains, rollback, observation, and final zero-difference closure.
+- Bound production claims to nine exact evidence artifacts for the read-only baseline, release inventory, approvals, recovery point, production value baseline, canary journal, reconciliation, rollback, and observation. Verified artifacts must be unique, minimized JSON files under the M07 evidence root, safely opened as bounded regular files, SHA-256 exact, candidate-commit bound, and check-coverage exact.
+- Added four synchronized approval flags, exact seven-category arithmetic, a 90/100 target, an 80% floor per category, sixteen fixed-ID and fixed-text automatic failures, sensitive-evidence scanning, negative corruption fixtures, and a positive completion fixture. The gate is wired into `npm run check`.
+- Fresh read-only evidence confirms canonical dashboard DNS, HTTP 200 health/login, HTTP 401 unsigned WooCommerce ingress, and running application/Supabase VMs through the approved Proxmox route. No service, deployment, schedule, campaign state, checkout path, production data, or loyalty value changed.
+- The honest provisional M07 score is 90/100, with 14 checks passed and 37 pending. Operability is 3/10 and blocks completion until an approved release and pilot store, fresh recovery point, disabled deployment, Starfiniti-only canary, exact reconciliation, rollback, observation, and final scoring pass.
+
 ## 2026-08-27 — M06 fail-closed referral canary gate
 
 - Reconstructed M06 after its five repository slices and confirmed S06 still relied on prose evidence despite implemented attribution, qualification, value, review, recovery, and experience boundaries.
