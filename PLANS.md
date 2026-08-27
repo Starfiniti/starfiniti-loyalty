@@ -69,7 +69,7 @@ The active integrated baseline is released production commit `0ced4b666a55d836bd
 
 ## Next safe work
 
-1. M14: implement S05's deterministic delinquency and effective-dated manual-contract policy while preserving every protected value, account, export, reconciliation, and checkout path.
+1. M14: wire S05B's separate commercial authorization only into explicitly inventoried mutable growth/configuration commands, with an executable state matrix and structural proof that protected operational paths remain independent.
 2. M13: complete S06's enterprise IdP/SCIM, Authentik private-egress, bilateral agency/support, stale-session, AAL2 recovery/export/deletion, rollback, reconciliation, observation, and category-floor gates when their approved external inputs are available.
 3. M11/M10: complete their reviewed releases, disabled deployments, isolated Starfiniti canaries, exact reconciliation, rollback, observation, and category-floor scoring.
 4. M09/M08: complete reviewed releases, disabled deployments, provider/store outage proof, exact reconciliation, observation, and scoring as external inputs permit.

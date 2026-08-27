@@ -1,5 +1,16 @@
 # Iteration Log
 
+## 2026-08-27 — M14 deterministic commercial-policy core
+
+- Accepted ADR-0060 after comparing live provider authorization with effective-dated local evidence. PostgreSQL deterministically combines deployment, immutable provider occurrence, append-only delinquency policy, and approved manual-contract evidence without changing the general entitlement resolver.
+- Added strict minimized `BillingSummaryV2` while retaining V1 compatibility, plus a separate private growth/configuration authorization helper that always preserves protected value paths and returns locally in `self_hosted`.
+- Added append-only, RLS-private policy and contract versions with separate actor/approver, bounded reason and interval, exact idempotency, semantic convergence across caller keys, and conflicting same-instant failure independent of lock acquisition order.
+- Bound past-due grace to policy effective and already recorded at provider occurrence time. Explicit stored grace wins; later-observed backdated policy cannot retroactively alter an old provider event. Manual `allow_growth` wins only while effective, and `defer_to_provider` explicitly ends the override.
+- The billing experience now explains authority source, restriction cause, grace deadline, and contract term while keeping balances, usage, history, protected-operation guidance, and private provider evidence separated.
+- Adversarial review repaired one status-copy selector regression, same-instant authority nondeterminism, retroactive policy selection, a pgTAP role-context mistake, an invalid entitlement fixture, and a concurrency probe interval crossing prior append-only deployment history.
+- Production-rendered Chromium passed restricted/grace/contract states at desktop/mobile in light/dark with reduced motion, exact bigint display, responsive card reflow, current navigation, drawer focus restoration, zero overflow, and zero real diagnostics.
+- Exact implementation-head run `33038559023` at `877f7e91de2d3eb4c047f0ff5edaa74877045d52` passed all seven jobs: 945 workspace tests, both images, 80 migrations, all 67 pgTAP files with 3,658 assertions, all 21 concurrency probes, and all four WooCommerce runtime cells. S05A is repository-complete; S05B explicit command enforcement is active with production unchanged.
+
 ## 2026-08-27 — M14 immutable source-fact usage metering
 
 - Accepted ADR-0059 after comparing mutable daily/monthly aggregates with immutable source facts. PostgreSQL remains authoritative; Stripe is an asynchronous managed-only sink with bounded duplicate enforcement, while corrections append signed compensating facts.
