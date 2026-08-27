@@ -2908,6 +2908,7 @@ tasks:
             docs/plan/evidence/M15/capacity.yaml,
             infrastructure/testing/capacity/workload.yaml,
             docs/operations/CAPACITY_AND_LOAD.md,
+            exact-head GitHub Actions run 33046822172 at 10b07286c221740c7261f7a704465ca6329669c8 passed all seven jobs,
           ]
       - id: M15-S02-FAULT-INJECTION
         title: Bound chaos recovery and retry storms

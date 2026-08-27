@@ -7,7 +7,7 @@
 - Bound every real run to a clean full commit and a short-lived approval containing exact origin/workload digests, rate, duration, and target class. Authority is read only from separate owner files; known production origins reject mutation; aggregate output omits URLs, paths, bodies, headers, selectors, customer data, credentials, cookies, tokens, and signatures.
 - Added a 22-check fail-closed manifest and validator. Completion requires exact environment/data/monitoring evidence, healthy driver, sustained/burst/recovery results, wallet and event-to-ledger SLOs, request/ledger/WooCommerce reconciliation, repeatability, an independent driver, the first failed higher boundary, exact-head CI, and explicit claim approval.
 - The adversarial pass repaired phase-local request identities that would have turned later phases into duplicates, rejected status-only success by validating response contracts, added 500-request measured minima and a two-million-request ceiling, removed unbounded maximum calculations, bound the approval to the driver commit, and made a dirty worktree fail.
-- Local format, lint, the evidence corruption matrix, and two in-process driver outcomes pass. Five repository checks pass and 17 externally measured/approval checks remain pending; no capacity number is published and no production load or mutation has run.
+- Local format, lint, the evidence corruption matrix, and two in-process driver outcomes pass. Exact implementation-head GitHub Actions run `33046822172` at `10b0728` passed all seven jobs. Six repository checks pass and 16 externally measured/approval checks remain pending; no capacity number is published and no production load or mutation has run.
 
 ## 2026-08-27 — M14 fail-closed canary gate
 
