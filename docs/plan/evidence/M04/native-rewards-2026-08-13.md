@@ -1,6 +1,6 @@
 # M04 native reward slice evidence — 2026-08-13
 
-Status: native and manual slices passed exact-head CI and the full WooCommerce runtime matrix. Browser review, disabled deployment, and tenant canary remain required.
+Status: native and manual slices passed exact-head CI and the full WooCommerce runtime matrix. Browser review passed on 2026-08-27; disabled deployment and the fail-closed tenant canary remain required.
 
 ## Implemented evidence
 
@@ -26,5 +26,4 @@ Status: native and manual slices passed exact-head CI and the full WooCommerce r
 
 ## Remaining M04 evidence
 
-- Desktop/mobile browser, keyboard, accessibility, slow/offline, and recovery review.
-- Disabled production deployment, Starfiniti canary, reconciliation, and module score.
+- Approved release and real pilot store, fresh recovery point, disabled production deployment, Starfiniti-only canary, reconciliation, rollback, observation, and final category-floor scoring through `canary.yaml`.

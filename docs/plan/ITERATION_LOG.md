@@ -1,5 +1,15 @@
 # Iteration Log
 
+## 2026-08-27 — M04 fail-closed reward canary gate
+
+- Reconstructed M04 after its browser/accessibility closeout and confirmed S04 still relied on prose evidence while M09–M14 had machine-enforced canary and score contracts.
+- Added a 48-check manifest covering exact candidate/release evidence, Supabase/PostgreSQL authority, native and manual reward outcomes, WooCommerce capability preflight, restrictions and capacity, historical compatibility, ambiguity recovery, connector/worker outage checkout, cross-tenant denial, four reconciliation domains, accepted-work continuity, rollback, observation, and final zero-difference closure.
+- Added four synchronized approval flags, exact seven-category arithmetic, a 90/100 target, an 80% floor per category, sixteen fixed-ID and fixed-text automatic failures, and evidence scanning that rejects sensitive keys, reusable authority material, email-like values, JWTs, and raw UUIDs.
+- Bound production claims to nine exact evidence artifacts for the read-only baseline, release inventory, approvals, recovery point, production value baseline, canary journal, reconciliation, rollback, and observation. Verified artifacts must be unique, minimized JSON files under the M04 evidence root, safely opened as bounded regular files, SHA-256 exact, candidate-commit bound, and check-coverage exact.
+- Wired the validator and corruption self-tests into `npm run check`. False completion, approval/check drift, pending or duplicate checks, short commits, unsafe or reused artifact bindings, digest drift, missing production artifacts, unsafe public baselines, task-score drift, incomplete prerequisite slices, and category-floor failure are rejected; a synthetic positive fixture proves the gate can close when every invariant is satisfied.
+- Fresh public/read-only evidence confirms canonical dashboard DNS, HTTP 200 health/login with no-store/private caching, HTTP 401 unsigned WooCommerce ingress, and running application/Supabase VMs through the approved Proxmox route. No service, configuration, deployment, production data, checkout path, or loyalty value changed.
+- The honest provisional M04 score is 90/100, with 13 checks passed and 35 pending. Operability is 3/10 and blocks completion until an approved release and pilot store, fresh recovery point, disabled deployment, Starfiniti-only canary, exact reconciliation, rollback, observation, and final scoring pass.
+
 ## 2026-08-27 — Stacked delivery-chain reconciliation
 
 - Reconstructed every open roadmap PR from #29 through #56 against its live GitHub base. The only non-external blockers were historical backup-repair ancestry conflicts in M04–M07 and a constraint-invalid stale timestamp fixture in M13 tenant federation.

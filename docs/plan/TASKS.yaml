@@ -668,6 +668,7 @@ tasks:
     title: Expand native rewards and audited manual fulfilment
     module: M04
     status: in_progress
+    module_score: 90
     dependencies: [M03-EARNING-RULES]
     hypothesis: Fulfilment-complete reward types increase redemption without stranding or speculatively releasing points.
     baseline: Fixed, uncapped percentage, and free-shipping coupons exist; broader restrictions, inventory, free product, and manual perks do not.
@@ -677,7 +678,9 @@ tasks:
         quantity and budget cannot oversubscribe,
         ambiguity retains reservation,
       ]
-    owner_inputs: []
+    owner_inputs:
+      - approved real WooCommerce store for the final canary
+      - approved release and bounded canary window
     acceptance:
       [
         native and manual types restrictions limits availability reservations recovery operations and summaries pass,
@@ -732,9 +735,10 @@ tasks:
         acceptance:
           - exact-head CI runtime matrix disabled deployment Starfiniti canary reconciliation and score at least 90 pass
         evidence:
+          - docs/plan/evidence/M04/canary.yaml records 48 exact checks, nine named path- and SHA-256-bound production artifacts, and a deterministic seven-category provisional score of 90 with operability below its floor
           - PR 29 is merge-clean at 30fb2f98a74f70390b6d664678614e14b377b03f and CI run 33073236099 passed baseline containers clean database replay and all four WooCommerce runtime variants
           - M04-S03 production-component desktop mobile and 320 pixel browser accessibility evidence passes without production mutation
-          - merge disabled deployment Starfiniti canary reconciliation observation and module score remain open
+          - approved release pilot store disabled deployment Starfiniti canary reconciliation rollback and observation remain open
     docs:
       [
         docs/architecture/ADR/0013-capability-negotiated-native-reward-fulfilment.md,
