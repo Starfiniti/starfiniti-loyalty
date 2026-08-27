@@ -141,7 +141,8 @@ export function readKlaviyoDeliveryConfig(
   // not password storage; changing the fast SHA-256 contract would break the
   // separately provisioned database fingerprint without adding protection.
   const credentialFingerprint = createHash("sha256");
-  credentialFingerprint.update(apiKey, "utf8"); // lgtm[js/insufficient-password-hash]
+  // codeql[js/insufficient-password-hash]
+  credentialFingerprint.update(apiKey, "utf8");
   const credentialSha256 = credentialFingerprint.digest("hex");
   return {
     connectionId,

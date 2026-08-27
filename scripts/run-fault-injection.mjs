@@ -110,6 +110,9 @@ function readRegularFile(path, label, maximumBytes, ownerOnly = false) {
   let initial;
   let raw;
   try {
+    // The runner opens an existing owner-controlled input read-only; it never
+    // creates a temporary file, and the descriptor is inode-checked below.
+    // codeql[js/insecure-temporary-file]
     descriptor = openSync(path, "r");
     initial = fstatSync(descriptor);
     const link = lstatSync(path);
