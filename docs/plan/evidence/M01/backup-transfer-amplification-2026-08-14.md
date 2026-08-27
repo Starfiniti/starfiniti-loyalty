@@ -43,4 +43,5 @@ Timestamped copies of the prior guest `authorized_keys` entry, host script, serv
 - The active timer still invokes the incremental `rrsync` stage. The old `--content-from-command` PostgreSQL script exists only as the timestamped pre-incremental rollback copy; no second active timer or cron job targets `10.10.10.71`.
 - A live scheduled cycle transferred three new files: 50,108 bytes of file content, 308,904 bytes received by rsync, and about 383 KB added to the VM tap counter. It completed successfully in roughly four seconds.
 - PVE RRD reported a maximum VM outbound rate of 102,968 bytes/s over both the last hour and last 24 hours. The last-hour disk-read maximum was zero and the 24-hour maximum was 1,843 bytes/s. The former 200–235 MB/s, 22 GB-per-cycle behavior is not active.
-- No production mutation was required; the healthy recovery timer remained enabled.
+- No production mutation was required for the traffic path; the healthy recovery timer remained enabled.
+- The same read-only sweep found the independently unrelated Realtime container stopped since an Aug 17 overlay-mount failure during the historical disk-full event. Starting the existing container required no image or configuration change; it returned healthy with PostgreSQL ready and every Supabase container running. Realtime was not the transfer source.

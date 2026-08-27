@@ -149,6 +149,8 @@ select is_empty(
           'get_migration_workspace_v1',
           'get_organization_access_workspace_v1',
           'get_organization_team_workspace_v1',
+          'organization_federation_workspace_v1',
+          'resolve_organization_federation_login_v1',
           'create_organization_command_v1',
           'update_organization_lifecycle_command_v1',
           'create_organization_invitation_command_v1',

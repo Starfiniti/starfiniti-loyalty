@@ -125,6 +125,8 @@ select is_empty(
           'loyalty.get_migration_workspace_v1(uuid,integer)',
           'loyalty.get_organization_access_workspace_v1(uuid)',
           'loyalty.get_organization_team_workspace_v1(uuid)',
+          'loyalty.organization_federation_workspace_v1(uuid)',
+          'loyalty.resolve_organization_federation_login_v1(text)',
           'loyalty.create_organization_command_v1(text,text,text,uuid)',
           'loyalty.update_organization_lifecycle_command_v1(uuid,bigint,text,text,text,text,uuid)',
           'loyalty.create_organization_invitation_command_v1(uuid,text,text,timestamp with time zone,text,text,uuid)',

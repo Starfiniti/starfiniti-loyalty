@@ -3,13 +3,20 @@ import { LockKeyhole } from "lucide-react";
 import { MerchantShell } from "@/components/merchant-shell";
 import {
   getOrganizationAccessWorkspace,
+  getOrganizationFederationWorkspace,
   getOrganizationTeamWorkspace,
 } from "@/lib/server/enterprise-identity";
 import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
 import { AccessReview } from "./access-review";
+import { FederationLifecycle } from "./federation-lifecycle";
 import { TeamLifecycle } from "./team-lifecycle";
 
-export default async function OrganizationAccessPage() {
+export default async function OrganizationAccessPage({
+  searchParams,
+}: Readonly<{
+  searchParams: Promise<{ federationLink?: string }>;
+}>) {
+  const query = await searchParams;
   const tenant = await getAuthenticatedTenantState();
   if (tenant.kind === "unauthenticated") {
     redirect("/login?next=%2Forganization%2Faccess");
@@ -18,11 +25,13 @@ export default async function OrganizationAccessPage() {
 
   let workspace = null;
   let teamWorkspace = null;
+  let federationWorkspace = null;
   let unavailable = false;
   try {
-    [workspace, teamWorkspace] = await Promise.all([
+    [workspace, teamWorkspace, federationWorkspace] = await Promise.all([
       getOrganizationAccessWorkspace(tenant.context.organization.public_id),
       getOrganizationTeamWorkspace(tenant.context.organization.public_id),
+      getOrganizationFederationWorkspace(tenant.context.organization.public_id),
     ]);
   } catch {
     unavailable = true;
@@ -51,6 +60,17 @@ export default async function OrganizationAccessPage() {
           <>
             <AccessReview workspace={workspace} />
             {teamWorkspace ? <TeamLifecycle workspace={teamWorkspace} /> : null}
+            {federationWorkspace ? (
+              <FederationLifecycle
+                linkOutcome={
+                  query.federationLink === "success" ||
+                  query.federationLink === "failed"
+                    ? query.federationLink
+                    : null
+                }
+                workspace={federationWorkspace}
+              />
+            ) : null}
           </>
         ) : (
           <section

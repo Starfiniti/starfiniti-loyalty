@@ -5,6 +5,8 @@ import { createHash } from "node:crypto";
 import {
   enterpriseIdentityMutationResultV1,
   organizationAccessWorkspaceV1,
+  organizationFederationLoginV1,
+  organizationFederationWorkspaceV1,
   organizationTeamWorkspaceV1,
   type AcceptOrganizationInvitationCommandV1,
   type CreateOrganizationCommandV1,
@@ -13,6 +15,8 @@ import {
   type OrganizationLifecycleCommandV1,
   type OrganizationMemberCommandV1,
   type OrganizationAccessWorkspaceV1,
+  type OrganizationFederationWorkspaceV1,
+  type OrganizationFederationLoginV1,
   type OrganizationTeamWorkspaceV1,
   type RevokeOrganizationInvitationCommandV1,
 } from "@starfiniti/contracts";
@@ -89,6 +93,48 @@ export async function getOrganizationTeamWorkspace(
       : null,
   );
   if (!parsed.success) throw new Error("organization_team_workspace_invalid");
+  return parsed.data;
+}
+
+export async function getOrganizationFederationWorkspace(
+  organizationId: string,
+): Promise<OrganizationFederationWorkspaceV1 | null> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .schema("loyalty")
+    .rpc("organization_federation_workspace_v1", {
+      target_organization_public_id: organizationId,
+    });
+  if (error) throw new Error("organization_federation_workspace_unavailable");
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row) return null;
+  const workspace =
+    typeof row === "object" && row !== null && "workspace" in row
+      ? (row as Record<string, unknown>).workspace
+      : row;
+  const parsed = organizationFederationWorkspaceV1.safeParse(workspace);
+  if (!parsed.success) {
+    throw new Error("organization_federation_workspace_invalid");
+  }
+  return parsed.data;
+}
+
+export async function resolveOrganizationFederationLogin(
+  organizationSlug: string,
+): Promise<OrganizationFederationLoginV1 | null> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .schema("loyalty")
+    .rpc("resolve_organization_federation_login_v1", {
+      target_organization_slug: organizationSlug,
+    });
+  if (error) throw new Error("organization_federation_login_unavailable");
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row) return null;
+  const parsed = organizationFederationLoginV1.safeParse(row);
+  if (!parsed.success) {
+    throw new Error("organization_federation_login_invalid");
+  }
   return parsed.data;
 }
 

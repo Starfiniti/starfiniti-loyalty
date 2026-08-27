@@ -389,6 +389,240 @@ export const organizationTeamWorkspaceV1 = z
     }
   });
 
+export const organizationFederationProtocolV1 = z.enum(["oidc", "saml"]);
+
+export const organizationFederationStatusV1 = z.enum([
+  "draft",
+  "validated",
+  "enabled",
+  "disabled",
+  "review_required",
+  "retired",
+]);
+
+const federationHttpsUrlV1 = z
+  .url()
+  .max(2_048)
+  .refine((value) => new URL(value).protocol === "https:", {
+    message: "federation endpoints must use HTTPS",
+  });
+
+const federationClientIdV1 = z
+  .string()
+  .trim()
+  .min(1)
+  .max(512)
+  .regex(/^[^\u0000-\u001f\u007f]+$/u);
+
+const federationIssuerV1 = z
+  .string()
+  .trim()
+  .min(1)
+  .max(2_048)
+  .regex(/^[^\u0000-\u001f\u007f]+$/u);
+
+export const organizationOidcSourceConfigurationV1 = z
+  .object({
+    protocol: z.literal("oidc"),
+    discoveryUrl: federationHttpsUrlV1,
+    clientId: federationClientIdV1,
+  })
+  .strict();
+
+export const organizationSamlSourceConfigurationV1 = z
+  .object({
+    protocol: z.literal("saml"),
+    metadataUrl: federationHttpsUrlV1,
+    expectedEntityId: federationIssuerV1.nullable(),
+  })
+  .strict();
+
+export const organizationFederationSourceConfigurationV1 = z.discriminatedUnion(
+  "protocol",
+  [
+    organizationOidcSourceConfigurationV1,
+    organizationSamlSourceConfigurationV1,
+  ],
+);
+
+export const createOrganizationFederationSourceCommandV1 = z
+  .object({
+    version: z.literal("1"),
+    organizationId: z.uuid(),
+    displayName: safeIdentityLabelV1,
+    configuration: organizationFederationSourceConfigurationV1,
+    clientSecretSha256: sha256HexV1.nullable(),
+    idempotencyKey: safeIdentityIdempotencyKeyV1,
+    correlationId: z.uuid(),
+  })
+  .strict()
+  .superRefine((command, context) => {
+    if (
+      (command.configuration.protocol === "oidc") !==
+      (command.clientSecretSha256 !== null)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["clientSecretSha256"],
+        message: "OIDC requires one write-only secret digest and SAML does not",
+      });
+    }
+  });
+
+export const organizationFederationActionV1 = z.enum([
+  "enable",
+  "disable",
+  "rotate_secret",
+  "retire",
+  "recover",
+]);
+
+export const organizationFederationSourceCommandV1 = z
+  .object({
+    version: z.literal("1"),
+    organizationId: z.uuid(),
+    sourceId: z.uuid(),
+    expectedRevision: z.number().int().min(1),
+    action: organizationFederationActionV1,
+    clientSecretSha256: sha256HexV1.nullable(),
+    reason: safeIdentityReasonV1,
+    idempotencyKey: safeIdentityIdempotencyKeyV1,
+    correlationId: z.uuid(),
+  })
+  .strict()
+  .superRefine((command, context) => {
+    if (
+      (command.action === "rotate_secret") !==
+      (command.clientSecretSha256 !== null)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["clientSecretSha256"],
+        message: "only secret rotation carries a write-only secret digest",
+      });
+    }
+  });
+
+export const organizationFederationValidationEvidenceV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    protocol: organizationFederationProtocolV1,
+    configurationSha256: sha256HexV1,
+    documentSha256: sha256HexV1,
+    issuer: federationIssuerV1,
+    authorizationEndpoint: federationHttpsUrlV1.nullable(),
+    tokenEndpoint: federationHttpsUrlV1.nullable(),
+    jwksUri: federationHttpsUrlV1.nullable(),
+    ssoEndpoint: federationHttpsUrlV1.nullable(),
+    signingFingerprints: z.array(sha256HexV1).min(1).max(20),
+    validatedAt: z.iso.datetime({ offset: true }),
+  })
+  .strict()
+  .superRefine((evidence, context) => {
+    const isOidc = evidence.protocol === "oidc";
+    if (isOidc && !evidence.issuer.startsWith("https://")) {
+      context.addIssue({
+        code: "custom",
+        path: ["issuer"],
+        message: "OIDC issuer must use HTTPS",
+      });
+    }
+    for (const field of [
+      "authorizationEndpoint",
+      "tokenEndpoint",
+      "jwksUri",
+    ] as const) {
+      if (isOidc !== (evidence[field] !== null)) {
+        context.addIssue({
+          code: "custom",
+          path: [field],
+          message: "OIDC evidence requires exact discovery endpoints",
+        });
+      }
+    }
+    if (isOidc === (evidence.ssoEndpoint !== null)) {
+      context.addIssue({
+        code: "custom",
+        path: ["ssoEndpoint"],
+        message: "only SAML evidence carries an SSO endpoint",
+      });
+    }
+  });
+
+export const organizationFederationSourceReadV1 = z
+  .object({
+    id: z.uuid(),
+    displayName: safeIdentityLabelV1,
+    protocol: organizationFederationProtocolV1,
+    status: organizationFederationStatusV1,
+    revision: z.number().int().min(1),
+    configuration: organizationFederationSourceConfigurationV1,
+    hasClientSecret: z.boolean(),
+    validation: organizationFederationValidationEvidenceV1.nullable(),
+    pendingAction: z
+      .enum(["enable", "disable", "rotate_secret", "retire"])
+      .nullable(),
+    lastOutcome: z
+      .enum(["none", "succeeded", "failed", "ambiguous"])
+      .default("none"),
+    createdAt: z.iso.datetime({ offset: true }),
+    updatedAt: z.iso.datetime({ offset: true }),
+  })
+  .strict()
+  .superRefine((source, context) => {
+    if ((source.protocol === "oidc") !== source.hasClientSecret) {
+      context.addIssue({
+        code: "custom",
+        path: ["hasClientSecret"],
+        message: "only OIDC sources retain a secret fingerprint",
+      });
+    }
+    if (
+      source.configuration.protocol !== source.protocol ||
+      (source.validation !== null &&
+        source.validation.protocol !== source.protocol)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["protocol"],
+        message: "source protocol must match configuration and validation",
+      });
+    }
+    if (source.pendingAction !== null && source.status === "retired") {
+      context.addIssue({
+        code: "custom",
+        path: ["pendingAction"],
+        message: "retired sources cannot retain a pending action",
+      });
+    }
+  });
+
+export const organizationFederationWorkspaceV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    organization: z
+      .object({
+        id: z.uuid(),
+        name: organizationNameV1,
+        slug: organizationSlugV1,
+        status: z.enum(["active", "suspended", "closed"]),
+      })
+      .strict(),
+    currentRole: organizationMembershipRoleV1,
+    mayConfigure: z.boolean(),
+    entitlementEnabled: z.boolean(),
+    localPasswordRecoveryAvailable: z.boolean(),
+    sources: z.array(organizationFederationSourceReadV1).max(5),
+  })
+  .strict();
+
+export const organizationFederationLoginV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    provider: z.string().regex(/^custom:loyalty-[a-z0-9]{20}$/u),
+  })
+  .strict();
+
 export type EnterpriseAccessRoleV1 = z.infer<typeof enterpriseAccessRoleV1>;
 export type OrganizationMembershipRoleV1 = z.infer<
   typeof organizationMembershipRoleV1
@@ -429,4 +663,34 @@ export type EnterpriseIdentityMutationResultV1 = z.infer<
 >;
 export type OrganizationTeamWorkspaceV1 = z.infer<
   typeof organizationTeamWorkspaceV1
+>;
+export type OrganizationFederationProtocolV1 = z.infer<
+  typeof organizationFederationProtocolV1
+>;
+export type OrganizationFederationStatusV1 = z.infer<
+  typeof organizationFederationStatusV1
+>;
+export type OrganizationFederationSourceConfigurationV1 = z.infer<
+  typeof organizationFederationSourceConfigurationV1
+>;
+export type CreateOrganizationFederationSourceCommandV1 = z.infer<
+  typeof createOrganizationFederationSourceCommandV1
+>;
+export type OrganizationFederationActionV1 = z.infer<
+  typeof organizationFederationActionV1
+>;
+export type OrganizationFederationSourceCommandV1 = z.infer<
+  typeof organizationFederationSourceCommandV1
+>;
+export type OrganizationFederationValidationEvidenceV1 = z.infer<
+  typeof organizationFederationValidationEvidenceV1
+>;
+export type OrganizationFederationSourceReadV1 = z.infer<
+  typeof organizationFederationSourceReadV1
+>;
+export type OrganizationFederationWorkspaceV1 = z.infer<
+  typeof organizationFederationWorkspaceV1
+>;
+export type OrganizationFederationLoginV1 = z.infer<
+  typeof organizationFederationLoginV1
 >;

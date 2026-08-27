@@ -1,6 +1,6 @@
 # M13 Evidence — Enterprise identity
 
-Status: M13-S01 access catalogue and review is complete on draft PR #40. M13-S02 organization and team lifecycle is complete on draft PR #41. Tenant federation, SCIM, support, agency, and production identity changes remain disabled and unimplemented.
+Status: M13-S01 access catalogue and review is complete on draft PR #40. M13-S02 organization and team lifecycle is complete on draft PR #41. M13-S03 tenant federation is implemented on draft PR #42 with production disabled; production-build browser evidence passes while Linux database replay, Authentik egress proof, and the enterprise-IdP canary remain open. SCIM, support, and agency administration remain unimplemented.
 
 ## M13-S01 access catalogue and review
 
@@ -39,3 +39,33 @@ Status: complete on `codex/m13-org-lifecycle`; no production identity mutation i
 - Local verification passes focused actions 6/6, dashboard typecheck, zero-warning lint, static 72-migration/59-pgTAP validation, production build, workflow validation, secret scan, and zero-high production dependency audit.
 - Exact-head Linux run `32966869787` at `e02765568b91a316953e5fa53bd0298fb72ff866` passed all seven jobs: the complete repository baseline, both production images, a clean 72-migration replay, all 59 pgTAP files with 3,128 assertions including all 70 focused lifecycle assertions, all 14 concurrency probes, and the minimum/current × HPOS/legacy WooCommerce matrix.
 - The self-improving loop first rejected a non-identical invitation retry fixture in run `32966574974`: separate `statement_timestamp()` calls intentionally produced changed expiry input under one idempotency key. Commit `e027655` bound the exact-retry fixture to one transaction timestamp while retaining the changed-expiry conflict case; the corrected exact head passed.
+
+## M13-S03 tenant federation
+
+Status: repository candidate implemented on `codex/m13-tenant-federation`; no production identity source, secret, application, custom provider, Auth setting, entitlement, or network policy changed.
+
+- ADR-0053 selects per-organization Authentik OIDC/SAML sources feeding one opaque downstream OIDC provider per source while Supabase continues to issue application sessions and PostgreSQL remains the tenant authority.
+- OIDC and SAML metadata validation is HTTPS-only, public-address socket-pinned, redirect-free, bounded, issuer/entity exact, cryptographically constrained, and raw-document-free. New enablement repeats that validation and requires exact document, endpoint, issuer/entity, and signing-evidence continuity before reserving activation. SAML V1 accepts one current certificate and disables IdP-initiated login.
+- Both OIDC hops request only `openid`. Supabase providers are email-optional with an empty claims allowlist, and the Authentik downstream provider has only the OpenID subject mapping. Existing invited members link explicitly from an authenticated session; email, domain, group, role, source, and JWT metadata grant no organization authority.
+- PostgreSQL retains additive tenant current state, immutable revisions, minimized evidence, digest-only upstream/broker secret fingerprints, exact idempotency, one-active-source serialization, public resolver minimization, owner recovery, and zero membership or ledger effects.
+- The database-authoritative `enterprise.identity` entitlement blocks new creation, enablement, and rotation while preserving accepted completion, exact retries, existing login, disablement, retirement, recovery, and audit access.
+- Mutating network/408/429/5xx/oversized/malformed outcomes are ambiguous, and Authentik response reads have a streaming 512 KiB ceiling. Resolver visibility is removed before disablement, Supabase enable precedes Authentik with compensation, uncertain compensation supersedes a definite rejection, and owner-only five-minute recovery converts an interrupted pending operation to immutable review evidence without guessing external state.
+- The Hub-style English Team & access workflow includes OIDC/SAML configuration, write-only secrets, callback setup, local-recovery and rollout warnings, source lifecycle/reconciliation, explicit SSO linking, and organization-slug login. Production-build desktop/mobile/narrow visual and interaction evidence passes.
+- Deployment preflight requires three distinct owner-only mounted files and exact Authentik/Supabase origins/selectors. Production additionally requires an Authentik egress allowlist for exact private dependencies plus denial of every other private/reserved/metadata destination; a controlled DNS-rebinding canary is mandatory.
+
+### Local verification
+
+- `npm run test`: all 69 dashboard files with 317 tests, 5 worker files with 108 tests, 29 contract files with 311 tests, 13 domain files with 85 tests, and the 8-test TypeScript SDK suite pass after the final adversarial additions. The focused provider/orchestration subset passes 19 cases and the enterprise-identity contract file passes 14 cases.
+- Dashboard typecheck, zero-warning root lint, production build including `/auth/link/callback`, architecture/accessibility validation, workflow validation, deployment self-tests, secret scan, production audit with zero vulnerabilities, and license validation pass.
+- `npm run db:validate` validates 73 additive migrations and 60 pgTAP files. `organization_tenant_federation_test.sql` declares and statically reconciles to 88 focused assertions across grants, tenancy, validation, entitlements, one-source activation, idempotency, recovery, lifecycle, minimization, membership, and ledger neutrality.
+- `npm run check` on this Windows working copy stops at the repository-wide Prettier gate because 223 pre-existing files are checked out with CRLF. Every changed supported file passes targeted Prettier, and `git diff --check` passes; clean Linux CI remains the authoritative formatting gate.
+- Production-build browser QA passes at `1440 × 1100`, `390 × 844`, and `320 × 720` across light/dark, reduced motion, OIDC/SAML switching, enabled/review/interrupted states, mobile navigation focus restoration, visible control targets, English-only output, inner-scroll overflow, and zero browser diagnostics. Evidence is recorded in `tenant-federation-browser-qa-2026-08-26.md`.
+- Local Windows cannot run the Docker/Supabase replay. Exact 73-migration replay and all 88 focused pgTAP assertions remain pending on Linux CI; no deterministic failure is waived.
+
+### Remaining production gate
+
+- Mount reviewed service credentials and exact Authentik flow/key/mapping selectors without exposing them to the browser or worker.
+- Prove the Authentik private/reserved egress denial and controlled DNS-rebinding test.
+- Enable manual Supabase identity linking in staging, retain disabled signup, and verify exact callback allowlists.
+- Run one approved enterprise OIDC or SAML tenant through disabled provisioning, explicit invited-account linking, login, forged-claim denial, stale-session revocation, IdP outage, local recovery, disable, rotation, interrupted-operation recovery, reconciliation, rollback, and log minimization.
+- Retain redacted Linux CI, network, and external-canary evidence before marking M13-S03 complete.
