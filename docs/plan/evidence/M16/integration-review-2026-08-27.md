@@ -1,12 +1,12 @@
 # Enterprise integration review evidence
 
 Date: 2026-08-27
-Status: repository review fixes implemented; exact integration-head CI pending
-Scope: `origin/main...154d29b61793d13cde205047f8ac3364bdd7079a` plus all unstaged changes
+Status: integration candidate verified; final evidence-record head CI pending
+Scope: `origin/main...78bb5ed34f786a6cc1a13f1127ad59be8a7dc4aa`
 
 ## Review scope
 
-The consolidated M04–M16 ancestry contains 345 commits and changes 702 files. Five independent review axes covered unnecessary complexity, security, billing and metering, project idioms, and implementation cruft. Every blocker or should-fix candidate received a separate adversarial verification before implementation. No blocker survived review.
+The consolidated M04–M16 integration candidate contains 346 commits and changes 705 files. Five independent review axes covered unnecessary complexity, security, billing and metering, project idioms, and implementation cruft. Every blocker or should-fix candidate received a separate adversarial verification before implementation. No blocker survived review.
 
 ## Verified corrections
 
@@ -27,7 +27,16 @@ The consolidated M04–M16 ancestry contains 345 commits and changes 702 files. 
 - `npm run ci:validate` and `npm run db:validate` remain green for four CI jobs, three security jobs, 81 migrations, and 68 pgTAP files.
 - Targeted Prettier and `git diff --check` pass.
 
-The full `npm run check`, GitHub CI, Security workflow, external CodeQL, mergeability, and exact integration-head identity remain mandatory before this evidence can be finalized.
+The full local `npm run check`, independent database/secret/audit/licence gates, GitHub CI, Security workflow, external CodeQL, and mergeability checks passed for the integration candidate. The final evidence-record commit must repeat the exact-head remote checks before this evidence is finalized.
+
+## Integration candidate evidence
+
+- Draft integration PR: [#57](https://github.com/Starfiniti/starfiniti-loyalty/pull/57)
+- Candidate head: `78bb5ed34f786a6cc1a13f1127ad59be8a7dc4aa`
+- CI run `33082415376` passed baseline, both production containers, clean migration/seed/pgTAP replay, and all four minimum/current HPOS/legacy WooCommerce runtime cells.
+- Security run `33082415262` passed CodeQL, isolated DAST, complete dependency audit, repository/image scanning, runtime enforcement, and SBOM generation.
+- External CodeQL check `98553236301` passed.
+- GitHub reported the candidate `CLEAN` and `MERGEABLE` with all eleven required checks green.
 
 ## Authority and remaining gates
 
