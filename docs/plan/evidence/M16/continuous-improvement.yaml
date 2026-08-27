@@ -3,7 +3,7 @@ status: in_progress
 observedAt: 2026-08-27T14:08:00Z
 candidate:
   branch: codex/m16-continuous-improvement
-  commit: 611b04eab5d4776208231e7057722da800b198d9
+  commit: c84e8361ccd58f52fac9d1bbdbe49a787fa9f992
   initialCloseApproved: false
 plan:
   path: infrastructure/governance/continuous-improvement.yaml
