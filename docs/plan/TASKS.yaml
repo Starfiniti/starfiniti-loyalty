@@ -2912,8 +2912,50 @@ tasks:
           ]
       - id: M15-S02-FAULT-INJECTION
         title: Bound chaos recovery and retry storms
-        status: planned
+        status: in_progress
         dependencies: [M15-S01-CAPACITY-ENVELOPE]
+        hypothesis: A digest-bound disposable-only controller plus independent value reconciliation proves recovery behavior without creating standing production chaos authority.
+        baseline: Focused lease retry outage and worker-death tests exist, but no common whole-system fault plan binds target safety restoration public recovery and immutable-value evidence.
+        targets:
+          [
+            every injected fault is restored inside its declared bound,
+            duplicate delayed retried and ambiguous input creates exactly one business effect,
+            checkout remains independent throughout every fault,
+            queues and public probes recover inside their declared windows with zero data difference,
+          ]
+        owner_inputs:
+          [
+            approved production-like disposable Compose environment and exercise window,
+            fresh synthetic signed fixtures plus exact monitoring and reconciliation exports,
+          ]
+        acceptance:
+          [
+            six-scenario plan and controller safety self-tests pass,
+            exact approval binds a clean commit plan control marker Compose project and fixture set,
+            all applied faults restore in finally and a restoration failure fails closed,
+            two exact environment runs pass and independent database WooCommerce queue WAL and checkout evidence reconciles,
+          ]
+        failure_modes:
+          [
+            a controller reaches production or an unrelated container,
+            a proxy or container fault survives the exercise,
+            a retry burst amplifies beyond the declared rate attempt lease or queue bounds,
+            public recovery is mistaken for ledger correctness,
+            fixture credentials payloads customer data or target details enter committed evidence,
+          ]
+        rollout: Exercise only a marked disposable production-like project; carry forward regression tests and runbooks without installing a production chaos daemon.
+        rollback: Restore exact labeled containers and named proxies, revoke fixture credentials, isolate the disposable project on restoration failure, preserve aggregate evidence, and never rewrite ledger history.
+        verification:
+          [
+            npm run faults:validate,
+            npm run faults:run -- --plan infrastructure/testing/fault-injection/plan.yaml --control-file <absolute-owner-file> --approval-file <absolute-owner-file> --out <new-absolute-json-file>,
+          ]
+        evidence:
+          [
+            docs/plan/evidence/M15/fault-injection.yaml,
+            infrastructure/testing/fault-injection/plan.yaml,
+            docs/operations/FAULT_INJECTION.md,
+          ]
       - id: M15-S03-SUPPLY-CHAIN-AND-SECURITY
         title: Complete security scanning SBOM and DAST gates
         status: planned

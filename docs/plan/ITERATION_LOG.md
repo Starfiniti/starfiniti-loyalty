@@ -1,5 +1,13 @@
 # Iteration Log
 
+## 2026-08-27 — M15 disposable fault control and retry bounds
+
+- Accepted ADR-0063 after comparing ad hoc Compose/network commands, a standing in-cluster chaos daemon, and a short-lived local controller on an approved disposable host. The local controller avoids permanent Docker/orchestrator authority and still requires independent value reconciliation.
+- Added one canonical plan for worker `SIGKILL`, database crash/restart, database-path latency, exact duplicate HTTP delivery, provider proxy disablement, and a bounded provider-outage trigger burst. Every scenario runs readiness and native-checkout probes, carries explicit duration/recovery/rate/count/concurrency/response limits, and restores applied faults in `finally`.
+- Bound execution to a clean commit, owner-only short approval, separate sandbox marker, raw control/marker/Compose digests, aggregate fixture-set digest, a `starfiniti-chaos-*` Compose project, exact disposable/non-production container labels, and loopback-only public/Toxiproxy origins. The controller has no arbitrary-command, remote-shell, global proxy-reset, or production Compose path.
+- Added a 27-check fail-closed manifest. Completion requires two exact environment runs, verified proxy routing and monitoring, worker interruption on both sides of commit, PostgreSQL crash/WAL integrity, bounded retries/queues, checkout independence, immutable ledger/idempotency/coupon/no-loss evidence, operator alerts, and zero-difference final reconciliation.
+- The self-test exercises all six adapters, deterministic restoration/recovery, exact replay counts, report minimization, production-origin rejection, and missing-scenario rejection. Five repository controls pass and 22 external/exact-head checks remain pending; no production or disposable-environment fault has run.
+
 ## 2026-08-27 — M15 declared capacity and fixed-arrival evidence
 
 - Accepted ADR-0062 after comparing ad hoc closed-loop requests, database-only `pgbench`, and a domain-aware fixed-arrival HTTP driver. The initial driver remains repository-owned for exact current signatures and contracts; publication also requires a mature independent-driver cross-check.
