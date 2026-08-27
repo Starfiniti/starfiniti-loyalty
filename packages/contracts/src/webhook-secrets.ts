@@ -17,7 +17,7 @@ export function issueWebhookSigningSecretV1(
   const hint = encoded
     .replace(/\+/gu, "-")
     .replace(/\//gu, "_")
-    .replace(/=+$/u, "")
+    .slice(0, -1)
     .slice(-6);
   return {
     secret: `whsec_${encoded}`,

@@ -1,7 +1,14 @@
 import "server-only";
 
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
-import { readFileSync, statSync } from "node:fs";
+import {
+  closeSync,
+  constants,
+  fstatSync,
+  lstatSync,
+  openSync,
+  readSync,
+} from "node:fs";
 import { isAbsolute } from "node:path";
 
 import {
@@ -181,20 +188,60 @@ export function readStripeBillingWebhookSecret(
   if (!path || !isAbsolute(path)) {
     throw new StripeBillingWebhookError("signing_secret_unavailable");
   }
-  let secret: string;
+  let descriptor: number | undefined;
   try {
-    const metadata = statSync(path);
-    if (!metadata.isFile() || metadata.size < 22 || metadata.size > 256) {
+    descriptor = openSync(
+      path,
+      constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0),
+    );
+    const initial = fstatSync(descriptor);
+    const link = lstatSync(path);
+    if (
+      !initial.isFile() ||
+      !link.isFile() ||
+      initial.dev !== link.dev ||
+      initial.ino !== link.ino ||
+      initial.size < 22 ||
+      initial.size > 256
+    ) {
       throw new Error("invalid secret file");
     }
-    secret = readFileSync(path, "utf8").trim();
+    const raw = Buffer.alloc(initial.size);
+    let offset = 0;
+    while (offset < raw.length) {
+      const count = readSync(
+        descriptor,
+        raw,
+        offset,
+        raw.length - offset,
+        offset,
+      );
+      if (count === 0) throw new Error("secret file changed");
+      offset += count;
+    }
+    const final = fstatSync(descriptor);
+    const finalLink = lstatSync(path);
+    if (
+      final.dev !== initial.dev ||
+      final.ino !== initial.ino ||
+      final.size !== initial.size ||
+      final.mtimeMs !== initial.mtimeMs ||
+      final.ctimeMs !== initial.ctimeMs ||
+      finalLink.dev !== initial.dev ||
+      finalLink.ino !== initial.ino
+    ) {
+      throw new Error("secret file changed");
+    }
+    const secret = raw.toString("utf8").trim();
+    if (!STRIPE_SECRET.test(secret)) {
+      throw new Error("invalid secret");
+    }
+    return secret;
   } catch {
     throw new StripeBillingWebhookError("signing_secret_unavailable");
+  } finally {
+    if (descriptor !== undefined) closeSync(descriptor);
   }
-  if (!STRIPE_SECRET.test(secret)) {
-    throw new StripeBillingWebhookError("signing_secret_unavailable");
-  }
-  return secret;
 }
 
 function parseStripeSignatureHeader(value: string | null): {

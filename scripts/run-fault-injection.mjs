@@ -1,9 +1,14 @@
 import { createHash } from "node:crypto";
 import {
+  closeSync,
+  constants,
+  fstatSync,
+  lstatSync,
   mkdtempSync,
+  openSync,
   readFileSync,
+  readSync,
   rmSync,
-  statSync,
   writeFileSync,
 } from "node:fs";
 import { createServer } from "node:http";
@@ -102,21 +107,65 @@ function isWithin(parent, child) {
 
 function readRegularFile(path, label, maximumBytes, ownerOnly = false) {
   if (!isAbsolute(path)) fail(`${label} path must be absolute`);
-  let status;
+  let descriptor;
+  let initial;
   let raw;
   try {
-    status = statSync(path);
-    raw = readFileSync(path, "utf8");
+    descriptor = openSync(
+      path,
+      constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0),
+    );
+    initial = fstatSync(descriptor);
+    const link = lstatSync(path);
+    if (
+      !initial.isFile() ||
+      !link.isFile() ||
+      initial.dev !== link.dev ||
+      initial.ino !== link.ino ||
+      initial.size < 1 ||
+      initial.size > maximumBytes
+    ) {
+      fail(`${label} must be a bounded stable file`);
+    }
+    const buffer = Buffer.alloc(initial.size);
+    let offset = 0;
+    while (offset < buffer.length) {
+      const count = readSync(
+        descriptor,
+        buffer,
+        offset,
+        buffer.length - offset,
+        offset,
+      );
+      if (count === 0) fail(`${label} changed while reading`);
+      offset += count;
+    }
+    const final = fstatSync(descriptor);
+    const finalLink = lstatSync(path);
+    if (
+      final.dev !== initial.dev ||
+      final.ino !== initial.ino ||
+      final.size !== initial.size ||
+      final.mtimeMs !== initial.mtimeMs ||
+      final.ctimeMs !== initial.ctimeMs ||
+      finalLink.dev !== initial.dev ||
+      finalLink.ino !== initial.ino
+    ) {
+      fail(`${label} changed while reading`);
+    }
+    raw = buffer.toString("utf8");
   } catch {
     fail(`${label} is unreadable`);
+  } finally {
+    if (descriptor !== undefined) closeSync(descriptor);
   }
-  if (!status.isFile() || status.size < 1 || status.size > maximumBytes) {
-    fail(`${label} must be a bounded regular file`);
+  if (Buffer.byteLength(raw, "utf8") !== initial.size) {
+    fail(`${label} must contain valid UTF-8 text`);
   }
   if (
     ownerOnly &&
     process.platform !== "win32" &&
-    (status.mode & 0o077) !== 0
+    (initial.mode & 0o077) !== 0
   ) {
     fail(`${label} must not grant group or other access`);
   }

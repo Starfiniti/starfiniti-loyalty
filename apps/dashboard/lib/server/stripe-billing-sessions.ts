@@ -1,6 +1,13 @@
 import "server-only";
 
-import { readFileSync, statSync } from "node:fs";
+import {
+  closeSync,
+  constants,
+  fstatSync,
+  lstatSync,
+  openSync,
+  readSync,
+} from "node:fs";
 import { isAbsolute } from "node:path";
 
 const STRIPE_API_ORIGIN = "https://api.stripe.com";
@@ -48,20 +55,65 @@ export function readStripeBillingApiKey(
   if (!path || !isAbsolute(path)) {
     throw new StripeBillingSessionError("provider_config_unavailable");
   }
-  let key: string;
+  let descriptor: number | undefined;
   try {
-    const metadata = statSync(path);
-    if (!metadata.isFile() || metadata.size < 25 || metadata.size > 256) {
+    descriptor = openSync(
+      path,
+      constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0),
+    );
+    const initial = fstatSync(descriptor);
+    const link = lstatSync(path);
+    if (
+      !initial.isFile() ||
+      !link.isFile() ||
+      initial.dev !== link.dev ||
+      initial.ino !== link.ino ||
+      initial.size < 25 ||
+      initial.size > 256
+    ) {
       throw new Error("invalid key file");
     }
-    key = readFileSync(path, "utf8").trim();
+    const raw = readExactFile(descriptor, initial.size);
+    const final = fstatSync(descriptor);
+    const finalLink = lstatSync(path);
+    if (
+      final.dev !== initial.dev ||
+      final.ino !== initial.ino ||
+      final.size !== initial.size ||
+      final.mtimeMs !== initial.mtimeMs ||
+      final.ctimeMs !== initial.ctimeMs ||
+      finalLink.dev !== initial.dev ||
+      finalLink.ino !== initial.ino
+    ) {
+      throw new Error("key file changed");
+    }
+    const key = raw.toString("utf8").trim();
+    if (!STRIPE_KEY.test(key)) {
+      throw new Error("invalid key");
+    }
+    return key;
   } catch {
     throw new StripeBillingSessionError("provider_config_unavailable");
+  } finally {
+    if (descriptor !== undefined) closeSync(descriptor);
   }
-  if (!STRIPE_KEY.test(key)) {
-    throw new StripeBillingSessionError("provider_config_unavailable");
+}
+
+function readExactFile(descriptor: number, size: number): Buffer {
+  const raw = Buffer.alloc(size);
+  let offset = 0;
+  while (offset < raw.length) {
+    const count = readSync(
+      descriptor,
+      raw,
+      offset,
+      raw.length - offset,
+      offset,
+    );
+    if (count === 0) throw new Error("file changed while reading");
+    offset += count;
   }
-  return key;
+  return raw;
 }
 
 export function stripeBillingSessionConfig(input: {

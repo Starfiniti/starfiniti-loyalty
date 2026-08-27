@@ -140,6 +140,10 @@ export function readKlaviyoDeliveryConfig(
   return {
     connectionId,
     apiKey,
+    // This is a deterministic binding for a high-entropy provider credential,
+    // not password storage; changing the fast SHA-256 contract would break the
+    // separately provisioned database fingerprint without adding protection.
+    // codeql[js/insufficient-password-hash]
     credentialSha256: createHash("sha256").update(apiKey, "utf8").digest("hex"),
     apiRevision: KLAVIYO_API_REVISION,
     baseUrl,

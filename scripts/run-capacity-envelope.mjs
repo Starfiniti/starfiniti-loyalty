@@ -1,7 +1,13 @@
 import { createHash, createHmac, randomBytes, randomUUID } from "node:crypto";
 import {
+  closeSync,
+  constants,
+  fstatSync,
+  lstatSync,
   mkdtempSync,
+  openSync,
   readFileSync,
+  readSync,
   rmSync,
   statSync,
   writeFileSync,
@@ -112,22 +118,65 @@ function parseArguments(argv) {
 
 function readRegularFile(path, label, maximumBytes, ownerOnly = false) {
   if (!isAbsolute(path)) fail(`${label} path must be absolute`);
-  let status;
+  let descriptor;
+  let initial;
   let value;
   try {
-    status = statSync(path);
-    value = readFileSync(path, "utf8");
+    descriptor = openSync(
+      path,
+      constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0),
+    );
+    initial = fstatSync(descriptor);
+    const link = lstatSync(path);
+    if (
+      !initial.isFile() ||
+      !link.isFile() ||
+      initial.dev !== link.dev ||
+      initial.ino !== link.ino ||
+      initial.size < 1 ||
+      initial.size > maximumBytes
+    ) {
+      fail(`${label} must be a bounded stable file`);
+    }
+    const raw = Buffer.alloc(initial.size);
+    let offset = 0;
+    while (offset < raw.length) {
+      const count = readSync(
+        descriptor,
+        raw,
+        offset,
+        raw.length - offset,
+        offset,
+      );
+      if (count === 0) fail(`${label} changed while reading`);
+      offset += count;
+    }
+    const final = fstatSync(descriptor);
+    const finalLink = lstatSync(path);
+    if (
+      final.dev !== initial.dev ||
+      final.ino !== initial.ino ||
+      final.size !== initial.size ||
+      final.mtimeMs !== initial.mtimeMs ||
+      final.ctimeMs !== initial.ctimeMs ||
+      finalLink.dev !== initial.dev ||
+      finalLink.ino !== initial.ino
+    ) {
+      fail(`${label} changed while reading`);
+    }
+    value = raw.toString("utf8");
   } catch {
     fail(`${label} file is unreadable`);
+  } finally {
+    if (descriptor !== undefined) closeSync(descriptor);
   }
-  if (!status.isFile()) fail(`${label} must be a regular file`);
-  if (status.size < 1 || status.size > maximumBytes) {
-    fail(`${label} file size is outside its bound`);
+  if (Buffer.byteLength(value, "utf8") !== initial.size) {
+    fail(`${label} must contain valid UTF-8 text`);
   }
   if (
     ownerOnly &&
     process.platform !== "win32" &&
-    (status.mode & 0o077) !== 0
+    (initial.mode & 0o077) !== 0
   ) {
     fail(`${label} must not grant group or other access`);
   }
