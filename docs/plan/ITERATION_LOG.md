@@ -1,5 +1,12 @@
 # Iteration Log
 
+## 2026-08-27 — M09 semantic production-evidence hardening
+
+- Reproduced a false-proof path in the completion fixture: every verified storefront artifact closed with only `{ fixture: true, mutationCount: 0 }`, so digest integrity did not prove hosted or WooCommerce delivery, English scope, asset budgets, privacy, coupon/value continuity, rollback, or observation outcomes.
+- Added nine exact minimized detail schemas with distinct release/recovery/baseline digests, unique per-check evidence digests, approved numeric snapshot/selector/Blocks budgets, every hosted/classic/Blocks/no-script/outage exercise, local snapshot rejection cases, native coupon continuity, bounded latency/load, and zero-difference value/privacy/queue assertions.
+- Approved pilot/control scope, rollout, experience-contract, asset-budget, observation policy, and numeric limits bind approval to journal. Exact images/plugin/migrations/contracts bind release; hosted/public presentation, local snapshot, coupon, outage, privacy, accessibility, and surface/work evidence bind reconciliation and observation; final approval binds release and every artifact under pre-canary, rollback-after-canary, and minimum 24-hour covering chronology.
+- Added positive and adversarial fixtures for hollow/extra fields, impossible time, current-release or current-commit reuse, ledger/coupon drift, non-English delivery, changed rollout/budget/plugin/observation policy, snapshot/count mismatch, artifact rebinding, late operator baseline/release/approval, early rollback, and short observation. Production, checkout, customer value, coupons, and deployment remain unchanged.
+
 ## 2026-08-27 — M10 semantic production-evidence hardening
 
 - Reproduced a false-proof path in the completion fixture: every verified analytics artifact closed with only `{ fixture: true, mutationCount: 0 }`, so digest integrity did not prove metrics, snapshot, export, privacy, rollback, or observation outcomes.

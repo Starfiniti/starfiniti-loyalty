@@ -1394,7 +1394,8 @@ tasks:
         evidence:
           - integrated exact-head CI run 33100009132 and Security run 33100009100 passed at c989229 with all eleven checks green
           - current production dashboard health and login return HTTP 200 while unauthenticated Auth and REST roots reject with HTTP 401 and the approved read-only Proxmox route confirms both VMs are running
-          - docs/plan/evidence/M09/canary.yaml records 34 checks four approvals nine path and digest bound production artifacts fixed automatic failures and a deterministic seven-category pre-canary score of 88
+          - docs/plan/evidence/M09/canary.yaml records 34 checks four approvals nine path digest and semantic bound production artifacts fixed automatic failures and a deterministic seven-category pre-canary score of 88
+          - docs/plan/evidence/M09/ARTIFACT_CONTRACT.md defines exact hosted WooCommerce snapshot placement coupon outage value privacy reconciliation rollback chronology and observation evidence
           - production mutation remains intentionally pending because draft PR 57 is not an approved release and no real WooCommerce pilot or canary window is approved
     risks: [R-005, R-009, R-030]
     docs:
