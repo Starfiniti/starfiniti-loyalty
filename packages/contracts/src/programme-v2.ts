@@ -5,6 +5,8 @@ import {
   programmeTierDefinitionV1,
 } from "./programme";
 import { programmeRewardDefinitionV2 } from "./reward-v2";
+import { pointExpiryPolicyV2 } from "./point-expiry-v2";
+import { tierPolicyV2 } from "./tier-policy-v2";
 
 const code = z.string().regex(/^[a-z][a-z0-9_-]{0,79}$/u);
 const POSTGRES_BIGINT_MAX = 9_223_372_036_854_775_807n;
@@ -256,7 +258,9 @@ export const programmeDefinitionV2 = z
     currencyMinorUnitDigits: z.number().int().min(0).max(6),
     pendingDays: z.number().int().min(0).max(365),
     pointsExpireAfterDays: z.number().int().min(1).max(3650),
+    pointsExpiryPolicy: pointExpiryPolicyV2.optional(),
     tiers: z.array(programmeTierDefinitionV1).min(1),
+    tierPolicy: tierPolicyV2.optional(),
     rewards: z
       .array(
         z.union([
@@ -269,6 +273,17 @@ export const programmeDefinitionV2 = z
   })
   .strict()
   .superRefine((definition, context) => {
+    if (
+      definition.pointsExpiryPolicy &&
+      definition.pointsExpiryPolicy.expireAfterDays !==
+        definition.pointsExpireAfterDays
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "The versioned expiry policy must match pointsExpireAfterDays",
+        path: ["pointsExpiryPolicy", "expireAfterDays"],
+      });
+    }
     const codes = new Set<string>();
     let enabledBaseRules = 0;
     definition.earningRules.forEach((rule, index) => {
@@ -319,6 +334,93 @@ export const programmeDefinitionV2 = z
         });
       }
     });
+
+    if (definition.tierPolicy) {
+      const baseRule = definition.earningRules.find(
+        (rule) => rule.enabled && rule.effect.kind === "base_rate",
+      );
+      const policyCodes = definition.tierPolicy.levels.map(
+        (level) => level.tierCode,
+      );
+      const tierCodes = definition.tiers.map((tier) => tier.code);
+      if (
+        policyCodes.length !== tierCodes.length ||
+        policyCodes.some((policyCode, index) => policyCode !== tierCodes[index])
+      ) {
+        context.addIssue({
+          code: "custom",
+          message:
+            "Advanced tier policy levels must match the ordered programme tiers",
+          path: ["tierPolicy", "levels"],
+        });
+      }
+      definition.tierPolicy.levels.forEach((level, levelIndex) => {
+        const tier = definition.tiers[levelIndex];
+        if (
+          tier &&
+          baseRule?.effect.kind === "base_rate" &&
+          BigInt(tier.pointsPerMajorUnit) * 10_000n !==
+            BigInt(baseRule.effect.pointsPerMajorUnit) *
+              BigInt(level.benefits.earningMultiplierBasisPoints)
+        ) {
+          context.addIssue({
+            code: "custom",
+            message:
+              "Tier earning multiplier must exactly match the displayed points rate",
+            path: [
+              "tierPolicy",
+              "levels",
+              levelIndex,
+              "benefits",
+              "earningMultiplierBasisPoints",
+            ],
+          });
+        }
+        level.benefits.rewardCodes.forEach((rewardCode, rewardIndex) => {
+          const reward = definition.rewards.find(
+            (candidate) => candidate.code === rewardCode,
+          );
+          if (!reward) {
+            context.addIssue({
+              code: "custom",
+              message: `Unknown tier benefit reward code: ${rewardCode}`,
+              path: [
+                "tierPolicy",
+                "levels",
+                levelIndex,
+                "benefits",
+                "rewardCodes",
+                rewardIndex,
+              ],
+            });
+          } else {
+            const executableReward =
+              programmeRewardDefinitionV2.safeParse(reward);
+            if (
+              executableReward.success &&
+              executableReward.data.configuration.availability.tierCodes.includes(
+                level.tierCode,
+              )
+            ) {
+              return;
+            }
+            context.addIssue({
+              code: "custom",
+              message:
+                "Tier benefit rewards must use V2 fulfilment and include the tier in availability",
+              path: [
+                "tierPolicy",
+                "levels",
+                levelIndex,
+                "benefits",
+                "rewardCodes",
+                rewardIndex,
+              ],
+            });
+          }
+        });
+      });
+    }
 
     const legacyTierSurface = programmeDefinitionV1.safeParse({
       version: "1",

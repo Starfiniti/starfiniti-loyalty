@@ -53,7 +53,15 @@ export function initialProgrammeDefinitionV2(value: unknown): Readonly<{
 }> {
   const current = programmeDefinitionV2.safeParse(value);
   if (current.success) {
-    return { definition: current.data, migratedFromV1: false };
+    return {
+      definition: {
+        ...current.data,
+        pointsExpiryPolicy:
+          current.data.pointsExpiryPolicy ??
+          defaultPointExpiryPolicy(current.data.pointsExpireAfterDays),
+      },
+      migratedFromV1: false,
+    };
   }
   const legacy = programmeDefinitionV1.safeParse(value);
   const tiers = legacy.success ? legacy.data.tiers : [fallbackTier];
@@ -67,6 +75,7 @@ export function initialProgrammeDefinitionV2(value: unknown): Readonly<{
       currencyMinorUnitDigits: 2,
       pendingDays: 30,
       pointsExpireAfterDays: 365,
+      pointsExpiryPolicy: defaultPointExpiryPolicy(365),
       tiers,
       rewards,
       earningRules: [
@@ -89,6 +98,17 @@ export function initialProgrammeDefinitionV2(value: unknown): Readonly<{
         },
       ],
     }),
+  };
+}
+
+export function defaultPointExpiryPolicy(expireAfterDays: number) {
+  return {
+    version: "2" as const,
+    method: "earned_date" as const,
+    expireAfterDays,
+    notificationLeadDays: [30, 14, 7].filter(
+      (leadDays) => leadDays < expireAfterDays,
+    ),
   };
 }
 

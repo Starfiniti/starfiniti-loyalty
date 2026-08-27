@@ -1,12 +1,17 @@
-import type {
+import {
+  programmeDefinitionV2,
+  type ProgrammeDefinitionV2,
   EarningRuleV2,
-  ProgrammeDefinitionV2,
 } from "@starfiniti/contracts/programme-v2";
 import { describe, expect, it } from "vitest";
 import {
   evaluateEarningV2,
   inspectEarningRuleConflictsV2,
+  calculateOrderAward,
+  minorUnit,
+  rosyRewardsV1,
   simulateEarningV2,
+  tierCode,
   type ActivityEarningFactV2,
   type PurchaseEarningFactV2,
 } from "./index";
@@ -131,6 +136,130 @@ const programme: ProgrammeDefinitionV2 = {
     },
   ],
 };
+
+const legacyVipShadowProgramme = programmeDefinitionV2.parse({
+  version: "2",
+  currencyCode: "EUR",
+  currencyMinorUnitDigits: 2,
+  pendingDays: 30,
+  pointsExpireAfterDays: 365,
+  tiers: [
+    {
+      code: "rose",
+      name: "Rose",
+      minimumEligibleSpendMinor: "0",
+      pointsPerMajorUnit: "5",
+    },
+    {
+      code: "bloom",
+      name: "Bloom",
+      minimumEligibleSpendMinor: "15000",
+      pointsPerMajorUnit: "6",
+    },
+    {
+      code: "icon",
+      name: "Icon",
+      minimumEligibleSpendMinor: "50000",
+      pointsPerMajorUnit: "7",
+    },
+  ],
+  tierPolicy: {
+    version: "2",
+    qualificationPeriod: { kind: "rolling_days", days: 365 },
+    downgradeGraceDays: 30,
+    levels: [
+      {
+        tierCode: "rose",
+        entry: null,
+        retention: null,
+        reentry: null,
+        benefits: {
+          earningMultiplierBasisPoints: 10_000,
+          rewardCodes: [],
+          earlyAccess: false,
+        },
+      },
+      {
+        tierCode: "bloom",
+        entry: {
+          operator: "all",
+          thresholds: [
+            {
+              metric: "eligible_spend",
+              minimum: "15000",
+              activityCodes: [],
+            },
+          ],
+        },
+        retention: {
+          operator: "all",
+          thresholds: [
+            {
+              metric: "eligible_spend",
+              minimum: "15000",
+              activityCodes: [],
+            },
+          ],
+        },
+        reentry: {
+          operator: "all",
+          thresholds: [
+            {
+              metric: "eligible_spend",
+              minimum: "15000",
+              activityCodes: [],
+            },
+          ],
+        },
+        benefits: {
+          earningMultiplierBasisPoints: 12_000,
+          rewardCodes: [],
+          earlyAccess: false,
+        },
+      },
+      {
+        tierCode: "icon",
+        entry: {
+          operator: "all",
+          thresholds: [
+            {
+              metric: "eligible_spend",
+              minimum: "50000",
+              activityCodes: [],
+            },
+          ],
+        },
+        retention: {
+          operator: "all",
+          thresholds: [
+            {
+              metric: "eligible_spend",
+              minimum: "50000",
+              activityCodes: [],
+            },
+          ],
+        },
+        reentry: {
+          operator: "all",
+          thresholds: [
+            {
+              metric: "eligible_spend",
+              minimum: "50000",
+              activityCodes: [],
+            },
+          ],
+        },
+        benefits: {
+          earningMultiplierBasisPoints: 14_000,
+          rewardCodes: [],
+          earlyAccess: false,
+        },
+      },
+    ],
+  },
+  rewards: [],
+  earningRules: [baseRule],
+});
 
 const purchase: PurchaseEarningFactV2 = {
   source: "purchase",
@@ -264,6 +393,83 @@ describe("ProgrammeDefinitionV2 earning engine", () => {
         },
       ],
     });
+  });
+
+  it("applies the effective tier multiplier to purchase value before one campaign multiplier", () => {
+    const tierProgramme: ProgrammeDefinitionV2 = {
+      ...programme,
+      tierPolicy: {
+        version: "2",
+        qualificationPeriod: { kind: "lifetime" },
+        downgradeGraceDays: 30,
+        levels: [
+          {
+            tierCode: "rose",
+            entry: null,
+            retention: null,
+            reentry: null,
+            benefits: {
+              earningMultiplierBasisPoints: 15_000,
+              rewardCodes: [],
+              earlyAccess: false,
+            },
+          },
+        ],
+      },
+    };
+    const result = evaluateEarningV2(tierProgramme, purchase);
+    expect(result).toMatchObject({
+      awardedPoints: "167",
+      selectedMultiplierRuleCode: "vip-double",
+    });
+    expect(result.contributions).toMatchObject([
+      { ruleCode: "purchase-base", awardedPoints: "75" },
+      { ruleCode: "vip-double", awardedPoints: "67" },
+      { ruleCode: "order-bonus", awardedPoints: "25" },
+    ]);
+  });
+
+  it("shadow-matches every legacy Rose Bloom and Icon award rate", () => {
+    for (const tier of ["rose", "bloom", "icon"] as const) {
+      for (const spendMinor of [
+        0, 1, 19, 20, 99, 100, 101, 14999, 15000, 49999, 50000, 123456,
+      ]) {
+        const legacy = calculateOrderAward(rosyRewardsV1, {
+          eligibleSpendMinor: minorUnit(spendMinor),
+          tierCodeSnapshot: tierCode(tier),
+          pendingAt: "2026-08-14T01:00:00Z",
+        });
+        const advanced = evaluateEarningV2(legacyVipShadowProgramme, {
+          source: "purchase",
+          eventId: `shadow:${tier}:${spendMinor}`,
+          occurredAt: "2026-08-14T01:00:00Z",
+          channel: "woocommerce",
+          segmentCodes: [],
+          tierCode: tier,
+          memberRuleUsage: {},
+          currencyCode: "EUR",
+          market: "SI",
+          lines: [
+            {
+              lineId: "eligible",
+              productId: "shadow-product",
+              categoryIds: [],
+              grossMinor: spendMinor.toString(),
+              discountMinor: "0",
+              refundedMinor: "0",
+              paymentKind: "money",
+            },
+          ],
+          shippingMinor: "0",
+          shippingRefundedMinor: "0",
+          taxMinor: "0",
+          taxRefundedMinor: "0",
+          feeMinor: "0",
+          feeRefundedMinor: "0",
+        });
+        expect(advanced.awardedPoints).toBe(legacy.points.toString());
+      }
+    }
   });
 
   it("produces identical live and simulation evidence independent of rule and line order", () => {

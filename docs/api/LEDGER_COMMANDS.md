@@ -12,16 +12,16 @@ Every command carries an organization scope, tenant-scoped idempotency key, cano
 
 ## Commands
 
-| Command                | Required value/reference                             | Ledger effect                                              |
-| ---------------------- | ---------------------------------------------------- | ---------------------------------------------------------- |
-| `award_points`         | customer, positive integer points, optional event    | programme issuance -> wallet pending                       |
-| `release_points`       | original pending credit entry, expiry                | wallet pending -> available; creates one attributed lot    |
-| `reserve_points`       | wallet, positive integer points                      | available -> reserved; allocates earliest-expiry lots      |
-| `capture_reservation`  | reservation transaction                              | reserved -> spent                                          |
-| `cancel_reservation`   | reservation transaction                              | reserved -> available; appends compensating allocations    |
-| `expire_points`        | wallet, immutable programme version, as-of timestamp | available -> expired; consumes eligible lot remainders     |
-| `reverse_award_points` | original award credit, amount, reason                | pending/available -> reversed with original attribution    |
-| `adjust_points`        | wallet, signed amount, actor, reason, expiry         | adjustment control <-> available; negative is compensating |
+| Command                | Required value/reference                             | Ledger effect                                                 |
+| ---------------------- | ---------------------------------------------------- | ------------------------------------------------------------- |
+| `award_points`         | customer, positive integer points, optional event    | programme issuance -> wallet pending                          |
+| `release_points`       | original pending credit entry, expiry                | wallet pending -> available; creates one attributed lot       |
+| `reserve_points`       | wallet, positive integer points                      | available -> reserved; allocates earliest-expiry lots         |
+| `capture_reservation`  | reservation transaction                              | reserved -> spent                                             |
+| `cancel_reservation`   | reservation transaction                              | reserved -> available; appends compensating allocations       |
+| `expire_points`        | wallet, immutable programme version, as-of timestamp | private primitive; available -> expired for that version only |
+| `reverse_award_points` | original award credit, amount, reason                | pending/available -> reversed with original attribution       |
+| `adjust_points`        | wallet, signed amount, actor, reason, expiry         | adjustment control <-> available; negative is compensating    |
 
 Capture and cancel are mutually exclusive for a reservation. The same resolution idempotency key/hash returns the original result; a conflicting resolution fails without a second effect.
 
@@ -40,5 +40,7 @@ The merchant-facing `adjust_customer_points_command` is narrower than the worker
 ## Projections and operations
 
 `wallet_balances` and `point_lot_balances` are caches, never authority. Difference and rebuild functions derive only from immutable entries/allocations. `export_ledger_entries` emits a tenant-scoped audit export, while `programme_liability_report` totals pending, available, reserved, and outstanding points by programme group.
+
+The worker does not receive direct `expire_points` execution. It uses the bounded, single-flight `run_point_expiry_lifecycle_v2`, which groups due lots by tenant, wallet, and original programme version before invoking the private primitive. This prevents a mixed-version wallet from being attributed to one arbitrary version. Reservation compensation restores original lot allocations and therefore never resets expiry.
 
 The database gate includes 91 ledger-foundation assertions plus 36 merchant-adjustment assertions and a two-session concurrency/property probe. The probe proves competing reservations cannot overspend and checks zero-sum/projection equality after deterministic mixed operations and idempotent retries.

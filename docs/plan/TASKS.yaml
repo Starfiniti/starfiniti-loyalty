@@ -740,7 +740,7 @@ tasks:
   - id: M05-VIP-AND-EXPIRY
     title: Deliver advanced VIP qualification, expiry, and member progression
     module: M05
-    status: planned
+    status: in_progress
     dependencies: [M04-REWARDS-AND-FULFILMENT]
     hypothesis: Auditable qualification periods and progress increase retention while preserving equivalent Rose/Bloom/Icon outcomes.
     baseline: Lifetime eligible spend, basic tiers/grace/history, and expiry primitives exist.
@@ -771,8 +771,65 @@ tasks:
         migration comparison,
         browser previews,
       ]
-    risks: [R-002, R-020]
-    docs: [docs/api/PROGRAMME_ENGINE.md]
+    slices:
+      - id: M05-S01-TIER-POLICY
+        status: completed
+        acceptance:
+          - ProgrammeDefinitionV2 optionally carries a strict versioned advanced tier policy without reinterpreting existing V1 or V2 definitions
+          - lifetime rolling-day and IANA-timezone calendar-year windows evaluate spend points orders referrals and verified actions using exact integer facts
+          - AND and OR entry retention and re-entry thresholds produce deterministic explanation and progress evidence
+          - Rose Bloom and Icon migrate to an outcome-identical rolling policy with the retained 30-day downgrade grace
+      - id: M05-S02-LIVE-QUALIFICATION
+        status: completed
+        acceptance:
+          - immutable event-time qualification facts and serialized decisions cover awards refunds late events and verified activities
+          - automatic upgrade grace downgrade and re-entry preserve one current membership and append-only history
+          - direct database calls cannot forge tenant customer wallet metric or tier authority
+      - id: M05-S03-BENEFITS-AND-OVERRIDES
+        status: completed
+        acceptance:
+          - tier earning multipliers reward access free shipping early access and custom perks have executable or explicitly manual fulfilment paths
+          - expiring manual overrides require owner or admin authority reason and immutable audit evidence
+          - automatic qualification retains its independently verified underlying tier while an active override pins only effective membership
+          - browser and worker roles cannot bypass benefit publication award multiplier or raw membership decision boundaries
+      - id: M05-S04-EXPIRY-POLICY
+        status: completed
+        acceptance:
+          - expiry policy authoring preview notification schedule and liability impact use immutable lots and exact dates
+          - expiry refund restoration and notification retries preserve original attribution and create one effect
+        evidence:
+          - PointExpiryPolicyV2 independently validates finite earned-date duration and a unique descending reminder schedule while retaining pointsExpireAfterDays wire compatibility
+          - additive migration materializes immutable V2 policy and fixes expiry to group lots by original tenant wallet and programme version
+          - one bounded single-flight worker sweep performs actual expiry and nearest-relevant exactly-once reminder scheduling while the worker cannot call the low-level expiry primitive
+          - merchant authoring explains original-lot restoration and shows aggregate outstanding overdue reserved-past-expiry 30-day 90-day affected-member and next-expiry evidence without identities
+          - exact-head run 31756142529 passed a clean 34-migration replay all 32 pgTAP files and 1,472 assertions including 48 focused expiry assertions plus both concurrency probes both images and all four WooCommerce runtimes
+          - a temporary production-build Playwright fixture exercised the real merchant shell and expiry editor at 1440 by 1000 and 390 by 844 with exact reminder filtering liability evidence mobile navigation no horizontal overflow and no browser diagnostics
+      - id: M05-S05-PROGRESSION-EXPERIENCE
+        status: completed
+        acceptance:
+          - merchant policy builder simulator member progress history next milestone and tier performance pass responsive accessibility review
+          - customer progress distinguishes qualification metrics available points retention and expiry
+        evidence:
+          - strict bigint-safe merchant and customer progress projections rebuild next retention and re-entry milestones from immutable qualification facts and decision history
+          - the VIP policy builder exposes qualification windows AND OR thresholds lifecycle benefits exact simulation and aggregate tier health while customer and merchant detail keep qualification progress separate from balances and expiry
+          - exact-head run 31759304542 passed a clean 35-migration replay all 32 pgTAP files and 1,491 assertions including 141 focused VIP assertions plus both concurrency probes both images and all four WooCommerce runtimes
+          - temporary production-build desktop and mobile fixtures passed keyboard mobile-navigation responsive overflow and browser-diagnostic review
+      - id: M05-S06-CANARY-AND-CLOSE
+        status: in_progress
+        acceptance:
+          - shadow comparison exact-head CI disabled deployment Starfiniti canary reconciliation and score at least 90 pass
+        evidence:
+          - deterministic V1 V2 shadow comparison proves all 36 Rose Bloom Icon point-award cases are identical across floor threshold and large-order boundaries
+          - contract PostgreSQL and editor boundaries require every displayed tier rate to equal the executable base-rate multiplier and fail closed on incomplete or inexact legacy migration
+          - exact-head run 31760806620 passed a clean 36-migration replay all 32 pgTAP files and 1,494 assertions plus both concurrency probes both images and all four WooCommerce runtimes
+          - merge disabled deployment fresh recovery point Starfiniti-only canary zero-drift reconciliation and module score remain open
+    risks: [R-002, R-020, R-033, R-034, R-035]
+    docs:
+      [
+        docs/api/PROGRAMME_ENGINE.md,
+        docs/architecture/ADR/0014-event-time-tier-qualification.md,
+        docs/architecture/ADR/0015-earned-date-point-expiry-lifecycle.md,
+      ]
     evidence: [docs/plan/evidence/M05/README.md]
 
   - id: M06-REFERRALS
