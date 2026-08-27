@@ -1,5 +1,13 @@
 # Iteration Log
 
+## 2026-08-28 — Disabled-first tenant-federation credential boundary
+
+- Read-only public and VM inspection proved that workforce SSO is already live through Supabase custom provider `custom:starfiniti-sso`, while production v0.1.11 correctly has no per-organization federation configuration, Authentik administration token, or Supabase service-role file.
+- Found that the integrated candidate nevertheless required all three administration files on every dashboard deployment. That coupled unrelated modules to an external M13 fixture and expanded dormant ambient privilege.
+- ADR-0069 now makes the files an optional all-or-none set. Empty paths use the established read-only `/dev/null` bind pattern; any partial set fails preflight; a complete set retains distinct absolute regular-file, owner-only, JSON, HTTPS-origin, UUID-selector, and secret-shape validation. Missing material still fails before a provider administration client can act.
+- Adversarial review caught and corrected three false-safety paths before handoff: short bind syntax could create a directory for a mistyped secret path, whitespace-only quoted values disagreed with Compose's enabled-state semantics, and the first ADR number collided with the existing GA-canary decision. Long binds now set `create_host_path: false`, disabled means exactly empty or unset, asset validation binds each reference exactly once to the dashboard target, and the decision is uniquely ADR-0069.
+- The deployment self-test proves disabled, partial, and complete states, and the exact candidate Compose validates with Docker Compose 2.40.3 on VM 970 without creating or modifying a container. Workforce SSO, Auth, production configuration, tenants, checkout, and loyalty value were unchanged.
+
 ## 2026-08-28 — M05 semantic production-evidence hardening
 
 - Reproduced a false-proof path in the completion fixture: every verified VIP artifact closed with only `{ fixture: true, mutationCount: 0 }`, so digest integrity did not prove shadow parity, qualification, tier movement, benefits, overrides, expiry, reminders, rollback, or observation outcomes.

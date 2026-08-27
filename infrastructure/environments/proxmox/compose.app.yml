@@ -21,10 +21,25 @@ services:
       - "${SUPABASE_PUBLIC_HOST:?required}:${SUPABASE_INTERNAL_PROXY_IP:?required}"
     secrets:
       - woocommerce_signing_material
-      - federation_management_config
-      - authentik_federation_token
-      - supabase_service_role_key
     volumes:
+      - type: bind
+        source: "${LOYALTY_FEDERATION_CONFIG_PATH:-/dev/null}"
+        target: /run/secrets/federation_management_config
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: "${LOYALTY_AUTHENTIK_API_TOKEN_PATH:-/dev/null}"
+        target: /run/secrets/authentik_federation_token
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: "${LOYALTY_SUPABASE_SERVICE_ROLE_KEY_PATH:-/dev/null}"
+        target: /run/secrets/supabase_service_role_key
+        read_only: true
+        bind:
+          create_host_path: false
       - ${LOYALTY_STRIPE_WEBHOOK_SECRET_PATH:-/dev/null}:/run/secrets/stripe_webhook_secret:ro
       - ${LOYALTY_STRIPE_API_KEY_PATH:-/dev/null}:/run/secrets/stripe_api_key:ro
     ports:
@@ -179,9 +194,3 @@ services:
 secrets:
   woocommerce_signing_material:
     file: ${WOOCOMMERCE_SIGNING_MATERIAL_PATH:?required}
-  federation_management_config:
-    file: ${LOYALTY_FEDERATION_CONFIG_PATH:?required}
-  authentik_federation_token:
-    file: ${LOYALTY_AUTHENTIK_API_TOKEN_PATH:?required}
-  supabase_service_role_key:
-    file: ${LOYALTY_SUPABASE_SERVICE_ROLE_KEY_PATH:?required}

@@ -2260,6 +2260,7 @@ tasks:
         docs/architecture/ADR/0008-broker-workforce-authentik-through-supabase-auth.md,
         docs/architecture/IDENTITY_MODEL.md,
         docs/architecture/ADR/0051-database-authoritative-enterprise-access-profiles.md,
+        docs/architecture/ADR/0069-optional-fail-closed-tenant-federation-credentials.md,
       ]
     evidence:
       [docs/plan/evidence/M13/README.md, docs/plan/evidence/M13/canary.yaml]
@@ -2561,6 +2562,9 @@ tasks:
           - integrated exact-head CI run 33104114747 and Security run 33104114894 passed at 0ae43ea with all eleven checks green
           - 51-check manifest records four synchronized approvals nine path digest and semantic bound production artifacts seventeen fixed automatic failures and deterministic positive/adversarial completion fixtures
           - twelve repository and read-only controls pass while thirty-nine approved release fixture deployment IdP SCIM agency support recovery deletion reconciliation rollback and observation controls remain pending
+          - read-only 2026-08-28 production audit proves workforce SSO redirects through custom starfiniti-sso while production v0.1.11 carries no per-organization federation administration files
+          - ADR-0069 and deployment preflight allow the complete disabled file set reject partial configuration and retain strict validation for a complete set without changing database authority
+          - exact candidate Compose with disabled read-only non-file binds validates through Docker Compose 2.40.3 on VM 970 without creating or changing a container
 
   - id: M14-MANAGED-BILLING
     title: Add managed Stripe billing and idempotent usage metering

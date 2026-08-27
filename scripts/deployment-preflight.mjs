@@ -24,10 +24,20 @@ const requiredVariables = [
   "DATABASE_URL",
   "LOYALTY_WORKER_DATABASE_URL",
   "WOOCOMMERCE_SIGNING_MATERIAL_PATH",
+];
+
+const federationVariables = [
   "LOYALTY_FEDERATION_CONFIG_PATH",
   "LOYALTY_AUTHENTIK_API_TOKEN_PATH",
   "LOYALTY_SUPABASE_SERVICE_ROLE_KEY_PATH",
 ];
+
+const federationMountTargets = {
+  LOYALTY_FEDERATION_CONFIG_PATH: "/run/secrets/federation_management_config",
+  LOYALTY_AUTHENTIK_API_TOKEN_PATH: "/run/secrets/authentik_federation_token",
+  LOYALTY_SUPABASE_SERVICE_ROLE_KEY_PATH:
+    "/run/secrets/supabase_service_role_key",
+};
 
 const referencePattern =
   /^pool:[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}:v1$/u;
@@ -283,6 +293,29 @@ function validateFederationManagementFiles(environment, enforcePermissions) {
   }
 }
 
+function validateOptionalFederationManagementFiles(
+  environment,
+  enforcePermissions,
+) {
+  const configured = [];
+  for (const name of federationVariables) {
+    const value = environment[name];
+    if (value === undefined || value === "") continue;
+    if (typeof value !== "string" || value.trim() === "") {
+      fail(`${name} must be empty or an absolute file path`);
+    }
+    configured.push(name);
+  }
+  if (configured.length === 0) return false;
+  if (configured.length !== federationVariables.length) {
+    fail(
+      "tenant federation configuration and credentials must be supplied together",
+    );
+  }
+  validateFederationManagementFiles(environment, enforcePermissions);
+  return true;
+}
+
 export function validateDeploymentConfiguration(
   environment,
   { enforcePermissions = process.platform !== "win32" } = {},
@@ -363,7 +396,7 @@ export function validateDeploymentConfiguration(
     environment.WOOCOMMERCE_SIGNING_MATERIAL_PATH,
     enforcePermissions,
   );
-  validateFederationManagementFiles(environment, enforcePermissions);
+  validateOptionalFederationManagementFiles(environment, enforcePermissions);
   return poolSize;
 }
 
@@ -371,7 +404,7 @@ export function validateDeploymentAssets() {
   const compose = readFileSync(
     "infrastructure/environments/proxmox/compose.app.yml",
     "utf8",
-  );
+  ).replace(/\r\n?/gu, "\n");
   const template = parseEnvironment(
     readFileSync("infrastructure/environments/proxmox/.env.example", "utf8"),
   );
@@ -380,12 +413,43 @@ export function validateDeploymentAssets() {
       (match) => match[1],
     ),
   );
+  const dashboardStart = compose.indexOf("  dashboard:\n");
+  const workerStart = compose.indexOf("\n  worker:\n", dashboardStart);
+  if (dashboardStart < 0 || workerStart < 0) {
+    fail("Proxmox Compose must declare dashboard before worker");
+  }
+  const dashboard = compose.slice(dashboardStart, workerStart);
   for (const name of requiredVariables) {
     if (!Object.hasOwn(template, name)) {
       fail(`Proxmox environment template does not declare ${name}`);
     }
     if (name !== "COMPOSE_PROJECT_NAME" && !composeVariables.has(name)) {
       fail(`Proxmox Compose does not require ${name}`);
+    }
+  }
+  for (const name of federationVariables) {
+    if (!Object.hasOwn(template, name)) {
+      fail(`Proxmox environment template does not declare ${name}`);
+    }
+    if (template[name] !== "") {
+      fail(`Proxmox environment template must keep optional ${name} empty`);
+    }
+    const reference = `\${${name}:-/dev/null}`;
+    if (compose.split(reference).length !== 2) {
+      fail(`Proxmox Compose must reference optional ${name} exactly once`);
+    }
+    const mount = [
+      "      - type: bind",
+      `        source: "${reference}"`,
+      `        target: ${federationMountTargets[name]}`,
+      "        read_only: true",
+      "        bind:",
+      "          create_host_path: false",
+    ].join("\n");
+    if (!dashboard.includes(mount)) {
+      fail(
+        `Proxmox Compose must mount optional ${name} read-only at its fixed dashboard target without creating a host path`,
+      );
     }
   }
   if (!compose.includes("http://127.0.0.1:3000/api/healthz")) {
@@ -472,6 +536,28 @@ function runSelfTest() {
         "Deployment preflight self-test returned the wrong count.",
       );
     }
+    const withoutFederation = { ...valid };
+    for (const name of federationVariables) delete withoutFederation[name];
+    if (
+      validateDeploymentConfiguration(withoutFederation, {
+        enforcePermissions: false,
+      }) !== 1
+    ) {
+      throw new Error(
+        "Deployment preflight self-test rejected disabled tenant federation.",
+      );
+    }
+    const emptyFederation = { ...withoutFederation };
+    for (const name of federationVariables) emptyFederation[name] = "";
+    if (
+      validateDeploymentConfiguration(emptyFederation, {
+        enforcePermissions: false,
+      }) !== 1
+    ) {
+      throw new Error(
+        "Deployment preflight self-test rejected empty tenant federation paths.",
+      );
+    }
     const messages = [
       expectFailure(() =>
         validateDeploymentConfiguration(
@@ -525,6 +611,24 @@ function runSelfTest() {
           { enforcePermissions: false },
         ),
       ),
+      expectFailure(() =>
+        validateDeploymentConfiguration(
+          {
+            ...withoutFederation,
+            LOYALTY_FEDERATION_CONFIG_PATH: federationConfigPath,
+          },
+          { enforcePermissions: false },
+        ),
+      ),
+      expectFailure(() =>
+        validateDeploymentConfiguration(
+          {
+            ...withoutFederation,
+            LOYALTY_FEDERATION_CONFIG_PATH: "   ",
+          },
+          { enforcePermissions: false },
+        ),
+      ),
     ];
     writeFileSync(poolPath, '{"invalid":"material"}\n', { mode: 0o600 });
     messages.push(
@@ -562,7 +666,7 @@ function runSelfTest() {
     rmSync(directory, { recursive: true, force: true });
   }
   console.log(
-    "Validated deployment asset parity, immutable selectors, credential separation, HTTPS origins, explicit dashboard binding, internal Supabase proxy mapping, signing-pool and federation-secret structure/ownership, and redacted failures.",
+    "Validated deployment asset parity, immutable selectors, credential separation, HTTPS origins, explicit dashboard binding, internal Supabase proxy mapping, signing-pool structure, optional all-or-none federation-secret structure/ownership, and redacted failures.",
   );
 }
 
