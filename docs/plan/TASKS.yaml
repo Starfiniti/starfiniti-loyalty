@@ -1566,7 +1566,8 @@ tasks:
           - read-only shadow comparison exact-head CI disabled deployment Starfiniti canary reconciliation rollback and module score at least 90 pass
         evidence:
           - integrated exact-head CI run 33101099338 and Security run 33101099291 passed at b760cec with all eleven checks green
-          - docs/plan/evidence/M10/canary.yaml records 32 checks four approvals nine path and digest bound production artifacts fixed automatic failures and deterministic false-completion self-tests
+          - docs/plan/evidence/M10/canary.yaml records 32 checks four approvals nine path digest and semantic bound production artifacts fixed automatic failures and deterministic false-completion self-tests
+          - docs/plan/evidence/M10/ARTIFACT_CONTRACT.md defines exact immutable-value commerce programme cohort snapshot export schedule privacy rollback chronology and observation evidence
           - eleven repository and read-only controls pass at provisional score 90 while approved deployment canary reconciliation rollback observation and the operability floor remain pending
     risks: [R-001, R-030, R-037, R-038]
     docs:

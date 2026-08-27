@@ -1,5 +1,12 @@
 # Iteration Log
 
+## 2026-08-27 — M10 semantic production-evidence hardening
+
+- Reproduced a false-proof path in the completion fixture: every verified analytics artifact closed with only `{ fixture: true, mutationCount: 0 }`, so digest integrity did not prove metrics, snapshot, export, privacy, rollback, or observation outcomes.
+- Added nine exact minimized detail schemas with distinct release/recovery/baseline digests, unique per-check evidence digests, all 103 Dictionary V4 definitions, four report totals on one snapshot, bounded export/download/schedule/work counts, explicit monetary-liability and causal labels, and zero-difference value/privacy assertions.
+- Approved pilot/control scope, analytics policy, export-ceiling policy and numeric byte limit, and observation policy bind approval to journal. The exact Dictionary V4 digest binds release, journal, and reconciliation; snapshot/report/export/schedule-occurrence evidence binds reconciliation; policy and effect counts bind observation; final approval binds release and every artifact under pre-canary, rollback-after-canary, and minimum 24-hour covering chronology.
+- Added positive and adversarial fixtures for hollow/extra fields, impossible time, current-release reuse, ledger drift, causal overclaim, changed export policy or numeric limit, changed observation policy or Dictionary V4, schedule-occurrence/snapshot/count mismatch, artifact rebinding, late operator baseline/release/approval, early rollback, observation drift, and short observation. Production, checkout, reports, customer value, and deployment remain unchanged.
+
 ## 2026-08-27 — M11 semantic production-evidence hardening
 
 - Reproduced a false-proof path in the completion fixture: every verified ecosystem artifact closed with only `{ fixture: true, mutationCount: 0 }`, so path and digest integrity did not prove topology, identity, currency, API, webhook, value, rollback, or observation outcomes.

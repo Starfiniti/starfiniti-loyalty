@@ -277,6 +277,796 @@ const readBoundArtifact = (relativePath, expectedDigest, artifactId) => {
   return document;
 };
 
+const isPlainObject = (value) =>
+  value !== null &&
+  typeof value === "object" &&
+  !Array.isArray(value) &&
+  Object.getPrototypeOf(value) === Object.prototype;
+
+const exactKeys = (value, expected, label) => {
+  if (!isPlainObject(value)) fail(`${label} must be an object`);
+  const actual = Object.keys(value).sort();
+  const wanted = [...expected].sort();
+  if (
+    actual.length !== wanted.length ||
+    actual.some((key, index) => key !== wanted[index])
+  ) {
+    fail(`${label} keys differ`);
+  }
+};
+
+const exactUtcTime = (value, label) => {
+  const parsed = typeof value === "string" ? Date.parse(value) : Number.NaN;
+  if (
+    typeof value !== "string" ||
+    !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/u.test(value) ||
+    Number.isNaN(parsed) ||
+    new Date(parsed).toISOString().replace(".000Z", "Z") !== value
+  ) {
+    fail(`${label} must be an exact UTC timestamp`);
+  }
+  return parsed;
+};
+
+const exactNonzeroDigest = (value, label) => {
+  if (!digestPattern.test(value) || /^0{64}$/u.test(value)) {
+    fail(`${label} must be an exact nonzero SHA-256 digest`);
+  }
+};
+
+const uniqueNonzeroDigests = (value, keys, label) => {
+  const seen = new Set();
+  for (const key of keys) {
+    exactNonzeroDigest(value[key], `${label} ${key}`);
+    if (seen.has(value[key])) fail(`${label} reuses one digest`);
+    seen.add(value[key]);
+  }
+};
+
+const exactAssertions = (value, expectedIds, label) => {
+  if (!Array.isArray(value) || value.length !== expectedIds.length) {
+    fail(`${label} assertions differ`);
+  }
+  const ids = new Set();
+  const sourceDigests = new Set();
+  for (const assertion of value) {
+    exactKeys(
+      assertion,
+      ["id", "status", "evidenceSha256", "differenceCount"],
+      `${label} assertion`,
+    );
+    if (!expectedIds.includes(assertion.id) || ids.has(assertion.id)) {
+      fail(`${label} assertion identity differs`);
+    }
+    if (assertion.status !== "passed" || assertion.differenceCount !== 0) {
+      fail(`${label} assertion is not a zero-difference pass`);
+    }
+    exactNonzeroDigest(
+      assertion.evidenceSha256,
+      `${label}.${assertion.id} evidence`,
+    );
+    if (sourceDigests.has(assertion.evidenceSha256)) {
+      fail(`${label} assertions reuse one source digest`);
+    }
+    ids.add(assertion.id);
+    sourceDigests.add(assertion.evidenceSha256);
+  }
+};
+
+const exactNonnegativeInteger = (value, label) => {
+  if (!Number.isSafeInteger(value) || value < 0) {
+    fail(`${label} must be a nonnegative safe integer`);
+  }
+};
+
+const exactPositiveInteger = (value, label) => {
+  if (!Number.isSafeInteger(value) || value < 1) {
+    fail(`${label} must be a positive safe integer`);
+  }
+};
+
+const validateArtifactDetails = (artifactId, document, candidateEvidence) => {
+  const details = document.details;
+  const observedAt = exactUtcTime(
+    document.observedAt,
+    `${artifactId} observedAt`,
+  );
+  if (artifactId === "read_only_baseline") {
+    exactKeys(
+      details,
+      [
+        "dashboardHealth",
+        "login",
+        "authWithoutKey",
+        "restWithoutKey",
+        "canonicalDns",
+        "applicationVm",
+        "databaseVm",
+        "applicationVmState",
+        "databaseVmState",
+        "scope",
+        "mutationCount",
+      ],
+      "read_only_baseline details",
+    );
+    for (const key of [
+      "dashboardHealth",
+      "login",
+      "authWithoutKey",
+      "restWithoutKey",
+      "canonicalDns",
+    ]) {
+      if (details[key] !== candidateEvidence.publicBaseline[key]) {
+        fail(`read_only_baseline ${key} differs from the manifest`);
+      }
+    }
+    if (
+      !Number.isSafeInteger(details.applicationVm) ||
+      details.applicationVm < 1 ||
+      !Number.isSafeInteger(details.databaseVm) ||
+      details.databaseVm < 1 ||
+      details.applicationVm === details.databaseVm ||
+      details.applicationVmState !== "running" ||
+      details.databaseVmState !== "running" ||
+      details.scope !== "read_only" ||
+      details.mutationCount !== 0
+    ) {
+      fail("read_only_baseline runtime or mutation evidence differs");
+    }
+    return;
+  }
+  if (artifactId === "release_inventory") {
+    exactKeys(
+      details,
+      [
+        "release",
+        "pullRequest",
+        "repositoryCommit",
+        "dashboardImageSha256",
+        "workerImageSha256",
+        "migrationInventorySha256",
+        "analyticsContractSha256",
+        "dictionaryV4Sha256",
+        "deploymentState",
+        "analyticsNavigationEnabled",
+        "analyticsEntitlementEnabled",
+        "reportingWorkerRunning",
+        "registeredMigrationDifference",
+        "assertions",
+      ],
+      "release_inventory details",
+    );
+    if (
+      !/^v\d+\.\d+\.\d+$/u.test(details.release) ||
+      details.release === candidateEvidence.currentProduction.release ||
+      details.pullRequest !== candidateEvidence.candidate.pullRequest ||
+      details.repositoryCommit !== candidateEvidence.candidate.commit ||
+      details.deploymentState !== "disabled" ||
+      details.analyticsNavigationEnabled !== false ||
+      details.analyticsEntitlementEnabled !== false ||
+      details.reportingWorkerRunning !== false ||
+      details.registeredMigrationDifference !== 0
+    ) {
+      fail("release_inventory identity or disabled state differs");
+    }
+    uniqueNonzeroDigests(
+      details,
+      [
+        "dashboardImageSha256",
+        "workerImageSha256",
+        "migrationInventorySha256",
+        "analyticsContractSha256",
+        "dictionaryV4Sha256",
+      ],
+      "release_inventory",
+    );
+    exactAssertions(
+      details.assertions,
+      artifactCheckBindings.get("release_inventory"),
+      "release_inventory",
+    );
+    return;
+  }
+  if (artifactId === "approval_record") {
+    exactKeys(
+      details,
+      [
+        "finalizedAt",
+        "release",
+        "pilotScopeSha256",
+        "controlScopeSha256",
+        "analyticsPolicySha256",
+        "exportCeilingSha256",
+        "observationPolicySha256",
+        "approvedExportByteLimit",
+        "approvals",
+        "artifactSha256",
+      ],
+      "approval_record details",
+    );
+    const finalizedAt = exactUtcTime(
+      details.finalizedAt,
+      "approval_record finalizedAt",
+    );
+    if (
+      finalizedAt > observedAt ||
+      !/^v\d+\.\d+\.\d+$/u.test(details.release)
+    ) {
+      fail("approval_record time or release differs");
+    }
+    uniqueNonzeroDigests(
+      details,
+      [
+        "pilotScopeSha256",
+        "controlScopeSha256",
+        "analyticsPolicySha256",
+        "exportCeilingSha256",
+        "observationPolicySha256",
+      ],
+      "approval_record approved scope",
+    );
+    if (
+      !Number.isSafeInteger(details.approvedExportByteLimit) ||
+      details.approvedExportByteLimit < 1 ||
+      details.approvedExportByteLimit > 2 * 1024 * 1024
+    ) {
+      fail("approval_record export byte limit differs");
+    }
+    const expectedApprovals = artifactCheckBindings.get("approval_record");
+    if (
+      !Array.isArray(details.approvals) ||
+      details.approvals.length !== expectedApprovals.length
+    ) {
+      fail("approval_record approvals differ");
+    }
+    const approvalIds = new Set();
+    const approvalDigests = new Set();
+    for (const approval of details.approvals) {
+      exactKeys(
+        approval,
+        ["id", "approved", "approvedAt", "evidenceSha256"],
+        "approval_record approval",
+      );
+      if (
+        !expectedApprovals.includes(approval.id) ||
+        approvalIds.has(approval.id) ||
+        approval.approved !== true ||
+        exactUtcTime(
+          approval.approvedAt,
+          `approval_record ${approval.id} approvedAt`,
+        ) > finalizedAt
+      ) {
+        fail(`approval_record ${approval.id} differs`);
+      }
+      exactNonzeroDigest(
+        approval.evidenceSha256,
+        `approval_record ${approval.id} evidence`,
+      );
+      if (approvalDigests.has(approval.evidenceSha256)) {
+        fail("approval_record approvals reuse one evidence digest");
+      }
+      approvalIds.add(approval.id);
+      approvalDigests.add(approval.evidenceSha256);
+    }
+    exactKeys(
+      details.artifactSha256,
+      [...requiredArtifacts].filter((id) => id !== "approval_record"),
+      "approval_record artifact bindings",
+    );
+    for (const [id, sha256] of Object.entries(details.artifactSha256)) {
+      exactNonzeroDigest(sha256, `approval_record ${id} binding`);
+    }
+    return;
+  }
+  if (artifactId === "recovery_point") {
+    exactKeys(
+      details,
+      [
+        "createdAt",
+        "verifiedAt",
+        "baseBackupSha256",
+        "walArchiveSha256",
+        "applicationConfigurationSha256",
+        "reportingReferenceInventorySha256",
+        "restoreEvidenceSha256",
+        "restorable",
+        "rpoSeconds",
+        "mutationCount",
+        "assertions",
+      ],
+      "recovery_point details",
+    );
+    const createdAt = exactUtcTime(
+      details.createdAt,
+      "recovery_point createdAt",
+    );
+    const verifiedAt = exactUtcTime(
+      details.verifiedAt,
+      "recovery_point verifiedAt",
+    );
+    if (
+      createdAt > verifiedAt ||
+      verifiedAt > observedAt ||
+      details.restorable !== true ||
+      !Number.isSafeInteger(details.rpoSeconds) ||
+      details.rpoSeconds < 0 ||
+      details.rpoSeconds > 60 ||
+      details.mutationCount !== 0
+    ) {
+      fail("recovery_point timing, RPO, restore, or mutation evidence differs");
+    }
+    uniqueNonzeroDigests(
+      details,
+      [
+        "baseBackupSha256",
+        "walArchiveSha256",
+        "applicationConfigurationSha256",
+        "reportingReferenceInventorySha256",
+        "restoreEvidenceSha256",
+      ],
+      "recovery_point",
+    );
+    exactAssertions(
+      details.assertions,
+      artifactCheckBindings.get("recovery_point"),
+      "recovery_point",
+    );
+    return;
+  }
+  if (artifactId === "production_baseline") {
+    const digestKeys = [
+      "snapshotSha256",
+      "ledgerTotalsSha256",
+      "lotTotalsSha256",
+      "walletProjectionTotalsSha256",
+      "commerceTotalsSha256",
+      "programmeTotalsSha256",
+      "cohortTotalsSha256",
+      "reportExportTotalsSha256",
+      "scheduleJobTotalsSha256",
+      "payloadCapabilityTotalsSha256",
+      "queueTotalsSha256",
+      "checkoutPrivacyTotalsSha256",
+    ];
+    exactKeys(
+      details,
+      [
+        "capturedAt",
+        "sourceCoverageRatio",
+        ...digestKeys,
+        "activeAnalyticsCapabilityCount",
+        "reportingWorkerCount",
+        "pendingAcceptedWorkCount",
+        "ledgerDifference",
+        "mutationCount",
+        "assertions",
+      ],
+      "production_baseline details",
+    );
+    if (
+      exactUtcTime(details.capturedAt, "production_baseline capturedAt") >
+        observedAt ||
+      details.sourceCoverageRatio !== 1 ||
+      details.activeAnalyticsCapabilityCount !== 0 ||
+      details.reportingWorkerCount !== 0 ||
+      details.pendingAcceptedWorkCount !== 0 ||
+      details.ledgerDifference !== 0 ||
+      details.mutationCount !== 0
+    ) {
+      fail(
+        "production_baseline authority, coverage, or difference evidence differs",
+      );
+    }
+    uniqueNonzeroDigests(details, digestKeys, "production_baseline");
+    exactAssertions(
+      details.assertions,
+      artifactCheckBindings.get("production_baseline"),
+      "production_baseline",
+    );
+    return;
+  }
+  if (artifactId === "canary_journal") {
+    const digestKeys = [
+      "pilotScopeSha256",
+      "controlScopeSha256",
+      "analyticsPolicySha256",
+      "exportCeilingSha256",
+      "observationPolicySha256",
+      "dictionaryV4Sha256",
+      "sharedSnapshotSha256",
+      "reportBundleSha256",
+      "manualExportSourceSha256",
+      "manualExportResponseSha256",
+      "scheduleOccurrenceSha256",
+    ];
+    exactKeys(
+      details,
+      [
+        "startedAt",
+        "endedAt",
+        "intervalCount",
+        "pilotOrganizationCount",
+        "controlOrganizationCount",
+        "nonCanaryEnabledCount",
+        ...digestKeys,
+        "dictionaryVersion",
+        "metricDefinitionCount",
+        "reportSetCount",
+        "valueTruthReportCount",
+        "commerceReportCount",
+        "programmeReportCount",
+        "cohortReportCount",
+        "approvedExportByteLimit",
+        "exportBytes",
+        "manualExportCount",
+        "manualDownloadCount",
+        "scheduleMaterializationCount",
+        "reportingWorkerRestartCount",
+        "statementTimeoutHandledCount",
+        "acceptedWorkCount",
+        "acceptedWorkStrandedCount",
+        "scheduleDuplicateCount",
+        "capabilityReplaySuccessCount",
+        "prohibitedFieldExposureCount",
+        "crossTenantExposureCount",
+        "protectedValuePathFailureCount",
+        "checkoutBlockedCount",
+        "duplicateReportEffectCount",
+        "ambiguousOutcomeCount",
+        "sourceCoverageRatio",
+        "assertions",
+      ],
+      "canary_journal details",
+    );
+    const startedAt = exactUtcTime(
+      details.startedAt,
+      "canary_journal startedAt",
+    );
+    const endedAt = exactUtcTime(details.endedAt, "canary_journal endedAt");
+    const minimumIntervals = Math.ceil((endedAt - startedAt) / 3_600_000);
+    for (const key of [
+      "approvedExportByteLimit",
+      "exportBytes",
+      "manualExportCount",
+      "manualDownloadCount",
+      "scheduleMaterializationCount",
+      "reportingWorkerRestartCount",
+      "statementTimeoutHandledCount",
+      "acceptedWorkCount",
+    ]) {
+      exactPositiveInteger(details[key], `canary_journal ${key}`);
+    }
+    if (
+      startedAt >= endedAt ||
+      endedAt > observedAt ||
+      !Number.isSafeInteger(details.intervalCount) ||
+      details.intervalCount < minimumIntervals ||
+      details.pilotOrganizationCount !== 1 ||
+      details.controlOrganizationCount !== 1 ||
+      details.nonCanaryEnabledCount !== 0 ||
+      details.dictionaryVersion !== 4 ||
+      details.metricDefinitionCount !== 103 ||
+      details.reportSetCount !== 4 ||
+      details.valueTruthReportCount !== 1 ||
+      details.commerceReportCount !== 1 ||
+      details.programmeReportCount !== 1 ||
+      details.cohortReportCount !== 1 ||
+      details.approvedExportByteLimit > 2 * 1024 * 1024 ||
+      details.exportBytes > details.approvedExportByteLimit ||
+      details.manualExportCount !== 1 ||
+      details.manualDownloadCount !== 1 ||
+      details.scheduleMaterializationCount !== 1 ||
+      details.reportingWorkerRestartCount !== 1 ||
+      details.statementTimeoutHandledCount !== 1 ||
+      details.acceptedWorkCount !== 2 ||
+      details.acceptedWorkStrandedCount !== 0 ||
+      details.scheduleDuplicateCount !== 0 ||
+      details.capabilityReplaySuccessCount !== 0 ||
+      details.prohibitedFieldExposureCount !== 0 ||
+      details.crossTenantExposureCount !== 0 ||
+      details.protectedValuePathFailureCount !== 0 ||
+      details.checkoutBlockedCount !== 0 ||
+      details.duplicateReportEffectCount !== 0 ||
+      details.ambiguousOutcomeCount !== 0 ||
+      details.sourceCoverageRatio !== 1
+    ) {
+      fail("canary_journal scope, timing, report, or privacy evidence differs");
+    }
+    uniqueNonzeroDigests(details, digestKeys, "canary_journal");
+    exactAssertions(
+      details.assertions,
+      artifactCheckBindings.get("canary_journal"),
+      "canary_journal",
+    );
+    return;
+  }
+  if (artifactId === "reconciliation_report") {
+    const digestKeys = [
+      "sharedSnapshotSha256",
+      "dictionaryV4Sha256",
+      "reportBundleSha256",
+      "manualExportSourceSha256",
+      "manualExportResponseSha256",
+      "scheduleOccurrenceSha256",
+      "valueTruthTotalsSha256",
+      "commerceTotalsSha256",
+      "programmeOutcomeTotalsSha256",
+      "cohortTotalsSha256",
+    ];
+    exactKeys(
+      details,
+      [
+        "sourceCoverageRatio",
+        "boundedConvergenceComplete",
+        ...digestKeys,
+        "dictionaryVersion",
+        "metricDefinitionCount",
+        "reportSetCount",
+        "manualExportCount",
+        "manualDownloadCount",
+        "scheduleMaterializationCount",
+        "monetaryLiabilityState",
+        "mixedCurrencyState",
+        "predictionState",
+        "statisticalSignificanceState",
+        "influencedRevenueLabel",
+        "incrementalRevenueState",
+        "ledgerFlowDifference",
+        "walletProjectionDifference",
+        "lotExposureDifference",
+        "commerceDifference",
+        "currencyMinorDifference",
+        "programmeOutcomeDifference",
+        "cohortDifference",
+        "experimentAssignmentDifference",
+        "exportDigestDifference",
+        "scheduleDifference",
+        "payloadDifference",
+        "capabilityDifference",
+        "queueDifference",
+        "privacyDifferenceCount",
+        "checkoutDifferenceCount",
+        "loyaltyValueDifference",
+        "causalOverclaimCount",
+        "unavailableStateDifferenceCount",
+        "unresolvedAmbiguousOutcomeCount",
+        "unresolvedCriticalCount",
+        "unresolvedHighCount",
+        "assertions",
+      ],
+      "reconciliation_report details",
+    );
+    for (const key of [
+      "manualExportCount",
+      "manualDownloadCount",
+      "scheduleMaterializationCount",
+    ]) {
+      exactPositiveInteger(details[key], `reconciliation_report ${key}`);
+    }
+    for (const key of [
+      "ledgerFlowDifference",
+      "walletProjectionDifference",
+      "lotExposureDifference",
+      "commerceDifference",
+      "currencyMinorDifference",
+      "programmeOutcomeDifference",
+      "cohortDifference",
+      "experimentAssignmentDifference",
+      "exportDigestDifference",
+      "scheduleDifference",
+      "payloadDifference",
+      "capabilityDifference",
+      "queueDifference",
+      "privacyDifferenceCount",
+      "checkoutDifferenceCount",
+      "loyaltyValueDifference",
+      "causalOverclaimCount",
+      "unavailableStateDifferenceCount",
+      "unresolvedAmbiguousOutcomeCount",
+      "unresolvedCriticalCount",
+      "unresolvedHighCount",
+    ]) {
+      if (details[key] !== 0) {
+        fail("reconciliation_report value or unresolved evidence differs");
+      }
+    }
+    if (
+      details.sourceCoverageRatio !== 1 ||
+      details.boundedConvergenceComplete !== true ||
+      details.dictionaryVersion !== 4 ||
+      details.metricDefinitionCount !== 103 ||
+      details.reportSetCount !== 4 ||
+      details.monetaryLiabilityState !==
+        "unavailable:valuation_policy_not_configured" ||
+      details.mixedCurrencyState !== "unavailable:no_conversion" ||
+      details.predictionState !== "unavailable:not_implemented" ||
+      details.statisticalSignificanceState !== "unavailable:not_implemented" ||
+      details.influencedRevenueLabel !== "descriptive" ||
+      details.incrementalRevenueState !== "evidence_gated"
+    ) {
+      fail("reconciliation_report value or unresolved evidence differs");
+    }
+    uniqueNonzeroDigests(details, digestKeys, "reconciliation_report");
+    exactAssertions(
+      details.assertions,
+      artifactCheckBindings.get("reconciliation_report"),
+      "reconciliation_report",
+    );
+    return;
+  }
+  if (artifactId === "rollback_report") {
+    exactKeys(
+      details,
+      [
+        "startedAt",
+        "endedAt",
+        "durationSeconds",
+        "analyticsDisabled",
+        "reportingWorkerStopped",
+        "acceptedWorkDrainedOrHeld",
+        "priorImagesRestored",
+        "customerAccessAvailable",
+        "checkoutAvailable",
+        "immutableHistoryPreserved",
+        "payloadExpiryPreserved",
+        "auditHistoryPreserved",
+        "acceptedWorkStrandedCount",
+        "capabilityReplaySuccessCount",
+        "unresolvedAmbiguousOutcomeCount",
+        "ledgerDifference",
+        "loyaltyValueDifference",
+        "evidenceSha256",
+        "assertions",
+      ],
+      "rollback_report details",
+    );
+    const startedAt = exactUtcTime(
+      details.startedAt,
+      "rollback_report startedAt",
+    );
+    const endedAt = exactUtcTime(details.endedAt, "rollback_report endedAt");
+    if (
+      startedAt >= endedAt ||
+      endedAt > observedAt ||
+      !Number.isSafeInteger(details.durationSeconds) ||
+      details.durationSeconds !== (endedAt - startedAt) / 1000 ||
+      details.analyticsDisabled !== true ||
+      details.reportingWorkerStopped !== true ||
+      details.acceptedWorkDrainedOrHeld !== true ||
+      details.priorImagesRestored !== true ||
+      details.customerAccessAvailable !== true ||
+      details.checkoutAvailable !== true ||
+      details.immutableHistoryPreserved !== true ||
+      details.payloadExpiryPreserved !== true ||
+      details.auditHistoryPreserved !== true ||
+      details.acceptedWorkStrandedCount !== 0 ||
+      details.capabilityReplaySuccessCount !== 0 ||
+      details.unresolvedAmbiguousOutcomeCount !== 0 ||
+      details.ledgerDifference !== 0 ||
+      details.loyaltyValueDifference !== 0
+    ) {
+      fail(
+        "rollback_report timing, continuity, privacy, or difference evidence differs",
+      );
+    }
+    exactNonzeroDigest(details.evidenceSha256, "rollback_report evidence");
+    exactAssertions(
+      details.assertions,
+      artifactCheckBindings.get("rollback_report"),
+      "rollback_report",
+    );
+    return;
+  }
+  if (artifactId === "observation_report") {
+    exactKeys(
+      details,
+      [
+        "startedAt",
+        "endedAt",
+        "durationSeconds",
+        "sampleIntervalCount",
+        "sourceCoverageRatio",
+        "observationPolicySha256",
+        "latencyWithinApprovedBounds",
+        "loadWithinApprovedBounds",
+        "interactiveP95LatencyMs",
+        "exportP95LatencyMs",
+        "workerThroughputPerMinute",
+        "maxQueueDepth",
+        "manualExportCount",
+        "manualDownloadCount",
+        "scheduleMaterializationCount",
+        "reportingWorkerRestartCount",
+        "statementTimeoutHandledCount",
+        "staleWarningCount",
+        "unavailableStateCount",
+        "acceptedWorkStrandedCount",
+        "capabilityReplaySuccessCount",
+        "privacyIncidentCount",
+        "customerAccessErrorCount",
+        "checkoutBlockedCount",
+        "sharedSnapshotDifferenceCount",
+        "reportDifferenceCount",
+        "ledgerDifference",
+        "queueDifferenceCount",
+        "loyaltyValueDifference",
+        "openCriticalCount",
+        "openHighCount",
+        "evidenceSha256",
+        "assertions",
+      ],
+      "observation_report details",
+    );
+    const startedAt = exactUtcTime(
+      details.startedAt,
+      "observation_report startedAt",
+    );
+    const endedAt = exactUtcTime(details.endedAt, "observation_report endedAt");
+    const minimumIntervals = Math.ceil((endedAt - startedAt) / 3_600_000);
+    for (const key of [
+      "interactiveP95LatencyMs",
+      "exportP95LatencyMs",
+      "workerThroughputPerMinute",
+      "manualExportCount",
+      "manualDownloadCount",
+      "scheduleMaterializationCount",
+      "reportingWorkerRestartCount",
+      "statementTimeoutHandledCount",
+      "staleWarningCount",
+      "unavailableStateCount",
+    ]) {
+      exactPositiveInteger(details[key], `observation_report ${key}`);
+    }
+    exactNonnegativeInteger(
+      details.maxQueueDepth,
+      "observation_report maxQueueDepth",
+    );
+    exactNonzeroDigest(
+      details.observationPolicySha256,
+      "observation_report policy",
+    );
+    if (
+      startedAt >= endedAt ||
+      endedAt > observedAt ||
+      !Number.isSafeInteger(details.durationSeconds) ||
+      details.durationSeconds !== (endedAt - startedAt) / 1000 ||
+      details.durationSeconds < 86_400 ||
+      !Number.isSafeInteger(details.sampleIntervalCount) ||
+      details.sampleIntervalCount < minimumIntervals ||
+      details.sourceCoverageRatio !== 1 ||
+      details.latencyWithinApprovedBounds !== true ||
+      details.loadWithinApprovedBounds !== true ||
+      details.interactiveP95LatencyMs > 60_000 ||
+      details.exportP95LatencyMs > 60_000 ||
+      details.maxQueueDepth > 100_000 ||
+      details.acceptedWorkStrandedCount !== 0 ||
+      details.capabilityReplaySuccessCount !== 0 ||
+      details.privacyIncidentCount !== 0 ||
+      details.customerAccessErrorCount !== 0 ||
+      details.checkoutBlockedCount !== 0 ||
+      details.sharedSnapshotDifferenceCount !== 0 ||
+      details.reportDifferenceCount !== 0 ||
+      details.ledgerDifference !== 0 ||
+      details.queueDifferenceCount !== 0 ||
+      details.loyaltyValueDifference !== 0 ||
+      details.openCriticalCount !== 0 ||
+      details.openHighCount !== 0
+    ) {
+      fail(
+        "observation_report duration, coverage, load, or failure evidence differs",
+      );
+    }
+    exactNonzeroDigest(details.evidenceSha256, "observation_report evidence");
+    exactAssertions(
+      details.assertions,
+      artifactCheckBindings.get("observation_report"),
+      "observation_report",
+    );
+    return;
+  }
+  fail(`unknown artifact detail contract ${artifactId}`);
+};
+
 const validateDocument = (
   candidateEvidence,
   candidateTasks = tasks,
@@ -288,15 +1078,10 @@ const validateDocument = (
   if (!new Set(["in_progress", "complete"]).has(candidateEvidence.status)) {
     fail("status must be in_progress or complete");
   }
-  if (
-    typeof candidateEvidence.observedAt !== "string" ||
-    !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(
-      candidateEvidence.observedAt,
-    ) ||
-    Number.isNaN(Date.parse(candidateEvidence.observedAt))
-  ) {
-    fail("observedAt must be an exact UTC timestamp");
-  }
+  const candidateObservedAt = exactUtcTime(
+    candidateEvidence.observedAt,
+    "observedAt",
+  );
   if (
     typeof candidateEvidence.currentProduction?.release !== "string" ||
     !/^v\d+\.\d+\.\d+$/.test(candidateEvidence.currentProduction.release) ||
@@ -363,6 +1148,7 @@ const validateDocument = (
   const artifactIds = new Set();
   const verifiedArtifactPaths = new Set();
   const verifiedArtifactDigests = new Set();
+  const verifiedArtifactDocuments = new Map();
   for (const artifact of candidateEvidence.artifacts) {
     if (!requiredArtifacts.has(artifact.id)) {
       fail(`unknown artifact ${artifact.id}`);
@@ -393,6 +1179,20 @@ const validateDocument = (
       artifact.sha256,
       artifact.id,
     );
+    exactKeys(
+      document,
+      [
+        "schema",
+        "artifactId",
+        "candidateCommit",
+        "observedAt",
+        "result",
+        "summary",
+        "checks",
+        "details",
+      ],
+      `${artifact.id} artifact document`,
+    );
     if (
       document?.schema !== "starfiniti.analytics-canary-artifact.v1" ||
       document.artifactId !== artifact.id ||
@@ -404,7 +1204,7 @@ const validateDocument = (
       typeof document.observedAt !== "string" ||
       !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/u.test(document.observedAt) ||
       Number.isNaN(Date.parse(document.observedAt)) ||
-      Date.parse(document.observedAt) > Date.parse(candidateEvidence.observedAt)
+      Date.parse(document.observedAt) > candidateObservedAt
     ) {
       fail(`${artifact.id} artifact contract differs`);
     }
@@ -418,6 +1218,8 @@ const validateDocument = (
       fail(`${artifact.id} artifact check coverage differs`);
     }
     inspectEvidence(document, `artifact.${artifact.id}`);
+    validateArtifactDetails(artifact.id, document, candidateEvidence);
+    verifiedArtifactDocuments.set(artifact.id, document);
   }
   for (const artifactId of requiredArtifacts) {
     if (!artifactIds.has(artifactId)) fail(`missing artifact ${artifactId}`);
@@ -582,6 +1384,166 @@ const validateDocument = (
         `complete evidence has unverified artifacts: ${incompleteArtifacts.map((artifact) => artifact.id).join(", ")}`,
       );
     }
+    const artifactById = new Map(
+      candidateEvidence.artifacts.map((artifact) => [artifact.id, artifact]),
+    );
+    const approvalRecord = verifiedArtifactDocuments.get("approval_record");
+    const releaseInventory = verifiedArtifactDocuments.get("release_inventory");
+    if (approvalRecord.details.release !== releaseInventory.details.release) {
+      fail("approval_record release differs from release_inventory");
+    }
+    for (const artifactId of requiredArtifacts) {
+      if (artifactId === "approval_record") continue;
+      if (
+        approvalRecord.details.artifactSha256[artifactId] !==
+        artifactById.get(artifactId).sha256
+      ) {
+        fail(`approval_record binding differs for ${artifactId}`);
+      }
+    }
+    const releaseObservedAt = exactUtcTime(
+      releaseInventory.observedAt,
+      "release_inventory observedAt",
+    );
+    const readOnlyBaselineObservedAt = exactUtcTime(
+      verifiedArtifactDocuments.get("read_only_baseline").observedAt,
+      "read_only_baseline observedAt",
+    );
+    const recoveryVerifiedAt = exactUtcTime(
+      verifiedArtifactDocuments.get("recovery_point").details.verifiedAt,
+      "recovery_point verifiedAt",
+    );
+    const baselineCapturedAt = exactUtcTime(
+      verifiedArtifactDocuments.get("production_baseline").details.capturedAt,
+      "production_baseline capturedAt",
+    );
+    const journal = verifiedArtifactDocuments.get("canary_journal");
+    const journalStartedAt = exactUtcTime(
+      journal.details.startedAt,
+      "canary_journal startedAt",
+    );
+    const journalEndedAt = exactUtcTime(
+      journal.details.endedAt,
+      "canary_journal endedAt",
+    );
+    const reconciliation = verifiedArtifactDocuments.get(
+      "reconciliation_report",
+    );
+    const reconciliationObservedAt = exactUtcTime(
+      reconciliation.observedAt,
+      "reconciliation_report observedAt",
+    );
+    const rollback = verifiedArtifactDocuments.get("rollback_report");
+    const rollbackStartedAt = exactUtcTime(
+      rollback.details.startedAt,
+      "rollback_report startedAt",
+    );
+    const rollbackObservedAt = exactUtcTime(
+      rollback.observedAt,
+      "rollback_report observedAt",
+    );
+    const observation = verifiedArtifactDocuments.get("observation_report");
+    const observationStartedAt = exactUtcTime(
+      observation.details.startedAt,
+      "observation_report startedAt",
+    );
+    const observationEndedAt = exactUtcTime(
+      observation.details.endedAt,
+      "observation_report endedAt",
+    );
+    const approvalObservedAt = exactUtcTime(
+      approvalRecord.observedAt,
+      "approval_record observedAt",
+    );
+    const approvalFinalizedAt = exactUtcTime(
+      approvalRecord.details.finalizedAt,
+      "approval_record finalizedAt",
+    );
+    const latestPrerequisiteApprovalAt = Math.max(
+      ...approvalRecord.details.approvals.map((approval) =>
+        exactUtcTime(
+          approval.approvedAt,
+          `approval_record ${approval.id} approvedAt`,
+        ),
+      ),
+    );
+    for (const key of [
+      "pilotScopeSha256",
+      "controlScopeSha256",
+      "analyticsPolicySha256",
+      "exportCeilingSha256",
+      "observationPolicySha256",
+    ]) {
+      if (approvalRecord.details[key] !== journal.details[key]) {
+        fail(`approved analytics ${key} differs from the canary journal`);
+      }
+    }
+    if (
+      approvalRecord.details.approvedExportByteLimit !==
+      journal.details.approvedExportByteLimit
+    ) {
+      fail("approved analytics export byte limit differs from the journal");
+    }
+    if (
+      releaseInventory.details.dictionaryV4Sha256 !==
+        journal.details.dictionaryV4Sha256 ||
+      reconciliation.details.dictionaryV4Sha256 !==
+        journal.details.dictionaryV4Sha256
+    ) {
+      fail("analytics Dictionary V4 digest differs across artifacts");
+    }
+    for (const key of [
+      "sharedSnapshotSha256",
+      "reportBundleSha256",
+      "manualExportSourceSha256",
+      "manualExportResponseSha256",
+      "scheduleOccurrenceSha256",
+    ]) {
+      if (reconciliation.details[key] !== journal.details[key]) {
+        fail(`canary and reconciliation ${key} differ`);
+      }
+    }
+    for (const key of [
+      "manualExportCount",
+      "manualDownloadCount",
+      "scheduleMaterializationCount",
+    ]) {
+      if (
+        reconciliation.details[key] !== journal.details[key] ||
+        observation.details[key] !== journal.details[key]
+      ) {
+        fail(`analytics artifact ${key} differs`);
+      }
+    }
+    if (
+      observation.details.reportingWorkerRestartCount !==
+        journal.details.reportingWorkerRestartCount ||
+      observation.details.statementTimeoutHandledCount !==
+        journal.details.statementTimeoutHandledCount ||
+      observation.details.observationPolicySha256 !==
+        journal.details.observationPolicySha256
+    ) {
+      fail("analytics observation scope differs from the canary journal");
+    }
+    if (
+      readOnlyBaselineObservedAt > journalStartedAt ||
+      releaseObservedAt > journalStartedAt ||
+      recoveryVerifiedAt > journalStartedAt ||
+      baselineCapturedAt > journalStartedAt ||
+      latestPrerequisiteApprovalAt > journalStartedAt ||
+      reconciliationObservedAt < journalEndedAt ||
+      rollbackStartedAt < journalEndedAt ||
+      rollbackObservedAt < journalEndedAt ||
+      observationStartedAt > journalStartedAt ||
+      observationEndedAt < journalEndedAt ||
+      approvalFinalizedAt < reconciliationObservedAt ||
+      approvalFinalizedAt < rollbackObservedAt ||
+      approvalFinalizedAt < observationEndedAt ||
+      approvalObservedAt < approvalFinalizedAt ||
+      candidateObservedAt < approvalObservedAt
+    ) {
+      fail("production artifact chronology differs");
+    }
     if (calculatedScore < candidateEvidence.score.target || belowFloor.length) {
       fail("complete evidence does not meet score and category floors");
     }
@@ -630,17 +1592,308 @@ if (process.argv.includes("--self-test")) {
       (slice) => slice.id === "M10-S06-SHADOW-CANARY-AND-CLOSE",
     ).status = "completed";
 
+    const fixtureTimes = {
+      read_only_baseline: "2026-01-31T19:00:00Z",
+      release_inventory: "2026-01-31T20:00:00Z",
+      recovery_point: "2026-01-31T21:00:00Z",
+      production_baseline: "2026-01-31T23:00:00Z",
+      canary_journal: "2026-02-02T00:01:00Z",
+      reconciliation_report: "2026-02-02T00:02:00Z",
+      rollback_report: "2026-02-02T00:03:00Z",
+      observation_report: "2026-02-02T00:04:00Z",
+      approval_record: "2026-02-02T00:05:00Z",
+    };
+    candidateEvidence.observedAt = fixtureTimes.approval_record;
+    const fixtureAssertions = (artifactId) =>
+      artifactCheckBindings.get(artifactId).map((id) => ({
+        id,
+        status: "passed",
+        evidenceSha256: digest(`fixture:${artifactId}:${id}`),
+        differenceCount: 0,
+      }));
+    const fixtureDetails = (artifactId) => {
+      if (artifactId === "read_only_baseline") {
+        return {
+          ...candidateEvidence.publicBaseline,
+          applicationVm: 970,
+          databaseVm: 971,
+          applicationVmState: "running",
+          databaseVmState: "running",
+          scope: "read_only",
+          mutationCount: 0,
+        };
+      }
+      if (artifactId === "release_inventory") {
+        return {
+          release: "v1.0.0",
+          pullRequest: candidateEvidence.candidate.pullRequest,
+          repositoryCommit: candidateEvidence.candidate.commit,
+          dashboardImageSha256: digest("fixture:dashboard-image"),
+          workerImageSha256: digest("fixture:worker-image"),
+          migrationInventorySha256: digest("fixture:migration-inventory"),
+          analyticsContractSha256: digest("fixture:analytics-contract"),
+          dictionaryV4Sha256: digest("fixture:dictionary-v4"),
+          deploymentState: "disabled",
+          analyticsNavigationEnabled: false,
+          analyticsEntitlementEnabled: false,
+          reportingWorkerRunning: false,
+          registeredMigrationDifference: 0,
+          assertions: fixtureAssertions(artifactId),
+        };
+      }
+      if (artifactId === "recovery_point") {
+        return {
+          createdAt: "2026-01-31T20:30:00Z",
+          verifiedAt: "2026-01-31T20:59:00Z",
+          baseBackupSha256: digest("fixture:base-backup"),
+          walArchiveSha256: digest("fixture:wal-archive"),
+          applicationConfigurationSha256: digest(
+            "fixture:application-configuration",
+          ),
+          reportingReferenceInventorySha256: digest(
+            "fixture:reporting-reference-inventory",
+          ),
+          restoreEvidenceSha256: digest("fixture:restore-evidence"),
+          restorable: true,
+          rpoSeconds: 60,
+          mutationCount: 0,
+          assertions: fixtureAssertions(artifactId),
+        };
+      }
+      if (artifactId === "production_baseline") {
+        return {
+          capturedAt: "2026-01-31T22:59:00Z",
+          sourceCoverageRatio: 1,
+          snapshotSha256: digest("fixture:production-baseline"),
+          ledgerTotalsSha256: digest("fixture:ledger-totals"),
+          lotTotalsSha256: digest("fixture:lot-totals"),
+          walletProjectionTotalsSha256: digest(
+            "fixture:wallet-projection-totals",
+          ),
+          commerceTotalsSha256: digest("fixture:commerce-totals"),
+          programmeTotalsSha256: digest("fixture:programme-totals"),
+          cohortTotalsSha256: digest("fixture:cohort-totals"),
+          reportExportTotalsSha256: digest("fixture:report-export-totals"),
+          scheduleJobTotalsSha256: digest("fixture:schedule-job-totals"),
+          payloadCapabilityTotalsSha256: digest(
+            "fixture:payload-capability-totals",
+          ),
+          queueTotalsSha256: digest("fixture:queue-totals"),
+          checkoutPrivacyTotalsSha256: digest(
+            "fixture:checkout-privacy-totals",
+          ),
+          activeAnalyticsCapabilityCount: 0,
+          reportingWorkerCount: 0,
+          pendingAcceptedWorkCount: 0,
+          ledgerDifference: 0,
+          mutationCount: 0,
+          assertions: fixtureAssertions(artifactId),
+        };
+      }
+      if (artifactId === "canary_journal") {
+        return {
+          startedAt: "2026-02-01T00:00:00Z",
+          endedAt: "2026-02-02T00:00:00Z",
+          intervalCount: 24,
+          pilotOrganizationCount: 1,
+          controlOrganizationCount: 1,
+          nonCanaryEnabledCount: 0,
+          pilotScopeSha256: digest("fixture:pilot-scope"),
+          controlScopeSha256: digest("fixture:control-scope"),
+          analyticsPolicySha256: digest("fixture:analytics-policy"),
+          exportCeilingSha256: digest("fixture:export-ceiling"),
+          observationPolicySha256: digest("fixture:observation-policy"),
+          dictionaryV4Sha256: digest("fixture:dictionary-v4"),
+          sharedSnapshotSha256: digest("fixture:shared-snapshot"),
+          reportBundleSha256: digest("fixture:report-bundle"),
+          manualExportSourceSha256: digest("fixture:manual-export-source"),
+          manualExportResponseSha256: digest("fixture:manual-export-response"),
+          scheduleOccurrenceSha256: digest("fixture:schedule-occurrence"),
+          dictionaryVersion: 4,
+          metricDefinitionCount: 103,
+          reportSetCount: 4,
+          valueTruthReportCount: 1,
+          commerceReportCount: 1,
+          programmeReportCount: 1,
+          cohortReportCount: 1,
+          approvedExportByteLimit: 1_048_576,
+          exportBytes: 4_096,
+          manualExportCount: 1,
+          manualDownloadCount: 1,
+          scheduleMaterializationCount: 1,
+          reportingWorkerRestartCount: 1,
+          statementTimeoutHandledCount: 1,
+          acceptedWorkCount: 2,
+          acceptedWorkStrandedCount: 0,
+          scheduleDuplicateCount: 0,
+          capabilityReplaySuccessCount: 0,
+          prohibitedFieldExposureCount: 0,
+          crossTenantExposureCount: 0,
+          protectedValuePathFailureCount: 0,
+          checkoutBlockedCount: 0,
+          duplicateReportEffectCount: 0,
+          ambiguousOutcomeCount: 0,
+          sourceCoverageRatio: 1,
+          assertions: fixtureAssertions(artifactId),
+        };
+      }
+      if (artifactId === "reconciliation_report") {
+        return {
+          sourceCoverageRatio: 1,
+          boundedConvergenceComplete: true,
+          sharedSnapshotSha256: digest("fixture:shared-snapshot"),
+          dictionaryV4Sha256: digest("fixture:dictionary-v4"),
+          reportBundleSha256: digest("fixture:report-bundle"),
+          manualExportSourceSha256: digest("fixture:manual-export-source"),
+          manualExportResponseSha256: digest("fixture:manual-export-response"),
+          scheduleOccurrenceSha256: digest("fixture:schedule-occurrence"),
+          valueTruthTotalsSha256: digest("fixture:value-truth-totals"),
+          commerceTotalsSha256: digest("fixture:commerce-report-totals"),
+          programmeOutcomeTotalsSha256: digest(
+            "fixture:programme-outcome-totals",
+          ),
+          cohortTotalsSha256: digest("fixture:cohort-report-totals"),
+          dictionaryVersion: 4,
+          metricDefinitionCount: 103,
+          reportSetCount: 4,
+          manualExportCount: 1,
+          manualDownloadCount: 1,
+          scheduleMaterializationCount: 1,
+          monetaryLiabilityState: "unavailable:valuation_policy_not_configured",
+          mixedCurrencyState: "unavailable:no_conversion",
+          predictionState: "unavailable:not_implemented",
+          statisticalSignificanceState: "unavailable:not_implemented",
+          influencedRevenueLabel: "descriptive",
+          incrementalRevenueState: "evidence_gated",
+          ledgerFlowDifference: 0,
+          walletProjectionDifference: 0,
+          lotExposureDifference: 0,
+          commerceDifference: 0,
+          currencyMinorDifference: 0,
+          programmeOutcomeDifference: 0,
+          cohortDifference: 0,
+          experimentAssignmentDifference: 0,
+          exportDigestDifference: 0,
+          scheduleDifference: 0,
+          payloadDifference: 0,
+          capabilityDifference: 0,
+          queueDifference: 0,
+          privacyDifferenceCount: 0,
+          checkoutDifferenceCount: 0,
+          loyaltyValueDifference: 0,
+          causalOverclaimCount: 0,
+          unavailableStateDifferenceCount: 0,
+          unresolvedAmbiguousOutcomeCount: 0,
+          unresolvedCriticalCount: 0,
+          unresolvedHighCount: 0,
+          assertions: fixtureAssertions(artifactId),
+        };
+      }
+      if (artifactId === "rollback_report") {
+        return {
+          startedAt: "2026-02-02T00:00:00Z",
+          endedAt: "2026-02-02T00:01:00Z",
+          durationSeconds: 60,
+          analyticsDisabled: true,
+          reportingWorkerStopped: true,
+          acceptedWorkDrainedOrHeld: true,
+          priorImagesRestored: true,
+          customerAccessAvailable: true,
+          checkoutAvailable: true,
+          immutableHistoryPreserved: true,
+          payloadExpiryPreserved: true,
+          auditHistoryPreserved: true,
+          acceptedWorkStrandedCount: 0,
+          capabilityReplaySuccessCount: 0,
+          unresolvedAmbiguousOutcomeCount: 0,
+          ledgerDifference: 0,
+          loyaltyValueDifference: 0,
+          evidenceSha256: digest("fixture:rollback-evidence"),
+          assertions: fixtureAssertions(artifactId),
+        };
+      }
+      if (artifactId === "observation_report") {
+        return {
+          startedAt: "2026-02-01T00:00:00Z",
+          endedAt: "2026-02-02T00:02:00Z",
+          durationSeconds: 86_520,
+          sampleIntervalCount: 25,
+          sourceCoverageRatio: 1,
+          observationPolicySha256: digest("fixture:observation-policy"),
+          latencyWithinApprovedBounds: true,
+          loadWithinApprovedBounds: true,
+          interactiveP95LatencyMs: 250,
+          exportP95LatencyMs: 500,
+          workerThroughputPerMinute: 30,
+          maxQueueDepth: 5,
+          manualExportCount: 1,
+          manualDownloadCount: 1,
+          scheduleMaterializationCount: 1,
+          reportingWorkerRestartCount: 1,
+          statementTimeoutHandledCount: 1,
+          staleWarningCount: 1,
+          unavailableStateCount: 1,
+          acceptedWorkStrandedCount: 0,
+          capabilityReplaySuccessCount: 0,
+          privacyIncidentCount: 0,
+          customerAccessErrorCount: 0,
+          checkoutBlockedCount: 0,
+          sharedSnapshotDifferenceCount: 0,
+          reportDifferenceCount: 0,
+          ledgerDifference: 0,
+          queueDifferenceCount: 0,
+          loyaltyValueDifference: 0,
+          openCriticalCount: 0,
+          openHighCount: 0,
+          evidenceSha256: digest("fixture:observation-evidence"),
+          assertions: fixtureAssertions(artifactId),
+        };
+      }
+      if (artifactId === "approval_record") {
+        return {
+          finalizedAt: fixtureTimes.approval_record,
+          release: "v1.0.0",
+          pilotScopeSha256: digest("fixture:pilot-scope"),
+          controlScopeSha256: digest("fixture:control-scope"),
+          analyticsPolicySha256: digest("fixture:analytics-policy"),
+          exportCeilingSha256: digest("fixture:export-ceiling"),
+          observationPolicySha256: digest("fixture:observation-policy"),
+          approvedExportByteLimit: 1_048_576,
+          approvals: artifactCheckBindings.get(artifactId).map((id) => ({
+            id,
+            approved: true,
+            approvedAt: "2026-01-31T22:00:00Z",
+            evidenceSha256: digest(`fixture:approval:${id}`),
+          })),
+          artifactSha256: Object.fromEntries(
+            candidateEvidence.artifacts
+              .filter((artifact) => artifact.id !== "approval_record")
+              .map((artifact) => [artifact.id, artifact.sha256]),
+          ),
+        };
+      }
+      fail(`unknown synthetic artifact ${artifactId}`);
+    };
+
     const bindings = new Map();
-    candidateEvidence.artifacts.forEach((artifact) => {
+    const artifactOrder = [
+      ...candidateEvidence.artifacts.filter(
+        (artifact) => artifact.id !== "approval_record",
+      ),
+      candidateEvidence.artifacts.find(
+        (artifact) => artifact.id === "approval_record",
+      ),
+    ];
+    artifactOrder.forEach((artifact) => {
       const document = {
         schema: "starfiniti.analytics-canary-artifact.v1",
         artifactId: artifact.id,
         candidateCommit: candidateEvidence.candidate.commit,
-        observedAt: candidateEvidence.observedAt,
+        observedAt: fixtureTimes[artifact.id],
         result: "verified",
         summary: `Synthetic self-test evidence verifies the exact ${artifact.id} completion boundary.`,
         checks: artifactCheckBindings.get(artifact.id),
-        details: { fixture: true, mutationCount: 0 },
+        details: fixtureDetails(artifact.id),
       };
       const raw = JSON.stringify(document);
       artifact.status = "verified";
@@ -753,6 +2006,14 @@ if (process.argv.includes("--self-test")) {
   );
   expectRejected(nonExactCommit, "full lowercase Git SHA", "a short commit");
 
+  const impossibleManifestTime = structuredClone(evidence);
+  impossibleManifestTime.observedAt = "2026-02-31T00:00:00Z";
+  expectRejected(
+    impossibleManifestTime,
+    "observedAt must be an exact UTC timestamp",
+    "an impossible manifest calendar time",
+  );
+
   const shortAutomaticFailure = structuredClone(evidence);
   shortAutomaticFailure.automaticFails[0].rule = "too short";
   expectRejected(
@@ -790,6 +2051,44 @@ if (process.argv.includes("--self-test")) {
     artifactDigestDrift,
     "artifact digest differs",
     "artifact digest drift",
+  );
+
+  const hollowBaselineReader = (relativePath, expectedDigest, artifactId) => {
+    const document = readBoundArtifact(
+      relativePath,
+      expectedDigest,
+      artifactId,
+    );
+    if (artifactId === "read_only_baseline") document.details = {};
+    return document;
+  };
+  expectRejected(
+    evidence,
+    "read_only_baseline details keys differ",
+    "a digest-bound baseline with no semantic evidence",
+    tasks,
+    hollowBaselineReader,
+  );
+
+  const extraArtifactFieldReader = (
+    relativePath,
+    expectedDigest,
+    artifactId,
+  ) => {
+    const document = readBoundArtifact(
+      relativePath,
+      expectedDigest,
+      artifactId,
+    );
+    if (artifactId === "read_only_baseline") document.unreviewed = true;
+    return document;
+  };
+  expectRejected(
+    evidence,
+    "artifact document keys differ",
+    "an artifact with an unreviewed top-level field",
+    tasks,
+    extraArtifactFieldReader,
   );
 
   const unsafeArtifactPath = structuredClone(evidence);
@@ -832,11 +2131,389 @@ if (process.argv.includes("--self-test")) {
     reusedDigestFixture.artifactReader,
   );
 
+  const nonzeroReconciliationFixture = buildCompleteFixture();
+  const nonzeroReconciliationReader = (
+    relativePath,
+    expectedDigest,
+    artifactId,
+  ) => {
+    const document = nonzeroReconciliationFixture.artifactReader(
+      relativePath,
+      expectedDigest,
+      artifactId,
+    );
+    if (artifactId === "reconciliation_report") {
+      document.details.ledgerFlowDifference = 1;
+    }
+    return document;
+  };
+  expectRejected(
+    nonzeroReconciliationFixture.candidateEvidence,
+    "value or unresolved evidence differs",
+    "a reconciliation report with ledger-flow drift",
+    nonzeroReconciliationFixture.candidateTasks,
+    nonzeroReconciliationReader,
+  );
+
+  const causalOverclaimFixture = buildCompleteFixture();
+  const causalOverclaimReader = (relativePath, expectedDigest, artifactId) => {
+    const document = causalOverclaimFixture.artifactReader(
+      relativePath,
+      expectedDigest,
+      artifactId,
+    );
+    if (artifactId === "reconciliation_report") {
+      document.details.influencedRevenueLabel = "incremental";
+    }
+    return document;
+  };
+  expectRejected(
+    causalOverclaimFixture.candidateEvidence,
+    "value or unresolved evidence differs",
+    "an influenced-revenue causal overclaim",
+    causalOverclaimFixture.candidateTasks,
+    causalOverclaimReader,
+  );
+
+  const reusedProductionReleaseFixture = buildCompleteFixture();
+  const reusedProductionReleaseReader = (
+    relativePath,
+    expectedDigest,
+    artifactId,
+  ) => {
+    const document = reusedProductionReleaseFixture.artifactReader(
+      relativePath,
+      expectedDigest,
+      artifactId,
+    );
+    if (artifactId === "release_inventory") {
+      document.details.release =
+        reusedProductionReleaseFixture.candidateEvidence.currentProduction.release;
+    }
+    if (artifactId === "approval_record") {
+      document.details.release =
+        reusedProductionReleaseFixture.candidateEvidence.currentProduction.release;
+    }
+    return document;
+  };
+  expectRejected(
+    reusedProductionReleaseFixture.candidateEvidence,
+    "release_inventory identity or disabled state differs",
+    "a candidate that reuses the current production release",
+    reusedProductionReleaseFixture.candidateTasks,
+    reusedProductionReleaseReader,
+  );
+
+  const approvalBindingFixture = buildCompleteFixture();
+  const approvalBindingReader = (relativePath, expectedDigest, artifactId) => {
+    const document = approvalBindingFixture.artifactReader(
+      relativePath,
+      expectedDigest,
+      artifactId,
+    );
+    if (artifactId === "approval_record") {
+      document.details.artifactSha256.read_only_baseline = "f".repeat(64);
+    }
+    return document;
+  };
+  expectRejected(
+    approvalBindingFixture.candidateEvidence,
+    "approval_record binding differs",
+    "an approval record bound to different production evidence",
+    approvalBindingFixture.candidateTasks,
+    approvalBindingReader,
+  );
+
+  const approvedScopeFixture = buildCompleteFixture();
+  const approvedScopeReader = (relativePath, expectedDigest, artifactId) => {
+    const document = approvedScopeFixture.artifactReader(
+      relativePath,
+      expectedDigest,
+      artifactId,
+    );
+    if (artifactId === "canary_journal") {
+      document.details.exportCeilingSha256 = digest(
+        "fixture:different-export-ceiling",
+      );
+    }
+    return document;
+  };
+  expectRejected(
+    approvedScopeFixture.candidateEvidence,
+    "approved analytics exportCeilingSha256 differs",
+    "a canary journal for a different approved export ceiling",
+    approvedScopeFixture.candidateTasks,
+    approvedScopeReader,
+  );
+
+  const approvedLimitFixture = buildCompleteFixture();
+  const approvedLimitReader = (relativePath, expectedDigest, artifactId) => {
+    const document = approvedLimitFixture.artifactReader(
+      relativePath,
+      expectedDigest,
+      artifactId,
+    );
+    if (artifactId === "canary_journal") {
+      document.details.approvedExportByteLimit = 524_288;
+    }
+    return document;
+  };
+  expectRejected(
+    approvedLimitFixture.candidateEvidence,
+    "approved analytics export byte limit differs",
+    "a canary journal with a different numeric export limit",
+    approvedLimitFixture.candidateTasks,
+    approvedLimitReader,
+  );
+
+  const observationPolicyFixture = buildCompleteFixture();
+  const observationPolicyReader = (
+    relativePath,
+    expectedDigest,
+    artifactId,
+  ) => {
+    const document = observationPolicyFixture.artifactReader(
+      relativePath,
+      expectedDigest,
+      artifactId,
+    );
+    if (artifactId === "observation_report") {
+      document.details.observationPolicySha256 = digest(
+        "fixture:different-observation-policy",
+      );
+    }
+    return document;
+  };
+  expectRejected(
+    observationPolicyFixture.candidateEvidence,
+    "analytics observation scope differs",
+    "an observation measured against a different approved policy",
+    observationPolicyFixture.candidateTasks,
+    observationPolicyReader,
+  );
+
+  const dictionaryDigestFixture = buildCompleteFixture();
+  const dictionaryDigestReader = (relativePath, expectedDigest, artifactId) => {
+    const document = dictionaryDigestFixture.artifactReader(
+      relativePath,
+      expectedDigest,
+      artifactId,
+    );
+    if (artifactId === "reconciliation_report") {
+      document.details.dictionaryV4Sha256 = digest(
+        "fixture:different-dictionary-v4",
+      );
+    }
+    return document;
+  };
+  expectRejected(
+    dictionaryDigestFixture.candidateEvidence,
+    "analytics Dictionary V4 digest differs",
+    "a reconciliation report for a different metric dictionary",
+    dictionaryDigestFixture.candidateTasks,
+    dictionaryDigestReader,
+  );
+
+  const scheduleOccurrenceFixture = buildCompleteFixture();
+  const scheduleOccurrenceReader = (
+    relativePath,
+    expectedDigest,
+    artifactId,
+  ) => {
+    const document = scheduleOccurrenceFixture.artifactReader(
+      relativePath,
+      expectedDigest,
+      artifactId,
+    );
+    if (artifactId === "reconciliation_report") {
+      document.details.scheduleOccurrenceSha256 = digest(
+        "fixture:different-schedule-occurrence",
+      );
+    }
+    return document;
+  };
+  expectRejected(
+    scheduleOccurrenceFixture.candidateEvidence,
+    "canary and reconciliation scheduleOccurrenceSha256 differ",
+    "a reconciliation report for a different schedule occurrence",
+    scheduleOccurrenceFixture.candidateTasks,
+    scheduleOccurrenceReader,
+  );
+
+  const snapshotMismatchFixture = buildCompleteFixture();
+  const snapshotMismatchReader = (relativePath, expectedDigest, artifactId) => {
+    const document = snapshotMismatchFixture.artifactReader(
+      relativePath,
+      expectedDigest,
+      artifactId,
+    );
+    if (artifactId === "reconciliation_report") {
+      document.details.sharedSnapshotSha256 = digest(
+        "fixture:different-shared-snapshot",
+      );
+    }
+    return document;
+  };
+  expectRejected(
+    snapshotMismatchFixture.candidateEvidence,
+    "canary and reconciliation sharedSnapshotSha256 differ",
+    "reports reconciled from a different snapshot",
+    snapshotMismatchFixture.candidateTasks,
+    snapshotMismatchReader,
+  );
+
+  const countMismatchFixture = buildCompleteFixture();
+  const countMismatchReader = (relativePath, expectedDigest, artifactId) => {
+    const document = countMismatchFixture.artifactReader(
+      relativePath,
+      expectedDigest,
+      artifactId,
+    );
+    if (artifactId === "reconciliation_report") {
+      document.details.manualDownloadCount = 2;
+    }
+    return document;
+  };
+  expectRejected(
+    countMismatchFixture.candidateEvidence,
+    "analytics artifact manualDownloadCount differs",
+    "a reconciliation report for a different download set",
+    countMismatchFixture.candidateTasks,
+    countMismatchReader,
+  );
+
+  const chronologyFixture = buildCompleteFixture();
+  const chronologyReader = (relativePath, expectedDigest, artifactId) => {
+    const document = chronologyFixture.artifactReader(
+      relativePath,
+      expectedDigest,
+      artifactId,
+    );
+    if (artifactId === "release_inventory") {
+      document.observedAt = "2026-02-01T00:01:00Z";
+    }
+    return document;
+  };
+  expectRejected(
+    chronologyFixture.candidateEvidence,
+    "production artifact chronology differs",
+    "a release inventory observed after canary start",
+    chronologyFixture.candidateTasks,
+    chronologyReader,
+  );
+
+  const lateOperatorBaselineFixture = buildCompleteFixture();
+  const lateOperatorBaselineReader = (
+    relativePath,
+    expectedDigest,
+    artifactId,
+  ) => {
+    const document = lateOperatorBaselineFixture.artifactReader(
+      relativePath,
+      expectedDigest,
+      artifactId,
+    );
+    if (artifactId === "read_only_baseline") {
+      document.observedAt = "2026-02-01T00:01:00Z";
+    }
+    return document;
+  };
+  expectRejected(
+    lateOperatorBaselineFixture.candidateEvidence,
+    "production artifact chronology differs",
+    "operator access established only after canary start",
+    lateOperatorBaselineFixture.candidateTasks,
+    lateOperatorBaselineReader,
+  );
+
+  const earlyRollbackFixture = buildCompleteFixture();
+  const earlyRollbackReader = (relativePath, expectedDigest, artifactId) => {
+    const document = earlyRollbackFixture.artifactReader(
+      relativePath,
+      expectedDigest,
+      artifactId,
+    );
+    if (artifactId === "rollback_report") {
+      document.details.startedAt = "2026-02-01T23:58:00Z";
+      document.details.endedAt = "2026-02-01T23:59:00Z";
+    }
+    return document;
+  };
+  expectRejected(
+    earlyRollbackFixture.candidateEvidence,
+    "production artifact chronology differs",
+    "a rollback rehearsal completed before canary end",
+    earlyRollbackFixture.candidateTasks,
+    earlyRollbackReader,
+  );
+
+  const lateApprovalFixture = buildCompleteFixture();
+  const lateApprovalReader = (relativePath, expectedDigest, artifactId) => {
+    const document = lateApprovalFixture.artifactReader(
+      relativePath,
+      expectedDigest,
+      artifactId,
+    );
+    if (artifactId === "approval_record") {
+      document.details.approvals[0].approvedAt = "2026-02-01T00:01:00Z";
+    }
+    return document;
+  };
+  expectRejected(
+    lateApprovalFixture.candidateEvidence,
+    "production artifact chronology differs",
+    "a prerequisite approval recorded after canary start",
+    lateApprovalFixture.candidateTasks,
+    lateApprovalReader,
+  );
+
+  const observationDriftFixture = buildCompleteFixture();
+  const observationDriftReader = (relativePath, expectedDigest, artifactId) => {
+    const document = observationDriftFixture.artifactReader(
+      relativePath,
+      expectedDigest,
+      artifactId,
+    );
+    if (artifactId === "observation_report") {
+      document.details.ledgerDifference = 1;
+    }
+    return document;
+  };
+  expectRejected(
+    observationDriftFixture.candidateEvidence,
+    "observation_report duration, coverage, load, or failure evidence differs",
+    "an observation window with ledger drift",
+    observationDriftFixture.candidateTasks,
+    observationDriftReader,
+  );
+
+  const shortObservationFixture = buildCompleteFixture();
+  const shortObservationReader = (relativePath, expectedDigest, artifactId) => {
+    const document = shortObservationFixture.artifactReader(
+      relativePath,
+      expectedDigest,
+      artifactId,
+    );
+    if (artifactId === "observation_report") {
+      document.details.startedAt = "2026-02-01T23:02:00Z";
+      document.details.durationSeconds = 3_600;
+      document.details.sampleIntervalCount = 1;
+    }
+    return document;
+  };
+  expectRejected(
+    shortObservationFixture.candidateEvidence,
+    "observation_report duration",
+    "an observation shorter than twenty-four hours",
+    shortObservationFixture.candidateTasks,
+    shortObservationReader,
+  );
+
   const baselineDrift = structuredClone(evidence);
   baselineDrift.publicBaseline.authWithoutKey = 200;
   expectRejected(
     baselineDrift,
-    "unexpected public baseline",
+    "differs from the manifest",
     "an unsafe public baseline",
   );
 
