@@ -1,6 +1,6 @@
 schema: starfiniti.continuous-improvement.v1
 status: in_progress
-observedAt: 2026-08-27T14:08:00Z
+observedAt: 2026-08-27T14:20:00Z
 candidate:
   branch: codex/m16-continuous-improvement
   commit: c84e8361ccd58f52fac9d1bbdbe49a787fa9f992
@@ -75,8 +75,8 @@ checks:
     status: passed
     evidence: The completion fixture and adversarial mutations prove that cadence, freshness, ranking, recurring controls, rescoring, experiment guardrails, exercises, artifacts, approvals, and score floors fail closed.
   - id: exact_head_ci
-    status: pending
-    evidence: Exact final documentation-head CI, database replay, image, WooCommerce, security, and external CodeQL evidence is not yet bound.
+    status: passed
+    evidence: Documentation head d61139d passed CI run 33071077688 with all seven jobs, Security run 33071077786 with all three jobs, and the external GitHub Advanced Security CodeQL policy check.
   - id: owner_roster
     status: pending
     evidence: Product, engineering, security, operations, monthly-review, quarterly-exercise, and owner roles require named environment-owned assignments.
