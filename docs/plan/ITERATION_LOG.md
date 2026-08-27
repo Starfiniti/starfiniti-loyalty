@@ -1,5 +1,12 @@
 # Iteration Log
 
+## 2026-08-27 — M08 semantic production-evidence hardening
+
+- Reproduced a false-proof path in the completion fixture: every verified notification artifact closed with only `{ fixture: true, mutationCount: 0 }`, so digest integrity did not prove consent, suppression, provider delivery, privacy, value/checkout continuity, rollback, or observation outcomes.
+- Added nine exact minimized detail schemas with distinct release/recovery/baseline digests, unique per-check evidence digests, bounded provider ceilings and counts, exact SMTP/Klaviyo/webhook/consent/suppression scenarios, and zero-difference value/privacy/queue assertions.
+- Approved pilot/control and provider policies plus numeric limits bind approval to journal. Exact images/contracts/adapters bind release; provider evidence and all exercise/work counts bind journal to reconciliation, and the observation subset binds to the same journal. Final approval binds release and every artifact under pre-canary, rollback-after-canary, and minimum 24-hour covering chronology.
+- Added positive and adversarial fixtures for hollow/extra fields, impossible time, current-release or current-commit reuse, consent/ledger drift, changed policy/ceiling/adapter/observation evidence, consent/suppression and count mismatch, artifact rebinding, late operator baseline/release/approval, early rollback, observation drift, and short observation. Production, providers, contacts, checkout, customer value, and deployment remain unchanged.
+
 ## 2026-08-27 — M09 semantic production-evidence hardening
 
 - Reproduced a false-proof path in the completion fixture: every verified storefront artifact closed with only `{ fixture: true, mutationCount: 0 }`, so digest integrity did not prove hosted or WooCommerce delivery, English scope, asset budgets, privacy, coupon/value continuity, rollback, or observation outcomes.

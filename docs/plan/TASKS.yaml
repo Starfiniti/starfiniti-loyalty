@@ -1244,7 +1244,8 @@ tasks:
         acceptance:
           - exact-head CI disabled deployment local SMTP sink test-provider canary reconciliation rollback and score at least 90 pass
         evidence:
-          - docs/plan/evidence/M08/canary.yaml is a 53-check fail-closed manifest with four approvals, exact category floors, nine path and digest bound production artifacts, and deterministic false-completion self-tests
+          - docs/plan/evidence/M08/canary.yaml is a 53-check fail-closed manifest with four approvals, exact category floors, nine path digest and semantic bound production artifacts, exact cross-artifact policy release provider count reconciliation and chronology, and deterministic positive and adversarial completion fixtures
+          - docs/plan/evidence/M08/ARTIFACT_CONTRACT.md defines the exact minimized production evidence schemas, bindings, zero-difference requirements, rollback order, and minimum 24-hour observation
           - repository and read-only controls pass at provisional score 90 while provider credentials, approved deployment, bounded canaries, reconciliation, rollback, observation, and category-floor close remain pending
     risks: [R-027]
     docs:
@@ -1261,6 +1262,7 @@ tasks:
         docs/operations/SMTP.md,
         docs/operations/KLAVIYO.md,
         docs/operations/WEBHOOKS.md,
+        docs/plan/evidence/M08/ARTIFACT_CONTRACT.md,
       ]
     evidence: [docs/plan/evidence/M08/README.md]
 
