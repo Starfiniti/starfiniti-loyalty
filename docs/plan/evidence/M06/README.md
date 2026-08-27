@@ -17,4 +17,8 @@ M06 is in progress. The referral path now remains value-neutral through attribut
 
 ## Open gates
 
-- Reviewed merge; disabled deployment; fresh recovery point; Starfiniti canary; reconciliation; production smoke; and module score
+M06-S06 now has a fail-closed machine gate in [`canary.yaml`](canary.yaml), validated during `npm run check`. It requires 48 unique minimized checks, nine named production artifacts, exact score arithmetic, at least 90/100 overall, at least 80% in every category, four explicit approvals, completed prerequisite slices, no failed or pending check, and matching completed task state before it can claim completion. Verified artifacts are unique, safe bounded JSON files under the M06 evidence root with exact SHA-256 digests, exact check coverage, the exact candidate commit, and minimized contents. The provisional score is 90/100, but operability is 3/10 and below its mandatory 8/10 floor.
+
+- Approved exact release and real pilot store
+- Fresh production recovery point and disabled deployment
+- Starfiniti-only canary, full attribution/value/fraud reconciliation, rollback, observation, and final category-floor scoring

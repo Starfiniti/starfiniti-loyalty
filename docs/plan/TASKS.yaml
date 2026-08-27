@@ -852,6 +852,7 @@ tasks:
     title: Add referrals with minimized fraud review and reversible decisions
     module: M06
     status: in_progress
+    module_score: 90
     dependencies: [M05-VIP-AND-EXPIRY]
     hypothesis: Cooling-period attribution and reversible review grow acquisition without granting value from self-referral or replay.
     baseline: Referral earning, attribution, fraud review, and customer sharing are absent.
@@ -863,6 +864,7 @@ tasks:
       ]
     owner_inputs:
       - approved real WooCommerce store access for the final canary only
+      - approved release and bounded canary window
     acceptance:
       [
         opaque links attribution window cooling rewards fraud signals review customer progress and funnel views pass,
@@ -938,8 +940,9 @@ tasks:
         acceptance:
           - exact-head CI disabled deployment Starfiniti canary full reconciliation and score at least 90 pass
         evidence:
+          - docs/plan/evidence/M06/canary.yaml records 48 exact checks, nine named path- and SHA-256-bound production artifacts, and a deterministic seven-category provisional score of 90 with operability below its floor
           - PR 31 is merge-clean at f16d6b2f0e524c3647f78ba9d3ee501c51ec74b7 and CI run 33075109579 passed baseline containers clean 41-migration replay all 35 pgTAP files and all four WooCommerce runtime variants
-          - merge disabled deployment Starfiniti canary full reconciliation observation and module score remain open
+          - approved release pilot store disabled deployment Starfiniti canary full reconciliation rollback observation and final scoring remain open
     risks: [R-026]
     docs:
       [
