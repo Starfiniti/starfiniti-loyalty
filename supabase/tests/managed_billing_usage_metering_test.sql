@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(62);
+select plan(63);
 
 grant loyalty_runtime, loyalty_worker to current_user;
 grant usage on schema extensions to loyalty_runtime, loyalty_worker;
@@ -603,7 +603,33 @@ select throws_ok($$
 $$, '22023', 'managed billing usage correction period invalid',
   'provider correction timestamp cannot drift from its immutable UTC period');
 
--- 54-62: tenant summary, privacy, immutability, and final zero-ledger proof.
+create temporary table usage_correction_claim (
+  dispatch_public_id uuid primary key,
+  lease_token uuid not null,
+  attempt_number integer not null
+) on commit drop;
+insert into usage_correction_claim
+select * from loyalty_private.claim_managed_billing_usage_dispatches_v1(
+  'billing-usage-correction-worker', 25, 60, '2041-01-05 00:03:10+00'
+);
+select results_eq($$
+  select authority.provider_event_name, authority.provider_customer_id,
+    authority.quantity
+  from usage_correction_claim as claim
+  join loyalty_private.managed_billing_usage_dispatches as dispatch
+    on dispatch.public_id = claim.dispatch_public_id
+  join loyalty_private.managed_billing_usage_facts as fact
+    on fact.id = dispatch.usage_fact_id
+  cross join lateral loyalty_private.authorize_managed_billing_usage_dispatch_v1(
+    claim.dispatch_public_id, claim.lease_token,
+    'billing-usage-correction-worker', '2041-01-05 00:03:11+00'
+  ) as authority
+  where fact.source_kind = 'correction'
+$$, $$ values ('starfiniti_orders'::text, 'cus_BillingUsageTest0001'::text,
+  '-1'::text) $$,
+  'correction dispatch reuses its accepted source meter and account');
+
+-- Tenant summary, privacy, immutability, and final zero-ledger proof.
 set local role authenticated;
 select set_config('request.jwt.claim.sub',
   'c1000000-0000-4000-8000-000000000001', true);

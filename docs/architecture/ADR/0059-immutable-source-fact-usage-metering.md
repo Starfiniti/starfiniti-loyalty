@@ -27,6 +27,7 @@ Use immutable source-fact metering with PostgreSQL as the authority.
 - Source eligibility resolves managed deployment and tenant entitlement at the immutable source occurrence time; enabling billing later never backfills activity from before activation.
 - Source identifiers are reduced to private UUID evidence and SHA-256 identities. Raw commerce object IDs, API keys, idempotency keys, customer contact data, payloads, and provider response bodies are not copied.
 - A correction appends a non-zero compensating fact linked to the original and retains an effective timestamp inside the original UTC usage period. Existing facts and successful dispatch evidence are never edited.
+- A correction reaches Stripe only after its original fact has an accepted provider dispatch, and it reuses that accepted dispatch's provider customer and meter version. Shadow-only, ambiguous, or rejected originals cannot emit a standalone negative provider event.
 - Usage periods are exact UTC calendar months. Quantities use PostgreSQL `bigint` and public contracts use decimal strings.
 - Dispatch configuration is append-only and externally supplied. No Stripe event name, meter ID, Price ID, or price is seeded by the application.
 - A database lease claims only a public dispatch selector. A second authorization step rechecks managed deployment mode, effective `managed.billing` entitlement, provider configuration, meter version, billing account, live mode, and lease before returning the minimized provider payload.

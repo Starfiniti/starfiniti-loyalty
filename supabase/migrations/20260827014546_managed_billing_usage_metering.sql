@@ -568,9 +568,11 @@ begin
       ), 'sha256'),
       target_observed_at
     from missing_sources as source
-    on conflict (
-      organization_id, meter_key, source_kind, source_reference_sha256
-    ) do nothing
+    -- Every non-correction insert has a generated public identity and no
+    -- idempotency key. The remaining uniqueness fence is the immutable source
+    -- identity, so concurrent capture workers can safely converge here without
+    -- naming output-column variables in the conflict target.
+    on conflict do nothing
     returning managed_billing_usage_facts.meter_key
   )
   select inserted.meter_key, pg_catalog.count(*)::bigint
@@ -778,13 +780,24 @@ begin
     'm14u_' || pg_catalog.replace(fact.public_id::text, '-', ''),
     'pending', target_at, target_at, target_at
   from loyalty_private.managed_billing_usage_facts as fact
+  left join loyalty_private.managed_billing_usage_dispatches
+    as original_dispatch
+    on fact.correction_of_fact_id is not null
+   and original_dispatch.organization_id = fact.organization_id
+   and original_dispatch.usage_fact_id = fact.correction_of_fact_id
+   and original_dispatch.state = 'accepted'
   cross join lateral (
     select candidate.*
     from loyalty_private.managed_billing_account_versions as candidate
     where candidate.organization_id = fact.organization_id
-      and candidate.effective_from <= target_at
-      and (candidate.effective_until is null
-        or candidate.effective_until > target_at)
+      and (
+        (fact.correction_of_fact_id is not null
+          and candidate.id = original_dispatch.billing_account_version_id)
+        or (fact.correction_of_fact_id is null
+          and candidate.effective_from <= target_at
+          and (candidate.effective_until is null
+            or candidate.effective_until > target_at))
+      )
     order by candidate.effective_from desc, candidate.id desc
     limit 1
   ) as account
@@ -792,8 +805,13 @@ begin
     select candidate.*
     from loyalty_private.managed_billing_usage_meter_versions as candidate
     where candidate.meter_key = fact.meter_key
-      and candidate.live_mode = account.live_mode
-      and candidate.effective_from <= target_at
+      and (
+        (fact.correction_of_fact_id is not null
+          and candidate.id = original_dispatch.meter_version_id)
+        or (fact.correction_of_fact_id is null
+          and candidate.live_mode = account.live_mode
+          and candidate.effective_from <= target_at)
+      )
     order by candidate.effective_from desc, candidate.version desc,
       candidate.id desc
     limit 1
@@ -812,7 +830,10 @@ begin
   where meter.enabled and provider_configuration.enabled
     and provider_configuration.live_mode = account.live_mode
     and entitlement.deployment_mode = 'managed' and entitlement.enabled
-    and fact.occurred_at >= meter.effective_from
+    and (fact.correction_of_fact_id is null
+      or original_dispatch.id is not null)
+    and (fact.correction_of_fact_id is not null
+      or fact.occurred_at >= meter.effective_from)
     and not exists (
       select 1
       from loyalty_private.managed_billing_usage_dispatches as existing
@@ -879,6 +900,7 @@ declare
   current_meter loyalty_private.managed_billing_usage_meter_versions%rowtype;
   bound_account loyalty_private.managed_billing_account_versions%rowtype;
   current_account loyalty_private.managed_billing_account_versions%rowtype;
+  original_dispatch loyalty_private.managed_billing_usage_dispatches%rowtype;
   provider_configuration
     loyalty_private.managed_billing_provider_configuration_versions%rowtype;
   target_deployment_mode text;
@@ -916,6 +938,13 @@ begin
   from loyalty_private.managed_billing_account_versions as candidate
   where candidate.organization_id = dispatch.organization_id
     and candidate.id = dispatch.billing_account_version_id;
+  if fact.correction_of_fact_id is not null then
+    select candidate.* into original_dispatch
+    from loyalty_private.managed_billing_usage_dispatches as candidate
+    where candidate.organization_id = dispatch.organization_id
+      and candidate.usage_fact_id = fact.correction_of_fact_id
+      and candidate.state = 'accepted';
+  end if;
 
   select configuration.deployment_mode into strict target_deployment_mode
   from loyalty_private.deployment_configuration_versions as configuration
@@ -959,10 +988,19 @@ begin
     or not provider_configuration.enabled
     or provider_configuration.live_mode <> bound_account.live_mode then
     target_hold_code := 'billing_usage_provider_disabled';
-  elsif current_account.id is distinct from bound_account.id then
+  elsif fact.correction_of_fact_id is not null and (
+      original_dispatch.id is null
+      or original_dispatch.billing_account_version_id <> bound_account.id
+      or original_dispatch.meter_version_id <> bound_meter.id
+    ) then
+    target_hold_code := 'billing_usage_correction_source_unaccepted';
+  elsif fact.correction_of_fact_id is null
+    and current_account.id is distinct from bound_account.id then
     target_hold_code := 'billing_usage_account_changed';
-  elsif current_meter.id is distinct from bound_meter.id
-    or not bound_meter.enabled then
+  elsif fact.correction_of_fact_id is null and (
+      current_meter.id is distinct from bound_meter.id
+      or not bound_meter.enabled
+    ) then
     target_hold_code := 'billing_usage_meter_changed';
   elsif fact.occurred_at < target_at - interval '34 days'
     or fact.occurred_at > target_at + interval '5 minutes' then
