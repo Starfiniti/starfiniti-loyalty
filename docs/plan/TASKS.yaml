@@ -2541,8 +2541,9 @@ tasks:
           - npm run enterprise-identity:canary:validate
         evidence:
           - docs/plan/evidence/M13/canary.yaml
+          - docs/plan/evidence/M13/ARTIFACT_CONTRACT.md defines exact semantic artifact schemas zero-difference assertions chronology and cross-artifact final approval binding
           - integrated exact-head CI run 33104114747 and Security run 33104114894 passed at 0ae43ea with all eleven checks green
-          - 51-check manifest records four synchronized approvals nine path and digest bound production artifacts seventeen fixed automatic failures and deterministic positive/adversarial completion fixtures
+          - 51-check manifest records four synchronized approvals nine path digest and semantic bound production artifacts seventeen fixed automatic failures and deterministic positive/adversarial completion fixtures
           - twelve repository and read-only controls pass while thirty-nine approved release fixture deployment IdP SCIM agency support recovery deletion reconciliation rollback and observation controls remain pending
 
   - id: M14-MANAGED-BILLING

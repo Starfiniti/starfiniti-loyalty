@@ -1,5 +1,12 @@
 # Iteration Log
 
+## 2026-08-27 — M13 semantic production-evidence hardening
+
+- Reproduced a false-proof path: after replacing the verified read-only artifact's complete observations with `{}` and rebinding its exact SHA-256 digest, the M13 validator still reported the public, Authentik, and operator baselines passed.
+- Replaced byte-authentication-only acceptance with nine exact minimized details schemas. Every check-bearing artifact requires uniquely digest-bound zero-difference assertions; release and recovery inputs cannot reuse one digest.
+- Final approval now binds the exact digest of every other artifact and the release inventory. Canonical UTC checks and chronology require release, recovery, baseline, and prerequisite approvals before canary start; reconciliation and rollback after canary end; at least 24 hours of observation covering the canary; and final approval after all evidence.
+- Added adversarial fixtures for empty details, nonzero reconciliation, different approval bindings, release-after-start chronology, late prerequisite approval, and short observation while retaining a positive complete fixture. Production, Authentik, Supabase, organization access, checkout, and loyalty value remain unchanged.
+
 ## 2026-08-27 — M14 semantic production-evidence hardening
 
 - Reproduced a false-proof path: after replacing the verified read-only artifact's complete observations with `{}` and rebinding its exact SHA-256 digest, the M14 validator still reported both public baseline and operator access passed.
