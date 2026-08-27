@@ -982,11 +982,17 @@ select throws_ok(
   'interrupted-operation recovery cannot race the five-minute safety window'
 );
 reset role;
-select set_config('loyalty.federation_command', 'on', true);
+-- Age both timestamps together while bypassing only the immutable-authority
+-- guard. Check constraints stay active, so the fixture remains internally
+-- valid while simulating an orchestration process that died six minutes ago.
+alter table loyalty.organization_federation_sources
+  disable trigger organization_federation_sources_guarded;
 update loyalty.organization_federation_sources
-set updated_at = statement_timestamp() - interval '6 minutes'
+set created_at = created_at - interval '6 minutes',
+    updated_at = updated_at - interval '6 minutes'
 where display_name = 'Corporate SAML';
-select set_config('loyalty.federation_command', 'off', true);
+alter table loyalty.organization_federation_sources
+  enable trigger organization_federation_sources_guarded;
 set local role loyalty_runtime;
 select results_eq(
   $$
