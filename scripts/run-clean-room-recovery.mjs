@@ -1010,11 +1010,11 @@ function readRegularFile(path, label, maximumBytes, ownerOnly = false) {
   let raw;
   let descriptor;
   try {
-    linkStatus = lstatSync(path);
-    if (!linkStatus.isFile()) fail(`${label} must not be a symbolic link`);
     descriptor = openSync(path, constants.O_RDONLY | constants.O_NOFOLLOW);
     status = fstatSync(descriptor);
+    linkStatus = lstatSync(path);
     if (
+      !linkStatus.isFile() ||
       status.dev !== linkStatus.dev ||
       status.ino !== linkStatus.ino ||
       !status.isFile()

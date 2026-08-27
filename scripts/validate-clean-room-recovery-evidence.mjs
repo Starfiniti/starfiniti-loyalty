@@ -169,11 +169,11 @@ function readBoundArtifact(relativePath, expectedDigest, extension) {
   let descriptor;
   let raw;
   try {
-    const linkStatus = lstatSync(absolute);
-    if (!linkStatus.isFile()) fail("recovery artifact must not be a link");
     descriptor = openSync(absolute, constants.O_RDONLY | constants.O_NOFOLLOW);
     const status = fstatSync(descriptor);
+    const linkStatus = lstatSync(absolute);
     if (
+      !linkStatus.isFile() ||
       !status.isFile() ||
       status.dev !== linkStatus.dev ||
       status.ino !== linkStatus.ino ||
