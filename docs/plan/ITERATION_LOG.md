@@ -1,5 +1,15 @@
 # Iteration Log
 
+## 2026-08-27 — M16 evidence-bound continuous improvement
+
+- Accepted ADR-0068 after comparing informal owner review, ticket/dependency automation, event-driven-only review, and fixed cadence plus event escalation with immutable evidence. Official Supabase, PostgreSQL, WooCommerce, Stripe, Authentik, Klaviyo, and Node.js change sources form the review catalogue.
+- Added a canonical UTC operating contract: calendar-month reviews close within ten days, calendar-quarter exercises within thirty days, and initial close requires two distinct consecutive months plus one complete quarterly bundle. Missing or stale sources remain unknown rather than healthy zero.
+- Added fourteen monthly sections, exact provider impact/disposition review, material-change module rescoring with retained history, a second-occurrence durable-control requirement, and experiment promotion only after primary-metric improvement with every guardrail passing.
+- Added a machine-ranked backlog. Severity, merchant impact, customer impact, confidence, effort, and dependency penalty recompute into exact descending order; the initial eight items preserve all known real-store, monitoring, recovery, penetration, GA, Stripe, enterprise-IdP, and notification external gates.
+- Added five quarterly exercises for full-service restore, tenant isolation, privacy, SCIM deprovisioning, and incident response. Every exercise requires separate digest evidence and zero unexplained protected-value, tenancy, privacy, recovery, checkout, or data-loss difference.
+- Added a 39-check fail-closed manifest and validator with five distinct minimized artifacts, score/category floors, independent review, and five approval roles. Its positive fixture proves the gate can close; adversarial cases reject missing cadence, stale sources, missing providers, unrescored changes, recurring failures without controls, unsafe experiment promotion, exercise differences, low module scores, reused artifacts, missing approvals, and incomplete prerequisite modules.
+- Repository evidence honestly records six passed controls, 33 pending elapsed-cadence/live/approval gates, and a provisional 77/100 with performance and operability below their floors. No review schedule, owner identity, provider upgrade, experiment, exercise, deployment, production mutation, checkout path, or loyalty value changed.
+
 ## 2026-08-27 — M15 evidence-bound GA canary and claims
 
 - Accepted ADR-0067 after comparing calendar uptime, broad rollout/support-volume observation, score substitution, and pre-evidence marketing claims with a one-pilot evidence-bound canary. Primary Google SRE and NIST SSDF guidance informs exact-release canarying, evaluation, rollback, audit trail, and provenance.

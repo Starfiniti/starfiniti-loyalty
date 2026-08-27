@@ -3223,21 +3223,38 @@ tasks:
   - id: M16-CONTINUOUS-IMPROVEMENT
     title: Institutionalize evidence-ranked product and operational improvement
     module: M16
-    status: planned
+    status: in_progress
     dependencies: [M15-GA-HARDENING]
     hypothesis: Scheduled measurement and exercises turn recurring failures into durable prevention instead of undocumented fixes.
     baseline: Iteration evidence exists but no complete enterprise monthly/quarterly cadence is active.
     targets:
       [
+        two consecutive monthly reviews close within ten days of period end,
+        one quarterly bundle contains all five required exercises,
         affected modules are rescored after material change,
         recurring failures become durable controls,
         backlog remains evidence-ranked,
+        M16 reaches 90/100 with every category at least 80 percent,
       ]
     owner_inputs:
-      [monthly product review owner, quarterly exercise participants]
+      [
+        named monthly product review owner and schedule,
+        named quarterly restore identity privacy SCIM and incident participants,
+        independent reviewer,
+        product engineering security operations and owner approvals,
+      ]
     acceptance:
       [
-        monthly metrics/support/security/billing review quarterly recovery/isolation/privacy/SCIM exercises provider review and ADR supersession operate,
+        two distinct consecutive UTC monthly reviews cover activation errors support reconciliation fraud campaigns churn usability performance security billing providers backlog and module scores,
+        every Supabase PostgreSQL WooCommerce Stripe Authentik Klaviyo and Node.js official source is reviewed through the same cutoff with impact owner and disposition,
+        the evidence-ranked backlog score and order recompute exactly with no overdue unaccepted Critical or High item,
+        the second occurrence of a stable failure binds a merged regression test validator monitor runbook or agent rule,
+        every material change rescored all affected modules while preserving prior scores and evidence,
+        an experiment is promoted only when its declared primary metric improves and all guardrails pass,
+        one quarterly bundle proves restore tenant isolation privacy SCIM deprovisioning and incident exercises with zero unexplained protected difference,
+        obsolete material decisions are superseded by ADR without rewriting historical evidence,
+        the roadmap task graph scorecard status risks changelog iteration log backlog and evidence index agree,
+        five distinct digest-bound artifacts independent review all approvals and a 90/100 score with category floors close the initial gate,
       ]
     failure_modes:
       [
@@ -3246,16 +3263,32 @@ tasks:
         obsolete provider assumptions,
         repeated incident without regression control,
       ]
-    rollout: Start cadence during the GA canary and publish the first monthly and quarterly evidence dates.
-    rollback: Not applicable to historical evidence; suspend experiments that breach guardrails and supersede decisions by ADR.
+    rollout: Install schedules during the GA canary; repository fixtures prove the gate but do not substitute for two elapsed monthly reviews and one quarterly bundle.
+    rollback: Historical evidence is append-only; stop experiments upgrades or rollouts that breach guardrails and supersede decisions by ADR while protected loyalty paths continue.
     verification:
       [
-        scheduled review records,
-        regression links,
-        score history,
-        exercise reports,
-        evidence-ranked backlog,
+        npm run continuous-improvement:validate,
+        two consecutive monthly review artifacts,
+        complete provider and dependency review,
+        exact backlog arithmetic and due-date audit,
+        recurring-failure inventory and durable regression links,
+        affected-module score history,
+        experiment metric and guardrail evidence,
+        five distinct quarterly exercise reports and reconciliation,
+        independent review and five-role approval,
       ]
-    risks: [R-030, R-031]
-    docs: [docs/plan/ENTERPRISE_ROADMAP.md, docs/plan/ITERATION_LOG.md]
-    evidence: [docs/plan/evidence/M16/README.md]
+    risks: [R-030, R-031, R-051]
+    docs:
+      [
+        docs/plan/ENTERPRISE_ROADMAP.md,
+        docs/plan/ITERATION_LOG.md,
+        docs/plan/IMPROVEMENT_BACKLOG.yaml,
+        docs/operations/CONTINUOUS_IMPROVEMENT.md,
+        docs/architecture/ADR/0068-evidence-bound-continuous-improvement.md,
+      ]
+    evidence:
+      [
+        docs/plan/evidence/M16/README.md,
+        docs/plan/evidence/M16/continuous-improvement.yaml,
+        infrastructure/governance/continuous-improvement.yaml,
+      ]

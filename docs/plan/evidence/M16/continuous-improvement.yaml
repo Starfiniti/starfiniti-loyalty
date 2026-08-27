@@ -1,0 +1,185 @@
+schema: starfiniti.continuous-improvement.v1
+status: in_progress
+observedAt: 2026-08-27T14:00:00Z
+candidate:
+  branch: codex/m16-continuous-improvement
+  commit: fd77db425095aa0a24e18174537d1dcd4e84c5bc
+  initialCloseApproved: false
+plan:
+  path: infrastructure/governance/continuous-improvement.yaml
+  sha256: 4fc9c72e0bf4d2cb216c135bd7565ee153cd1c1e77689ecb19056138f82adc37
+backlog:
+  path: docs/plan/IMPROVEMENT_BACKLOG.yaml
+  sha256: 1be9ed681216b83b676653a8adea65c0a3bbbaa662c80f6f2dd3705a39a3fef3
+artifacts:
+  monthlyReviewPrimaryPath: null
+  monthlyReviewPrimarySha256: null
+  monthlyReviewRepeatPath: null
+  monthlyReviewRepeatSha256: null
+  quarterlyExerciseBundlePath: null
+  quarterlyExerciseBundleSha256: null
+  finalReconciliationPath: null
+  finalReconciliationSha256: null
+  approvalRecordPath: null
+  approvalRecordSha256: null
+score:
+  total: 77
+  target: 90
+  minimumCategoryRatio: 0.8
+  categories:
+    - id: correctness
+      weight: 20
+      score: 17
+      evidence: The versioned calendar, ranking, review, exercise, and completion contracts are deterministic; elapsed review evidence remains pending.
+    - id: security
+      weight: 15
+      score: 12
+      evidence: Evidence minimization and mandatory security, privacy, tenancy, SCIM, and incident review are specified; live exercises remain pending.
+    - id: ledgerReliability
+      weight: 15
+      score: 12
+      evidence: Reconciliation and recurring-failure controls preserve immutable value requirements; repeated live zero-difference evidence remains pending.
+    - id: tests
+      weight: 15
+      score: 15
+      evidence: The validator uses a positive closeout fixture and adversarial corruption cases for cadence, ranking, controls, scores, experiments, exercises, and approvals.
+    - id: performance
+      weight: 10
+      score: 5
+      evidence: Performance is a mandatory monthly section and material changes require rescoring, but no repeated production performance review exists yet.
+    - id: operability
+      weight: 10
+      score: 2
+      evidence: The operating contract and runbook exist, but two elapsed monthly reviews, one quarterly bundle, owner roster, and schedule activation remain pending.
+    - id: maintainability
+      weight: 15
+      score: 14
+      evidence: Stable schemas, official-source catalogue, exact ranking, append-only evidence, and ADR supersession make future decisions reconstructable.
+checks:
+  - id: repository_contract
+    status: passed
+    evidence: The canonical contract fixes UTC cadence, review sections, provider sources, ranking arithmetic, regression threshold, score floors, experiment guardrails, five artifacts, and automatic failures.
+  - id: backlog_contract
+    status: passed
+    evidence: The evidence-ranked backlog records current external and dependency gates with exact integer inputs, recomputable scores, stable order, evidence paths, and owner inputs.
+  - id: task_graph_binding
+    status: passed
+    evidence: M16 declares measurable cadence, provider, regression, experiment, exercise, scoring, rollout, rollback, owner-input, and evidence requirements.
+  - id: runbook_contract
+    status: passed
+    evidence: The runbook defines monthly and quarterly operation, evidence minimization, absence handling, regression promotion, exercise safety, independent review, and append-only correction.
+  - id: adr_contract
+    status: passed
+    evidence: ADR-0068 compares four approaches, cites canonical official providers, defines the decision, and preserves rollback and historical evidence semantics.
+  - id: validator_selftest
+    status: passed
+    evidence: The completion fixture and adversarial mutations prove that cadence, freshness, ranking, recurring controls, rescoring, experiment guardrails, exercises, artifacts, approvals, and score floors fail closed.
+  - id: exact_head_ci
+    status: pending
+    evidence: Exact final documentation-head CI, database replay, image, WooCommerce, security, and external CodeQL evidence is not yet bound.
+  - id: owner_roster
+    status: pending
+    evidence: Product, engineering, security, operations, monthly-review, quarterly-exercise, and owner roles require named environment-owned assignments.
+  - id: schedules_active
+    status: pending
+    evidence: Approved UTC monthly and quarterly schedule instances and notification routes are not active.
+  - id: monthly_review_primary
+    status: pending
+    evidence: The first complete elapsed calendar-month review has not been recorded.
+  - id: monthly_review_repeat
+    status: pending
+    evidence: A second distinct consecutive calendar-month review has not been recorded.
+  - id: monthly_continuity
+    status: pending
+    evidence: Two complete consecutive periods with no source or review gap cannot yet be proven.
+  - id: activation_review
+    status: pending
+    evidence: Activation baseline, observation, target, interpretation, and disposition require elapsed source evidence.
+  - id: errors_support_review
+    status: pending
+    evidence: Error and support patterns require fresh sources, stable fingerprints, impact, and disposition.
+  - id: reconciliation_fraud_review
+    status: pending
+    evidence: Immutable-value reconciliation and minimized fraud outcomes require elapsed review evidence.
+  - id: campaign_churn_review
+    status: pending
+    evidence: Campaign outcomes and churn require versioned definitions, fresh sources, and owner interpretation.
+  - id: usability_performance_review
+    status: pending
+    evidence: Merchant and customer usability plus supported performance evidence require an elapsed review.
+  - id: security_billing_review
+    status: pending
+    evidence: Security findings and managed billing usage, invoice, entitlement, and protected-path evidence require an elapsed review.
+  - id: provider_review
+    status: pending
+    evidence: Every canonical official provider source must be reviewed through the same cutoff with impact and ownership.
+  - id: dependency_pins
+    status: pending
+    evidence: Runtime, container, action, SDK, API revision, WordPress, WooCommerce, PHP, PostgreSQL, and Authentik pins require current support review.
+  - id: backlog_freshness
+    status: pending
+    evidence: The backlog must be regenerated from the completed review cutoff and contain no stale or silently closed item.
+  - id: backlog_priority
+    status: pending
+    evidence: Final score arithmetic, order, due dates, dependencies, and accepted-risk links require independent review.
+  - id: no_overdue_critical_high
+    status: pending
+    evidence: Completion requires no overdue unaccepted Critical or High item at the review cutoff.
+  - id: recurring_failure_inventory
+    status: pending
+    evidence: Stable fingerprints and occurrence counts require two elapsed review periods and incident/support evidence.
+  - id: durable_regression_controls
+    status: pending
+    evidence: Every failure reaching the second occurrence must bind at least one merged test, validator, monitor, runbook, or agent rule.
+  - id: module_rescoring
+    status: pending
+    evidence: Every module materially changed during the review periods must be rescored against exact evidence.
+  - id: score_history
+    status: pending
+    evidence: Prior and current whole-product and affected-module scores must remain independently reconstructable.
+  - id: experiment_registry
+    status: pending
+    evidence: Experiments require immutable declarations of primary metric, baseline, target, guardrails, exposure, owner, and decision.
+  - id: experiment_guardrails
+    status: pending
+    evidence: Every promoted experiment must show primary-metric improvement and all guardrails passing; every breach must stop.
+  - id: quarterly_restore
+    status: pending
+    evidence: A current approved full-service restore exercise with measured RPO, RTO, source coverage, and zero unexplained difference is absent.
+  - id: quarterly_tenant_isolation
+    status: pending
+    evidence: A current adversarial tenant-isolation and revoked-membership exercise is absent.
+  - id: quarterly_privacy
+    status: pending
+    evidence: A current consent, suppression, export, deletion, pseudonymization, and retention exercise is absent.
+  - id: quarterly_scim
+    status: pending
+    evidence: A current SCIM deprovisioning, stale-session, forged-domain, group, and metadata exercise is absent.
+  - id: quarterly_incident
+    status: pending
+    evidence: A current protected-path incident notification, escalation, postmortem, and regression exercise is absent.
+  - id: exercise_reconciliation
+    status: pending
+    evidence: All five distinct quarterly exercise reports must reconcile with zero protected-value, tenant, privacy, recovery, checkout, or data-loss difference.
+  - id: adr_supersession
+    status: pending
+    evidence: The elapsed periods must prove changed material decisions append a superseding ADR and do not rewrite history.
+  - id: living_documents_current
+    status: pending
+    evidence: Roadmap, task graph, status, risks, scorecard, changelog, iteration log, backlog, and evidence index must agree through the review cutoff.
+  - id: independent_review
+    status: pending
+    evidence: An independent reviewer must verify chronology, freshness, digests, rankings, controls, scores, experiments, exercises, and document agreement.
+  - id: owner_approval
+    status: pending
+    evidence: Product, engineering, security, operations, and owner approvals remain unissued.
+automaticFails:
+  - a due monthly review or quarterly exercise is missing stale incomplete or represented as a healthy zero
+  - a Critical backlog item is overdue or a High item exceeds its bounded remediation window without approved risk evidence
+  - a recurring failure reaches two occurrences without at least one linked durable regression control
+  - a material change ships without rescoring every affected module against the current evidence
+  - an experiment is promoted without improving its declared primary metric or while any guardrail fails
+  - a provider or dependency change is accepted without official-source review impact classification and an owner
+  - a quarterly restore tenancy privacy SCIM or incident exercise has an unexplained failure or protected-value difference
+  - an obsolete decision is silently rewritten instead of being superseded through an ADR
+  - completion is claimed below 90 total below a category floor or without distinct digest-bound artifacts and all approvals

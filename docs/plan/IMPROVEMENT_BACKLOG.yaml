@@ -1,0 +1,112 @@
+schema: starfiniti.improvement-backlog.v1
+version: 1
+observedAt: 2026-08-27T14:00:00Z
+ranking:
+  formula: severityPoints + (2 * merchantImpact) + (2 * customerImpact) + confidence - effort - dependencyPenalty
+  severityPoints: { critical: 40, high: 30, medium: 20, low: 10 }
+  sort: [score-descending, id-ascending]
+items:
+  - id: IMP-002
+    title: Deploy protected production monitoring and independent incident routes
+    severity: critical
+    merchantImpact: 9
+    customerImpact: 10
+    effort: 7
+    confidence: 10
+    dependencyPenalty: 7
+    score: 74
+    status: blocked_external
+    evidence: docs/plan/evidence/M15/operations.yaml
+    dependency: Approved monitoring environment, receiver destinations, and named on-call roster.
+    ownerInput: Operations owner approves the environment and supplies primary and secondary routes outside Git.
+  - id: IMP-001
+    title: Prove the real WooCommerce pilot and protected-value reconciliation
+    severity: critical
+    merchantImpact: 10
+    customerImpact: 10
+    effort: 7
+    confidence: 10
+    dependencyPenalty: 10
+    score: 73
+    status: blocked_external
+    evidence: docs/plan/evidence/M01/production-pilot.yaml
+    dependency: Approved real WooCommerce store access and pilot authorization.
+    ownerInput: Product owner selects the store and approves the bounded test customer and orders.
+  - id: IMP-003
+    title: Complete full-service clean-room recovery twice against the release candidate
+    severity: critical
+    merchantImpact: 9
+    customerImpact: 10
+    effort: 8
+    confidence: 9
+    dependencyPenalty: 8
+    score: 71
+    status: blocked_external
+    evidence: docs/plan/evidence/M15/recovery.yaml
+    dependency: Approved isolated recovery host, protected evidence destination, and recovery owners.
+    ownerInput: Operations and security approve the disposable recovery environment and roster.
+  - id: IMP-004
+    title: Close independent penetration testing and exact-image security evidence
+    severity: critical
+    merchantImpact: 8
+    customerImpact: 10
+    effort: 8
+    confidence: 9
+    dependencyPenalty: 10
+    score: 67
+    status: blocked_external
+    evidence: docs/plan/evidence/M15/security.yaml
+    dependency: Independent tester, production-safe scope, retest, and owner acceptance.
+    ownerInput: Security owner commissions and approves the independent test and retest.
+  - id: IMP-005
+    title: Run the immutable thirty-day Starfiniti GA canary
+    severity: high
+    merchantImpact: 10
+    customerImpact: 10
+    effort: 10
+    confidence: 10
+    dependencyPenalty: 10
+    score: 60
+    status: blocked_dependency
+    evidence: docs/plan/evidence/M15/ga-canary.yaml
+    dependency: M00 through M15 prerequisites, approved release, pilot, operations, and owner GA authority.
+    ownerInput: Product owner approves the release, pilot window, claim review, and final GA decision.
+  - id: IMP-006
+    title: Close managed Stripe billing canary without affecting protected loyalty paths
+    severity: high
+    merchantImpact: 8
+    customerImpact: 8
+    effort: 8
+    confidence: 9
+    dependencyPenalty: 10
+    score: 53
+    status: blocked_external
+    evidence: docs/plan/evidence/M14/managed-billing-canary.yaml
+    dependency: Restricted Stripe test key, approved Price and Meter IDs, test clock, and canary approval.
+    ownerInput: Product owner supplies commercial policy and Stripe sandbox configuration outside Git.
+  - id: IMP-007
+    title: Exercise tenant SSO SCIM and immediate deprovisioning with an enterprise IdP
+    severity: high
+    merchantImpact: 8
+    customerImpact: 6
+    effort: 8
+    confidence: 9
+    dependencyPenalty: 10
+    score: 49
+    status: blocked_external
+    evidence: docs/plan/evidence/M13/enterprise-identity-canary.yaml
+    dependency: Approved enterprise OIDC or SAML and SCIM test tenant.
+    ownerInput: Identity owner supplies a bounded test tenant and provisioning fixtures outside Git.
+  - id: IMP-008
+    title: Exercise provider-neutral notifications and Klaviyo reconciliation
+    severity: medium
+    merchantImpact: 7
+    customerImpact: 7
+    effort: 6
+    confidence: 8
+    dependencyPenalty: 8
+    score: 42
+    status: blocked_external
+    evidence: docs/plan/evidence/M08/notification-canary.yaml
+    dependency: Approved SMTP sink and managed Klaviyo test credentials.
+    ownerInput: Product owner approves provider fixtures, consent cases, and bounded delivery recipients.
