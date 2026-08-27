@@ -1,0 +1,89 @@
+schema: starfiniti.capacity-workload.v1
+profile: single-site-enterprise-pilot
+status: candidate
+driver:
+  implementation: node-fixed-arrival-v1
+  maximumEventLoopP95Ms: 25
+  maximumCpuPercent: 70
+  maximumMemoryMiB: 1024
+phases:
+  - id: warmup
+    durationSeconds: 120
+    rateMultiplier: 0.25
+    measured: false
+  - id: sustained
+    durationSeconds: 900
+    rateMultiplier: 1
+    measured: true
+  - id: burst
+    durationSeconds: 120
+    rateMultiplier: 2
+    measured: true
+  - id: recovery
+    durationSeconds: 300
+    rateMultiplier: 0.5
+    measured: true
+scenarios:
+  - id: dashboard_readiness
+    adapter: readiness
+    method: GET
+    path: /api/healthz
+    mutates: false
+    ratePerSecond: 10
+    concurrencyLimit: 32
+    timeoutMs: 2000
+    maximumResponseBytes: 64
+    expectedStatuses: [200]
+    thresholds:
+      maximumErrorRate: 0.001
+      maximumP95Ms: 250
+      maximumP99Ms: 500
+      maximumScheduleLagP95Ms: 50
+  - id: customer_wallet_read
+    adapter: authenticated_get
+    credentialFile: customer-cookie.txt
+    method: GET
+    path: /account/loyalty
+    mutates: false
+    ratePerSecond: 20
+    concurrencyLimit: 64
+    timeoutMs: 3000
+    maximumResponseBytes: 524288
+    expectedStatuses: [200]
+    thresholds:
+      maximumErrorRate: 0.001
+      maximumP95Ms: 300
+      maximumP99Ms: 750
+      maximumScheduleLagP95Ms: 50
+  - id: service_customer_intake
+    adapter: service_customer_upsert
+    credentialFile: service-api.token
+    method: POST
+    path: /api/v1/service/customers
+    mutates: true
+    ratePerSecond: 5
+    concurrencyLimit: 32
+    timeoutMs: 3000
+    maximumResponseBytes: 32768
+    expectedStatuses: [201]
+    thresholds:
+      maximumErrorRate: 0.001
+      maximumP95Ms: 750
+      maximumP99Ms: 1500
+      maximumScheduleLagP95Ms: 75
+  - id: woocommerce_order_intake
+    adapter: woocommerce_order_upsert
+    credentialFile: woocommerce.json
+    method: POST
+    path: /api/v1/integrations/woocommerce/events
+    mutates: true
+    ratePerSecond: 10
+    concurrencyLimit: 64
+    timeoutMs: 3000
+    maximumResponseBytes: 65536
+    expectedStatuses: [202]
+    thresholds:
+      maximumErrorRate: 0.001
+      maximumP95Ms: 750
+      maximumP99Ms: 1500
+      maximumScheduleLagP95Ms: 75

@@ -1,0 +1,114 @@
+schema: starfiniti.capacity-evidence.v1
+status: in_progress
+observedAt: 2026-08-27T06:45:17Z
+currentProduction:
+  release: v0.1.11
+  applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
+candidate:
+  branch: codex/m15-capacity-envelope
+  commit: 10b07286c221740c7261f7a704465ca6329669c8
+  approvedEnvironment: false
+  capacityClaimApproved: false
+workload:
+  path: infrastructure/testing/capacity/workload.yaml
+  sha256: 8e0bf683fadd7c75cdb48883aba0351fbc88a1151669ec0f4ea8d456151fe442
+  profile: single-site-enterprise-pilot
+claim:
+  enabled: false
+  supportedSustainedRequestsPerSecond: null
+  supportedBurstRequestsPerSecond: null
+  supportedOrdersPerMinute: null
+  environmentEvidencePath: null
+  environmentEvidenceSha256: null
+  passingRunPath: null
+  passingRunSha256: null
+  repeatRunPath: null
+  repeatRunSha256: null
+  independentRunPath: null
+  independentRunSha256: null
+  reconciliationPath: null
+  reconciliationSha256: null
+checks:
+  - id: workload_contract
+    status: passed
+    evidence: Four concurrent domain scenarios and explicit warmup sustained burst and recovery phases have bounded rates concurrency timeouts responses and thresholds.
+  - id: fixed_arrival_runner
+    status: passed
+    evidence: The local self-test exercises schedule lag drops latency percentiles driver headroom threshold decisions and a nonzero failed-run result without an external target.
+  - id: domain_adapters
+    status: passed
+    evidence: The self-test reaches readiness authenticated account service-customer and exact-body signed WooCommerce adapters with unique non-email synthetic identities.
+  - id: approval_target_guard
+    status: passed
+    evidence: Short-lived approval binds the clean driver commit canonical origin and workload digests plus duration rate and target class; mutations are restricted to local or disposable staging targets.
+  - id: minimized_report
+    status: passed
+    evidence: Aggregate output excludes target origin request paths bodies headers selectors identifiers credentials cookies tokens signatures customer data and provider material.
+  - id: independent_driver_crosscheck
+    status: pending
+    evidence: The passing boundary must be repeated with a mature independent fixed-arrival load driver before the supported envelope is published.
+  - id: exact_head_ci
+    status: passed
+    evidence: GitHub Actions run 33046822172 passed all seven jobs at exact implementation commit 10b07286c221740c7261f7a704465ca6329669c8 after adversarial review.
+  - id: approved_environment
+    status: pending
+    evidence: A disposable production-like target and bounded run window require approval.
+  - id: exact_environment_inventory
+    status: pending
+    evidence: Application database proxy worker storage network image migration and plugin versions require exact run-bound evidence.
+  - id: production_like_data_shape
+    status: pending
+    evidence: Tenant member order ledger lot reward campaign notification and billing cardinalities require an approved synthetic production-like dataset.
+  - id: monitoring_coverage
+    status: pending
+    evidence: Application PostgreSQL pool worker queue WAL storage proxy network and checkout monitoring must cover every run phase.
+  - id: driver_headroom
+    status: pending
+    evidence: The isolated driver must remain below CPU memory and event-loop thresholds with zero dropped schedules.
+  - id: sustained_phase
+    status: pending
+    evidence: The full sustained mixed workload has not run in the approved environment.
+  - id: burst_phase
+    status: pending
+    evidence: The two-times-rate burst has not run in the approved environment.
+  - id: recovery_phase
+    status: pending
+    evidence: Queue latency database storage WAL and checkout health have not been observed returning inside the recovery thresholds.
+  - id: wallet_latency
+    status: pending
+    evidence: Customer wallet read p95 below 300 milliseconds requires measured evidence.
+  - id: event_to_ledger_latency
+    status: pending
+    evidence: Event acceptance to committed immutable ledger-effect p95 below 10 seconds requires measured evidence.
+  - id: request_reconciliation
+    status: pending
+    evidence: Scheduled completed dropped failed and accepted request totals require exact run reconciliation.
+  - id: ledger_reconciliation
+    status: pending
+    evidence: Accepted canonical events effects transactions entries wallets and lots require zero-difference reconciliation.
+  - id: woocommerce_reconciliation
+    status: pending
+    evidence: WooCommerce orders canonical events connector commands native coupons refunds and dead letters require zero-difference reconciliation.
+  - id: repeatability
+    status: pending
+    evidence: A second exact environment and workload run must pass within the approved throughput and latency variance.
+  - id: supported_limit_documented
+    status: pending
+    evidence: No supported capacity will be published until the highest passing run and first failed higher run are recorded separately.
+automaticFails:
+  - a mutating workload reaches production or any target not classified as local or disposable staging
+  - target origin credential selector token cookie signing key signature request body or response body enters a report log or repository file
+  - the approval origin workload rate duration target class or expiry differs from the executed run
+  - scheduled work queues without bound or dropped schedules are omitted from the result
+  - driver CPU memory or event-loop saturation is attributed to target capacity
+  - API acceptance is reported as successful value processing without canonical effect and immutable ledger reconciliation
+  - duplicate delayed or retried input creates more than one business effect
+  - cross-tenant data authority or personal identity is used to manufacture throughput
+  - checkout depends synchronously on the hub or regresses during the run
+  - a burst passes only because work remains outside the declared recovery window
+  - application database storage network worker plugin data shape or code evidence is absent stale or not bound to the run
+  - a failed higher workload is represented as supported capacity
+  - a report is reused after workload environment candidate or threshold drift
+  - the repeated run exceeds the approved variance or lacks independent reconciliation
+  - the supported boundary is not cross-checked with an independent mature fixed-arrival driver
+  - any critical security tenancy ledger privacy recovery data-loss or immutable-history failure remains
