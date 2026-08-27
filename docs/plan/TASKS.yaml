@@ -554,7 +554,11 @@ tasks:
         every later feature is tenant-gated server-side,
         disabling preserves history and promised value,
       ]
-    owner_inputs: []
+    owner_inputs:
+      [
+        approved release and bounded pilot window,
+        approved real WooCommerce store and test member,
+      ]
     acceptance:
       [
         versioned catalogue and effective-dated limits exist,
@@ -1388,10 +1392,10 @@ tasks:
           - ledger coupon queue and presentation state reconcile exactly before and after rollback rehearsal and observation
           - seven-category module score reaches at least 90 with every category at least 80 percent and no deterministic failure
         evidence:
-          - exact-head run 32875639062 at 639eac4 passed baseline both production images clean database replay every concurrency probe and all four WooCommerce runtimes after S05 evidence closure
-          - current production dashboard health and login return HTTP 200 with no-store or private cache policy while unauthenticated Auth and REST roots reject with HTTP 401
-          - docs/plan/evidence/M09/canary.yaml records 30 minimized checks and a deterministic seven-category pre-canary score of 88; completion is impossible while any check is pending failed or below threshold
-          - production mutation remains intentionally pending because PR 36 is a stacked unreviewed draft rather than an approved release and the configured non-interactive Proxmox key is rejected
+          - integrated exact-head CI run 33100009132 and Security run 33100009100 passed at c989229 with all eleven checks green
+          - current production dashboard health and login return HTTP 200 while unauthenticated Auth and REST roots reject with HTTP 401 and the approved read-only Proxmox route confirms both VMs are running
+          - docs/plan/evidence/M09/canary.yaml records 34 checks four approvals nine path and digest bound production artifacts fixed automatic failures and a deterministic seven-category pre-canary score of 88
+          - production mutation remains intentionally pending because draft PR 57 is not an approved release and no real WooCommerce pilot or canary window is approved
     risks: [R-005, R-009, R-030]
     docs:
       [

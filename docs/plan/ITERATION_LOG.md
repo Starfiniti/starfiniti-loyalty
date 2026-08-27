@@ -1,5 +1,14 @@
 # Iteration Log
 
+## 2026-08-27 — M09 digest-bound storefront closeout hardening
+
+- Adversarially reviewed the legacy M09 closeout and found that it had no production artifacts, only one false-completion self-test, two loosely checked approvals, key-only secret scanning, mutable automatic-failure prose, stale operator status, and no binding between a passed production claim and exact evidence.
+- Replaced it with a 34-check gate covering the complete hosted, merchant, WooCommerce snapshot, classic, Blocks, no-script, native coupon, Hub-outage, worker-outage, non-canary isolation, privacy, reconciliation, rollback, observation, and final zero-difference boundary.
+- Added four synchronized approvals, nine unique path- and SHA-256-bound minimized JSON artifacts, bounded descriptor-first reads, exact candidate and check coverage, forbidden sensitive keys and values, fixed-ID/fixed-text automatic failures, five completed prerequisite slices, task/score synchronization, and an attainable positive fixture.
+- Corruption fixtures reject pending completion, approval drift, missing/duplicate/forward-looking checks, short commits, changed scores, sensitive material, weakened failures, missing/unsafe/reused/digest-drifted artifacts, unsafe public baselines, incomplete slices, prose-only closure, and category-floor bypass.
+- Exact integrated candidate `c989229` passed CI `33100009132` and Security `33100009100`; the refreshed read-only artifact records public/Auth/REST availability and running application/Supabase VMs without production mutation.
+- The honest M09 score remains 88/100, with 8 controls passed and 26 pending. Operability is 4/10 and blocks completion until an approved release, real WooCommerce pilot, fresh recovery point, disabled deployment, hosted/local/outage canaries, exact reconciliation, rollback, and observation pass.
+
 ## 2026-08-27 — M08 fail-closed notification canary gate
 
 - Reconstructed M08 after the provider-neutral event/consent, SMTP, Klaviyo, signed webhook, and merchant template/health slices and confirmed S06 still lacked a machine-enforced production closeout.

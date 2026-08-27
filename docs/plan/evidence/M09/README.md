@@ -65,13 +65,14 @@ Status: in progress. M09-S01 through M09-S05 are complete; M09-S06 disabled depl
 ## S06 — Canary and close
 
 - Status: in progress; pre-canary automation is complete and no production mutation has been attempted.
-- Exact-head CI: [run 32875639062](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/32875639062) passed the closure commit across baseline, both images, clean database replay, concurrency probes, and all four WooCommerce runtime cells.
-- Machine gate: [`canary.yaml`](canary.yaml) is validated during `npm run check`. It requires 30 unique minimized checks, exact scoring arithmetic, at least 90/100 overall, at least 80% in every category, an approved release, working operator access, no failed/pending checks, and matching completed task state before it can claim completion.
+- Integrated exact-head CI: [run 33100009132](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/33100009132) and [Security run 33100009100](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/33100009100) passed candidate `c989229d84a08a9d377b23c747219661fbb74a31` across all eleven checks.
+- Machine gate: [`canary.yaml`](canary.yaml) is validated during `npm run check`. It requires 34 exact checks, four synchronized approvals, seven-category arithmetic, at least 90/100 overall, at least 80% in every category, nine unique path- and SHA-256-bound production artifacts, no failed/pending check, and matching completed task state before it can claim completion.
+- Artifact and corruption boundary: verified production claims must be unique minimized JSON files under the M09 production evidence root, safely opened as bounded regular files, candidate-commit bound, check-coverage exact, and free of contact, coupon, reusable signing, raw payload, and private ledger evidence. Self-tests reject approval drift, short commits, missing/duplicate checks, forward-looking passed claims, weakened automatic failures, unsafe/reused paths and digests, prose-only closure, task-score drift, incomplete prerequisite slices, and category-floor bypass.
 - Current pre-canary score: 88/100. Correctness, security, ledger reliability, tests, performance, and maintainability clear their category floors; operability remains 4/10 until the disabled deployment, production rollback, observation, and reconciliation evidence exists.
-- Public baseline on 2026-08-25: canonical dashboard and API DNS resolve; dashboard health and login return HTTP 200 with no-store/private cache behavior; unauthenticated Auth and REST roots reject with HTTP 401.
-- Safe stop: PR #36 is a stacked unreviewed draft, not an approved release, and the configured non-interactive Proxmox key is currently rejected. The release contract forbids deploying it or improvising production access. These conditions do not invalidate the implementation evidence and do not permit a false canary claim.
+- Public/read-only baseline: canonical dashboard and API DNS resolve; dashboard health and login return HTTP 200; unauthenticated Auth and REST roots reject with HTTP 401; the approved Proxmox route confirms both VMs are running without mutation.
+- Safe stop: PR #57 remains a draft, not an approved release, and no real WooCommerce store or canary window is approved. The release contract forbids deployment or tenant enablement. These conditions preserve implementation evidence without permitting a false canary claim.
 
 ## Remaining
 
-- Reviewed stacked merge and approved immutable release.
-- Restored production operator access, fresh recovery point, disabled migration/application deployment, Starfiniti hosted and WooCommerce canary, outage/rollback rehearsal, exact reconciliation, observation, and score of at least 90.
+- Reviewed merge and approved immutable release and pilot store/window.
+- Fresh recovery point, disabled migration/application deployment, Starfiniti hosted and WooCommerce canary, outage/rollback rehearsal, exact reconciliation, observation, and score of at least 90.
