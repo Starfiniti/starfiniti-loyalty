@@ -307,6 +307,794 @@ const readBoundArtifact = (relativePath, expectedDigest, artifactId) => {
   return document;
 };
 
+const isPlainObject = (value) =>
+  value !== null &&
+  typeof value === "object" &&
+  !Array.isArray(value) &&
+  Object.getPrototypeOf(value) === Object.prototype;
+
+const exactKeys = (value, expected, label) => {
+  if (!isPlainObject(value)) fail(`${label} must be an object`);
+  const actual = Object.keys(value).sort();
+  const wanted = [...expected].sort();
+  if (
+    actual.length !== wanted.length ||
+    actual.some((key, index) => key !== wanted[index])
+  )
+    fail(`${label} keys differ`);
+};
+
+const exactUtcTime = (value, label) => {
+  const parsed = typeof value === "string" ? Date.parse(value) : Number.NaN;
+  if (
+    typeof value !== "string" ||
+    !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/u.test(value) ||
+    Number.isNaN(parsed) ||
+    new Date(parsed).toISOString().replace(".000Z", "Z") !== value
+  )
+    fail(`${label} must be an exact UTC timestamp`);
+  return parsed;
+};
+
+const exactNonzeroDigest = (value, label) => {
+  if (!digestPattern.test(value) || /^0{64}$/u.test(value))
+    fail(`${label} must be an exact nonzero SHA-256 digest`);
+};
+
+const exactDigestMap = (value, keys, label) => {
+  exactKeys(value, keys, label);
+  const seen = new Set();
+  for (const key of keys) {
+    exactNonzeroDigest(value[key], `${label} ${key}`);
+    if (seen.has(value[key])) fail(`${label} reuses one digest`);
+    seen.add(value[key]);
+  }
+};
+
+const exactPositiveMap = (value, expected, label) => {
+  exactKeys(value, Object.keys(expected), label);
+  for (const [key, wanted] of Object.entries(expected)) {
+    if (
+      !Number.isSafeInteger(value[key]) ||
+      value[key] < 1 ||
+      value[key] !== wanted
+    )
+      fail(`${label} ${key} differs`);
+  }
+};
+
+const exactZeroMap = (value, keys, label) => {
+  exactKeys(value, keys, label);
+  for (const key of keys)
+    if (value[key] !== 0) fail(`${label} zero-difference evidence differs`);
+};
+
+const exactAssertions = (value, expectedIds, label) => {
+  if (!Array.isArray(value) || value.length !== expectedIds.length)
+    fail(`${label} assertions differ`);
+  const ids = new Set();
+  const digests = new Set();
+  for (const assertion of value) {
+    exactKeys(
+      assertion,
+      ["id", "status", "evidenceSha256", "differenceCount"],
+      `${label} assertion`,
+    );
+    if (
+      !expectedIds.includes(assertion.id) ||
+      ids.has(assertion.id) ||
+      assertion.status !== "passed" ||
+      assertion.differenceCount !== 0
+    )
+      fail(`${label} assertion differs`);
+    exactNonzeroDigest(
+      assertion.evidenceSha256,
+      `${label}.${assertion.id} evidence`,
+    );
+    if (digests.has(assertion.evidenceSha256))
+      fail(`${label} assertions reuse one evidence digest`);
+    ids.add(assertion.id);
+    digests.add(assertion.evidenceSha256);
+  }
+};
+
+const releaseComponentKeys = [
+  "dashboardImage",
+  "workerImage",
+  "wordpressPlugin",
+  "migrationInventory",
+  "rewardDefinitionContract",
+  "programmeContract",
+  "redemptionContract",
+  "woocommerceCommandContract",
+  "manualFulfilmentContract",
+];
+const approvalPolicyKeys = [
+  "pilotScope",
+  "rollout",
+  "rewardValueCeiling",
+  "availability",
+  "stacking",
+  "nativeFulfilment",
+  "manualFulfilment",
+  "ambiguousOutcome",
+  "observation",
+];
+const rewardEvidenceKeys = [
+  "nativeCapability",
+  "merchantWorkflow",
+  "customerReward",
+  "historicalVersion",
+  "fixedDiscount",
+  "percentageDiscount",
+  "freeShipping",
+  "freeProduct",
+  "restrictionMatrix",
+  "availabilityCapacity",
+  "perCustomerLimit",
+  "nativeCancellationExpiry",
+  "manualClaim",
+  "manualFulfilment",
+  "manualRejectionCompensation",
+  "ambiguousNativeRecovery",
+  "connectorOutageCheckout",
+  "workerOutageCheckout",
+  "crossTenantDenial",
+  "privacyScan",
+  "deterministicFailure",
+  "transientRetry",
+];
+const rewardCounts = {
+  nativeCapabilityPreflight: 1,
+  merchantWorkflow: 1,
+  customerReward: 1,
+  historicalVersion: 2,
+  fixedDiscount: 1,
+  percentageDiscount: 1,
+  freeShipping: 1,
+  freeProduct: 1,
+  restrictionMatrix: 4,
+  availabilityCapacity: 2,
+  perCustomerLimit: 1,
+  nativeCancellationExpiry: 2,
+  manualClaim: 1,
+  manualFulfilment: 1,
+  manualRejectionCompensation: 1,
+  ambiguousNativeRecovery: 1,
+  connectorOutageCheckout: 1,
+  workerOutageCheckout: 1,
+  crossTenantDenial: 1,
+  acceptedWork: 6,
+};
+const rewardDifferenceKeys = [
+  "unsupportedReward",
+  "unsupportedStoredValue",
+  "duplicateBusinessEffect",
+  "capacityOversubscription",
+  "memberLimitBypass",
+  "ambiguousPointsRelease",
+  "duplicateCompensation",
+  "browserAuthority",
+  "crossTenantExposure",
+  "checkoutBlocked",
+  "acceptedWorkStranded",
+  "ledger",
+  "balance",
+  "lot",
+  "reservation",
+  "capacity",
+  "command",
+  "coupon",
+  "case",
+  "queue",
+  "privacy",
+  "loyaltyValue",
+  "unresolvedAmbiguousOutcome",
+  "unresolvedCritical",
+  "unresolvedHigh",
+];
+const canaryCeilingObservedKeys = {
+  maxCustomers: "customers",
+  maxRewardEffects: "rewardEffects",
+  maxReservedPoints: "reservedPoints",
+  maxQuantityUnits: "quantityUnits",
+  maxLiabilityMinor: "liabilityMinor",
+  maxManualCases: "manualCases",
+  maxReservationHours: "reservationHours",
+};
+
+const validateArtifactDetails = (artifactId, document, candidateEvidence) => {
+  const details = document.details;
+  const observedAt = exactUtcTime(
+    document.observedAt,
+    `${artifactId} observedAt`,
+  );
+  if (artifactId === "read_only_baseline") {
+    exactKeys(
+      details,
+      [
+        "dashboardHealth",
+        "login",
+        "unsignedWooCommerceIngress",
+        "canonicalDns",
+        "applicationVm",
+        "databaseVm",
+        "applicationVmState",
+        "databaseVmState",
+        "scope",
+        "mutationCount",
+      ],
+      "read_only_baseline details",
+    );
+    for (const key of [
+      "dashboardHealth",
+      "login",
+      "unsignedWooCommerceIngress",
+      "canonicalDns",
+    ])
+      if (details[key] !== candidateEvidence.publicBaseline[key])
+        fail(`read_only_baseline ${key} differs from the manifest`);
+    if (
+      !Number.isSafeInteger(details.applicationVm) ||
+      details.applicationVm < 1 ||
+      !Number.isSafeInteger(details.databaseVm) ||
+      details.databaseVm < 1 ||
+      details.applicationVm === details.databaseVm ||
+      details.applicationVmState !== "running" ||
+      details.databaseVmState !== "running" ||
+      details.scope !== "read_only" ||
+      details.mutationCount !== 0
+    )
+      fail("read_only_baseline runtime or mutation evidence differs");
+    return;
+  }
+  if (artifactId === "release_inventory") {
+    exactKeys(
+      details,
+      [
+        "release",
+        "pullRequest",
+        "repositoryCommit",
+        "components",
+        "deploymentState",
+        "expandedRewardsEnabled",
+        "rewardWorkerEnabled",
+        "manualFulfilmentEnabled",
+        "registeredMigrationDifference",
+        "assertions",
+      ],
+      "release_inventory details",
+    );
+    if (
+      !/^v\d+\.\d+\.\d+$/u.test(details.release) ||
+      details.release === candidateEvidence.currentProduction.release ||
+      details.pullRequest !== candidateEvidence.candidate.pullRequest ||
+      details.repositoryCommit !== candidateEvidence.candidate.commit ||
+      details.deploymentState !== "disabled" ||
+      details.expandedRewardsEnabled !== false ||
+      details.rewardWorkerEnabled !== false ||
+      details.manualFulfilmentEnabled !== false ||
+      details.registeredMigrationDifference !== 0
+    )
+      fail("release_inventory identity or disabled state differs");
+    exactDigestMap(
+      details.components,
+      releaseComponentKeys,
+      "release_inventory components",
+    );
+    exactAssertions(
+      details.assertions,
+      artifactCheckBindings.get(artifactId),
+      artifactId,
+    );
+    return;
+  }
+  if (artifactId === "approval_record") {
+    exactKeys(
+      details,
+      [
+        "finalizedAt",
+        "release",
+        "policies",
+        "ceilings",
+        "approvals",
+        "artifactSha256",
+      ],
+      "approval_record details",
+    );
+    const finalizedAt = exactUtcTime(
+      details.finalizedAt,
+      "approval_record finalizedAt",
+    );
+    if (finalizedAt > observedAt || !/^v\d+\.\d+\.\d+$/u.test(details.release))
+      fail("approval_record time or release differs");
+    exactDigestMap(
+      details.policies,
+      approvalPolicyKeys,
+      "approval_record policies",
+    );
+    exactKeys(
+      details.ceilings,
+      [
+        "maxCustomers",
+        "maxRewardEffects",
+        "maxReservedPoints",
+        "maxQuantityUnits",
+        "maxLiabilityMinor",
+        "maxManualCases",
+        "maxReservationHours",
+      ],
+      "approval_record ceilings",
+    );
+    for (const [key, maximum] of Object.entries({
+      maxCustomers: 10000,
+      maxRewardEffects: 100000,
+      maxReservedPoints: 1000000000,
+      maxQuantityUnits: 1000000,
+      maxLiabilityMinor: 1000000000,
+      maxManualCases: 10000,
+      maxReservationHours: 720,
+    }))
+      if (
+        !Number.isSafeInteger(details.ceilings[key]) ||
+        details.ceilings[key] < 1 ||
+        details.ceilings[key] > maximum
+      )
+        fail(`approval_record ${key} differs`);
+    const expectedApprovals = artifactCheckBindings.get(artifactId);
+    if (
+      !Array.isArray(details.approvals) ||
+      details.approvals.length !== expectedApprovals.length
+    )
+      fail("approval_record approvals differ");
+    const ids = new Set();
+    const approvalDigests = new Set();
+    for (const approval of details.approvals) {
+      exactKeys(
+        approval,
+        ["id", "approved", "approvedAt", "evidenceSha256"],
+        "approval_record approval",
+      );
+      if (
+        !expectedApprovals.includes(approval.id) ||
+        ids.has(approval.id) ||
+        approval.approved !== true ||
+        exactUtcTime(
+          approval.approvedAt,
+          `approval_record ${approval.id} approvedAt`,
+        ) > finalizedAt
+      )
+        fail(`approval_record ${approval.id} differs`);
+      exactNonzeroDigest(
+        approval.evidenceSha256,
+        `approval_record ${approval.id} evidence`,
+      );
+      if (approvalDigests.has(approval.evidenceSha256))
+        fail("approval_record approvals reuse one evidence digest");
+      ids.add(approval.id);
+      approvalDigests.add(approval.evidenceSha256);
+    }
+    exactKeys(
+      details.artifactSha256,
+      [...requiredArtifacts].filter((id) => id !== artifactId),
+      "approval_record artifact bindings",
+    );
+    for (const [id, sha256] of Object.entries(details.artifactSha256))
+      exactNonzeroDigest(sha256, `approval_record ${id} binding`);
+    return;
+  }
+  if (artifactId === "recovery_point") {
+    const keys = [
+      "baseBackup",
+      "walArchive",
+      "applicationConfiguration",
+      "connectorSigningReferenceInventory",
+      "pluginRollbackPackage",
+      "restoreEvidence",
+    ];
+    exactKeys(
+      details,
+      [
+        "createdAt",
+        "verifiedAt",
+        "components",
+        "restorable",
+        "rpoSeconds",
+        "mutationCount",
+        "assertions",
+      ],
+      "recovery_point details",
+    );
+    const createdAt = exactUtcTime(
+      details.createdAt,
+      "recovery_point createdAt",
+    );
+    const verifiedAt = exactUtcTime(
+      details.verifiedAt,
+      "recovery_point verifiedAt",
+    );
+    if (
+      createdAt > verifiedAt ||
+      verifiedAt > observedAt ||
+      details.restorable !== true ||
+      !Number.isSafeInteger(details.rpoSeconds) ||
+      details.rpoSeconds < 0 ||
+      details.rpoSeconds > 60 ||
+      details.mutationCount !== 0
+    )
+      fail("recovery_point timing, RPO, restore, or mutation evidence differs");
+    exactDigestMap(details.components, keys, "recovery_point components");
+    exactAssertions(
+      details.assertions,
+      artifactCheckBindings.get(artifactId),
+      artifactId,
+    );
+    return;
+  }
+  if (artifactId === "production_baseline") {
+    const sourceKeys = [
+      "programme",
+      "rewardDefinition",
+      "wallet",
+      "ledger",
+      "lot",
+      "reservation",
+      "capacity",
+      "nativeCommand",
+      "coupon",
+      "manualCase",
+      "queue",
+      "connector",
+      "checkoutAvailability",
+    ];
+    exactKeys(
+      details,
+      [
+        "capturedAt",
+        "sourceCoverageRatio",
+        "sources",
+        "expandedRewardsActive",
+        "rewardWorkerActive",
+        "manualFulfilmentActive",
+        "pendingAcceptedWork",
+        "differences",
+        "mutationCount",
+        "assertions",
+      ],
+      "production_baseline details",
+    );
+    if (
+      exactUtcTime(details.capturedAt, "production_baseline capturedAt") >
+        observedAt ||
+      details.sourceCoverageRatio !== 1 ||
+      details.expandedRewardsActive !== false ||
+      details.rewardWorkerActive !== false ||
+      details.manualFulfilmentActive !== false ||
+      details.pendingAcceptedWork !== 0 ||
+      details.mutationCount !== 0
+    )
+      fail("production_baseline authority or coverage evidence differs");
+    exactDigestMap(details.sources, sourceKeys, "production_baseline sources");
+    exactZeroMap(
+      details.differences,
+      [
+        "ledger",
+        "balance",
+        "reservation",
+        "capacity",
+        "coupon",
+        "manualCase",
+        "queue",
+        "privacy",
+        "loyaltyValue",
+      ],
+      "production_baseline differences",
+    );
+    exactAssertions(
+      details.assertions,
+      artifactCheckBindings.get(artifactId),
+      artifactId,
+    );
+    return;
+  }
+  if (artifactId === "canary_journal") {
+    exactKeys(
+      details,
+      [
+        "startedAt",
+        "endedAt",
+        "intervalCount",
+        "pilotOrganizationCount",
+        "nonCanaryEnabledCount",
+        "policies",
+        "components",
+        "evidence",
+        "ceilings",
+        "observed",
+        "counts",
+        "differences",
+        "sourceCoverageRatio",
+        "assertions",
+      ],
+      "canary_journal details",
+    );
+    const startedAt = exactUtcTime(
+      details.startedAt,
+      "canary_journal startedAt",
+    );
+    const endedAt = exactUtcTime(details.endedAt, "canary_journal endedAt");
+    if (
+      startedAt >= endedAt ||
+      endedAt > observedAt ||
+      !Number.isSafeInteger(details.intervalCount) ||
+      details.intervalCount < Math.ceil((endedAt - startedAt) / 3600000) ||
+      details.pilotOrganizationCount !== 1 ||
+      details.nonCanaryEnabledCount !== 0 ||
+      details.sourceCoverageRatio !== 1
+    )
+      fail("canary_journal timing, scope, or coverage differs");
+    exactDigestMap(
+      details.policies,
+      approvalPolicyKeys,
+      "canary_journal policies",
+    );
+    exactDigestMap(
+      details.components,
+      releaseComponentKeys,
+      "canary_journal components",
+    );
+    exactDigestMap(
+      details.evidence,
+      rewardEvidenceKeys,
+      "canary_journal evidence",
+    );
+    exactPositiveMap(details.counts, rewardCounts, "canary_journal counts");
+    exactKeys(
+      details.ceilings,
+      [
+        "maxCustomers",
+        "maxRewardEffects",
+        "maxReservedPoints",
+        "maxQuantityUnits",
+        "maxLiabilityMinor",
+        "maxManualCases",
+        "maxReservationHours",
+      ],
+      "canary_journal ceilings",
+    );
+    exactKeys(
+      details.observed,
+      [
+        "customers",
+        "rewardEffects",
+        "reservedPoints",
+        "quantityUnits",
+        "liabilityMinor",
+        "manualCases",
+        "reservationHours",
+      ],
+      "canary_journal observed",
+    );
+    for (const [ceilingKey, observedKey] of Object.entries(
+      canaryCeilingObservedKeys,
+    ))
+      if (
+        !Number.isSafeInteger(details.ceilings[ceilingKey]) ||
+        details.ceilings[ceilingKey] < 1 ||
+        !Number.isSafeInteger(details.observed[observedKey]) ||
+        details.observed[observedKey] < 1 ||
+        details.observed[observedKey] > details.ceilings[ceilingKey]
+      )
+        fail(`canary_journal ${ceilingKey} ceiling differs`);
+    exactZeroMap(
+      details.differences,
+      rewardDifferenceKeys,
+      "canary_journal differences",
+    );
+    exactAssertions(
+      details.assertions,
+      artifactCheckBindings.get(artifactId),
+      artifactId,
+    );
+    return;
+  }
+  if (artifactId === "reconciliation_report") {
+    const sourceKeys = [
+      "rewardDefinition",
+      "wallet",
+      "ledger",
+      "lot",
+      "reservation",
+      "capacity",
+      "nativeCommand",
+      "coupon",
+      "manualCase",
+      "queue",
+      "checkout",
+    ];
+    exactKeys(
+      details,
+      [
+        "sourceCoverageRatio",
+        "boundedConvergenceComplete",
+        "evidence",
+        "counts",
+        "sources",
+        "differences",
+        "assertions",
+      ],
+      "reconciliation_report details",
+    );
+    if (
+      details.sourceCoverageRatio !== 1 ||
+      details.boundedConvergenceComplete !== true
+    )
+      fail("reconciliation_report coverage or convergence differs");
+    exactDigestMap(
+      details.evidence,
+      rewardEvidenceKeys,
+      "reconciliation_report evidence",
+    );
+    exactPositiveMap(
+      details.counts,
+      rewardCounts,
+      "reconciliation_report counts",
+    );
+    exactDigestMap(
+      details.sources,
+      sourceKeys,
+      "reconciliation_report sources",
+    );
+    exactZeroMap(
+      details.differences,
+      rewardDifferenceKeys,
+      "reconciliation_report differences",
+    );
+    exactAssertions(
+      details.assertions,
+      artifactCheckBindings.get(artifactId),
+      artifactId,
+    );
+    return;
+  }
+  if (artifactId === "rollback_report") {
+    const stateKeys = [
+      "expandedRewardsDisabled",
+      "rewardWorkerStopped",
+      "manualFulfilmentDisabled",
+      "acceptedWorkDrainedOrHeld",
+      "priorImagesRestored",
+      "priorPluginRestored",
+      "rewardDefinitionsPreserved",
+      "reservationsPreserved",
+      "capacityPreserved",
+      "nativeStatesPreserved",
+      "manualCasesPreserved",
+      "ledgerPreserved",
+      "customerAccessAvailable",
+      "checkoutAvailable",
+    ];
+    exactKeys(
+      details,
+      [
+        "startedAt",
+        "endedAt",
+        "durationSeconds",
+        "states",
+        "differences",
+        "evidenceSha256",
+        "assertions",
+      ],
+      "rollback_report details",
+    );
+    const startedAt = exactUtcTime(
+      details.startedAt,
+      "rollback_report startedAt",
+    );
+    const endedAt = exactUtcTime(details.endedAt, "rollback_report endedAt");
+    if (
+      startedAt >= endedAt ||
+      endedAt > observedAt ||
+      !Number.isSafeInteger(details.durationSeconds) ||
+      details.durationSeconds !== (endedAt - startedAt) / 1000
+    )
+      fail("rollback_report timing differs");
+    exactKeys(details.states, stateKeys, "rollback_report states");
+    if (stateKeys.some((key) => details.states[key] !== true))
+      fail("rollback_report continuity differs");
+    exactZeroMap(
+      details.differences,
+      rewardDifferenceKeys,
+      "rollback_report differences",
+    );
+    exactNonzeroDigest(details.evidenceSha256, "rollback_report evidence");
+    exactAssertions(
+      details.assertions,
+      artifactCheckBindings.get(artifactId),
+      artifactId,
+    );
+    return;
+  }
+  if (artifactId === "observation_report") {
+    const latencyKeys = [
+      "reservationP95Ms",
+      "nativeCommandP95Ms",
+      "manualCaseP95Ms",
+      "reconciliationP95Ms",
+      "customerRewardP95Ms",
+      "checkoutP95Ms",
+    ];
+    exactKeys(
+      details,
+      [
+        "startedAt",
+        "endedAt",
+        "durationSeconds",
+        "sampleIntervalCount",
+        "sourceCoverageRatio",
+        "observationPolicySha256",
+        "latencyWithinApprovedBounds",
+        "loadWithinApprovedBounds",
+        "latencies",
+        "maxQueueDepth",
+        "counts",
+        "differences",
+        "evidenceSha256",
+        "assertions",
+      ],
+      "observation_report details",
+    );
+    const startedAt = exactUtcTime(
+      details.startedAt,
+      "observation_report startedAt",
+    );
+    const endedAt = exactUtcTime(details.endedAt, "observation_report endedAt");
+    if (
+      startedAt >= endedAt ||
+      endedAt > observedAt ||
+      !Number.isSafeInteger(details.durationSeconds) ||
+      details.durationSeconds !== (endedAt - startedAt) / 1000 ||
+      details.durationSeconds < 86400 ||
+      !Number.isSafeInteger(details.sampleIntervalCount) ||
+      details.sampleIntervalCount <
+        Math.ceil((endedAt - startedAt) / 3600000) ||
+      details.sourceCoverageRatio !== 1 ||
+      details.latencyWithinApprovedBounds !== true ||
+      details.loadWithinApprovedBounds !== true ||
+      !Number.isSafeInteger(details.maxQueueDepth) ||
+      details.maxQueueDepth < 0 ||
+      details.maxQueueDepth > 100000
+    )
+      fail("observation_report duration, coverage, or load evidence differs");
+    exactNonzeroDigest(
+      details.observationPolicySha256,
+      "observation_report policy",
+    );
+    exactKeys(details.latencies, latencyKeys, "observation_report latencies");
+    for (const key of latencyKeys)
+      if (
+        !Number.isSafeInteger(details.latencies[key]) ||
+        details.latencies[key] < 1 ||
+        details.latencies[key] > 60000
+      )
+        fail(`observation_report ${key} differs`);
+    exactPositiveMap(details.counts, rewardCounts, "observation_report counts");
+    exactZeroMap(
+      details.differences,
+      rewardDifferenceKeys,
+      "observation_report differences",
+    );
+    exactNonzeroDigest(details.evidenceSha256, "observation_report evidence");
+    exactAssertions(
+      details.assertions,
+      artifactCheckBindings.get(artifactId),
+      artifactId,
+    );
+    return;
+  }
+  fail(`unknown artifact detail contract ${artifactId}`);
+};
+
 const validateDocument = (
   candidateEvidence,
   candidateTasks = tasks,
@@ -318,15 +1106,10 @@ const validateDocument = (
   if (!new Set(["in_progress", "complete"]).has(candidateEvidence.status)) {
     fail("status must be in_progress or complete");
   }
-  if (
-    typeof candidateEvidence.observedAt !== "string" ||
-    !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(
-      candidateEvidence.observedAt,
-    ) ||
-    Number.isNaN(Date.parse(candidateEvidence.observedAt))
-  ) {
-    fail("observedAt must be an exact UTC timestamp");
-  }
+  const candidateObservedAt = exactUtcTime(
+    candidateEvidence.observedAt,
+    "observedAt",
+  );
   if (
     typeof candidateEvidence.currentProduction?.release !== "string" ||
     !/^v\d+\.\d+\.\d+$/.test(candidateEvidence.currentProduction.release) ||
@@ -343,6 +1126,12 @@ const validateDocument = (
     !/^[0-9a-f]{40}$/.test(candidateEvidence.candidate.commit)
   ) {
     fail("candidate commit must be a full lowercase Git SHA");
+  }
+  if (
+    candidateEvidence.candidate.commit ===
+    candidateEvidence.currentProduction.applicationCommit
+  ) {
+    fail("candidate commit must differ from current production");
   }
   if (
     !Number.isSafeInteger(candidateEvidence.candidate.pullRequest) ||
@@ -393,6 +1182,7 @@ const validateDocument = (
   const artifactIds = new Set();
   const verifiedArtifactPaths = new Set();
   const verifiedArtifactDigests = new Set();
+  const verifiedArtifactDocuments = new Map();
   for (const artifact of candidateEvidence.artifacts) {
     if (!requiredArtifacts.has(artifact.id)) {
       fail(`unknown artifact ${artifact.id}`);
@@ -423,6 +1213,24 @@ const validateDocument = (
       artifact.sha256,
       artifact.id,
     );
+    exactKeys(
+      document,
+      [
+        "schema",
+        "artifactId",
+        "candidateCommit",
+        "observedAt",
+        "result",
+        "summary",
+        "checks",
+        "details",
+      ],
+      `${artifact.id} artifact document`,
+    );
+    const artifactObservedAt = exactUtcTime(
+      document.observedAt,
+      `${artifact.id} observedAt`,
+    );
     if (
       document?.schema !== "starfiniti.rewards-canary-artifact.v1" ||
       document.artifactId !== artifact.id ||
@@ -431,10 +1239,7 @@ const validateDocument = (
       typeof document.summary !== "string" ||
       document.summary.length < 20 ||
       document.summary !== document.summary.trim() ||
-      typeof document.observedAt !== "string" ||
-      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/u.test(document.observedAt) ||
-      Number.isNaN(Date.parse(document.observedAt)) ||
-      Date.parse(document.observedAt) > Date.parse(candidateEvidence.observedAt)
+      artifactObservedAt > candidateObservedAt
     ) {
       fail(`${artifact.id} artifact contract differs`);
     }
@@ -448,6 +1253,8 @@ const validateDocument = (
       fail(`${artifact.id} artifact check coverage differs`);
     }
     inspectEvidence(document, `artifact.${artifact.id}`);
+    validateArtifactDetails(artifact.id, document, candidateEvidence);
+    verifiedArtifactDocuments.set(artifact.id, document);
   }
   for (const artifactId of requiredArtifacts) {
     if (!artifactIds.has(artifactId)) fail(`missing artifact ${artifactId}`);
@@ -611,6 +1418,157 @@ const validateDocument = (
         `complete evidence has unverified artifacts: ${incompleteArtifacts.map((artifact) => artifact.id).join(", ")}`,
       );
     }
+    const artifactById = new Map(
+      candidateEvidence.artifacts.map((artifact) => [artifact.id, artifact]),
+    );
+    const readOnlyBaseline =
+      verifiedArtifactDocuments.get("read_only_baseline");
+    const releaseInventory = verifiedArtifactDocuments.get("release_inventory");
+    const approvalRecord = verifiedArtifactDocuments.get("approval_record");
+    const recoveryPoint = verifiedArtifactDocuments.get("recovery_point");
+    const productionBaseline = verifiedArtifactDocuments.get(
+      "production_baseline",
+    );
+    const journal = verifiedArtifactDocuments.get("canary_journal");
+    const reconciliation = verifiedArtifactDocuments.get(
+      "reconciliation_report",
+    );
+    const rollback = verifiedArtifactDocuments.get("rollback_report");
+    const observation = verifiedArtifactDocuments.get("observation_report");
+    if (approvalRecord.details.release !== releaseInventory.details.release) {
+      fail("approval_record release differs from release_inventory");
+    }
+    for (const artifactId of requiredArtifacts) {
+      if (artifactId === "approval_record") continue;
+      if (
+        approvalRecord.details.artifactSha256[artifactId] !==
+        artifactById.get(artifactId).sha256
+      ) {
+        fail(`approval_record binding differs for ${artifactId}`);
+      }
+    }
+    for (const key of approvalPolicyKeys) {
+      if (
+        approvalRecord.details.policies[key] !== journal.details.policies[key]
+      ) {
+        fail(`approved reward ${key} differs from the canary journal`);
+      }
+    }
+    for (const key of Object.keys(canaryCeilingObservedKeys)) {
+      if (
+        approvalRecord.details.ceilings[key] !== journal.details.ceilings[key]
+      ) {
+        fail(`approved reward ${key} differs from the canary journal`);
+      }
+    }
+    for (const key of releaseComponentKeys) {
+      if (
+        releaseInventory.details.components[key] !==
+        journal.details.components[key]
+      ) {
+        fail(`released reward ${key} differs from the canary journal`);
+      }
+    }
+    for (const key of rewardEvidenceKeys) {
+      if (
+        reconciliation.details.evidence[key] !== journal.details.evidence[key]
+      ) {
+        fail(`canary and reconciliation ${key} evidence differ`);
+      }
+    }
+    for (const key of Object.keys(rewardCounts)) {
+      if (
+        reconciliation.details.counts[key] !== journal.details.counts[key] ||
+        observation.details.counts[key] !== journal.details.counts[key]
+      ) {
+        fail(`reward artifact ${key} count differs`);
+      }
+    }
+    if (
+      observation.details.observationPolicySha256 !==
+      journal.details.policies.observation
+    ) {
+      fail("reward observation policy differs from the journal");
+    }
+    const readOnlyObservedAt = exactUtcTime(
+      readOnlyBaseline.observedAt,
+      "read_only_baseline observedAt",
+    );
+    const releaseObservedAt = exactUtcTime(
+      releaseInventory.observedAt,
+      "release_inventory observedAt",
+    );
+    const recoveryVerifiedAt = exactUtcTime(
+      recoveryPoint.details.verifiedAt,
+      "recovery_point verifiedAt",
+    );
+    const baselineCapturedAt = exactUtcTime(
+      productionBaseline.details.capturedAt,
+      "production_baseline capturedAt",
+    );
+    const journalStartedAt = exactUtcTime(
+      journal.details.startedAt,
+      "canary_journal startedAt",
+    );
+    const journalEndedAt = exactUtcTime(
+      journal.details.endedAt,
+      "canary_journal endedAt",
+    );
+    const reconciliationObservedAt = exactUtcTime(
+      reconciliation.observedAt,
+      "reconciliation_report observedAt",
+    );
+    const rollbackStartedAt = exactUtcTime(
+      rollback.details.startedAt,
+      "rollback_report startedAt",
+    );
+    const rollbackObservedAt = exactUtcTime(
+      rollback.observedAt,
+      "rollback_report observedAt",
+    );
+    const observationStartedAt = exactUtcTime(
+      observation.details.startedAt,
+      "observation_report startedAt",
+    );
+    const observationEndedAt = exactUtcTime(
+      observation.details.endedAt,
+      "observation_report endedAt",
+    );
+    const approvalFinalizedAt = exactUtcTime(
+      approvalRecord.details.finalizedAt,
+      "approval_record finalizedAt",
+    );
+    const approvalObservedAt = exactUtcTime(
+      approvalRecord.observedAt,
+      "approval_record observedAt",
+    );
+    const latestPrerequisiteApprovalAt = Math.max(
+      ...approvalRecord.details.approvals.map((approval) =>
+        exactUtcTime(
+          approval.approvedAt,
+          `approval_record ${approval.id} approvedAt`,
+        ),
+      ),
+    );
+    if (
+      readOnlyObservedAt >= journalStartedAt ||
+      releaseObservedAt >= journalStartedAt ||
+      recoveryVerifiedAt >= journalStartedAt ||
+      baselineCapturedAt >= journalStartedAt ||
+      latestPrerequisiteApprovalAt >= journalStartedAt ||
+      reconciliationObservedAt <= journalEndedAt ||
+      rollbackStartedAt <= journalEndedAt ||
+      rollbackObservedAt <= journalEndedAt ||
+      observationStartedAt > journalStartedAt ||
+      observationEndedAt < journalEndedAt ||
+      approvalFinalizedAt <= reconciliationObservedAt ||
+      approvalFinalizedAt <= rollbackObservedAt ||
+      approvalFinalizedAt <= observationEndedAt ||
+      approvalObservedAt < approvalFinalizedAt ||
+      candidateObservedAt <= approvalObservedAt
+    ) {
+      fail("production artifact chronology differs");
+    }
     if (calculatedScore < candidateEvidence.score.target || belowFloor.length) {
       fail("complete evidence does not meet score and category floors");
     }
@@ -658,17 +1616,282 @@ if (process.argv.includes("--self-test")) {
     m04.slices.find((slice) => slice.id === "M04-S04-CANARY-AND-CLOSE").status =
       "completed";
 
+    const fixtureTimes = {
+      read_only_baseline: "2026-01-31T19:00:00Z",
+      release_inventory: "2026-01-31T20:00:00Z",
+      recovery_point: "2026-01-31T21:00:00Z",
+      production_baseline: "2026-01-31T23:00:00Z",
+      canary_journal: "2026-02-02T00:01:00Z",
+      reconciliation_report: "2026-02-02T00:02:00Z",
+      rollback_report: "2026-02-02T00:03:00Z",
+      observation_report: "2026-02-02T00:04:00Z",
+      approval_record: "2026-02-02T00:05:00Z",
+    };
+    candidateEvidence.observedAt = "2026-02-02T00:06:00Z";
+    const fixtureDigests = (keys, namespace) =>
+      Object.fromEntries(
+        keys.map((key) => [key, digest(`fixture:${namespace}:${key}`)]),
+      );
+    const fixtureAssertions = (artifactId) =>
+      artifactCheckBindings.get(artifactId).map((id) => ({
+        id,
+        status: "passed",
+        evidenceSha256: digest(`fixture:${artifactId}:${id}`),
+        differenceCount: 0,
+      }));
+    const fixtureZeroes = (keys) =>
+      Object.fromEntries(keys.map((key) => [key, 0]));
+    const releaseComponents = fixtureDigests(
+      releaseComponentKeys,
+      "release-components",
+    );
+    const policyDigests = fixtureDigests(approvalPolicyKeys, "reward-policy");
+    const rewardEvidence = fixtureDigests(
+      rewardEvidenceKeys,
+      "reward-evidence",
+    );
+    const ceilings = {
+      maxCustomers: 100,
+      maxRewardEffects: 100,
+      maxReservedPoints: 10_000,
+      maxQuantityUnits: 100,
+      maxLiabilityMinor: 100_000,
+      maxManualCases: 10,
+      maxReservationHours: 72,
+    };
+    const observed = {
+      customers: 3,
+      rewardEffects: 8,
+      reservedPoints: 600,
+      quantityUnits: 5,
+      liabilityMinor: 5_000,
+      manualCases: 2,
+      reservationHours: 24,
+    };
+    const currentVersion = candidateEvidence.currentProduction.release
+      .slice(1)
+      .split(".")
+      .map(Number);
+    const fixtureRelease = `v${currentVersion[0]}.${currentVersion[1]}.${currentVersion[2] + 1}`;
+    const fixtureDetails = (artifactId) => {
+      if (artifactId === "read_only_baseline") {
+        return {
+          ...candidateEvidence.publicBaseline,
+          applicationVm: 970,
+          databaseVm: 971,
+          applicationVmState: "running",
+          databaseVmState: "running",
+          scope: "read_only",
+          mutationCount: 0,
+        };
+      }
+      if (artifactId === "release_inventory") {
+        return {
+          release: fixtureRelease,
+          pullRequest: candidateEvidence.candidate.pullRequest,
+          repositoryCommit: candidateEvidence.candidate.commit,
+          components: releaseComponents,
+          deploymentState: "disabled",
+          expandedRewardsEnabled: false,
+          rewardWorkerEnabled: false,
+          manualFulfilmentEnabled: false,
+          registeredMigrationDifference: 0,
+          assertions: fixtureAssertions(artifactId),
+        };
+      }
+      if (artifactId === "recovery_point") {
+        return {
+          createdAt: "2026-01-31T20:30:00Z",
+          verifiedAt: "2026-01-31T20:59:00Z",
+          components: fixtureDigests(
+            [
+              "baseBackup",
+              "walArchive",
+              "applicationConfiguration",
+              "connectorSigningReferenceInventory",
+              "pluginRollbackPackage",
+              "restoreEvidence",
+            ],
+            "recovery",
+          ),
+          restorable: true,
+          rpoSeconds: 60,
+          mutationCount: 0,
+          assertions: fixtureAssertions(artifactId),
+        };
+      }
+      if (artifactId === "production_baseline") {
+        return {
+          capturedAt: "2026-01-31T22:59:00Z",
+          sourceCoverageRatio: 1,
+          sources: fixtureDigests(
+            [
+              "programme",
+              "rewardDefinition",
+              "wallet",
+              "ledger",
+              "lot",
+              "reservation",
+              "capacity",
+              "nativeCommand",
+              "coupon",
+              "manualCase",
+              "queue",
+              "connector",
+              "checkoutAvailability",
+            ],
+            "baseline",
+          ),
+          expandedRewardsActive: false,
+          rewardWorkerActive: false,
+          manualFulfilmentActive: false,
+          pendingAcceptedWork: 0,
+          differences: fixtureZeroes([
+            "ledger",
+            "balance",
+            "reservation",
+            "capacity",
+            "coupon",
+            "manualCase",
+            "queue",
+            "privacy",
+            "loyaltyValue",
+          ]),
+          mutationCount: 0,
+          assertions: fixtureAssertions(artifactId),
+        };
+      }
+      if (artifactId === "canary_journal") {
+        return {
+          startedAt: "2026-02-01T00:00:00Z",
+          endedAt: "2026-02-02T00:00:00Z",
+          intervalCount: 24,
+          pilotOrganizationCount: 1,
+          nonCanaryEnabledCount: 0,
+          policies: policyDigests,
+          components: releaseComponents,
+          evidence: rewardEvidence,
+          ceilings,
+          observed,
+          counts: rewardCounts,
+          differences: fixtureZeroes(rewardDifferenceKeys),
+          sourceCoverageRatio: 1,
+          assertions: fixtureAssertions(artifactId),
+        };
+      }
+      if (artifactId === "reconciliation_report") {
+        return {
+          sourceCoverageRatio: 1,
+          boundedConvergenceComplete: true,
+          evidence: rewardEvidence,
+          counts: rewardCounts,
+          sources: fixtureDigests(
+            [
+              "rewardDefinition",
+              "wallet",
+              "ledger",
+              "lot",
+              "reservation",
+              "capacity",
+              "nativeCommand",
+              "coupon",
+              "manualCase",
+              "queue",
+              "checkout",
+            ],
+            "reconciliation",
+          ),
+          differences: fixtureZeroes(rewardDifferenceKeys),
+          assertions: fixtureAssertions(artifactId),
+        };
+      }
+      if (artifactId === "rollback_report") {
+        return {
+          startedAt: "2026-02-02T00:01:00Z",
+          endedAt: "2026-02-02T00:02:00Z",
+          durationSeconds: 60,
+          states: Object.fromEntries(
+            [
+              "expandedRewardsDisabled",
+              "rewardWorkerStopped",
+              "manualFulfilmentDisabled",
+              "acceptedWorkDrainedOrHeld",
+              "priorImagesRestored",
+              "priorPluginRestored",
+              "rewardDefinitionsPreserved",
+              "reservationsPreserved",
+              "capacityPreserved",
+              "nativeStatesPreserved",
+              "manualCasesPreserved",
+              "ledgerPreserved",
+              "customerAccessAvailable",
+              "checkoutAvailable",
+            ].map((key) => [key, true]),
+          ),
+          differences: fixtureZeroes(rewardDifferenceKeys),
+          evidenceSha256: digest("fixture:rollback:evidence"),
+          assertions: fixtureAssertions(artifactId),
+        };
+      }
+      if (artifactId === "observation_report") {
+        return {
+          startedAt: "2026-02-01T00:00:00Z",
+          endedAt: "2026-02-02T00:02:00Z",
+          durationSeconds: 86_520,
+          sampleIntervalCount: 25,
+          sourceCoverageRatio: 1,
+          observationPolicySha256: policyDigests.observation,
+          latencyWithinApprovedBounds: true,
+          loadWithinApprovedBounds: true,
+          latencies: {
+            reservationP95Ms: 250,
+            nativeCommandP95Ms: 300,
+            manualCaseP95Ms: 350,
+            reconciliationP95Ms: 400,
+            customerRewardP95Ms: 200,
+            checkoutP95Ms: 500,
+          },
+          maxQueueDepth: 5,
+          counts: rewardCounts,
+          differences: fixtureZeroes(rewardDifferenceKeys),
+          evidenceSha256: digest("fixture:observation:evidence"),
+          assertions: fixtureAssertions(artifactId),
+        };
+      }
+      if (artifactId === "approval_record") {
+        return {
+          finalizedAt: fixtureTimes.approval_record,
+          release: fixtureRelease,
+          policies: policyDigests,
+          ceilings,
+          approvals: artifactCheckBindings.get(artifactId).map((id) => ({
+            id,
+            approved: true,
+            approvedAt: "2026-01-31T22:00:00Z",
+            evidenceSha256: digest(`fixture:approval:${id}`),
+          })),
+          artifactSha256: Object.fromEntries(
+            candidateEvidence.artifacts
+              .filter((artifact) => artifact.id !== "approval_record")
+              .map((artifact) => [artifact.id, artifact.sha256]),
+          ),
+        };
+      }
+      fail(`missing fixture details for ${artifactId}`);
+    };
     const bindings = new Map();
-    candidateEvidence.artifacts.forEach((artifact) => {
+    for (const artifact of candidateEvidence.artifacts.filter(
+      (candidate) => candidate.id !== "approval_record",
+    )) {
       const document = {
         schema: "starfiniti.rewards-canary-artifact.v1",
         artifactId: artifact.id,
         candidateCommit: candidateEvidence.candidate.commit,
-        observedAt: candidateEvidence.observedAt,
+        observedAt: fixtureTimes[artifact.id],
         result: "verified",
         summary: `Synthetic self-test evidence verifies the exact ${artifact.id} completion boundary.`,
         checks: artifactCheckBindings.get(artifact.id),
-        details: { fixture: true, mutationCount: 0 },
+        details: fixtureDetails(artifact.id),
       };
       const raw = JSON.stringify(document);
       artifact.status = "verified";
@@ -678,6 +1901,29 @@ if (process.argv.includes("--self-test")) {
         artifact: structuredClone(artifact),
         document,
       });
+    }
+    const approvalArtifact = candidateEvidence.artifacts.find(
+      (artifact) => artifact.id === "approval_record",
+    );
+    const approvalDocument = {
+      schema: "starfiniti.rewards-canary-artifact.v1",
+      artifactId: approvalArtifact.id,
+      candidateCommit: candidateEvidence.candidate.commit,
+      observedAt: fixtureTimes.approval_record,
+      result: "verified",
+      summary:
+        "Synthetic self-test evidence verifies the exact approval_record completion boundary.",
+      checks: artifactCheckBindings.get("approval_record"),
+      details: fixtureDetails("approval_record"),
+    };
+    const approvalRaw = JSON.stringify(approvalDocument);
+    approvalArtifact.status = "verified";
+    approvalArtifact.path =
+      "docs/plan/evidence/M04/production/rewards-approval-record-self-test.json";
+    approvalArtifact.sha256 = digest(approvalRaw);
+    bindings.set("approval_record", {
+      artifact: structuredClone(approvalArtifact),
+      document: approvalDocument,
     });
     const artifactReader = (relativePath, expectedDigest, artifactId) => {
       const binding = bindings.get(artifactId);
@@ -707,6 +1953,17 @@ if (process.argv.includes("--self-test")) {
     }
     fail(`self-test accepted ${label}`);
   };
+  const artifactMutationReader =
+    (fixture, targetId, mutation) =>
+    (relativePath, expectedDigest, artifactId) => {
+      const document = fixture.artifactReader(
+        relativePath,
+        expectedDigest,
+        artifactId,
+      );
+      if (artifactId === targetId) mutation(document);
+      return document;
+    };
 
   const unapprovedCompletion = structuredClone(evidence);
   unapprovedCompletion.status = "complete";
@@ -780,6 +2037,15 @@ if (process.argv.includes("--self-test")) {
     12,
   );
   expectRejected(nonExactCommit, "full lowercase Git SHA", "a short commit");
+
+  const currentProductionCommit = structuredClone(evidence);
+  currentProductionCommit.candidate.commit =
+    currentProductionCommit.currentProduction.applicationCommit;
+  expectRejected(
+    currentProductionCommit,
+    "candidate commit must differ from current production",
+    "a relabelled current-production commit",
+  );
 
   const shortAutomaticFailure = structuredClone(evidence);
   shortAutomaticFailure.automaticFails[0].rule = "too short";
@@ -860,11 +2126,349 @@ if (process.argv.includes("--self-test")) {
     reusedDigestFixture.artifactReader,
   );
 
+  const hollowArtifactFixture = buildCompleteFixture();
+  expectRejected(
+    hollowArtifactFixture.candidateEvidence,
+    "details keys differ",
+    "digest-valid but semantically hollow production evidence",
+    hollowArtifactFixture.candidateTasks,
+    artifactMutationReader(
+      hollowArtifactFixture,
+      "canary_journal",
+      (document) => {
+        document.details = { fixture: true, mutationCount: 0 };
+      },
+    ),
+  );
+
+  const extraArtifactFieldFixture = buildCompleteFixture();
+  expectRejected(
+    extraArtifactFieldFixture.candidateEvidence,
+    "artifact document keys differ",
+    "an artifact with an unreviewed top-level field",
+    extraArtifactFieldFixture.candidateTasks,
+    artifactMutationReader(
+      extraArtifactFieldFixture,
+      "reconciliation_report",
+      (document) => {
+        document.unreviewedClaim = true;
+      },
+    ),
+  );
+
+  const impossibleTimeFixture = buildCompleteFixture();
+  expectRejected(
+    impossibleTimeFixture.candidateEvidence,
+    "must be an exact UTC timestamp",
+    "an impossible normalized artifact timestamp",
+    impossibleTimeFixture.candidateTasks,
+    artifactMutationReader(
+      impossibleTimeFixture,
+      "read_only_baseline",
+      (document) => {
+        document.observedAt = "2026-02-30T00:00:00Z";
+      },
+    ),
+  );
+
+  const nonzeroReconciliationFixture = buildCompleteFixture();
+  expectRejected(
+    nonzeroReconciliationFixture.candidateEvidence,
+    "zero-difference evidence differs",
+    "a reconciliation report with ledger drift",
+    nonzeroReconciliationFixture.candidateTasks,
+    artifactMutationReader(
+      nonzeroReconciliationFixture,
+      "reconciliation_report",
+      (document) => {
+        document.details.differences.ledger = 1;
+      },
+    ),
+  );
+
+  const reusedProductionReleaseFixture = buildCompleteFixture();
+  const reusedProductionReleaseReader = (
+    relativePath,
+    expectedDigest,
+    artifactId,
+  ) => {
+    const document = reusedProductionReleaseFixture.artifactReader(
+      relativePath,
+      expectedDigest,
+      artifactId,
+    );
+    if (new Set(["release_inventory", "approval_record"]).has(artifactId)) {
+      document.details.release =
+        reusedProductionReleaseFixture.candidateEvidence.currentProduction.release;
+    }
+    return document;
+  };
+  expectRejected(
+    reusedProductionReleaseFixture.candidateEvidence,
+    "release_inventory identity or disabled state differs",
+    "a candidate that reuses the current production release",
+    reusedProductionReleaseFixture.candidateTasks,
+    reusedProductionReleaseReader,
+  );
+
+  const approvalBindingFixture = buildCompleteFixture();
+  expectRejected(
+    approvalBindingFixture.candidateEvidence,
+    "approval_record binding differs",
+    "an approval record bound to different production evidence",
+    approvalBindingFixture.candidateTasks,
+    artifactMutationReader(
+      approvalBindingFixture,
+      "approval_record",
+      (document) => {
+        document.details.artifactSha256.read_only_baseline = "f".repeat(64);
+      },
+    ),
+  );
+
+  const approvedPolicyFixture = buildCompleteFixture();
+  expectRejected(
+    approvedPolicyFixture.candidateEvidence,
+    "approved reward pilotScope differs",
+    "a canary journal for a different pilot-scope policy",
+    approvedPolicyFixture.candidateTasks,
+    artifactMutationReader(
+      approvedPolicyFixture,
+      "canary_journal",
+      (document) => {
+        document.details.policies.pilotScope = digest(
+          "fixture:different-pilot-scope-policy",
+        );
+      },
+    ),
+  );
+
+  const approvedCeilingFixture = buildCompleteFixture();
+  expectRejected(
+    approvedCeilingFixture.candidateEvidence,
+    "approved reward maxReservedPoints differs",
+    "a canary journal with a different reserved-points ceiling",
+    approvedCeilingFixture.candidateTasks,
+    artifactMutationReader(
+      approvedCeilingFixture,
+      "canary_journal",
+      (document) => {
+        document.details.ceilings.maxReservedPoints = 9_999;
+      },
+    ),
+  );
+
+  const releasedPluginFixture = buildCompleteFixture();
+  expectRejected(
+    releasedPluginFixture.candidateEvidence,
+    "released reward wordpressPlugin differs",
+    "a canary using a different WooCommerce plugin package",
+    releasedPluginFixture.candidateTasks,
+    artifactMutationReader(
+      releasedPluginFixture,
+      "canary_journal",
+      (document) => {
+        document.details.components.wordpressPlugin = digest(
+          "fixture:different-wordpress-plugin",
+        );
+      },
+    ),
+  );
+
+  const nativeEvidenceFixture = buildCompleteFixture();
+  expectRejected(
+    nativeEvidenceFixture.candidateEvidence,
+    "canary and reconciliation nativeCapability evidence differ",
+    "a reconciliation report for different native-capability evidence",
+    nativeEvidenceFixture.candidateTasks,
+    artifactMutationReader(
+      nativeEvidenceFixture,
+      "reconciliation_report",
+      (document) => {
+        document.details.evidence.nativeCapability = digest(
+          "fixture:different-native-capability",
+        );
+      },
+    ),
+  );
+
+  const ambiguousRecoveryEvidenceFixture = buildCompleteFixture();
+  expectRejected(
+    ambiguousRecoveryEvidenceFixture.candidateEvidence,
+    "canary and reconciliation ambiguousNativeRecovery evidence differ",
+    "a reconciliation report for different ambiguous recovery evidence",
+    ambiguousRecoveryEvidenceFixture.candidateTasks,
+    artifactMutationReader(
+      ambiguousRecoveryEvidenceFixture,
+      "reconciliation_report",
+      (document) => {
+        document.details.evidence.ambiguousNativeRecovery = digest(
+          "fixture:different-ambiguous-recovery",
+        );
+      },
+    ),
+  );
+
+  const countMismatchFixture = buildCompleteFixture();
+  expectRejected(
+    countMismatchFixture.candidateEvidence,
+    "reconciliation_report counts historicalVersion differs",
+    "a reconciliation report with fewer historical-version cases",
+    countMismatchFixture.candidateTasks,
+    artifactMutationReader(
+      countMismatchFixture,
+      "reconciliation_report",
+      (document) => {
+        document.details.counts.historicalVersion = 1;
+      },
+    ),
+  );
+
+  const observationPolicyFixture = buildCompleteFixture();
+  expectRejected(
+    observationPolicyFixture.candidateEvidence,
+    "reward observation policy differs from the journal",
+    "an observation measured against a different approved policy",
+    observationPolicyFixture.candidateTasks,
+    artifactMutationReader(
+      observationPolicyFixture,
+      "observation_report",
+      (document) => {
+        document.details.observationPolicySha256 = digest(
+          "fixture:different-observation-policy",
+        );
+      },
+    ),
+  );
+
+  const ambiguousReleaseFixture = buildCompleteFixture();
+  expectRejected(
+    ambiguousReleaseFixture.candidateEvidence,
+    "zero-difference evidence differs",
+    "a canary that released points while native outcome was ambiguous",
+    ambiguousReleaseFixture.candidateTasks,
+    artifactMutationReader(
+      ambiguousReleaseFixture,
+      "canary_journal",
+      (document) => {
+        document.details.differences.ambiguousPointsRelease = 1;
+      },
+    ),
+  );
+
+  const capacityOversubscriptionFixture = buildCompleteFixture();
+  expectRejected(
+    capacityOversubscriptionFixture.candidateEvidence,
+    "zero-difference evidence differs",
+    "an observation with limited-reward capacity oversubscription",
+    capacityOversubscriptionFixture.candidateTasks,
+    artifactMutationReader(
+      capacityOversubscriptionFixture,
+      "observation_report",
+      (document) => {
+        document.details.differences.capacityOversubscription = 1;
+      },
+    ),
+  );
+
+  const lateReleaseFixture = buildCompleteFixture();
+  expectRejected(
+    lateReleaseFixture.candidateEvidence,
+    "production artifact chronology differs",
+    "a release inventory observed after canary start",
+    lateReleaseFixture.candidateTasks,
+    artifactMutationReader(
+      lateReleaseFixture,
+      "release_inventory",
+      (document) => {
+        document.observedAt = "2026-02-01T00:01:00Z";
+      },
+    ),
+  );
+
+  const lateOperatorFixture = buildCompleteFixture();
+  expectRejected(
+    lateOperatorFixture.candidateEvidence,
+    "production artifact chronology differs",
+    "operator access established only after canary start",
+    lateOperatorFixture.candidateTasks,
+    artifactMutationReader(
+      lateOperatorFixture,
+      "read_only_baseline",
+      (document) => {
+        document.observedAt = "2026-02-01T00:01:00Z";
+      },
+    ),
+  );
+
+  const lateApprovalFixture = buildCompleteFixture();
+  expectRejected(
+    lateApprovalFixture.candidateEvidence,
+    "production artifact chronology differs",
+    "a prerequisite approval recorded after canary start",
+    lateApprovalFixture.candidateTasks,
+    artifactMutationReader(
+      lateApprovalFixture,
+      "approval_record",
+      (document) => {
+        document.details.approvals[0].approvedAt = "2026-02-01T00:01:00Z";
+      },
+    ),
+  );
+
+  const earlyRollbackFixture = buildCompleteFixture();
+  expectRejected(
+    earlyRollbackFixture.candidateEvidence,
+    "production artifact chronology differs",
+    "a rollback rehearsal completed before canary end",
+    earlyRollbackFixture.candidateTasks,
+    artifactMutationReader(
+      earlyRollbackFixture,
+      "rollback_report",
+      (document) => {
+        document.details.startedAt = "2026-02-01T23:58:00Z";
+        document.details.endedAt = "2026-02-01T23:59:00Z";
+      },
+    ),
+  );
+
+  const observationDriftFixture = buildCompleteFixture();
+  expectRejected(
+    observationDriftFixture.candidateEvidence,
+    "zero-difference evidence differs",
+    "an observation window with loyalty-value drift",
+    observationDriftFixture.candidateTasks,
+    artifactMutationReader(
+      observationDriftFixture,
+      "observation_report",
+      (document) => {
+        document.details.differences.loyaltyValue = 1;
+      },
+    ),
+  );
+
+  const shortObservationFixture = buildCompleteFixture();
+  expectRejected(
+    shortObservationFixture.candidateEvidence,
+    "observation_report duration",
+    "an observation shorter than twenty-four hours",
+    shortObservationFixture.candidateTasks,
+    artifactMutationReader(
+      shortObservationFixture,
+      "observation_report",
+      (document) => {
+        document.details.startedAt = "2026-02-01T23:02:00Z";
+        document.details.durationSeconds = 3_600;
+        document.details.sampleIntervalCount = 1;
+      },
+    ),
+  );
+
   const baselineDrift = structuredClone(evidence);
   baselineDrift.publicBaseline.unsignedWooCommerceIngress = 200;
   expectRejected(
     baselineDrift,
-    "unexpected public baseline",
+    "differs from the manifest",
     "an unsafe public baseline",
   );
 
