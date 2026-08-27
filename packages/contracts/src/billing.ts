@@ -40,6 +40,120 @@ export const stripeSubscriptionStatusV1 = z.enum([
 
 export const managedBillingSessionActionV1 = z.enum(["checkout", "portal"]);
 
+export const managedBillingUsageMeterKeyV1 = z.enum([
+  "orders",
+  "active_members",
+  "messages",
+  "api_requests",
+]);
+
+const bigintDecimal = z.string().regex(/^-?(?:0|[1-9][0-9]*)$/u);
+const nonNegativeBigintDecimal = z.string().regex(/^(?:0|[1-9][0-9]*)$/u);
+
+export const managedBillingUsageMeterSummaryV1 = z
+  .object({
+    meterKey: managedBillingUsageMeterKeyV1,
+    label: z.string().trim().min(2).max(80),
+    quantity: nonNegativeBigintDecimal,
+    dispatchedQuantity: bigintDecimal,
+    factCount: nonNegativeBigintDecimal,
+    pendingCount: nonNegativeBigintDecimal,
+    attentionCount: nonNegativeBigintDecimal,
+  })
+  .strict();
+
+export const managedBillingUsageSummaryV1 = z
+  .object({
+    schemaVersion: z.literal("1"),
+    organizationId: z.uuid(),
+    periodStart: z.iso.datetime({ offset: true }),
+    periodEnd: z.iso.datetime({ offset: true }),
+    measuredAt: z.iso.datetime({ offset: true }),
+    dispatchMode: z.enum(["shadow", "configured"]),
+    meters: z.array(managedBillingUsageMeterSummaryV1).length(4),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    const periodStart = new Date(value.periodStart);
+    const expectedStart = Date.UTC(
+      periodStart.getUTCFullYear(),
+      periodStart.getUTCMonth(),
+      1,
+    );
+    const expectedEnd = Date.UTC(
+      periodStart.getUTCFullYear(),
+      periodStart.getUTCMonth() + 1,
+      1,
+    );
+    if (periodStart.getTime() !== expectedStart) {
+      context.addIssue({
+        code: "custom",
+        path: ["periodStart"],
+        message: "usage period must start at a UTC month boundary",
+      });
+    }
+    if (Date.parse(value.periodEnd) !== expectedEnd) {
+      context.addIssue({
+        code: "custom",
+        path: ["periodEnd"],
+        message: "usage period must cover exactly one UTC month",
+      });
+    }
+    if (Date.parse(value.measuredAt) < expectedStart) {
+      context.addIssue({
+        code: "custom",
+        path: ["measuredAt"],
+        message: "usage measurement cannot precede its period",
+      });
+    }
+    const keys = value.meters.map((meter) => meter.meterKey);
+    if (new Set(keys).size !== 4) {
+      context.addIssue({
+        code: "custom",
+        path: ["meters"],
+        message: "usage summary requires each meter exactly once",
+      });
+    }
+  });
+
+export const managedBillingUsageDispatchClaimV1 = z
+  .object({
+    dispatchId: z.uuid(),
+    leaseToken: z.uuid(),
+    attemptNumber: z.number().int().min(1).max(10),
+  })
+  .strict();
+
+export const managedBillingUsageDispatchAuthorityV1 = z
+  .object({
+    eventName: z.string().regex(/^[a-z][a-z0-9_]{1,99}$/u),
+    customerId: z.string().regex(/^cus_[A-Za-z0-9]{8,120}$/u),
+    identifier: z.string().regex(/^m14u_[a-f0-9]{32}$/u),
+    quantity: z.string().regex(/^-?[1-9][0-9]*$/u),
+    occurredAt: z.iso.datetime({ offset: true }),
+    liveMode: z.boolean(),
+  })
+  .strict();
+
+export const managedBillingUsageDispatchResultV1 = z
+  .object({
+    outcome: z.enum(["accepted", "retryable", "ambiguous", "rejected", "held"]),
+    responseClass: z.enum([
+      "success",
+      "duplicate",
+      "temporary_failure",
+      "permanent_failure",
+      "ambiguous",
+      "policy",
+    ]),
+    responseCode: z.number().int().min(200).max(599).nullable(),
+    errorCode: z
+      .string()
+      .regex(/^[a-z][a-z0-9_]{2,79}$/u)
+      .nullable(),
+  })
+  .strict();
+
 export const managedBillingPlanOptionV1 = z
   .object({
     schemaVersion: z.literal("1"),
@@ -340,6 +454,24 @@ export type ManagedBillingPlanOptionV1 = z.infer<
 >;
 export type ManagedBillingSessionRequestV1 = z.infer<
   typeof managedBillingSessionRequestV1
+>;
+export type ManagedBillingUsageMeterKeyV1 = z.infer<
+  typeof managedBillingUsageMeterKeyV1
+>;
+export type ManagedBillingUsageMeterSummaryV1 = z.infer<
+  typeof managedBillingUsageMeterSummaryV1
+>;
+export type ManagedBillingUsageSummaryV1 = z.infer<
+  typeof managedBillingUsageSummaryV1
+>;
+export type ManagedBillingUsageDispatchClaimV1 = z.infer<
+  typeof managedBillingUsageDispatchClaimV1
+>;
+export type ManagedBillingUsageDispatchAuthorityV1 = z.infer<
+  typeof managedBillingUsageDispatchAuthorityV1
+>;
+export type ManagedBillingUsageDispatchResultV1 = z.infer<
+  typeof managedBillingUsageDispatchResultV1
 >;
 export type StripeBillingWebhookEventV1 = z.infer<
   typeof stripeBillingWebhookEventV1

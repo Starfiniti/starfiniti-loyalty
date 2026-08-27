@@ -2656,9 +2656,9 @@ tasks:
           - docs/api/BILLING.md
           - docs/operations/STRIPE_BILLING.md
           - docs/plan/evidence/M14/README.md
-          - exact-head run 33029143332 at 873ed92cbb61783aaa4335df403c1494e5e7d9f3 passes all seven jobs including clean 78-migration replay all 65 pgTAP files with 3532 assertions all 19 concurrency probes both production images and all four WooCommerce runtimes
+          - exact-head run 33030547427 at d72166ae778f1a381926ceb7e4b5c09f942ddf77 passes all seven jobs including clean 78-migration replay all 65 pgTAP files with 3532 assertions all 19 concurrency probes both production images and all four WooCommerce runtimes
       - id: M14-S04-IDEMPOTENT-USAGE-METERING
-        status: in_progress
+        status: complete
         dependencies: [M14-S03-CHECKOUT-PORTAL-AND-SUBSCRIPTION-LIFECYCLE]
         hypothesis: Immutable source facts and permanent local fences can reconcile billable usage even when Stripe provides only bounded duplicate enforcement.
         metrics:
@@ -2674,12 +2674,34 @@ tasks:
           - metering failure queues independently and never changes loyalty behavior
         rollout: Shadow local totals then sandbox meters then one managed tenant.
         rollback: Stop dispatch retain source facts and reconciliation then forward-correct provider usage.
+        failure_modes:
+          - mutable aggregate overwrites a later total or loses source attribution
+          - duplicate source or provider replay creates a second billable unit
+          - correction rewrites history or makes one source cumulatively negative
+          - browser tenant or provider selectors become billing authority
+          - self-hosted mode scans sources reads a Stripe key or constructs a provider client
+          - timeout is blindly replayed after the provider duplicate window
+          - usage failure blocks checkout loyalty value refunds reconciliation or exports
+        security_boundaries:
+          - PostgreSQL derives managed deployment entitlement source identity account meter provider mode and dispatch authority
+          - private RLS tables retain only minimized UUID and SHA-256 source evidence with no contact payload secret response Price or card data
+          - the worker receives one public lease then reads a separate regular-file restricted key only after database reauthorization
+          - public summaries require live membership and contain exact totals plus bounded queue health only
         verification:
-          [
-            property concurrency replay correction outage and reconciliation tests,
-          ]
+          - strict usage summary claim authority and provider-result contracts plus focused server and worker tests
+          - 63 managed-usage pgTAP assertions for grants RLS minimization executable source-time eligibility source deduplication period-bound and source-bound correction lease cooling effective entitlement and provider mode outcome tenancy immutability and zero-ledger behavior
+          - twentieth two-session concurrency probe for one lease and permanent identifier exact correction convergence changed retry rejection and zero ledger effects
+          - fixed-origin loopback provider tests for exact request duplicate retry rejection malformed response secret-file and self-hosted no-client behavior
+          - production-rendered 1440 by 1000 and 390 by 844 light and dark browser review for exact bigint display responsive cards queue health current navigation drawer focus Escape overflow and diagnostics
+          - npm run check clean database replay both production images and all four WooCommerce runtimes
+        evidence:
+          - docs/architecture/ADR/0059-immutable-source-fact-usage-metering.md
+          - docs/api/BILLING.md
+          - docs/operations/STRIPE_BILLING.md
+          - docs/plan/evidence/M14/README.md
+          - exact implementation-head run 33036216639 at c7f72ec4d18a7b8595bbdbf4689e436b1949617d passes all seven jobs including clean 79-migration replay all 66 pgTAP files with 3595 assertions all 20 concurrency probes 939 workspace tests both production images and all four WooCommerce runtimes
       - id: M14-S05-DELINQUENCY-ENTITLEMENTS-AND-MANUAL-CONTRACTS
-        status: planned
+        status: in_progress
         dependencies: [M14-S04-IDEMPOTENT-USAGE-METERING]
         hypothesis: Effective-dated local policy can restrict only new managed growth after grace while preserving all historical and protected value behavior.
         metrics:

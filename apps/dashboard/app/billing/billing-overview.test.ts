@@ -1,7 +1,7 @@
 import type { BillingSummaryV1 } from "@starfiniti/contracts";
 import { describe, expect, it } from "vitest";
 
-import { billingStatePresentation } from "./billing-overview";
+import { billingStatePresentation, formatUsageCount } from "./billing-overview";
 
 const protectedAccess = {
   balanceRead: true,
@@ -105,5 +105,14 @@ describe("billingStatePresentation", () => {
       title: "Managed billing is in a grace period",
       tone: "warning",
     });
+  });
+});
+
+describe("managed usage presentation", () => {
+  it("formats bigint usage without lossy number conversion", () => {
+    expect(formatUsageCount("9223372036854775807")).toBe(
+      "9,223,372,036,854,775,807",
+    );
+    expect(formatUsageCount("-1")).toBe("-1");
   });
 });

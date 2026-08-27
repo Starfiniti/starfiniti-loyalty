@@ -6,7 +6,11 @@ vi.mock("@/lib/supabase/server", () => ({
   createSupabaseServerClient: async () => ({ schema: () => ({ rpc }) }),
 }));
 
-import { getBillingSummary } from "./billing";
+import {
+  getBillingSummary,
+  getManagedBillingUsageSummary,
+  utcMonthStart,
+} from "./billing";
 
 const organizationId = "a1000000-0000-4000-8000-000000000100";
 
@@ -69,6 +73,66 @@ describe("billing summary server read", () => {
       await expect(getBillingSummary(organizationId)).rejects.toThrow(
         "billing_summary_unavailable",
       );
+    }
+  });
+});
+
+describe("managed billing usage server read", () => {
+  beforeEach(() => rpc.mockReset());
+
+  const usage = {
+    schemaVersion: "1",
+    organizationId,
+    periodStart: "2026-08-01T00:00:00Z",
+    periodEnd: "2026-09-01T00:00:00Z",
+    measuredAt: "2026-08-27T01:00:00Z",
+    dispatchMode: "shadow",
+    meters: [
+      ["orders", "Orders ingested", "4"],
+      ["active_members", "Active members", "3"],
+      ["messages", "Messages delivered", "2"],
+      ["api_requests", "Accepted API commands", "1"],
+    ].map(([meterKey, label, quantity]) => ({
+      meterKey,
+      label,
+      quantity,
+      dispatchedQuantity: "0",
+      factCount: quantity,
+      pendingCount: quantity,
+      attentionCount: "0",
+    })),
+  };
+
+  it("reads one strict live-member usage summary for an exact UTC month", async () => {
+    rpc.mockResolvedValue({ data: [{ usage_summary: usage }], error: null });
+    await expect(
+      getManagedBillingUsageSummary(organizationId, usage.periodStart),
+    ).resolves.toEqual(usage);
+    expect(rpc).toHaveBeenCalledWith(
+      "get_my_managed_billing_usage_summary_v1",
+      {
+        target_organization_public_id: organizationId,
+        target_period_start: usage.periodStart,
+      },
+    );
+    expect(utcMonthStart(new Date("2026-08-27T23:30:00-07:00"))).toBe(
+      "2026-08-01T00:00:00.000Z",
+    );
+  });
+
+  it("fails closed on expanded or malformed usage evidence", async () => {
+    for (const usageSummary of [
+      { ...usage, providerCustomerId: "cus_private" },
+      { ...usage, meters: usage.meters.slice(0, 3) },
+      { ...usage, periodEnd: usage.periodStart },
+    ]) {
+      rpc.mockResolvedValueOnce({
+        data: [{ usage_summary: usageSummary }],
+        error: null,
+      });
+      await expect(
+        getManagedBillingUsageSummary(organizationId, usage.periodStart),
+      ).rejects.toThrow("billing_usage_summary_unavailable");
     }
   });
 });

@@ -2,6 +2,7 @@ import { hostname } from "node:os";
 import postgres from "postgres";
 import { runAnalyticsExportLifecycle } from "./analytics-export.ts";
 import { runBillingWebhookLifecycle } from "./billing-webhook.ts";
+import { runBillingUsageLifecycle } from "./billing-usage.ts";
 import {
   createKlaviyoDeliveryRuntime,
   readKlaviyoDeliveryConfig,
@@ -44,6 +45,7 @@ const workerId = `${hostname()}:${process.pid}`;
 const workerMode = readWorkerMode(process.env.LOYALTY_WORKER_MODE);
 let stopping = false;
 let nextCancellationSweepAt = 0;
+let nextBillingUsageCaptureAt = 0;
 process.once("SIGINT", () => {
   stopping = true;
 });
@@ -104,8 +106,15 @@ if (workerMode === "notification") {
   }
 } else if (workerMode === "billing") {
   while (!stopping) {
-    const result = await runBillingWebhookLifecycle(sql, workerId);
-    if (result.claimed === 0) await delay(1_000);
+    const webhookResult = await runBillingWebhookLifecycle(sql, workerId);
+    const captureFacts = Date.now() >= nextBillingUsageCaptureAt;
+    const usageResult = await runBillingUsageLifecycle(sql, workerId, {
+      captureFacts,
+    });
+    if (captureFacts) nextBillingUsageCaptureAt = Date.now() + 60_000;
+    if (webhookResult.claimed === 0 && usageResult.claimed === 0) {
+      await delay(1_000);
+    }
   }
 } else {
   while (!stopping) {

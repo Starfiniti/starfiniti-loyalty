@@ -167,6 +167,9 @@ services:
       NODE_ENV: production
       LOYALTY_WORKER_MODE: billing
       LOYALTY_WORKER_DATABASE_URL: ${LOYALTY_WORKER_DATABASE_URL:?required}
+      LOYALTY_STRIPE_API_KEY_FILE: /run/secrets/stripe_usage_api_key
+    volumes:
+      - ${LOYALTY_STRIPE_USAGE_API_KEY_PATH:-/dev/null}:/run/secrets/stripe_usage_api_key:ro
     security_opt:
       - no-new-privileges:true
     cap_drop:

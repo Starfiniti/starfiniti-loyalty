@@ -1,10 +1,12 @@
 import type {
   BillingSummaryV1,
+  ManagedBillingUsageSummaryV1,
   ManagedBillingPlanOptionV1,
   ManagedBillingCommercialState,
 } from "@starfiniti/contracts";
 import {
   Ban,
+  BarChart3,
   CheckCircle2,
   CloudCog,
   DatabaseZap,
@@ -113,6 +115,7 @@ const protectedOperations = [
 
 export function BillingOverview({
   summary,
+  usageSummary = null,
   plans = [],
   organizationId = "00000000-0000-4000-8000-000000000000",
   portalOperationId = "00000000-0000-4000-8000-000000000001",
@@ -120,6 +123,7 @@ export function BillingOverview({
   startSessionAction,
 }: Readonly<{
   summary: BillingSummaryV1 | null;
+  usageSummary?: ManagedBillingUsageSummaryV1 | null;
   plans?: readonly ManagedBillingPlanOptionV1[];
   organizationId?: string;
   portalOperationId?: string;
@@ -231,14 +235,17 @@ export function BillingOverview({
       </section>
 
       {summary.deploymentMode === "managed" ? (
-        <ManagedBillingControls
-          canManage={canManage}
-          organizationId={organizationId}
-          plans={plans}
-          portalOperationId={portalOperationId}
-          providerLinked={summary.providerLinked}
-          startSessionAction={startSessionAction}
-        />
+        <>
+          <UsagePanel summary={usageSummary} />
+          <ManagedBillingControls
+            canManage={canManage}
+            organizationId={organizationId}
+            plans={plans}
+            portalOperationId={portalOperationId}
+            providerLinked={summary.providerLinked}
+            startSessionAction={startSessionAction}
+          />
+        </>
       ) : null}
 
       <div className="billing-boundary-grid">
@@ -282,6 +289,78 @@ export function BillingOverview({
       </div>
     </div>
   );
+}
+
+function UsagePanel({
+  summary,
+}: Readonly<{ summary: ManagedBillingUsageSummaryV1 | null }>) {
+  const period = summary
+    ? new Intl.DateTimeFormat("en", {
+        month: "long",
+        year: "numeric",
+        timeZone: "UTC",
+      }).format(new Date(summary.periodStart))
+    : "Current UTC month";
+  return (
+    <section
+      className="billing-usage-panel"
+      aria-labelledby="billing-usage-title"
+    >
+      <header>
+        <div>
+          <p className="login-eyebrow">Measured usage</p>
+          <h2 id="billing-usage-title">{period}</h2>
+          <p>
+            Every unit traces to immutable product evidence. Corrections are
+            compensating facts; provider delivery never affects loyalty work.
+          </p>
+        </div>
+        <span className="billing-usage-mode">
+          <BarChart3 aria-hidden="true" />
+          {summary?.dispatchMode === "configured"
+            ? "Dispatch configured"
+            : "Shadow mode"}
+        </span>
+      </header>
+      {!summary ? (
+        <p className="billing-plan-empty">
+          The tenant-scoped usage projection is temporarily unavailable.
+          Subscription authority and loyalty value are unaffected.
+        </p>
+      ) : (
+        <div className="billing-usage-grid">
+          {summary.meters.map((meter) => {
+            const attention = BigInt(meter.attentionCount);
+            const pending = BigInt(meter.pendingCount);
+            return (
+              <article key={meter.meterKey}>
+                <small>{meter.label}</small>
+                <strong>{formatUsageCount(meter.quantity)}</strong>
+                <p>
+                  {summary.dispatchMode === "configured"
+                    ? `${formatUsageCount(meter.dispatchedQuantity)} provider-accepted${
+                        pending > 0n
+                          ? ` · ${formatUsageCount(meter.pendingCount)} pending`
+                          : ""
+                      }`
+                    : `${formatUsageCount(meter.factCount)} source facts`}
+                </p>
+                {attention > 0n ? (
+                  <span className="billing-usage-attention">
+                    {formatUsageCount(meter.attentionCount)} need reconciliation
+                  </span>
+                ) : null}
+              </article>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+}
+
+export function formatUsageCount(value: string): string {
+  return new Intl.NumberFormat("en").format(BigInt(value));
 }
 
 function ManagedBillingControls({
