@@ -13,6 +13,7 @@ let managedModeSet = false;
 
 const modeAt = new Date();
 const enabledAt = new Date(modeAt.getTime() + 1);
+const correctionAt = new Date(modeAt.getTime() + 1_000);
 const exactCorrectionId = randomUUID();
 const changedCorrectionId = randomUUID();
 
@@ -30,7 +31,7 @@ function correct(sql, sourceFactId, operationId, quantity) {
     select loyalty_private.record_managed_billing_usage_correction_v1(
       ${sourceFactId}, ${quantity}, 'probe:billing-usage-concurrency',
       'Append isolated usage correction during concurrency probe',
-      statement_timestamp(), ${operationId}
+      ${correctionAt}, ${operationId}
     ) as public_id
   `;
 }
