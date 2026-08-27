@@ -32,7 +32,7 @@ export const CUSTOMER_COPY = {
     signOut: "Sign out",
     connected: "Your verified store account is now connected.",
     rewardReserved:
-      "Reward reserved. Your customer-only WooCommerce coupon is being created now.",
+      "Reward reserved. Your benefit is being prepared by the store.",
     accountEyebrow: "Your loyalty account",
     accountTitle: "Points, tier, and rewards",
     accountIntro:
@@ -117,7 +117,7 @@ export const CUSTOMER_COPY = {
     currentBalance: "Current balance",
     afterReservation: "After reservation",
     reservationSafety:
-      "Your points will be reserved now. WooCommerce creates a customer-only coupon asynchronously; if issuance fails, the ledger releases the points automatically.",
+      "Your points and any limited reward capacity will be reserved now. Native coupons are created asynchronously; store-delivered perks stay reserved until the store records a definitive outcome.",
     confirmRedemption: "Confirm redemption",
     cancel: "Cancel",
     manualReward:

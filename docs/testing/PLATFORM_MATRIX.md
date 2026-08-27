@@ -15,16 +15,16 @@ Every case activates, deactivates, and reactivates the English-only plugin; crea
 
 Before a production release, execute and retain results for:
 
-| Dimension               | Required cases                                                                                                      |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| WordPress / WooCommerce | Oldest supported and current stable combinations                                                                    |
-| Storage                 | HPOS enabled and legacy order tables during supported migration windows                                             |
-| Checkout                | Cart/Checkout Blocks and classic checkout; hub online, timeout, and unavailable                                     |
-| PHP                     | Every declared supported PHP minor                                                                                  |
-| Money                   | Zero-, two-, and three-decimal currencies; taxes, discounts, shipping, fees, partial/full refunds                   |
-| Queues                  | WP-Cron disabled, Action Scheduler backlog, retry exhaustion, dead-letter recovery, delayed command acknowledgement |
-| Rewards                 | Fixed cart, uncapped percentage, free shipping, customer mismatch, expiry, use/cancel race                          |
-| Lifecycle               | Activate, deactivate, reinstall, opt-in uninstall cleanup, multisite rejection, key rotation                        |
-| Localization            | English source/POT parity; additional locale catalogs, long-copy, and RTL presentation are deferred                 |
+| Dimension               | Required cases                                                                                                                                                                                      |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| WordPress / WooCommerce | Oldest supported and current stable combinations                                                                                                                                                    |
+| Storage                 | HPOS enabled and legacy order tables during supported migration windows                                                                                                                             |
+| Checkout                | Cart/Checkout Blocks and classic checkout; hub online, timeout, and unavailable                                                                                                                     |
+| PHP                     | Every declared supported PHP minor                                                                                                                                                                  |
+| Money                   | Zero-, two-, and three-decimal currencies; taxes, discounts, shipping, fees, partial/full refunds                                                                                                   |
+| Queues                  | WP-Cron disabled, Action Scheduler backlog, retry exhaustion, dead-letter recovery, delayed command acknowledgement                                                                                 |
+| Rewards                 | V1 fixed/percentage/free shipping; V2 fixed, restricted uncapped percentage, free shipping, product-specific free product, old-plugin capability denial, customer mismatch, expiry, use/cancel race |
+| Lifecycle               | Activate, deactivate, reinstall, opt-in uninstall cleanup, multisite rejection, key rotation                                                                                                        |
+| Localization            | English source/POT parity; additional locale catalogs, long-copy, and RTL presentation are deferred                                                                                                 |
 
-The minimum/current smoke is a Phase 7 pass, not the exhaustive production release matrix. R-008 remains open until every declared PHP minor and the remaining money, tax, cache, queue, reward, lifecycle, additional-language/RTL, and multi-currency cases have retained evidence. Docker remains unavailable locally, so GitHub Actions is the container-backed runner.
+The released minimum/current smoke is a Phase 7 pass, not the exhaustive production release matrix. The M04 additions have local contract, pgTAP, concurrency, and PHP runtime-smoke coverage but are not production evidence until the complete four-cell runtime matrix passes at the exact commit. R-008 remains open until every declared PHP minor and the remaining money, tax, cache, queue, reward, lifecycle, and multi-currency cases have retained evidence. Additional-language and RTL presentation are deferred because the active product is English-only. Docker remains unavailable locally, so GitHub Actions is the container-backed runner.

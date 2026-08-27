@@ -8,6 +8,8 @@ Deliver the enterprise WooCommerce roadmap in `docs/plan/ENTERPRISE_ROADMAP.md` 
 
 M04 — expanded native rewards and audited manual fulfilment. M00, M02, and M03 are complete; M01 remains active at its approved-real-store and full-service-recovery external gates.
 
+M04-S01 through S03 are implemented locally: strict V2 native rewards, independent PostgreSQL validation, atomic global quantity/points-budget allocation, capability-negotiated WooCommerce execution, audited manual-perk cases with exact capture/rejection accounting, and six-template merchant/customer workflows have passed clean database replay, all pgTAP suites, focused contracts, dashboard checks, and the two-session last-unit race. M04-S04 exact-head CI, the full runtime matrix, browser/accessibility review, disabled deployment, Starfiniti canary, reconciliation, and scoring remain.
+
 The active integrated baseline is released production commit `0ced4b666a55d836bd3d4927337fe057a71bb4ba` (`v0.1.11`). The previous local Phase 4 branch and its six modified planning files remain preserved in a named git stash and have not been mixed into this work.
 
 ## Completed M00 slice
@@ -33,7 +35,7 @@ The active integrated baseline is released production commit `0ced4b666a55d836bd
 
 ## Next safe work
 
-1. M04: implement fulfilment-complete fixed, percentage, free-shipping, free-product, exclusive-access, and manual-perk rewards with restrictions, atomic inventory/budget reservations, ambiguity-safe recovery, merchant operations, and runtime evidence.
+1. M04: finish the audited manual-perk queue, merchant reward workflows, summaries, runtime/browser evidence, disabled deployment, canary reconciliation, and score after the native capacity/capability slice.
 2. M01: connect an approved real WooCommerce store when access is supplied and complete its value, outage, rotation, alert, and clean-room recovery gate.
 3. Deliver M05–M16 sequentially in versioned vertical slices and close each measured module gate before beginning its dependent module.
 

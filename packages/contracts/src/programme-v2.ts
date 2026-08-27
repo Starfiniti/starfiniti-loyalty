@@ -4,6 +4,7 @@ import {
   programmeRewardDefinitionV1,
   programmeTierDefinitionV1,
 } from "./programme";
+import { programmeRewardDefinitionV2 } from "./reward-v2";
 
 const code = z.string().regex(/^[a-z][a-z0-9_-]{0,79}$/u);
 const POSTGRES_BIGINT_MAX = 9_223_372_036_854_775_807n;
@@ -17,6 +18,29 @@ const timestamp = z.iso.datetime({ offset: true });
 const selector = z.string().trim().min(1).max(255);
 const selectorList = z.array(selector).max(100).default([]);
 const operationKey = z.string().min(1).max(255);
+const legacyProgrammeRewardKinds = new Set<string>([
+  "fixed_discount",
+  "percentage_discount",
+  "free_shipping",
+]);
+const legacyProgrammeRewardDefinitionForV2 =
+  programmeRewardDefinitionV1.superRefine((reward, context) => {
+    if (!legacyProgrammeRewardKinds.has(reward.kind)) {
+      context.addIssue({
+        code: "custom",
+        message: "Unsupported legacy reward kind in ProgrammeDefinitionV2",
+        path: ["kind"],
+      });
+    }
+    if (Object.prototype.hasOwnProperty.call(reward.configuration, "version")) {
+      context.addIssue({
+        code: "custom",
+        message:
+          "Versioned reward configuration must satisfy RewardDefinitionV2",
+        path: ["configuration", "version"],
+      });
+    }
+  });
 
 export const earningSourceV2 = z.enum([
   "purchase",
@@ -133,7 +157,11 @@ export const earningRuleV2 = z
   .strict()
   .superRefine((rule, context) => {
     const { startsAt, endsAt } = rule.conditions;
-    if (startsAt !== null && endsAt !== null && startsAt >= endsAt) {
+    if (
+      startsAt !== null &&
+      endsAt !== null &&
+      Date.parse(startsAt) >= Date.parse(endsAt)
+    ) {
       context.addIssue({
         code: "custom",
         message: "Rule end must follow rule start",
@@ -229,7 +257,14 @@ export const programmeDefinitionV2 = z
     pendingDays: z.number().int().min(0).max(365),
     pointsExpireAfterDays: z.number().int().min(1).max(3650),
     tiers: z.array(programmeTierDefinitionV1).min(1),
-    rewards: z.array(programmeRewardDefinitionV1).default([]),
+    rewards: z
+      .array(
+        z.union([
+          programmeRewardDefinitionV2,
+          legacyProgrammeRewardDefinitionForV2,
+        ]),
+      )
+      .default([]),
     earningRules: z.array(earningRuleV2).min(1).max(200),
   })
   .strict()
@@ -257,13 +292,43 @@ export const programmeDefinitionV2 = z
       });
     }
 
-    const legacySurface = programmeDefinitionV1.safeParse({
+    const rewardCodes = new Set<string>();
+    definition.rewards.forEach((reward, index) => {
+      const legacyConfiguration = reward.configuration as Record<
+        string,
+        unknown
+      >;
+      if (rewardCodes.has(reward.code)) {
+        context.addIssue({
+          code: "custom",
+          message: `Duplicate reward code: ${reward.code}`,
+          path: ["rewards", index, "code"],
+        });
+      }
+      rewardCodes.add(reward.code);
+      if (
+        reward.configuration.version !== "2" &&
+        ["fixed_discount", "percentage_discount"].includes(reward.kind) &&
+        legacyConfiguration.currencyMinorUnitDigits !==
+          definition.currencyMinorUnitDigits
+      ) {
+        context.addIssue({
+          code: "custom",
+          message: "Legacy reward precision must match programme precision",
+          path: ["rewards", index, "configuration", "currencyMinorUnitDigits"],
+        });
+      }
+    });
+
+    const legacyTierSurface = programmeDefinitionV1.safeParse({
       version: "1",
       tiers: definition.tiers,
-      rewards: definition.rewards,
+      rewards: definition.rewards.filter(
+        (reward) => reward.configuration.version !== "2",
+      ),
     });
-    if (!legacySurface.success) {
-      for (const issue of legacySurface.error.issues) {
+    if (!legacyTierSurface.success) {
+      for (const issue of legacyTierSurface.error.issues) {
         context.addIssue({
           code: "custom",
           message: issue.message,

@@ -45,9 +45,13 @@ The decision command serializes by wallet. When the effective tier changes, it c
 
 ## Rewards and failure compensation
 
-Approved definitions support fixed or percentage discounts, free products, free shipping, store credit, exclusive access, and custom connector-neutral rewards. A reward request snapshots the version, reward, wallet, cost, expiry, idempotency key, and request hash.
+V1 definitions retain their historical fixed, percentage, and free-shipping behavior. `ProgrammeRewardDefinitionV2` adds fulfilment-complete fixed discounts, uncapped percentage discounts, free shipping, product-specific free products, exclusive access, and custom perks. Store credit, gift cards, cash redemption, and maximum-capped percentage discounts remain unsupported. A reward request snapshots the version, reward, wallet, cost, expiry, idempotency key, and request hash.
 
-Native WooCommerce fixed discounts require a positive minor-unit amount, percentage discounts require 1–10,000 basis points with no maximum cap, currency precision is 0–6 digits, and fixed/percentage/free-shipping coupons require a 1–365 day validity. These fields are validated before a programme draft can be saved and rechecked before customer value moves.
+Native WooCommerce fixed discounts require a positive minor-unit amount, percentage discounts require 1–10,000 basis points with no maximum cap, currency precision is 0–6 digits, and native coupons require a 1–365 day validity. V2 adds minimum-spend, product/category, sale-item, stacking, date, tier, per-customer, global-quantity, and points-budget controls. Segment availability is structurally empty until M07 provides an authoritative audience snapshot. The public contract validates authoring and PostgreSQL independently rechecks publication and redemption before customer value moves.
+
+`20260813210000_expanded_reward_fulfilment.sql` allocates limited quantity and points budget inside the same serialized transaction as the reward reservation. Capture consumes the allocation; a definitive release returns it. An ambiguous connector outcome keeps both points and capacity reserved for inspection. Two-session verification proves that only one request can take the last unit.
+
+`20260813211000_manual_reward_fulfilment.sql` routes exclusive-access and custom rewards into one private case created in the reservation transaction. The customer receives the same minimized reservation result as a native reward. Merchant queue reads derive organization and programme-group scope from the live member role. Owner, admin, and operator commands start a case and then record confirmed fulfilment or definitive rejection; analysts and auditors are read-only. Confirmed fulfilment captures points, definitive rejection compensates them, and uncertain delivery stays reserved and `in_progress`. The public command and response schemas are documented in `docs/api/REWARD_FULFILMENT.md`.
 
 The state graph is:
 
@@ -61,7 +65,7 @@ Value-bearing transitions must reference a unique ledger transaction for the sam
 
 Connector execution references must be opaque object IDs. Coupon plaintext is not persisted in this boundary.
 
-For WooCommerce native rewards, a reserved reward queues one high-entropy, customer-scoped coupon issue command. Successful connector acknowledgement records `issued`. A signed completed-order coupon fact then calls the narrow capture command, which locks the reservation and creates both the related `capture` ledger transaction and `captured` transition atomically. A retry returns the original transaction; the same reservation against another order conflicts.
+For WooCommerce native rewards, a reserved reward queues one high-entropy, customer-scoped coupon issue command. V2 commands are returned only when the polling plugin advertises `coupon.issue.v2`; the retained V1 claim boundary cannot receive them. Successful connector acknowledgement records `issued`. A signed completed-order coupon fact then calls the narrow capture command, which locks the reservation and creates both the related `capture` ledger transaction and `captured` transition atomically. A retry returns the original transaction; the same reservation against another order conflicts.
 
 Authenticated hosted customers use `redeem_my_reward(account_public_id, reward_code, request_id)`. The account must be an active non-revoked link for the live Auth subject; tenant, customer, wallet, programme version, points, validity, and WooCommerce connection are never caller inputs. One transaction creates the reservation, reserves exact FIFO-funded points, records the transition, and queues the private coupon command. The response contains only reservation ID, state, and created/duplicate outcome.
 
