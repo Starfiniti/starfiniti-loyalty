@@ -1,12 +1,12 @@
 schema: starfiniti.recovery-evidence.v1
 status: in_progress
-observedAt: 2026-08-27T09:36:31Z
+observedAt: 2026-08-27T10:13:13Z
 currentProduction:
   release: v0.1.11
   applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
 candidate:
   branch: codex/m15-clean-room-recovery
-  commit: a0b9881aae58ed27bab055f98febbe121d5a842f
+  commit: aa990c137a06b2f0718e718e4ec2f37fd33bf959
   approvedDrill: false
   reconciliationApproved: false
 plan:
@@ -33,7 +33,7 @@ checks:
     evidence: The canonical candidate plan orders thirteen exact service-recovery stages plus always-run teardown and fixes five-minute RPO and sixty-minute full-service RTO objectives.
   - id: controller_selftest
     status: passed
-    evidence: The controller test exercises its real private-copy child-process boundary plus complete, database-integrity, cleanup, measured-time, public-ingress, stale-marker, short-approval, and sensitive-shape cases.
+    evidence: The controller test exercises its real private-copy child-process boundary plus complete, database-integrity, source-aggregate, cleanup, measured-time, public-ingress, stale-marker, short-approval, and sensitive-shape cases.
   - id: approval_digest_binding
     status: passed
     evidence: Real execution accepts only a clean exact commit, a four-hour-or-shorter owner approval with a full remaining run window, and exact plan inventory driver target-marker and Compose-project digests copied privately after validation.
@@ -47,8 +47,8 @@ checks:
     status: passed
     evidence: The report retains controller-measured stage duration, control and observation digests, aggregate RPO/RTO, failure, and cleanup facts without paths origins credentials identities or raw recovery observations.
   - id: exact_head_ci
-    status: pending
-    evidence: A Linux CI run at the exact implementation commit must pass root checks database replay both images and all four WooCommerce runtime cells.
+    status: passed
+    evidence: Exact commit aa990c137a06b2f0718e718e4ec2f37fd33bf959 passed CI run 33061625916 with all seven baseline database image and WooCommerce jobs and Security run 33061625968 with all three jobs.
   - id: approved_drill_window
     status: pending
     evidence: A named owner must approve the disposable infrastructure window driver digest source set and teardown authority for both recovery runs.
