@@ -1,6 +1,6 @@
 # M13 Evidence — Enterprise identity
 
-Status: M13-S01 through M13-S05 are repository-complete on stacked draft PRs #40 through #44, with every production capability disabled. M13-S06 is active on draft PR #45 with a fail-closed 50-check manifest: 12 repository, public-baseline, Authentik-health, and operator checks pass; 38 production checks remain pending. Its provisional score is 90/100, but operability is 3/10 and below the mandatory 8/10 category floor. Production is unchanged.
+Status: M13-S01 through M13-S05 are repository-complete on the integrated enterprise branch, with every production capability disabled. M13-S06 is active on draft PR #57 with a fail-closed 51-check, four-approval, nine-artifact manifest: 12 repository/read-only checks pass and 39 production checks remain pending. Its provisional score is 90/100, but operability is 3/10 and below the mandatory 8/10 category floor. Production is unchanged.
 
 ## M13-S01 access catalogue and review
 
@@ -226,10 +226,11 @@ deletion state changed.
 
 ## M13-S06 enterprise identity canary and close
 
-Status: active on `codex/m13-canary-close` and draft PR #45; production remains unchanged.
+Status: active on the integrated enterprise branch and draft PR #57; production remains unchanged.
 
-- The exact-schema `starfiniti.enterprise-identity-canary.v1` manifest defines 50 mandatory checks and seven weighted categories. Completion fails closed for a pending, failed, missing, duplicate, or unknown check; a short or non-exact commit; score drift; a category below 80% of its weight; an incomplete prerequisite slice; unsafe public status; sensitive evidence; hollow automatic-failure claims; or absent release, operator, enterprise-identity, and canary approvals.
-- Validator self-tests deliberately corrupt completion, evidence keys, check membership, score arithmetic, commit identity, automatic-failure evidence, public baseline, prerequisite status, and category floors. Each corruption is rejected.
-- Exact candidate run `33015769949` at `6f1c1790f672f9aecfef61a581592313d5d67610` passed all seven jobs: the root baseline with the hardened canary validator, both production images, a clean 75-migration replay, all 62 pgTAP files with 3,349 assertions, all 16 concurrency probes, and all four WooCommerce runtimes.
+- The exact-schema `starfiniti.enterprise-identity-canary.v1` manifest defines 51 mandatory checks, four synchronized approvals, seven fixed weighted categories, seventeen fixed automatic failures, and nine unique path- and SHA-256-bound production artifacts.
+- Verified production files must be minimized JSON under the M13 production evidence root, safely opened descriptor-first as bounded regular files, unique by path/digest, candidate-commit and check-coverage exact, and free of identity, external subject, reusable federation/SCIM/support/recovery material, raw payloads, private selectors, and ledger metadata.
+- Adversarial fixtures reject approval drift, missing/duplicate/forward-looking checks, score drift, short commits, sensitive values, weakened failure rules, missing/unsafe/reused/digest-drifted artifacts, unsafe public baselines, incomplete prerequisite slices, prose-only closure, and category-floor bypass; a positive fixture proves valid closure remains attainable.
+- Integrated exact-head [CI run 33104114747](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/33104114747) and [Security run 33104114894](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/33104114894) passed candidate `0ae43ea092ffdb3aef8664a7fde27e18a2782b64` across all eleven checks.
 - Fresh read-only public probes returned `200` for dashboard health/login and Authentik live/ready, `401` for unauthenticated Supabase Auth/REST, and canonical DNS resolution. The approved `s2-root` route confirmed production VMs 970 and 971 running. No identity, application, database, network-policy, secret, organization, or customer state was changed.
-- Twelve checks pass and 38 remain pending. The provisional module score is 90/100, but operability is 3/10 and therefore below its mandatory 8/10 floor. The gate cannot complete until an immutable approved release, recovery point, reviewed private-egress policy, mounted administration material, approved enterprise OIDC/SAML and SCIM fixture, agency/support and AAL2 recovery/deletion rehearsals, exact reconciliation, rollback, observation, and explicit owner approval all pass.
+- Twelve checks pass and 39 remain pending. The provisional module score is 90/100, but operability is 3/10 and therefore below its mandatory 8/10 floor. The gate cannot complete until an immutable approved release, recovery point, reviewed private-egress policy, mounted administration material, approved enterprise OIDC/SAML and SCIM fixture, agency/support and AAL2 recovery/deletion rehearsals, exact reconciliation, rollback, observation, and explicit owner approval all pass.

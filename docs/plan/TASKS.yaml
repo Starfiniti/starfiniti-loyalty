@@ -2210,7 +2210,12 @@ tasks:
         forged domain group metadata grants nothing,
         cross-tenant flows fail closed,
       ]
-    owner_inputs: [enterprise IdP test tenant]
+    owner_inputs:
+      [
+        approved enterprise IdP and SCIM test tenant,
+        approved consenting agency and support fixture,
+        approved release and bounded identity canary window,
+      ]
     acceptance:
       [
         organization lifecycle invitations seven roles federation SCIM break-glass support agency and visible history pass,
@@ -2506,11 +2511,15 @@ tasks:
           - zero usable stale membership session endpoint relationship grant or recovery capability after revocation
           - zero unexplained membership source endpoint relationship support audit credential pseudonym ledger checkout or privacy difference
         targets:
-          - all 50 mandatory canary checks pass with minimized non-sensitive evidence
+          - all 51 mandatory canary checks pass with minimized non-sensitive evidence
           - module score reaches at least 90 and every category reaches 80 percent of its weight
           - every deterministic automatic failure remains absent
         owner_inputs:
-          [enterprise IdP test tenant and production canary approval]
+          [
+            approved enterprise IdP and SCIM test tenant,
+            approved consenting agency and support fixture,
+            production canary approval,
+          ]
         acceptance:
           - stale sessions fail after deprovisioning and forged domain group metadata issuer and tenant selectors grant nothing
           - OIDC SAML SCIM support and agency canaries reconcile exactly with complete tenant-visible audit
@@ -2532,8 +2541,9 @@ tasks:
           - npm run enterprise-identity:canary:validate
         evidence:
           - docs/plan/evidence/M13/canary.yaml
-          - 50-check manifest records 12 passed repository public-baseline Authentik-health and operator checks with 38 release IdP SCIM agency support recovery deletion rollback observation and reconciliation checks pending
-          - exact candidate run 33015769949 at 6f1c1790f672f9aecfef61a581592313d5d67610 passes all seven jobs including root checks both images clean 75-migration replay all 62 pgTAP files with 3349 assertions all 16 concurrency probes and all four WooCommerce runtimes
+          - integrated exact-head CI run 33104114747 and Security run 33104114894 passed at 0ae43ea with all eleven checks green
+          - 51-check manifest records four synchronized approvals nine path and digest bound production artifacts seventeen fixed automatic failures and deterministic positive/adversarial completion fixtures
+          - twelve repository and read-only controls pass while thirty-nine approved release fixture deployment IdP SCIM agency support recovery deletion reconciliation rollback and observation controls remain pending
 
   - id: M14-MANAGED-BILLING
     title: Add managed Stripe billing and idempotent usage metering

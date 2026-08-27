@@ -1,12 +1,12 @@
 schema: starfiniti.enterprise-identity-canary.v1
 status: in_progress
-observedAt: 2026-08-26T21:19:00Z
+observedAt: 2026-08-27T18:40:05Z
 currentProduction:
   release: v0.1.11
   applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
 candidate:
-  pullRequest: 45
-  commit: 6f1c1790f672f9aecfef61a581592313d5d67610
+  pullRequest: 57
+  commit: 0ae43ea092ffdb3aef8664a7fde27e18a2782b64
   approvedRelease: false
   operatorAccess: true
   enterpriseIdentityApproved: false
@@ -39,7 +39,7 @@ score:
     - id: tests
       weight: 15
       score: 15
-      evidence: Candidate evidence covers 3,349 pgTAP assertions, 16 concurrency probes, contracts, actions, browser states, both images, and all four WooCommerce runtimes.
+      evidence: "Exact candidate evidence covers 958 workspace tests, 81 migrations, 68 pgTAP files, the full concurrency matrix, contracts, actions, browser states, both images, and all four WooCommerce runtimes."
     - id: performance
       weight: 10
       score: 8
@@ -55,10 +55,10 @@ score:
 checks:
   - id: exact_head_ci
     status: passed
-    evidence: Run 33015769949 at 6f1c1790f672f9aecfef61a581592313d5d67610 passed root checks, both production images, 75 migrations, 62 pgTAP files with 3,349 assertions, 16 concurrency probes, and all four WooCommerce runtimes.
+    evidence: "CI run 33104114747 and Security run 33104114894 passed at integrated candidate commit 0ae43ea092ffdb3aef8664a7fde27e18a2782b64 with all eleven PR checks green."
   - id: migration_replay
     status: passed
-    evidence: Run 33014200478 cleanly replayed all 75 additive migrations and all 62 pgTAP files with 3,349 assertions.
+    evidence: "Exact candidate CI replayed all 81 additive migration files and all 68 pgTAP files with the complete database and concurrency boundary green."
   - id: contract_protocol_matrix
     status: passed
     evidence: Organization lifecycle, federation, SCIM discovery and resources, agency, support, recovery, export, and deletion contracts pass strict parsing and route/action tests.
@@ -67,7 +67,7 @@ checks:
     evidence: RLS, grants, fixed search paths, Auth-derived subjects, live membership and session checks, cross-tenant denial, immutable evidence, and zero-value boundaries pass.
   - id: concurrency_matrix
     status: passed
-    evidence: Sixteen two-session probes cover value, capacity, identity, lifecycle, SCIM, bilateral acceptance, support approval, and deletion serialization.
+    evidence: "The complete repository two-session matrix covers value, capacity, identity, lifecycle, SCIM, bilateral acceptance, support approval, billing, migration, and deletion serialization."
   - id: woocommerce_runtime_matrix
     status: passed
     evidence: Minimum and current WordPress and WooCommerce pass with HPOS and legacy storage while enterprise administration remains outside checkout.
@@ -91,7 +91,7 @@ checks:
     evidence: The approved s2-root route reached the production Proxmox node read-only and confirmed application VM 970 and database VM 971 running without mutation.
   - id: approved_release
     status: pending
-    evidence: Draft PR 45 exists, but it and its stacked M13 parents are not an approved immutable production release.
+    evidence: "Draft PR 57 is exact-head green but explicit merge, immutable release, and deployment approval remain required."
   - id: approved_enterprise_identity_fixture
     status: pending
     evidence: An approved enterprise OIDC and SAML test tenant with a controlled SCIM cohort has not been supplied.
@@ -119,6 +119,9 @@ checks:
   - id: migration_registration
     status: pending
     evidence: Production must record each M13 additive migration version and source hash exactly once before any enterprise identity command.
+  - id: non_canary_disabled
+    status: pending
+    evidence: "Unrelated organizations, users, sessions, identity sources, SCIM endpoints, agency relationships, support grants, recovery cases, and deletion cases must receive no M13 capability."
   - id: identity_entitlement_canary
     status: pending
     evidence: Keep enterprise identity disabled globally, then enable only the approved Starfiniti test organization after disabled-deployment smoke passes.
@@ -203,18 +206,75 @@ checks:
   - id: final_reconciliation
     status: pending
     evidence: Confirm zero unexplained membership, role, session, source, endpoint, relationship, grant, use, credential, pseudonym, audit, ledger, checkout, or privacy difference.
+artifacts:
+  - id: read_only_baseline
+    status: verified
+    path: docs/plan/evidence/M13/production/identity-read-only-baseline-2026-08-27.json
+    sha256: b859d70b2b81d86ba4e2a01f1cc75b4ed084b6eb45c9e0b0a2450c5558ac4d81
+  - id: release_inventory
+    status: pending
+    path: null
+    sha256: null
+  - id: approval_record
+    status: pending
+    path: null
+    sha256: null
+  - id: recovery_point
+    status: pending
+    path: null
+    sha256: null
+  - id: production_baseline
+    status: pending
+    path: null
+    sha256: null
+  - id: canary_journal
+    status: pending
+    path: null
+    sha256: null
+  - id: reconciliation_report
+    status: pending
+    path: null
+    sha256: null
+  - id: rollback_report
+    status: pending
+    path: null
+    sha256: null
+  - id: observation_report
+    status: pending
+    path: null
+    sha256: null
 automaticFails:
-  - email domain group name profile metadata browser input or upstream claim grants tenant authority
-  - uninvited unprovisioned unmapped conflicting or unrelated identity gains membership
-  - stale Auth or application session retains access after membership endpoint grant relationship or recovery revocation
-  - reusable plaintext federation SCIM agency support recovery or administration material persists outside its approved isolated handoff
-  - cross-organization source endpoint directory membership relationship grant export deletion audit or value access
-  - agency relationship creates membership customer sharing wallet sharing or product-command authority
-  - support is self-approved over-scoped writable hidden unaudited expired or usable after revocation
-  - break-glass works without a live owner signed AAL2 correlated Auth session short expiry and tenant-visible use evidence
-  - offboarding leaves an active credential session destination signing fingerprint schedule export payload or non-owner membership
-  - deletion completes before cooling without exact approval or rewrites ledger programme event provisioning or immutable audit history
-  - checkout ingestion refunds releases reconciliation export existing redemption or customer value depends on enterprise identity availability
-  - unexplained membership role source endpoint relationship grant use credential pseudonym audit ledger checkout or privacy difference
-  - approved release recovery point enterprise identity fixture canary rollback observation or final reconciliation evidence is absent
-  - critical security tenancy authorization privacy recovery accessibility data-loss or immutable-history finding remains unresolved
+  - id: upstream_claim_authority
+    rule: "email domain group name profile metadata browser input upstream claim issuer label or provider attribute grants tenant membership role support recovery or deletion authority"
+  - id: unprovisioned_access
+    rule: "an uninvited unprovisioned unmapped conflicting revoked or unrelated identity gains membership relationship support recovery export or administration access"
+  - id: stale_session_access
+    rule: "a stale Auth or application session retains access after membership endpoint grant relationship recovery agency or organization revocation"
+  - id: credential_or_identity_leak
+    rule: "reusable plaintext federation SCIM agency support recovery administration or identity material persists outside its approved isolated handoff or enters logs evidence browser or database"
+  - id: cross_tenant_exposure
+    rule: "an unrelated organization source endpoint directory membership relationship grant export deletion audit identity or value selector becomes visible mutable or externally actionable"
+  - id: egress_or_rebinding_escape
+    rule: "redirect DNS rebinding private reserved link-local metadata mixed answer unpinned socket or changed validation reaches an internal or unapproved destination"
+  - id: duplicate_identity_effect
+    rule: "retry concurrency replay rotation lease recovery or provider ambiguity creates another membership source endpoint mapping relationship grant use case deletion or audit effect"
+  - id: agency_authority_escalation
+    rule: "an agency relationship creates organization membership customer sharing wallet sharing owner role write authority or product command authority"
+  - id: support_approval_bypass
+    rule: "support is self-approved over-scoped writable hidden unaudited expired changed on retry or usable after grant relationship membership endpoint or session revocation"
+  - id: break_glass_bypass
+    rule: "break-glass works without a live owner signed fresh AAL2 correlated Auth session exact short expiry tenant-visible use evidence and immediate revocation checks"
+  - id: offboarding_residue
+    rule: "offboarding leaves an active credential session destination signing fingerprint schedule export payload relationship support grant or non-recovery membership"
+  - id: premature_or_destructive_deletion
+    rule: "deletion completes before cooling without exact approval or rewrites removes or loses ledger programme event provisioning value tombstone or immutable audit history"
+  - id: identity_value_dependency
+    rule: "checkout ingestion refunds releases reconciliation export existing redemption promised value or customer access depends on federation SCIM agency support recovery or deletion availability"
+  - id: unsafe_rollout
+    rule: "identity federation SCIM agency support recovery offboarding or deletion is enabled outside the approved fixture before recovery baseline disabled deployment egress and isolation pass"
+  - id: reconciliation_gap
+    rule: "membership role session source endpoint relationship grant use credential pseudonym audit ledger checkout privacy or identity evidence differs from immutable source facts"
+  - id: score_or_approval_bypass
+    rule: "module status completion approval fixture policy artifact score total or category floor is changed without exact synchronized evidence"
+  - id: unexplained_or_unapproved_close
+    rule: "any identity access tenancy federation SCIM agency support recovery offboarding deletion privacy approval artifact score floor or critical finding remains unresolved"

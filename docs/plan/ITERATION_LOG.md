@@ -1,5 +1,14 @@
 # Iteration Log
 
+## 2026-08-27 — M13 digest-bound enterprise identity closeout hardening
+
+- Adversarially reviewed the 50-check identity gate and found no production artifacts, mutable failure prose, unsynchronized approvals, no explicit non-canary isolation, and incomplete corruption coverage despite high-risk federation, SCIM, support, recovery, and deletion operations.
+- Replaced it with a 51-check gate retaining every organization, federation, egress, rebinding, OIDC, SAML, SCIM, deprovisioning, stale-session, agency, support, AAL2 recovery, export, offboarding, deletion, outage, rollback, observation, and final reconciliation boundary while adding explicit non-canary isolation.
+- Added nine unique path- and SHA-256-bound minimized JSON artifacts, descriptor-first bounded reads, exact candidate/check coverage, forbidden sensitive keys/values, seventeen fixed automatic failures, five completed prerequisite slices, task/score synchronization, four synchronized approvals, and an attainable positive fixture.
+- Corruption fixtures reject approval drift, missing/duplicate/forward-looking checks, scores, short commits, sensitive material, weakened rules, missing/unsafe/reused/digest-drifted artifacts, unsafe public baselines, incomplete slices, prose-only closure, and category-floor bypass.
+- Integrated candidate `0ae43ea` passed CI `33104114747` and Security `33104114894`; fresh read-only Loyalty, Supabase, Authentik, DNS, and Proxmox probes passed without mutation.
+- The honest M13 score remains 90/100, with 12 controls passed and 39 pending. Operability is 3/10 and blocks completion until approved release/fixture inputs, recovery, disabled deployment, sequential identity/administration canaries, reconciliation, rollback, and observation pass.
+
 ## 2026-08-27 — M12 digest-bound migration closeout hardening
 
 - Adversarially reviewed the 34-check migration gate and found no production artifacts, mutable failure prose, key-only sensitive scanning, unsynchronized approval booleans, stale operator evidence, and only false-completion/sensitive-key tests despite irreversible-value risk.
