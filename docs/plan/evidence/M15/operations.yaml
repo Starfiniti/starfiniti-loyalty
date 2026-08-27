@@ -12,7 +12,7 @@ currentProduction:
   interpretation: The VM counter is cumulative evidence from the contained full-stream backup incident; the latest twelve one-minute samples are quiet and no active monitoring plane exists.
 candidate:
   branch: codex/m15-operations-incidents
-  commit: 8a0209b929d655cc9791a3c889388a23dfa3351e
+  commit: c2a6fd5ceb80ae4a8b564e19f148d4a63cc85872
   approvedEnvironment: false
   operationsClaimApproved: false
 assets:
