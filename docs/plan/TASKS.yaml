@@ -2482,6 +2482,7 @@ tasks:
     title: Add managed Stripe billing and idempotent usage metering
     module: M14
     status: in_progress
+    module_score: 90
     dependencies: [M13-ENTERPRISE-IDENTITY]
     hypothesis: Managed commercial state can fund the service without becoming loyalty-value authority or burdening self-hosted deployments.
     baseline: Database-authoritative deployment entitlements and private provider Price-ID evidence exist, but no billing account mirror, subscription lifecycle, Stripe webhook inbox, checkout/portal flow, manual contract, or source-fact usage metering exists.
@@ -2808,7 +2809,12 @@ tasks:
         verification:
           [
             fail-closed manifest exact CI Stripe sandbox canary reconciliation rollback and score validation,
+            npm run billing:canary:validate,
           ]
+        evidence:
+          - docs/plan/evidence/M14/canary.yaml
+          - 48-check manifest records 13 passed repository public-baseline and operator checks with 35 approval deployment sandbox lifecycle metering invoice policy rollback observation and reconciliation checks pending
+          - provisional module score is 90 of 100 but operability is 3 of 10 and below the mandatory 8 of 10 category floor
 
   - id: M15-GA-HARDENING
     title: Prove capacity, chaos, security, recovery, canary, and GA operations

@@ -1,5 +1,13 @@
 # Iteration Log
 
+## 2026-08-27 — M14 fail-closed canary gate
+
+- Added the exact-schema 48-check M14 manifest and validator to the root repository gate. Completion requires exact release/commit evidence, five explicit approvals, all checks passing, a 90/100 module score, at least 80% of every category, completed prerequisite task state, and no deterministic automatic failure.
+- Covered recovery, disabled deployment, runtime self-hosted no-call evidence, one-tenant enablement, owner-only Checkout/Portal, verified webhook replay/disorder, official test-clock lifecycle, immutable source-fact usage/correction, bounded asynchronous provider convergence, invoice reconciliation, commercial recovery, protected paths, provider/worker outage, rollback, observation, and final reconciliation.
+- Added evidence scanning for secret-bearing keys, personal data, reusable credentials, and raw Stripe resource patterns. Self-tests corrupt approvals, checks, score arithmetic, commit identity, public access, prerequisites, category floors, and evidence to prove false completion is rejected.
+- Revalidated the canonical public baseline without authentication or mutation: dashboard health and login return 200, Supabase Auth and REST without a key return 401, and DNS resolves. Production remains globally `self_hosted` with no Stripe configuration or request.
+- Thirteen checks pass and 35 remain pending. The provisional module score is 90/100, but operability is 3/10 and below its mandatory 8/10 floor; approved release, sandbox/catalogue/policy inputs, recovery point, deployment, lifecycle/usage/invoice canaries, reconciliation, rollback, observation, and owner approval remain mandatory.
+
 ## 2026-08-27 — M14 managed-billing merchant closeout
 
 - Completed the Billing recovery experience across unconfigured, grace, restricted, cancelled, active, and manual-contract authority. Every state now explains who can act, what action is available, and which balances, history, operations, exports, reconciliation, checkout, and promised rewards remain protected.

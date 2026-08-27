@@ -2,7 +2,7 @@
 
 ## Current boundary
 
-M14-S05A adds a local deterministic delinquency/manual-contract policy core to the disabled immutable usage capture, owner-only Checkout/Portal flow, managed-only webhook receiver, and isolated billing worker. Prices, meter definitions, event names, delinquency terms, and contracts remain externally approved private evidence. Production remains `self_hosted`, all three Stripe secret paths remain empty, and the optional worker profile remains stopped.
+M14-S05 completes the local deterministic delinquency/manual-contract policy, table-bound managed-growth enforcement, and authority-aware merchant recovery experience around the disabled immutable usage capture, owner-only Checkout/Portal flow, managed-only webhook receiver, and isolated billing worker. Prices, meter definitions, event names, delinquency terms, and contracts remain externally approved private evidence. Production remains `self_hosted`, all three Stripe secret paths remain empty, and the optional worker profile remains stopped.
 
 Endpoint:
 
@@ -43,11 +43,26 @@ Only after an approved M14 canary:
 4. Set all three absolute host secret paths, recreate the dashboard container, create the explicit tenant `managed.billing` canary entitlement, and keep every other tenant disabled.
 5. Start only the isolated worker with `docker compose --profile billing up -d billing-worker`. It receives the least-privilege worker database URL and only the meter-event key; webhook normalization still performs no provider request.
 6. As the canary organization owner, create Checkout and Portal sessions. Confirm an admin, revoked owner, and other-tenant owner fail; browser requests cannot select a customer, Price, mode, or return URL; and provider failure records a bounded rejected or ambiguous attempt.
-7. Complete official sandbox and test-clock subscription create/update/delete/pause/resume plus invoice paid/payment-failed/payment-action-required cases. Exercise duplicate, delayed, changed-replay, out-of-order, stale-signature, worker-stop, lease-expiry, entitlement-revocation, cancelled return, and lost browser-return cases.
+7. Complete official sandbox and test-clock subscription create/update/delete/pause/resume plus invoice paid/payment-failed/payment-action-required cases. A clock advance is asynchronous: wait for the clock's ready state through its event or bounded polling before reconciling subscription and invoice evidence. Exercise duplicate, delayed, changed-replay, out-of-order, stale-signature, worker-stop, lease-expiry, entitlement-revocation, cancelled return, and lost browser-return cases.
 8. In shadow mode, reconcile all four local source totals before enabling meter versions. Then exercise exact meter replay, negative compensation, HTTP `409`/`429`/`5xx`, timeout, malformed response, expired provider window, worker loss before/after authorization, key removal, and meter/account version changes.
-9. Reconcile each operation, provider event ID, account, session, receipt, job, usage fact, permanent meter identifier, provider aggregate, attempt, and normalized state revision. Confirm the return page and provider aggregate change nothing, no redirect URL or payment/contact/source data is stored, zero loyalty ledger changes occur, and checkout remains independent.
+9. Reconcile each operation, provider event, account, session, receipt, job, usage fact, permanent meter identifier, provider aggregate, attempt, and normalized state revision. Stripe meter processing is asynchronous, so poll bounded meter summaries until they converge before comparing invoice quantities. Confirm the return page and provider aggregate change nothing, no redirect URL or payment/contact/source data is stored, zero loyalty ledger changes occur, and checkout remains independent.
 
 Exact sandbox credentials, approved test Prices, and a real Stripe endpoint remain owner inputs for the M14 production canary. Local deterministic fixtures are repository evidence, not a claim that the external endpoint has passed.
+
+Official behavior reviewed for the gate:
+
+- [Stripe test clocks and simulations](https://docs.stripe.com/billing/testing/test-clocks)
+- [Stripe test-clock API and asynchronous advancement](https://docs.stripe.com/billing/testing/test-clocks/api-advanced-usage)
+- [Stripe usage-based billing and asynchronous meter summaries](https://docs.stripe.com/billing/subscriptions/usage-based/implementation-guide)
+- [Stripe subscription webhook and invoice behavior](https://docs.stripe.com/billing/subscriptions/webhooks)
+
+## Canary evidence gate
+
+`npm run billing:canary:validate` validates `docs/plan/evidence/M14/canary.yaml` during every root repository check. The manifest has 48 exact checks, fixed seven-category score arithmetic, a 90/100 target, an 80% floor in every category, minimized-evidence scanning, and deterministic false-completion self-tests.
+
+The gate remains `in_progress` until every repository, approval, recovery, disabled-deployment, self-hosted no-call, Stripe sandbox, test-clock lifecycle, usage, invoice, protected-path, outage, rollback, observation, and final-reconciliation check passes. A 90/100 total cannot compensate for a category below its floor; the initial 3/10 operability score deliberately blocks completion.
+
+Do not put keys, webhook signatures, contact or payment data, raw provider bodies, or provider resource identifiers in the manifest. Store restricted source evidence only in the approved operator evidence location and record a minimized result here.
 
 ## Observation and recovery
 
