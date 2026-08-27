@@ -2701,7 +2701,7 @@ tasks:
           - docs/plan/evidence/M14/README.md
           - exact implementation-head run 33036216639 at c7f72ec4d18a7b8595bbdbf4689e436b1949617d passes all seven jobs including clean 79-migration replay all 66 pgTAP files with 3595 assertions all 20 concurrency probes 939 workspace tests both production images and all four WooCommerce runtimes
       - id: M14-S05-DELINQUENCY-ENTITLEMENTS-AND-MANUAL-CONTRACTS
-        status: in_progress
+        status: complete
         dependencies: [M14-S04-IDEMPOTENT-USAGE-METERING]
         hypothesis: Effective-dated local policy can restrict only new managed growth after grace while preserving all historical and protected value behavior.
         metrics:
@@ -2766,7 +2766,7 @@ tasks:
               - the reviewed inventory binds 23 growth or configuration table roots to separate product capability and managed billing policy while protected value operational checkout access and export roots remain structurally absent
               - adversarial Linux iterations repaired global managed activation legacy-validation masking mixed V1/V2 product authority request-claim privilege confusion and subjectless loyalty runtime compatibility before the exact-head pass
           - id: M14-S05C-MERCHANT-EXPERIENCE-AND-CLOSE
-            status: in_progress
+            status: completed
             dependencies: [M14-S05B-GROWTH-CONFIGURATION-ENFORCEMENT]
             hypothesis: A minimized live projection can explain restriction recovery and contract term without leaking private billing evidence.
             acceptance:
@@ -2776,12 +2776,17 @@ tasks:
             verification:
               - production-rendered browser review
               - adversarial diff review and exact-head npm database image WooCommerce gate
+            evidence:
+              - exact implementation-head run 33043411759 at f7a4def55ae5d4cd646ac6cad26004992f498d2b passes all seven jobs including clean 81-migration replay all 68 pgTAP files with 3701 assertions all 22 concurrency probes 950 workspace tests both production images and all four WooCommerce runtimes
+              - production-rendered restricted-owner grace-analyst contract-owner and narrow-mobile review passes 1440 by 1000 720 by 700 390 by 844 and 320 by 900 light and dark reduced-motion states with exact bigint display no horizontal overflow correct landmarks current navigation skip-link and drawer focus behavior and zero diagnostics
+              - measured light and dark theme contrast for billing state recovery continuity and plan copy remains at or above 4.5 to 1
+              - adversarial review removed contradictory plan guidance prevented self-serve controls for manual contracts made zero-plan provider setup fail honestly and repaired a skip-link pointer collision plus the missing application icon
         rollout: Policy simulation then sandbox failure then one approved managed tenant.
         rollback: Append an effective manual override or reopen growth; never edit commercial or loyalty history.
         verification:
           [state precedence protected-path browser audit and recovery tests]
       - id: M14-S06-CANARY-AND-CLOSE
-        status: planned
+        status: in_progress
         dependencies: [M14-S05-DELINQUENCY-ENTITLEMENTS-AND-MANUAL-CONTRACTS]
         hypothesis: A fail-closed Stripe sandbox and managed-tenant canary can prove subscription usage invoice and entitlement reconciliation without commercializing self-hosted installs.
         metrics:

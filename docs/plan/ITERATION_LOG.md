@@ -1,5 +1,13 @@
 # Iteration Log
 
+## 2026-08-27 — M14 managed-billing merchant closeout
+
+- Completed the Billing recovery experience across unconfigured, grace, restricted, cancelled, active, and manual-contract authority. Every state now explains who can act, what action is available, and which balances, history, operations, exports, reconciliation, checkout, and promised rewards remain protected.
+- Bound Checkout, Portal, plan selection, and manual-contract presentation to the minimized database-authoritative projection. Manual contracts no longer imply self-serve provider authority, zero-plan configurations fail honestly to an operator dependency, non-owners receive owner-directed guidance, and browser redirects remain navigation only.
+- Added semantic operational-continuity navigation, exact friendly restriction reasons, responsive 4→2→1 layout, 40/44 px controls, route metadata, and the existing Starfiniti application icon.
+- Adversarial production-browser review repaired contradictory controls/copy and a skip-link pointer collision over the mobile menu. The final 1440×1000, 720×700, 390×844, and 320×900 light/dark reduced-motion matrix passed landmarks, keyboard/drawer focus, Escape restoration, reflow, overflow, exact bigint usage, diagnostics, and measured 4.5:1-or-better contrast.
+- Local `npm run check` passed 950 workspace tests and the 32-route production build. Exact implementation-head run `33043411759` at `f7a4def55ae5d4cd646ac6cad26004992f498d2b` passed all seven jobs: 81 migrations, all 68 pgTAP files with 3,701 assertions, all 22 concurrency probes, both images, and all four WooCommerce runtime cells. M14-S05 is repository-complete; S06 canary and closeout is active with production unchanged.
+
 ## 2026-08-27 — M14 table-bound managed growth enforcement
 
 - Accepted ADR-0061 after comparing a global entitlement substitution, explicit command calls, UI-only denial, and table-bound guards. A private immutable inventory now covers 23 reviewed mutable growth/configuration roots while protected value, commerce, customer access, export, organization-access, correction, and checkout roots remain structurally absent.
