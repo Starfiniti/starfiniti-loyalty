@@ -137,14 +137,16 @@ export function readKlaviyoDeliveryConfig(
   } else if (testMode) {
     throw new Error("klaviyo_config_test_base_required");
   }
+  // This is a deterministic binding for a high-entropy provider credential,
+  // not password storage; changing the fast SHA-256 contract would break the
+  // separately provisioned database fingerprint without adding protection.
+  const credentialFingerprint = createHash("sha256");
+  credentialFingerprint.update(apiKey, "utf8"); // lgtm[js/insufficient-password-hash]
+  const credentialSha256 = credentialFingerprint.digest("hex");
   return {
     connectionId,
     apiKey,
-    // This is a deterministic binding for a high-entropy provider credential,
-    // not password storage; changing the fast SHA-256 contract would break the
-    // separately provisioned database fingerprint without adding protection.
-    // codeql[js/insufficient-password-hash]
-    credentialSha256: createHash("sha256").update(apiKey, "utf8").digest("hex"),
+    credentialSha256,
     apiRevision: KLAVIYO_API_REVISION,
     baseUrl,
     timeoutMs,

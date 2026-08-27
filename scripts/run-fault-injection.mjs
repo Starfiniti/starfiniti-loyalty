@@ -1,7 +1,6 @@
 import { createHash } from "node:crypto";
 import {
   closeSync,
-  constants,
   fstatSync,
   lstatSync,
   mkdtempSync,
@@ -111,10 +110,7 @@ function readRegularFile(path, label, maximumBytes, ownerOnly = false) {
   let initial;
   let raw;
   try {
-    descriptor = openSync(
-      path,
-      constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0),
-    );
+    descriptor = openSync(path, "r");
     initial = fstatSync(descriptor);
     const link = lstatSync(path);
     if (
