@@ -1,0 +1,63 @@
+schema: starfiniti.recovery-plan.v1
+status: candidate
+profile: single-site-enterprise-pilot
+objectives:
+  maximumRpoSeconds: 300
+  maximumFullServiceRtoSeconds: 3600
+  maximumSourceMarkerAgeSeconds: 60
+  maximumStageSeconds: 1800
+  maximumDriverOutputBytes: 32768
+  maximumExactImages: 32
+safety:
+  targetClass: clean_room_disposable
+  environmentMarker: starfiniti-clean-room-v1
+  composeProjectPrefix: starfiniti-recovery-
+  internalNetworkRequired: true
+  publicIngressAllowed: false
+  externalEgressAllowed: false
+  productionRoutesAllowed: false
+  destroyAfterRun: true
+stages:
+  - id: provision_clean_room
+    adapter: provision_isolated_target_v1
+    timeoutSeconds: 300
+  - id: inspect_isolation
+    adapter: inspect_isolated_target_v1
+    timeoutSeconds: 60
+  - id: verify_inputs
+    adapter: verify_recovery_inputs_v1
+    timeoutSeconds: 300
+  - id: restore_postgres
+    adapter: restore_physical_base_v1
+    timeoutSeconds: 1800
+  - id: replay_wal
+    adapter: replay_wal_to_target_v1
+    timeoutSeconds: 1800
+  - id: verify_database
+    adapter: verify_database_integrity_v1
+    timeoutSeconds: 600
+  - id: restore_authentik
+    adapter: restore_authentik_v1
+    timeoutSeconds: 900
+  - id: restore_configuration
+    adapter: restore_versioned_configuration_v1
+    timeoutSeconds: 300
+  - id: restore_signing_material
+    adapter: restore_signing_references_v1
+    timeoutSeconds: 300
+  - id: replay_privacy
+    adapter: replay_privacy_journal_v1
+    timeoutSeconds: 300
+  - id: start_services
+    adapter: start_exact_services_v1
+    timeoutSeconds: 600
+  - id: verify_identity_application
+    adapter: verify_identity_application_v1
+    timeoutSeconds: 300
+  - id: reconcile
+    adapter: reconcile_recovered_state_v1
+    timeoutSeconds: 600
+  - id: destroy_clean_room
+    adapter: destroy_isolated_target_v1
+    timeoutSeconds: 300
+    alwaysRun: true

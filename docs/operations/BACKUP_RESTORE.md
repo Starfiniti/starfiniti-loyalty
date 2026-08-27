@@ -49,6 +49,31 @@ VM snapshots are useful recovery aids but are not authoritative database backups
 - Inbox/outbox uniqueness constraints and pending/dead-letter counts are consistent.
 - Auth login, authorized tenant read, forbidden cross-tenant read, webhook receipt, and one idempotent value command pass.
 
+## M15 full-service clean-room controller
+
+The production database-only drill remains valid evidence for PostgreSQL extraction and WAL replay, but it is not full-service recovery evidence. M15-S04 uses `infrastructure/testing/recovery/plan.yaml` and `scripts/run-clean-room-recovery.mjs` to begin timing before disposable provisioning and stop full-service RTO only after database, Supabase Auth, Authentik, application, configuration, signing, privacy, connector, value, and independent reconciliation checks pass.
+
+Before a real run:
+
+1. Stage the exact reviewed driver and all recovery inputs on an isolated Linux host. Backups and escrow stay read-only and outside Git.
+2. Create an owner-only minimized inventory with its observation instant, exact image/input digests, source-manifest aggregate counts for committed facts, ledger, queues, Supabase Auth, Authentik, provider configuration, signing references, and post-target privacy actions, the disposable marker/project, zero ingress/egress/production routes, simulated failure instant, fresh last-committed marker instant, and latest recoverable instant.
+3. Create an owner-only control file binding the clean candidate commit, canonical document digest, inventory document digest, raw driver digest, exact target, short approval reference/window, and a maximum run no longer than two hours. The remaining approval window must be at least that full maximum run when the controller starts.
+4. Run `npm run recovery:validate`, independently review the driver, and verify the target has no route to production.
+5. Execute from the clean candidate checkout:
+
+```bash
+npm run recovery:run -- \
+  --control-file /restricted/recovery-control.yaml \
+  --inventory-file /restricted/recovery-inventory.yaml \
+  --driver /restricted/recovery-driver.mjs \
+  --out /restricted/recovery-primary.json
+```
+
+6. Repeat with a separately approved equivalent source set and a distinct observed inventory. Independently reconcile both inventory digests, both raw report digests, and every database, ledger, queue, Supabase Auth, Authentik, configuration, signing, privacy, connector, WooCommerce, and unexplained-loss count.
+7. Commit only the sanitized summaries/digests accepted by `docs/plan/evidence/M15/recovery.yaml`. Raw logs, receipts, paths, origins, backup data, secrets, and test identities stay in the restricted evidence store.
+
+The controller always invokes `destroy_clean_room`. A retained volume, network, route, credential copy, identity, or runnable service fails the run. Do not manually change a failed report to passed; correct the driver or recovery source under a new exact approval and repeat the full drill.
+
 ## Failure handling
 
 - A failed or stale backup is a paging alert, not a warning-only dashboard item.

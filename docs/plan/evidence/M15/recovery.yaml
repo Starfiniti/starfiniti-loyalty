@@ -1,0 +1,145 @@
+schema: starfiniti.recovery-evidence.v1
+status: in_progress
+observedAt: 2026-08-27T10:21:14Z
+currentProduction:
+  release: v0.1.11
+  applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
+candidate:
+  branch: codex/m15-clean-room-recovery
+  commit: 007ede2017bea02df35b241191b45251ff79e665
+  approvedDrill: false
+  reconciliationApproved: false
+plan:
+  path: infrastructure/testing/recovery/plan.yaml
+  profile: single-site-enterprise-pilot
+  sha256: ace3a94bab093cc65dc798aedb6db1da2d6070abd714f0278602f3d0224d592c
+objectives:
+  maximumRpoSeconds: 300
+  maximumFullServiceRtoSeconds: 3600
+artifacts:
+  primaryInventoryPath: null
+  primaryInventorySha256: null
+  repeatInventoryPath: null
+  repeatInventorySha256: null
+  primaryRunPath: null
+  primaryRunSha256: null
+  repeatRunPath: null
+  repeatRunSha256: null
+  reconciliationPath: null
+  reconciliationSha256: null
+checks:
+  - id: plan_contract
+    status: passed
+    evidence: The canonical candidate plan orders thirteen exact service-recovery stages plus always-run teardown and fixes five-minute RPO and sixty-minute full-service RTO objectives.
+  - id: controller_selftest
+    status: passed
+    evidence: The controller test exercises its real private-copy child-process boundary plus complete, database-integrity, source-aggregate, cleanup, measured-time, public-ingress, stale-marker, short-approval, and sensitive-shape cases.
+  - id: approval_digest_binding
+    status: passed
+    evidence: Real execution accepts only a clean exact commit, a four-hour-or-shorter owner approval with a full remaining run window, and exact plan inventory driver target-marker and Compose-project digests copied privately after validation.
+  - id: disposable_isolation_guard
+    status: passed
+    evidence: Inventory and live stage contracts enforce a marked disposable target, internal network, zero public ingress, zero external egress, zero production route, and prefixed Compose project.
+  - id: deterministic_teardown
+    status: passed
+    evidence: Teardown runs in the controller finally boundary after success or failure; any retained volume network or exposed route makes the minimized run fail closed.
+  - id: minimized_report
+    status: passed
+    evidence: The report retains controller-measured stage duration, control and observation digests, aggregate RPO/RTO, failure, and cleanup facts without paths origins credentials identities or raw recovery observations.
+  - id: exact_head_ci
+    status: passed
+    evidence: Exact commit 007ede2017bea02df35b241191b45251ff79e665 passed CI run 33062421018 with all seven jobs, Security run 33062421028 with all three jobs, and CodeQL policy check 98484528475.
+  - id: approved_drill_window
+    status: pending
+    evidence: A named owner must approve the disposable infrastructure window driver digest source set and teardown authority for both recovery runs.
+  - id: exact_source_inventory
+    status: pending
+    evidence: Both runs require distinct observed inventories with exact image/input digests and bounded source aggregates for database ledger queue Auth configuration signing privacy base and WAL evidence.
+  - id: source_marker_freshness
+    status: pending
+    evidence: A controlled authoritative commit no more than sixty seconds before simulated failure must bind the measured recoverable point rather than relying on an idle database timestamp.
+  - id: base_backup_integrity
+    status: pending
+    evidence: The selected physical base must pass transfer checksum compression backup manifest and pg_verifybackup validation before extraction.
+  - id: wal_continuity_pitr
+    status: pending
+    evidence: WAL and timeline history from the selected base start through the exact target must be continuous and replay with zero missing segment or corruption error.
+  - id: measured_rpo
+    status: pending
+    evidence: Restored state must lose no authoritative commit beyond the five-minute objective and must record the exact source marker target and observed gap.
+  - id: migration_parity
+    status: pending
+    evidence: The restored database migration history extensions schemas functions triggers and exact release manifest must have zero difference.
+  - id: rls_grant_parity
+    status: pending
+    evidence: Every tenant-owned table RLS policy explicit grant private function and database role boundary must match the exact release and fail cross-tenant access closed.
+  - id: ledger_projection_integrity
+    status: pending
+    evidence: Immutable transactions must balance to zero and wallet lot tier liability and analytics projections must reconcile to rebuilds without historical edits.
+  - id: queue_idempotency_integrity
+    status: pending
+    evidence: Inbox outbox event effect lease retry and dead-letter uniqueness plus accepted committed facts must reconcile with zero lost or duplicate business effect.
+  - id: supabase_auth_data
+    status: pending
+    evidence: Restored auth users identities factors sessions and application links must reconcile without exposing identity data in the retained report.
+  - id: supabase_auth_session
+    status: pending
+    evidence: Restored JWT and provider configuration must issue a fresh Supabase application session; old-token behavior and intentional rotation consequences must be recorded.
+  - id: authentik_state
+    status: pending
+    evidence: The exact Authentik PostgreSQL database and required data directory configuration providers flows policies users and outpost state must restore without migration error.
+  - id: authentik_login
+    status: pending
+    evidence: An approved test identity must complete the internal Authentik-to-Supabase broker flow without email domain group or token metadata granting tenant authority.
+  - id: application_image_configuration
+    status: pending
+    evidence: Exact dashboard worker Supabase and Authentik image digests plus non-secret configuration must start with zero drift and every required service healthy.
+  - id: signing_reference_resolution
+    status: pending
+    evidence: Every active WooCommerce signing-material reference must resolve to one escrow-restored key and no key reference may back more than one connection.
+  - id: provider_secret_configuration
+    status: pending
+    evidence: Supabase JWT and API keys Auth provider settings SMTP and enabled provider files must reconcile by fingerprint and purpose without storing secret material in evidence.
+  - id: privacy_journal_replay
+    status: pending
+    evidence: Every deletion pseudonymization consent withdrawal suppression and deprovisioning action after the recovery target must replay before the clean room serves a test user.
+  - id: tenant_authorization
+    status: pending
+    evidence: A fresh restored session must read its authorized tenant and every cross-tenant revoked suspended stale and unprovisioned access attempt must fail closed.
+  - id: connector_webhook
+    status: pending
+    evidence: One exact signed WooCommerce test event must verify through the restored pool and create one canonical fact without exposing source identity or key material.
+  - id: protected_value_idempotency
+    status: pending
+    evidence: One approved synthetic value command and its replay must create exactly one immutable attributable effect while refund release access export and checkout paths remain available.
+  - id: measured_full_service_rto
+    status: pending
+    evidence: Controller start through completed identity application and full reconciliation must remain within sixty minutes; database-ready time alone is insufficient.
+  - id: final_reconciliation
+    status: pending
+    evidence: Independent database application Authentik signing privacy connector and WooCommerce evidence must bind both raw run digests with zero unexplained difference or loss.
+  - id: repeatability
+    status: pending
+    evidence: A second clean-room restore from a separately approved equivalent source set must reproduce the same RPO RTO integrity authorization value and reconciliation result.
+  - id: teardown_evidence
+    status: pending
+    evidence: Both exercises must leave zero volume network route credential copy test identity or runnable clean-room service and retain only sanitized digest-bound evidence.
+automaticFails:
+  - any recovery action reaches production routing a production Compose project a public listener or an environment without the exact disposable marker
+  - the controller accepts an arbitrary command stage reordered adapter stale approval dirty worktree or plan inventory driver target digest different from approval
+  - the source marker is stale fabricated later than failure or absent such that an idle database timestamp can understate recovery point loss
+  - a base backup lacks exact transfer compression backup-manifest and pg_verifybackup evidence or is extracted before those checks pass
+  - archived WAL or timeline history is missing corrupt discontinuous or cannot replay from the chosen base through the exact target point
+  - measured authoritative data loss exceeds five minutes or full identity application reconciliation and value readiness exceed sixty minutes
+  - restored migration extension schema function trigger RLS grant or database role state differs from the exact release manifest
+  - any immutable ledger transaction is unbalanced or any wallet lot tier liability analytics queue event effect audit or committed-fact projection differs
+  - Supabase Auth data starts without restored JWT API-key and provider configuration or a successful fresh application session
+  - Authentik starts without its database required data configuration flows policies providers users or internal broker login proof
+  - any active signing-material reference is unresolved duplicated or bound to more than one connection after escrow restoration
+  - a credential key contact identity source identifier raw path origin response body backup content or privacy payload enters a report or repository artifact
+  - a deletion pseudonymization consent suppression or deprovisioning action newer than the recovery target is omitted before test-user access
+  - restored authentication email domain group claim or token metadata grants tenant authority without live database membership and RLS authorization
+  - a signed connector replay or approved synthetic value replay creates more than one canonical fact immutable effect or ledger result
+  - teardown is skipped fails retains a volume network route credential or identity or is reported as successful despite any retained clean-room resource
+  - completion is claimed from database readiness alone without both full-service runs independent reconciliation measured RPO RTO and explicit approvals
+  - any critical security tenancy ledger privacy recovery data-loss or immutable-history failure remains unresolved
