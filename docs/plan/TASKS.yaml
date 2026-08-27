@@ -837,7 +837,8 @@ tasks:
         acceptance:
           - shadow comparison exact-head CI disabled deployment Starfiniti canary reconciliation and score at least 90 pass
         evidence:
-          - docs/plan/evidence/M05/canary.yaml records 48 exact checks, nine named path- and SHA-256-bound production artifacts, and a deterministic seven-category provisional score of 90 with operability below its floor
+          - docs/plan/evidence/M05/canary.yaml records 48 exact checks, nine named path digest and semantic bound production artifacts, exact cross-artifact policy release VIP count reconciliation and chronology, and a deterministic seven-category provisional score of 90 with operability below its floor
+          - docs/plan/evidence/M05/ARTIFACT_CONTRACT.md defines the exact minimized production evidence schemas, bindings, zero-difference requirements, rollback order, and minimum 24-hour observation
           - deterministic V1 V2 shadow comparison proves all 36 Rose Bloom Icon point-award cases are identical across floor threshold and large-order boundaries
           - contract PostgreSQL and editor boundaries require every displayed tier rate to equal the executable base-rate multiplier and fail closed on incomplete or inexact legacy migration
           - exact-head run 31760806620 passed a clean 36-migration replay all 32 pgTAP files and 1,494 assertions plus both concurrency probes both images and all four WooCommerce runtimes
@@ -849,6 +850,7 @@ tasks:
         docs/api/PROGRAMME_ENGINE.md,
         docs/architecture/ADR/0014-event-time-tier-qualification.md,
         docs/architecture/ADR/0015-earned-date-point-expiry-lifecycle.md,
+        docs/plan/evidence/M05/ARTIFACT_CONTRACT.md,
       ]
     evidence: [docs/plan/evidence/M05/README.md]
 
@@ -946,6 +948,7 @@ tasks:
         evidence:
           - docs/plan/evidence/M06/canary.yaml records 48 exact checks, nine named path digest and semantic bound production artifacts, exact cross-artifact policy release referral count reconciliation and chronology, and a deterministic seven-category provisional score of 90 with operability below its floor
           - docs/plan/evidence/M06/ARTIFACT_CONTRACT.md defines the exact minimized production evidence schemas, bindings, zero-difference requirements, rollback order, and minimum 24-hour observation
+          - integrated head c38c6585174a67d174a176ae1bf121a3966dbb1a passed all seven CI jobs in run 33121739492 and all three Security jobs in run 33121739491
           - PR 31 is merge-clean at f16d6b2f0e524c3647f78ba9d3ee501c51ec74b7 and CI run 33075109579 passed baseline containers clean 41-migration replay all 35 pgTAP files and all four WooCommerce runtime variants
           - approved release pilot store disabled deployment Starfiniti canary full reconciliation rollback observation and final scoring remain open
     risks: [R-026]

@@ -1,5 +1,12 @@
 # Iteration Log
 
+## 2026-08-28 — M05 semantic production-evidence hardening
+
+- Reproduced a false-proof path in the completion fixture: every verified VIP artifact closed with only `{ fixture: true, mutationCount: 0 }`, so digest integrity did not prove shadow parity, qualification, tier movement, benefits, overrides, expiry, reminders, rollback, or observation outcomes.
+- Added nine exact minimized detail schemas with distinct release/recovery/baseline digests, unique per-check evidence digests, bounded member/benefit/points/grace/override ceilings, exact 36-case parity plus qualification/movement/benefit/expiry/progression scenarios, and zero-difference history/value/privacy/notification assertions.
+- Approved pilot, rollout, qualification, lifecycle, benefit, override, expiry, reminder, and observation policies plus numeric limits bind approval to journal. Exact images/plugin/contracts bind release; VIP evidence and every scenario/work count bind journal to reconciliation and observation. Final approval binds release and every artifact under strict pre-canary, rollback-after-canary, and minimum 24-hour covering chronology.
+- Added positive and adversarial fixtures for hollow/extra fields, impossible time, current-release/commit reuse, nonzero history/liability or benefit-rate drift, changed policy/ceiling/plugin/observation evidence, parity/expiry and count mismatch, artifact rebinding, late operator baseline/release/approval, early rollback, observation drift, and short observation. Production, VIP, expiry, checkout, customer value, and deployment remain unchanged.
+
 ## 2026-08-28 — M06 semantic production-evidence hardening
 
 - Reproduced a false-proof path in the completion fixture: every verified referral artifact closed with only `{ fixture: true, mutationCount: 0 }`, so digest integrity did not prove attribution, cooling, fraud review, give/get value, refunds, recovery, privacy, rollback, or observation outcomes.
