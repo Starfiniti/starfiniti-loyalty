@@ -171,7 +171,6 @@ as $$
 declare
   boundary loyalty_private.managed_growth_configuration_boundaries%rowtype;
   authorization_row record;
-  billing_rollout record;
 begin
   select candidate.* into boundary
   from loyalty_private.managed_growth_configuration_boundaries as candidate
@@ -210,33 +209,28 @@ begin
   select * into strict authorization_row
   from loyalty_private.authorize_managed_growth_configuration_v1(
     target_organization_id,
-    boundary.capability_key,
+    'managed.billing',
     'managed-growth-boundary:' || boundary.boundary_key || ':' ||
       target_organization_id::text,
     target_at
   );
 
-  -- Managed commercial enforcement is itself a tenant-canary capability.
-  -- Until managed.billing is explicitly enabled, preserve the ordinary
-  -- feature-entitlement decision and do not commercialize the tenant.
-  if authorization_row.deployment_mode = 'managed' then
-    select * into strict billing_rollout
-    from loyalty_private.resolve_organization_entitlement(
-      target_organization_id,
-      'managed.billing',
-      'managed-growth-enforcement:' || target_organization_id::text,
-      target_at
-    );
-    if not billing_rollout.enabled then
-      allowed := authorization_row.entitlement_enabled;
-      commercial_state := authorization_row.commercial_state;
-      reason_code := case when authorization_row.entitlement_enabled
-        then 'commercial_enforcement_disabled'
-        else 'entitlement_disabled'
-      end;
-      return next;
-      return;
-    end if;
+  -- Existing domain commands and contract triggers remain authoritative for
+  -- product capabilities, including tables shared by V1 and V2 definitions.
+  -- This boundary adds only the separately canaried commercial decision.
+  if authorization_row.deployment_mode = 'self_hosted' then
+    allowed := true;
+    commercial_state := authorization_row.commercial_state;
+    reason_code := 'allowed';
+    return next;
+    return;
+  end if;
+  if not authorization_row.entitlement_enabled then
+    allowed := true;
+    commercial_state := authorization_row.commercial_state;
+    reason_code := 'commercial_enforcement_disabled';
+    return next;
+    return;
   end if;
 
   allowed := authorization_row.allowed;
@@ -279,34 +273,29 @@ begin
       message = 'managed growth boundary trigger is misconfigured';
   end if;
 
-  request_actor_user_id := loyalty_private.request_user_id();
   request_role := nullif(pg_catalog.current_setting('role', true), '');
   if request_role is null or request_role = 'none' then
     request_role := session_user;
   end if;
 
-  -- Trusted migrations and dedicated workers have no end-user subject.
+  -- Trusted migrations and dedicated workers bypass regardless of stale
+  -- request GUCs on a reused privileged session. Their database role, never
+  -- JWT metadata, is the authority for this narrow bypass.
+  if request_role in ('postgres', 'loyalty_owner', 'loyalty_worker') then
+    if tg_op = 'DELETE' then
+      return old;
+    end if;
+    return new;
+  end if;
+
+  request_actor_user_id := loyalty_private.request_user_id();
+
   -- The server runtime still passes through policy because it executes some
   -- merchant configuration functions on behalf of an already validated actor.
   -- Unknown and browser roles without a subject fail closed.
   if request_actor_user_id is null then
-    if request_role = 'loyalty_worker' then
-      if tg_op = 'DELETE' then
-        return old;
-      end if;
-      return new;
-    end if;
-    if request_role not in ('none', 'postgres', 'loyalty_owner',
-      'loyalty_runtime') then
-      raise exception using errcode = '42501',
-        message = 'managed growth configuration actor is required';
-    end if;
-    if request_role in ('none', 'postgres', 'loyalty_owner') then
-      if tg_op = 'DELETE' then
-        return old;
-      end if;
-      return new;
-    end if;
+    raise exception using errcode = '42501',
+      message = 'managed growth configuration actor is required';
   end if;
 
   row_document := case when tg_op = 'DELETE'
@@ -476,6 +465,6 @@ comment on table loyalty_private.managed_growth_configuration_boundaries is
 comment on function loyalty_private.evaluate_managed_growth_boundary_v1(
   bigint, text, text, text, text, timestamptz
 ) is
-  'Deterministically combines a reviewed authoring boundary with ordinary entitlement and commercial evidence; safe risk-reducing transitions remain available.';
+  'Deterministically combines a reviewed authoring boundary with the managed.billing canary and commercial evidence; established domain commands retain product-entitlement authority and safe risk-reducing transitions remain available.';
 comment on function loyalty_private.enforce_managed_growth_boundary_v1() is
-  'Fail-closed trigger guard for authenticated merchant authoring roots. Trusted subjectless workers bypass only because guarded relations exclude operational and protected value paths.';
+  'Fail-closed trigger guard for authenticated merchant authoring roots. Trusted database owner and worker roles bypass request metadata only because guarded relations exclude operational and protected value paths.';

@@ -76,15 +76,13 @@ select results_eq($$
 $$, array[23::bigint],
   'commercial guards sort after established contract validation triggers');
 select ok((
-  select pg_catalog.position(
-      'request.jwt.claim.role' in pg_catalog.lower(
-        pg_catalog.pg_get_functiondef(routine.oid)
-      )
+  select pg_catalog.strpos(
+      pg_catalog.lower(pg_catalog.pg_get_functiondef(routine.oid)),
+      'request.jwt.claim.role'
     ) = 0
-    and pg_catalog.position(
-      'session_user' in pg_catalog.lower(
-        pg_catalog.pg_get_functiondef(routine.oid)
-      )
+    and pg_catalog.strpos(
+      pg_catalog.lower(pg_catalog.pg_get_functiondef(routine.oid)),
+      'session_user'
     ) > 0
   from pg_catalog.pg_proc as routine
   join pg_catalog.pg_namespace as namespace on namespace.oid = routine.pronamespace
