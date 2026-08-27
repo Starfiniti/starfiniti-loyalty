@@ -65,6 +65,9 @@ describe("tenant federation link callback", () => {
     expect(exchangeCodeForSession).toHaveBeenCalledWith("one-time-code", {
       flowId,
     });
+    expect(hasCookie).toHaveBeenCalledWith(
+      "sb-api-auth-token-flow-bc0f26282e6abeac61d7b21c49683e6a-code-verifier",
+    );
     expect(response.headers.get("location")).toBe(
       "https://loyalty.starfiniti.com/organization/access?federationLink=success",
     );
@@ -96,6 +99,9 @@ describe("tenant federation link callback", () => {
     );
 
     expect(exchangeCodeForSession).not.toHaveBeenCalled();
+    expect(hasCookie).toHaveBeenCalledWith(
+      "sb-api-auth-token-flow-bc0f26282e6abeac61d7b21c49683e6a-code-verifier",
+    );
     expect(response.headers.get("location")).toContain(
       "reason=verifier_cookie_missing",
     );

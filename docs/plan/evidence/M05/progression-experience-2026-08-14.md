@@ -1,7 +1,7 @@
 # M05-S05 progression experience evidence
 
-Date: 2026-08-14  
-Code commit: `06f1b4d`; security-surface test hardening: `6d1b337`  
+Date: 2026-08-14
+Code commit: `06f1b4d`; security-surface test hardening: `6d1b337`
 Status: complete; exact-head run `31759304542` passed
 
 ## Decision and competitive evidence

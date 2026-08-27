@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { safeAppPath } from "@/lib/safe-navigation";
 import { claimOrganizationScimMembership } from "@/lib/server/enterprise-identity";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { supabasePkceVerifierCookieName } from "@/lib/supabase/server-options";
 import { dashboardPublicUrl, workforceSsoFlowId } from "@/lib/workforce-sso";
 
 const ORGANIZATION_ID =
@@ -48,29 +49,40 @@ export async function GET(request: Request) {
   if (organizationId !== null && !ORGANIZATION_ID.test(organizationId)) {
     failureReason = "federation_context_invalid";
   } else if (code) {
-    const supabase = await createSupabaseServerClient();
     const flowId = workforceSsoFlowId(
       requestUrl.searchParams.get("sb_flow_id"),
     );
-    const cookieStore = await cookies();
-    const verifierCookiePresent = flowId
-      ? cookieStore.has(`sb-api-auth-token-flow-${flowId}-code-verifier`)
-      : cookieStore.has("sb-api-auth-token-code-verifier");
-    if (!flowId) failureReason = "flow_id_missing";
-    if (!verifierCookiePresent) failureReason = "verifier_cookie_missing";
-    const { error } = await supabase.auth.exchangeCodeForSession(
-      code,
-      flowId ? { flowId } : undefined,
-    );
-    if (!error) {
-      if (organizationId !== null) {
-        try {
-          const claim = await claimOrganizationScimMembership(
-            organizationId,
-            randomUUID(),
-          );
-          if (!SCIM_CLAIM_OUTCOMES.has(claim.outcome)) {
-            failureReason = "federation_membership_unavailable";
+    if (!flowId) {
+      failureReason = "flow_id_missing";
+    } else {
+      const cookieStore = await cookies();
+      if (!cookieStore.has(supabasePkceVerifierCookieName(flowId))) {
+        failureReason = "verifier_cookie_missing";
+      } else {
+        const supabase = await createSupabaseServerClient();
+        const { error } = await supabase.auth.exchangeCodeForSession(code, {
+          flowId,
+        });
+        if (!error) {
+          if (organizationId !== null) {
+            try {
+              const claim = await claimOrganizationScimMembership(
+                organizationId,
+                randomUUID(),
+              );
+              if (!SCIM_CLAIM_OUTCOMES.has(claim.outcome)) {
+                failureReason = "federation_membership_unavailable";
+              } else {
+                return privateRedirect(
+                  dashboardPublicUrl(
+                    publicOrigin,
+                    safeAppPath(requestUrl.searchParams.get("next")),
+                  ),
+                );
+              }
+            } catch {
+              failureReason = "federation_membership_unavailable";
+            }
           } else {
             return privateRedirect(
               dashboardPublicUrl(
@@ -79,16 +91,9 @@ export async function GET(request: Request) {
               ),
             );
           }
-        } catch {
-          failureReason = "federation_membership_unavailable";
+        } else {
+          failureReason = "exchange_failed";
         }
-      } else {
-        return privateRedirect(
-          dashboardPublicUrl(
-            publicOrigin,
-            safeAppPath(requestUrl.searchParams.get("next")),
-          ),
-        );
       }
     }
   }

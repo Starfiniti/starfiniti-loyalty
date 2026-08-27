@@ -14,6 +14,7 @@ import {
   adaptWooRewardsJsonV1,
   adaptWPLoyaltyCsvV1,
   genericMigrationCsvHeaderV1,
+  migrationAdapterLimitsV1,
   migrationAdapterIssuesCsvV1,
   type MigrationAdapterSha256V1,
 } from "./migration-adapters-v1";
@@ -23,8 +24,6 @@ export {
   migrationAdapterIssuesCsvV1,
   type MigrationAdapterSha256V1,
 };
-
-const MAX_INPUT_BYTES = 5 * 1024 * 1024;
 
 export const migrationAdapterRegistryV1: MigrationAdapterRegistryV1 =
   migrationAdapterRegistrySchemaV1.parse({
@@ -42,9 +41,9 @@ export const migrationAdapterRegistryV1: MigrationAdapterRegistryV1 =
         referenceFixtureSha256:
           "a49d1de9cfaf2817a83bfaa93186ab31169ae538683b968e31ff559c3ae03547",
         requiredExpiryPolicy: "merchant_selected",
-        maxInputBytes: MAX_INPUT_BYTES,
-        maxPhysicalRows: 25_000,
-        maxCanonicalRows: 500,
+        maxInputBytes: migrationAdapterLimitsV1.maxInputBytes,
+        maxPhysicalRows: migrationAdapterLimitsV1.maxPhysicalRows.genericCsv,
+        maxCanonicalRows: migrationAdapterLimitsV1.maxCanonicalRows,
       },
       {
         sourceSystem: "wployalty",
@@ -59,9 +58,9 @@ export const migrationAdapterRegistryV1: MigrationAdapterRegistryV1 =
         referenceFixtureSha256:
           "ce587afa3e1f4d07d8f9b2b1974e878b9cae48e04ad3200c4e4c2d6cfcc28323",
         requiredExpiryPolicy: "apply_default",
-        maxInputBytes: MAX_INPUT_BYTES,
-        maxPhysicalRows: 500,
-        maxCanonicalRows: 500,
+        maxInputBytes: migrationAdapterLimitsV1.maxInputBytes,
+        maxPhysicalRows: migrationAdapterLimitsV1.maxPhysicalRows.wployaltyCsv,
+        maxCanonicalRows: migrationAdapterLimitsV1.maxCanonicalRows,
       },
       {
         sourceSystem: "yith_points_and_rewards",
@@ -92,9 +91,10 @@ export const migrationAdapterRegistryV1: MigrationAdapterRegistryV1 =
         referenceFixtureSha256:
           "4b527fd1961bb88d859be9df6a8d3aa0c9e1df835e1ceddae8cbbf923e439bf5",
         requiredExpiryPolicy: "apply_default",
-        maxInputBytes: MAX_INPUT_BYTES,
-        maxPhysicalRows: 500,
-        maxCanonicalRows: 500,
+        maxInputBytes: migrationAdapterLimitsV1.maxInputBytes,
+        maxPhysicalRows:
+          migrationAdapterLimitsV1.maxPhysicalRows.woorewardsJson,
+        maxCanonicalRows: migrationAdapterLimitsV1.maxCanonicalRows,
       },
     ],
   });

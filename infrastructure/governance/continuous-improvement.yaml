@@ -1,0 +1,114 @@
+schema: starfiniti.continuous-improvement-plan.v1
+version: 1
+timezone: UTC
+reviewCalendar:
+  monthly:
+    period: calendar-month
+    dueDaysAfterPeriodEnd: 10
+    minimumConsecutiveReviewsForInitialClose: 2
+    requiredSections:
+      [
+        activation,
+        errors,
+        support,
+        reconciliation,
+        fraud,
+        campaigns,
+        churn,
+        usability,
+        performance,
+        security,
+        billing,
+        providerChanges,
+        backlog,
+        moduleScores,
+      ]
+  quarterly:
+    period: calendar-quarter
+    dueDaysAfterPeriodEnd: 30
+    minimumBundlesForInitialClose: 1
+    requiredExercises:
+      [restore, tenantIsolation, privacy, scimDeprovisioning, incident]
+providerCatalogue:
+  - id: supabase
+    source: https://supabase.com/changelog
+    reviewFrequency: monthly
+  - id: postgresql
+    source: https://www.postgresql.org/support/versioning/
+    reviewFrequency: monthly
+  - id: woocommerce
+    source: https://developer.woocommerce.com/changelog/
+    reviewFrequency: monthly
+  - id: stripe
+    source: https://docs.stripe.com/changelog
+    reviewFrequency: monthly
+  - id: authentik
+    source: https://docs.goauthentik.io/releases/
+    reviewFrequency: monthly
+  - id: klaviyo
+    source: https://developers.klaviyo.com/en/docs/changelog_
+    reviewFrequency: monthly
+  - id: nodejs
+    source: https://nodejs.org/en/about/previous-releases
+    reviewFrequency: monthly
+backlog:
+  path: docs/plan/IMPROVEMENT_BACKLOG.yaml
+  ranking:
+    formula: severityPoints + (2 * merchantImpact) + (2 * customerImpact) + confidence - effort - dependencyPenalty
+    severityPoints: { critical: 40, high: 30, medium: 20, low: 10 }
+    integerRange: { minimum: 0, maximum: 10 }
+    sort: [score-descending, id-ascending]
+  criticalDueDays: 2
+  highDueDays: 14
+  incompleteCriticalHighRequire: [approvedRiskSha256, nextReviewAt, dependency]
+recurringFailure:
+  thresholdOccurrences: 2
+  minimumDurableControls: 1
+  allowedControls: [regressionTest, validator, monitor, runbook, agentRule]
+moduleRescoring:
+  materialChangeRequiresRescore: true
+  target: 90
+  minimumCategoryRatio: 0.8
+  categories:
+    correctness: 20
+    security: 15
+    ledgerReliability: 15
+    tests: 15
+    performance: 10
+    operability: 10
+    maintainability: 15
+experiments:
+  requireDeclaredPrimaryMetric: true
+  requireBaselineAndTarget: true
+  requirePredeclaredGuardrails: true
+  promotionRequiresMetricImprovement: true
+  promotionRequiresAllGuardrailsPass: true
+  stopOnGuardrailBreach: true
+decisions:
+  supersedeByAdr: true
+  rewriteHistoricalEvidence: false
+artifacts:
+  governanceBindings: [candidateCommit, planSha256, backlogSha256]
+  approvalBindsPriorArtifacts: true
+  required:
+    - id: monthly-review-primary
+      schema: starfiniti.monthly-improvement-review.v1
+    - id: monthly-review-repeat
+      schema: starfiniti.monthly-improvement-review.v1
+    - id: quarterly-exercise-bundle
+      schema: starfiniti.quarterly-exercise-bundle.v1
+    - id: final-reconciliation
+      schema: starfiniti.improvement-reconciliation.v1
+    - id: approval-record
+      schema: starfiniti.improvement-approval-record.v1
+requiredApprovalRoles: [product, engineering, security, operations, owner]
+automaticFails:
+  - a due monthly review or quarterly exercise is missing stale incomplete or represented as a healthy zero
+  - a Critical backlog item is overdue or a High item exceeds its bounded remediation window without approved risk evidence
+  - a recurring failure reaches two occurrences without at least one linked durable regression control
+  - a material change ships without rescoring every affected module against the current evidence
+  - an experiment is promoted without improving its declared primary metric or while any guardrail fails
+  - a provider or dependency change is accepted without official-source review impact classification and an owner
+  - a quarterly restore tenancy privacy SCIM or incident exercise has an unexplained failure or protected-value difference
+  - an obsolete decision is silently rewritten instead of being superseded through an ADR
+  - completion is claimed below 90 total below a category floor or without distinct digest-bound artifacts and all approvals

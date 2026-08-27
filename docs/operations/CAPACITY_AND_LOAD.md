@@ -24,7 +24,7 @@ npm run capacity:run -- --config infrastructure/testing/capacity/workload.yaml -
 
 The command exits nonzero when a measured threshold fails. The aggregate report is still written for diagnosis. Copy only a reviewed, minimized report digest and aggregate results into `docs/plan/evidence/M15/capacity.yaml`; never copy raw request logs.
 
-Capacity closeout stores reviewed aggregate files below `docs/plan/evidence/M15/runs/`. The gate verifies the runner reports as `starfiniti.capacity-run.v1`, the independent normalized report as `starfiniti.capacity-independent-run.v1`, the exact environment inventory as `starfiniti.capacity-environment.v1`, and zero-difference reconciliation as `starfiniti.capacity-reconciliation.v1`. Paths and raw-file digests are bound in `capacity.yaml`; missing, changed, sensitive, failed, saturated, cross-environment, or incomplete evidence fails closed.
+Capacity closeout stores reviewed aggregate files below `docs/plan/evidence/M15/runs/`. The gate opens each artifact without following the final symlink, requires a stable regular file, and caps JSON at 1 MiB and YAML at 256 KiB before allocation or parsing. It verifies the runner reports as `starfiniti.capacity-run.v1`, the independent normalized report as `starfiniti.capacity-independent-run.v1`, the exact environment inventory as `starfiniti.capacity-environment.v1`, and zero-difference reconciliation as `starfiniti.capacity-reconciliation.v1`. Paths and raw-file digests are bound in `capacity.yaml`; missing, changed, sensitive, failed, saturated, cross-environment, or incomplete evidence fails closed.
 
 ## Required closeout evidence
 

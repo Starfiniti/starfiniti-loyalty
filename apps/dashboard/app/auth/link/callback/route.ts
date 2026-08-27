@@ -5,6 +5,7 @@ import {
   resolveOrganizationFederationLogin,
 } from "@/lib/server/enterprise-identity";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { supabasePkceVerifierCookieName } from "@/lib/supabase/server-options";
 import { dashboardPublicUrl, workforceSsoFlowId } from "@/lib/workforce-sso";
 
 const ORGANIZATION_ID =
@@ -48,7 +49,7 @@ export async function GET(request: Request) {
   }
 
   const cookieStore = await cookies();
-  if (!cookieStore.has(`sb-api-auth-token-flow-${flowId}-code-verifier`)) {
+  if (!cookieStore.has(supabasePkceVerifierCookieName(flowId))) {
     return privateRedirect(
       outcomeUrl(publicOrigin, "failed", "verifier_cookie_missing"),
     );
