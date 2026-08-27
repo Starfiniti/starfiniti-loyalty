@@ -1,0 +1,21 @@
+{
+  "schema": "starfiniti.vip-canary-artifact.v1",
+  "artifactId": "read_only_baseline",
+  "candidateCommit": "e62f2a43e3f1fbc8a1d7d2227a0c0ec2e2390b5e",
+  "observedAt": "2026-08-27T16:16:45Z",
+  "result": "verified",
+  "summary": "The canonical public endpoints and approved read-only Proxmox route passed the advanced VIP pre-canary availability and isolation baseline without mutation.",
+  "checks": ["public_production_baseline", "operator_access"],
+  "details": {
+    "dashboardHealth": 200,
+    "login": 200,
+    "unsignedWooCommerceIngress": 401,
+    "canonicalDns": true,
+    "applicationVm": 970,
+    "databaseVm": 971,
+    "applicationVmState": "running",
+    "databaseVmState": "running",
+    "scope": "read_only",
+    "mutationCount": 0
+  }
+}

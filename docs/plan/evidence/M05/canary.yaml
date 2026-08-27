@@ -1,0 +1,266 @@
+schema: starfiniti.vip-canary.v1
+status: in_progress
+observedAt: 2026-08-27T16:16:45Z
+currentProduction:
+  release: v0.1.11
+  applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
+candidate:
+  pullRequest: 57
+  commit: e62f2a43e3f1fbc8a1d7d2227a0c0ec2e2390b5e
+  approvedRelease: false
+  operatorAccess: true
+  pilotStoreApproved: false
+  canaryApproved: false
+publicBaseline:
+  dashboardHealth: 200
+  login: 200
+  unsignedWooCommerceIngress: 401
+  canonicalDns: true
+score:
+  total: 90
+  target: 90
+  minimumCategoryRatio: 0.8
+  categories:
+    - id: correctness
+      weight: 20
+      score: 20
+      evidence: "Versioned event-time qualification, lifecycle transitions, benefits, overrides, expiry, and progress have one strict deterministic outcome and explanation."
+    - id: security
+      weight: 15
+      score: 15
+      evidence: "PostgreSQL derives tenant, membership, programme, wallet, customer, tier, fact, override, lot, reminder, and value authority behind explicit grants and RLS."
+    - id: ledger_reliability
+      weight: 15
+      score: 15
+      evidence: "Tier multipliers, expiry, refund restoration, and benefit eligibility preserve immutable attribution, exact retries, compensating history, and checkout independence."
+    - id: tests
+      weight: 15
+      score: 15
+      evidence: "Exact candidate checks cover 958 workspace tests, 81 migration files, 68 pgTAP files, all concurrency probes, both images, and four WooCommerce runtimes."
+    - id: performance
+      weight: 10
+      score: 8
+      evidence: "Bounded qualification facts, projections, sweeps, reminders, payloads, and local checkout behavior pass; production latency and sustained observation remain pending."
+    - id: operability
+      weight: 10
+      score: 3
+      evidence: "Disabled-first rollout, shadow evaluation, recovery, reconciliation, and rollback boundaries exist; release, pilot, production rehearsal, and observation remain pending."
+    - id: maintainability
+      weight: 15
+      score: 14
+      evidence: "Versioned contracts, additive migrations, independent validation, compatibility proofs, regression tests, ADRs, runbooks, and living evidence remain synchronized."
+checks:
+  - id: exact_head_ci
+    status: passed
+    evidence: "CI run 33095199209 and Security run 33095199208 passed at integrated candidate commit e62f2a43e3f1fbc8a1d7d2227a0c0ec2e2390b5e with all eleven PR checks green."
+  - id: shadow_v1_v2
+    status: passed
+    evidence: "Deterministic shadow evaluation proves all 36 Rose Bloom and Icon award cases remain identical across floor threshold and large-order boundaries."
+  - id: contract_policy_matrix
+    status: passed
+    evidence: "Strict contracts cover lifetime rolling-day and calendar-year windows, five exact metrics, AND and OR groups, lifecycle thresholds, benefits, overrides, expiry, and progress."
+  - id: database_authority_matrix
+    status: passed
+    evidence: "Explicit grants, RLS, private qualification helpers, immutable fact and decision history, independent publication checks, minimized projections, and live role checks pass."
+  - id: qualification_concurrency
+    status: passed
+    evidence: "Independent-session probes serialize late facts, refunds, retries, upgrades, grace, downgrade, re-entry, and expiry so each canonical fact creates one deterministic decision."
+  - id: expiry_lifecycle_matrix
+    status: passed
+    evidence: "Earned-date lot expiry, original-attribution restoration, nearest-relevant reminders, bounded worker claims, consent-aware intents, liability previews, and retry fences pass."
+  - id: browser_accessibility
+    status: passed
+    evidence: "Production components pass desktop and mobile policy authoring, exact simulation, progress, history, liability, keyboard navigation, responsive overflow, and diagnostic review."
+  - id: privacy_minimization
+    status: passed
+    evidence: "Merchant customer worker audit and support projections omit contacts, raw identities, private qualification facts, reusable authority, and ledger internals."
+  - id: checkout_independence
+    status: passed
+    evidence: "WooCommerce checkout uses local native state and never waits for Hub tier evaluation, expiry, worker, entitlement, or benefit delivery."
+  - id: legacy_compatibility_repository
+    status: passed
+    evidence: "V1 programme readers and immutable evaluation remain; exact 5 6 and 7 rates migrate to executable 1.0 1.2 and 1.4 multipliers without historical reinterpretation."
+  - id: operations_documentation
+    status: passed
+    evidence: "Programme, VIP, expiry, notification, WooCommerce, deployment, backup, reconciliation, incident, and rollback documentation define deterministic operator boundaries."
+  - id: public_production_baseline
+    status: passed
+    evidence: "Canonical DNS resolves; dashboard health and login return HTTP 200 with no-store or private caching, and unsigned WooCommerce ingestion returns HTTP 401."
+  - id: operator_access
+    status: passed
+    evidence: "The approved read-only Proxmox route confirms application VM 970 and Supabase VM 971 are running without changing service, configuration, data, or value."
+  - id: approved_release
+    status: pending
+    evidence: "Draft PR 57 is exact-head green but explicit merge, immutable release, and deployment approval remain required."
+  - id: approved_pilot_store
+    status: pending
+    evidence: "One real WooCommerce store and bounded linked-member, order, refund, activity, tier, expiry, and benefit fixtures require owner approval before value canary work."
+  - id: canary_approval
+    status: pending
+    evidence: "No approved maintenance window, exact pilot scope, change ceiling, observation interval, stop condition, or rollback decision owner is recorded."
+  - id: pre_change_recovery_point
+    status: pending
+    evidence: "A fresh verified PostgreSQL base, WAL position, incremental off-host archive, application configuration snapshot, and signing-reference inventory must precede deployment."
+  - id: production_value_baseline
+    status: pending
+    evidence: "Read-only programme, tier policy, customer, wallet, qualification fact, decision, membership, override, lot, expiry, reminder, and award aggregates require capture."
+  - id: disabled_deployment
+    status: pending
+    evidence: "Candidate images and additive migrations have not been deployed with advanced VIP disabled."
+  - id: migration_registration
+    status: pending
+    evidence: "Production must record every candidate migration version and source digest exactly once before advanced VIP can be enabled."
+  - id: non_canary_disabled
+    status: pending
+    evidence: "Unrelated organizations, workspaces, programmes, customers, connectors, and sessions must receive no advanced VIP capability."
+  - id: production_shadow_parity
+    status: pending
+    evidence: "Production shadow evaluation must compare V1 and V2 Rose Bloom and Icon results from the same immutable facts with zero unexplained difference before publication."
+  - id: lifetime_qualification_canary
+    status: pending
+    evidence: "One approved member must qualify by exact lifetime facts and retain the same explanation, progress, history, and effective tier across retry."
+  - id: rolling_qualification_canary
+    status: pending
+    evidence: "Rolling-window entry, retention, review, grace, downgrade, and re-entry must use the original event instant and exact cutoff boundaries."
+  - id: calendar_qualification_canary
+    status: pending
+    evidence: "Calendar-year qualification must use the configured IANA timezone and pass year-boundary and daylight-saving evidence without execution-time drift."
+  - id: threshold_group_canary
+    status: pending
+    evidence: "Spend, points, order, referral, and verified-action metrics with AND and OR groups must match simulator, persisted policy, immutable facts, and live decisions."
+  - id: upgrade_grace_downgrade
+    status: pending
+    evidence: "Approved facts must exercise upgrade, retention, grace, downgrade, and re-entry once with append-only decision and membership history."
+  - id: refund_backdated_canary
+    status: pending
+    evidence: "One refund and one delayed canonical fact must compensate original evidence, preserve ordering, and converge to the deterministic tier without duplicate movement."
+  - id: manual_override_canary
+    status: pending
+    evidence: "An authorized owner or admin must create, inspect, expire, and revoke a reason-bound override while the independently calculated automatic tier remains visible."
+  - id: multiplier_benefit_canary
+    status: pending
+    evidence: "A tier earning multiplier must equal the displayed published rate and create one exactly attributable award without browser or worker-selected authority."
+  - id: reward_access_benefit
+    status: pending
+    evidence: "Tier-gated reward discovery and claim authorization must allow the eligible member, deny the ineligible member, and preserve the normal reservation and ledger boundary."
+  - id: free_shipping_benefit
+    status: pending
+    evidence: "A configured tier free-shipping benefit must execute through the reviewed native WooCommerce path without synchronous Hub checkout dependency."
+  - id: early_access_custom_perk
+    status: pending
+    evidence: "Early-access and custom-perk states must expose exact eligibility and an executable or audited manual fulfilment path without inventing value."
+  - id: expiry_preview_canary
+    status: pending
+    evidence: "Merchant expiry preview must reconcile outstanding, overdue, reserved-past-expiry, affected-member, next-date, 30-day, and 90-day aggregates exactly."
+  - id: expiry_reminder_canary
+    status: pending
+    evidence: "Nearest-relevant reminder scheduling must honor the published schedule and current consent, suppression, retry, and deduplication state exactly once."
+  - id: expiry_sweep_canary
+    status: pending
+    evidence: "The bounded expiry sweep must expire each eligible lot once, preserve original attribution, skip reserved value, and reconcile wallet and liability effects."
+  - id: refund_expiry_restoration
+    status: pending
+    evidence: "Refund restoration after expiry must use the original lot policy and attribution without silently extending, duplicating, or losing customer value."
+  - id: customer_progress_canary
+    status: pending
+    evidence: "The approved member must see available points separately from qualifying progress, next and retention milestones, review timing, grace, override, expiry, and history."
+  - id: merchant_performance_canary
+    status: pending
+    evidence: "Tenant-scoped aggregate tier population, movement, progress, and liability views must reconcile to immutable facts and reveal no member identity."
+  - id: cross_tenant_denial
+    status: pending
+    evidence: "Unrelated organization, programme, customer, wallet, policy, fact, decision, membership, override, lot, reminder, and benefit selectors must reveal nothing and create no effect."
+  - id: membership_history_reconciliation
+    status: pending
+    evidence: "Every automatic and manual effective-tier change must reconcile to immutable facts, decisions, current membership, overrides, grace, and original event time."
+  - id: award_multiplier_reconciliation
+    status: pending
+    evidence: "Every canary award must reconcile published base rate, effective tier multiplier, original commerce or activity fact, ledger transaction, lots, and balance exactly."
+  - id: expiry_liability_reconciliation
+    status: pending
+    evidence: "Every expiry and restoration must reconcile policy version, earned date, lots, reservations, ledger entries, wallet balance, forecasts, and liability aggregates."
+  - id: notification_reconciliation
+    status: pending
+    evidence: "Every scheduled, suppressed, accepted, retried, and deduplicated expiry notice must reconcile to the exact policy threshold and provider-neutral event."
+  - id: disable_state_continuity
+    status: pending
+    evidence: "Disabling advanced VIP must stop new V2 transitions while retaining accepted benefits, effective membership, history, overrides, expiry evidence, and customer access."
+  - id: rollback_rehearsal
+    status: pending
+    evidence: "Disable the pilot capability, drain or hold accepted work, restore prior images, and retain additive policy, fact, decision, membership, override, lot, and audit history."
+  - id: observation_window
+    status: pending
+    evidence: "Observe the bounded canary after rollback rehearsal and record decision latency, retries, late facts, expiry lag, reminders, checkout, privacy, and reconciliation health."
+  - id: final_reconciliation
+    status: pending
+    evidence: "Confirm zero unexplained policy, tier, fact, decision, membership, override, award, lot, expiry, reminder, benefit, checkout, tenancy, or privacy difference."
+artifacts:
+  - id: read_only_baseline
+    status: verified
+    path: docs/plan/evidence/M05/production/vip-read-only-baseline-2026-08-27.json
+    sha256: 3ace34eae8386ef4780bc68bde121c1b2aee02fc5eed16f29de31bdf3a7d4e21
+  - id: release_inventory
+    status: pending
+    path: null
+    sha256: null
+  - id: approval_record
+    status: pending
+    path: null
+    sha256: null
+  - id: recovery_point
+    status: pending
+    path: null
+    sha256: null
+  - id: production_baseline
+    status: pending
+    path: null
+    sha256: null
+  - id: canary_journal
+    status: pending
+    path: null
+    sha256: null
+  - id: reconciliation_report
+    status: pending
+    path: null
+    sha256: null
+  - id: rollback_report
+    status: pending
+    path: null
+    sha256: null
+  - id: observation_report
+    status: pending
+    path: null
+    sha256: null
+automaticFails:
+  - id: historical_tier_rewrite
+    rule: "a published tier policy or historical qualification decision is rewritten or reinterpreted"
+  - id: shadow_parity_drift
+    rule: "a migrated Rose Bloom or Icon case differs between immutable V1 and V2 evaluation"
+  - id: timezone_boundary_drift
+    rule: "calendar or rolling qualification changes because worker execution time replaces the original event instant"
+  - id: backdated_nondeterminism
+    rule: "a delayed or backdated fact produces an ordering-dependent tier decision or unexplained history"
+  - id: refund_downgrade_failure
+    rule: "a refund fails to compensate its original qualification fact or apply the configured retention grace"
+  - id: duplicate_tier_decision
+    rule: "duplicate replay delayed delivery or concurrent processing creates another tier movement benefit or expiry effect"
+  - id: override_authority_bypass
+    rule: "a manual override lacks live owner or admin authority reason expiry underlying automatic tier or immutable audit"
+  - id: benefit_rate_mismatch
+    rule: "a displayed tier rate reward access or fulfilment benefit differs from the executable published definition"
+  - id: expiry_attribution_loss
+    rule: "expiry or refund restoration loses the original tenant wallet programme version lot or earned-date attribution"
+  - id: duplicate_expiry_notice
+    rule: "an expiry reminder retry creates another delivery intent or ignores current consent suppression or policy"
+  - id: untrusted_authority
+    rule: "browser input Auth claims email domain or connector metadata grants tenant customer wallet tier override or value authority"
+  - id: cross_tenant_exposure
+    rule: "an unrelated tenant programme customer wallet tier fact decision override benefit or evidence becomes visible or mutable"
+  - id: checkout_dependency
+    rule: "WooCommerce checkout synchronously depends on the Hub worker entitlement tier evaluation expiry or benefit outcome"
+  - id: disabled_state_stranded
+    rule: "disabling advanced VIP hides history overrides progress expiry evidence or an already accepted tier benefit"
+  - id: sensitive_evidence
+    rule: "reusable signing material raw payload personal data private qualification facts or ledger metadata enters logs support output or evidence"
+  - id: unexplained_or_unapproved_close
+    rule: "any tier award expiry reminder liability tenancy or privacy difference approval artifact score floor or critical finding remains unresolved"

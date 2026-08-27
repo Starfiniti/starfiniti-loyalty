@@ -1,5 +1,14 @@
 # Iteration Log
 
+## 2026-08-27 — M05 fail-closed advanced VIP canary gate
+
+- Reconstructed M05 after its 36-case Rose/Bloom/Icon shadow proof and confirmed S06 still relied on prose evidence while later modules had machine-enforced canary and score contracts.
+- Added a 48-check manifest covering exact candidate and shadow evidence, Supabase/PostgreSQL authority, lifetime/rolling/calendar qualification, AND/OR metrics, event-time lifecycle, refunds and delayed facts, benefits, overrides, earned-date expiry, reminders, restoration, progress, cross-tenant denial, four reconciliation domains, disabled-state continuity, rollback, observation, and final zero-difference closure.
+- Bound production claims to nine exact evidence artifacts for the read-only baseline, release inventory, approvals, recovery point, production value baseline, canary journal, reconciliation, rollback, and observation. Verified artifacts must be unique, minimized JSON files under the M05 evidence root, safely opened as bounded regular files, SHA-256 exact, candidate-commit bound, and check-coverage exact.
+- Added four synchronized approval flags, exact seven-category arithmetic, a 90/100 target, an 80% floor per category, sixteen fixed-ID and fixed-text automatic failures, sensitive-evidence scanning, negative corruption fixtures, and a positive completion fixture. The gate is wired into `npm run check`.
+- Fresh read-only evidence confirms canonical dashboard DNS, HTTP 200 health/login, HTTP 401 unsigned WooCommerce ingress, and running application/Supabase VMs through the approved Proxmox route. No service, configuration, deployment, production data, checkout path, or loyalty value changed.
+- The honest provisional M05 score is 90/100, with 13 checks passed and 35 pending. Operability is 3/10 and blocks completion until an approved release and pilot store, fresh recovery point, disabled deployment, Starfiniti-only canary, exact reconciliation, rollback, observation, and final scoring pass.
+
 ## 2026-08-27 — M04 fail-closed reward canary gate
 
 - Reconstructed M04 after its browser/accessibility closeout and confirmed S04 still relied on prose evidence while M09–M14 had machine-enforced canary and score contracts.

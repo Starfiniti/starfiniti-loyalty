@@ -752,6 +752,7 @@ tasks:
     title: Deliver advanced VIP qualification, expiry, and member progression
     module: M05
     status: in_progress
+    module_score: 90
     dependencies: [M04-REWARDS-AND-FULFILMENT]
     hypothesis: Auditable qualification periods and progress increase retention while preserving equivalent Rose/Bloom/Icon outcomes.
     baseline: Lifetime eligible spend, basic tiers/grace/history, and expiry primitives exist.
@@ -760,7 +761,9 @@ tasks:
         V1 migration is outcome-identical,
         every boundary refund expiry downgrade and backdated case is deterministic,
       ]
-    owner_inputs: []
+    owner_inputs:
+      - approved real WooCommerce store for the final canary
+      - approved release and bounded canary window
     acceptance:
       [
         qualification modes threshold groups lifecycle benefits override expiry previews notifications progress history and performance pass,
@@ -830,11 +833,12 @@ tasks:
         acceptance:
           - shadow comparison exact-head CI disabled deployment Starfiniti canary reconciliation and score at least 90 pass
         evidence:
+          - docs/plan/evidence/M05/canary.yaml records 48 exact checks, nine named path- and SHA-256-bound production artifacts, and a deterministic seven-category provisional score of 90 with operability below its floor
           - deterministic V1 V2 shadow comparison proves all 36 Rose Bloom Icon point-award cases are identical across floor threshold and large-order boundaries
           - contract PostgreSQL and editor boundaries require every displayed tier rate to equal the executable base-rate multiplier and fail closed on incomplete or inexact legacy migration
           - exact-head run 31760806620 passed a clean 36-migration replay all 32 pgTAP files and 1,494 assertions plus both concurrency probes both images and all four WooCommerce runtimes
           - PR 30 is merge-clean at 48c87846d1be5e4c05c1858b331ef083afa8020b and CI run 33074423308 passed baseline containers clean database replay and all four WooCommerce runtime variants
-          - merge disabled deployment fresh recovery point Starfiniti-only canary zero-drift reconciliation and module score remain open
+          - approved release pilot store disabled deployment fresh recovery point Starfiniti-only canary zero-drift reconciliation rollback and observation remain open
     risks: [R-002, R-020, R-034, R-035, R-036]
     docs:
       [
