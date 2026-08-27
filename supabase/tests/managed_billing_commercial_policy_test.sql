@@ -215,6 +215,7 @@ select results_eq($$
     and (billing_summary#>>'{protectedAccess,exports}')::boolean
     and (billing_summary#>>'{protectedAccess,promisedRewardRedemption}')::boolean
 $$, array[1::bigint], 'all protected paths remain true in self-hosted V2');
+reset role;
 select results_eq($$
   select provider_linked, subscription_present, state_source
   from loyalty_private.resolve_managed_billing_commercial_policy_v1(
@@ -224,6 +225,8 @@ select results_eq($$
 $$, $$ values (false, false, 'self_hosted'::text) $$,
   'private self-hosted resolution returns before provider evidence'
 );
+set local role authenticated;
+set local request.jwt.claim.sub = 'c1000000-0000-4000-8000-000000000001';
 select results_eq($$
   select count(*)::bigint
   from loyalty.get_my_billing_summary_v2(
