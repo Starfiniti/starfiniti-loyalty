@@ -1,5 +1,14 @@
 # Iteration Log
 
+## 2026-08-27 — M08 fail-closed notification canary gate
+
+- Reconstructed M08 after the provider-neutral event/consent, SMTP, Klaviyo, signed webhook, and merchant template/health slices and confirmed S06 still lacked a machine-enforced production closeout.
+- Added a 53-check manifest covering exact candidate evidence, PostgreSQL authority, consent and trusted suppression, isolated provider adapters, immutable templates, delivery health, approved disabled rollout, local and external provider canaries, withdrawal, replay, scheduling, bounded retries, ambiguity review, outage isolation, value and checkout continuity, cross-tenant denial, four reconciliation domains, rollback, observation, and final zero-difference closure.
+- Bound production claims to nine unique minimized JSON artifacts for the read-only baseline, release inventory, approvals, recovery point, notification baseline, canary journal, reconciliation, rollback, and observation. Verified files must be safely opened as bounded regular files, SHA-256 exact, candidate-commit bound, check-coverage exact, and free of sensitive provider, contact, payload, coupon, and ledger material.
+- Added four synchronized approval flags, exact seven-category arithmetic, a 90/100 target, an 80% floor per category, sixteen fixed automatic failures, negative corruption fixtures, and a positive completion fixture. The gate is wired into `npm run check`.
+- Read-only evidence confirms canonical dashboard DNS, HTTP 200 health/login, HTTP 401 unsigned WooCommerce ingress, and running application/Supabase VMs through the approved Proxmox route. No service, provider profile, credential, endpoint, deployment, production contact, checkout path, or loyalty value changed.
+- The honest provisional M08 score is 90/100, with 15 checks passed and 38 pending. Operability is 3/10 and blocks completion until an approved release and pilot, provider credentials, fresh recovery point, disabled deployment, bounded SMTP/Klaviyo/webhook canaries, exact reconciliation, rollback, observation, and final scoring pass.
+
 ## 2026-08-27 — M07 fail-closed campaign canary gate
 
 - Reconstructed M07 after its five repository slices and seven release-hardening ADRs and confirmed S06 still lacked a machine-enforced production closeout.

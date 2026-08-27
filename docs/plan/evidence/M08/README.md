@@ -1,6 +1,6 @@
 # M08 Evidence — Notifications
 
-M08 is in progress. M08-S01 through S05 are complete: the provider-neutral consent authority, isolated SMTP/Klaviyo/webhook delivery, and safe merchant template/test/health experience are exact-head green. M08-S06 disabled deployment, provider canaries, reconciliation, rollback, and module scoring remain open.
+M08 is in progress. M08-S01 through S05 are complete: the provider-neutral consent authority, isolated SMTP/Klaviyo/webhook delivery, and safe merchant template/test/health experience are exact-head green. M08-S06 now has a fail-closed canary manifest; approved disabled deployment, provider credentials, bounded canaries, reconciliation, rollback, observation, and category-floor close remain open.
 
 ## M08-S01 — Event and consent authority
 
@@ -57,4 +57,11 @@ M08-S03 is complete. Its real test-account canary remains an S06 owner-input gat
 - Visual evidence uses synthetic non-customer values and contains no contact or secret data: [desktop](notification-studio-desktop.png), [dark](notification-studio-dark.png), and [mobile](notification-studio-mobile.png).
 - Rollback disables new publication/test work while retaining the active binding, immutable versions, accepted normal/test attempts, provider-neutral facts, health evidence, system fallback, and every checkout/value/refund/reconciliation path.
 
-M08-S01 through S05 are complete. S06 disabled deployment, local SMTP sink, real-provider canaries, exact reconciliation, rollback proof, and scoring remain open. No production notification provider is active.
+## M08-S06 — Fail-closed production canary and close
+
+- `canary.yaml` defines 53 mandatory checks, four synchronized approvals, seven weighted categories, a 90/100 target, an 80% floor in every category, and nine distinct path- and SHA-256-bound production artifacts.
+- Fifteen repository/read-only controls pass at candidate `d81526183ab2ce685c3cea8166d8c3886ecb03ba`; 38 approval, deployment, provider-canary, outage, reconciliation, rollback, and observation controls remain pending. Operability is 3/10, so the module cannot close despite a provisional total of 90.
+- The validator performs descriptor-first bounded artifact reads, exact artifact/check coverage, sensitive-evidence rejection, task/score synchronization, and adversarial self-tests for approval drift, prose-only completion, missing checks, digest/path reuse, unsafe paths, weakened automatic failures, and category-floor bypass.
+- The verified read-only artifact records only the canonical public HTTP/DNS baseline and approved Proxmox VM running states. It made no production mutation and activates no notification provider.
+
+M08-S01 through S05 are complete. S06 approved disabled deployment, local SMTP sink, real-provider canaries, exact reconciliation, rollback proof, observation, and final scoring remain open. No production notification provider is active.

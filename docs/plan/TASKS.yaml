@@ -1093,6 +1093,7 @@ tasks:
     title: Add provider-neutral notifications, SMTP, Klaviyo, and webhooks
     module: M08
     status: in_progress
+    module_score: 90
     dependencies: [M07-CAMPAIGNS]
     hypothesis: Consent-aware asynchronous messages improve activation without coupling providers to value processing.
     baseline: Expiry notification scheduling exists without provider delivery; Klaviyo is deferred in current docs.
@@ -1104,6 +1105,7 @@ tasks:
       ]
     owner_inputs:
       [
+        approved release and bounded pilot window,
         Klaviyo credentials for managed canary,
         SMTP credentials for deployment canary,
       ]
@@ -1237,6 +1239,9 @@ tasks:
         status: in_progress
         acceptance:
           - exact-head CI disabled deployment local SMTP sink test-provider canary reconciliation rollback and score at least 90 pass
+        evidence:
+          - docs/plan/evidence/M08/canary.yaml is a 53-check fail-closed manifest with four approvals, exact category floors, nine path and digest bound production artifacts, and deterministic false-completion self-tests
+          - repository and read-only controls pass at provisional score 90 while provider credentials, approved deployment, bounded canaries, reconciliation, rollback, observation, and category-floor close remain pending
     risks: [R-027]
     docs:
       [
