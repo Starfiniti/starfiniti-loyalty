@@ -1,5 +1,12 @@
 # Iteration Log
 
+## 2026-08-27 — M07 semantic production-evidence hardening
+
+- Reproduced a false-proof path in the completion fixture: every verified campaign artifact closed with only `{ fixture: true, mutationCount: 0 }`, so digest integrity did not prove audience consistency, budgets, control assignment, campaign value, refunds, native rewards, rollback, or observation outcomes.
+- Added nine exact minimized detail schemas with distinct release/recovery/baseline digests, unique per-check evidence digests, bounded audience/points/quantity/liability/member ceilings, exact behavior/concurrency/refund/native-reward scenarios, and zero-difference value/privacy/queue assertions.
+- Approved pilot/control, rollout, value, control, schedule, and observation policies plus numeric limits bind approval to journal. Exact images/plugin/contracts bind release; campaign evidence and every exercise/work count bind journal to reconciliation and observation. Final approval binds release and every artifact under strict pre-canary, rollback-after-canary, and minimum 24-hour covering chronology.
+- Added positive and adversarial fixtures for hollow/extra fields, impossible time, current-release or current-commit reuse, capacity/liability drift, changed policy/ceiling/plugin/observation evidence, audience/refund and count mismatch, artifact rebinding, late operator baseline/release/approval, early rollback, observation drift, and short observation. Production, campaigns, checkout, native coupons, customer value, and deployment remain unchanged.
+
 ## 2026-08-27 — M08 semantic production-evidence hardening
 
 - Reproduced a false-proof path in the completion fixture: every verified notification artifact closed with only `{ fixture: true, mutationCount: 0 }`, so digest integrity did not prove consent, suppression, provider delivery, privacy, value/checkout continuity, rollback, or observation outcomes.

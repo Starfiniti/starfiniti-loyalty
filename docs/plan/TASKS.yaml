@@ -1062,7 +1062,8 @@ tasks:
           - native campaigns preflight an active exact-programme connector and deterministic execution failures stop after one rolled-back attempt while transient failures remain bounded retries
           - campaign rule and tier selectors come from the exact published programme and incompatible future programme publication fails atomically while accepted work exists
         evidence:
-          - docs/plan/evidence/M07/canary.yaml records 51 exact checks, nine named path- and SHA-256-bound production artifacts, and a deterministic seven-category provisional score of 90 with operability below its floor
+          - docs/plan/evidence/M07/canary.yaml records 51 exact checks, nine named path digest and semantic bound production artifacts, exact cross-artifact policy release campaign count reconciliation and chronology, and a deterministic seven-category provisional score of 90 with operability below its floor
+          - docs/plan/evidence/M07/ARTIFACT_CONTRACT.md defines the exact minimized production evidence schemas, bindings, zero-difference requirements, rollback order, and minimum 24-hour observation
           - ADR-0026 defines append-only per-origin cumulative campaign refund compensation; exact-head run 32674872811 passed and partial/full refund canary evidence remains pending
           - ADR-0027 rejects merchant-declared per-effect valuation unsupported native kinds unpublished rewards and same-group cross-programme reward references; exact-head run 32674872811 passed and canary evidence remains pending
           - ADR-0028 selects one materialized candidate and decision statement with STABLE nested evaluators; exact-head run 32674872811 passed and concurrent source-change canary evidence remains pending
@@ -1090,6 +1091,7 @@ tasks:
         docs/architecture/ADR/0030-published-programme-campaign-selector-authority.md,
         docs/api/CAMPAIGNS.md,
         docs/architecture/DATA_MODEL.md,
+        docs/plan/evidence/M07/ARTIFACT_CONTRACT.md,
       ]
     evidence: [docs/plan/evidence/M07/README.md]
 
