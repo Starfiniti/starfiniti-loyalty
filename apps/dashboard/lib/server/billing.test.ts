@@ -16,7 +16,7 @@ const organizationId = "a1000000-0000-4000-8000-000000000100";
 
 function fixture() {
   return {
-    schemaVersion: "1",
+    schemaVersion: "2",
     organizationId,
     deploymentMode: "self_hosted",
     commercialState: "self_hosted",
@@ -30,6 +30,9 @@ function fixture() {
     graceEndsAt: null,
     evaluatedAt: "2026-08-26T20:00:00Z",
     stateUpdatedAt: null,
+    stateSource: "self_hosted",
+    restrictionReason: "none",
+    contractEndsAt: null,
     protectedAccess: {
       balanceRead: true,
       refunds: true,
@@ -50,7 +53,7 @@ describe("billing summary server read", () => {
       error: null,
     });
     await expect(getBillingSummary(organizationId)).resolves.toEqual(fixture());
-    expect(rpc).toHaveBeenCalledWith("get_my_billing_summary_v1", {
+    expect(rpc).toHaveBeenCalledWith("get_my_billing_summary_v2", {
       target_organization_public_id: organizationId,
     });
   });

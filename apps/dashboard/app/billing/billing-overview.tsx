@@ -1,5 +1,5 @@
 import type {
-  BillingSummaryV1,
+  BillingSummaryV2,
   ManagedBillingUsageSummaryV1,
   ManagedBillingPlanOptionV1,
   ManagedBillingCommercialState,
@@ -11,6 +11,7 @@ import {
   CloudCog,
   DatabaseZap,
   ExternalLink,
+  FileCheck2,
   LockKeyhole,
   ServerCog,
   ShieldCheck,
@@ -41,8 +42,15 @@ const stateLabels: Record<ManagedBillingCommercialState, string> = {
   contract_managed: "Contract managed",
 };
 
+const stateSourceLabels: Record<BillingSummaryV2["stateSource"], string> = {
+  self_hosted: "Local deployment",
+  unconfigured: "Awaiting configuration",
+  provider: "Provider lifecycle",
+  manual_contract: "Approved contract",
+};
+
 export function billingStatePresentation(
-  summary: BillingSummaryV1,
+  summary: BillingSummaryV2,
 ): BillingPresentation {
   if (summary.commercialState === "self_hosted") {
     return {
@@ -67,11 +75,18 @@ export function billingStatePresentation(
   }
 
   if (!summary.growthConfigurationAllowed) {
+    const restrictedDescription =
+      summary.restrictionReason === "grace_expired"
+        ? "The approved grace period has ended. Existing balances, refunds, reconciliation, exports, checkout, and promised rewards remain available."
+        : summary.restrictionReason === "payment_past_due"
+          ? "Payment is past due and no active grace decision allows new setup. Existing loyalty value and every protected operation remain available."
+          : summary.restrictionReason === "provider_cancelled"
+            ? "The managed subscription is cancelled. Existing loyalty value and every protected operation remain available while commercial access is recovered."
+            : "The provider lifecycle restricts new managed setup. Existing balances, refunds, reconciliation, exports, checkout, and promised rewards remain available.";
     return {
       badge: stateLabels[summary.commercialState],
       title: "New managed growth is restricted",
-      description:
-        "Existing balances, refunds, reconciliation, exports, checkout, and promised rewards remain available while the commercial state is resolved.",
+      description: restrictedDescription,
       provider: "Linked privately",
       tone: "restricted",
     };
@@ -122,7 +137,7 @@ export function BillingOverview({
   canManage = false,
   startSessionAction,
 }: Readonly<{
-  summary: BillingSummaryV1 | null;
+  summary: BillingSummaryV2 | null;
   usageSummary?: ManagedBillingUsageSummaryV1 | null;
   plans?: readonly ManagedBillingPlanOptionV1[];
   organizationId?: string;
@@ -192,6 +207,11 @@ export function BillingOverview({
             summary.growthConfigurationAllowed ? "Available" : "Restricted"
           }
         />
+        <SummaryCard
+          icon={FileCheck2}
+          label="Authority"
+          value={stateSourceLabels[summary.stateSource]}
+        />
       </section>
 
       <section className={`billing-status-panel is-${presentation.tone}`}>
@@ -205,7 +225,27 @@ export function BillingOverview({
         <div>
           <p className="login-eyebrow">Current state</p>
           <h2>{presentation.title}</h2>
-          <p>{presentation.description}</p>
+          <p className="billing-state-description">
+            {presentation.description}
+          </p>
+          <dl className="billing-state-facts">
+            <div>
+              <dt>Decision source</dt>
+              <dd>{stateSourceLabels[summary.stateSource]}</dd>
+            </div>
+            {summary.graceEndsAt ? (
+              <div>
+                <dt>Grace deadline</dt>
+                <dd>{formatBillingInstant(summary.graceEndsAt)}</dd>
+              </div>
+            ) : null}
+            {summary.contractEndsAt ? (
+              <div>
+                <dt>Contract term</dt>
+                <dd>Through {formatBillingInstant(summary.contractEndsAt)}</dd>
+              </div>
+            ) : null}
+          </dl>
         </div>
       </section>
 
@@ -361,6 +401,18 @@ function UsagePanel({
 
 export function formatUsageCount(value: string): string {
   return new Intl.NumberFormat("en").format(BigInt(value));
+}
+
+export function formatBillingInstant(value: string): string {
+  return new Intl.DateTimeFormat("en", {
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    month: "short",
+    timeZone: "UTC",
+    timeZoneName: "short",
+    year: "numeric",
+  }).format(new Date(value));
 }
 
 function ManagedBillingControls({

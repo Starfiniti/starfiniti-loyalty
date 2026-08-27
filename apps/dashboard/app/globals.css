@@ -19673,7 +19673,7 @@ html[data-dashboard-theme="dark"] .billing-state-badge.is-restricted {
 
 .billing-summary-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -19767,7 +19767,7 @@ html[data-dashboard-theme="dark"] .billing-state-badge.is-restricted {
   letter-spacing: -0.025em;
 }
 
-.billing-status-panel > div > p:last-child,
+.billing-state-description,
 .billing-protected-panel header p:last-child,
 .billing-boundary-grid section > div > p:last-child,
 .billing-unavailable div > p:last-child {
@@ -19776,6 +19776,35 @@ html[data-dashboard-theme="dark"] .billing-state-badge.is-restricted {
   color: var(--merchant-muted, #71717a);
   font-size: 11px;
   line-height: 1.6;
+}
+
+.billing-state-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin: 16px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--merchant-border, #e4e4e7);
+}
+
+.billing-state-facts > div {
+  display: grid;
+  gap: 3px;
+}
+
+.billing-state-facts dt {
+  color: var(--merchant-muted, #71717a);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.billing-state-facts dd {
+  margin: 0;
+  color: var(--merchant-text, #18181b);
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .billing-protected-panel {
@@ -20133,6 +20162,10 @@ html[data-dashboard-theme="dark"] .billing-state-badge.is-restricted {
 }
 
 @media (max-width: 900px) {
+  .billing-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .billing-protected-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

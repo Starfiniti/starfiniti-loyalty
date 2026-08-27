@@ -2,7 +2,7 @@
 
 ## Current boundary
 
-M14-S04 adds disabled immutable usage capture and Stripe meter-event dispatch to the owner-only Checkout/Portal flow, managed-only webhook receiver, and isolated billing worker. Prices, meter definitions, and event names remain externally configured private evidence. Invoice presentation and payment enforcement remain outside this slice. Production remains `self_hosted`, all three Stripe secret paths remain empty, and the optional worker profile remains stopped.
+M14-S05A adds a local deterministic delinquency/manual-contract policy core to the disabled immutable usage capture, owner-only Checkout/Portal flow, managed-only webhook receiver, and isolated billing worker. Prices, meter definitions, event names, delinquency terms, and contracts remain externally approved private evidence. Production remains `self_hosted`, all three Stripe secret paths remain empty, and the optional worker profile remains stopped.
 
 Endpoint:
 
@@ -18,6 +18,16 @@ The endpoint accepts only Stripe-signed JSON up to 256 KiB. A successful new or 
 - The self-hosted database reservation returns before API-key access or provider construction and requires no Stripe configuration.
 
 The database gate runs before body or secret access. Self-hosted usage capture returns before reading source tables, claim returns no dispatch, and no usage-key file or provider client is touched.
+
+## Commercial policy administration
+
+- Configure no delinquency or manual-contract record until its policy, approver, effective interval, and rollback have been approved. The repository seeds none.
+- Append policy only through `record_managed_billing_delinquency_policy_v1` and contract decisions only through `record_managed_billing_manual_contract_v1` on a privileged operator connection. Browser, runtime, and worker roles have no execute or table access.
+- Use separate bounded actor and approver references; do not put names, email addresses, provider identifiers, contract documents, prices, or secrets in either reference or reason.
+- One effective instant accepts one semantic decision. An exact retry, including one with a different caller key, converges; a conflicting same-instant decision fails closed.
+- A current `allow_growth` contract overrides delayed provider state. Append open-ended `defer_to_provider` to end local precedence early; otherwise a bounded contract falls through when its term ends. Never update or delete history.
+- Delinquency grace is bound to policy already recorded at provider occurrence. Backdating a later policy cannot alter an old event. Provider `past_due` remains restricted when no approved policy existed.
+- Commercial recovery changes only new growth/configuration authorization. Verify all six protected paths and normal ingestion/release/reversal/redemption/reconciliation/export/checkout processing independently before and after every change.
 
 ## Sandbox enablement
 

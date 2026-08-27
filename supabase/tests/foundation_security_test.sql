@@ -103,6 +103,7 @@ select is_empty(
           'loyalty.get_my_referral_experiences_v1()',
           'loyalty.get_my_entitlements_v1(uuid,timestamp with time zone)',
           'loyalty.get_my_billing_summary_v1(uuid,timestamp with time zone)',
+          'loyalty.get_my_billing_summary_v2(uuid,timestamp with time zone)',
           'loyalty.get_my_managed_billing_usage_summary_v1(uuid,timestamp with time zone,timestamp with time zone)',
           'loyalty.get_my_tier_progress_v1(timestamp with time zone)',
           'loyalty.get_programme_expiry_liability_v2(uuid,timestamp with time zone)',

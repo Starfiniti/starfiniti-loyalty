@@ -2715,6 +2715,54 @@ tasks:
         acceptance:
           - only new managed growth or configuration is restricted after grace
           - refunds releases reconciliation promised redemption account access and exports always continue
+        failure_modes:
+          - Stripe delivery order or provider status directly grants or removes tenant authority
+          - enabling a delinquency policy retroactively shortens an already observed past-due interval
+          - a manual contract loses to a delayed provider webhook or survives its effective interval
+          - a blanket entitlement restriction blocks ingestion value processing refunds releases redemption reconciliation exports or checkout
+          - an exact command retry creates another policy or contract version while a changed retry silently succeeds
+          - public output exposes provider identifiers approver identity reason or private commercial evidence
+        security_boundaries:
+          - PostgreSQL derives organization deployment provider policy and live membership authority
+          - policy and contract commands are private operator-only functions with no browser runtime or worker grants
+          - public V1 remains backward compatible and public V2 remains minimized tenant-scoped and strict
+          - protected value paths bypass commercial restriction and never bypass normal tenant authorization
+        slices:
+          - id: M14-S05A-COMMERCIAL-POLICY-CORE
+            status: in_progress
+            hypothesis: An append-only local resolver can deterministically combine deployment provider delinquency and manual-contract evidence without changing the V1 public contract.
+            acceptance:
+              - BillingSummaryV2 adds source reason and contract expiry while BillingSummaryV1 retains its exact shape and behavior
+              - past-due grace is fixed from policy effective at immutable provider occurrence time and never from observation or browser time
+              - effective manual allow-growth evidence wins over provider state and explicit defer-to-provider evidence ends the override
+              - self-hosted returns before provider policy or contract evidence and makes no external billing dependency
+            verification:
+              - contract compatibility and strict minimization tests
+              - pgTAP for precedence time boundaries RLS grants immutability idempotency tenancy protected access and zero ledger effects
+              - two-session exact retry and changed retry convergence probe
+          - id: M14-S05B-GROWTH-CONFIGURATION-ENFORCEMENT
+            status: planned
+            dependencies: [M14-S05A-COMMERCIAL-POLICY-CORE]
+            hypothesis: Explicit checks at authoring boundaries can restrict new managed growth without changing operational or historical behavior.
+            acceptance:
+              - every mutable merchant growth or configuration command has an explicit commercial authorization check
+              - ingestion refunds releases redemption reconciliation exports customer access and checkout contain no commercial-denial dependency
+              - recovery to active grace or contract-managed state reopens new configuration without rewriting history
+            verification:
+              - executable command matrix in every commercial state
+              - structural allowlist proving protected and operational functions do not call the growth authorization function
+              - concurrency retry and historical-version compatibility tests
+          - id: M14-S05C-MERCHANT-EXPERIENCE-AND-CLOSE
+            status: planned
+            dependencies: [M14-S05B-GROWTH-CONFIGURATION-ENFORCEMENT]
+            hypothesis: A minimized live projection can explain restriction recovery and contract term without leaking private billing evidence.
+            acceptance:
+              - merchant UI identifies state source restriction reason grace deadline and contract end in English
+              - balances configuration history usage and protected operation guidance remain visible while restricted
+              - desktop mobile keyboard reduced-motion dark-theme overflow and diagnostic review passes
+            verification:
+              - production-rendered browser review
+              - adversarial diff review and exact-head npm database image WooCommerce gate
         rollout: Policy simulation then sandbox failure then one approved managed tenant.
         rollback: Append an effective manual override or reopen growth; never edit commercial or loyalty history.
         verification:

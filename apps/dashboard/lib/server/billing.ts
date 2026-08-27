@@ -1,9 +1,9 @@
 import "server-only";
 
 import {
-  billingSummaryV1,
+  billingSummaryV2,
   managedBillingUsageSummaryV1,
-  type BillingSummaryV1,
+  type BillingSummaryV2,
   type ManagedBillingUsageSummaryV1,
 } from "@starfiniti/contracts";
 
@@ -13,11 +13,11 @@ type UnknownRow = Readonly<Record<string, unknown>>;
 
 export async function getBillingSummary(
   organizationId: string,
-): Promise<BillingSummaryV1> {
+): Promise<BillingSummaryV2> {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .schema("loyalty")
-    .rpc("get_my_billing_summary_v1", {
+    .rpc("get_my_billing_summary_v2", {
       target_organization_public_id: organizationId,
     });
   if (error || !Array.isArray(data) || data.length !== 1) {
@@ -25,7 +25,7 @@ export async function getBillingSummary(
   }
 
   const row = data[0] as UnknownRow | undefined;
-  const parsed = billingSummaryV1.safeParse(row?.billing_summary);
+  const parsed = billingSummaryV2.safeParse(row?.billing_summary);
   if (!parsed.success) throw new Error("billing_summary_unavailable");
   return parsed.data;
 }

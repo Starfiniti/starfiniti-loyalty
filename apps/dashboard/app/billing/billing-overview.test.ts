@@ -1,7 +1,11 @@
-import type { BillingSummaryV1 } from "@starfiniti/contracts";
+import type { BillingSummaryV2 } from "@starfiniti/contracts";
 import { describe, expect, it } from "vitest";
 
-import { billingStatePresentation, formatUsageCount } from "./billing-overview";
+import {
+  billingStatePresentation,
+  formatBillingInstant,
+  formatUsageCount,
+} from "./billing-overview";
 
 const protectedAccess = {
   balanceRead: true,
@@ -13,10 +17,10 @@ const protectedAccess = {
 } as const;
 
 function managedSummary(
-  overrides: Partial<BillingSummaryV1> = {},
-): BillingSummaryV1 {
+  overrides: Partial<BillingSummaryV2> = {},
+): BillingSummaryV2 {
   return {
-    schemaVersion: "1",
+    schemaVersion: "2",
     organizationId: "55f34937-fc41-4f2d-b41a-f9494b51df04",
     deploymentMode: "managed",
     commercialState: "active",
@@ -30,6 +34,9 @@ function managedSummary(
     graceEndsAt: null,
     evaluatedAt: "2030-12-01T00:00:00.000Z",
     stateUpdatedAt: "2030-11-01T00:00:00.000Z",
+    stateSource: "provider",
+    restrictionReason: "none",
+    contractEndsAt: null,
     protectedAccess,
     ...overrides,
   };
@@ -41,6 +48,7 @@ describe("billingStatePresentation", () => {
       managedSummary({
         deploymentMode: "self_hosted",
         commercialState: "self_hosted",
+        stateSource: "self_hosted",
         billingAvailable: false,
         providerLinked: false,
         subscriptionPresent: false,
@@ -63,6 +71,7 @@ describe("billingStatePresentation", () => {
     const presentation = billingStatePresentation(
       managedSummary({
         commercialState: "suspended",
+        restrictionReason: "provider_suspended",
         growthConfigurationAllowed: false,
         restriction: "new_growth_only",
       }),
@@ -79,6 +88,7 @@ describe("billingStatePresentation", () => {
     const presentation = billingStatePresentation(
       managedSummary({
         commercialState: "contract_managed",
+        stateSource: "manual_contract",
         providerLinked: false,
         subscriptionPresent: false,
         currentPeriodEndsAt: null,
@@ -96,6 +106,7 @@ describe("billingStatePresentation", () => {
     const presentation = billingStatePresentation(
       managedSummary({
         commercialState: "grace",
+        restrictionReason: "payment_past_due",
         graceEndsAt: "2030-12-15T00:00:00.000Z",
       }),
     );
@@ -106,6 +117,21 @@ describe("billingStatePresentation", () => {
       tone: "warning",
     });
   });
+
+  it("explains expired local grace separately from provider suspension", () => {
+    const presentation = billingStatePresentation(
+      managedSummary({
+        commercialState: "suspended",
+        growthConfigurationAllowed: false,
+        restriction: "new_growth_only",
+        restrictionReason: "grace_expired",
+        graceEndsAt: "2030-11-30T00:00:00.000Z",
+      }),
+    );
+
+    expect(presentation.description).toContain("grace period has ended");
+    expect(presentation.description).toContain("promised rewards remain");
+  });
 });
 
 describe("managed usage presentation", () => {
@@ -114,5 +140,9 @@ describe("managed usage presentation", () => {
       "9,223,372,036,854,775,807",
     );
     expect(formatUsageCount("-1")).toBe("-1");
+  });
+
+  it("formats commercial deadlines in explicit UTC", () => {
+    expect(formatBillingInstant("2030-12-15T15:30:00.000Z")).toContain("UTC");
   });
 });
