@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   billingSummaryV1,
+  managedBillingPlanOptionV1,
+  managedBillingSessionRequestV1,
   managedBillingWebhookProcessingResultV1,
   stripeBillingWebhookEventV1,
 } from "./billing";
@@ -217,5 +219,87 @@ describe("Stripe billing webhook v1", () => {
         stateRevisionId: organizationId,
       }),
     ).toThrow(/only state-recorded/u);
+  });
+});
+
+describe("managed billing session contracts v1", () => {
+  const plan = {
+    schemaVersion: "1",
+    planId: "a2000000-0000-4000-8000-000000000100",
+    key: "growth_monthly",
+    name: "Growth",
+    description: "Recurring managed loyalty platform access.",
+    currency: "EUR",
+    unitAmountMinor: 9900,
+    interval: "month",
+    intervalCount: 1,
+    trialDays: 14,
+  } as const;
+
+  it("accepts a minimized externally configured plan without provider IDs", () => {
+    expect(managedBillingPlanOptionV1.parse(plan).unitAmountMinor).toBe(9900);
+    for (const forbidden of [
+      { providerPriceId: "price_private" },
+      { providerProductId: "prod_private" },
+      { paymentMethod: "pm_private" },
+    ]) {
+      expect(() =>
+        managedBillingPlanOptionV1.parse({ ...plan, ...forbidden }),
+      ).toThrow();
+    }
+  });
+
+  it("binds checkout to one public plan selector and portal to none", () => {
+    expect(
+      managedBillingSessionRequestV1.parse({
+        schemaVersion: "1",
+        organizationId,
+        action: "checkout",
+        planId: plan.planId,
+        operationId: "a3000000-0000-4000-8000-000000000100",
+      }).action,
+    ).toBe("checkout");
+    expect(
+      managedBillingSessionRequestV1.parse({
+        schemaVersion: "1",
+        organizationId,
+        action: "portal",
+        planId: null,
+        operationId: "a3000000-0000-4000-8000-000000000101",
+      }).action,
+    ).toBe("portal");
+  });
+
+  it("rejects browser provider authority and invalid action-plan combinations", () => {
+    expect(() =>
+      managedBillingSessionRequestV1.parse({
+        schemaVersion: "1",
+        organizationId,
+        action: "checkout",
+        planId: null,
+        operationId: "a3000000-0000-4000-8000-000000000102",
+      }),
+    ).toThrow(/requires one plan/u);
+    expect(() =>
+      managedBillingSessionRequestV1.parse({
+        schemaVersion: "1",
+        organizationId,
+        action: "portal",
+        planId: plan.planId,
+        operationId: "a3000000-0000-4000-8000-000000000103",
+      }),
+    ).toThrow(/forbids plan/u);
+    expect(() =>
+      managedBillingSessionRequestV1.parse({
+        schemaVersion: "1",
+        organizationId,
+        action: "checkout",
+        planId: plan.planId,
+        operationId: "a3000000-0000-4000-8000-000000000104",
+        customerId: "cus_forbidden",
+        priceId: "price_forbidden",
+        returnUrl: "https://attacker.example.test",
+      }),
+    ).toThrow();
   });
 });

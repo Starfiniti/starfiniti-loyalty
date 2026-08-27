@@ -2,7 +2,7 @@
 
 ## Current boundary
 
-M14-S02 provides a disabled managed-only Stripe webhook receiver and an isolated normalization worker. It does not create Checkout or Portal sessions, call Stripe, configure prices, send usage, expose invoices, or enforce payment. Production remains `self_hosted` and the optional worker profile remains stopped.
+M14-S03 adds disabled owner-only Stripe Checkout and Customer Portal session creation to the managed-only webhook receiver and isolated normalization worker. Prices remain externally configured private database evidence; usage, invoice presentation, and payment enforcement remain outside this slice. Production remains `self_hosted`, both Stripe secret paths remain empty, and the optional worker profile remains stopped.
 
 Endpoint:
 
@@ -12,10 +12,10 @@ The endpoint accepts only Stripe-signed JSON up to 256 KiB. A successful new or 
 
 ## Disabled default
 
-- Leave `LOYALTY_STRIPE_WEBHOOK_SECRET_PATH` empty for self-hosted and ordinary managed deployments. Compose mounts `/dev/null`; the runtime rejects it because it is not a regular secret file.
+- Leave `LOYALTY_STRIPE_WEBHOOK_SECRET_PATH` and `LOYALTY_STRIPE_API_KEY_PATH` empty for self-hosted and unapproved managed deployments. Compose mounts `/dev/null`; each runtime reader rejects it because it is not a regular secret file.
 - Do not start the `billing` Compose profile.
 - Keep the global deployment mode `self_hosted`, or keep `managed.billing` disabled for every account.
-- No Stripe API key is used or accepted by this slice.
+- The self-hosted database reservation returns before API-key access or provider construction and requires no Stripe configuration.
 
 The database gate runs before body or secret access. A self-hosted request therefore needs no Stripe configuration and creates no receipt.
 
@@ -23,15 +23,16 @@ The database gate runs before body or secret access. A self-hosted request there
 
 Only after an approved M14 canary:
 
-1. Create a Stripe sandbox webhook endpoint at the canonical HTTPS URL and subscribe only to the event allowlist documented in `docs/api/BILLING.md`.
-2. Place the endpoint signing secret in a root-managed file outside the repository. The dashboard container runs as UID/GID `1001`; expose the file read-only with the minimum ownership/mode needed by that runtime. Never place the value in `.env`, a command line, logs, evidence, or support output.
-3. Set `LOYALTY_STRIPE_WEBHOOK_SECRET_PATH` to the absolute host path and recreate the dashboard container.
-4. Create the reviewed private billing-account binding and explicit tenant `managed.billing` canary entitlement. A provider customer ID never grants tenant access by itself.
-5. Start only the isolated worker with `docker compose --profile billing up -d billing-worker`. It receives the least-privilege worker database URL and no Stripe secret or network credential.
-6. Send official sandbox fixtures for subscription create/update/delete/pause/resume and invoice paid/payment-failed/payment-action-required. Exercise duplicate, delayed, changed-replay, out-of-order, stale-signature, worker-stop, lease-expiry, and entitlement-revocation cases.
-7. Reconcile each provider event ID to one immutable receipt, one terminal or held job, immutable attempt history, and at most one normalized subscription revision. Confirm zero loyalty ledger changes and no checkout dependency.
+1. Create reviewed Stripe sandbox Prices and a webhook endpoint at the canonical HTTPS URL. Subscribe only to the event allowlist documented in `docs/api/BILLING.md`.
+2. Place the restricted sandbox API key and endpoint signing secret in separate root-managed files outside the repository. The dashboard runs as UID/GID `1001`; expose each file read-only with the minimum ownership/mode required. Never place either value in `.env`, a command line, logs, evidence, or support output.
+3. Configure the private append-only provider mode and plan versions through a privileged operator connection. Confirm the API key test/live mode matches the database provider mode; never commit a Price ID.
+4. Set both absolute host secret paths, recreate the dashboard container, create the explicit tenant `managed.billing` canary entitlement, and keep every other tenant disabled.
+5. Start only the isolated worker with `docker compose --profile billing up -d billing-worker`. It receives the least-privilege worker database URL and no Stripe secret or provider network client.
+6. As the canary organization owner, create Checkout and Portal sessions. Confirm an admin, revoked owner, and other-tenant owner fail; browser requests cannot select a customer, Price, mode, or return URL; and provider failure records a bounded rejected or ambiguous attempt.
+7. Complete official sandbox and test-clock subscription create/update/delete/pause/resume plus invoice paid/payment-failed/payment-action-required cases. Exercise duplicate, delayed, changed-replay, out-of-order, stale-signature, worker-stop, lease-expiry, entitlement-revocation, cancelled return, and lost browser-return cases.
+8. Reconcile each operation, provider event ID, account, session, receipt, job, attempt, and normalized state revision. Confirm the return page changes nothing, no redirect URL or payment/contact data is stored, zero loyalty ledger changes occur, and checkout remains independent.
 
-Exact sandbox signing material and a real Stripe endpoint remain owner inputs for the M14 production canary. Local deterministic fixtures are repository evidence, not a claim that the external endpoint has passed.
+Exact sandbox credentials, approved test Prices, and a real Stripe endpoint remain owner inputs for the M14 production canary. Local deterministic fixtures are repository evidence, not a claim that the external endpoint has passed.
 
 ## Observation and recovery
 
@@ -45,6 +46,6 @@ For an ambiguous provider outcome, stop new intake if necessary, retain every re
 
 1. Disable the tenant canary entitlement or return the deployment to `self_hosted`.
 2. Stop the optional `billing-worker` service.
-3. Remove the secret-path setting and recreate the dashboard container.
+3. Remove both Stripe secret-path settings and recreate the dashboard container.
 4. Verify that balance reads, refunds, reconciliation, exports, promised reward redemption, account access, and WooCommerce checkout remain available.
 5. Retain and reconcile all accepted receipt and normalized-state evidence.

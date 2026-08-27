@@ -1,10 +1,14 @@
 import { redirect } from "next/navigation";
+import { randomUUID } from "node:crypto";
+import type { ManagedBillingPlanOptionV1 } from "@starfiniti/contracts";
 
 import { MerchantShell } from "@/components/merchant-shell";
 import { getBillingSummary } from "@/lib/server/billing";
+import { listManagedBillingPlans } from "@/lib/server/managed-billing-sessions";
 import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
 
 import { BillingOverview } from "./billing-overview";
+import { startManagedBillingSessionAction } from "./actions";
 
 export default async function BillingPage() {
   const tenant = await getAuthenticatedTenantState();
@@ -14,8 +18,18 @@ export default async function BillingPage() {
   if (tenant.kind === "unassigned") redirect("/");
 
   let summary = null;
+  let plans: readonly ManagedBillingPlanOptionV1[] = [];
   try {
     summary = await getBillingSummary(tenant.context.organization.public_id);
+    if (
+      summary.deploymentMode === "managed" &&
+      tenant.context.membershipRole === "owner"
+    ) {
+      plans = await listManagedBillingPlans(
+        tenant.userId,
+        tenant.context.organization.public_id,
+      );
+    }
   } catch {
     // Fail closed: never infer a commercial state from claims or stale UI data.
   }
@@ -39,7 +53,14 @@ export default async function BillingPage() {
         lang="en"
         tabIndex={-1}
       >
-        <BillingOverview summary={summary} />
+        <BillingOverview
+          organizationId={tenant.context.organization.public_id}
+          plans={plans}
+          portalOperationId={randomUUID()}
+          startSessionAction={startManagedBillingSessionAction}
+          summary={summary}
+          canManage={tenant.context.membershipRole === "owner"}
+        />
       </main>
     </MerchantShell>
   );

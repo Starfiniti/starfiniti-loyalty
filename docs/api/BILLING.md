@@ -4,7 +4,7 @@
 
 `BillingSummaryV1` is the minimized merchant-readable projection for deployment and commercial state. It is not a payment API, subscription mutation API, or entitlement authority. PostgreSQL derives the organization from a public selector plus the authenticated user's current live membership.
 
-M14-S02 adds one disabled managed-only webhook intake boundary. It makes no outbound Stripe request and exposes no checkout, portal, price, invoice, or metering command. Those operations remain disabled until their own versioned contracts and production gates exist.
+M14-S03 adds disabled managed-only Checkout and Customer Portal session creation. It makes no provider request in self-hosted mode, exposes no Stripe customer or Price identifier to the browser, and does not treat a provider redirect or return page as subscription authority. Invoices and metering remain outside this slice.
 
 ## Read contract
 
@@ -67,6 +67,18 @@ An exact retry returns the same receipt with `duplicate`. The response never inc
 `loyalty_private.accept_managed_billing_webhook_v1` derives the organization from the current private provider-customer binding and rechecks `managed.billing`; it accepts no tenant, actor, plan, workspace, or entitlement selector. One event ID with identical minimized content returns one receipt, while changed content fails with SQLSTATE `23505`.
 
 `loyalty_private.claim_managed_billing_webhooks_v1` and `process_managed_billing_webhook_v1` are available only to the isolated worker role. Claims are bounded and leased; processing rechecks entitlement, appends immutable attempt evidence, records subscription state through the existing S01 event-time boundary, and records invoice events without a state effect. The worker has no Stripe credential or provider client.
+
+## Managed session contracts V1
+
+`ManagedBillingPlanOptionV1` exposes only a public plan selector, merchant copy, ISO currency, integer minor-unit amount, interval, and trial days. Provider Product and Price identifiers remain in append-only private PostgreSQL versions and are configured externally; the repository seeds no price.
+
+`ManagedBillingSessionRequestV1` accepts only schema version, organization public ID, `checkout` or `portal`, a public plan selector for Checkout, and an operation UUID. It rejects customer, Price, return URL, provider mode, payment, contact, claim, or entitlement input.
+
+The server reserves the operation in `loyalty_private.reserve_managed_billing_session_v1` before loading an API key or constructing a provider client. PostgreSQL checks the current deployment mode, active organization, live owner membership, `managed.billing` entitlement, provider mode, and effective plan/account evidence. An exact retry returns the same fence; changed content under the same operation ID fails with SQLSTATE `23505`.
+
+Immediately before each customer or session request, `authorize_managed_billing_session_attempt_v1` rechecks membership, entitlement, and provider mode. The narrow client can POST only to Stripe's fixed API origin, pins reviewed API version `2026-02-25.clover`, uses a stable database-derived idempotency key, pins success/cancel/return navigation to `DASHBOARD_PUBLIC_ORIGIN`, limits responses to 32 KiB, and accepts redirects only from Stripe Checkout or Billing Portal origins. Customer creation sends only the opaque operation ID and no email.
+
+`record_managed_billing_session_attempt_v1` appends minimized succeeded, rejected, ambiguous, or held evidence. It stores no redirect URL, provider response, contact, card, payment method, body, or secret. Customer success binds one private account; Checkout or Portal success stores only its provider resource fence. Subscription state and entitlements change only after separately verified webhook processing.
 
 ## Error and privacy behavior
 
