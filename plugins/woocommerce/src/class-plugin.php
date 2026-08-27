@@ -14,8 +14,13 @@ final class Plugin
         add_action('init', [self::class, 'registerAccountEndpoint']);
         add_filter('woocommerce_account_menu_items', [self::class, 'accountMenuItems']);
         add_action('woocommerce_account_loyalty_endpoint', [self::class, 'renderAccount']);
+        add_action('woocommerce_single_product_summary', [self::class, 'renderProductLoyalty'], 25);
         add_action('woocommerce_before_cart', [self::class, 'renderCartNotice']);
+        add_action('woocommerce_review_order_before_payment', [self::class, 'renderCheckoutLoyalty']);
+        add_action('woocommerce_thankyou', [self::class, 'renderPostPurchaseLoyalty'], 20, 1);
         Referrals::boot();
+        ExperienceSnapshot::boot();
+        Blocks::boot();
         Outbox::boot();
         Commands::boot();
         Privacy::boot();
@@ -73,6 +78,14 @@ final class Plugin
         self::textField('signing_key', __('Base64 signing key', 'starfiniti-loyalty'), '', 'password', Settings::hasSigningKey()
             ? __('Leave blank to keep the encrypted key already stored.', 'starfiniti-loyalty')
             : __('Paste the one-time key issued by the hub.', 'starfiniti-loyalty'));
+        echo '<tr><th scope="row">' . esc_html__('Cart and Checkout Blocks data', 'starfiniti-loyalty') . '</th><td><label>';
+        echo '<input name="blocks_data" type="checkbox" value="yes" ' . checked(Settings::blocksDataEnabled(), true, false) . '> ';
+        echo esc_html__('Expose the bounded local loyalty snapshot through WooCommerce Store API. Enable this before the optional panel during rollout.', 'starfiniti-loyalty');
+        echo '</label></td></tr>';
+        echo '<tr><th scope="row">' . esc_html__('Cart and Checkout Blocks panel', 'starfiniti-loyalty') . '</th><td><label>';
+        echo '<input name="progressive_panel" type="checkbox" value="yes" ' . checked(Settings::progressivePanelEnabled(), true, false) . '> ';
+        echo esc_html__('Enable the optional local loyalty panel. It uses cached data only and can be turned off without affecting balances, coupons, or checkout.', 'starfiniti-loyalty');
+        echo '</label></td></tr>';
         echo '</tbody></table>';
         submit_button(__('Save connection', 'starfiniti-loyalty'));
         echo '</form>';
@@ -106,7 +119,16 @@ final class Plugin
             return;
         }
         $coupons = self::customerCoupons(get_current_user_id());
+        $snapshotState = ExperienceSnapshot::stateForUser(get_current_user_id());
         echo '<h2>' . esc_html__('Loyalty rewards', 'starfiniti-loyalty') . '</h2>';
+        if ('fresh' === $snapshotState['state'] && is_array($snapshotState['snapshot'])) {
+            self::renderSnapshotSummary($snapshotState['snapshot']);
+        } elseif ('stale' === $snapshotState['state']) {
+            echo '<p>' . esc_html__(
+                'Your loyalty summary is refreshing. Open your secure loyalty account for the latest balance.',
+                'starfiniti-loyalty'
+            ) . '</p>';
+        }
         $accountLink = CustomerClaim::linkForUser(get_current_user_id());
         if ('' !== $accountLink) {
             echo '<p>' . esc_html__(
@@ -148,13 +170,145 @@ final class Plugin
 
     public static function renderCartNotice(): void
     {
-        if (is_user_logged_in() && [] !== self::customerCoupons(get_current_user_id())) {
+        if (! is_user_logged_in()) {
+            return;
+        }
+        $customerId = get_current_user_id();
+        if ([] !== self::customerCoupons($customerId)) {
             wc_print_notice(sprintf(
                 /* translators: %s is the My Account loyalty URL. */
                 wp_kses(__('You have an active loyalty reward. <a href="%s">View your code</a>.', 'starfiniti-loyalty'), ['a' => ['href' => true]]),
                 esc_url(wc_get_account_endpoint_url('loyalty'))
             ), 'notice');
         }
+        self::renderPlacementNotice('cart', ExperienceSnapshot::stateForUser($customerId));
+    }
+
+    public static function renderProductLoyalty(): void
+    {
+        if (is_user_logged_in()) {
+            self::renderPlacementNotice(
+                'product',
+                ExperienceSnapshot::stateForUser(get_current_user_id())
+            );
+        }
+    }
+
+    public static function renderCheckoutLoyalty(): void
+    {
+        if (is_user_logged_in()) {
+            self::renderPlacementNotice(
+                'checkout',
+                ExperienceSnapshot::stateForUser(get_current_user_id())
+            );
+        }
+    }
+
+    /** @param int|string $orderId */
+    public static function renderPostPurchaseLoyalty($orderId): void
+    {
+        if (! is_user_logged_in()) {
+            return;
+        }
+        $order = wc_get_order((int) $orderId);
+        $customerId = get_current_user_id();
+        if (! $order instanceof \WC_Order || $order->get_customer_id() !== $customerId) {
+            return;
+        }
+        self::renderPlacementNotice(
+            'post_purchase',
+            ExperienceSnapshot::stateForUser($customerId)
+        );
+    }
+
+    /** @param array<string,mixed> $snapshot */
+    private static function renderSnapshotSummary(array $snapshot): void
+    {
+        echo '<section class="starfiniti-loyalty-summary" aria-labelledby="starfiniti-loyalty-balance">';
+        echo '<h3 id="starfiniti-loyalty-balance">' . esc_html__('Points balance', 'starfiniti-loyalty') . '</h3>';
+        echo '<p><strong>' . esc_html(sprintf(
+            /* translators: %s is an exact loyalty-points balance. */
+            __('%s points available', 'starfiniti-loyalty'),
+            (string) $snapshot['balances']['available']
+        )) . '</strong><br><small>' . esc_html(sprintf(
+            /* translators: 1: pending points, 2: reserved points. */
+            __('Pending: %1$s · Reserved: %2$s', 'starfiniti-loyalty'),
+            (string) $snapshot['balances']['pending'],
+            (string) $snapshot['balances']['reserved']
+        )) . '</small></p>';
+        if (is_array($snapshot['currentTier'] ?? null)) {
+            echo '<p>' . esc_html(sprintf(
+                /* translators: %s is the current VIP tier name. */
+                __('VIP tier: %s', 'starfiniti-loyalty'),
+                (string) $snapshot['currentTier']['name']
+            )) . '</p>';
+        }
+        if (is_array($snapshot['nextExpiry'] ?? null)) {
+            $expiry = ExperienceSnapshot::displayInstant((string) $snapshot['nextExpiry']['expiresAt']);
+            if (null !== $expiry) {
+                echo '<p>' . esc_html(sprintf(
+                    /* translators: 1: expiring points, 2: locale-neutral expiry date. */
+                    __('%1$s points expire %2$s', 'starfiniti-loyalty'),
+                    (string) $snapshot['nextExpiry']['points'],
+                    $expiry
+                )) . '</p>';
+            }
+        }
+        if (($snapshot['enhancementsEnabled'] ?? false) && [] !== $snapshot['rewards']) {
+            echo '<h3>' . esc_html__('Available rewards', 'starfiniti-loyalty') . '</h3><ul>';
+            foreach ($snapshot['rewards'] as $reward) {
+                $message = $reward['affordable']
+                    ? __('%1$s — %2$s points', 'starfiniti-loyalty')
+                    : __('%1$s — %2$s points needed', 'starfiniti-loyalty');
+                echo '<li>' . esc_html(sprintf(
+                    /* translators: 1: reward name, 2: exact points cost. */
+                    $message,
+                    (string) $reward['name'],
+                    (string) $reward['costPoints']
+                )) . '</li>';
+            }
+            echo '</ul>';
+        }
+        $generated = ExperienceSnapshot::displayInstant((string) $snapshot['generatedAt']);
+        if (null !== $generated) {
+            echo '<p><small>' . esc_html(sprintf(
+                /* translators: %s is the locale-neutral snapshot time. */
+                __('Last updated %s. Live value is confirmed in the secure loyalty hub.', 'starfiniti-loyalty'),
+                $generated
+            )) . '</small></p>';
+        }
+        echo '</section>';
+    }
+
+    /** @param array{state:string,snapshot:?array} $state */
+    private static function renderPlacementNotice(string $placement, array $state): void
+    {
+        $snapshot = $state['snapshot'];
+        if (! is_array($snapshot) || ! ($snapshot['enhancementsEnabled'] ?? false)) {
+            return;
+        }
+        $accountUrl = wc_get_account_endpoint_url('loyalty');
+        if ('stale' === $state['state']) {
+            echo '<p class="starfiniti-loyalty-notice">' . esc_html__(
+                'Your loyalty summary is refreshing. Open your secure loyalty account for the latest balance.',
+                'starfiniti-loyalty'
+            ) . ' <a href="' . esc_url($accountUrl) . '">' . esc_html__('View loyalty account', 'starfiniti-loyalty') . '</a></p>';
+            return;
+        }
+        if ('fresh' !== $state['state']) {
+            return;
+        }
+        $available = (string) $snapshot['balances']['available'];
+        $message = match ($placement) {
+            'checkout' => __('Loyalty balance: %s points. Rewards are redeemed through your loyalty account.', 'starfiniti-loyalty'),
+            'post_purchase' => __('Eligible loyalty points are added after your order is processed. Current balance: %s points.', 'starfiniti-loyalty'),
+            default => __('You have %s loyalty points.', 'starfiniti-loyalty'),
+        };
+        echo '<p class="starfiniti-loyalty-notice">' . esc_html(sprintf(
+            /* translators: %s is an exact loyalty-points balance. */
+            $message,
+            $available
+        )) . ' <a href="' . esc_url($accountUrl) . '">' . esc_html__('View loyalty account', 'starfiniti-loyalty') . '</a></p>';
     }
 
     /** @return array<int, \WC_Coupon> */

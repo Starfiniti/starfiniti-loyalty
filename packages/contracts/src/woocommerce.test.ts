@@ -11,6 +11,7 @@ import {
   verifyWooCommerceDelivery,
   wooCommerceCustomerClaimV1,
   wooCommerceCustomerCreatedPayloadV1,
+  wooCommerceCustomerExperienceSnapshotV1,
   wooCommerceCustomerDeletedPayloadV1,
   wooCommerceCouponCapturedPayloadV1,
   wooCommerceCouponCommandEnvelopeV1,
@@ -775,5 +776,113 @@ describe("WooCommerce coupon commands", () => {
         capabilities: ["coupon.issue.v3"],
       }).success,
     ).toBe(false);
+  });
+});
+
+describe("WooCommerce customer experience snapshot commands", () => {
+  const snapshot = {
+    version: "1",
+    revision: "12",
+    externalCustomerId: "7",
+    generatedAt: "2026-08-25T10:00:00Z",
+    refreshAfter: "2026-08-25T10:15:00Z",
+    staleAfter: "2026-08-26T10:00:00Z",
+    accountStatus: "ready",
+    enhancementsEnabled: true,
+    programmeName: "Starfiniti Loyalty",
+    balances: { pending: "30", available: "150", reserved: "20" },
+    currentTier: { name: "Bloom" },
+    nextExpiry: { points: "25", expiresAt: "2026-09-25T10:00:00Z" },
+    earningMethods: [{ name: "Eligible purchases", availableNow: true }],
+    rewards: [
+      {
+        name: "Free shipping",
+        kind: "free_shipping",
+        costPoints: "100",
+        affordable: true,
+      },
+    ],
+  } as const;
+
+  it("accepts a bounded PII-free revisioned snapshot command", () => {
+    expect(
+      wooCommerceCustomerExperienceSnapshotV1.safeParse(snapshot).success,
+    ).toBe(true);
+    expect(
+      wooCommerceConnectorCommandEnvelope.safeParse({
+        version: "1",
+        commandId: "61000000-0000-4000-8000-000000000010",
+        connectionId: "62000000-0000-4000-8000-000000000001",
+        topic: "woocommerce.customer_experience.put",
+        payloadVersion: "v1",
+        deliveredAt: "2026-08-25T10:00:01Z",
+        payload: { kind: "put_customer_experience_snapshot", snapshot },
+      }).success,
+    ).toBe(true);
+  });
+
+  it("rejects markup, private extensions, inconsistent value, and unsafe lifetimes", () => {
+    for (const changed of [
+      { programmeName: "<script>alert(1)</script>" },
+      { revision: "0" },
+      { refreshAfter: "2026-08-25T12:00:00Z" },
+      { staleAfter: "2026-08-28T10:00:00Z" },
+      {
+        rewards: [
+          {
+            name: "Free shipping",
+            kind: "free_shipping",
+            costPoints: "200",
+            affordable: true,
+          },
+        ],
+      },
+      { customerEmail: "customer@example.test" },
+      { couponCode: "SFSECRET" },
+      { tenantId: "62000000-0000-4000-8000-000000000001" },
+    ]) {
+      expect(
+        wooCommerceCustomerExperienceSnapshotV1.safeParse({
+          ...snapshot,
+          ...changed,
+        }).success,
+      ).toBe(false);
+    }
+  });
+
+  it("requires capability-bound unique customer refresh selectors", () => {
+    const poll = {
+      version: "1",
+      kind: "poll",
+      connectionId: "62000000-0000-4000-8000-000000000001",
+      requestId: "61000000-0000-4000-8000-000000000011",
+      batchSize: 10,
+      capabilities: ["customer_experience.snapshot.v1"],
+      snapshotCustomerIds: ["7", "9"],
+    } as const;
+    expect(wooCommerceCommandRequestV1.safeParse(poll).success).toBe(true);
+    expect(
+      wooCommerceCommandRequestV1.safeParse({ ...poll, capabilities: [] })
+        .success,
+    ).toBe(false);
+    expect(
+      wooCommerceCommandRequestV1.safeParse({
+        ...poll,
+        snapshotCustomerIds: ["7", "7"],
+      }).success,
+    ).toBe(false);
+  });
+
+  it("preserves exact negative balances without making rewards affordable", () => {
+    expect(
+      wooCommerceCustomerExperienceSnapshotV1.safeParse({
+        ...snapshot,
+        balances: { ...snapshot.balances, available: "-25" },
+        rewards: snapshot.rewards.map((reward) => ({
+          ...reward,
+          affordable: false,
+        })),
+      }).success,
+    ).toBe(true);
   });
 });

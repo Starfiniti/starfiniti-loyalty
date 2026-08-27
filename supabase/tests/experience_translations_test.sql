@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(33);
+select plan(41);
 
 select has_table('loyalty', 'experience_translations', 'experience translation table exists');
 select has_function(
@@ -26,6 +26,41 @@ select ok(
     'EXECUTE'
   ),
   'anonymous users cannot enter the translation command'
+);
+select has_function(
+  'loyalty',
+  'save_experience_copy_v2_command',
+  array['uuid', 'uuid', 'text', 'text', 'text', 'text', 'text', 'text', 'text', 'text', 'uuid'],
+  'English-only V2 copy command exists without a locale selector'
+);
+select ok(
+  has_function_privilege(
+    'authenticated',
+    'loyalty.save_experience_copy_v2_command(uuid,uuid,text,text,text,text,text,text,text,text,uuid)',
+    'EXECUTE'
+  ),
+  'authenticated users can enter the guarded English-only copy command'
+);
+select ok(
+  not has_function_privilege(
+    'anon',
+    'loyalty.save_experience_copy_v2_command(uuid,uuid,text,text,text,text,text,text,text,text,uuid)',
+    'EXECUTE'
+  ),
+  'anonymous users cannot enter the English-only copy command'
+);
+select results_eq(
+  $$ select routine.prosecdef
+     from pg_proc as routine
+     join pg_namespace as namespace on namespace.oid = routine.pronamespace
+     where namespace.nspname = 'loyalty'
+       and routine.proname = 'save_experience_copy_v2_command'
+       and exists (
+         select 1 from unnest(routine.proconfig) as setting
+         where setting = 'search_path=""'
+       ) $$,
+  array[false],
+  'English-only copy wrapper is security invoker with an empty search path'
 );
 select results_eq(
   $$ select routine.prosecdef
@@ -199,6 +234,44 @@ select results_eq(
   $$ select revision from loyalty.experience_translations where locale = 'en' $$,
   array[2],
   'translation revision increments monotonically'
+);
+select results_eq(
+  $$ select outcome, locale from loyalty.save_experience_copy_v2_command(
+    '79000000-0000-4000-8000-000000000110',
+    '79000000-0000-4000-8000-000000000120',
+    'English-only member headline', 'Stars', 'Your balance',
+    'Member rewards', 'Use points', 'Join free',
+    'Earn stars on every eligible order.',
+    'experience:copy:v2:update',
+    '79000000-0000-4000-8000-000000000214'
+  ) $$,
+  $$ values ('updated'::text, 'en'::text) $$,
+  'V2 copy command updates only the English locale'
+);
+select results_eq(
+  $$ select hero_text, points_label, revision
+     from loyalty.experience_translations where locale = 'en' $$,
+  $$ values ('English-only member headline'::text, 'Stars'::text, 3) $$,
+  'V2 copy command persists exact bounded English copy as a new revision'
+);
+select results_eq(
+  $$ select outcome from loyalty.save_experience_copy_v2_command(
+    '79000000-0000-4000-8000-000000000110',
+    '79000000-0000-4000-8000-000000000120',
+    'English-only member headline', 'Stars', 'Your balance',
+    'Member rewards', 'Use points', 'Join free',
+    'Earn stars on every eligible order.',
+    'experience:copy:v2:update',
+    '79000000-0000-4000-8000-000000000215'
+  ) $$,
+  array['duplicate'::text],
+  'exact V2 copy retry creates no second effect'
+);
+select results_eq(
+  $$ select count(*)::bigint from loyalty.admin_audit_events
+     where idempotency_key = 'experience:copy:v2:update' $$,
+  array[1::bigint],
+  'V2 copy save appends one immutable audit event'
 );
 select results_eq(
   $$ select locale from loyalty.save_experience_translation_command(

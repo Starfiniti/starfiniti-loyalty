@@ -1,149 +1,357 @@
+import type {
+  ExperienceHeroAssetV2,
+  ExperienceSectionV2,
+  PublicLoyaltyExperienceV2,
+} from "@starfiniti/contracts";
 import type { Metadata } from "next";
+import type { LucideIcon } from "lucide-react";
+import {
+  ArrowRight,
+  CircleUserRound,
+  Crown,
+  Gift,
+  HeartHandshake,
+  History,
+  RefreshCw,
+  ShieldAlert,
+  ShieldCheck,
+  ShoppingBag,
+  Sparkles,
+  Star,
+} from "lucide-react";
 import type { CSSProperties } from "react";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { experienceFontStack } from "@/lib/experience-theme";
+import { visibleCustomerExperienceSections } from "@/lib/customer-experience-presentation";
 import {
   formatEurMinor,
   formatPublicPoints,
   isPublicId,
-  resolvePublicLocale,
+  PUBLIC_LOYALTY_ACCOUNT_PATH,
 } from "@/lib/public-loyalty";
 import { getPublicLoyaltyExperience } from "@/lib/server/public-loyalty";
 
 export const metadata: Metadata = {
   title: "Loyalty programme",
-  description: "Rewards, tiers, and ways to earn.",
+  description: "Rewards, tiers, referrals, and ways to earn.",
 };
 
 type PageProps = Readonly<{
   params: Promise<{ workspaceId: string; programmeId: string }>;
-  searchParams: Promise<{ lang?: string | string[] }>;
 }>;
 
-const language = {
-  programme: "Loyalty programme",
-  how: "How it works",
-  howText: "Shop with your store account and eligible orders earn points.",
-  earn: "Ways to earn",
-  earnText: "Complete an eligible purchase",
-  tiers: "Member tiers",
-  from: "From",
-  perEuro: "points per €1",
-  rewardCost: "points",
-  account: "Use your store account to join, see your balance, and redeem.",
-  privacy: "This public page contains no customer or order information.",
-} as const;
+const heroIcons: Readonly<Record<ExperienceHeroAssetV2, LucideIcon | null>> = {
+  none: null,
+  sparkles: Sparkles,
+  gift: Gift,
+  crown: Crown,
+};
 
-export default async function PublicLoyaltyPage({
-  params,
-  searchParams,
-}: PageProps) {
-  const [{ workspaceId, programmeId }, query] = await Promise.all([
-    params,
-    searchParams,
-  ]);
-  const locale = resolvePublicLocale(query.lang);
+const sectionLabels: Readonly<Record<ExperienceSectionV2, string>> = {
+  overview: "Overview",
+  earning: "Ways to earn",
+  rewards: "Rewards",
+  vip: "VIP tiers",
+  referrals: "Referrals",
+  history: "Points history",
+  account: "My account",
+};
+
+export default async function PublicLoyaltyPage({ params }: PageProps) {
+  const { workspaceId, programmeId } = await params;
   if (!isPublicId(workspaceId) || !isPublicId(programmeId)) notFound();
-  const experience = await getPublicLoyaltyExperience(
-    workspaceId,
-    programmeId,
-    locale,
-  );
+
+  let experience: PublicLoyaltyExperienceV2 | null;
+  try {
+    experience = await getPublicLoyaltyExperience(workspaceId, programmeId);
+  } catch {
+    return (
+      <PublicExperienceUnavailable
+        programmeId={programmeId}
+        workspaceId={workspaceId}
+      />
+    );
+  }
   if (!experience) notFound();
 
-  const labels = language;
+  const { copy, theme } = experience.presentation;
+  const HeroIcon = heroIcons[theme.heroAsset];
+  const visibleSections = visibleCustomerExperienceSections(theme);
   const style = {
-    "--loyalty-brand": experience.brandColor,
-    "--loyalty-radius": `${experience.cardRadiusPx}px`,
-    "--loyalty-font": experienceFontStack(experience.displayFont),
+    "--loyalty-brand": theme.brandColor,
+    "--loyalty-radius": `${theme.cardRadiusPx}px`,
+    "--loyalty-font": experienceFontStack(theme.displayFont),
   } as CSSProperties;
+
   return (
     <main
-      className="public-loyalty-page"
+      className={`public-loyalty-page public-loyalty-v2 ${theme.density}`}
       id="main-content"
-      lang={experience.resolvedLocale}
+      lang="en"
       style={style}
       tabIndex={-1}
     >
-      <header className="public-loyalty-hero">
-        <p>{labels.programme}</p>
-        <h1>{experience.copy.heroText}</h1>
-        <p>{experience.copy.earnMessage}</p>
-        <span>{experience.programmeName}</span>
+      <nav className="public-loyalty-nav" aria-label="Programme navigation">
+        <Link
+          className="public-loyalty-brand"
+          href={`/loyalty/${workspaceId}/${programmeId}`}
+        >
+          <span aria-hidden="true">
+            <Star />
+          </span>
+          <strong>{experience.programmeName}</strong>
+        </Link>
+        <div>
+          {visibleSections.map((section) => (
+            <a href={`#${section}`} key={section}>
+              {sectionLabels[section]}
+            </a>
+          ))}
+        </div>
+      </nav>
+
+      <header className="public-loyalty-hero" id="programme-introduction">
+        <p>
+          <Sparkles aria-hidden="true" /> Free to join
+        </p>
+        <h1>{copy.heroText}</h1>
+        <p>{copy.earnMessage}</p>
+        <div className="public-loyalty-actions">
+          <Link href={PUBLIC_LOYALTY_ACCOUNT_PATH}>
+            {copy.joinLabel} <ArrowRight aria-hidden="true" />
+          </Link>
+          <a href={`#${visibleSections[0] ?? "account"}`}>
+            Discover your benefits
+          </a>
+        </div>
+        <span>
+          <ShieldCheck aria-hidden="true" /> Balances and redemptions stay
+          private
+        </span>
+        {HeroIcon ? (
+          <span className="public-loyalty-hero-icon" aria-hidden="true">
+            <HeroIcon />
+          </span>
+        ) : null}
       </header>
 
-      <section className="public-loyalty-section" aria-labelledby="how-title">
-        <div>
-          <p className="public-loyalty-kicker">01</p>
-          <h2 id="how-title">{labels.how}</h2>
-          <p>{labels.howText}</p>
-        </div>
-        <article>
-          <span aria-hidden="true">◎</span>
-          <h3>{labels.earn}</h3>
-          <p>{labels.earnText}</p>
-        </article>
-      </section>
+      <div className="public-loyalty-composition">
+        {visibleSections.map((section, index) => (
+          <PublicSection
+            experience={experience}
+            index={index}
+            key={section}
+            section={section}
+          />
+        ))}
+      </div>
 
-      {experience.showTier && experience.tiers.length > 0 ? (
-        <section
-          className="public-loyalty-section public-loyalty-catalogue"
-          aria-labelledby="tiers-title"
-        >
+      <footer className="public-loyalty-footer">
+        <span>{experience.programmeName}</span>
+        <small>This page contains no customer or order information.</small>
+      </footer>
+    </main>
+  );
+}
+
+function PublicSection({
+  experience,
+  index,
+  section,
+}: Readonly<{
+  experience: PublicLoyaltyExperienceV2;
+  index: number;
+  section: ExperienceSectionV2;
+}>) {
+  const copy = experience.presentation.copy;
+  if (section === "overview") {
+    return (
+      <section className="public-loyalty-section" id="overview">
+        <PublicHeading index={index} title="How the programme works" />
+        <div className="public-loyalty-steps">
+          {[
+            [ShoppingBag, "Shop", "Complete an eligible purchase."],
+            [Crown, "Grow", "Progress through published VIP milestones."],
+            [Gift, "Choose", "Redeem points for a published benefit."],
+          ].map(([Icon, title, body]) => {
+            const StepIcon = Icon as LucideIcon;
+            return (
+              <article key={title as string}>
+                <span aria-hidden="true">
+                  <StepIcon />
+                </span>
+                <h3>{title as string}</h3>
+                <p>{body as string}</p>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+    );
+  }
+  if (section === "earning") {
+    return (
+      <section className="public-loyalty-section" id="earning">
+        <PublicHeading index={index} title="Ways to earn" />
+        <div className="public-loyalty-feature-card">
+          <Sparkles aria-hidden="true" />
           <div>
-            <p className="public-loyalty-kicker">02</p>
-            <h2 id="tiers-title">{labels.tiers}</h2>
+            <h3>Eligible store activity</h3>
+            <p>{copy.earnMessage}</p>
+            <small>
+              Your signed-in account shows live availability, caps, and
+              restrictions before you participate.
+            </small>
           </div>
+        </div>
+      </section>
+    );
+  }
+  if (section === "rewards") {
+    return (
+      <section className="public-loyalty-section" id="rewards">
+        <PublicHeading index={index} title={copy.rewardsLabel} />
+        {experience.rewards.length ? (
+          <div className="public-loyalty-cards">
+            {experience.rewards.map((reward) => (
+              <article key={reward.code}>
+                <small>{copy.redeemLabel}</small>
+                <h3>{reward.name}</h3>
+                <strong>
+                  {formatPublicPoints(reward.costPoints, "en")} points
+                </strong>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <PublicEmpty icon={Gift} text="New rewards are being prepared." />
+        )}
+      </section>
+    );
+  }
+  if (section === "vip") {
+    return (
+      <section className="public-loyalty-section" id="vip">
+        <PublicHeading index={index} title="VIP tiers" />
+        {experience.tiers.length ? (
           <div className="public-loyalty-cards">
             {experience.tiers.map((tier) => (
               <article key={tier.code}>
                 <small>
-                  {labels.from}{" "}
-                  {formatEurMinor(tier.minimumEligibleSpendMinor, locale)}
+                  From {formatEurMinor(tier.minimumEligibleSpendMinor, "en")}
                 </small>
                 <h3>{tier.name}</h3>
                 <strong>
-                  {formatPublicPoints(tier.pointsPerMajorUnit, locale)}{" "}
-                  {labels.perEuro}
+                  {formatPublicPoints(tier.pointsPerMajorUnit, "en")} points per
+                  €1
                 </strong>
               </article>
             ))}
           </div>
-        </section>
-      ) : null}
-
-      {experience.showRewards && experience.rewards.length > 0 ? (
-        <section
-          className="public-loyalty-section public-loyalty-catalogue"
-          aria-labelledby="rewards-title"
-        >
+        ) : (
+          <PublicEmpty icon={Crown} text="VIP milestones are coming soon." />
+        )}
+      </section>
+    );
+  }
+  if (section === "referrals") {
+    return (
+      <section className="public-loyalty-section" id="referrals">
+        <PublicHeading index={index} title="Refer friends" />
+        <div className="public-loyalty-feature-card">
+          <HeartHandshake aria-hidden="true" />
           <div>
-            <p className="public-loyalty-kicker">03</p>
-            <h2 id="rewards-title">{experience.copy.rewardsLabel}</h2>
+            <h3>Share from your private account</h3>
+            <p>
+              When the store activates referrals, eligible members receive one
+              customer-bound link and can follow qualification progress without
+              exposing their identity.
+            </p>
           </div>
-          <div className="public-loyalty-cards">
-            {experience.rewards.map((reward) => (
-              <article key={reward.code}>
-                <small>{experience.copy.redeemLabel}</small>
-                <h3>{reward.name}</h3>
-                <strong>
-                  {formatPublicPoints(reward.costPoints, locale)}{" "}
-                  {labels.rewardCost}
-                </strong>
-              </article>
-            ))}
+        </div>
+      </section>
+    );
+  }
+  if (section === "history") {
+    return (
+      <section className="public-loyalty-section" id="history">
+        <PublicHeading index={index} title="Transparent points history" />
+        <div className="public-loyalty-feature-card">
+          <History aria-hidden="true" />
+          <div>
+            <h3>Every value change stays attributable</h3>
+            <p>
+              Sign in to see earned, released, reserved, spent, expired, and
+              reversed points. Corrections never rewrite prior history.
+            </p>
           </div>
-        </section>
-      ) : null}
-
+        </div>
+      </section>
+    );
+  }
+  return (
+    <section className="public-loyalty-section" id="account">
+      <PublicHeading index={index} title="Your loyalty account" />
       <aside className="public-loyalty-account">
-        <p>{labels.account}</p>
-        <strong>{experience.copy.joinLabel}</strong>
+        <CircleUserRound aria-hidden="true" />
+        <p>
+          Use your verified store account to see balances, milestones,
+          referrals, rewards, expiry, and immutable activity.
+        </p>
+        <Link href={PUBLIC_LOYALTY_ACCOUNT_PATH}>
+          {copy.joinLabel} <ArrowRight aria-hidden="true" />
+        </Link>
       </aside>
-      <footer className="public-loyalty-footer">
-        <span>{experience.programmeName}</span>
-        <small>{labels.privacy}</small>
-      </footer>
+    </section>
+  );
+}
+
+function PublicHeading({
+  index,
+  title,
+}: Readonly<{ index: number; title: string }>) {
+  return (
+    <header className="public-loyalty-section-heading">
+      <p className="public-loyalty-kicker">
+        {String(index + 1).padStart(2, "0")}
+      </p>
+      <h2>{title}</h2>
+    </header>
+  );
+}
+
+function PublicEmpty({
+  icon: Icon,
+  text,
+}: Readonly<{ icon: LucideIcon; text: string }>) {
+  return (
+    <div className="public-loyalty-empty">
+      <Icon aria-hidden="true" />
+      <p>{text}</p>
+    </div>
+  );
+}
+
+function PublicExperienceUnavailable({
+  programmeId,
+  workspaceId,
+}: Readonly<{ programmeId: string; workspaceId: string }>) {
+  return (
+    <main className="public-loyalty-recovery" id="main-content" tabIndex={-1}>
+      <section role="alert">
+        <ShieldAlert aria-hidden="true" />
+        <p>LOYALTY PROGRAMME</p>
+        <h1>Programme details are temporarily unavailable</h1>
+        <p>
+          We could not verify the current public programme safely. No partial
+          programme or customer data is displayed. Store checkout remains
+          available.
+        </p>
+        <Link href={`/loyalty/${workspaceId}/${programmeId}`} prefetch={false}>
+          <RefreshCw aria-hidden="true" /> Try again
+        </Link>
+      </section>
     </main>
   );
 }

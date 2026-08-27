@@ -14,6 +14,15 @@ const commands = readFileSync(
   "plugins/woocommerce/src/class-commands.php",
   "utf8",
 );
+const snapshot = readFileSync(
+  "plugins/woocommerce/src/class-experience-snapshot.php",
+  "utf8",
+);
+const blocks = readFileSync("plugins/woocommerce/src/class-blocks.php", "utf8");
+const blocksIntegration = readFileSync(
+  "plugins/woocommerce/src/class-blocks-integration.php",
+  "utf8",
+);
 const privacy = readFileSync(
   "plugins/woocommerce/src/class-privacy.php",
   "utf8",
@@ -46,6 +55,9 @@ for (const [label, content, requirements] of [
       "FeaturesUtil::declare_compatibility",
       "class-outbox.php",
       "class-referrals.php",
+      "class-experience-snapshot.php",
+      "class-blocks.php",
+      "cart_checkout_blocks",
     ],
   ],
   [
@@ -90,6 +102,8 @@ for (const [label, content, requirements] of [
       "as_schedule_recurring_action",
       "capabilities",
       "coupon.issue.v2",
+      "customer_experience.snapshot.v1",
+      "snapshotCustomerIds",
       "woocommerce_coupon_is_valid",
       "set_usage_limit(1)",
       "set_minimum_amount",
@@ -101,6 +115,32 @@ for (const [label, content, requirements] of [
       "_starfiniti_external_customer_id",
       "woocommerce.coupon.issue",
       "woocommerce.coupon.cancel",
+    ],
+  ],
+  [
+    "experience snapshot",
+    snapshot,
+    [
+      "MAX_SNAPSHOT_BYTES",
+      "pendingCustomerIds",
+      "update_option",
+      "snapshot_revision_conflict",
+      "delete_user",
+      "hash_equals",
+    ],
+  ],
+  [
+    "Blocks integration",
+    `${blocks}\n${blocksIntegration}`,
+    [
+      "woocommerce_store_api_register_endpoint_data",
+      "CartSchema::IDENTIFIER",
+      "blocksDataEnabled",
+      "progressivePanelEnabled",
+      "render_block_woocommerce/cart",
+      "IntegrationInterface",
+      "get_script_handles",
+      "wp_set_script_translations",
     ],
   ],
   [
@@ -173,7 +213,9 @@ for (const [label, content, requirements] of [
       "wooCommerceCommandRequestV1.safeParse",
       "wooCommerceConnectorCommandEnvelope.safeParse",
       "parsed.data.capabilities",
+      "queue_woocommerce_customer_snapshots_v1",
       "claim_woocommerce_commands",
+      "platform = 'woocommerce'",
     ],
   ],
   [
@@ -202,7 +244,7 @@ for (const forbidden of [
 ]) {
   if (
     forbidden.test(
-      `${bootstrap}\n${plugin}\n${settings}\n${cli}\n${commands}\n${privacy}\n${uninstall}\n${outbox}\n${referrals}\n${receiver}`,
+      `${bootstrap}\n${plugin}\n${settings}\n${cli}\n${commands}\n${snapshot}\n${blocks}\n${blocksIntegration}\n${privacy}\n${uninstall}\n${outbox}\n${referrals}\n${receiver}`,
     )
   ) {
     throw new Error(

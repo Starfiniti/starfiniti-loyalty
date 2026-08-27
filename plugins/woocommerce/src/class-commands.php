@@ -38,7 +38,11 @@ final class Commands
             'connectionId' => Settings::connectionId(),
             'requestId' => wp_generate_uuid4(),
             'batchSize' => 10,
-            'capabilities' => ['coupon.issue.v2'],
+            'capabilities' => [
+                'coupon.issue.v2',
+                'customer_experience.snapshot.v1',
+            ],
+            'snapshotCustomerIds' => ExperienceSnapshot::pendingCustomerIds(),
         ]);
         if (is_wp_error($response) || 200 !== wp_remote_retrieve_response_code($response)) {
             return;
@@ -66,8 +70,22 @@ final class Commands
             '1' !== ($command['version'] ?? null)
             || ! wp_is_uuid($commandId)
             || ! in_array($payloadVersion, ['v1', 'v2'], true)
+            || ! hash_equals(
+                Settings::connectionId(),
+                (string) ($command['connectionId'] ?? '')
+            )
         ) {
             return self::failure('dead_letter', 'invalid_command_payload');
+        }
+        if ('woocommerce.customer_experience.put' === ($command['topic'] ?? null)) {
+            if (
+                'v1' !== $payloadVersion
+                || 'put_customer_experience_snapshot' !== ($payload['kind'] ?? null)
+                || ! is_array($payload['snapshot'] ?? null)
+            ) {
+                return self::failure('dead_letter', 'invalid_customer_experience_snapshot');
+            }
+            return ExperienceSnapshot::store($commandId, $payload['snapshot']);
         }
         if ('woocommerce.order.reconcile' === ($command['topic'] ?? null)) {
             $rawOrderId = (string) ($payload['orderId'] ?? '');

@@ -18,6 +18,7 @@ export * from "./referral";
 export * from "./audience";
 export * from "./campaign";
 export * from "./notification";
+export * from "./customer-experience";
 
 export const commerceEnvelopeV1 = z.object({
   version: z.literal("1"),

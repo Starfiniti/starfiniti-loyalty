@@ -1,8 +1,8 @@
 # WooCommerce Integration
 
-- Documentation reviewed: 2026-08-13
+- Documentation reviewed: 2026-08-25
 - REST API: `wc/v3` (current official integration)
-- References: https://developer.woocommerce.com/docs/apis/rest-api/, https://developer.woocommerce.com/docs/extensions/best-practices-extensions/compatibility/, https://woocommerce.github.io/code-reference/classes/WC-Order.html, https://developer.wordpress.org/plugins/internationalization/how-to-internationalize-your-plugin/, and https://developer.wordpress.org/reference/functions/load_plugin_textdomain/
+- References: https://developer.woocommerce.com/docs/apis/rest-api/, https://developer.woocommerce.com/docs/apis/store-api/extending-store-api/extend-store-api-add-data/, https://developer.woocommerce.com/docs/block-development/reference/integration-interface/, https://developer.woocommerce.com/docs/block-development/reference/slot-fills/, https://developer.woocommerce.com/docs/block-development/extensible-blocks/cart-and-checkout-blocks/available-slot-fills/, https://developer.woocommerce.com/docs/extensions/core-concepts/adding-actions-and-filters/, https://developer.woocommerce.com/docs/theming/theme-development/classic-theme-developer-handbook, https://woocommerce.github.io/code-reference/classes/WC-Order.html, https://developer.wordpress.org/reference/functions/update_option/, https://developer.wordpress.org/plugins/privacy/adding-the-personal-data-eraser-to-your-plugin/, and https://developer.wordpress.org/reference/functions/load_plugin_textdomain/
 
 WooCommerce is a thin connector. It uses HTTPS, least-privilege credentials, signed outbound events, Action Scheduler retries, local queue diagnostics, HPOS declarations, and tested Cart/Checkout Blocks plus documented classic-checkout compatibility. Monetary API values arrive as decimal strings and must be converted to integer minor units without floating-point arithmetic. Central failure must never block checkout.
 
@@ -41,23 +41,44 @@ WooCommerce is a thin connector. It uses HTTPS, least-privilege credentials, sig
 - Unknown command outcomes retry with the same command ID and bounded error codes. Ten unsuccessful delivery attempts stop in an inspect-only manual-review state so an ambiguous native coupon outcome cannot loop forever or release points without proof that no coupon exists.
 - Definitive pre-creation issue failure and confirmed-unused expiry compensate through the existing immutable cancel/release path; history is never rewritten.
 
+## Local customer experience snapshots
+
+- A logged-in My Account, product, cart, classic checkout, or post-purchase render reads only WordPress state. Missing or refresh-due data adds the numeric local customer ID to a bounded non-autoloaded pending option; rendering makes no HTTP request.
+- The next scheduled signed command poll advertises `customer_experience.snapshot.v1` and supplies at most 25 unique numeric local IDs. PostgreSQL binds them to the signed connection and derives customer, tenant, programme, wallet, and exact value. Unknown IDs reveal no row.
+- The response is a capability-gated `woocommerce.customer_experience.put` V1 command. Older connectors cannot claim it. Each connection/customer revision advances monotonically, and pending/processing/retryable work is returned as a duplicate rather than enqueued twice.
+- The display-only snapshot contains account state, exact pending/available/reserved points, safe programme and tier names, next expiry, at most eight earning names, at most ten rewards, affordability, `generatedAt`, `refreshAfter`, and `staleAfter`. It excludes contacts, tenant/internal IDs, raw selectors, coupons, secrets, fingerprints, and ledger evidence.
+- The plugin independently validates exact keys, points through PostgreSQL bigint capacity, dates, lifetime, affordability, size, local customer existence, and revision. Invalid, conflicting, or older content cannot replace the per-customer last-known-good non-autoloaded option.
+- My Account may show cached core balances regardless of the enhancement entitlement. Product, cart, checkout, and post-purchase enhancements require the database-authored flag. After 24 hours, cached values are not shown; the placement displays generic refresh guidance and the local loyalty-account link.
+- A snapshot cannot reserve or redeem points, issue/capture a coupon, qualify a tier, or change ledger state. All live value actions remain in the hosted Auth-derived flow or native WooCommerce coupon boundary.
+
+## Cart and Checkout Blocks
+
+- The plugin declares Cart and Checkout Blocks compatibility and registers one `wc/store/cart` extension under `starfiniti-loyalty`. The callback derives the logged-in WordPress user and reads only the strict local snapshot; it accepts no browser-supplied scope or value.
+- `blocks_data` and `progressive_panel` are separate non-autoloaded, server-side flags that default off. Data can be canaried first. Enabling the panel also enables its data dependency; disabling either does not change balances, native coupons, checkout, or hosted access.
+- Fresh responses expose version/state, one same-store account URL, exact string-form available points, safe programme/tier labels, and at most three reward summaries. Stale responses expose no balance, label, tier, or reward value.
+- The optional integration uses WooCommerce `IntegrationInterface` and `ExperimentalOrderMeta`, reads the existing Store API `extensions` object, and makes no request. Its only dependencies are `wc-blocks-checkout`, `wp-element`, `wp-i18n`, and `wp-plugins`; it loads no editor asset.
+- Enabled Cart and Checkout blocks retain a semantic local `<noscript>` account path. The panel and fallback never apply or issue value; native WooCommerce coupons remain the checkout mechanism.
+- Because `ExperimentalOrderMeta` is experimental, minimum/current WooCommerce runtime cells are mandatory. Rollback disables the panel first and Store API data second while classic placements and every value-bearing path remain available.
+
 ## Localization
 
 - Every customer and administration string uses the literal `starfiniti-loyalty` text domain. `Domain Path: /languages` and an `init`-time `load_plugin_textdomain` registration support the self-distributed ZIP without loading translations too early.
 - `languages/starfiniti-loyalty.pot` is the canonical translator template and must exactly match source strings. `npm run woocommerce:localization:validate` rejects missing/stale messages, missing customer strings, empty translations, and placeholder drift.
-- The launch package is English-only. All 43 customer/admin strings use the standard WordPress text domain and have exact POT coverage, so future catalogs can be added deliberately without changing connector authority.
+- The launch package is English-only. All 67 customer/admin strings use the standard WordPress text domain and have exact POT coverage, so future catalogs can be added deliberately without changing connector authority.
 
 ## Storefront budgets
 
 The connector's production customer surfaces deliberately use WooCommerce's native server-rendered markup and coupon field. The enforced Phase 9 budgets are:
 
-- 0 bytes of connector storefront JavaScript and 0 bytes of connector CSS;
-- 0 hub requests while rendering My Account or cart loyalty surfaces, validating coupons, or completing checkout;
+- 0 bytes of connector JavaScript and 0 bytes of connector CSS for the complete classic path;
+- at most 4 KiB gzip JavaScript and 2 KiB gzip CSS for the separately flagged Blocks panel;
+- 0 hub requests while rendering My Account, product, cart, classic checkout, or post-purchase loyalty surfaces, validating coupons, or completing checkout;
 - at most 20 active reward coupons in one account response;
-- at most 32 KiB of account loyalty markup and 4 KiB for the cart notice in the real runtime smoke; and
-- at most 12 KiB for the PHP class containing storefront/admin hook rendering, with any expansion requiring an explicit reviewed budget change.
+- at most 10 cached reward summaries, 8 earning summaries, 25 refresh selectors per poll, and 32 KiB per stored snapshot;
+- at most 48 KiB of account loyalty markup, 8 KiB for the cart notice, and 4 KiB for each other classic placement in the real runtime smoke; and
+- at most 48 KiB combined for the PHP storefront/render-and-snapshot boundary, with any expansion requiring an explicit reviewed budget change.
 
-`scripts/validate-woocommerce-storefront.mjs` fails the complete repository gate if connector scripts/styles, inline executable/style tags, browser/network request calls, unbounded coupon reads, or missing escaping/login guards enter the storefront boundary. Every minimum/current HPOS/legacy runtime renders the account and cart surfaces with the hub forcibly unavailable, checks semantic bounded asset-free markup, and proves zero HTTP calls.
+`scripts/validate-woocommerce-storefront.mjs` fails the complete repository gate if unrelated connector scripts/styles, inline executable/style tags, browser/network request calls, unbounded coupon reads, or missing escaping/login guards enter the classic boundary. `scripts/validate-woocommerce-blocks.mjs` independently enforces the reviewed Blocks asset budgets, dependencies, accessible fresh/stale rendering, and zero network/dangerous primitives. Every minimum/current HPOS/legacy runtime renders all five classic surfaces and executes the real namespaced Cart Store API under forced Hub failure.
 
 ## Guided connection setup
 
@@ -90,5 +111,7 @@ The hub verifies the live connection/key and HMAC, preserves the full link only 
 Admin actions require WordPress capabilities and nonces. Inputs are validated; outputs escaped. Signing and Woo REST credentials rotate by version/reference and are masked in logs/support bundles. Plugin logs never contain bodies, access keys, signatures, email/phone, coupon plaintext, or loyalty access tokens.
 
 WooCommerce user deletion and its native personal-data eraser enqueue the same opaque, idempotent `commerce.customer.deleted` event. The event contains only the numeric channel customer ID needed for resolution and never email/profile fields. The worker atomically creates a private keyed suppression tombstone, pseudonymizes the channel identity, revokes the hosted Auth link, clears display data, and scrubs the ID from restricted delivery/canonical evidence. Wallets and immutable ledger history remain attributable through the retained pseudonymous customer; a later order for the deleted channel ID is suppressed instead of silently recreating the identity.
+
+The local snapshot is included in the WordPress personal-data export and removed by the personal-data eraser and user-deletion hook. Explicit data-removing uninstall deletes all namespaced snapshot and refresh options; normal uninstall continues preserving connector evidence by default.
 
 See `docs/architecture/EVENT_MODEL.md`, `docs/api/WEBHOOKS.md`, and ADR-0007.

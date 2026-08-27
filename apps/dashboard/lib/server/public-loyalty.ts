@@ -1,27 +1,66 @@
 import "server-only";
 import {
+  canonicalExperienceSectionOrderV2,
   publicLoyaltyExperienceV1,
-  type ExperienceLocaleV1,
+  publicLoyaltyExperienceV2,
   type PublicLoyaltyExperienceV1,
+  type PublicLoyaltyExperienceV2,
 } from "@starfiniti/contracts";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
+
+type ProjectionError = Readonly<{ code?: string | null }>;
 
 export async function getPublicLoyaltyExperience(
   workspaceId: string,
   programmeId: string,
-  locale: ExperienceLocaleV1,
-): Promise<PublicLoyaltyExperienceV1 | null> {
-  const supabase = createPublicSupabaseClient();
-  const { data, error } = await supabase
-    .schema("loyalty")
-    .rpc("get_public_loyalty_experience", {
-      target_workspace_public_id: workspaceId,
-      target_programme_public_id: programmeId,
-      target_locale: locale,
-    });
-  if (error) throw new Error("public_loyalty_read_unavailable");
-  const row = Array.isArray(data) ? data[0] : null;
-  if (!row) return null;
+): Promise<PublicLoyaltyExperienceV2 | null> {
+  const loyalty = createPublicSupabaseClient().schema("loyalty");
+  const v2 = await loyalty.rpc("get_public_loyalty_experience_v2", {
+    target_workspace_public_id: workspaceId,
+    target_programme_public_id: programmeId,
+  });
+  if (!v2.error) return parseV2(v2.data);
+  if (!isMissingProjection(v2.error)) {
+    throw new Error("public_loyalty_read_unavailable");
+  }
+
+  // The English V1 projection remains valid only as a rolling-deploy bridge.
+  const v1 = await loyalty.rpc("get_public_loyalty_experience", {
+    target_workspace_public_id: workspaceId,
+    target_programme_public_id: programmeId,
+    target_locale: "en",
+  });
+  if (v1.error) throw new Error("public_loyalty_read_unavailable");
+  const parsed = parseV1(v1.data);
+  return parsed ? normalizeV1(parsed) : null;
+}
+
+function parseV2(data: unknown): PublicLoyaltyExperienceV2 | null {
+  if (!Array.isArray(data)) throw new Error("public_loyalty_read_unavailable");
+  if (data.length === 0) return null;
+  if (data.length !== 1) throw new Error("public_loyalty_read_unavailable");
+  const row = data[0];
+  const parsed = publicLoyaltyExperienceV2.safeParse({
+    version: "2",
+    workspaceId: row.workspace_public_id,
+    programmeId: row.programme_public_id,
+    programmeGroupId: row.programme_group_public_id,
+    programmeName: row.programme_name,
+    requestedLocale: row.requested_locale,
+    resolvedLocale: row.resolved_locale,
+    presentation: row.presentation,
+    tiers: row.tiers,
+    rewards: row.rewards,
+  });
+  if (!parsed.success) throw new Error("public_loyalty_read_unavailable");
+  return parsed.data;
+}
+
+function parseV1(data: unknown): PublicLoyaltyExperienceV1 | null {
+  if (!Array.isArray(data)) throw new Error("public_loyalty_read_unavailable");
+  if (data.length === 0) return null;
+  if (data.length !== 1) throw new Error("public_loyalty_read_unavailable");
+  const row = data[0];
   const parsed = publicLoyaltyExperienceV1.safeParse({
     version: "1",
     workspaceId: row.workspace_public_id,
@@ -49,6 +88,52 @@ export async function getPublicLoyaltyExperience(
     tiers: row.tiers,
     rewards: row.rewards,
   });
-  if (!parsed.success) throw new Error("public_loyalty_read_unavailable");
+  if (
+    !parsed.success ||
+    parsed.data.requestedLocale !== "en" ||
+    parsed.data.resolvedLocale !== "en" ||
+    parsed.data.copy.locale !== "en"
+  ) {
+    throw new Error("public_loyalty_read_unavailable");
+  }
   return parsed.data;
+}
+
+function normalizeV1(
+  experience: PublicLoyaltyExperienceV1,
+): PublicLoyaltyExperienceV2 {
+  return publicLoyaltyExperienceV2.parse({
+    version: "2",
+    workspaceId: experience.workspaceId,
+    programmeId: experience.programmeId,
+    programmeGroupId: experience.programmeGroupId,
+    programmeName: experience.programmeName,
+    requestedLocale: "en",
+    resolvedLocale: "en",
+    presentation: {
+      version: "2",
+      theme: {
+        version: "2",
+        brandColor: experience.brandColor,
+        displayFont: experience.displayFont,
+        cardRadiusPx: experience.cardRadiusPx,
+        heroText: experience.copy.heroText,
+        pointsLabel: experience.copy.pointsLabel,
+        showTier: experience.showTier,
+        showRewards: experience.showRewards,
+        widgetPosition: "right",
+        density: "comfortable",
+        heroAsset: "sparkles",
+        showReferrals: true,
+        sectionOrder: [...canonicalExperienceSectionOrderV2],
+      },
+      copy: { ...experience.copy, version: "2", locale: "en" },
+    },
+    tiers: experience.tiers,
+    rewards: experience.rewards,
+  });
+}
+
+function isMissingProjection(error: ProjectionError): boolean {
+  return error.code === "PGRST202" || error.code === "42883";
 }

@@ -4,6 +4,7 @@
 - Date: 2026-08-14
 - Decision owners: Starfiniti Loyalty engineering
 - Related modules: M06, M09, M10, M13
+- Superseded in part: ADR-0036 supersedes only the prohibition on a later strict server-side aggregate; the dedicated referral projection, authority, privacy, and rollout decisions remain active.
 
 ## Context
 

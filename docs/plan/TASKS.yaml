@@ -450,7 +450,10 @@ tasks:
         every later module is measurable,
         no undocumented dependency,
       ]
-    owner_inputs: []
+    owner_inputs:
+      - reviewed merge and immutable release approval for the stacked M04 through M09 branch chain
+      - restored non-interactive Proxmox operator access for the approved release
+      - one explicitly approved Starfiniti-controlled or merchant-authorized WooCommerce canary store and test customer
     acceptance:
       [
         stale work is preserved,
@@ -1230,7 +1233,8 @@ tasks:
   - id: M09-STOREFRONT-EXPERIENCE
     title: Complete hosted and WooCommerce customer experiences
     module: M09
-    status: planned
+    status: in_progress
+    module_score: 88
     dependencies: [M08-NOTIFICATIONS]
     hypothesis: Complete, accessible loyalty discovery and progress increase redemption while local rendering preserves checkout.
     baseline: Basic hosted guest/member routes and bounded WooCommerce account/cart markup exist.
@@ -1260,8 +1264,114 @@ tasks:
         plugin matrix,
         asset budget,
       ]
+    slices:
+      - id: M09-S01-CUSTOMER-EXPERIENCE-CONTRACT
+        status: completed
+        acceptance:
+          - strict versioned Auth-derived no-selector aggregate returns exact balances bounded earning summaries rewards reservations expiry tier referrals and activity from one statement snapshot
+          - storefront entitlement controls enhancements only and cannot hide value history reservations redemptions or native coupons
+          - malformed duplicate cross-account and unauthorized containers fail closed without browser-supplied authority or a ledger effect
+        failure_modes:
+          - unsafe TypeScript cast trusts malformed database data
+          - independent reads mix committed states
+          - earning summary leaks internal selectors exclusions customer facts or markup
+          - disabled enhancement hides protected customer value
+        rollout: Deploy the additive contract and projection first; enable enhanced rendering only for the Starfiniti canary after exact-head verification.
+        rollback: Stop consuming the V1 aggregate and retain the compatible legacy reads; never delete customer value or historical interfaces.
+        verification:
+          - contract boundary consistency duplicate and bigint tests
+          - pgTAP grants Auth derivation tenancy revocation entitlement minimization bounds snapshot coherence and zero ledger mutation
+          - server malformed-container unauthenticated and database-error tests
+        evidence:
+          - strict CustomerLoyaltyExperienceV1 rejects malformed duplicate cross-account unsafe-markup and inconsistent affordability containers before rendering
+          - additive migration 20260825023000 derives one Auth-scoped statement snapshot and exposes no tenant customer or channel selector
+          - focused contract and server tests cover exact bigint balances bounds database errors unauthenticated access and fail-closed parsing
+          - exact-head run 32839387263 at f531f82 passed baseline both images 55 migrations 43 pgTAP files with 2361 assertions and all four WooCommerce runtimes
+      - id: M09-S02-HOSTED-SEVEN-AREA-EXPERIENCE
+        status: completed
+        acceptance:
+          - hosted member experience provides overview earning rewards VIP referrals history and account states with useful discovery progress affordability sharing and expiry guidance
+          - public guest experience explains programme value without exposing customer state and routes sign-in through the canonical origin
+          - desktop mobile keyboard zoom contrast reduced-motion and screen-reader checks have no critical issue
+        rollout: Enable enhanced hosted navigation for the Starfiniti tenant before any WooCommerce placement.
+        rollback: Disable enhanced navigation and retain the current core account and public pages.
+        evidence:
+          - the Auth-derived member experience renders overview earning rewards VIP referrals immutable history and account states with exact bigint balances affordability shortfalls progress sharing expiry guidance and no browser-supplied scope
+          - the anonymous experience explains earning tiers rewards and redemption through one bounded public projection and routes sign-in to a tested same-origin canonical English account path
+          - real-component Playwright review at 1440 by 1000 390 by 844 and 720 by 900 reflow passed headings landmarks first-focus bypass navigation overflow reduced-motion and zero browser diagnostics with eight retained screenshots
+          - exact-head run 32844158775 at ad1ddcf passed baseline both images 55 migrations 43 pgTAP files with 2361 assertions and all four WooCommerce runtimes
+      - id: M09-S03-LOCAL-WOOCOMMERCE-SNAPSHOT-AND-PLACEMENTS
+        status: completed
+        acceptance:
+          - a signed leased idempotent bounded PII-free revisioned snapshot is stored locally without becoming balance coupon or redemption authority
+          - My Account product cart checkout and post-purchase classic placements render only local data and degrade to generic copy
+          - Hub worker DNS TLS and database outages add zero synchronous checkout dependency
+        rollout: Deliver snapshots disabled first then enable classic placements for the Starfiniti store.
+        rollback: Stop generation and placements while retaining the last valid snapshot account link and native coupons.
+        evidence:
+          - signed polls submit at most 25 unique numeric channel-local selectors and PostgreSQL derives tenant customer programme wallet balances catalogue affordability and entitlement into one bounded PII-free monotonic command
+          - strict plugin validation preserves the last-known-good non-autoloaded per-customer option across stale older conflicting private and cross-connection payloads while privacy export erasure user deletion and explicit uninstall handle local state
+          - My Account product cart classic checkout and post-purchase hooks render only local data with zero connector JavaScript CSS or render-time Hub calls and retain native coupon and secure-account fallbacks
+          - exact-head run 32853757058 at c2e2c82 passed baseline both images 56 migrations all 44 pgTAP files with 2392 assertions and all four minimum/current HPOS/legacy WooCommerce runtimes
+      - id: M09-S04-BLOCKS-AND-PROGRESSIVE-PANEL
+        status: completed
+        acceptance:
+          - namespaced Store API extension data and official SlotFill integration support Cart and Checkout Blocks without private data or live Hub calls
+          - optional progressively enhanced panel preserves a complete no-script path and passes explicit compressed JavaScript and CSS budgets
+          - minimum and current WooCommerce PHP HPOS legacy Blocks and classic cells pass
+        rollout: Enable Blocks data before the separately flagged panel and observe asset and checkout telemetry.
+        rollback: Dequeue the panel and remove Store API presentation data while retaining classic local fallbacks.
+        evidence:
+          - ADR-0038 binds one starfiniti-loyalty wc/store/cart extension to the logged-in user's strict local snapshot and the official IntegrationInterface plus ExperimentalOrderMeta without adding value authority or a live Hub dependency
+          - separate non-autoloaded Blocks-data and panel flags default off, the data canary can run independently, and disabling the panel preserves native coupons classic placements hosted access and no-script guidance
+          - static and real-browser verification passed the 3821-byte source and 1177-byte gzip JavaScript plus 980-byte source and 430-byte gzip CSS budgets at desktop and mobile widths with fresh stale unsafe-link focus overflow and zero-diagnostic coverage
+          - exact-head run 32859649418 at bf5ec90 passed baseline both images 56 migrations all 44 pgTAP files with 2392 assertions and every minimum/current HPOS/legacy WooCommerce runtime cell including staged flags actual Store API responses native coupons no-script and forced Hub failure
+      - id: M09-S05-BRANDING-ACCESSIBILITY-AND-OUTAGE-HARDENING
+        status: completed
+        acceptance:
+          - controlled assets copy spacing ordering preview states responsive layouts refresh labels and offline states are polished and bounded
+          - keyboard screen-reader zoom reduced-motion contrast slow-network no-script and total-Hub-outage evidence passes
+          - no active language switcher or non-English customer path is rendered
+          - strict additive V2 presentation commands and public/Auth-derived reads retain V1 compatibility while PostgreSQL independently rejects missing duplicate unknown or cross-tenant section and asset authority
+          - the canonical seven sections remain complete and reorderable while only rewards VIP and referrals are presentation-optional and core value history privacy and account access cannot be hidden
+          - merchant preview covers member public and WooCommerce panel compositions at desktop and mobile plus ready guest offline and empty states without persisting preview-only controls
+          - 320-pixel and 200-percent-reflow equivalents have no two-dimensional page scroll every keyboard focus indicator remains visible and no essential status depends on colour or motion alone
+          - hosted and public provider failures render bounded recovery states with no private evidence while WooCommerce retains last-valid local state native coupons no-script account access and zero synchronous Hub dependency
+        rollout: Review real components at desktop and mobile widths in light and dark themes before tenant canary.
+        rollback: Revert presentation tokens and optional assets while retaining semantic local content.
+        evidence:
+          - ADR-0039 binds controlled English V2 tokens exact semantic order reviewed Lucide assets strict Auth/public reads rolling V1 compatibility and independent degraded delivery without creating programme or value authority
+          - merchant member and public compositions consume one strict persisted order filter only rewards VIP and referrals and retain overview earning history privacy and account access
+          - focused tests cover exact saves forged stale locale input malformed and duplicate projections RPC-absence fallback controlled text strict English copy and optional-section order while the accessibility validator covers fifteen route surfaces
+          - local lint all workspace typechecks 177 dashboard 97 worker 234 contract and 57 domain tests all non-Docker validators production build secret scan zero-vulnerability production audit licence validation and 57-migration 44-pgTAP static validation pass
+          - exact-head run 32875015095 at 4f8be7a passed the complete baseline both production images a clean 57-migration replay all 44 pgTAP files with 2441 assertions every concurrency probe and all four minimum/current HPOS/legacy WooCommerce runtime cells
+          - Chrome review at 1512 by 982 390 by 844 320 pixels and 200-percent scale passed the approved Hub comparison interactive member public and WooCommerce previews English-only DOM anonymous-public privacy visible keyboard focus reduced motion zero horizontal overflow and zero final diagnostics
+          - the browser audit found low-contrast dark-theme form surfaces; commit 4f8be7a repaired the scoped editor colors and added deterministic accessibility-validator guards before final evidence was captured under docs/plan/evidence/M09
+      - id: M09-S06-CANARY-AND-CLOSE
+        status: in_progress
+        acceptance:
+          - exact-head CI disabled deployment Starfiniti hosted and WooCommerce canary checkout trace reconciliation rollback and module score at least 90 pass
+        verification:
+          - machine-validated canary evidence includes one approved release and pre-change recovery point before any production migration or application change
+          - hosted public member and merchant surfaces pass English-only privacy accessibility and bounded-recovery checks on the Starfiniti tenant
+          - local WooCommerce classic Blocks no-script native-coupon hub-outage and worker-outage paths pass without synchronous Hub checkout dependency
+          - ledger coupon queue and presentation state reconcile exactly before and after rollback rehearsal and observation
+          - seven-category module score reaches at least 90 with every category at least 80 percent and no deterministic failure
+        evidence:
+          - exact-head run 32875639062 at 639eac4 passed baseline both production images clean database replay every concurrency probe and all four WooCommerce runtimes after S05 evidence closure
+          - current production dashboard health and login return HTTP 200 with no-store or private cache policy while unauthenticated Auth and REST roots reject with HTTP 401
+          - docs/plan/evidence/M09/canary.yaml records 30 minimized checks and a deterministic seven-category pre-canary score of 88; completion is impossible while any check is pending failed or below threshold
+          - production mutation remains intentionally pending because PR 36 is a stacked unreviewed draft rather than an approved release and the configured non-interactive Proxmox key is rejected
     risks: [R-005, R-009, R-030]
-    docs: [design-qa.md, docs/testing/PLATFORM_MATRIX.md]
+    docs:
+      [
+        design-qa.md,
+        docs/testing/PLATFORM_MATRIX.md,
+        docs/architecture/ADR/0036-auth-derived-customer-experience-and-local-woocommerce-snapshots.md,
+        docs/architecture/ADR/0037-demand-driven-woocommerce-snapshots-and-classic-placements.md,
+        docs/architecture/ADR/0038-namespaced-store-api-and-flagged-blocks-panel.md,
+        docs/architecture/ADR/0039-controlled-english-presentation-v2-and-degraded-delivery.md,
+      ]
     evidence: [docs/plan/evidence/M09/README.md]
 
   - id: M10-ANALYTICS

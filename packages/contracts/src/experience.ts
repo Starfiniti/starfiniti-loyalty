@@ -7,6 +7,11 @@ const accessibleBrandColor = z
     message: "Brand color must meet 4.5:1 contrast with white text",
   });
 
+const controlledPresentationText = z
+  .string()
+  .trim()
+  .regex(/^[^\u0000-\u001f\u007f<>]*$/u);
+
 export const experienceDisplayFontV1 = z.enum([
   "system-sans",
   "editorial-serif",
@@ -27,12 +32,76 @@ export const experienceThemeDefinitionV1 = z
   })
   .strict();
 
+export const experienceSectionV2 = z.enum([
+  "overview",
+  "earning",
+  "rewards",
+  "vip",
+  "referrals",
+  "history",
+  "account",
+]);
+
+export const canonicalExperienceSectionOrderV2 = [
+  "overview",
+  "earning",
+  "rewards",
+  "vip",
+  "referrals",
+  "history",
+  "account",
+] as const;
+
+export const experienceSectionOrderV2 = z
+  .array(experienceSectionV2)
+  .length(canonicalExperienceSectionOrderV2.length)
+  .superRefine((sections, context) => {
+    if (new Set(sections).size !== canonicalExperienceSectionOrderV2.length) {
+      context.addIssue({
+        code: "custom",
+        message: "Every customer section must appear exactly once",
+      });
+    }
+  });
+
+export const experienceHeroAssetV2 = z.enum([
+  "none",
+  "sparkles",
+  "gift",
+  "crown",
+]);
+
+export const experienceDensityV2 = z.enum(["comfortable", "compact"]);
+
+export const experienceThemeDefinitionV2 = experienceThemeDefinitionV1
+  .extend({
+    version: z.literal("2"),
+    heroText: controlledPresentationText.min(1).max(120),
+    pointsLabel: controlledPresentationText.min(1).max(30),
+    density: experienceDensityV2,
+    heroAsset: experienceHeroAssetV2,
+    showReferrals: z.boolean(),
+    sectionOrder: experienceSectionOrderV2,
+  })
+  .strict();
+
 export const merchantSaveExperienceThemeCommandV1 = z
   .object({
     version: z.literal("1"),
     workspaceId: z.uuid(),
     programmeGroupId: z.uuid(),
     theme: experienceThemeDefinitionV1,
+    idempotencyKey: z.string().min(1).max(255),
+    correlationId: z.uuid(),
+  })
+  .strict();
+
+export const merchantSaveExperienceThemeCommandV2 = z
+  .object({
+    version: z.literal("2"),
+    workspaceId: z.uuid(),
+    programmeGroupId: z.uuid(),
+    theme: experienceThemeDefinitionV2,
     idempotencyKey: z.string().min(1).max(255),
     correlationId: z.uuid(),
   })
@@ -62,6 +131,32 @@ export const experienceTranslationDefinitionV1 = z
     redeemLabel: translatedCopy.min(1).max(30),
     joinLabel: translatedCopy.min(1).max(30),
     earnMessage: translatedCopy.min(1).max(120),
+  })
+  .strict();
+
+export const experienceCopyDefinitionV2 = experienceTranslationDefinitionV1
+  .extend({
+    version: z.literal("2"),
+    locale: z.literal("en"),
+  })
+  .strict();
+
+export const experiencePresentationV2 = z
+  .object({
+    version: z.literal("2"),
+    theme: experienceThemeDefinitionV2,
+    copy: experienceCopyDefinitionV2,
+  })
+  .strict();
+
+export const merchantSaveExperienceCopyCommandV2 = z
+  .object({
+    version: z.literal("2"),
+    workspaceId: z.uuid(),
+    programmeGroupId: z.uuid(),
+    copy: experienceCopyDefinitionV2,
+    idempotencyKey: z.string().min(1).max(255),
+    correlationId: z.uuid(),
   })
   .strict();
 
@@ -131,6 +226,26 @@ export const publicLoyaltyExperienceV1 = z
   })
   .strict();
 
+export const publicLoyaltyExperienceV2 = publicLoyaltyExperienceV1
+  .omit({
+    version: true,
+    requestedLocale: true,
+    resolvedLocale: true,
+    brandColor: true,
+    displayFont: true,
+    cardRadiusPx: true,
+    showTier: true,
+    showRewards: true,
+    copy: true,
+  })
+  .extend({
+    version: z.literal("2"),
+    requestedLocale: z.literal("en"),
+    resolvedLocale: z.literal("en"),
+    presentation: experiencePresentationV2,
+  })
+  .strict();
+
 function srgbChannel(value: number): number {
   const normalized = value / 255;
   return normalized <= 0.04045
@@ -150,10 +265,26 @@ export function contrastAgainstWhite(color: string): number {
 export type ExperienceThemeDefinitionV1 = z.infer<
   typeof experienceThemeDefinitionV1
 >;
+export type ExperienceSectionV2 = z.infer<typeof experienceSectionV2>;
+export type ExperienceHeroAssetV2 = z.infer<typeof experienceHeroAssetV2>;
+export type ExperienceDensityV2 = z.infer<typeof experienceDensityV2>;
+export type ExperienceThemeDefinitionV2 = z.infer<
+  typeof experienceThemeDefinitionV2
+>;
 export type ExperienceLocaleV1 = z.infer<typeof experienceLocaleV1>;
 export type ExperienceTranslationDefinitionV1 = z.infer<
   typeof experienceTranslationDefinitionV1
 >;
+export type ExperienceCopyDefinitionV2 = z.infer<
+  typeof experienceCopyDefinitionV2
+>;
+export type ExperiencePresentationV2 = z.infer<typeof experiencePresentationV2>;
+export type MerchantSaveExperienceCopyCommandV2 = z.infer<
+  typeof merchantSaveExperienceCopyCommandV2
+>;
 export type PublicLoyaltyExperienceV1 = z.infer<
   typeof publicLoyaltyExperienceV1
+>;
+export type PublicLoyaltyExperienceV2 = z.infer<
+  typeof publicLoyaltyExperienceV2
 >;

@@ -1,0 +1,149 @@
+schema: starfiniti.storefront-canary.v1
+status: in_progress
+observedAt: 2026-08-25T17:07:59Z
+currentProduction:
+  release: v0.1.11
+  applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
+candidate:
+  pullRequest: 36
+  commit: 639eac4b1e6e9998ceb92c6493884fe6eb3d4b36
+  approvedRelease: false
+  operatorAccess: false
+publicBaseline:
+  dashboardHealth: 200
+  login: 200
+  authWithoutKey: 401
+  restWithoutKey: 401
+  canonicalDns: true
+score:
+  total: 88
+  target: 90
+  minimumCategoryRatio: 0.8
+  categories:
+    - id: correctness
+      weight: 20
+      score: 18
+      evidence: Strict V2 contracts, independent PostgreSQL validation, one-statement reads, and real-component interaction checks pass; production presentation compatibility is pending.
+    - id: security
+      weight: 15
+      score: 14
+      evidence: Auth-derived and anonymous-minimized reads, explicit grants, RLS, public privacy, and secret scans pass; live post-deployment authorization smoke is pending.
+    - id: ledger_reliability
+      weight: 15
+      score: 15
+      evidence: Presentation remains value-neutral and WooCommerce snapshots cannot grant value; immutable ledger, native coupon, idempotency, and concurrency gates remain green.
+    - id: tests
+      weight: 15
+      score: 15
+      evidence: Exact-head baseline, clean migration replay, all pgTAP and concurrency probes, both images, and four WooCommerce runtime cells pass.
+    - id: performance
+      weight: 10
+      score: 9
+      evidence: Explicit compressed panel budgets, local rendering, zero synchronous Hub checkout calls, mobile reflow, and reduced-motion checks pass; production timing observation is pending.
+    - id: operability
+      weight: 10
+      score: 4
+      evidence: Recovery-safe rollout and rollback contracts exist, but approved release, operator access, disabled deployment, rollback rehearsal, observation, and reconciliation remain pending.
+    - id: maintainability
+      weight: 15
+      score: 13
+      evidence: Versioned contracts, additive migration, ADR, strict parsers, validators, living evidence, and V1 compatibility pass; production closeout remains to be recorded.
+checks:
+  - id: exact_head_ci
+    status: passed
+    evidence: Run 32875639062 passed all seven jobs at candidate commit 639eac4.
+  - id: migration_replay
+    status: passed
+    evidence: Exact-head CI replayed all 57 additive migrations and all 44 pgTAP files.
+  - id: test_and_contract_matrix
+    status: passed
+    evidence: Dashboard, worker, contract, domain, concurrency, production image, and static validators pass.
+  - id: woocommerce_runtime_matrix
+    status: passed
+    evidence: Minimum and current WordPress/WooCommerce with HPOS and legacy order storage pass.
+  - id: browser_accessibility
+    status: passed
+    evidence: Chrome desktop, mobile, 320-pixel, 200-percent scale, keyboard, contrast, and reduced-motion evidence is retained.
+  - id: asset_and_checkout_budget
+    status: passed
+    evidence: Progressive assets remain inside reviewed compressed budgets and checkout has zero synchronous Hub dependency.
+  - id: public_production_baseline
+    status: passed
+    evidence: Canonical DNS resolves; dashboard health and login return 200; unauthenticated Auth and REST roots return 401.
+  - id: approved_release
+    status: pending
+    evidence: PR 36 is a stacked draft and has not crossed reviewed merge and immutable release gates.
+  - id: operator_access
+    status: pending
+    evidence: The configured non-interactive Proxmox key is rejected; no alternate access path was improvised.
+  - id: pre_change_recovery_point
+    status: pending
+    evidence: A fresh verified base and incremental off-host archive must complete immediately before deployment.
+  - id: production_value_baseline
+    status: pending
+    evidence: Reconstruct current tenant, customer, wallet, ledger, reservation, coupon, queue, and presentation aggregates read-only before migration.
+  - id: disabled_deployment
+    status: pending
+    evidence: Apply the approved additive migration and immutable images with enhancements disabled before canary enablement.
+  - id: migration_registration
+    status: pending
+    evidence: Confirm the exact migration version and source hash appear once in production history.
+  - id: hosted_public_canary
+    status: pending
+    evidence: Verify the Starfiniti public programme renders the bounded V2 presentation with no customer state.
+  - id: hosted_member_canary
+    status: pending
+    evidence: Verify one approved linked test member sees exact balance, earning, rewards, VIP, referrals, history, privacy, and account states.
+  - id: merchant_editor_canary
+    status: pending
+    evidence: Verify owner-controlled preview and save use the strict persisted theme, copy, order, visibility, and revision boundary.
+  - id: english_only_production
+    status: pending
+    evidence: Confirm document language is English and no active locale route or language switcher is rendered.
+  - id: woocommerce_snapshot_canary
+    status: pending
+    evidence: Confirm one signed leased snapshot advances monotonically and preserves the prior valid cache on malformed or stale input.
+  - id: woocommerce_classic_canary
+    status: pending
+    evidence: Verify approved My Account, product, cart, classic checkout, and post-purchase placements render from local data.
+  - id: woocommerce_blocks_canary
+    status: pending
+    evidence: Stage Blocks data before the separate panel flag and verify the exact namespaced local projection.
+  - id: no_script_fallback
+    status: pending
+    evidence: Disable the progressive panel and JavaScript and verify native account guidance and coupons remain usable.
+  - id: native_coupon_continuity
+    status: pending
+    evidence: Verify an already promised native coupon remains usable through presentation disablement and Hub outage.
+  - id: hub_outage_checkout
+    status: pending
+    evidence: Force Hub DNS or application failure and capture a successful native checkout trace with only local loyalty state.
+  - id: worker_outage_checkout
+    status: pending
+    evidence: Stop the worker during checkout, restart it, and prove bounded recovery without a duplicate business effect.
+  - id: production_privacy
+    status: pending
+    evidence: Confirm anonymous output contains no customer, order, balance, referral identity, or internal selector.
+  - id: ledger_reconciliation
+    status: pending
+    evidence: Compare canonical commerce events, effects, ledger transactions, lots, reservations, and exact balances with zero unexplained difference.
+  - id: coupon_reconciliation
+    status: pending
+    evidence: Compare reservations, connector commands, native coupon state, captures, reversals, and releases with zero unexplained difference.
+  - id: queue_reconciliation
+    status: pending
+    evidence: Confirm no accepted event, snapshot, command, or leased job is lost, duplicated, exhausted, or left ambiguously recoverable.
+  - id: rollback_rehearsal
+    status: pending
+    evidence: Disable presentation and panel canaries and restore prior images while retaining additive history, local cache, native coupons, and customer value.
+  - id: observation_window
+    status: pending
+    evidence: Observe the controlled canary and record health, latency, errors, queues, checkout, privacy, and reconciliation after rollback rehearsal.
+automaticFails:
+  - unexplained ledger balance reservation coupon queue or presentation difference
+  - cross-tenant access or authority derived from browser input mutable identity claims email or domain
+  - duplicate value effect overspend or unrecoverable accepted event
+  - checkout synchronously depends on the Hub
+  - public output exposes customer state or internal authority
+  - critical accessibility security privacy recovery or data-loss finding remains unresolved
+  - approved release recovery point rollback reconciliation or observation evidence is absent

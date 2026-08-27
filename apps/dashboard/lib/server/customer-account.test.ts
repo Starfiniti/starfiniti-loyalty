@@ -14,7 +14,69 @@ import { getCustomerLoyaltyAccounts } from "./customer-account";
 
 const accountId = "88000000-0000-4000-8000-000000000001";
 
-describe("customer account referral composition", () => {
+const presentation = {
+  version: "2",
+  theme: {
+    version: "2",
+    brandColor: "#7c2d4f",
+    displayFont: "editorial-serif",
+    cardRadiusPx: 14,
+    heroText: "Beauty that gives back",
+    pointsLabel: "Points",
+    showTier: true,
+    showRewards: true,
+    widgetPosition: "right",
+    density: "comfortable",
+    heroAsset: "sparkles",
+    showReferrals: true,
+    sectionOrder: [
+      "overview",
+      "earning",
+      "rewards",
+      "vip",
+      "referrals",
+      "history",
+      "account",
+    ],
+  },
+  copy: {
+    version: "2",
+    locale: "en",
+    heroText: "Beauty that gives back",
+    pointsLabel: "Points",
+    balanceLabel: "Your balance",
+    rewardsLabel: "Rewards",
+    redeemLabel: "Redeem",
+    joinLabel: "Join free",
+    earnMessage: "Earn on eligible purchases.",
+  },
+} as const;
+
+function experience(version: "1" | "2" = "2") {
+  return {
+    version,
+    asOf: "2026-08-25T10:00:00Z",
+    accountId,
+    workspaceId: "88000000-0000-4000-8000-000000000004",
+    programmeId: "88000000-0000-4000-8000-000000000005",
+    storeName: "Example store",
+    programmeName: "Example loyalty",
+    accountStatus: "ready",
+    enhancementsEnabled: true,
+    balances: { pending: "0", available: "100", reserved: "0" },
+    currentTier: { code: "rose", name: "Rose" },
+    nextExpiry: null,
+    earningMethods: [],
+    rewards: [],
+    reservations: [],
+    activity: [],
+    tierProgress: null,
+    referral: null,
+    ...(version === "2" ? { presentation } : {}),
+  };
+}
+
+describe("customer account aggregate", () => {
   beforeEach(() => {
     getClaims.mockReset();
     rpc.mockReset();
@@ -22,146 +84,109 @@ describe("customer account referral composition", () => {
       data: { claims: { sub: "88000000-0000-4000-8000-000000000002" } },
       error: null,
     });
+    rpc.mockResolvedValue({
+      data: [{ account_id: accountId, experience: experience() }],
+      error: null,
+    });
   });
 
-  it("joins a strictly parsed no-selector referral experience by account", async () => {
-    rpc.mockImplementation((name: string) => {
-      if (name === "get_my_loyalty_accounts") {
-        return Promise.resolve({
-          data: [
-            {
-              account_id: accountId,
-              customer_id: "88000000-0000-4000-8000-000000000003",
-              workspace_id: "88000000-0000-4000-8000-000000000004",
-              programme_id: "88000000-0000-4000-8000-000000000005",
-              store_name: "Example store",
-              programme_name: "Example loyalty",
-              account_status: "ready",
-              pending_points: "0",
-              available_points: "100",
-              reserved_points: "0",
-              tier_code: "rose",
-              tier_name: "Rose",
-              next_expiry_points: null,
-              next_expiry_at: null,
-              rewards: [],
-              reservations: [],
-              activity: [],
-            },
-          ],
-          error: null,
-        });
-      }
-      if (name === "get_my_tier_progress_v1") {
-        return Promise.resolve({ data: [], error: null });
-      }
-      return Promise.resolve({
-        data: [
-          {
-            account_id: accountId,
-            sharing_state: "active",
-            share_url:
-              "https://shop.example.test/?stf_ref=88000000-0000-4000-8000-000000000006",
-            advocate_reward_points: "500",
-            friend_reward_points: "250",
-            minimum_eligible_spend_minor: "3000",
-            currency_code: "EUR",
-            currency_minor_unit_digits: 2,
-            qualification_status: "completed",
-            cooling_days: 14,
-            total_count: "1",
-            pending_count: "0",
-            qualified_count: "1",
-            rejected_count: "0",
-            reversed_count: "0",
-            history: [
-              {
-                referralId: "88000000-0000-4000-8000-000000000007",
-                state: "qualified",
-                rewardPoints: "500",
-                capturedAt: "2026-08-01T08:00:00Z",
-                updatedAt: "2026-08-16T08:00:00Z",
-                availableAt: "2026-08-16T08:00:00Z",
-              },
-            ],
-          },
-        ],
-        error: null,
-      });
+  it("strictly parses V2 and maps its controlled presentation", async () => {
+    await expect(getCustomerLoyaltyAccounts()).resolves.toEqual({
+      kind: "ready",
+      accounts: [
+        expect.objectContaining({
+          account_id: accountId,
+          available_points: "100",
+          tier_name: "Rose",
+          enhancements_enabled: true,
+          presentation,
+        }),
+      ],
     });
-
-    const state = await getCustomerLoyaltyAccounts();
-    expect(state.kind).toBe("ready");
-    if (state.kind !== "ready") throw new Error("expected ready state");
-    expect(state.accounts[0]?.referral?.counts.qualified).toBe("1");
-    expect(rpc).toHaveBeenCalledWith("get_my_referral_experiences_v1");
+    expect(rpc).toHaveBeenCalledTimes(1);
+    expect(rpc).toHaveBeenCalledWith("get_my_loyalty_experiences_v2");
   });
 
-  it("fails the optional referral panel closed without hiding loyalty value", async () => {
-    rpc.mockImplementation((name: string) => {
-      if (name === "get_my_loyalty_accounts") {
-        return Promise.resolve({ data: [], error: null });
-      }
-      if (name === "get_my_tier_progress_v1") {
-        return Promise.resolve({ data: [], error: null });
-      }
-      return Promise.resolve({
-        data: [
-          {
-            account_id: accountId,
-            sharing_state: "paused",
-            share_url:
-              "https://shop.example.test/?stf_ref=88000000-0000-4000-8000-000000000006",
-            advocate_reward_points: "500",
-            friend_reward_points: "250",
-            minimum_eligible_spend_minor: "3000",
-            currency_code: "EUR",
-            currency_minor_unit_digits: 2,
-            qualification_status: "completed",
-            cooling_days: 14,
-            total_count: "1",
-            pending_count: "0",
-            qualified_count: "0",
-            rejected_count: "0",
-            reversed_count: "0",
-            history: [],
-          },
-        ],
+  it("normalizes V1 only while an additive database deploy lacks V2", async () => {
+    rpc
+      .mockResolvedValueOnce({ data: null, error: { code: "PGRST202" } })
+      .mockResolvedValueOnce({
+        data: [{ account_id: accountId, experience: experience("1") }],
         error: null,
       });
+    const result = await getCustomerLoyaltyAccounts();
+    expect(result).toMatchObject({
+      kind: "ready",
+      accounts: [{ presentation: { version: "2" } }],
+    });
+    expect(rpc).toHaveBeenNthCalledWith(1, "get_my_loyalty_experiences_v2");
+    expect(rpc).toHaveBeenNthCalledWith(2, "get_my_loyalty_experiences_v1");
+  });
+
+  it("returns a bounded unavailable state for malformed containers", async () => {
+    rpc.mockResolvedValueOnce({
+      data: [
+        {
+          account_id: accountId,
+          experience: {
+            ...experience(),
+            customerEmail: "private@example.test",
+          },
+        },
+      ],
+      error: null,
+    });
+    await expect(getCustomerLoyaltyAccounts()).resolves.toEqual({
+      kind: "unavailable",
     });
 
+    rpc.mockResolvedValueOnce({
+      data: [
+        {
+          account_id: "88000000-0000-4000-8000-000000000099",
+          experience: experience(),
+        },
+      ],
+      error: null,
+    });
+    await expect(getCustomerLoyaltyAccounts()).resolves.toEqual({
+      kind: "unavailable",
+    });
+
+    rpc.mockResolvedValueOnce({
+      data: [
+        { account_id: accountId, experience: experience() },
+        { account_id: accountId, experience: experience() },
+      ],
+      error: null,
+    });
+    await expect(getCustomerLoyaltyAccounts()).resolves.toEqual({
+      kind: "unavailable",
+    });
+  });
+
+  it("does not hide provider or malformed V2 failures behind legacy data", async () => {
+    rpc.mockResolvedValue({
+      data: null,
+      error: { code: "57014", message: "projection unavailable" },
+    });
+    await expect(getCustomerLoyaltyAccounts()).resolves.toEqual({
+      kind: "unavailable",
+    });
+    expect(rpc).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns honest empty and unauthenticated states", async () => {
+    rpc.mockResolvedValue({ data: [], error: null });
     await expect(getCustomerLoyaltyAccounts()).resolves.toEqual({
       kind: "ready",
       accounts: [],
     });
-  });
 
-  it("keeps the customer account available during a referral projection outage", async () => {
-    rpc.mockImplementation((name: string) => {
-      if (name === "get_my_loyalty_accounts") {
-        return Promise.resolve({ data: [], error: null });
-      }
-      if (name === "get_my_tier_progress_v1") {
-        return Promise.resolve({ data: [], error: null });
-      }
-      return Promise.resolve({
-        data: null,
-        error: { message: "referral projection unavailable" },
-      });
-    });
-
-    await expect(getCustomerLoyaltyAccounts()).resolves.toEqual({
-      kind: "ready",
-      accounts: [],
-    });
-  });
-
-  it("does not call a projection without an Auth subject", async () => {
     getClaims.mockResolvedValue({ data: null, error: { message: "missing" } });
     await expect(getCustomerLoyaltyAccounts()).resolves.toEqual({
       kind: "unauthenticated",
     });
-    expect(rpc).not.toHaveBeenCalled();
+    expect(rpc).toHaveBeenCalledTimes(1);
   });
 });
