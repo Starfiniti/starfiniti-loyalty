@@ -1,5 +1,13 @@
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import {
+  closeSync,
+  constants,
+  fstatSync,
+  lstatSync,
+  openSync,
+  readFileSync,
+  readSync,
+} from "node:fs";
 import { dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -232,7 +240,40 @@ function readBoundArtifact(path, expectedDigest) {
     fail("completion artifact digest must be exact and nonzero");
   }
   const absolute = safeEvidencePath(path);
-  const raw = readFileSync(absolute);
+  let descriptor;
+  let raw;
+  try {
+    descriptor = openSync(absolute, constants.O_RDONLY | constants.O_NOFOLLOW);
+    const status = fstatSync(descriptor);
+    const linkStatus = lstatSync(absolute);
+    if (
+      !linkStatus.isFile() ||
+      !status.isFile() ||
+      status.dev !== linkStatus.dev ||
+      status.ino !== linkStatus.ino ||
+      status.size < 1 ||
+      status.size > 256 * 1024
+    ) {
+      fail("completion artifact is not a bounded stable file");
+    }
+    raw = Buffer.alloc(status.size);
+    let offset = 0;
+    while (offset < raw.length) {
+      const bytesRead = readSync(
+        descriptor,
+        raw,
+        offset,
+        raw.length - offset,
+        offset,
+      );
+      if (bytesRead === 0) fail("completion artifact changed while reading");
+      offset += bytesRead;
+    }
+  } catch {
+    fail(`completion artifact ${path} is unreadable`);
+  } finally {
+    if (descriptor !== undefined) closeSync(descriptor);
+  }
   if (createHash("sha256").update(raw).digest("hex") !== expectedDigest) {
     fail(`completion artifact digest drifted for ${path}`);
   }

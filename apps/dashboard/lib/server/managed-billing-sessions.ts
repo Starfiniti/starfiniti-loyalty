@@ -35,6 +35,10 @@ type AuthorizationRow = Readonly<{
   provider_idempotency_key: string;
 }>;
 
+type RecordRow = Readonly<{
+  operation_state: string;
+}>;
+
 export type ManagedBillingSessionOutcome =
   | Readonly<{ kind: "self_hosted" }>
   | Readonly<{ kind: "redirect"; url: string }>;
@@ -132,7 +136,7 @@ export async function createManagedBillingSession(
       );
       throw new Error("billing_session_unavailable");
     }
-    await record(
+    const customerRecord = await record(
       actorUserId,
       command.operationId,
       attemptId,
@@ -141,6 +145,9 @@ export async function createManagedBillingSession(
       customerId,
       "customer_created",
     );
+    if (customerRecord.operation_state !== "ready") {
+      throw new Error("billing_session_unavailable");
+    }
     sessionAuthority = await authorize(
       actorUserId,
       command.operationId,
@@ -187,7 +194,7 @@ export async function createManagedBillingSession(
     );
     throw new Error("billing_session_unavailable");
   }
-  await record(
+  const sessionRecord = await record(
     actorUserId,
     command.operationId,
     attemptId,
@@ -198,6 +205,9 @@ export async function createManagedBillingSession(
       ? "checkout_created"
       : "portal_created",
   );
+  if (sessionRecord.operation_state !== "completed") {
+    throw new Error("billing_session_unavailable");
+  }
   return { kind: "redirect", url: redirect.url };
 }
 
@@ -242,16 +252,16 @@ async function record(
   outcome: "succeeded" | "rejected" | "ambiguous",
   providerResourceId: string | null,
   detailCode: string,
-): Promise<void> {
+): Promise<RecordRow> {
   const sql = getDatabase();
-  const rows = await sql<Array<{ operation_state: string }>>`
+  const rows = await sql<RecordRow[]>`
     select operation_state
     from loyalty_private.record_managed_billing_session_attempt_v1(
       ${actorUserId}::uuid, ${operationId}::uuid, ${attemptId}::uuid,
       ${stage}, ${outcome}, ${providerResourceId}, ${detailCode}
     )
   `;
-  requiredRow(rows);
+  return requiredRow(rows);
 }
 
 async function recordFailure(

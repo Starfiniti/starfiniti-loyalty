@@ -11,7 +11,7 @@ import type { Sql } from "postgres";
 
 const STRIPE_API_ORIGIN = "https://api.stripe.com";
 const STRIPE_API_VERSION = "2026-02-25.clover";
-const STRIPE_KEY = /^(sk|rk)_(test|live)_[A-Za-z0-9_]{16,240}$/u;
+const STRIPE_KEY = /^rk_(test|live)_[A-Za-z0-9_]{16,240}$/u;
 const MAX_RESPONSE_BYTES = 32_768;
 const MIN_BIGINT = -(2n ** 63n);
 const MAX_BIGINT = 2n ** 63n - 1n;

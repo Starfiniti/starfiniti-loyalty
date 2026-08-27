@@ -13,7 +13,17 @@ import {
   type StripeUsageRuntime,
 } from "./billing-usage.ts";
 
-const apiKey = ["sk", "test", "usagefixturesonly000000000000000"].join("_");
+const apiKey = ["rk", "test", "usagefixturesonly000000000000000"].join("_");
+const rejectedBroadTestKey = [
+  "sk",
+  "test",
+  "usagefixturesonly000000000000000",
+].join("_");
+const rejectedBroadLiveKey = [
+  "sk",
+  "live",
+  "usagefixturesonly000000000000000",
+].join("_");
 const dispatchId = "a5000000-0000-4000-8000-000000000100";
 const leaseToken = "a5000000-0000-4000-8000-000000000101";
 const authority = {
@@ -138,6 +148,32 @@ describe("Stripe meter-event client", () => {
         liveMode: true,
       }),
     ).toThrow("stripe_usage_provider_config_unavailable");
+    expect(() =>
+      stripeUsageConfig({
+        apiKey: rejectedBroadTestKey,
+        liveMode: false,
+      }),
+    ).toThrow("stripe_usage_provider_config_unavailable");
+    expect(() =>
+      stripeUsageConfig({
+        apiKey: rejectedBroadLiveKey,
+        liveMode: true,
+      }),
+    ).toThrow("stripe_usage_provider_config_unavailable");
+    writeFileSync(path, `${rejectedBroadTestKey}\n`, {
+      encoding: "utf8",
+      mode: 0o600,
+    });
+    expect(() => readStripeUsageApiKey(path)).toThrow(
+      "stripe_usage_provider_config_unavailable",
+    );
+    writeFileSync(path, `${rejectedBroadLiveKey}\n`, {
+      encoding: "utf8",
+      mode: 0o600,
+    });
+    expect(() => readStripeUsageApiKey(path)).toThrow(
+      "stripe_usage_provider_config_unavailable",
+    );
     expect(() =>
       stripeUsageConfig({
         apiKey,

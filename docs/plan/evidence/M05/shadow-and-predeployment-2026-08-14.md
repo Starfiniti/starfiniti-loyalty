@@ -1,6 +1,6 @@
 # M05-S06 shadow and predeployment evidence
 
-Date: 2026-08-14  
+Date: 2026-08-14
 Status: shadow implementation, browser verification, and exact-head database/runtime CI complete; production deployment remains open
 
 ## Weakness found by the self-improving loop

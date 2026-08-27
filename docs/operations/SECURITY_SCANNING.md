@@ -58,6 +58,8 @@ R-032 was development-only but still High. The candidate upgrades `@wordpress/en
 
 ## External completion evidence
 
+Every minimized YAML completion artifact must be a stable regular file below the M15 runs directory and no larger than 256 KiB. The validator opens without following the final symlink before digest, schema, and sensitive-content checks.
+
 Before changing `docs/plan/evidence/M15/security.yaml` to `complete`, obtain and sanitize:
 
 - fresh exact-head security workflow results and SBOM digests;

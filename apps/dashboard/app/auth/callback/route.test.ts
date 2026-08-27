@@ -67,13 +67,16 @@ describe("workforce SSO callback", () => {
     expect(exchangeCodeForSession).toHaveBeenCalledWith("one-time-code", {
       flowId: "bc0f26282e6abeac61d7b21c49683e6a",
     });
+    expect(hasCookie).toHaveBeenCalledWith(
+      "sb-api-auth-token-flow-bc0f26282e6abeac61d7b21c49683e6a-code-verifier",
+    );
     expect(response.headers.get("location")).toBe(
       "https://loyalty.starfiniti.com/programme",
     );
   });
 
-  it("never exposes the internal bind address after an exchange failure", async () => {
-    exchangeCodeForSession.mockResolvedValue({ error: new Error("failed") });
+  it("rejects a missing flow ID before exchange", async () => {
+    exchangeCodeForSession.mockResolvedValue({ error: null });
     const response = await GET(
       new Request("https://0.0.0.0:3000/auth/callback?code=used-code"),
     );
@@ -81,6 +84,21 @@ describe("workforce SSO callback", () => {
     expect(response.headers.get("location")).toBe(
       "https://loyalty.starfiniti.com/login?error=authentication_failed&reason=flow_id_missing",
     );
+    expect(exchangeCodeForSession).not.toHaveBeenCalled();
+  });
+
+  it("rejects a malformed flow ID before exchange", async () => {
+    exchangeCodeForSession.mockResolvedValue({ error: null });
+    const response = await GET(
+      new Request(
+        "https://0.0.0.0:3000/auth/callback?code=used-code&sb_flow_id=not%20valid",
+      ),
+    );
+
+    expect(response.headers.get("location")).toBe(
+      "https://loyalty.starfiniti.com/login?error=authentication_failed&reason=flow_id_missing",
+    );
+    expect(exchangeCodeForSession).not.toHaveBeenCalled();
   });
 
   it("claims a tenant membership only after the brokered exchange", async () => {
@@ -136,7 +154,7 @@ describe("workforce SSO callback", () => {
 
   it("reports a missing verifier without exposing its value", async () => {
     hasCookie.mockReturnValue(false);
-    exchangeCodeForSession.mockResolvedValue({ error: new Error("failed") });
+    exchangeCodeForSession.mockResolvedValue({ error: null });
     const response = await GET(
       new Request(
         "https://0.0.0.0:3000/auth/callback?code=used-code&sb_flow_id=bc0f26282e6abeac61d7b21c49683e6a",
@@ -146,6 +164,10 @@ describe("workforce SSO callback", () => {
     expect(response.headers.get("location")).toBe(
       "https://loyalty.starfiniti.com/login?error=authentication_failed&reason=verifier_cookie_missing",
     );
+    expect(hasCookie).toHaveBeenCalledWith(
+      "sb-api-auth-token-flow-bc0f26282e6abeac61d7b21c49683e6a-code-verifier",
+    );
+    expect(exchangeCodeForSession).not.toHaveBeenCalled();
   });
 
   it("fails closed when the public origin is unavailable", async () => {

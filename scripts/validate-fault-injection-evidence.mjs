@@ -1,5 +1,13 @@
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import {
+  closeSync,
+  constants,
+  fstatSync,
+  lstatSync,
+  openSync,
+  readFileSync,
+  readSync,
+} from "node:fs";
 import { dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -122,11 +130,40 @@ function readBoundArtifact(relativePath, expectedDigest, extension) {
   if (!absolute.startsWith(`${artifactRoot}${sep}`)) {
     fail("artifact path escapes the M15 evidence root");
   }
+  const maximumBytes = extension === "json" ? 1024 * 1024 : 256 * 1024;
+  let descriptor;
   let raw;
   try {
-    raw = readFileSync(absolute, "utf8");
+    descriptor = openSync(absolute, constants.O_RDONLY | constants.O_NOFOLLOW);
+    const status = fstatSync(descriptor);
+    const linkStatus = lstatSync(absolute);
+    if (
+      !linkStatus.isFile() ||
+      !status.isFile() ||
+      status.dev !== linkStatus.dev ||
+      status.ino !== linkStatus.ino ||
+      status.size < 1 ||
+      status.size > maximumBytes
+    ) {
+      fail("fault artifact is not a bounded stable file");
+    }
+    raw = Buffer.alloc(status.size);
+    let offset = 0;
+    while (offset < raw.length) {
+      const bytesRead = readSync(
+        descriptor,
+        raw,
+        offset,
+        raw.length - offset,
+        offset,
+      );
+      if (bytesRead === 0) fail("fault artifact changed while reading");
+      offset += bytesRead;
+    }
   } catch {
     fail(`artifact ${relativePath} is unreadable`);
+  } finally {
+    if (descriptor !== undefined) closeSync(descriptor);
   }
   const actualDigest = createHash("sha256").update(raw).digest("hex");
   if (actualDigest !== expectedDigest) {
@@ -134,7 +171,8 @@ function readBoundArtifact(relativePath, expectedDigest, extension) {
   }
   let parsed;
   try {
-    parsed = extension === "json" ? JSON.parse(raw) : YAML.parse(raw);
+    const text = raw.toString("utf8");
+    parsed = extension === "json" ? JSON.parse(text) : YAML.parse(text);
   } catch {
     fail(`artifact ${relativePath} is invalid ${extension}`);
   }

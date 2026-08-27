@@ -15,9 +15,23 @@ import {
 
 import { canonicalMigrationJsonV1 } from "./migration-v1";
 
-const MAX_INPUT_BYTES = 5 * 1024 * 1024;
-const MAX_CANONICAL_ROWS = 500;
-const MAX_GENERIC_PHYSICAL_ROWS = 25_000;
+export const migrationAdapterLimitsV1 = Object.freeze({
+  maxInputBytes: 5 * 1024 * 1024,
+  maxCanonicalRows: 500,
+  maxPhysicalRows: Object.freeze({
+    genericCsv: 25_000,
+    wployaltyCsv: 500,
+    woorewardsJson: 500,
+  }),
+});
+const MAX_INPUT_BYTES = migrationAdapterLimitsV1.maxInputBytes;
+const MAX_CANONICAL_ROWS = migrationAdapterLimitsV1.maxCanonicalRows;
+const MAX_GENERIC_PHYSICAL_ROWS =
+  migrationAdapterLimitsV1.maxPhysicalRows.genericCsv;
+const MAX_WPLOYALTY_PHYSICAL_ROWS =
+  migrationAdapterLimitsV1.maxPhysicalRows.wployaltyCsv;
+const MAX_WOOREWARDS_PHYSICAL_ROWS =
+  migrationAdapterLimitsV1.maxPhysicalRows.woorewardsJson;
 const MAX_ISSUES = 100;
 const POSTGRES_BIGINT_MAX = 9_223_372_036_854_775_807n;
 const SAFE_REFERENCE = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,159}$/u;
@@ -741,7 +755,7 @@ export function adaptWPLoyaltyCsvV1(
       issues,
     );
   }
-  const records = parseCsv(text, MAX_CANONICAL_ROWS, issues);
+  const records = parseCsv(text, MAX_WPLOYALTY_PHYSICAL_ROWS, issues);
   if (records === null) {
     return invalidResult(
       adapterId,
@@ -925,7 +939,7 @@ function parseWooRewardsJson(
     } else {
       while (index < text.length) {
         const rowNumber = objects.length + 1;
-        if (rowNumber > MAX_CANONICAL_ROWS) {
+        if (rowNumber > MAX_WOOREWARDS_PHYSICAL_ROWS) {
           issues.add(rowNumber, "too_many_rows", "row");
           return null;
         }

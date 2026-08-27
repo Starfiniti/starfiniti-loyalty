@@ -2639,6 +2639,7 @@ tasks:
           - provider success pages never grant access before webhook and database reconciliation
           - self-hosted returns before plan account provider configuration key or client access
           - entitlement or provider disablement commits a recoverable hold and returns no provider authority
+          - a post-provider customer or session hold returns no Checkout or Portal redirect to the browser
           - provider identifiers and Price evidence remain private while merchant plans contain only reviewed public display fields
         failure_modes:
           - a browser selector or Auth claim grants provider customer Price tenant return or subscription authority
@@ -2656,7 +2657,7 @@ tasks:
         rollout: Keep global self-hosted and production session configuration unchanged; exercise sandbox and test clocks only in the final approved M14 canary.
         rollback: Disable new session creation preserve subscription evidence and existing loyalty access.
         verification:
-          - 14 strict billing contract cases and 9 focused server/provider orchestration cases including a loopback Stripe sink
+          - 14 strict billing contract cases and 12 focused server/provider orchestration cases including a loopback Stripe sink and post-provider hold regressions
           - 55 managed-session pgTAP assertions for grants RLS tenancy immutability minimization exact retry historical Price authority holds and zero ledger effects
           - nineteenth two-session concurrency probe for exact reservation exact customer binding changed-plan races one-account convergence and zero ledger effects
           - production-rendered desktop/mobile owner/read-only/unavailable browser review with navigation focus English-only reflow and zero diagnostics
@@ -3299,6 +3300,7 @@ tasks:
       [
         docs/plan/evidence/M16/README.md,
         docs/plan/evidence/M16/continuous-improvement.yaml,
+        docs/plan/evidence/M16/integration-review-2026-08-27.md,
         infrastructure/governance/continuous-improvement.yaml,
         exact implementation and evidence head 88a9ef023a8e30c52a8728cc89fc026ba7514b8e passed CI run 33071504559 Security run 33071504623 and external CodeQL with all eleven checks green,
         delivery-chain audit found every open roadmap PR from 29 through 56 merge-clean with zero failed or pending checks after exact-head repairs to PRs 29 30 31 32 and 42,
