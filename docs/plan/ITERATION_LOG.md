@@ -1,5 +1,12 @@
 # Iteration Log
 
+## 2026-08-27 — M11 semantic production-evidence hardening
+
+- Reproduced a false-proof path in the completion fixture: every verified ecosystem artifact closed with only `{ fixture: true, mutationCount: 0 }`, so path and digest integrity did not prove topology, identity, currency, API, webhook, value, rollback, or observation outcomes.
+- Added nine exact minimized detail schemas with distinct release/recovery/baseline digests, unique per-check evidence digests, bounded counts and latency/capacity measurements, and zero-difference authority/value assertions.
+- Approved pilot scope, rate policy, and value ceiling bind approval to canary journal. Distinct control scope, observed value totals, and every topology/identity/provider/credential/API/webhook lifecycle count bind journal to reconciliation; quota and outage counts bind observation. Final approval binds the release and every other artifact. Canonical UTC chronology requires release/recovery/baseline/approvals before canary, rollback after canary end, at least 24 hours of covering observation, and final approval after all evidence.
+- Added positive and adversarial fixtures for hollow/extra fields, impossible manifest time, currency drift, changed approval scope, journal/reconciliation/observation count mismatch, artifact rebinding, late release/approval, early rollback, observation ledger drift, and short observation. Production, checkout, credentials, providers, customer value, and deployment remain unchanged.
+
 ## 2026-08-27 — M12 semantic production-evidence hardening
 
 - Reproduced a false-proof path: replacing the verified migration read-only artifact's complete observations with `{}` and rebinding its exact SHA-256 digest still left all eleven current M12 controls passing.

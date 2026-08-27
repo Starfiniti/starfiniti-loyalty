@@ -1903,7 +1903,8 @@ tasks:
           - controlled outage rollback and observation evidence with zero unexplained reconciliation difference
         evidence:
           - integrated exact-head CI run 33101922228 and Security run 33101922223 passed at f171770 with all eleven checks green
-          - docs/plan/evidence/M11/canary.yaml records 44 checks four approvals nine path and digest bound production artifacts fixed automatic failures and deterministic false-completion self-tests
+          - docs/plan/evidence/M11/canary.yaml records 44 checks four approvals nine path digest and semantic bound production artifacts fixed automatic failures and deterministic false-completion self-tests
+          - docs/plan/evidence/M11/ARTIFACT_CONTRACT.md defines exact topology identity currency API webhook value reconciliation approval chronology rollback and observation evidence
           - eleven repository and read-only controls pass at provisional score 90 while approved provider deployment canaries reconciliation rollback observation and the operability floor remain pending
           - docs/plan/evidence/M11/canary.yaml
           - docs/plan/evidence/M11/README.md
