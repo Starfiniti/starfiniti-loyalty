@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(59);
+select plan(60);
 
 grant loyalty_runtime, loyalty_worker to current_user;
 grant usage on schema extensions to loyalty_runtime, loyalty_worker;
@@ -539,7 +539,7 @@ select throws_ok($$
 $$, '22023', 'managed billing usage correction period invalid',
   'provider correction timestamp cannot drift from its immutable UTC period');
 
--- 53-59: tenant summary, privacy, immutability, and final zero-ledger proof.
+-- 53-60: tenant summary, privacy, immutability, and final zero-ledger proof.
 set local role authenticated;
 select set_config('request.jwt.claim.sub',
   'c1000000-0000-4000-8000-000000000001', true);
@@ -560,6 +560,22 @@ select results_eq($$
     '2041-01-01 00:00:00+00', '2041-01-05 00:04:00+00'
   )
 $$, array[0::bigint], 'membership cannot read another tenant usage summary');
+reset role;
+select loyalty_private.record_managed_billing_provider_configuration_v1(
+  false, false, '2041-01-05 00:04:01+00', 'operator:m14',
+  'Disable provider after usage projection test',
+  'c1000000-0000-4000-8000-000000000504');
+set local role authenticated;
+select set_config('request.jwt.claim.sub',
+  'c1000000-0000-4000-8000-000000000001', true);
+select results_eq($$
+  select usage_summary ->> 'dispatchMode'
+  from loyalty.get_my_managed_billing_usage_summary_v1(
+    'c1000000-0000-4000-8000-000000000100',
+    '2041-01-01 00:00:00+00', '2041-01-05 00:04:02+00'
+  )
+$$, array['shadow'::text],
+  'disabled effective provider configuration returns usage to shadow mode');
 reset role;
 select results_eq($$
   select count(*)::bigint

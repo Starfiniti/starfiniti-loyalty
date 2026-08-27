@@ -1171,7 +1171,17 @@ begin
   order by account.effective_from desc, account.id desc
   limit 1;
 
-  if target_live_mode is not null and (
+  if target_live_mode is not null
+    and coalesce((
+      select candidate.enabled
+        and candidate.live_mode = target_live_mode
+      from loyalty_private.managed_billing_provider_configuration_versions
+        as candidate
+      where candidate.effective_from <= target_at
+      order by candidate.effective_from desc, candidate.id desc
+      limit 1
+    ), false)
+    and (
     select pg_catalog.count(distinct current_meter.meter_key)
     from (
       select distinct on (meter.meter_key) meter.meter_key, meter.enabled

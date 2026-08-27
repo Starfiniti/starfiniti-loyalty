@@ -82,7 +82,7 @@ Immediately before each customer or session request, `authorize_managed_billing_
 
 ## Managed usage contracts V1
 
-`ManagedBillingUsageSummaryV1` contains one exact UTC month, measurement time, `shadow` or `configured` dispatch mode, and exactly four reviewed meters: orders ingested, ledger-active members, delivered messages, and accepted Service API commands. Quantities and queue counts are decimal strings so JavaScript never narrows PostgreSQL integers. The public projection contains no provider customer, event name, source identity, contact, Price, payload, or response evidence.
+`ManagedBillingUsageSummaryV1` contains one exact UTC month, measurement time, `shadow` or `configured` dispatch mode, and exactly four reviewed meters: orders ingested, ledger-active members, delivered messages, and accepted Service API commands. `configured` requires a current account, all four effective meters, and an enabled provider configuration for the same mode; otherwise the projection stays `shadow`. Quantities and queue counts are decimal strings so JavaScript never narrows PostgreSQL integers. The public projection contains no provider customer, event name, source identity, contact, Price, payload, or response evidence.
 
 PostgreSQL derives one immutable private fact for each reviewed source identity. A duplicate source creates no second fact. A correction is a non-zero compensating fact linked to the original, retains a provider timestamp inside the original UTC period, and cannot make cumulative usage for one source negative. Facts, corrections, provider attempts, and dispatch identity are immutable and create no loyalty ledger effect.
 
