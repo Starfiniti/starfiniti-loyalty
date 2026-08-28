@@ -581,6 +581,10 @@ select wallet.organization_id, wallet.programme_group_id, version.id, wallet.id,
   'rose', 'rose', 'upgrade', 5000, now(), 'member-tier',
   extensions.digest('member-tier', 'sha256'), '{}'::jsonb
 from loyalty.wallets as wallet
+join loyalty.customers as customer
+  on customer.organization_id = wallet.organization_id
+ and customer.id = wallet.customer_id
+ and customer.public_id = '8c000000-0000-4000-8000-000000000150'
 join loyalty.programme_versions as version
   on version.organization_id = wallet.organization_id
  and version.programme_group_id = wallet.programme_group_id
@@ -601,6 +605,10 @@ select wallet.organization_id, wallet.programme_group_id, version.id, wallet.id,
   reward.id, reward.cost_points, 'issued', 'member-reservation',
   extensions.digest('member-reservation', 'sha256'), now() + interval '1 day'
 from loyalty.wallets as wallet
+join loyalty.customers as customer
+  on customer.organization_id = wallet.organization_id
+ and customer.id = wallet.customer_id
+ and customer.public_id = '8c000000-0000-4000-8000-000000000150'
 join loyalty.programme_versions as version
   on version.organization_id = wallet.organization_id
  and version.programme_group_id = wallet.programme_group_id
