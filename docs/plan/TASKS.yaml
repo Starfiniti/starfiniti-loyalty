@@ -3128,7 +3128,7 @@ tasks:
         status: in_progress
         dependencies: [M15-S01-CAPACITY-ENVELOPE]
         hypothesis: A digest-bound controller that begins before provisioning and refuses public or production routing can measure full database identity application signing privacy and value recovery without turning a disposable drill into production authority.
-        baseline: PostgreSQL base/WAL backup and one isolated database-only PITR drill exist, but application Authentik Supabase Auth configuration signing escrow privacy replay full-service RTO repeatability and clean teardown remain unproved.
+        baseline: PostgreSQL base/WAL backup and one isolated database-only PITR drill exist, but the live off-host archive shares a Borg repository with the long whole-VM sequence and its hourly retention can thin recent recovery points below the target; dedicated-repository rollout plus application Authentik Supabase Auth configuration signing escrow privacy replay full-service RTO repeatability and clean teardown remain unproved.
         targets:
           [
             authoritative PostgreSQL RPO at or below 300 seconds from a fresh pre-failure source marker,
@@ -3148,6 +3148,7 @@ tasks:
           [
             a clean exact commit and short approval bind the canonical plan source inventory target marker Compose project and driver digests,
             base integrity and continuous WAL replay reach the exact target with no missing segment corruption or timeline ambiguity,
+            the off-host PostgreSQL repository lock cache retention and restore evidence are independent from whole-VM backup duration preserve every archive inside the 48-hour recent window and prove fresh-archive-anchored bounded maintenance creates no interval above the recovery target,
             migrations extensions schemas RLS grants roles immutable ledger projections queues and committed facts reconcile exactly,
             Supabase Auth and Authentik restore and complete a fresh brokered login while cross-tenant and stale access fail closed,
             exact application images configuration signing references provider-secret fingerprints and privacy replay reconcile before test access,
@@ -3161,6 +3162,7 @@ tasks:
             an idle database timestamp or stale source marker understates recoverable data loss,
             a base passes superficial extraction without transfer compression manifest and pg_verifybackup validation,
             WAL history is incomplete corrupt or replays to a different target or timeline,
+            whole-VM repository contention or hourly retention creates an unobserved off-host recovery gap,
             database readiness is reported as full-service recovery while Auth application signing privacy or value paths fail,
             restored tenant authority differs from live membership and RLS or stale credentials remain authoritative,
             privacy actions newer than the restore target are exposed before replay,
@@ -3183,6 +3185,9 @@ tasks:
             scripts/run-clean-room-recovery.mjs,
             scripts/validate-clean-room-recovery-evidence.mjs,
             docs/architecture/ADR/0065-digest-bound-full-service-clean-room-recovery.md,
+            docs/architecture/ADR/0071-dedicated-postgresql-borg-repository.md,
+            infrastructure/environments/proxmox/scripts/starfiniti-loyalty-postgres-borg,
+            infrastructure/environments/proxmox/scripts/starfiniti-loyalty-postgres-borg-maintain,
             docs/operations/BACKUP_RESTORE.md,
           ]
       - id: M15-S05-OPERATIONS-AND-INCIDENTS
@@ -3210,6 +3215,7 @@ tasks:
             the exact catalogue rules routing policy and locked Grafana dashboard validate and every alert maps to a bounded signal owner route severity runbook and summary,
             telemetry contains no tenant customer order coupon credential token payload or correlation labels and missing time series never become healthy zero,
             backup amplification detects both more than four-times changed-byte transfer and more than one GiB without relying on cumulative VM counters,
+            archive-age and retention evidence fail when PostgreSQL resolves to the whole-VM repository or any recent recovery interval exceeds the declared bound,
             production sources routes dashboards owners and last-known-good reload behavior bind to exact candidate and asset digests,
             an independently hosted dead-man switch pages when the monitoring plane itself stops,
             protected pages reach two independent destinations and prove acknowledgement escalation repeat inhibition safety and handoff timing,

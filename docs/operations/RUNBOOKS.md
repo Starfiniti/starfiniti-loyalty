@@ -63,7 +63,7 @@ Use the incident state machine and communication policy in `INCIDENT_MANAGEMENT.
 **Detect:** WAL archive lag over five minutes, missing/corrupt segment, failed archive, or verified base backup older than one day. **Owner:** `recovery-on-call`.
 
 1. Declare a protected-value incident at an RPO breach. Preserve the last successful segment/base fingerprint and failure evidence.
-2. Inspect archive destination availability, continuity, permissions, capacity, exact pinned backup units, and the shared Borg lock owner without exposing paths or credentials broadly. Lock timeout status 75 means no incremental archive was created; do not reinterpret a later timer retry or older archive as success.
+2. Inspect archive destination availability, continuity, permissions, capacity, exact pinned backup units, and the dedicated PostgreSQL Borg lock owner without exposing paths or credentials broadly. If a whole-VM process owns that lock or both jobs resolve to one repository, fail the configuration and keep recovery status non-passing. Lock timeout status 75 means no incremental archive was created; maintenance timeout status 124 means check/prune/compact did not complete. Do not reinterpret a later timer retry, older archive, or partial maintenance trace as success.
 3. Do not delete the last known-good base/WAL chain or claim recovery from a successful timer alone.
 4. Resume archiving, verify continuity and integrity, then schedule an approved isolated restore. RPO/RTO claims require clean-room evidence.
 
@@ -73,8 +73,8 @@ Use the incident state machine and communication policy in `INCIDENT_MANAGEMENT.
 
 1. Stop only the offending backup transfer after identifying the exact unit/process. Do not stop PostgreSQL or remove the source backup chain.
 2. Compare guest transmit, bridge receive, physical-uplink transmit, disk read, changed-byte estimate, and transferred-byte total. Cumulative VM counters are not rates.
-3. Confirm the active stage is the restricted incremental implementation. A full tar/stream loop or timestamped rollback copy must never be executable by a timer.
-4. Run one bounded manual incremental cycle, verify source/destination totals and Borg archive, then resume the timer. Retain aggregate start/end counters and amplification ratio.
+3. Confirm the active stage is the restricted incremental implementation and the PostgreSQL repository/lock differ from the whole-VM repository/lock. A full tar/stream loop or timestamped rollback copy must never be executable by a timer.
+4. Run one bounded manual incremental cycle, verify source/destination totals and the exact dedicated Borg archive, then resume the timer. Retain aggregate start/end counters and amplification ratio.
 
 ## OPS-009 — Ledger mismatch
 

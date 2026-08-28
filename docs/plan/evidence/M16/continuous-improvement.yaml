@@ -1,6 +1,6 @@
 schema: starfiniti.continuous-improvement.v1
 status: in_progress
-observedAt: 2026-08-27T14:20:00Z
+observedAt: 2026-08-28T01:10:00Z
 candidate:
   branch: codex/m16-continuous-improvement
   commit: c84e8361ccd58f52fac9d1bbdbe49a787fa9f992
@@ -10,7 +10,7 @@ plan:
   sha256: 4fc9c72e0bf4d2cb216c135bd7565ee153cd1c1e77689ecb19056138f82adc37
 backlog:
   path: docs/plan/IMPROVEMENT_BACKLOG.yaml
-  sha256: 1be9ed681216b83b676653a8adea65c0a3bbbaa662c80f6f2dd3705a39a3fef3
+  sha256: 4dcfc51ed6fc58ee286373efdae44fb6c197bd8a380ab0d9c9cd8caa4da99475
 artifacts:
   monthlyReviewPrimaryPath: null
   monthlyReviewPrimarySha256: null

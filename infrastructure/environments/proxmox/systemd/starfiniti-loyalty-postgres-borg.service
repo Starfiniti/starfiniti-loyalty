@@ -13,11 +13,11 @@ UMask=0077
 PrivateTmp=true
 ProtectHome=read-only
 ProtectSystem=full
-Environment=BORG_CACHE_DIR=/var/cache/starfiniti-borg
-Environment=BORG_SECURITY_DIR=/var/lib/starfiniti-borg/security
-CacheDirectory=starfiniti-borg
+Environment=BORG_CACHE_DIR=/var/cache/starfiniti-postgres-borg
+Environment=BORG_SECURITY_DIR=/var/lib/starfiniti-postgres-borg/security
+CacheDirectory=starfiniti-postgres-borg
 CacheDirectoryMode=0700
-StateDirectory=starfiniti-borg starfiniti-postgres-backup-stage
+StateDirectory=starfiniti-postgres-borg starfiniti-postgres-backup-stage
 StateDirectoryMode=0700
 ReadWritePaths=/run/lock
 TimeoutStartSec=30m

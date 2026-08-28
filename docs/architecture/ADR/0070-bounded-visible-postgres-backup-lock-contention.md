@@ -1,6 +1,6 @@
 # ADR-0070: Bound and expose PostgreSQL backup lock contention
 
-- Status: Accepted
+- Status: Superseded by ADR-0071 for repository ownership; bounded visible failure retained
 - Date: 2026-08-28
 
 ## Context

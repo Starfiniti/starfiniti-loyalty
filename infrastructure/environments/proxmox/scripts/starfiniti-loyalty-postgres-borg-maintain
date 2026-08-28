@@ -4,7 +4,7 @@ set -Eeuo pipefail
 umask 077
 
 fail() {
-  printf 'starfiniti-loyalty-postgres-borg: %s\n' "$*" >&2
+  printf 'starfiniti-loyalty-postgres-borg-maintain: %s\n' "$*" >&2
   exit 1
 }
 
@@ -21,7 +21,6 @@ source "$config_file"
 : "${BORG_RSH:?BORG_RSH is required}"
 : "${BORG_PASSCOMMAND:?BORG_PASSCOMMAND is required}"
 : "${BORG_REMOTE_PATH:?BORG_REMOTE_PATH is required}"
-: "${BORG_COMPRESSION:?BORG_COMPRESSION is required}"
 
 readonly whole_vm_borg_repo="$BORG_REPO"
 [[ "$STARFINITI_POSTGRES_BORG_REPO" != "$whole_vm_borg_repo" ]] ||
@@ -38,28 +37,45 @@ export BORG_REPO BORG_RSH BORG_PASSCOMMAND
 export BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK=no
 export BORG_RELOCATED_REPO_ACCESS_IS_OK=no
 
-readonly guest_host="${STARFINITI_POSTGRES_GUEST_HOST:-10.10.10.71}"
-readonly stage_root="${STARFINITI_POSTGRES_STAGE_ROOT:-/var/lib/starfiniti-postgres-backup-stage}"
 readonly lock_file="${STARFINITI_POSTGRES_BORG_LOCK_FILE:-/run/lock/starfiniti-loyalty-postgres-borg.lock}"
-readonly lock_wait_seconds="${STARFINITI_POSTGRES_BORG_LOCK_WAIT_SECONDS:-120}"
+readonly lock_wait_seconds="${STARFINITI_POSTGRES_BORG_MAINTENANCE_LOCK_WAIT_SECONDS:-10}"
+readonly command_timeout_seconds="${STARFINITI_POSTGRES_BORG_MAINTENANCE_COMMAND_TIMEOUT_SECONDS:-15}"
+readonly check_max_duration_seconds="${STARFINITI_POSTGRES_BORG_CHECK_MAX_DURATION_SECONDS:-8}"
 readonly whole_vm_lock_file="/run/lock/starfiniti-pve-borg.lock"
 
 [[ "$lock_file" != "$whole_vm_lock_file" ]] ||
-  fail "PostgreSQL backup must not use the whole-VM repository lock"
+  fail "PostgreSQL maintenance must not use the whole-VM repository lock"
 
-[[ "$lock_wait_seconds" =~ ^[1-9][0-9]{0,2}$ ]] &&
-  ((lock_wait_seconds <= 120)) ||
-  fail "lock wait must be an integer from 1 through 120 seconds"
+[[ "$lock_wait_seconds" =~ ^[1-9][0-9]?$ ]] &&
+  ((lock_wait_seconds <= 10)) ||
+  fail "maintenance lock wait must be an integer from 1 through 10 seconds"
 
-for command_name in borg flock install jq rsync; do
+[[ "$command_timeout_seconds" =~ ^[1-9][0-9]?$ ]] &&
+  ((command_timeout_seconds <= 15)) ||
+  fail "maintenance command timeout must be an integer from 1 through 15 seconds"
+
+[[ "$check_max_duration_seconds" =~ ^[1-9][0-9]?$ ]] &&
+  ((check_max_duration_seconds <= 8)) ||
+  fail "repository check duration must be an integer from 1 through 8 seconds"
+
+for command_name in borg flock jq timeout; do
   command -v "$command_name" >/dev/null 2>&1 || fail "required command is missing: $command_name"
 done
+
+run_borg_bounded() {
+  timeout \
+    --foreground \
+    --signal=INT \
+    --kill-after=10s \
+    "${command_timeout_seconds}s" \
+    borg "$@"
+}
 
 verify_repository_identity() {
   local actual_repository_id
 
   actual_repository_id="$(
-    borg info \
+    run_borg_bounded info \
       --remote-path "$BORG_REMOTE_PATH" \
       --json \
       --lock-wait "$lock_wait_seconds" \
@@ -71,33 +87,6 @@ verify_repository_identity() {
     fail "dedicated PostgreSQL Borg repository identity does not match approved configuration"
 }
 
-install -d -m 0700 "$stage_root"
-
-# The remote forced command exposes only a read-only rrsync view. Rsync writes
-# each immutable file atomically on the Proxmox host, preserves timestamps for
-# Borg's files cache, and removes local staging files only after the source no
-# longer retains them. It never deletes or writes a file on the database VM.
-export RSYNC_RSH="ssh -i /root/.ssh/starfiniti-loyalty-backup-pull -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=/etc/starfiniti-backup/loyalty-guest-known-hosts"
-rsync \
-  --archive \
-  --chmod=D700,F600 \
-  --chown=root:root \
-  --compress-choice=zstd \
-  --compress-level=3 \
-  --delete-delay \
-  --exclude='*.partial' \
-  --ignore-existing \
-  --stats \
-  --timeout=120 \
-  "vault-admin@${guest_host}:/" \
-  "$stage_root/"
-
-if [[ ! -d "$stage_root/base" || ! -d "$stage_root/wal" ]]; then
-  fail "staged backup set unavailable"
-fi
-
-# Staging does not access the Borg repository and must continue even while
-# retention owns the repository. Only the repository write is serialized.
 exec 9>"$lock_file"
 flock \
   --exclusive \
@@ -106,24 +95,40 @@ flock \
   9 || {
   lock_status=$?
   readonly lock_status
-  printf 'starfiniti-loyalty-postgres-borg: dedicated repository lock unavailable after %s seconds; incremental archive not created\n' "$lock_wait_seconds" >&2
+  printf 'starfiniti-loyalty-postgres-borg-maintain: dedicated repository lock unavailable after %s seconds; retention not run\n' "$lock_wait_seconds" >&2
   exit "$lock_status"
 }
 
 verify_repository_identity
 
-stamp=$(date -u +%Y%m%dT%H%M%SZ)
-readonly archive="loyalty-postgres-$stamp"
-
-ionice -c2 -n7 nice -n 10 borg create \
+# Keep every recent archive so daily retention cannot silently turn a
+# five-minute off-host recovery target into an hourly one. Older archives use
+# bounded daily/monthly tiers. Validate repository structure before destructive
+# retention. Borg 1.2+ then requires a separate compact operation to reclaim
+# chunks after prune.
+run_borg_bounded check \
   --remote-path "$BORG_REMOTE_PATH" \
   --lock-wait "$lock_wait_seconds" \
-  --compression "$BORG_COMPRESSION" \
-  --files-cache ctime,size,inode \
-  --one-file-system \
+  --repository-only \
+  --max-duration "$check_max_duration_seconds" \
   --show-rc \
-  --stats \
-  "${BORG_REPO}::${archive}" \
-  "$stage_root"
+  "$BORG_REPO"
 
-printf 'starfiniti-loyalty-postgres-borg: created %s\n' "$archive"
+run_borg_bounded prune \
+  --remote-path "$BORG_REMOTE_PATH" \
+  --lock-wait "$lock_wait_seconds" \
+  --list \
+  --show-rc \
+  --glob-archives 'loyalty-postgres-*' \
+  --keep-within 48h \
+  --keep-daily 35 \
+  --keep-monthly 12 \
+  "$BORG_REPO"
+
+run_borg_bounded compact \
+  --remote-path "$BORG_REMOTE_PATH" \
+  --lock-wait "$lock_wait_seconds" \
+  --show-rc \
+  "$BORG_REPO"
+
+printf 'starfiniti-loyalty-postgres-borg-maintain: retention and compaction completed\n'

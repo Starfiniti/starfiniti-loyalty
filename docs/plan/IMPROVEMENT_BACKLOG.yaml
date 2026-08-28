@@ -1,11 +1,24 @@
 schema: starfiniti.improvement-backlog.v1
 version: 1
-observedAt: 2026-08-27T14:00:00Z
+observedAt: 2026-08-28T01:05:00Z
 ranking:
   formula: severityPoints + (2 * merchantImpact) + (2 * customerImpact) + confidence - effort - dependencyPenalty
   severityPoints: { critical: 40, high: 30, medium: 20, low: 10 }
   sort: [score-descending, id-ascending]
 items:
+  - id: IMP-009
+    title: Isolate PostgreSQL off-host recovery from whole-VM Borg serialization
+    severity: critical
+    merchantImpact: 10
+    customerImpact: 10
+    effort: 5
+    confidence: 10
+    dependencyPenalty: 6
+    score: 79
+    status: blocked_external
+    evidence: docs/plan/evidence/M01/backup-transfer-amplification-2026-08-14.md
+    dependency: Approved dedicated repository provisioning, recovery-material escrow, timer and retention canary, and isolated restore window.
+    ownerInput: Operations owner approves production backup configuration change and independent recovery review.
   - id: IMP-002
     title: Deploy protected production monitoring and independent incident routes
     severity: critical
