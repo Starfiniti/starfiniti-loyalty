@@ -194,6 +194,16 @@ jobs:
           done
           docker logs starfiniti-dast-target
           exit 1
+      - name: Enforce dashboard response security headers
+        shell: bash
+        run: |
+          headers="$(docker exec starfiniti-dast-target wget --server-response --spider http://127.0.0.1:3000/login 2>&1)"
+          printf '%s\n' "$headers" | grep -Eiq "^[[:space:]]+Content-Security-Policy:.*script-src 'self' 'nonce-[A-Za-z0-9+/]{48}' 'strict-dynamic'.*frame-ancestors 'none'"
+          printf '%s\n' "$headers" | grep -Eiq "^[[:space:]]+X-Frame-Options:[[:space:]]+DENY"
+          printf '%s\n' "$headers" | grep -Eiq "^[[:space:]]+X-Content-Type-Options:[[:space:]]+nosniff"
+          if printf '%s\n' "$headers" | grep -Eiq "script-src[^;]*'unsafe-inline'"; then
+            exit 1
+          fi
       - name: Run bounded ZAP Automation Framework scan
         shell: bash
         run: |

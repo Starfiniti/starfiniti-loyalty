@@ -3302,7 +3302,7 @@ tasks:
         status: in_progress
         dependencies: [M15-S01-CAPACITY-ENVELOPE]
         hypothesis: Exact deployable-image scans isolated dynamic testing SBOMs provenance and independent review expose release risk without granting a scanner production mutation authority.
-        baseline: Baseline tests production npm audit secret scan licence inventory and pinned container builds exist without CodeQL deployable-image SBOM provenance DAST or independent penetration-test evidence.
+        baseline: Baseline tests production npm audit secret scan licence inventory and pinned container builds exist without CodeQL deployable-image SBOM provenance DAST strict application-owned response headers or independent penetration-test evidence.
         targets:
           [
             zero unresolved Critical or High finding across automated and independent sources,
@@ -3322,6 +3322,7 @@ tasks:
             the worker image imports only its exact external nodemailer postgres and zod packages and carries no root-workspace dependency tree,
             dashboard and worker SBOMs reconcile to exact image digests,
             bounded disposable ZAP scan passes with no High alert and retained report,
+            the deployable dashboard returns a fresh nonce-bound script policy plus application-owned framing and MIME controls,
             tagged release checksum and file plus image attestations verify,
             production review and independent penetration test have zero unresolved Critical or High issue,
             development-only R-032 is resolved and the full development audit passes,
@@ -3331,6 +3332,7 @@ tasks:
             scanner action image or database input is mutable or stale,
             development risk is hidden by a production-only result,
             dynamic scan reaches production or retains a mutable target,
+            response protection exists only at an assumed reverse proxy or permits unsafe inline script,
             release SBOM does not match the published image,
             a deterministic finding is suppressed by severity exclusion or blanket waiver,
             penetration scope or remediation retest is incomplete,
@@ -3349,6 +3351,7 @@ tasks:
           [
             docs/plan/evidence/M15/security.yaml,
             docs/architecture/ADR/0064-deployable-artifact-security-and-isolated-dast.md,
+            docs/architecture/ADR/0082-request-bound-dashboard-content-security-policy.md,
             docs/operations/SECURITY_SCANNING.md,
             infrastructure/testing/security/trivy.yaml,
           ]

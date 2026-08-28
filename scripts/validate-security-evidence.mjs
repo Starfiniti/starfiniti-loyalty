@@ -41,6 +41,7 @@ const requiredChecks = new Set([
   "dashboard_sbom",
   "worker_sbom",
   "disposable_dast",
+  "dashboard_response_security_headers",
   "scanner_database_freshness",
   "release_sbom_verification",
   "release_file_attestations",

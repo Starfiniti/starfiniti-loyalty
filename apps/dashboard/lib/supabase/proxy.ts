@@ -73,8 +73,15 @@ export function unauthenticatedLoginTarget(source: URL): URL {
 
 export async function updateSupabaseSession(
   request: NextRequest,
+  forwardedHeaders?: Headers,
 ): Promise<NextResponse> {
-  const requestHeaders = localeRequestHeaders(request);
+  const requestHeaders = forwardedHeaders
+    ? new Headers(forwardedHeaders)
+    : localeRequestHeaders(request);
+  requestHeaders.set(
+    REQUEST_LOCALE_HEADER,
+    resolveMerchantLocale(request.nextUrl.searchParams.get("lang")),
+  );
   if (request.nextUrl.pathname === "/auth/callback") {
     const callbackResponse = NextResponse.next({
       request: { headers: requestHeaders },
@@ -108,7 +115,7 @@ export async function updateSupabaseSession(
           request.cookies.set(name, value),
         );
         response = NextResponse.next({
-          request: { headers: localeRequestHeaders(request) },
+          request: { headers: requestHeaders },
         });
         cookiesToSet.forEach(({ name, value, options }) =>
           response.cookies.set(name, value, options),

@@ -1,5 +1,12 @@
 # Iteration Log
 
+## 2026-08-28 — Deployable dashboard response security
+
+- Reconstructed the latest exact-head Security artifacts instead of relying on their green High/Critical threshold. The bounded ZAP report contained two real Medium findings on four document responses: missing Content Security Policy and missing anti-clickjacking protection. The 30 other Medium items were reciprocal image-licence obligations, not vulnerabilities.
+- Compared edge-only headers, a static `unsafe-inline` policy, experimental webpack-only SRI, and request nonces. ADR-0082 selects the supported Next.js 16 Proxy nonce flow because the App Router is already dynamic and the repository builds with Turbopack.
+- The candidate forwards one bounded fresh nonce and strict policy through Supabase response recreation, denies cross-origin browser authority, frames, objects, and framing ancestors, and applies framing, MIME, referrer, capability, and sandbox controls at the application boundary. Production script never permits `unsafe-inline` or `unsafe-eval`; the remaining narrow inline-style-attribute allowance is explicit.
+- Ten focused tests, the production build, workflow/security validators, and a real Chromium production-server smoke pass. The browser saw the exact nonce on every framework script, no initial console/page/resource failure, and blocked a prohibited cross-origin connection. The isolated workflow now inspects the real container response before ZAP. Fresh exact-head Linux Security evidence remains required; no production image, edge, route, tenant, checkout path, or loyalty value changed.
+
 ## 2026-08-28 — Fail-closed self-hosted Supabase compatibility
 
 - Reconstructed production VM 971 read-only after the transfer-loop revalidation and compared its exact Supabase release provenance, Compose bytes, mounted assets, environment boundaries, services, platform image IDs, and health with official `self-hosted/v0.8.0` source and 2026 Supabase breaking-change notices. The live source differs from upstream only by the four reviewed asymmetric-JWKS mappings; all fifteen critical mounted assets and eleven required services match the captured `linux/amd64` inventory.

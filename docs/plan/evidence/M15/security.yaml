@@ -11,7 +11,7 @@ candidate:
 inputs:
   securityWorkflow:
     path: .github/workflows/security.yml
-    sha256: a316ad8e84944202e977beb7ea5e63f4c15264107d950041b3c88dde47b672e0
+    sha256: 1c47888084b794adf5c6acfaa9442b6e334893e2d4861a642751d17ee219b301
   releaseWorkflow:
     path: .github/workflows/release.yml
     sha256: 379bd17a50780ff043af30d724c1b51d1774a12d8d10c4cc5ba282a7ad434892
@@ -84,6 +84,9 @@ checks:
   - id: disposable_dast
     status: passed
     evidence: Security run 33057428402 completed bounded ZAP 2.17.0 against one internal no-port disposable target with zero High alert; artifact 9640284697 has archive digest 1f2f720069b94be9ad6f148a470627346a60c0ddbe3711967458fbf4998f8705 and report SHA-256 cbfc112cff41ae1c50c8f542ab4a2f3daae1f020e97b7f4c6ac4a60bd3cd75df.
+  - id: dashboard_response_security_headers
+    status: pending
+    evidence: ADR-0082 adds request-bound nonce CSP plus framing and MIME controls at the deployable dashboard boundary; a fresh exact-head isolated workflow run must prove the real response and remove the two prior Medium ZAP findings.
   - id: scanner_database_freshness
     status: pending
     evidence: CodeQL Trivy ZAP and package-advisory databases must be current inside the approved evidence age at final review.
@@ -127,6 +130,7 @@ automaticFails:
   - An SBOM is missing malformed generated from a different image or cannot be reconciled to the released image and candidate commit.
   - Release files or container images lack verifiable repository-scoped provenance for their exact checksum or registry digest.
   - The dynamic scanner can route outside its internal disposable Docker network or can reach any public staging or production origin.
+  - The deployable dashboard omits CSP framing or MIME controls permits unsafe-inline script or relies on an unverified reverse proxy to add them.
   - The dynamic scan receives authentication secrets customer data provider credentials production configuration or a mutable value-bearing database.
   - The disposable target publishes a host port uses host networking omits cleanup or survives a failed or cancelled security workflow.
   - ZAP does not complete bounded spider passive active report and exit jobs or reports any unresolved High alert.

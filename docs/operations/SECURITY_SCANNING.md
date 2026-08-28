@@ -54,6 +54,8 @@ Run these commands in a new empty directory. Treat the downloaded files and scan
 - Low/Informational: review for systemic patterns and convert recurring findings into tests or configuration controls.
 - False positive: retain scanner/rule/version, exact artifact digest, technical reproduction, reviewer, expiry, and regression check. Blanket or path-wide suppression is prohibited.
 
+The dashboard enforces ADR-0082 at the deployable-container boundary. Each document response receives a fresh nonce-bound script policy from Next.js Proxy; all responses deny framing and MIME sniffing, and API responses receive a non-executable sandbox policy. The isolated Security job checks the real response before ZAP. A reverse proxy may add stricter controls, but it cannot substitute for or weaken the application policy.
+
 R-032 was development-only but still High. The candidate upgrades `@wordpress/env` from 11.8.0 to 11.14.0, removes vulnerable `extract-zip`, installs patched `adm-zip` 0.6.0, and produces a zero-vulnerability complete npm audit. R-032 closes only after the exact candidate also passes all four Linux WooCommerce runtime cells.
 
 ## External completion evidence
