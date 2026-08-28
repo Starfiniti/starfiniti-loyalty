@@ -253,8 +253,8 @@ requireCondition(
 requireCondition(
   Object.keys(securityWorkflow?.jobs ?? {})
     .sort()
-    .join(",") === "codeql,dast,supply-chain",
-  `${securityWorkflowPath}: exact CodeQL supply-chain and DAST jobs are required`,
+    .join(",") === "codeql,dast,recovery-transport,supply-chain",
+  `${securityWorkflowPath}: exact CodeQL supply-chain recovery-transport and DAST jobs are required`,
 );
 
 for (const [jobName, job] of Object.entries(securityWorkflow?.jobs ?? {})) {
@@ -458,6 +458,52 @@ requireCondition(
       step.with?.["if-no-files-found"] === "error",
   ),
   `${securityWorkflowPath}: minimized review reports and SBOMs must upload even when enforcement fails`,
+);
+
+const recoveryTransportSteps =
+  securityWorkflow.jobs["recovery-transport"].steps;
+const recoveryTransportText = recoveryTransportSteps
+  .map((step) => step.run ?? "")
+  .join("\n");
+requireCondition(
+  recoveryTransportSteps.some(
+    (step) =>
+      step.uses ===
+        "actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444" &&
+      step.with?.["node-version"] === 24 &&
+      step.with?.cache === "npm",
+  ) &&
+    recoveryTransportSteps.some((step) => step.run === "npm ci") &&
+    recoveryTransportSteps.some(
+      (step) => step.run === "npm run recovery-transport:validate",
+    ) &&
+    recoveryTransportSteps.some(
+      (step) =>
+        step.run ===
+        "npm run recovery-transport:run -- --out dist/recovery-transport/ci.json",
+    ),
+  `${securityWorkflowPath}: recovery transport must validate and execute the exact repository plan`,
+);
+requireCondition(
+  recoveryTransportSteps.some(
+    (step) =>
+      step.name === "Upload minimized recovery transport evidence" &&
+      step.if === "always()" &&
+      step.uses ===
+        "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a" &&
+      step.with?.name === "security-recovery-transport-${{ github.sha }}" &&
+      step.with?.path === "dist/recovery-transport/ci.json" &&
+      step.with?.["if-no-files-found"] === "error" &&
+      step.with?.["retention-days"] === 30,
+  ),
+  `${securityWorkflowPath}: minimized exact-head recovery transport evidence must upload or fail`,
+);
+requireCondition(
+  !recoveryTransportText.includes("--publish") &&
+    !recoveryTransportText.includes("--network host") &&
+    !recoveryTransportText.includes("production") &&
+    !recoveryTransportText.includes("ssh"),
+  `${securityWorkflowPath}: recovery transport canary must not publish ports or name production access`,
 );
 
 const dastText = securityWorkflow.jobs.dast.steps

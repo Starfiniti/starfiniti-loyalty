@@ -3,6 +3,7 @@
 - Status: Accepted
 - Date: 2026-08-28
 - Extends: ADR-0013 and ADR-0071
+- Extended by: ADR-0073
 
 ## Context
 
@@ -43,7 +44,7 @@ The undeployed ADR-0071 archive controller validates its configured rsync execut
 
 The database-VM forced exporter performs the same version comparison against the fixed `/usr/bin/rsync`, requires root ownership and no group/other write bit for both `/usr/bin/rsync` and `/usr/bin/rrsync`, verifies their complete parent chains, and requires the installed restricted wrapper to contain the upstream `--confine-root` integration. It clears the inherited environment except for a fixed system path, C locale, and the one opaque `SSH_ORIGINAL_COMMAND` before executing `rrsync -ro` against the fixed recovery root. A baseline failure occurs inside the fixed privileged wrapper before rrsync runs or any backup filename is listed.
 
-The gate intentionally does not download, build, install, or upgrade rsync. Package acquisition, signature/checksum verification, compatibility testing, and installation are operator-controlled supply-chain actions. A package version string below 3.5.0 does not pass merely because a subset of fixes was backported. A future distribution package that backports the complete audit set may be accepted only through a superseding ADR that binds exact package versions, patches, regression evidence, and vendor support.
+The production gate intentionally does not download, build, install, or upgrade rsync. ADR-0073 separately binds current exact vendor-signed Debian and rsync-project Launchpad packages through a disposable OS-matched canary without authorizing installation. Production package acquisition, rollback escrow, real compatibility testing, and installation remain operator-controlled supply-chain actions. A package version string below 3.5.0 does not pass merely because a subset of fixes was backported. A future distribution package that backports the complete audit set may be accepted only through a superseding ADR that binds exact package versions, patches, regression evidence, and vendor support.
 
 The host and guest may run different package builds as long as both report at least 3.5.0 and the guest wrapper proves the confinement integration. Rsync protocol negotiation remains authoritative for wire compatibility. The existing immutable-file, `.partial` exclusion, `--ignore-existing`, compression, transfer-amplification, staging, and Borg controls remain unchanged.
 

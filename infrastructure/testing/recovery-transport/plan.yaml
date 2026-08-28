@@ -1,0 +1,54 @@
+schema: starfiniti.rsync-transport-plan.v1
+status: candidate
+profile: production-recovery-transport
+minimumVersion: 3.5.0
+architecture: amd64
+network:
+  internalOnly: true
+  module: recovery
+  maximumFiles: 4
+  maximumBytes: 1048576
+sources:
+  upstreamRelease: https://download.samba.org/pub/rsync/NEWS#3.5.0
+  upstreamSecurity: https://download.samba.org/pub/unpacked/rsync/rsync-web/security.html
+  upstreamInstall: https://download.samba.org/pub/rsync/INSTALL.html
+  debianPackage: https://packages.debian.org/unstable/rsync
+  ubuntuPpa: https://launchpad.net/~rsyncproject/+archive/ubuntu/rsync
+endpoints:
+  - id: proxmox-host
+    role: receiver
+    os:
+      id: debian
+      versionId: "13"
+    baseImage: debian:13-slim@sha256:d7e12182ce18b85b93007c1dedf31f2d29e01ccf3182cc4017c709b6259bc132
+    package:
+      authority: debian-archive
+      name: rsync
+      version: 3.5.0+ds1-2
+      repositoryUrl: https://deb.debian.org/debian
+      suite: sid
+      url: https://deb.debian.org/debian/pool/main/r/rsync/rsync_3.5.0+ds1-2_amd64.deb
+      sha256: 5f0ecada9a0b4729f18aca43260bb8bcb16f95750c562409f84555b9de59a094
+      signingFingerprint: debian-archive-keyring
+  - id: database-guest
+    role: sender
+    os:
+      id: ubuntu
+      versionId: "24.04"
+    baseImage: ubuntu:24.04@sha256:33ceb71981b602c1a7443a53469e4dba065f7503eab3078a2d7a57a2ab987517
+    package:
+      authority: rsync-project-launchpad-ppa
+      name: rsync
+      version: 3.5.0-1ppa~noble1
+      repositoryUrl: https://ppa.launchpadcontent.net/rsyncproject/rsync/ubuntu
+      suite: noble
+      url: https://launchpad.net/~rsyncproject/+archive/ubuntu/rsync/+build/33538375/+files/rsync_3.5.0-1ppa~noble1_amd64.deb
+      sha256: 3ae102d79c9a82d1f1aee94bde3afa3142a7ef6f367484f130d6fba05c3c1648
+      signingFingerprint: 72BBF83452B11E5B5A8F99123CC6C2BBC7F3DB85
+rollback:
+  hostInstalledVersion: 3.4.1+ds1-5+deb13u3
+  hostCandidateVersion: 3.4.1+ds1-5+deb13u4
+  guestInstalledVersion: 3.2.7-1ubuntu1.5
+  packagesRequiredBeforeProduction: true
+  preserveLocalWalAndBases: true
+  preserveStagesAndArchives: true

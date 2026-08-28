@@ -1,0 +1,51 @@
+schema: starfiniti.rsync-transport-evidence.v1
+status: in_progress
+observedAt: 2026-08-28T05:51:43Z
+candidate:
+  branch: codex/enterprise-roadmap-integration
+  commit: null
+plan:
+  path: infrastructure/testing/recovery-transport/plan.yaml
+  sha256: 4d810267565eb4aebdbb4e0723c7f8fe313135a6fe15ef2b4cbb370163fdbeb2
+endpoints:
+  - id: proxmox-host
+    authority: debian-archive
+    packageVersion: 3.5.0+ds1-2
+    packageSha256: 5f0ecada9a0b4729f18aca43260bb8bcb16f95750c562409f84555b9de59a094
+    signingFingerprint: debian-archive-keyring
+  - id: database-guest
+    authority: rsync-project-launchpad-ppa
+    packageVersion: 3.5.0-1ppa~noble1
+    packageSha256: 3ae102d79c9a82d1f1aee94bde3afa3142a7ef6f367484f130d6fba05c3c1648
+    signingFingerprint: 72BBF83452B11E5B5A8F99123CC6C2BBC7F3DB85
+checks:
+  - id: plan_contract
+    status: passed
+    evidence: The exact two-endpoint plan binds OS image digests, authorities, suites, package versions, package hashes, and the minimum protocol baseline.
+  - id: source_authority_contract
+    status: passed
+    evidence: Debian archive metadata and the rsync project Launchpad PPA are independently scoped, with signed APT metadata and the exact PPA signing fingerprint.
+  - id: build_verification_contract
+    status: passed
+    evidence: The disposable build rejects the wrong OS, architecture, authority, signature, checksum, package metadata, version, executable ownership, wrapper, or confinement integration before execution.
+  - id: workflow_contract
+    status: passed
+    evidence: Security CI executes the canonical plan on an internal Docker network and uploads only the minimized report; no port, SSH route, production target, package binary, or payload is published.
+  - id: exact_head_canary
+    status: pending
+    evidence: The exact candidate commit has not yet completed the disposable Debian-to-Ubuntu package and protocol canary in GitHub Actions.
+  - id: rollback_packages
+    status: pending
+    evidence: Exact restorable host and guest package files have not been escrowed and verified by operations, so production installation remains prohibited.
+  - id: production_rollout
+    status: pending
+    evidence: No maintenance window, dual-endpoint installation, forced-command test, manual archive, or timer archive has been approved or performed.
+  - id: isolated_restore
+    status: pending
+    evidence: No archive produced through the candidate transport has completed the independent isolated full-service recovery gate.
+productionMutation: false
+automaticFails:
+  - either endpoint package differs from its exact vendor authority version checksum architecture or signing boundary
+  - either installed executable is older than 3.5.0 noncanonical writable incorrectly owned or lacks the upstream confined wrapper integration
+  - the canary publishes a port uses host networking names a production route exceeds its file or byte bound or retains a resource
+  - production changes before exact rollback packages exact-head canary manual and timer archives and isolated restore are independently approved

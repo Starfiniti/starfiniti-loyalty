@@ -1,5 +1,13 @@
 # Iteration Log
 
+## 2026-08-28 — Exact vendor rsync 3.5 transport canary
+
+- Reconstructed the remaining IMP-010 dependency after ADR-0072: current production intentionally fails the 3.5 gate, but current official vendor channels now publish architecture-compatible rsync 3.5 packages for both operating systems.
+- Compared waiting for complete stable-distribution backports, maintaining a private upstream build, upgrading only one endpoint, and using separate vendor-signed packages with one shared behavioral canary. ADR-0073 selects the last approach without authorizing production installation.
+- Bound Debian `3.5.0+ds1-2` and the rsync project's Ubuntu Noble `3.5.0-1ppa~noble1` to exact repository authorities, package checksums, the complete Launchpad signing fingerprint, and digest-pinned OS images. Candidate repositories are pinned below base repositories for every dependency except the exact rsync package.
+- Added a fail-closed build and internal-only Docker canary that verifies OS/architecture, signed metadata, package identity and checksum, canonical root-owned executables, rsync 3.5/protocol 32, the upstream confinement/inode-pinning integration, restricted-command rejection, two-file content transfer, bounded evidence, and exact teardown. The runner accepts only the canonical repository plan and never names production access.
+- Wired positive and adversarial plan/evidence validation into the root gate and a fourth bounded Security workflow job. Exact-head Linux execution remains pending until the candidate is pushed; rollback packages, maintenance approval, real forced-command/manual/timer archives, production rollout, and isolated restore remain external gates. No production package, service, timer, repository, backup, route, checkout path, or loyalty value changed.
+
 ## 2026-08-28 — M16 recovery dependency drift control
 
 - Reconstructed the M16 monthly source contract after ADR-0072 exposed a gap: Supabase, PostgreSQL, WooCommerce, Stripe, Authentik, Klaviyo, and Node.js were mandatory, but rsync, BorgBackup, OpenSSH, the guest operating systems, and Proxmox were not. The rsync incident could therefore become a one-off fix without a required future source review.
