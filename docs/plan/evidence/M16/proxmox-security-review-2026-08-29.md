@@ -78,7 +78,7 @@ edited to disguise that difference.
 | Candidate metadata                  | Passed                          | Five repository observations, twelve exact package records, four retained packages, and five advisories are bound. |
 | Listed advisory floors              | Candidate passes; current fails | Exact candidate versions meet every listed floor; the running host does not.                                       |
 | Candidate package bytes             | Pending                         | The twelve packages have not been independently downloaded and byte-verified.                                      |
-| Repository signature reverification | Pending                         | The endpoint APT trust result has not been independently reproduced by repository tooling.                         |
+| Repository signature reverification | Pending                         | The first disposable run failed before candidate acquisition; the corrected exact-head run remains required.       |
 | Compatibility                       | Pending                         | No isolated host/guest rehearsal or consumer matrix is complete.                                                   |
 | Rollback escrow                     | Pending                         | Exact package/configuration inputs and retained-kernel recovery are not independently escrowed.                    |
 | Recovery readiness                  | Pending                         | Current clean-room host, database/WAL, VM, Auth, application, and connector recovery proof is incomplete.          |
@@ -107,3 +107,20 @@ the prior manifest digest. That failure is preserved. Correction head
 candidate bindings, then passed all seven jobs in CI run `33218625530`, all four
 jobs in Security run `33218625547`, and external CodeQL check `99008025406`.
 All twelve PR checks were green and PR #57 was mergeable/clean at review time.
+
+## Disposable package-provenance attempt
+
+Candidate head `af3ffa2059fb25801ed9fa6dcf0c70d46f376fc2` passed all seven
+jobs in CI run `33221204896` and the internal supply-chain, DAST, and CodeQL jobs
+in Security run `33221204951`. Recovery-transport job `99015408787` failed
+closed before candidate acquisition because the Debian slim bootstrap lacked
+the aggregate `.gpg` file assumed by the verifier. No report artifact was
+produced and no production route, credential, or mutation was present.
+
+External CodeQL check `99015611427` separately rejected a High report-path
+check/write race. Both findings are accepted as real. The correction explicitly
+installs Debian's signed archive-keyring package, requires the resulting
+root-owned non-writable regular keyring, and creates the final report through
+one exclusive no-follow descriptor with same-inode verification. These
+corrections do not advance either pending gate until a fresh exact-head run and
+independent artifact verification pass.

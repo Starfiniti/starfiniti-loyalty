@@ -87,6 +87,18 @@ def bounded_regular(path: Path, maximum: int, label: str) -> None:
         fail(f"{label} is not a bounded regular file")
 
 
+def trusted_root_file(path: Path, maximum: int, label: str) -> None:
+    """Require an immutable-enough package-managed trust input for this run."""
+    bounded_regular(path, maximum, label)
+    metadata = path.lstat()
+    if (
+        metadata.st_uid != 0
+        or metadata.st_gid != 0
+        or metadata.st_mode & (stat.S_IWGRP | stat.S_IWOTH)
+    ):
+        fail(f"{label} ownership or permissions differ")
+
+
 def read_manifest() -> tuple[dict[str, str], list[dict[str, str]], list[dict[str, str]]]:
     bounded_regular(MANIFEST, 128 * 1024, "manifest")
     before = MANIFEST.stat()
@@ -218,8 +230,7 @@ def read_manifest() -> tuple[dict[str, str], list[dict[str, str]], list[dict[str
 def configure_repositories(
     plan: dict[str, str], repositories: list[dict[str, str]]
 ) -> None:
-    if not DEBIAN_KEYRING.is_file() or DEBIAN_KEYRING.is_symlink():
-        fail("Debian archive keyring is unavailable")
+    trusted_root_file(DEBIAN_KEYRING, 4 * 1024 * 1024, "Debian archive keyring")
     run(
         [
             "curl",
@@ -244,6 +255,7 @@ def configure_repositories(
     )
     if sha256_file(PROXMOX_KEYRING) != plan["keySha256"]:
         fail("Proxmox archive keyring digest differs")
+    trusted_root_file(PROXMOX_KEYRING, 4 * 1024 * 1024, "Proxmox archive keyring")
     key_output = run(
         [
             "gpg",

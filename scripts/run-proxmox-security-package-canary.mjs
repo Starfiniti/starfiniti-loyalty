@@ -8,6 +8,7 @@ import {
   copyFileSync,
   existsSync,
   fstatSync,
+  fsyncSync,
   lstatSync,
   mkdirSync,
   mkdtempSync,
@@ -16,9 +17,12 @@ import {
   readSync,
   realpathSync,
   rmSync,
+  unlinkSync,
+  writeSync,
   writeFileSync,
 } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 
 import YAML from "yaml";
@@ -134,6 +138,83 @@ function safeOutputPath(value) {
     );
   }
   return resolve(root, normalized);
+}
+
+function writeReport(outputPath, report) {
+  const bytes = Buffer.from(`${JSON.stringify(report, null, 2)}\n`, "utf8");
+  let descriptor;
+  let created = false;
+  let completed = false;
+  let createdIdentity;
+  try {
+    descriptor = openSync(
+      outputPath,
+      constants.O_WRONLY |
+        constants.O_CREAT |
+        constants.O_EXCL |
+        (constants.O_NOFOLLOW ?? 0),
+      0o600,
+    );
+    created = true;
+    const opened = fstatSync(descriptor);
+    if (!opened.isFile()) fail("report output is not a regular file");
+    createdIdentity = { dev: opened.dev, ino: opened.ino };
+    let offset = 0;
+    while (offset < bytes.length) {
+      const count = writeSync(
+        descriptor,
+        bytes,
+        offset,
+        bytes.length - offset,
+        offset,
+      );
+      if (count === 0) fail("report write stopped before completion");
+      offset += count;
+    }
+    fsyncSync(descriptor);
+    const written = fstatSync(descriptor);
+    if (
+      !written.isFile() ||
+      written.size !== bytes.length ||
+      (process.platform !== "win32" && (written.mode & 0o777) !== 0o600)
+    ) {
+      fail("written report is not an exact bounded regular file");
+    }
+    closeSync(descriptor);
+    descriptor = undefined;
+    const pathStatus = lstatSync(outputPath);
+    if (
+      !pathStatus.isFile() ||
+      pathStatus.dev !== written.dev ||
+      pathStatus.ino !== written.ino
+    ) {
+      fail("written report path identity differs");
+    }
+    completed = true;
+  } catch (error) {
+    if (error && typeof error === "object" && error.code === "EEXIST") {
+      fail("output path already exists; reports are never overwritten");
+    }
+    throw error;
+  } finally {
+    if (descriptor !== undefined) closeSync(descriptor);
+    if (created && !completed && createdIdentity) {
+      try {
+        const status = lstatSync(outputPath);
+        if (
+          status.isFile() &&
+          status.dev === createdIdentity.dev &&
+          status.ino === createdIdentity.ino
+        ) {
+          unlinkSync(outputPath);
+        }
+      } catch (error) {
+        if (!(error && typeof error === "object" && error.code === "ENOENT")) {
+          throw error;
+        }
+      }
+    }
+  }
 }
 
 function manifestText(plan, candidate) {
@@ -461,7 +542,6 @@ function execute(args) {
   }
   const commit = requireExactCiHead();
   const outputPath = safeOutputPath(args.out);
-  if (existsSync(outputPath)) fail("output must be exclusive");
   const outputParent = dirname(outputPath);
   mkdirSync(outputParent, { recursive: true });
   if (resolve(realpathSync(outputParent)) !== resolve(outputParent)) {
@@ -569,11 +649,7 @@ function execute(args) {
     teardownPassed,
   });
   validateCanaryReport(report, plan, { expectedCommit: commit });
-  writeFileSync(outputPath, `${JSON.stringify(report, null, 2)}\n`, {
-    encoding: "utf8",
-    flag: "wx",
-    mode: 0o600,
-  });
+  writeReport(outputPath, report);
   process.stdout.write(
     `Verified ${report.summary.packageCount} exact packages (${report.summary.packageBytes} bytes) through ${report.summary.repositoryCount} signed repositories; retained bytes and production mutation are false.\n`,
   );
@@ -584,6 +660,20 @@ function selfTest() {
   const validated = validateCanaryPlan(plan);
   const manifest = manifestText(plan, validated.candidate);
   assert.equal(manifest.trimEnd().split("\n").length, 18);
+  const reportDirectory = mkdtempSync(
+    join(tmpdir(), "starfiniti-proxmox-report-"),
+  );
+  try {
+    const reportPath = join(reportDirectory, "report.json");
+    writeReport(reportPath, { status: "verified" });
+    assert.deepEqual(
+      JSON.parse(readStableBytes(reportPath, 1024, "self-test report")),
+      { status: "verified" },
+    );
+    assert.throws(() => writeReport(reportPath, { status: "overwritten" }));
+  } finally {
+    rmSync(reportDirectory, { recursive: true, force: true });
+  }
   const signer = "A".repeat(40);
   const rows = [
     ...plan.repositories.map((repository) =>
@@ -658,7 +748,7 @@ function selfTest() {
     );
   }
   process.stdout.write(
-    `Validated the network-free Proxmox canary controller boundary and ${cases.length} corrupt fact streams.\n`,
+    `Validated the network-free Proxmox canary controller boundary, exclusive report writes, and ${cases.length} corrupt fact streams.\n`,
   );
 }
 

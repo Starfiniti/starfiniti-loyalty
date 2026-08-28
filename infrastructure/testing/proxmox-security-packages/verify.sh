@@ -13,7 +13,8 @@ test ! -e /output/facts.tsv
 
 apt-get update
 DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends \
-  ca-certificates curl gnupg python3
+  ca-certificates curl debian-archive-keyring gnupg python3
+test "$(dpkg-query -W -f='${db:Status-Status}\n' debian-archive-keyring)" = installed
 apt-get clean
 
 exec python3 /workspace/verify.py

@@ -57,9 +57,12 @@ and deletion without installing a candidate package or contacting production.
 
 1. Bind the canary to the complete SHA-256 and canonical provenance of the
    immutable ADR-0086 V1 candidate and to a digest-pinned Debian 13 image.
-2. Use only the five candidate repositories. Debian trust comes from the
-   digest-pinned image's archive keyring. Fetch the official Proxmox Trixie
-   archive keyring over HTTPS and require SHA-256
+2. Use only the five candidate repositories. Bootstrap through the
+   digest-pinned image's existing authenticated Debian source, explicitly
+   install Debian's `debian-archive-keyring` package, and require its aggregate
+   keyring to be a bounded root-owned regular file with no group/world write.
+   Fetch the official Proxmox Trixie archive keyring over HTTPS and impose the
+   same file controls plus SHA-256
    `136673be77aba35dcce385b28737689ad64fd785a797e57897589aed08db6e45`
    plus release fingerprint
    `24B30F06ECC1836A4E5EFECBA7BCD1420BFE778E`.
@@ -118,9 +121,27 @@ escrow and deliberately deletes candidate bytes. Operators must still stage and
 protect the exact approved forward and rollback inputs through the separately
 approved maintenance process.
 
+The first exact-head networked attempt failed closed before repository
+reconfiguration because the slim image could authenticate bootstrap APT but did
+not contain the aggregate `.gpg` file assumed by the verifier. No candidate
+package was downloaded and no production route or credential was present. The
+correction installs the Debian-owned archive-keyring package through that
+authenticated bootstrap and retains the strict regular-file boundary rather
+than accepting an arbitrary link or alternate path.
+
+That attempt's external CodeQL policy also rejected a check-then-write race at
+the final report path. The correction no longer tests and later reopens that
+path. It creates the report once with exclusive/no-follow flags, writes and
+syncs through the same descriptor, verifies size, mode, and path identity, and
+on failure removes only the inode it created. A passing network canary artifact
+therefore cannot overwrite or follow a pre-existing report path.
+
 ## Official sources
 
 - Debian `apt-secure`: https://manpages.debian.org/trixie/apt/apt-secure.8.en.html
+- Debian Trixie `debian-archive-keyring` package and installed-file list:
+  https://packages.debian.org/trixie/debian-archive-keyring and
+  https://packages.debian.org/trixie/all/debian-archive-keyring/filelist
 - Proxmox VE administration guide: https://pve.proxmox.com/pve-docs/pve-admin-guide.pdf
 - Proxmox release key directory and published fingerprint:
   https://enterprise.proxmox.com/iso/
