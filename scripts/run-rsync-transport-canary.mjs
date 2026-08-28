@@ -70,6 +70,8 @@ function safeOutputPath(value) {
 
 function buildArgs(endpoint, plan, tag) {
   const dependency = endpoint.package.dependencies[0];
+  const rollbackOne = endpoint.rollbackPackages[0];
+  const rollbackTwo = endpoint.rollbackPackages[1];
   const values = {
     BASE_IMAGE: endpoint.baseImage,
     EXPECTED_OS_ID: endpoint.os.id,
@@ -87,6 +89,14 @@ function buildArgs(endpoint, plan, tag) {
     DEPENDENCY_VERSION: dependency?.version ?? "",
     DEPENDENCY_SHA256: dependency?.sha256 ?? "",
     MINIMUM_VERSION: plan.minimumVersion,
+    ROLLBACK_ONE_NAME: rollbackOne.name,
+    ROLLBACK_ONE_VERSION: rollbackOne.version,
+    ROLLBACK_ONE_URL: rollbackOne.url,
+    ROLLBACK_ONE_SHA256: rollbackOne.sha256,
+    ROLLBACK_TWO_NAME: rollbackTwo?.name ?? "",
+    ROLLBACK_TWO_VERSION: rollbackTwo?.version ?? "",
+    ROLLBACK_TWO_URL: rollbackTwo?.url ?? "",
+    ROLLBACK_TWO_SHA256: rollbackTwo?.sha256 ?? "",
   };
   const args = ["build", "--file", dockerfile, "--tag", tag];
   for (const [key, value] of Object.entries(values)) {
@@ -146,6 +156,51 @@ function inspectEndpoint(container, endpoint) {
       name: dependency.name,
       version: installedVersion,
       packageSha256: dependency.sha256,
+    };
+  });
+  run([
+    "exec",
+    container,
+    "sh",
+    "-ec",
+    `test -z "$(find /tmp /var/cache/apt/archives -type f -name '*.deb' -print -quit)"`,
+  ]);
+  const rollbackFacts = run(
+    [
+      "exec",
+      container,
+      "cat",
+      "/usr/local/share/starfiniti/rollback-package-facts",
+    ],
+    { capture: true },
+  )
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => line.split("|"));
+  if (
+    rollbackFacts.length !== endpoint.rollbackPackages.length ||
+    rollbackFacts.some((fact) => fact.length !== 3)
+  ) {
+    fail(`${endpoint.id} rollback package facts are incomplete`);
+  }
+  facts.rollbackPackages = endpoint.rollbackPackages.map((rollbackPackage) => {
+    const fact = rollbackFacts.find(([name]) => name === rollbackPackage.name);
+    if (
+      !fact ||
+      fact[1] !== rollbackPackage.version ||
+      fact[2] !== rollbackPackage.sha256
+    ) {
+      fail(
+        `${endpoint.id} rollback package ${rollbackPackage.name} is invalid`,
+      );
+    }
+    return {
+      name: rollbackPackage.name,
+      version: rollbackPackage.version,
+      packageSha256: rollbackPackage.sha256,
+      signedMetadataVerified: true,
+      exactUrlVerified: true,
+      packageBytesRetained: false,
     };
   });
   return facts;
@@ -332,6 +387,7 @@ function main() {
           executableSha256: hostFacts.rsyncSha256,
           wrapperSha256: hostFacts.rrsyncSha256,
           dependencies: hostFacts.dependencies,
+          rollbackPackages: hostFacts.rollbackPackages,
           confinement: true,
           packageVerified: true,
         },
@@ -343,6 +399,7 @@ function main() {
           executableSha256: guestFacts.rsyncSha256,
           wrapperSha256: guestFacts.rrsyncSha256,
           dependencies: guestFacts.dependencies,
+          rollbackPackages: guestFacts.rollbackPackages,
           confinement: true,
           packageVerified: true,
         },

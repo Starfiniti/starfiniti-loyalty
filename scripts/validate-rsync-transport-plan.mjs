@@ -24,16 +24,53 @@ const sha256Pattern = /^[0-9a-f]{64}$/u;
 const imagePattern = /^(?:debian:13-slim|ubuntu:24\.04)@sha256:[0-9a-f]{64}$/u;
 const versionPattern = /^[0-9][0-9A-Za-z.+:~-]{2,79}$/u;
 const endpointIds = ["database-guest", "proxmox-host"];
-const testedCandidateCommit = "13e55ad3bebdeb699d0df2e6ecbc4f8cbd40c706";
-const testedWorkflowRunId = 33148107140;
-const testedWorkflowJobId = 98773576973;
-const testedArtifactId = 9676590363;
-const testedArtifactName =
-  "security-recovery-transport-af0dd59fcfb4bcb4dda64feaa3c951635c5c2f8d";
-const testedArtifactSha256 =
-  "b13599342a489c085c1da54d21aff2dc151000671360b995352356645b7a85ba";
-const testedReportSha256 =
-  "04d4389a559acd71ff5d0bc06cca6cff43e3e0ad65c6e6e6faddc9fa181897f7";
+const testedCandidateCommit = null;
+const testedWorkflowRunId = null;
+const testedWorkflowJobId = null;
+const testedArtifactId = null;
+const testedArtifactName = null;
+const testedArtifactSha256 = null;
+const testedReportSha256 = null;
+const testedReportObservedAt = null;
+const rollbackPackageExpectations = {
+  "proxmox-host": [
+    {
+      authority: "debian-security",
+      name: "rsync",
+      version: "3.4.1+ds1-5+deb13u3",
+      repositoryUrl: "https://security.debian.org/debian-security",
+      suite: "trixie-security",
+      url: "https://security.debian.org/debian-security/pool/updates/main/r/rsync/rsync_3.4.1+ds1-5+deb13u3_amd64.deb",
+      sha256:
+        "fee3fa3b5924cc7e0964603945e0edfd63b7f29fc3cd4cf7613ad970e05a55be",
+      signingFingerprint: "debian-archive-keyring",
+    },
+    {
+      authority: "debian-archive",
+      name: "libacl1",
+      version: "2.3.2-2+b1",
+      repositoryUrl: "https://deb.debian.org/debian",
+      suite: "trixie",
+      url: "https://deb.debian.org/debian/pool/main/a/acl/libacl1_2.3.2-2+b1_amd64.deb",
+      sha256:
+        "08074f01e384bc07c0c2d79a58cf4a6523f71cf75d1808101c79617656c9a39d",
+      signingFingerprint: "debian-archive-keyring",
+    },
+  ],
+  "database-guest": [
+    {
+      authority: "ubuntu-security",
+      name: "rsync",
+      version: "3.2.7-1ubuntu1.5",
+      repositoryUrl: "https://security.ubuntu.com/ubuntu",
+      suite: "noble-security",
+      url: "https://security.ubuntu.com/ubuntu/pool/main/r/rsync/rsync_3.2.7-1ubuntu1.5_amd64.deb",
+      sha256:
+        "8f952895697d19a6f1caa71f17c7d4e8c1f1fb485eb824ffe3e4c77dd587b338",
+      signingFingerprint: "ubuntu-archive-keyring",
+    },
+  ],
+};
 
 function fail(message) {
   throw new Error(`Recovery transport plan invalid: ${message}`);
@@ -180,7 +217,7 @@ export function validateTransportPlan(plan) {
   for (const endpoint of plan.endpoints) {
     exactKeys(
       endpoint,
-      ["id", "role", "os", "baseImage", "package"],
+      ["id", "role", "os", "baseImage", "rollbackPackages", "package"],
       "endpoint",
     );
     if (seen.has(endpoint.id) || !endpointIds.includes(endpoint.id)) {
@@ -240,6 +277,57 @@ export function validateTransportPlan(plan) {
     if (!Array.isArray(endpoint.package.dependencies)) {
       fail(`${endpoint.id} dependencies must be an array`);
     }
+    const expectedRollbackPackages = rollbackPackageExpectations[endpoint.id];
+    if (
+      !Array.isArray(endpoint.rollbackPackages) ||
+      endpoint.rollbackPackages.length !== expectedRollbackPackages.length
+    ) {
+      fail(`${endpoint.id} rollback package set is invalid`);
+    }
+    for (const [
+      index,
+      rollbackPackage,
+    ] of endpoint.rollbackPackages.entries()) {
+      exactKeys(
+        rollbackPackage,
+        [
+          "authority",
+          "name",
+          "version",
+          "repositoryUrl",
+          "suite",
+          "url",
+          "sha256",
+          "signingFingerprint",
+        ],
+        `${endpoint.id} rollback package`,
+      );
+      const expectedRollbackPackage = expectedRollbackPackages[index];
+      const rollbackUrl = exactHttps(
+        rollbackPackage.url,
+        `${endpoint.id} rollback package URL`,
+        new Set([new URL(expectedRollbackPackage.url).hostname]),
+      );
+      const rollbackRepositoryUrl = exactHttps(
+        rollbackPackage.repositoryUrl,
+        `${endpoint.id} rollback repository URL`,
+        new Set([new URL(expectedRollbackPackage.repositoryUrl).hostname]),
+      );
+      if (
+        Object.entries(expectedRollbackPackage).some(
+          ([key, value]) => rollbackPackage[key] !== value,
+        ) ||
+        rollbackUrl.pathname !==
+          new URL(expectedRollbackPackage.url).pathname ||
+        rollbackRepositoryUrl.pathname !==
+          new URL(expectedRollbackPackage.repositoryUrl).pathname ||
+        !versionPattern.test(rollbackPackage.version) ||
+        !sha256Pattern.test(rollbackPackage.sha256) ||
+        /^0{64}$/u.test(rollbackPackage.sha256)
+      ) {
+        fail(`${endpoint.id} rollback package ${index + 1} is invalid`);
+      }
+    }
     if (endpoint.id === "proxmox-host") {
       if (endpoint.package.dependencies.length !== 1) {
         fail("proxmox-host requires the exact libacl1 dependency");
@@ -297,20 +385,18 @@ export function validateTransportPlan(plan) {
   exactKeys(
     plan.rollback,
     [
-      "hostInstalledVersion",
       "hostCandidateVersion",
-      "guestInstalledVersion",
-      "packagesRequiredBeforeProduction",
+      "verifyArtifactsInCanary",
+      "operationsEscrowRequiredBeforeProduction",
       "preserveLocalWalAndBases",
       "preserveStagesAndArchives",
     ],
     "rollback",
   );
   if (
-    !versionPattern.test(plan.rollback.hostInstalledVersion) ||
     !versionPattern.test(plan.rollback.hostCandidateVersion) ||
-    !versionPattern.test(plan.rollback.guestInstalledVersion) ||
-    plan.rollback.packagesRequiredBeforeProduction !== true ||
+    plan.rollback.verifyArtifactsInCanary !== true ||
+    plan.rollback.operationsEscrowRequiredBeforeProduction !== true ||
     plan.rollback.preserveLocalWalAndBases !== true ||
     plan.rollback.preserveStagesAndArchives !== true
   ) {
@@ -374,6 +460,7 @@ function validateEvidence(evidence, plan) {
         "packageSha256",
         "signingFingerprint",
         "dependencies",
+        "rollbackPackages",
       ],
       "evidence endpoint",
     );
@@ -388,74 +475,88 @@ function validateEvidence(evidence, plan) {
       endpointEvidence.signingFingerprint !==
         endpoint.package.signingFingerprint ||
       JSON.stringify(endpointEvidence.dependencies) !==
-        JSON.stringify(endpoint.package.dependencies)
+        JSON.stringify(endpoint.package.dependencies) ||
+      JSON.stringify(endpointEvidence.rollbackPackages) !==
+        JSON.stringify(endpoint.rollbackPackages)
     ) {
       fail("evidence endpoint differs from the approved plan");
     }
   }
-  exactKeys(
-    evidence.canary,
-    [
-      "workflowRunId",
-      "workflowJobId",
-      "artifactId",
-      "artifactName",
-      "artifactSha256",
-      "reportPath",
-      "reportSha256",
-      "report",
-    ],
-    "evidence canary",
-  );
-  exactKeys(
-    evidence.canary.report,
-    [
-      "observedAt",
-      "status",
-      "planSha256",
-      "protocol",
-      "files",
-      "bytes",
-      "maximumFiles",
-      "maximumBytes",
-      "productionMutation",
-      "teardown",
-    ],
-    "evidence canary report",
-  );
-  if (
-    evidence.canary.workflowRunId !== testedWorkflowRunId ||
-    evidence.canary.workflowJobId !== testedWorkflowJobId ||
-    evidence.canary.artifactId !== testedArtifactId ||
-    evidence.canary.artifactName !== testedArtifactName ||
-    evidence.canary.artifactSha256 !== testedArtifactSha256 ||
-    evidence.canary.reportPath !== "ci.json" ||
-    evidence.canary.reportSha256 !== testedReportSha256 ||
-    evidence.canary.report.observedAt !== "2026-08-28T06:31:02.045Z" ||
-    evidence.canary.report.status !== "passed" ||
-    evidence.canary.report.planSha256 !== planDigest(plan) ||
-    evidence.canary.report.protocol !== 32 ||
-    evidence.canary.report.files !== 2 ||
-    evidence.canary.report.bytes !== 21 ||
-    evidence.canary.report.maximumFiles !== plan.network.maximumFiles ||
-    evidence.canary.report.maximumBytes !== plan.network.maximumBytes ||
-    evidence.canary.report.productionMutation !== false ||
-    evidence.canary.report.teardown !== "passed"
-  ) {
-    fail("exact-head canary binding or minimized result is invalid");
+  if (testedCandidateCommit === null) {
+    if (evidence.canary !== null) {
+      fail("unproved exact-head canary must not bind an artifact");
+    }
+  } else {
+    exactKeys(
+      evidence.canary,
+      [
+        "workflowRunId",
+        "workflowJobId",
+        "artifactId",
+        "artifactName",
+        "artifactSha256",
+        "reportPath",
+        "reportSha256",
+        "report",
+      ],
+      "evidence canary",
+    );
+    exactKeys(
+      evidence.canary.report,
+      [
+        "observedAt",
+        "status",
+        "planSha256",
+        "protocol",
+        "files",
+        "bytes",
+        "maximumFiles",
+        "maximumBytes",
+        "rollbackPackages",
+        "productionMutation",
+        "teardown",
+      ],
+      "evidence canary report",
+    );
+    if (
+      evidence.canary.workflowRunId !== testedWorkflowRunId ||
+      evidence.canary.workflowJobId !== testedWorkflowJobId ||
+      evidence.canary.artifactId !== testedArtifactId ||
+      evidence.canary.artifactName !== testedArtifactName ||
+      evidence.canary.artifactSha256 !== testedArtifactSha256 ||
+      evidence.canary.reportPath !== "ci.json" ||
+      evidence.canary.reportSha256 !== testedReportSha256 ||
+      evidence.canary.report.observedAt !== testedReportObservedAt ||
+      evidence.canary.report.status !== "passed" ||
+      evidence.canary.report.planSha256 !== planDigest(plan) ||
+      evidence.canary.report.protocol !== 32 ||
+      evidence.canary.report.files !== 2 ||
+      evidence.canary.report.bytes !== 21 ||
+      evidence.canary.report.maximumFiles !== plan.network.maximumFiles ||
+      evidence.canary.report.maximumBytes !== plan.network.maximumBytes ||
+      evidence.canary.report.rollbackPackages !== 3 ||
+      evidence.canary.report.productionMutation !== false ||
+      evidence.canary.report.teardown !== "passed"
+    ) {
+      fail("exact-head canary binding or minimized result is invalid");
+    }
   }
   const expectedChecks = new Map([
     ["plan_contract", "passed"],
     ["source_authority_contract", "passed"],
     ["build_verification_contract", "passed"],
+    ["rollback_artifact_contract", "passed"],
     ["workflow_contract", "passed"],
-    ["exact_head_canary", "passed"],
-    ["rollback_packages", "pending"],
+    [
+      "exact_head_canary",
+      testedCandidateCommit === null ? "pending" : "passed",
+    ],
+    ["rollback_escrow", "pending"],
     ["production_rollout", "pending"],
     ["isolated_restore", "pending"],
   ]);
-  if (!Array.isArray(evidence.checks) || evidence.checks.length !== 8) {
-    fail("evidence must contain the exact eight checks");
+  if (!Array.isArray(evidence.checks) || evidence.checks.length !== 9) {
+    fail("evidence must contain the exact nine checks");
   }
   for (const check of evidence.checks) {
     exactKeys(check, ["id", "status", "evidence"], "evidence check");
@@ -497,6 +598,26 @@ function validateDockerfile(text) {
     "Pin-Priority: 1",
     "Pin-Priority: 1001",
     'apt-get download "$PACKAGE_NAME=$PACKAGE_VERSION"',
+    "ARG ROLLBACK_ONE_NAME",
+    "ARG ROLLBACK_ONE_VERSION",
+    "ARG ROLLBACK_ONE_URL",
+    "ARG ROLLBACK_ONE_SHA256",
+    "ARG ROLLBACK_TWO_NAME",
+    "ARG ROLLBACK_TWO_VERSION",
+    "ARG ROLLBACK_TWO_URL",
+    "ARG ROLLBACK_TWO_SHA256",
+    'apt-get download "$name=$version"',
+    "curl --fail --proto '=https' --tlsv1.2 --output exact-url.deb \"$url\"",
+    'printf \'%s  %s\\n\' "$expected_sha256" signed-metadata.deb "$expected_sha256" exact-url.deb | sha256sum --check --strict',
+    "cmp signed-metadata.deb exact-url.deb",
+    'dpkg-deb --field signed-metadata.deb Package)" = "$name"',
+    'dpkg-deb --field signed-metadata.deb Version)" = "$version"',
+    'dpkg-deb --field signed-metadata.deb Architecture)" = "$EXPECTED_ARCHITECTURE"',
+    "/usr/local/share/starfiniti/rollback-package-facts",
+    "chmod 0444 /usr/local/share/starfiniti/rollback-package-facts",
+    "/tmp/rollback-one /tmp/rollback-two",
+    "/var/cache/apt/archives/*.deb",
+    `test -z "$(find /tmp /var/cache/apt/archives -type f -name '*.deb' -print -quit)"`,
     "sha256sum --check --strict",
     "dpkg-deb --field /tmp/rsync-candidate.deb Package",
     "dpkg-deb --field /tmp/rsync-candidate.deb Version",
@@ -547,6 +668,23 @@ function validateDockerfile(text) {
   const packageInstallIndex = text.indexOf(
     "apt-get install --yes --no-install-recommends /tmp/rsync-candidate.deb",
   );
+  const rollbackRepositoryIndex = text.indexOf(
+    'apt-get download "$name=$version"',
+  );
+  const rollbackChecksumIndex = text.indexOf(
+    '"$expected_sha256" signed-metadata.deb "$expected_sha256" exact-url.deb',
+  );
+  const rollbackEqualityIndex = text.indexOf(
+    "cmp signed-metadata.deb exact-url.deb",
+  );
+  const rollbackMetadataIndex = text.indexOf(
+    "dpkg-deb --field signed-metadata.deb Package",
+  );
+  const rollbackMarkerIndex = text.indexOf(
+    "chmod 0444 /usr/local/share/starfiniti/rollback-package-facts",
+  );
+  const candidateAuthorityIndex = text.indexOf('case "$PACKAGE_AUTHORITY" in');
+  const cleanupIndex = text.indexOf("/tmp/rollback-one /tmp/rollback-two");
   const ordered = (indexes) =>
     indexes.every(
       (index, position) =>
@@ -564,9 +702,23 @@ function validateDockerfile(text) {
       packageChecksumIndex,
       packageMetadataIndex,
       packageInstallIndex,
-    ])
+    ]) ||
+    !ordered([
+      rollbackRepositoryIndex,
+      rollbackChecksumIndex,
+      rollbackEqualityIndex,
+      rollbackMetadataIndex,
+      rollbackMarkerIndex,
+      cleanupIndex,
+      candidateAuthorityIndex,
+    ]) ||
+    text
+      .slice(rollbackRepositoryIndex, candidateAuthorityIndex)
+      .includes("apt-get install")
   ) {
-    fail("package verification must precede installation");
+    fail(
+      "rollback verification must precede candidate acquisition and package verification must precede installation",
+    );
   }
 }
 
@@ -586,6 +738,18 @@ function validateRunner(text) {
     "lock file = /tmp/rsyncd.lock",
     "transferredFiles > plan.network.maximumFiles",
     "transferredBytes > plan.network.maximumBytes",
+    "ROLLBACK_ONE_NAME: rollbackOne.name",
+    'ROLLBACK_TWO_NAME: rollbackTwo?.name ?? ""',
+    "/usr/local/share/starfiniti/rollback-package-facts",
+    "rollbackFacts.length !== endpoint.rollbackPackages.length",
+    "fact[1] !== rollbackPackage.version",
+    "fact[2] !== rollbackPackage.sha256",
+    "signedMetadataVerified: true",
+    "exactUrlVerified: true",
+    "packageBytesRetained: false",
+    `test -z "$(find /tmp /var/cache/apt/archives -type f -name '*.deb' -print -quit)"`,
+    "rollbackPackages: hostFacts.rollbackPackages",
+    "rollbackPackages: guestFacts.rollbackPackages",
     "productionMutation: false",
     '["rm", "--force", hostName]',
     '["rm", "--force", guestName]',
@@ -632,8 +796,13 @@ function selfTest(plan, evidence, dockerfile, runner) {
       (candidate.endpoints[0].package.repositoryUrl =
         "https://example.test/debian"),
     (candidate) => (candidate.endpoints[1].baseImage = "ubuntu:24.04"),
+    (candidate) => (candidate.rollback.verifyArtifactsInCanary = false),
+    (candidate) => candidate.endpoints[0].rollbackPackages.pop(),
     (candidate) =>
-      (candidate.rollback.packagesRequiredBeforeProduction = false),
+      (candidate.endpoints[0].rollbackPackages[0].sha256 = "0".repeat(64)),
+    (candidate) =>
+      (candidate.endpoints[1].rollbackPackages[0].url =
+        "https://example.test/rsync.deb"),
   ];
   for (const mutate of mutations) {
     const candidate = structuredClone(plan);
@@ -643,14 +812,16 @@ function selfTest(plan, evidence, dockerfile, runner) {
   assert.doesNotThrow(() => validateEvidence(structuredClone(evidence), plan));
   for (const mutate of [
     (candidate) => (candidate.status = "complete"),
-    (candidate) => (candidate.candidate.commit = null),
+    (candidate) => (candidate.candidate.commit = "0".repeat(40)),
     (candidate) => (candidate.plan.sha256 = "0".repeat(64)),
     (candidate) => (candidate.endpoints[0].packageSha256 = "0".repeat(64)),
-    (candidate) => (candidate.canary.workflowRunId += 1),
-    (candidate) => (candidate.canary.artifactSha256 = "0".repeat(64)),
-    (candidate) => (candidate.canary.reportSha256 = "0".repeat(64)),
-    (candidate) => (candidate.canary.report.productionMutation = true),
-    (candidate) => (candidate.checks[4].status = "pending"),
+    (candidate) =>
+      (candidate.endpoints[0].rollbackPackages[0].sha256 = "0".repeat(64)),
+    (candidate) => (candidate.canary = {}),
+    (candidate) =>
+      (candidate.checks.find(
+        (check) => check.id === "workflow_contract",
+      ).status = "pending"),
     (candidate) => candidate.checks.pop(),
     (candidate) => (candidate.productionMutation = true),
   ]) {
@@ -671,6 +842,29 @@ function selfTest(plan, evidence, dockerfile, runner) {
     ['gpg --batch --export "$SIGNING_FINGERPRINT"', "gpg --batch --export"],
     ["readlink -f /usr/bin/rrsync", "readlink -f /tmp/rrsync"],
     ["rsync_opts.append('--confine-root=' + os.getcwd())", "confine-root"],
+    ['apt-get download "$name=$version"', "removed-rollback-repository"],
+    [
+      "curl --fail --proto '=https' --tlsv1.2 --output exact-url.deb \"$url\"",
+      'curl --fail --output exact-url.deb "$url"',
+    ],
+    [
+      '"$expected_sha256" signed-metadata.deb "$expected_sha256" exact-url.deb',
+      '"$expected_sha256" signed-metadata.deb',
+    ],
+    ["cmp signed-metadata.deb exact-url.deb", "removed-rollback-equality"],
+    [
+      "dpkg-deb --field signed-metadata.deb Version",
+      "removed-rollback-version",
+    ],
+    [
+      "chmod 0444 /usr/local/share/starfiniti/rollback-package-facts",
+      "removed-read-only-marker",
+    ],
+    ["/tmp/rollback-one /tmp/rollback-two", "/tmp/rollback-one"],
+    [
+      `test -z "$(find /tmp /var/cache/apt/archives -type f -name '*.deb' -print -quit)"`,
+      "removed-package-byte-check",
+    ],
   ]) {
     const candidate = dockerfile.replace(...mutation);
     assert.notEqual(candidate, dockerfile);
@@ -681,6 +875,11 @@ function selfTest(plan, evidence, dockerfile, runner) {
     '"{{json .NetworkSettings.Ports}}"',
     "rmSync(outputPath, { force: true })",
     "transferredBytes > plan.network.maximumBytes",
+    "/usr/local/share/starfiniti/rollback-package-facts",
+    "signedMetadataVerified: true",
+    "fact[2] !== rollbackPackage.sha256",
+    "packageBytesRetained: false",
+    "rollbackPackages: hostFacts.rollbackPackages",
   ]) {
     const candidate = runner.replace(requirement, "removed-control");
     assert.notEqual(candidate, runner);

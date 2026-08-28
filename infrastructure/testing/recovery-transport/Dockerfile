@@ -16,6 +16,14 @@ ARG DEPENDENCY_NAME
 ARG DEPENDENCY_VERSION
 ARG DEPENDENCY_SHA256
 ARG MINIMUM_VERSION
+ARG ROLLBACK_ONE_NAME
+ARG ROLLBACK_ONE_VERSION
+ARG ROLLBACK_ONE_URL
+ARG ROLLBACK_ONE_SHA256
+ARG ROLLBACK_TWO_NAME
+ARG ROLLBACK_TWO_VERSION
+ARG ROLLBACK_TWO_URL
+ARG ROLLBACK_TWO_SHA256
 
 SHELL ["/bin/sh", "-euxc"]
 
@@ -25,6 +33,34 @@ RUN . /etc/os-release; \
     test "$(dpkg --print-architecture)" = "$EXPECTED_ARCHITECTURE"; \
     apt-get update; \
     DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends ca-certificates curl gnupg python3; \
+    mkdir -p /usr/local/share/starfiniti; \
+    : > /usr/local/share/starfiniti/rollback-package-facts; \
+    verify_rollback_package() { \
+      slot="$1"; name="$2"; version="$3"; url="$4"; expected_sha256="$5"; \
+      test -n "$name"; test -n "$version"; test -n "$url"; test -n "$expected_sha256"; \
+      mkdir "/tmp/rollback-${slot}"; \
+      cd "/tmp/rollback-${slot}"; \
+      apt-get download "$name=$version"; \
+      set -- ./*.deb; \
+      test "$#" -eq 1; \
+      mv "$1" signed-metadata.deb; \
+      curl --fail --proto '=https' --tlsv1.2 --output exact-url.deb "$url"; \
+      printf '%s  %s\n' "$expected_sha256" signed-metadata.deb "$expected_sha256" exact-url.deb | sha256sum --check --strict; \
+      cmp signed-metadata.deb exact-url.deb; \
+      test "$(dpkg-deb --field signed-metadata.deb Package)" = "$name"; \
+      test "$(dpkg-deb --field signed-metadata.deb Version)" = "$version"; \
+      test "$(dpkg-deb --field signed-metadata.deb Architecture)" = "$EXPECTED_ARCHITECTURE"; \
+      printf '%s|%s|%s\n' "$name" "$version" "$expected_sha256" >> /usr/local/share/starfiniti/rollback-package-facts; \
+      cd /; \
+    }; \
+    verify_rollback_package one "$ROLLBACK_ONE_NAME" "$ROLLBACK_ONE_VERSION" "$ROLLBACK_ONE_URL" "$ROLLBACK_ONE_SHA256"; \
+    if test -n "$ROLLBACK_TWO_NAME"; then \
+      verify_rollback_package two "$ROLLBACK_TWO_NAME" "$ROLLBACK_TWO_VERSION" "$ROLLBACK_TWO_URL" "$ROLLBACK_TWO_SHA256"; \
+    else \
+      test -z "$ROLLBACK_TWO_VERSION"; test -z "$ROLLBACK_TWO_URL"; test -z "$ROLLBACK_TWO_SHA256"; \
+    fi; \
+    chmod 0444 /usr/local/share/starfiniti/rollback-package-facts; \
+    rm -rf /tmp/rollback-one /tmp/rollback-two; \
     case "$PACKAGE_AUTHORITY" in \
       debian-archive) \
         test "$SIGNING_FINGERPRINT" = debian-archive-keyring; \
@@ -89,7 +125,8 @@ RUN . /etc/os-release; \
     printf 'private-canary-marker\n' > /tmp/rrsync-negative/root/marker; \
     if env -i PATH=/usr/bin:/bin LC_ALL=C SSH_ORIGINAL_COMMAND=id /usr/bin/rrsync -ro /tmp/rrsync-negative/root > /tmp/rrsync-negative/output 2>&1; then exit 1; fi; \
     ! grep -Fq -- private-canary-marker /tmp/rrsync-negative/output; \
-    rm -rf /var/lib/apt/lists/* /tmp/rsync-candidate.deb /tmp/rsync-dependency.deb /tmp/rrsync-negative /tmp/starfiniti-gnupg /tmp/starfiniti-ppa.asc
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*.deb /tmp/rsync-candidate.deb /tmp/rsync-dependency.deb /tmp/rrsync-negative /tmp/starfiniti-gnupg /tmp/starfiniti-ppa.asc; \
+    test -z "$(find /tmp /var/cache/apt/archives -type f -name '*.deb' -print -quit)"
 
 LABEL com.starfiniti.disposable="true" \
       com.starfiniti.purpose="recovery-transport-canary"

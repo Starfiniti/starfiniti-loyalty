@@ -1,12 +1,12 @@
 schema: starfiniti.rsync-transport-evidence.v1
 status: in_progress
-observedAt: 2026-08-28T06:31:02Z
+observedAt: 2026-08-28T07:14:59Z
 candidate:
   branch: codex/enterprise-roadmap-integration
-  commit: 13e55ad3bebdeb699d0df2e6ecbc4f8cbd40c706
+  commit: null
 plan:
   path: infrastructure/testing/recovery-transport/plan.yaml
-  sha256: c623bebcf48b0dba785ed2fa4b00bfb2899855139647fdc153a6d383cea0f17d
+  sha256: 56600763ba44ab85221ecbc4effbac09055e42d135a04429ee27980389f73405
 endpoints:
   - id: proxmox-host
     authority: debian-archive
@@ -18,31 +18,39 @@ endpoints:
         version: 2.4.0-1
         url: https://deb.debian.org/debian/pool/main/a/acl/libacl1_2.4.0-1_amd64.deb
         sha256: e9da0e00387e31c1709b70497f1eda91389c962c3940e6d233d4c57f5ea6f635
+    rollbackPackages:
+      - authority: debian-security
+        name: rsync
+        version: 3.4.1+ds1-5+deb13u3
+        repositoryUrl: https://security.debian.org/debian-security
+        suite: trixie-security
+        url: https://security.debian.org/debian-security/pool/updates/main/r/rsync/rsync_3.4.1+ds1-5+deb13u3_amd64.deb
+        sha256: fee3fa3b5924cc7e0964603945e0edfd63b7f29fc3cd4cf7613ad970e05a55be
+        signingFingerprint: debian-archive-keyring
+      - authority: debian-archive
+        name: libacl1
+        version: 2.3.2-2+b1
+        repositoryUrl: https://deb.debian.org/debian
+        suite: trixie
+        url: https://deb.debian.org/debian/pool/main/a/acl/libacl1_2.3.2-2+b1_amd64.deb
+        sha256: 08074f01e384bc07c0c2d79a58cf4a6523f71cf75d1808101c79617656c9a39d
+        signingFingerprint: debian-archive-keyring
   - id: database-guest
     authority: rsync-project-launchpad-ppa
     packageVersion: 3.5.0-1ppa~noble1
     packageSha256: 3ae102d79c9a82d1f1aee94bde3afa3142a7ef6f367484f130d6fba05c3c1648
     signingFingerprint: 72BBF83452B11E5B5A8F99123CC6C2BBC7F3DB85
     dependencies: []
-canary:
-  workflowRunId: 33148107140
-  workflowJobId: 98773576973
-  artifactId: 9676590363
-  artifactName: security-recovery-transport-af0dd59fcfb4bcb4dda64feaa3c951635c5c2f8d
-  artifactSha256: b13599342a489c085c1da54d21aff2dc151000671360b995352356645b7a85ba
-  reportPath: ci.json
-  reportSha256: 04d4389a559acd71ff5d0bc06cca6cff43e3e0ad65c6e6e6faddc9fa181897f7
-  report:
-    observedAt: 2026-08-28T06:31:02.045Z
-    status: passed
-    planSha256: c623bebcf48b0dba785ed2fa4b00bfb2899855139647fdc153a6d383cea0f17d
-    protocol: 32
-    files: 2
-    bytes: 21
-    maximumFiles: 4
-    maximumBytes: 1048576
-    productionMutation: false
-    teardown: passed
+    rollbackPackages:
+      - authority: ubuntu-security
+        name: rsync
+        version: 3.2.7-1ubuntu1.5
+        repositoryUrl: https://security.ubuntu.com/ubuntu
+        suite: noble-security
+        url: https://security.ubuntu.com/ubuntu/pool/main/r/rsync/rsync_3.2.7-1ubuntu1.5_amd64.deb
+        sha256: 8f952895697d19a6f1caa71f17c7d4e8c1f1fb485eb824ffe3e4c77dd587b338
+        signingFingerprint: ubuntu-archive-keyring
+canary: null
 checks:
   - id: plan_contract
     status: passed
@@ -53,15 +61,18 @@ checks:
   - id: build_verification_contract
     status: passed
     evidence: The disposable build rejects the wrong OS, architecture, authority, signature, checksum, package metadata, version, executable ownership, wrapper, or confinement integration before execution.
+  - id: rollback_artifact_contract
+    status: passed
+    evidence: Exact host rsync, host libacl1, and guest rsync rollback versions, signed APT authorities, HTTPS archive URLs, package metadata, architectures, and SHA-256 digests are fail-closed inputs to the disposable build.
   - id: workflow_contract
     status: passed
     evidence: Security CI executes the canonical plan on an internal Docker network and uploads only the minimized report; no port, SSH route, production target, package binary, or payload is published.
   - id: exact_head_canary
-    status: passed
-    evidence: Exact candidate 13e55ad3bebdeb699d0df2e6ecbc4f8cbd40c706 passed Security run 33148107140 job 98773576973; artifact 9676590363 binds the minimized report and zero-residue teardown hashes above.
-  - id: rollback_packages
     status: pending
-    evidence: Exact restorable host and guest package files have not been escrowed and verified by operations, so production installation remains prohibited.
+    evidence: The changed rollback verification path has not yet passed Linux Security CI on its exact implementation head, so it binds no workflow run, job, artifact, or report.
+  - id: rollback_escrow
+    status: pending
+    evidence: Operations has not copied the three exact verified package bytes to approved offline escrow or independently rechecked their recorded SHA-256 digests, so production installation remains prohibited.
   - id: production_rollout
     status: pending
     evidence: No maintenance window, dual-endpoint installation, forced-command test, manual archive, or timer archive has been approved or performed.
@@ -70,7 +81,7 @@ checks:
     evidence: No archive produced through the candidate transport has completed the independent isolated full-service recovery gate.
 productionMutation: false
 automaticFails:
-  - either endpoint package differs from its exact vendor authority version checksum architecture or signing boundary
+  - either candidate or rollback package differs from its exact vendor authority version checksum architecture URL or signing boundary
   - either installed executable is older than 3.5.0 noncanonical writable incorrectly owned or lacks the upstream confined wrapper integration
-  - the canary publishes a port uses host networking names a production route exceeds its file or byte bound or retains a resource
-  - production changes before exact rollback packages exact-head canary manual and timer archives and isolated restore are independently approved
+  - the canary installs a rollback package publishes a port uses host networking names a production route exceeds its file or byte bound or retains package bytes or another resource
+  - production changes before exact-head rollback verification operations escrow manual and timer archives and isolated restore are independently approved

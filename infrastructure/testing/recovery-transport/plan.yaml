@@ -21,6 +21,23 @@ endpoints:
       id: debian
       versionId: "13"
     baseImage: debian:13-slim@sha256:d7e12182ce18b85b93007c1dedf31f2d29e01ccf3182cc4017c709b6259bc132
+    rollbackPackages:
+      - authority: debian-security
+        name: rsync
+        version: 3.4.1+ds1-5+deb13u3
+        repositoryUrl: https://security.debian.org/debian-security
+        suite: trixie-security
+        url: https://security.debian.org/debian-security/pool/updates/main/r/rsync/rsync_3.4.1+ds1-5+deb13u3_amd64.deb
+        sha256: fee3fa3b5924cc7e0964603945e0edfd63b7f29fc3cd4cf7613ad970e05a55be
+        signingFingerprint: debian-archive-keyring
+      - authority: debian-archive
+        name: libacl1
+        version: 2.3.2-2+b1
+        repositoryUrl: https://deb.debian.org/debian
+        suite: trixie
+        url: https://deb.debian.org/debian/pool/main/a/acl/libacl1_2.3.2-2+b1_amd64.deb
+        sha256: 08074f01e384bc07c0c2d79a58cf4a6523f71cf75d1808101c79617656c9a39d
+        signingFingerprint: debian-archive-keyring
     package:
       authority: debian-archive
       name: rsync
@@ -41,6 +58,15 @@ endpoints:
       id: ubuntu
       versionId: "24.04"
     baseImage: ubuntu:24.04@sha256:33ceb71981b602c1a7443a53469e4dba065f7503eab3078a2d7a57a2ab987517
+    rollbackPackages:
+      - authority: ubuntu-security
+        name: rsync
+        version: 3.2.7-1ubuntu1.5
+        repositoryUrl: https://security.ubuntu.com/ubuntu
+        suite: noble-security
+        url: https://security.ubuntu.com/ubuntu/pool/main/r/rsync/rsync_3.2.7-1ubuntu1.5_amd64.deb
+        sha256: 8f952895697d19a6f1caa71f17c7d4e8c1f1fb485eb824ffe3e4c77dd587b338
+        signingFingerprint: ubuntu-archive-keyring
     package:
       authority: rsync-project-launchpad-ppa
       name: rsync
@@ -52,9 +78,8 @@ endpoints:
       signingFingerprint: 72BBF83452B11E5B5A8F99123CC6C2BBC7F3DB85
       dependencies: []
 rollback:
-  hostInstalledVersion: 3.4.1+ds1-5+deb13u3
   hostCandidateVersion: 3.4.1+ds1-5+deb13u4
-  guestInstalledVersion: 3.2.7-1ubuntu1.5
-  packagesRequiredBeforeProduction: true
+  verifyArtifactsInCanary: true
+  operationsEscrowRequiredBeforeProduction: true
   preserveLocalWalAndBases: true
   preserveStagesAndArchives: true
