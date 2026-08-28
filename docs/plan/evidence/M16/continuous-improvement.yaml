@@ -1,9 +1,9 @@
 schema: starfiniti.continuous-improvement.v1
 status: in_progress
-observedAt: 2026-08-28T04:58:10Z
+observedAt: 2026-08-28T05:18:47Z
 candidate:
   branch: codex/enterprise-roadmap-integration
-  commit: dd33f778060112d156b6dd5a2fdf03fd85ccbc40
+  commit: a7a00f2cfe082b91f8eef65b0930c24fe1c1e4b8
   initialCloseApproved: false
 plan:
   path: infrastructure/governance/continuous-improvement.yaml
@@ -76,7 +76,7 @@ checks:
     evidence: The completion fixture and adversarial mutations prove that cadence, freshness, ranking, recurring controls, rescoring, experiment guardrails, exercises, artifacts, approvals, and score floors fail closed.
   - id: exact_head_ci
     status: passed
-    evidence: Recovery-governance implementation head dd33f778060112d156b6dd5a2fdf03fd85ccbc40 passed CI run 33143147877 with all seven jobs, Security run 33143147832 with all three jobs, and the external GitHub Advanced Security CodeQL policy check.
+    evidence: Recovery-governance implementation head a7a00f2cfe082b91f8eef65b0930c24fe1c1e4b8 passed CI run 33144201269 with all seven jobs, Security run 33144201312 with all three jobs, and the external GitHub Advanced Security CodeQL policy check.
   - id: owner_roster
     status: pending
     evidence: Product, engineering, security, operations, monthly-review, quarterly-exercise, and owner roles require named environment-owned assignments.
