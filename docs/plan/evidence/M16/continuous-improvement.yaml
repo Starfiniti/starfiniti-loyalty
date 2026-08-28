@@ -1,16 +1,16 @@
 schema: starfiniti.continuous-improvement.v1
 status: in_progress
-observedAt: 2026-08-28T01:10:00Z
+observedAt: 2026-08-28T04:44:02Z
 candidate:
   branch: codex/m16-continuous-improvement
   commit: c84e8361ccd58f52fac9d1bbdbe49a787fa9f992
   initialCloseApproved: false
 plan:
   path: infrastructure/governance/continuous-improvement.yaml
-  sha256: 4fc9c72e0bf4d2cb216c135bd7565ee153cd1c1e77689ecb19056138f82adc37
+  sha256: d415743e5b280ecb6b1332212c26fb29ae2259f2c1204d31a90e096dc58b446c
 backlog:
   path: docs/plan/IMPROVEMENT_BACKLOG.yaml
-  sha256: 4dcfc51ed6fc58ee286373efdae44fb6c197bd8a380ab0d9c9cd8caa4da99475
+  sha256: 47e7ece6b19157c3ca5dca1dbcb6ca37fd5feaa8046925a6f52cd00b56cb84ba
 artifacts:
   monthlyReviewPrimaryPath: null
   monthlyReviewPrimarySha256: null
@@ -58,7 +58,7 @@ score:
 checks:
   - id: repository_contract
     status: passed
-    evidence: The canonical contract fixes UTC cadence, review sections, provider sources, ranking arithmetic, regression threshold, score floors, experiment guardrails, five artifacts, and automatic failures.
+    evidence: The canonical contract fixes UTC cadence, review sections, thirteen official provider platform and recovery sources, ranking arithmetic, regression threshold, score floors, experiment guardrails, five artifacts, and automatic failures.
   - id: backlog_contract
     status: passed
     evidence: The evidence-ranked backlog records current external and dependency gates with exact integer inputs, recomputable scores, stable order, evidence paths, and owner inputs.
@@ -112,10 +112,10 @@ checks:
     evidence: Security findings and managed billing usage, invoice, entitlement, and protected-path evidence require an elapsed review.
   - id: provider_review
     status: pending
-    evidence: Every canonical official provider source must be reviewed through the same cutoff with impact and ownership.
+    evidence: All thirteen canonical official provider platform and recovery-dependency sources must be reviewed through the same cutoff with version or entry impact and ownership.
   - id: dependency_pins
     status: pending
-    evidence: Runtime, container, action, SDK, API revision, WordPress, WooCommerce, PHP, PostgreSQL, and Authentik pins require current support review.
+    evidence: Runtime container action SDK API WordPress WooCommerce PHP PostgreSQL Authentik rsync BorgBackup OpenSSH OS and Proxmox pins require installed and candidate version provenance plus current support review.
   - id: backlog_freshness
     status: pending
     evidence: The backlog must be regenerated from the completed review cutoff and contain no stale or silently closed item.

@@ -51,6 +51,24 @@ providerCatalogue:
   - id: nodejs
     source: https://nodejs.org/en/about/previous-releases
     reviewFrequency: monthly
+  - id: rsync
+    source: https://download.samba.org/pub/rsync/NEWS
+    reviewFrequency: monthly
+  - id: borgbackup
+    source: https://borgbackup.readthedocs.io/en/stable/changes.html
+    reviewFrequency: monthly
+  - id: openssh
+    source: https://www.openssh.com/releasenotes.html
+    reviewFrequency: monthly
+  - id: debian
+    source: https://www.debian.org/security/
+    reviewFrequency: monthly
+  - id: ubuntu
+    source: https://ubuntu.com/security/notices
+    reviewFrequency: monthly
+  - id: proxmox
+    source: https://forum.proxmox.com/forums/security-advisories.26/
+    reviewFrequency: monthly
 backlog:
   path: docs/plan/IMPROVEMENT_BACKLOG.yaml
   ranking:

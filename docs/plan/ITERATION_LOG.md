@@ -1,5 +1,13 @@
 # Iteration Log
 
+## 2026-08-28 — M16 recovery dependency drift control
+
+- Reconstructed the M16 monthly source contract after ADR-0072 exposed a gap: Supabase, PostgreSQL, WooCommerce, Stripe, Authentik, Klaviyo, and Node.js were mandatory, but rsync, BorgBackup, OpenSSH, the guest operating systems, and Proxmox were not. The rsync incident could therefore become a one-off fix without a required future source review.
+- Verified the official rsync NEWS, BorgBackup changes, OpenSSH release notes, Debian security, Ubuntu security notices, and Proxmox advisory sources. The initially inferred Proxmox category identifier returned 404, and the VE thread defaulted to its oldest pagination page; following Proxmox's own announcement link resolved the current Security Advisories category, which exposes the latest advisory dates across Proxmox projects.
+- Extended the exact provider catalogue and M16 acceptance/runbook/ADR bindings from seven to thirteen sources. A monthly artifact must now record the installed and candidate version or dated entry, source/package provenance where applicable, impact, owner, and disposition through one cutoff; recovery transport review is incomplete unless it covers both endpoints.
+- Added a deterministic adversarial case that substitutes an unofficial rsync source and proves the monthly review fails closed. Existing closed-set checks also reject missing or additional source identities and stale review instants.
+- Added `IMP-010` for the live pre-3.5 rsync boundary. Its exact score is `40 + 20 + 20 + 10 - 4 - 6 = 80`, placing it above the dedicated-repository item while retaining the approved-package/build, rollback, canary, and isolated-restore dependency. M16 remains in progress at 77/100 with seven checks passed and 32 pending; no elapsed review, package acquisition, production change, backup, checkout path, or loyalty value was claimed.
+
 ## 2026-08-28 — Rsync 3.5 recovery-transport security baseline
 
 - Reconstructed both live endpoints without mutation. The Proxmox Debian 13.5 host runs rsync `3.4.1+ds1-5+deb13u3` with `deb13u4` available; the Ubuntu 24.04.4 database VM runs `3.2.7-1ubuntu1.5`. Both installed rsync/rrsync files are root-owned regular mode `0755`, but neither endpoint implements the complete upstream 3.5 security baseline.

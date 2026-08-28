@@ -113,6 +113,12 @@ const providerSources = new Map([
   ["authentik", "https://docs.goauthentik.io/releases/"],
   ["klaviyo", "https://developers.klaviyo.com/en/docs/changelog_"],
   ["nodejs", "https://nodejs.org/en/about/previous-releases"],
+  ["rsync", "https://download.samba.org/pub/rsync/NEWS"],
+  ["borgbackup", "https://borgbackup.readthedocs.io/en/stable/changes.html"],
+  ["openssh", "https://www.openssh.com/releasenotes.html"],
+  ["debian", "https://www.debian.org/security/"],
+  ["ubuntu", "https://ubuntu.com/security/notices"],
+  ["proxmox", "https://forum.proxmox.com/forums/security-advisories.26/"],
 ]);
 const scoreWeights = new Map([
   ["correctness", 20],
@@ -1389,6 +1395,16 @@ if (process.argv.includes("--self-test")) {
     ({ documents }) => {
       documents.get("monthly-review-primary").providers[0].reviewedAt =
         "2026-06-30T23:59:59Z";
+    },
+  );
+  expectRejected(
+    "substituted recovery dependency source",
+    "provider review is incomplete",
+    ({ documents }) => {
+      documents
+        .get("monthly-review-primary")
+        .providers.find((provider) => provider.id === "rsync").source =
+        "https://example.invalid/rsync-news";
     },
   );
   expectRejected(
