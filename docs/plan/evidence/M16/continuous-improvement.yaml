@@ -1,9 +1,9 @@
 schema: starfiniti.continuous-improvement.v1
 status: in_progress
-observedAt: 2026-08-28T07:33:52Z
+observedAt: 2026-08-28T21:20:42Z
 candidate:
   branch: codex/enterprise-roadmap-integration
-  commit: a7a00f2cfe082b91f8eef65b0930c24fe1c1e4b8
+  commit: 257e99ce931d93832ee5723df159f54dba6dd8a7
   initialCloseApproved: false
 plan:
   path: infrastructure/governance/continuous-improvement.yaml
@@ -73,10 +73,10 @@ checks:
     evidence: ADR-0068 compares four approaches, cites canonical official providers, defines the decision, and preserves rollback and historical evidence semantics.
   - id: validator_selftest
     status: passed
-    evidence: The completion fixture and adversarial mutations prove that cadence, freshness, ranking, recurring controls, rescoring, experiment guardrails, exercises, artifacts, approvals, and score floors fail closed; the separate collector rejects twenty-five source, network, response, digest, review-claim, and output corruptions without network access, including IPv4-mapped-private DNS and a missing output parent before any request.
+    evidence: The completion fixture and adversarial mutations prove that cadence, freshness, ranking, recurring controls, rescoring, experiment guardrails, exercises, artifacts, approvals, and score floors fail closed; the separate collector rejects twenty-six source, network, response, digest, review-claim, output, and byte-preservation corruptions without network access, including IPv4-mapped-private DNS and a missing output parent before any request.
   - id: exact_head_ci
     status: passed
-    evidence: Recovery-governance implementation head a7a00f2cfe082b91f8eef65b0930c24fe1c1e4b8 passed CI run 33144201269 with all seven jobs, Security run 33144201312 with all three jobs, and the external GitHub Advanced Security CodeQL policy check.
+    evidence: Corrected provider-source implementation head 257e99ce931d93832ee5723df159f54dba6dd8a7 passed CI run 33211821152 with all seven jobs, Security run 33211821140 with all four jobs, and the external GitHub Advanced Security CodeQL policy check; all twelve PR checks passed.
   - id: owner_roster
     status: pending
     evidence: Product, engineering, security, operations, monthly-review, quarterly-exercise, and owner roles require named environment-owned assignments.
@@ -112,10 +112,10 @@ checks:
     evidence: Security findings and managed billing usage, invoice, entitlement, and protected-path evidence require an elapsed review.
   - id: provider_review
     status: pending
-    evidence: All thirteen canonical official sources must be reviewed through one cutoff; recovery sources also require every declared endpoint and nonzero installed and candidate provenance digests.
+    evidence: The verified 6534-byte metadata-only snapshot at docs/plan/evidence/M16/runs/provider-source-snapshot-257e99c-2026-08-28T212100Z.json binds all thirteen HTTP 200 source digests through 2026-08-28T21:20:42Z under SHA-256 5786186426b065493f5c01b5d76742322e2e8ed3fe92b8f80c30d787caa516be, but review impact installed evidence and approval are explicitly false; recovery sources still require every declared endpoint and nonzero installed and candidate provenance digests.
   - id: dependency_pins
     status: pending
-    evidence: Runtime container action SDK API WordPress WooCommerce PHP PostgreSQL Authentik rsync BorgBackup OpenSSH OS and Proxmox pins require installed and candidate version provenance plus current support review.
+    evidence: The source snapshot proves current official bytes only. Runtime container action SDK API WordPress WooCommerce PHP PostgreSQL Authentik rsync BorgBackup OpenSSH OS and Proxmox pins still require installed and candidate version provenance plus current support review.
   - id: backlog_freshness
     status: pending
     evidence: The backlog must be regenerated from the completed review cutoff and contain no stale or silently closed item.

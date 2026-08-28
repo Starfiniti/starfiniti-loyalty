@@ -3668,6 +3668,7 @@ tasks:
       [
         docs/plan/evidence/M16/README.md,
         docs/plan/evidence/M16/continuous-improvement.yaml,
+        docs/plan/evidence/M16/runs/provider-source-snapshot-257e99c-2026-08-28T212100Z.json,
         docs/plan/evidence/M16/integration-review-2026-08-27.md,
         docs/plan/evaluations/product-score.json,
         docs/plan/evaluations/product-score-v1-2026-08-13.json,
@@ -3678,5 +3679,6 @@ tasks:
         product-score governance implementation d1a78c04cefacad203c786edee85c4b3a20787a1 passed the complete local 983-test gate 86-migration and 68-pgTAP-file static validation 1069-file secret scan zero-vulnerability production audit licence validation formatting and diff review without a runtime schema or production change,
         exact implementation and evidence head 88a9ef023a8e30c52a8728cc89fc026ba7514b8e passed CI run 33071504559 Security run 33071504623 and external CodeQL with all eleven checks green,
         recovery-dependency governance implementation head a7a00f2cfe082b91f8eef65b0930c24fe1c1e4b8 passed CI run 33144201269 Security run 33144201312 and external CodeQL with all eleven checks green on draft PR 57,
+        corrected provider-source implementation head 257e99ce931d93832ee5723df159f54dba6dd8a7 passed CI run 33211821152 Security run 33211821140 and external CodeQL with all twelve PR checks green; its independently verified 6534-byte thirteen-source metadata artifact has SHA-256 5786186426b065493f5c01b5d76742322e2e8ed3fe92b8f80c30d787caa516be while review impact installed evidence and approval remain false,
         delivery-chain audit found every open roadmap PR from 29 through 56 merge-clean with zero failed or pending checks after exact-head repairs to PRs 29 30 31 32 and 42,
       ]

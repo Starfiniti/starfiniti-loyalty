@@ -28,6 +28,9 @@ const planPath = join(
   root,
   "infrastructure/governance/continuous-improvement.yaml",
 );
+const attributesPath = join(root, ".gitattributes");
+const snapshotAttribute =
+  "docs/plan/evidence/M16/runs/provider-source-snapshot-*.json -text";
 const snapshotSchema = "starfiniti.provider-source-snapshot.v1";
 const limitation =
   "This artifact proves bounded official-source freshness and byte provenance only. It does not complete provider review, classify impact, prove installed versions, approve an upgrade, or close a monthly review.";
@@ -226,6 +229,22 @@ function readStableFile(path, maximumBytes, label) {
   } finally {
     if (descriptor !== undefined) closeSync(descriptor);
   }
+}
+
+function validateGitAttributesBytes(bytes) {
+  const lines = bytes
+    .toString("utf8")
+    .split(/\r?\n/u)
+    .filter((line) => line.trim() !== "");
+  if (lines.filter((line) => line === snapshotAttribute).length !== 1) {
+    fail("provider snapshot byte-preservation attribute differs");
+  }
+}
+
+function validateGitAttributes() {
+  validateGitAttributesBytes(
+    readStableFile(attributesPath, 64 * 1024, "Git attributes"),
+  );
 }
 
 function uniqueCatalogue(items) {
@@ -1022,6 +1041,11 @@ async function runSelfTest(plan, planRaw) {
     changed.sources[0].sha256 = "0".repeat(64);
     validateSnapshot(changed, plan, planRaw, fixtureCommit);
   });
+  await expectFailure(
+    "missing byte-preservation attribute",
+    "byte-preservation attribute differs",
+    () => validateGitAttributesBytes(Buffer.from("*.json text\n", "utf8")),
+  );
 
   const provider = plan.providerCatalogue[0];
   const policy = plan.providerSourceSnapshot;
@@ -1191,6 +1215,7 @@ function parseArguments(args) {
 
 async function main() {
   const command = parseArguments(process.argv.slice(2));
+  validateGitAttributes();
   const { plan, raw: planRaw } = loadPlan();
   if (command.mode === "self-test") {
     await runSelfTest(plan, planRaw);
