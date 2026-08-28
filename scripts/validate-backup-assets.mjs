@@ -28,14 +28,16 @@ const sudoersRoot = new URL(
 );
 const backupScriptUrls = [
   new URL("starfiniti-postgres-backup-rsync", assetRoot),
+  new URL("starfiniti-loyalty-postgres-borg-controller", assetRoot),
   new URL("starfiniti-loyalty-postgres-borg", assetRoot),
   new URL("starfiniti-loyalty-postgres-borg-maintain", assetRoot),
   new URL("starfiniti-postgres-basebackup", assetRoot),
 ];
 const [
   pullFile,
-  borgFile,
-  maintenanceFile,
+  controllerFile,
+  borgRollbackFile,
+  maintenanceRollbackFile,
   basebackupFile,
   serviceFile,
   timerFile,
@@ -63,8 +65,29 @@ const [
   readFile(new URL("starfiniti-postgres-backup-rsync", sudoersRoot), "utf8"),
 ]);
 const pull = pullFile.replaceAll("\r\n", "\n");
-const borg = borgFile.replaceAll("\r\n", "\n");
-const maintenance = maintenanceFile.replaceAll("\r\n", "\n");
+const controller = controllerFile.replaceAll("\r\n", "\n");
+const archiveStart = controller.indexOf("run_archive() {");
+const maintenanceStart = controller.indexOf("run_maintenance() {");
+const dispatchStart = controller.lastIndexOf('case "$controller_mode" in');
+assert.ok(
+  archiveStart > 0 &&
+    maintenanceStart > archiveStart &&
+    dispatchStart > maintenanceStart,
+  "controller must expose ordered archive and maintenance subcommands",
+);
+const controllerCommon = controller.slice(0, archiveStart);
+const controllerModeBody = (start, end) => {
+  const section = controller.slice(start, end).trimEnd();
+  return section
+    .slice(section.indexOf("\n") + 1, section.lastIndexOf("\n}"))
+    .replace(/^ {2}/gmu, "");
+};
+const borg =
+  controllerCommon + controllerModeBody(archiveStart, maintenanceStart);
+const maintenance =
+  controllerCommon + controllerModeBody(maintenanceStart, dispatchStart);
+const borgRollback = borgRollbackFile.replaceAll("\r\n", "\n");
+const maintenanceRollback = maintenanceRollbackFile.replaceAll("\r\n", "\n");
 const basebackup = basebackupFile.replaceAll("\r\n", "\n");
 const service = serviceFile.replaceAll("\r\n", "\n");
 const timer = timerFile.replaceAll("\r\n", "\n");
@@ -91,14 +114,33 @@ if (process.platform !== "win32") {
 
 for (const [label, source] of [
   ["pull", pull],
-  ["borg", borg],
-  ["maintenance", maintenance],
+  ["controller", controller],
+  ["archive rollback", borgRollback],
+  ["maintenance rollback", maintenanceRollback],
   ["basebackup", basebackup],
 ]) {
   assert.match(
     source,
     /^#!\/usr\/bin\/env bash\nset -Eeuo pipefail\n/u,
     `${label} must fail closed`,
+  );
+}
+
+assert.match(
+  controller,
+  /controller_mode="\$\{1:-\}"[\s\S]*usage: starfiniti-loyalty-postgres-borg-controller archive\|maintain[\s\S]*archive \| maintain[\s\S]*archive\) run_archive ;;[\s\S]*maintain\) run_maintenance ;;/u,
+  "one installed controller must fail closed to explicit archive and maintain subcommands",
+);
+for (const sharedFunction of [
+  "prepare_metrics_storage",
+  "read_numeric_state",
+  "write_numeric_state",
+  "publish_repository_metric",
+]) {
+  assert.equal(
+    controller.split(`${sharedFunction}() {`).length - 1,
+    1,
+    `${sharedFunction} must have one shared privileged implementation`,
   );
 }
 
@@ -321,6 +363,11 @@ assert.match(
 );
 assert.match(
   service,
+  /ExecStart=\/usr\/local\/sbin\/starfiniti-loyalty-postgres-borg-controller archive/u,
+  "archive service must select the explicit controller subcommand",
+);
+assert.match(
+  service,
   /Environment=BORG_CACHE_DIR=\/var\/cache\/starfiniti-postgres-borg[\s\S]*Environment=BORG_SECURITY_DIR=\/var\/lib\/starfiniti-postgres-borg\/security[\s\S]*StateDirectory=starfiniti-postgres-borg starfiniti-postgres-backup-stage/u,
   "systemd must isolate PostgreSQL Borg state and its owner-only incremental stage",
 );
@@ -427,7 +474,7 @@ assert.match(
 );
 assert.match(
   maintenanceService,
-  /Requires=starfiniti-loyalty-postgres-borg\.service[\s\S]*After=.*starfiniti-loyalty-postgres-borg\.service[\s\S]*Conflicts=starfiniti-loyalty-postgres-borg-prune\.service[\s\S]*ExecStart=\/usr\/local\/sbin\/starfiniti-loyalty-postgres-borg-maintain[\s\S]*CacheDirectory=starfiniti-postgres-borg[\s\S]*StateDirectory=starfiniti-postgres-borg[\s\S]*TimeoutStartSec=105s[\s\S]*TimeoutStopSec=10s[\s\S]*KillSignal=SIGINT/u,
+  /Requires=starfiniti-loyalty-postgres-borg\.service[\s\S]*After=.*starfiniti-loyalty-postgres-borg\.service[\s\S]*Conflicts=starfiniti-loyalty-postgres-borg-prune\.service[\s\S]*ExecStart=\/usr\/local\/sbin\/starfiniti-loyalty-postgres-borg-controller maintain[\s\S]*CacheDirectory=starfiniti-postgres-borg[\s\S]*StateDirectory=starfiniti-postgres-borg[\s\S]*TimeoutStartSec=105s[\s\S]*TimeoutStopSec=10s[\s\S]*KillSignal=SIGINT/u,
   "maintenance must require a fresh archive, conflict with legacy pruning, share only dedicated PostgreSQL state, and retain a hard service deadline",
 );
 assert.match(
@@ -505,12 +552,11 @@ if (process.platform !== "win32") {
   const metricsPath = join(testRoot, "metrics");
   const metricsStatePath = join(testRoot, "metrics-state");
   const unavailableMetricsPath = join(testRoot, "metrics-unavailable");
-  const borgScriptPath = fileURLToPath(
-    new URL("starfiniti-loyalty-postgres-borg", assetRoot),
+  const controllerScriptPath = fileURLToPath(
+    new URL("starfiniti-loyalty-postgres-borg-controller", assetRoot),
   );
-  const maintenanceScriptPath = fileURLToPath(
-    new URL("starfiniti-loyalty-postgres-borg-maintain", assetRoot),
-  );
+  const borgScriptPath = join(testRoot, "archive-controller");
+  const maintenanceScriptPath = join(testRoot, "maintenance-controller");
 
   const writeExecutable = async (name, source) => {
     const path = join(mockBin, name);
@@ -526,6 +572,35 @@ if (process.platform !== "win32") {
 
   try {
     await mkdir(mockBin, { recursive: true });
+    await writeFile(
+      borgScriptPath,
+      `#!/usr/bin/env bash\nexec bash ${JSON.stringify(controllerScriptPath)} archive "$@"\n`,
+      "utf8",
+    );
+    await chmod(borgScriptPath, 0o700);
+    await writeFile(
+      maintenanceScriptPath,
+      `#!/usr/bin/env bash\nexec bash ${JSON.stringify(controllerScriptPath)} maintain "$@"\n`,
+      "utf8",
+    );
+    await chmod(maintenanceScriptPath, 0o700);
+    for (const arguments_ of [[], ["unknown"]]) {
+      const invalidMode = spawnSync(
+        "bash",
+        [controllerScriptPath, ...arguments_],
+        { encoding: "utf8", env: process.env },
+      );
+      assert.notEqual(
+        invalidMode.status,
+        0,
+        "controller must reject absent or unknown modes before configuration access",
+      );
+      assert.match(
+        invalidMode.stderr,
+        /usage: starfiniti-loyalty-postgres-borg-controller archive\|maintain/u,
+        "invalid controller modes must return bounded usage guidance",
+      );
+    }
     await writeFile(unavailableMetricsPath, "not a directory\n", "utf8");
     await writeFile(
       configPath,

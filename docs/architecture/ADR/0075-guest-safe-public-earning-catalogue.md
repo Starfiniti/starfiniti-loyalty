@@ -2,6 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-08-28
+- Application fallback superseded by: ADR-0079
 - Extends: ADR-0074
 
 ## Context

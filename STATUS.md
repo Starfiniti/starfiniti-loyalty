@@ -1,5 +1,8 @@
 # Status
 
+- Merge-readiness review repaired three concrete boundaries without changing production: ADR-0079 limits the public reader to complete V6 then released English V1, V6 now carries exact immutable programme currency for non-EUR earning/VIP formatting, and expanded reward rows retain editor-only identity through edits/removal. M09 now uses the shared manifest envelope and all eleven M04-M14 validators share one no-follow digest-bound JSON artifact reader. The complete local gate passes 983 tests, every validator/typecheck/build, 86 migrations and 68 pgTAP files, a 1,066-file secret scan, zero production dependency vulnerabilities, and licence validation; exact-head GitHub CI/database replay remains the handoff authority.
+- ADR-0071's undeployed Borg candidate now has one installed fail-closed `archive|maintain` controller with a single configuration boundary and shared numeric-state/repository-metric primitives. Both systemd units select explicit modes; the old standalone programs remain rollback artifacts. No production script, timer, repository, credential, archive, or recovery state changed.
+
 ## Enterprise roadmap status
 
 - Production application images run `v0.1.11`; M00, M02, and M03 are complete, and M01 plus M04–M16 remain the authoritative unfinished enterprise graph.
@@ -82,7 +85,8 @@
 - The Docker-backed GitHub Actions database job replays migrations/seed and runs 1,095 transactional pgTAP assertions plus real two-session ledger/programme concurrency and property probes.
 - Phase 1 Rosy Rewards semantics are owner-approved and encoded as versioned configuration rather than global merchant assumptions.
 - Pure domain behavior covers integer award calculation, explicit historical tier snapshots, 30-day release, 12-month rolling expiry, earliest-expiry redemption ordering, rolling-spend tiers with grace, cumulative original-attribution refund reversal, and negative balances.
-- Forty-nine domain, one hundred twenty-nine versioned contract, one hundred ten dashboard, and nineteen worker tests pass.
+- The current integration head passes 983 workspace tests: 411 dashboard, 118 worker,
+  361 versioned-contract, 85 domain, and 8 TypeScript SDK tests.
 - The platform carries a full AGPL-3.0 license and package metadata; the WooCommerce connector remains independently GPL-2.0-or-later.
 - Phase 2 architecture is complete and deterministically validated: tenant/Auth trust, identity, double-entry ledger, signed inbox/outbox, reward reservation, privacy, backup/restore, deployment, and SLO models are reviewable.
 - Phase 3 tenancy/RLS is complete: organizations, memberships, workspaces, programme groups, support grants, least-privilege roles, composite tenant keys, and live authorization policies execute successfully in disposable Supabase CI.
@@ -141,17 +145,34 @@
 
 ## Database migration state
 
-The active integration branch validates 81 versioned migrations and 68 pgTAP files; exact-head CI run `33127298348` at `657caca` passed clean replay, all concurrency probes, both production images, and all four WooCommerce runtime variants. Production has applied twenty-eight migrations through `20260813200000`, contains the audited initial Starfiniti owner scope and explicit `programme.v2` canary, and still has no customer or loyalty-ledger value.
+The active integration branch validates 86 versioned migrations and 68 pgTAP files.
+Exact code-and-evidence head `8c7da2f65dea0e677e1110244393e7b90b6f11bd` passed CI
+`33176416306`, Security `33176416320`, and external CodeQL: clean replay of
+all 86 migrations, all 68 pgTAP files with 3,772 assertions, all 22 concurrency
+probes, both production images, and all four WooCommerce runtime variants. The
+current PR-head rollup remains authoritative for documentation-only successors.
+Production has applied twenty-eight migrations through `20260813200000`, contains
+the audited initial Starfiniti owner scope and explicit `programme.v2` canary, and
+still has no customer or loyalty-ledger value.
 
 ## Git state
 
 Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 WooCommerce pipeline, PR `#7` merged Phase 9, PR `#9` merged Authentik workforce SSO, PR `#10` merged the English-only launch presentation, PR `#17` merged the Hub-style redesign, PR `#20` merged the focused Programme workflows, PR `#26` merged M03, and PR `#27` versioned the production-backup repair. Release `v0.1.11` runs the exact M03/recovery commit in production. GitHub recognizes the repository license as GNU AGPLv3.
 
-The active implementation branch is `codex/enterprise-roadmap-integration`; draft PR #57 targets `main`, consolidates M04–M16, and is merge-clean at verified candidate `657caca`. Stale Phase 4 local planning changes remain preserved as `preserve stale phase-4 planning state before enterprise roadmap 2026-08-13` and are not part of this branch.
+The active implementation branch is `codex/enterprise-roadmap-integration`; draft PR
+#57 targets `main`, consolidates M04–M16, and is merge-clean. Exact code-and-evidence
+head `8c7da2f` passed all twelve PR checks; the current PR-head rollup remains the
+handoff authority. Stale Phase 4 local planning changes remain preserved as
+`preserve stale phase-4 planning state before enterprise roadmap 2026-08-13` and are
+not part of this branch.
 
 ## Last verification
 
-- Consolidated integration candidate `657caca` passed CI `33127298348`, Security `33127298345`, and external CodeQL with all eleven checks green; draft PR #57 is merge-clean against `main`.
+- Exact code-and-evidence head `8c7da2f65dea0e677e1110244393e7b90b6f11bd`
+  passed CI `33176416306`, Security `33176416320`, and external CodeQL with all
+  twelve PR checks green; draft PR #57 is merge-clean against `main`. The database
+  job replayed 86 migrations, passed all 68 pgTAP files with 3,772 assertions and
+  all 22 concurrency probes; both images and all four WooCommerce runtimes passed.
 - M13 credential-boundary commit `945c92f` independently passed CI `33126151633`, Security `33126151639`, and external CodeQL before the M01 evidence refresh was added.
 - `npm run ci:validate` — passed locally for four baseline jobs, three security jobs, release SBOM/provenance, immutable action inputs, and container boundaries.
 - `npm run security:validate` — passed its corruption matrix for 25 security checks and the isolated six-job ZAP plan; 15 exact repository/execution controls pass and ten external/final-review gates remain deliberately non-passing.

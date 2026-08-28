@@ -1,19 +1,12 @@
 import { createHash } from "node:crypto";
-import {
-  closeSync,
-  constants,
-  fstatSync,
-  lstatSync,
-  openSync,
-  readFileSync,
-  readSync,
-} from "node:fs";
+import { readFileSync } from "node:fs";
 import { dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import YAML from "yaml";
 
 import { validateCanaryManifestEnvelope } from "./lib/validate-canary-manifest-envelope.mjs";
+import { readBoundJsonArtifact } from "./lib/read-bound-json-artifact.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const evidencePath = join(root, "docs/plan/evidence/M14/canary.yaml");
@@ -240,54 +233,11 @@ const safeArtifactPath = (relativePath, artifactId) => {
   return absolute;
 };
 
-const readBoundArtifact = (relativePath, expectedDigest, artifactId) => {
-  if (!digestPattern.test(expectedDigest) || /^0{64}$/u.test(expectedDigest)) {
-    fail(`${artifactId} artifact digest must be exact and nonzero`);
-  }
-  const absolute = safeArtifactPath(relativePath, artifactId);
-  let descriptor;
-  let raw;
-  try {
-    descriptor = openSync(
-      absolute,
-      constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0),
-    );
-    const opened = fstatSync(descriptor);
-    const linked = lstatSync(absolute);
-    if (
-      !opened.isFile() ||
-      !linked.isFile() ||
-      opened.dev !== linked.dev ||
-      opened.ino !== linked.ino ||
-      opened.size < 2 ||
-      opened.size > 256 * 1024
-    ) {
-      fail(`${artifactId} artifact is not one stable bounded regular file`);
-    }
-    raw = Buffer.alloc(opened.size);
-    let offset = 0;
-    while (offset < raw.length) {
-      const count = readSync(
-        descriptor,
-        raw,
-        offset,
-        raw.length - offset,
-        offset,
-      );
-      if (count === 0) fail(`${artifactId} artifact changed while reading`);
-      offset += count;
-    }
-  } finally {
-    if (descriptor !== undefined) closeSync(descriptor);
-  }
-  if (digest(raw) !== expectedDigest)
-    fail(`${artifactId} artifact digest differs`);
-  try {
-    return JSON.parse(raw.toString("utf8"));
-  } catch {
-    fail(`${artifactId} artifact must be valid JSON`);
-  }
-};
+const readBoundArtifact = (relativePath, expectedDigest, artifactId) =>
+  readBoundJsonArtifact(relativePath, expectedDigest, artifactId, {
+    fail,
+    resolvePath: safeArtifactPath,
+  });
 
 const isPlainObject = (value) =>
   value !== null &&

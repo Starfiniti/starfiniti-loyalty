@@ -44,6 +44,7 @@ import {
   formatPublicEarningSource,
   formatPublicEarningWindow,
   formatPublicMoneyMinor,
+  formatPublicPointsPerMajorUnit,
   formatPublicRewardBenefit,
   formatPublicRewardDelivery,
   formatPublicRewardWindow,
@@ -272,7 +273,11 @@ function PublicSection({
                         </span>
                       </header>
                       <strong>
-                        {formatPublicEarningEffect(method.effect, "en")}
+                        {formatPublicEarningEffect(
+                          method.effect,
+                          experience.programmeCurrency,
+                          "en",
+                        )}
                       </strong>
                       <footer>
                         <span>
@@ -429,8 +434,11 @@ function PublicSection({
                         <h3>{level.name}</h3>
                       </div>
                       <strong>
-                        {formatPublicPoints(level.pointsPerMajorUnit, "en")}
-                        <span> points / €1</span>
+                        {formatPublicPointsPerMajorUnit(
+                          level.pointsPerMajorUnit,
+                          experience.programmeCurrency,
+                          "en",
+                        )}
                       </strong>
                     </header>
                     {level.entry ? (
@@ -447,7 +455,11 @@ function PublicSection({
                                 key={`${threshold.metric}:${threshold.minimum}:${thresholdIndex}`}
                               >
                                 <Check aria-hidden="true" />
-                                {formatPublicVipThreshold(threshold, "en")}
+                                {formatPublicVipThreshold(
+                                  threshold,
+                                  experience.programmeCurrency,
+                                  "en",
+                                )}
                               </li>
                             ),
                           )}

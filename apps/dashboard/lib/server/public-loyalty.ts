@@ -32,57 +32,8 @@ export async function getPublicLoyaltyExperience(
     throw new Error("public_loyalty_read_unavailable");
   }
 
-  const v5 = await loyalty.rpc("get_public_loyalty_experience_v5", {
-    target_workspace_public_id: workspaceId,
-    target_programme_public_id: programmeId,
-  });
-  if (!v5.error) {
-    const parsed = parseV5(v5.data);
-    return parsed ? normalizeV5(parsed) : null;
-  }
-  if (!isMissingProjection(v5.error)) {
-    throw new Error("public_loyalty_read_unavailable");
-  }
-
-  const v4 = await loyalty.rpc("get_public_loyalty_experience_v4", {
-    target_workspace_public_id: workspaceId,
-    target_programme_public_id: programmeId,
-  });
-  if (!v4.error) {
-    const parsed = parseV4(v4.data);
-    return parsed ? normalizeV5(normalizeV4(parsed)) : null;
-  }
-  if (!isMissingProjection(v4.error)) {
-    throw new Error("public_loyalty_read_unavailable");
-  }
-
-  const v3 = await loyalty.rpc("get_public_loyalty_experience_v3", {
-    target_workspace_public_id: workspaceId,
-    target_programme_public_id: programmeId,
-  });
-  if (!v3.error) {
-    const parsed = parseV3(v3.data);
-    return parsed ? normalizeV5(normalizeV4(normalizeV3(parsed))) : null;
-  }
-  if (!isMissingProjection(v3.error)) {
-    throw new Error("public_loyalty_read_unavailable");
-  }
-
-  const v2 = await loyalty.rpc("get_public_loyalty_experience_v2", {
-    target_workspace_public_id: workspaceId,
-    target_programme_public_id: programmeId,
-  });
-  if (!v2.error) {
-    const parsed = parseV2(v2.data);
-    return parsed
-      ? normalizeV5(normalizeV4(normalizeV3(normalizeV2(parsed))))
-      : null;
-  }
-  if (!isMissingProjection(v2.error)) {
-    throw new Error("public_loyalty_read_unavailable");
-  }
-
-  // The English V1 projection remains valid only as a rolling-deploy bridge.
+  // Production v0.1.11 exposes V1. V2-V6 are one migration-first release, so
+  // intermediate application fallbacks were never a deployable state.
   const v1 = await loyalty.rpc("get_public_loyalty_experience", {
     target_workspace_public_id: workspaceId,
     target_programme_public_id: programmeId,
@@ -113,96 +64,8 @@ function parseV6(data: unknown): PublicLoyaltyExperienceV6 | null {
     vipCatalogue: row.vip_catalogue,
     earningMethods: row.earning_methods,
     rewardCatalogue: row.reward_catalogue,
+    programmeCurrency: row.programme_currency,
     referralCatalogue: row.referral_catalogue,
-  });
-  if (!parsed.success) throw new Error("public_loyalty_read_unavailable");
-  return parsed.data;
-}
-
-function parseV5(data: unknown): PublicLoyaltyExperienceV5 | null {
-  if (!Array.isArray(data)) throw new Error("public_loyalty_read_unavailable");
-  if (data.length === 0) return null;
-  if (data.length !== 1) throw new Error("public_loyalty_read_unavailable");
-  const row = data[0];
-  const parsed = publicLoyaltyExperienceV5.safeParse({
-    version: "5",
-    workspaceId: row.workspace_public_id,
-    programmeId: row.programme_public_id,
-    programmeGroupId: row.programme_group_public_id,
-    programmeName: row.programme_name,
-    requestedLocale: row.requested_locale,
-    resolvedLocale: row.resolved_locale,
-    presentation: row.presentation,
-    tiers: row.tiers,
-    vipCatalogue: row.vip_catalogue,
-    earningMethods: row.earning_methods,
-    rewardCatalogue: row.reward_catalogue,
-  });
-  if (!parsed.success) throw new Error("public_loyalty_read_unavailable");
-  return parsed.data;
-}
-
-function parseV4(data: unknown): PublicLoyaltyExperienceV4 | null {
-  if (!Array.isArray(data)) throw new Error("public_loyalty_read_unavailable");
-  if (data.length === 0) return null;
-  if (data.length !== 1) throw new Error("public_loyalty_read_unavailable");
-  const row = data[0];
-  const parsed = publicLoyaltyExperienceV4.safeParse({
-    version: "4",
-    workspaceId: row.workspace_public_id,
-    programmeId: row.programme_public_id,
-    programmeGroupId: row.programme_group_public_id,
-    programmeName: row.programme_name,
-    requestedLocale: row.requested_locale,
-    resolvedLocale: row.resolved_locale,
-    presentation: row.presentation,
-    tiers: row.tiers,
-    rewards: row.rewards,
-    vipCatalogue: row.vip_catalogue,
-    earningMethods: row.earning_methods,
-  });
-  if (!parsed.success) throw new Error("public_loyalty_read_unavailable");
-  return parsed.data;
-}
-
-function parseV3(data: unknown): PublicLoyaltyExperienceV3 | null {
-  if (!Array.isArray(data)) throw new Error("public_loyalty_read_unavailable");
-  if (data.length === 0) return null;
-  if (data.length !== 1) throw new Error("public_loyalty_read_unavailable");
-  const row = data[0];
-  const parsed = publicLoyaltyExperienceV3.safeParse({
-    version: "3",
-    workspaceId: row.workspace_public_id,
-    programmeId: row.programme_public_id,
-    programmeGroupId: row.programme_group_public_id,
-    programmeName: row.programme_name,
-    requestedLocale: row.requested_locale,
-    resolvedLocale: row.resolved_locale,
-    presentation: row.presentation,
-    tiers: row.tiers,
-    rewards: row.rewards,
-    vipCatalogue: row.vip_catalogue,
-  });
-  if (!parsed.success) throw new Error("public_loyalty_read_unavailable");
-  return parsed.data;
-}
-
-function parseV2(data: unknown): PublicLoyaltyExperienceV2 | null {
-  if (!Array.isArray(data)) throw new Error("public_loyalty_read_unavailable");
-  if (data.length === 0) return null;
-  if (data.length !== 1) throw new Error("public_loyalty_read_unavailable");
-  const row = data[0];
-  const parsed = publicLoyaltyExperienceV2.safeParse({
-    version: "2",
-    workspaceId: row.workspace_public_id,
-    programmeId: row.programme_public_id,
-    programmeGroupId: row.programme_group_public_id,
-    programmeName: row.programme_name,
-    requestedLocale: row.requested_locale,
-    resolvedLocale: row.resolved_locale,
-    presentation: row.presentation,
-    tiers: row.tiers,
-    rewards: row.rewards,
   });
   if (!parsed.success) throw new Error("public_loyalty_read_unavailable");
   return parsed.data;
@@ -398,6 +261,7 @@ function normalizeV5(
   return publicLoyaltyExperienceV6.parse({
     ...experience,
     version: "6",
+    programmeCurrency: null,
     referralCatalogue: {
       version: "1",
       state: "confirm_in_account",

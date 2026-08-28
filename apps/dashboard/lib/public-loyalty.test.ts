@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
-  formatEurMinor,
   formatPublicPoints,
   formatPublicEarningEffect,
   formatPublicEarningSource,
   formatPublicEarningWindow,
   formatPublicMoneyMinor,
+  formatPublicPointsPerMajorUnit,
   formatPublicRewardBenefit,
   formatPublicRewardDelivery,
   formatPublicRewardWindow,
@@ -54,12 +54,10 @@ describe("public loyalty presentation", () => {
     expect(isPublicId("00000000-0000-0000-0000-000000000000")).toBe(false);
   });
 
-  it("formats exact bigint point and EUR values without number coercion", () => {
+  it("formats exact bigint points without number coercion", () => {
     expect(formatPublicPoints("9007199254740993", "en")).toBe(
       "9,007,199,254,740,993",
     );
-    expect(formatEurMinor("15000", "en")).toBe("€150");
-    expect(formatEurMinor("15025", "en")).toBe("€150.25");
   });
 
   it("routes guests to the canonical same-origin loyalty sign-in", () => {
@@ -74,27 +72,35 @@ describe("public loyalty presentation", () => {
     expect(
       formatPublicVipThreshold(
         { metric: "eligible_spend", minimum: "15025" },
+        { code: "EUR", minorUnitDigits: 2 },
         "en",
       ),
     ).toBe("Spend €150.25");
     expect(
       formatPublicVipThreshold(
         { metric: "earned_points", minimum: "9007199254740993" },
+        { code: "EUR", minorUnitDigits: 2 },
         "en",
       ),
     ).toBe("Earn 9,007,199,254,740,993 points");
     expect(
-      formatPublicVipThreshold({ metric: "order_count", minimum: "1" }, "en"),
+      formatPublicVipThreshold(
+        { metric: "order_count", minimum: "1" },
+        { code: "EUR", minorUnitDigits: 2 },
+        "en",
+      ),
     ).toBe("Place 1 order");
     expect(
       formatPublicVipThreshold(
         { metric: "referral_count", minimum: "2" },
+        { code: "EUR", minorUnitDigits: 2 },
         "en",
       ),
     ).toBe("Refer 2 friends");
     expect(
       formatPublicVipThreshold(
         { metric: "verified_action_count", minimum: "3" },
+        { code: "EUR", minorUnitDigits: 2 },
         "en",
       ),
     ).toBe("Complete 3 qualifying activities");
@@ -126,21 +132,65 @@ describe("public loyalty presentation", () => {
     expect(
       formatPublicEarningEffect(
         { kind: "base_rate", pointsPerMajorUnit: "5" },
+        { code: "EUR", minorUnitDigits: 2 },
         "en",
       ),
     ).toBe("5 points / €1");
     expect(
       formatPublicEarningEffect(
         { kind: "multiplier", multiplierBasisPoints: 15_625 },
+        { code: "EUR", minorUnitDigits: 2 },
         "en",
       ),
     ).toBe("1.5625× points");
     expect(
       formatPublicEarningEffect(
         { kind: "fixed_bonus", points: "9007199254740993" },
+        { code: "EUR", minorUnitDigits: 2 },
         "en",
       ),
     ).toBe("9,007,199,254,740,993 bonus points");
+  });
+
+  it("uses the published currency for earning and VIP money", () => {
+    expect(
+      formatPublicEarningEffect(
+        { kind: "base_rate", pointsPerMajorUnit: "5" },
+        { code: "USD", minorUnitDigits: 2 },
+        "en",
+      ),
+    ).toBe("5 points / $1");
+    expect(
+      formatPublicVipThreshold(
+        { metric: "eligible_spend", minimum: "15025" },
+        { code: "JPY", minorUnitDigits: 0 },
+        "en",
+      ),
+    ).toBe("Spend ¥15,025");
+    expect(
+      formatPublicPointsPerMajorUnit(
+        "7",
+        { code: "JPY", minorUnitDigits: 0 },
+        "en",
+      ),
+    ).toBe("7 points / ¥1");
+  });
+
+  it("uses currency-neutral copy only for the released V1 fallback", () => {
+    expect(
+      formatPublicEarningEffect(
+        { kind: "base_rate", pointsPerMajorUnit: "5" },
+        null,
+        "en",
+      ),
+    ).toBe("5 points / major currency unit");
+    expect(
+      formatPublicVipThreshold(
+        { metric: "eligible_spend", minimum: "15025" },
+        null,
+        "en",
+      ),
+    ).toBe("Published spend threshold");
   });
 
   it("explains current and scheduled earning windows in UTC", () => {

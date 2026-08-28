@@ -103,6 +103,7 @@ function publicV6Value() {
   return {
     ...publicV5Value(),
     version: "6" as const,
+    programmeCurrency: { code: "EUR", minorUnitDigits: 2 },
     referralCatalogue: {
       version: "1" as const,
       state: "available" as const,
@@ -833,6 +834,35 @@ describe("experience theme contracts", () => {
 
     expect(publicLoyaltyExperienceV6.parse(value)).toEqual(value);
     expect(publicLoyaltyExperienceV5.safeParse(value).success).toBe(false);
+  });
+
+  it("requires a strict programme currency or an explicit legacy fallback", () => {
+    const value = publicV6Value();
+
+    expect(
+      publicLoyaltyExperienceV6.safeParse({
+        ...value,
+        programmeCurrency: { code: "JPY", minorUnitDigits: 0 },
+      }).success,
+    ).toBe(true);
+    expect(
+      publicLoyaltyExperienceV6.safeParse({
+        ...value,
+        programmeCurrency: null,
+      }).success,
+    ).toBe(true);
+    expect(
+      publicLoyaltyExperienceV6.safeParse({
+        ...value,
+        programmeCurrency: { code: "usd", minorUnitDigits: 2 },
+      }).success,
+    ).toBe(false);
+    expect(
+      publicLoyaltyExperienceV6.safeParse({
+        ...value,
+        programmeCurrency: { code: "USD", minorUnitDigits: 7 },
+      }).success,
+    ).toBe(false);
   });
 
   it("accepts honest non-active V6 referral states without policy details", () => {

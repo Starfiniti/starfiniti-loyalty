@@ -2,6 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-08-28
+- Application fallback superseded by: ADR-0079
 - Decision owners: Starfiniti Loyalty engineering
 - Related modules: M06, M09
 

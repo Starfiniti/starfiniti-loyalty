@@ -753,6 +753,7 @@ export const publicLoyaltyExperienceV6 = z
   .object({
     ...publicLoyaltyExperienceV6BaseShape,
     version: z.literal("6"),
+    programmeCurrency: publicRewardCurrencyV1.nullable(),
     referralCatalogue: publicReferralCatalogueV1,
   })
   .strict()

@@ -19,6 +19,7 @@ returns table (
   vip_catalogue jsonb,
   earning_methods jsonb,
   reward_catalogue jsonb,
+  programme_currency jsonb,
   referral_catalogue jsonb
 )
 language sql
@@ -108,6 +109,15 @@ as $$
     scope.earning_methods,
     scope.reward_catalogue,
     case
+      when scope.currency_code is not null
+       and scope.currency_minor_unit_digits is not null
+      then pg_catalog.jsonb_build_object(
+        'code', scope.currency_code,
+        'minorUnitDigits', scope.currency_minor_unit_digits
+      )
+      else null
+    end as programme_currency,
+    case
       when scope.referral_policy_id is null then pg_catalog.jsonb_build_object(
         'version', '1',
         'state', 'unavailable'
@@ -154,4 +164,4 @@ grant execute on function loyalty.get_public_loyalty_experience_v6(uuid, uuid)
   to anon, authenticated;
 
 comment on function loyalty.get_public_loyalty_experience_v6(uuid, uuid) is
-  'Returns one bounded English guest referral catalogue derived from the immutable published policy and server rollout state; excludes customer links, identities, orders, history, risk evidence, internal selectors, exact caps, and value authority.';
+  'Returns one bounded English guest catalogue with immutable published programme currency and referral terms; excludes customer links, identities, orders, history, risk evidence, internal selectors, exact caps, and value authority.';

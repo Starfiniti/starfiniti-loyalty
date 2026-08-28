@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   expandedRewardValidationIssues,
+  initialExpandedRewardEditorRows,
   isVersionedRewardCandidate,
+  removeExpandedRewardEditorRow,
   replaceCollapsedRewardIssues,
+  replaceExpandedRewardEditorRow,
   validationPathHasIssue,
 } from "./expanded-rewards-validation";
 
@@ -81,5 +84,40 @@ describe("expanded reward draft validation", () => {
         path: ["rewards", 1, "configuration", "availability", "pointsBudget"],
       },
     ]);
+  });
+
+  it("keeps editor-only row identity stable through edits and removal", () => {
+    const secondReward = {
+      ...freeProductReward,
+      code: "free-product-two",
+      name: "Second free product",
+    };
+    const initial = initialExpandedRewardEditorRows([
+      freeProductReward,
+      secondReward,
+    ]);
+
+    expect(initial.map((row) => row.editorKey)).toEqual([
+      "initial:0",
+      "initial:1",
+    ]);
+
+    const edited = replaceExpandedRewardEditorRow(initial, 1, {
+      ...secondReward,
+      code: "edited-code",
+    });
+    expect(edited[1]?.editorKey).toBe("initial:1");
+    expect(edited[1]?.reward.code).toBe("edited-code");
+
+    const surviving = removeExpandedRewardEditorRow(edited, 0);
+    expect(surviving).toEqual([
+      {
+        editorKey: "initial:1",
+        reward: expect.objectContaining({ code: "edited-code" }),
+      },
+    ]);
+    expect(JSON.stringify(surviving.map((row) => row.reward))).not.toContain(
+      "editorKey",
+    );
   });
 });

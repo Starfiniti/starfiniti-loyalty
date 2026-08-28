@@ -7,7 +7,7 @@ Conflicts=starfiniti-loyalty-postgres-borg-prune.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/sbin/starfiniti-loyalty-postgres-borg-maintain
+ExecStart=/usr/local/sbin/starfiniti-loyalty-postgres-borg-controller maintain
 Nice=10
 IOSchedulingClass=best-effort
 IOSchedulingPriority=7

@@ -1,7 +1,39 @@
 import {
+  type ProgrammeDefinitionV2,
   programmeRewardDefinitionV2,
   type ProgrammeRewardDefinitionV2,
 } from "@starfiniti/contracts";
+
+export type ExpandedRewardEditorRow = Readonly<{
+  editorKey: string;
+  reward: ProgrammeDefinitionV2["rewards"][number];
+}>;
+
+export function initialExpandedRewardEditorRows(
+  rewards: ProgrammeDefinitionV2["rewards"],
+): ExpandedRewardEditorRow[] {
+  return rewards.map((reward, index) => ({
+    editorKey: `initial:${index}`,
+    reward,
+  }));
+}
+
+export function replaceExpandedRewardEditorRow(
+  rows: readonly ExpandedRewardEditorRow[],
+  index: number,
+  reward: ProgrammeDefinitionV2["rewards"][number],
+): ExpandedRewardEditorRow[] {
+  return rows.map((row, rowIndex) =>
+    rowIndex === index ? { ...row, reward } : row,
+  );
+}
+
+export function removeExpandedRewardEditorRow(
+  rows: readonly ExpandedRewardEditorRow[],
+  index: number,
+): ExpandedRewardEditorRow[] {
+  return rows.filter((_, rowIndex) => rowIndex !== index);
+}
 
 export type ExpandedRewardValidationIssue = Readonly<{
   message: string;

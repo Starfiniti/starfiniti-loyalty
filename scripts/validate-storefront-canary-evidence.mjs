@@ -1,17 +1,11 @@
 import { createHash } from "node:crypto";
-import {
-  closeSync,
-  constants,
-  fstatSync,
-  lstatSync,
-  openSync,
-  readFileSync,
-  readSync,
-} from "node:fs";
+import { readFileSync } from "node:fs";
 import { dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import YAML from "yaml";
+import { validateCanaryManifestEnvelope } from "./lib/validate-canary-manifest-envelope.mjs";
+import { readBoundJsonArtifact } from "./lib/read-bound-json-artifact.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const evidencePath = join(root, "docs/plan/evidence/M09/canary.yaml");
@@ -187,39 +181,6 @@ const completionApprovals = [
   "pilotStoreApproved",
   "canaryApproved",
 ];
-const manifestKeys = [
-  "schema",
-  "status",
-  "observedAt",
-  "currentProduction",
-  "candidate",
-  "publicBaseline",
-  "score",
-  "checks",
-  "artifacts",
-  "automaticFails",
-];
-const currentProductionKeys = ["release", "applicationCommit"];
-const candidateKeys = [
-  "pullRequest",
-  "commit",
-  "approvedRelease",
-  "operatorAccess",
-  "pilotStoreApproved",
-  "canaryApproved",
-];
-const publicBaselineKeys = [
-  "dashboardHealth",
-  "login",
-  "authWithoutKey",
-  "restWithoutKey",
-  "canonicalDns",
-];
-const scoreKeys = ["total", "target", "minimumCategoryRatio", "categories"];
-const scoreCategoryKeys = ["id", "weight", "score", "evidence"];
-const checkKeys = ["id", "status", "evidence"];
-const artifactKeys = ["id", "status", "path", "sha256"];
-const automaticFailKeys = ["id", "rule"];
 const maximumEvidenceTextLength = 4_096;
 const fail = (message) => {
   throw new Error(`Storefront canary evidence invalid: ${message}`);
@@ -284,57 +245,11 @@ const safeArtifactPath = (relativePath, artifactId) => {
   return absolute;
 };
 
-const readBoundArtifact = (relativePath, expectedDigest, artifactId) => {
-  if (!digestPattern.test(expectedDigest) || /^0{64}$/u.test(expectedDigest)) {
-    fail(`${artifactId} artifact digest must be exact and nonzero`);
-  }
-  const absolute = safeArtifactPath(relativePath, artifactId);
-  let descriptor;
-  let raw;
-  try {
-    descriptor = openSync(
-      absolute,
-      constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0),
-    );
-    const opened = fstatSync(descriptor);
-    const linked = lstatSync(absolute);
-    if (
-      !opened.isFile() ||
-      !linked.isFile() ||
-      opened.dev !== linked.dev ||
-      opened.ino !== linked.ino ||
-      opened.size < 2 ||
-      opened.size > 256 * 1024
-    ) {
-      fail(`${artifactId} artifact is not one stable bounded regular file`);
-    }
-    raw = Buffer.alloc(opened.size);
-    let offset = 0;
-    while (offset < raw.length) {
-      const count = readSync(
-        descriptor,
-        raw,
-        offset,
-        raw.length - offset,
-        offset,
-      );
-      if (count === 0) fail(`${artifactId} artifact changed while reading`);
-      offset += count;
-    }
-  } finally {
-    if (descriptor !== undefined) closeSync(descriptor);
-  }
-  if (digest(raw) !== expectedDigest) {
-    fail(`${artifactId} artifact digest differs`);
-  }
-  let document;
-  try {
-    document = JSON.parse(raw.toString("utf8"));
-  } catch {
-    fail(`${artifactId} artifact must be valid JSON`);
-  }
-  return document;
-};
+const readBoundArtifact = (relativePath, expectedDigest, artifactId) =>
+  readBoundJsonArtifact(relativePath, expectedDigest, artifactId, {
+    fail,
+    resolvePath: safeArtifactPath,
+  });
 
 const isPlainObject = (value) =>
   value !== null &&
@@ -1217,32 +1132,19 @@ const validateDocument = (
   candidateTasks = tasks,
   artifactReader = readBoundArtifact,
 ) => {
-  inspectEvidence(candidateEvidence);
-  exactKeys(candidateEvidence, manifestKeys, "manifest");
-  exactKeys(
-    candidateEvidence.currentProduction,
-    currentProductionKeys,
-    "currentProduction",
+  const { observedAt: candidateObservedAt } = validateCanaryManifestEnvelope(
+    candidateEvidence,
+    candidateTasks,
+    fail,
+    {
+      inspect: inspectEvidence,
+    },
   );
-  exactKeys(candidateEvidence.candidate, candidateKeys, "candidate");
-  exactKeys(
-    candidateEvidence.publicBaseline,
-    publicBaselineKeys,
-    "publicBaseline",
-  );
-  exactKeys(candidateEvidence.score, scoreKeys, "score");
   if (candidateEvidence.schema !== "starfiniti.storefront-canary.v1") {
     fail("unexpected schema");
   }
   if (!new Set(["in_progress", "complete"]).has(candidateEvidence.status)) {
     fail("status must be in_progress or complete");
-  }
-  const candidateObservedAt = exactUtcTime(
-    candidateEvidence.observedAt,
-    "observedAt",
-  );
-  if (candidateObservedAt > Date.now() + 5 * 60 * 1_000) {
-    fail("observedAt must not be in the future");
   }
   if (
     typeof candidateEvidence.currentProduction?.release !== "string" ||
@@ -1284,7 +1186,6 @@ const validateDocument = (
 
   const checkIds = new Set();
   for (const check of candidateEvidence.checks) {
-    exactKeys(check, checkKeys, "check");
     if (!requiredChecks.has(check.id)) fail(`unknown check ${check.id}`);
     if (checkIds.has(check.id)) fail(`duplicate check ${check.id}`);
     if (!allowedStatuses.has(check.status)) {
@@ -1319,7 +1220,6 @@ const validateDocument = (
   const verifiedArtifactDigests = new Set();
   const verifiedArtifactDocuments = new Map();
   for (const artifact of candidateEvidence.artifacts) {
-    exactKeys(artifact, artifactKeys, "artifact");
     if (!requiredArtifacts.has(artifact.id)) {
       fail(`unknown artifact ${artifact.id}`);
     }
@@ -1433,7 +1333,6 @@ const validateDocument = (
   let calculatedWeight = 0;
   const categoryIds = new Set();
   for (const category of candidateEvidence.score.categories) {
-    exactKeys(category, scoreCategoryKeys, "score category");
     const expectedWeight = categoryWeights.get(category.id);
     if (expectedWeight === undefined) {
       fail(`unknown score category ${category.id}`);
@@ -1489,9 +1388,6 @@ const validateDocument = (
   if (!Array.isArray(candidateEvidence.automaticFails)) {
     fail("automatic failures must be an array");
   }
-  for (const rule of candidateEvidence.automaticFails) {
-    exactKeys(rule, automaticFailKeys, "automatic failure");
-  }
   if (
     candidateEvidence.automaticFails.length !== requiredAutomaticFails.size ||
     candidateEvidence.automaticFails.some(
@@ -1505,9 +1401,6 @@ const validateDocument = (
     fail("automatic failures must contain every required unique rule ID");
   }
 
-  if (!isPlainObject(candidateTasks) || !Array.isArray(candidateTasks.tasks)) {
-    fail("task graph is invalid");
-  }
   const m09 = candidateTasks.tasks.find(
     (task) => task.id === "M09-STOREFRONT-EXPERIENCE",
   );

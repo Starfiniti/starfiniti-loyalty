@@ -27,10 +27,16 @@ import {
   useState,
 } from "react";
 import { saveProgrammeDraft, type ProgrammeActionState } from "./actions";
-import { initialProgrammeDefinitionV2 } from "./earning-rules-model";
+import {
+  initialProgrammeDefinitionV2,
+  selectorList,
+} from "./earning-rules-model";
 import {
   expandedRewardValidationIssues,
+  initialExpandedRewardEditorRows,
   isVersionedRewardCandidate,
+  removeExpandedRewardEditorRow,
+  replaceExpandedRewardEditorRow,
   replaceCollapsedRewardIssues,
   validationPathHasIssue,
 } from "./expanded-rewards-validation";
@@ -204,17 +210,6 @@ function createReward(
   };
 }
 
-function selectorList(value: string): string[] {
-  return Array.from(
-    new Set(
-      value
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean),
-    ),
-  ).slice(0, 100);
-}
-
 function optionalInteger(value: string): number | null {
   if (value.trim() === "") return null;
   const number = Number(value);
@@ -271,9 +266,13 @@ export function ExpandedRewardsEditor({
     () => initialProgrammeDefinitionV2(initialConfiguration),
     [initialConfiguration],
   );
-  const [rewards, setRewards] = useState(initial.definition.rewards);
+  const [rewardRows, setRewardRows] = useState(() =>
+    initialExpandedRewardEditorRows(initial.definition.rewards),
+  );
+  const nextRewardKey = useRef(initial.definition.rewards.length);
   const [state, action, pending] = useActionState(saveProgrammeDraft, idle);
   const formRef = useRef<HTMLFormElement>(null);
+  const rewards = rewardRows.map((row) => row.reward);
   const definition = { ...initial.definition, rewards };
   const validation = programmeDefinitionV2.safeParse(definition);
   const rewardIssues = expandedRewardValidationIssues(rewards);
@@ -294,19 +293,24 @@ export function ExpandedRewardsEditor({
   }).length;
 
   function addReward(kind: RewardTemplate) {
-    setRewards((current) => [
+    const editorKey = `added:${nextRewardKey.current}`;
+    nextRewardKey.current += 1;
+    setRewardRows((current) => [
       ...current,
-      createReward(
-        kind,
-        current.map((reward) => reward.code),
-        initial.definition.currencyMinorUnitDigits,
-      ),
+      {
+        editorKey,
+        reward: createReward(
+          kind,
+          current.map((row) => row.reward.code),
+          initial.definition.currencyMinorUnitDigits,
+        ),
+      },
     ]);
   }
 
   function replaceReward(index: number, reward: ProgrammeRewardDefinitionV2) {
-    setRewards((current) =>
-      current.map((item, itemIndex) => (itemIndex === index ? reward : item)),
+    setRewardRows((current) =>
+      replaceExpandedRewardEditorRow(current, index, reward),
     );
   }
 
@@ -427,7 +431,7 @@ export function ExpandedRewardsEditor({
             </div>
           ) : null}
 
-          {rewards.length === 0 ? (
+          {rewardRows.length === 0 ? (
             <div className="reward-empty-state">
               <div className="reward-empty-icon" aria-hidden="true">
                 <Gift />
@@ -439,12 +443,12 @@ export function ExpandedRewardsEditor({
             </div>
           ) : (
             <div className="expanded-reward-list">
-              {rewards.map((item, index) => {
+              {rewardRows.map(({ editorKey, reward: item }, index) => {
                 if (!isExpandedReward(item)) {
                   return (
                     <article
                       className="expanded-reward-card legacy"
-                      key={item.code}
+                      key={editorKey}
                     >
                       <div className="expanded-reward-card-heading">
                         <div className="reward-kind-icon" aria-hidden="true">
@@ -472,10 +476,7 @@ export function ExpandedRewardsEditor({
                 const nativeReward = isNativeReward(reward) ? reward : null;
                 const manual = manualReward !== null;
                 return (
-                  <fieldset
-                    className="expanded-reward-card"
-                    key={`${index}:${reward.kind}`}
-                  >
+                  <fieldset className="expanded-reward-card" key={editorKey}>
                     <legend>Reward {index + 1}</legend>
                     <div className="expanded-reward-card-heading">
                       <div className="reward-kind-icon" aria-hidden="true">
@@ -497,10 +498,8 @@ export function ExpandedRewardsEditor({
                           aria-label={`Remove ${reward.name}`}
                           className="ui-icon-button reward-remove-button"
                           onClick={() =>
-                            setRewards((current) =>
-                              current.filter(
-                                (_, itemIndex) => itemIndex !== index,
-                              ),
+                            setRewardRows((current) =>
+                              removeExpandedRewardEditorRow(current, index),
                             )
                           }
                           type="button"

@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(88);
+select plan(89);
 
 select has_function(
   'loyalty', 'get_public_loyalty_experience', array['uuid', 'uuid', 'text'],
@@ -896,6 +896,16 @@ select results_eq(
     'null'::jsonb
   ) $$,
   'V5 retains a conservative no-schedule compatibility offer for valid legacy rewards'
+);
+select results_eq(
+  $$ select
+       programme_currency ->> 'code',
+       (programme_currency ->> 'minorUnitDigits')::integer
+     from loyalty.get_public_loyalty_experience_v6(
+       '7b000000-0000-4000-8000-000000000110',
+       '7b000000-0000-4000-8000-000000000130') $$,
+  $$ values ('EUR'::text, 2) $$,
+  'V6 derives exact display currency only from the selected immutable published programme'
 );
 select results_eq(
   $$ select

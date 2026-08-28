@@ -1378,17 +1378,18 @@ tasks:
             - V6 is read-only and may expose only reviewed programme-level facts;
               authenticated customer sharing and history remain on the existing
               Auth-derived no-selector boundary
-            - V5 through V1 are attempted only when a projection function is absent;
-              malformed, contradictory, duplicate, or provider-error V6 data fails
-              closed
+            - production V1 is the only application fallback when V6 is absent;
+              the unreleased V2-V5 SQL contracts remain available to old clients
+              and composition, while malformed, contradictory, duplicate, or
+              provider-error V6 data fails closed
           rollout:
-            Deploy the additive projection before the V6 reader, keep production
-            unchanged, then include the exact release in the existing M09 disabled
-            Starfiniti canary.
+            Deploy all additive V2-V6 projections before the complete V6 reader,
+            keep production unchanged, then include the exact release in the
+            existing M09 disabled Starfiniti canary.
           rollback:
-            Revert the reader to V5 while retaining the additive V6 function;
-            do not alter published policies, customer links, referral history, ledger
-            effects, or WooCommerce checkout behavior.
+            Revert the dashboard to released V1 while retaining additive V2-V6
+            functions; do not alter published policies, customer links, referral
+            history, ledger effects, or WooCommerce checkout behavior.
           verification:
             - strict contract, boundary, bigint, state, contradiction, and unknown-field
               tests
@@ -1401,6 +1402,9 @@ tasks:
             - strict V6 contracts and server parsing reject private, contradictory,
               oversized, duplicate, malformed, and provider-error data without
               selecting an older projection
+            - ADR-0079 limits the release bridge to V6 then English V1, adds exact
+              published programme currency to V6, and uses currency-neutral copy
+              instead of guessing EUR for the legacy fallback
             - additive migration 20260828111703 derives immutable published referral
               terms and rollout state, grants only the reviewed bounded read, and
               adds focused tenancy, minimization, state, and zero-mutation pgTAP
@@ -3375,6 +3379,7 @@ tasks:
             scripts/validate-rsync-transport-plan.mjs,
             scripts/run-rsync-transport-canary.mjs,
             infrastructure/environments/proxmox/scripts/starfiniti-postgres-backup-rsync,
+            infrastructure/environments/proxmox/scripts/starfiniti-loyalty-postgres-borg-controller,
             infrastructure/environments/proxmox/scripts/starfiniti-loyalty-postgres-borg,
             infrastructure/environments/proxmox/scripts/starfiniti-loyalty-postgres-borg-maintain,
             scripts/validate-backup-assets.mjs,
@@ -3446,6 +3451,7 @@ tasks:
             infrastructure/observability/grafana/provisioning/starfiniti-dashboards/starfiniti-operations.json,
             docs/architecture/ADR/0066-bounded-observability-and-independent-incident-evidence.md,
             docs/architecture/ADR/0071-dedicated-postgresql-borg-repository.md,
+            infrastructure/environments/proxmox/scripts/starfiniti-loyalty-postgres-borg-controller,
             infrastructure/environments/proxmox/scripts/starfiniti-loyalty-postgres-borg,
             infrastructure/environments/proxmox/scripts/starfiniti-loyalty-postgres-borg-maintain,
             docs/operations/INCIDENT_MANAGEMENT.md,

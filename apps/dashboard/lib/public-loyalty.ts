@@ -1,5 +1,4 @@
 import type {
-  ExperienceLocaleV1,
   PublicEarningEffectV1,
   PublicEarningMethodV1,
   PublicEarningSourceV1,
@@ -23,30 +22,19 @@ export function resolvePublicLocale(value: unknown): "en" {
   return "en";
 }
 
-export function formatPublicPoints(
-  value: string,
-  locale: ExperienceLocaleV1,
-): string {
+export function formatPublicPoints(value: string, locale: "en"): string {
   return new Intl.NumberFormat(locale).format(BigInt(value));
-}
-
-export function formatEurMinor(
-  value: string,
-  locale: ExperienceLocaleV1,
-): string {
-  const minor = BigInt(value);
-  const major = minor / 100n;
-  const cents = (minor % 100n).toString().padStart(2, "0");
-  const majorText = new Intl.NumberFormat(locale).format(major);
-  return `€${majorText}${cents === "00" ? "" : `${locale === "sl-SI" ? "," : "."}${cents}`}`;
 }
 
 export function formatPublicVipThreshold(
   threshold: PublicVipQualificationThresholdV1,
-  locale: ExperienceLocaleV1,
+  currency: PublicRewardCurrencyV1 | null,
+  locale: "en",
 ): string {
   if (threshold.metric === "eligible_spend") {
-    return `Spend ${formatEurMinor(threshold.minimum, locale)}`;
+    return currency
+      ? `Spend ${formatPublicMoneyMinor(threshold.minimum, currency, locale)}`
+      : "Published spend threshold";
   }
   const amount = formatPublicPoints(threshold.minimum, locale);
   const singular = threshold.minimum === "1";
@@ -84,10 +72,15 @@ export function formatPublicEarningSource(
 
 export function formatPublicEarningEffect(
   effect: PublicEarningEffectV1,
-  locale: ExperienceLocaleV1,
+  currency: PublicRewardCurrencyV1 | null,
+  locale: "en",
 ): string {
   if (effect.kind === "base_rate") {
-    return `${formatPublicPoints(effect.pointsPerMajorUnit, locale)} points / €1`;
+    return formatPublicPointsPerMajorUnit(
+      effect.pointsPerMajorUnit,
+      currency,
+      locale,
+    );
   }
   if (effect.kind === "fixed_bonus") {
     const amount = formatPublicPoints(effect.points, locale);
@@ -101,7 +94,7 @@ export function formatPublicEarningEffect(
 
 export function formatPublicEarningWindow(
   method: PublicEarningMethodV1,
-  locale: ExperienceLocaleV1,
+  locale: "en",
 ): string {
   const date = (value: string) =>
     new Intl.DateTimeFormat(locale, {
@@ -121,7 +114,7 @@ export function formatPublicEarningWindow(
 export function formatPublicMoneyMinor(
   value: string,
   currency: PublicRewardCurrencyV1,
-  locale: ExperienceLocaleV1,
+  locale: "en",
 ): string {
   const minor = BigInt(value);
   const scale = 10n ** BigInt(currency.minorUnitDigits);
@@ -135,7 +128,7 @@ export function formatPublicMoneyMinor(
           .toString()
           .padStart(currency.minorUnitDigits, "0")
           .replace(/0+$/u, "");
-  const decimal = locale === "sl-SI" ? "," : ".";
+  const decimal = ".";
   const symbol =
     new Intl.NumberFormat(locale, {
       style: "currency",
@@ -152,9 +145,24 @@ export function formatPublicMoneyMinor(
     : `${symbol}${amount}`;
 }
 
+export function formatPublicPointsPerMajorUnit(
+  points: string,
+  currency: PublicRewardCurrencyV1 | null,
+  locale: "en",
+): string {
+  const unit = currency
+    ? formatPublicMoneyMinor(
+        (10n ** BigInt(currency.minorUnitDigits)).toString(),
+        currency,
+        locale,
+      )
+    : "major currency unit";
+  return `${formatPublicPoints(points, locale)} points / ${unit}`;
+}
+
 export function formatPublicRewardBenefit(
   offer: PublicRewardOfferV1,
-  locale: ExperienceLocaleV1,
+  locale: "en",
 ): string {
   const benefit = offer.benefit;
   if (benefit.kind === "fixed_discount") {
@@ -180,7 +188,7 @@ export function formatPublicRewardBenefit(
 
 export function formatPublicRewardWindow(
   offer: PublicRewardOfferV1,
-  locale: ExperienceLocaleV1,
+  locale: "en",
 ): string {
   const date = (value: string) =>
     new Intl.DateTimeFormat(locale, {
@@ -201,7 +209,7 @@ export function formatPublicRewardWindow(
 
 export function publicRewardConditionLabels(
   offer: PublicRewardOfferV1,
-  locale: ExperienceLocaleV1,
+  locale: "en",
 ): string[] {
   const labels: string[] = [];
   if (offer.conditions.minimumSpendMinor !== null && offer.currency) {

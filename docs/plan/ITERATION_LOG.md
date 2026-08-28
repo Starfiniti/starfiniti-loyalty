@@ -1,5 +1,30 @@
 # Iteration Log
 
+## 2026-08-28 — Public release bridge, exact currency, and review hardening
+
+- Reconstructed the actual rollout boundary: production `v0.1.11` exposes V1,
+  while public V2-V6 are one unmerged migration-first release. ADR-0079 removes
+  impossible V2-V5 application fallbacks, retains every additive SQL/contract
+  boundary, and limits the public reader to V6 then released English V1 only for
+  recognized missing-function errors.
+- Extended the complete V6 document with the exact immutable published programme
+  currency. Earning rates, VIP rates, and spend thresholds now use bigint-safe
+  ISO-currency formatting for EUR, USD, zero-decimal JPY, and other supported
+  precisions; the V1 bridge uses currency-neutral copy and never guesses EUR.
+- Repaired expanded-reward row identity with deterministic editor-only keys that
+  survive code edits and removal without entering the strict programme payload.
+  This prevents native details/focus state from moving to another same-kind row.
+- Completed the first incremental canary-validator consolidation: M09 now uses the
+  shared manifest envelope, and all eleven M04-M14 validators use one stable,
+  no-follow, digest-bound JSON artifact reader while retaining module-specific
+  schemas, chronology, scoring, and completion rules.
+- The complete local gate passes 983 workspace tests, every validator and typecheck,
+  both production builds, static validation of 86 migrations and 68 pgTAP files, a
+  1,066-file secret scan, zero production dependency vulnerabilities, licence
+  validation, formatting, and diff checks. Production, customer value, PostgreSQL,
+  WooCommerce, checkout, and feature flags remain unchanged; exact-head GitHub
+  CI/database evidence is still required before handoff.
+
 ## 2026-08-28 — Auth-derived customer purchase campaign opportunities
 
 - Reconstructed the authenticated hosted account after closing the public earning,
