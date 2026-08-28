@@ -11,7 +11,7 @@ candidate:
 inputs:
   securityWorkflow:
     path: .github/workflows/security.yml
-    sha256: f5bcb92d10f52a2e60f2d7df8b00b36aac9e41f8115e84619619f4b3ca7b1b93
+    sha256: d0b2b92e09fa70a2bea15fca182288d416539f8fc87508204c0fb10cf504b252
   releaseWorkflow:
     path: .github/workflows/release.yml
     sha256: 60ec9a315ce06ebea87bcfeac98a8e5583dfa6e34db3c06096e7c3265710b3df

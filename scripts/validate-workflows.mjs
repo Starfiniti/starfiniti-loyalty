@@ -414,6 +414,15 @@ requireCondition(
 );
 
 const supplySteps = securityWorkflow.jobs["supply-chain"].steps;
+const supplyInstallIndex = supplySteps.findIndex(
+  (step) =>
+    step.name ===
+      "Install exact repository dependencies without lifecycle scripts" &&
+    step.run === "npm ci --ignore-scripts",
+);
+const supplyInventoryIndex = supplySteps.findIndex(
+  (step) => step.name === "Verify exact reciprocal source inventory",
+);
 requireCondition(
   supplySteps.some(
     (step) =>
@@ -421,8 +430,11 @@ requireCondition(
         "actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444" &&
       step.with?.["node-version"] === 24 &&
       step.with?.cache === "npm",
-  ) && supplySteps.some((step) => step.run === "npm audit --audit-level=high"),
-  `${securityWorkflowPath}: full development and production dependency audit is required`,
+  ) &&
+    supplySteps.some((step) => step.run === "npm audit --audit-level=high") &&
+    supplyInstallIndex >= 0 &&
+    supplyInstallIndex < supplyInventoryIndex,
+  `${securityWorkflowPath}: exact no-lifecycle dependency installation and full dependency audit are required before source inventory`,
 );
 const trivySteps = supplySteps.filter(
   (step) =>
