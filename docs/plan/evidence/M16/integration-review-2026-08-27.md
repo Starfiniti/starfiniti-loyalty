@@ -1,10 +1,57 @@
 # Enterprise integration review evidence
 
 Date: 2026-08-27
-Status: security-remediated integration candidate verified; PR #57 current-head checks are authoritative
-Scope: `origin/main...82f644cdf707f9dca2a719d9024ec33cfc3acbb9`
+Status: follow-up merge-readiness candidate locally verified; PR #57 exact-head checks remain authoritative
+Scope: `origin/main...13d71988d7c05ddfad807320246c9ee613a13531`
 
-## Review scope
+## Follow-up merge-readiness review — 2026-08-28
+
+The current candidate contains 417 commits and changes 792 files relative to
+`origin/main`. Independent review axes covered security, billing/ledger integrity,
+project idioms, and unnecessary complexity. Security and billing/ledger review
+reported no findings. Every idiom or complexity proposal was independently checked
+against the actual release, contract, migration, and rollback boundaries before it
+was accepted, modified, or rejected.
+
+Verified corrections:
+
+- ADR-0079 removes impossible V2-V5 application fallback states from the unshipped
+  migration-first public release. The reader now performs at most two RPCs: complete
+  V6, then released English V1 only for recognized missing-function errors.
+- V6 derives exact programme currency and minor-unit precision from the selected
+  immutable published version. Public earning and VIP copy formats EUR, USD, JPY,
+  and other supported currencies without guessing EUR for the V1 bridge.
+- Expanded reward rows use stable editor-only identities through code edits and
+  removal, so native disclosure/focus state cannot move to a different same-kind
+  row. The keys never enter strict programme contracts.
+- M09 uses the shared exact canary manifest envelope. All eleven M04-M14 validators
+  use one bounded, no-follow, descriptor-first, SHA-256-bound JSON artifact reader
+  while retaining module-specific schemas, chronology, scoring, and completion.
+- ADR-0071's undeployed archive and maintenance candidates now share one installed
+  fail-closed controller with explicit `archive|maintain` dispatch, one validated
+  root-equivalent configuration boundary, and one copy of shared numeric-state and
+  repository-metric primitives. The standalone programs remain rollback artifacts.
+- The reward editor reuses the existing allowlisted selector parser instead of
+  maintaining a second implementation.
+
+The proposal to replace the backup asset validator with a regex-based shell
+pseudo-parser was rejected. The current validator combines static invariants with
+Linux execution of mocked success and failure paths; a partial parser would add a
+second shell semantics model without strengthening the runtime boundary.
+
+The complete local `npm run check` passed 983 workspace tests, every validator and
+typecheck, both production builds, and all WooCommerce budgets. Independent gates
+validated 86 migrations, 68 pgTAP files, 1,066 tracked files in the secret scan,
+zero production dependency vulnerabilities, licences, formatting, and diff
+cleanliness. Linux Bash behavior, clean database replay, image policy, the full
+WooCommerce runtime matrix, and security analysis remain bound to the exact-head
+GitHub rollup after push.
+
+No production repository, script, timer, service, database, programme, customer,
+loyalty value, WooCommerce checkout, feature flag, or release changed during this
+review.
+
+## Original review scope — 2026-08-27
 
 The consolidated M04–M16 security-remediated integration candidate contains 350 commits and changes 705 files. Five independent review axes covered unnecessary complexity, security, billing and metering, project idioms, and implementation cruft. Every blocker or should-fix candidate received a separate adversarial verification before implementation. No blocker survived review.
 
