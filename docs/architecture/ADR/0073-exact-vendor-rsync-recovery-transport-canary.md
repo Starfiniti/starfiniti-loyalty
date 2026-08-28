@@ -10,7 +10,7 @@ ADR-0072 correctly makes rsync 3.5.0 and the repaired `rrsync` confinement integ
 
 Current official sources now provide exact architecture-compatible packages:
 
-- Debian unstable publishes `rsync_3.5.0+ds1-2_amd64.deb` through the Debian archive. The package is acquired from signed Debian repository metadata using the base image's Debian archive keyring and is independently bound to SHA-256 `5f0ecada9a0b4729f18aca43260bb8bcb16f95750c562409f84555b9de59a094`.
+- Debian unstable publishes `rsync_3.5.0+ds1-2_amd64.deb` through the Debian archive. The package is acquired from signed Debian repository metadata using the base image's Debian archive keyring and is independently bound to SHA-256 `5f0ecada9a0b4729f18aca43260bb8bcb16f95750c562409f84555b9de59a094`. Debian 13's `libacl1` 2.3.2 does not satisfy this package's declared `>= 2.4.0` dependency, so the plan also binds the sole Debian unstable dependency `libacl1_2.4.0-1_amd64.deb` to SHA-256 `e9da0e00387e31c1709b70497f1eda91389c962c3940e6d233d4c57f5ea6f635`; it depends only on a libc baseline already met by Debian 13.
 - The rsync project documents its stable Launchpad PPA as an installation route. Its Ubuntu Noble build publishes `rsync_3.5.0-1ppa~noble1_amd64.deb`. The repository key is accepted only when its complete fingerprint is `72BBF83452B11E5B5A8F99123CC6C2BBC7F3DB85`, and the package is independently bound to SHA-256 `3ae102d79c9a82d1f1aee94bde3afa3142a7ef6f367484f130d6fba05c3c1648`.
 
 Authoritative references:
@@ -32,13 +32,13 @@ Authoritative references:
 
 Use option 4.
 
-`infrastructure/testing/recovery-transport/plan.yaml` is the only executable canary plan. It binds two digest-pinned base images, exact OS identity and architecture, repository authority and suite, package URL, exact version, checksum, and signing boundary. The Debian candidate repository is pinned below the stable base for every package except the exact rsync version. The Launchpad repository is similarly pinned below Ubuntu Noble except for the exact rsync version. This prevents the disposable proof from silently becoming a distribution upgrade.
+`infrastructure/testing/recovery-transport/plan.yaml` is the only executable canary plan. It binds two digest-pinned base images, exact OS identity and architecture, repository authority and suite, package URL, exact version, checksum, dependency set, and signing boundary. The Debian candidate repository is pinned below the stable base for every package except the exact rsync and `libacl1` versions. The Launchpad repository is similarly pinned below Ubuntu Noble except for the exact rsync version and has an empty extra-dependency set. This prevents the disposable proof from silently becoming a distribution upgrade.
 
 The build verifies signed APT metadata, the complete PPA key fingerprint, downloaded package checksum, package name/version/architecture, installed version, canonical root-owned mode-`0755` executables, rsync 3.5.0, protocol 32, the upstream `--confine-root` and pinned-descriptor wrapper integration, and a restricted-command negative case. Verification precedes package installation or execution.
 
 Security CI builds both exact endpoint images, connects them only to a new Docker `--internal` network, sends two synthetic files through an rsync daemon, checks content and strict file/byte bounds, records executable and wrapper digests, and removes the exact containers, network, and disposable image tags. It publishes only a minimized JSON report. The runner accepts no alternative plan, public port, host network, SSH route, production origin, package binary, credential, or recovery material.
 
-This is compatibility and provenance evidence, not deployment approval. Production remains unchanged until operations independently escrow and verify exact rollback packages, approve a maintenance window, install both endpoints, prove the real forced-command path, run manual and timer archives, and complete an isolated recovery.
+This is compatibility and provenance evidence, not deployment approval. Production remains unchanged until operations independently assesses the Debian `libacl1` upgrade against host consumers, escrows and verifies exact rollback packages for rsync and `libacl1`, approves a maintenance window, installs both endpoints, proves the real forced-command path, runs manual and timer archives, and completes an isolated recovery.
 
 ## Security and reliability effects
 

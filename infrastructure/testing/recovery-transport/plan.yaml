@@ -30,6 +30,11 @@ endpoints:
       url: https://deb.debian.org/debian/pool/main/r/rsync/rsync_3.5.0+ds1-2_amd64.deb
       sha256: 5f0ecada9a0b4729f18aca43260bb8bcb16f95750c562409f84555b9de59a094
       signingFingerprint: debian-archive-keyring
+      dependencies:
+        - name: libacl1
+          version: 2.4.0-1
+          url: https://deb.debian.org/debian/pool/main/a/acl/libacl1_2.4.0-1_amd64.deb
+          sha256: e9da0e00387e31c1709b70497f1eda91389c962c3940e6d233d4c57f5ea6f635
   - id: database-guest
     role: sender
     os:
@@ -45,6 +50,7 @@ endpoints:
       url: https://launchpad.net/~rsyncproject/+archive/ubuntu/rsync/+build/33538375/+files/rsync_3.5.0-1ppa~noble1_amd64.deb
       sha256: 3ae102d79c9a82d1f1aee94bde3afa3142a7ef6f367484f130d6fba05c3c1648
       signingFingerprint: 72BBF83452B11E5B5A8F99123CC6C2BBC7F3DB85
+      dependencies: []
 rollback:
   hostInstalledVersion: 3.4.1+ds1-5+deb13u3
   hostCandidateVersion: 3.4.1+ds1-5+deb13u4

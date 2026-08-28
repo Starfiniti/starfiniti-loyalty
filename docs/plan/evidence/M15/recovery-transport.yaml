@@ -6,22 +6,28 @@ candidate:
   commit: null
 plan:
   path: infrastructure/testing/recovery-transport/plan.yaml
-  sha256: 4d810267565eb4aebdbb4e0723c7f8fe313135a6fe15ef2b4cbb370163fdbeb2
+  sha256: c623bebcf48b0dba785ed2fa4b00bfb2899855139647fdc153a6d383cea0f17d
 endpoints:
   - id: proxmox-host
     authority: debian-archive
     packageVersion: 3.5.0+ds1-2
     packageSha256: 5f0ecada9a0b4729f18aca43260bb8bcb16f95750c562409f84555b9de59a094
     signingFingerprint: debian-archive-keyring
+    dependencies:
+      - name: libacl1
+        version: 2.4.0-1
+        url: https://deb.debian.org/debian/pool/main/a/acl/libacl1_2.4.0-1_amd64.deb
+        sha256: e9da0e00387e31c1709b70497f1eda91389c962c3940e6d233d4c57f5ea6f635
   - id: database-guest
     authority: rsync-project-launchpad-ppa
     packageVersion: 3.5.0-1ppa~noble1
     packageSha256: 3ae102d79c9a82d1f1aee94bde3afa3142a7ef6f367484f130d6fba05c3c1648
     signingFingerprint: 72BBF83452B11E5B5A8F99123CC6C2BBC7F3DB85
+    dependencies: []
 checks:
   - id: plan_contract
     status: passed
-    evidence: The exact two-endpoint plan binds OS image digests, authorities, suites, package versions, package hashes, and the minimum protocol baseline.
+    evidence: The exact two-endpoint plan binds OS image digests, authorities, suites, rsync and required dependency versions and hashes, and the minimum protocol baseline.
   - id: source_authority_contract
     status: passed
     evidence: Debian archive metadata and the rsync project Launchpad PPA are independently scoped, with signed APT metadata and the exact PPA signing fingerprint.

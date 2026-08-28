@@ -207,6 +207,7 @@ export function validateTransportPlan(plan) {
         "url",
         "sha256",
         "signingFingerprint",
+        "dependencies",
       ],
       `${endpoint.id} package`,
     );
@@ -225,6 +226,37 @@ export function validateTransportPlan(plan) {
       /^0{64}$/u.test(endpoint.package.sha256)
     ) {
       fail(`${endpoint.id} package boundary is invalid`);
+    }
+    if (!Array.isArray(endpoint.package.dependencies)) {
+      fail(`${endpoint.id} dependencies must be an array`);
+    }
+    if (endpoint.id === "proxmox-host") {
+      if (endpoint.package.dependencies.length !== 1) {
+        fail("proxmox-host requires the exact libacl1 dependency");
+      }
+      const [dependency] = endpoint.package.dependencies;
+      exactKeys(
+        dependency,
+        ["name", "version", "url", "sha256"],
+        "proxmox-host dependency",
+      );
+      const dependencyUrl = exactHttps(
+        dependency.url,
+        "proxmox-host dependency URL",
+        new Set(["deb.debian.org"]),
+      );
+      if (
+        dependency.name !== "libacl1" ||
+        dependency.version !== "2.4.0-1" ||
+        dependencyUrl.pathname !==
+          "/debian/pool/main/a/acl/libacl1_2.4.0-1_amd64.deb" ||
+        dependency.sha256 !==
+          "e9da0e00387e31c1709b70497f1eda91389c962c3940e6d233d4c57f5ea6f635"
+      ) {
+        fail("proxmox-host dependency boundary is invalid");
+      }
+    } else if (endpoint.package.dependencies.length !== 0) {
+      fail("database-guest must not acquire an extra package dependency");
     }
     const packageUrl = exactHttps(
       endpoint.package.url,
@@ -330,6 +362,7 @@ function validateEvidence(evidence, plan) {
         "packageVersion",
         "packageSha256",
         "signingFingerprint",
+        "dependencies",
       ],
       "evidence endpoint",
     );
@@ -342,7 +375,9 @@ function validateEvidence(evidence, plan) {
       endpointEvidence.packageVersion !== endpoint.package.version ||
       endpointEvidence.packageSha256 !== endpoint.package.sha256 ||
       endpointEvidence.signingFingerprint !==
-        endpoint.package.signingFingerprint
+        endpoint.package.signingFingerprint ||
+      JSON.stringify(endpointEvidence.dependencies) !==
+        JSON.stringify(endpoint.package.dependencies)
     ) {
       fail("evidence endpoint differs from the approved plan");
     }
@@ -404,6 +439,14 @@ function validateDockerfile(text) {
     "dpkg-deb --field /tmp/rsync-candidate.deb Package",
     "dpkg-deb --field /tmp/rsync-candidate.deb Version",
     "dpkg-deb --field /tmp/rsync-candidate.deb Architecture",
+    'apt-get download "$DEPENDENCY_NAME=$DEPENDENCY_VERSION"',
+    "sha256sum --check --strict",
+    "dpkg-deb --field /tmp/rsync-dependency.deb Package",
+    "dpkg-deb --field /tmp/rsync-dependency.deb Version",
+    "dpkg-deb --field /tmp/rsync-dependency.deb Architecture",
+    "apt-get install --yes --no-install-recommends /tmp/rsync-dependency.deb",
+    '"$DEPENDENCY_SHA256" /tmp/rsync-dependency.deb | sha256sum --check --strict',
+    '"$PACKAGE_SHA256" /tmp/rsync-candidate.deb | sha256sum --check --strict',
     "apt-get install --yes --no-install-recommends /tmp/rsync-candidate.deb",
     "readlink -f /usr/bin/rsync",
     "readlink -f /usr/bin/rrsync",
@@ -416,20 +459,49 @@ function validateDockerfile(text) {
     if (!text.includes(requirement))
       fail(`Dockerfile is missing ${requirement}`);
   }
-  const repositoryIndex = text.indexOf(
+  const dependencyRepositoryIndex = text.indexOf(
+    'apt-get download "$DEPENDENCY_NAME=$DEPENDENCY_VERSION"',
+  );
+  const dependencyChecksumIndex = text.indexOf(
+    '"$DEPENDENCY_SHA256" /tmp/rsync-dependency.deb',
+  );
+  const dependencyMetadataIndex = text.indexOf(
+    "dpkg-deb --field /tmp/rsync-dependency.deb Package",
+  );
+  const dependencyInstallIndex = text.indexOf(
+    "apt-get install --yes --no-install-recommends /tmp/rsync-dependency.deb",
+  );
+  const packageRepositoryIndex = text.indexOf(
     'apt-get download "$PACKAGE_NAME=$PACKAGE_VERSION"',
   );
-  const checksumIndex = text.indexOf("sha256sum --check --strict");
-  const metadataIndex = text.indexOf("dpkg-deb --field");
-  const installIndex = text.indexOf(
+  const packageChecksumIndex = text.indexOf(
+    '"$PACKAGE_SHA256" /tmp/rsync-candidate.deb',
+  );
+  const packageMetadataIndex = text.indexOf(
+    "dpkg-deb --field /tmp/rsync-candidate.deb Package",
+  );
+  const packageInstallIndex = text.indexOf(
     "apt-get install --yes --no-install-recommends /tmp/rsync-candidate.deb",
   );
-  if (!(
-    repositoryIndex >= 0 &&
-    repositoryIndex < checksumIndex &&
-    checksumIndex < metadataIndex &&
-    metadataIndex < installIndex
-  )) {
+  const ordered = (indexes) =>
+    indexes.every(
+      (index, position) =>
+        index >= 0 && (position === 0 || index > indexes[position - 1]),
+    );
+  if (
+    !ordered([
+      dependencyRepositoryIndex,
+      dependencyChecksumIndex,
+      dependencyMetadataIndex,
+      dependencyInstallIndex,
+    ]) ||
+    !ordered([
+      packageRepositoryIndex,
+      packageChecksumIndex,
+      packageMetadataIndex,
+      packageInstallIndex,
+    ])
+  ) {
     fail("package verification must precede installation");
   }
 }
@@ -475,6 +547,16 @@ function selfTest(plan, evidence, dockerfile, runner) {
     (candidate) => candidate.endpoints.pop(),
     (candidate) => (candidate.endpoints[0].id = candidate.endpoints[1].id),
     (candidate) => (candidate.endpoints[0].package.sha256 = "0".repeat(64)),
+    (candidate) => candidate.endpoints[0].package.dependencies.pop(),
+    (candidate) =>
+      (candidate.endpoints[0].package.dependencies[0].sha256 = "0".repeat(64)),
+    (candidate) =>
+      candidate.endpoints[1].package.dependencies.push({
+        name: "unexpected",
+        version: "1.0.0",
+        url: "https://launchpad.net/unexpected.deb",
+        sha256: "1".repeat(64),
+      }),
     (candidate) =>
       (candidate.endpoints[0].package.url = "http://example.test/rsync.deb"),
     (candidate) =>
@@ -507,7 +589,14 @@ function selfTest(plan, evidence, dockerfile, runner) {
     assert.throws(() => validateEvidence(candidate, plan));
   }
   for (const mutation of [
-    ["sha256sum --check --strict", "sha256sum --check"],
+    [
+      '"$DEPENDENCY_SHA256" /tmp/rsync-dependency.deb | sha256sum --check --strict',
+      '"$DEPENDENCY_SHA256" /tmp/rsync-dependency.deb | sha256sum --check',
+    ],
+    [
+      '"$PACKAGE_SHA256" /tmp/rsync-candidate.deb | sha256sum --check --strict',
+      '"$PACKAGE_SHA256" /tmp/rsync-candidate.deb | sha256sum --check',
+    ],
     ["Pin: release a=unstable", "Pin: release *"],
     ['gpg --batch --export "$SIGNING_FINGERPRINT"', "gpg --batch --export"],
     ["readlink -f /usr/bin/rrsync", "readlink -f /tmp/rrsync"],

@@ -12,6 +12,9 @@ ARG PACKAGE_SUITE
 ARG PACKAGE_URL
 ARG PACKAGE_SHA256
 ARG SIGNING_FINGERPRINT
+ARG DEPENDENCY_NAME
+ARG DEPENDENCY_VERSION
+ARG DEPENDENCY_SHA256
 ARG MINIMUM_VERSION
 
 SHELL ["/bin/sh", "-euxc"]
@@ -27,7 +30,10 @@ RUN . /etc/os-release; \
         test "$SIGNING_FINGERPRINT" = debian-archive-keyring; \
         test -s /usr/share/keyrings/debian-archive-keyring.gpg; \
         printf 'deb [signed-by=/usr/share/keyrings/debian-archive-keyring.gpg] %s %s main\n' "$PACKAGE_REPOSITORY_URL" "$PACKAGE_SUITE" > /etc/apt/sources.list.d/starfiniti-rsync-candidate.list; \
-        printf 'Package: *\nPin: release a=unstable\nPin-Priority: 1\n\nPackage: rsync\nPin: version %s\nPin-Priority: 1001\n' "$PACKAGE_VERSION" > /etc/apt/preferences.d/starfiniti-rsync-candidate \
+        test "$DEPENDENCY_NAME" = libacl1; \
+        test -n "$DEPENDENCY_VERSION"; \
+        test -n "$DEPENDENCY_SHA256"; \
+        printf 'Package: *\nPin: release a=unstable\nPin-Priority: 1\n\nPackage: rsync\nPin: version %s\nPin-Priority: 1001\n\nPackage: %s\nPin: version %s\nPin-Priority: 1001\n' "$PACKAGE_VERSION" "$DEPENDENCY_NAME" "$DEPENDENCY_VERSION" > /etc/apt/preferences.d/starfiniti-rsync-candidate \
         ;; \
       rsync-project-launchpad-ppa) \
         mkdir -m 0700 /tmp/starfiniti-gnupg; \
@@ -36,6 +42,9 @@ RUN . /etc/os-release; \
         test "$(GNUPGHOME=/tmp/starfiniti-gnupg gpg --batch --with-colons --list-keys | awk -F: '$1 == "pub" { count += 1 } END { print count + 0 }')" -eq 1; \
         test "$(GNUPGHOME=/tmp/starfiniti-gnupg gpg --batch --with-colons --fingerprint "$SIGNING_FINGERPRINT" | awk -F: '$1 == "fpr" { print $10; exit }')" = "$SIGNING_FINGERPRINT"; \
         GNUPGHOME=/tmp/starfiniti-gnupg gpg --batch --export "$SIGNING_FINGERPRINT" | gpg --batch --yes --dearmor --output /usr/share/keyrings/starfiniti-rsync-ppa.gpg; \
+        test -z "$DEPENDENCY_NAME"; \
+        test -z "$DEPENDENCY_VERSION"; \
+        test -z "$DEPENDENCY_SHA256"; \
         printf 'deb [signed-by=/usr/share/keyrings/starfiniti-rsync-ppa.gpg] %s %s main\n' "$PACKAGE_REPOSITORY_URL" "$PACKAGE_SUITE" > /etc/apt/sources.list.d/starfiniti-rsync-candidate.list; \
         printf 'Package: *\nPin: release o=LP-PPA-rsyncproject-rsync\nPin-Priority: 1\n\nPackage: rsync\nPin: version %s\nPin-Priority: 1001\n' "$PACKAGE_VERSION" > /etc/apt/preferences.d/starfiniti-rsync-candidate \
         ;; \
@@ -43,6 +52,18 @@ RUN . /etc/os-release; \
     esac; \
     apt-get update; \
     cd /tmp; \
+    if test -n "$DEPENDENCY_NAME"; then \
+      apt-get download "$DEPENDENCY_NAME=$DEPENDENCY_VERSION"; \
+      set -- "/tmp/${DEPENDENCY_NAME}"_*.deb; \
+      test "$#" -eq 1; \
+      mv "$1" /tmp/rsync-dependency.deb; \
+      printf '%s  %s\n' "$DEPENDENCY_SHA256" /tmp/rsync-dependency.deb | sha256sum --check --strict; \
+      test "$(dpkg-deb --field /tmp/rsync-dependency.deb Package)" = "$DEPENDENCY_NAME"; \
+      test "$(dpkg-deb --field /tmp/rsync-dependency.deb Version)" = "$DEPENDENCY_VERSION"; \
+      test "$(dpkg-deb --field /tmp/rsync-dependency.deb Architecture)" = "$EXPECTED_ARCHITECTURE"; \
+      DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends /tmp/rsync-dependency.deb; \
+      test "$(dpkg-query --show --showformat='${Version}' "$DEPENDENCY_NAME")" = "$DEPENDENCY_VERSION"; \
+    fi; \
     apt-get download "$PACKAGE_NAME=$PACKAGE_VERSION"; \
     set -- /tmp/rsync_*.deb; \
     test "$#" -eq 1; \
@@ -68,7 +89,7 @@ RUN . /etc/os-release; \
     printf 'private-canary-marker\n' > /tmp/rrsync-negative/root/marker; \
     if env -i PATH=/usr/bin:/bin LC_ALL=C SSH_ORIGINAL_COMMAND=id /usr/bin/rrsync -ro /tmp/rrsync-negative/root > /tmp/rrsync-negative/output 2>&1; then exit 1; fi; \
     ! grep -Fq -- private-canary-marker /tmp/rrsync-negative/output; \
-    rm -rf /var/lib/apt/lists/* /tmp/rsync-candidate.deb /tmp/rrsync-negative /tmp/starfiniti-gnupg /tmp/starfiniti-ppa.asc
+    rm -rf /var/lib/apt/lists/* /tmp/rsync-candidate.deb /tmp/rsync-dependency.deb /tmp/rrsync-negative /tmp/starfiniti-gnupg /tmp/starfiniti-ppa.asc
 
 LABEL com.starfiniti.disposable="true" \
       com.starfiniti.purpose="recovery-transport-canary"

@@ -69,6 +69,7 @@ function safeOutputPath(value) {
 }
 
 function buildArgs(endpoint, plan, tag) {
+  const dependency = endpoint.package.dependencies[0];
   const values = {
     BASE_IMAGE: endpoint.baseImage,
     EXPECTED_OS_ID: endpoint.os.id,
@@ -82,6 +83,9 @@ function buildArgs(endpoint, plan, tag) {
     PACKAGE_URL: endpoint.package.url,
     PACKAGE_SHA256: endpoint.package.sha256,
     SIGNING_FINGERPRINT: endpoint.package.signingFingerprint,
+    DEPENDENCY_NAME: dependency?.name ?? "",
+    DEPENDENCY_VERSION: dependency?.version ?? "",
+    DEPENDENCY_SHA256: dependency?.sha256 ?? "",
     MINIMUM_VERSION: plan.minimumVersion,
   };
   const args = ["build", "--file", dockerfile, "--tag", tag];
@@ -122,6 +126,27 @@ function inspectEndpoint(container, endpoint) {
     fail(`${endpoint.id} runtime facts are invalid`);
   }
   facts.protocol = Number(protocol);
+  facts.dependencies = endpoint.package.dependencies.map((dependency) => {
+    const installedVersion = run(
+      [
+        "exec",
+        container,
+        "dpkg-query",
+        "--show",
+        "--showformat=${Version}",
+        dependency.name,
+      ],
+      { capture: true },
+    );
+    if (installedVersion !== dependency.version) {
+      fail(`${endpoint.id} dependency ${dependency.name} is invalid`);
+    }
+    return {
+      name: dependency.name,
+      version: installedVersion,
+      packageSha256: dependency.sha256,
+    };
+  });
   return facts;
 }
 
@@ -305,6 +330,7 @@ function main() {
           packageSha256: host.package.sha256,
           executableSha256: hostFacts.rsyncSha256,
           wrapperSha256: hostFacts.rrsyncSha256,
+          dependencies: hostFacts.dependencies,
           confinement: true,
           packageVerified: true,
         },
@@ -315,6 +341,7 @@ function main() {
           packageSha256: guest.package.sha256,
           executableSha256: guestFacts.rsyncSha256,
           wrapperSha256: guestFacts.rrsyncSha256,
+          dependencies: guestFacts.dependencies,
           confinement: true,
           packageVerified: true,
         },
