@@ -13418,6 +13418,170 @@ html[data-dashboard-theme="dark"]
   line-height: 1.6;
 }
 
+.public-earning-catalogue {
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+}
+
+.public-earning-catalogue > header {
+  min-height: 74px;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.public-earning-catalogue > header p {
+  margin: 0;
+  color: #725e67;
+}
+
+.public-earning-catalogue > header a {
+  min-width: max-content;
+  color: var(--loyalty-brand);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.78rem;
+  font-weight: 760;
+  text-decoration: none;
+}
+
+.public-earning-catalogue > header a svg {
+  width: 14px;
+  height: 14px;
+}
+
+.public-earning-methods {
+  margin: 0;
+  padding: 0;
+  border: 1px solid #e7dcdd;
+  border-radius: var(--loyalty-radius);
+  overflow: hidden;
+  background: #e7dcdd;
+  box-shadow: 0 24px 60px rgba(56, 32, 43, 0.07);
+  display: grid;
+  gap: 1px;
+  list-style: none;
+}
+
+.public-earning-methods > li {
+  min-width: 0;
+  padding: clamp(20px, 3vw, 30px);
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      color-mix(in srgb, var(--loyalty-brand) 8%, transparent),
+      transparent 34%
+    ),
+    rgba(255, 255, 255, 0.94);
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 18px;
+}
+
+.public-earning-index {
+  padding-top: 5px;
+  color: #725e67;
+  font-size: 0.68rem;
+  font-weight: 820;
+  letter-spacing: 0.12em;
+}
+
+.public-earning-methods article {
+  min-width: 0;
+}
+
+.public-earning-methods article > header {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 13px;
+}
+
+.public-earning-icon {
+  width: 42px;
+  height: 42px;
+  border: 1px solid color-mix(in srgb, var(--loyalty-brand) 20%, white);
+  border-radius: 12px;
+  color: var(--loyalty-brand);
+  background: color-mix(in srgb, var(--loyalty-brand) 7%, white);
+  display: grid;
+  place-items: center;
+}
+
+.public-earning-icon svg {
+  width: 19px;
+  height: 19px;
+}
+
+.public-earning-methods h3 {
+  margin: 3px 0 0;
+  font-family: var(--loyalty-font);
+  font-size: clamp(1rem, 2vw, 1.24rem);
+  letter-spacing: -0.02em;
+}
+
+.public-earning-methods header small {
+  color: #725e67;
+  font-size: 0.65rem;
+  font-weight: 780;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.public-earning-status {
+  padding: 6px 9px;
+  border: 1px solid #ded1d5;
+  border-radius: 999px;
+  color: #725e67;
+  background: rgba(255, 255, 255, 0.72);
+  font-size: 0.63rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.public-earning-status.available {
+  border-color: color-mix(in srgb, var(--loyalty-brand) 24%, white);
+  color: var(--loyalty-brand);
+  background: color-mix(in srgb, var(--loyalty-brand) 7%, white);
+}
+
+.public-earning-methods article > strong {
+  margin: 22px 0 15px;
+  color: #302127;
+  display: block;
+  font-family: var(--loyalty-font);
+  font-size: clamp(1.5rem, 3vw, 2.3rem);
+  font-weight: 560;
+  letter-spacing: -0.035em;
+}
+
+.public-earning-methods footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+}
+
+.public-earning-methods footer span {
+  color: #725e67;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.public-earning-methods footer svg {
+  width: 13px;
+  height: 13px;
+  color: var(--loyalty-brand);
+  flex: 0 0 auto;
+}
+
 .public-loyalty-empty {
   display: grid;
   place-items: center;
@@ -13564,6 +13728,18 @@ html[data-dashboard-theme="dark"]
   .public-loyalty-v2 .public-loyalty-account {
     grid-template-columns: 1fr;
   }
+  .public-earning-catalogue > header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .public-earning-methods > li {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .public-earning-index {
+    padding-top: 0;
+  }
 }
 
 @media (max-width: 420px) {
@@ -13587,6 +13763,13 @@ html[data-dashboard-theme="dark"]
     grid-template-columns: 32px minmax(0, 1fr);
   }
   .member-hub-v2 .member-history-list b {
+    grid-column: 2;
+  }
+  .public-earning-methods article > header {
+    grid-template-columns: 42px minmax(0, 1fr);
+  }
+  .public-earning-status {
+    width: max-content;
     grid-column: 2;
   }
 }

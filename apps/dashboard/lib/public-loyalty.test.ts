@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   formatEurMinor,
   formatPublicPoints,
+  formatPublicEarningEffect,
+  formatPublicEarningSource,
+  formatPublicEarningWindow,
   formatPublicVipPeriod,
   formatPublicVipThreshold,
   isPublicId,
@@ -82,5 +85,63 @@ describe("public loyalty presentation", () => {
         timeZone: "Europe/Ljubljana",
       }),
     ).toBe("Calendar year · Europe/Ljubljana");
+  });
+
+  it("formats public earning sources and exact integer effects", () => {
+    expect(formatPublicEarningSource("purchase")).toBe("Shopping");
+    expect(formatPublicEarningSource("account_created")).toBe("Membership");
+    expect(formatPublicEarningSource("birthday")).toBe("Birthday");
+    expect(formatPublicEarningSource("verified_product_review")).toBe(
+      "Verified review",
+    );
+    expect(formatPublicEarningSource("referral")).toBe("Referral");
+    expect(
+      formatPublicEarningEffect(
+        { kind: "base_rate", pointsPerMajorUnit: "5" },
+        "en",
+      ),
+    ).toBe("5 points / €1");
+    expect(
+      formatPublicEarningEffect(
+        { kind: "multiplier", multiplierBasisPoints: 15_625 },
+        "en",
+      ),
+    ).toBe("1.5625× points");
+    expect(
+      formatPublicEarningEffect(
+        { kind: "fixed_bonus", points: "9007199254740993" },
+        "en",
+      ),
+    ).toBe("9,007,199,254,740,993 bonus points");
+  });
+
+  it("explains current and scheduled earning windows in UTC", () => {
+    const base = {
+      code: "birthday",
+      name: "Birthday bonus",
+      source: "birthday" as const,
+      effect: { kind: "fixed_bonus" as const, points: "250" },
+      hasRestrictions: false,
+      startsAt: null,
+      endsAt: null,
+      availableNow: true,
+    };
+    expect(formatPublicEarningWindow(base, "en")).toBe("Available now");
+    expect(
+      formatPublicEarningWindow(
+        {
+          ...base,
+          availableNow: false,
+          startsAt: "2027-02-03T10:00:00.000Z",
+        },
+        "en",
+      ),
+    ).toBe("Available from Feb 3, 2027");
+    expect(
+      formatPublicEarningWindow(
+        { ...base, endsAt: "2027-02-03T10:00:00.000Z" },
+        "en",
+      ),
+    ).toBe("Available until Feb 3, 2027");
   });
 });

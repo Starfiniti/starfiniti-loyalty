@@ -6,13 +6,21 @@ Authenticated merchant reads and programme commands use the exposed `loyalty` sc
 
 Tenant and actor authority are not command inputs. Each command derives the Auth subject from PostgreSQL request claims and rechecks a live, unrevoked `organization_memberships` row. Only `owner` and `admin` may alter programme value policy; `operator`, `analyst`, `auditor`, revoked members, anonymous callers, and owners of another tenant fail closed.
 
+## Public loyalty experience V4
+
+`get_public_loyalty_experience_v4(target_workspace_public_id, target_programme_public_id)` is the current anonymous English guest projection. It retains strict V3 presentation, rewards, and advanced VIP data and adds at most twelve ordered `earningMethods` derived from the immutable published version.
+
+Each method contains only a source/ordinal-derived public code, reviewed generic source/effect label, one public standard source, an exact bigint-safe base/fixed effect or bounded integer multiplier, a conservative restrictions boolean, optional validated schedule, and database-derived availability. Purchase, account-created, birthday, verified-product-review, and referral sources may appear. Merchant-authored rule codes/names, signed custom activities, raw condition selectors, activity/product/category/segment/tier/channel data, cap values, priority/stacking internals, customer eligibility, tenant/internal IDs, audit evidence, and ledger state never appear. If no safe standard method survives projection, the catalogue is empty. A legacy V1 programme may receive one conservative first-tier purchase method.
+
+The dashboard requests V4 first and normalizes V3/V2/V1 only for recognized missing-function codes during a migration-first rollout. Malformed, duplicate, oversized, contradictory, non-English, or provider-error documents fail closed. See ADR-0075.
+
 ## Public loyalty experience V3
 
 `get_public_loyalty_experience_v3(target_workspace_public_id, target_programme_public_id)` is the anonymous English guest projection. Both UUIDs are public selectors only: PostgreSQL derives one active tenant, linked programme group, active programme, and immutable published version. Mixed-tenant selectors, a suspended workspace/programme, or the absence of a published version returns no row.
 
 V3 retains the strict V2 presentation, tier, and reward fields and adds one `vipCatalogue`. The catalogue contains at most fifteen ordered levels, the qualification period and grace days, exact text-form entry thresholds with `all`/`any` semantics, exact points-per-major-unit rates, and booleans for early access and exclusive reward availability. Legacy programmes receive an equivalent lifetime/spend catalogue. Private activity selectors, reward codes/configuration, retention/re-entry internals, customer progress, organization/internal IDs, audit evidence, and ledger state are not returned.
 
-The dashboard requests V3 first and falls back to normalized V2/V1 only for the recognized missing-function codes during a migration-first rolling deploy. Malformed, duplicate, non-English, mismatched, or provider-error responses fail closed; they never trigger a broader legacy read. See ADR-0074.
+V3 remains the compatible advanced-VIP predecessor. V4 readers use it only when the additive V4 function is genuinely absent. See ADR-0074.
 
 ## Signed Merchant Activity API v1
 

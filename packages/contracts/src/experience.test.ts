@@ -13,6 +13,7 @@ import {
   publicLoyaltyExperienceV1,
   publicLoyaltyExperienceV2,
   publicLoyaltyExperienceV3,
+  publicLoyaltyExperienceV4,
 } from "./experience";
 
 const theme = {
@@ -491,6 +492,165 @@ describe("experience theme contracts", () => {
             },
           ],
         },
+      }).success,
+    ).toBe(false);
+  });
+
+  it("accepts an exact guest-safe V4 earning catalogue", () => {
+    const tier = {
+      code: "rose",
+      name: "Rose",
+      minimumEligibleSpendMinor: "0",
+      pointsPerMajorUnit: "5",
+    };
+    const value = {
+      version: "4" as const,
+      workspaceId: "a1000000-0000-4000-8000-000000000001",
+      programmeId: "a1000000-0000-4000-8000-000000000002",
+      programmeGroupId: "a1000000-0000-4000-8000-000000000003",
+      programmeName: "Rosy Rewards",
+      requestedLocale: "en" as const,
+      resolvedLocale: "en" as const,
+      presentation: { version: "2" as const, theme: themeV2, copy: copyV2 },
+      tiers: [tier],
+      rewards: [],
+      vipCatalogue: {
+        version: "1" as const,
+        qualificationPeriod: { kind: "lifetime" as const },
+        downgradeGraceDays: 0,
+        levels: [
+          {
+            code: "rose",
+            name: "Rose",
+            entry: null,
+            pointsPerMajorUnit: "5",
+            earlyAccess: false,
+            exclusiveRewardAccess: false,
+          },
+        ],
+      },
+      earningMethods: [
+        {
+          code: "purchase-base",
+          name: "Eligible purchases",
+          source: "purchase" as const,
+          effect: {
+            kind: "base_rate" as const,
+            pointsPerMajorUnit: "5",
+          },
+          hasRestrictions: true,
+          startsAt: null,
+          endsAt: null,
+          availableNow: true,
+        },
+        {
+          code: "birthday-bonus",
+          name: "Birthday bonus",
+          source: "birthday" as const,
+          effect: { kind: "fixed_bonus" as const, points: "250" },
+          hasRestrictions: false,
+          startsAt: "2026-01-01T00:00:00.000Z",
+          endsAt: "2027-01-01T00:00:00.000Z",
+          availableNow: true,
+        },
+        {
+          code: "purchase-multiplier",
+          name: "Purchase multiplier",
+          source: "purchase" as const,
+          effect: {
+            kind: "multiplier" as const,
+            multiplierBasisPoints: 15_000,
+          },
+          hasRestrictions: true,
+          startsAt: null,
+          endsAt: null,
+          availableNow: true,
+        },
+      ],
+    };
+
+    expect(publicLoyaltyExperienceV4.parse(value)).toEqual(value);
+    expect(publicLoyaltyExperienceV3.safeParse(value).success).toBe(false);
+  });
+
+  it("rejects private, contradictory, duplicate, and oversized V4 earning data", () => {
+    const base = publicLoyaltyExperienceV4.parse({
+      version: "4",
+      workspaceId: "a1000000-0000-4000-8000-000000000001",
+      programmeId: "a1000000-0000-4000-8000-000000000002",
+      programmeGroupId: "a1000000-0000-4000-8000-000000000003",
+      programmeName: "Rosy Rewards",
+      requestedLocale: "en",
+      resolvedLocale: "en",
+      presentation: { version: "2", theme: themeV2, copy: copyV2 },
+      tiers: [],
+      rewards: [],
+      vipCatalogue: {
+        version: "1",
+        qualificationPeriod: { kind: "lifetime" },
+        downgradeGraceDays: 0,
+        levels: [],
+      },
+      earningMethods: [],
+    });
+    const method = {
+      code: "birthday",
+      name: "Birthday bonus",
+      source: "birthday" as const,
+      effect: { kind: "fixed_bonus" as const, points: "250" },
+      hasRestrictions: false,
+      startsAt: null,
+      endsAt: null,
+      availableNow: true,
+    };
+
+    expect(
+      publicLoyaltyExperienceV4.safeParse({
+        ...base,
+        earningMethods: [{ ...method, source: "custom_activity" }],
+      }).success,
+    ).toBe(false);
+    expect(
+      publicLoyaltyExperienceV4.safeParse({
+        ...base,
+        earningMethods: [{ ...method, name: "Internal high-value segment" }],
+      }).success,
+    ).toBe(false);
+    expect(
+      publicLoyaltyExperienceV4.safeParse({
+        ...base,
+        earningMethods: [
+          { ...method, effect: { kind: "base_rate", pointsPerMajorUnit: "5" } },
+        ],
+      }).success,
+    ).toBe(false);
+    expect(
+      publicLoyaltyExperienceV4.safeParse({
+        ...base,
+        earningMethods: [method, method],
+      }).success,
+    ).toBe(false);
+    expect(
+      publicLoyaltyExperienceV4.safeParse({
+        ...base,
+        earningMethods: [
+          {
+            ...method,
+            effect: { kind: "fixed_bonus", points: "9".repeat(100_000) },
+          },
+        ],
+      }).success,
+    ).toBe(false);
+    expect(
+      publicLoyaltyExperienceV4.safeParse({
+        ...base,
+        earningMethods: [
+          {
+            ...method,
+            startsAt: "2027-01-01T00:00:00.000Z",
+            endsAt: "2026-01-01T00:00:00.000Z",
+          },
+        ],
       }).success,
     ).toBe(false);
   });

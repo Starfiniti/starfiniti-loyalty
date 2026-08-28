@@ -369,6 +369,137 @@ export const publicLoyaltyExperienceV3 = publicLoyaltyExperienceV2
     });
   });
 
+export const publicEarningSourceV1 = z.enum([
+  "purchase",
+  "account_created",
+  "birthday",
+  "verified_product_review",
+  "referral",
+]);
+
+export const publicEarningEffectV1 = z.discriminatedUnion("kind", [
+  z
+    .object({
+      kind: z.literal("base_rate"),
+      pointsPerMajorUnit: positivePostgresBigintString,
+    })
+    .strict(),
+  z
+    .object({
+      kind: z.literal("multiplier"),
+      multiplierBasisPoints: z.number().int().min(10_001).max(100_000),
+    })
+    .strict(),
+  z
+    .object({
+      kind: z.literal("fixed_bonus"),
+      points: positivePostgresBigintString,
+    })
+    .strict(),
+]);
+
+export const publicEarningMethodV1 = z
+  .object({
+    code: z.string().regex(/^[a-z][a-z0-9_-]{0,79}$/u),
+    name: translatedCopy.min(1).max(200),
+    source: publicEarningSourceV1,
+    effect: publicEarningEffectV1,
+    hasRestrictions: z.boolean(),
+    startsAt: z.iso.datetime({ offset: true }).nullable(),
+    endsAt: z.iso.datetime({ offset: true }).nullable(),
+    availableNow: z.boolean(),
+  })
+  .strict()
+  .superRefine((method, context) => {
+    if (method.name !== expectedPublicEarningName(method)) {
+      context.addIssue({
+        code: "custom",
+        path: ["name"],
+        message:
+          "Public earning method name must use the reviewed source label",
+      });
+    }
+    if (method.source !== "purchase" && method.effect.kind !== "fixed_bonus") {
+      context.addIssue({
+        code: "custom",
+        path: ["effect"],
+        message: "Non-purchase public earning methods require a fixed bonus",
+      });
+    }
+    if (
+      method.startsAt !== null &&
+      method.endsAt !== null &&
+      Date.parse(method.startsAt) >= Date.parse(method.endsAt)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["endsAt"],
+        message: "Public earning method end must be after its start",
+      });
+    }
+  });
+
+function expectedPublicEarningName(method: {
+  source: z.infer<typeof publicEarningSourceV1>;
+  effect: z.infer<typeof publicEarningEffectV1>;
+}): string {
+  if (method.source === "purchase") {
+    if (method.effect.kind === "base_rate") return "Eligible purchases";
+    if (method.effect.kind === "multiplier") return "Purchase multiplier";
+    return "Purchase bonus";
+  }
+  if (method.source === "account_created") return "Create your account";
+  if (method.source === "birthday") return "Birthday bonus";
+  if (method.source === "verified_product_review") {
+    return "Verified product review";
+  }
+  return "Refer a friend";
+}
+
+export const publicLoyaltyExperienceV4 = z
+  .object({
+    ...publicLoyaltyExperienceV3.shape,
+    version: z.literal("4"),
+    earningMethods: z.array(publicEarningMethodV1).max(12),
+  })
+  .strict()
+  .superRefine((experience, context) => {
+    if (experience.tiers.length !== experience.vipCatalogue.levels.length) {
+      context.addIssue({
+        code: "custom",
+        path: ["vipCatalogue", "levels"],
+        message: "Public VIP catalogue must cover every published tier",
+      });
+    } else {
+      experience.tiers.forEach((tier, index) => {
+        const level = experience.vipCatalogue.levels[index];
+        if (
+          !level ||
+          level.code !== tier.code ||
+          level.name !== tier.name ||
+          level.pointsPerMajorUnit !== tier.pointsPerMajorUnit
+        ) {
+          context.addIssue({
+            code: "custom",
+            path: ["vipCatalogue", "levels", index],
+            message: "Public VIP catalogue does not match the published tier",
+          });
+        }
+      });
+    }
+    const codes = new Set<string>();
+    experience.earningMethods.forEach((method, index) => {
+      if (codes.has(method.code)) {
+        context.addIssue({
+          code: "custom",
+          path: ["earningMethods", index, "code"],
+          message: "Public earning method codes must be unique",
+        });
+      }
+      codes.add(method.code);
+    });
+  });
+
 function srgbChannel(value: number): number {
   const normalized = value / 255;
   return normalized <= 0.04045
@@ -420,4 +551,10 @@ export type PublicVipLevelV1 = z.infer<typeof publicVipLevelV1>;
 export type PublicVipCatalogueV1 = z.infer<typeof publicVipCatalogueV1>;
 export type PublicLoyaltyExperienceV3 = z.infer<
   typeof publicLoyaltyExperienceV3
+>;
+export type PublicEarningSourceV1 = z.infer<typeof publicEarningSourceV1>;
+export type PublicEarningEffectV1 = z.infer<typeof publicEarningEffectV1>;
+export type PublicEarningMethodV1 = z.infer<typeof publicEarningMethodV1>;
+export type PublicLoyaltyExperienceV4 = z.infer<
+  typeof publicLoyaltyExperienceV4
 >;

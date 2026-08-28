@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(47);
+select plan(60);
 
 select has_function(
   'loyalty', 'get_public_loyalty_experience', array['uuid', 'uuid', 'text'],
@@ -87,6 +87,45 @@ select results_eq(
   array[2],
   'V3 accepts only public workspace and programme selectors'
 );
+select has_function(
+  'loyalty', 'get_public_loyalty_experience_v4', array['uuid', 'uuid'],
+  'guest-safe V4 public earning catalogue read model exists'
+);
+select ok(
+  has_function_privilege(
+    'anon', 'loyalty.get_public_loyalty_experience_v4(uuid,uuid)', 'EXECUTE'
+  ),
+  'anonymous callers can enter the bounded V4 read model'
+);
+select ok(
+  has_function_privilege(
+    'authenticated',
+    'loyalty.get_public_loyalty_experience_v4(uuid,uuid)', 'EXECUTE'
+  ),
+  'signed-in customers may enter the same V4 public projection'
+);
+select results_eq(
+  $$ select routine.prosecdef
+     from pg_proc as routine
+     join pg_namespace as namespace on namespace.oid = routine.pronamespace
+     where namespace.nspname = 'loyalty'
+       and routine.proname = 'get_public_loyalty_experience_v4'
+       and exists (
+         select 1 from unnest(routine.proconfig) as setting
+         where setting = 'search_path=""'
+       ) $$,
+  array[true],
+  'V4 public projection is security definer with an empty search path'
+);
+select results_eq(
+  $$ select routine.pronargs::integer
+     from pg_proc as routine
+     join pg_namespace as namespace on namespace.oid = routine.pronamespace
+     where namespace.nspname = 'loyalty'
+       and routine.proname = 'get_public_loyalty_experience_v4' $$,
+  array[2],
+  'V4 accepts only public workspace and programme selectors'
+);
 select ok(
   has_function_privilege('anon', 'loyalty.get_public_loyalty_experience(uuid,uuid,text)', 'EXECUTE'),
   'anonymous callers can enter only the public read model'
@@ -108,6 +147,10 @@ select ok(
   'anonymous callers cannot read raw reward definitions or configuration'
 );
 select ok(
+  not has_table_privilege('anon', 'loyalty.programme_earning_rules', 'SELECT'),
+  'anonymous callers cannot read raw earning rules or selectors'
+);
+select ok(
   not has_table_privilege('anon', 'loyalty.experience_translations', 'SELECT'),
   'anonymous callers cannot read translation tables directly'
 );
@@ -120,6 +163,14 @@ select ok(
     'anon', 'loyalty.programme_tier_thresholds', 'SELECT'
   ),
   'anonymous callers cannot read raw advanced VIP policy tables'
+);
+select ok(
+  not has_function_privilege(
+    'anon', 'loyalty_private.try_parse_public_timestamptz(text)', 'EXECUTE'
+  ) and not has_function_privilege(
+    'anon', 'loyalty_private.try_parse_public_integer(text)', 'EXECUTE'
+  ),
+  'anonymous callers cannot invoke private public-projection parsers'
 );
 select results_eq(
   $$ select routine.prosecdef
@@ -269,6 +320,78 @@ cross join (values
   ('reentry', 1::smallint, 'eligible_spend', 15000::bigint, '{}'::text[])
 ) as threshold(threshold_kind, ordinal, metric, minimum_value, activity_codes)
 where public_id = '7b000000-0000-4000-8000-000000000140';
+insert into loyalty.programme_earning_rules (
+  organization_id, programme_group_id, programme_version_id, code, name,
+  ordinal, source, enabled, priority, stackable, effect_kind, effect,
+  conditions, purchase_exclusions, cap
+)
+select version.organization_id, version.programme_group_id, version.id,
+  rule.code, rule.name, rule.ordinal, rule.source, true, rule.priority,
+  rule.stackable, rule.effect_kind, rule.effect, rule.conditions,
+  rule.purchase_exclusions, rule.cap
+from loyalty.programme_versions as version
+cross join (values
+  (
+    'purchase-base'::text, 'Eligible purchases'::text, 1::smallint,
+    'purchase'::text, 0::integer, false, 'base_rate'::text,
+    '{"kind":"base_rate","pointsPerMajorUnit":"5"}'::jsonb,
+    '{"productIds":[],"categoryIds":[],"currencyCodes":[],"markets":[],"channels":[],"activityCodes":[],"segmentCodes":[],"tierCodes":[],"startsAt":null,"endsAt":null}'::jsonb,
+    '{}'::jsonb,
+    '{"perEventPoints":null,"perMemberPoints":null,"memberPeriod":null,"rollingDays":null}'::jsonb
+  ),
+  (
+    'internal-high-value-multiplier', 'Internal high-value multiplier',
+    2::smallint, 'purchase', 10, false, 'multiplier',
+    '{"kind":"multiplier","multiplierBasisPoints":15000}'::jsonb,
+    '{"productIds":[],"categoryIds":[],"currencyCodes":[],"markets":[],"channels":[],"activityCodes":[],"segmentCodes":["private-segment"],"tierCodes":[],"startsAt":null,"endsAt":null}'::jsonb,
+    '{}'::jsonb,
+    '{"perEventPoints":null,"perMemberPoints":null,"memberPeriod":null,"rollingDays":null}'::jsonb
+  ),
+  (
+    'birthday-bonus', 'Birthday bonus', 3::smallint, 'birthday',
+    10, true, 'fixed_bonus',
+    '{"kind":"fixed_bonus","points":"250"}'::jsonb,
+    '{"productIds":[],"categoryIds":[],"currencyCodes":[],"markets":[],"channels":[],"activityCodes":[],"segmentCodes":[],"tierCodes":[],"startsAt":"2099-01-01T00:00:00Z","endsAt":null}'::jsonb,
+    null,
+    '{"perEventPoints":null,"perMemberPoints":null,"memberPeriod":null,"rollingDays":null}'::jsonb
+  ),
+  (
+    'private-consultation', 'Private consultation', 4::smallint,
+    'custom_activity', 20, true, 'fixed_bonus',
+    '{"kind":"fixed_bonus","points":"100"}'::jsonb,
+    '{"productIds":[],"categoryIds":[],"currencyCodes":[],"markets":[],"channels":[],"activityCodes":["consultation"],"segmentCodes":[],"tierCodes":[],"startsAt":null,"endsAt":null}'::jsonb,
+    null,
+    '{"perEventPoints":null,"perMemberPoints":null,"memberPeriod":null,"rollingDays":null}'::jsonb
+  ),
+  (
+    'unsafe-referral', '<script>internal referral label</script>', 5::smallint,
+    'referral', 30, true, 'fixed_bonus',
+    '{"kind":"fixed_bonus","points":"125"}'::jsonb,
+    '{"productIds":[],"categoryIds":[],"currencyCodes":[],"markets":[],"channels":[],"activityCodes":[],"segmentCodes":[],"tierCodes":[],"startsAt":null,"endsAt":null}'::jsonb,
+    null,
+    '{"perEventPoints":null,"perMemberPoints":null,"memberPeriod":null,"rollingDays":null}'::jsonb
+  ),
+  (
+    'invalid-effect', 'Invalid effect', 6::smallint,
+    'account_created', 40, true, 'fixed_bonus',
+    '{"kind":"fixed_bonus","points":"9223372036854775808"}'::jsonb,
+    '{"productIds":[],"categoryIds":[],"currencyCodes":[],"markets":[],"channels":[],"activityCodes":[],"segmentCodes":[],"tierCodes":[],"startsAt":null,"endsAt":null}'::jsonb,
+    null,
+    '{"perEventPoints":null,"perMemberPoints":null,"memberPeriod":null,"rollingDays":null}'::jsonb
+  ),
+  (
+    'invalid-date', 'Invalid date', 7::smallint,
+    'verified_product_review', 50, true, 'fixed_bonus',
+    '{"kind":"fixed_bonus","points":"50"}'::jsonb,
+    '{"productIds":[],"categoryIds":[],"currencyCodes":[],"markets":[],"channels":[],"activityCodes":[],"segmentCodes":[],"tierCodes":[],"startsAt":"2099-99-99T00:00:00Z","endsAt":null}'::jsonb,
+    null,
+    '{"perEventPoints":null,"perMemberPoints":null,"memberPeriod":null,"rollingDays":null}'::jsonb
+  )
+) as rule(
+  code, name, ordinal, source, priority, stackable, effect_kind, effect,
+  conditions, purchase_exclusions, cap
+)
+where version.public_id = '7b000000-0000-4000-8000-000000000140';
 insert into loyalty.experience_themes (
   organization_id, workspace_id, programme_group_id, brand_color,
   display_font, card_radius_px, hero_text, points_label, show_tier, show_rewards
@@ -387,6 +510,57 @@ select results_eq(
   'V3 synthesizes an equivalent lifetime catalogue for legacy published tiers'
 );
 select results_eq(
+  $$ select
+       pg_catalog.jsonb_array_length(earning_methods),
+       earning_methods #>> '{0,code}',
+       earning_methods #>> '{0,source}',
+       earning_methods #>> '{0,effect,kind}',
+       earning_methods #>> '{0,effect,pointsPerMajorUnit}',
+       (earning_methods #>> '{0,hasRestrictions}')::boolean,
+       earning_methods #>> '{1,code}',
+       earning_methods #>> '{1,name}',
+       earning_methods #>> '{1,effect,kind}',
+       (earning_methods #>> '{1,effect,multiplierBasisPoints}')::integer,
+       earning_methods #>> '{2,code}',
+       (earning_methods #>> '{2,availableNow}')::boolean,
+       earning_methods #>> '{3,code}',
+       earning_methods #>> '{3,name}'
+     from loyalty.get_public_loyalty_experience_v4(
+       '7b000000-0000-4000-8000-000000000110',
+       '7b000000-0000-4000-8000-000000000130') $$,
+  $$ values (
+    4, 'purchase-1'::text, 'purchase'::text, 'base_rate'::text,
+    '5'::text, true, 'purchase-2'::text, 'Purchase multiplier'::text,
+    'multiplier'::text, 15000, 'birthday-3'::text, false,
+    'referral-5'::text, 'Refer a friend'::text
+  ) $$,
+  'V4 returns exact public standard methods and schedule availability'
+);
+select results_eq(
+  $$ select
+       earning_methods::text !~
+         '(private-consultation|unsafe-referral|internal-high-value|internal referral|invalid-effect|invalid-date|activityCodes|segmentCodes|tierCodes|perMemberPoints)',
+       not (earning_methods -> 0 ? 'cap'),
+       not (earning_methods -> 0 ? 'conditions'),
+       not (earning_methods -> 0 ? 'purchaseExclusions')
+     from loyalty.get_public_loyalty_experience_v4(
+       '7b000000-0000-4000-8000-000000000110',
+       '7b000000-0000-4000-8000-000000000130') $$,
+  $$ values (true, true, true, true) $$,
+  'V4 omits custom activities, unsafe rules, merchant labels/codes, raw selectors, caps, and exclusions'
+);
+select results_eq(
+  $$ select
+       pg_catalog.jsonb_array_length(earning_methods),
+       earning_methods #>> '{0,code}',
+       earning_methods #>> '{0,effect,pointsPerMajorUnit}'
+     from loyalty.get_public_loyalty_experience_v4(
+       '7c000000-0000-4000-8000-000000000110',
+       '7c000000-0000-4000-8000-000000000130') $$,
+  $$ values (1, 'eligible-purchases'::text, '4'::text) $$,
+  'V4 synthesizes one conservative public purchase method for legacy V1'
+);
+select results_eq(
   $$ select tiers from loyalty.get_public_loyalty_experience(
        '7b000000-0000-4000-8000-000000000110',
        '7b000000-0000-4000-8000-000000000130', 'en') $$,
@@ -436,6 +610,13 @@ select results_eq(
   'V3 mixed-tenant selectors fail closed'
 );
 select results_eq(
+  $$ select count(*)::bigint from loyalty.get_public_loyalty_experience_v4(
+       '7c000000-0000-4000-8000-000000000110',
+       '7b000000-0000-4000-8000-000000000130') $$,
+  array[0::bigint],
+  'V4 mixed-tenant selectors fail closed'
+);
+select results_eq(
   $$ select count(*)::bigint from loyalty.get_public_loyalty_experience(
        '00000000-0000-4000-8000-000000000000',
        '7b000000-0000-4000-8000-000000000130', 'en') $$,
@@ -467,6 +648,13 @@ select results_eq(
        '7b000000-0000-4000-8000-000000000130') $$,
   array[0::bigint],
   'suspended workspace removes the V3 public document'
+);
+select results_eq(
+  $$ select count(*)::bigint from loyalty.get_public_loyalty_experience_v4(
+       '7b000000-0000-4000-8000-000000000110',
+       '7b000000-0000-4000-8000-000000000130') $$,
+  array[0::bigint],
+  'suspended workspace removes the V4 public document'
 );
 reset role;
 update loyalty.workspaces set status = 'active'
@@ -500,6 +688,13 @@ select results_eq(
        '7b000000-0000-4000-8000-000000000130') $$,
   array[0::bigint],
   'absence of a published version removes the V3 public document'
+);
+select results_eq(
+  $$ select count(*)::bigint from loyalty.get_public_loyalty_experience_v4(
+       '7b000000-0000-4000-8000-000000000110',
+       '7b000000-0000-4000-8000-000000000130') $$,
+  array[0::bigint],
+  'absence of a published version removes the V4 public document'
 );
 
 reset role;

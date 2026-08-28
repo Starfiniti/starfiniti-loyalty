@@ -48,7 +48,9 @@ for (const required of [
   /\.member-hub-v2 :where\(a, button\):focus-visible/u,
   /\.public-loyalty-v2 :where\(a, button\):focus-visible/u,
   /\.public-vip-levels/u,
+  /\.public-earning-methods/u,
   /@media \(max-width: 420px\)[\s\S]*?\.public-vip-levels > li/u,
+  /@media \(max-width: 420px\)[\s\S]*?\.public-earning-methods article > header/u,
   /html\[data-dashboard-theme="dark"\][\s\S]*?\.experience-editor-v2[\s\S]*?\.experience-fields[\s\S]*?select,/u,
   /html\[data-dashboard-theme="dark"\][\s\S]*?\.experience-editor-v2[\s\S]*?\.experience-visibility-grid[\s\S]*?label[\s\S]*?strong,/u,
   /html\[data-dashboard-theme="dark"\][\s\S]*?\.experience-preview-v2[\s\S]*?\.experience-preview-toolbar[\s\S]*?button\[aria-pressed="true"\]/u,
@@ -83,7 +85,11 @@ const publicExperience = readFileSync(
 );
 for (const required of [
   /public-loyalty-v3/u,
+  /public-loyalty-v4/u,
   /catalogue\.levels\.map/u,
+  /experience\.earningMethods\.map/u,
+  /formatPublicEarningEffect/u,
+  /formatPublicEarningWindow/u,
   /formatPublicVipThreshold/u,
   /aria-label="Tier benefits"/u,
 ]) {
@@ -94,6 +100,11 @@ for (const required of [
 if (/VIP milestones are coming soon/u.test(publicExperience)) {
   throw new Error(
     "The public VIP empty state must describe the published programme, not promise future work.",
+  );
+}
+if (/<h3>Eligible store activity<\/h3>/u.test(publicExperience)) {
+  throw new Error(
+    "The public earning section must render exact published methods, not generic placeholder copy.",
   );
 }
 

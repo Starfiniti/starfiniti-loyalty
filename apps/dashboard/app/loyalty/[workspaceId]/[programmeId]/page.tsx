@@ -1,12 +1,14 @@
 import type {
   ExperienceHeroAssetV2,
   ExperienceSectionV2,
-  PublicLoyaltyExperienceV3,
+  PublicEarningSourceV1,
+  PublicLoyaltyExperienceV4,
 } from "@starfiniti/contracts";
 import type { Metadata } from "next";
 import type { LucideIcon } from "lucide-react";
 import {
   ArrowRight,
+  CakeSlice,
   Check,
   CircleUserRound,
   Clock3,
@@ -15,12 +17,14 @@ import {
   HeartHandshake,
   History,
   KeyRound,
+  MessageSquareCheck,
   RefreshCw,
   ShieldAlert,
   ShieldCheck,
   ShoppingBag,
   Sparkles,
   Star,
+  UserPlus,
   Zap,
 } from "lucide-react";
 import type { CSSProperties } from "react";
@@ -30,6 +34,9 @@ import { experienceFontStack } from "@/lib/experience-theme";
 import { visibleCustomerExperienceSections } from "@/lib/customer-experience-presentation";
 import {
   formatPublicPoints,
+  formatPublicEarningEffect,
+  formatPublicEarningSource,
+  formatPublicEarningWindow,
   formatPublicVipPeriod,
   formatPublicVipThreshold,
   isPublicId,
@@ -63,11 +70,19 @@ const sectionLabels: Readonly<Record<ExperienceSectionV2, string>> = {
   account: "My account",
 };
 
+const earningIcons: Readonly<Record<PublicEarningSourceV1, LucideIcon>> = {
+  purchase: ShoppingBag,
+  account_created: UserPlus,
+  birthday: CakeSlice,
+  verified_product_review: MessageSquareCheck,
+  referral: HeartHandshake,
+};
+
 export default async function PublicLoyaltyPage({ params }: PageProps) {
   const { workspaceId, programmeId } = await params;
   if (!isPublicId(workspaceId) || !isPublicId(programmeId)) notFound();
 
-  let experience: PublicLoyaltyExperienceV3 | null;
+  let experience: PublicLoyaltyExperienceV4 | null;
   try {
     experience = await getPublicLoyaltyExperience(workspaceId, programmeId);
   } catch {
@@ -91,7 +106,7 @@ export default async function PublicLoyaltyPage({ params }: PageProps) {
 
   return (
     <main
-      className={`public-loyalty-page public-loyalty-v2 public-loyalty-v3 ${theme.density}`}
+      className={`public-loyalty-page public-loyalty-v2 public-loyalty-v3 public-loyalty-v4 ${theme.density}`}
       id="main-content"
       lang="en"
       style={style}
@@ -165,7 +180,7 @@ function PublicSection({
   index,
   section,
 }: Readonly<{
-  experience: PublicLoyaltyExperienceV3;
+  experience: PublicLoyaltyExperienceV4;
   index: number;
   section: ExperienceSectionV2;
 }>) {
@@ -199,17 +214,68 @@ function PublicSection({
     return (
       <section className="public-loyalty-section" id="earning">
         <PublicHeading index={index} title="Ways to earn" />
-        <div className="public-loyalty-feature-card">
-          <Sparkles aria-hidden="true" />
-          <div>
-            <h3>Eligible store activity</h3>
-            <p>{copy.earnMessage}</p>
-            <small>
-              Your signed-in account shows live availability, caps, and
-              restrictions before you participate.
-            </small>
+        {experience.earningMethods.length ? (
+          <div className="public-earning-catalogue">
+            <header>
+              <p>{copy.earnMessage}</p>
+              <Link href={PUBLIC_LOYALTY_ACCOUNT_PATH}>
+                See your exact limits <ArrowRight aria-hidden="true" />
+              </Link>
+            </header>
+            <ol className="public-earning-methods">
+              {experience.earningMethods.map((method, methodIndex) => {
+                const MethodIcon = earningIcons[method.source];
+                return (
+                  <li key={method.code}>
+                    <span className="public-earning-index" aria-hidden="true">
+                      {String(methodIndex + 1).padStart(2, "0")}
+                    </span>
+                    <article>
+                      <header>
+                        <span
+                          className="public-earning-icon"
+                          aria-hidden="true"
+                        >
+                          <MethodIcon />
+                        </span>
+                        <div>
+                          <small>
+                            {formatPublicEarningSource(method.source)}
+                          </small>
+                          <h3>{method.name}</h3>
+                        </div>
+                        <span
+                          className={`public-earning-status ${method.availableNow ? "available" : "scheduled"}`}
+                        >
+                          {method.availableNow ? "Live" : "Scheduled"}
+                        </span>
+                      </header>
+                      <strong>
+                        {formatPublicEarningEffect(method.effect, "en")}
+                      </strong>
+                      <footer>
+                        <span>
+                          <Clock3 aria-hidden="true" />
+                          {formatPublicEarningWindow(method, "en")}
+                        </span>
+                        {method.hasRestrictions ? (
+                          <span>
+                            <ShieldCheck aria-hidden="true" /> Conditions apply
+                          </span>
+                        ) : null}
+                      </footer>
+                    </article>
+                  </li>
+                );
+              })}
+            </ol>
           </div>
-        </div>
+        ) : (
+          <PublicEmpty
+            icon={Sparkles}
+            text="No public earning methods are listed for this programme. Sign in to view account-specific ways to earn."
+          />
+        )}
       </section>
     );
   }

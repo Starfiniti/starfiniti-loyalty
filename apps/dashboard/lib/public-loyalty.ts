@@ -1,5 +1,8 @@
 import type {
   ExperienceLocaleV1,
+  PublicEarningEffectV1,
+  PublicEarningMethodV1,
+  PublicEarningSourceV1,
   PublicVipQualificationThresholdV1,
   TierQualificationPeriodV2,
 } from "@starfiniti/contracts";
@@ -65,4 +68,50 @@ export function formatPublicVipPeriod(
     return `Your latest ${period.days} ${period.days === 1 ? "day" : "days"}`;
   }
   return `Calendar year · ${period.timeZone}`;
+}
+
+export function formatPublicEarningSource(
+  source: PublicEarningSourceV1,
+): string {
+  if (source === "purchase") return "Shopping";
+  if (source === "account_created") return "Membership";
+  if (source === "birthday") return "Birthday";
+  if (source === "verified_product_review") return "Verified review";
+  return "Referral";
+}
+
+export function formatPublicEarningEffect(
+  effect: PublicEarningEffectV1,
+  locale: ExperienceLocaleV1,
+): string {
+  if (effect.kind === "base_rate") {
+    return `${formatPublicPoints(effect.pointsPerMajorUnit, locale)} points / €1`;
+  }
+  if (effect.kind === "fixed_bonus") {
+    const amount = formatPublicPoints(effect.points, locale);
+    return `${amount} bonus ${effect.points === "1" ? "point" : "points"}`;
+  }
+  const whole = Math.floor(effect.multiplierBasisPoints / 10_000);
+  const remainder = effect.multiplierBasisPoints % 10_000;
+  const fraction = remainder.toString().padStart(4, "0").replace(/0+$/u, "");
+  return `${whole}${fraction ? `.${fraction}` : ""}× points`;
+}
+
+export function formatPublicEarningWindow(
+  method: PublicEarningMethodV1,
+  locale: ExperienceLocaleV1,
+): string {
+  const date = (value: string) =>
+    new Intl.DateTimeFormat(locale, {
+      dateStyle: "medium",
+      timeZone: "UTC",
+    }).format(new Date(value));
+  if (!method.availableNow) {
+    return method.startsAt
+      ? `Available from ${date(method.startsAt)}`
+      : "Currently unavailable";
+  }
+  return method.endsAt
+    ? `Available until ${date(method.endsAt)}`
+    : "Available now";
 }

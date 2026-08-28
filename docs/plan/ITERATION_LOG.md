@@ -1,5 +1,15 @@
 # Iteration Log
 
+## 2026-08-28 — Guest-safe public earning catalogue
+
+- Reconstructed the hosted earning path and found that a single generic “Eligible store activity” card hid the six versioned earning sources and exact published effects already supported by the platform. It could also imply purchase earning where a V2 programme published only private custom rules.
+- Compared static copy, raw `ProgrammeDefinitionV2` disclosure, and a database-derived minimized version. ADR-0075 selects additive V4: PostgreSQL re-derives active tenant and immutable published version, derives stable public codes and reviewed labels instead of exposing merchant-authored identifiers/copy, exposes only five standard public sources and rebuilt effects/schedules, and omits custom activities, selectors, exclusions, cap values, priority/stacking internals, customer facts, IDs, audit, and ledger state.
+- Added bounded contracts and missing-function-only V3/V2/V1 compatibility. Duplicate codes, contradictory source/effect pairs, invalid date windows, oversized integers, malformed/duplicate rows, and provider errors fail closed. Legacy V1 receives one conservative first-tier purchase method; a V2 programme with only private rules remains honestly empty.
+- Replaced the generic card with a responsive editorial catalogue using source-specific Lucide icons, exact base/multiplier/fixed copy, live/scheduled states, availability windows, conditions guidance, and an honest empty state. Accessibility guards now prevent restoration of the generic placeholder.
+- Focused reduced-motion Playwright review of the real route at 1512×982 and 390×844 passed all five public sources, exact effects, scheduled state, first-focus bypass, one H1, zero horizontal overflow, and zero console/page/request diagnostics. Desktop and mobile captures are retained under M09 evidence.
+- The required adversarial diff review found that the first candidate still exposed merchant-authored rule codes/names and used two sub-4.5:1 small-text colors. The final boundary derives source/ordinal codes and fixed reviewed labels in PostgreSQL, enforces those labels again in the untrusted-response contract, proves raw internal identifiers/copy and invalid timestamps are absent, and uses the established higher-contrast muted text token. No finding survived the refutation pass after those repairs.
+- Local contract, server, presentation, type, accessibility, migration, and pgTAP static checks pass. Docker-backed 83-migration replay and the expanded 60-case public projection suite await the identical Linux CI job. Production, customer value, programme evaluation, WooCommerce, checkout, and M09's 88/100 canary state remain unchanged.
+
 ## 2026-08-28 — Guest-safe advanced VIP catalogue
 
 - Reconstructed the public hosted VIP path and found a correctness gap: strict V2 exposed only legacy spend/rate tiers, while published V2 policies may qualify by spend, points, orders, referrals, or verified activities under lifetime, rolling, or calendar windows. The page therefore misrepresented advanced policies and used a speculative “coming soon” empty state.
