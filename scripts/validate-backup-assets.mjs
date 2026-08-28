@@ -623,7 +623,7 @@ if (process.platform !== "win32") {
     );
     assert.match(
       maintenanceTrace[0] ?? "",
-      /^borg\|ssh:\/\/backup\.invalid\/\.\/loyalty-postgres\|check .*--repository-only --show-rc/u,
+      /^borg\|ssh:\/\/backup\.invalid\/\.\/loyalty-postgres\|check .*--repository-only --max-duration 1 --show-rc/u,
       "maintenance must check only the dedicated repository",
     );
     assert.match(
