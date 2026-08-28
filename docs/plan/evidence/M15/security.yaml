@@ -23,7 +23,7 @@ inputs:
     sha256: 1eed0cc5db61226b7c2ac79615169aac01c6fadfedc64d6ef3caf784a07143c3
   reciprocalSourcePlan:
     path: infrastructure/testing/security/reciprocal-source-plan.yaml
-    sha256: f18efecff2711e8f49a433c9946090b5f937fb757f8433483e965e2c5ea881f8
+    sha256: 2619135260bd950dc4d7f7b954100c742d921c0d43acfbad68b04867e44725b1
   tools:
     codeqlAction: 4.37.9
     trivyAction: 0.36.0

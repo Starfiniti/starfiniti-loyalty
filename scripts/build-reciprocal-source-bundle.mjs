@@ -30,8 +30,8 @@ import {
 import { pipeline } from "node:stream/promises";
 import { Transform } from "node:stream";
 import { fileURLToPath } from "node:url";
+import { request as httpsRequest } from "node:https";
 
-import { TarArchive } from "archiver";
 import YAML from "yaml";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -81,6 +81,15 @@ function sortedUniqueStrings(values, label) {
     fail(`${label} must contain unique non-empty strings`);
   }
   return [...values].sort();
+}
+
+function isSafeInputFilename(value) {
+  return (
+    typeof value === "string" &&
+    value !== "." &&
+    value !== ".." &&
+    /^[A-Za-z0-9_.+-]{1,128}$/u.test(value)
+  );
 }
 
 function assertSafeRelativePath(value, label = "path") {
@@ -556,6 +565,22 @@ function assertGeneratedTemp(path) {
   }
 }
 
+function requestHttps(url, signal) {
+  return new Promise((resolveRequest, rejectRequest) => {
+    const request = httpsRequest(
+      url,
+      {
+        headers: { "user-agent": "Starfiniti-Loyalty-source-bundle/1" },
+        method: "GET",
+        signal,
+      },
+      resolveRequest,
+    );
+    request.on("error", rejectRequest);
+    request.end();
+  });
+}
+
 async function downloadVerified(input, destination) {
   assertHttps(input.url, `${input.file ?? input.id} download URL`);
   await mkdir(dirname(destination), { recursive: true });
@@ -570,27 +595,25 @@ async function downloadVerified(input, destination) {
   for (let redirects = 0; redirects <= 5; redirects += 1) {
     if (visited.has(currentUrl)) fail(`${label} redirect loop detected`);
     visited.add(currentUrl);
-    response = await fetch(currentUrl, {
-      headers: { "user-agent": "Starfiniti-Loyalty-source-bundle/1" },
-      redirect: "manual",
-      signal,
-    });
-    if (![301, 302, 303, 307, 308].includes(response.status)) break;
+    response = await requestHttps(currentUrl, signal);
+    if (![301, 302, 303, 307, 308].includes(response.statusCode)) break;
     if (redirects === 5) fail(`${label} exceeded five redirects`);
     const target = resolveHttpsRedirect(
       currentUrl,
-      response.headers.get("location"),
+      response.headers.location,
       label,
     );
-    await response.body?.cancel();
+    response.destroy();
     currentUrl = target;
     response = undefined;
   }
-  if (!response.ok || !response.body) {
-    fail(`${input.file ?? input.id} download returned HTTP ${response.status}`);
+  if (!response || response.statusCode < 200 || response.statusCode >= 300) {
+    fail(
+      `${input.file ?? input.id} download returned HTTP ${response?.statusCode ?? "unknown"}`,
+    );
   }
-  assertHttps(response.url, `${input.file ?? input.id} final download URL`);
-  const declaredLength = Number(response.headers.get("content-length"));
+  assertHttps(currentUrl, `${input.file ?? input.id} final download URL`);
+  const declaredLength = Number(response.headers["content-length"]);
   if (Number.isFinite(declaredLength) && declaredLength > input.maxBytes) {
     fail(`${input.file ?? input.id} declared length exceeds its bound`);
   }
@@ -607,7 +630,7 @@ async function downloadVerified(input, destination) {
   });
   try {
     await pipeline(
-      response.body,
+      response,
       meter,
       createWriteStream(temporary, { flags: "wx", mode: 0o600 }),
     );
@@ -674,7 +697,7 @@ function parseApkbuildChecksums(apkbuild, originId) {
     .filter(Boolean)
     .map((line) => {
       const entry = line.match(/^([0-9a-f]{128})\s{2}([^\s]+)$/u);
-      if (!entry || !safeFilePattern.test(entry[2])) {
+      if (!entry || !isSafeInputFilename(entry[2])) {
         fail(`${originId} APKBUILD checksum entry is invalid`);
       }
       return { sha512: entry[1], file: entry[2] };
@@ -792,6 +815,7 @@ function generateNotices(candidate, candidateCommit, tag) {
 }
 
 async function createDeterministicArchive(staging, archivePath, epochSeconds) {
+  const { TarArchive } = await import("archiver");
   const entries = await walkTree(staging);
   const epoch = new Date(epochSeconds * 1000);
   await new Promise((resolveArchive, rejectArchive) => {
@@ -1063,6 +1087,8 @@ async function buildBundle(argumentsMap) {
     run(
       "git",
       [
+        "-c",
+        "core.autocrlf=false",
         "archive",
         "--format=tar",
         `--output=${productTar}`,
@@ -1102,6 +1128,8 @@ async function buildBundle(argumentsMap) {
       run(
         "git",
         [
+          "-c",
+          "core.autocrlf=false",
           "archive",
           "--format=tar",
           `--output=${packagingTar}`,
@@ -1289,6 +1317,10 @@ async function runSelfTest() {
   const fixtures = syntheticSboms();
   const inventory = validateSboms(fixtures.dashboard, fixtures.worker);
   if (inventory.length !== 13) fail("self-test exact inventory count drifted");
+  parseApkbuildChecksums(
+    `sha512sums="\n${"a".repeat(128)}  _apk\n"\n`,
+    "self-test",
+  );
 
   const ordinaryComponents = structuredClone(fixtures);
   ordinaryComponents.dashboard.components.push(

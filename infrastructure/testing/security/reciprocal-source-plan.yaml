@@ -31,7 +31,7 @@ alpine:
       sources:
         - file: protocols-6.4
           url: https://salsa.debian.org/md/netbase/-/raw/v6.4/etc/protocols
-          sha512: 49109d434b577563849c43dd8141961ca798dada74d4d3f49003dac1911f522c43438b8241fa254e4faacdd90058f4d39a7d69b1f493f6d57422c1f706547c95
+          sha512: 3a00083bcdf5a9e884c9d07877d52311e3d99e79cbee656e236ba06e08ba0dddb7ba76494fdc9dd1a826c48e197a790a69e6bb458e9df64832d6b5e904e9fd15
           maxBytes: 1000000
         - file: services-6.4
           url: https://salsa.debian.org/md/netbase/-/raw/v6.4/etc/services
@@ -111,7 +111,7 @@ alpine:
           images: [dashboard, worker]
       sources:
         - file: musl-1.2.6.tar.gz
-          url: https://musl.libc.org/releases/musl-1.2.6.tar.gz
+          url: https://distfiles.alpinelinux.org/distfiles/v3.24/musl-1.2.6.tar.gz
           sha512: 1adad96eddb3a2eb0cacb3e363b0046568925fcdd75cf8b0503f2139df1f693d64730779ca0ce8131b7624ab2d37f4247bb1d3393c523de6e30d2b1d7732555c
           maxBytes: 10000000
     - id: pax-utils

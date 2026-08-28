@@ -52,7 +52,7 @@ R-056 remains open until a real tagged release produces and verifies the new art
 - Source failure occurs before registry authentication and image publication, so an incomplete release cannot distribute only the binaries.
 - The source archive is larger than the current release assets because it includes the full compiler and other upstream sources. The release has explicit byte and time bounds rather than truncating silently.
 - SBOM metadata selects authority; browser input, package names alone, mutable branches, and latest-version lookups select nothing.
-- All downloads require HTTPS, bounded bytes, an exact output name, and a fixed SHA-512. Redirects to another protocol fail.
+- All downloads require HTTPS, bounded bytes, an exact output name, and a fixed SHA-512. Redirects to another protocol fail. A source may use Alpine's release-specific official distfiles cache when the recipe's upstream origin is unavailable, but only when the cached bytes match the exact pinned APKBUILD checksum.
 - Product source and third-party source remain separate paths inside one archive, while one manifest and checksum set bind them to the tag.
 - GitHub attestations provide provenance for the produced files and images. Consumers must still verify checksums, attestations, and the manifest; attestations are not a substitute for review.
 
