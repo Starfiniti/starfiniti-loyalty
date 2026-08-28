@@ -81,7 +81,9 @@ candidate-based false completion.
 Run `npm run product-score:validate` after every material module change and as part
 of `npm run check`. Update both subjects only when their exact evidence changes.
 Production changes require a released/deployed source commit and the applicable live
-artifacts; candidate changes require an exact reviewed implementation commit.
+artifacts; candidate changes require an exact reviewed implementation commit. CI's
+baseline checkout uses full Git history so commit ancestry is proved rather than
+skipped or inferred from a depth-one clone.
 
 M15 final reconciliation still owns the release-specific score at GA. M16 elapsed
 monthly reviews must retain prior and current subjects, review every affected module,

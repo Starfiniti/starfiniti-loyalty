@@ -231,7 +231,9 @@ function verifyCommit(commit, label) {
       stdio: "ignore",
     });
   } catch {
-    fail(`${label} must resolve to an ancestor commit`);
+    fail(
+      `${label} must resolve to an ancestor commit; validation requires full Git history`,
+    );
   }
 }
 

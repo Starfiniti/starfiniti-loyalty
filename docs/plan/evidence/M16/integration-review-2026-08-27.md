@@ -34,6 +34,14 @@ attempted as required, while this slice remained limited to scoring governance.
 Exact-head Linux database replay, image policy, the runtime matrix, and security
 analysis remain the GitHub handoff authority after push.
 
+The first exact-head CI run `33186485592` then exposed a verification-environment
+defect: the baseline depth-one checkout did not contain the fixed historical
+production commit, so ancestry proof failed after every preceding test and validator
+passed. The correction gives only the baseline a full Git history. Commit ancestry
+remains mandatory; the validator was not changed to trust a missing object or shallow
+clone. A fresh exact-head run is required, while the already-completed container,
+CodeQL, DAST, recovery-transport, and WooCommerce jobs were green.
+
 No production release, database, programme, customer, loyalty value, WooCommerce
 checkout, feature flag, entitlement, identity, billing, backup, or service changed.
 
