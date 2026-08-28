@@ -54,21 +54,33 @@ providerCatalogue:
   - id: rsync
     source: https://download.samba.org/pub/rsync/NEWS
     reviewFrequency: monthly
+    installedEndpoints: [proxmox-host, database-guest]
+    requiresCandidateProvenanceSha256: true
   - id: borgbackup
     source: https://borgbackup.readthedocs.io/en/stable/changes.html
     reviewFrequency: monthly
+    installedEndpoints: [proxmox-host]
+    requiresCandidateProvenanceSha256: true
   - id: openssh
     source: https://www.openssh.com/releasenotes.html
     reviewFrequency: monthly
+    installedEndpoints: [proxmox-host, database-guest]
+    requiresCandidateProvenanceSha256: true
   - id: debian
     source: https://www.debian.org/security/
     reviewFrequency: monthly
+    installedEndpoints: [proxmox-host]
+    requiresCandidateProvenanceSha256: true
   - id: ubuntu
     source: https://ubuntu.com/security/notices
     reviewFrequency: monthly
+    installedEndpoints: [database-guest]
+    requiresCandidateProvenanceSha256: true
   - id: proxmox
     source: https://forum.proxmox.com/forums/security-advisories.26/
     reviewFrequency: monthly
+    installedEndpoints: [proxmox-host]
+    requiresCandidateProvenanceSha256: true
 backlog:
   path: docs/plan/IMPROVEMENT_BACKLOG.yaml
   ranking:

@@ -120,6 +120,14 @@ const providerSources = new Map([
   ["ubuntu", "https://ubuntu.com/security/notices"],
   ["proxmox", "https://forum.proxmox.com/forums/security-advisories.26/"],
 ]);
+const recoverySourceEndpoints = new Map([
+  ["rsync", new Set(["proxmox-host", "database-guest"])],
+  ["borgbackup", new Set(["proxmox-host"])],
+  ["openssh", new Set(["proxmox-host", "database-guest"])],
+  ["debian", new Set(["proxmox-host"])],
+  ["ubuntu", new Set(["database-guest"])],
+  ["proxmox", new Set(["proxmox-host"])],
+]);
 const scoreWeights = new Map([
   ["correctness", 20],
   ["security", 15],
@@ -528,6 +536,39 @@ function validateMonthlyReview(document, candidate, bindings) {
     ) {
       fail(`${document.period}.${provider.id} provider review is incomplete`);
     }
+    const requiredEndpoints = recoverySourceEndpoints.get(provider.id);
+    if (requiredEndpoints) {
+      exactSet(
+        uniqueIds(
+          provider.installed,
+          `${document.period}.${provider.id} installed endpoints`,
+        ),
+        requiredEndpoints,
+        `${document.period}.${provider.id} installed endpoints`,
+      );
+      for (const installed of provider.installed) {
+        if (
+          typeof installed.versionOrRelease !== "string" ||
+          installed.versionOrRelease.length < 4 ||
+          !digestPattern.test(installed.provenanceSha256 ?? "") ||
+          /^0{64}$/u.test(installed.provenanceSha256)
+        ) {
+          fail(
+            `${document.period}.${provider.id}.${installed.id} installed evidence is incomplete`,
+          );
+        }
+      }
+      if (
+        typeof provider.candidateVersionOrEntry !== "string" ||
+        provider.candidateVersionOrEntry.length < 4 ||
+        !digestPattern.test(provider.candidateProvenanceSha256 ?? "") ||
+        /^0{64}$/u.test(provider.candidateProvenanceSha256)
+      ) {
+        fail(
+          `${document.period}.${provider.id} candidate evidence is incomplete`,
+        );
+      }
+    }
   }
   const material = new Set(document.materiallyChangedModules ?? []);
   if ([...material].some((id) => !moduleIds.has(id))) {
@@ -833,6 +874,31 @@ function validateDocument(
     ) {
       fail(`${provider.id} provider source or cadence differs`);
     }
+    const requiredEndpoints = recoverySourceEndpoints.get(provider.id);
+    if (requiredEndpoints) {
+      if (
+        !Array.isArray(provider.installedEndpoints) ||
+        provider.installedEndpoints.length !== requiredEndpoints.size ||
+        provider.installedEndpoints.some(
+          (endpoint) => typeof endpoint !== "string",
+        )
+      ) {
+        fail(`${provider.id} installed endpoint requirements are invalid`);
+      }
+      exactSet(
+        new Set(provider.installedEndpoints),
+        requiredEndpoints,
+        `${provider.id} installed endpoint requirements`,
+      );
+      if (provider.requiresCandidateProvenanceSha256 !== true) {
+        fail(`${provider.id} candidate provenance requirement differs`);
+      }
+    } else if (
+      provider.installedEndpoints !== undefined ||
+      provider.requiresCandidateProvenanceSha256 !== undefined
+    ) {
+      fail(`${provider.id} unexpected recovery requirements`);
+    }
   }
   exactSet(
     new Set(candidatePlan.recurringFailure.allowedControls),
@@ -1136,16 +1202,29 @@ function completionFixture() {
         "Reviewed against the exact source and assigned no unresolved follow-up.",
     }));
   const makeProviders = (reviewedAt) =>
-    [...providerSources].map(([id, source]) => ({
-      id,
-      source,
-      reviewedAt,
-      observedVersionOrEntry: "review-cutoff-entry",
-      impact: "none",
-      ownerRole: "engineering",
-      disposition:
-        "Official changes were reviewed and require no candidate change for this period.",
-    }));
+    [...providerSources].map(([id, source]) => {
+      const provider = {
+        id,
+        source,
+        reviewedAt,
+        observedVersionOrEntry: "review-cutoff-entry",
+        impact: "none",
+        ownerRole: "engineering",
+        disposition:
+          "Official changes were reviewed and require no candidate change for this period.",
+      };
+      const installedEndpoints = recoverySourceEndpoints.get(id);
+      if (installedEndpoints) {
+        provider.installed = [...installedEndpoints].map((endpoint) => ({
+          id: endpoint,
+          versionOrRelease: "installed-version",
+          provenanceSha256: "9".repeat(64),
+        }));
+        provider.candidateVersionOrEntry = "candidate-version";
+        provider.candidateProvenanceSha256 = "a".repeat(64);
+      }
+      return provider;
+    });
   const monthlyPrimary = {
     schema: "starfiniti.monthly-improvement-review.v1",
     period: "2026-07",
@@ -1405,6 +1484,27 @@ if (process.argv.includes("--self-test")) {
         .get("monthly-review-primary")
         .providers.find((provider) => provider.id === "rsync").source =
         "https://example.invalid/rsync-news";
+    },
+  );
+  expectRejected(
+    "missing recovery endpoint evidence",
+    "installed endpoints differs from the required closed set",
+    ({ documents }) => {
+      documents
+        .get("monthly-review-primary")
+        .providers.find((provider) => provider.id === "rsync")
+        .installed.pop();
+    },
+  );
+  expectRejected(
+    "missing recovery candidate provenance",
+    "candidate evidence is incomplete",
+    ({ documents }) => {
+      documents
+        .get("monthly-review-primary")
+        .providers.find(
+          (provider) => provider.id === "rsync",
+        ).candidateProvenanceSha256 = "0".repeat(64);
     },
   );
   expectRejected(

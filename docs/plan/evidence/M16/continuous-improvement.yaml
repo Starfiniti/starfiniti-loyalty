@@ -7,7 +7,7 @@ candidate:
   initialCloseApproved: false
 plan:
   path: infrastructure/governance/continuous-improvement.yaml
-  sha256: d415743e5b280ecb6b1332212c26fb29ae2259f2c1204d31a90e096dc58b446c
+  sha256: 3e36f1a70f00a0373d8badb711861c1682c2a76e1cf61c0d14ab47730e0ebeff
 backlog:
   path: docs/plan/IMPROVEMENT_BACKLOG.yaml
   sha256: 47e7ece6b19157c3ca5dca1dbcb6ca37fd5feaa8046925a6f52cd00b56cb84ba
@@ -58,7 +58,7 @@ score:
 checks:
   - id: repository_contract
     status: passed
-    evidence: The canonical contract fixes UTC cadence, review sections, thirteen official provider platform and recovery sources, ranking arithmetic, regression threshold, score floors, experiment guardrails, five artifacts, and automatic failures.
+    evidence: The canonical contract fixes UTC cadence, review sections, thirteen official sources, exact recovery host and guest endpoints, installed and candidate provenance digests, ranking arithmetic, regression threshold, score floors, experiment guardrails, five artifacts, and automatic failures.
   - id: backlog_contract
     status: passed
     evidence: The evidence-ranked backlog records current external and dependency gates with exact integer inputs, recomputable scores, stable order, evidence paths, and owner inputs.
@@ -112,7 +112,7 @@ checks:
     evidence: Security findings and managed billing usage, invoice, entitlement, and protected-path evidence require an elapsed review.
   - id: provider_review
     status: pending
-    evidence: All thirteen canonical official provider platform and recovery-dependency sources must be reviewed through the same cutoff with version or entry impact and ownership.
+    evidence: All thirteen canonical official sources must be reviewed through one cutoff; recovery sources also require every declared endpoint and nonzero installed and candidate provenance digests.
   - id: dependency_pins
     status: pending
     evidence: Runtime container action SDK API WordPress WooCommerce PHP PostgreSQL Authentik rsync BorgBackup OpenSSH OS and Proxmox pins require installed and candidate version provenance plus current support review.
