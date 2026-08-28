@@ -209,14 +209,6 @@ const expectedMediumFindings = [
     "release_obligation_open",
   ],
   [
-    "sharp-libvips-lgpl-3-or-later",
-    "@img/sharp-libvips-linuxmusl-x64",
-    "1.3.2",
-    "LGPL-3.0-or-later",
-    ["dashboard"],
-    "release_obligation_open",
-  ],
-  [
     "starfiniti-dashboard-agpl-3-or-later",
     "@starfiniti/dashboard",
     "0.0.0",
@@ -613,16 +605,16 @@ function validateMediumTriage(register, candidate, candidateRisks) {
   const expectedReconciliation = {
     currentCritical: 0,
     currentHigh: 0,
-    currentMedium: 30,
-    currentMediumLicenses: 30,
+    currentMedium: 29,
+    currentMediumLicenses: 29,
     currentMediumDast: 0,
     currentDastInformational: 2,
-    distinctMediumFindings: 16,
-    rawMediumOccurrences: 30,
+    distinctMediumFindings: 15,
+    rawMediumOccurrences: 29,
     remediatedPriorDastMedium: 2,
     falsePositives: 0,
     sourceAvailable: 1,
-    openReleaseObligations: 15,
+    openReleaseObligations: 14,
   };
   exactKeys(
     register.reconciliation,
@@ -737,7 +729,8 @@ function validateMediumTriage(register, candidate, candidateRisks) {
     if (
       remediation.status !== "remediated" ||
       remediation.falsePositive !== false ||
-      remediation.remediationCommit !== candidate.candidate.commit ||
+      remediation.remediationCommit !==
+        "f9c83ac5de0fc7c73aed7528dc8e158ef45df17d" ||
       remediation.priorReportSha256 !==
         register.source.previousDast.reportSha256 ||
       remediation.currentReportSha256 !== register.source.dast.reportSha256 ||
@@ -1253,7 +1246,7 @@ if (process.argv.includes("--self-test")) {
   }
 
   const historicalTriagePath =
-    "docs/plan/evidence/M15/runs/security-medium-triage-f9c83ac.yaml";
+    "docs/plan/evidence/M15/runs/security-medium-triage-188d9d8.yaml";
   const mediumTriage = readBoundArtifact(
     historicalTriagePath,
     rawDigest(historicalTriagePath),
@@ -1280,7 +1273,7 @@ if (process.argv.includes("--self-test")) {
   );
 
   const incorrectMediumCount = structuredClone(mediumTriage);
-  incorrectMediumCount.reconciliation.rawMediumOccurrences = 29;
+  incorrectMediumCount.reconciliation.rawMediumOccurrences = 28;
   expectTriageRejected(
     incorrectMediumCount,
     "counts do not reconcile",
@@ -1304,7 +1297,7 @@ if (process.argv.includes("--self-test")) {
   );
 
   const expiredMediumReview = structuredClone(mediumTriage);
-  expiredMediumReview.review.expiresAt = "2026-08-28T17:43:02Z";
+  expiredMediumReview.review.expiresAt = mediumTriage.observedAt;
   expectTriageRejected(
     expiredMediumReview,
     "ownership expiry or release gate",
@@ -1312,7 +1305,7 @@ if (process.argv.includes("--self-test")) {
   );
 
   const expiredMediumSource = structuredClone(mediumTriage);
-  expiredMediumSource.source.dast.artifactExpiresAt = "2026-08-28T17:43:02Z";
+  expiredMediumSource.source.dast.artifactExpiresAt = "2026-08-28T19:40:53Z";
   expectTriageRejected(
     expiredMediumSource,
     "source artifact has expired",

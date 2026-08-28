@@ -1,12 +1,12 @@
 schema: starfiniti.security-evidence.v1
 status: in_progress
-observedAt: 2026-08-28T17:43:01Z
+observedAt: 2026-08-28T19:40:52Z
 currentProduction:
   release: v0.1.11
   applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
 candidate:
   branch: codex/enterprise-roadmap-integration
-  commit: f9c83ac5de0fc7c73aed7528dc8e158ef45df17d
+  commit: 188d9d8e9f05063e47861a801b143df761c67c19
   securityOwnerApproved: false
 inputs:
   securityWorkflow:
@@ -45,8 +45,8 @@ artifacts:
   findingRegisterPath: null
   findingRegisterSha256: null
 triage:
-  path: null
-  sha256: null
+  path: docs/plan/evidence/M15/runs/security-medium-triage-188d9d8.yaml
+  sha256: 8248961f67783aa46ad65ceefbf4e95575ae0b5f657050e03547d65845385392
 checks:
   - id: workflow_contract
     status: passed
@@ -68,31 +68,31 @@ checks:
     evidence: Repository validators reject drift-sensitive evidence, false completion, missing checks, unsafe DAST, optimizer reintroduction, unplanned reciprocal components, incomplete source inputs, and release publication before source verification.
   - id: exact_head_ci
     status: passed
-    evidence: GitHub Actions CI run 33195600450 completed successfully at head f9c83ac5de0fc7c73aed7528dc8e158ef45df17d across baseline, database replay and pgTAP, both images, the worker runtime import probe, and all four minimum/current HPOS/legacy WooCommerce jobs.
+    evidence: GitHub Actions CI run 33204477508 completed successfully at exact candidate 188d9d8e9f05063e47861a801b143df761c67c19 across the full baseline, clean database replay and pgTAP, both deployable images, the worker runtime import probe, and all four minimum/current HPOS/legacy WooCommerce jobs.
   - id: codeql_sast
     status: passed
-    evidence: Security run 33195600514 completed CodeQL security-extended successfully at the exact candidate head, and the exact run reported no unresolved CodeQL failure.
+    evidence: Security run 33204478017 completed CodeQL security-extended successfully at exact candidate 188d9d8e9f05063e47861a801b143df761c67c19 and reported no unresolved CodeQL failure.
   - id: repository_secret_misconfiguration_scan
     status: passed
-    evidence: Security run 33195600514 completed its fail-closed Trivy 0.74.0 repository secret and misconfiguration scan without a finding.
+    evidence: Security run 33204478017 completed the fail-closed Trivy 0.74.0 repository secret and misconfiguration scan without a finding.
   - id: dashboard_image_scan
     status: passed
-    evidence: Security run 33195600514 enforced zero Unknown High or Critical findings on dashboard image sha256:b17e176e048571e0fd42b7e4f6c8f185b613e946eff9dc59da29ceaeb8eb1c5b; its secret-free full report has SHA-256 b22cbb8475951dec8d1b7683cbcde460de6cc72b0ff905753f903bcf2c55d422.
+    evidence: Security run 33204478017 enforced zero Unknown High or Critical findings on dashboard image sha256:e6ff873adebae173913873445923e1f041a8ef99c34ff61b7646e60652f86b13; its secret-free full report has SHA-256 421928920fd0de386b54f7003d1c0feaa7d31b8fde4a3e2c7dce6554b016d0f6.
   - id: worker_image_scan
     status: passed
-    evidence: Security run 33195600514 imported the exact three external modules and enforced zero Unknown High or Critical findings on worker image sha256:457b1b92ff6e8620adcb86da465b8c4ccda5df7bd9068afe640eceafcbaab5d6; its review report has SHA-256 a2c88f4a045c62d23787b3d30d913ec30b9c1520b381cb8133baad684bf7295f.
+    evidence: Security run 33204478017 imported the exact three external modules and enforced zero Unknown High or Critical findings on worker image sha256:8fa9cffea2108f67d994d5ac4a54e18385d2eed849eec37ccdb736d7667e86ce; its review report has SHA-256 3fbee669996bebeceedd723e6104fd1f7b68fa4f34e88ae7baf6960b8927e09d.
   - id: dashboard_sbom
     status: passed
-    evidence: Security run 33195600514 generated a valid CycloneDX 1.7 dashboard inventory with 238 components and SHA-256 0c0c7668f34c94cf1e6d03af7106dbff328895aff1a8be9b8191523a1bc900de.
+    evidence: Security run 33204478017 generated a valid CycloneDX 1.7 dashboard inventory with 228 components and SHA-256 9770111b4ec1cf47810203d2b3abd787a0882fe321ce9edcc792e7c0177f48af; exact source inventory reconciliation accepted 13 reciprocal components.
   - id: worker_sbom
     status: passed
-    evidence: Security run 33195600514 generated a valid CycloneDX 1.7 worker inventory with 108 operating-system runtime and external-package components and SHA-256 76523c9d5c400fda9d7d61c47bf69905be82c1495139570876a726b1122af7dd.
+    evidence: Security run 33204478017 generated a valid CycloneDX 1.7 worker inventory with 108 operating-system runtime and external-package components and SHA-256 45555dae4392b2f163c8cbfd7dbda1b5d5f5a5b9d034cca0f27c6875d30df1a1; exact source inventory reconciliation passed.
   - id: disposable_dast
     status: passed
-    evidence: Security run 33195600514 completed bounded ZAP 2.17.0 against one internal no-port disposable target with zero Critical High Medium or Low alert; artifact 9695668396 has archive SHA-256 595bb661d6512069a118682798eb93f95cc10e3aa5f244c5124991cd1d45f758 and report SHA-256 810910fc1ee7a4206016ec19cca85f1ec5eda82f5841073a8530cca4718ab4c2.
+    evidence: Security run 33204478017 completed bounded ZAP 2.17.0 against one internal no-port disposable target with zero Critical High Medium or Low alert; artifact 9699139334 has archive SHA-256 83f3e4de97c57708b15c8bf1004eaca02c7930e9f80235985d7eaa3f7119f997 and report SHA-256 ec17e724b4a9a6cce5c569fde0459b787b120f8486ac6a32227df37cf314624c.
   - id: dashboard_response_security_headers
     status: passed
-    evidence: Exact-head isolated job 98931801974 accepted a real container response only after finding a fresh nonce-shaped strict script policy framing denial DENY fallback and MIME-sniff prevention; current ZAP report 810910fc1ee7a4206016ec19cca85f1ec5eda82f5841073a8530cca4718ab4c2 contains neither prior Medium rule.
+    evidence: Exact-candidate isolated job 98961908416 accepted a real container response only after finding a fresh nonce-shaped strict script policy framing denial DENY fallback and MIME-sniff prevention; current ZAP report ec17e724b4a9a6cce5c569fde0459b787b120f8486ac6a32227df37cf314624c contains neither prior Medium rule.
   - id: scanner_database_freshness
     status: pending
     evidence: CodeQL Trivy ZAP and package-advisory databases must be current inside the approved evidence age at final review.
@@ -118,11 +118,11 @@ checks:
     status: pending
     evidence: Exact-head automated sources contain zero unresolved Critical or High item; the final reconciled register also needs the production review and independent penetration-test sources.
   - id: medium_and_false_positive_review
-    status: pending
-    evidence: The prior digest-bound review remains historical; optimizer removal and reciprocal inventory enforcement require a fresh exact-head image/SBOM reconciliation, false-positive review, and expiring R-056 disposition.
+    status: passed
+    evidence: "Digest-bound review of Security run 33204478017 reconciles 29 raw Medium occurrences to 15 exact package/licence dispositions: one product source_available disposition and 14 third-party release_obligation_open dispositions across 12 packages. The review records zero false positives and blockingTaggedRelease true under R-056."
   - id: development_advisory_resolved
     status: passed
-    evidence: Exact-head Security audit found zero complete-tree vulnerabilities, and CI run 33195600450 passed all four Linux minimum/current HPOS/legacy WooCommerce cells with @wordpress/env 11.14.0, patched adm-zip 0.6.0, and no extract-zip package.
+    evidence: Exact-candidate Security run 33204478017 found zero complete-tree dependency vulnerabilities, and CI run 33204477508 passed all four Linux minimum/current HPOS/legacy WooCommerce cells with @wordpress/env 11.14.0, patched adm-zip 0.6.0, and no extract-zip package.
   - id: security_owner_approval
     status: pending
     evidence: The named security owner must review exact artifacts findings residual risks and rollback guidance before accepting the module.
