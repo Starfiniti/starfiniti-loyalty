@@ -26,11 +26,12 @@ Status: in progress. M09-S01 through M09-S05 are complete; M09-S06 disabled depl
 
 ### S02 follow-up — Guest-safe advanced VIP catalogue
 
-- Status: implementation verification. Production remains unchanged and the M09-S06 canary gate remains open.
+- Status: repository verified. Production remains unchanged and the M09-S06 canary gate remains open.
 - Architecture: ADR-0074 adds an additive V3 anonymous projection rather than changing strict V2. PostgreSQL re-derives active tenant, workspace/group link, programme, and immutable published version, then emits only ordered public levels, period/grace, exact entry operator/metric/threshold, earning rate, and safe benefit booleans. Customer state, internal identifiers, activity selectors, reward codes/configuration, retention/re-entry internals, audit evidence, and ledger data remain private.
 - Compatibility: the server requests V3 first and normalizes V2/V1 only for recognized missing-function errors. Malformed, duplicate, mismatched, non-English, or provider-error responses fail closed. Legacy tiers synthesize the equivalent lifetime/spend catalogue without changing V1/V2 functions or historical programme versions.
 - Experience: the generic spend-only cards are replaced by a responsive editorial progression rail with a qualification-window policy, starting level, `all`/`any` milestone copy, exact large-integer-safe thresholds, earning rates, and public benefits. The empty state now says that tiers are not part of the published programme instead of promising an unspecified future feature.
 - Browser evidence: the actual Next.js route passed Playwright review at 1512×982 and 390×844 with three levels, both expression types, exclusive benefits, one H1, no horizontal overflow, and zero console/page errors. Retained captures: [desktop](./public-vip-v3-desktop-2026-08-28.png) and [mobile](./public-vip-v3-mobile-2026-08-28.png).
+- Repository evidence: exact implementation head `7a68ffa4f9812b209015aa4c597d2555637138b3` passed all 12 PR checks. CI run `33157341807` passed baseline, both pinned images, all four minimum/current HPOS/legacy WooCommerce cells, 82-migration replay, 68 pgTAP files, and 3,712 assertions; Security run `33157341670` passed CodeQL, DAST, recovery transport, supply-chain policy, secret/misconfiguration scanning, and SBOM generation. The first replay's two reviewed-function allowlist failures were corrected explicitly; the dedicated 47-case public projection suite passed in both runs.
 - Rollback: return the application reader/component to V2 and leave the additive V3 function inert during mixed-version operation. No value, tier decision, reservation, coupon, checkout, or WooCommerce behavior changes.
 
 ## S03 — Local WooCommerce snapshot and classic placements
