@@ -1,61 +1,280 @@
 {
-  "schemaVersion": 1,
-  "evaluatedAt": "2026-08-13",
-  "release": "v0.1.11",
-  "sourceCommit": "0ced4b666a55d836bd3d4927337fe057a71bb4ba",
-  "score": 54,
+  "schemaVersion": 2,
+  "evaluatedAt": "2026-08-28",
   "target": 90,
   "minimumCategoryRatio": 0.8,
-  "categories": [
+  "productionSubject": "production",
+  "decisionSubject": "candidate",
+  "completionSubject": "production",
+  "completionEligible": false,
+  "categoryWeights": {
+    "activation": 10,
+    "feature_breadth": 25,
+    "merchant_usability": 15,
+    "customer_value": 15,
+    "reliability": 15,
+    "operations": 10,
+    "enterprise_commercial": 10
+  },
+  "automaticFailDefinitions": [
     {
-      "id": "activation",
-      "weight": 10,
-      "score": 3,
-      "evidence": "No real WooCommerce store or production-value customer is connected."
+      "id": "unexplained_protected_difference",
+      "condition": "an unexplained ledger balance liability coupon referral campaign usage or invoice difference exists"
     },
     {
-      "id": "feature_breadth",
-      "weight": 25,
-      "score": 10,
-      "evidence": "Six versioned earning sources, conditions, exclusions, precedence, caps, signed activity, and three reward types exist; referrals, campaigns, communications, migration, advanced VIP, and enterprise breadth do not."
+      "id": "untrusted_tenant_authority",
+      "condition": "cross-tenant access or authority derives from browser email domain mutable identity claims or upstream groups"
     },
     {
-      "id": "merchant_usability",
-      "weight": 15,
-      "score": 11,
-      "evidence": "The Hub shell, focused programme workflows, source-safe earning-rule catalogue, conflict review, and exact simulator pass responsive production QA; advanced campaign, referral, approval, and fulfilment operations remain incomplete."
+      "id": "duplicate_or_unrecoverable_effect",
+      "condition": "a duplicate value effect overspend budget overrun or unrecoverable accepted event exists"
     },
     {
-      "id": "customer_value",
-      "weight": 15,
-      "score": 5,
-      "evidence": "Hosted balances, history, and redemption exist; discovery, referrals, progress, communications, and broad store placements are incomplete."
+      "id": "checkout_hub_dependency",
+      "condition": "checkout synchronously depends on the hub"
     },
     {
-      "id": "reliability",
-      "weight": 15,
-      "score": 13,
-      "evidence": "Immutable ledger, idempotency, RLS, bounded queues, compensation, and runtime matrix pass; real-store outage and full recovery proof remain."
+      "id": "unresolved_critical_high",
+      "condition": "a critical or high security privacy recovery or data-loss finding remains unresolved"
     },
     {
-      "id": "operations",
-      "weight": 10,
-      "score": 8,
-      "evidence": "Queue health, support bundle, WAL/base backup, worker leases, and production deployment exist; full clean-room application/Auth/secret recovery and load evidence remain."
-    },
-    {
-      "id": "enterprise_commercial",
-      "weight": 10,
-      "score": 4,
-      "evidence": "Authentik workforce SSO plus database-authoritative deployment modes, entitlements, protected paths, exact limits, and tenant rollout exist; tenant SSO/SCIM, agency controls, metering, and managed billing do not."
+      "id": "required_live_evidence_absent",
+      "condition": "required clean-room recovery or real-store canary evidence is absent"
     }
   ],
-  "automaticFails": [
-    "unexplained ledger, balance, liability, coupon, referral, campaign, usage, or invoice difference",
-    "cross-tenant access or authority derived from browser, email, domain, mutable identity claims, or upstream groups",
-    "duplicate value effect, overspend, budget overrun, or unrecoverable accepted event",
-    "checkout synchronously depends on the hub",
-    "critical or high security, privacy, recovery, or data-loss finding remains unresolved",
-    "required clean-room recovery or real-store canary evidence is absent"
+  "history": [
+    {
+      "schemaVersion": 1,
+      "evaluatedAt": "2026-08-13",
+      "path": "docs/plan/evaluations/product-score-v1-2026-08-13.json",
+      "sha256": "699a781d0483068b82a7b369760cc265b969feda9a03b134dfed6129727afc95",
+      "score": 54
+    }
+  ],
+  "subjects": [
+    {
+      "id": "production",
+      "kind": "release",
+      "evaluatedAt": "2026-08-28",
+      "release": "v0.1.11",
+      "branch": null,
+      "sourceCommit": "0ced4b666a55d836bd3d4927337fe057a71bb4ba",
+      "score": 54,
+      "target": 90,
+      "minimumCategoryRatio": 0.8,
+      "gateStatus": "blocked_external",
+      "categories": [
+        {
+          "id": "activation",
+          "weight": 10,
+          "score": 3,
+          "evidence": "No approved real WooCommerce pilot store or production-value customer is connected.",
+          "evidencePaths": ["docs/plan/evidence/M01/pilot.yaml"]
+        },
+        {
+          "id": "feature_breadth",
+          "weight": 25,
+          "score": 10,
+          "evidence": "Production v0.1.11 contains competitive earning V2 and the protected value foundation; M04-M14 breadth remains an undeployed candidate.",
+          "evidencePaths": ["docs/plan/evidence/M03/README.md", "STATUS.md"]
+        },
+        {
+          "id": "merchant_usability",
+          "weight": 15,
+          "score": 11,
+          "evidence": "The released Hub shell and earning workflows are usable, while the broader candidate merchant operations are not deployed.",
+          "evidencePaths": ["docs/plan/evidence/M03/README.md", "design-qa.md"]
+        },
+        {
+          "id": "customer_value",
+          "weight": 15,
+          "score": 5,
+          "evidence": "Released hosted balance history and redemption foundations exist; full discovery progression referral campaign and communication value is not live.",
+          "evidencePaths": [
+            "docs/plan/evidence/M01/production-baseline-2026-08-28.md",
+            "docs/plan/evidence/M09/README.md"
+          ]
+        },
+        {
+          "id": "reliability",
+          "weight": 15,
+          "score": 13,
+          "evidence": "Immutable ledger idempotency RLS queues compensation runtime matrix and PostgreSQL recovery operate, but real-store outage and full-service restore proof remain absent.",
+          "evidencePaths": [
+            "docs/plan/evidence/M01/README.md",
+            "docs/operations/BACKUP_RESTORE.md"
+          ]
+        },
+        {
+          "id": "operations",
+          "weight": 10,
+          "score": 8,
+          "evidence": "Production deployment queue health WAL and base backup exist; protected monitoring load and complete application Auth configuration and signing recovery remain open.",
+          "evidencePaths": [
+            "docs/plan/evidence/M15/operations.yaml",
+            "docs/plan/evidence/M15/recovery.yaml"
+          ]
+        },
+        {
+          "id": "enterprise_commercial",
+          "weight": 10,
+          "score": 4,
+          "evidence": "Released workforce SSO and database-authoritative deployment entitlements exist; tenant federation SCIM agency billing and metering remain undeployed.",
+          "evidencePaths": [
+            "docs/plan/evidence/M02/README.md",
+            "docs/plan/evidence/M13/README.md",
+            "docs/plan/evidence/M14/README.md"
+          ]
+        }
+      ],
+      "automaticFailStates": [
+        {
+          "id": "unexplained_protected_difference",
+          "status": "clear",
+          "evidence": "No unexplained difference is recorded in the zero-value production baseline; live pilot reconciliation is separately absent."
+        },
+        {
+          "id": "untrusted_tenant_authority",
+          "status": "clear",
+          "evidence": "Production tenant bootstrap and RLS smoke derive authority from live memberships."
+        },
+        {
+          "id": "duplicate_or_unrecoverable_effect",
+          "status": "clear",
+          "evidence": "Exact-head database and WooCommerce runtime gates pass idempotency concurrency and compensation behavior."
+        },
+        {
+          "id": "checkout_hub_dependency",
+          "status": "clear",
+          "evidence": "The WooCommerce connector renders from local state and performs zero Hub requests at checkout render time."
+        },
+        {
+          "id": "unresolved_critical_high",
+          "status": "clear",
+          "evidence": "Repository and image security gates report no unresolved known Critical or High finding; independent penetration testing is a separate GA prerequisite."
+        },
+        {
+          "id": "required_live_evidence_absent",
+          "status": "active",
+          "evidence": "The approved real-store pilot and complete application Auth configuration signing and value recovery exercises have not occurred."
+        }
+      ],
+      "remainingGate": "Approved real-store pilot, full-service recovery, module canaries, monitoring, independent security review, and GA approval."
+    },
+    {
+      "id": "candidate",
+      "kind": "integration_candidate",
+      "evaluatedAt": "2026-08-28",
+      "release": null,
+      "branch": "codex/enterprise-roadmap-integration",
+      "sourceCommit": "13d71988d7c05ddfad807320246c9ee613a13531",
+      "score": 83,
+      "target": 90,
+      "minimumCategoryRatio": 0.8,
+      "gateStatus": "blocked_external",
+      "categories": [
+        {
+          "id": "activation",
+          "weight": 10,
+          "score": 3,
+          "evidence": "Repository behavior is extensive but no approved real-store customer has completed the end-to-end value and outage sequence.",
+          "evidencePaths": ["docs/plan/evidence/M01/pilot.yaml"]
+        },
+        {
+          "id": "feature_breadth",
+          "weight": 25,
+          "score": 24,
+          "evidence": "M03-M14 implement earning rewards VIP referrals campaigns notifications experience analytics ecosystem migration enterprise identity and managed billing; live canary proof remains.",
+          "evidencePaths": [
+            "docs/plan/TASKS.yaml",
+            "docs/plan/evidence/M16/integration-review-2026-08-27.md"
+          ]
+        },
+        {
+          "id": "merchant_usability",
+          "weight": 15,
+          "score": 14,
+          "evidence": "Hub-style builders previews queues analytics integration migration identity and billing operations pass responsive repository review; approved production observation remains.",
+          "evidencePaths": [
+            "docs/plan/evidence/M04/README.md",
+            "docs/plan/evidence/M07/README.md",
+            "docs/plan/evidence/M10/README.md"
+          ]
+        },
+        {
+          "id": "customer_value",
+          "weight": 15,
+          "score": 13,
+          "evidence": "Hosted and WooCommerce experiences cover earning rewards VIP referrals campaigns history progress expiry and degraded states; real-store customer validation remains.",
+          "evidencePaths": [
+            "docs/plan/evidence/M09/README.md",
+            "docs/plan/evidence/M08/README.md"
+          ]
+        },
+        {
+          "id": "reliability",
+          "weight": 15,
+          "score": 13,
+          "evidence": "Ledger tenancy idempotency concurrency compensation database replay connector matrices and fail-closed canary contracts pass; full live outage and recovery proof remains.",
+          "evidencePaths": [
+            "docs/plan/evidence/M15/fault-injection.yaml",
+            "docs/plan/evidence/M15/recovery.yaml"
+          ]
+        },
+        {
+          "id": "operations",
+          "weight": 10,
+          "score": 8,
+          "evidence": "Versioned monitoring capacity fault recovery incident and canary controllers exist, but live routes exercises restore evidence and the thirty-day window remain external.",
+          "evidencePaths": [
+            "docs/plan/evidence/M15/operations.yaml",
+            "docs/plan/evidence/M15/ga-canary.yaml"
+          ]
+        },
+        {
+          "id": "enterprise_commercial",
+          "weight": 10,
+          "score": 8,
+          "evidence": "Tenant federation SCIM agency support service APIs metering and protected managed billing are implemented and disabled; enterprise IdP and Stripe canaries remain external.",
+          "evidencePaths": [
+            "docs/plan/evidence/M13/README.md",
+            "docs/plan/evidence/M14/README.md"
+          ]
+        }
+      ],
+      "automaticFailStates": [
+        {
+          "id": "unexplained_protected_difference",
+          "status": "clear",
+          "evidence": "Repository value tests and exact-head reconciliation fixtures report no unexplained difference."
+        },
+        {
+          "id": "untrusted_tenant_authority",
+          "status": "clear",
+          "evidence": "RLS grants Auth-derived commands and adversarial tenant tests fail closed."
+        },
+        {
+          "id": "duplicate_or_unrecoverable_effect",
+          "status": "clear",
+          "evidence": "All twenty-two exact-head two-session probes and immutable effect tests pass."
+        },
+        {
+          "id": "checkout_hub_dependency",
+          "status": "clear",
+          "evidence": "Classic Blocks no-script and native coupon paths remain locally rendered without synchronous Hub checkout requests."
+        },
+        {
+          "id": "unresolved_critical_high",
+          "status": "clear",
+          "evidence": "Exact-head CodeQL DAST dependency image secret and supply-chain gates pass; independent penetration testing remains a separate prerequisite."
+        },
+        {
+          "id": "required_live_evidence_absent",
+          "status": "active",
+          "evidence": "The real-store pilot complete clean-room recovery module canaries and thirty-day GA observation are absent."
+        }
+      ],
+      "remainingGate": "Merge and release approval, approved pilot and credentials, disabled deployments, exact reconciliation, recovery and monitoring exercises, independent penetration test, thirty-day canary, and final approvals."
+    }
   ]
 }

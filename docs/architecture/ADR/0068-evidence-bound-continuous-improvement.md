@@ -4,6 +4,7 @@
 - Date: 2026-08-27
 - Decision owners: Starfiniti product and engineering
 - Scope: M16 product review, provider review, regression prevention, experiments, exercises, and backlog governance
+- Related refinement: ADR-0080 defines the versioned deployed-production and integration-candidate score subjects without changing this cadence or its live-evidence requirements.
 
 ## Context
 
@@ -55,7 +56,7 @@ Monthly and quarterly minimums expose quiet drift, while Critical/High findings 
 3. Review only canonical official provider, platform, and recovery-dependency sources. For recovery sources, record installed version/release and digest-bound provenance for every exact host/guest endpoint declared by the catalogue plus candidate version/entry and digest-bound provenance. Record impact, affected modules, owner, and durable disposition. Automated update tools may collect candidates but cannot approve an upgrade.
 4. Rank backlog items by a versioned integer formula combining severity, merchant impact, customer impact, confidence, effort, and dependency penalty. The validator recomputes scores and order. External blocking stays visible and does not become completion; an incomplete Critical or High item requires a distinct accepted-risk digest and future review instant.
 5. Treat the second occurrence of the same stable failure fingerprint as recurring. It must link at least one merged regression test, validator, monitor, runbook, or agent rule; a ticket alone does not close it.
-6. Rescore every affected module after a material change. Retain the prior score and evidence. Completion remains at least 90/100 with every category at least 80% of its weight; deterministic failures cannot be averaged away.
+6. Rescore every affected module after a material change. Retain the prior score and evidence. ADR-0080 keeps deployed-production and integration-candidate subjects distinct so candidate progress cannot be presented as live readiness. Completion remains at least 90/100 with every category at least 80% of its weight; deterministic failures cannot be averaged away.
 7. Promote an experiment only when its predeclared primary metric improves and all predeclared guardrails pass. Stop on any guardrail breach.
 8. Run quarterly restore, tenant-isolation, privacy, SCIM-deprovisioning, and incident exercises under their existing bounded authorities. Any unexplained protected-value, tenant, privacy, checkout, recovery, or data-loss difference fails the bundle.
 9. Preserve historical reviews, scores, exercises, and decisions. Corrections append evidence; obsolete architectural decisions are superseded through ADRs.

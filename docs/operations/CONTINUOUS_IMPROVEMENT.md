@@ -17,7 +17,7 @@ Close each calendar month within ten days. The initial M16 gate requires two dis
 2. Review activation, errors, support, reconciliation, fraud, campaigns, churn, usability, performance, security, and billing. Each section records source freshness, the baseline, observed result, target, interpretation, and linked action or explicit no-action rationale.
 3. Review every official provider, platform, and recovery-dependency source in the canonical catalogue. Record the installed version/release and digest-bound provenance for every exact endpoint declared by the catalogue, the candidate version/entry and digest-bound provenance, breaking/security/support impact, affected modules, an owner, and the resulting task, ADR, test, upgrade plan, or explicit no-impact rationale. Recovery review covers both ends of privileged transport boundaries; a host-only or guest-only version check is incomplete and fails validation.
 4. Recompute the evidence-ranked backlog. Verify the arithmetic and exact order. Critical work is due within two days and High work within fourteen days unless a distinct approved-risk digest, external dependency, and future review instant exist; `blocked_external` is not “done.”
-5. Rescore every module changed materially in the period. Preserve the prior score and evidence; record category weights, new evidence, and the reason for each change.
+5. Rescore every module changed materially in the period. Preserve the prior score and evidence; record category weights, new evidence, and the reason for each change. Keep deployed-production and integration-candidate subjects distinct under ADR-0080; a candidate score is not elapsed production evidence.
 6. Review failures and incidents by stable fingerprint. At the second occurrence, link at least one merged regression test, validator, monitor, runbook, or agent rule. A ticket or promise alone is not a durable control.
 7. Review experiments. Promotion requires a predeclared primary metric, baseline, target, guardrails, measured improvement, and every guardrail passing. Stop an experiment immediately on guardrail breach.
 8. Sign and checksum the completed monthly artifact. Do not overwrite it after review.
@@ -49,6 +49,8 @@ M16 initial close requires five distinct digest-bound artifacts: two consecutive
 - the M16 score is at least 90/100 and every category reaches 80% of its weight.
 
 An independent reviewer checks artifact digests, chronology, source freshness, backlog arithmetic, score history, regression links, experiment decisions, and exercise separation. Product, engineering, security, operations, and the owner approve the final record. The recurring schedule continues after initial close; a later missed cadence reopens the operational gate and creates a ranked backlog item.
+
+Run `npm run product-score:validate` and `npm run continuous-improvement:validate` before review. The first command verifies score arithmetic, subject identity, category floors, automatic failures, exact evidence and commit bindings, preserved history, and the human scorecard marker. The second verifies the elapsed-cadence and closeout contract. Both must pass; neither creates missing live evidence.
 
 ## Rollback and stop conditions
 

@@ -133,10 +133,10 @@ checks:
     evidence: Every failure reaching the second occurrence must bind at least one merged test, validator, monitor, runbook, or agent rule.
   - id: module_rescoring
     status: pending
-    evidence: Every module materially changed during the review periods must be rescored against exact evidence.
+    evidence: ADR-0080 and the product-score V2 validator preserve the 54/100 deployed-production history and rescore the exact integration candidate at 83/100 without conflating code with live evidence; every module materially changed during the two future elapsed review periods still requires its own exact rescore.
   - id: score_history
     status: pending
-    evidence: Prior and current whole-product and affected-module scores must remain independently reconstructable.
+    evidence: The original V1 whole-product score is now retained byte-for-byte under an exact SHA-256 binding and V2 separates production from candidate evidence; initial M16 close still requires two elapsed reviews with prior/current whole-product and affected-module history.
   - id: experiment_registry
     status: pending
     evidence: Experiments require immutable declarations of primary metric, baseline, target, guardrails, exposure, owner, and decision.

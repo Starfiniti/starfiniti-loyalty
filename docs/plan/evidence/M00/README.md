@@ -18,7 +18,8 @@ The competitive matrix uses official Smile, LoyaltyLion, and Yotpo documentation
 
 ## Baseline and target
 
-- Whole-product baseline: 49/100 in `docs/plan/evaluations/product-score.json`.
+- Whole-product baseline at this M00 cutoff: 49/100. The active score file later
+  evolved under ADR-0080; this historical result is not rewritten.
 - Released engineering score: 95/100 with recovery/real-store automatic failure still active.
 - Enterprise target: at least 90/100 overall and per module, at least 80% of each relevant category, and no deterministic failure.
 
@@ -27,7 +28,9 @@ The competitive matrix uses official Smile, LoyaltyLion, and Yotpo documentation
 - Clean baseline `npm.cmd run check`: stopped at repository-wide Prettier because the Windows checkout reports the known tracked CRLF baseline across 180 files; no later script ran.
 - `npm ci`: passed and restored 962 packages from the lockfile; this corrected an incomplete local install that initially lacked the declared worker `esbuild` binary.
 - Changed-file Prettier: passed.
-- `TASKS.yaml` and product-score JSON parse: passed with 27 unique tasks, 17 enterprise modules, valid dependencies, one active module, and a reconciled score of 49.
+- `TASKS.yaml` and the then-current product-score JSON parse passed with 27 unique
+  tasks, 17 enterprise modules, valid dependencies, one active module, and a
+  reconciled historical score of 49.
 - Lint, all workspace typechecks, and 177 unit tests: passed.
 - Dashboard and worker production builds: passed.
 - CI, deployment, architecture, accessibility, WooCommerce, and migration validators: passed. Architecture validation covers eight models and five accepted ADRs.

@@ -1,5 +1,12 @@
 # Iteration Log
 
+## 2026-08-28 — Versioned production and candidate product scoring
+
+- Reconstructed the whole-product evidence after M04-M14 implementation and found two contradictory stale views: the machine-readable production categories summed to 54/100 while the human scorecard reported 51/100, and both still described implemented candidate breadth as absent.
+- Compared keeping a production-only score, overwriting it with the candidate, and retaining two exact subjects. ADR-0080 selects separate deployed-production and integration-candidate subjects so repository progress is visible without claiming deployment, activation, or observation.
+- Preserved the original V1 production evaluation byte-for-byte under its fixed known SHA-256 and release identity. The V2 score binds fixed weights, category floors, exact automatic-failure definitions, exact ancestor commits, bounded no-link repository evidence, task-graph authority, and the human scorecard marker. Its self-test rejects fifteen deterministic corruptions covering schema/definition/date drift, arithmetic inflation, missing or escaping evidence, history rewriting, and candidate-based false completion.
+- Production `v0.1.11` is the only completion subject and remains 54/100. The exact unmerged implementation candidate is the development-prioritization subject at 83/100, but activation remains 3/10 and required live evidence is absent, so both subjects remain completion-ineligible. No Supabase schema, application runtime, WooCommerce behavior, deployment, tenant, checkout, billing, or loyalty value changed.
+
 ## 2026-08-28 — Public release bridge, exact currency, and review hardening
 
 - Reconstructed the actual rollout boundary: production `v0.1.11` exposes V1,

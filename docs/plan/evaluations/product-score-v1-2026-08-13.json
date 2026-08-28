@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "evaluatedAt": "2026-08-13",
+  "release": "v0.1.11",
+  "sourceCommit": "0ced4b666a55d836bd3d4927337fe057a71bb4ba",
+  "score": 54,
+  "target": 90,
+  "minimumCategoryRatio": 0.8,
+  "categories": [
+    {
+      "id": "activation",
+      "weight": 10,
+      "score": 3,
+      "evidence": "No real WooCommerce store or production-value customer is connected."
+    },
+    {
+      "id": "feature_breadth",
+      "weight": 25,
+      "score": 10,
+      "evidence": "Six versioned earning sources, conditions, exclusions, precedence, caps, signed activity, and three reward types exist; referrals, campaigns, communications, migration, advanced VIP, and enterprise breadth do not."
+    },
+    {
+      "id": "merchant_usability",
+      "weight": 15,
+      "score": 11,
+      "evidence": "The Hub shell, focused programme workflows, source-safe earning-rule catalogue, conflict review, and exact simulator pass responsive production QA; advanced campaign, referral, approval, and fulfilment operations remain incomplete."
+    },
+    {
+      "id": "customer_value",
+      "weight": 15,
+      "score": 5,
+      "evidence": "Hosted balances, history, and redemption exist; discovery, referrals, progress, communications, and broad store placements are incomplete."
+    },
+    {
+      "id": "reliability",
+      "weight": 15,
+      "score": 13,
+      "evidence": "Immutable ledger, idempotency, RLS, bounded queues, compensation, and runtime matrix pass; real-store outage and full recovery proof remain."
+    },
+    {
+      "id": "operations",
+      "weight": 10,
+      "score": 8,
+      "evidence": "Queue health, support bundle, WAL/base backup, worker leases, and production deployment exist; full clean-room application/Auth/secret recovery and load evidence remain."
+    },
+    {
+      "id": "enterprise_commercial",
+      "weight": 10,
+      "score": 4,
+      "evidence": "Authentik workforce SSO plus database-authoritative deployment modes, entitlements, protected paths, exact limits, and tenant rollout exist; tenant SSO/SCIM, agency controls, metering, and managed billing do not."
+    }
+  ],
+  "automaticFails": [
+    "unexplained ledger, balance, liability, coupon, referral, campaign, usage, or invoice difference",
+    "cross-tenant access or authority derived from browser, email, domain, mutable identity claims, or upstream groups",
+    "duplicate value effect, overspend, budget overrun, or unrecoverable accepted event",
+    "checkout synchronously depends on the hub",
+    "critical or high security, privacy, recovery, or data-loss finding remains unresolved",
+    "required clean-room recovery or real-store canary evidence is absent"
+  ]
+}

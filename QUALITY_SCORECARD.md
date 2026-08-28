@@ -1,38 +1,50 @@
 # Quality Scorecard
 
-Scores are evidence-based and cover implementation through the M02 deployment-entitlement production slice.
+The engineering score is evidence-based for the exact integration candidate and
+does not claim deployment or product readiness. Whole-product scoring below keeps
+deployed production separate from the unmerged candidate.
 
 | Category                      |  Weight | Current | Evidence                                                                                                                                                                |
 | ----------------------------- | ------: | ------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Functional/domain correctness |      20 |      20 | Rosy evaluation, immutable programme/ledger, order awards, cumulative refunds, and coupon issue/capture/cancel compensation execute deterministically                   |
 | Security/tenant isolation     |      20 |      19 | Tenant RLS, raw-body HMAC, encrypted plugin key, private queues, narrow roles, replay fences, and cross-tenant tests execute in CI                                      |
 | Ledger integrity/reliability  |      15 |      15 | Immutable zero-sum entries, origin-preserving reservations, layered idempotency, deterministic locks, compensation, races, and property probes pass                     |
-| Test strength                 |      15 |      15 | 185 unit tests, accessibility/package gates, 1,095 CI-passed pgTAP assertions, race/property probes, browser QA, and four WooCommerce runtimes                          |
+| Test strength                 |      15 |      15 | 983 workspace tests, 3,773 CI-passed pgTAP assertions, 22 concurrency probes, browser QA, and four WooCommerce runtimes                                                 |
 | Performance/storefront        |      10 |       7 | Checkout performs no hub call and the Hub-style merchant shell passes 390/1440-pixel responsive browser QA; no load measurements exist                                  |
 | Observability/operability     |      10 |       9 | Tenant queue health/issues, minimized support bundle, safe replay/reconciliation, exact reporting, worker leases, watermarks, SLOs, and recovery procedures are defined |
 | Documentation/maintainability |      10 |      10 | Accepted ADRs, executable examples, operating files, task graph, integration/API docs, package tooling, and evidence remain versioned                                   |
-| **Total**                     | **100** |  **95** | M02 entitlement authority is production-proven; the real-store pilot, full recovery, and load evidence remain automatic release gates                                   |
+| **Total**                     | **100** |  **95** | Exact candidate implementation quality is strong; the real-store pilot, full recovery, live operations, and load evidence remain automatic release gates                |
 
 Automatic fail remains active until complete application/Auth/signing-secret recovery and the real-store pilot exist. A higher total cannot override that missing critical gate.
 
 ## Whole-product readiness
 
-Engineering quality and product completeness are deliberately separate. The machine-readable baseline is `docs/plan/evaluations/product-score.json`.
+Engineering quality and product completeness are deliberately separate. ADR-0080
+and the machine-readable V2 score keep deployed production and the integration
+candidate distinct. The digest-bound V1 production score remains preserved.
 
-| Category              |  Weight | Current | Primary gap                                                                            |
-| --------------------- | ------: | ------: | -------------------------------------------------------------------------------------- |
-| Activation            |      10 |       3 | No real WooCommerce store or production-value customer                                 |
-| Feature breadth       |      25 |       8 | Earning sources, advanced rewards/VIP, referrals, campaigns, communications, migration |
-| Merchant usability    |      15 |      10 | Advanced builders, previews, approvals, and operations                                 |
-| Customer value        |      15 |       5 | Discovery, progress, referrals, communications, and full store placements              |
-| Reliability           |      15 |      13 | Real-store outage and full recovery proof                                              |
-| Operations            |      10 |       8 | Capacity and clean-room application/Auth/secret recovery                               |
-| Enterprise/commercial |      10 |       4 | Production SSO/SCIM/agency canary, metering, and managed billing                       |
-| **Total**             | **100** |  **51** | Enterprise finish requires at least 90                                                 |
+<!-- product-score:v2 production=54 candidate=83 target=90 eligible=false -->
+
+| Category              | Weight | Production v0.1.11 | Integration candidate | Primary remaining gap                                                          |
+| --------------------- | -----: | -----------------: | --------------------: | ------------------------------------------------------------------------------ |
+| Activation            |     10 |                  3 |                     3 | No approved real-store value and outage sequence                               |
+| Feature breadth       |     25 |                 10 |                    24 | M04-M14 are implemented but unmerged, disabled, and uncanaried                 |
+| Merchant usability    |     15 |                 11 |                    14 | Approved production observation remains                                        |
+| Customer value        |     15 |                  5 |                    13 | Real-store customer validation and delivery observation remain                 |
+| Reliability           |     15 |                 13 |                    13 | Real-store outage and complete full-service recovery proof                     |
+| Operations            |     10 |                  8 |                     8 | Live monitoring, capacity/fault exercises, recovery, and 30-day observation    |
+| Enterprise/commercial |     10 |                  4 |                     8 | Enterprise IdP, provider, metering, and managed billing canaries               |
+| **Total**             |    100 |             **54** |                **83** | Target is 90, every category must reach 80%, and automatic failures must clear |
+
+The candidate score is the development-prioritization subject, not a production or
+completion claim. Deployed production is the only completion subject. Both remain
+ineligible because activation is below its mandatory category floor and the required
+real-store/canary/recovery evidence is absent. The deployed production score remains
+54 until a reviewed release and live evidence change it.
 
 Every module also requires at least 90/100 and at least 80% of every relevant category. Unexplained value differences, cross-tenant access, duplicate effects, checkout dependency, missing recovery/canary evidence, or unresolved critical/high findings fail the gate regardless of score.
 
-M15-S06 is provisionally 77/100 across correctness, security, ledger reliability, tests, performance, operability, and maintainability. Performance and operability are below their mandatory floors, and 45 live/module/approval checks remain pending. The 95/100 engineering score and 51/100 whole-product score cannot override the real-store, module closeout, capacity, recovery, monitoring, independent security, 30-day canary, reconciliation, claims, or owner-approval gates.
+M15-S06 is provisionally 77/100 across correctness, security, ledger reliability, tests, performance, operability, and maintainability. Performance and operability are below their mandatory floors, and 45 live/module/approval checks remain pending. The 95/100 engineering score, 54/100 deployed-production score, and 83/100 integration-candidate score cannot override the real-store, module closeout, capacity, recovery, monitoring, independent security, 30-day canary, reconciliation, claims, or owner-approval gates.
 
 M16 is provisionally 77/100 with correctness 17/20, security 12/15, ledger reliability 12/15, tests 15/15, performance 5/10, operability 2/10, and maintainability 14/15. Its 39-check gate has seven repository controls passing and 32 elapsed-cadence, source, exercise, reconciliation, review, and approval checks pending. Performance and operability are below their mandatory floors; source-controlled fixtures prove only that honest closeout is representable, never that two monthly reviews or a quarterly bundle occurred.
 

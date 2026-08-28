@@ -222,7 +222,7 @@ checks:
     evidence: Every product and marketing claim must bind its required exact-release evidence and preserve declared limitations.
   - id: product_score
     status: pending
-    evidence: The whole-product score is 51/100 and cannot close until it reaches 90 with every category floor.
+    evidence: ADR-0080 preserves deployed production at 54/100 and scores the exact integration candidate at 83/100; the candidate cannot close until it reaches 90, activation reaches its category floor, every automatic failure clears, and the score binds the approved release and final reconciliation.
   - id: m15_score
     status: pending
     evidence: M15 is provisionally 77/100 and performance and operability remain below their mandatory category floors.

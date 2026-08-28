@@ -5,7 +5,7 @@ This runbook defines the only path from a release candidate to a Starfiniti Loya
 ## Preconditions
 
 1. Select one immutable reviewed release. Record its Git commit, image digests, connector package digest, migration manifest digest, configuration digest, and every M15 prerequisite evidence digest.
-2. Close M00 through M14 and M15-S01 through M15-S05. A provisional score or passing repository test cannot replace a live module closeout.
+2. Close M00 through M14 and M15-S01 through M15-S05. A provisional score or passing repository test cannot replace a live module closeout. The final whole-product score must bind this exact approved release and its live evidence; an unmerged integration-candidate score is not a GA score.
 3. Confirm zero unresolved Critical or High security, tenancy, ledger, privacy, recovery, data-loss, or checkout finding.
 4. Obtain a named release window, one Starfiniti pilot tenant, rollback authority, value-integrity owner, security owner, operations owner, product owner, and an independent reviewer. Identities and contact routes remain outside Git.
 5. Create a fresh recovery point and verify the tested rollback path before exposure.
@@ -60,4 +60,4 @@ Failed and superseded evidence is retained. Approval never rewrites an incident,
 
 ## Repository verification
 
-Run `npm run ga:validate`. The validator accepts an in-progress manifest with honest pending gates and rejects any completion claim with a short or discontinuous window, material drift, missing module closeout, stale prerequisite evidence, unsafe artifact, nonzero protected difference, unpublished evidence-backed claim, score-floor failure, unresolved finding, or missing approval.
+Run `npm run product-score:validate` and `npm run ga:validate`. The product-score validator keeps deployed production, integration candidates, and preserved score history distinct. The GA validator accepts an in-progress manifest with honest pending gates and rejects any completion claim with a short or discontinuous window, material drift, missing module closeout, stale prerequisite evidence, unsafe artifact, nonzero protected difference, unpublished evidence-backed claim, score-floor failure, unresolved finding, or missing approval.
