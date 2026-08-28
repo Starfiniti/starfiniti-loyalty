@@ -3149,6 +3149,8 @@ tasks:
             a clean exact commit and short approval bind the canonical plan source inventory target marker Compose project and driver digests,
             base integrity and continuous WAL replay reach the exact target with no missing segment corruption or timeline ambiguity,
             the off-host PostgreSQL repository lock cache retention and restore evidence are independent from whole-VM backup duration preserve every archive inside the 48-hour recent window and prove fresh-archive-anchored bounded maintenance creates no interval above the recovery target,
+            both privileged Borg jobs open the configuration once and reject relative non-canonical symlink non-regular wrong-owner executable group/other-accessible or unsafe-directory-chain shell input before any rsync Borg metric or retention action,
+            each completed incremental stage yields exactly one locale-stable bounded changed-byte and received-byte pair; exact four-times or one-GiB equality continues while crossing both boundaries publishes aggregate evidence and invokes neither repository identity nor Borg create,
             migrations extensions schemas RLS grants roles immutable ledger projections queues and committed facts reconcile exactly,
             Supabase Auth and Authentik restore and complete a fresh brokered login while cross-tenant and stale access fail closed,
             exact application images configuration signing references provider-secret fingerprints and privacy replay reconcile before test access,
@@ -3163,6 +3165,8 @@ tasks:
             a base passes superficial extraction without transfer compression manifest and pg_verifybackup validation,
             WAL history is incomplete corrupt or replays to a different target or timeline,
             whole-VM repository contention or hourly retention creates an unobserved off-host recovery gap,
+            a linked replaced permissive executable differently owned or attacker-parented configuration is sourced with service authority or replaced with a blocking special file,
+            missing duplicated malformed oversized or dual-threshold rsync statistics reach Borg or are reported as a healthy archive cycle,
             database readiness is reported as full-service recovery while Auth application signing privacy or value paths fail,
             restored tenant authority differs from live membership and RLS or stale credentials remain authoritative,
             privacy actions newer than the restore target are exposed before replay,
@@ -3188,6 +3192,7 @@ tasks:
             docs/architecture/ADR/0071-dedicated-postgresql-borg-repository.md,
             infrastructure/environments/proxmox/scripts/starfiniti-loyalty-postgres-borg,
             infrastructure/environments/proxmox/scripts/starfiniti-loyalty-postgres-borg-maintain,
+            scripts/validate-backup-assets.mjs,
             docs/operations/BACKUP_RESTORE.md,
           ]
       - id: M15-S05-OPERATIONS-AND-INCIDENTS

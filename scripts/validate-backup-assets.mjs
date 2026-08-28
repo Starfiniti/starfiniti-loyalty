@@ -2,10 +2,12 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import {
   chmod,
+  chown,
   mkdir,
   mkdtemp,
   readFile,
   rm,
+  symlink,
   writeFile,
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -100,6 +102,32 @@ for (const [label, source] of [
   );
 }
 
+for (const [label, source] of [
+  ["archive", borg],
+  ["maintenance", maintenance],
+]) {
+  assert.match(
+    source,
+    /\[\[ "\$config_file" == \/\* \]\][\s\S]*\[\[ ! -L "\$config_file" \]\][\s\S]*readlink -f -- "\$config_file"[\s\S]*"\$canonical_config_file" == "\$config_file"[\s\S]*\[\[ -f "\$config_file" \]\][\s\S]*exec \{config_fd\}<"\$config_file"[\s\S]*\[\[ -f "\/dev\/fd\/\$config_fd" \]\][\s\S]*stat -Lc '%u\|%a' "\/dev\/fd\/\$config_fd"[\s\S]*"\$config_owner" == "\$effective_uid"[\s\S]*"\$config_mode" =~ \^\[46\]00\$[\s\S]*source "\/dev\/fd\/\$config_fd"[\s\S]*exec \{config_fd\}<&-/u,
+    `${label} must open one absolute non-symlink configuration, validate the opened regular file as service-owned and owner-only, and source only that descriptor`,
+  );
+  assert.match(
+    source,
+    /effective_uid="\$\(id -u\)"[\s\S]*validate_config_directory_chain\(\)[\s\S]*while true[\s\S]*stat -Lc '%u\|%a' "\$current_directory"[\s\S]*directory_mode_octal=\$\(\(8#\$directory_mode\)\)[\s\S]*"\$directory_owner" == "\$effective_uid"[\s\S]*"\$directory_owner" == "0"[\s\S]*directory_mode_octal & 0022[\s\S]*directory_mode_octal & 01000[\s\S]*validate_config_directory_chain/u,
+    `${label} must reject configuration paths inside untrusted writable parent chains before opening them`,
+  );
+  assert.doesNotMatch(
+    source,
+    /stat -Lc '%F/u,
+    `${label} configuration validation must not depend on localized file-type text`,
+  );
+  assert.doesNotMatch(
+    source,
+    /source "\$config_file"/u,
+    `${label} must not reopen the validated configuration path`,
+  );
+}
+
 assert.match(
   pull,
   /SSH_ORIGINAL_COMMAND/u,
@@ -151,6 +179,31 @@ assert.match(
   borg,
   /--stats/u,
   "host backup must expose per-run transfer measurements",
+);
+assert.match(
+  borg,
+  /LC_ALL=C rsync \\\n[\s\S]*--no-human-readable \\\n[\s\S]*--stats \\\n[\s\S]*>"\$rsync_stats_file"/u,
+  "host backup must capture pure-digit locale-stable rsync evidence",
+);
+assert.match(
+  borg,
+  /Total\\ transferred\\ file\\ size:[\s\S]*Total\\ bytes\\ received:[\s\S]*changed_count == 1 && transferred_count == 1[\s\S]*\^\[0-9\]\{1,18\}\$[\s\S]*transferred \/ denominator/u,
+  "host backup must derive bounded changed bytes, received bytes, and amplification from one completed cycle",
+);
+assert.match(
+  borg,
+  /starfiniti_backup_cycle_transferred_bytes[\s\S]*starfiniti_backup_cycle_transfer_amplification_ratio[\s\S]*chmod 0644 "\$temporary"[\s\S]*mv -f "\$temporary" "\$transfer_metrics_file"/u,
+  "host backup must atomically publish the two canonical transfer-amplification signals",
+);
+assert.match(
+  borg,
+  /transfer_amplification_limit=4[\s\S]*transfer_absolute_limit_bytes=1073741824[\s\S]*rsync_transferred_bytes > transfer_absolute_limit_bytes[\s\S]*rsync_transferred_bytes > transfer_amplification_limit \* rsync_changed_bytes[\s\S]*Borg archive not created/u,
+  "host backup must fail before Borg when both reviewed transfer boundaries are crossed",
+);
+assert.ok(
+  borg.indexOf("Borg archive not created") <
+    borg.indexOf('exec 9>"$lock_file"'),
+  "transfer amplification must stop the cycle before repository access",
 );
 assert.match(
   borg,
@@ -384,9 +437,29 @@ if (process.platform !== "win32") {
   const incompleteConfigPath = join(testRoot, "incomplete.env");
   const aliasConfigPath = join(testRoot, "alias.env");
   const reusedIdConfigPath = join(testRoot, "reused-id.env");
+  const permissiveConfigPath = join(testRoot, "permissive.env");
+  const executableConfigPath = join(testRoot, "executable.env");
+  const nonRegularConfigPath = join(testRoot, "config-directory");
+  const symlinkConfigPath = join(testRoot, "symlink.env");
+  const wrongOwnerConfigPath = join(testRoot, "wrong-owner.env");
+  const writableParentPath = join(testRoot, "writable-parent");
+  const writableParentConfigPath = join(writableParentPath, "backup.env");
+  const writableAncestorPath = join(testRoot, "writable-ancestor");
+  const writableAncestorNestedPath = join(writableAncestorPath, "nested");
+  const writableAncestorConfigPath = join(
+    writableAncestorNestedPath,
+    "backup.env",
+  );
+  const wrongOwnerAncestorPath = join(testRoot, "wrong-owner-ancestor");
+  const wrongOwnerAncestorNestedPath = join(wrongOwnerAncestorPath, "nested");
+  const wrongOwnerAncestorConfigPath = join(
+    wrongOwnerAncestorNestedPath,
+    "backup.env",
+  );
   const stagePath = join(testRoot, "stage");
   const lockPath = join(testRoot, "postgres.lock");
   const tracePath = join(testRoot, "trace");
+  const borgCallTracePath = join(testRoot, "borg-call-trace");
   const metricsPath = join(testRoot, "metrics");
   const metricsStatePath = join(testRoot, "metrics-state");
   const unavailableMetricsPath = join(testRoot, "metrics-unavailable");
@@ -469,6 +542,66 @@ if (process.platform !== "win32") {
       ].join("\n"),
       "utf8",
     );
+    for (const path of [
+      configPath,
+      aliasConfigPath,
+      reusedIdConfigPath,
+      incompleteConfigPath,
+    ]) {
+      await chmod(path, 0o600);
+    }
+    await writeFile(
+      permissiveConfigPath,
+      await readFile(configPath, "utf8"),
+      "utf8",
+    );
+    await chmod(permissiveConfigPath, 0o640);
+    await writeFile(
+      executableConfigPath,
+      await readFile(configPath, "utf8"),
+      "utf8",
+    );
+    await chmod(executableConfigPath, 0o700);
+    await mkdir(nonRegularConfigPath);
+    await symlink(configPath, symlinkConfigPath);
+    await mkdir(writableParentPath);
+    await writeFile(
+      writableParentConfigPath,
+      await readFile(configPath, "utf8"),
+      "utf8",
+    );
+    await chmod(writableParentConfigPath, 0o600);
+    await chmod(writableParentPath, 0o770);
+    await mkdir(writableAncestorNestedPath, { recursive: true });
+    await writeFile(
+      writableAncestorConfigPath,
+      await readFile(configPath, "utf8"),
+      "utf8",
+    );
+    await chmod(writableAncestorConfigPath, 0o600);
+    await chmod(writableAncestorNestedPath, 0o700);
+    await chmod(writableAncestorPath, 0o770);
+    if (process.getuid?.() === 0) {
+      await mkdir(wrongOwnerAncestorNestedPath, { recursive: true });
+      await writeFile(
+        wrongOwnerAncestorConfigPath,
+        await readFile(configPath, "utf8"),
+        "utf8",
+      );
+      await chmod(wrongOwnerAncestorConfigPath, 0o600);
+      await chmod(wrongOwnerAncestorNestedPath, 0o700);
+      await chmod(wrongOwnerAncestorPath, 0o755);
+      await chown(wrongOwnerAncestorPath, 65534, process.getgid?.() ?? 0);
+    }
+    if (process.getuid?.() === 0) {
+      await writeFile(
+        wrongOwnerConfigPath,
+        await readFile(configPath, "utf8"),
+        "utf8",
+      );
+      await chmod(wrongOwnerConfigPath, 0o600);
+      await chown(wrongOwnerConfigPath, 65534, process.getgid?.() ?? 0);
+    }
     await writeExecutable(
       "rsync",
       [
@@ -477,6 +610,18 @@ if (process.platform !== "win32") {
         'destination="${!#}"',
         'mkdir -p "$destination/base" "$destination/wal"',
         "printf 'rsync\\n' >>\"$STARFINITI_TEST_TRACE\"",
+        'if [[ "${STARFINITI_TEST_RSYNC_STATS_MODE:-valid}" == "missing" ]]; then',
+        "  printf 'Number of files: 2\\n'",
+        "  exit 0",
+        "fi",
+        'changed_bytes="${STARFINITI_TEST_RSYNC_CHANGED_BYTES:-50901}"',
+        'transferred_bytes="${STARFINITI_TEST_RSYNC_TRANSFERRED_BYTES:-399762}"',
+        "printf 'Total transferred file size: %s bytes\\n' \"$changed_bytes\"",
+        "printf 'Total bytes received: %s\\n' \"$transferred_bytes\"",
+        'if [[ "${STARFINITI_TEST_RSYNC_STATS_MODE:-valid}" == "duplicate" ]]; then',
+        "  printf 'Total transferred file size: %s bytes\\n' \"$changed_bytes\"",
+        "  printf 'Total bytes received: %s\\n' \"$transferred_bytes\"",
+        "fi",
         "",
       ].join("\n"),
     );
@@ -485,6 +630,7 @@ if (process.platform !== "win32") {
       [
         "#!/usr/bin/env bash",
         "set -Eeuo pipefail",
+        'printf \'borg-call:%s\\n\' "${1:-missing}" >>"$STARFINITI_TEST_BORG_CALL_TRACE"',
         'if [[ "${1:-}" == "info" ]]; then',
         '  repository_id="${STARFINITI_TEST_ACTUAL_REPOSITORY_ID:-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb}"',
         '  printf \'{"repository":{"id":"%s"}}\\n\' "$repository_id"',
@@ -536,10 +682,60 @@ if (process.platform !== "win32") {
       STARFINITI_POSTGRES_BORG_METRICS_STATE_DIR: metricsStatePath,
       STARFINITI_MONITORING_ENVIRONMENT: "production",
       STARFINITI_TEST_BORG_ARCHIVE_NAMES: validArchiveNames,
+      STARFINITI_TEST_RSYNC_CHANGED_BYTES: "50901",
+      STARFINITI_TEST_RSYNC_TRANSFERRED_BYTES: "399762",
+      STARFINITI_TEST_BORG_CALL_TRACE: borgCallTracePath,
       STARFINITI_TEST_TRACE: tracePath,
     };
 
+    for (const [scriptLabel, scriptPath] of [
+      ["archive", borgScriptPath],
+      ["maintenance", maintenanceScriptPath],
+    ]) {
+      for (const [configLabel, insecureConfigPath] of [
+        ["relative-path", "relative.env"],
+        ["group-readable", permissiveConfigPath],
+        ["executable", executableConfigPath],
+        ["non-regular", nonRegularConfigPath],
+        ["symbolic-link", symlinkConfigPath],
+        ["group-writable-parent", writableParentConfigPath],
+        ["group-writable-ancestor", writableAncestorConfigPath],
+        ...(process.getuid?.() === 0
+          ? [["wrong-owner-ancestor", wrongOwnerAncestorConfigPath]]
+          : []),
+        ...(process.getuid?.() === 0
+          ? [["wrong-owner", wrongOwnerConfigPath]]
+          : []),
+      ]) {
+        await writeFile(tracePath, "", "utf8");
+        await writeFile(borgCallTracePath, "", "utf8");
+        const insecureConfig = spawnSync("bash", [scriptPath], {
+          encoding: "utf8",
+          env: {
+            ...runEnvironment,
+            STARFINITI_POSTGRES_BORG_CONFIG: insecureConfigPath,
+          },
+        });
+        assert.notEqual(
+          insecureConfig.status,
+          0,
+          `${scriptLabel} must reject a ${configLabel} configuration`,
+        );
+        assert.equal(
+          await readFile(tracePath, "utf8"),
+          "",
+          `${scriptLabel} ${configLabel} rejection must happen before rsync or Borg`,
+        );
+        assert.equal(
+          await readFile(borgCallTracePath, "utf8"),
+          "",
+          `${scriptLabel} ${configLabel} rejection must not invoke any Borg command`,
+        );
+      }
+    }
+
     await writeFile(tracePath, "", "utf8");
+    await writeFile(borgCallTracePath, "", "utf8");
     const success = spawnSync("bash", [borgScriptPath], {
       encoding: "utf8",
       env: runEnvironment,
@@ -557,6 +753,11 @@ if (process.platform !== "win32") {
       "successful backup must invoke exactly rsync then Borg",
     );
     assert.equal(successTrace[0], "rsync", "staging must run before Borg");
+    assert.deepEqual(
+      (await readFile(borgCallTracePath, "utf8")).trim().split("\n"),
+      ["borg-call:info", "borg-call:create"],
+      "successful backup must verify repository identity before create",
+    );
     assert.match(
       successTrace[1] ?? "",
       /^borg\|ssh:\/\/backup\.invalid\/\.\/loyalty-postgres\|create --remote-path borg-1\.4 --lock-wait 1 --compression zstd,3 --files-cache ctime,size,inode --one-file-system --show-rc --stats ssh:\/\/backup\.invalid\/\.\/loyalty-postgres::loyalty-postgres-[0-9]{8}T[0-9]{6}Z /u,
@@ -589,6 +790,109 @@ if (process.platform !== "win32") {
       /starfiniti_postgres_borg_repository_isolated\{environment="production",service="starfiniti-loyalty"\} 1/u,
       "successful identity verification must publish repository isolation",
     );
+    const transferMetricsPath = join(
+      metricsPath,
+      "starfiniti-postgres-borg-transfer.prom",
+    );
+    const transferMetrics = await readFile(transferMetricsPath, "utf8");
+    assert.match(
+      transferMetrics,
+      /starfiniti_backup_cycle_transferred_bytes\{environment="production",service="starfiniti-loyalty"\} 399762/u,
+      "successful backup must publish the completed rsync wire-byte total",
+    );
+    assert.match(
+      transferMetrics,
+      /starfiniti_backup_cycle_transfer_amplification_ratio\{environment="production",service="starfiniti-loyalty"\} 7\.853716/u,
+      "successful backup must publish the completed rsync amplification ratio",
+    );
+    assert.doesNotMatch(
+      transferMetrics,
+      /ssh:|loyalty-postgres-[0-9]|[0-9a-f]{64}|BORG_REPO|archive\.invalid/iu,
+      "transfer metrics must not expose selectors IDs paths or archive names",
+    );
+
+    for (const [boundaryLabel, changedBytes, transferredBytes] of [
+      ["exact four-times ratio", "300000000", "1200000000"],
+      ["exact one-GiB transfer", "100000000", "1073741824"],
+    ]) {
+      await writeFile(tracePath, "", "utf8");
+      const boundary = spawnSync("bash", [borgScriptPath], {
+        encoding: "utf8",
+        env: {
+          ...runEnvironment,
+          STARFINITI_TEST_RSYNC_CHANGED_BYTES: changedBytes,
+          STARFINITI_TEST_RSYNC_TRANSFERRED_BYTES: transferredBytes,
+        },
+      });
+      assert.equal(
+        boundary.status,
+        0,
+        `${boundaryLabel} must remain below the dual strict-greater-than guard: ${formatProcessFailure(boundary)}`,
+      );
+      assert.equal(
+        (await readFile(tracePath, "utf8")).trim().split("\n").length,
+        2,
+        `${boundaryLabel} must preserve rsync and Borg execution`,
+      );
+    }
+
+    await writeFile(tracePath, "", "utf8");
+    await writeFile(borgCallTracePath, "", "utf8");
+    const amplifiedTransfer = spawnSync("bash", [borgScriptPath], {
+      encoding: "utf8",
+      env: {
+        ...runEnvironment,
+        STARFINITI_TEST_RSYNC_CHANGED_BYTES: "100000000",
+        STARFINITI_TEST_RSYNC_TRANSFERRED_BYTES: "1073741825",
+      },
+    });
+    assert.notEqual(
+      amplifiedTransfer.status,
+      0,
+      "a transfer above both amplification boundaries must fail visibly",
+    );
+    assert.deepEqual(
+      (await readFile(tracePath, "utf8")).trim().split("\n"),
+      ["rsync"],
+      "an amplified transfer must stop before repository identity or archive access",
+    );
+    assert.equal(
+      await readFile(borgCallTracePath, "utf8"),
+      "",
+      "an amplified transfer must not invoke any Borg command",
+    );
+    assert.match(
+      await readFile(transferMetricsPath, "utf8"),
+      /starfiniti_backup_cycle_transferred_bytes\{environment="production",service="starfiniti-loyalty"\} 1073741825[\s\S]*starfiniti_backup_cycle_transfer_amplification_ratio\{environment="production",service="starfiniti-loyalty"\} 10\.737418/u,
+      "an amplified transfer must retain its aggregate alert evidence",
+    );
+
+    for (const invalidStatsMode of ["missing", "duplicate"]) {
+      await writeFile(tracePath, "", "utf8");
+      await writeFile(borgCallTracePath, "", "utf8");
+      const invalidTransferEvidence = spawnSync("bash", [borgScriptPath], {
+        encoding: "utf8",
+        env: {
+          ...runEnvironment,
+          STARFINITI_TEST_RSYNC_STATS_MODE: invalidStatsMode,
+        },
+      });
+      assert.notEqual(
+        invalidTransferEvidence.status,
+        0,
+        `${invalidStatsMode} rsync transfer evidence must keep the unit non-passing`,
+      );
+      assert.deepEqual(
+        (await readFile(tracePath, "utf8")).trim().split("\n"),
+        ["rsync"],
+        `${invalidStatsMode} transfer evidence must fail before repository access`,
+      );
+      assert.equal(
+        await readFile(borgCallTracePath, "utf8"),
+        "",
+        `${invalidStatsMode} transfer evidence must not invoke any Borg command`,
+      );
+    }
 
     await writeFile(tracePath, "", "utf8");
     const metricsUnavailable = spawnSync("bash", [borgScriptPath], {

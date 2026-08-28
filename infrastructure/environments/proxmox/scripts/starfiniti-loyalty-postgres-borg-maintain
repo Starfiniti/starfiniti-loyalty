@@ -9,10 +9,75 @@ fail() {
 }
 
 readonly config_file="${STARFINITI_POSTGRES_BORG_CONFIG:-/etc/starfiniti-backup/pve-borg.env}"
-[[ -r "$config_file" ]] || fail "configuration is not readable: $config_file"
+
+[[ "$config_file" == /* ]] || fail "configuration path must be absolute"
+[[ ! -L "$config_file" ]] || fail "configuration must not be a symbolic link"
+for bootstrap_command in dirname id readlink stat; do
+  command -v "$bootstrap_command" >/dev/null 2>&1 ||
+    fail "required command is missing: $bootstrap_command"
+done
+canonical_config_file="$(readlink -f -- "$config_file")" ||
+  fail "configuration path could not be resolved"
+[[ "$canonical_config_file" == "$config_file" ]] ||
+  fail "configuration path must be canonical and contain no symbolic links"
+config_parent="$(dirname -- "$config_file")"
+effective_uid="$(id -u)"
+
+validate_config_directory_chain() {
+  local current_directory="$config_parent"
+  local directory_metadata directory_owner directory_mode directory_mode_octal next_directory
+
+  while true; do
+    [[ -d "$current_directory" ]] || fail "configuration parent chain must contain only directories"
+    directory_metadata="$(stat -Lc '%u|%a' "$current_directory")" ||
+      fail "configuration parent metadata could not be read"
+    IFS='|' read -r directory_owner directory_mode <<<"$directory_metadata"
+    [[ "$directory_mode" =~ ^[0-7]{3,4}$ ]] ||
+      fail "configuration parent mode is invalid"
+    directory_mode_octal=$((8#$directory_mode))
+
+    if [[ "$current_directory" == "$config_parent" ]]; then
+      [[ "$directory_owner" == "$effective_uid" ]] ||
+        fail "configuration parent must be owned by the service user"
+      (( (directory_mode_octal & 0022) == 0 )) ||
+        fail "configuration parent must not be writable by group or others"
+    else
+      [[ "$directory_owner" == "$effective_uid" || "$directory_owner" == "0" ]] ||
+        fail "configuration ancestor must be owned by the service user or root"
+      if (( (directory_mode_octal & 0022) != 0 && (directory_mode_octal & 01000) == 0 )); then
+        fail "configuration ancestor must not be writable without sticky-directory protection"
+      fi
+    fi
+
+    [[ "$current_directory" == "/" ]] && break
+    next_directory="$(dirname -- "$current_directory")"
+    [[ "$next_directory" != "$current_directory" ]] ||
+      fail "configuration parent chain could not be resolved"
+    current_directory="$next_directory"
+  done
+}
+
+validate_config_directory_chain
+[[ -f "$config_file" ]] || fail "configuration must be a regular file"
+
+# The configuration is executable shell syntax and therefore root-equivalent
+# when this system unit runs as root. Open it once, validate the opened object,
+# and source only that descriptor. The canonical service-owned parent prevents
+# an untrusted replacement before open; the descriptor prevents replacement
+# between opened-object validation and evaluation.
+exec {config_fd}<"$config_file" || fail "configuration is not readable: $config_file"
+[[ -f "/dev/fd/$config_fd" ]] || fail "configuration must be a regular file"
+config_metadata="$(stat -Lc '%u|%a' "/dev/fd/$config_fd")" ||
+  fail "configuration metadata could not be read"
+IFS='|' read -r config_owner config_mode <<<"$config_metadata"
+[[ "$config_owner" == "$effective_uid" ]] ||
+  fail "configuration must be owned by the service user"
+[[ "$config_mode" =~ ^[46]00$ ]] ||
+  fail "configuration must be owner-readable, non-executable, and inaccessible to group and others"
 
 # shellcheck source=/dev/null
-source "$config_file"
+source "/dev/fd/$config_fd"
+exec {config_fd}<&-
 
 : "${BORG_REPO:?BORG_REPO is required}"
 : "${STARFINITI_POSTGRES_BORG_REPO:?STARFINITI_POSTGRES_BORG_REPO is required}"
