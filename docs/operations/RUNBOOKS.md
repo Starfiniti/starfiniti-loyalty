@@ -58,14 +58,14 @@ Use the incident state machine and communication policy in `INCIDENT_MANAGEMENT.
 3. Apply only proven pool/concurrency limits. Do not restart PostgreSQL blindly or remove WAL/backups/logs to create space.
 4. Verify WAL continuity, replication/archive state, ledger writes, queue recovery, and projections after headroom returns.
 
-## OPS-007 — WAL RPO or stale base backup
+## OPS-007 — PostgreSQL recovery RPO or repository failure
 
-**Detect:** WAL archive lag over five minutes, missing/corrupt segment, failed archive, or verified base backup older than one day. **Owner:** `recovery-on-call`.
+**Detect:** WAL archive lag over five minutes; a missing, stale, or failed dedicated off-site archive; repository isolation not equal to one; failed retention evidence; a retained interval above five minutes; maintenance older than thirty hours; a missing/corrupt segment; or a verified base backup older than one day. **Owner:** `recovery-on-call`.
 
 1. Declare a protected-value incident at an RPO breach. Preserve the last successful segment/base fingerprint and failure evidence.
-2. Inspect archive destination availability, continuity, permissions, capacity, exact pinned backup units, and the dedicated PostgreSQL Borg lock owner without exposing paths or credentials broadly. If a whole-VM process owns that lock or both jobs resolve to one repository, fail the configuration and keep recovery status non-passing. Lock timeout status 75 means no incremental archive was created; maintenance timeout status 124 means check/prune/compact did not complete. Do not reinterpret a later timer retry, older archive, or partial maintenance trace as success.
+2. Inspect archive destination availability, continuity, permissions, capacity, exact pinned backup units, node_exporter textfile collection, and the dedicated PostgreSQL Borg lock owner without exposing paths, archive names, repository IDs, or credentials broadly. If both jobs resolve to one repository, repository isolation is absent/zero, the last attempt is zero, or a recent interval is above 300 seconds, fail the recovery gate. Lock timeout status 75 means no incremental archive was created; maintenance timeout status 124 means check/prune/list/compact did not complete. Do not reinterpret a later timer retry, older archive, stale metric, or partial maintenance trace as success.
 3. Do not delete the last known-good base/WAL chain or claim recovery from a successful timer alone.
-4. Resume archiving, verify continuity and integrity, then schedule an approved isolated restore. RPO/RTO claims require clean-room evidence.
+4. Resume archiving, require archive age and every retained interval to return within the target, require an independently scraped successful attempt and repository-isolation value of one, verify continuity and integrity, then schedule an approved isolated restore. RPO/RTO claims require clean-room evidence.
 
 ## OPS-008 — Backup transfer amplification
 

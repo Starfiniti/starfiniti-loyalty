@@ -42,6 +42,17 @@ readonly lock_wait_seconds="${STARFINITI_POSTGRES_BORG_MAINTENANCE_LOCK_WAIT_SEC
 readonly command_timeout_seconds="${STARFINITI_POSTGRES_BORG_MAINTENANCE_COMMAND_TIMEOUT_SECONDS:-15}"
 readonly check_max_duration_seconds="${STARFINITI_POSTGRES_BORG_CHECK_MAX_DURATION_SECONDS:-8}"
 readonly whole_vm_lock_file="/run/lock/starfiniti-pve-borg.lock"
+readonly monitoring_environment="${STARFINITI_MONITORING_ENVIRONMENT:-production}"
+readonly metrics_dir="${STARFINITI_POSTGRES_BORG_METRICS_DIR:-/var/lib/node_exporter/textfile_collector}"
+readonly metrics_state_dir="${STARFINITI_POSTGRES_BORG_METRICS_STATE_DIR:-/var/lib/starfiniti-postgres-borg/metrics-state}"
+readonly maintenance_metrics_file="$metrics_dir/starfiniti-postgres-borg-maintenance.prom"
+readonly repository_metrics_file="$metrics_dir/starfiniti-postgres-borg-repository.prom"
+readonly maintenance_success_state="$metrics_state_dir/maintenance-last-success"
+readonly recent_interval_state="$metrics_state_dir/recent-max-interval"
+readonly recent_count_state="$metrics_state_dir/recent-archive-count"
+readonly repository_isolated_state="$metrics_state_dir/repository-isolated"
+readonly recent_window_seconds=172800
+readonly maximum_recovery_interval_seconds=300
 
 [[ "$lock_file" != "$whole_vm_lock_file" ]] ||
   fail "PostgreSQL maintenance must not use the whole-VM repository lock"
@@ -58,9 +69,121 @@ readonly whole_vm_lock_file="/run/lock/starfiniti-pve-borg.lock"
   ((check_max_duration_seconds <= 8)) ||
   fail "repository check duration must be an integer from 1 through 8 seconds"
 
-for command_name in borg flock jq timeout; do
+[[ "$monitoring_environment" =~ ^[a-z][a-z0-9-]{1,31}$ ]] ||
+  fail "monitoring environment must be a bounded lowercase label"
+
+for command_name in borg chmod flock install jq mktemp mv timeout; do
   command -v "$command_name" >/dev/null 2>&1 || fail "required command is missing: $command_name"
 done
+
+prepare_metrics_storage() {
+  if [[ -L "$metrics_dir" || ( -e "$metrics_dir" && ! -d "$metrics_dir" ) ]]; then
+    return 1
+  fi
+  if [[ ! -d "$metrics_dir" ]]; then
+    install -d -m 0755 "$metrics_dir" || return 1
+  fi
+  [[ -w "$metrics_dir" && -x "$metrics_dir" ]] || return 1
+
+  if [[ -L "$metrics_state_dir" || ( -e "$metrics_state_dir" && ! -d "$metrics_state_dir" ) ]]; then
+    return 1
+  fi
+  install -d -m 0700 "$metrics_state_dir"
+}
+
+metrics_ready=1
+if ! prepare_metrics_storage; then
+  metrics_ready=0
+  printf 'starfiniti-loyalty-postgres-borg-maintain: metrics storage unavailable; maintenance will continue and the completed unit will fail evidence publication\n' >&2
+fi
+
+read_numeric_state() {
+  local state_file="$1"
+  local fallback="$2"
+  local value
+
+  if [[ -r "$state_file" ]]; then
+    IFS= read -r value <"$state_file" || value=""
+    if [[ "$value" =~ ^[0-9]{1,19}$ ]]; then
+      printf '%s\n' "$value"
+      return
+    fi
+  fi
+  printf '%s\n' "$fallback"
+}
+
+write_numeric_state() {
+  local state_file="$1"
+  local value="$2"
+  local temporary
+
+  temporary="$(mktemp "${state_file}.tmp.XXXXXX")"
+  printf '%s\n' "$value" >"$temporary"
+  mv -f "$temporary" "$state_file"
+}
+
+publish_maintenance_metrics() {
+  local attempt_success="$1"
+  local completed_at="$2"
+  local max_interval="$3"
+  local recent_count="$4"
+  local temporary
+
+  temporary="$(mktemp "${maintenance_metrics_file}.tmp.XXXXXX")"
+  {
+    printf '# HELP starfiniti_postgres_borg_maintenance_unixtime_seconds Unix time of the last completed dedicated PostgreSQL Borg maintenance run.\n'
+    printf '# TYPE starfiniti_postgres_borg_maintenance_unixtime_seconds gauge\n'
+    printf 'starfiniti_postgres_borg_maintenance_unixtime_seconds{environment="%s",service="starfiniti-loyalty"} %s\n' "$monitoring_environment" "$completed_at"
+    printf '# HELP starfiniti_postgres_borg_maintenance_last_attempt_success Whether the last completed dedicated PostgreSQL Borg maintenance attempt succeeded.\n'
+    printf '# TYPE starfiniti_postgres_borg_maintenance_last_attempt_success gauge\n'
+    printf 'starfiniti_postgres_borg_maintenance_last_attempt_success{environment="%s",service="starfiniti-loyalty"} %s\n' "$monitoring_environment" "$attempt_success"
+    printf '# HELP starfiniti_postgres_borg_recent_archive_max_interval_seconds Largest interval ending inside the retained 48-hour PostgreSQL recovery window.\n'
+    printf '# TYPE starfiniti_postgres_borg_recent_archive_max_interval_seconds gauge\n'
+    printf 'starfiniti_postgres_borg_recent_archive_max_interval_seconds{environment="%s",service="starfiniti-loyalty"} %s\n' "$monitoring_environment" "$max_interval"
+    printf '# HELP starfiniti_postgres_borg_recent_archive_count Dedicated PostgreSQL Borg archives retained inside the 48-hour recovery window.\n'
+    printf '# TYPE starfiniti_postgres_borg_recent_archive_count gauge\n'
+    printf 'starfiniti_postgres_borg_recent_archive_count{environment="%s",service="starfiniti-loyalty"} %s\n' "$monitoring_environment" "$recent_count"
+  } >"$temporary"
+  chmod 0644 "$temporary"
+  mv -f "$temporary" "$maintenance_metrics_file"
+}
+
+publish_repository_metric() {
+  local isolated="$1"
+  local temporary
+
+  temporary="$(mktemp "${repository_metrics_file}.tmp.XXXXXX")"
+  {
+    printf '# HELP starfiniti_postgres_borg_repository_isolated Whether the configured and actual PostgreSQL Borg repository is distinct from the whole-VM repository.\n'
+    printf '# TYPE starfiniti_postgres_borg_repository_isolated gauge\n'
+    printf 'starfiniti_postgres_borg_repository_isolated{environment="%s",service="starfiniti-loyalty"} %s\n' "$monitoring_environment" "$isolated"
+  } >"$temporary"
+  chmod 0644 "$temporary"
+  mv -f "$temporary" "$repository_metrics_file"
+}
+
+maintenance_last_success=0
+recent_max_interval=0
+recent_archive_count=0
+repository_isolated=0
+if ((metrics_ready)); then
+  maintenance_last_success="$(read_numeric_state "$maintenance_success_state" 0)"
+  recent_max_interval="$(read_numeric_state "$recent_interval_state" 0)"
+  recent_archive_count="$(read_numeric_state "$recent_count_state" 0)"
+  repository_isolated="$(read_numeric_state "$repository_isolated_state" 0)"
+fi
+
+record_failed_attempt() {
+  local status=$?
+
+  if ((status != 0 && metrics_ready)); then
+    publish_maintenance_metrics 0 "$maintenance_last_success" "$recent_max_interval" "$recent_archive_count" ||
+      printf 'starfiniti-loyalty-postgres-borg-maintain: failed to publish failed-attempt metrics\n' >&2
+  fi
+  return "$status"
+}
+
+trap record_failed_attempt EXIT
 
 run_borg_bounded() {
   timeout \
@@ -83,8 +206,92 @@ verify_repository_identity() {
       jq -er '.repository.id | select(type == "string" and test("^[0-9a-f]{64}$"))'
   )" || fail "dedicated PostgreSQL Borg repository identity could not be verified"
 
-  [[ "$actual_repository_id" == "$STARFINITI_POSTGRES_BORG_REPOSITORY_ID" ]] ||
+  if [[ "$actual_repository_id" != "$STARFINITI_POSTGRES_BORG_REPOSITORY_ID" ]]; then
+    repository_isolated=0
+    if ((metrics_ready)); then
+      write_numeric_state "$repository_isolated_state" "$repository_isolated" &&
+        publish_repository_metric "$repository_isolated" ||
+        printf 'starfiniti-loyalty-postgres-borg-maintain: failed to publish repository-isolation failure\n' >&2
+    fi
     fail "dedicated PostgreSQL Borg repository identity does not match approved configuration"
+  fi
+
+  repository_isolated=1
+  if ((metrics_ready)); then
+    if ! write_numeric_state "$repository_isolated_state" "$repository_isolated" ||
+      ! publish_repository_metric "$repository_isolated"; then
+      metrics_ready=0
+      printf 'starfiniti-loyalty-postgres-borg-maintain: repository isolation verified but evidence publication failed\n' >&2
+    fi
+  fi
+}
+
+measure_recent_recovery_intervals() {
+  local archive_names
+  local measurement
+  local observed_at
+  local cutoff
+
+  observed_at="$(date -u +%s)"
+  cutoff=$((observed_at - recent_window_seconds))
+  archive_names="$(
+    run_borg_bounded list \
+      --remote-path "$BORG_REMOTE_PATH" \
+      --lock-wait "$lock_wait_seconds" \
+      --glob-archives 'loyalty-postgres-*' \
+      --sort-by timestamp \
+      --format '{archive}{NL}' \
+      "$BORG_REPO"
+  )" || fail "retained PostgreSQL archive names could not be listed"
+
+  measurement="$(
+    printf '%s\n' "$archive_names" |
+      jq -Rsec \
+        --argjson observedAt "$observed_at" \
+        --argjson cutoff "$cutoff" '
+          split("\n")
+          | map(select(length > 0))
+          | if length > 2000 then error("archive inventory exceeds bound") else . end
+          | map(
+              capture("^loyalty-postgres-(?<year>[0-9]{4})(?<month>[0-9]{2})(?<day>[0-9]{2})T(?<hour>[0-9]{2})(?<minute>[0-9]{2})(?<second>[0-9]{2})Z$")
+              | "\(.year)-\(.month)-\(.day)T\(.hour):\(.minute):\(.second)Z"
+              | fromdateiso8601
+            )
+          | sort as $times
+          | if ($times | length) < 2 then error("fewer than two recovery points") else . end
+          | if ($times | unique | length) != ($times | length) then error("duplicate recovery timestamp") else . end
+          | if ($times | last) > ($observedAt + 60) then error("future recovery timestamp") else . end
+          | [range(1; $times | length) as $index
+              | select($times[$index] >= $cutoff)
+              | $times[$index] - $times[$index - 1]] as $intervals
+          | [$times[] | select(. >= $cutoff)] as $recent
+          | if ($intervals | length) < 1 or ($recent | length) < 1 then error("recovery window lacks a measurable interval") else . end
+          | {
+              count: ($recent | length),
+              latest: ($times | last),
+              maxInterval: ($intervals | max)
+            }
+        '
+  )" || fail "retained PostgreSQL recovery intervals are malformed or incomplete"
+
+  recent_archive_count="$(jq -er '.count | select(type == "number" and . >= 1 and floor == .)' <<<"$measurement")"
+  recent_max_interval="$(jq -er '.maxInterval | select(type == "number" and . >= 0 and floor == .)' <<<"$measurement")"
+  latest_archive_timestamp="$(jq -er '.latest | select(type == "number" and . >= 0 and floor == .)' <<<"$measurement")"
+
+  if ((metrics_ready)); then
+    if ! write_numeric_state "$recent_count_state" "$recent_archive_count" ||
+      ! write_numeric_state "$recent_interval_state" "$recent_max_interval"; then
+      metrics_ready=0
+      printf 'starfiniti-loyalty-postgres-borg-maintain: recovery interval measured but evidence state publication failed\n' >&2
+    fi
+  fi
+
+  if ((observed_at - latest_archive_timestamp > maximum_recovery_interval_seconds)); then
+    fail "latest retained PostgreSQL archive exceeds the recovery interval bound"
+  fi
+  if ((recent_max_interval > maximum_recovery_interval_seconds)); then
+    fail "retained PostgreSQL archive interval exceeds the recovery target"
+  fi
 }
 
 exec 9>"$lock_file"
@@ -125,10 +332,25 @@ run_borg_bounded prune \
   --keep-monthly 12 \
   "$BORG_REPO"
 
+# The post-prune inventory is the retention proof. It is derived only from
+# canonical archive names and fails before compaction if pruning or an outage
+# leaves a recent interval above the five-minute recovery objective.
+measure_recent_recovery_intervals
+
 run_borg_bounded compact \
   --remote-path "$BORG_REMOTE_PATH" \
   --lock-wait "$lock_wait_seconds" \
   --show-rc \
   "$BORG_REPO"
 
+maintenance_last_success="$(date -u +%s)"
+metrics_published=0
+if ((metrics_ready)) &&
+  write_numeric_state "$maintenance_success_state" "$maintenance_last_success" &&
+  publish_maintenance_metrics 1 "$maintenance_last_success" "$recent_max_interval" "$recent_archive_count"; then
+  metrics_published=1
+fi
+trap - EXIT
+
 printf 'starfiniti-loyalty-postgres-borg-maintain: retention and compaction completed\n'
+((metrics_published)) || fail "maintenance completed but observability evidence was not published"

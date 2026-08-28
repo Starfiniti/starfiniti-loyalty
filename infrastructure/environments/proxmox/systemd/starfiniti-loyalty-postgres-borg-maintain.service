@@ -22,6 +22,6 @@ CacheDirectoryMode=0700
 StateDirectory=starfiniti-postgres-borg
 StateDirectoryMode=0700
 ReadWritePaths=/run/lock
-TimeoutStartSec=90s
+TimeoutStartSec=105s
 TimeoutStopSec=10s
 KillSignal=SIGINT

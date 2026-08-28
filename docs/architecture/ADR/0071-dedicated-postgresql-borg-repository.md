@@ -14,7 +14,9 @@ Current Borg 1.4 documentation confirms that repository operations are lock-prot
 
 - [Borg general options and locking](https://borgbackup.readthedocs.io/en/stable/usage/general.html)
 - [Borg prune](https://borgbackup.readthedocs.io/en/stable/usage/prune.html)
+- [Borg filtered archive listing](https://borgbackup.readthedocs.io/en/stable/usage/list.html)
 - [Borg separate compaction](https://borgbackup.readthedocs.io/en/stable/usage/notes.html#separate-compaction)
+- [Prometheus node_exporter textfile collector](https://github.com/prometheus/node_exporter#textfile-collector)
 
 ## Alternatives
 
@@ -31,7 +33,9 @@ STARFINITI_POSTGRES_BORG_REPO is a required externally configured repository sel
 
 The archive script completes the restricted incremental rsync before acquiring the dedicated repository lock. Staging therefore remains fresh during a bounded retention operation; only borg create is serialized. Contention waits at most 120 seconds and exits 75 without claiming an archive.
 
-Daily maintenance first requires a fresh successful archive, then runs a bounded partial repository-structure check, keeps every loyalty-postgres-* archive within the latest 48 hours before 35 daily and 12 monthly archives, and runs borg compact. The local maintenance-lock wait is at most 10 seconds and every remote operation is independently interrupted after at most 15 seconds; the systemd unit adds a 90-second whole-service ceiling and a 10-second termination ceiling. Borg's transactional commit behavior makes an interrupted prune or compact fail without committing a partial mutation. A timeout is a visible maintenance failure, not permission to continue or claim retention success. --keep-within 48h is intentional: the former --keep-hourly 48 policy could thin a successful three-minute archive stream to one copy per hour and invalidate the off-host recovery objective after pruning. A bounded partial check is a precondition for automated destructive retention; a complete repository/index check, full data verification, and an isolated restore remain separate mandatory evidence.
+Daily maintenance first requires a fresh successful archive, then runs a bounded partial repository-structure check, keeps every loyalty-postgres-* archive within the latest 48 hours before 35 daily and 12 monthly archives, lists the post-prune canonical archive names, and runs borg compact only when the measured maximum recent interval is at most 300 seconds. Names must match the exact UTC timestamp grammar; the inventory is capped at 2,000 entries and rejects duplicate, future, missing, or unmeasurable intervals. The local maintenance-lock wait is at most 10 seconds and every remote operation is independently interrupted after at most 15 seconds; the additional list proof raises the systemd whole-service ceiling to 105 seconds while retaining a 10-second termination ceiling. Borg's transactional commit behavior makes an interrupted prune or compact fail without committing a partial mutation. A timeout is a visible maintenance failure, not permission to continue or claim retention success. --keep-within 48h is intentional: the former --keep-hourly 48 policy could thin a successful three-minute archive stream to one copy per hour and invalidate the off-host recovery objective after pruning. A bounded partial check is a precondition for automated destructive retention; a complete repository/index check, full data verification, and an isolated restore remain separate mandatory evidence.
+
+The archive and maintenance jobs publish seven aggregate machine-bound gauges through node_exporter's textfile collector using temporary files and same-directory rename. Archive completion time and completed-attempt status, canonical repository-isolation status, maintenance completion/status, retained recent count, and maximum retained interval contain only the bounded environment and service labels. Owner-only numeric state preserves the last successful values across a failed attempt; failure updates the completed-attempt gauge without rewriting the last-success timestamp, so stale and failed states remain distinguishable. Missing series are alert failures. Repository IDs, selectors, paths, archive names, backup contents, credentials, and value/customer data never enter metrics. Publishing telemetry does not authorize or synchronously gate checkout, ledger, refund, redemption, archive creation, or restore; an archive that succeeds but cannot publish evidence remains present while the service reports failure for operator attention.
 
 The new repository is never initialized automatically. An approved operator must create it with reviewed encryption and remote access, escrow/export its recovery material, run a dry-run retention review, and prove create/list/dry-run-extract/restore behavior. Existing PostgreSQL archives in the shared repository remain retained until the dedicated repository has passed its first verified archive, maintenance, timer, and isolated restore evidence.
 
@@ -40,8 +44,8 @@ The new repository is never initialized automatically. An approved operator must
 - The database VM still has only a forced read-only rsync identity and receives no Borg credential.
 - The Proxmox root-owned environment may retain the same Borg transport/passcommand, but repository identity, local lock, cache, security state, retention, and restore evidence are distinct.
 - Whole-VM duration can no longer suppress PostgreSQL archive creation.
-- Repository reuse, missing configuration, unbounded lock waits or maintenance commands, silent contention, full-tree stdin streaming, hourly thinning of recent archives, and maintenance without compaction fail deterministic validation.
-- A dedicated repository removes one contention domain; it does not prove provider independence, archive freshness monitoring, restore correctness, or the M15 clean-room gate.
+- Repository reuse, missing configuration, unbounded lock waits or maintenance commands, silent contention, full-tree stdin streaming, hourly thinning of recent archives, unsafe archive-name inventories, intervals above 300 seconds, non-atomic metrics, and maintenance without compaction fail deterministic validation.
+- A dedicated repository and repository-level metrics remove one contention/visibility domain; they do not prove provider independence, production monitoring activation, restore correctness, or the M15 clean-room gate.
 
 ## Rollout and verification
 
@@ -49,13 +53,13 @@ Production rollout requires an approved immutable release and recovery window:
 
 1. Create the dedicated encrypted repository and separately escrow its key/recovery material without printing it.
 2. Record both canonical repository IDs in the owner-only configuration and prove both IDs and selectors differ.
-3. Disable the legacy PostgreSQL prune timer, install the reviewed archive and maintenance scripts plus their isolated/conflicting systemd units, then run systemd-analyze verify.
+3. Disable the legacy PostgreSQL prune timer, install the reviewed archive and maintenance scripts plus their isolated/conflicting systemd units, configure node_exporter's textfile collector for the reviewed directory, then run systemd-analyze verify.
 4. Keep the timers disabled while a manual archive, exact list, dry-run extract, and retention dry run pass.
 5. Hold the whole-VM lock and prove a manual PostgreSQL archive still succeeds; hold the dedicated lock and prove the archive and maintenance commands exit 75 without invoking Borg.
-6. Enable the archive timer, require a timer-created archive inside five minutes, then trigger the bounded maintenance unit. Prove its required fresh archive precedes the maintenance lock, no archive-age interval breaches the target, the latest archive and every archive inside the 48-hour window remain, and a timeout fails visibly without a partial retention commit.
+6. Enable the archive timer, require a timer-created archive inside five minutes, then trigger the bounded maintenance unit. Prove its required fresh archive precedes the maintenance lock, all seven aggregate series are independently scraped, missing/zero/over-bound fixtures fire the exact protected alerts, no archive-age interval breaches the target, the latest archive and every archive inside the 48-hour window remain, and a timeout fails visibly without a partial retention commit.
 7. Perform an isolated restore from the dedicated repository and reconcile base/WAL continuity before retiring any shared-repository PostgreSQL history.
 
-Repository tests use mock rsync/Borg commands to prove successful dedicated routing, missing configuration, selector reuse and canonical-ID reuse refusal, staging-before-lock order, contention status, bounded check/prune/compact order, legacy-timer conflict, and no whole-VM lock acquisition. No production repository, script, timer, lock, archive, credential, or value changed when this ADR was accepted.
+Repository tests use mock rsync/Borg commands to prove successful dedicated routing, missing configuration, selector reuse and canonical-ID reuse refusal, staging-before-lock order, contention status, bounded check/prune/list/compact order, atomic minimized metrics, a visible over-bound retained interval, legacy-timer conflict, and no whole-VM lock acquisition. No production repository, script, timer, lock, archive, credential, monitoring service, or value changed when this ADR was accepted.
 
 ## Rollback
 

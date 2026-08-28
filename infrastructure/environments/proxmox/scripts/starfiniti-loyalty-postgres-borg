@@ -43,6 +43,13 @@ readonly stage_root="${STARFINITI_POSTGRES_STAGE_ROOT:-/var/lib/starfiniti-postg
 readonly lock_file="${STARFINITI_POSTGRES_BORG_LOCK_FILE:-/run/lock/starfiniti-loyalty-postgres-borg.lock}"
 readonly lock_wait_seconds="${STARFINITI_POSTGRES_BORG_LOCK_WAIT_SECONDS:-120}"
 readonly whole_vm_lock_file="/run/lock/starfiniti-pve-borg.lock"
+readonly monitoring_environment="${STARFINITI_MONITORING_ENVIRONMENT:-production}"
+readonly metrics_dir="${STARFINITI_POSTGRES_BORG_METRICS_DIR:-/var/lib/node_exporter/textfile_collector}"
+readonly metrics_state_dir="${STARFINITI_POSTGRES_BORG_METRICS_STATE_DIR:-/var/lib/starfiniti-postgres-borg/metrics-state}"
+readonly archive_metrics_file="$metrics_dir/starfiniti-postgres-borg-archive.prom"
+readonly repository_metrics_file="$metrics_dir/starfiniti-postgres-borg-repository.prom"
+readonly archive_success_state="$metrics_state_dir/archive-last-success"
+readonly repository_isolated_state="$metrics_state_dir/repository-isolated"
 
 [[ "$lock_file" != "$whole_vm_lock_file" ]] ||
   fail "PostgreSQL backup must not use the whole-VM repository lock"
@@ -51,9 +58,109 @@ readonly whole_vm_lock_file="/run/lock/starfiniti-pve-borg.lock"
   ((lock_wait_seconds <= 120)) ||
   fail "lock wait must be an integer from 1 through 120 seconds"
 
-for command_name in borg flock install jq rsync; do
+[[ "$monitoring_environment" =~ ^[a-z][a-z0-9-]{1,31}$ ]] ||
+  fail "monitoring environment must be a bounded lowercase label"
+
+for command_name in borg chmod flock install jq mktemp mv rsync; do
   command -v "$command_name" >/dev/null 2>&1 || fail "required command is missing: $command_name"
 done
+
+prepare_metrics_storage() {
+  if [[ -L "$metrics_dir" || ( -e "$metrics_dir" && ! -d "$metrics_dir" ) ]]; then
+    return 1
+  fi
+  if [[ ! -d "$metrics_dir" ]]; then
+    install -d -m 0755 "$metrics_dir" || return 1
+  fi
+  [[ -w "$metrics_dir" && -x "$metrics_dir" ]] || return 1
+
+  if [[ -L "$metrics_state_dir" || ( -e "$metrics_state_dir" && ! -d "$metrics_state_dir" ) ]]; then
+    return 1
+  fi
+  install -d -m 0700 "$metrics_state_dir"
+}
+
+metrics_ready=1
+if ! prepare_metrics_storage; then
+  metrics_ready=0
+  printf 'starfiniti-loyalty-postgres-borg: metrics storage unavailable; archive will continue and the completed unit will fail evidence publication\n' >&2
+fi
+
+read_numeric_state() {
+  local state_file="$1"
+  local fallback="$2"
+  local value
+
+  if [[ -r "$state_file" ]]; then
+    IFS= read -r value <"$state_file" || value=""
+    if [[ "$value" =~ ^[0-9]{1,19}$ ]]; then
+      printf '%s\n' "$value"
+      return
+    fi
+  fi
+  printf '%s\n' "$fallback"
+}
+
+write_numeric_state() {
+  local state_file="$1"
+  local value="$2"
+  local temporary
+
+  temporary="$(mktemp "${state_file}.tmp.XXXXXX")"
+  printf '%s\n' "$value" >"$temporary"
+  mv -f "$temporary" "$state_file"
+}
+
+publish_archive_metrics() {
+  local attempt_success="$1"
+  local completed_at="$2"
+  local temporary
+
+  temporary="$(mktemp "${archive_metrics_file}.tmp.XXXXXX")"
+  {
+    printf '# HELP starfiniti_postgres_offsite_archive_unixtime_seconds Unix time of the last completed dedicated PostgreSQL Borg archive.\n'
+    printf '# TYPE starfiniti_postgres_offsite_archive_unixtime_seconds gauge\n'
+    printf 'starfiniti_postgres_offsite_archive_unixtime_seconds{environment="%s",service="starfiniti-loyalty"} %s\n' "$monitoring_environment" "$completed_at"
+    printf '# HELP starfiniti_postgres_offsite_archive_last_attempt_success Whether the last completed dedicated PostgreSQL Borg archive attempt succeeded.\n'
+    printf '# TYPE starfiniti_postgres_offsite_archive_last_attempt_success gauge\n'
+    printf 'starfiniti_postgres_offsite_archive_last_attempt_success{environment="%s",service="starfiniti-loyalty"} %s\n' "$monitoring_environment" "$attempt_success"
+  } >"$temporary"
+  chmod 0644 "$temporary"
+  mv -f "$temporary" "$archive_metrics_file"
+}
+
+publish_repository_metric() {
+  local isolated="$1"
+  local temporary
+
+  temporary="$(mktemp "${repository_metrics_file}.tmp.XXXXXX")"
+  {
+    printf '# HELP starfiniti_postgres_borg_repository_isolated Whether the configured and actual PostgreSQL Borg repository is distinct from the whole-VM repository.\n'
+    printf '# TYPE starfiniti_postgres_borg_repository_isolated gauge\n'
+    printf 'starfiniti_postgres_borg_repository_isolated{environment="%s",service="starfiniti-loyalty"} %s\n' "$monitoring_environment" "$isolated"
+  } >"$temporary"
+  chmod 0644 "$temporary"
+  mv -f "$temporary" "$repository_metrics_file"
+}
+
+archive_last_success=0
+repository_isolated=0
+if ((metrics_ready)); then
+  archive_last_success="$(read_numeric_state "$archive_success_state" 0)"
+  repository_isolated="$(read_numeric_state "$repository_isolated_state" 0)"
+fi
+
+record_failed_attempt() {
+  local status=$?
+
+  if ((status != 0 && metrics_ready)); then
+    publish_archive_metrics 0 "$archive_last_success" ||
+      printf 'starfiniti-loyalty-postgres-borg: failed to publish failed-attempt metrics\n' >&2
+  fi
+  return "$status"
+}
+
+trap record_failed_attempt EXIT
 
 verify_repository_identity() {
   local actual_repository_id
@@ -67,8 +174,24 @@ verify_repository_identity() {
       jq -er '.repository.id | select(type == "string" and test("^[0-9a-f]{64}$"))'
   )" || fail "dedicated PostgreSQL Borg repository identity could not be verified"
 
-  [[ "$actual_repository_id" == "$STARFINITI_POSTGRES_BORG_REPOSITORY_ID" ]] ||
+  if [[ "$actual_repository_id" != "$STARFINITI_POSTGRES_BORG_REPOSITORY_ID" ]]; then
+    repository_isolated=0
+    if ((metrics_ready)); then
+      write_numeric_state "$repository_isolated_state" "$repository_isolated" &&
+        publish_repository_metric "$repository_isolated" ||
+        printf 'starfiniti-loyalty-postgres-borg: failed to publish repository-isolation failure\n' >&2
+    fi
     fail "dedicated PostgreSQL Borg repository identity does not match approved configuration"
+  fi
+
+  repository_isolated=1
+  if ((metrics_ready)); then
+    if ! write_numeric_state "$repository_isolated_state" "$repository_isolated" ||
+      ! publish_repository_metric "$repository_isolated"; then
+      metrics_ready=0
+      printf 'starfiniti-loyalty-postgres-borg: repository isolation verified but evidence publication failed\n' >&2
+    fi
+  fi
 }
 
 install -d -m 0700 "$stage_root"
@@ -126,4 +249,14 @@ ionice -c2 -n7 nice -n 10 borg create \
   "${BORG_REPO}::${archive}" \
   "$stage_root"
 
+archive_last_success="$(date -u +%s)"
+metrics_published=0
+if ((metrics_ready)) &&
+  write_numeric_state "$archive_success_state" "$archive_last_success" &&
+  publish_archive_metrics 1 "$archive_last_success"; then
+  metrics_published=1
+fi
+trap - EXIT
+
 printf 'starfiniti-loyalty-postgres-borg: created %s\n' "$archive"
+((metrics_published)) || fail "archive exists but observability evidence was not published"

@@ -223,6 +223,74 @@ groups:
             dashboard: starfiniti-operations,
             summary: A backup cycle transfers over four times changed bytes and more than one GiB.,
           }
+      - alert: StarfinitiOffsiteArchiveRpoBreached
+        expr: absent(starfiniti_postgres_offsite_archive_unixtime_seconds{environment="production"}) or absent(starfiniti_postgres_offsite_archive_last_attempt_success{environment="production"}) or time() - max by (environment, service) (starfiniti_postgres_offsite_archive_unixtime_seconds{environment="production"}) > 300 or min by (environment, service) (starfiniti_postgres_offsite_archive_last_attempt_success{environment="production"}) < 1
+        for: 0s
+        keep_firing_for: 30m
+        labels:
+          {
+            severity: critical,
+            owner: recovery-on-call,
+            route: protected-value-page,
+            service: starfiniti-loyalty,
+          }
+        annotations:
+          {
+            runbook: OPS-007,
+            dashboard: starfiniti-operations,
+            summary: The dedicated off-site PostgreSQL archive is absent stale or its last attempt failed.,
+          }
+      - alert: StarfinitiPostgresBorgRepositoryIsolationLost
+        expr: absent(starfiniti_postgres_borg_repository_isolated{environment="production"}) or min by (environment, service) (starfiniti_postgres_borg_repository_isolated{environment="production"}) < 1
+        for: 0s
+        keep_firing_for: 30m
+        labels:
+          {
+            severity: critical,
+            owner: recovery-on-call,
+            route: protected-value-page,
+            service: starfiniti-loyalty,
+          }
+        annotations:
+          {
+            runbook: OPS-007,
+            dashboard: starfiniti-operations,
+            summary: PostgreSQL backup repository isolation is absent or actual identity verification failed.,
+          }
+      - alert: StarfinitiPostgresBorgRetentionGap
+        expr: absent(starfiniti_postgres_borg_maintenance_last_attempt_success{environment="production"}) or absent(starfiniti_postgres_borg_recent_archive_max_interval_seconds{environment="production"}) or absent(starfiniti_postgres_borg_recent_archive_count{environment="production"}) or min by (environment, service) (starfiniti_postgres_borg_maintenance_last_attempt_success{environment="production"}) < 1 or max by (environment, service) (starfiniti_postgres_borg_recent_archive_max_interval_seconds{environment="production"}) > 300 or min by (environment, service) (starfiniti_postgres_borg_recent_archive_count{environment="production"}) < 1
+        for: 0s
+        keep_firing_for: 30m
+        labels:
+          {
+            severity: critical,
+            owner: recovery-on-call,
+            route: protected-value-page,
+            service: starfiniti-loyalty,
+          }
+        annotations:
+          {
+            runbook: OPS-007,
+            dashboard: starfiniti-operations,
+            summary: Dedicated PostgreSQL retention failed or left a recent recovery interval above five minutes.,
+          }
+      - alert: StarfinitiPostgresBorgMaintenanceStale
+        expr: absent(starfiniti_postgres_borg_maintenance_unixtime_seconds{environment="production"}) or time() - max by (environment, service) (starfiniti_postgres_borg_maintenance_unixtime_seconds{environment="production"}) > 108000
+        for: 5m
+        keep_firing_for: 30m
+        labels:
+          {
+            severity: high,
+            owner: recovery-on-call,
+            route: platform-page,
+            service: starfiniti-loyalty,
+          }
+        annotations:
+          {
+            runbook: OPS-007,
+            dashboard: starfiniti-operations,
+            summary: Dedicated PostgreSQL Borg maintenance has no successful evidence within thirty hours.,
+          }
       - alert: StarfinitiLedgerDifference
         expr: max by (environment, service) (starfiniti_ledger_unexplained_difference_count) > 0
         for: 0s

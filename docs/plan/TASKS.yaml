@@ -3252,6 +3252,9 @@ tasks:
             infrastructure/observability/routing-policy.yaml,
             infrastructure/observability/grafana/provisioning/starfiniti-dashboards/starfiniti-operations.json,
             docs/architecture/ADR/0066-bounded-observability-and-independent-incident-evidence.md,
+            docs/architecture/ADR/0071-dedicated-postgresql-borg-repository.md,
+            infrastructure/environments/proxmox/scripts/starfiniti-loyalty-postgres-borg,
+            infrastructure/environments/proxmox/scripts/starfiniti-loyalty-postgres-borg-maintain,
             docs/operations/INCIDENT_MANAGEMENT.md,
             docs/operations/RUNBOOKS.md,
           ]

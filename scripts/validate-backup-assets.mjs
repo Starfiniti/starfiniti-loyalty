@@ -228,7 +228,7 @@ assert.match(
 );
 assert.match(
   borg,
-  /borg info \\\n      --remote-path "\$BORG_REMOTE_PATH" \\\n      --json \\\n      --lock-wait "\$lock_wait_seconds"[\s\S]*jq -er '\.repository\.id \| select\(type == "string" and test\("\^\[0-9a-f\]\{64\}\$"\)\)'[\s\S]*\[\[ "\$actual_repository_id" == "\$STARFINITI_POSTGRES_BORG_REPOSITORY_ID" \]\]/u,
+  /borg info \\\n      --remote-path "\$BORG_REMOTE_PATH" \\\n      --json \\\n      --lock-wait "\$lock_wait_seconds"[\s\S]*jq -er '\.repository\.id \| select\(type == "string" and test\("\^\[0-9a-f\]\{64\}\$"\)\)'[\s\S]*if \[\[ "\$actual_repository_id" != "\$STARFINITI_POSTGRES_BORG_REPOSITORY_ID" \]\]/u,
   "host backup must compare the actual remote Borg identity with approved configuration",
 );
 assert.match(
@@ -246,6 +246,26 @@ assert.match(
   /OnUnitInactiveSec=3m/u,
   "incremental archive cadence must retain the five-minute RPO target",
 );
+assert.match(
+  borg,
+  /starfiniti_postgres_offsite_archive_unixtime_seconds[\s\S]*starfiniti_postgres_offsite_archive_last_attempt_success[\s\S]*chmod 0644 "\$temporary"[\s\S]*mv -f "\$temporary" "\$archive_metrics_file"/u,
+  "archive completion and failed-attempt metrics must publish atomically for node_exporter",
+);
+assert.match(
+  borg,
+  /starfiniti_postgres_borg_repository_isolated[\s\S]*write_numeric_state "\$repository_isolated_state" "\$repository_isolated"[\s\S]*publish_repository_metric "\$repository_isolated"/u,
+  "actual dedicated-repository verification must publish a bounded isolation signal",
+);
+assert.match(
+  borg,
+  /\[\[ "\$monitoring_environment" =~ \^\[a-z\]\[a-z0-9-\]\{1,31\}\$ \]\]/u,
+  "backup metric environment labels must reject unbounded or injected values",
+);
+assert.doesNotMatch(
+  borg,
+  /repository\.id.*printf|BORG_REPO.*starfiniti_postgres_|archive.*starfiniti_postgres_/u,
+  "backup metrics must not expose repository IDs paths or archive names",
+);
 
 assert.match(
   maintenance,
@@ -259,7 +279,7 @@ assert.match(
 );
 assert.match(
   maintenance,
-  /run_borg_bounded info[\s\S]*--json[\s\S]*jq -er '\.repository\.id \| select\(type == "string" and test\("\^\[0-9a-f\]\{64\}\$"\)\)'[\s\S]*\[\[ "\$actual_repository_id" == "\$STARFINITI_POSTGRES_BORG_REPOSITORY_ID" \]\]/u,
+  /run_borg_bounded info[\s\S]*--json[\s\S]*jq -er '\.repository\.id \| select\(type == "string" and test\("\^\[0-9a-f\]\{64\}\$"\)\)'[\s\S]*if \[\[ "\$actual_repository_id" != "\$STARFINITI_POSTGRES_BORG_REPOSITORY_ID" \]\]/u,
   "maintenance must verify the actual remote repository identity before pruning",
 );
 assert.doesNotMatch(
@@ -289,7 +309,7 @@ assert.match(
 );
 assert.doesNotMatch(
   maintenance,
-  /\n(?:borg info|borg check|borg prune|borg compact) /u,
+  /\n(?:borg info|borg check|borg prune|borg list|borg compact) /u,
   "maintenance must not bypass its bounded Borg command wrapper",
 );
 assert.match(
@@ -303,8 +323,23 @@ assert.match(
   "Borg 1.2+ retention must compact pruned repository segments",
 );
 assert.match(
+  maintenance,
+  /run_borg_bounded list \\\n      --remote-path "\$BORG_REMOTE_PATH" \\\n      --lock-wait "\$lock_wait_seconds" \\\n      --glob-archives 'loyalty-postgres-\*' \\\n      --sort-by timestamp \\\n      --format '\{archive\}\{NL\}'/u,
+  "maintenance must list only canonical dedicated PostgreSQL archives after pruning",
+);
+assert.match(
+  maintenance,
+  /recent_window_seconds=172800[\s\S]*maximum_recovery_interval_seconds=300[\s\S]*archive inventory exceeds bound[\s\S]*duplicate recovery timestamp[\s\S]*future recovery timestamp[\s\S]*recent_max_interval > maximum_recovery_interval_seconds/u,
+  "retention evidence must be bounded canonical current unique and fail above the five-minute target",
+);
+assert.match(
+  maintenance,
+  /starfiniti_postgres_borg_maintenance_unixtime_seconds[\s\S]*starfiniti_postgres_borg_maintenance_last_attempt_success[\s\S]*starfiniti_postgres_borg_recent_archive_max_interval_seconds[\s\S]*starfiniti_postgres_borg_recent_archive_count/u,
+  "maintenance must publish freshness outcome interval and retained-count evidence",
+);
+assert.match(
   maintenanceService,
-  /Requires=starfiniti-loyalty-postgres-borg\.service[\s\S]*After=.*starfiniti-loyalty-postgres-borg\.service[\s\S]*Conflicts=starfiniti-loyalty-postgres-borg-prune\.service[\s\S]*ExecStart=\/usr\/local\/sbin\/starfiniti-loyalty-postgres-borg-maintain[\s\S]*CacheDirectory=starfiniti-postgres-borg[\s\S]*StateDirectory=starfiniti-postgres-borg[\s\S]*TimeoutStartSec=90s[\s\S]*TimeoutStopSec=10s[\s\S]*KillSignal=SIGINT/u,
+  /Requires=starfiniti-loyalty-postgres-borg\.service[\s\S]*After=.*starfiniti-loyalty-postgres-borg\.service[\s\S]*Conflicts=starfiniti-loyalty-postgres-borg-prune\.service[\s\S]*ExecStart=\/usr\/local\/sbin\/starfiniti-loyalty-postgres-borg-maintain[\s\S]*CacheDirectory=starfiniti-postgres-borg[\s\S]*StateDirectory=starfiniti-postgres-borg[\s\S]*TimeoutStartSec=105s[\s\S]*TimeoutStopSec=10s[\s\S]*KillSignal=SIGINT/u,
   "maintenance must require a fresh archive, conflict with legacy pruning, share only dedicated PostgreSQL state, and retain a hard service deadline",
 );
 assert.match(
@@ -352,6 +387,9 @@ if (process.platform !== "win32") {
   const stagePath = join(testRoot, "stage");
   const lockPath = join(testRoot, "postgres.lock");
   const tracePath = join(testRoot, "trace");
+  const metricsPath = join(testRoot, "metrics");
+  const metricsStatePath = join(testRoot, "metrics-state");
+  const unavailableMetricsPath = join(testRoot, "metrics-unavailable");
   const borgScriptPath = fileURLToPath(
     new URL("starfiniti-loyalty-postgres-borg", assetRoot),
   );
@@ -373,6 +411,7 @@ if (process.platform !== "win32") {
 
   try {
     await mkdir(mockBin, { recursive: true });
+    await writeFile(unavailableMetricsPath, "not a directory\n", "utf8");
     await writeFile(
       configPath,
       [
@@ -452,6 +491,10 @@ if (process.platform !== "win32") {
         "  exit 0",
         "fi",
         'printf \'borg|%s|%s\\n\' "$BORG_REPO" "$*" >>"$STARFINITI_TEST_TRACE"',
+        'if [[ "${1:-}" == "list" ]]; then',
+        "  printf '%s\\n' \"$STARFINITI_TEST_BORG_ARCHIVE_NAMES\"",
+        "  exit 0",
+        "fi",
         'if [[ "${1:-}" == "prune" && -n "${STARFINITI_TEST_BORG_PRUNE_SLEEP_SECONDS:-}" ]]; then',
         '  exec sleep "$STARFINITI_TEST_BORG_PRUNE_SLEEP_SECONDS"',
         "fi",
@@ -461,6 +504,23 @@ if (process.platform !== "win32") {
         "",
       ].join("\n"),
     );
+
+    const archiveNameAt = (epochSeconds) =>
+      "loyalty-postgres-" +
+      new Date(epochSeconds * 1000)
+        .toISOString()
+        .replaceAll("-", "")
+        .replaceAll(":", "")
+        .replace(".000", "");
+    const fixtureNow = Math.floor(Date.now() / 1000) - 5;
+    const validArchiveNames = [
+      archiveNameAt(fixtureNow - 240),
+      archiveNameAt(fixtureNow),
+    ].join("\n");
+    const gappedArchiveNames = [
+      archiveNameAt(fixtureNow - 600),
+      archiveNameAt(fixtureNow),
+    ].join("\n");
 
     const runEnvironment = {
       ...process.env,
@@ -472,6 +532,10 @@ if (process.platform !== "win32") {
       STARFINITI_POSTGRES_BORG_MAINTENANCE_COMMAND_TIMEOUT_SECONDS: "2",
       STARFINITI_POSTGRES_BORG_CHECK_MAX_DURATION_SECONDS: "1",
       STARFINITI_POSTGRES_STAGE_ROOT: stagePath,
+      STARFINITI_POSTGRES_BORG_METRICS_DIR: metricsPath,
+      STARFINITI_POSTGRES_BORG_METRICS_STATE_DIR: metricsStatePath,
+      STARFINITI_MONITORING_ENVIRONMENT: "production",
+      STARFINITI_TEST_BORG_ARCHIVE_NAMES: validArchiveNames,
       STARFINITI_TEST_TRACE: tracePath,
     };
 
@@ -497,6 +561,65 @@ if (process.platform !== "win32") {
       successTrace[1] ?? "",
       /^borg\|ssh:\/\/backup\.invalid\/\.\/loyalty-postgres\|create --remote-path borg-1\.4 --lock-wait 1 --compression zstd,3 --files-cache ctime,size,inode --one-file-system --show-rc --stats ssh:\/\/backup\.invalid\/\.\/loyalty-postgres::loyalty-postgres-[0-9]{8}T[0-9]{6}Z /u,
       "backup must write only to the dedicated repository",
+    );
+    const archiveMetrics = await readFile(
+      join(metricsPath, "starfiniti-postgres-borg-archive.prom"),
+      "utf8",
+    );
+    assert.match(
+      archiveMetrics,
+      /starfiniti_postgres_offsite_archive_unixtime_seconds\{environment="production",service="starfiniti-loyalty"\} [1-9][0-9]*/u,
+      "successful backup must publish a nonzero completion timestamp",
+    );
+    assert.match(
+      archiveMetrics,
+      /starfiniti_postgres_offsite_archive_last_attempt_success\{environment="production",service="starfiniti-loyalty"\} 1/u,
+      "successful backup must publish its completed-attempt outcome",
+    );
+    assert.doesNotMatch(
+      archiveMetrics,
+      /ssh:|loyalty-postgres-[0-9]|[0-9a-f]{64}|BORG_REPO|archive\.invalid/iu,
+      "archive metrics must not expose repository selectors IDs or archive names",
+    );
+    assert.match(
+      await readFile(
+        join(metricsPath, "starfiniti-postgres-borg-repository.prom"),
+        "utf8",
+      ),
+      /starfiniti_postgres_borg_repository_isolated\{environment="production",service="starfiniti-loyalty"\} 1/u,
+      "successful identity verification must publish repository isolation",
+    );
+
+    await writeFile(tracePath, "", "utf8");
+    const metricsUnavailable = spawnSync("bash", [borgScriptPath], {
+      encoding: "utf8",
+      env: {
+        ...runEnvironment,
+        STARFINITI_POSTGRES_BORG_METRICS_DIR: unavailableMetricsPath,
+      },
+    });
+    assert.notEqual(
+      metricsUnavailable.status,
+      0,
+      "archive without evidence publication must keep the unit non-passing",
+    );
+    const metricsUnavailableTrace = (await readFile(tracePath, "utf8"))
+      .trim()
+      .split("\n");
+    assert.equal(
+      metricsUnavailableTrace.length,
+      2,
+      "metrics storage failure must not prevent staging and archive creation",
+    );
+    assert.equal(
+      metricsUnavailableTrace[0],
+      "rsync",
+      "metrics storage failure must preserve staging order",
+    );
+    assert.match(
+      metricsUnavailableTrace[1] ?? "",
+      /\|create /u,
+      "metrics storage failure must leave the created archive attributable",
     );
 
     await writeFile(tracePath, "", "utf8");
@@ -539,6 +662,25 @@ if (process.platform !== "win32") {
     }
 
     await writeFile(tracePath, "", "utf8");
+    const injectedMonitoringLabel = spawnSync("bash", [borgScriptPath], {
+      encoding: "utf8",
+      env: {
+        ...runEnvironment,
+        STARFINITI_MONITORING_ENVIRONMENT: 'production",tenant="injected',
+      },
+    });
+    assert.notEqual(
+      injectedMonitoringLabel.status,
+      0,
+      "metric label injection must fail closed",
+    );
+    assert.equal(
+      await readFile(tracePath, "utf8"),
+      "",
+      "invalid metric labels must fail before staging or Borg",
+    );
+
+    await writeFile(tracePath, "", "utf8");
     const reusedLock = spawnSync("bash", [borgScriptPath], {
       encoding: "utf8",
       env: {
@@ -576,6 +718,14 @@ if (process.platform !== "win32") {
       (await readFile(tracePath, "utf8")).trim().split("\n"),
       ["rsync"],
       "identity mismatch may refresh staging but must not create an archive",
+    );
+    assert.match(
+      await readFile(
+        join(metricsPath, "starfiniti-postgres-borg-repository.prom"),
+        "utf8",
+      ),
+      /starfiniti_postgres_borg_repository_isolated\{environment="production",service="starfiniti-loyalty"\} 0/u,
+      "actual repository mismatch must publish a failed isolation state",
     );
 
     await writeFile(tracePath, "", "utf8");
@@ -618,8 +768,8 @@ if (process.platform !== "win32") {
       .split("\n");
     assert.equal(
       maintenanceTrace.length,
-      3,
-      "maintenance must run exactly check then prune then compact",
+      4,
+      "maintenance must run exactly check then prune then retention measurement then compact",
     );
     assert.match(
       maintenanceTrace[0] ?? "",
@@ -633,8 +783,67 @@ if (process.platform !== "win32") {
     );
     assert.match(
       maintenanceTrace[2] ?? "",
+      /^borg\|ssh:\/\/backup\.invalid\/\.\/loyalty-postgres\|list .*--glob-archives loyalty-postgres-\* --sort-by timestamp --format \{archive\}\{NL\}/u,
+      "maintenance must measure only the retained dedicated recovery timeline",
+    );
+    assert.match(
+      maintenanceTrace[3] ?? "",
       /^borg\|ssh:\/\/backup\.invalid\/\.\/loyalty-postgres\|compact /u,
       "maintenance must compact only the dedicated repository",
+    );
+    const maintenanceMetrics = await readFile(
+      join(metricsPath, "starfiniti-postgres-borg-maintenance.prom"),
+      "utf8",
+    );
+    assert.match(
+      maintenanceMetrics,
+      /starfiniti_postgres_borg_maintenance_last_attempt_success\{environment="production",service="starfiniti-loyalty"\} 1/u,
+      "successful maintenance must publish its completed-attempt outcome",
+    );
+    assert.match(
+      maintenanceMetrics,
+      /starfiniti_postgres_borg_recent_archive_max_interval_seconds\{environment="production",service="starfiniti-loyalty"\} 240/u,
+      "successful maintenance must publish the retained maximum interval",
+    );
+    assert.match(
+      maintenanceMetrics,
+      /starfiniti_postgres_borg_recent_archive_count\{environment="production",service="starfiniti-loyalty"\} 2/u,
+      "successful maintenance must publish the retained recent count",
+    );
+    assert.doesNotMatch(
+      maintenanceMetrics,
+      /ssh:|loyalty-postgres-[0-9]|[0-9a-f]{64}|BORG_REPO|archive\.invalid/iu,
+      "maintenance metrics must not expose repository selectors IDs or archive names",
+    );
+
+    await writeFile(tracePath, "", "utf8");
+    const excessiveInterval = spawnSync("bash", [maintenanceScriptPath], {
+      encoding: "utf8",
+      env: {
+        ...runEnvironment,
+        STARFINITI_TEST_BORG_ARCHIVE_NAMES: gappedArchiveNames,
+      },
+    });
+    assert.notEqual(
+      excessiveInterval.status,
+      0,
+      "retained recovery interval above five minutes must fail closed",
+    );
+    const excessiveIntervalTrace = (await readFile(tracePath, "utf8"))
+      .trim()
+      .split("\n");
+    assert.equal(
+      excessiveIntervalTrace.length,
+      3,
+      "retention gap must stop before compaction",
+    );
+    assert.match(
+      await readFile(
+        join(metricsPath, "starfiniti-postgres-borg-maintenance.prom"),
+        "utf8",
+      ),
+      /starfiniti_postgres_borg_recent_archive_max_interval_seconds\{environment="production",service="starfiniti-loyalty"\} 600/u,
+      "failed retention evidence must publish the measured unsafe interval",
     );
 
     await writeFile(tracePath, "", "utf8");

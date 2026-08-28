@@ -79,7 +79,7 @@ sources:
   - id: postgres-exporter
     boundary: Restricted aggregate database pool WAL storage and integrity observations.
   - id: backup-controller
-    boundary: Aggregate incremental-change transfer and completion observations without paths or contents.
+    boundary: Aggregate incremental-change transfer dedicated-repository archive retention and completion observations without paths names identifiers or contents.
   - id: host-exporter
     boundary: Aggregate VM host filesystem CPU memory and network observations.
   - id: security-evidence
@@ -172,6 +172,48 @@ signals:
     source: backup-controller
     type: gauge
     unit: bytes
+    requiredLabels: [environment, service]
+  - id: offsite_archive_timestamp
+    metric: starfiniti_postgres_offsite_archive_unixtime_seconds
+    source: backup-controller
+    type: gauge
+    unit: unix_seconds
+    requiredLabels: [environment, service]
+  - id: offsite_archive_attempt_success
+    metric: starfiniti_postgres_offsite_archive_last_attempt_success
+    source: backup-controller
+    type: gauge
+    unit: ratio
+    requiredLabels: [environment, service]
+  - id: borg_repository_isolated
+    metric: starfiniti_postgres_borg_repository_isolated
+    source: backup-controller
+    type: gauge
+    unit: ratio
+    requiredLabels: [environment, service]
+  - id: borg_maintenance_timestamp
+    metric: starfiniti_postgres_borg_maintenance_unixtime_seconds
+    source: backup-controller
+    type: gauge
+    unit: unix_seconds
+    requiredLabels: [environment, service]
+  - id: borg_maintenance_attempt_success
+    metric: starfiniti_postgres_borg_maintenance_last_attempt_success
+    source: backup-controller
+    type: gauge
+    unit: ratio
+    requiredLabels: [environment, service]
+  - id: borg_recent_max_interval
+    metric: starfiniti_postgres_borg_recent_archive_max_interval_seconds
+    source: backup-controller
+    type: gauge
+    unit: seconds
+    requiredLabels: [environment, service]
+  - id: borg_recent_archive_count
+    metric: starfiniti_postgres_borg_recent_archive_count
+    source: backup-controller
+    type: gauge
+    unit: items
     requiredLabels: [environment, service]
   - id: ledger_difference_count
     metric: starfiniti_ledger_unexplained_difference_count
@@ -377,6 +419,55 @@ alerts:
     keepFiringFor: 30m
     expression: starfiniti_backup_cycle_transfer_amplification_ratio > 4 and starfiniti_backup_cycle_transferred_bytes > 1073741824
     summary: A backup cycle transfers over four times changed bytes and more than one GiB.
+  - id: StarfinitiOffsiteArchiveRpoBreached
+    signalIds: [offsite_archive_timestamp, offsite_archive_attempt_success]
+    severity: critical
+    owner: recovery-on-call
+    route: protected-value-page
+    runbook: OPS-007
+    dashboard: starfiniti-operations
+    for: 0s
+    keepFiringFor: 30m
+    expression: absent(starfiniti_postgres_offsite_archive_unixtime_seconds{environment="production"}) or absent(starfiniti_postgres_offsite_archive_last_attempt_success{environment="production"}) or time() - max by (environment, service) (starfiniti_postgres_offsite_archive_unixtime_seconds{environment="production"}) > 300 or min by (environment, service) (starfiniti_postgres_offsite_archive_last_attempt_success{environment="production"}) < 1
+    summary: The dedicated off-site PostgreSQL archive is absent stale or its last attempt failed.
+  - id: StarfinitiPostgresBorgRepositoryIsolationLost
+    signalIds: [borg_repository_isolated]
+    severity: critical
+    owner: recovery-on-call
+    route: protected-value-page
+    runbook: OPS-007
+    dashboard: starfiniti-operations
+    for: 0s
+    keepFiringFor: 30m
+    expression: absent(starfiniti_postgres_borg_repository_isolated{environment="production"}) or min by (environment, service) (starfiniti_postgres_borg_repository_isolated{environment="production"}) < 1
+    summary: PostgreSQL backup repository isolation is absent or actual identity verification failed.
+  - id: StarfinitiPostgresBorgRetentionGap
+    signalIds:
+      [
+        borg_maintenance_attempt_success,
+        borg_recent_max_interval,
+        borg_recent_archive_count,
+      ]
+    severity: critical
+    owner: recovery-on-call
+    route: protected-value-page
+    runbook: OPS-007
+    dashboard: starfiniti-operations
+    for: 0s
+    keepFiringFor: 30m
+    expression: absent(starfiniti_postgres_borg_maintenance_last_attempt_success{environment="production"}) or absent(starfiniti_postgres_borg_recent_archive_max_interval_seconds{environment="production"}) or absent(starfiniti_postgres_borg_recent_archive_count{environment="production"}) or min by (environment, service) (starfiniti_postgres_borg_maintenance_last_attempt_success{environment="production"}) < 1 or max by (environment, service) (starfiniti_postgres_borg_recent_archive_max_interval_seconds{environment="production"}) > 300 or min by (environment, service) (starfiniti_postgres_borg_recent_archive_count{environment="production"}) < 1
+    summary: Dedicated PostgreSQL retention failed or left a recent recovery interval above five minutes.
+  - id: StarfinitiPostgresBorgMaintenanceStale
+    signalIds: [borg_maintenance_timestamp]
+    severity: high
+    owner: recovery-on-call
+    route: platform-page
+    runbook: OPS-007
+    dashboard: starfiniti-operations
+    for: 5m
+    keepFiringFor: 30m
+    expression: absent(starfiniti_postgres_borg_maintenance_unixtime_seconds{environment="production"}) or time() - max by (environment, service) (starfiniti_postgres_borg_maintenance_unixtime_seconds{environment="production"}) > 108000
+    summary: Dedicated PostgreSQL Borg maintenance has no successful evidence within thirty hours.
   - id: StarfinitiLedgerDifference
     signalIds: [ledger_difference_count]
     severity: critical

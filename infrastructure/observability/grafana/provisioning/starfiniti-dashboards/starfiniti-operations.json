@@ -549,6 +549,126 @@
       ],
       "title": "Evidence freshness",
       "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "starfiniti-prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 300 }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 21 },
+      "id": 12,
+      "options": {
+        "legend": {
+          "calcs": ["lastNotNull", "max"],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "expr": "time() - max by (environment, service) (starfiniti_postgres_offsite_archive_unixtime_seconds)",
+          "legendFormat": "off-site archive age",
+          "refId": "A"
+        },
+        {
+          "expr": "max by (environment, service) (starfiniti_postgres_borg_recent_archive_max_interval_seconds)",
+          "legendFormat": "retained maximum interval",
+          "refId": "B"
+        },
+        {
+          "expr": "time() - max by (environment, service) (starfiniti_postgres_borg_maintenance_unixtime_seconds)",
+          "legendFormat": "maintenance age",
+          "refId": "C"
+        }
+      ],
+      "title": "Dedicated PostgreSQL recovery timeline",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "starfiniti-prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 21 },
+      "id": 13,
+      "options": {
+        "legend": {
+          "calcs": ["lastNotNull"],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "expr": "min by (environment, service) (starfiniti_postgres_offsite_archive_last_attempt_success)",
+          "legendFormat": "archive attempt",
+          "refId": "A"
+        },
+        {
+          "expr": "min by (environment, service) (starfiniti_postgres_borg_repository_isolated)",
+          "legendFormat": "repository isolated",
+          "refId": "B"
+        },
+        {
+          "expr": "min by (environment, service) (starfiniti_postgres_borg_maintenance_last_attempt_success)",
+          "legendFormat": "maintenance attempt",
+          "refId": "C"
+        },
+        {
+          "expr": "min by (environment, service) (starfiniti_postgres_borg_recent_archive_count)",
+          "legendFormat": "retained recent archives",
+          "refId": "D"
+        }
+      ],
+      "title": "Dedicated repository health",
+      "type": "timeseries"
     }
   ],
   "refresh": "30s",

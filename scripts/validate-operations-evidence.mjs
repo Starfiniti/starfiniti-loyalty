@@ -57,6 +57,7 @@ const requiredChecks = new Set([
   "bounded_label_guard",
   "protected_value_pages",
   "backup_amplification_guard",
+  "offsite_recovery_guard",
   "runbook_coverage",
   "incident_state_machine",
   "postmortem_contract",
@@ -121,6 +122,10 @@ const requiredAlerts = new Set([
   "StarfinitiWalRpoBreached",
   "StarfinitiBaseBackupStale",
   "StarfinitiBackupTransferAmplification",
+  "StarfinitiOffsiteArchiveRpoBreached",
+  "StarfinitiPostgresBorgRepositoryIsolationLost",
+  "StarfinitiPostgresBorgRetentionGap",
+  "StarfinitiPostgresBorgMaintenanceStale",
   "StarfinitiLedgerDifference",
   "StarfinitiTenantBoundaryViolation",
   "StarfinitiCheckoutHubDependency",
@@ -135,6 +140,9 @@ const requiredAlerts = new Set([
 const immediateAlerts = new Set([
   "StarfinitiAmbiguousProviderOutcome",
   "StarfinitiWalRpoBreached",
+  "StarfinitiOffsiteArchiveRpoBreached",
+  "StarfinitiPostgresBorgRepositoryIsolationLost",
+  "StarfinitiPostgresBorgRetentionGap",
   "StarfinitiLedgerDifference",
   "StarfinitiTenantBoundaryViolation",
   "StarfinitiCheckoutHubDependency",
@@ -450,6 +458,43 @@ function validateCatalogue(
   ) {
     fail("backup amplification guard lost its ratio or absolute threshold");
   }
+  const offsiteArchiveAlert = alertById.get(
+    "StarfinitiOffsiteArchiveRpoBreached",
+  );
+  if (
+    !offsiteArchiveAlert.expression.includes(
+      "absent(starfiniti_postgres_offsite_archive_unixtime_seconds",
+    ) ||
+    !offsiteArchiveAlert.expression.includes(
+      "starfiniti_postgres_offsite_archive_last_attempt_success",
+    ) ||
+    !offsiteArchiveAlert.expression.includes("> 300")
+  ) {
+    fail("off-site archive guard lost absence attempt or RPO detection");
+  }
+  const repositoryIsolationAlert = alertById.get(
+    "StarfinitiPostgresBorgRepositoryIsolationLost",
+  );
+  if (
+    !repositoryIsolationAlert.expression.includes(
+      "absent(starfiniti_postgres_borg_repository_isolated",
+    ) ||
+    !repositoryIsolationAlert.expression.includes("< 1")
+  ) {
+    fail("dedicated Borg repository isolation guard is incomplete");
+  }
+  const retentionGapAlert = alertById.get("StarfinitiPostgresBorgRetentionGap");
+  if (
+    !retentionGapAlert.expression.includes(
+      "absent(starfiniti_postgres_borg_recent_archive_max_interval_seconds",
+    ) ||
+    !retentionGapAlert.expression.includes(
+      "starfiniti_postgres_borg_maintenance_last_attempt_success",
+    ) ||
+    !retentionGapAlert.expression.includes("> 300")
+  ) {
+    fail("retained recovery-interval guard is incomplete");
+  }
 
   const prometheusRules = candidateRules?.groups?.flatMap(
     (group) => group.rules ?? [],
@@ -492,7 +537,7 @@ function validateCatalogue(
     ) ||
     !candidateRouting.requirements.some((item) =>
       String(item).includes(
-        "never suppress ledger tenant privacy checkout or WAL-RPO",
+        "never suppress ledger tenant privacy checkout WAL-RPO or off-site-recovery",
       ),
     ) ||
     !candidateRouting.requirements.some((item) =>
@@ -537,6 +582,13 @@ function validateDashboard(
     "starfiniti_database_disk_available_ratio",
     "starfiniti_backup_cycle_transfer_amplification_ratio",
     "starfiniti_backup_cycle_transferred_bytes",
+    "starfiniti_postgres_offsite_archive_unixtime_seconds",
+    "starfiniti_postgres_offsite_archive_last_attempt_success",
+    "starfiniti_postgres_borg_repository_isolated",
+    "starfiniti_postgres_borg_maintenance_unixtime_seconds",
+    "starfiniti_postgres_borg_maintenance_last_attempt_success",
+    "starfiniti_postgres_borg_recent_archive_max_interval_seconds",
+    "starfiniti_postgres_borg_recent_archive_count",
     "starfiniti_recovery_exercise_age_seconds",
     "starfiniti_incident_route_exercise_age_seconds",
     "starfiniti_observability_required_series_present_ratio",

@@ -32,6 +32,6 @@ requirements:
   - Environment-owned Alertmanager configuration binds each receiver class to at least two independently controlled destinations for page routes.
   - Receiver URLs credentials phone numbers email addresses and person identities remain outside source control.
   - Billing subscription and entitlement labels are not routing conditions for protected-value security recovery or checkout alerts.
-  - Inhibition may suppress symptom alerts only while the root alert is firing; it may never suppress ledger tenant privacy checkout or WAL-RPO alerts.
+  - Inhibition may suppress symptom alerts only while the root alert is firing; it may never suppress ledger tenant privacy checkout WAL-RPO or off-site-recovery alerts.
   - Configuration validation and test-alert delivery must pass before reload; a failed reload leaves the last known-good configuration active.
   - The monitoring plane sends a continuous heartbeat to an independently hosted dead-man switch; missing heartbeat pages the platform route without depending on Prometheus or Alertmanager availability.
