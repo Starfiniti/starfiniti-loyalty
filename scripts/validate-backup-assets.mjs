@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 
 const assetRoot = new URL(
   "../infrastructure/environments/proxmox/scripts/",
@@ -13,6 +15,11 @@ const sudoersRoot = new URL(
   "../infrastructure/environments/proxmox/sudoers/",
   import.meta.url,
 );
+const backupScriptUrls = [
+  new URL("starfiniti-postgres-backup-rsync", assetRoot),
+  new URL("starfiniti-loyalty-postgres-borg", assetRoot),
+  new URL("starfiniti-postgres-basebackup", assetRoot),
+];
 const [
   pullFile,
   borgFile,
@@ -21,9 +28,7 @@ const [
   timerFile,
   sudoersFile,
 ] = await Promise.all([
-  readFile(new URL("starfiniti-postgres-backup-rsync", assetRoot), "utf8"),
-  readFile(new URL("starfiniti-loyalty-postgres-borg", assetRoot), "utf8"),
-  readFile(new URL("starfiniti-postgres-basebackup", assetRoot), "utf8"),
+  ...backupScriptUrls.map((url) => readFile(url, "utf8")),
   readFile(
     new URL("starfiniti-loyalty-postgres-borg.service", systemdRoot),
     "utf8",
@@ -40,6 +45,23 @@ const basebackup = basebackupFile.replaceAll("\r\n", "\n");
 const service = serviceFile.replaceAll("\r\n", "\n");
 const timer = timerFile.replaceAll("\r\n", "\n");
 const sudoers = sudoersFile.replaceAll("\r\n", "\n");
+
+if (process.platform !== "win32") {
+  const syntax = spawnSync(
+    "bash",
+    ["-n", ...backupScriptUrls.map((url) => fileURLToPath(url))],
+    { encoding: "utf8" },
+  );
+  const syntaxDiagnostic =
+    syntax.error?.message ||
+    syntax.stderr?.trim() ||
+    "bash exited without diagnostics";
+  assert.equal(
+    syntax.status,
+    0,
+    `backup scripts must parse as Bash: ${syntaxDiagnostic}`,
+  );
+}
 
 for (const [label, source] of [
   ["pull", pull],
@@ -114,6 +136,21 @@ assert.doesNotMatch(
   borg,
   /--content-from-command|--files-cache disabled|loyalty-postgres-backups\.tar/u,
   "host backup must not stream the complete set as one uncached file",
+);
+assert.match(
+  borg,
+  /readonly lock_wait_seconds=120/u,
+  "host backup must use the reviewed bounded repository-lock wait",
+);
+assert.match(
+  borg,
+  /flock \\\n  --exclusive \\\n  --timeout "\$lock_wait_seconds" \\\n  --conflict-exit-code 75 \\\n  9 \|\| \{[\s\S]*incremental archive not created[\s\S]*exit "\$lock_status"/u,
+  "repository-lock contention must wait boundedly and fail visibly without claiming an archive",
+);
+assert.doesNotMatch(
+  borg,
+  /flock -n 9|another backup holds the lock[\s\S]{0,160}exit 0/u,
+  "repository-lock contention must never be recorded as a successful backup run",
 );
 assert.match(
   service,

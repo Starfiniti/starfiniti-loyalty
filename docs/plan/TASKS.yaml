@@ -533,6 +533,7 @@ tasks:
         docs/integrations/WOOCOMMERCE.md,
         docs/operations/BACKUP_RESTORE.md,
         docs/operations/RUNBOOKS.md,
+        docs/architecture/ADR/0070-bounded-visible-postgres-backup-lock-contention.md,
       ]
     evidence:
       - docs/plan/evidence/M01/README.md
@@ -541,6 +542,7 @@ tasks:
       - docs/plan/evidence/M01/production-baseline-2026-08-28.md
       - docs/plan/evidence/M01/backup-export-repair-2026-08-13.md
       - docs/plan/evidence/M01/backup-transfer-amplification-2026-08-14.md
+      - ADR-0070 and the undeployed backup candidate convert prolonged shared Borg-lock contention from false success into a bounded 120-second wait and visible status 75 with semantic and Linux Bash syntax gates
       - the exact M01 validator rejects schema drift future timestamps mutable release selectors contradictory store or restore authority unreconciled container counts negative aggregates duplicate checks obvious sensitive values and false completion through eleven adversarial fixtures
 
   - id: M02-ENTITLEMENTS-AND-FLAGS

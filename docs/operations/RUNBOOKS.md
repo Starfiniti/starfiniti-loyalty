@@ -63,7 +63,7 @@ Use the incident state machine and communication policy in `INCIDENT_MANAGEMENT.
 **Detect:** WAL archive lag over five minutes, missing/corrupt segment, failed archive, or verified base backup older than one day. **Owner:** `recovery-on-call`.
 
 1. Declare a protected-value incident at an RPO breach. Preserve the last successful segment/base fingerprint and failure evidence.
-2. Inspect archive destination availability, continuity, permissions, capacity, and exact pinned backup units without exposing paths or credentials broadly.
+2. Inspect archive destination availability, continuity, permissions, capacity, exact pinned backup units, and the shared Borg lock owner without exposing paths or credentials broadly. Lock timeout status 75 means no incremental archive was created; do not reinterpret a later timer retry or older archive as success.
 3. Do not delete the last known-good base/WAL chain or claim recovery from a successful timer alone.
 4. Resume archiving, verify continuity and integrity, then schedule an approved isolated restore. RPO/RTO claims require clean-room evidence.
 

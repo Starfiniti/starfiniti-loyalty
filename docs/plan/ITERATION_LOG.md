@@ -1,5 +1,13 @@
 # Iteration Log
 
+## 2026-08-28 — Visible bounded PostgreSQL backup lock contention
+
+- Rechecked VM 971 after the reported transfer pattern. Its 3.604 TB counter spans 14.68 days; the latest 24-hour RRD estimate is about 190 MiB total with a 104 KB/s maximum, and a direct ten-second sample added 1,013 bytes. The resolved tar-stream amplification has not returned.
+- Found a separate fail-open evidence path: the nightly whole-VM Borg job held the shared repository lock while every three-minute PostgreSQL attempt logged contention and exited zero. The last real PostgreSQL archive remained 01:30:31 CEST even though systemd continued recording successful invocations.
+- Accepted ADR-0070 after comparing silent retries, indefinite waits, bounded visible failure, and separate repository/controller ownership. The candidate waits at most 120 seconds, exits with status 75 without invoking rsync/Borg when contention persists, and lets the timer retry after deactivation.
+- Extended deployment validation with exact lock semantics, rejection of the former non-blocking success branch, and Linux `bash -n` parsing for all three recovery scripts. A production-host parser accepted the normalized candidate without installation; the first diagnostic's CRLF transport false positive was explicitly refuted.
+- Production scripts, units, locks, archives, database, checkout, and loyalty value remain unchanged. Approved contention, manual-success, timer-success, transfer, WAL, and health evidence is required before rollout closes.
+
 ## 2026-08-28 — M04–M14 shared canary-envelope hardening
 
 - Reconstructed all eleven module closeout manifests and found that M09 alone enforced an exact bounded parent envelope; the other ten semantic validators could still admit unreviewed parent and nested fields.

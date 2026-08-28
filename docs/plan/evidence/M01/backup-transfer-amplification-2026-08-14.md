@@ -45,3 +45,10 @@ Timestamped copies of the prior guest `authorized_keys` entry, host script, serv
 - PVE RRD reported a maximum VM outbound rate of 102,968 bytes/s over both the last hour and last 24 hours. The last-hour disk-read maximum was zero and the 24-hour maximum was 1,843 bytes/s. The former 200–235 MB/s, 22 GB-per-cycle behavior is not active.
 - No production mutation was required for the traffic path; the healthy recovery timer remained enabled.
 - The same read-only sweep found the independently unrelated Realtime container stopped since an Aug 17 overlay-mount failure during the historical disk-full event. Starting the existing container required no image or configuration change; it returned healthy with PostgreSQL ready and every Supabase container running. Realtime was not the transfer source.
+
+## Live follow-up — 2026-08-28
+
+- A second read-only sweep refuted a renewed transfer incident. VM 971's 3.604 TB `netout` value spans 14.68 days of uptime; the latest 24-hour RRD estimate was about 190 MiB total, 2.3 KB/s average, and 104 KB/s maximum. A direct ten-second tap sample increased by only 1,013 bytes, and dashboard readiness returned 200.
+- The active PostgreSQL script still uses incremental rsync staging and normal Borg files; the old tar-over-stdin implementation remains only a dated rollback file with no active timer reference.
+- The sweep exposed a distinct recovery-evidence defect. The nightly whole-VM Borg controller held the shared repository lock from 01:31 CEST onward, while the PostgreSQL timer repeatedly logged contention and exited zero. The last actual PostgreSQL archive was created at 01:30:31 CEST, so later successful unit results did not represent new archives.
+- ADR-0070 selects a bounded 120-second wait followed by visible temporary-failure status 75. The repository candidate and Linux Bash syntax gate are verified, but the production script, timer, lock, archives, and database remain unchanged pending an approved rollout and measured contention/success canary.

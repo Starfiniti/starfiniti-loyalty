@@ -11,11 +11,18 @@ export BORG_RELOCATED_REPO_ACCESS_IS_OK=no
 readonly guest_host="${STARFINITI_POSTGRES_GUEST_HOST:-10.10.10.71}"
 readonly stage_root="${STARFINITI_POSTGRES_STAGE_ROOT:-/var/lib/starfiniti-postgres-backup-stage}"
 readonly lock_file="/run/lock/starfiniti-pve-borg.lock"
+readonly lock_wait_seconds=120
 
 exec 9>"$lock_file"
-flock -n 9 || {
-  printf 'starfiniti-loyalty-postgres-borg: another backup holds the lock\n'
-  exit 0
+flock \
+  --exclusive \
+  --timeout "$lock_wait_seconds" \
+  --conflict-exit-code 75 \
+  9 || {
+  lock_status=$?
+  readonly lock_status
+  printf 'starfiniti-loyalty-postgres-borg: backup repository lock unavailable after %s seconds; incremental archive not created\n' "$lock_wait_seconds" >&2
+  exit "$lock_status"
 }
 
 install -d -m 0700 "$stage_root"
