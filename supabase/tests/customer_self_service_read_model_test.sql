@@ -470,6 +470,7 @@ as $$
         'reward', pg_catalog.jsonb_build_object(
           'kind', 'points', 'points', '9007199254740993'
         )
+      )
       else pg_catalog.jsonb_build_object(
         'kind', 'purchase_multiplier',
         'earningRuleCodes', pg_catalog.jsonb_build_array('purchase-base'),
