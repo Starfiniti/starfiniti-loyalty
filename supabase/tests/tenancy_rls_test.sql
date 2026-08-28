@@ -183,6 +183,7 @@ select is_empty(
           'get_overview_report',
           'get_public_loyalty_experience',
           'get_public_loyalty_experience_v2',
+          'get_public_loyalty_experience_v3',
           'get_reward_fulfilment_summary',
           'list_customer_summaries',
           'list_referral_review_cases',
