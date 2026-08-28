@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(75);
+select plan(88);
 
 select has_function(
   'loyalty', 'get_public_loyalty_experience', array['uuid', 'uuid', 'text'],
@@ -165,6 +165,45 @@ select results_eq(
   array[2],
   'V5 accepts only public workspace and programme selectors'
 );
+select has_function(
+  'loyalty', 'get_public_loyalty_experience_v6', array['uuid', 'uuid'],
+  'guest-safe V6 public referral catalogue read model exists'
+);
+select ok(
+  has_function_privilege(
+    'anon', 'loyalty.get_public_loyalty_experience_v6(uuid,uuid)', 'EXECUTE'
+  ),
+  'anonymous callers can enter the bounded V6 read model'
+);
+select ok(
+  has_function_privilege(
+    'authenticated',
+    'loyalty.get_public_loyalty_experience_v6(uuid,uuid)', 'EXECUTE'
+  ),
+  'signed-in customers may enter the same V6 public projection'
+);
+select results_eq(
+  $$ select routine.prosecdef
+     from pg_proc as routine
+     join pg_namespace as namespace on namespace.oid = routine.pronamespace
+     where namespace.nspname = 'loyalty'
+       and routine.proname = 'get_public_loyalty_experience_v6'
+       and exists (
+         select 1 from unnest(routine.proconfig) as setting
+         where setting = 'search_path=""'
+       ) $$,
+  array[true],
+  'V6 public projection is security definer with an empty search path'
+);
+select results_eq(
+  $$ select routine.pronargs::integer
+     from pg_proc as routine
+     join pg_namespace as namespace on namespace.oid = routine.pronamespace
+     where namespace.nspname = 'loyalty'
+       and routine.proname = 'get_public_loyalty_experience_v6' $$,
+  array[2],
+  'V6 accepts only public workspace and programme selectors'
+);
 select ok(
   has_function_privilege('anon', 'loyalty.get_public_loyalty_experience(uuid,uuid,text)', 'EXECUTE'),
   'anonymous callers can enter only the public read model'
@@ -188,6 +227,12 @@ select ok(
 select ok(
   not has_table_privilege('anon', 'loyalty.programme_earning_rules', 'SELECT'),
   'anonymous callers cannot read raw earning rules or selectors'
+);
+select ok(
+  not has_table_privilege(
+    'anon', 'loyalty.programme_referral_policies', 'SELECT'
+  ),
+  'anonymous callers cannot read raw referral policy or fraud configuration'
 );
 select ok(
   not has_table_privilege('anon', 'loyalty.experience_translations', 'SELECT'),
@@ -297,7 +342,19 @@ select
           "perEventPoints":null,"perMemberPoints":null,
           "memberPeriod":null,"rollingDays":null
         }
-      }]
+      }],
+      "referralPolicy":{
+        "version":"1","attributionWindowDays":30,
+        "qualificationStatus":"completed","coolingDays":14,
+        "minimumEligibleSpendMinor":"3000","requireNewCustomer":true,
+        "monthlyAdvocateReferralLimit":12,
+        "advocateReward":{"kind":"points","points":"500"},
+        "friendReward":{"kind":"points","points":"250"},
+        "risk":{
+          "manualReviewEnabled":true,"rollingWindowHours":168,
+          "sourceNetworkReferralLimit":5,"deviceReferralLimit":5
+        }
+      }
     }'::jsonb
   else '{"version":"1","tiers":[],"rewards":[]}'::jsonb end,
   extensions.digest('public-fixture', 'sha256'),
@@ -826,6 +883,82 @@ select results_eq(
   'V5 retains a conservative no-schedule compatibility offer for valid legacy rewards'
 );
 select results_eq(
+  $$ select
+       referral_catalogue ->> 'version',
+       referral_catalogue ->> 'state',
+       referral_catalogue ->> 'advocateRewardPoints',
+       referral_catalogue ->> 'friendRewardPoints',
+       referral_catalogue ->> 'minimumEligibleSpendMinor',
+       referral_catalogue #>> '{currency,code}',
+       (referral_catalogue #>> '{currency,minorUnitDigits}')::integer,
+       (referral_catalogue ->> 'attributionWindowDays')::integer,
+       (referral_catalogue ->> 'coolingDays')::integer,
+       referral_catalogue ->> 'qualification',
+       (referral_catalogue ->> 'newCustomersOnly')::boolean,
+       (referral_catalogue ->> 'monthlyLimitApplies')::boolean
+     from loyalty.get_public_loyalty_experience_v6(
+       '7b000000-0000-4000-8000-000000000110',
+       '7b000000-0000-4000-8000-000000000130') $$,
+  $$ values (
+    '1'::text, 'available'::text, '500'::text, '250'::text, '3000'::text,
+    'EUR'::text, 2, 30, 14, 'first_eligible_purchase'::text, true, true
+  ) $$,
+  'V6 returns exact published give-and-get terms and first-order conditions'
+);
+select results_eq(
+  $$ select
+       referral_catalogue::text !~
+         '(customer|advocateCode|friendId|order|shareUrl|fingerprint|risk|manualReview|sourceNetwork|deviceReferral|monthlyAdvocateReferralLimit|qualificationStatus|programmeVersion|organization|ledger)',
+       not (referral_catalogue ? 'configuration'),
+       not (referral_catalogue ? 'publicId')
+     from loyalty.get_public_loyalty_experience_v6(
+       '7b000000-0000-4000-8000-000000000110',
+       '7b000000-0000-4000-8000-000000000130') $$,
+  $$ values (true, true, true) $$,
+  'V6 omits customer links, identities, orders, risk evidence, raw policy, internal IDs, and value authority'
+);
+select results_eq(
+  $$ select referral_catalogue
+     from loyalty.get_public_loyalty_experience_v6(
+       '7c000000-0000-4000-8000-000000000110',
+       '7c000000-0000-4000-8000-000000000130') $$,
+  $$ values ('{"version":"1","state":"unavailable"}'::jsonb) $$,
+  'V6 reports no referral offer when the immutable published version has no policy'
+);
+
+reset role;
+insert into loyalty.organization_entitlements (
+  organization_id, catalogue_version, capability_key, state, source,
+  actor_reference, reason, effective_from
+)
+select id, 1, 'referrals', 'disabled', 'local_control',
+  'test:public-referrals',
+  'Verify that the public catalogue reports a server-side rollout pause',
+  pg_catalog.statement_timestamp() - interval '2 seconds'
+from loyalty.organizations where slug = 'public-one';
+set local role anon;
+select results_eq(
+  $$ select referral_catalogue,
+       (select count(*)::integer
+        from pg_catalog.jsonb_object_keys(referral_catalogue))
+     from loyalty.get_public_loyalty_experience_v6(
+       '7b000000-0000-4000-8000-000000000110',
+       '7b000000-0000-4000-8000-000000000130') $$,
+  $$ values ('{"version":"1","state":"paused"}'::jsonb, 2) $$,
+  'V6 exposes only an honest paused state when PostgreSQL disables referral entry'
+);
+reset role;
+insert into loyalty.organization_entitlements (
+  organization_id, catalogue_version, capability_key, state, source,
+  actor_reference, reason, effective_from
+)
+select id, 1, 'referrals', 'enabled', 'local_control',
+  'test:public-referrals',
+  'Restore the public referral fixture after the append-only pause assertion',
+  pg_catalog.statement_timestamp() - interval '1 second'
+from loyalty.organizations where slug = 'public-one';
+set local role anon;
+select results_eq(
   $$ select tiers from loyalty.get_public_loyalty_experience(
        '7b000000-0000-4000-8000-000000000110',
        '7b000000-0000-4000-8000-000000000130', 'en') $$,
@@ -882,6 +1015,13 @@ select results_eq(
   'V5 mixed-tenant selectors fail closed'
 );
 select results_eq(
+  $$ select count(*)::bigint from loyalty.get_public_loyalty_experience_v6(
+       '7c000000-0000-4000-8000-000000000110',
+       '7b000000-0000-4000-8000-000000000130') $$,
+  array[0::bigint],
+  'V6 mixed-tenant selectors fail closed'
+);
+select results_eq(
   $$ select count(*)::bigint from loyalty.get_public_loyalty_experience(
        '00000000-0000-4000-8000-000000000000',
        '7b000000-0000-4000-8000-000000000130', 'en') $$,
@@ -927,6 +1067,13 @@ select results_eq(
        '7b000000-0000-4000-8000-000000000130') $$,
   array[0::bigint],
   'suspended workspace removes the V5 public document'
+);
+select results_eq(
+  $$ select count(*)::bigint from loyalty.get_public_loyalty_experience_v6(
+       '7b000000-0000-4000-8000-000000000110',
+       '7b000000-0000-4000-8000-000000000130') $$,
+  array[0::bigint],
+  'suspended workspace removes the V6 public document'
 );
 reset role;
 update loyalty.workspaces set status = 'active'
@@ -974,6 +1121,13 @@ select results_eq(
        '7b000000-0000-4000-8000-000000000130') $$,
   array[0::bigint],
   'absence of a published version removes the V5 public document'
+);
+select results_eq(
+  $$ select count(*)::bigint from loyalty.get_public_loyalty_experience_v6(
+       '7b000000-0000-4000-8000-000000000110',
+       '7b000000-0000-4000-8000-000000000130') $$,
+  array[0::bigint],
+  'absence of a published version removes the V6 public document'
 );
 
 reset role;

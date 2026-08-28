@@ -2,7 +2,7 @@ import type {
   ExperienceHeroAssetV2,
   ExperienceSectionV2,
   PublicEarningSourceV1,
-  PublicLoyaltyExperienceV5,
+  PublicLoyaltyExperienceV6,
   PublicRewardBenefitV1,
 } from "@starfiniti/contracts";
 import type { Metadata } from "next";
@@ -43,6 +43,7 @@ import {
   formatPublicEarningEffect,
   formatPublicEarningSource,
   formatPublicEarningWindow,
+  formatPublicMoneyMinor,
   formatPublicRewardBenefit,
   formatPublicRewardDelivery,
   formatPublicRewardWindow,
@@ -102,7 +103,7 @@ export default async function PublicLoyaltyPage({ params }: PageProps) {
   const { workspaceId, programmeId } = await params;
   if (!isPublicId(workspaceId) || !isPublicId(programmeId)) notFound();
 
-  let experience: PublicLoyaltyExperienceV5 | null;
+  let experience: PublicLoyaltyExperienceV6 | null;
   try {
     experience = await getPublicLoyaltyExperience(workspaceId, programmeId);
   } catch {
@@ -126,7 +127,7 @@ export default async function PublicLoyaltyPage({ params }: PageProps) {
 
   return (
     <main
-      className={`public-loyalty-page public-loyalty-v2 public-loyalty-v3 public-loyalty-v4 public-loyalty-v5 ${theme.density}`}
+      className={`public-loyalty-page public-loyalty-v2 public-loyalty-v3 public-loyalty-v4 public-loyalty-v5 public-loyalty-v6 ${theme.density}`}
       id="main-content"
       lang="en"
       style={style}
@@ -200,7 +201,7 @@ function PublicSection({
   index,
   section,
 }: Readonly<{
-  experience: PublicLoyaltyExperienceV5;
+  experience: PublicLoyaltyExperienceV6;
   index: number;
   section: ExperienceSectionV2;
 }>) {
@@ -490,20 +491,117 @@ function PublicSection({
     );
   }
   if (section === "referrals") {
+    const referral = experience.referralCatalogue;
     return (
       <section className="public-loyalty-section" id="referrals">
         <PublicHeading index={index} title="Refer friends" />
-        <div className="public-loyalty-feature-card">
-          <HeartHandshake aria-hidden="true" />
-          <div>
-            <h3>Share from your private account</h3>
-            <p>
-              When the store activates referrals, eligible members receive one
-              customer-bound link and can follow qualification progress without
-              exposing their identity.
-            </p>
+        {referral.state === "available" ? (
+          <div className="public-referral-catalogue">
+            <header>
+              <div>
+                <small>Give and get</small>
+                <h3>Invite a friend. You both earn points.</h3>
+                <p>
+                  Share one private account link. Rewards follow only after a
+                  new customer completes the published first-order conditions.
+                </p>
+              </div>
+              <Link href={PUBLIC_LOYALTY_ACCOUNT_PATH}>
+                Get my private link <ArrowRight aria-hidden="true" />
+              </Link>
+            </header>
+
+            <div className="public-referral-offers">
+              <article>
+                <span aria-hidden="true">
+                  <UserPlus />
+                </span>
+                <small>Your friend earns</small>
+                <strong>
+                  {formatPublicPoints(referral.friendRewardPoints, "en")}
+                  <span> points</span>
+                </strong>
+                <p>
+                  After their first eligible purchase clears the return period.
+                </p>
+              </article>
+              <span className="public-referral-join" aria-hidden="true">
+                <HeartHandshake />
+              </span>
+              <article>
+                <span aria-hidden="true">
+                  <Gift />
+                </span>
+                <small>You earn</small>
+                <strong>
+                  {formatPublicPoints(referral.advocateRewardPoints, "en")}
+                  <span> points</span>
+                </strong>
+                <p>Issued through the same protected ledger as other points.</p>
+              </article>
+            </div>
+
+            <ol className="public-referral-flow">
+              <li>
+                <span>01</span>
+                <div>
+                  <strong>Share privately</strong>
+                  <p>Sign in and send your opaque referral link.</p>
+                </div>
+              </li>
+              <li>
+                <span>02</span>
+                <div>
+                  <strong>They place a first order</strong>
+                  <p>
+                    At least{" "}
+                    {formatPublicMoneyMinor(
+                      referral.minimumEligibleSpendMinor,
+                      referral.currency,
+                      "en",
+                    )}{" "}
+                    within {referral.attributionWindowDays} days.
+                  </p>
+                </div>
+              </li>
+              <li>
+                <span>03</span>
+                <div>
+                  <strong>Both rewards clear</strong>
+                  <p>
+                    Points are issued after a {referral.coolingDays}-day return
+                    period.
+                  </p>
+                </div>
+              </li>
+            </ol>
+
+            <footer>
+              <div
+                className="public-referral-terms"
+                aria-label="Referral terms"
+              >
+                <span>
+                  <Check aria-hidden="true" /> New customers only
+                </span>
+                <span>
+                  <Clock3 aria-hidden="true" /> First eligible purchase
+                </span>
+                {referral.monthlyLimitApplies ? (
+                  <span>
+                    <ShieldCheck aria-hidden="true" /> Monthly limits apply
+                  </span>
+                ) : null}
+              </div>
+              <p>
+                Your account shows exact eligibility and private progress. No
+                friend identity appears on this public page.
+              </p>
+            </footer>
           </div>
-        </div>
+        ) : (
+          <PublicReferralState state={referral.state} />
+        )}
       </section>
     );
   }
@@ -538,6 +636,47 @@ function PublicSection({
         </Link>
       </aside>
     </section>
+  );
+}
+
+function PublicReferralState({
+  state,
+}: Readonly<{
+  state: "paused" | "unavailable" | "confirm_in_account";
+}>) {
+  const copy =
+    state === "paused"
+      ? {
+          title: "New referral sharing is paused",
+          detail:
+            "Existing customer progress and issued points remain protected. Sign in to view your private history.",
+        }
+      : state === "unavailable"
+        ? {
+            title: "Referral rewards are not currently offered",
+            detail:
+              "This published programme has no active referral offer. Other earning methods and rewards remain available above.",
+          }
+        : {
+            title: "Confirm referral availability in your account",
+            detail:
+              "The store is completing a safe programme update. Sign in for the current private referral status.",
+          };
+  return (
+    <div className={`public-referral-state ${state}`}>
+      {state === "paused" ? (
+        <ShieldAlert aria-hidden="true" />
+      ) : (
+        <HeartHandshake aria-hidden="true" />
+      )}
+      <div>
+        <h3>{copy.title}</h3>
+        <p>{copy.detail}</p>
+        <Link href={PUBLIC_LOYALTY_ACCOUNT_PATH}>
+          Open my loyalty account <ArrowRight aria-hidden="true" />
+        </Link>
+      </div>
+    </div>
   );
 }
 

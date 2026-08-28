@@ -186,6 +186,7 @@ select is_empty(
           'get_public_loyalty_experience_v3',
           'get_public_loyalty_experience_v4',
           'get_public_loyalty_experience_v5',
+          'get_public_loyalty_experience_v6',
           'get_reward_fulfilment_summary',
           'list_customer_summaries',
           'list_referral_review_cases',

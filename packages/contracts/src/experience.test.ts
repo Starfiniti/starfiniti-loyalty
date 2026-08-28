@@ -15,6 +15,7 @@ import {
   publicLoyaltyExperienceV3,
   publicLoyaltyExperienceV4,
   publicLoyaltyExperienceV5,
+  publicLoyaltyExperienceV6,
 } from "./experience";
 
 const theme = {
@@ -94,6 +95,26 @@ function publicV5Value() {
           },
         },
       ],
+    },
+  };
+}
+
+function publicV6Value() {
+  return {
+    ...publicV5Value(),
+    version: "6" as const,
+    referralCatalogue: {
+      version: "1" as const,
+      state: "available" as const,
+      advocateRewardPoints: "500",
+      friendRewardPoints: "250",
+      minimumEligibleSpendMinor: "3000",
+      currency: { code: "EUR", minorUnitDigits: 2 },
+      attributionWindowDays: 30,
+      coolingDays: 14,
+      qualification: "first_eligible_purchase" as const,
+      newCustomersOnly: true as const,
+      monthlyLimitApplies: true as const,
     },
   };
 }
@@ -802,6 +823,86 @@ describe("experience theme contracts", () => {
               benefit: { kind: "store_credit", amountMinor: "500" },
             },
           ],
+        },
+      }).success,
+    ).toBe(false);
+  });
+
+  it("accepts an exact guest-safe V6 referral catalogue", () => {
+    const value = publicV6Value();
+
+    expect(publicLoyaltyExperienceV6.parse(value)).toEqual(value);
+    expect(publicLoyaltyExperienceV5.safeParse(value).success).toBe(false);
+  });
+
+  it("accepts honest non-active V6 referral states without policy details", () => {
+    for (const state of [
+      "unavailable",
+      "paused",
+      "confirm_in_account",
+    ] as const) {
+      expect(
+        publicLoyaltyExperienceV6.safeParse({
+          ...publicV6Value(),
+          referralCatalogue: { version: "1", state },
+        }).success,
+      ).toBe(true);
+    }
+  });
+
+  it("rejects private, contradictory, and oversized V6 referral data", () => {
+    const base = publicV6Value();
+    const referral = base.referralCatalogue;
+
+    expect(
+      publicLoyaltyExperienceV6.safeParse({
+        ...base,
+        referralCatalogue: { ...referral, advocateCode: "private" },
+      }).success,
+    ).toBe(false);
+    expect(
+      publicLoyaltyExperienceV6.safeParse({
+        ...base,
+        referralCatalogue: {
+          version: "1",
+          state: "paused",
+          advocateRewardPoints: "500",
+        },
+      }).success,
+    ).toBe(false);
+    expect(
+      publicLoyaltyExperienceV6.safeParse({
+        ...base,
+        referralCatalogue: {
+          ...referral,
+          advocateRewardPoints: "9223372036854775808",
+        },
+      }).success,
+    ).toBe(false);
+    expect(
+      publicLoyaltyExperienceV6.safeParse({
+        ...base,
+        referralCatalogue: {
+          ...referral,
+          minimumEligibleSpendMinor: "-1",
+        },
+      }).success,
+    ).toBe(false);
+    expect(
+      publicLoyaltyExperienceV6.safeParse({
+        ...base,
+        referralCatalogue: {
+          ...referral,
+          attributionWindowDays: 91,
+        },
+      }).success,
+    ).toBe(false);
+    expect(
+      publicLoyaltyExperienceV6.safeParse({
+        ...base,
+        referralCatalogue: {
+          ...referral,
+          newCustomersOnly: false,
         },
       }).success,
     ).toBe(false);

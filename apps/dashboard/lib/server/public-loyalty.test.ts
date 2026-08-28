@@ -175,6 +175,25 @@ function v5Row() {
   };
 }
 
+function v6Row() {
+  return {
+    ...v5Row(),
+    referral_catalogue: {
+      version: "1",
+      state: "available",
+      advocateRewardPoints: "500",
+      friendRewardPoints: "250",
+      minimumEligibleSpendMinor: "3000",
+      currency: { code: "EUR", minorUnitDigits: 2 },
+      attributionWindowDays: 30,
+      coolingDays: 14,
+      qualification: "first_eligible_purchase",
+      newCustomersOnly: true,
+      monthlyLimitApplies: true,
+    },
+  };
+}
+
 function v1Row(locale = "en") {
   return {
     workspace_public_id: workspaceId,
@@ -204,14 +223,14 @@ describe("public loyalty server read", () => {
   beforeEach(() => {
     rpc.mockReset();
     schema.mockClear();
-    rpc.mockResolvedValue({ data: [v5Row()], error: null });
+    rpc.mockResolvedValue({ data: [v6Row()], error: null });
   });
 
-  it("requests the selector-minimized English V5 public document", async () => {
+  it("requests the selector-minimized English V6 public document", async () => {
     await expect(
       getPublicLoyaltyExperience(workspaceId, programmeId),
     ).resolves.toMatchObject({
-      version: "5",
+      version: "6",
       requestedLocale: "en",
       resolvedLocale: "en",
       presentation,
@@ -229,26 +248,50 @@ describe("public loyalty server read", () => {
           },
         ],
       },
+      referralCatalogue: {
+        state: "available",
+        advocateRewardPoints: "500",
+        friendRewardPoints: "250",
+      },
     });
     expect(schema).toHaveBeenCalledWith("loyalty");
-    expect(rpc).toHaveBeenCalledWith("get_public_loyalty_experience_v5", {
+    expect(rpc).toHaveBeenCalledWith("get_public_loyalty_experience_v6", {
       target_workspace_public_id: workspaceId,
       target_programme_public_id: programmeId,
     });
   });
 
-  it("normalizes V4 only while an additive database deploy lacks V5", async () => {
+  it("normalizes V5 only while an additive database deploy lacks V6", async () => {
     rpc
       .mockResolvedValueOnce({ data: null, error: { code: "PGRST202" } })
+      .mockResolvedValueOnce({ data: [v5Row()], error: null });
+
+    await expect(
+      getPublicLoyaltyExperience(workspaceId, programmeId),
+    ).resolves.toMatchObject({
+      version: "6",
+      referralCatalogue: { version: "1", state: "confirm_in_account" },
+    });
+    expect(rpc).toHaveBeenNthCalledWith(2, "get_public_loyalty_experience_v5", {
+      target_workspace_public_id: workspaceId,
+      target_programme_public_id: programmeId,
+    });
+  });
+
+  it("normalizes V4 only while an additive database deploy lacks V6 and V5", async () => {
+    rpc
+      .mockResolvedValueOnce({ data: null, error: { code: "PGRST202" } })
+      .mockResolvedValueOnce({ data: null, error: { code: "42883" } })
       .mockResolvedValueOnce({ data: [v4Row()], error: null });
 
     await expect(
       getPublicLoyaltyExperience(workspaceId, programmeId),
     ).resolves.toMatchObject({
-      version: "5",
+      version: "6",
       rewardCatalogue: { version: "1", offers: [] },
+      referralCatalogue: { state: "confirm_in_account" },
     });
-    expect(rpc).toHaveBeenNthCalledWith(2, "get_public_loyalty_experience_v4", {
+    expect(rpc).toHaveBeenNthCalledWith(3, "get_public_loyalty_experience_v4", {
       target_workspace_public_id: workspaceId,
       target_programme_public_id: programmeId,
     });
@@ -257,6 +300,7 @@ describe("public loyalty server read", () => {
   it("keeps legacy public rewards conservative and excludes stored value during V4 compatibility", async () => {
     rpc
       .mockResolvedValueOnce({ data: null, error: { code: "PGRST202" } })
+      .mockResolvedValueOnce({ data: null, error: { code: "42883" } })
       .mockResolvedValueOnce({
         data: [
           v4Row([
@@ -280,7 +324,7 @@ describe("public loyalty server read", () => {
     await expect(
       getPublicLoyaltyExperience(workspaceId, programmeId),
     ).resolves.toMatchObject({
-      version: "5",
+      version: "6",
       rewardCatalogue: {
         offers: [
           {
@@ -293,10 +337,11 @@ describe("public loyalty server read", () => {
           },
         ],
       },
+      referralCatalogue: { state: "confirm_in_account" },
     });
   });
 
-  it("normalizes V3 only while an additive database deploy lacks V5 and V4", async () => {
+  it("normalizes V3 only while an additive database deploy lacks V6 through V4", async () => {
     const tiers = [
       {
         code: "starter",
@@ -308,12 +353,13 @@ describe("public loyalty server read", () => {
     rpc
       .mockResolvedValueOnce({ data: null, error: { code: "PGRST202" } })
       .mockResolvedValueOnce({ data: null, error: { code: "42883" } })
+      .mockResolvedValueOnce({ data: null, error: { code: "PGRST202" } })
       .mockResolvedValueOnce({ data: [v3Row(tiers)], error: null });
 
     await expect(
       getPublicLoyaltyExperience(workspaceId, programmeId),
     ).resolves.toMatchObject({
-      version: "5",
+      version: "6",
       earningMethods: [
         {
           code: "eligible-purchases",
@@ -321,14 +367,15 @@ describe("public loyalty server read", () => {
           effect: { kind: "base_rate", pointsPerMajorUnit: "4" },
         },
       ],
+      referralCatalogue: { state: "confirm_in_account" },
     });
-    expect(rpc).toHaveBeenNthCalledWith(3, "get_public_loyalty_experience_v3", {
+    expect(rpc).toHaveBeenNthCalledWith(4, "get_public_loyalty_experience_v3", {
       target_workspace_public_id: workspaceId,
       target_programme_public_id: programmeId,
     });
   });
 
-  it("normalizes V2 only while an additive database deploy lacks V5 through V3", async () => {
+  it("normalizes V2 only while an additive database deploy lacks V6 through V3", async () => {
     const tiers = [
       {
         code: "starter",
@@ -347,11 +394,12 @@ describe("public loyalty server read", () => {
       .mockResolvedValueOnce({ data: null, error: { code: "PGRST202" } })
       .mockResolvedValueOnce({ data: null, error: { code: "42883" } })
       .mockResolvedValueOnce({ data: null, error: { code: "PGRST202" } })
+      .mockResolvedValueOnce({ data: null, error: { code: "42883" } })
       .mockResolvedValueOnce({ data: [v2Row(tiers)], error: null });
     await expect(
       getPublicLoyaltyExperience(workspaceId, programmeId),
     ).resolves.toMatchObject({
-      version: "5",
+      version: "6",
       presentation: {
         theme: { brandColor: "#7c2d4f" },
         copy: { locale: "en" },
@@ -376,35 +424,41 @@ describe("public loyalty server read", () => {
           effect: { kind: "base_rate", pointsPerMajorUnit: "4" },
         },
       ],
+      referralCatalogue: { state: "confirm_in_account" },
     });
-    expect(rpc).toHaveBeenNthCalledWith(4, "get_public_loyalty_experience_v2", {
+    expect(rpc).toHaveBeenNthCalledWith(5, "get_public_loyalty_experience_v2", {
       target_workspace_public_id: workspaceId,
       target_programme_public_id: programmeId,
     });
   });
 
-  it("normalizes V1 only while an additive database deploy lacks V5 through V2", async () => {
+  it("normalizes V1 only while an additive database deploy lacks V6 through V2", async () => {
     rpc
       .mockResolvedValueOnce({ data: null, error: { code: "PGRST202" } })
       .mockResolvedValueOnce({ data: null, error: { code: "42883" } })
       .mockResolvedValueOnce({ data: null, error: { code: "PGRST202" } })
       .mockResolvedValueOnce({ data: null, error: { code: "42883" } })
+      .mockResolvedValueOnce({ data: null, error: { code: "PGRST202" } })
       .mockResolvedValueOnce({ data: [v1Row()], error: null });
     await expect(
       getPublicLoyaltyExperience(workspaceId, programmeId),
-    ).resolves.toMatchObject({ version: "5", requestedLocale: "en" });
-    expect(rpc).toHaveBeenNthCalledWith(5, "get_public_loyalty_experience", {
+    ).resolves.toMatchObject({
+      version: "6",
+      requestedLocale: "en",
+      referralCatalogue: { state: "confirm_in_account" },
+    });
+    expect(rpc).toHaveBeenNthCalledWith(6, "get_public_loyalty_experience", {
       target_workspace_public_id: workspaceId,
       target_programme_public_id: programmeId,
       target_locale: "en",
     });
   });
 
-  it("fails closed on malformed V5 without selecting legacy data", async () => {
+  it("fails closed on malformed V6 without selecting legacy data", async () => {
     rpc.mockResolvedValue({
       data: [
         {
-          ...v5Row(),
+          ...v6Row(),
           presentation: { ...presentation, locale: "sl-SI" },
         },
       ],
@@ -416,8 +470,8 @@ describe("public loyalty server read", () => {
     expect(rpc).toHaveBeenCalledTimes(1);
   });
 
-  it("fails closed when V5 reward data expands authority or repeats an offer code", async () => {
-    const privateRow = v5Row();
+  it("fails closed when V6 reward data expands authority or repeats an offer code", async () => {
+    const privateRow = v6Row();
     privateRow.reward_catalogue.offers[0] = {
       ...privateRow.reward_catalogue.offers[0],
       internalRewardId: "42",
@@ -428,7 +482,7 @@ describe("public loyalty server read", () => {
     ).rejects.toThrow("public_loyalty_read_unavailable");
     expect(rpc).toHaveBeenCalledTimes(1);
 
-    const duplicateRow = v5Row();
+    const duplicateRow = v6Row();
     duplicateRow.reward_catalogue.offers.push({
       ...duplicateRow.reward_catalogue.offers[0]!,
     });
@@ -439,16 +493,59 @@ describe("public loyalty server read", () => {
     expect(rpc).toHaveBeenCalledTimes(2);
   });
 
+  it("fails closed when V6 referral data expands authority or contradicts state", async () => {
+    const privateRow = v6Row();
+    privateRow.referral_catalogue = {
+      ...privateRow.referral_catalogue,
+      advocateCode: "a1000000-0000-4000-8000-000000000009",
+    } as typeof privateRow.referral_catalogue;
+    rpc.mockResolvedValueOnce({ data: [privateRow], error: null });
+    await expect(
+      getPublicLoyaltyExperience(workspaceId, programmeId),
+    ).rejects.toThrow("public_loyalty_read_unavailable");
+    expect(rpc).toHaveBeenCalledTimes(1);
+
+    const paused = v6Row();
+    paused.referral_catalogue = {
+      version: "1",
+      state: "paused",
+      advocateRewardPoints: "500",
+    } as typeof paused.referral_catalogue;
+    rpc.mockResolvedValueOnce({ data: [paused], error: null });
+    await expect(
+      getPublicLoyaltyExperience(workspaceId, programmeId),
+    ).rejects.toThrow("public_loyalty_read_unavailable");
+    expect(rpc).toHaveBeenCalledTimes(2);
+  });
+
+  it("fails closed on malformed V5 during a V6 rolling deploy", async () => {
+    rpc
+      .mockResolvedValueOnce({ data: null, error: { code: "PGRST202" } })
+      .mockResolvedValueOnce({
+        data: [
+          {
+            ...v5Row(),
+            presentation: { ...presentation, locale: "sl-SI" },
+          },
+        ],
+        error: null,
+      });
+    await expect(
+      getPublicLoyaltyExperience(workspaceId, programmeId),
+    ).rejects.toThrow("public_loyalty_read_unavailable");
+    expect(rpc).toHaveBeenCalledTimes(2);
+  });
+
   it("fails closed on duplicate or non-array public containers", async () => {
     rpc.mockResolvedValueOnce({
-      data: [v5Row(), v5Row()],
+      data: [v6Row(), v6Row()],
       error: null,
     });
     await expect(
       getPublicLoyaltyExperience(workspaceId, programmeId),
     ).rejects.toThrow("public_loyalty_read_unavailable");
 
-    rpc.mockResolvedValueOnce({ data: { row: v5Row() }, error: null });
+    rpc.mockResolvedValueOnce({ data: { row: v6Row() }, error: null });
     await expect(
       getPublicLoyaltyExperience(workspaceId, programmeId),
     ).rejects.toThrow("public_loyalty_read_unavailable");
@@ -475,6 +572,7 @@ describe("public loyalty server read", () => {
       .mockResolvedValueOnce({ data: null, error: { code: "PGRST202" } })
       .mockResolvedValueOnce({ data: null, error: { code: "42883" } })
       .mockResolvedValueOnce({ data: null, error: { code: "PGRST202" } })
+      .mockResolvedValueOnce({ data: null, error: { code: "42883" } })
       .mockResolvedValueOnce({ data: [v1Row("sl-SI")], error: null });
     await expect(
       getPublicLoyaltyExperience(workspaceId, programmeId),

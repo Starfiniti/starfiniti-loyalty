@@ -1340,6 +1340,77 @@ tasks:
           - exact-head run 32839387263 at f531f82 passed baseline both images 55 migrations 43 pgTAP files with 2361 assertions and all four WooCommerce runtimes
       - id: M09-S02-HOSTED-SEVEN-AREA-EXPERIENCE
         status: completed
+        follow_up_v6:
+          id: M09-S02F-GUEST-SAFE-REFERRAL-CATALOGUE
+          status: in_progress
+          hypothesis:
+            A concrete guest-safe give-and-get offer with exact published
+            rewards and qualification terms will make referral discovery useful
+            without exposing customer identity, private links, fraud evidence, or
+            browser value authority.
+          baseline:
+            The public referrals section is a generic promise even when the
+            immutable published programme has an exact referral policy; authenticated
+            customers already receive private link, progress, and history through a
+            separate no-selector projection.
+          targets:
+            - one strict additive V6 document distinguishes available, paused,
+              unavailable, and rolling-deploy compatibility states
+            - available programmes expose exact advocate and friend points, minimum
+              first-order spend, attribution and cooling windows, new-customer scope,
+              and a monthly-limit signal derived from the immutable published policy
+            - all customer links, advocate codes, identities, orders, fingerprints,
+              risk settings, internal IDs, raw configuration, and value authority
+              remain absent
+            - desktop and mobile render one useful give-and-get flow with no critical
+              accessibility, overflow, privacy, or diagnostic defect
+          metrics:
+            - public referral facts not derivable from the selected immutable
+              published policy = 0
+            - customer, advocate, friend, order, fingerprint, risk, internal selector,
+              or ledger authority fields in the V6 browser contract = 0
+            - malformed V6 responses that fall back to an older projection = 0
+            - duplicate business effects or ledger transactions from public reads = 0
+          security_boundaries:
+            - PostgreSQL derives organization, programme group, immutable published
+              version, currency, referral policy, and rollout state from the two
+              existing public resource selectors
+            - V6 is read-only and may expose only reviewed programme-level facts;
+              authenticated customer sharing and history remain on the existing
+              Auth-derived no-selector boundary
+            - V5 through V1 are attempted only when a projection function is absent;
+              malformed, contradictory, duplicate, or provider-error V6 data fails
+              closed
+          rollout:
+            Deploy the additive projection before the V6 reader, keep production
+            unchanged, then include the exact release in the existing M09 disabled
+            Starfiniti canary.
+          rollback:
+            Revert the reader to V5 while retaining the additive V6 function;
+            do not alter published policies, customer links, referral history, ledger
+            effects, or WooCommerce checkout behavior.
+          verification:
+            - strict contract, boundary, bigint, state, contradiction, and unknown-field
+              tests
+            - pgTAP grants, exact-scope, rollout, minimization, no-row, immutability,
+              malformed-policy, and zero-ledger-effect assertions
+            - server missing-function-only compatibility and provider-error tests
+            - production-rendered desktop/mobile keyboard, reduced-motion, reflow,
+              link-origin, privacy, and browser-diagnostic review
+          evidence:
+            - strict V6 contracts and server parsing reject private, contradictory,
+              oversized, duplicate, malformed, and provider-error data without
+              selecting an older projection
+            - additive migration 20260828111703 derives immutable published referral
+              terms and rollout state, grants only the reviewed bounded read, and
+              adds focused tenancy, minimization, state, and zero-mutation pgTAP
+            - production-rendered reduced-motion review at 1512 by 982 and 390 by
+              844 passed exact terms, one same-origin private-account action,
+              44-pixel action height, zero overflow, and zero browser diagnostics
+            - the complete local repository gate passes 981 workspace tests, every
+              validator, accessibility, WooCommerce budgets, and all production
+              builds; static validation passes 85 migrations and 68 pgTAP files,
+              while Docker-backed Linux replay remains the exact-head gate
         acceptance:
           - hosted member experience provides overview earning rewards VIP referrals history and account states with useful discovery progress affordability sharing and expiry guidance
           - public guest experience explains programme value without exposing customer state and routes sign-in through the canonical origin
@@ -1439,6 +1510,7 @@ tasks:
         docs/architecture/ADR/0074-guest-safe-advanced-vip-catalogue.md,
         docs/architecture/ADR/0075-guest-safe-public-earning-catalogue.md,
         docs/architecture/ADR/0076-guest-safe-public-reward-catalogue.md,
+        docs/architecture/ADR/0077-guest-safe-public-referral-catalogue.md,
       ]
     evidence: [docs/plan/evidence/M09/README.md]
 

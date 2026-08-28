@@ -704,11 +704,56 @@ const {
 void _publicV4Version;
 void _legacyPublicRewards;
 
-export const publicLoyaltyExperienceV5 = z
+const publicLoyaltyExperienceV5Base = z
   .object({
     ...publicLoyaltyExperienceV5BaseShape,
     version: z.literal("5"),
     rewardCatalogue: publicRewardCatalogueV1,
+  })
+  .strict();
+
+export const publicLoyaltyExperienceV5 =
+  publicLoyaltyExperienceV5Base.superRefine(
+    enforcePublicLoyaltyExperienceInvariants,
+  );
+
+const publicReferralUnavailableV1 = z
+  .object({
+    version: z.literal("1"),
+    state: z.enum(["unavailable", "paused", "confirm_in_account"]),
+  })
+  .strict();
+
+const publicReferralAvailableV1 = z
+  .object({
+    version: z.literal("1"),
+    state: z.literal("available"),
+    advocateRewardPoints: positivePostgresBigintString,
+    friendRewardPoints: positivePostgresBigintString,
+    minimumEligibleSpendMinor: nonNegativePostgresBigintString,
+    currency: publicRewardCurrencyV1,
+    attributionWindowDays: z.number().int().min(1).max(90),
+    coolingDays: z.number().int().min(0).max(90),
+    qualification: z.literal("first_eligible_purchase"),
+    newCustomersOnly: z.literal(true),
+    monthlyLimitApplies: z.literal(true),
+  })
+  .strict();
+
+export const publicReferralCatalogueV1 = z.discriminatedUnion("state", [
+  publicReferralUnavailableV1,
+  publicReferralAvailableV1,
+]);
+
+const { version: _publicV5Version, ...publicLoyaltyExperienceV6BaseShape } =
+  publicLoyaltyExperienceV5Base.shape;
+void _publicV5Version;
+
+export const publicLoyaltyExperienceV6 = z
+  .object({
+    ...publicLoyaltyExperienceV6BaseShape,
+    version: z.literal("6"),
+    referralCatalogue: publicReferralCatalogueV1,
   })
   .strict()
   .superRefine(enforcePublicLoyaltyExperienceInvariants);
@@ -778,4 +823,10 @@ export type PublicRewardOfferV1 = z.infer<typeof publicRewardOfferV1>;
 export type PublicRewardCatalogueV1 = z.infer<typeof publicRewardCatalogueV1>;
 export type PublicLoyaltyExperienceV5 = z.infer<
   typeof publicLoyaltyExperienceV5
+>;
+export type PublicReferralCatalogueV1 = z.infer<
+  typeof publicReferralCatalogueV1
+>;
+export type PublicLoyaltyExperienceV6 = z.infer<
+  typeof publicLoyaltyExperienceV6
 >;
