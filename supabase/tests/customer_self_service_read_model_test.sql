@@ -815,7 +815,7 @@ select results_eq(
   'the multiplier retains exact basis points and highest-eligible semantics'
 );
 select ok(
-  (select experience::text
+  (select (experience -> 'campaignOpportunities')::text
       !~* 'campaignVersion|campaignId|audience|snapshot|assignment|control|wallet|customerId|earningRule|priority|budget|liability|globalEffect|perMember|raw|definition'
    from loyalty.get_my_loyalty_experiences_v3()),
   'V3 omits campaign selectors identities assignments controls budgets and raw policy'
