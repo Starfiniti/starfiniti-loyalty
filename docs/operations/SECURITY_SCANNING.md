@@ -12,6 +12,7 @@ The `Security` workflow runs on pull requests, `main`, Tuesdays at 03:17 UTC, an
 - The complete npm dependency tree fails on every High or Critical advisory, including development-only tooling.
 - Trivy scans repository secrets/misconfiguration and both deployable images for Unknown/High/Critical vulnerability, secret, misconfiguration, and policy-classified licence findings.
 - Syft produces CycloneDX JSON SBOMs for both images.
+- The reciprocal-source validator rejects an SBOM component, version, licence expression, Alpine origin, packaging commit, architecture, or image placement outside the exact source plan.
 - ZAP 2.17.0 runs a bounded active scan against `starfiniti-dast-target` on the internal `starfiniti-dast` Docker network.
 
 The DAST network has no published port and no external route. The target is built from the candidate commit, labelled disposable, contains no live credentials or customer data, and is removed in an `always()` cleanup step. Never change its origin to a public, staging, or production host in a pull request.
@@ -27,12 +28,16 @@ Full-severity dashboard and worker JSON review reports exclude the secret scanne
 For a signed `vMAJOR.MINOR.PATCH` tag, the release workflow:
 
 1. reruns application, database, connector, secret, audit, and licence gates;
-2. builds and pushes immutable dashboard and worker images;
-3. records exact registry digests;
-4. generates dashboard and worker CycloneDX SBOMs;
-5. checksums the WooCommerce package and both SBOMs;
-6. attests the four release files and both image digests; and
-7. publishes the package, SBOMs, and checksum file.
+2. builds immutable dashboard and worker images locally;
+3. generates both exact image CycloneDX SBOMs;
+4. builds the exact corresponding-source archive, external manifest, and third-party notices from the release commit and source plan;
+5. independently lists, extracts, bounds, hashes, and reconciles those artifacts to both SBOMs before registry authentication;
+6. checksums the connector, both SBOMs, source archive, source manifest, and notices;
+7. authenticates, pushes the images, and records exact registry digests;
+8. attests all seven release files and both image digests; and
+9. publishes all seven files.
+
+ADR-0083 governs the source bundle. It includes the exact Starfiniti source tree, exact Alpine packaging directories and commits, every checksum-bound local or downloaded APKBUILD input, and pinned SPDX licence texts. Downloads are credential-free HTTPS, byte-bounded, and SHA-512 verified. The builder treats APKBUILD and upstream source as data and never executes either. An unexpected reciprocal SBOM component fails before image publication.
 
 Verify a release with the repository-scoped GitHub CLI:
 
@@ -41,6 +46,11 @@ gh release download vX.Y.Z --repo Starfiniti/starfiniti-loyalty --dir release-ev
 sha256sum --check release-evidence/SHA256SUMS
 gh attestation verify release-evidence/starfiniti-loyalty.zip --repo Starfiniti/starfiniti-loyalty
 gh attestation verify release-evidence/loyalty-dashboard.cdx.json --repo Starfiniti/starfiniti-loyalty
+gh attestation verify release-evidence/loyalty-worker.cdx.json --repo Starfiniti/starfiniti-loyalty
+gh attestation verify release-evidence/starfiniti-loyalty-source.tar.gz --repo Starfiniti/starfiniti-loyalty
+gh attestation verify release-evidence/starfiniti-loyalty-source-manifest.json --repo Starfiniti/starfiniti-loyalty
+gh attestation verify release-evidence/starfiniti-loyalty-third-party-notices.md --repo Starfiniti/starfiniti-loyalty
+gh attestation verify release-evidence/SHA256SUMS --repo Starfiniti/starfiniti-loyalty
 gh attestation verify oci://ghcr.io/starfiniti/loyalty-dashboard:vX.Y.Z --repo Starfiniti/starfiniti-loyalty
 gh attestation verify oci://ghcr.io/starfiniti/loyalty-worker:vX.Y.Z --repo Starfiniti/starfiniti-loyalty
 ```
@@ -54,7 +64,7 @@ Run these commands in a new empty directory. Treat the downloaded files and scan
 - Low/Informational: review for systemic patterns and convert recurring findings into tests or configuration controls.
 - False positive: retain scanner/rule/version, exact artifact digest, technical reproduction, reviewer, expiry, and regression check. Blanket or path-wide suppression is prohibited.
 
-The current digest-bound Medium register reconciles 30 raw image-licence occurrences to 16 exact package/version/licence dispositions. It records zero false positives: the Starfiniti dashboard source is already available, while 15 reciprocal components retain open corresponding-source and third-party-notice obligations under R-056. Triage is not compliance evidence. Tagged dashboard and worker image distribution stays blocked until the distributed artifacts, SBOMs, exact corresponding source, and notices are verified together by the release-security owner. The register expires no later than its earliest source artifact and must be regenerated after image, package, scanner, or source-evidence drift.
+The current digest-bound Medium register reconciles 30 raw image-licence occurrences to 16 exact package/version/licence dispositions and records zero false positives. Those dispositions contained 15 open findings across 13 distinct third-party packages because `libgcc` and `libstdc++` each carried two licence findings and sharp/libvips was still traced. ADR-0083 removes sharp and supplies a release-bound source plan and fail-closed generator for the Starfiniti product plus the 12 remaining Alpine reciprocal components. Repository wiring and synthetic verification are not compliance evidence. R-056 keeps tagged dashboard and worker image distribution blocked until a real release's image digests, SBOMs, source archive, external manifest, notices, checksums, and attestations verify together and the release-security owner approves completeness. The register expires no later than its earliest source artifact and must be regenerated after image, package, scanner, or source-evidence drift.
 
 The dashboard enforces ADR-0082 at the deployable-container boundary. Each document response receives a fresh nonce-bound script policy from Next.js Proxy; all responses deny framing and MIME sniffing, and API responses receive a non-executable sandbox policy. The isolated Security job checks the real response before ZAP. A reverse proxy may add stricter controls, but it cannot substitute for or weaken the application policy.
 
@@ -67,7 +77,7 @@ Every minimized YAML completion artifact must be a stable regular file below the
 Before changing `docs/plan/evidence/M15/security.yaml` to `complete`, obtain and sanitize:
 
 - fresh exact-head security workflow results and SBOM digests;
-- a tagged release verification with file and image attestations;
+- a tagged release verification naming and hashing all seven files, proving both source-envelope checks, reconciling all 13 planned reciprocal components, and verifying both image attestations;
 - a production configuration/passive scan performed under an approved window;
 - an independent penetration-test report and remediation retest;
 - a complete finding register with zero unresolved Critical/High items; and

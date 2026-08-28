@@ -3321,6 +3321,7 @@ tasks:
             CodeQL repository and both deployable-image scans pass on the exact candidate,
             the worker image imports only its exact external nodemailer postgres and zod packages and carries no root-workspace dependency tree,
             dashboard and worker SBOMs reconcile to exact image digests,
+            every reciprocal SBOM component reconciles to one checksum-bound source plan and the release publishes the exact product source Alpine build recipes patches upstream inputs licence texts manifest and notices before either image is pushed,
             bounded disposable ZAP scan passes with no High alert and retained report,
             the deployable dashboard returns a fresh nonce-bound script policy plus application-owned framing and MIME controls,
             tagged release checksum and file plus image attestations verify,
@@ -3334,6 +3335,7 @@ tasks:
             dynamic scan reaches production or retains a mutable target,
             response protection exists only at an assumed reverse proxy or permits unsafe inline script,
             release SBOM does not match the published image,
+            corresponding source omits an SBOM component source input build recipe patch licence text or checksum binding or is generated after image publication,
             a deterministic finding is suppressed by severity exclusion or blanket waiver,
             penetration scope or remediation retest is incomplete,
           ]
@@ -3343,6 +3345,8 @@ tasks:
           [
             npm run ci:validate,
             npm run security:validate,
+            npm run release:sources:validate,
+            npm run release:sources:inventory -- --dashboard-sbom <dashboard-cyclonedx-json> --worker-sbom <worker-cyclonedx-json>,
             GitHub Security workflow on the exact candidate,
             tagged release checksum SBOM and attestation verification,
             independent penetration-test and retest summary validation,
@@ -3353,7 +3357,9 @@ tasks:
             docs/plan/evidence/M15/runs/security-medium-triage-f9c83ac.yaml,
             docs/architecture/ADR/0064-deployable-artifact-security-and-isolated-dast.md,
             docs/architecture/ADR/0082-request-bound-dashboard-content-security-policy.md,
+            docs/architecture/ADR/0083-release-bound-corresponding-source-artifacts.md,
             docs/operations/SECURITY_SCANNING.md,
+            infrastructure/testing/security/reciprocal-source-plan.yaml,
             infrastructure/testing/security/trivy.yaml,
           ]
       - id: M15-S04-CLEAN-ROOM-RECOVERY

@@ -77,6 +77,15 @@ const artifactKeys = [
   "findingRegisterPath",
   "findingRegisterSha256",
 ];
+const expectedReleaseFiles = [
+  "SHA256SUMS",
+  "loyalty-dashboard.cdx.json",
+  "loyalty-worker.cdx.json",
+  "starfiniti-loyalty-source-manifest.json",
+  "starfiniti-loyalty-source.tar.gz",
+  "starfiniti-loyalty-third-party-notices.md",
+  "starfiniti-loyalty.zip",
+].sort();
 const pendingLanguagePattern =
   /\b(await|pending|remain|requires?|must|not yet|has not|will|future|todo)\b/iu;
 const uuidPattern =
@@ -795,21 +804,68 @@ function validateSecurityRun(run, candidate) {
 }
 
 function validateRelease(release, candidate) {
+  exactKeys(
+    release,
+    [
+      "candidateCommit",
+      "checksumsVerified",
+      "fileAttestationsVerified",
+      "files",
+      "imageAttestationsVerified",
+      "imageDigests",
+      "reciprocalComponentsVerified",
+      "sbomSha256",
+      "schema",
+      "sourceArchiveVerified",
+      "sourceManifestVerified",
+      "tag",
+      "verifiedAt",
+    ],
+    "release security verification",
+  );
+  const files = release.files;
+  const filesByName = new Map(
+    Array.isArray(files) ? files.map((file) => [file?.name, file]) : [],
+  );
   if (
     release?.schema !== "starfiniti.release-security-verification.v1" ||
     release.candidateCommit !== candidate.candidate.commit ||
     !/^v\d+\.\d+\.\d+$/u.test(release.tag) ||
     release.checksumsVerified !== true ||
-    release.fileAttestationsVerified !== 4 ||
+    release.fileAttestationsVerified !== 7 ||
+    release.sourceArchiveVerified !== true ||
+    release.sourceManifestVerified !== true ||
+    release.reciprocalComponentsVerified !== 13 ||
+    !Array.isArray(files) ||
+    files.length !== expectedReleaseFiles.length ||
+    filesByName.size !== expectedReleaseFiles.length ||
+    [...filesByName.keys()].sort().join(",") !==
+      expectedReleaseFiles.join(",") ||
+    files.some(
+      (file) =>
+        !file ||
+        Object.keys(file).sort().join(",") !==
+          "attestationVerified,name,sha256" ||
+        file.attestationVerified !== true ||
+        !/^[0-9a-f]{64}$/u.test(file.sha256) ||
+        /^0{64}$/u.test(file.sha256),
+    ) ||
     release.imageAttestationsVerified !== 2 ||
     !Array.isArray(release.imageDigests) ||
     release.imageDigests.length !== 2 ||
     release.imageDigests.some(
-      (digest) => !/^sha256:[0-9a-f]{64}$/u.test(digest),
+      (digest) =>
+        !/^sha256:[0-9a-f]{64}$/u.test(digest) ||
+        /^sha256:0{64}$/u.test(digest),
     ) ||
     !Array.isArray(release.sbomSha256) ||
     release.sbomSha256.length !== 2 ||
-    release.sbomSha256.some((digest) => !/^[0-9a-f]{64}$/u.test(digest))
+    release.sbomSha256.some(
+      (digest) => !/^[0-9a-f]{64}$/u.test(digest) || /^0{64}$/u.test(digest),
+    ) ||
+    release.sbomSha256[0] !==
+      filesByName.get("loyalty-dashboard.cdx.json")?.sha256 ||
+    release.sbomSha256[1] !== filesByName.get("loyalty-worker.cdx.json")?.sha256
   ) {
     fail("release security verification is incomplete or inconsistent");
   }
@@ -914,6 +970,10 @@ export function validateDocument(
     ["releaseWorkflow", ".github/workflows/release.yml"],
     ["dastPlan", "infrastructure/testing/security/zap-automation.yaml"],
     ["licensePolicy", "infrastructure/testing/security/trivy.yaml"],
+    [
+      "reciprocalSourcePlan",
+      "infrastructure/testing/security/reciprocal-source-plan.yaml",
+    ],
   ];
   for (const [id, path] of exactInputs) {
     if (
@@ -1150,13 +1210,60 @@ if (process.argv.includes("--self-test")) {
   weakFailures.automaticFails = weakFailures.automaticFails.slice(0, 5);
   expectRejected(weakFailures, "eighteen unique", "weak failure rules");
 
+  const syntheticReleaseFiles = expectedReleaseFiles.map((name, index) => ({
+    name,
+    sha256: (index + 1).toString(16).padStart(64, "0"),
+    attestationVerified: true,
+  }));
+  const syntheticRelease = {
+    schema: "starfiniti.release-security-verification.v1",
+    candidateCommit: evidence.candidate.commit,
+    tag: "v1.0.0",
+    checksumsVerified: true,
+    fileAttestationsVerified: 7,
+    files: syntheticReleaseFiles,
+    imageAttestationsVerified: 2,
+    imageDigests: [`sha256:${"a".repeat(64)}`, `sha256:${"b".repeat(64)}`],
+    reciprocalComponentsVerified: 13,
+    sbomSha256: [
+      syntheticReleaseFiles.find(
+        (file) => file.name === "loyalty-dashboard.cdx.json",
+      ).sha256,
+      syntheticReleaseFiles.find(
+        (file) => file.name === "loyalty-worker.cdx.json",
+      ).sha256,
+    ],
+    sourceArchiveVerified: true,
+    sourceManifestVerified: true,
+    verifiedAt: "2026-08-28T18:00:00Z",
+  };
+  validateRelease(syntheticRelease, evidence);
+  const incompleteReleaseFiles = structuredClone(syntheticRelease);
+  incompleteReleaseFiles.files.pop();
+  try {
+    validateRelease(incompleteReleaseFiles, evidence);
+    fail("self-test accepted incomplete release file evidence");
+  } catch (error) {
+    if (
+      !(error instanceof Error) ||
+      !error.message.includes("release security verification is incomplete")
+    ) {
+      throw error;
+    }
+  }
+
+  const historicalTriagePath =
+    "docs/plan/evidence/M15/runs/security-medium-triage-f9c83ac.yaml";
   const mediumTriage = readBoundArtifact(
-    evidence.triage.path,
-    evidence.triage.sha256,
+    historicalTriagePath,
+    rawDigest(historicalTriagePath),
   );
+  const mediumTriageEvidence = structuredClone(evidence);
+  mediumTriageEvidence.inputs.securityWorkflow.sha256 =
+    mediumTriage.source.securityWorkflowSha256;
   const expectTriageRejected = (candidate, message, label) => {
     try {
-      validateMediumTriage(candidate, evidence, risksText);
+      validateMediumTriage(candidate, mediumTriageEvidence, risksText);
     } catch (error) {
       if (error instanceof Error && error.message.includes(message)) return;
       throw error;
@@ -1226,19 +1333,6 @@ if (process.argv.includes("--self-test")) {
     weakenedRemediation,
     "remediation evidence",
     "real defect relabelled false positive",
-  );
-
-  const prematureRelease = structuredClone(evidence);
-  const releaseCheck = prematureRelease.checks.find(
-    (check) => check.id === "release_sbom_verification",
-  );
-  releaseCheck.status = "passed";
-  releaseCheck.evidence =
-    "Exact release payload checksums and both image SBOMs were verified against one signed immutable release candidate.";
-  expectRejected(
-    prematureRelease,
-    "tagged release evidence conflicts",
-    "release evidence with open reciprocal obligations",
   );
 }
 

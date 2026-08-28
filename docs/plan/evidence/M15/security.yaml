@@ -11,16 +11,19 @@ candidate:
 inputs:
   securityWorkflow:
     path: .github/workflows/security.yml
-    sha256: 1c47888084b794adf5c6acfaa9442b6e334893e2d4861a642751d17ee219b301
+    sha256: f5bcb92d10f52a2e60f2d7df8b00b36aac9e41f8115e84619619f4b3ca7b1b93
   releaseWorkflow:
     path: .github/workflows/release.yml
-    sha256: 379bd17a50780ff043af30d724c1b51d1774a12d8d10c4cc5ba282a7ad434892
+    sha256: 60ec9a315ce06ebea87bcfeac98a8e5583dfa6e34db3c06096e7c3265710b3df
   dastPlan:
     path: infrastructure/testing/security/zap-automation.yaml
     sha256: af8478c13983e575522077f7a8452d39c55cb1ec7386470bca1241f4fc2f0aff
   licensePolicy:
     path: infrastructure/testing/security/trivy.yaml
     sha256: 1eed0cc5db61226b7c2ac79615169aac01c6fadfedc64d6ef3caf784a07143c3
+  reciprocalSourcePlan:
+    path: infrastructure/testing/security/reciprocal-source-plan.yaml
+    sha256: f18efecff2711e8f49a433c9946090b5f937fb757f8433483e965e2c5ea881f8
   tools:
     codeqlAction: 4.37.9
     trivyAction: 0.36.0
@@ -42,8 +45,8 @@ artifacts:
   findingRegisterPath: null
   findingRegisterSha256: null
 triage:
-  path: docs/plan/evidence/M15/runs/security-medium-triage-f9c83ac.yaml
-  sha256: bf06ca1dc8138aff3f1f5d6e9640e7356ccd8678206fbce43804ed1c8d8b42cf
+  path: null
+  sha256: null
 checks:
   - id: workflow_contract
     status: passed
@@ -59,10 +62,10 @@ checks:
     evidence: The canonical ZAP plan targets only the named disposable container with bounded crawl active-scan wait report and High-alert exit jobs.
   - id: release_evidence_contract
     status: passed
-    evidence: The tagged release workflow generates two CycloneDX files checksums file provenance and registry-backed image attestations.
+    evidence: The tagged workflow builds both images locally, inventories their reciprocal components, creates and independently verifies exact corresponding source before registry login, then checksums and attests all seven files plus both image digests.
   - id: fail_closed_manifest
     status: passed
-    evidence: The repository validator rejects drift sensitive evidence false completion missing checks task mismatch and unsafe DAST or release controls.
+    evidence: Repository validators reject drift-sensitive evidence, false completion, missing checks, unsafe DAST, optimizer reintroduction, unplanned reciprocal components, incomplete source inputs, and release publication before source verification.
   - id: exact_head_ci
     status: passed
     evidence: GitHub Actions CI run 33195600450 completed successfully at head f9c83ac5de0fc7c73aed7528dc8e158ef45df17d across baseline, database replay and pgTAP, both images, the worker runtime import probe, and all four minimum/current HPOS/legacy WooCommerce jobs.
@@ -95,10 +98,10 @@ checks:
     evidence: CodeQL Trivy ZAP and package-advisory databases must be current inside the approved evidence age at final review.
   - id: release_sbom_verification
     status: pending
-    evidence: A tagged release must publish both SBOMs and all three downloaded release payloads must match the signed checksum file.
+    evidence: A real tagged release must publish both SBOMs, exact corresponding source, manifest, notices, and connector package with all six pre-checksum payloads matching the attested checksum file.
   - id: release_file_attestations
     status: pending
-    evidence: GitHub CLI verification must accept provenance for the connector package both SBOMs and the exact checksum file.
+    evidence: GitHub CLI verification must accept repository provenance for the connector package, both SBOMs, source archive, source manifest, third-party notices, and exact checksum file.
   - id: release_image_attestations
     status: pending
     evidence: GitHub CLI verification must accept registry-backed provenance for the exact dashboard and worker release image digests.
@@ -115,8 +118,8 @@ checks:
     status: pending
     evidence: Exact-head automated sources contain zero unresolved Critical or High item; the final reconciled register also needs the production review and independent penetration-test sources.
   - id: medium_and_false_positive_review
-    status: passed
-    evidence: Digest-bound triage bf06ca1dc8138aff3f1f5d6e9640e7356ccd8678206fbce43804ed1c8d8b42cf reconciles all 30 raw Medium licence occurrences to 16 exact dispositions, records zero false positives, closes both real DAST findings through current report evidence, and binds 15 reciprocal components to expiring R-056 release obligations.
+    status: pending
+    evidence: The prior digest-bound review remains historical; optimizer removal and reciprocal inventory enforcement require a fresh exact-head image/SBOM reconciliation, false-positive review, and expiring R-056 disposition.
   - id: development_advisory_resolved
     status: passed
     evidence: Exact-head Security audit found zero complete-tree vulnerabilities, and CI run 33195600450 passed all four Linux minimum/current HPOS/legacy WooCommerce cells with @wordpress/env 11.14.0, patched adm-zip 0.6.0, and no extract-zip package.
@@ -132,6 +135,7 @@ automaticFails:
   - A prohibited or restricted production-image licence finding is suppressed without an exact package legal decision and independent review.
   - An SBOM is missing malformed generated from a different image or cannot be reconciled to the released image and candidate commit.
   - Release files or container images lack verifiable repository-scoped provenance for their exact checksum or registry digest.
+  - The reciprocal source plan omits a distributed component or exact build input, an archive exceeds its bounds or differs from its manifest, or registry authentication occurs before independent source verification.
   - The dynamic scanner can route outside its internal disposable Docker network or can reach any public staging or production origin.
   - The deployable dashboard omits CSP framing or MIME controls permits unsafe-inline script or relies on an unverified reverse proxy to add them.
   - The dynamic scan receives authentication secrets customer data provider credentials production configuration or a mutable value-bearing database.

@@ -9,6 +9,11 @@ const securityWorkflowPath = ".github/workflows/security.yml";
 const securityWorkflow = parse(readFileSync(securityWorkflowPath, "utf8"));
 const trivyPolicyPath = "infrastructure/testing/security/trivy.yaml";
 const trivyPolicy = parse(readFileSync(trivyPolicyPath, "utf8"));
+const reciprocalSourcePlanPath =
+  "infrastructure/testing/security/reciprocal-source-plan.yaml";
+const reciprocalSourcePlan = parse(
+  readFileSync(reciprocalSourcePlanPath, "utf8"),
+);
 
 function requireCondition(condition, message) {
   if (!condition) throw new Error(`${workflowPath}: ${message}`);
@@ -177,6 +182,34 @@ for (const [jobName, job] of Object.entries(releaseWorkflow?.jobs ?? {})) {
 
 const releaseSteps = releaseWorkflow.jobs?.release?.steps ?? [];
 const releaseStepContract = JSON.stringify(releaseSteps);
+const reciprocalArtifactNames = reciprocalSourcePlan?.artifact;
+requireCondition(
+  reciprocalSourcePlan?.schema === "starfiniti.reciprocal-source-plan.v1" &&
+    reciprocalArtifactNames?.archive === "starfiniti-loyalty-source.tar.gz" &&
+    reciprocalArtifactNames?.manifest ===
+      "starfiniti-loyalty-source-manifest.json" &&
+    reciprocalArtifactNames?.notices ===
+      "starfiniti-loyalty-third-party-notices.md",
+  `${reciprocalSourcePlanPath}: exact reciprocal release artifact contract is required`,
+);
+const releasePayloads = [
+  "dist/starfiniti-loyalty.zip",
+  "dist/loyalty-dashboard.cdx.json",
+  "dist/loyalty-worker.cdx.json",
+  ...[
+    reciprocalArtifactNames.archive,
+    reciprocalArtifactNames.manifest,
+    reciprocalArtifactNames.notices,
+  ].map((name) => `dist/${name}`),
+];
+const attestedReleaseFiles = [...releasePayloads, "dist/SHA256SUMS"];
+const exactDistPaths = (value) =>
+  [...new Set(value?.match(/dist\/[A-Za-z0-9][A-Za-z0-9._+-]*/gu) ?? [])]
+    .sort()
+    .join(",");
+const exactAttestedReleasePaths = [...attestedReleaseFiles].sort().join(",");
+const normalizeShell = (value) =>
+  value?.replaceAll("\\\n", " ").replace(/\s+/gu, " ").trim();
 for (const requiredCommand of [
   "npm run check",
   "npm run db:verify",
@@ -185,11 +218,14 @@ for (const requiredCommand of [
   "apps/dashboard/Dockerfile",
   "apps/worker/Dockerfile",
   "cyclonedx-json",
+  "npm run release:sources:build",
+  "npm run release:sources:verify",
   "actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8",
   "subject-digest",
   "push-to-registry",
   "dist/loyalty-dashboard.cdx.json",
   "dist/loyalty-worker.cdx.json",
+  ...releasePayloads.slice(3),
   "gh release create",
 ]) {
   requireCondition(
@@ -203,6 +239,8 @@ const orderedReleaseSteps = [
   "Build immutable application images",
   "Generate dashboard CycloneDX SBOM",
   "Generate worker CycloneDX SBOM",
+  "Build exact corresponding source release artifacts",
+  "Verify exact corresponding source release artifacts",
   "Write release checksums",
   "Authenticate to GitHub Container Registry",
   "Publish immutable application images and capture digests",
@@ -217,7 +255,7 @@ requireCondition(
       (index, position) =>
         position === 0 || index > orderedReleaseSteps[position - 1],
     ),
-  `${releaseWorkflowPath}: build SBOM checksum publication attestation and release order must fail before publishing unsupported evidence`,
+  `${releaseWorkflowPath}: build SBOM source verification checksum publication attestation and release order must fail before publishing unsupported evidence`,
 );
 const imageBuildStep =
   releaseSteps[releaseStepIndex("Build immutable application images")];
@@ -236,6 +274,79 @@ requireCondition(
       '[[ "$worker_digest" =~ ^sha256:[0-9a-f]{64}$ ]]',
     ),
   `${releaseWorkflowPath}: local image build and post-SBOM digest-bound publication must remain separate`,
+);
+const sourceBuildStep =
+  releaseSteps[
+    releaseStepIndex("Build exact corresponding source release artifacts")
+  ];
+const sourceVerifyStep =
+  releaseSteps[
+    releaseStepIndex("Verify exact corresponding source release artifacts")
+  ];
+const checksumStep = releaseSteps[releaseStepIndex("Write release checksums")];
+const registryAuthIndex = releaseStepIndex(
+  "Authenticate to GitHub Container Registry",
+);
+const sourceArgumentContract = [
+  "--dashboard-sbom dist/loyalty-dashboard.cdx.json",
+  "--worker-sbom dist/loyalty-worker.cdx.json",
+  '--candidate-commit "$GITHUB_SHA"',
+  '--tag "$GITHUB_REF_NAME"',
+  '--source-date-epoch "$source_date_epoch"',
+  "--output-dir dist",
+];
+requireCondition(
+  sourceBuildStep?.run?.includes("npm run release:sources:build") &&
+    sourceVerifyStep?.run?.includes("npm run release:sources:verify") &&
+    [sourceBuildStep, sourceVerifyStep].every((step) =>
+      sourceArgumentContract.every((argument) => step.run.includes(argument)),
+    ) &&
+    releaseStepIndex("Verify exact corresponding source release artifacts") <
+      registryAuthIndex &&
+    releaseStepIndex("Verify exact corresponding source release artifacts") <
+      releaseStepIndex(
+        "Publish immutable application images and capture digests",
+      ),
+  `${releaseWorkflowPath}: exact source build and independent verification must complete before registry authentication or image publication`,
+);
+requireCondition(
+  normalizeShell(checksumStep?.run) ===
+    `sha256sum ${releasePayloads.join(" ")} > dist/SHA256SUMS` &&
+    exactDistPaths(checksumStep.run) === exactAttestedReleasePaths,
+  `${releaseWorkflowPath}: the checksum file must bind every release payload`,
+);
+const fileAttestationStep =
+  releaseSteps[releaseStepIndex("Attest release files")];
+const releasePublicationStep =
+  releaseSteps[releaseStepIndex("Publish GitHub release")];
+requireCondition(
+  fileAttestationStep?.with?.["subject-path"]
+    ?.split(/\r?\n/u)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join(",") === attestedReleaseFiles.join(",") &&
+    normalizeShell(releasePublicationStep?.run) ===
+      `gh release create "$GITHUB_REF_NAME" ${attestedReleaseFiles.join(" ")} --verify-tag --generate-notes --title "Starfiniti Loyalty $GITHUB_REF_NAME"` &&
+    exactDistPaths(releasePublicationStep.run) === exactAttestedReleasePaths,
+  `${releaseWorkflowPath}: release publication and file provenance must include all seven exact files`,
+);
+
+const dashboardNextConfig = readFileSync(
+  "apps/dashboard/next.config.ts",
+  "utf8",
+);
+const dashboardStandalonePreparation = readFileSync(
+  "apps/dashboard/scripts/prepare-standalone.mjs",
+  "utf8",
+);
+requireCondition(
+  /images:\s*\{\s*unoptimized:\s*true,?\s*\}/u.test(dashboardNextConfig) &&
+    dashboardStandalonePreparation.includes("node_modules/sharp/") &&
+    dashboardStandalonePreparation.includes("node_modules/@img/") &&
+    dashboardStandalonePreparation.includes(
+      "Refusing to remove unexpected traced @img package",
+    ),
+  "dashboard must disable its unused optimizer and fail closed before pruning the traced sharp runtime family",
 );
 
 requireCondition(
@@ -450,6 +561,16 @@ requireCondition(
 requireCondition(
   supplySteps.some(
     (step) =>
+      step.name === "Verify exact reciprocal source inventory" &&
+      step.run?.includes("npm run release:sources:inventory") &&
+      step.run.includes("--dashboard-sbom dist/security/dashboard.cdx.json") &&
+      step.run.includes("--worker-sbom dist/security/worker.cdx.json"),
+  ),
+  `${securityWorkflowPath}: both exact image SBOMs must pass the reciprocal source inventory contract`,
+);
+requireCondition(
+  supplySteps.some(
+    (step) =>
       step.name === "Upload minimized supply-chain evidence" &&
       step.if === "always()" &&
       step.with?.name === "security-supply-chain-${{ github.sha }}" &&
@@ -520,6 +641,8 @@ for (const requirement of [
   "X-Frame-Options:",
   "X-Content-Type-Options:",
   "script-src[^;]*'unsafe-inline'",
+  "/_next/image?",
+  "r.status!==404",
   "zap.sh -cmd -autorun /zap/wrk/infrastructure/testing/security/zap-automation.yaml",
   "docker rm --force starfiniti-dast-target",
   "docker network rm starfiniti-dast",

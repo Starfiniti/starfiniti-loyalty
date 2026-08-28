@@ -5,6 +5,9 @@ import {
 } from "./lib/security-headers";
 
 const nextConfig: NextConfig = {
+  images: {
+    unoptimized: true,
+  },
   reactStrictMode: true,
   poweredByHeader: false,
   output: "standalone",
