@@ -1,10 +1,14 @@
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
-  createReadStream,
+  closeSync,
+  constants,
   createWriteStream,
+  fstatSync,
+  lstatSync,
+  openSync,
+  readSync,
   readFileSync,
-  statSync,
 } from "node:fs";
 import {
   lstat,
@@ -29,7 +33,7 @@ import {
   sep,
 } from "node:path";
 import { pipeline } from "node:stream/promises";
-import { Transform } from "node:stream";
+import { Readable, Transform } from "node:stream";
 import { fileURLToPath } from "node:url";
 import { request as httpsRequest } from "node:https";
 import { createGunzip, createGzip } from "node:zlib";
@@ -165,13 +169,131 @@ function digestBytes(bytes, algorithm = "sha256") {
   return createHash(algorithm).update(bytes).digest("hex");
 }
 
-function digestFile(path, algorithm = "sha256") {
-  return new Promise((resolveDigest, rejectDigest) => {
+function inspectStableRegularFile(
+  path,
+  {
+    algorithm = "sha256",
+    allowMissing = false,
+    captureBytes = false,
+    label,
+    maximumBytes,
+    minimumBytes = 0,
+  },
+) {
+  let descriptor;
+  try {
+    descriptor = openSync(
+      path,
+      constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0),
+    );
+    const opened = fstatSync(descriptor);
+    const linked = lstatSync(path);
+    if (
+      !opened.isFile() ||
+      !linked.isFile() ||
+      opened.dev !== linked.dev ||
+      opened.ino !== linked.ino ||
+      !Number.isSafeInteger(opened.size) ||
+      opened.size < minimumBytes ||
+      opened.size > maximumBytes
+    ) {
+      fail(`${label} is not one stable bounded regular file`);
+    }
+    const bytes = captureBytes ? Buffer.alloc(opened.size) : undefined;
+    const chunk = captureBytes
+      ? bytes
+      : Buffer.allocUnsafe(Math.min(Math.max(opened.size, 1), 64 * 1024));
     const hash = createHash(algorithm);
-    const input = createReadStream(path);
-    input.on("data", (chunk) => hash.update(chunk));
-    input.on("error", rejectDigest);
-    input.on("end", () => resolveDigest(hash.digest("hex")));
+    let offset = 0;
+    while (offset < opened.size) {
+      const remaining = opened.size - offset;
+      const requested = Math.min(chunk.length, remaining);
+      const count = readSync(
+        descriptor,
+        chunk,
+        captureBytes ? offset : 0,
+        requested,
+        offset,
+      );
+      if (count === 0) fail(`${label} changed while reading`);
+      hash.update(
+        captureBytes
+          ? chunk.subarray(offset, offset + count)
+          : chunk.subarray(0, count),
+      );
+      offset += count;
+    }
+    const final = fstatSync(descriptor);
+    const finalLink = lstatSync(path);
+    if (
+      final.dev !== opened.dev ||
+      final.ino !== opened.ino ||
+      final.size !== opened.size ||
+      final.mtimeMs !== opened.mtimeMs ||
+      final.ctimeMs !== opened.ctimeMs ||
+      finalLink.dev !== opened.dev ||
+      finalLink.ino !== opened.ino
+    ) {
+      fail(`${label} changed while reading`);
+    }
+    return {
+      bytes,
+      digest: hash.digest("hex"),
+      mode: opened.mode,
+      size: opened.size,
+    };
+  } catch (error) {
+    if (allowMissing && descriptor === undefined && error?.code === "ENOENT") {
+      return null;
+    }
+    if (
+      String(error?.message).startsWith("Reciprocal source bundle invalid:")
+    ) {
+      throw error;
+    }
+    fail(`${label} is unreadable`);
+  } finally {
+    if (descriptor !== undefined) closeSync(descriptor);
+  }
+}
+
+function readStableBoundedFile(path, maximumBytes, label) {
+  const inspected = inspectStableRegularFile(path, {
+    captureBytes: true,
+    label,
+    maximumBytes,
+    minimumBytes: 1,
+  });
+  return { bytes: inspected.bytes, sha256: inspected.digest };
+}
+
+function createDescriptorReadStream(descriptor, expectedBytes, label) {
+  let offset = 0;
+  return new Readable({
+    read(requestedBytes) {
+      if (offset === expectedBytes) {
+        this.push(null);
+        return;
+      }
+      const chunk = Buffer.allocUnsafe(
+        Math.min(
+          Math.max(requestedBytes, 1),
+          expectedBytes - offset,
+          64 * 1024,
+        ),
+      );
+      try {
+        const count = readSync(descriptor, chunk, 0, chunk.length, offset);
+        if (count === 0) {
+          this.destroy(new Error(`${label} changed while reading`));
+          return;
+        }
+        offset += count;
+        this.push(chunk.subarray(0, count));
+      } catch (error) {
+        this.destroy(error);
+      }
+    },
   });
 }
 
@@ -685,12 +807,16 @@ async function walkTree(basePath, options = {}) {
         await visit(absolute, path);
       } else if (details.isFile()) {
         if (options.exclude?.has(path)) continue;
+        const inspected = inspectStableRegularFile(absolute, {
+          label: `bundle file ${path}`,
+          maximumBytes: plan.artifact.maxExpandedBytes,
+        });
         entries.push({
           path,
           type: "file",
-          size: details.size,
-          mode: details.mode & 0o111 ? 0o755 : 0o644,
-          sha256: await digestFile(absolute),
+          size: inspected.size,
+          mode: inspected.mode & 0o111 ? 0o755 : 0o644,
+          sha256: inspected.digest,
         });
       } else if (details.isSymbolicLink()) {
         if (options.exclude?.has(path)) continue;
@@ -760,24 +886,27 @@ async function verifyApkbuildInputs(staging, origin) {
   for (const entry of checksums) {
     const localPath = join(packagingRoot, entry.file);
     const remotePath = join(upstreamRoot, entry.file);
-    const localExists = await lstat(localPath).then(
-      () => true,
-      () => false,
-    );
-    const remoteExists = await lstat(remotePath).then(
-      () => true,
-      () => false,
-    );
-    if (localExists === remoteExists) {
+    const local = inspectStableRegularFile(localPath, {
+      algorithm: "sha512",
+      allowMissing: true,
+      label: `${origin.id} local source ${entry.file}`,
+      maximumBytes: plan.artifact.maxExpandedBytes,
+    });
+    const remote = inspectStableRegularFile(remotePath, {
+      algorithm: "sha512",
+      allowMissing: true,
+      label: `${origin.id} remote source ${entry.file}`,
+      maximumBytes: plan.artifact.maxExpandedBytes,
+    });
+    if (Boolean(local) === Boolean(remote)) {
       fail(
         `${origin.id} ${entry.file} must resolve to exactly one source input`,
       );
     }
-    const sourcePath = localExists ? localPath : remotePath;
-    if ((await digestFile(sourcePath, "sha512")) !== entry.sha512) {
+    if ((local ?? remote).digest !== entry.sha512) {
       fail(`${origin.id} ${entry.file} does not match APKBUILD SHA-512`);
     }
-    if (remoteExists) {
+    if (remote) {
       const planned = plannedSources.get(entry.file);
       if (!planned || planned.sha512 !== entry.sha512) {
         fail(`${origin.id} ${entry.file} is not bound by the source plan`);
@@ -878,6 +1007,8 @@ async function inspectArchive(archivePath, candidate) {
   const seen = new Set();
   const contents = new Map();
   let expandedBytes = 0;
+  let archiveBytes = 0;
+  const archiveHash = createHash("sha256");
 
   extractor.on("entry", (header, stream, next) => {
     let settled = false;
@@ -967,12 +1098,73 @@ async function inspectArchive(archivePath, candidate) {
     }
   });
 
+  let descriptor;
+  let opened;
   try {
-    await pipeline(createReadStream(archivePath), createGunzip(), extractor);
+    descriptor = openSync(
+      archivePath,
+      constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0),
+    );
+    opened = fstatSync(descriptor);
+    const linked = lstatSync(archivePath);
+    if (
+      !opened.isFile() ||
+      !linked.isFile() ||
+      opened.dev !== linked.dev ||
+      opened.ino !== linked.ino ||
+      opened.size < 1 ||
+      opened.size > candidate.artifact.maxArchiveBytes
+    ) {
+      fail("source archive is not one stable bounded regular file");
+    }
+    const meter = new Transform({
+      transform(chunk, _encoding, callback) {
+        archiveBytes += chunk.length;
+        if (archiveBytes > candidate.artifact.maxArchiveBytes) {
+          callback(new Error("source archive bytes exceed the release bound"));
+          return;
+        }
+        archiveHash.update(chunk);
+        callback(null, chunk);
+      },
+    });
+    const archiveStream = createDescriptorReadStream(
+      descriptor,
+      opened.size,
+      "source archive",
+    );
+    await pipeline(archiveStream, meter, createGunzip(), extractor);
+    const final = fstatSync(descriptor);
+    const finalLink = lstatSync(archivePath);
+    if (
+      archiveBytes !== opened.size ||
+      final.dev !== opened.dev ||
+      final.ino !== opened.ino ||
+      final.size !== opened.size ||
+      final.mtimeMs !== opened.mtimeMs ||
+      final.ctimeMs !== opened.ctimeMs ||
+      finalLink.dev !== opened.dev ||
+      finalLink.ino !== opened.ino
+    ) {
+      fail("source archive changed while reading");
+    }
   } catch (error) {
+    if (
+      String(error?.message).startsWith("Reciprocal source bundle invalid:")
+    ) {
+      throw error;
+    }
     fail(`source archive stream verification failed: ${error.message}`);
+  } finally {
+    if (descriptor !== undefined) closeSync(descriptor);
   }
-  return { entries, contents, expandedBytes };
+  return {
+    archiveBytes,
+    archiveSha256: archiveHash.digest("hex"),
+    entries,
+    contents,
+    expandedBytes,
+  };
 }
 
 function validateManifestIdentity(
@@ -1082,18 +1274,18 @@ async function verifyArchiveEnvelope(candidate, outputDirectory, expected) {
   const archivePath = join(outputDirectory, candidate.artifact.archive);
   const manifestPath = join(outputDirectory, candidate.artifact.manifest);
   const noticesPath = join(outputDirectory, candidate.artifact.notices);
-  const archiveSize = statSync(archivePath).size;
-  if (archiveSize <= 0 || archiveSize > candidate.artifact.maxArchiveBytes) {
-    fail("source archive size is outside its release bound");
-  }
-  if (
-    statSync(manifestPath).size > 4_000_000 ||
-    statSync(noticesPath).size > 1_000_000
-  ) {
-    fail("external source manifest or notices exceed their byte bound");
-  }
-  const externalManifest = await readFile(manifestPath);
-  const externalNotices = await readFile(noticesPath);
+  const externalManifestFile = readStableBoundedFile(
+    manifestPath,
+    4_000_000,
+    "external source manifest",
+  );
+  const externalNoticesFile = readStableBoundedFile(
+    noticesPath,
+    1_000_000,
+    "external third-party notices",
+  );
+  const externalManifest = externalManifestFile.bytes;
+  const externalNotices = externalNoticesFile.bytes;
   const inspected = await inspectArchive(archivePath, candidate);
   const internalManifest = inspected.contents.get("SOURCE-MANIFEST.json");
   const internalNotices = inspected.contents.get("THIRD-PARTY-NOTICES.md");
@@ -1151,10 +1343,10 @@ async function verifyArchiveEnvelope(candidate, outputDirectory, expected) {
     fail("archive listing does not match the manifest envelope");
   }
   return {
-    archiveBytes: archiveSize,
-    archiveSha256: await digestFile(archivePath),
-    manifestSha256: await digestFile(manifestPath),
-    noticesSha256: await digestFile(noticesPath),
+    archiveBytes: inspected.archiveBytes,
+    archiveSha256: inspected.archiveSha256,
+    manifestSha256: externalManifestFile.sha256,
+    noticesSha256: externalNoticesFile.sha256,
   };
 }
 
@@ -1373,18 +1565,6 @@ async function verifyBundle(argumentsMap) {
   const identity = releaseIdentity(argumentsMap);
   const outputDirectory = resolve(argumentsMap.get("output-dir") ?? "");
   if (!argumentsMap.get("output-dir")) fail("output directory is required");
-  const manifest = JSON.parse(
-    await readFile(join(outputDirectory, plan.artifact.manifest), "utf8"),
-  );
-  validateManifestIdentity(
-    manifest,
-    plan,
-    identity.candidateCommit,
-    identity.tag,
-    identity.epochSeconds,
-    sbomFacts,
-    inventory,
-  );
   const verification = await verifyArchiveEnvelope(plan, outputDirectory, {
     ...identity,
     inventory,

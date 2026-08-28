@@ -37,7 +37,7 @@ For a signed `vMAJOR.MINOR.PATCH` tag, the release workflow:
 8. attests all seven release files and both image digests; and
 9. publishes all seven files.
 
-ADR-0083 governs the source bundle. It includes the exact Starfiniti source tree, exact Alpine packaging directories and commits, every checksum-bound local or downloaded APKBUILD input, and pinned SPDX licence texts. Downloads are credential-free HTTPS, byte-bounded, and SHA-512 verified. The builder treats APKBUILD and upstream source as data and never executes either. Its verifier streams the gzip/tar envelope, rejects unsafe paths and symlinks before use, and compares each file, mode, byte count, and digest to the external and archived manifests without extracting to disk. An unexpected reciprocal SBOM component fails before image publication.
+ADR-0083 governs the source bundle. It includes the exact Starfiniti source tree, exact Alpine packaging directories and commits, every checksum-bound local or downloaded APKBUILD input, and pinned SPDX licence texts. Downloads are credential-free HTTPS, byte-bounded, and SHA-512 verified. The builder treats APKBUILD and upstream source as data and never executes either. Its verifier opens release envelopes and staged inputs without following the final symlink, hashes the exact descriptor bytes after descriptor/path identity checks, rejects metadata drift after the read, streams the gzip/tar envelope, rejects unsafe paths and symlinks before use, and compares each file, mode, byte count, and digest to the external and archived manifests without extracting to disk. An unexpected reciprocal SBOM component fails before image publication.
 
 Verify a release with the repository-scoped GitHub CLI:
 

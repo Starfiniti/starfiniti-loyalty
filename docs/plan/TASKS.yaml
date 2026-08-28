@@ -3322,6 +3322,7 @@ tasks:
             the worker image imports only its exact external nodemailer postgres and zod packages and carries no root-workspace dependency tree,
             dashboard and worker SBOMs reconcile to exact image digests,
             every reciprocal SBOM component reconciles to one checksum-bound source plan and the release publishes the exact product source Alpine build recipes patches upstream inputs licence texts manifest and notices before either image is pushed,
+            release envelopes staged source and APKBUILD inputs are read through no-follow descriptors with same-byte size and digest evidence plus before-after descriptor and path identity checks,
             bounded disposable ZAP scan passes with no High alert and retained report,
             the deployable dashboard returns a fresh nonce-bound script policy plus application-owned framing and MIME controls,
             tagged release checksum and file plus image attestations verify,
@@ -3336,6 +3337,7 @@ tasks:
             response protection exists only at an assumed reverse proxy or permits unsafe inline script,
             release SBOM does not match the published image,
             corresponding source omits an SBOM component source input build recipe patch licence text or checksum binding or is generated after image publication,
+            a release envelope or staged source path changes between metadata validation reading and hashing,
             a deterministic finding is suppressed by severity exclusion or blanket waiver,
             penetration scope or remediation retest is incomplete,
           ]
