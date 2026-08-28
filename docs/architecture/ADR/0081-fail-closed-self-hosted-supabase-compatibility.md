@@ -28,7 +28,7 @@ Resolved container image digests are locked per supported platform and compared 
 
 ## Security and integrity effects
 
-The validator reads secret-bearing environment files only locally, never prints values, and emits only names, counts, variants, hashes, and pass/fail facts. Exact Compose, mounted-asset, and local platform-image hashes prevent an unreviewed service, mount, route, initialization script, image, or gateway change from hiding behind the same release label. Repository scanning converts future RLS, extension, Realtime, public-schema, and removed-log-API drift into deterministic failures. Enabling RLS without direct policies adds defense in depth if a private-table grant is introduced later.
+The validator reads secret-bearing environment files only locally, never prints values, and emits only names, counts, variants, hashes, and pass/fail facts. Source files are opened once with no-follow semantics, validated through the descriptor, read through that same descriptor, and rejected when their inode metadata changes during the read. Exact Compose, mounted-asset, and local platform-image hashes prevent an unreviewed service, mount, route, initialization script, image, or gateway change from hiding behind the same release label. Repository scanning converts future RLS, extension, Realtime, public-schema, and removed-log-API drift into deterministic failures. Enabling RLS without direct policies adds defense in depth if a private-table grant is introduced later.
 
 The lock does not make an unsigned upstream tag trusted by itself. The resolved commit, official asset digest, reviewed variant digest, registry digest inventory, release process, scanning, backups, and restore evidence remain separate controls.
 

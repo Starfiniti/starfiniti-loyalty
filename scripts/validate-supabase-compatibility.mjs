@@ -2,9 +2,13 @@ import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
+  closeSync,
+  constants,
+  fstatSync,
   lstatSync,
   mkdirSync,
   mkdtempSync,
+  openSync,
   readdirSync,
   readFileSync,
   realpathSync,
@@ -413,6 +417,59 @@ function enumerateRegularFiles(directory, rootDirectory, output) {
   }
 }
 
+function readBoundFile(
+  path,
+  label,
+  { ownerOnly = false, maxBytes = 1024 * 1024, encoding } = {},
+) {
+  const noFollow =
+    process.platform !== "win32" && constants.O_NOFOLLOW
+      ? constants.O_NOFOLLOW
+      : 0;
+  let descriptor;
+  try {
+    descriptor = openSync(path, constants.O_RDONLY | noFollow);
+  } catch {
+    fail(`${label} is unreadable`);
+  }
+  try {
+    const before = fstatSync(descriptor);
+    if (!before.isFile()) fail(`${label} must be a regular file`);
+    if (before.size > maxBytes)
+      fail(`${label} exceeds the reviewed size boundary`);
+    if (process.platform !== "win32") {
+      if (realpathSync(path) !== resolve(path)) {
+        fail(`${label} must not traverse a symlink`);
+      }
+      if ((before.mode & 0o002) !== 0) {
+        fail(`${label} must not be writable by other users`);
+      }
+      if (ownerOnly && (before.mode & 0o077) !== 0) {
+        fail(`${label} must be owner-only`);
+      }
+      if (ownerOnly && before.uid !== process.getuid()) {
+        fail(`${label} must be owned by the invoking operator`);
+      }
+    }
+    const source = encoding
+      ? readFileSync(descriptor, encoding)
+      : readFileSync(descriptor);
+    const after = fstatSync(descriptor);
+    if (
+      before.dev !== after.dev ||
+      before.ino !== after.ino ||
+      before.size !== after.size ||
+      before.mtimeMs !== after.mtimeMs ||
+      before.ctimeMs !== after.ctimeMs
+    ) {
+      fail(`${label} changed while it was being read`);
+    }
+    return source;
+  } finally {
+    closeSync(descriptor);
+  }
+}
+
 function loadCriticalAssetSources(bundleRoot, contract) {
   let rootStatus;
   try {
@@ -452,28 +509,9 @@ function loadCriticalAssetSources(bundleRoot, contract) {
   const sources = {};
   for (const path of Object.keys(contract.criticalAssets)) {
     const absolutePath = join(bundleRoot, path);
-    let status;
-    try {
-      status = lstatSync(absolutePath);
-    } catch {
-      fail(`critical asset ${path} is unreadable`);
-    }
-    if (!status.isFile() || status.isSymbolicLink()) {
-      fail(`critical asset ${path} must be a non-symlink regular file`);
-    }
-    if (
-      process.platform !== "win32" &&
-      realpathSync(absolutePath) !== resolve(absolutePath)
-    ) {
-      fail(`critical asset ${path} must not traverse a symlink`);
-    }
-    if (status.size > 4 * 1024 * 1024) {
-      fail(`critical asset ${path} exceeds the reviewed size boundary`);
-    }
-    if (process.platform !== "win32" && (status.mode & 0o002) !== 0) {
-      fail(`critical asset ${path} must not be writable by other users`);
-    }
-    sources[path] = readFileSync(absolutePath);
+    sources[path] = readBoundFile(absolutePath, `critical asset ${path}`, {
+      maxBytes: 4 * 1024 * 1024,
+    });
   }
   return sources;
 }
@@ -483,32 +521,7 @@ function readDeploymentFile(
   label,
   { ownerOnly = false, maxBytes = 1024 * 1024 } = {},
 ) {
-  let status;
-  try {
-    status = lstatSync(path);
-  } catch {
-    fail(`${label} is unreadable`);
-  }
-  if (!status.isFile() || status.isSymbolicLink()) {
-    fail(`${label} must be a non-symlink regular file`);
-  }
-  if (status.size > maxBytes)
-    fail(`${label} exceeds the reviewed size boundary`);
-  if (process.platform !== "win32") {
-    if (realpathSync(path) !== resolve(path)) {
-      fail(`${label} must not traverse a symlink`);
-    }
-    if ((status.mode & 0o002) !== 0) {
-      fail(`${label} must not be writable by other users`);
-    }
-    if (ownerOnly && (status.mode & 0o077) !== 0) {
-      fail(`${label} must be owner-only`);
-    }
-    if (ownerOnly && status.uid !== process.getuid()) {
-      fail(`${label} must be owned by the invoking operator`);
-    }
-  }
-  return readFileSync(path, "utf8");
+  return readBoundFile(path, label, { ownerOnly, maxBytes, encoding: "utf8" });
 }
 
 function validateLocalImages(platform, contract) {
