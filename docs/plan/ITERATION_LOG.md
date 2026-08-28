@@ -7,6 +7,7 @@
 - Extended the exact provider catalogue and M16 acceptance/runbook/ADR bindings from seven to thirteen sources. A monthly artifact must now record the installed and candidate version or dated entry, source/package provenance where applicable, impact, owner, and disposition through one cutoff; recovery transport review is incomplete unless it covers both endpoints.
 - Added a deterministic adversarial case that substitutes an unofficial rsync source and proves the monthly review fails closed. Existing closed-set checks also reject missing or additional source identities and stale review instants.
 - Added `IMP-010` for the live pre-3.5 rsync boundary. Its exact score is `40 + 20 + 20 + 10 - 4 - 6 = 80`, placing it above the dedicated-repository item while retaining the approved-package/build, rollback, canary, and isolated-restore dependency. M16 remains in progress at 77/100 with seven checks passed and 32 pending; no elapsed review, package acquisition, production change, backup, checkout path, or loyalty value was claimed.
+- Full local checks, 81 migration/68 pgTAP-file validation, the 1,036-file secret scan, zero-vulnerability production audit, and licence inventory passed. Exact implementation head `dd33f778060112d156b6dd5a2fdf03fd85ccbc40` passed CI run `33143147877`, Security run `33143147832`, and external CodeQL with all eleven draft PR #57 checks green; the PR remained draft and merge-clean.
 
 ## 2026-08-28 — Rsync 3.5 recovery-transport security baseline
 
