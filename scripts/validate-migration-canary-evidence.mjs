@@ -13,6 +13,8 @@ import { fileURLToPath } from "node:url";
 
 import YAML from "yaml";
 
+import { validateCanaryManifestEnvelope } from "./lib/validate-canary-manifest-envelope.mjs";
+
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const evidencePath = join(root, "docs/plan/evidence/M12/canary.yaml");
 const tasksPath = join(root, "docs/plan/TASKS.yaml");
@@ -893,6 +895,9 @@ const validateDocument = (
   candidateTasks = tasks,
   artifactReader = readBoundArtifact,
 ) => {
+  validateCanaryManifestEnvelope(candidateEvidence, candidateTasks, fail, {
+    inspect: inspectEvidence,
+  });
   if (candidateEvidence.schema !== "starfiniti.migration-canary.v1") {
     fail("unexpected schema");
   }
@@ -1130,8 +1135,6 @@ const validateDocument = (
   if (candidateEvidence.publicBaseline.canonicalDns !== true) {
     fail("canonical DNS must be verified");
   }
-
-  inspectEvidence(candidateEvidence);
 
   if (
     !Array.isArray(candidateEvidence.automaticFails) ||

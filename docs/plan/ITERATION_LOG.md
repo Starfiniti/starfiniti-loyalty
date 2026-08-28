@@ -1,5 +1,13 @@
 # Iteration Log
 
+## 2026-08-28 — M04–M14 shared canary-envelope hardening
+
+- Reconstructed all eleven module closeout manifests and found that M09 alone enforced an exact bounded parent envelope; the other ten semantic validators could still admit unreviewed parent and nested fields.
+- Added one registered schema catalogue for the exact manifest, production, candidate, public-baseline, score, category, check, artifact, and automatic-failure shapes across rewards, VIP, referrals, campaigns, notifications, storefront, analytics, ecosystem, migration, enterprise identity, and managed billing.
+- Wired the shared boundary into every previously shape-light module validator while preserving each module's existing sensitive-evidence inspection and semantic artifact checks. The root check now runs fourteen independent corruption cases for every module: nine unknown-field locations, an unknown schema, a future timestamp, oversized evidence, a cyclic structure, and an invalid task graph.
+- Adversarial refutation found that the first integration invoked each existing sensitive-evidence inspector twice. The duplicate legacy calls were removed, retaining one bounded shared traversal plus one module-specific sensitive scan per validator.
+- All eleven focused validators and the 154-fixture cross-module harness pass. Scores, pending production controls, deployment state, checkout, and loyalty value are unchanged; this proves stricter evidence handling rather than module completion.
+
 ## 2026-08-28 — M09 manifest-boundary adversarial hardening
 
 - Reconstructed the exact-green M09 candidate and confirmed the 88/100 score is blocked by production operability rather than a missing customer or merchant surface.

@@ -484,6 +484,7 @@ tasks:
       ]
     evidence:
       - docs/plan/evidence/M00/README.md
+      - one registered exact M04-M14 canary-envelope catalogue is enforced by every module gate and 154 deterministic cross-module corruption fixtures
       - npm ci restored 962 packages and the declared worker esbuild binary
       - 177 unit tests lint all workspace typechecks dashboard and worker builds passed
       - CI deployment architecture accessibility WooCommerce migration secret production audit and licence gates passed
