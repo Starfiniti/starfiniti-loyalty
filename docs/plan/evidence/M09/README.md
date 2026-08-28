@@ -67,9 +67,9 @@ Status: in progress. M09-S01 through M09-S05 are complete; M09-S06 disabled depl
 
 ### S02 follow-up — Auth-derived purchase campaign opportunities
 
-- Status: repository candidate verified locally; exact-head clean database replay and
-  security are pending CI. Production remains unchanged and the M09-S06 canary gate
-  remains open.
+- Status: repository-verified on exact implementation head
+  `9644d66ed4835a61d7b5a1053338a9ffe453e0c6`. Production remains unchanged and the
+  M09-S06 canary gate remains open.
 - Architecture: ADR-0078 adds strict additive `CustomerLoyaltyExperienceV3` without
   changing V2. Its no-argument PostgreSQL function derives the Auth subject, active
   customer link, commerce connection, exact programme and wallet, immutable treatment
@@ -93,6 +93,12 @@ Status: in progress. M09-S01 through M09-S05 are complete; M09-S06 disabled depl
   86 migrations and 68 pgTAP files. The adversarial pass repaired programme-unavailable
   compatibility, mobile extreme-number containment, exhausted-capacity presentation,
   and customer-role test authority before handoff.
+- Exact-head verification: [CI 33175790670](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/33175790670)
+  and [Security 33175790673](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/33175790673)
+  passed: 86 migrations replayed cleanly, all 68 pgTAP files passed 3,772 assertions,
+  all 22 concurrency probes passed, both production images built, all four minimum/current
+  HPOS/legacy WooCommerce runtimes passed, and CodeQL, isolated DAST, supply-chain image
+  and SBOM policy, secret scanning, and recovery transport passed.
 - Rollback: return the application reader to V2 and retain the additive V3 function.
   Do not change campaign assignments/effects, ledger value, notifications, native
   coupons, checkout, or WooCommerce behavior.

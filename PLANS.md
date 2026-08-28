@@ -24,8 +24,10 @@ multipliers; and preserves exact bigint/basis-point and combination semantics. C
 other-tenant, revoked, paused, ended, or exhausted opportunities and all raw audience,
 rule, budget, liability, identity, and value authority remain absent. V2/V1 are used only
 when V3 is missing, and malformed V3 fails closed. Production-build desktop/mobile
-review and the complete local 985-test gate pass; exact-head database replay and security
-remain the current CI gate. Production and M09's 88/100 canary state remain unchanged.
+review and the complete local 985-test gate pass. Exact implementation head `9644d66`
+passed CI `33175790670` and Security `33175790673`, including 86 migrations, all 68
+pgTAP files with 3,772 assertions, all 22 concurrency probes, both images, and all four
+WooCommerce runtimes. Production and M09's 88/100 canary state remain unchanged.
 
 The M04–M14 production canary family now shares one exact registered-envelope catalogue. Every module gate rejects unknown parent and nested fields, unregistered schemas, future evidence, strings above 4 KiB, cyclic structures, and invalid task graphs; the root check exercises fourteen corruptions per module, or 154 fixtures in total. This closes a cross-module false-evidence class without changing any module score, pending production control, deployment, checkout path, or loyalty value.
 

@@ -1416,7 +1416,7 @@ tasks:
               images, and all four WooCommerce runtimes
         follow_up_v7:
           id: M09-S02G-AUTH-DERIVED-PURCHASE-CAMPAIGNS
-          status: active
+          status: completed
           hypothesis:
             Showing a signed-in member only their treatment-assigned scheduled or
             active purchase campaigns will make time-bound earning value discoverable
@@ -1484,7 +1484,17 @@ tasks:
               one H1, unique IDs, zero overflow, and zero browser diagnostics
             - the complete local repository gate passes 985 workspace tests, every
               validator and both builds; static validation covers 86 migrations and 68
-              pgTAP files, while exact-head Docker replay and security remain pending CI
+              pgTAP files
+            - exact implementation head 9644d66ed4835a61d7b5a1053338a9ffe453e0c6
+              passed CI 33175790670 and Security 33175790673 including clean replay of
+              86 migrations, all 68 pgTAP files with 3772 assertions, all 22 concurrency
+              probes, both production images, all four WooCommerce runtimes, CodeQL,
+              isolated DAST, supply-chain image and SBOM policy, secret scanning, and
+              recovery transport
+            - three exact-head replay iterations repaired a missing fixture constructor
+              parenthesis, constrained pre-existing tier and reward setup to its original
+              wallet after adding the control customer, and scoped minimization inspection
+              to the new campaign array without weakening the inherited V2 contract
         acceptance:
           - hosted member experience provides overview earning rewards VIP referrals history and account states with useful discovery progress affordability sharing and expiry guidance
           - public guest experience explains programme value without exposing customer state and routes sign-in through the canonical origin

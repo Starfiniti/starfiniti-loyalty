@@ -37,6 +37,20 @@
   migrations and 68 pgTAP files. Docker-backed replay remains mandatory exact-head CI
   evidence because Docker and Podman are unavailable locally. Production, campaigns,
   customer value, WooCommerce, checkout, and M09's 88/100 canary state are unchanged.
+- Exact-head replay found three test-evidence defects before acceptance: the first
+  campaign fixture omitted one JSON-constructor parenthesis; adding a second customer
+  caused older tier/reward setup to target both wallets; and the first minimization
+  assertion scanned the inherited V2 document instead of only the new campaign array.
+  Each was repaired at the fixture/assertion boundary without weakening production
+  behavior, authorization, or the inherited contract. The third replay reached all
+  77 customer-experience assertions and failed only the overbroad minimization check.
+- Exact implementation head `9644d66ed4835a61d7b5a1053338a9ffe453e0c6`
+  passed all required checks in CI `33175790670` and Security `33175790673`: 86
+  migrations replayed cleanly, all 68 pgTAP files passed 3,772 assertions, all 22
+  concurrency probes passed, both production images built, all four WooCommerce
+  runtimes passed, and CodeQL, isolated DAST, supply-chain/image/SBOM policy, secret
+  scanning, and recovery transport passed. Production, customer value, campaigns,
+  checkout, and M09's 88/100 canary state remain unchanged.
 
 ## 2026-08-28 — Guest-safe public referral catalogue
 
