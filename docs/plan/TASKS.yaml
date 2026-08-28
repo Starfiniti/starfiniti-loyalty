@@ -3201,6 +3201,7 @@ tasks:
             infrastructure/environments/proxmox/scripts/starfiniti-loyalty-postgres-borg-maintain,
             scripts/validate-backup-assets.mjs,
             docs/operations/BACKUP_RESTORE.md,
+            exact rsync transport implementation head fa7b4fccc908ba9944780893c40751aa008caaa6 passed CI run 33142071508 Security run 33142071515 and external CodeQL with all eleven checks green,
           ]
       - id: M15-S05-OPERATIONS-AND-INCIDENTS
         title: Complete observability ownership and incident exercises
