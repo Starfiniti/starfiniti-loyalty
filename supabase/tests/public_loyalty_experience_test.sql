@@ -270,7 +270,35 @@ select
     else '7c000000-0000-4000-8000-000000000140'::uuid end,
   organization.id, programme.programme_group_id, programme.id, 1, 'published',
   case when organization.slug = 'public-one' then
-    '{"version":"2","currencyCode":"EUR","currencyMinorUnitDigits":2,"tiers":[],"rewards":[]}'::jsonb
+    '{
+      "version":"2","currencyCode":"EUR","currencyMinorUnitDigits":2,
+      "pendingDays":30,"pointsExpireAfterDays":365,
+      "tiers":[{
+        "code":"rose","name":"Rose","minimumEligibleSpendMinor":"0",
+        "pointsPerMajorUnit":"5"
+      }],
+      "rewards":[],
+      "earningRules":[{
+        "code":"purchase-base","name":"Base purchase points",
+        "source":"purchase","enabled":true,"priority":0,
+        "stackable":false,
+        "effect":{"kind":"base_rate","pointsPerMajorUnit":"5"},
+        "conditions":{
+          "productIds":[],"categoryIds":[],"currencyCodes":[],
+          "markets":[],"channels":[],"activityCodes":[],
+          "segmentCodes":[],"tierCodes":[],"startsAt":null,"endsAt":null
+        },
+        "purchaseExclusions":{
+          "productIds":[],"categoryIds":[],"shipping":true,"tax":true,
+          "fees":true,"giftCardPayments":true,"storeCreditPayments":true,
+          "discounts":true
+        },
+        "cap":{
+          "perEventPoints":null,"perMemberPoints":null,
+          "memberPeriod":null,"rollingDays":null
+        }
+      }]
+    }'::jsonb
   else '{"version":"1","tiers":[],"rewards":[]}'::jsonb end,
   extensions.digest('public-fixture', 'sha256'),
   case when organization.slug = 'public-one' then '7b000000-0000-4000-8000-000000000001'::uuid else null end,
