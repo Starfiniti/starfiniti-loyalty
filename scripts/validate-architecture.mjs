@@ -104,6 +104,7 @@ const acceptedAdrs = [
   "0040-ledger-sourced-versioned-analytics-and-explicit-liability-valuation.md",
   "0081-fail-closed-self-hosted-supabase-compatibility.md",
   "0082-request-bound-dashboard-content-security-policy.md",
+  "0084-bounded-provider-source-provenance-snapshots.md",
 ];
 
 for (const adr of acceptedAdrs) {

@@ -9,6 +9,25 @@ This runbook governs M16. It makes product learning, operational follow-up, and 
 - A missing source is unknown. Never coerce missing metrics, provider checks, exercise output, or owner review into a healthy zero.
 - Historical evidence is never edited to improve a result. Corrections are new records. Architecture decisions are superseded through a later ADR.
 
+## Official-source provenance capture
+
+The provider-source collector creates a bounded pre-review input; it does not perform the monthly review. Validate its deterministic, network-free contract first:
+
+```sh
+npm run continuous-improvement:sources:validate
+```
+
+From a clean exact Git `HEAD`, select an absent absolute `.json` path and capture the thirteen canonical sources:
+
+```sh
+npm run continuous-improvement:sources:capture -- --out /absolute/path/provider-source-snapshot.json
+npm run continuous-improvement:sources:verify -- --in /absolute/path/provider-source-snapshot.json
+```
+
+The collector resolves and pins a public socket address independently for every HTTPS hop, permits only same-host redirects plus the explicit OpenSSH `.com` to `.org` transition, requires identity encoding and one of three textual content types, and hashes at most 4,000,000 streamed bytes per source. It retains no provider body. Its exclusive no-follow output binds the clean candidate commit and the exact governance-plan digest; mode `0600` is enforced on POSIX and requested but not asserted as an equivalent Windows ACL.
+
+After collection, a reviewer must still inspect current official changes, dependency pins, and every required installed host/guest endpoint; classify breaking, security, and support impact; identify affected modules and an owner; and record the disposition. A snapshot never changes `provider_review`, `dependency_pins`, installed evidence, approval, or monthly-close status. A failed source remains unknown; do not bypass the collector's DNS, redirect, TLS, type, encoding, size, timeout, or output controls.
+
 ## Monthly review
 
 Close each calendar month within ten days. The initial M16 gate requires two distinct consecutive months; one review copied twice does not qualify.

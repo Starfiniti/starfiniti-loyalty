@@ -31,7 +31,7 @@ reviewCalendar:
       [restore, tenantIsolation, privacy, scimDeprovisioning, incident]
 providerCatalogue:
   - id: supabase
-    source: https://supabase.com/changelog
+    source: https://supabase.com/changelog.md
     reviewFrequency: monthly
   - id: postgresql
     source: https://www.postgresql.org/support/versioning/
@@ -81,6 +81,27 @@ providerCatalogue:
     reviewFrequency: monthly
     installedEndpoints: [proxmox-host]
     requiresCandidateProvenanceSha256: true
+providerSourceSnapshot:
+  schema: starfiniti.provider-source-snapshot.v1
+  catalogueCount: 13
+  timeoutMs: 20000
+  maximumRedirects: 5
+  maximumResponseBytes: 4000000
+  maximumHeaderBytes: 32768
+  minimumTlsVersion: TLSv1.2
+  acceptedContentTypes: [text/html, text/plain, text/markdown]
+  acceptedContentEncodings: [identity]
+  allowedRedirectHosts:
+    openssh: [www.openssh.org]
+  contentRetained: false
+  reviewComplete: false
+  impactClassified: false
+  installedEvidenceComplete: false
+  output:
+    absolutePathRequired: true
+    extension: .json
+    overwrite: false
+    mode: "0600"
 backlog:
   path: docs/plan/IMPROVEMENT_BACKLOG.yaml
   ranking:

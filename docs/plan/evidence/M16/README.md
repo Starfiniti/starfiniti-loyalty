@@ -11,3 +11,11 @@ validator is part of `npm run check`; two future elapsed monthly reviews must st
 rescore their affected modules and retain prior/current evidence.
 
 Approved run artifacts belong in `runs/` and must use the five schemas in `infrastructure/governance/continuous-improvement.yaml`. Do not commit raw telemetry, personal data, tenant identifiers, customer data, credentials, receiver destinations, provider payloads, or mutable review drafts.
+
+ADR-0084 adds a separate minimized `starfiniti.provider-source-snapshot.v1`
+pre-review artifact. `npm run continuous-improvement:sources:validate` proves the
+network-free corruption cases, while `continuous-improvement:sources:capture`
+requires a clean exact commit and hashes bounded streamed bytes from all thirteen
+official sources without retaining their content. The artifact explicitly leaves
+review, impact classification, installed endpoint evidence, and approval false; it
+cannot make any of the 32 pending M16 closeout checks pass by itself.

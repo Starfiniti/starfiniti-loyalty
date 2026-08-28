@@ -7,7 +7,7 @@ candidate:
   initialCloseApproved: false
 plan:
   path: infrastructure/governance/continuous-improvement.yaml
-  sha256: 3e36f1a70f00a0373d8badb711861c1682c2a76e1cf61c0d14ab47730e0ebeff
+  sha256: a81bd908039352845ea2bc62675f64ff04ca3e988275d9f4374e98519bfb89ea
 backlog:
   path: docs/plan/IMPROVEMENT_BACKLOG.yaml
   sha256: e91ce7632f9a8b13a145069a840d323518fa69905cc3de57bd6d6b46bb25e485
@@ -58,7 +58,7 @@ score:
 checks:
   - id: repository_contract
     status: passed
-    evidence: The canonical contract fixes UTC cadence, review sections, thirteen official sources, exact recovery host and guest endpoints, installed and candidate provenance digests, ranking arithmetic, regression threshold, score floors, experiment guardrails, five artifacts, and automatic failures.
+    evidence: The canonical contract fixes UTC cadence, review sections, thirteen official sources, bounded content-free source snapshots, exact recovery host and guest endpoints, installed and candidate provenance digests, ranking arithmetic, regression threshold, score floors, experiment guardrails, five closeout artifacts, and automatic failures.
   - id: backlog_contract
     status: passed
     evidence: The evidence-ranked backlog records current external and dependency gates with exact integer inputs, recomputable scores, stable order, evidence paths, and owner inputs.
@@ -73,7 +73,7 @@ checks:
     evidence: ADR-0068 compares four approaches, cites canonical official providers, defines the decision, and preserves rollback and historical evidence semantics.
   - id: validator_selftest
     status: passed
-    evidence: The completion fixture and adversarial mutations prove that cadence, freshness, ranking, recurring controls, rescoring, experiment guardrails, exercises, artifacts, approvals, and score floors fail closed.
+    evidence: The completion fixture and adversarial mutations prove that cadence, freshness, ranking, recurring controls, rescoring, experiment guardrails, exercises, artifacts, approvals, and score floors fail closed; the separate collector rejects twenty-three source, network, response, digest, review-claim, and output corruptions without network access.
   - id: exact_head_ci
     status: passed
     evidence: Recovery-governance implementation head a7a00f2cfe082b91f8eef65b0930c24fe1c1e4b8 passed CI run 33144201269 with all seven jobs, Security run 33144201312 with all three jobs, and the external GitHub Advanced Security CodeQL policy check.

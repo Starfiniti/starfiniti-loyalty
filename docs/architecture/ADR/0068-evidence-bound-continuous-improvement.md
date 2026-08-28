@@ -12,7 +12,7 @@ An enterprise roadmap can become stale immediately after GA. Support cases, recu
 
 Application and provider sources reviewed on 2026-08-27:
 
-- Supabase changelog: <https://supabase.com/changelog>
+- Supabase changelog index: <https://supabase.com/changelog.md>
 - PostgreSQL versioning policy: <https://www.postgresql.org/support/versioning/>
 - WooCommerce developer changelog: <https://developer.woocommerce.com/changelog/>
 - Stripe API changelog: <https://docs.stripe.com/changelog>

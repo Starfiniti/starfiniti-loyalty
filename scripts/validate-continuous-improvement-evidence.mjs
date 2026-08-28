@@ -106,7 +106,7 @@ const differenceFields = new Set([
   "dataLoss",
 ]);
 const providerSources = new Map([
-  ["supabase", "https://supabase.com/changelog"],
+  ["supabase", "https://supabase.com/changelog.md"],
   ["postgresql", "https://www.postgresql.org/support/versioning/"],
   ["woocommerce", "https://developer.woocommerce.com/changelog/"],
   ["stripe", "https://docs.stripe.com/changelog"],
@@ -900,6 +900,52 @@ function validateDocument(
       fail(`${provider.id} unexpected recovery requirements`);
     }
   }
+  const snapshotPolicy = candidatePlan.providerSourceSnapshot;
+  if (
+    snapshotPolicy?.schema !== "starfiniti.provider-source-snapshot.v1" ||
+    snapshotPolicy.catalogueCount !== providerSources.size ||
+    snapshotPolicy.timeoutMs !== 20_000 ||
+    snapshotPolicy.maximumRedirects !== 5 ||
+    snapshotPolicy.maximumResponseBytes !== 4_000_000 ||
+    snapshotPolicy.maximumHeaderBytes !== 32_768 ||
+    snapshotPolicy.minimumTlsVersion !== "TLSv1.2" ||
+    snapshotPolicy.contentRetained !== false ||
+    snapshotPolicy.reviewComplete !== false ||
+    snapshotPolicy.impactClassified !== false ||
+    snapshotPolicy.installedEvidenceComplete !== false ||
+    snapshotPolicy.output?.absolutePathRequired !== true ||
+    snapshotPolicy.output.extension !== ".json" ||
+    snapshotPolicy.output.overwrite !== false ||
+    snapshotPolicy.output.mode !== "0600"
+  ) {
+    fail("provider source snapshot policy differs");
+  }
+  exactSet(
+    new Set(snapshotPolicy.acceptedContentTypes ?? []),
+    new Set(["text/html", "text/plain", "text/markdown"]),
+    "provider source snapshot content types",
+  );
+  if (snapshotPolicy.acceptedContentTypes.length !== 3) {
+    fail("provider source snapshot content types contain a duplicate");
+  }
+  exactSet(
+    new Set(snapshotPolicy.acceptedContentEncodings ?? []),
+    new Set(["identity"]),
+    "provider source snapshot content encodings",
+  );
+  if (snapshotPolicy.acceptedContentEncodings.length !== 1) {
+    fail("provider source snapshot content encodings contain a duplicate");
+  }
+  exactSet(
+    new Set(Object.keys(snapshotPolicy.allowedRedirectHosts ?? {})),
+    new Set(["openssh"]),
+    "provider source snapshot redirect providers",
+  );
+  exactSet(
+    new Set(snapshotPolicy.allowedRedirectHosts.openssh ?? []),
+    new Set(["www.openssh.org"]),
+    "provider source snapshot OpenSSH redirect hosts",
+  );
   exactSet(
     new Set(candidatePlan.recurringFailure.allowedControls),
     allowedControls,
