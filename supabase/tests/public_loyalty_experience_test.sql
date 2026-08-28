@@ -638,6 +638,13 @@ select results_eq(
   $$ values (1, 'eligible-purchases'::text, '4'::text) $$,
   'V4 synthesizes one conservative public purchase method for legacy V1'
 );
+select results_eq(
+  $$ select rewards from loyalty.get_public_loyalty_experience(
+       '7b000000-0000-4000-8000-000000000110',
+       '7b000000-0000-4000-8000-000000000130', 'en') $$,
+  $$ values ('[{"code":"five-off","name":"€5 discount","kind":"fixed_discount","costPoints":"500"}]'::jsonb) $$,
+  'reward projection omits markup-shaped names and private reward configuration'
+);
 
 reset role;
 insert into loyalty.programme_rewards (
@@ -824,13 +831,6 @@ select results_eq(
        '7b000000-0000-4000-8000-000000000130', 'en') $$,
   $$ values ('[{"code":"rose","name":"Rose","minimumEligibleSpendMinor":"0","pointsPerMajorUnit":"5"},{"code":"bloom","name":"Bloom","minimumEligibleSpendMinor":"15000","pointsPerMajorUnit":"6"}]'::jsonb) $$,
   'tier projection contains safe names rates and exact text-form thresholds only'
-);
-select results_eq(
-  $$ select rewards from loyalty.get_public_loyalty_experience(
-       '7b000000-0000-4000-8000-000000000110',
-       '7b000000-0000-4000-8000-000000000130', 'en') $$,
-  $$ values ('[{"code":"five-off","name":"€5 discount","kind":"fixed_discount","costPoints":"500"}]'::jsonb) $$,
-  'reward projection omits markup-shaped names and private reward configuration'
 );
 select results_eq(
   $$ select count(*)::bigint from loyalty.get_public_loyalty_experience(
