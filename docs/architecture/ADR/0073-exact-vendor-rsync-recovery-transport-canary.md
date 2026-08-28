@@ -38,6 +38,8 @@ The build verifies signed APT metadata, the complete PPA key fingerprint, downlo
 
 Security CI builds both exact endpoint images, connects them only to a new Docker `--internal` network, sends two synthetic files through an rsync daemon, checks content and strict file/byte bounds, records executable and wrapper digests, and removes the exact containers, network, and disposable image tags. It publishes only a minimized JSON report. The runner accepts no alternative plan, public port, host network, SSH route, production origin, package binary, credential, or recovery material.
 
+Exact candidate `13e55ad3bebdeb699d0df2e6ecbc4f8cbd40c706` passed Security run `33148107140`, recovery-transport job `98773576973`. GitHub artifact `9676590363` and the independently hashed `ci.json` are bound in `docs/plan/evidence/M15/recovery-transport.yaml`; the report records protocol 32, two files and 21 bytes below the declared bounds, no published port, both endpoint package and wrapper checks, no production mutation, and passing teardown.
+
 This is compatibility and provenance evidence, not deployment approval. Production remains unchanged until operations independently assesses the Debian `libacl1` upgrade against host consumers, escrows and verifies exact rollback packages for rsync and `libacl1`, approves a maintenance window, installs both endpoints, proves the real forced-command path, runs manual and timer archives, and completes an isolated recovery.
 
 ## Security and reliability effects

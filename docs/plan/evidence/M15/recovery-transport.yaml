@@ -1,9 +1,9 @@
 schema: starfiniti.rsync-transport-evidence.v1
 status: in_progress
-observedAt: 2026-08-28T05:51:43Z
+observedAt: 2026-08-28T06:31:02Z
 candidate:
   branch: codex/enterprise-roadmap-integration
-  commit: null
+  commit: 13e55ad3bebdeb699d0df2e6ecbc4f8cbd40c706
 plan:
   path: infrastructure/testing/recovery-transport/plan.yaml
   sha256: c623bebcf48b0dba785ed2fa4b00bfb2899855139647fdc153a6d383cea0f17d
@@ -24,6 +24,25 @@ endpoints:
     packageSha256: 3ae102d79c9a82d1f1aee94bde3afa3142a7ef6f367484f130d6fba05c3c1648
     signingFingerprint: 72BBF83452B11E5B5A8F99123CC6C2BBC7F3DB85
     dependencies: []
+canary:
+  workflowRunId: 33148107140
+  workflowJobId: 98773576973
+  artifactId: 9676590363
+  artifactName: security-recovery-transport-af0dd59fcfb4bcb4dda64feaa3c951635c5c2f8d
+  artifactSha256: b13599342a489c085c1da54d21aff2dc151000671360b995352356645b7a85ba
+  reportPath: ci.json
+  reportSha256: 04d4389a559acd71ff5d0bc06cca6cff43e3e0ad65c6e6e6faddc9fa181897f7
+  report:
+    observedAt: 2026-08-28T06:31:02.045Z
+    status: passed
+    planSha256: c623bebcf48b0dba785ed2fa4b00bfb2899855139647fdc153a6d383cea0f17d
+    protocol: 32
+    files: 2
+    bytes: 21
+    maximumFiles: 4
+    maximumBytes: 1048576
+    productionMutation: false
+    teardown: passed
 checks:
   - id: plan_contract
     status: passed
@@ -38,8 +57,8 @@ checks:
     status: passed
     evidence: Security CI executes the canonical plan on an internal Docker network and uploads only the minimized report; no port, SSH route, production target, package binary, or payload is published.
   - id: exact_head_canary
-    status: pending
-    evidence: The exact candidate commit has not yet completed the disposable Debian-to-Ubuntu package and protocol canary in GitHub Actions.
+    status: passed
+    evidence: Exact candidate 13e55ad3bebdeb699d0df2e6ecbc4f8cbd40c706 passed Security run 33148107140 job 98773576973; artifact 9676590363 binds the minimized report and zero-residue teardown hashes above.
   - id: rollback_packages
     status: pending
     evidence: Exact restorable host and guest package files have not been escrowed and verified by operations, so production installation remains prohibited.

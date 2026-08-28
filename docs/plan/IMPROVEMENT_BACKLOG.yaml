@@ -1,6 +1,6 @@
 schema: starfiniti.improvement-backlog.v1
 version: 1
-observedAt: 2026-08-28T05:51:43Z
+observedAt: 2026-08-28T06:31:02Z
 ranking:
   formula: severityPoints + (2 * merchantImpact) + (2 * customerImpact) + confidence - effort - dependencyPenalty
   severityPoints: { critical: 40, high: 30, medium: 20, low: 10 }
@@ -16,8 +16,8 @@ items:
     dependencyPenalty: 6
     score: 80
     status: blocked_external
-    evidence: docs/architecture/ADR/0072-rsync-3-5-backup-transport-security-baseline.md
-    dependency: Exact-head ADR-0073 disposable canary, verified exact rollback packages, approved dual-endpoint maintenance and real forced-command/archive evidence, and an isolated restore window.
+    evidence: docs/plan/evidence/M15/recovery-transport.yaml
+    dependency: Verified exact rollback packages, approved dual-endpoint maintenance and host-consumer compatibility, real forced-command/manual/timer archive evidence, and an isolated restore window.
     ownerInput: Operations and security approve the exact candidate and rollback packages, dual-endpoint rollout, and independent restore review.
   - id: IMP-009
     title: Isolate PostgreSQL off-host recovery from whole-VM Borg serialization

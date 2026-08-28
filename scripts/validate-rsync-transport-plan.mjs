@@ -24,6 +24,16 @@ const sha256Pattern = /^[0-9a-f]{64}$/u;
 const imagePattern = /^(?:debian:13-slim|ubuntu:24\.04)@sha256:[0-9a-f]{64}$/u;
 const versionPattern = /^[0-9][0-9A-Za-z.+:~-]{2,79}$/u;
 const endpointIds = ["database-guest", "proxmox-host"];
+const testedCandidateCommit = "13e55ad3bebdeb699d0df2e6ecbc4f8cbd40c706";
+const testedWorkflowRunId = 33148107140;
+const testedWorkflowJobId = 98773576973;
+const testedArtifactId = 9676590363;
+const testedArtifactName =
+  "security-recovery-transport-af0dd59fcfb4bcb4dda64feaa3c951635c5c2f8d";
+const testedArtifactSha256 =
+  "b13599342a489c085c1da54d21aff2dc151000671360b995352356645b7a85ba";
+const testedReportSha256 =
+  "04d4389a559acd71ff5d0bc06cca6cff43e3e0ad65c6e6e6faddc9fa181897f7";
 
 function fail(message) {
   throw new Error(`Recovery transport plan invalid: ${message}`);
@@ -319,6 +329,7 @@ function validateEvidence(evidence, plan) {
       "candidate",
       "plan",
       "endpoints",
+      "canary",
       "checks",
       "productionMutation",
       "automaticFails",
@@ -338,9 +349,9 @@ function validateEvidence(evidence, plan) {
   exactKeys(evidence.candidate, ["branch", "commit"], "evidence candidate");
   if (
     evidence.candidate.branch !== "codex/enterprise-roadmap-integration" ||
-    evidence.candidate.commit !== null
+    evidence.candidate.commit !== testedCandidateCommit
   ) {
-    fail("unproved exact-head canary must not name a passing commit");
+    fail("evidence must bind the exact tested candidate commit");
   }
   exactKeys(evidence.plan, ["path", "sha256"], "evidence plan");
   if (
@@ -382,12 +393,63 @@ function validateEvidence(evidence, plan) {
       fail("evidence endpoint differs from the approved plan");
     }
   }
+  exactKeys(
+    evidence.canary,
+    [
+      "workflowRunId",
+      "workflowJobId",
+      "artifactId",
+      "artifactName",
+      "artifactSha256",
+      "reportPath",
+      "reportSha256",
+      "report",
+    ],
+    "evidence canary",
+  );
+  exactKeys(
+    evidence.canary.report,
+    [
+      "observedAt",
+      "status",
+      "planSha256",
+      "protocol",
+      "files",
+      "bytes",
+      "maximumFiles",
+      "maximumBytes",
+      "productionMutation",
+      "teardown",
+    ],
+    "evidence canary report",
+  );
+  if (
+    evidence.canary.workflowRunId !== testedWorkflowRunId ||
+    evidence.canary.workflowJobId !== testedWorkflowJobId ||
+    evidence.canary.artifactId !== testedArtifactId ||
+    evidence.canary.artifactName !== testedArtifactName ||
+    evidence.canary.artifactSha256 !== testedArtifactSha256 ||
+    evidence.canary.reportPath !== "ci.json" ||
+    evidence.canary.reportSha256 !== testedReportSha256 ||
+    evidence.canary.report.observedAt !== "2026-08-28T06:31:02.045Z" ||
+    evidence.canary.report.status !== "passed" ||
+    evidence.canary.report.planSha256 !== planDigest(plan) ||
+    evidence.canary.report.protocol !== 32 ||
+    evidence.canary.report.files !== 2 ||
+    evidence.canary.report.bytes !== 21 ||
+    evidence.canary.report.maximumFiles !== plan.network.maximumFiles ||
+    evidence.canary.report.maximumBytes !== plan.network.maximumBytes ||
+    evidence.canary.report.productionMutation !== false ||
+    evidence.canary.report.teardown !== "passed"
+  ) {
+    fail("exact-head canary binding or minimized result is invalid");
+  }
   const expectedChecks = new Map([
     ["plan_contract", "passed"],
     ["source_authority_contract", "passed"],
     ["build_verification_contract", "passed"],
     ["workflow_contract", "passed"],
-    ["exact_head_canary", "pending"],
+    ["exact_head_canary", "passed"],
     ["rollback_packages", "pending"],
     ["production_rollout", "pending"],
     ["isolated_restore", "pending"],
@@ -581,10 +643,14 @@ function selfTest(plan, evidence, dockerfile, runner) {
   assert.doesNotThrow(() => validateEvidence(structuredClone(evidence), plan));
   for (const mutate of [
     (candidate) => (candidate.status = "complete"),
-    (candidate) => (candidate.candidate.commit = "a".repeat(40)),
+    (candidate) => (candidate.candidate.commit = null),
     (candidate) => (candidate.plan.sha256 = "0".repeat(64)),
     (candidate) => (candidate.endpoints[0].packageSha256 = "0".repeat(64)),
-    (candidate) => (candidate.checks[4].status = "passed"),
+    (candidate) => (candidate.canary.workflowRunId += 1),
+    (candidate) => (candidate.canary.artifactSha256 = "0".repeat(64)),
+    (candidate) => (candidate.canary.reportSha256 = "0".repeat(64)),
+    (candidate) => (candidate.canary.report.productionMutation = true),
+    (candidate) => (candidate.checks[4].status = "pending"),
     (candidate) => candidate.checks.pop(),
     (candidate) => (candidate.productionMutation = true),
   ]) {

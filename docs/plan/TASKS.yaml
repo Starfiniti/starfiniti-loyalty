@@ -3129,7 +3129,7 @@ tasks:
         status: in_progress
         dependencies: [M15-S01-CAPACITY-ENVELOPE]
         hypothesis: A digest-bound controller that begins before provisioning and refuses public or production routing can measure full database identity application signing privacy and value recovery without turning a disposable drill into production authority.
-        baseline: PostgreSQL base/WAL backup and one isolated database-only PITR drill exist, but the live off-host archive shares a Borg repository with the long whole-VM sequence and its hourly retention can thin recent recovery points below the target; the Debian host runs rsync 3.4.1 and the Ubuntu database VM runs 3.2.7 even though upstream 3.5 closes directly applicable restricted-wrapper confinement and peer-input flaws; exact Debian and rsync-project Launchpad packages are now bound to a repository-only internal canary, while exact-head execution, rollback escrow, dedicated-repository and dual-endpoint production rollout plus application Authentik Supabase Auth configuration signing escrow privacy replay full-service RTO repeatability and clean teardown remain unproved.
+        baseline: PostgreSQL base/WAL backup and one isolated database-only PITR drill exist, but the live off-host archive shares a Borg repository with the long whole-VM sequence and its hourly retention can thin recent recovery points below the target; the Debian host runs rsync 3.4.1 and the Ubuntu database VM runs 3.2.7 even though upstream 3.5 closes directly applicable restricted-wrapper confinement and peer-input flaws; exact Debian and rsync-project Launchpad packages are bound to an exact-head passing repository-only internal canary, while rollback escrow, host-consumer compatibility, dedicated-repository and dual-endpoint production rollout plus application Authentik Supabase Auth configuration signing escrow privacy replay full-service RTO repeatability and clean teardown remain unproved.
         targets:
           [
             authoritative PostgreSQL RPO at or below 300 seconds from a fresh pre-failure source marker,
@@ -3208,6 +3208,7 @@ tasks:
             scripts/validate-backup-assets.mjs,
             docs/operations/BACKUP_RESTORE.md,
             exact rsync transport implementation head fa7b4fccc908ba9944780893c40751aa008caaa6 passed CI run 33142071508 Security run 33142071515 and external CodeQL with all eleven checks green,
+            exact vendor canary candidate 13e55ad3bebdeb699d0df2e6ecbc4f8cbd40c706 passed CI run 33148107122 Security run 33148107140 recovery job 98773576973 and external CodeQL with all twelve checks green; minimized artifact 9676590363 binds protocol 32 both endpoint package and wrapper facts a two-file 21-byte internal transfer zero published ports no production mutation and passing teardown,
           ]
       - id: M15-S05-OPERATIONS-AND-INCIDENTS
         title: Complete observability ownership and incident exercises
