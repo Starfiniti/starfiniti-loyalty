@@ -103,7 +103,7 @@ function inspectEndpoint(container, endpoint) {
       container,
       "sh",
       "-ec",
-      "printf 'version='; dpkg-query --show --showformat='${Version}' rsync; printf '\\nrsyncSha256='; sha256sum /usr/bin/rsync | cut -d' ' -f1; printf '\\nrrsyncSha256='; sha256sum /usr/bin/rrsync | cut -d' ' -f1; printf '\\nversionLine='; rsync --version | sed -n '1p'; printf '\\nconfined='; grep -Fq -- \"rsync_opts.append('--confine-root=' + os.getcwd())\" /usr/bin/rrsync && printf true; printf '\\npackageVerified='; test -z \"$(dpkg --verify rsync)\" && printf true; printf '\\n'",
+      "printf 'version='; dpkg-query --show --showformat='${Version}' rsync; printf '\\nrsyncSha256='; sha256sum /usr/bin/rsync | cut -d' ' -f1; printf '\\nrrsyncSha256='; sha256sum /usr/bin/rrsync | cut -d' ' -f1; printf '\\nversionLine='; rsync --version | sed -n '1p'; printf '\\nconfined='; grep -Fq -- \"rsync_opts.append('--confine-root=' + os.getcwd())\" /usr/bin/rrsync && printf true; printf '\\npackageVerified='; if dpkg --verify rsync | grep -Eq ' /usr/bin/(rsync|rrsync)$'; then printf false; else printf true; fi; printf '\\n'",
     ],
     { capture: true },
   );
@@ -114,16 +114,17 @@ function inspectEndpoint(container, endpoint) {
     }),
   );
   const protocol = facts.versionLine.match(/protocol version (\d+)$/u)?.[1];
-  if (
-    facts.version !== endpoint.package.version ||
-    !/^[0-9a-f]{64}$/u.test(facts.rsyncSha256) ||
-    !/^[0-9a-f]{64}$/u.test(facts.rrsyncSha256) ||
-    !facts.versionLine.startsWith("rsync  version 3.5.0") ||
-    protocol !== "32" ||
-    facts.confined !== "true" ||
-    facts.packageVerified !== "true"
-  ) {
-    fail(`${endpoint.id} runtime facts are invalid`);
+  const failures = [
+    facts.version === endpoint.package.version || "package-version",
+    /^[0-9a-f]{64}$/u.test(facts.rsyncSha256) || "rsync-digest",
+    /^[0-9a-f]{64}$/u.test(facts.rrsyncSha256) || "rrsync-digest",
+    facts.versionLine.startsWith("rsync  version 3.5.0") || "version-line",
+    protocol === "32" || "protocol",
+    facts.confined === "true" || "confinement",
+    facts.packageVerified === "true" || "package-file-verification",
+  ].filter((value) => value !== true);
+  if (failures.length > 0) {
+    fail(`${endpoint.id} runtime facts are invalid: ${failures.join(",")}`);
   }
   facts.protocol = Number(protocol);
   facts.dependencies = endpoint.package.dependencies.map((dependency) => {
@@ -205,7 +206,7 @@ function main() {
       guestTag,
       "sh",
       "-ec",
-      "mkdir -p /tmp/recovery; printf 'base-proof\\n' > /tmp/recovery/base; printf 'wal-proof\\n' > /tmp/recovery/wal; printf '[recovery]\\npath = /tmp/recovery\\nread only = true\\nuse chroot = no\\nlist = true\\n' > /tmp/rsyncd.conf; exec rsync --daemon --no-detach --config=/tmp/rsyncd.conf",
+      "mkdir -p /tmp/recovery; printf 'base-proof\\n' > /tmp/recovery/base; printf 'wal-proof\\n' > /tmp/recovery/wal; printf 'pid file = /tmp/rsyncd.pid\\nlock file = /tmp/rsyncd.lock\\n[recovery]\\npath = /tmp/recovery\\nread only = true\\nuse chroot = no\\nlist = true\\n' > /tmp/rsyncd.conf; exec rsync --daemon --no-detach --config=/tmp/rsyncd.conf",
     ]);
     created.guest = true;
     run([

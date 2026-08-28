@@ -1,4 +1,4 @@
-ARG BASE_IMAGE
+ARG BASE_IMAGE=debian:13-slim@sha256:d7e12182ce18b85b93007c1dedf31f2d29e01ccf3182cc4017c709b6259bc132
 FROM ${BASE_IMAGE}
 
 ARG EXPECTED_OS_ID
@@ -93,5 +93,9 @@ RUN . /etc/os-release; \
 
 LABEL com.starfiniti.disposable="true" \
       com.starfiniti.purpose="recovery-transport-canary"
+
+USER 65532:65532
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=2 CMD ["rsync", "--version"]
 
 CMD ["sleep", "infinity"]

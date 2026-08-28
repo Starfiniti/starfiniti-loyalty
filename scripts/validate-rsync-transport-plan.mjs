@@ -422,7 +422,7 @@ function validateEvidence(evidence, plan) {
 
 function validateDockerfile(text) {
   const requirements = [
-    "ARG BASE_IMAGE\nFROM ${BASE_IMAGE}",
+    "ARG BASE_IMAGE=debian:13-slim@sha256:d7e12182ce18b85b93007c1dedf31f2d29e01ccf3182cc4017c709b6259bc132\nFROM ${BASE_IMAGE}",
     "curl --fail --location --proto '=https' --tlsv1.2",
     "signed-by=/usr/share/keyrings/debian-archive-keyring.gpg",
     "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x${SIGNING_FINGERPRINT}",
@@ -454,6 +454,8 @@ function validateDockerfile(text) {
     "subprocess.run(cmd, pass_fds=tuple(pinned_fds))",
     "env -i PATH=/usr/bin:/bin LC_ALL=C SSH_ORIGINAL_COMMAND=id",
     'com.starfiniti.disposable="true"',
+    "USER 65532:65532",
+    'HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=2 CMD ["rsync", "--version"]',
   ];
   for (const requirement of requirements) {
     if (!text.includes(requirement))
@@ -518,6 +520,8 @@ function validateRunner(text) {
     '"{{json .NetworkSettings.Ports}}"',
     '"{{json .NetworkSettings.Networks}}"',
     "escaped its internal no-port network boundary",
+    "pid file = /tmp/rsyncd.pid",
+    "lock file = /tmp/rsyncd.lock",
     "transferredFiles > plan.network.maximumFiles",
     "transferredBytes > plan.network.maximumBytes",
     "productionMutation: false",
