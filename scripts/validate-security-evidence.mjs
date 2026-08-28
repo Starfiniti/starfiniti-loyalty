@@ -1252,6 +1252,8 @@ if (process.argv.includes("--self-test")) {
     rawDigest(historicalTriagePath),
   );
   const mediumTriageEvidence = structuredClone(evidence);
+  mediumTriageEvidence.observedAt = mediumTriage.observedAt;
+  mediumTriageEvidence.candidate.commit = mediumTriage.candidateCommit;
   mediumTriageEvidence.inputs.securityWorkflow.sha256 =
     mediumTriage.source.securityWorkflowSha256;
   const expectTriageRejected = (candidate, message, label) => {
