@@ -1,6 +1,6 @@
 schema: starfiniti.improvement-backlog.v1
 version: 1
-observedAt: 2026-08-28T07:14:59Z
+observedAt: 2026-08-28T07:33:52Z
 ranking:
   formula: severityPoints + (2 * merchantImpact) + (2 * customerImpact) + confidence - effort - dependencyPenalty
   severityPoints: { critical: 40, high: 30, medium: 20, low: 10 }
@@ -15,10 +15,10 @@ items:
     confidence: 10
     dependencyPenalty: 6
     score: 80
-    status: in_progress
+    status: blocked_external
     evidence: docs/plan/evidence/M15/recovery-transport.yaml
-    dependency: Exact-head Linux verification of the three plan-bound rollback artifacts, operations-controlled offline escrow, approved dual-endpoint maintenance and host-consumer compatibility, real forced-command/manual/timer archive evidence, and an isolated restore window.
-    ownerInput: After exact-head verification, operations independently rechecks and escrows the three exact rollback artifacts; operations and security then approve the candidate, dual-endpoint rollout, and restore review.
+    dependency: Operations-controlled offline escrow of the three exact canary-verified rollback artifacts, approved dual-endpoint maintenance and host-consumer compatibility, real forced-command/manual/timer archive evidence, and an isolated restore window.
+    ownerInput: Operations independently rechecks and escrows the three exact rollback artifacts; operations and security then approve the candidate, dual-endpoint rollout, and restore review.
   - id: IMP-009
     title: Isolate PostgreSQL off-host recovery from whole-VM Borg serialization
     severity: critical

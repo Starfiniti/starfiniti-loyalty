@@ -24,14 +24,17 @@ const sha256Pattern = /^[0-9a-f]{64}$/u;
 const imagePattern = /^(?:debian:13-slim|ubuntu:24\.04)@sha256:[0-9a-f]{64}$/u;
 const versionPattern = /^[0-9][0-9A-Za-z.+:~-]{2,79}$/u;
 const endpointIds = ["database-guest", "proxmox-host"];
-const testedCandidateCommit = null;
-const testedWorkflowRunId = null;
-const testedWorkflowJobId = null;
-const testedArtifactId = null;
-const testedArtifactName = null;
-const testedArtifactSha256 = null;
-const testedReportSha256 = null;
-const testedReportObservedAt = null;
+const testedCandidateCommit = "ed5eb7f315e2136d43d1f5a0b4cbdb75941b1c26";
+const testedWorkflowRunId = 33151832310;
+const testedWorkflowJobId = 98785369076;
+const testedArtifactId = 9678028203;
+const testedArtifactName =
+  "security-recovery-transport-484340d9d9410ffc46aec09310e3b4962064f647";
+const testedArtifactSha256 =
+  "e1c29eaa9df6c8b04f8fad0de072ed71c30a9337d1c4ae648b60cb71bf2c63e5";
+const testedReportSha256 =
+  "a35f4dbd8bd892f41718fb639022350084ee67e535919558393c0d98ce4320d3";
+const testedReportObservedAt = "2026-08-28T07:33:51.161Z";
 const rollbackPackageExpectations = {
   "proxmox-host": [
     {
@@ -817,7 +820,13 @@ function selfTest(plan, evidence, dockerfile, runner) {
     (candidate) => (candidate.endpoints[0].packageSha256 = "0".repeat(64)),
     (candidate) =>
       (candidate.endpoints[0].rollbackPackages[0].sha256 = "0".repeat(64)),
-    (candidate) => (candidate.canary = {}),
+    (candidate) => (candidate.canary.workflowRunId += 1),
+    (candidate) => (candidate.canary.artifactSha256 = "0".repeat(64)),
+    (candidate) => (candidate.canary.reportSha256 = "0".repeat(64)),
+    (candidate) =>
+      (candidate.canary.report.observedAt = "2026-08-28T00:00:00Z"),
+    (candidate) => (candidate.canary.report.rollbackPackages = 2),
+    (candidate) => (candidate.canary.report.productionMutation = true),
     (candidate) =>
       (candidate.checks.find(
         (check) => check.id === "workflow_contract",

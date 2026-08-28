@@ -1,9 +1,9 @@
 schema: starfiniti.rsync-transport-evidence.v1
 status: in_progress
-observedAt: 2026-08-28T07:14:59Z
+observedAt: 2026-08-28T07:33:52Z
 candidate:
   branch: codex/enterprise-roadmap-integration
-  commit: null
+  commit: ed5eb7f315e2136d43d1f5a0b4cbdb75941b1c26
 plan:
   path: infrastructure/testing/recovery-transport/plan.yaml
   sha256: 56600763ba44ab85221ecbc4effbac09055e42d135a04429ee27980389f73405
@@ -50,7 +50,26 @@ endpoints:
         url: https://security.ubuntu.com/ubuntu/pool/main/r/rsync/rsync_3.2.7-1ubuntu1.5_amd64.deb
         sha256: 8f952895697d19a6f1caa71f17c7d4e8c1f1fb485eb824ffe3e4c77dd587b338
         signingFingerprint: ubuntu-archive-keyring
-canary: null
+canary:
+  workflowRunId: 33151832310
+  workflowJobId: 98785369076
+  artifactId: 9678028203
+  artifactName: security-recovery-transport-484340d9d9410ffc46aec09310e3b4962064f647
+  artifactSha256: e1c29eaa9df6c8b04f8fad0de072ed71c30a9337d1c4ae648b60cb71bf2c63e5
+  reportPath: ci.json
+  reportSha256: a35f4dbd8bd892f41718fb639022350084ee67e535919558393c0d98ce4320d3
+  report:
+    observedAt: 2026-08-28T07:33:51.161Z
+    status: passed
+    planSha256: 56600763ba44ab85221ecbc4effbac09055e42d135a04429ee27980389f73405
+    protocol: 32
+    files: 2
+    bytes: 21
+    maximumFiles: 4
+    maximumBytes: 1048576
+    rollbackPackages: 3
+    productionMutation: false
+    teardown: passed
 checks:
   - id: plan_contract
     status: passed
@@ -68,8 +87,8 @@ checks:
     status: passed
     evidence: Security CI executes the canonical plan on an internal Docker network and uploads only the minimized report; no port, SSH route, production target, package binary, or payload is published.
   - id: exact_head_canary
-    status: pending
-    evidence: The changed rollback verification path has not yet passed Linux Security CI on its exact implementation head, so it binds no workflow run, job, artifact, or report.
+    status: passed
+    evidence: Exact implementation head ed5eb7f315e2136d43d1f5a0b4cbdb75941b1c26 passed Security run 33151832310 job 98785369076; artifact 9678028203 binds all three rollback proofs, the bounded transport, no retained package bytes, and teardown.
   - id: rollback_escrow
     status: pending
     evidence: Operations has not copied the three exact verified package bytes to approved offline escrow or independently rechecked their recorded SHA-256 digests, so production installation remains prohibited.
