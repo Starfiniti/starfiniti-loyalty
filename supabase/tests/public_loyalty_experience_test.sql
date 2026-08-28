@@ -362,6 +362,21 @@ select
   now()
 from loyalty.organizations as organization
 join loyalty.programmes as programme on programme.organization_id = organization.id;
+insert into loyalty.programme_referral_policies (
+  organization_id, programme_group_id, programme_version_id,
+  attribution_window_days, qualification_status, cooling_days,
+  minimum_eligible_spend_minor, require_new_customer,
+  monthly_advocate_referral_limit, advocate_reward_points,
+  friend_reward_points, manual_review_enabled, risk_window_hours,
+  source_network_referral_limit, device_referral_limit
+)
+select
+  version.organization_id, version.programme_group_id, version.id,
+  30, 'completed', 14, 3000, true, 12, 500, 250, true, 168, 5, 5
+from loyalty.programme_versions as version
+join loyalty.organizations as organization
+  on organization.id = version.organization_id
+where organization.slug = 'public-one';
 insert into loyalty.programme_tiers (
   organization_id, programme_group_id, programme_version_id, code, name,
   ordinal, minimum_eligible_spend_minor, points_per_major_unit
@@ -934,7 +949,7 @@ insert into loyalty.organization_entitlements (
 select id, 1, 'referrals', 'disabled', 'local_control',
   'test:public-referrals',
   'Verify that the public catalogue reports a server-side rollout pause',
-  pg_catalog.statement_timestamp() - interval '2 seconds'
+  pg_catalog.transaction_timestamp() - interval '2 seconds'
 from loyalty.organizations where slug = 'public-one';
 set local role anon;
 select results_eq(
@@ -955,7 +970,7 @@ insert into loyalty.organization_entitlements (
 select id, 1, 'referrals', 'enabled', 'local_control',
   'test:public-referrals',
   'Restore the public referral fixture after the append-only pause assertion',
-  pg_catalog.statement_timestamp() - interval '1 second'
+  pg_catalog.transaction_timestamp() - interval '1 second'
 from loyalty.organizations where slug = 'public-one';
 set local role anon;
 select results_eq(
