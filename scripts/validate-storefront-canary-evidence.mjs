@@ -187,6 +187,40 @@ const completionApprovals = [
   "pilotStoreApproved",
   "canaryApproved",
 ];
+const manifestKeys = [
+  "schema",
+  "status",
+  "observedAt",
+  "currentProduction",
+  "candidate",
+  "publicBaseline",
+  "score",
+  "checks",
+  "artifacts",
+  "automaticFails",
+];
+const currentProductionKeys = ["release", "applicationCommit"];
+const candidateKeys = [
+  "pullRequest",
+  "commit",
+  "approvedRelease",
+  "operatorAccess",
+  "pilotStoreApproved",
+  "canaryApproved",
+];
+const publicBaselineKeys = [
+  "dashboardHealth",
+  "login",
+  "authWithoutKey",
+  "restWithoutKey",
+  "canonicalDns",
+];
+const scoreKeys = ["total", "target", "minimumCategoryRatio", "categories"];
+const scoreCategoryKeys = ["id", "weight", "score", "evidence"];
+const checkKeys = ["id", "status", "evidence"];
+const artifactKeys = ["id", "status", "path", "sha256"];
+const automaticFailKeys = ["id", "rule"];
+const maximumEvidenceTextLength = 4_096;
 const fail = (message) => {
   throw new Error(`Storefront canary evidence invalid: ${message}`);
 };
@@ -198,21 +232,39 @@ const forbiddenKey =
 const forbiddenValue =
   /(-----BEGIN [A-Z ]*PRIVATE KEY-----|\bBearer\s+[A-Za-z0-9._~+/=-]{12,}|\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b|\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b|\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b)/i;
 
-const inspectEvidence = (value, path = "evidence") => {
-  if (Array.isArray(value)) {
-    value.forEach((item, index) => inspectEvidence(item, `${path}[${index}]`));
-    return;
-  }
-  if (value && typeof value === "object") {
-    for (const [key, nested] of Object.entries(value)) {
-      if (forbiddenKey.test(key))
-        fail(`forbidden sensitive key ${path}.${key}`);
-      inspectEvidence(nested, `${path}.${key}`);
+const inspectEvidence = (
+  value,
+  path = "evidence",
+  ancestors = new WeakSet(),
+) => {
+  if (typeof value === "string") {
+    if (value.length > maximumEvidenceTextLength) {
+      fail(`evidence text at ${path} exceeds the bounded length`);
+    }
+    if (forbiddenValue.test(value)) {
+      fail(`forbidden sensitive value at ${path}`);
     }
     return;
   }
-  if (typeof value === "string" && forbiddenValue.test(value)) {
-    fail(`forbidden sensitive value at ${path}`);
+  if (Array.isArray(value)) {
+    if (ancestors.has(value)) fail(`cyclic evidence at ${path}`);
+    ancestors.add(value);
+    value.forEach((item, index) =>
+      inspectEvidence(item, `${path}[${index}]`, ancestors),
+    );
+    ancestors.delete(value);
+    return;
+  }
+  if (value && typeof value === "object") {
+    if (ancestors.has(value)) fail(`cyclic evidence at ${path}`);
+    ancestors.add(value);
+    for (const [key, nested] of Object.entries(value)) {
+      if (forbiddenKey.test(key))
+        fail(`forbidden sensitive key ${path}.${key}`);
+      inspectEvidence(nested, `${path}.${key}`, ancestors);
+    }
+    ancestors.delete(value);
+    return;
   }
 };
 
@@ -1165,6 +1217,20 @@ const validateDocument = (
   candidateTasks = tasks,
   artifactReader = readBoundArtifact,
 ) => {
+  inspectEvidence(candidateEvidence);
+  exactKeys(candidateEvidence, manifestKeys, "manifest");
+  exactKeys(
+    candidateEvidence.currentProduction,
+    currentProductionKeys,
+    "currentProduction",
+  );
+  exactKeys(candidateEvidence.candidate, candidateKeys, "candidate");
+  exactKeys(
+    candidateEvidence.publicBaseline,
+    publicBaselineKeys,
+    "publicBaseline",
+  );
+  exactKeys(candidateEvidence.score, scoreKeys, "score");
   if (candidateEvidence.schema !== "starfiniti.storefront-canary.v1") {
     fail("unexpected schema");
   }
@@ -1175,6 +1241,9 @@ const validateDocument = (
     candidateEvidence.observedAt,
     "observedAt",
   );
+  if (candidateObservedAt > Date.now() + 5 * 60 * 1_000) {
+    fail("observedAt must not be in the future");
+  }
   if (
     typeof candidateEvidence.currentProduction?.release !== "string" ||
     !/^v\d+\.\d+\.\d+$/.test(candidateEvidence.currentProduction.release) ||
@@ -1215,6 +1284,7 @@ const validateDocument = (
 
   const checkIds = new Set();
   for (const check of candidateEvidence.checks) {
+    exactKeys(check, checkKeys, "check");
     if (!requiredChecks.has(check.id)) fail(`unknown check ${check.id}`);
     if (checkIds.has(check.id)) fail(`duplicate check ${check.id}`);
     if (!allowedStatuses.has(check.status)) {
@@ -1249,6 +1319,7 @@ const validateDocument = (
   const verifiedArtifactDigests = new Set();
   const verifiedArtifactDocuments = new Map();
   for (const artifact of candidateEvidence.artifacts) {
+    exactKeys(artifact, artifactKeys, "artifact");
     if (!requiredArtifacts.has(artifact.id)) {
       fail(`unknown artifact ${artifact.id}`);
     }
@@ -1362,6 +1433,7 @@ const validateDocument = (
   let calculatedWeight = 0;
   const categoryIds = new Set();
   for (const category of candidateEvidence.score.categories) {
+    exactKeys(category, scoreCategoryKeys, "score category");
     const expectedWeight = categoryWeights.get(category.id);
     if (expectedWeight === undefined) {
       fail(`unknown score category ${category.id}`);
@@ -1414,10 +1486,13 @@ const validateDocument = (
     fail("canonical DNS must be verified");
   }
 
-  inspectEvidence(candidateEvidence);
-
+  if (!Array.isArray(candidateEvidence.automaticFails)) {
+    fail("automatic failures must be an array");
+  }
+  for (const rule of candidateEvidence.automaticFails) {
+    exactKeys(rule, automaticFailKeys, "automatic failure");
+  }
   if (
-    !Array.isArray(candidateEvidence.automaticFails) ||
     candidateEvidence.automaticFails.length !== requiredAutomaticFails.size ||
     candidateEvidence.automaticFails.some(
       (rule) =>
@@ -1430,6 +1505,9 @@ const validateDocument = (
     fail("automatic failures must contain every required unique rule ID");
   }
 
+  if (!isPlainObject(candidateTasks) || !Array.isArray(candidateTasks.tasks)) {
+    fail("task graph is invalid");
+  }
   const m09 = candidateTasks.tasks.find(
     (task) => task.id === "M09-STOREFRONT-EXPERIENCE",
   );
@@ -2171,6 +2249,92 @@ if (process.argv.includes("--self-test")) {
     }
     fail(`self-test accepted ${label}`);
   };
+
+  const extraManifestField = structuredClone(evidence);
+  extraManifestField.unreviewed = true;
+  expectRejected(
+    extraManifestField,
+    "manifest keys differ",
+    "an unreviewed manifest field",
+  );
+
+  const extraCandidateField = structuredClone(evidence);
+  extraCandidateField.candidate.unreviewed = true;
+  expectRejected(
+    extraCandidateField,
+    "candidate keys differ",
+    "an unreviewed candidate field",
+  );
+
+  const extraCheckField = structuredClone(evidence);
+  extraCheckField.checks[0].unreviewed = true;
+  expectRejected(
+    extraCheckField,
+    "check keys differ",
+    "an unreviewed check field",
+  );
+
+  const extraArtifactField = structuredClone(evidence);
+  extraArtifactField.artifacts[0].unreviewed = true;
+  expectRejected(
+    extraArtifactField,
+    "artifact keys differ",
+    "an unreviewed artifact manifest field",
+  );
+
+  const extraCategoryField = structuredClone(evidence);
+  extraCategoryField.score.categories[0].unreviewed = true;
+  expectRejected(
+    extraCategoryField,
+    "score category keys differ",
+    "an unreviewed score-category field",
+  );
+
+  const extraAutomaticFailureField = structuredClone(evidence);
+  extraAutomaticFailureField.automaticFails[0].unreviewed = true;
+  expectRejected(
+    extraAutomaticFailureField,
+    "automatic failure keys differ",
+    "an unreviewed automatic-failure field",
+  );
+
+  const futureManifest = structuredClone(evidence);
+  futureManifest.observedAt = "9999-01-01T00:00:00Z";
+  expectRejected(
+    futureManifest,
+    "observedAt must not be in the future",
+    "future-dated evidence",
+  );
+
+  const oversizedEvidence = structuredClone(evidence);
+  oversizedEvidence.checks[0].evidence = "x".repeat(
+    maximumEvidenceTextLength + 1,
+  );
+  expectRejected(
+    oversizedEvidence,
+    "exceeds the bounded length",
+    "unbounded evidence text",
+  );
+
+  expectRejected(evidence, "task graph is invalid", "a missing task array", {});
+
+  const cyclicEvidence = {};
+  cyclicEvidence.self = cyclicEvidence;
+  let cyclicEvidenceRejected = false;
+  try {
+    inspectEvidence(cyclicEvidence);
+  } catch (error) {
+    if (
+      !(error instanceof Error) ||
+      !error.message.includes("cyclic evidence")
+    ) {
+      throw error;
+    }
+    cyclicEvidenceRejected = true;
+  }
+  if (!cyclicEvidenceRejected) {
+    fail("self-test accepted a recursive evidence structure");
+  }
 
   const unapprovedCompletion = structuredClone(evidence);
   unapprovedCompletion.status = "complete";

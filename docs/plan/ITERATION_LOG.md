@@ -1,5 +1,12 @@
 # Iteration Log
 
+## 2026-08-28 — M09 manifest-boundary adversarial hardening
+
+- Reconstructed the exact-green M09 candidate and confirmed the 88/100 score is blocked by production operability rather than a missing customer or merchant surface.
+- Adversarial review found the semantic artifact schemas were strict while the parent YAML still admitted unreviewed root/nested fields and future-dated evidence, and its recursive evidence inspection lacked cycle and text-size bounds.
+- Added exact manifest, current-production, candidate, public-baseline, score, category, check, artifact, and automatic-failure schemas; a five-minute future-time ceiling; cycle-safe traversal; a 4 KiB evidence-string ceiling; and explicit task-graph validation.
+- Added deterministic corruption fixtures for each new boundary. The honest manifest still reports eight of 34 checks passed, 26 pending, and 88/100; no production state, release, store, checkout path, coupon, or loyalty value changed.
+
 ## 2026-08-28 — M01 read-only production evidence refresh
 
 - Reconstructed the current public, release, VM, container, database, Auth-count, migration, PostgreSQL-backup, and whole-VM Borg baseline without reading reusable material or mutating production.
