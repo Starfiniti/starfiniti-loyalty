@@ -42,3 +42,18 @@ official-source artifact and exact rsync candidate plan, and keeps five other
 candidate reviews plus every impact, approval, upgrade, and monthly-close assertion
 false. `npm run continuous-improvement:installed:validate` exercises the positive
 contract and thirty-six adversarial cases without network or SSH access.
+
+The first verified real installed-state artifact is
+[`runs/recovery-dependency-snapshot-c5678b6-2026-08-28T221524Z.json`](runs/recovery-dependency-snapshot-c5678b6-2026-08-28T221524Z.json).
+It binds clean implementation commit
+`c5678b652024bb2a625f07d150e8ffd0b5d9e0cb`, both opaque endpoints, all six
+recovery providers, the official-source artifact above, and the complete rsync
+candidate plan. The 8,813-byte artifact has SHA-256
+`9960e01bea1a66856a2e0ed36493b28e183f5e316ce027fef3534ba5043448f7`.
+Independent historical verification passed, as did CI `33215968172`, Security
+`33215968421`, and external CodeQL for the exact implementation commit.
+`installedCaptureComplete` is `true` only for the closed installed catalogue;
+`candidateEvidenceComplete`,
+`reviewComplete`, `impactClassified`, `approvalComplete`, and `productionMutation`
+remain `false`. BorgBackup, OpenSSH, Debian, Ubuntu, and Proxmox candidate review
+remains unresolved.

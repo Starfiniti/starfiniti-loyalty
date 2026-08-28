@@ -1,6 +1,6 @@
 # Changelog
 
-- Added ADR-0085 and a bounded recovery installed-state snapshot contract for M16. The repository helper has no SSH or production-discovery authority; it validates two opaque endpoint fact envelopes, canonical normalization, the exact six-provider/component catalogue, timestamps, public versions, executable hashes, historical committed official-source and full rsync-candidate provenance, clean commits, exclusive output, and false review/approval/mutation assertions through thirty-six deterministic cases.
+- Added ADR-0085 and a bounded recovery installed-state snapshot contract for M16. The repository helper has no SSH or production-discovery authority; it validates two opaque endpoint fact envelopes, canonical normalization, the exact six-provider/component catalogue, timestamps, public versions, executable hashes, historical committed official-source and full rsync-candidate provenance, clean commits, exclusive output, and false review/approval/mutation assertions through thirty-six deterministic cases. The first independently verified 8,813-byte real artifact binds clean implementation `c5678b6`, both endpoints, all six provider projections, the thirteen-source artifact, and the full rsync plan under SHA-256 `9960e01bea1a66856a2e0ed36493b28e183f5e316ce027fef3534ba5043448f7`; that implementation passed CI `33215968172`, Security `33215968421`, and external CodeQL with all twelve PR checks green. Five candidates plus review, impact, approval, and production mutation remain open.
 
 ## Unreleased
 
