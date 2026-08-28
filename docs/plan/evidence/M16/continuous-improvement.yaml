@@ -73,7 +73,7 @@ checks:
     evidence: ADR-0068 compares four approaches, cites canonical official providers, defines the decision, and preserves rollback and historical evidence semantics.
   - id: validator_selftest
     status: passed
-    evidence: The completion fixture and adversarial mutations prove that cadence, freshness, ranking, recurring controls, rescoring, experiment guardrails, exercises, artifacts, approvals, and score floors fail closed; the separate collector rejects twenty-three source, network, response, digest, review-claim, and output corruptions without network access.
+    evidence: The completion fixture and adversarial mutations prove that cadence, freshness, ranking, recurring controls, rescoring, experiment guardrails, exercises, artifacts, approvals, and score floors fail closed; the separate collector rejects twenty-five source, network, response, digest, review-claim, and output corruptions without network access, including IPv4-mapped-private DNS and a missing output parent before any request.
   - id: exact_head_ci
     status: passed
     evidence: Recovery-governance implementation head a7a00f2cfe082b91f8eef65b0930c24fe1c1e4b8 passed CI run 33144201269 with all seven jobs, Security run 33144201312 with all three jobs, and the external GitHub Advanced Security CodeQL policy check.

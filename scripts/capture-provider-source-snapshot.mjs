@@ -775,7 +775,17 @@ function validateOutputPath(outputPath) {
   ) {
     fail("output path must be an absolute JSON path");
   }
-  return resolve(outputPath);
+  const absolute = resolve(outputPath);
+  let parentStatus;
+  try {
+    parentStatus = lstatSync(dirname(absolute));
+  } catch {
+    fail("output parent must be a pre-existing regular directory");
+  }
+  if (!parentStatus.isDirectory() || parentStatus.isSymbolicLink()) {
+    fail("output parent must be a pre-existing regular directory");
+  }
+  return absolute;
 }
 
 function writeSnapshot(outputPath, snapshot) {
@@ -1144,6 +1154,12 @@ async function runSelfTest(plan, planRaw) {
     join(tmpdir(), "starfiniti-provider-source-snapshot-"),
   );
   try {
+    await expectFailure(
+      "missing output parent",
+      "pre-existing regular directory",
+      () =>
+        writeSnapshot(join(temporary, "missing", "snapshot.json"), positive),
+    );
     const output = join(temporary, "snapshot.json");
     writeSnapshot(output, positive);
     await expectFailure("output reuse", "never overwritten", () =>
