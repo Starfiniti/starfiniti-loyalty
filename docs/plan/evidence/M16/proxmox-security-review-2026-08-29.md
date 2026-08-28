@@ -97,3 +97,13 @@ the root `npm run check` gate.
 This document advances candidate metadata and risk classification only. It does
 not make `provider_review`, `dependency_pins`, M15 security, M16, R-059, or
 IMP-011 complete.
+
+## Repository verification record
+
+Implementation head `34d45ea0859caafddc7f7b57416fc460bc3bb4c6`
+correctly failed CI run `33218479200` because its changed backlog bytes still had
+the prior manifest digest. That failure is preserved. Correction head
+`387138271abbf3fcfd23ff1a9ede84ba2c3217d3` committed the exact backlog and
+candidate bindings, then passed all seven jobs in CI run `33218625530`, all four
+jobs in Security run `33218625547`, and external CodeQL check `99008025406`.
+All twelve PR checks were green and PR #57 was mergeable/clean at review time.

@@ -1,9 +1,9 @@
 schema: starfiniti.continuous-improvement.v1
 status: in_progress
-observedAt: 2026-08-28T22:49:55Z
+observedAt: 2026-08-28T22:59:37Z
 candidate:
   branch: codex/enterprise-roadmap-integration
-  commit: 34d45ea0859caafddc7f7b57416fc460bc3bb4c6
+  commit: 387138271abbf3fcfd23ff1a9ede84ba2c3217d3
   initialCloseApproved: false
 plan:
   path: infrastructure/governance/continuous-improvement.yaml
@@ -75,8 +75,8 @@ checks:
     status: passed
     evidence: The completion fixture and adversarial mutations prove that cadence, freshness, ranking, recurring controls, rescoring, experiment guardrails, exercises, artifacts, approvals, and score floors fail closed; the source collector rejects twenty-six source, network, response, digest, review-claim, output, and byte-preservation corruptions without network access, while the installed-state collector rejects thirty-six fact, endpoint, component, chronology, digest, historical-source, full-candidate, output, and false-authority corruptions without network or SSH access.
   - id: exact_head_ci
-    status: pending
-    evidence: Proxmox candidate implementation head 34d45ea0859caafddc7f7b57416fc460bc3bb4c6 has focused local validation; exact-head CI Security and external CodeQL evidence is not yet available.
+    status: passed
+    evidence: Corrected Proxmox candidate and manifest head 387138271abbf3fcfd23ff1a9ede84ba2c3217d3 passed all seven CI jobs in run 33218625530 all four Security jobs in run 33218625547 and external CodeQL check 99008025406; the earlier stale-manifest failure remains preserved.
   - id: owner_roster
     status: pending
     evidence: Product, engineering, security, operations, monthly-review, quarterly-exercise, and owner roles require named environment-owned assignments.
