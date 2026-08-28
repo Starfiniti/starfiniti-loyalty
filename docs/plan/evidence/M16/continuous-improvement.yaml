@@ -1,16 +1,16 @@
 schema: starfiniti.continuous-improvement.v1
 status: in_progress
-observedAt: 2026-08-28T22:15:26Z
+observedAt: 2026-08-28T22:49:55Z
 candidate:
   branch: codex/enterprise-roadmap-integration
-  commit: c5678b652024bb2a625f07d150e8ffd0b5d9e0cb
+  commit: 34d45ea0859caafddc7f7b57416fc460bc3bb4c6
   initialCloseApproved: false
 plan:
   path: infrastructure/governance/continuous-improvement.yaml
   sha256: a81bd908039352845ea2bc62675f64ff04ca3e988275d9f4374e98519bfb89ea
 backlog:
   path: docs/plan/IMPROVEMENT_BACKLOG.yaml
-  sha256: e91ce7632f9a8b13a145069a840d323518fa69905cc3de57bd6d6b46bb25e485
+  sha256: 1e48c2ecb4105c1fde4a709d2ad555c9ac3589a28b4970b9453f5d85db7379ba
 artifacts:
   monthlyReviewPrimaryPath: null
   monthlyReviewPrimarySha256: null
@@ -75,8 +75,8 @@ checks:
     status: passed
     evidence: The completion fixture and adversarial mutations prove that cadence, freshness, ranking, recurring controls, rescoring, experiment guardrails, exercises, artifacts, approvals, and score floors fail closed; the source collector rejects twenty-six source, network, response, digest, review-claim, output, and byte-preservation corruptions without network access, while the installed-state collector rejects thirty-six fact, endpoint, component, chronology, digest, historical-source, full-candidate, output, and false-authority corruptions without network or SSH access.
   - id: exact_head_ci
-    status: passed
-    evidence: Installed-state implementation head c5678b652024bb2a625f07d150e8ffd0b5d9e0cb passed CI run 33215968172 with all seven jobs, Security run 33215968421 with all four jobs, and the external GitHub Advanced Security CodeQL policy check; all twelve PR checks passed.
+    status: pending
+    evidence: Proxmox candidate implementation head 34d45ea0859caafddc7f7b57416fc460bc3bb4c6 has focused local validation; exact-head CI Security and external CodeQL evidence is not yet available.
   - id: owner_roster
     status: pending
     evidence: Product, engineering, security, operations, monthly-review, quarterly-exercise, and owner roles require named environment-owned assignments.
@@ -112,10 +112,10 @@ checks:
     evidence: Security findings and managed billing usage, invoice, entitlement, and protected-path evidence require an elapsed review.
   - id: provider_review
     status: pending
-    evidence: The verified 6534-byte source snapshot binds all thirteen HTTP 200 digests under SHA-256 5786186426b065493f5c01b5d76742322e2e8ed3fe92b8f80c30d787caa516be, and the independently verified 8813-byte installed snapshot at docs/plan/evidence/M16/runs/recovery-dependency-snapshot-c5678b6-2026-08-28T221524Z.json binds both opaque endpoints and all six installed provider projections under SHA-256 9960e01bea1a66856a2e0ed36493b28e183f5e316ce027fef3534ba5043448f7; candidate completeness review impact and approval remain false.
+    evidence: The verified 6534-byte source snapshot and 8813-byte installed snapshot bind all thirteen official sources both opaque recovery endpoints and all six installed recovery providers. ADR-0086 classifies Proxmox as Critical across five advisory gaps and binds an exact twelve-package candidate, while package-byte and signature review compatibility recovery maintenance reboot mutation post-change proof independent review and the other providers remain incomplete.
   - id: dependency_pins
     status: pending
-    evidence: Exact installed facts now cover rsync BorgBackup OpenSSH Debian Ubuntu and Proxmox at both catalogue-declared endpoints, and the rsync candidate binds the complete committed plan bytes. Runtime container action SDK API WordPress WooCommerce PHP PostgreSQL Authentik and the five unresolved recovery candidates still require candidate provenance current support review impact owners and disposition.
+    evidence: Exact installed facts cover rsync BorgBackup OpenSSH Debian Ubuntu and Proxmox at both catalogue-declared endpoints; rsync binds its full candidate plan and Proxmox now binds candidate provenance 39f30c67a374b041944a598ce2334fed3fcb8e5f64264b3db08847d5ee23ff9f. Proxmox package bytes signatures compatibility owner approval and execution plus runtime container action SDK API WordPress WooCommerce PHP PostgreSQL Authentik and the remaining recovery candidates still require review impact ownership and disposition.
   - id: backlog_freshness
     status: pending
     evidence: The backlog must be regenerated from the completed review cutoff and contain no stale or silently closed item.
