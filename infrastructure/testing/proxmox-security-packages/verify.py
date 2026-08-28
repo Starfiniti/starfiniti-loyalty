@@ -15,7 +15,7 @@ import sys
 from urllib.parse import unquote
 
 
-MANIFEST = Path("/output/manifest.tsv")
+MANIFEST = Path("/workspace/manifest.tsv")
 FACTS = Path("/output/facts.tsv")
 WORK_ROOT = Path("/tmp/starfiniti-proxmox-package-canary")
 APT_LISTS = Path("/var/lib/apt/lists")

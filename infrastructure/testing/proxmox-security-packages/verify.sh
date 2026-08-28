@@ -7,8 +7,8 @@ test "$(id -u)" -eq 0
 test "$ID" = debian
 test "$VERSION_ID" = 13
 test "$(dpkg --print-architecture)" = amd64
-test -f /output/manifest.tsv
-test ! -L /output/manifest.tsv
+test -f /workspace/manifest.tsv
+test ! -L /workspace/manifest.tsv
 test ! -e /output/facts.tsv
 
 apt-get update

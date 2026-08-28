@@ -92,10 +92,11 @@ and deletion without installing a candidate package or contacting production.
 
 The plan accepts no hostname, address, credential, repository, package, command,
 or output path from production. The controller accepts only the repository plan
-and a bounded artifact path. The container mounts the source tree read-only and
-one exclusive output directory, uses no host network or published port, and
-receives no secret. Package selectors are validator-derived rather than shell
-text supplied by an operator.
+and a bounded artifact path. The container receives only same-byte copies of the
+two verifier files and generated manifest through a read-only mount plus one
+exclusive output directory; it never mounts the source tree, Git metadata, or a
+credential. It uses no host network or published port. Package selectors are
+validator-derived rather than shell text supplied by an operator.
 
 The minimized artifact contains public repository fingerprints and digests,
 public package identities, exact public versions and hashes, the candidate and

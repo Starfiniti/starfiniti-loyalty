@@ -483,7 +483,7 @@ function execute(args) {
   const containerOutput = join(workRoot, "output");
   mkdirSync(stageDirectory);
   mkdirSync(containerOutput);
-  const manifestPath = join(containerOutput, "manifest.tsv");
+  const manifestPath = join(stageDirectory, "manifest.tsv");
   const factsPath = join(containerOutput, "facts.tsv");
   const containerName = `starfiniti-proxmox-packages-${randomUUID().replaceAll("-", "").slice(0, 12)}`;
   let teardownPassed = false;
