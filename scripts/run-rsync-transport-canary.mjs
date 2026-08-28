@@ -27,7 +27,7 @@ const dockerfile = join(
   "infrastructure/testing/recovery-transport/Dockerfile",
 );
 const safeOutputPattern =
-  /^dist\/recovery-transport\/[a-z0-9][a-z0-9._-]{2,79}\.json$/u;
+  /^dist\/recovery-transport\/[a-z0-9][a-z0-9._-]{1,79}\.json$/u;
 
 function fail(message) {
   throw new Error(`Recovery transport canary failed: ${message}`);

@@ -437,6 +437,7 @@ function validateDockerfile(text) {
 function validateRunner(text) {
   for (const requirement of [
     "only the repository recovery transport plan may be executed",
+    "[a-z0-9][a-z0-9._-]{1,79}\\.json",
     "output parent must not traverse a symbolic link",
     "rmSync(outputPath, { force: true })",
     "timeout: options.timeout ?? 120_000",
