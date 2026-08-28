@@ -6,7 +6,9 @@ Deliver the enterprise WooCommerce roadmap in `docs/plan/ENTERPRISE_ROADMAP.md` 
 
 ## Current module
 
-M16 — continuous self-improvement is the active dependency-safe repository module while M01 and M04–M15 retain reviewed deployment/canary/reconciliation closeout. M00, M02, and M03 are complete. The complete M04–M16 repository stack is consolidated on ready PR #57 against `main`; the exact candidate and current check evidence are recorded on the PR instead of duplicated here. The current merge-reviewed candidate brings the local repository gate to 86 migrations, 68 pgTAP files, the complete concurrency matrix, 983 workspace tests, both images, and all four WooCommerce runtime cells. Production remains self-hosted and unchanged, and repository verification is not recorded as production completion.
+M16 — continuous self-improvement is the active dependency-safe repository module while M01 and M04–M15 retain reviewed deployment/canary/reconciliation closeout. M00, M02, and M03 are complete. The complete M04–M16 repository stack is consolidated on ready PR #57 against `main`; the exact candidate and current check evidence are recorded on the PR instead of duplicated here. The current local repository gate covers 87 migrations, 69 pgTAP files, the complete concurrency matrix, 983 workspace tests, both images, and all four WooCommerce runtime cells; exact-head Linux replay remains pending for this slice. Production remains self-hosted and unchanged, and repository verification is not recorded as production completion.
+
+M01-S01 is now the active infrastructure compatibility slice under ADR-0081. It turns the self-hosted Supabase assumption into an executable, fail-closed contract over the exact upstream source provenance, both approved Compose byte variants, fifteen mounted assets, eleven reviewed `linux/amd64` image IDs, required gateway/Auth/Data API/database behavior, and cumulative RLS coverage for all 173 tenant tables. Three private coordination tables that already denied direct access now enable RLS through an additive migration and zero direct-role policies. Read-only VM 971 evidence matches the approved files and healthy runtime except for an older Studio container that still has the pre-`loyalty` schema environment. Production remains untouched; approved Studio recreation/smoke, a future exact upgrade rehearsal, and clean-room restore are the remaining compatibility closeout gates.
 
 ADR-0079 now binds the real public release boundary: production exposes English V1 and the complete V2-V6 stack ships migration-first in one dashboard release. The application therefore requests V6 and falls directly to V1 only for recognized missing-function errors, performs at most two RPCs, and fails closed on malformed/provider responses. V6 carries the exact immutable published programme currency; bigint-safe earning and VIP formatting no longer assumes EUR, while the V1 bridge uses currency-neutral copy. Reward-editor row identity and the shared M04-M14 canary artifact/envelope primitives were also repaired during the merge-readiness review. Focused tests and all eleven module validators pass; production and M09's 88/100 canary state are unchanged pending exact-head CI and the approved production gate.
 
@@ -113,6 +115,7 @@ The active integrated baseline is released production commit `0ced4b666a55d836bd
 ## Active M01 external gate
 
 - Production/store/recovery state is inventoried without secrets: exact `v0.1.11` images and all Supabase containers are healthy, value/event aggregates are zero, database PITR is proven and repaired, and no reachable customer store was treated as approved.
+- The self-hosted Supabase source bundle now has an exact offline compatibility contract and 39-corruption self-test. Repository/static checks cover 87 migrations, 69 pgTAP files, all 173 tenant tables, two Compose variants, fifteen mounted assets, and eleven platform image IDs; runtime Studio schema parity, exact future upgrade rehearsal, and full clean-room recovery remain explicitly pending.
 - The 22-case machine-readable pilot gate and exact operational runbook define provisioning, value, refund, expiry, reconciliation, rotation, outage, recovery, alert, and final-reconciliation evidence.
 - Complete every recovery/outage/reconciliation step that does not require interactive store-owner access. Leave only explicit store selection and owner-controlled checkout/order actions for the end if credentials remain unavailable.
 
@@ -138,6 +141,7 @@ The active integrated baseline is released production commit `0ced4b666a55d836bd
 ## External inputs
 
 - M01 production gate: approved real WooCommerce store access.
+- M01 Supabase compatibility closeout: approved isolated Studio recreation/smoke window, exact future upgrade rehearsal, and clean-room recovery exercise.
 - M08 production gate: SMTP and Klaviyo credentials.
 - M11 live multi-currency gate: approved exchange-rate provider.
 - M13 production gate: enterprise IdP test tenant.

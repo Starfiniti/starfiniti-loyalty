@@ -1,0 +1,104 @@
+{
+  "schemaVersion": "starfiniti.supabase-compatibility.v1",
+  "reviewedAt": "2026-08-28",
+  "upstream": {
+    "repository": "supabase/supabase",
+    "releaseRef": "self-hosted/v0.8.0",
+    "tagObjectSha": "e1af732589cd468edb49500ebc04e4367d4c56ad",
+    "commitSha": "241bb11c0627f2981746d37033f57dbfa81d29b0",
+    "officialComposeSha256": "ccff9999a5ec72de91082eef84e2cac7bb6d92dd0057feb4e474c38ebf0b21cb"
+  },
+  "approvedComposeVariants": [
+    {
+      "id": "official",
+      "sha256": "ccff9999a5ec72de91082eef84e2cac7bb6d92dd0057feb4e474c38ebf0b21cb",
+      "asymmetricJwksRequired": false
+    },
+    {
+      "id": "asymmetric-jwks-enabled",
+      "sha256": "3c0cc8d931fba8e40923b1e05961d10692cbd7e7cb378d59cdb7f2b590ca4a55",
+      "asymmetricJwksRequired": true
+    }
+  ],
+  "requiredServices": [
+    "studio",
+    "envoy",
+    "auth",
+    "rest",
+    "realtime",
+    "storage",
+    "imgproxy",
+    "meta",
+    "functions",
+    "db",
+    "supavisor"
+  ],
+  "forbiddenDefaultServices": ["kong", "analytics", "vector"],
+  "serviceImages": {
+    "studio": "supabase/studio:2026.08.03-sha-022b374",
+    "envoy": "envoyproxy/envoy:v1.39.0",
+    "auth": "supabase/gotrue:v2.189.0",
+    "rest": "postgrest/postgrest:v14.12",
+    "realtime": "supabase/realtime:v2.102.3",
+    "storage": "supabase/storage-api:v1.60.4",
+    "imgproxy": "darthsim/imgproxy:v3.30.1",
+    "meta": "supabase/postgres-meta:v0.96.6",
+    "functions": "supabase/edge-runtime:v1.74.0",
+    "db": "supabase/postgres:17.6.1.136",
+    "supavisor": "supabase/supavisor:2.9.5"
+  },
+  "platformImageDigests": {
+    "linux/amd64": {
+      "studio": "sha256:606aca9fdaa753b60968d5c304e2ada83869b76c9043684e63d5885aca9550e8",
+      "envoy": "sha256:d59f7f5fa10cff6d5892b6c5e7df5c9297ddfb2c3683e33fbfb82da24de4fa66",
+      "auth": "sha256:385184459f57569c54c25209f51f3b2be99ddd7c4ce9e3555b5d3eea8447b7cf",
+      "rest": "sha256:54000f24847d01a2c2302e0041cf0618b875c57fb48507d743cfa9aaa50bf43c",
+      "realtime": "sha256:aa1c92c0cf326007563641730ec9da9c60478caa6853887775365fa2c097a471",
+      "storage": "sha256:c8eb9858eafec891a97c27125470aaad54703c3f4eb4d55ca7f1bf6c6411febf",
+      "imgproxy": "sha256:3b709e4a0e5e8e0e959b556b7031229202b4b8e7e7d955c517ea7abed68ee34d",
+      "meta": "sha256:a84cc713585eea7b401e4a2561ec4a1e48c87083d1c7ecb4502f204bb4391300",
+      "functions": "sha256:2781daf92394db91f7e94129cc3d04ec474ad16a8fe64b3fbeef6e7d557ab120",
+      "db": "sha256:f371b5f3f2ac0a05703f33d6e6134515fb2498cab708fb948a0aeb7481467c00",
+      "supavisor": "sha256:31c2f05b13b11069660fdfae2f6cfd37b509748d2710aca121cfee8b16cb8b07"
+    }
+  },
+  "database": {
+    "postgresMajor": 17,
+    "postgresMetaUser": "postgres"
+  },
+  "environment": {
+    "apiExternalPath": "/auth/v1",
+    "postgrestSchemas": "public,graphql_public,loyalty"
+  },
+  "requiredComposeMappings": {
+    "auth.API_EXTERNAL_URL": "${API_EXTERNAL_URL}",
+    "auth.GOTRUE_JWT_ISSUER": "${API_EXTERNAL_URL}",
+    "rest.PGRST_DB_SCHEMAS": "${PGRST_DB_SCHEMAS}",
+    "meta.PG_META_DB_USER": "postgres"
+  },
+  "asymmetricJwksMappings": {
+    "auth.GOTRUE_JWT_KEYS": "${JWT_KEYS:-[]}",
+    "rest.API_JWT_JWKS": "${JWT_JWKS:-{\"keys\":[]}}",
+    "realtime.JWT_JWKS": "${JWT_JWKS:-{\"keys\":[]}}",
+    "storage.SUPABASE_JWKS": "${JWT_JWKS:-{\"keys\":[]}}"
+  },
+  "criticalAssets": {
+    "volumes/api/envoy/envoy.yaml": "3697f23b0be9ec5b829f937c600eb9b878f1f778ab510b42ad5e4f14742447e9",
+    "volumes/api/envoy/cds.yaml": "1d7514b891370ed27c25911df008887402e16ab09273e6e433225bb7f09f7905",
+    "volumes/api/envoy/lds.template.yaml": "55f5b61fff7409a29f7fe2a0d4a35ba77cf83f849eb411ab89602b3f364f81bd",
+    "volumes/api/envoy/docker-entrypoint.sh": "7ae0abaa8d76332d001e60dc29d4f29985890f89e04ee78489abbf680495631d",
+    "volumes/db/realtime.sql": "7e9e442e7fc4dae05544c07b67bede37a00d84644304dfce4d937134cb4c8f88",
+    "volumes/db/webhooks.sql": "b584aaaa0c393f27218f81e01e76e1d07d42f947083249adcd6097ad471cde62",
+    "volumes/db/roles.sql": "3ad717b225daa38aa982da26750f35641eb404e1eb5e69a763c22236ab96c1b2",
+    "volumes/db/jwt.sql": "1cc94a4f16f6e2932b383cd68e211a96bcae298437ca4120d8a5106396c58465",
+    "volumes/db/_supabase.sql": "9dce462adc04137d6afabcf28efa60a6c355270a4b32d7af58891ac4eb964c5f",
+    "volumes/db/logs.sql": "f0463ce5030907acef49326d2bffd36002df0718035071be7c99bd7fc897c63d",
+    "volumes/db/pooler.sql": "df97ebe148d94cfb92a5e37ebf972dfd496be195f0915ecf14396b2cf50efecb",
+    "volumes/pooler/pooler.exs": "d844e49f8915021ccbf6af6b769fef7909a723346bfc8f94ddb0433a328e49b1",
+    "volumes/functions/hello/index.ts": "924360da7a031b0c649d870863aa69cfa7436550169e7cc0d163bb15de2b0e3f",
+    "volumes/functions/main/index.ts": "5fb63babd5ebe7fda6f2e541fa9b4e3513a7514f8fa511ad7fdb37f46d2b9a95",
+    "volumes/snippets/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "sealedAssetDirectories": ["volumes/functions", "volumes/snippets"],
+  "mutableBindDirectories": ["volumes/storage", "volumes/db/data"]
+}

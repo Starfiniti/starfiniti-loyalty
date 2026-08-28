@@ -1,5 +1,5 @@
 version: 3
-updated: 2026-08-13
+updated: 2026-08-28
 scope:
   active:
     [
@@ -505,7 +505,10 @@ tasks:
         checkout succeeds through hub and worker outages,
         complete recovery meets recorded RPO and RTO,
       ]
-    owner_inputs: [approved real WooCommerce store access]
+    owner_inputs:
+      - approved real WooCommerce store access
+      - approved isolated Studio recreation and smoke-test window
+      - approved exact future Supabase upgrade rehearsal and clean-room restore
     acceptance:
       [
         award release redemption capture refund expiry reconciliation rotation recovery and outage cases pass,
@@ -529,13 +532,56 @@ tasks:
         reconciliation report,
         production alerts,
       ]
-    risks: [R-004, R-005, R-008, R-033]
+    risks: [R-004, R-005, R-008, R-033, R-055]
+    slices:
+      - id: M01-S01-SELF-HOSTED-SUPABASE-COMPATIBILITY
+        status: in_progress
+        hypothesis: An exact source, asset, image, runtime-boundary, and schema contract prevents an apparently unchanged self-hosted Supabase release from silently violating Auth, Data API, tenant, or recovery assumptions.
+        baseline: Production records self-hosted v0.8.0 and healthy services, but compatibility was prose-only and three private tenant tables lacked RLS.
+        targets:
+          - every approved bundle byte and platform image resolves to reviewed provenance
+          - every loyalty and loyalty_private table enables RLS
+          - applicable Supabase breaking changes fail deterministically before deployment
+          - no compatibility evidence contains a secret or raw container environment
+        owner_inputs:
+          - approved isolated Studio recreation and browser smoke test
+          - approved exact next-release upgrade rehearsal
+          - approved M15 clean-room recovery exercise
+        acceptance:
+          - repository migrations and all 173 tenant tables pass the compatibility and RLS gates
+          - the live source bundle matches one exact approved Compose variant and all critical mounted assets
+          - every required linux/amd64 image ID matches the reviewed inventory
+          - Envoy Auth PostgREST PostgreSQL postgres-meta optional-service and JWKS boundaries match the contract
+          - Studio runtime schema parity exact upgrade rehearsal and clean-room restore are recorded before slice completion
+        failure_modes:
+          - mutable tag or release label hides changed image bytes
+          - mounted initialization or gateway asset drifts outside Compose
+          - removed Supabase API or ownership behavior remains referenced
+          - a tenant table is created without RLS
+          - runtime parity or restore is inferred from healthy containers
+        security_boundary: The validator reads owner-only environment files locally, emits no values, inspects only local image IDs, and rejects symlinked or unreviewed source assets and binds.
+        rollout: Run offline before any Supabase recreation or upgrade; production remains unchanged until every pending runtime and recovery approval passes.
+        rollback: Keep the current approved bundle and image IDs; stop on preflight failure, forward-fix database history, and never disable RLS to restore an unreviewed caller.
+        verification:
+          - npm run supabase:preflight -- --compose <path> --env <path> --version-file <path> --provenance-file <path> --bundle-root <path> --platform linux/amd64
+          - npm run deployment:validate
+          - npm run db:validate
+          - npm run db:verify
+          - npm run check
+        evidence:
+          - infrastructure/environments/proxmox/supabase-compatibility.json
+          - docs/plan/evidence/M01/supabase-compatibility-2026-08-28.json
+          - supabase/migrations/20260828190000_private_table_rls_completion.sql
+          - supabase/tests/private_table_rls_completion_test.sql
+          - repository and read-only production-source checks pass; Studio recreation, exact future upgrade rehearsal, and clean-room restore remain pending
     docs:
       [
         docs/integrations/WOOCOMMERCE.md,
         docs/operations/BACKUP_RESTORE.md,
         docs/operations/RUNBOOKS.md,
+        docs/operations/SUPABASE_COMPATIBILITY.md,
         docs/architecture/ADR/0070-bounded-visible-postgres-backup-lock-contention.md,
+        docs/architecture/ADR/0081-fail-closed-self-hosted-supabase-compatibility.md,
       ]
     evidence:
       - docs/plan/evidence/M01/README.md
@@ -544,6 +590,11 @@ tasks:
       - docs/plan/evidence/M01/production-baseline-2026-08-28.md
       - docs/plan/evidence/M01/backup-export-repair-2026-08-13.md
       - docs/plan/evidence/M01/backup-transfer-amplification-2026-08-14.md
+      - docs/plan/evidence/M01/supabase-compatibility-2026-08-28.json
+      - infrastructure/environments/proxmox/supabase-compatibility.json
+      - migration 20260828190000 enables RLS on the three previously uncovered private tenant coordination tables while retaining reviewed owner-function bypass and zero direct-role policies
+      - the compatibility self-test covers 87 migrations, all 173 tenant tables, one official and one reviewed asymmetric-JWKS Compose variant, 15 mounted assets, 11 linux/amd64 image IDs, and 39 deterministic corruptions
+      - read-only VM 971 evidence matches the reviewed source files and service inventory; an older Studio container still needs approved recreation and smoke testing before runtime parity can pass
       - ADR-0070 and the undeployed backup candidate convert prolonged shared Borg-lock contention from false success into a bounded 120-second wait and visible status 75 with semantic and Linux Bash syntax gates
       - the exact M01 validator rejects schema drift future timestamps mutable release selectors contradictory store or restore authority unreconciled container counts negative aggregates duplicate checks obvious sensitive values and false completion through eleven adversarial fixtures
 

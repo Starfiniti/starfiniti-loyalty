@@ -102,6 +102,7 @@ const acceptedAdrs = [
   "0038-namespaced-store-api-and-flagged-blocks-panel.md",
   "0039-controlled-english-presentation-v2-and-degraded-delivery.md",
   "0040-ledger-sourced-versioned-analytics-and-explicit-liability-valuation.md",
+  "0081-fail-closed-self-hosted-supabase-compatibility.md",
 ];
 
 for (const adr of acceptedAdrs) {

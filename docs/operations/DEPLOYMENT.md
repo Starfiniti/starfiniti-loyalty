@@ -36,6 +36,8 @@ Forwarded client IP headers are accepted only from the trusted proxy. Host firew
 - New table Data API access is opt-in; Starfiniti also keeps explicit schema/grant/RLS validation.
 - Set `PGRST_DB_SCHEMAS=public,graphql_public,loyalty` in the self-hosted environment. Omitting `loyalty` makes authenticated dashboard queries fail with HTTP 406; adding it does not bypass the schema's explicit grants or tenant RLS policies.
 
+Before creating or recreating any Supabase service, run `npm run supabase:preflight` with the exact Compose, environment, upstream version, separately recorded provenance, and bundle-root paths. The fail-closed contract in `infrastructure/environments/proxmox/supabase-compatibility.json` binds the release ref, resolved source, approved Compose bytes, all mounted static assets, service/image set, gateway, PostgreSQL major, Auth path, postgres-meta ownership, schema allowlist, and asymmetric-key mappings. It also rejects unreviewed local binds, repository extension pins, removed `logs.all` use, Realtime-schema mutation, Starfiniti tables in `public`, and any loyalty table without cumulative RLS enablement. Follow `SUPABASE_COMPATIBILITY.md`; passing the offline check is not runtime, upgrade, or recovery evidence.
+
 ## Secrets
 
 Populate secret-managed environment files on the target hosts; never commit them. Required classes include database password, publishable/secret API keys, JWT signing material, dashboard credentials, SMTP, runtime/worker database credentials, Woo signing-key root material, encryption/backup keys, and observability credentials.

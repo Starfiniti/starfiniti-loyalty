@@ -1,5 +1,12 @@
 # Iteration Log
 
+## 2026-08-28 — Fail-closed self-hosted Supabase compatibility
+
+- Reconstructed production VM 971 read-only after the transfer-loop revalidation and compared its exact Supabase release provenance, Compose bytes, mounted assets, environment boundaries, services, platform image IDs, and health with official `self-hosted/v0.8.0` source and 2026 Supabase breaking-change notices. The live source differs from upstream only by the four reviewed asymmetric-JWKS mappings; all fifteen critical mounted assets and eleven required services match the captured `linux/amd64` inventory.
+- ADR-0081 selects a machine-readable compatibility lock and offline preflight instead of trusting a release label or mutable image tag. The validator rejects Compose, asset, image, platform, gateway, Auth URL, PostgREST schema, postgres-meta owner, PostgreSQL major, optional service, key-set, bind, provenance, permission, extension-pin, removed-log-API, owned-Realtime-schema, public-table, and cumulative-RLS drift through 39 deterministic corruptions.
+- The repository audit found three private tenant coordination tables without RLS. Additive migration `20260828190000` enables RLS, explicitly revokes every direct application-role table privilege, and adds no direct-role policies; a 17-case pgTAP suite includes one global assertion over every actual replayed `loyalty` and `loyalty_private` table, deliberate owner-function bypass, effective privilege denial, and zero-policy checks.
+- Static checks pass for 87 migrations, 69 pgTAP files, and all 173 tenant tables. Read-only production evidence records one honest runtime gap: the current files select the `loyalty` schema, but the older Studio container still has its prior schema environment. An approved isolated recreation/browser smoke, an exact future upgrade rehearsal, and full clean-room restore remain mandatory. No production file, container, database, route, checkout path, or loyalty value changed.
+
 ## 2026-08-28 — Versioned production and candidate product scoring
 
 - Reconstructed the whole-product evidence after M04-M14 implementation and found two contradictory stale views: the machine-readable production categories summed to 54/100 while the human scorecard reported 51/100, and both still described implemented candidate breadth as absent.
