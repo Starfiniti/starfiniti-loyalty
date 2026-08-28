@@ -28,6 +28,47 @@ The collector resolves and pins a public socket address independently for every 
 
 After collection, a reviewer must still inspect current official changes, dependency pins, and every required installed host/guest endpoint; classify breaking, security, and support impact; identify affected modules and an owner; and record the disposition. A snapshot never changes `provider_review`, `dependency_pins`, installed evidence, approval, or monthly-close status. A failed source remains unknown; do not bypass the collector's DNS, redirect, TLS, type, encoding, size, timeout, or output controls.
 
+## Recovery installed-state capture
+
+The installed-state helper validates evidence supplied through an independently
+approved read-only operator route. It contains no SSH client, endpoint address,
+credential, route selection, or production command. Validate its network-free
+contract first:
+
+```sh
+npm run continuous-improvement:installed:validate
+```
+
+Create one exact `starfiniti.recovery-endpoint-facts.v1` JSON object in memory for
+each opaque endpoint. Record only the UTC observation instant, the fixed
+`approved-read-only-ssh` capture method, `productionMutation: false`, public OS
+release facts, the closed package/version/architecture set, exact executable
+SHA-256 values, and the Proxmox version/kernel facts required by the policy. Do
+not include a hostname, address, username, route, key, command output, arbitrary
+package, provider body, application data, or contact. Canonical-base64 encode each
+UTF-8 object and capture from a clean exact commit:
+
+```sh
+npm run continuous-improvement:installed:capture -- \
+  --source /absolute/repository/path/docs/plan/evidence/M16/runs/provider-source-snapshot-....json \
+  --host-facts-base64 "$STARFINITI_HOST_FACTS_B64" \
+  --guest-facts-base64 "$STARFINITI_GUEST_FACTS_B64" \
+  --out /absolute/new/recovery-dependency-snapshot.json
+npm run continuous-improvement:installed:verify -- \
+  --in /absolute/new/recovery-dependency-snapshot.json
+```
+
+The helper derives exactly six installed provider projections, binds them to the
+official-source artifact and the exact rsync candidate plan, and writes through an
+exclusive no-follow descriptor. `installedCaptureComplete` covers only this closed
+installed catalogue. Candidate evidence remains incomplete for BorgBackup,
+OpenSSH, Debian, Ubuntu, and Proxmox; review, impact, ownership, approval, package
+installation, and production mutation all remain false. The artifact is a monthly
+review input, not remote attestation or an upgrade gate. Independent verification
+loads every governance/source/candidate binding from the artifact's exact candidate
+commit, so later working-tree or policy changes cannot silently reinterpret the
+historical evidence.
+
 ## Monthly review
 
 Close each calendar month within ten days. The initial M16 gate requires two distinct consecutive months; one review copied twice does not qualify.

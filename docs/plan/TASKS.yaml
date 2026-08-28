@@ -3620,6 +3620,7 @@ tasks:
         two distinct consecutive UTC monthly reviews cover activation errors support reconciliation fraud campaigns churn usability performance security billing providers backlog and module scores,
         every Supabase PostgreSQL WooCommerce Stripe Authentik Klaviyo Node.js rsync BorgBackup OpenSSH Debian Ubuntu and Proxmox official source is reviewed through the same cutoff with installed evidence for every required endpoint candidate provenance or dated entry impact owner and disposition,
         an exact clean-commit metadata-only snapshot binds bounded streamed SHA-256 evidence for all thirteen official sources without retaining provider content or asserting review impact installed evidence or approval,
+        a separate exact clean-commit installed-state snapshot binds both opaque recovery endpoints all six recovery providers public versions and exact executable provenance without retaining SSH routes command output identifiers or asserting candidate review impact approval or mutation,
         the evidence-ranked backlog score and order recompute exactly with no overdue unaccepted Critical or High item,
         the second occurrence of a stable failure binds a merged regression test validator monitor runbook or agent rule,
         every material change rescored all affected modules while preserving prior scores and evidence,
@@ -3643,6 +3644,8 @@ tasks:
         npm run continuous-improvement:validate,
         npm run continuous-improvement:sources:validate,
         clean-head thirteen-source capture and independent snapshot verification,
+        npm run continuous-improvement:installed:validate,
+        clean-head dual-endpoint installed-state capture and independent snapshot verification,
         npm run product-score:validate,
         two consecutive monthly review artifacts,
         complete provider and dependency review,
@@ -3653,7 +3656,7 @@ tasks:
         five distinct quarterly exercise reports and reconciliation,
         independent review and five-role approval,
       ]
-    risks: [R-030, R-031, R-051, R-052, R-054, R-057]
+    risks: [R-030, R-031, R-051, R-052, R-054, R-057, R-058]
     docs:
       [
         docs/plan/ENTERPRISE_ROADMAP.md,
@@ -3663,6 +3666,7 @@ tasks:
         docs/architecture/ADR/0068-evidence-bound-continuous-improvement.md,
         docs/architecture/ADR/0080-versioned-production-and-candidate-product-scores.md,
         docs/architecture/ADR/0084-bounded-provider-source-provenance-snapshots.md,
+        docs/architecture/ADR/0085-bounded-recovery-dependency-installed-state-snapshots.md,
       ]
     evidence:
       [
@@ -3675,10 +3679,13 @@ tasks:
         scripts/validate-product-score.mjs,
         infrastructure/governance/continuous-improvement.yaml,
         scripts/capture-provider-source-snapshot.mjs,
+        infrastructure/governance/recovery-dependency-snapshot-v1.yaml,
+        scripts/capture-recovery-dependency-snapshot.mjs,
         ADR-0080 preserves the exact V1 production score under SHA-256 and the V2 validator separately recomputes deployed production at 54/100 and the exact integration candidate at 83/100 while both remain completion-ineligible,
         product-score governance implementation d1a78c04cefacad203c786edee85c4b3a20787a1 passed the complete local 983-test gate 86-migration and 68-pgTAP-file static validation 1069-file secret scan zero-vulnerability production audit licence validation formatting and diff review without a runtime schema or production change,
         exact implementation and evidence head 88a9ef023a8e30c52a8728cc89fc026ba7514b8e passed CI run 33071504559 Security run 33071504623 and external CodeQL with all eleven checks green,
         recovery-dependency governance implementation head a7a00f2cfe082b91f8eef65b0930c24fe1c1e4b8 passed CI run 33144201269 Security run 33144201312 and external CodeQL with all eleven checks green on draft PR 57,
         corrected provider-source implementation head 257e99ce931d93832ee5723df159f54dba6dd8a7 passed CI run 33211821152 Security run 33211821140 and external CodeQL with all twelve PR checks green; its independently verified 6534-byte thirteen-source metadata artifact has SHA-256 5786186426b065493f5c01b5d76742322e2e8ed3fe92b8f80c30d787caa516be while review impact installed evidence and approval remain false,
+        ADR-0085 and the separate installed-state policy define a no-SSH repository boundary over two opaque endpoints six recovery providers exact public version and executable-hash facts source and rsync candidate bindings with candidate review impact approval and mutation false; a real minimized artifact and exact-head CI remain pending,
         delivery-chain audit found every open roadmap PR from 29 through 56 merge-clean with zero failed or pending checks after exact-head repairs to PRs 29 30 31 32 and 42,
       ]

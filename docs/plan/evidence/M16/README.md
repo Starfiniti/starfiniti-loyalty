@@ -33,3 +33,12 @@ Independent verification passed, and `contentRetained`, `reviewComplete`,
 `impactClassified`, and `installedEvidenceComplete` remain `false`.
 The path-scoped repository `-text` attribute preserves those exact bytes across
 Windows and POSIX checkouts.
+
+ADR-0085 adds a separate installed-state preparation boundary for the six recovery
+providers. The repository helper has no SSH or production-discovery authority. It
+accepts only two bounded exact-schema fact envelopes obtained through the approved
+read-only operator route, derives provider-specific installed provenance, binds the
+official-source artifact and exact rsync candidate plan, and keeps five other
+candidate reviews plus every impact, approval, upgrade, and monthly-close assertion
+false. `npm run continuous-improvement:installed:validate` exercises the positive
+contract and thirty-six adversarial cases without network or SSH access.

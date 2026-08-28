@@ -1,0 +1,66 @@
+schema: starfiniti.recovery-dependency-snapshot-plan.v1
+version: 1
+timezone: UTC
+facts:
+  schema: starfiniti.recovery-endpoint-facts.v1
+  maximumDecodedBytes: 8192
+  maximumObservationAgeSeconds: 3600
+  productionMutation: false
+  captureMethod: approved-read-only-ssh
+  endpoints:
+    - id: proxmox-host
+      osProvider: debian
+      packageIds:
+        [rsync, borgbackup, openssh-client, openssh-server, pve-manager]
+      executableIds: [rsync, borg, ssh, sshd]
+      platformIds: [proxmox]
+    - id: database-guest
+      osProvider: ubuntu
+      packageIds: [rsync, openssh-client, openssh-server]
+      executableIds: [rsync, ssh, sshd]
+      platformIds: []
+providers:
+  - id: rsync
+    installedEndpoints: [proxmox-host, database-guest]
+    packageIds: [rsync]
+    executableIds: [rsync]
+  - id: borgbackup
+    installedEndpoints: [proxmox-host]
+    packageIds: [borgbackup]
+    executableIds: [borg]
+  - id: openssh
+    installedEndpoints: [proxmox-host, database-guest]
+    packageIds: [openssh-client, openssh-server]
+    executableIds: [ssh, sshd]
+  - id: debian
+    installedEndpoints: [proxmox-host]
+    osProvider: debian
+  - id: ubuntu
+    installedEndpoints: [database-guest]
+    osProvider: ubuntu
+  - id: proxmox
+    installedEndpoints: [proxmox-host]
+    packageIds: [pve-manager]
+    platformIds: [proxmox]
+providerSourceSnapshot:
+  schema: starfiniti.provider-source-snapshot.v1
+  repositoryPathPrefix: docs/plan/evidence/M16/runs/provider-source-snapshot-
+  maximumBytes: 262144
+candidateReferences:
+  rsync:
+    planPath: infrastructure/testing/recovery-transport/plan.yaml
+    endpoints: [proxmox-host, database-guest]
+  unresolvedProviders: [borgbackup, openssh, debian, ubuntu, proxmox]
+assertions:
+  installedCaptureComplete: true
+  candidateEvidenceComplete: false
+  reviewComplete: false
+  impactClassified: false
+  approvalComplete: false
+  productionMutation: false
+output:
+  schema: starfiniti.recovery-dependency-snapshot.v1
+  absolutePathRequired: true
+  extension: .json
+  overwrite: false
+  mode: "0600"
