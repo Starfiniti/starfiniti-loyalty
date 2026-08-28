@@ -1361,7 +1361,7 @@ tasks:
           - ADR-0076 and additive PublicLoyaltyExperienceV5 replace legacy name kind and cost reward cards with a minimized exact published catalogue while raw reward configuration selectors instructions exact limits budgets internal codes customer state and value authority remain private and store credit stays excluded
           - the V5 reader falls back through V4 V3 V2 and V1 only for missing-function errors while malformed duplicate contradictory oversized or provider-error V5 data fails closed and legacy rewards normalize conservatively without stored value
           - reduced-motion browser review at 1512 by 982 and 390 by 844 passed six supported benefit and native or manual delivery presentations one H1 exact same-origin actions 44-pixel mobile reward links zero horizontal overflow duplicate IDs or browser diagnostics with retained desktop and mobile captures
-          - focused contract server presentation type accessibility and migration static checks pass while clean database replay and exact-head repository checks remain required before repository verification is recorded
+          - exact implementation head 294c62a passed all 11 required checks in CI 33165531738 and Security 33165531707 including 84 migration replay 68 pgTAP files with 3740 assertions the expanded 75-case public projection suite all 22 concurrency probes both images and all four WooCommerce runtimes
           - exact-head run 32844158775 at ad1ddcf passed baseline both images 55 migrations 43 pgTAP files with 2361 assertions and all four WooCommerce runtimes
       - id: M09-S03-LOCAL-WOOCOMMERCE-SNAPSHOT-AND-PLACEMENTS
         status: completed
