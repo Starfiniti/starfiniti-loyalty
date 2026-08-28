@@ -1,0 +1,216 @@
+schema: starfiniti.proxmox-security-update-plan.v1
+version: 1
+status: blocked_external
+observedAt: 2026-08-28T22:34:37Z
+endpointId: proxmox-host
+sourceBindings:
+  providerSnapshot:
+    path: docs/plan/evidence/M16/runs/provider-source-snapshot-257e99c-2026-08-28T212100Z.json
+    sha256: 5786186426b065493f5c01b5d76742322e2e8ed3fe92b8f80c30d787caa516be
+  installedSnapshot:
+    path: docs/plan/evidence/M16/runs/recovery-dependency-snapshot-c5678b6-2026-08-28T221524Z.json
+    sha256: 9960e01bea1a66856a2e0ed36493b28e183f5e316ce027fef3534ba5043448f7
+aptObservation:
+  captureMethod: approved-read-only-apt-cache-and-simulation
+  trustBoundary: endpoint-apt-verified-metadata
+  repositoryToolSignatureReverified: false
+  productionMutation: false
+  repositories:
+    - id: debian-trixie
+      inReleaseSha256: 98b25b5cd185c59d34aa6e4c3e9b5b8f01bbe9d104fe2dcfbcd30dc0a14a59ed
+      packagesSha256: be70297f6ea499e8ef0bd93906719298c795bc3dc4ce72560f13e6c9836bfedb
+    - id: debian-trixie-backports
+      inReleaseSha256: 3247937e0d6cb8c93fdb2e1b8d56cea50c948a2994e3fb54e181b1b6b087835c
+      packagesSha256: 81bcaf47638ee46541f01b05644e74b0bf5f3d8364ce263b9085ee8bbdad051b
+    - id: debian-trixie-updates
+      inReleaseSha256: be5a746af262ae0104341022497ef78f0ce514f5ba1371fec11f58ccaecbb6c5
+      packagesSha256: a855cb0d5a041e97b7e449de8de7c233ef6207f10c7ba62df6a77a887a461f13
+    - id: debian-trixie-security
+      inReleaseSha256: 151004a23f43898094f3c91567c2f7c80301d3f59a8880da3a3de3fe6e55059d
+      packagesSha256: 6368d31b5be929f65d1030da91917b0c335f9c54645bd37010945f6acad7a82b
+    - id: proxmox-trixie-no-subscription
+      inReleaseSha256: 26f5215ee5b5d11a0fa72b3015a73131d4c08165362149d28a1c7dd9f3a4144b
+      packagesSha256: 504803ebbf1b5428ae35bd35c95ff6519553fe7b586d28174755ebb6266a032a
+      productionRecommended: false
+      subscriptionDecisionRequired: true
+repairSet:
+  strategy: exact-security-minimum-superset
+  removals: []
+  packages:
+    - id: base-files
+      sourceId: debian-trixie
+      installedVersion: 13.8+deb13u5
+      candidateVersion: 13.8+deb13u6
+      architecture: amd64
+      action: upgrade
+      filename: pool/main/b/base-files/base-files_13.8+deb13u6_amd64.deb
+      size: 73300
+      sha256: c4bb697554ef3e6588b38ffb73e27a22698c2b9525b1c7223b06d42d155e63fa
+    - id: pve-qemu-kvm
+      sourceId: proxmox-trixie-no-subscription
+      installedVersion: 11.0.0-4
+      candidateVersion: 11.0.3-3
+      architecture: amd64
+      action: upgrade
+      filename: dists/trixie/pve-no-subscription/binary-amd64/pve-qemu-kvm_11.0.3-3_amd64.deb
+      size: 32388816
+      sha256: dc3d3eab976cce76ddc50ea72c54b04a5ddaf97f24e3a81f3a3c17fb07b4d21e
+    - id: libpve-storage-perl
+      sourceId: proxmox-trixie-no-subscription
+      installedVersion: 9.1.5
+      candidateVersion: 9.1.9
+      architecture: all
+      action: upgrade
+      filename: dists/trixie/pve-no-subscription/binary-amd64/libpve-storage-perl_9.1.9_all.deb
+      size: 178080
+      sha256: 27ee5273b0c3a1e17d458c34a0b8871d8a3a4fdf732538dfdad013fc7c259253
+    - id: qemu-server
+      sourceId: proxmox-trixie-no-subscription
+      installedVersion: 9.1.16
+      candidateVersion: 9.2.7
+      architecture: amd64
+      action: upgrade
+      filename: dists/trixie/pve-no-subscription/binary-amd64/qemu-server_9.2.7_amd64.deb
+      size: 374696
+      sha256: 4a60b67ffec4769998f7af75bdf42b33510fdcb480130c2e98edc67a5f4948b1
+    - id: pve-manager
+      sourceId: proxmox-trixie-no-subscription
+      installedVersion: 9.2.3
+      candidateVersion: 9.2.11
+      architecture: all
+      action: upgrade
+      filename: dists/trixie/pve-no-subscription/binary-amd64/pve-manager_9.2.11_all.deb
+      size: 648256
+      sha256: 4ed3869ff368974e57f966f15faa57d925ba75d54aa47dfc166e7f3de49ff3eb
+    - id: libpve-common-perl
+      sourceId: proxmox-trixie-no-subscription
+      installedVersion: 9.1.16
+      candidateVersion: 9.2.1
+      architecture: all
+      action: upgrade
+      filename: dists/trixie/pve-no-subscription/binary-amd64/libpve-common-perl_9.2.1_all.deb
+      size: 137416
+      sha256: 179ec2ed61414c6809cc11f5b4b434bbb1ece60a3a2fd5e3b862574d0555b2bc
+    - id: pve-container
+      sourceId: proxmox-trixie-no-subscription
+      installedVersion: 6.1.10
+      candidateVersion: 6.1.13
+      architecture: all
+      action: upgrade
+      filename: dists/trixie/pve-no-subscription/binary-amd64/pve-container_6.1.13_all.deb
+      size: 162676
+      sha256: 95bdc35b6e8db25f85656b0c4d703803230f798e225bf87306fb9df45ecf01ce
+    - id: pve-ha-manager
+      sourceId: proxmox-trixie-no-subscription
+      installedVersion: 5.2.4
+      candidateVersion: 5.2.5
+      architecture: amd64
+      action: upgrade
+      filename: dists/trixie/pve-no-subscription/binary-amd64/pve-ha-manager_5.2.5_amd64.deb
+      size: 101312
+      sha256: ba9a65bcaef945f7ac73cd2bf9438ddb3b140511ae6683e01063e259e07ab510
+    - id: proxmox-mini-journalreader
+      sourceId: proxmox-trixie-no-subscription
+      installedVersion: "1.6"
+      candidateVersion: "1.7"
+      architecture: amd64
+      action: upgrade
+      filename: dists/trixie/pve-no-subscription/binary-amd64/proxmox-mini-journalreader_1.7_amd64.deb
+      size: 13924
+      sha256: 869d7903eb7cb84fc395a8d7716511f396b5c7daef8ec04d86726cc900f6cd14
+    - id: proxmox-widget-toolkit
+      sourceId: proxmox-trixie-no-subscription
+      installedVersion: 5.2.3
+      candidateVersion: 5.2.8
+      architecture: all
+      action: upgrade
+      filename: dists/trixie/pve-no-subscription/binary-amd64/proxmox-widget-toolkit_5.2.8_all.deb
+      size: 234296
+      sha256: 57949c2c71ae574aba4dab7fe48b30bb7db8dea7548624eff14aedcd4735f9bc
+    - id: proxmox-kernel-7.0.14-14-pve-signed
+      sourceId: proxmox-trixie-no-subscription
+      installedVersion: null
+      candidateVersion: 7.0.14-14
+      architecture: amd64
+      action: install
+      filename: dists/trixie/pve-no-subscription/binary-amd64/proxmox-kernel-7.0.14-14-pve-signed_7.0.14-14_amd64.deb
+      size: 131014420
+      sha256: bfade38b890924f177b4bb5238bafab7f47370f912fe0290ec4e2e8727c8ac9d
+    - id: proxmox-kernel-7.0
+      sourceId: proxmox-trixie-no-subscription
+      installedVersion: 7.0.6-2
+      candidateVersion: 7.0.14-14
+      architecture: amd64
+      action: upgrade
+      filename: dists/trixie/pve-no-subscription/binary-amd64/proxmox-kernel-7.0_7.0.14-14_amd64.deb
+      size: 13832
+      sha256: d5102cf4fb890b52033bfc8d4dc537526042fe2f48332f77748140b1057c3e03
+  retainedBoundaryPackages:
+    - id: rsync
+      version: 3.4.1+ds1-5+deb13u3
+      architecture: amd64
+      sha256: fee3fa3b5924cc7e0964603945e0edfd63b7f29fc3cd4cf7613ad970e05a55be
+    - id: borgbackup
+      version: 1.4.0-5
+      architecture: amd64
+      sha256: 51e1cbdee1fccb31e9c63b93fda81d5fffb14289dc31ba27984e04ebb0c85733
+    - id: openssh-client
+      version: 1:10.0p1-7+deb13u4
+      architecture: amd64
+      sha256: 8fff343654f86c3b3266f94cd338c7b4da2e386da029327815118ea00bce03b9
+    - id: openssh-server
+      version: 1:10.0p1-7+deb13u4
+      architecture: amd64
+      sha256: b4a02524fd2be375624d917ee8102a16567e9e8dd786b41c35e22360cdd37f9d
+advisories:
+  - id: PSA-2026-00037-1
+    publishedAt: 2026-08-10T00:00:00Z
+    url: https://forum.proxmox.com/threads/proxmox-virtual-environment-security-advisories.149331/post-865180
+    fixes:
+      - packageId: proxmox-kernel-7.0
+        minimumVersion: 7.0.14-10
+        candidateVersion: 7.0.14-14
+  - id: PSA-2026-00038-1
+    publishedAt: 2026-08-10T00:00:00Z
+    url: https://forum.proxmox.com/threads/proxmox-virtual-environment-security-advisories.149331/post-865181
+    fixes:
+      - packageId: proxmox-kernel-7.0
+        minimumVersion: 7.0.14-11
+        candidateVersion: 7.0.14-14
+  - id: PSA-2026-00039-1
+    publishedAt: 2026-08-12T00:00:00Z
+    url: https://forum.proxmox.com/threads/proxmox-virtual-environment-security-advisories.149331/post-865583
+    fixes:
+      - packageId: qemu-server
+        minimumVersion: 9.2.3
+        candidateVersion: 9.2.7
+  - id: PSA-2026-00040-1
+    publishedAt: 2026-08-12T00:00:00Z
+    url: https://forum.proxmox.com/threads/proxmox-virtual-environment-security-advisories.149331/post-865584
+    fixes:
+      - packageId: qemu-server
+        minimumVersion: 9.2.2
+        candidateVersion: 9.2.7
+      - packageId: pve-container
+        minimumVersion: 6.1.13
+        candidateVersion: 6.1.13
+  - id: PSA-2026-00042-1
+    publishedAt: 2026-08-17T00:00:00Z
+    url: https://forum.proxmox.com/threads/proxmox-virtual-environment-security-advisories.149331/post-866076
+    fixes:
+      - packageId: pve-manager
+        minimumVersion: 9.2.8
+        candidateVersion: 9.2.11
+gates:
+  candidateMetadataComplete: true
+  candidatePackageBytesVerified: false
+  repositoryToolSignatureReverified: false
+  currentClosesKnownAdvisories: false
+  candidateClosesKnownAdvisories: true
+  compatibilityProved: false
+  rollbackEscrowComplete: false
+  recoveryReady: false
+  maintenanceApproved: false
+  rebootApproved: false
+  productionMutation: false
+candidateProvenanceSha256: 39f30c67a374b041944a598ce2334fed3fcb8e5f64264b3db08847d5ee23ff9f

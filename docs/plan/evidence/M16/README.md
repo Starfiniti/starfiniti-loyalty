@@ -57,3 +57,15 @@ Independent historical verification passed, as did CI `33215968172`, Security
 `reviewComplete`, `impactClassified`, `approvalComplete`, and `productionMutation`
 remain `false`. BorgBackup, OpenSSH, Debian, Ubuntu, and Proxmox candidate review
 remains unresolved.
+
+ADR-0086 records the first security-impact classification produced from these
+inputs. The minimized review
+[`proxmox-security-review-2026-08-29.md`](proxmox-security-review-2026-08-29.md)
+shows that the observed host is below fixed floors in five official Proxmox
+advisories and binds an exact twelve-package, zero-removal candidate. The
+candidate's listed versions meet every advisory floor, but package-byte and
+signature reverification, compatibility, rollback escrow, recovery readiness,
+repository policy, maintenance, reboot, mutation, post-change reconciliation,
+and independent approval remain open. It advances Proxmox candidate metadata and
+Critical risk classification only; it does not complete a monthly provider
+review or any production gate.

@@ -3621,6 +3621,7 @@ tasks:
         every Supabase PostgreSQL WooCommerce Stripe Authentik Klaviyo Node.js rsync BorgBackup OpenSSH Debian Ubuntu and Proxmox official source is reviewed through the same cutoff with installed evidence for every required endpoint candidate provenance or dated entry impact owner and disposition,
         an exact clean-commit metadata-only snapshot binds bounded streamed SHA-256 evidence for all thirteen official sources without retaining provider content or asserting review impact installed evidence or approval,
         a separate exact clean-commit installed-state snapshot binds both opaque recovery endpoints all six recovery providers public versions and exact executable provenance without retaining SSH routes command output identifiers or asserting candidate review impact approval or mutation,
+        the Proxmox review records every current published advisory gap and one exact dependency-complete zero-removal candidate while package bytes signature compatibility recovery approval reboot mutation and post-change proof remain explicitly open,
         the evidence-ranked backlog score and order recompute exactly with no overdue unaccepted Critical or High item,
         the second occurrence of a stable failure binds a merged regression test validator monitor runbook or agent rule,
         every material change rescored all affected modules while preserving prior scores and evidence,
@@ -3646,6 +3647,8 @@ tasks:
         clean-head thirteen-source capture and independent snapshot verification,
         npm run continuous-improvement:installed:validate,
         clean-head dual-endpoint installed-state capture and independent snapshot verification,
+        npm run proxmox-security:update:validate,
+        exact Proxmox package-byte signature compatibility rollback recovery maintenance reboot and post-change evidence,
         npm run product-score:validate,
         two consecutive monthly review artifacts,
         complete provider and dependency review,
@@ -3656,7 +3659,7 @@ tasks:
         five distinct quarterly exercise reports and reconciliation,
         independent review and five-role approval,
       ]
-    risks: [R-030, R-031, R-051, R-052, R-054, R-057, R-058]
+    risks: [R-030, R-031, R-051, R-052, R-054, R-057, R-058, R-059]
     docs:
       [
         docs/plan/ENTERPRISE_ROADMAP.md,
@@ -3667,6 +3670,8 @@ tasks:
         docs/architecture/ADR/0080-versioned-production-and-candidate-product-scores.md,
         docs/architecture/ADR/0084-bounded-provider-source-provenance-snapshots.md,
         docs/architecture/ADR/0085-bounded-recovery-dependency-installed-state-snapshots.md,
+        docs/architecture/ADR/0086-exact-proxmox-security-repair-candidate.md,
+        docs/operations/PROXMOX_SECURITY_UPDATE.md,
       ]
     evidence:
       [
@@ -3682,6 +3687,9 @@ tasks:
         scripts/capture-provider-source-snapshot.mjs,
         infrastructure/governance/recovery-dependency-snapshot-v1.yaml,
         scripts/capture-recovery-dependency-snapshot.mjs,
+        infrastructure/governance/proxmox-security-update-plan.yaml,
+        scripts/validate-proxmox-security-update-plan.mjs,
+        docs/plan/evidence/M16/proxmox-security-review-2026-08-29.md,
         ADR-0080 preserves the exact V1 production score under SHA-256 and the V2 validator separately recomputes deployed production at 54/100 and the exact integration candidate at 83/100 while both remain completion-ineligible,
         product-score governance implementation d1a78c04cefacad203c786edee85c4b3a20787a1 passed the complete local 983-test gate 86-migration and 68-pgTAP-file static validation 1069-file secret scan zero-vulnerability production audit licence validation formatting and diff review without a runtime schema or production change,
         exact implementation and evidence head 88a9ef023a8e30c52a8728cc89fc026ba7514b8e passed CI run 33071504559 Security run 33071504623 and external CodeQL with all eleven checks green,

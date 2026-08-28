@@ -1,5 +1,12 @@
 # Iteration Log
 
+## 2026-08-29 — Exact Proxmox security-repair candidate
+
+- The bounded installed-state review exposed a real Critical production condition: the running Proxmox kernel and installed `pve-manager`, `qemu-server`, and `pve-container` versions are below fixed floors in five official Proxmox advisories published from 10–17 August 2026. This reprioritizes provider review ahead of the remaining routine candidate classifications; R-059 and IMP-011 record the unresolved exposure.
+- Compared accepting isolation as mitigation, installing only the four named packages, a blind full distribution upgrade, and an exact dependency-complete repair. ADR-0086 selects the last: the V1 plan binds the five signed repository index observations, every one of the APT-simulated eleven upgrades and one new signed kernel, zero removals, 165,341,024 package bytes, the retained rsync/BorgBackup/OpenSSH packages, and the exact advisory sources and floors.
+- The candidate kernel `7.0.14-14`, `pve-manager` `9.2.11`, `qemu-server` `9.2.7`, and `pve-container` `6.1.13` meet every listed floor. The configured `pve-no-subscription` repository remains explicitly non-recommended for production under Proxmox documentation and requires an owner subscription-policy decision.
+- The deterministic validator binds canonical provenance `39f30c67a374b041944a598ce2334fed3fcb8e5f64264b3db08847d5ee23ff9f` and rejects plan, source, advisory, package, removal, repository-policy, and false-authority drift. Package bytes and repository signatures have not been independently reverified; compatibility, rollback escrow, recovery readiness, maintenance, reboot, mutation, running-kernel smoke, service observation, reconciliation, and independent review remain false. No production package, service, boot entry, VM, repository, checkout path, customer, or loyalty value changed.
+
 ## 2026-08-28 — Bounded recovery installed-state provenance
 
 - Reconstructed both production recovery endpoints read-only and compared pasted terminal output, repository-controlled SSH discovery, arbitrary monitoring exports, and two minimized fact envelopes. ADR-0085 selects the last boundary: environment-owned operator access gathers facts, while the repository tool contains no SSH client, route, address, username, credential, or production command.
