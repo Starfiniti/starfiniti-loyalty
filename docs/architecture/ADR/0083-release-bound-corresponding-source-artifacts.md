@@ -39,7 +39,7 @@ For each tag, the release job must:
 3. archive the exact Starfiniti commit and the exact aports packaging directory named by installed APK metadata;
 4. fetch every remote input missing from each packaging directory and verify its APKBUILD SHA-512 before inclusion;
 5. include pinned licence texts, bounded third-party notices, and a manifest of every file, digest, component, source URL, and packaging commit;
-6. independently verify the archive, manifest, notices, SBOM digests, safe paths, and closed inventory;
+6. independently stream and verify the archive, manifest, notices, SBOM digests, entry types/modes, safe paths and symlinks, byte bounds, and closed inventory without filesystem extraction;
 7. write checksums and attest the source archive, manifest, notices, plugin, both SBOMs, and checksum file;
 8. only then authenticate to GHCR, push the two images, attest their digests, and create the GitHub release.
 
@@ -53,6 +53,7 @@ R-056 remains open until a real tagged release produces and verifies the new art
 - The source archive is larger than the current release assets because it includes the full compiler and other upstream sources. The release has explicit byte and time bounds rather than truncating silently.
 - SBOM metadata selects authority; browser input, package names alone, mutable branches, and latest-version lookups select nothing.
 - All downloads require HTTPS, bounded bytes, an exact output name, and a fixed SHA-512. Redirects to another protocol fail. A source may use Alpine's release-specific official distfiles cache when the recipe's upstream origin is unavailable, but only when the cached bytes match the exact pinned APKBUILD checksum.
+- Archive verification is streaming and platform-independent. It rejects duplicate or excess entries, devices, hard links, directories, unexpected modes, size drift, path traversal, and symlink escape before accepting the internal/external manifest and notices as byte-identical.
 - Product source and third-party source remain separate paths inside one archive, while one manifest and checksum set bind them to the tag.
 - GitHub attestations provide provenance for the produced files and images. Consumers must still verify checksums, attestations, and the manifest; attestations are not a substitute for review.
 

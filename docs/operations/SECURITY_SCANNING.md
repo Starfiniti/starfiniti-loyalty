@@ -31,13 +31,13 @@ For a signed `vMAJOR.MINOR.PATCH` tag, the release workflow:
 2. builds immutable dashboard and worker images locally;
 3. generates both exact image CycloneDX SBOMs;
 4. builds the exact corresponding-source archive, external manifest, and third-party notices from the release commit and source plan;
-5. independently lists, extracts, bounds, hashes, and reconciles those artifacts to both SBOMs before registry authentication;
+5. independently streams, bounds, hashes, and reconciles every archive entry and both external envelopes to the two SBOMs before registry authentication, without filesystem extraction;
 6. checksums the connector, both SBOMs, source archive, source manifest, and notices;
 7. authenticates, pushes the images, and records exact registry digests;
 8. attests all seven release files and both image digests; and
 9. publishes all seven files.
 
-ADR-0083 governs the source bundle. It includes the exact Starfiniti source tree, exact Alpine packaging directories and commits, every checksum-bound local or downloaded APKBUILD input, and pinned SPDX licence texts. Downloads are credential-free HTTPS, byte-bounded, and SHA-512 verified. The builder treats APKBUILD and upstream source as data and never executes either. An unexpected reciprocal SBOM component fails before image publication.
+ADR-0083 governs the source bundle. It includes the exact Starfiniti source tree, exact Alpine packaging directories and commits, every checksum-bound local or downloaded APKBUILD input, and pinned SPDX licence texts. Downloads are credential-free HTTPS, byte-bounded, and SHA-512 verified. The builder treats APKBUILD and upstream source as data and never executes either. Its verifier streams the gzip/tar envelope, rejects unsafe paths and symlinks before use, and compares each file, mode, byte count, and digest to the external and archived manifests without extracting to disk. An unexpected reciprocal SBOM component fails before image publication.
 
 Verify a release with the repository-scoped GitHub CLI:
 

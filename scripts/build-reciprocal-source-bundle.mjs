@@ -24,6 +24,7 @@ import {
   isAbsolute,
   join,
   normalize,
+  posix,
   resolve,
   sep,
 } from "node:path";
@@ -31,6 +32,7 @@ import { pipeline } from "node:stream/promises";
 import { Transform } from "node:stream";
 import { fileURLToPath } from "node:url";
 import { request as httpsRequest } from "node:https";
+import { createGunzip, createGzip } from "node:zlib";
 
 import YAML from "yaml";
 
@@ -98,7 +100,7 @@ function assertSafeRelativePath(value, label = "path") {
     value.length === 0 ||
     value.length > 512 ||
     value.includes("\\") ||
-    value.includes("\0") ||
+    /[\u0000-\u001f\u007f]/u.test(value) ||
     isAbsolute(value) ||
     value.startsWith("/") ||
     value.split("/").some((part) => !part || part === "." || part === "..") ||
@@ -107,6 +109,30 @@ function assertSafeRelativePath(value, label = "path") {
     fail(`${label} is not a safe relative path`);
   }
   return value;
+}
+
+function assertSafeSymlinkTarget(entryPath, target, label = "symlink") {
+  if (
+    typeof target !== "string" ||
+    target.length === 0 ||
+    target.length > 512 ||
+    target.includes("\\") ||
+    /[\u0000-\u001f\u007f]/u.test(target) ||
+    posix.isAbsolute(target)
+  ) {
+    fail(`${entryPath} ${label} target is invalid`);
+  }
+  const resolvedTarget = posix.normalize(
+    posix.join(posix.dirname(entryPath), target),
+  );
+  if (
+    resolvedTarget === ".." ||
+    resolvedTarget.startsWith("../") ||
+    posix.isAbsolute(resolvedTarget)
+  ) {
+    fail(`${entryPath} ${label} escapes the source bundle`);
+  }
+  return target;
 }
 
 function assertHttps(value, label) {
@@ -669,7 +695,7 @@ async function walkTree(basePath, options = {}) {
       } else if (details.isSymbolicLink()) {
         if (options.exclude?.has(path)) continue;
         const target = await readlink(absolute);
-        if (isAbsolute(target)) fail(`${path} has an absolute symlink target`);
+        assertSafeSymlinkTarget(path, target);
         const resolvedTarget = resolve(dirname(absolute), target);
         const resolvedBase = resolve(basePath);
         if (
@@ -845,6 +871,110 @@ async function createDeterministicArchive(staging, archivePath, epochSeconds) {
   });
 }
 
+async function inspectArchive(archivePath, candidate) {
+  const { extract } = await import("tar-stream");
+  const extractor = extract();
+  const entries = [];
+  const seen = new Set();
+  const contents = new Map();
+  let expandedBytes = 0;
+
+  extractor.on("entry", (header, stream, next) => {
+    let settled = false;
+    const abortEntry = (error) => {
+      if (settled) return;
+      settled = true;
+      stream.resume();
+      extractor.destroy(error);
+    };
+    stream.on("error", abortEntry);
+    try {
+      assertSafeRelativePath(header.name, "archive entry");
+      if (
+        entries.length >= candidate.artifact.maxFiles + 1 ||
+        seen.has(header.name)
+      ) {
+        fail("source archive contains too many or duplicate entries");
+      }
+      seen.add(header.name);
+      if (header.type === "symlink") {
+        const target = header.linkname;
+        assertSafeSymlinkTarget(header.name, target, "archive symlink");
+        if (header.size !== 0) {
+          fail(`${header.name} archive symlink has a non-zero size`);
+        }
+        entries.push({ path: header.name, type: "symlink", target });
+        stream.on("end", () => {
+          if (settled) return;
+          settled = true;
+          next();
+        });
+        stream.resume();
+        return;
+      }
+      if (
+        header.type !== "file" ||
+        !Number.isSafeInteger(header.size) ||
+        header.size < 0 ||
+        ![0o644, 0o755].includes(header.mode)
+      ) {
+        fail(`${header.name} archive entry type mode or size is invalid`);
+      }
+      expandedBytes += header.size;
+      if (expandedBytes > candidate.artifact.maxExpandedBytes + 4_000_000) {
+        fail("source archive expanded bytes exceed the release bound");
+      }
+      const hash = createHash("sha256");
+      const capture =
+        header.name === "SOURCE-MANIFEST.json" ||
+        header.name === "THIRD-PARTY-NOTICES.md";
+      const chunks = [];
+      let observedBytes = 0;
+      stream.on("data", (chunk) => {
+        observedBytes += chunk.length;
+        hash.update(chunk);
+        if (capture) {
+          if (observedBytes > 4_000_000) {
+            abortEntry(
+              new Error("captured archive metadata exceeds its byte bound"),
+            );
+            return;
+          }
+          chunks.push(chunk);
+        }
+      });
+      stream.on("end", () => {
+        if (settled) return;
+        settled = true;
+        if (observedBytes !== header.size) {
+          extractor.destroy(
+            new Error(`${header.name} archive size does not match its header`),
+          );
+          return;
+        }
+        entries.push({
+          path: header.name,
+          type: "file",
+          size: header.size,
+          mode: header.mode,
+          sha256: hash.digest("hex"),
+        });
+        if (capture) contents.set(header.name, Buffer.concat(chunks));
+        next();
+      });
+    } catch (error) {
+      abortEntry(error);
+    }
+  });
+
+  try {
+    await pipeline(createReadStream(archivePath), createGunzip(), extractor);
+  } catch (error) {
+    fail(`source archive stream verification failed: ${error.message}`);
+  }
+  return { entries, contents, expandedBytes };
+}
+
 function validateManifestIdentity(
   manifest,
   candidate,
@@ -889,8 +1019,8 @@ function validateManifestIdentity(
       JSON.stringify(sourceInputFacts(candidate)) ||
     JSON.stringify(manifest.sboms) !== JSON.stringify(sbomFacts) ||
     JSON.stringify(manifest.components) !== JSON.stringify(inventory) ||
-    !Number.isInteger(manifest.fileCount) ||
-    !Number.isInteger(manifest.expandedBytes) ||
+    !Number.isSafeInteger(manifest.fileCount) ||
+    !Number.isSafeInteger(manifest.expandedBytes) ||
     !Array.isArray(manifest.files)
   ) {
     fail("source manifest identity or inventory is invalid");
@@ -918,7 +1048,7 @@ function validateManifestIdentity(
         "manifest file",
       );
       if (
-        !Number.isInteger(entry.size) ||
+        !Number.isSafeInteger(entry.size) ||
         entry.size < 0 ||
         ![0o644, 0o755].includes(entry.mode) ||
         !sha256Pattern.test(entry.sha256)
@@ -927,9 +1057,7 @@ function validateManifestIdentity(
       }
     } else if (entry.type === "symlink") {
       exactKeys(entry, ["path", "target", "type"], "manifest symlink");
-      if (typeof entry.target !== "string" || isAbsolute(entry.target)) {
-        fail(`${entry.path} manifest symlink is invalid`);
-      }
+      assertSafeSymlinkTarget(entry.path, entry.target, "manifest symlink");
     } else {
       fail(`${entry.path} manifest entry type is invalid`);
     }
@@ -958,68 +1086,76 @@ async function verifyArchiveEnvelope(candidate, outputDirectory, expected) {
   if (archiveSize <= 0 || archiveSize > candidate.artifact.maxArchiveBytes) {
     fail("source archive size is outside its release bound");
   }
-  const listed = run("tar", ["-tzf", archivePath])
-    .split(/\r?\n/u)
-    .filter(Boolean);
-  if (listed.length === 0 || new Set(listed).size !== listed.length) {
-    fail("source archive listing is empty or duplicated");
+  if (
+    statSync(manifestPath).size > 4_000_000 ||
+    statSync(noticesPath).size > 1_000_000
+  ) {
+    fail("external source manifest or notices exceed their byte bound");
   }
-  listed.forEach((entry) => assertSafeRelativePath(entry, "archive entry"));
-  const temporary = await mkdtemp(
-    join(tmpdir(), "starfiniti-reciprocal-source-verify-"),
+  const externalManifest = await readFile(manifestPath);
+  const externalNotices = await readFile(noticesPath);
+  const inspected = await inspectArchive(archivePath, candidate);
+  const internalManifest = inspected.contents.get("SOURCE-MANIFEST.json");
+  const internalNotices = inspected.contents.get("THIRD-PARTY-NOTICES.md");
+  if (!internalManifest || !externalManifest.equals(internalManifest)) {
+    fail("external and archived source manifests differ");
+  }
+  if (!internalNotices || !externalNotices.equals(internalNotices)) {
+    fail("external and archived third-party notices differ");
+  }
+  const parsed = JSON.parse(externalManifest.toString("utf8"));
+  if (expected) {
+    validateManifestIdentity(
+      parsed,
+      candidate,
+      expected.candidateCommit,
+      expected.tag,
+      expected.epochSeconds,
+      expected.sbomFacts,
+      expected.inventory,
+    );
+  }
+  const actualEntries = inspected.entries
+    .filter((entry) => entry.path !== "SOURCE-MANIFEST.json")
+    .sort((left, right) => left.path.localeCompare(right.path));
+  const declaredEntries = [...parsed.files].sort((left, right) =>
+    left.path.localeCompare(right.path),
   );
-  assertGeneratedTemp(temporary);
-  try {
-    run("tar", ["-xzf", archivePath, "-C", temporary]);
-    const externalManifest = await readFile(manifestPath);
-    const internalManifest = await readFile(
-      join(temporary, "SOURCE-MANIFEST.json"),
-    );
-    const externalNotices = await readFile(noticesPath);
-    const internalNotices = await readFile(
-      join(temporary, "THIRD-PARTY-NOTICES.md"),
-    );
-    if (!externalManifest.equals(internalManifest)) {
-      fail("external and archived source manifests differ");
-    }
-    if (!externalNotices.equals(internalNotices)) {
-      fail("external and archived third-party notices differ");
-    }
-    const parsed = JSON.parse(externalManifest.toString("utf8"));
-    if (expected) {
-      validateManifestIdentity(
-        parsed,
-        candidate,
-        expected.candidateCommit,
-        expected.tag,
-        expected.epochSeconds,
-        expected.sbomFacts,
-        expected.inventory,
+  if (
+    inspected.expandedBytes !==
+    parsed.expandedBytes + internalManifest.length
+  ) {
+    fail("archive expanded bytes do not match the source manifest");
+  }
+  if (actualEntries.length !== declaredEntries.length) {
+    fail("archive entry count does not match the source manifest");
+  }
+  for (let index = 0; index < declaredEntries.length; index += 1) {
+    const actual = actualEntries[index];
+    const declared = declaredEntries[index];
+    if (JSON.stringify(actual) !== JSON.stringify(declared)) {
+      fail(
+        `archive entry ${index} (${actual?.path ?? "missing"}) does not match the source manifest`,
       );
     }
-    const actualEntries = await walkTree(temporary, {
-      exclude: new Set(["SOURCE-MANIFEST.json"]),
-    });
-    if (JSON.stringify(actualEntries) !== JSON.stringify(parsed.files)) {
-      fail("archived files do not match the source manifest");
-    }
-    if (
-      listed.sort().join(",") !==
-      [...parsed.files.map((entry) => entry.path), "SOURCE-MANIFEST.json"]
-        .sort()
-        .join(",")
-    ) {
-      fail("archive listing does not match the manifest envelope");
-    }
-    return {
-      archiveBytes: archiveSize,
-      archiveSha256: await digestFile(archivePath),
-      manifestSha256: await digestFile(manifestPath),
-      noticesSha256: await digestFile(noticesPath),
-    };
-  } finally {
-    await rm(temporary, { force: true, recursive: true });
   }
+  if (
+    inspected.entries
+      .map((entry) => entry.path)
+      .sort()
+      .join(",") !==
+    [...parsed.files.map((entry) => entry.path), "SOURCE-MANIFEST.json"]
+      .sort()
+      .join(",")
+  ) {
+    fail("archive listing does not match the manifest envelope");
+  }
+  return {
+    archiveBytes: archiveSize,
+    archiveSha256: await digestFile(archivePath),
+    manifestSha256: await digestFile(manifestPath),
+    noticesSha256: await digestFile(noticesPath),
+  };
 }
 
 async function loadReleaseInputs(argumentsMap) {
@@ -1312,6 +1448,16 @@ function expectFailure(label, action, pattern) {
   fail(`self-test ${label} unexpectedly passed`);
 }
 
+async function expectAsyncFailure(label, action, pattern) {
+  try {
+    await action();
+  } catch (error) {
+    if (pattern.test(String(error?.message))) return;
+    throw error;
+  }
+  fail(`self-test ${label} unexpectedly passed`);
+}
+
 async function runSelfTest() {
   validatePlan();
   const fixtures = syntheticSboms();
@@ -1460,6 +1606,11 @@ async function runSelfTest() {
     /safe relative path/u,
   );
   expectFailure(
+    "path control character",
+    () => assertSafeRelativePath("source/forged\nentry"),
+    /safe relative path/u,
+  );
+  expectFailure(
     "insecure redirect",
     () =>
       resolveHttpsRedirect(
@@ -1483,8 +1634,11 @@ async function runSelfTest() {
     await writeFile(join(staging, "THIRD-PARTY-NOTICES.md"), notices);
     await writeFile(join(staging, "source", "fixture.txt"), "fixture\n");
     const files = await walkTree(staging);
+    const expandedBytes = files
+      .filter((entry) => entry.type === "file")
+      .reduce((sum, entry) => sum + entry.size, 0);
     const manifestBytes = Buffer.from(
-      `${JSON.stringify({ files }, null, 2)}\n`,
+      `${JSON.stringify({ expandedBytes, files }, null, 2)}\n`,
     );
     await writeFile(join(staging, "SOURCE-MANIFEST.json"), manifestBytes);
     await writeFile(join(output, plan.artifact.manifest), manifestBytes);
@@ -1498,11 +1652,39 @@ async function runSelfTest() {
     if (!sha256Pattern.test(verified.archiveSha256)) {
       fail("self-test archive digest is invalid");
     }
+
+    const unsafeArchive = join(output, "unsafe-symlink.tar.gz");
+    const { pack } = await import("tar-stream");
+    const packer = pack();
+    const writing = pipeline(
+      packer,
+      createGzip({ level: 9, mtime: 0 }),
+      createWriteStream(unsafeArchive, { flags: "wx", mode: 0o600 }),
+    );
+    await new Promise((resolveEntry, rejectEntry) => {
+      packer.entry(
+        {
+          linkname: "../../outside",
+          mode: 0o777,
+          name: "source/link",
+          type: "symlink",
+        },
+        Buffer.alloc(0),
+        (error) => (error ? rejectEntry(error) : resolveEntry()),
+      );
+    });
+    packer.finalize();
+    await writing;
+    await expectAsyncFailure(
+      "archive symlink escape",
+      () => inspectArchive(unsafeArchive, plan),
+      /archive symlink escapes the source bundle/u,
+    );
   } finally {
     await rm(archiveFixture, { force: true, recursive: true });
   }
   process.stdout.write(
-    "Validated reciprocal source plan, closed SBOM inventory, deterministic archive envelope, and 13 adversarial cases.\n",
+    "Validated reciprocal source plan, closed SBOM inventory, deterministic archive envelope, and 15 adversarial cases.\n",
   );
 }
 
