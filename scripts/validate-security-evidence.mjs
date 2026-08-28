@@ -86,6 +86,144 @@ const credentialPattern =
   /\b(?:sflt_v1_[0-9a-f]{32}_[A-Za-z0-9_-]{43}|sk_(?:live|test)_[A-Za-z0-9]{16,}|whsec_[A-Za-z0-9]{16,})\b/u;
 const forbiddenEvidenceKeyPattern =
   /(?:secret|password|authorization|cookie|requestbody|responsebody|rawbody|payload|customerid|connectionid|servicekey)$/iu;
+const expectedMediumFindings = [
+  [
+    "alpine-baselayout-gpl-2-only",
+    "alpine-baselayout",
+    "3.7.2-r1",
+    "GPL-2.0-only",
+    ["dashboard", "worker"],
+    "release_obligation_open",
+  ],
+  [
+    "alpine-baselayout-data-gpl-2-only",
+    "alpine-baselayout-data",
+    "3.7.2-r1",
+    "GPL-2.0-only",
+    ["dashboard", "worker"],
+    "release_obligation_open",
+  ],
+  [
+    "apk-tools-gpl-2-only",
+    "apk-tools",
+    "3.0.6-r0",
+    "GPL-2.0-only",
+    ["dashboard", "worker"],
+    "release_obligation_open",
+  ],
+  [
+    "busybox-gpl-2-only",
+    "busybox",
+    "1.37.0-r31",
+    "GPL-2.0-only",
+    ["dashboard", "worker"],
+    "release_obligation_open",
+  ],
+  [
+    "busybox-binsh-gpl-2-only",
+    "busybox-binsh",
+    "1.37.0-r31",
+    "GPL-2.0-only",
+    ["dashboard", "worker"],
+    "release_obligation_open",
+  ],
+  [
+    "ca-certificates-bundle-mpl-2",
+    "ca-certificates-bundle",
+    "20260611-r0",
+    "MPL-2.0",
+    ["dashboard", "worker"],
+    "release_obligation_open",
+  ],
+  [
+    "libapk-gpl-2-only",
+    "libapk",
+    "3.0.6-r0",
+    "GPL-2.0-only",
+    ["dashboard", "worker"],
+    "release_obligation_open",
+  ],
+  [
+    "libgcc-gpl-2-or-later",
+    "libgcc",
+    "15.2.0-r5",
+    "GPL-2.0-or-later",
+    ["dashboard", "worker"],
+    "release_obligation_open",
+  ],
+  [
+    "libgcc-lgpl-2-1-or-later",
+    "libgcc",
+    "15.2.0-r5",
+    "LGPL-2.1-or-later",
+    ["dashboard", "worker"],
+    "release_obligation_open",
+  ],
+  [
+    "libstdcxx-gpl-2-or-later",
+    "libstdc++",
+    "15.2.0-r5",
+    "GPL-2.0-or-later",
+    ["dashboard", "worker"],
+    "release_obligation_open",
+  ],
+  [
+    "libstdcxx-lgpl-2-1-or-later",
+    "libstdc++",
+    "15.2.0-r5",
+    "LGPL-2.1-or-later",
+    ["dashboard", "worker"],
+    "release_obligation_open",
+  ],
+  [
+    "musl-utils-gpl-2-or-later",
+    "musl-utils",
+    "1.2.6-r2",
+    "GPL-2.0-or-later",
+    ["dashboard", "worker"],
+    "release_obligation_open",
+  ],
+  [
+    "scanelf-gpl-2-only",
+    "scanelf",
+    "1.3.9-r1",
+    "GPL-2.0-only",
+    ["dashboard", "worker"],
+    "release_obligation_open",
+  ],
+  [
+    "ssl-client-gpl-2-only",
+    "ssl_client",
+    "1.37.0-r31",
+    "GPL-2.0-only",
+    ["dashboard", "worker"],
+    "release_obligation_open",
+  ],
+  [
+    "sharp-libvips-lgpl-3-or-later",
+    "@img/sharp-libvips-linuxmusl-x64",
+    "1.3.2",
+    "LGPL-3.0-or-later",
+    ["dashboard"],
+    "release_obligation_open",
+  ],
+  [
+    "starfiniti-dashboard-agpl-3-or-later",
+    "@starfiniti/dashboard",
+    "0.0.0",
+    "AGPL-3.0-or-later",
+    ["dashboard"],
+    "source_available",
+  ],
+].map(([id, packageName, version, license, images, disposition]) => ({
+  id,
+  package: packageName,
+  version,
+  license,
+  images,
+  rawOccurrences: images.length,
+  disposition,
+}));
 
 function fail(message) {
   throw new Error(`Security evidence invalid: ${message}`);
@@ -98,6 +236,24 @@ function exactUtc(value, label) {
     Number.isNaN(Date.parse(value))
   ) {
     fail(`${label} must be an exact UTC timestamp`);
+  }
+}
+
+function exactKeys(value, keys, label) {
+  if (
+    !value ||
+    typeof value !== "object" ||
+    Array.isArray(value) ||
+    Object.keys(value).sort().join(",") !== [...keys].sort().join(",")
+  ) {
+    fail(`${label} shape is invalid`);
+  }
+}
+
+function exactDigest(value, label, prefixed = false) {
+  const pattern = prefixed ? /^sha256:[0-9a-f]{64}$/u : /^[0-9a-f]{64}$/u;
+  if (typeof value !== "string" || !pattern.test(value)) {
+    fail(`${label} digest is invalid`);
   }
 }
 
@@ -296,6 +452,299 @@ function zeroSeverity(record, label) {
       `${label} severity totals are invalid or not zero for Critical and High`,
     );
   }
+}
+
+function validateMediumTriage(register, candidate, candidateRisks) {
+  exactKeys(
+    register,
+    [
+      "schema",
+      "candidateCommit",
+      "observedAt",
+      "source",
+      "reconciliation",
+      "review",
+      "findings",
+      "remediations",
+      "falsePositives",
+    ],
+    "Medium triage register",
+  );
+  if (
+    register.schema !== "starfiniti.security-medium-triage.v1" ||
+    register.candidateCommit !== candidate.candidate.commit ||
+    register.observedAt !== candidate.observedAt
+  ) {
+    fail("Medium triage identity is invalid");
+  }
+  exactUtc(register.observedAt, "Medium triage observedAt");
+
+  exactKeys(
+    register.source,
+    [
+      "securityRunId",
+      "securityWorkflowSha256",
+      "trivyVersion",
+      "zapVersion",
+      "completedAt",
+      "supplyChain",
+      "dast",
+      "previousDast",
+    ],
+    "Medium triage source",
+  );
+  if (
+    !Number.isSafeInteger(register.source.securityRunId) ||
+    register.source.securityRunId < 1 ||
+    register.source.securityWorkflowSha256 !==
+      candidate.inputs.securityWorkflow.sha256 ||
+    String(register.source.trivyVersion) !== candidate.inputs.tools.trivy ||
+    String(register.source.zapVersion) !== candidate.inputs.tools.zap
+  ) {
+    fail("Medium triage source identity or tool versions are invalid");
+  }
+  exactUtc(register.source.completedAt, "Medium triage completedAt");
+  if (
+    Date.parse(register.source.completedAt) >= Date.parse(register.observedAt)
+  ) {
+    fail("Medium triage chronology is invalid");
+  }
+
+  exactKeys(
+    register.source.supplyChain,
+    [
+      "jobId",
+      "artifactId",
+      "artifactName",
+      "artifactArchiveSha256",
+      "artifactExpiresAt",
+      "dashboardReportSha256",
+      "workerReportSha256",
+      "dashboardSbomSha256",
+      "workerSbomSha256",
+      "dashboardImageDigest",
+      "workerImageDigest",
+    ],
+    "Medium triage supply-chain source",
+  );
+  exactKeys(
+    register.source.dast,
+    [
+      "jobId",
+      "artifactId",
+      "artifactName",
+      "artifactArchiveSha256",
+      "artifactExpiresAt",
+      "reportSha256",
+    ],
+    "Medium triage DAST source",
+  );
+  exactKeys(
+    register.source.previousDast,
+    [
+      "securityRunId",
+      "artifactId",
+      "artifactArchiveSha256",
+      "artifactExpiresAt",
+      "reportSha256",
+    ],
+    "Medium triage previous DAST source",
+  );
+  for (const source of [
+    register.source.supplyChain,
+    register.source.dast,
+    register.source.previousDast,
+  ]) {
+    for (const id of ["jobId", "artifactId", "securityRunId"]) {
+      if (
+        source[id] !== undefined &&
+        (!Number.isSafeInteger(source[id]) || source[id] < 1)
+      ) {
+        fail(`Medium triage ${id} is invalid`);
+      }
+    }
+    exactUtc(source.artifactExpiresAt, "Medium triage artifact expiry");
+    if (
+      Date.parse(source.artifactExpiresAt) <= Date.parse(register.observedAt)
+    ) {
+      fail("Medium triage source expired before review");
+    }
+    if (Date.parse(source.artifactExpiresAt) <= Date.now()) {
+      fail("Medium triage source artifact has expired");
+    }
+  }
+  if (
+    !/^security-supply-chain-[0-9a-f]{40}$/u.test(
+      register.source.supplyChain.artifactName,
+    ) ||
+    !/^security-dast-[0-9a-f]{40}$/u.test(register.source.dast.artifactName)
+  ) {
+    fail("Medium triage artifact names are invalid");
+  }
+  for (const [key, value] of Object.entries(register.source.supplyChain)) {
+    if (key.endsWith("Sha256")) exactDigest(value, `supply-chain ${key}`);
+  }
+  for (const [key, value] of Object.entries(register.source.dast)) {
+    if (key.endsWith("Sha256")) exactDigest(value, `DAST ${key}`);
+  }
+  for (const [key, value] of Object.entries(register.source.previousDast)) {
+    if (key.endsWith("Sha256")) exactDigest(value, `previous DAST ${key}`);
+  }
+  exactDigest(
+    register.source.supplyChain.dashboardImageDigest,
+    "dashboard image",
+    true,
+  );
+  exactDigest(
+    register.source.supplyChain.workerImageDigest,
+    "worker image",
+    true,
+  );
+
+  const expectedReconciliation = {
+    currentCritical: 0,
+    currentHigh: 0,
+    currentMedium: 30,
+    currentMediumLicenses: 30,
+    currentMediumDast: 0,
+    currentDastInformational: 2,
+    distinctMediumFindings: 16,
+    rawMediumOccurrences: 30,
+    remediatedPriorDastMedium: 2,
+    falsePositives: 0,
+    sourceAvailable: 1,
+    openReleaseObligations: 15,
+  };
+  exactKeys(
+    register.reconciliation,
+    Object.keys(expectedReconciliation),
+    "Medium triage reconciliation",
+  );
+  if (
+    Object.entries(expectedReconciliation).some(
+      ([key, value]) => register.reconciliation[key] !== value,
+    )
+  ) {
+    fail("Medium triage counts do not reconcile");
+  }
+
+  exactKeys(
+    register.review,
+    [
+      "status",
+      "ownerRole",
+      "risk",
+      "reviewedAt",
+      "expiresAt",
+      "allMediumTriaged",
+      "falsePositivesReviewed",
+      "blockingTaggedRelease",
+      "requiredAction",
+      "rationale",
+    ],
+    "Medium triage review",
+  );
+  exactUtc(register.review.reviewedAt, "Medium triage reviewedAt");
+  exactUtc(register.review.expiresAt, "Medium triage expiresAt");
+  const reviewDuration =
+    Date.parse(register.review.expiresAt) -
+    Date.parse(register.review.reviewedAt);
+  const earliestArtifactExpiry = Math.min(
+    Date.parse(register.source.supplyChain.artifactExpiresAt),
+    Date.parse(register.source.dast.artifactExpiresAt),
+    Date.parse(register.source.previousDast.artifactExpiresAt),
+  );
+  if (
+    register.review.status !== "triaged_release_blocked" ||
+    register.review.ownerRole !== "release_security" ||
+    register.review.risk !== "R-056" ||
+    register.review.reviewedAt !== register.observedAt ||
+    reviewDuration <= 0 ||
+    reviewDuration > 31 * 24 * 60 * 60 * 1000 ||
+    Date.parse(register.review.expiresAt) <= Date.now() ||
+    Date.parse(register.review.expiresAt) > earliestArtifactExpiry ||
+    register.review.allMediumTriaged !== true ||
+    register.review.falsePositivesReviewed !== true ||
+    register.review.blockingTaggedRelease !== true ||
+    register.review.requiredAction !==
+      "Publish exact corresponding-source and third-party-notice evidence for every open reciprocal component before distributing a tagged dashboard or worker image." ||
+    typeof register.review.rationale !== "string" ||
+    register.review.rationale.length < 120 ||
+    !/^\| R-056 \|/mu.test(candidateRisks)
+  ) {
+    fail("Medium triage ownership expiry or release gate is invalid");
+  }
+
+  if (
+    JSON.stringify(register.findings) !== JSON.stringify(expectedMediumFindings)
+  ) {
+    fail("Medium triage finding matrix is incomplete or drifted");
+  }
+  if (
+    register.findings.reduce(
+      (sum, finding) => sum + finding.rawOccurrences,
+      0,
+    ) !== register.reconciliation.rawMediumOccurrences ||
+    register.findings.filter(
+      (finding) => finding.disposition === "release_obligation_open",
+    ).length !== register.reconciliation.openReleaseObligations ||
+    register.findings.filter(
+      (finding) => finding.disposition === "source_available",
+    ).length !== register.reconciliation.sourceAvailable
+  ) {
+    fail("Medium triage occurrence or disposition totals drifted");
+  }
+
+  const expectedControls = [
+    "apps/dashboard/lib/security-headers.test.ts",
+    "apps/dashboard/proxy.test.ts",
+    ".github/workflows/security.yml",
+  ];
+  if (
+    !Array.isArray(register.remediations) ||
+    register.remediations.length !== 2 ||
+    register.remediations
+      .map((item) => item.ruleId)
+      .sort()
+      .join(",") !== "10020,10038"
+  ) {
+    fail("Medium triage remediation coverage is invalid");
+  }
+  for (const remediation of register.remediations) {
+    exactKeys(
+      remediation,
+      [
+        "ruleId",
+        "name",
+        "status",
+        "falsePositive",
+        "remediationCommit",
+        "priorReportSha256",
+        "currentReportSha256",
+        "regressionControls",
+      ],
+      "Medium triage remediation",
+    );
+    if (
+      remediation.status !== "remediated" ||
+      remediation.falsePositive !== false ||
+      remediation.remediationCommit !== candidate.candidate.commit ||
+      remediation.priorReportSha256 !==
+        register.source.previousDast.reportSha256 ||
+      remediation.currentReportSha256 !== register.source.dast.reportSha256 ||
+      JSON.stringify(remediation.regressionControls) !==
+        JSON.stringify(expectedControls)
+    ) {
+      fail("Medium triage remediation evidence is invalid");
+    }
+  }
+  if (
+    !Array.isArray(register.falsePositives) ||
+    register.falsePositives.length
+  ) {
+    fail("Medium triage false-positive reconciliation is invalid");
+  }
+  scanSensitive(register, "Medium triage register");
 }
 
 function validateSecurityRun(run, candidate) {
@@ -527,6 +976,33 @@ export function validateDocument(
   ) {
     fail("artifact binding shape is invalid");
   }
+  exactKeys(candidate.triage, ["path", "sha256"], "Medium triage binding");
+  const mediumTriageCheck = candidate.checks.find(
+    (check) => check.id === "medium_and_false_positive_review",
+  );
+  if (mediumTriageCheck?.status === "passed") {
+    const mediumTriage = readBoundArtifact(
+      candidate.triage.path,
+      candidate.triage.sha256,
+    );
+    validateMediumTriage(mediumTriage, candidate, candidateRisks);
+    const releaseEvidencePassed = [
+      "release_sbom_verification",
+      "release_file_attestations",
+      "release_image_attestations",
+    ].some(
+      (id) =>
+        candidate.checks.find((check) => check.id === id)?.status === "passed",
+    );
+    if (mediumTriage.review.blockingTaggedRelease && releaseEvidencePassed) {
+      fail("tagged release evidence conflicts with open Medium obligations");
+    }
+  } else if (
+    candidate.triage.path !== null ||
+    candidate.triage.sha256 !== null
+  ) {
+    fail("non-passing Medium triage cannot bind a completion artifact");
+  }
   const m15 = candidateTasks.tasks?.find(
     (task) => task.id === "M15-GA-HARDENING",
   );
@@ -673,6 +1149,97 @@ if (process.argv.includes("--self-test")) {
   const weakFailures = structuredClone(evidence);
   weakFailures.automaticFails = weakFailures.automaticFails.slice(0, 5);
   expectRejected(weakFailures, "eighteen unique", "weak failure rules");
+
+  const mediumTriage = readBoundArtifact(
+    evidence.triage.path,
+    evidence.triage.sha256,
+  );
+  const expectTriageRejected = (candidate, message, label) => {
+    try {
+      validateMediumTriage(candidate, evidence, risksText);
+    } catch (error) {
+      if (error instanceof Error && error.message.includes(message)) return;
+      throw error;
+    }
+    fail(`self-test accepted ${label}`);
+  };
+
+  const missingMediumFinding = structuredClone(mediumTriage);
+  missingMediumFinding.findings.pop();
+  expectTriageRejected(
+    missingMediumFinding,
+    "finding matrix",
+    "incomplete Medium finding matrix",
+  );
+
+  const incorrectMediumCount = structuredClone(mediumTriage);
+  incorrectMediumCount.reconciliation.rawMediumOccurrences = 29;
+  expectTriageRejected(
+    incorrectMediumCount,
+    "counts do not reconcile",
+    "incorrect Medium count",
+  );
+
+  const overlongMediumReview = structuredClone(mediumTriage);
+  overlongMediumReview.review.expiresAt = "2026-09-27T17:15:56Z";
+  expectTriageRejected(
+    overlongMediumReview,
+    "ownership expiry or release gate",
+    "review beyond source expiry",
+  );
+
+  const unblockedMediumRelease = structuredClone(mediumTriage);
+  unblockedMediumRelease.review.blockingTaggedRelease = false;
+  expectTriageRejected(
+    unblockedMediumRelease,
+    "ownership expiry or release gate",
+    "unblocked reciprocal release",
+  );
+
+  const expiredMediumReview = structuredClone(mediumTriage);
+  expiredMediumReview.review.expiresAt = "2026-08-28T17:43:02Z";
+  expectTriageRejected(
+    expiredMediumReview,
+    "ownership expiry or release gate",
+    "expired Medium review",
+  );
+
+  const expiredMediumSource = structuredClone(mediumTriage);
+  expiredMediumSource.source.dast.artifactExpiresAt = "2026-08-28T17:43:02Z";
+  expectTriageRejected(
+    expiredMediumSource,
+    "source artifact has expired",
+    "expired Medium source artifact",
+  );
+
+  const inventedFalsePositive = structuredClone(mediumTriage);
+  inventedFalsePositive.falsePositives.push({ ruleId: "invented" });
+  expectTriageRejected(
+    inventedFalsePositive,
+    "false-positive reconciliation",
+    "invented false positive",
+  );
+
+  const weakenedRemediation = structuredClone(mediumTriage);
+  weakenedRemediation.remediations[0].falsePositive = true;
+  expectTriageRejected(
+    weakenedRemediation,
+    "remediation evidence",
+    "real defect relabelled false positive",
+  );
+
+  const prematureRelease = structuredClone(evidence);
+  const releaseCheck = prematureRelease.checks.find(
+    (check) => check.id === "release_sbom_verification",
+  );
+  releaseCheck.status = "passed";
+  releaseCheck.evidence =
+    "Exact release payload checksums and both image SBOMs were verified against one signed immutable release candidate.";
+  expectRejected(
+    prematureRelease,
+    "tagged release evidence conflicts",
+    "release evidence with open reciprocal obligations",
+  );
 }
 
 console.log(

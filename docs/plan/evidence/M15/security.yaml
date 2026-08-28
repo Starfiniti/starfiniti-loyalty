@@ -1,12 +1,12 @@
 schema: starfiniti.security-evidence.v1
 status: in_progress
-observedAt: 2026-08-27T09:14:38Z
+observedAt: 2026-08-28T17:43:01Z
 currentProduction:
   release: v0.1.11
   applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
 candidate:
-  branch: codex/m15-security-supply-chain
-  commit: 2a27fc6a8bf9577ccf2f1ffb3475fffbdbb52440
+  branch: codex/enterprise-roadmap-integration
+  commit: f9c83ac5de0fc7c73aed7528dc8e158ef45df17d
   securityOwnerApproved: false
 inputs:
   securityWorkflow:
@@ -41,6 +41,9 @@ artifacts:
   penetrationTestSha256: null
   findingRegisterPath: null
   findingRegisterSha256: null
+triage:
+  path: docs/plan/evidence/M15/runs/security-medium-triage-f9c83ac.yaml
+  sha256: bf06ca1dc8138aff3f1f5d6e9640e7356ccd8678206fbce43804ed1c8d8b42cf
 checks:
   - id: workflow_contract
     status: passed
@@ -62,31 +65,31 @@ checks:
     evidence: The repository validator rejects drift sensitive evidence false completion missing checks task mismatch and unsafe DAST or release controls.
   - id: exact_head_ci
     status: passed
-    evidence: GitHub Actions CI run 33057428413 completed successfully at head 2a27fc6a8bf9577ccf2f1ffb3475fffbdbb52440 across baseline, database replay and pgTAP, both images, the worker runtime import probe, and all four minimum/current HPOS/legacy WooCommerce jobs.
+    evidence: GitHub Actions CI run 33195600450 completed successfully at head f9c83ac5de0fc7c73aed7528dc8e158ef45df17d across baseline, database replay and pgTAP, both images, the worker runtime import probe, and all four minimum/current HPOS/legacy WooCommerce jobs.
   - id: codeql_sast
     status: passed
-    evidence: Security run 33057428402 completed CodeQL security-extended successfully at the exact candidate head; the GitHub code-scanning API returned zero open alerts for the pull-request merge ref at review time.
+    evidence: Security run 33195600514 completed CodeQL security-extended successfully at the exact candidate head, and the exact run reported no unresolved CodeQL failure.
   - id: repository_secret_misconfiguration_scan
     status: passed
-    evidence: Security run 33057428402 completed its fail-closed Trivy 0.74.0 repository secret and misconfiguration scan without a finding.
+    evidence: Security run 33195600514 completed its fail-closed Trivy 0.74.0 repository secret and misconfiguration scan without a finding.
   - id: dashboard_image_scan
     status: passed
-    evidence: Security run 33057428402 enforced zero Unknown High or Critical findings on dashboard image sha256:f9744f644af35335292f35bfff61512ce9d0465ba3c86f9f041c167beaeca8f2; its secret-free full report has SHA-256 98f786ce8cf1787317da11c3b5f840f30fc7b488bf032902672846e34fc59769.
+    evidence: Security run 33195600514 enforced zero Unknown High or Critical findings on dashboard image sha256:b17e176e048571e0fd42b7e4f6c8f185b613e946eff9dc59da29ceaeb8eb1c5b; its secret-free full report has SHA-256 b22cbb8475951dec8d1b7683cbcde460de6cc72b0ff905753f903bcf2c55d422.
   - id: worker_image_scan
     status: passed
-    evidence: Security run 33057428402 imported the exact three external modules and enforced zero Unknown High or Critical findings on worker image sha256:cbf457cbf91b794f9554927b235883494547817fec23bcaa03d860da09bd4698; its review report has SHA-256 cfc7f6bf776e2aefb5d05a71ebafc17ac7f9e7af72d5149adc1887239d98a96c.
+    evidence: Security run 33195600514 imported the exact three external modules and enforced zero Unknown High or Critical findings on worker image sha256:457b1b92ff6e8620adcb86da465b8c4ccda5df7bd9068afe640eceafcbaab5d6; its review report has SHA-256 a2c88f4a045c62d23787b3d30d913ec30b9c1520b381cb8133baad684bf7295f.
   - id: dashboard_sbom
     status: passed
-    evidence: Security run 33057428402 generated a valid CycloneDX 1.7 dashboard inventory with 238 components and SHA-256 bdca342bcc62c8ef7b0071d98a89092c0d6b6966dc686819a865b867a11b288d.
+    evidence: Security run 33195600514 generated a valid CycloneDX 1.7 dashboard inventory with 238 components and SHA-256 0c0c7668f34c94cf1e6d03af7106dbff328895aff1a8be9b8191523a1bc900de.
   - id: worker_sbom
     status: passed
-    evidence: Security run 33057428402 generated a valid CycloneDX 1.7 worker inventory with 108 operating-system runtime and external-package components and SHA-256 05171375f0d06eb6dfbaa2f98f8051202200696cab3f115f547cb102e328e20c.
+    evidence: Security run 33195600514 generated a valid CycloneDX 1.7 worker inventory with 108 operating-system runtime and external-package components and SHA-256 76523c9d5c400fda9d7d61c47bf69905be82c1495139570876a726b1122af7dd.
   - id: disposable_dast
     status: passed
-    evidence: Security run 33057428402 completed bounded ZAP 2.17.0 against one internal no-port disposable target with zero High alert; artifact 9640284697 has archive digest 1f2f720069b94be9ad6f148a470627346a60c0ddbe3711967458fbf4998f8705 and report SHA-256 cbfc112cff41ae1c50c8f542ab4a2f3daae1f020e97b7f4c6ac4a60bd3cd75df.
+    evidence: Security run 33195600514 completed bounded ZAP 2.17.0 against one internal no-port disposable target with zero Critical High Medium or Low alert; artifact 9695668396 has archive SHA-256 595bb661d6512069a118682798eb93f95cc10e3aa5f244c5124991cd1d45f758 and report SHA-256 810910fc1ee7a4206016ec19cca85f1ec5eda82f5841073a8530cca4718ab4c2.
   - id: dashboard_response_security_headers
-    status: pending
-    evidence: ADR-0082 adds request-bound nonce CSP plus framing and MIME controls at the deployable dashboard boundary; a fresh exact-head isolated workflow run must prove the real response and remove the two prior Medium ZAP findings.
+    status: passed
+    evidence: Exact-head isolated job 98931801974 accepted a real container response only after finding a fresh nonce-shaped strict script policy framing denial DENY fallback and MIME-sniff prevention; current ZAP report 810910fc1ee7a4206016ec19cca85f1ec5eda82f5841073a8530cca4718ab4c2 contains neither prior Medium rule.
   - id: scanner_database_freshness
     status: pending
     evidence: CodeQL Trivy ZAP and package-advisory databases must be current inside the approved evidence age at final review.
@@ -112,11 +115,11 @@ checks:
     status: pending
     evidence: Exact-head automated sources contain zero unresolved Critical or High item; the final reconciled register also needs the production review and independent penetration-test sources.
   - id: medium_and_false_positive_review
-    status: pending
-    evidence: The exact reports contain 30 reciprocal Medium image-licence findings and two Medium ZAP alerts; each needs owned technical triage plus any false-positive expiry and regression or remediation link.
+    status: passed
+    evidence: Digest-bound triage bf06ca1dc8138aff3f1f5d6e9640e7356ccd8678206fbce43804ed1c8d8b42cf reconciles all 30 raw Medium licence occurrences to 16 exact dispositions, records zero false positives, closes both real DAST findings through current report evidence, and binds 15 reciprocal components to expiring R-056 release obligations.
   - id: development_advisory_resolved
     status: passed
-    evidence: Exact-head Security audit found zero complete-tree vulnerabilities, and CI run 33057428413 passed all four Linux minimum/current HPOS/legacy WooCommerce cells with @wordpress/env 11.14.0, patched adm-zip 0.6.0, and no extract-zip package.
+    evidence: Exact-head Security audit found zero complete-tree vulnerabilities, and CI run 33195600450 passed all four Linux minimum/current HPOS/legacy WooCommerce cells with @wordpress/env 11.14.0, patched adm-zip 0.6.0, and no extract-zip package.
   - id: security_owner_approval
     status: pending
     evidence: The named security owner must review exact artifacts findings residual risks and rollback guidance before accepting the module.
@@ -139,5 +142,6 @@ automaticFails:
   - The independent penetration test omits tenant isolation authorization ledger connector SSO SCIM billing or infrastructure scope without owner acceptance.
   - Any independent Critical or High finding lacks a completed remediation and tester-performed retest on the exact corrected release candidate.
   - A Medium or false-positive decision lacks reproducible technical evidence named ownership expiry and a regression or remediation link.
+  - A tagged dashboard or worker image is distributed while R-056 corresponding-source or third-party-notice evidence is open or unverified.
   - The development-only R-032 High advisory remains installed unresolved or silently excluded when the module is marked complete.
   - Security completion is claimed while any mandatory check artifact digest task state or named security-owner approval is missing or inconsistent.

@@ -54,6 +54,8 @@ Run these commands in a new empty directory. Treat the downloaded files and scan
 - Low/Informational: review for systemic patterns and convert recurring findings into tests or configuration controls.
 - False positive: retain scanner/rule/version, exact artifact digest, technical reproduction, reviewer, expiry, and regression check. Blanket or path-wide suppression is prohibited.
 
+The current digest-bound Medium register reconciles 30 raw image-licence occurrences to 16 exact package/version/licence dispositions. It records zero false positives: the Starfiniti dashboard source is already available, while 15 reciprocal components retain open corresponding-source and third-party-notice obligations under R-056. Triage is not compliance evidence. Tagged dashboard and worker image distribution stays blocked until the distributed artifacts, SBOMs, exact corresponding source, and notices are verified together by the release-security owner. The register expires no later than its earliest source artifact and must be regenerated after image, package, scanner, or source-evidence drift.
+
 The dashboard enforces ADR-0082 at the deployable-container boundary. Each document response receives a fresh nonce-bound script policy from Next.js Proxy; all responses deny framing and MIME sniffing, and API responses receive a non-executable sandbox policy. The isolated Security job checks the real response before ZAP. A reverse proxy may add stricter controls, but it cannot substitute for or weaken the application policy.
 
 R-032 was development-only but still High. The candidate upgrades `@wordpress/env` from 11.8.0 to 11.14.0, removes vulnerable `extract-zip`, installs patched `adm-zip` 0.6.0, and produces a zero-vulnerability complete npm audit. R-032 closes only after the exact candidate also passes all four Linux WooCommerce runtime cells.
@@ -69,6 +71,7 @@ Before changing `docs/plan/evidence/M15/security.yaml` to `complete`, obtain and
 - a production configuration/passive scan performed under an approved window;
 - an independent penetration-test report and remediation retest;
 - a complete finding register with zero unresolved Critical/High items; and
+- exact corresponding-source and third-party-notice evidence for every reciprocal component in the distributed images; and
 - named security-owner approval.
 
 Evidence must exclude secrets, cookies, request/response bodies, production origins, raw customer data, exploit payloads, and reusable infrastructure details. Preserve full confidential reports outside the repository; commit only the signed summary, content digest, severity/count reconciliation, reviewer, and approval reference.

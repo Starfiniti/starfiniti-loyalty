@@ -50,7 +50,7 @@ Deferred. Next.js documents the App Router implementation as experimental and we
 
 The isolated Security workflow starts the production image with disposable configuration on an internal no-port network. Before ZAP, it reads the real `/login` response and fails unless the CSP contains a fresh 48-character base64 nonce, strict script delegation, and denied framing; it separately requires `X-Frame-Options: DENY` and `X-Content-Type-Options: nosniff`, and rejects `unsafe-inline` script. Focused Vitest coverage verifies policy construction and per-request nonce variation. Production-build browser smoke verifies framework nonce propagation, normal hydration, zero initial console/resource failure, and same-origin connection enforcement.
 
-Operators must verify the application and edge policies together during the disabled deployment and canary. An edge may add HSTS or tighten a directive but must not remove the application CSP, framing, MIME, referrer, or permissions controls. Scanner findings remain open until exact report hashes and dispositions are recorded.
+Operators must verify the application and edge policies together during the disabled deployment and canary. An edge may add HSTS or tighten a directive but must not remove the application CSP, framing, MIME, referrer, or permissions controls. Exact implementation head `f9c83ac` passed CI `33195600450` and Security `33195600514`; ZAP report `810910fc1ee7a4206016ec19cca85f1ec5eda82f5841073a8530cca4718ab4c2` contains zero Critical/High/Medium/Low alerts and neither prior rule. This closes the two response defects without changing the production edge or application.
 
 ## Migration and rollback
 
