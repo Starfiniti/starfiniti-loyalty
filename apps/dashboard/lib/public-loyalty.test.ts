@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   formatEurMinor,
   formatPublicPoints,
+  formatPublicVipPeriod,
+  formatPublicVipThreshold,
   isPublicId,
   PUBLIC_LOYALTY_ACCOUNT_PATH,
   resolvePublicLocale,
@@ -35,5 +37,50 @@ describe("public loyalty presentation", () => {
     );
     expect(PUBLIC_LOYALTY_ACCOUNT_PATH).not.toMatch(/^https?:/u);
     expect(PUBLIC_LOYALTY_ACCOUNT_PATH).not.toContain("lang=");
+  });
+
+  it("formats every public VIP qualification without number coercion", () => {
+    expect(
+      formatPublicVipThreshold(
+        { metric: "eligible_spend", minimum: "15025" },
+        "en",
+      ),
+    ).toBe("Spend €150.25");
+    expect(
+      formatPublicVipThreshold(
+        { metric: "earned_points", minimum: "9007199254740993" },
+        "en",
+      ),
+    ).toBe("Earn 9,007,199,254,740,993 points");
+    expect(
+      formatPublicVipThreshold({ metric: "order_count", minimum: "1" }, "en"),
+    ).toBe("Place 1 order");
+    expect(
+      formatPublicVipThreshold(
+        { metric: "referral_count", minimum: "2" },
+        "en",
+      ),
+    ).toBe("Refer 2 friends");
+    expect(
+      formatPublicVipThreshold(
+        { metric: "verified_action_count", minimum: "3" },
+        "en",
+      ),
+    ).toBe("Complete 3 qualifying activities");
+  });
+
+  it("explains each bounded VIP qualification window", () => {
+    expect(formatPublicVipPeriod({ kind: "lifetime" })).toBe(
+      "Lifetime activity",
+    );
+    expect(formatPublicVipPeriod({ kind: "rolling_days", days: 1 })).toBe(
+      "Your latest 1 day",
+    );
+    expect(
+      formatPublicVipPeriod({
+        kind: "calendar_year",
+        timeZone: "Europe/Ljubljana",
+      }),
+    ).toBe("Calendar year · Europe/Ljubljana");
   });
 });

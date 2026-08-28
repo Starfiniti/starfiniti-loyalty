@@ -47,6 +47,8 @@ for (const required of [
   /\.login-card,\s*\.access-card\s*\{[^}]*width:\s*100%;[^}]*max-width:\s*430px;[^}]*min-width:\s*0;/u,
   /\.member-hub-v2 :where\(a, button\):focus-visible/u,
   /\.public-loyalty-v2 :where\(a, button\):focus-visible/u,
+  /\.public-vip-levels/u,
+  /@media \(max-width: 420px\)[\s\S]*?\.public-vip-levels > li/u,
   /html\[data-dashboard-theme="dark"\][\s\S]*?\.experience-editor-v2[\s\S]*?\.experience-fields[\s\S]*?select,/u,
   /html\[data-dashboard-theme="dark"\][\s\S]*?\.experience-editor-v2[\s\S]*?\.experience-visibility-grid[\s\S]*?label[\s\S]*?strong,/u,
   /html\[data-dashboard-theme="dark"\][\s\S]*?\.experience-preview-v2[\s\S]*?\.experience-preview-toolbar[\s\S]*?button\[aria-pressed="true"\]/u,
@@ -73,6 +75,26 @@ for (const required of [
 }
 if (/member-hub-orb/u.test(memberExperience)) {
   throw new Error("The customer experience must not restore CSS-drawn assets.");
+}
+
+const publicExperience = readFileSync(
+  "apps/dashboard/app/loyalty/[workspaceId]/[programmeId]/page.tsx",
+  "utf8",
+);
+for (const required of [
+  /public-loyalty-v3/u,
+  /catalogue\.levels\.map/u,
+  /formatPublicVipThreshold/u,
+  /aria-label="Tier benefits"/u,
+]) {
+  if (!required.test(publicExperience)) {
+    throw new Error(`Public VIP composition guard is missing: ${required}`);
+  }
+}
+if (/VIP milestones are coming soon/u.test(publicExperience)) {
+  throw new Error(
+    "The public VIP empty state must describe the published programme, not promise future work.",
+  );
 }
 
 const experienceEditor = readFileSync(

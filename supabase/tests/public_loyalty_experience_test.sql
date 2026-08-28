@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(36);
+select plan(47);
 
 select has_function(
   'loyalty', 'get_public_loyalty_experience', array['uuid', 'uuid', 'text'],
@@ -48,6 +48,45 @@ select results_eq(
   array[2],
   'V2 accepts only public workspace and programme selectors and no locale authority'
 );
+select has_function(
+  'loyalty', 'get_public_loyalty_experience_v3', array['uuid', 'uuid'],
+  'guest-safe V3 public VIP catalogue read model exists'
+);
+select ok(
+  has_function_privilege(
+    'anon', 'loyalty.get_public_loyalty_experience_v3(uuid,uuid)', 'EXECUTE'
+  ),
+  'anonymous callers can enter the bounded V3 read model'
+);
+select ok(
+  has_function_privilege(
+    'authenticated',
+    'loyalty.get_public_loyalty_experience_v3(uuid,uuid)', 'EXECUTE'
+  ),
+  'signed-in customers may enter the same V3 public projection'
+);
+select results_eq(
+  $$ select routine.prosecdef
+     from pg_proc as routine
+     join pg_namespace as namespace on namespace.oid = routine.pronamespace
+     where namespace.nspname = 'loyalty'
+       and routine.proname = 'get_public_loyalty_experience_v3'
+       and exists (
+         select 1 from unnest(routine.proconfig) as setting
+         where setting = 'search_path=""'
+       ) $$,
+  array[true],
+  'V3 public projection is security definer with an empty search path'
+);
+select results_eq(
+  $$ select routine.pronargs::integer
+     from pg_proc as routine
+     join pg_namespace as namespace on namespace.oid = routine.pronamespace
+     where namespace.nspname = 'loyalty'
+       and routine.proname = 'get_public_loyalty_experience_v3' $$,
+  array[2],
+  'V3 accepts only public workspace and programme selectors'
+);
 select ok(
   has_function_privilege('anon', 'loyalty.get_public_loyalty_experience(uuid,uuid,text)', 'EXECUTE'),
   'anonymous callers can enter only the public read model'
@@ -71,6 +110,16 @@ select ok(
 select ok(
   not has_table_privilege('anon', 'loyalty.experience_translations', 'SELECT'),
   'anonymous callers cannot read translation tables directly'
+);
+select ok(
+  not has_table_privilege('anon', 'loyalty.programme_tier_policies', 'SELECT')
+  and not has_table_privilege(
+    'anon', 'loyalty.programme_tier_policy_levels', 'SELECT'
+  )
+  and not has_table_privilege(
+    'anon', 'loyalty.programme_tier_thresholds', 'SELECT'
+  ),
+  'anonymous callers cannot read raw advanced VIP policy tables'
 );
 select results_eq(
   $$ select routine.prosecdef
@@ -146,8 +195,26 @@ insert into loyalty.programme_tiers (
   organization_id, programme_group_id, programme_version_id, code, name,
   ordinal, minimum_eligible_spend_minor, points_per_major_unit
 )
-select organization_id, programme_group_id, id, 'unsafe', '<script>tier</script>', 2, 10000, 6
+select organization_id, programme_group_id, id, 'bloom', 'Bloom', 2, 15000, 6
 from loyalty.programme_versions where public_id = '7b000000-0000-4000-8000-000000000140';
+insert into loyalty.programme_tiers (
+  organization_id, programme_group_id, programme_version_id, code, name,
+  ordinal, minimum_eligible_spend_minor, points_per_major_unit
+)
+select organization_id, programme_group_id, id, 'unsafe', '<script>tier</script>', 3, 30000, 7
+from loyalty.programme_versions where public_id = '7b000000-0000-4000-8000-000000000140';
+insert into loyalty.programme_tiers (
+  organization_id, programme_group_id, programme_version_id, code, name,
+  ordinal, minimum_eligible_spend_minor, points_per_major_unit
+)
+select organization_id, programme_group_id, id, 'starter', 'Starter', 1, 0, 4
+from loyalty.programme_versions where public_id = '7c000000-0000-4000-8000-000000000140';
+insert into loyalty.programme_tiers (
+  organization_id, programme_group_id, programme_version_id, code, name,
+  ordinal, minimum_eligible_spend_minor, points_per_major_unit
+)
+select organization_id, programme_group_id, id, 'silver', 'Silver', 2, 25000, 5
+from loyalty.programme_versions where public_id = '7c000000-0000-4000-8000-000000000140';
 insert into loyalty.programme_rewards (
   organization_id, programme_group_id, programme_version_id, code, name,
   reward_kind, cost_points
@@ -162,6 +229,46 @@ insert into loyalty.programme_rewards (
 select organization_id, programme_group_id, id, 'unsafe', '<script>reward</script>',
   'custom', 1
 from loyalty.programme_versions where public_id = '7b000000-0000-4000-8000-000000000140';
+insert into loyalty.programme_tier_policies (
+  organization_id, programme_group_id, programme_version_id,
+  qualification_period_kind, rolling_days, downgrade_grace_days
+)
+select organization_id, programme_group_id, id, 'rolling_days', 365, 30
+from loyalty.programme_versions
+where public_id = '7b000000-0000-4000-8000-000000000140';
+insert into loyalty.programme_tier_policy_levels (
+  organization_id, programme_group_id, programme_version_id, tier_code,
+  ordinal, entry_operator, retention_operator, reentry_operator,
+  earning_multiplier_basis_points, reward_codes, early_access
+)
+select organization_id, programme_group_id, id, 'rose', 1,
+  null, null, null, 10000, '{}'::text[], false
+from loyalty.programme_versions
+where public_id = '7b000000-0000-4000-8000-000000000140';
+insert into loyalty.programme_tier_policy_levels (
+  organization_id, programme_group_id, programme_version_id, tier_code,
+  ordinal, entry_operator, retention_operator, reentry_operator,
+  earning_multiplier_basis_points, reward_codes, early_access
+)
+select organization_id, programme_group_id, id, 'bloom', 2,
+  'any', 'all', 'all', 12000, array['five-off'], true
+from loyalty.programme_versions
+where public_id = '7b000000-0000-4000-8000-000000000140';
+insert into loyalty.programme_tier_thresholds (
+  organization_id, programme_group_id, programme_version_id, tier_code,
+  threshold_kind, ordinal, metric, minimum_value, activity_codes
+)
+select organization_id, programme_group_id, id, 'bloom', threshold_kind,
+  ordinal, metric, minimum_value, activity_codes
+from loyalty.programme_versions
+cross join (values
+  ('entry'::text, 1::smallint, 'eligible_spend'::text, 15000::bigint, '{}'::text[]),
+  ('entry', 2::smallint, 'order_count', 5::bigint, '{}'::text[]),
+  ('entry', 3::smallint, 'verified_action_count', 2::bigint, array['birthday']::text[]),
+  ('retention', 1::smallint, 'eligible_spend', 12000::bigint, '{}'::text[]),
+  ('reentry', 1::smallint, 'eligible_spend', 15000::bigint, '{}'::text[])
+) as threshold(threshold_kind, ordinal, metric, minimum_value, activity_codes)
+where public_id = '7b000000-0000-4000-8000-000000000140';
 insert into loyalty.experience_themes (
   organization_id, workspace_id, programme_group_id, brand_color,
   display_font, card_radius_px, hero_text, points_label, show_tier, show_rewards
@@ -250,16 +357,40 @@ select results_eq(
        '7b000000-0000-4000-8000-000000000110',
        '7b000000-0000-4000-8000-000000000130') $$,
   $$ values (
-    '[{"code":"rose","name":"Rose","minimumEligibleSpendMinor":"0","pointsPerMajorUnit":"5"}]'::jsonb,
+    '[{"code":"rose","name":"Rose","minimumEligibleSpendMinor":"0","pointsPerMajorUnit":"5"},{"code":"bloom","name":"Bloom","minimumEligibleSpendMinor":"15000","pointsPerMajorUnit":"6"}]'::jsonb,
     '[{"code":"five-off","name":"€5 discount","kind":"fixed_discount","costPoints":"500"}]'::jsonb
   ) $$,
   'V2 preserves the bounded published tier and reward value contract'
 );
 select results_eq(
+  $$ select requested_locale, resolved_locale, tiers, rewards, vip_catalogue
+     from loyalty.get_public_loyalty_experience_v3(
+       '7b000000-0000-4000-8000-000000000110',
+       '7b000000-0000-4000-8000-000000000130') $$,
+  $$ values (
+    'en'::text,
+    'en'::text,
+    '[{"code":"rose","name":"Rose","minimumEligibleSpendMinor":"0","pointsPerMajorUnit":"5"},{"code":"bloom","name":"Bloom","minimumEligibleSpendMinor":"15000","pointsPerMajorUnit":"6"}]'::jsonb,
+    '[{"code":"five-off","name":"€5 discount","kind":"fixed_discount","costPoints":"500"}]'::jsonb,
+    '{"version":"1","qualificationPeriod":{"kind":"rolling_days","days":365},"downgradeGraceDays":30,"levels":[{"code":"rose","name":"Rose","entry":null,"pointsPerMajorUnit":"5","earlyAccess":false,"exclusiveRewardAccess":false},{"code":"bloom","name":"Bloom","entry":{"operator":"any","thresholds":[{"metric":"eligible_spend","minimum":"15000"},{"metric":"order_count","minimum":"5"},{"metric":"verified_action_count","minimum":"2"}]},"pointsPerMajorUnit":"6","earlyAccess":true,"exclusiveRewardAccess":true}]}'::jsonb
+  ) $$,
+  'V3 exposes exact public metrics and benefit flags without private activity selectors'
+);
+select results_eq(
+  $$ select vip_catalogue
+     from loyalty.get_public_loyalty_experience_v3(
+       '7c000000-0000-4000-8000-000000000110',
+       '7c000000-0000-4000-8000-000000000130') $$,
+  $$ values (
+    '{"version":"1","qualificationPeriod":{"kind":"lifetime"},"downgradeGraceDays":0,"levels":[{"code":"starter","name":"Starter","entry":null,"pointsPerMajorUnit":"4","earlyAccess":false,"exclusiveRewardAccess":false},{"code":"silver","name":"Silver","entry":{"operator":"all","thresholds":[{"metric":"eligible_spend","minimum":"25000"}]},"pointsPerMajorUnit":"5","earlyAccess":false,"exclusiveRewardAccess":false}]}'::jsonb
+  ) $$,
+  'V3 synthesizes an equivalent lifetime catalogue for legacy published tiers'
+);
+select results_eq(
   $$ select tiers from loyalty.get_public_loyalty_experience(
        '7b000000-0000-4000-8000-000000000110',
        '7b000000-0000-4000-8000-000000000130', 'en') $$,
-  $$ values ('[{"code":"rose","name":"Rose","minimumEligibleSpendMinor":"0","pointsPerMajorUnit":"5"}]'::jsonb) $$,
+  $$ values ('[{"code":"rose","name":"Rose","minimumEligibleSpendMinor":"0","pointsPerMajorUnit":"5"},{"code":"bloom","name":"Bloom","minimumEligibleSpendMinor":"15000","pointsPerMajorUnit":"6"}]'::jsonb) $$,
   'tier projection contains safe names rates and exact text-form thresholds only'
 );
 select results_eq(
@@ -298,6 +429,13 @@ select results_eq(
   'V2 mixed-tenant selectors fail closed'
 );
 select results_eq(
+  $$ select count(*)::bigint from loyalty.get_public_loyalty_experience_v3(
+       '7c000000-0000-4000-8000-000000000110',
+       '7b000000-0000-4000-8000-000000000130') $$,
+  array[0::bigint],
+  'V3 mixed-tenant selectors fail closed'
+);
+select results_eq(
   $$ select count(*)::bigint from loyalty.get_public_loyalty_experience(
        '00000000-0000-4000-8000-000000000000',
        '7b000000-0000-4000-8000-000000000130', 'en') $$,
@@ -322,6 +460,13 @@ select results_eq(
        '7b000000-0000-4000-8000-000000000130') $$,
   array[0::bigint],
   'suspended workspace removes the V2 public document'
+);
+select results_eq(
+  $$ select count(*)::bigint from loyalty.get_public_loyalty_experience_v3(
+       '7b000000-0000-4000-8000-000000000110',
+       '7b000000-0000-4000-8000-000000000130') $$,
+  array[0::bigint],
+  'suspended workspace removes the V3 public document'
 );
 reset role;
 update loyalty.workspaces set status = 'active'
@@ -348,6 +493,13 @@ select results_eq(
        '7b000000-0000-4000-8000-000000000130', 'en') $$,
   array[0::bigint],
   'absence of a published version removes the public document'
+);
+select results_eq(
+  $$ select count(*)::bigint from loyalty.get_public_loyalty_experience_v3(
+       '7b000000-0000-4000-8000-000000000110',
+       '7b000000-0000-4000-8000-000000000130') $$,
+  array[0::bigint],
+  'absence of a published version removes the V3 public document'
 );
 
 reset role;

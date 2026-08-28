@@ -1,23 +1,27 @@
 import type {
   ExperienceHeroAssetV2,
   ExperienceSectionV2,
-  PublicLoyaltyExperienceV2,
+  PublicLoyaltyExperienceV3,
 } from "@starfiniti/contracts";
 import type { Metadata } from "next";
 import type { LucideIcon } from "lucide-react";
 import {
   ArrowRight,
+  Check,
   CircleUserRound,
+  Clock3,
   Crown,
   Gift,
   HeartHandshake,
   History,
+  KeyRound,
   RefreshCw,
   ShieldAlert,
   ShieldCheck,
   ShoppingBag,
   Sparkles,
   Star,
+  Zap,
 } from "lucide-react";
 import type { CSSProperties } from "react";
 import Link from "next/link";
@@ -25,8 +29,9 @@ import { notFound } from "next/navigation";
 import { experienceFontStack } from "@/lib/experience-theme";
 import { visibleCustomerExperienceSections } from "@/lib/customer-experience-presentation";
 import {
-  formatEurMinor,
   formatPublicPoints,
+  formatPublicVipPeriod,
+  formatPublicVipThreshold,
   isPublicId,
   PUBLIC_LOYALTY_ACCOUNT_PATH,
 } from "@/lib/public-loyalty";
@@ -62,7 +67,7 @@ export default async function PublicLoyaltyPage({ params }: PageProps) {
   const { workspaceId, programmeId } = await params;
   if (!isPublicId(workspaceId) || !isPublicId(programmeId)) notFound();
 
-  let experience: PublicLoyaltyExperienceV2 | null;
+  let experience: PublicLoyaltyExperienceV3 | null;
   try {
     experience = await getPublicLoyaltyExperience(workspaceId, programmeId);
   } catch {
@@ -86,7 +91,7 @@ export default async function PublicLoyaltyPage({ params }: PageProps) {
 
   return (
     <main
-      className={`public-loyalty-page public-loyalty-v2 ${theme.density}`}
+      className={`public-loyalty-page public-loyalty-v2 public-loyalty-v3 ${theme.density}`}
       id="main-content"
       lang="en"
       style={style}
@@ -160,7 +165,7 @@ function PublicSection({
   index,
   section,
 }: Readonly<{
-  experience: PublicLoyaltyExperienceV2;
+  experience: PublicLoyaltyExperienceV3;
   index: number;
   section: ExperienceSectionV2;
 }>) {
@@ -231,26 +236,103 @@ function PublicSection({
     );
   }
   if (section === "vip") {
+    const catalogue = experience.vipCatalogue;
     return (
-      <section className="public-loyalty-section" id="vip">
+      <section className="public-loyalty-section public-loyalty-vip" id="vip">
         <PublicHeading index={index} title="VIP tiers" />
-        {experience.tiers.length ? (
-          <div className="public-loyalty-cards">
-            {experience.tiers.map((tier) => (
-              <article key={tier.code}>
-                <small>
-                  From {formatEurMinor(tier.minimumEligibleSpendMinor, "en")}
-                </small>
-                <h3>{tier.name}</h3>
+        {catalogue.levels.length ? (
+          <div className="public-vip-catalogue">
+            <header className="public-vip-policy">
+              <span aria-hidden="true">
+                <Clock3 />
+              </span>
+              <div>
+                <small>Qualification window</small>
                 <strong>
-                  {formatPublicPoints(tier.pointsPerMajorUnit, "en")} points per
-                  €1
+                  {formatPublicVipPeriod(catalogue.qualificationPeriod)}
                 </strong>
-              </article>
-            ))}
+                <p>
+                  {catalogue.downgradeGraceDays > 0
+                    ? `${catalogue.downgradeGraceDays}-day grace period if your activity falls below the retention level.`
+                    : "Tier changes follow the published qualification policy without a grace period."}
+                </p>
+              </div>
+            </header>
+            <ol className="public-vip-levels">
+              {catalogue.levels.map((level, levelIndex) => (
+                <li key={level.code}>
+                  <div className="public-vip-marker" aria-hidden="true">
+                    <span>{String(levelIndex + 1).padStart(2, "0")}</span>
+                    <Crown />
+                  </div>
+                  <article>
+                    <header>
+                      <div>
+                        <small>
+                          {levelIndex === 0
+                            ? "Your starting tier"
+                            : `Milestone ${levelIndex}`}
+                        </small>
+                        <h3>{level.name}</h3>
+                      </div>
+                      <strong>
+                        {formatPublicPoints(level.pointsPerMajorUnit, "en")}
+                        <span> points / €1</span>
+                      </strong>
+                    </header>
+                    {level.entry ? (
+                      <div className="public-vip-qualification">
+                        <p>
+                          {level.entry.operator === "all"
+                            ? "Complete every requirement"
+                            : "Complete any one requirement"}
+                        </p>
+                        <ul>
+                          {level.entry.thresholds.map(
+                            (threshold, thresholdIndex) => (
+                              <li
+                                key={`${threshold.metric}:${threshold.minimum}:${thresholdIndex}`}
+                              >
+                                <Check aria-hidden="true" />
+                                {formatPublicVipThreshold(threshold, "en")}
+                              </li>
+                            ),
+                          )}
+                        </ul>
+                      </div>
+                    ) : (
+                      <p className="public-vip-base">
+                        <Check aria-hidden="true" /> Included when you join
+                      </p>
+                    )}
+                    <div
+                      className="public-vip-benefits"
+                      aria-label="Tier benefits"
+                    >
+                      <span>
+                        <Zap aria-hidden="true" /> Earning rate
+                      </span>
+                      {level.earlyAccess ? (
+                        <span>
+                          <Sparkles aria-hidden="true" /> Early access
+                        </span>
+                      ) : null}
+                      {level.exclusiveRewardAccess ? (
+                        <span>
+                          <KeyRound aria-hidden="true" /> Exclusive rewards
+                        </span>
+                      ) : null}
+                    </div>
+                  </article>
+                </li>
+              ))}
+            </ol>
           </div>
         ) : (
-          <PublicEmpty icon={Crown} text="VIP milestones are coming soon." />
+          <PublicEmpty
+            icon={Crown}
+            text="VIP tiers are not part of this published programme."
+          />
         )}
       </section>
     );

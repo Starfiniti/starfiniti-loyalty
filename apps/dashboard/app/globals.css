@@ -2150,6 +2150,194 @@ h1 {
   color: var(--loyalty-brand);
   font-size: 0.92rem;
 }
+.public-vip-catalogue {
+  min-width: 0;
+  display: grid;
+  gap: 18px;
+}
+.public-vip-policy {
+  min-height: 112px;
+  padding: 20px 22px;
+  border: 1px solid color-mix(in srgb, var(--loyalty-brand) 22%, #eadfde);
+  border-radius: var(--loyalty-radius);
+  background: linear-gradient(
+    110deg,
+    color-mix(in srgb, var(--loyalty-brand) 8%, white),
+    rgba(255, 255, 255, 0.84) 55%
+  );
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: start;
+  gap: 14px;
+}
+.public-vip-policy > span {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  color: #fff;
+  background: var(--loyalty-brand);
+  display: grid;
+  place-items: center;
+}
+.public-vip-policy svg {
+  width: 19px;
+  height: 19px;
+}
+.public-vip-policy small,
+.public-vip-levels article header small {
+  color: #806d75;
+  font-size: 0.68rem;
+  font-weight: 760;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.public-vip-policy strong {
+  margin-top: 3px;
+  color: #291b21;
+  display: block;
+  font-family: var(--loyalty-font);
+  font-size: 1.12rem;
+}
+.public-vip-policy p {
+  margin: 5px 0 0;
+  color: #725e67;
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+.public-vip-levels {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 12px;
+}
+.public-vip-levels > li {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 12px;
+}
+.public-vip-marker {
+  position: relative;
+  min-height: 100%;
+  padding-top: 19px;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 7px;
+}
+.public-vip-marker::after {
+  width: 1px;
+  min-height: 24px;
+  flex: 1;
+  content: "";
+  background: color-mix(in srgb, var(--loyalty-brand) 24%, #eadfde);
+}
+.public-vip-levels > li:last-child .public-vip-marker::after {
+  opacity: 0;
+}
+.public-vip-marker span {
+  color: #806d75;
+  font-size: 0.64rem;
+  font-weight: 780;
+  letter-spacing: 0.08em;
+}
+.public-vip-marker svg {
+  width: 36px;
+  height: 36px;
+  padding: 9px;
+  border: 1px solid color-mix(in srgb, var(--loyalty-brand) 24%, white);
+  border-radius: 50%;
+  color: #fff;
+  background: var(--loyalty-brand);
+  box-shadow: 0 9px 24px
+    color-mix(in srgb, var(--loyalty-brand) 18%, transparent);
+}
+.public-vip-levels article {
+  min-width: 0;
+  padding: clamp(20px, 3vw, 30px);
+  border: 1px solid #eadfde;
+  border-radius: var(--loyalty-radius);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 18px 46px rgba(56, 32, 43, 0.06);
+}
+.public-vip-levels article > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+.public-vip-levels article h3 {
+  margin: 4px 0 0;
+  font-size: clamp(1.45rem, 3vw, 2rem);
+}
+.public-vip-levels article header > strong {
+  flex: none;
+  color: var(--loyalty-brand);
+  font-size: 1.06rem;
+}
+.public-vip-levels article header > strong span {
+  color: #806d75;
+  font-size: 0.7rem;
+  font-weight: 650;
+}
+.public-vip-qualification {
+  margin-top: 20px;
+  padding-top: 17px;
+  border-top: 1px solid #f0e7e5;
+}
+.public-vip-qualification > p {
+  margin: 0 0 10px;
+  color: #725e67;
+  font-size: 0.74rem;
+  font-weight: 720;
+}
+.public-vip-qualification ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.public-vip-qualification li,
+.public-vip-base,
+.public-vip-benefits span {
+  min-height: 30px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 680;
+}
+.public-vip-qualification li,
+.public-vip-base {
+  color: #4d3b43;
+  background: #f8f0ef;
+}
+.public-vip-qualification svg,
+.public-vip-base svg,
+.public-vip-benefits svg {
+  width: 13px;
+  height: 13px;
+}
+.public-vip-base {
+  width: max-content;
+  margin: 20px 0 0;
+}
+.public-vip-benefits {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.public-vip-benefits span {
+  border: 1px solid color-mix(in srgb, var(--loyalty-brand) 20%, #eadfde);
+  color: var(--loyalty-brand);
+  background: color-mix(in srgb, var(--loyalty-brand) 5%, white);
+}
 .public-loyalty-account {
   margin-top: 50px;
   padding: clamp(28px, 5vw, 58px);
@@ -2209,6 +2397,11 @@ h1 {
   .public-loyalty-cards {
     grid-template-columns: 1fr;
   }
+  .public-vip-levels article > header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
   .public-loyalty-account,
   .public-loyalty-footer {
     align-items: flex-start;
@@ -2216,6 +2409,26 @@ h1 {
   }
   .public-loyalty-footer small {
     text-align: left;
+  }
+}
+@media (max-width: 420px) {
+  .public-vip-policy {
+    grid-template-columns: 1fr;
+  }
+  .public-vip-levels > li {
+    grid-template-columns: 38px minmax(0, 1fr);
+    gap: 8px;
+  }
+  .public-vip-marker {
+    padding-top: 16px;
+  }
+  .public-vip-marker svg {
+    width: 32px;
+    height: 32px;
+    padding: 8px;
+  }
+  .public-vip-levels article {
+    padding: 18px;
   }
 }
 .experience-fields {

@@ -12,6 +12,7 @@ import {
   merchantSaveExperienceThemeCommandV2,
   publicLoyaltyExperienceV1,
   publicLoyaltyExperienceV2,
+  publicLoyaltyExperienceV3,
 } from "./experience";
 
 const theme = {
@@ -310,6 +311,186 @@ describe("experience theme contracts", () => {
       publicLoyaltyExperienceV2.safeParse({
         ...value,
         brandColor: "#000000",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("accepts an exact guest-safe V3 VIP catalogue", () => {
+    const tiers = [
+      {
+        code: "rose",
+        name: "Rose",
+        minimumEligibleSpendMinor: "0",
+        pointsPerMajorUnit: "5",
+      },
+      {
+        code: "bloom",
+        name: "Bloom",
+        minimumEligibleSpendMinor: "15000",
+        pointsPerMajorUnit: "6",
+      },
+    ];
+    const value = {
+      version: "3" as const,
+      workspaceId: "a1000000-0000-4000-8000-000000000001",
+      programmeId: "a1000000-0000-4000-8000-000000000002",
+      programmeGroupId: "a1000000-0000-4000-8000-000000000003",
+      programmeName: "Rosy Rewards",
+      requestedLocale: "en" as const,
+      resolvedLocale: "en" as const,
+      presentation: { version: "2" as const, theme: themeV2, copy: copyV2 },
+      tiers,
+      rewards: [],
+      vipCatalogue: {
+        version: "1" as const,
+        qualificationPeriod: { kind: "rolling_days" as const, days: 365 },
+        downgradeGraceDays: 30,
+        levels: [
+          {
+            code: "rose",
+            name: "Rose",
+            entry: null,
+            pointsPerMajorUnit: "5",
+            earlyAccess: false,
+            exclusiveRewardAccess: false,
+          },
+          {
+            code: "bloom",
+            name: "Bloom",
+            entry: {
+              operator: "any" as const,
+              thresholds: [
+                { metric: "eligible_spend" as const, minimum: "15000" },
+                { metric: "order_count" as const, minimum: "5" },
+              ],
+            },
+            pointsPerMajorUnit: "6",
+            earlyAccess: true,
+            exclusiveRewardAccess: true,
+          },
+        ],
+      },
+    };
+
+    expect(publicLoyaltyExperienceV3.parse(value)).toEqual(value);
+    expect(publicLoyaltyExperienceV2.safeParse(value).success).toBe(false);
+  });
+
+  it("rejects misleading or expanded-authority public VIP catalogues", () => {
+    const tier = {
+      code: "rose",
+      name: "Rose",
+      minimumEligibleSpendMinor: "0",
+      pointsPerMajorUnit: "5",
+    };
+    const base = {
+      version: "3" as const,
+      workspaceId: "a1000000-0000-4000-8000-000000000001",
+      programmeId: "a1000000-0000-4000-8000-000000000002",
+      programmeGroupId: "a1000000-0000-4000-8000-000000000003",
+      programmeName: "Rosy Rewards",
+      requestedLocale: "en" as const,
+      resolvedLocale: "en" as const,
+      presentation: { version: "2" as const, theme: themeV2, copy: copyV2 },
+      tiers: [tier],
+      rewards: [],
+      vipCatalogue: {
+        version: "1" as const,
+        qualificationPeriod: { kind: "lifetime" as const },
+        downgradeGraceDays: 0,
+        levels: [
+          {
+            code: "rose",
+            name: "Rose",
+            entry: null,
+            pointsPerMajorUnit: "5",
+            earlyAccess: false,
+            exclusiveRewardAccess: false,
+          },
+        ],
+      },
+    };
+
+    expect(
+      publicLoyaltyExperienceV3.safeParse({
+        ...base,
+        vipCatalogue: {
+          ...base.vipCatalogue,
+          levels: [
+            {
+              ...base.vipCatalogue.levels[0],
+              code: "forged",
+              internalProgrammeVersionId: "42",
+            },
+          ],
+        },
+      }).success,
+    ).toBe(false);
+    expect(
+      publicLoyaltyExperienceV3.safeParse({
+        ...base,
+        tiers: [
+          {
+            ...tier,
+            minimumEligibleSpendMinor: "9223372036854775808",
+          },
+        ],
+      }).success,
+    ).toBe(false);
+    expect(
+      publicLoyaltyExperienceV3.safeParse({
+        ...base,
+        rewards: [
+          {
+            code: "oversized",
+            name: "Oversized",
+            kind: "fixed_discount",
+            costPoints: "9".repeat(100_000),
+          },
+        ],
+      }).success,
+    ).toBe(false);
+    expect(
+      publicLoyaltyExperienceV3.safeParse({
+        ...base,
+        vipCatalogue: {
+          ...base.vipCatalogue,
+          levels: [
+            {
+              ...base.vipCatalogue.levels[0],
+              entry: {
+                operator: "all",
+                thresholds: [{ metric: "eligible_spend", minimum: "0" }],
+              },
+            },
+          ],
+        },
+      }).success,
+    ).toBe(false);
+    expect(
+      publicLoyaltyExperienceV3.safeParse({
+        ...base,
+        tiers: [tier, { ...tier, code: "bloom", name: "Bloom" }],
+        vipCatalogue: {
+          ...base.vipCatalogue,
+          levels: [
+            base.vipCatalogue.levels[0],
+            {
+              ...base.vipCatalogue.levels[0],
+              code: "bloom",
+              name: "Bloom",
+              entry: {
+                operator: "all",
+                thresholds: [
+                  {
+                    metric: "earned_points",
+                    minimum: "9223372036854775808",
+                  },
+                ],
+              },
+            },
+          ],
+        },
       }).success,
     ).toBe(false);
   });

@@ -24,6 +24,15 @@ Status: in progress. M09-S01 through M09-S05 are complete; M09-S06 disabled depl
 - Local verification: 41 dashboard test files with 164 tests, dashboard lint/typecheck/build, root lint, every workspace typecheck/test/build, database/deployment/pilot/entitlement/architecture/accessibility/WooCommerce validators, secret scan, production audit, licence inventory, targeted formatting, and diff checks passed. The Windows Nextcloud worktree still reports the documented untouched-file CRLF Prettier noise; exact Linux CI is authoritative.
 - Rollback: disable `enhancements_enabled` and retain the compatible core account and public experience. The immutable read model, customer value, reservations, native coupons, and history remain available.
 
+### S02 follow-up — Guest-safe advanced VIP catalogue
+
+- Status: implementation verification. Production remains unchanged and the M09-S06 canary gate remains open.
+- Architecture: ADR-0074 adds an additive V3 anonymous projection rather than changing strict V2. PostgreSQL re-derives active tenant, workspace/group link, programme, and immutable published version, then emits only ordered public levels, period/grace, exact entry operator/metric/threshold, earning rate, and safe benefit booleans. Customer state, internal identifiers, activity selectors, reward codes/configuration, retention/re-entry internals, audit evidence, and ledger data remain private.
+- Compatibility: the server requests V3 first and normalizes V2/V1 only for recognized missing-function errors. Malformed, duplicate, mismatched, non-English, or provider-error responses fail closed. Legacy tiers synthesize the equivalent lifetime/spend catalogue without changing V1/V2 functions or historical programme versions.
+- Experience: the generic spend-only cards are replaced by a responsive editorial progression rail with a qualification-window policy, starting level, `all`/`any` milestone copy, exact large-integer-safe thresholds, earning rates, and public benefits. The empty state now says that tiers are not part of the published programme instead of promising an unspecified future feature.
+- Browser evidence: the actual Next.js route passed Playwright review at 1512×982 and 390×844 with three levels, both expression types, exclusive benefits, one H1, no horizontal overflow, and zero console/page errors. Retained captures: [desktop](./public-vip-v3-desktop-2026-08-28.png) and [mobile](./public-vip-v3-mobile-2026-08-28.png).
+- Rollback: return the application reader/component to V2 and leave the additive V3 function inert during mixed-version operation. No value, tier decision, reservation, coupon, checkout, or WooCommerce behavior changes.
+
 ## S03 — Local WooCommerce snapshot and classic placements
 
 - Commit: `c2e2c82b5557c9105d4311afed9f621776f11c53`

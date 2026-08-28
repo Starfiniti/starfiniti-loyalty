@@ -51,7 +51,14 @@ const presentation = {
   },
 } as const;
 
-function v2Row() {
+function v2Row(
+  tiers: ReadonlyArray<{
+    code: string;
+    name: string;
+    minimumEligibleSpendMinor: string;
+    pointsPerMajorUnit: string;
+  }> = [],
+) {
   return {
     workspace_public_id: workspaceId,
     programme_public_id: programmeId,
@@ -60,8 +67,20 @@ function v2Row() {
     requested_locale: "en",
     resolved_locale: "en",
     presentation,
-    tiers: [],
+    tiers,
     rewards: [],
+  };
+}
+
+function v3Row() {
+  return {
+    ...v2Row(),
+    vip_catalogue: {
+      version: "1",
+      qualificationPeriod: { kind: "lifetime" },
+      downgradeGraceDays: 0,
+      levels: [],
+    },
   };
 }
 
@@ -94,49 +113,94 @@ describe("public loyalty server read", () => {
   beforeEach(() => {
     rpc.mockReset();
     schema.mockClear();
-    rpc.mockResolvedValue({ data: [v2Row()], error: null });
+    rpc.mockResolvedValue({ data: [v3Row()], error: null });
   });
 
-  it("requests the selector-minimized English V2 public document", async () => {
+  it("requests the selector-minimized English V3 public document", async () => {
     await expect(
       getPublicLoyaltyExperience(workspaceId, programmeId),
     ).resolves.toMatchObject({
-      version: "2",
+      version: "3",
       requestedLocale: "en",
       resolvedLocale: "en",
       presentation,
     });
     expect(schema).toHaveBeenCalledWith("loyalty");
-    expect(rpc).toHaveBeenCalledWith("get_public_loyalty_experience_v2", {
+    expect(rpc).toHaveBeenCalledWith("get_public_loyalty_experience_v3", {
       target_workspace_public_id: workspaceId,
       target_programme_public_id: programmeId,
     });
   });
 
-  it("normalizes V1 only while an additive database deploy lacks V2", async () => {
+  it("normalizes V2 only while an additive database deploy lacks V3", async () => {
+    const tiers = [
+      {
+        code: "starter",
+        name: "Starter",
+        minimumEligibleSpendMinor: "0",
+        pointsPerMajorUnit: "4",
+      },
+      {
+        code: "silver",
+        name: "Silver",
+        minimumEligibleSpendMinor: "25000",
+        pointsPerMajorUnit: "5",
+      },
+    ];
     rpc
       .mockResolvedValueOnce({ data: null, error: { code: "PGRST202" } })
-      .mockResolvedValueOnce({ data: [v1Row()], error: null });
+      .mockResolvedValueOnce({ data: [v2Row(tiers)], error: null });
     await expect(
       getPublicLoyaltyExperience(workspaceId, programmeId),
     ).resolves.toMatchObject({
-      version: "2",
+      version: "3",
       presentation: {
         theme: { brandColor: "#7c2d4f" },
         copy: { locale: "en" },
       },
+      vipCatalogue: {
+        qualificationPeriod: { kind: "lifetime" },
+        levels: [
+          { code: "starter", entry: null, pointsPerMajorUnit: "4" },
+          {
+            code: "silver",
+            entry: {
+              operator: "all",
+              thresholds: [{ metric: "eligible_spend", minimum: "25000" }],
+            },
+            pointsPerMajorUnit: "5",
+          },
+        ],
+      },
     });
-    expect(rpc).toHaveBeenNthCalledWith(2, "get_public_loyalty_experience", {
+    expect(rpc).toHaveBeenNthCalledWith(2, "get_public_loyalty_experience_v2", {
+      target_workspace_public_id: workspaceId,
+      target_programme_public_id: programmeId,
+    });
+  });
+
+  it("normalizes V1 only while an additive database deploy lacks V3 and V2", async () => {
+    rpc
+      .mockResolvedValueOnce({ data: null, error: { code: "PGRST202" } })
+      .mockResolvedValueOnce({ data: null, error: { code: "42883" } })
+      .mockResolvedValueOnce({ data: [v1Row()], error: null });
+    await expect(
+      getPublicLoyaltyExperience(workspaceId, programmeId),
+    ).resolves.toMatchObject({ version: "3", requestedLocale: "en" });
+    expect(rpc).toHaveBeenNthCalledWith(3, "get_public_loyalty_experience", {
       target_workspace_public_id: workspaceId,
       target_programme_public_id: programmeId,
       target_locale: "en",
     });
   });
 
-  it("fails closed on malformed V2 without selecting legacy data", async () => {
+  it("fails closed on malformed V3 without selecting legacy data", async () => {
     rpc.mockResolvedValue({
       data: [
-        { ...v2Row(), presentation: { ...presentation, locale: "sl-SI" } },
+        {
+          ...v3Row(),
+          presentation: { ...presentation, locale: "sl-SI" },
+        },
       ],
       error: null,
     });
@@ -148,7 +212,7 @@ describe("public loyalty server read", () => {
 
   it("fails closed on duplicate or non-array public containers", async () => {
     rpc.mockResolvedValueOnce({
-      data: [v2Row(), v2Row()],
+      data: [v3Row(), v3Row()],
       error: null,
     });
     await expect(
@@ -179,6 +243,7 @@ describe("public loyalty server read", () => {
   it("rejects a non-English legacy projection during rolling deploy", async () => {
     rpc
       .mockResolvedValueOnce({ data: null, error: { code: "42883" } })
+      .mockResolvedValueOnce({ data: null, error: { code: "PGRST202" } })
       .mockResolvedValueOnce({ data: [v1Row("sl-SI")], error: null });
     await expect(
       getPublicLoyaltyExperience(workspaceId, programmeId),

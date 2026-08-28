@@ -1349,7 +1349,10 @@ tasks:
         evidence:
           - the Auth-derived member experience renders overview earning rewards VIP referrals immutable history and account states with exact bigint balances affordability shortfalls progress sharing expiry guidance and no browser-supplied scope
           - the anonymous experience explains earning tiers rewards and redemption through one bounded public projection and routes sign-in to a tested same-origin canonical English account path
+          - ADR-0074 adds a strict guest-safe V3 VIP catalogue so advanced rolling calendar points order referral and verified-activity qualification is not misrepresented as legacy spend; V2 and V1 remain missing-function-only fallbacks
+          - the responsive public VIP progression rail exposes exact operator metric threshold period grace earning-rate and safe benefit facts while omitting customer state internal identifiers raw activity selectors reward codes and value authority
           - real-component Playwright review at 1440 by 1000 390 by 844 and 720 by 900 reflow passed headings landmarks first-focus bypass navigation overflow reduced-motion and zero browser diagnostics with eight retained screenshots
+          - focused V3 browser review at 1512 by 982 and 390 by 844 passed all three levels any and all expressions exclusive benefits one H1 zero horizontal overflow and zero browser diagnostics with retained desktop and mobile captures
           - exact-head run 32844158775 at ad1ddcf passed baseline both images 55 migrations 43 pgTAP files with 2361 assertions and all four WooCommerce runtimes
       - id: M09-S03-LOCAL-WOOCOMMERCE-SNAPSHOT-AND-PLACEMENTS
         status: completed
@@ -1424,6 +1427,7 @@ tasks:
         docs/architecture/ADR/0037-demand-driven-woocommerce-snapshots-and-classic-placements.md,
         docs/architecture/ADR/0038-namespaced-store-api-and-flagged-blocks-panel.md,
         docs/architecture/ADR/0039-controlled-english-presentation-v2-and-degraded-delivery.md,
+        docs/architecture/ADR/0074-guest-safe-advanced-vip-catalogue.md,
       ]
     evidence: [docs/plan/evidence/M09/README.md]
 

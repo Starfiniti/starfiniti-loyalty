@@ -6,6 +6,14 @@ Authenticated merchant reads and programme commands use the exposed `loyalty` sc
 
 Tenant and actor authority are not command inputs. Each command derives the Auth subject from PostgreSQL request claims and rechecks a live, unrevoked `organization_memberships` row. Only `owner` and `admin` may alter programme value policy; `operator`, `analyst`, `auditor`, revoked members, anonymous callers, and owners of another tenant fail closed.
 
+## Public loyalty experience V3
+
+`get_public_loyalty_experience_v3(target_workspace_public_id, target_programme_public_id)` is the anonymous English guest projection. Both UUIDs are public selectors only: PostgreSQL derives one active tenant, linked programme group, active programme, and immutable published version. Mixed-tenant selectors, a suspended workspace/programme, or the absence of a published version returns no row.
+
+V3 retains the strict V2 presentation, tier, and reward fields and adds one `vipCatalogue`. The catalogue contains at most fifteen ordered levels, the qualification period and grace days, exact text-form entry thresholds with `all`/`any` semantics, exact points-per-major-unit rates, and booleans for early access and exclusive reward availability. Legacy programmes receive an equivalent lifetime/spend catalogue. Private activity selectors, reward codes/configuration, retention/re-entry internals, customer progress, organization/internal IDs, audit evidence, and ledger state are not returned.
+
+The dashboard requests V3 first and falls back to normalized V2/V1 only for the recognized missing-function codes during a migration-first rolling deploy. Malformed, duplicate, non-English, mismatched, or provider-error responses fail closed; they never trigger a broader legacy read. See ADR-0074.
+
 ## Signed Merchant Activity API v1
 
 `POST /api/v1/activities/events` is a server-to-server earning-fact endpoint, not a browser API. A live tenant owner/admin provisions one source for an active workspace and published ProgrammeDefinitionV2. The trusted runtime consumes a unique deployment key reference and displays one exact package containing `version`, HTTPS `endpoint`, public `sourceId`, `keyVersion`, and a 256-bit-or-stronger base64 `signingKey`. The database and audit retain the reference only; the browser Data API cannot read it and the package is not recoverable after leaving the result page.

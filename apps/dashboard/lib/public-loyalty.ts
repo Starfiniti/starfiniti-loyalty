@@ -1,4 +1,8 @@
-import type { ExperienceLocaleV1 } from "@starfiniti/contracts";
+import type {
+  ExperienceLocaleV1,
+  PublicVipQualificationThresholdV1,
+  TierQualificationPeriodV2,
+} from "@starfiniti/contracts";
 
 export const PUBLIC_LOYALTY_ACCOUNT_PATH =
   "/login?next=%2Faccount%2Floyalty" as const;
@@ -30,4 +34,35 @@ export function formatEurMinor(
   const cents = (minor % 100n).toString().padStart(2, "0");
   const majorText = new Intl.NumberFormat(locale).format(major);
   return `€${majorText}${cents === "00" ? "" : `${locale === "sl-SI" ? "," : "."}${cents}`}`;
+}
+
+export function formatPublicVipThreshold(
+  threshold: PublicVipQualificationThresholdV1,
+  locale: ExperienceLocaleV1,
+): string {
+  if (threshold.metric === "eligible_spend") {
+    return `Spend ${formatEurMinor(threshold.minimum, locale)}`;
+  }
+  const amount = formatPublicPoints(threshold.minimum, locale);
+  const singular = threshold.minimum === "1";
+  if (threshold.metric === "earned_points") {
+    return `Earn ${amount} ${singular ? "point" : "points"}`;
+  }
+  if (threshold.metric === "order_count") {
+    return `Place ${amount} ${singular ? "order" : "orders"}`;
+  }
+  if (threshold.metric === "referral_count") {
+    return `Refer ${amount} ${singular ? "friend" : "friends"}`;
+  }
+  return `Complete ${amount} qualifying ${singular ? "activity" : "activities"}`;
+}
+
+export function formatPublicVipPeriod(
+  period: TierQualificationPeriodV2,
+): string {
+  if (period.kind === "lifetime") return "Lifetime activity";
+  if (period.kind === "rolling_days") {
+    return `Your latest ${period.days} ${period.days === 1 ? "day" : "days"}`;
+  }
+  return `Calendar year · ${period.timeZone}`;
 }

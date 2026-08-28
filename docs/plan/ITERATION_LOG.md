@@ -1,5 +1,19 @@
 # Iteration Log
 
+## 2026-08-28 — Guest-safe advanced VIP catalogue
+
+- Reconstructed the public hosted VIP path and found a correctness gap: strict V2 exposed only legacy spend/rate tiers, while published V2 policies may qualify by spend, points, orders, referrals, or verified activities under lifetime, rolling, or calendar windows. The page therefore misrepresented advanced policies and used a speculative “coming soon” empty state.
+- Compared mutating V2, passing raw policy JSON to the browser, and adding a database-derived minimized V3 projection. ADR-0074 selects additive V3 so strict clients and rollback remain compatible while PostgreSQL retains tenant/version and disclosure authority.
+- Added a bounded V3 contract and projection for period, grace, ordered levels, exact entry operator/metric/threshold, rate, and safe benefit booleans. Private activity selectors, reward codes/configuration, customer progress, internal IDs, audit evidence, and ledger/value state remain absent. Legacy policies synthesize an equivalent lifetime/spend catalogue; malformed or mismatched new data fails closed and only a genuinely missing function permits V2/V1 normalization.
+- Replaced generic spend cards with a responsive editorial progression rail and an honest no-tier state. Focused actual-route Playwright review at 1512×982 and 390×844 passed three levels, both expression types, benefit labels, one H1, zero horizontal overflow, and zero console/page diagnostics; desktop and mobile captures are retained under M09 evidence.
+- The adversarial pass added PostgreSQL-bigint upper bounds, duplicate-safe React keys, generic wording for private verified-activity selectors, and a database test for the legacy synthesis branch. Production, customer value, tier decisions, WooCommerce, checkout, and M09's 88/100 canary state remain unchanged.
+
+## 2026-08-28 — VM 971 transfer-loop revalidation
+
+- Investigated the reported 200–235 MB/s five-minute pattern through the approved read-only Proxmox route. The active PostgreSQL timer uses incremental rsync and normal Borg files; the old tar-over-stdin `--content-from-command` script is only a dated rollback copy. The 3.604 TB VM counter remains cumulative incident history rather than a current rate.
+- A direct quiet sample measured 1,559 VM tap bytes in 15 seconds. Watching the next scheduled cycle end to end measured about 446 KiB across the window; the job transferred four changed files, 67,885 content bytes and 409,323 received bytes, created the archive in 1.63 seconds, and exited zero. Public dashboard readiness returned HTTP 200 and the timer stayed enabled.
+- No VM restart, timer change, process termination, package change, archive mutation, database operation, checkout change, or loyalty-value mutation was needed. The separate dedicated-repository, retention, monitoring, rsync 3.5, escrow, and isolated-restore gates remain open.
+
 ## 2026-08-28 — Exact recovery rollback-artifact contract
 
 - Reconstructed the last package-level gap in ADR-0073 before any production proposal. Read-only Proxmox inspection reconfirmed both VMs running and the host on Debian amd64 with rsync `3.4.1+ds1-5+deb13u3` and `libacl1` `2.3.2-2+b1`; the host candidate is rsync `3.4.1+ds1-5+deb13u4`. The QEMU guest agent and host-to-guest SSH were unavailable, so the guest version remains bound to the prior observed Ubuntu rsync `3.2.7-1ubuntu1.5` rather than being guessed from current reachability. No service, package, timer, repository, configuration, secret, backup, route, or value was changed.
