@@ -2963,6 +2963,7 @@ tasks:
         R-048,
         R-049,
         R-050,
+        R-052,
       ]
     docs:
       [
@@ -3128,7 +3129,7 @@ tasks:
         status: in_progress
         dependencies: [M15-S01-CAPACITY-ENVELOPE]
         hypothesis: A digest-bound controller that begins before provisioning and refuses public or production routing can measure full database identity application signing privacy and value recovery without turning a disposable drill into production authority.
-        baseline: PostgreSQL base/WAL backup and one isolated database-only PITR drill exist, but the live off-host archive shares a Borg repository with the long whole-VM sequence and its hourly retention can thin recent recovery points below the target; dedicated-repository rollout plus application Authentik Supabase Auth configuration signing escrow privacy replay full-service RTO repeatability and clean teardown remain unproved.
+        baseline: PostgreSQL base/WAL backup and one isolated database-only PITR drill exist, but the live off-host archive shares a Borg repository with the long whole-VM sequence and its hourly retention can thin recent recovery points below the target; the Debian host runs rsync 3.4.1 and the Ubuntu database VM runs 3.2.7 even though upstream 3.5 closes directly applicable restricted-wrapper confinement and peer-input flaws; dedicated-repository and dual-endpoint transport rollout plus application Authentik Supabase Auth configuration signing escrow privacy replay full-service RTO repeatability and clean teardown remain unproved.
         targets:
           [
             authoritative PostgreSQL RPO at or below 300 seconds from a fresh pre-failure source marker,
@@ -3139,6 +3140,7 @@ tasks:
         owner_inputs:
           [
             approved disposable Linux recovery environment and exercise window,
+            approved provenance-checked rsync 3.5 or newer packages or builds plus exact dual-endpoint rollback packages,
             owner-only exact driver control inventory and source manifests,
             recoverable Supabase Auth Authentik configuration signing and provider-secret escrow,
             approved synthetic identities commerce event and value command,
@@ -3149,6 +3151,7 @@ tasks:
             a clean exact commit and short approval bind the canonical plan source inventory target marker Compose project and driver digests,
             base integrity and continuous WAL replay reach the exact target with no missing segment corruption or timeline ambiguity,
             the off-host PostgreSQL repository lock cache retention and restore evidence are independent from whole-VM backup duration preserve every archive inside the 48-hour recent window and prove fresh-archive-anchored bounded maintenance creates no interval above the recovery target,
+            both endpoints report rsync 3.5.0 or newer from canonical trusted executables and the database-VM restricted wrapper proves its confine-root integration before any recovery file is listed,
             both privileged Borg jobs open the configuration once and reject relative non-canonical symlink non-regular wrong-owner executable group/other-accessible or unsafe-directory-chain shell input before any rsync Borg metric or retention action,
             each completed incremental stage yields exactly one locale-stable bounded changed-byte and received-byte pair; exact four-times or one-GiB equality continues while crossing both boundaries publishes aggregate evidence and invokes neither repository identity nor Borg create,
             migrations extensions schemas RLS grants roles immutable ledger projections queues and committed facts reconcile exactly,
@@ -3165,6 +3168,7 @@ tasks:
             a base passes superficial extraction without transfer compression manifest and pg_verifybackup validation,
             WAL history is incomplete corrupt or replays to a different target or timeline,
             whole-VM repository contention or hourly retention creates an unobserved off-host recovery gap,
+            an older malformed linked replaced writable or unsafe-parent rsync executable or a restricted wrapper without confine-root reaches transfer or Borg,
             a linked replaced permissive executable differently owned or attacker-parented configuration is sourced with service authority or replaced with a blocking special file,
             missing duplicated malformed oversized or dual-threshold rsync statistics reach Borg or are reported as a healthy archive cycle,
             database readiness is reported as full-service recovery while Auth application signing privacy or value paths fail,
@@ -3172,14 +3176,15 @@ tasks:
             privacy actions newer than the restore target are exposed before replay,
             teardown fails or raw backup credential identity path origin request response or payload evidence is retained,
           ]
-        security_boundary: The controller runs only from a clean exact repository commit with owner-only short-lived control inventory and driver files. It copies their exact approved bytes into one private run directory, passes fixed stage IDs to that exact-digest Node driver, measures stage time independently, never accepts shell text or a production route, retains only aggregate counts timings and evidence digests, and always invokes teardown. Database Authentik signing and provider secret contents stay outside Git and reports.
-        rollout: Install the exact controller and separately reviewed environment driver on an isolated Linux recovery host; run twice with no public ingress external egress production route or test-user exposure before integrity and privacy replay pass.
+        security_boundary: The controller runs only from a clean exact repository commit with owner-only short-lived control inventory and driver files. It copies their exact approved bytes into one private run directory, passes fixed stage IDs to that exact-digest Node driver, measures stage time independently, never accepts shell text or a production route, retains only aggregate counts timings and evidence digests, and always invokes teardown. The live transport accepts only canonical trusted rsync 3.5-or-newer executables and a confined read-only forced exporter with a cleared environment. Database Authentik signing and provider secret contents stay outside Git and reports.
+        rollout: Install provenance-checked rsync 3.5-or-newer endpoints and verify the confined forced exporter before enabling the exact archive controller; install the exact clean-room controller and separately reviewed environment driver on an isolated Linux recovery host; run twice with no public ingress external egress production route or test-user exposure before integrity and privacy replay pass.
         rollback: Stop scheduling new drills and remove the controller/driver from the recovery host while preserving sanitized run and reconciliation evidence; never delete source backups published evidence or privacy journals to hide a failure.
         verification:
           [
             npm run recovery:validate,
             npm run check,
             exact-head GitHub Actions CI and Security workflows,
+            dual-endpoint package provenance version executable-digest confinement transport-canary and rollback evidence,
             two approved clean-room run reports and independent reconciliation,
           ]
         evidence:
@@ -3190,6 +3195,8 @@ tasks:
             scripts/validate-clean-room-recovery-evidence.mjs,
             docs/architecture/ADR/0065-digest-bound-full-service-clean-room-recovery.md,
             docs/architecture/ADR/0071-dedicated-postgresql-borg-repository.md,
+            docs/architecture/ADR/0072-rsync-3-5-backup-transport-security-baseline.md,
+            infrastructure/environments/proxmox/scripts/starfiniti-postgres-backup-rsync,
             infrastructure/environments/proxmox/scripts/starfiniti-loyalty-postgres-borg,
             infrastructure/environments/proxmox/scripts/starfiniti-loyalty-postgres-borg-maintain,
             scripts/validate-backup-assets.mjs,

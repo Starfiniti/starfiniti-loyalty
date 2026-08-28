@@ -135,8 +135,23 @@ assert.match(
 );
 assert.match(
   pull,
-  /exec \/usr\/bin\/rrsync -ro/u,
-  "pull identity must expose only a read-only restricted rsync root",
+  /readonly rsync_binary="\/usr\/bin\/rsync"[\s\S]*readonly rrsync_binary="\/usr\/bin\/rrsync"[\s\S]*validate_root_executable "\$rsync_binary"[\s\S]*validate_root_executable "\$rrsync_binary"[\s\S]*require_rsync_security_baseline[\s\S]*\/usr\/bin\/grep -Fq -- "rsync_opts\.append\('--confine-root=' \+ os\.getcwd\(\)\)" "\$rrsync_binary"[\s\S]*\/usr\/bin\/grep -Fq -- 'subprocess\.run\(cmd, pass_fds=tuple\(pinned_fds\)\)' "\$rrsync_binary"[\s\S]*exec \/usr\/bin\/env -i[\s\S]*"\$rrsync_binary" -ro "\$backup_root"/u,
+  "pull identity must expose only a validated read-only rsync 3.5 restricted root with confinement support",
+);
+assert.match(
+  pull,
+  /validate_root_executable\(\)[\s\S]*\[\[ ! -L "\$executable_path" \]\][\s\S]*\/usr\/bin\/readlink -f -- "\$executable_path"[\s\S]*"\$canonical_executable" == "\$executable_path"[\s\S]*\/usr\/bin\/stat -Lc '%u\|%a' "\$executable_path"[\s\S]*"\$executable_owner" == "0"[\s\S]*executable_mode_octal & 0022[\s\S]*while true[\s\S]*\/usr\/bin\/stat -Lc '%u\|%a' "\$current_directory"[\s\S]*directory_mode_octal & 0022[\s\S]*directory_mode_octal & 01000/u,
+  "pull identity must reject replaced executables and untrusted writable parent paths",
+);
+assert.match(
+  pull,
+  /\^rsync\[\[:space:\]\]\+version[\s\S]*major < 3 \|\| \(major == 3 && minor < 5\)[\s\S]*rsync 3\.5\.0 or newer is required/u,
+  "pull identity must fail closed below the reviewed rsync 3.5 security baseline",
+);
+assert.match(
+  pull,
+  /exec \/usr\/bin\/env -i \\\n  PATH=\/usr\/bin:\/bin \\\n  LC_ALL=C \\\n  SSH_ORIGINAL_COMMAND="\$SSH_ORIGINAL_COMMAND"/u,
+  "pull identity must clear inherited environment state before invoking rrsync",
 );
 assert.match(
   pull,
@@ -154,7 +169,26 @@ assert.equal(
   "sudoers must grant only the reviewed restricted wrapper",
 );
 
-assert.match(borg, /rsync \\\n/u, "host backup must pull individual files");
+assert.match(
+  borg,
+  /LC_ALL=C "\$rsync_binary" \\\n/u,
+  "host backup must pull individual files through the validated executable",
+);
+assert.match(
+  borg,
+  /readonly rsync_binary="\$\{STARFINITI_RSYNC_BINARY:-\/usr\/bin\/rsync\}"[\s\S]*validate_trusted_executable "\$rsync_binary"[\s\S]*require_rsync_security_baseline[\s\S]*prepare_metrics_storage/u,
+  "host backup must validate the configured executable and rsync 3.5 baseline before staging or evidence writes",
+);
+assert.match(
+  borg,
+  /validate_trusted_executable\(\)[\s\S]*\[\[ ! -L "\$executable_path" \]\][\s\S]*readlink -f -- "\$executable_path"[\s\S]*"\$canonical_executable" == "\$executable_path"[\s\S]*stat -Lc '%u\|%a' "\$executable_path"[\s\S]*executable_mode_octal & 0022[\s\S]*while true[\s\S]*stat -Lc '%u\|%a' "\$current_directory"[\s\S]*directory_mode_octal & 0022[\s\S]*directory_mode_octal & 01000/u,
+  "host backup must reject replaced executables and untrusted writable parent paths",
+);
+assert.match(
+  borg,
+  /\^rsync\[\[:space:\]\]\+version[\s\S]*major < 3 \|\| \(major == 3 && minor < 5\)[\s\S]*rsync 3\.5\.0 or newer is required/u,
+  "host backup must fail closed below the reviewed rsync 3.5 security baseline",
+);
 assert.match(
   borg,
   /--exclude='\*\.partial'/u,
@@ -182,7 +216,7 @@ assert.match(
 );
 assert.match(
   borg,
-  /LC_ALL=C rsync \\\n[\s\S]*--no-human-readable \\\n[\s\S]*--stats \\\n[\s\S]*>"\$rsync_stats_file"/u,
+  /LC_ALL=C "\$rsync_binary" \\\n[\s\S]*--no-human-readable \\\n[\s\S]*--stats \\\n[\s\S]*>"\$rsync_stats_file"/u,
   "host backup must capture pure-digit locale-stable rsync evidence",
 );
 assert.match(
@@ -271,7 +305,8 @@ assert.doesNotMatch(
   "repository-lock contention must never be recorded as a successful backup run",
 );
 assert.ok(
-  borg.indexOf("rsync \\\n") < borg.indexOf('exec 9>"$lock_file"'),
+  borg.indexOf('LC_ALL=C "$rsync_binary" \\\n') <
+    borg.indexOf('exec 9>"$lock_file"'),
   "staging must complete before the dedicated repository lock is acquired",
 );
 assert.match(
@@ -433,6 +468,13 @@ if (process.platform !== "win32") {
     join(tmpdir(), "starfiniti-postgres-borg-validation-"),
   );
   const mockBin = join(testRoot, "bin");
+  const rsyncSymlinkPath = join(testRoot, "rsync-link");
+  const writableRsyncPath = join(mockBin, "rsync-writable");
+  const writableExecutableParentPath = join(
+    testRoot,
+    "writable-executable-parent",
+  );
+  const unsafeParentRsyncPath = join(writableExecutableParentPath, "rsync");
   const configPath = join(testRoot, "backup.env");
   const incompleteConfigPath = join(testRoot, "incomplete.env");
   const aliasConfigPath = join(testRoot, "alias.env");
@@ -602,29 +644,42 @@ if (process.platform !== "win32") {
       await chmod(wrongOwnerConfigPath, 0o600);
       await chown(wrongOwnerConfigPath, 65534, process.getgid?.() ?? 0);
     }
-    await writeExecutable(
-      "rsync",
-      [
-        "#!/usr/bin/env bash",
-        "set -Eeuo pipefail",
-        'destination="${!#}"',
-        'mkdir -p "$destination/base" "$destination/wal"',
-        "printf 'rsync\\n' >>\"$STARFINITI_TEST_TRACE\"",
-        'if [[ "${STARFINITI_TEST_RSYNC_STATS_MODE:-valid}" == "missing" ]]; then',
-        "  printf 'Number of files: 2\\n'",
-        "  exit 0",
-        "fi",
-        'changed_bytes="${STARFINITI_TEST_RSYNC_CHANGED_BYTES:-50901}"',
-        'transferred_bytes="${STARFINITI_TEST_RSYNC_TRANSFERRED_BYTES:-399762}"',
-        "printf 'Total transferred file size: %s bytes\\n' \"$changed_bytes\"",
-        "printf 'Total bytes received: %s\\n' \"$transferred_bytes\"",
-        'if [[ "${STARFINITI_TEST_RSYNC_STATS_MODE:-valid}" == "duplicate" ]]; then',
-        "  printf 'Total transferred file size: %s bytes\\n' \"$changed_bytes\"",
-        "  printf 'Total bytes received: %s\\n' \"$transferred_bytes\"",
-        "fi",
-        "",
-      ].join("\n"),
-    );
+    const rsyncMockSource = [
+      "#!/usr/bin/env bash",
+      "set -Eeuo pipefail",
+      'if [[ "${1:-}" == "--version" ]]; then',
+      '  if [[ "${STARFINITI_TEST_RSYNC_VERSION_MODE:-valid}" == "malformed" ]]; then',
+      "    printf 'unparseable rsync version\\n'",
+      "    exit 0",
+      "  fi",
+      "  printf 'rsync  version %s  protocol version 32\\n' \"${STARFINITI_TEST_RSYNC_VERSION:-3.5.0}\"",
+      "  exit 0",
+      "fi",
+      'destination="${!#}"',
+      'mkdir -p "$destination/base" "$destination/wal"',
+      "printf 'rsync\\n' >>\"$STARFINITI_TEST_TRACE\"",
+      'if [[ "${STARFINITI_TEST_RSYNC_STATS_MODE:-valid}" == "missing" ]]; then',
+      "  printf 'Number of files: 2\\n'",
+      "  exit 0",
+      "fi",
+      'changed_bytes="${STARFINITI_TEST_RSYNC_CHANGED_BYTES:-50901}"',
+      'transferred_bytes="${STARFINITI_TEST_RSYNC_TRANSFERRED_BYTES:-399762}"',
+      "printf 'Total transferred file size: %s bytes\\n' \"$changed_bytes\"",
+      "printf 'Total bytes received: %s\\n' \"$transferred_bytes\"",
+      'if [[ "${STARFINITI_TEST_RSYNC_STATS_MODE:-valid}" == "duplicate" ]]; then',
+      "  printf 'Total transferred file size: %s bytes\\n' \"$changed_bytes\"",
+      "  printf 'Total bytes received: %s\\n' \"$transferred_bytes\"",
+      "fi",
+      "",
+    ].join("\n");
+    await writeExecutable("rsync", rsyncMockSource);
+    await writeFile(writableRsyncPath, rsyncMockSource, "utf8");
+    await chmod(writableRsyncPath, 0o720);
+    await mkdir(writableExecutableParentPath);
+    await chmod(writableExecutableParentPath, 0o770);
+    await writeFile(unsafeParentRsyncPath, rsyncMockSource, "utf8");
+    await chmod(unsafeParentRsyncPath, 0o700);
+    await symlink(join(mockBin, "rsync"), rsyncSymlinkPath);
     await writeExecutable(
       "borg",
       [
@@ -672,6 +727,7 @@ if (process.platform !== "win32") {
       ...process.env,
       PATH: mockBin + ":" + (process.env.PATH ?? ""),
       STARFINITI_POSTGRES_BORG_CONFIG: configPath,
+      STARFINITI_RSYNC_BINARY: join(mockBin, "rsync"),
       STARFINITI_POSTGRES_BORG_LOCK_FILE: lockPath,
       STARFINITI_POSTGRES_BORG_LOCK_WAIT_SECONDS: "1",
       STARFINITI_POSTGRES_BORG_MAINTENANCE_LOCK_WAIT_SECONDS: "1",
@@ -684,6 +740,8 @@ if (process.platform !== "win32") {
       STARFINITI_TEST_BORG_ARCHIVE_NAMES: validArchiveNames,
       STARFINITI_TEST_RSYNC_CHANGED_BYTES: "50901",
       STARFINITI_TEST_RSYNC_TRANSFERRED_BYTES: "399762",
+      STARFINITI_TEST_RSYNC_VERSION: "3.5.0",
+      STARFINITI_TEST_RSYNC_VERSION_MODE: "valid",
       STARFINITI_TEST_BORG_CALL_TRACE: borgCallTracePath,
       STARFINITI_TEST_TRACE: tracePath,
     };
@@ -732,6 +790,65 @@ if (process.platform !== "win32") {
           `${scriptLabel} ${configLabel} rejection must not invoke any Borg command`,
         );
       }
+    }
+
+    for (const [executableLabel, executablePath] of [
+      ["symbolic-link", rsyncSymlinkPath],
+      ["group-writable", writableRsyncPath],
+      ["unsafe-parent", unsafeParentRsyncPath],
+    ]) {
+      await writeFile(tracePath, "", "utf8");
+      await writeFile(borgCallTracePath, "", "utf8");
+      const insecureExecutable = spawnSync("bash", [borgScriptPath], {
+        encoding: "utf8",
+        env: {
+          ...runEnvironment,
+          STARFINITI_RSYNC_BINARY: executablePath,
+        },
+      });
+      assert.notEqual(
+        insecureExecutable.status,
+        0,
+        `${executableLabel} rsync executable must fail closed`,
+      );
+      assert.equal(
+        await readFile(tracePath, "utf8"),
+        "",
+        `${executableLabel} rsync executable must fail before transfer or repository access`,
+      );
+      assert.equal(
+        await readFile(borgCallTracePath, "utf8"),
+        "",
+        `${executableLabel} rsync executable must not invoke any Borg command`,
+      );
+    }
+
+    for (const [versionLabel, versionEnvironment] of [
+      ["pre-3.5", { STARFINITI_TEST_RSYNC_VERSION: "3.4.4" }],
+      ["oversized", { STARFINITI_TEST_RSYNC_VERSION: "9999.5.0" }],
+      ["malformed", { STARFINITI_TEST_RSYNC_VERSION_MODE: "malformed" }],
+    ]) {
+      await writeFile(tracePath, "", "utf8");
+      await writeFile(borgCallTracePath, "", "utf8");
+      const insecureVersion = spawnSync("bash", [borgScriptPath], {
+        encoding: "utf8",
+        env: { ...runEnvironment, ...versionEnvironment },
+      });
+      assert.notEqual(
+        insecureVersion.status,
+        0,
+        `${versionLabel} rsync must fail the backup transport security baseline`,
+      );
+      assert.equal(
+        await readFile(tracePath, "utf8"),
+        "",
+        `${versionLabel} rsync must fail before transfer or repository access`,
+      );
+      assert.equal(
+        await readFile(borgCallTracePath, "utf8"),
+        "",
+        `${versionLabel} rsync must not invoke any Borg command`,
+      );
     }
 
     await writeFile(tracePath, "", "utf8");
@@ -1231,5 +1348,5 @@ if (process.platform !== "win32") {
 }
 
 console.log(
-  "Validated restricted incremental PostgreSQL backup, dedicated Borg identity/retention isolation, and retained-base WAL cleanup assets.",
+  "Validated rsync 3.5 restricted transport, incremental PostgreSQL backup, dedicated Borg identity/retention isolation, and retained-base WAL cleanup assets.",
 );
