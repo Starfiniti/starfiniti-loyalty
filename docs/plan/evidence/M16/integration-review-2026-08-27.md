@@ -4,6 +4,39 @@ Date: 2026-08-27
 Status: follow-up merge-readiness candidate locally verified; PR #57 exact-head checks remain authoritative
 Scope: `origin/main...13d71988d7c05ddfad807320246c9ee613a13531`
 
+## Product-score integrity follow-up — 2026-08-28
+
+Implementation commit `d1a78c04cefacad203c786edee85c4b3a20787a1`
+closes a material M16 rescoring gap under ADR-0080. The prior human scorecard
+reported 51/100 while the machine categories summed to 54/100, and neither subject
+represented the implemented M04-M14 candidate. The original V1 production score is
+now byte-preserved under its fixed known SHA-256 and release identity. V2 separately
+reports deployed production at 54/100 and the exact integration candidate at
+83/100; production is the only completion subject, while the candidate is used only
+for development prioritization.
+
+Adversarial review repaired three initial validator weaknesses before acceptance:
+automatic-failure text is now exact rather than merely non-empty, history validation
+is fixed to the known prior digest rather than trusting a mutable digest field, and
+the integration candidate cannot become the completion subject. Bounded
+descriptor-first repository reads reject path escape, links, non-regular or oversized
+files, and changes during read. Exact calendar dates, commit ancestry, category
+weights/floors, totals, evidence paths, task authority, and the human scorecard marker
+also fail closed. Fifteen deterministic corruptions cover schema, definition, date,
+history, path, subject, score, evidence, and completion drift.
+
+The complete local `npm run check` passed 983 workspace tests, every validator and
+typecheck, both production builds, and all WooCommerce budgets. Independent gates
+validated 86 migrations, 68 pgTAP files, a 1,069-file secret scan, zero production
+dependency vulnerabilities, licences, formatting, and diff cleanliness. The
+Supabase skill review caused no runtime or schema change: official-source review was
+attempted as required, while this slice remained limited to scoring governance.
+Exact-head Linux database replay, image policy, the runtime matrix, and security
+analysis remain the GitHub handoff authority after push.
+
+No production release, database, programme, customer, loyalty value, WooCommerce
+checkout, feature flag, entitlement, identity, billing, backup, or service changed.
+
 ## Follow-up merge-readiness review — 2026-08-28
 
 The current candidate contains 417 commits and changes 792 files relative to
