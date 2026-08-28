@@ -1342,7 +1342,7 @@ tasks:
         status: completed
         follow_up_v6:
           id: M09-S02F-GUEST-SAFE-REFERRAL-CATALOGUE
-          status: in_progress
+          status: completed
           hypothesis:
             A concrete guest-safe give-and-get offer with exact published
             rewards and qualification terms will make referral discovery useful
@@ -1409,8 +1409,11 @@ tasks:
               44-pixel action height, zero overflow, and zero browser diagnostics
             - the complete local repository gate passes 981 workspace tests, every
               validator, accessibility, WooCommerce budgets, and all production
-              builds; static validation passes 85 migrations and 68 pgTAP files,
-              while Docker-backed Linux replay remains the exact-head gate
+              builds; static validation passes 85 migrations and 68 pgTAP files
+            - exact implementation head 3812e67 passed all 11 required checks in
+              CI 33169816691 and Security 33169816719 including 85 migration replay,
+              68 pgTAP files with 3753 assertions, all 22 concurrency probes, both
+              images, and all four WooCommerce runtimes
         acceptance:
           - hosted member experience provides overview earning rewards VIP referrals history and account states with useful discovery progress affordability sharing and expiry guidance
           - public guest experience explains programme value without exposing customer state and routes sign-in through the canonical origin
