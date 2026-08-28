@@ -1414,6 +1414,77 @@ tasks:
               CI 33169816691 and Security 33169816719 including 85 migration replay,
               68 pgTAP files with 3753 assertions, all 22 concurrency probes, both
               images, and all four WooCommerce runtimes
+        follow_up_v7:
+          id: M09-S02G-AUTH-DERIVED-PURCHASE-CAMPAIGNS
+          status: active
+          hypothesis:
+            Showing a signed-in member only their treatment-assigned scheduled or
+            active purchase campaigns will make time-bound earning value discoverable
+            before checkout without exposing audiences, controls, selectors, or value
+            authority.
+          baseline:
+            Campaign authoring, immutable assignments, execution, notifications,
+            analytics, refunds, and reconciliation exist, but the hosted member account
+            shows no eligible purchase bonus before an order occurs.
+          targets:
+            - one strict additive V3 no-selector document exposes at most eight
+              treatment-assigned live purchase opportunities and preserves exact V2
+              balances presentation history referrals and value state
+            - fixed bonuses retain exact bigint points and multipliers retain exact
+              basis points with explicit additive or highest-eligible combination
+              semantics
+            - control members, other tenants, revoked links, ended or paused campaigns,
+              exhausted capacity, raw audience and rule selectors, caps, budgets,
+              liability, internal IDs, assignment evidence, and value commands remain
+              absent
+            - desktop and mobile render one useful scheduled or active campaign strip
+              with no critical accessibility, overflow, privacy, or diagnostic defect
+          metrics:
+            - projected opportunities without an Auth-derived treatment assignment = 0
+            - control, cross-tenant, ended, paused, or cancelled opportunities returned = 0
+            - globally or per-member exhausted opportunities returned = 0
+            - campaign reads that mutate ledger, capacity, queue, assignment, or audit rows = 0
+            - malformed V3 responses that fall back to V2 or V1 = 0
+          security_boundaries:
+            - PostgreSQL derives Auth subject, active account link, organization,
+              connection, programme, wallet, assignment, lifecycle, and projection time
+              without a caller selector
+            - accepted offers remain readable through later commercial restriction;
+              billing may block new growth but cannot erase promised loyalty access
+            - V2 and V1 are attempted only when the V3 function is absent; malformed,
+              contradictory, duplicate, oversized, or provider-error V3 data fails closed
+          rollout:
+            Deploy the additive V3 projection before its reader, keep production
+            unchanged, and include the exact release in the existing M09 disabled
+            Starfiniti canary.
+          rollback:
+            Revert the reader to V2 while retaining the additive V3 function; do not
+            alter campaign assignments effects counters notifications ledger value or
+            WooCommerce checkout behavior.
+          verification:
+            - strict contract bigint basis-point time-state duplicate bounds unknown-field
+              and private-extension tests
+            - pgTAP grants Auth derivation programme binding treatment/control isolation
+              lifecycle capacity revocation minimization bounds and zero-mutation
+              assertions
+            - server V3-first missing-function-only compatibility malformed-container and
+              provider-error tests
+            - production-rendered desktop/mobile keyboard reduced-motion reflow privacy
+              and browser-diagnostic review
+          evidence:
+            - ADR-0078 and additive CustomerLoyaltyExperienceV3 bind a no-selector
+              treatment-only projection with exact benefit semantics, lifecycle and
+              remaining-capacity checks, minimized output, and missing-function-only
+              compatibility
+            - focused contract and dashboard suites pass 22 tests covering exact bigint
+              and basis-point evidence, time states, bounds, duplicates, unsafe/private
+              fields, V3-first compatibility, and fail-closed provider errors
+            - production-build reduced-motion review at 1512 by 982 and 390 by 844
+              passed active and scheduled cards, an extreme bigint, exact multiplier,
+              one H1, unique IDs, zero overflow, and zero browser diagnostics
+            - the complete local repository gate passes 985 workspace tests, every
+              validator and both builds; static validation covers 86 migrations and 68
+              pgTAP files, while exact-head Docker replay and security remain pending CI
         acceptance:
           - hosted member experience provides overview earning rewards VIP referrals history and account states with useful discovery progress affordability sharing and expiry guidance
           - public guest experience explains programme value without exposing customer state and routes sign-in through the canonical origin

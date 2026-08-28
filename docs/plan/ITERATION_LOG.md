@@ -1,5 +1,43 @@
 # Iteration Log
 
+## 2026-08-28 — Auth-derived customer purchase campaign opportunities
+
+- Reconstructed the authenticated hosted account after closing the public earning,
+  reward, VIP, and referral catalogues. Campaign authoring, immutable audience and
+  control assignment, execution, notifications, reporting, refund, and reconciliation
+  already existed, but an assigned member could not discover a scheduled or active
+  purchase bonus before placing an order.
+- Compared anonymous publication, raw assigned definitions, post-event delivery only,
+  and a minimized Auth-derived projection. ADR-0078 selects additive
+  `CustomerLoyaltyExperienceV3`: PostgreSQL accepts no selectors, starts from the strict
+  V2 value container, re-derives the active customer link, connection, programme,
+  wallet, treatment assignment, lifecycle, and projection instant, and returns at most
+  eight purchase bonuses or multipliers.
+- The contract preserves exact bigint bonus points and exact multiplier basis points,
+  names additive bonuses and highest-eligible multiplier behavior, rejects unsafe or
+  contradictory data, and omits campaign/audience identifiers, assignment/control
+  evidence, rule selectors, caps, budgets, liability, customer identity, raw policy,
+  and value commands. V2/V1 compatibility is missing-function-only; malformed or
+  provider-error V3 fails closed.
+- The member overview now shows a responsive current-offers strip with live/scheduled
+  timing, exact benefit, eligible-purchase guidance, and explicit combination language.
+  Production-build reduced-motion review at 1512×982 and 390×844 passed an extreme
+  bigint, multiplier, both lifecycle states, one H1, unique IDs, zero horizontal
+  overflow, and zero console/page/request diagnostics. The mobile review exposed and
+  repaired a numeric badge that could squeeze the offer title into single letters.
+- Adversarial review repaired three further defects before handoff: programme-unavailable
+  legacy accounts remain visible through left joins; exhausted global, per-member, or
+  points capacity is not advertised as available; and pgTAP no longer reads private
+  assignment/capacity tables while impersonating an authenticated customer. Accepted
+  assignments remain visible through later commercial restriction, but reads never
+  reserve capacity or mutate ledger, queue, assignment, counter, or audit evidence.
+- Focused contract and dashboard suites pass 22 tests. The complete local repository
+  gate passes 985 workspace tests, every validator, accessibility and WooCommerce
+  budget checks, and both production builds; static database validation covers 86
+  migrations and 68 pgTAP files. Docker-backed replay remains mandatory exact-head CI
+  evidence because Docker and Podman are unavailable locally. Production, campaigns,
+  customer value, WooCommerce, checkout, and M09's 88/100 canary state are unchanged.
+
 ## 2026-08-28 — Guest-safe public referral catalogue
 
 - Reconstructed the hosted referral path and found that a generic private-sharing promise remained even when an immutable published referral policy already defined both offers, minimum spend, attribution, cooling, new-customer scope, and monthly limits. The page could neither confirm a real offer nor distinguish unavailable and paused programmes.

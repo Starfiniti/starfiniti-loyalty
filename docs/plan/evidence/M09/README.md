@@ -65,6 +65,38 @@ Status: in progress. M09-S01 through M09-S05 are complete; M09-S06 disabled depl
 - Verification: the complete local `npm run check` passes 981 workspace tests, every repository validator, all workspace typechecks, accessibility, WooCommerce budgets, and all production builds. Static validation covers 85 migrations and 68 pgTAP files; visual inspection, format/diff, 1,059-file secret, zero-vulnerability production dependency, and licence checks also pass. Exact implementation head `3812e67a8360f50675c3edff90d4f196e66242ef` passed [CI 33169816691](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/33169816691) and [Security 33169816719](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/33169816719): 85 migrations replayed cleanly, all 68 pgTAP files passed 3,753 assertions, all 22 concurrency probes passed, both production images built, all four minimum/current HPOS/legacy WooCommerce runtime cells passed, and CodeQL, isolated DAST, supply-chain/image/SBOM policy, secret scanning, and recovery transport passed.
 - Rollback: return the reader/component to V5 and leave additive V6 inert during mixed-version operation. No published policy, private link, attribution, referral transition, ledger value, reward, connector, checkout, or WooCommerce behavior changes.
 
+### S02 follow-up — Auth-derived purchase campaign opportunities
+
+- Status: repository candidate verified locally; exact-head clean database replay and
+  security are pending CI. Production remains unchanged and the M09-S06 canary gate
+  remains open.
+- Architecture: ADR-0078 adds strict additive `CustomerLoyaltyExperienceV3` without
+  changing V2. Its no-argument PostgreSQL function derives the Auth subject, active
+  customer link, commerce connection, exact programme and wallet, immutable treatment
+  assignment, lifecycle, and one projection instant. Control, other-tenant, revoked,
+  paused, ended, and exhausted opportunities remain absent.
+- Public boundary: at most eight scheduled or active purchase bonus/multiplier offers
+  expose only a one-way display code, safe name/description, exact times, exact bigint
+  points or basis points, conservative purchase-eligibility guidance, and additive or
+  highest-eligible combination semantics. Raw identifiers, audiences, controls, rules,
+  selectors, caps, budgets, liability, customer data, and value commands stay private.
+- Compatibility: the server requests V3 first and uses V2/V1 only for a recognized
+  missing-function error. Malformed, contradictory, duplicate, oversized, private-field,
+  or provider-error V3 data fails closed rather than selecting older campaign facts.
+- Browser evidence: the production build passed reduced-motion review at 1512×982 and
+  390×844 with active and scheduled cards, an exact extreme bigint, an exact multiplier,
+  one H1, unique IDs, zero horizontal overflow, and zero browser diagnostics. Retained
+  captures: [desktop](./customer-campaign-v3-desktop-2026-08-28.png) and
+  [mobile](./customer-campaign-v3-mobile-2026-08-28.png).
+- Local verification: focused contract and dashboard suites pass 22 tests; the full
+  repository gate passes 985 workspace tests and both builds; static validation passes
+  86 migrations and 68 pgTAP files. The adversarial pass repaired programme-unavailable
+  compatibility, mobile extreme-number containment, exhausted-capacity presentation,
+  and customer-role test authority before handoff.
+- Rollback: return the application reader to V2 and retain the additive V3 function.
+  Do not change campaign assignments/effects, ledger value, notifications, native
+  coupons, checkout, or WooCommerce behavior.
+
 ## S03 — Local WooCommerce snapshot and classic placements
 
 - Commit: `c2e2c82b5557c9105d4311afed9f621776f11c53`

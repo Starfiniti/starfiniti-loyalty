@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(58);
+select plan(77);
 
 select has_function(
   'loyalty', 'get_my_loyalty_accounts', array[]::text[],
@@ -91,11 +91,41 @@ select results_eq(
   array[true],
   'V2 customer aggregate is security definer with an empty search path'
 );
+select has_function(
+  'loyalty', 'get_my_loyalty_experiences_v3', array[]::text[],
+  'strict Auth-derived campaign-opportunity customer projection exists'
+);
+select ok(
+  has_function_privilege(
+    'authenticated', 'loyalty.get_my_loyalty_experiences_v3()', 'EXECUTE'
+  ),
+  'authenticated customers can read their V3 aggregate'
+);
+select ok(
+  not has_function_privilege(
+    'anon', 'loyalty.get_my_loyalty_experiences_v3()', 'EXECUTE'
+  ),
+  'anonymous sessions cannot read a V3 customer aggregate'
+);
+select results_eq(
+  $$ select routine.prosecdef
+     from pg_proc as routine
+     join pg_namespace as namespace on namespace.oid = routine.pronamespace
+     where namespace.nspname = 'loyalty'
+       and routine.proname = 'get_my_loyalty_experiences_v3'
+       and exists (
+         select 1 from unnest(routine.proconfig) as setting
+         where setting = 'search_path=""'
+       ) $$,
+  array[true],
+  'V3 customer aggregate is security definer with an empty search path'
+);
 
 insert into auth.users (id, email)
 values
   ('8c000000-0000-4000-8000-000000000001', 'member-one@example.test'),
-  ('8c000000-0000-4000-8000-000000000002', 'member-two@example.test');
+  ('8c000000-0000-4000-8000-000000000002', 'member-two@example.test'),
+  ('8c000000-0000-4000-8000-000000000003', 'member-one-control@example.test');
 insert into loyalty.organizations (slug, name)
 values ('member-one', 'Private Member One Org'), ('member-two', 'Private Member Two Org');
 insert into loyalty.workspaces (public_id, organization_id, slug, name)
@@ -263,6 +293,9 @@ select organization.id, customer.id,
 from loyalty.organizations as organization
 join loyalty.customers as customer on customer.organization_id = organization.id
 join loyalty.commerce_connections as connection on connection.organization_id = organization.id;
+insert into loyalty.organization_memberships (organization_id, user_id, role)
+select id, '8c000000-0000-4000-8000-000000000001', 'owner'
+from loyalty.organizations where slug = 'member-one';
 insert into loyalty.organization_entitlements (
   organization_id, catalogue_version, capability_key, state, source,
   actor_reference, reason, effective_from
@@ -296,6 +329,247 @@ select * from loyalty_private.release_points(
      and account.account_kind = 'pending' and entry.points > 0),
   now() + interval '90 days', 'member-release',
   extensions.digest('member-release', 'sha256')
+);
+
+insert into loyalty.customers (public_id, organization_id, display_reference)
+select '8c000000-0000-4000-8000-000000000151', id,
+  'Private control profile reference'
+from loyalty.organizations where slug = 'member-one';
+insert into loyalty.customer_user_links (
+  organization_id, customer_id, auth_user_id, source_connection_id
+)
+select customer.organization_id, customer.id,
+  '8c000000-0000-4000-8000-000000000003', connection.id
+from loyalty.customers as customer
+join loyalty.commerce_connections as connection
+  on connection.organization_id = customer.organization_id
+where customer.public_id = '8c000000-0000-4000-8000-000000000151';
+select loyalty_private.ensure_wallet_accounts(
+  customer.organization_id, programme_group.id, customer.id
+)
+from loyalty.customers as customer
+join loyalty.programme_groups as programme_group
+  on programme_group.organization_id = customer.organization_id
+where customer.public_id = '8c000000-0000-4000-8000-000000000151';
+
+create function pg_temp.member_campaign_audience()
+returns jsonb
+language sql
+immutable
+as $$
+  select '{
+    "schemaVersion":"1","code":"member-campaigns",
+    "name":"Member campaigns","description":"","match":"all",
+    "conditions":[{
+      "kind":"metric","metric":"available_points","operator":"at_least",
+      "minimum":"0","maximum":null,"window":null,"activityCodes":[]
+    }]
+  }'::jsonb;
+$$;
+
+insert into loyalty.audiences (
+  public_id, organization_id, programme_group_id, code, created_by_user_id
+)
+select '8c600000-0000-4000-8000-000000000001', organization.id,
+  programme_group.id, 'member-campaigns',
+  '8c000000-0000-4000-8000-000000000001'
+from loyalty.organizations as organization
+join loyalty.programme_groups as programme_group
+  on programme_group.organization_id = organization.id
+where organization.slug = 'member-one';
+
+insert into loyalty.audience_versions (
+  public_id, organization_id, programme_group_id, audience_id, version_number,
+  status, definition, definition_sha256, created_by_user_id,
+  approved_by_user_id, published_at
+)
+select '8c600000-0000-4000-8000-000000000002', audience.organization_id,
+  audience.programme_group_id, audience.id, 1, 'draft',
+  pg_temp.member_campaign_audience(),
+  extensions.digest(
+    pg_catalog.convert_to(pg_temp.member_campaign_audience()::text, 'UTF8'),
+    'sha256'
+  ), audience.created_by_user_id, null, null
+from loyalty.audiences as audience
+where audience.public_id = '8c600000-0000-4000-8000-000000000001';
+
+update loyalty.audience_versions
+set status = 'published', approved_by_user_id = created_by_user_id,
+  published_at = statement_timestamp()
+where public_id = '8c600000-0000-4000-8000-000000000002';
+
+insert into loyalty.audience_snapshots (
+  public_id, organization_id, programme_group_id, audience_version_id,
+  state, snapshot_at, member_count, definition_sha256,
+  created_by_user_id, completed_at
+)
+select '8c600000-0000-4000-8000-000000000003', version.organization_id,
+  version.programme_group_id, version.id, 'complete', statement_timestamp(),
+  2, version.definition_sha256, version.created_by_user_id,
+  statement_timestamp()
+from loyalty.audience_versions as version
+where version.public_id = '8c600000-0000-4000-8000-000000000002';
+
+insert into loyalty_private.audience_snapshot_members (
+  organization_id, programme_group_id, audience_snapshot_id,
+  customer_id, wallet_id, evaluation
+)
+select snapshot.organization_id, snapshot.programme_group_id, snapshot.id,
+  wallet.customer_id, wallet.id, '{"included":true}'::jsonb
+from loyalty.audience_snapshots as snapshot
+join loyalty.wallets as wallet
+  on wallet.organization_id = snapshot.organization_id
+ and wallet.programme_group_id = snapshot.programme_group_id
+where snapshot.public_id = '8c600000-0000-4000-8000-000000000003';
+
+create function pg_temp.member_purchase_campaign(
+  target_code text,
+  target_kind text,
+  target_control_basis_points integer
+)
+returns jsonb
+language sql
+stable
+as $$
+  with schedule as (
+    select pg_catalog.date_trunc(
+      'second', pg_catalog.statement_timestamp() + interval '5 minutes'
+    ) as starts_at,
+    pg_catalog.date_trunc(
+      'second', pg_catalog.statement_timestamp() + interval '1 day'
+    ) as ends_at
+  )
+  select pg_catalog.jsonb_build_object(
+    'schemaVersion', '1',
+    'code', target_code,
+    'name', case target_kind
+      when 'bonus_points' then 'Member bonus'
+      else 'Member multiplier'
+    end,
+    'description', case target_kind
+      when 'bonus_points' then 'Earn an exact bonus on eligible purchases.'
+      else 'Earn more points on eligible purchases.'
+    end,
+    'audienceSnapshotId', '8c600000-0000-4000-8000-000000000003',
+    'exclusionSnapshotIds', pg_catalog.jsonb_build_array(),
+    'schedule', pg_catalog.jsonb_build_object(
+      'timezone', 'UTC',
+      'startsAt', schedule.starts_at,
+      'startsLocal', pg_catalog.to_char(
+        schedule.starts_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS'
+      ),
+      'endsAt', schedule.ends_at,
+      'endsLocal', pg_catalog.to_char(
+        schedule.ends_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS'
+      )
+    ),
+    'behavior', case target_kind
+      when 'bonus_points' then pg_catalog.jsonb_build_object(
+        'kind', 'bonus_points',
+        'earningRuleCodes', pg_catalog.jsonb_build_array('purchase-base'),
+        'reward', pg_catalog.jsonb_build_object(
+          'kind', 'points', 'points', '9007199254740993'
+        )
+      else pg_catalog.jsonb_build_object(
+        'kind', 'purchase_multiplier',
+        'earningRuleCodes', pg_catalog.jsonb_build_array('purchase-base'),
+        'multiplierBasisPoints', 15000,
+        'priority', 100
+      )
+    end,
+    'capacity', pg_catalog.jsonb_build_object(
+      'globalEffectLimit', '2', 'perMemberEffectLimit', 1,
+      'maximumPoints', '9223372036854775807',
+      'maximumLiabilityMinor', null, 'liabilityMinorPerEffect', null,
+      'liabilityCurrencyCode', null, 'liabilityMinorUnitDigits', null
+    ),
+    'controlBasisPoints', target_control_basis_points
+  )
+  from schedule;
+$$;
+
+set local role authenticated;
+set local request.jwt.claim.sub = '8c000000-0000-4000-8000-000000000001';
+do $$
+declare
+  created record;
+begin
+  select * into strict created
+  from loyalty.create_campaign_draft_command(
+    '8c000000-0000-4000-8000-000000000130',
+    pg_temp.member_purchase_campaign('member-bonus', 'bonus_points', 5000),
+    'member-campaign-bonus-draft',
+    '8c690000-0000-4000-8000-000000000001'
+  );
+  perform * from loyalty.approve_campaign_version_command(
+    created.resource_public_id,
+    created.definition_sha256,
+    'member-campaign-bonus-approve',
+    '8c690000-0000-4000-8000-000000000002'
+  );
+  select * into strict created
+  from loyalty.create_campaign_draft_command(
+    '8c000000-0000-4000-8000-000000000130',
+    pg_temp.member_purchase_campaign(
+      'member-multiplier', 'purchase_multiplier', 0
+    ),
+    'member-campaign-multiplier-draft',
+    '8c690000-0000-4000-8000-000000000003'
+  );
+  perform * from loyalty.approve_campaign_version_command(
+    created.resource_public_id,
+    created.definition_sha256,
+    'member-campaign-multiplier-approve',
+    '8c690000-0000-4000-8000-000000000004'
+  );
+end;
+$$;
+reset role;
+select pg_catalog.set_config(
+  'test.member_bonus_treatment_sub',
+  (
+    select customer_link.auth_user_id::text
+    from loyalty_private.campaign_assignments as assignment
+    join loyalty.campaign_versions as campaign_version
+      on campaign_version.id = assignment.campaign_version_id
+    join loyalty.campaigns as campaign
+      on campaign.id = campaign_version.campaign_id
+    join loyalty.customer_user_links as customer_link
+      on customer_link.organization_id = assignment.organization_id
+     and customer_link.customer_id = assignment.customer_id
+     and customer_link.revoked_at is null
+    where campaign.code = 'member-bonus'
+      and assignment.assignment = 'treatment'
+  ),
+  true
+);
+select pg_catalog.set_config(
+  'test.member_bonus_control_sub',
+  (
+    select customer_link.auth_user_id::text
+    from loyalty_private.campaign_assignments as assignment
+    join loyalty.campaign_versions as campaign_version
+      on campaign_version.id = assignment.campaign_version_id
+    join loyalty.campaigns as campaign
+      on campaign.id = campaign_version.campaign_id
+    join loyalty.customer_user_links as customer_link
+      on customer_link.organization_id = assignment.organization_id
+     and customer_link.customer_id = assignment.customer_id
+     and customer_link.revoked_at is null
+    where campaign.code = 'member-bonus'
+      and assignment.assignment = 'control'
+  ),
+  true
+);
+select pg_catalog.set_config(
+  'test.member_multiplier_version',
+  (
+    select version.public_id::text
+    from loyalty.campaign_versions as version
+    join loyalty.campaigns as campaign on campaign.id = version.campaign_id
+    where campaign.code = 'member-multiplier'
+  ),
+  true
 );
 insert into loyalty.tier_decisions (
   organization_id, programme_group_id, programme_version_id, wallet_id,
@@ -485,7 +759,190 @@ select ok(
    from loyalty.get_my_loyalty_experiences_v2()),
   'V2 omits private evidence tenant authority contacts and inactive locales'
 );
+
+select results_eq(
+  $$ select experience ->> 'version',
+            experience #>> '{balances,available}'
+     from loyalty.get_my_loyalty_experiences_v3() $$,
+  $$ values ('3'::text, '9007199254740993'::text) $$,
+  'V3 preserves the exact V2 customer value container'
+);
+select pg_catalog.set_config(
+  'request.jwt.claim.sub',
+  pg_catalog.current_setting('test.member_bonus_treatment_sub'),
+  true
+);
+select results_eq(
+  $$ select jsonb_array_length(experience -> 'campaignOpportunities'),
+            (select count(*)::integer
+             from jsonb_array_elements(
+               experience -> 'campaignOpportunities'
+             ) as opportunity(value)
+             where opportunity.value ->> 'state' = 'scheduled')
+     from loyalty.get_my_loyalty_experiences_v3() $$,
+  $$ values (2, 2) $$,
+  'the treatment member sees both future assigned purchase offers as scheduled'
+);
+select results_eq(
+  $$ select opportunity.value #>> '{effect,points}',
+            opportunity.value #>> '{effect,combination}'
+     from loyalty.get_my_loyalty_experiences_v3() as projection
+     cross join lateral jsonb_array_elements(
+       projection.experience -> 'campaignOpportunities'
+     ) as opportunity(value)
+     where opportunity.value #>> '{effect,kind}' = 'bonus_points' $$,
+  $$ values ('9007199254740993'::text, 'additive_bonus'::text) $$,
+  'the purchase bonus retains exact bigint points and additive semantics'
+);
+select results_eq(
+  $$ select (opportunity.value #>> '{effect,multiplierBasisPoints}')::integer,
+            opportunity.value #>> '{effect,combination}'
+     from loyalty.get_my_loyalty_experiences_v3() as projection
+     cross join lateral jsonb_array_elements(
+       projection.experience -> 'campaignOpportunities'
+     ) as opportunity(value)
+     where opportunity.value #>> '{effect,kind}' = 'purchase_multiplier' $$,
+  $$ values (15000, 'highest_eligible_multiplier'::text) $$,
+  'the multiplier retains exact basis points and highest-eligible semantics'
+);
+select ok(
+  (select experience::text
+      !~* 'campaignVersion|campaignId|audience|snapshot|assignment|control|wallet|customerId|earningRule|priority|budget|liability|globalEffect|perMember|raw|definition'
+   from loyalty.get_my_loyalty_experiences_v3()),
+  'V3 omits campaign selectors identities assignments controls budgets and raw policy'
+);
+
+select pg_catalog.set_config(
+  'request.jwt.claim.sub',
+  pg_catalog.current_setting('test.member_bonus_control_sub'),
+  true
+);
+select results_eq(
+  $$ select jsonb_array_length(experience -> 'campaignOpportunities'),
+            (select count(*)::integer
+             from jsonb_array_elements(
+               experience -> 'campaignOpportunities'
+             ) as opportunity(value)
+             where opportunity.value #>> '{effect,kind}' = 'bonus_points'),
+            (select count(*)::integer
+             from jsonb_array_elements(
+               experience -> 'campaignOpportunities'
+             ) as opportunity(value)
+             where opportunity.value #>> '{effect,kind}' = 'purchase_multiplier')
+     from loyalty.get_my_loyalty_experiences_v3() $$,
+  $$ values (1, 0, 1) $$,
+  'a control member cannot distinguish the hidden bonus assignment from ineligibility'
+);
+
 reset role;
+do $$
+begin
+  perform * from loyalty_private.set_organization_entitlement(
+    (select organization.public_id
+     from loyalty.organizations as organization
+     where organization.slug = 'member-one'),
+    'campaigns', 'disabled', null,
+    'local_control', 'test:customer-campaigns',
+    'Block new campaign growth without erasing accepted offers',
+    pg_catalog.transaction_timestamp() - interval '1 second', null
+  );
+end;
+$$;
+set local role authenticated;
+select pg_catalog.set_config(
+  'request.jwt.claim.sub',
+  pg_catalog.current_setting('test.member_bonus_treatment_sub'),
+  true
+);
+select results_eq(
+  $$ select jsonb_array_length(experience -> 'campaignOpportunities')
+     from loyalty.get_my_loyalty_experiences_v3() $$,
+  array[2],
+  'later commercial restriction does not erase accepted customer offers'
+);
+
+select pg_catalog.set_config(
+  'request.jwt.claim.sub',
+  '8c000000-0000-4000-8000-000000000001',
+  true
+);
+do $$
+begin
+  perform * from loyalty.pause_campaign_version_command(
+    pg_catalog.current_setting('test.member_multiplier_version')::uuid,
+    'Pause this member projection fixture safely',
+    'member-campaign-multiplier-pause',
+    '8c690000-0000-4000-8000-000000000005'
+  );
+end;
+$$;
+select pg_catalog.set_config(
+  'request.jwt.claim.sub',
+  pg_catalog.current_setting('test.member_bonus_treatment_sub'),
+  true
+);
+select results_eq(
+  $$ select jsonb_array_length(experience -> 'campaignOpportunities'),
+            experience #>> '{campaignOpportunities,0,effect,kind}'
+     from loyalty.get_my_loyalty_experiences_v3() $$,
+  $$ values (1, 'bonus_points'::text) $$,
+  'a paused campaign disappears without affecting the remaining accepted offer'
+);
+
+reset role;
+insert into loyalty_private.campaign_capacity_counters (
+  organization_id, programme_group_id, campaign_version_id,
+  committed_effects
+)
+select version.organization_id, version.programme_group_id, version.id,
+  version.global_effect_limit
+from loyalty.campaign_versions as version
+join loyalty.campaigns as campaign on campaign.id = version.campaign_id
+where campaign.code = 'member-bonus'
+on conflict (organization_id, campaign_version_id) do update
+set committed_effects = excluded.committed_effects,
+  updated_at = pg_catalog.statement_timestamp();
+set local role authenticated;
+select pg_catalog.set_config(
+  'request.jwt.claim.sub',
+  pg_catalog.current_setting('test.member_bonus_treatment_sub'),
+  true
+);
+select results_eq(
+  $$ select jsonb_array_length(experience -> 'campaignOpportunities')
+     from loyalty.get_my_loyalty_experiences_v3() $$,
+  array[0],
+  'an exhausted global campaign capacity is no longer presented as available'
+);
+
+reset role;
+create temporary table member_campaign_read_before as
+select pg_catalog.jsonb_build_object(
+  'assignments', (select count(*) from loyalty_private.campaign_assignments),
+  'effects', (select count(*) from loyalty_private.campaign_effects),
+  'counters', (select count(*) from loyalty_private.campaign_capacity_counters),
+  'jobs', (select count(*) from loyalty_private.campaign_trigger_jobs),
+  'ledger', (select count(*) from loyalty.ledger_transactions),
+  'audit', (select count(*) from loyalty.admin_audit_events)
+) as evidence;
+set local role authenticated;
+select lives_ok(
+  $$ select count(*) from loyalty.get_my_loyalty_experiences_v3() $$,
+  'an authenticated campaign opportunity read succeeds at the public grant boundary'
+);
+reset role;
+select results_eq(
+  $$ select pg_catalog.jsonb_build_object(
+       'assignments', (select count(*) from loyalty_private.campaign_assignments),
+       'effects', (select count(*) from loyalty_private.campaign_effects),
+       'counters', (select count(*) from loyalty_private.campaign_capacity_counters),
+       'jobs', (select count(*) from loyalty_private.campaign_trigger_jobs),
+       'ledger', (select count(*) from loyalty.ledger_transactions),
+       'audit', (select count(*) from loyalty.admin_audit_events)
+     ) $$,
+  $$ select evidence from member_campaign_read_before $$,
+  'campaign opportunity reads mutate no assignment capacity queue value or audit evidence'
+);
 select results_eq(
   $$ select count(*)::bigint from loyalty.ledger_transactions $$,
   $$ select transaction_count from member_ledger_before $$,
@@ -530,6 +987,14 @@ select results_eq(
   $$ values (1::bigint, 'Other Store'::text, '0'::text) $$,
   'another customer receives only their own honest V2 account and value'
 );
+select results_eq(
+  $$ select count(*)::bigint,
+            min(experience ->> 'storeName'),
+            min(jsonb_array_length(experience -> 'campaignOpportunities'))
+     from loyalty.get_my_loyalty_experiences_v3() $$,
+  $$ values (1::bigint, 'Other Store'::text, 0) $$,
+  'another tenant receives only its own V3 account and no foreign campaign'
+);
 
 set local request.jwt.claim.sub = '8c000000-0000-4000-8000-000000000001';
 reset role;
@@ -550,6 +1015,11 @@ select results_eq(
   $$ select count(*)::bigint from loyalty.get_my_loyalty_experiences_v2() $$,
   array[0::bigint],
   'revocation removes V2 aggregate access immediately'
+);
+select results_eq(
+  $$ select count(*)::bigint from loyalty.get_my_loyalty_experiences_v3() $$,
+  array[0::bigint],
+  'revocation removes V3 campaign-opportunity access immediately'
 );
 
 reset role;
@@ -573,6 +1043,11 @@ select results_eq(
   $$ select count(*)::bigint from loyalty.get_my_loyalty_experiences_v1() $$,
   array[0::bigint],
   'a missing authenticated subject cannot read a strict aggregate'
+);
+select results_eq(
+  $$ select count(*)::bigint from loyalty.get_my_loyalty_experiences_v3() $$,
+  array[0::bigint],
+  'a missing authenticated subject cannot read campaign opportunities'
 );
 select is_empty(
   $$ select parameter_name from information_schema.parameters
@@ -604,6 +1079,13 @@ select is_empty(
        and specific_name like 'get_my_loyalty_experiences_v2_%'
        and parameter_mode = 'IN' $$,
   'V2 accepts no tenant customer connection workspace programme account or locale selector'
+);
+select is_empty(
+  $$ select parameter_name from information_schema.parameters
+     where specific_schema = 'loyalty'
+       and specific_name like 'get_my_loyalty_experiences_v3_%'
+       and parameter_mode = 'IN' $$,
+  'V3 accepts no tenant customer account programme campaign audience or assignment selector'
 );
 select ok(
   (select pg_get_functiondef('loyalty.get_my_loyalty_experiences_v1()'::regprocedure)

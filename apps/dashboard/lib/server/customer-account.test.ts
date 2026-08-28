@@ -52,7 +52,7 @@ const presentation = {
   },
 } as const;
 
-function experience(version: "1" | "2" = "2") {
+function experience(version: "1" | "2" | "3" = "3") {
   return {
     version,
     asOf: "2026-08-25T10:00:00Z",
@@ -72,7 +72,27 @@ function experience(version: "1" | "2" = "2") {
     activity: [],
     tierProgress: null,
     referral: null,
-    ...(version === "2" ? { presentation } : {}),
+    ...(version === "2" || version === "3" ? { presentation } : {}),
+    ...(version === "3"
+      ? {
+          campaignOpportunities: [
+            {
+              code: "offer-a7f39c2d",
+              name: "Summer points boost",
+              description: "Earn more on eligible purchases this week.",
+              state: "active",
+              startsAt: "2026-08-24T00:00:00Z",
+              endsAt: "2026-09-01T00:00:00Z",
+              hasPurchaseRestrictions: true,
+              effect: {
+                kind: "purchase_multiplier",
+                multiplierBasisPoints: 20_000,
+                combination: "highest_eligible_multiplier",
+              },
+            },
+          ],
+        }
+      : {}),
   };
 }
 
@@ -90,7 +110,7 @@ describe("customer account aggregate", () => {
     });
   });
 
-  it("strictly parses V2 and maps its controlled presentation", async () => {
+  it("strictly parses V3 and maps its controlled campaign opportunities", async () => {
     await expect(getCustomerLoyaltyAccounts()).resolves.toEqual({
       kind: "ready",
       accounts: [
@@ -99,16 +119,41 @@ describe("customer account aggregate", () => {
           available_points: "100",
           tier_name: "Rose",
           enhancements_enabled: true,
+          campaign_opportunities: [
+            expect.objectContaining({
+              code: "offer-a7f39c2d",
+              state: "active",
+            }),
+          ],
           presentation,
         }),
       ],
     });
     expect(rpc).toHaveBeenCalledTimes(1);
-    expect(rpc).toHaveBeenCalledWith("get_my_loyalty_experiences_v2");
+    expect(rpc).toHaveBeenCalledWith("get_my_loyalty_experiences_v3");
   });
 
-  it("normalizes V1 only while an additive database deploy lacks V2", async () => {
+  it("normalizes V2 only while an additive database deploy lacks V3", async () => {
     rpc
+      .mockResolvedValueOnce({ data: null, error: { code: "PGRST202" } })
+      .mockResolvedValueOnce({
+        data: [{ account_id: accountId, experience: experience("2") }],
+        error: null,
+      });
+    const result = await getCustomerLoyaltyAccounts();
+    expect(result).toMatchObject({
+      kind: "ready",
+      accounts: [
+        { presentation: { version: "2" }, campaign_opportunities: [] },
+      ],
+    });
+    expect(rpc).toHaveBeenNthCalledWith(1, "get_my_loyalty_experiences_v3");
+    expect(rpc).toHaveBeenNthCalledWith(2, "get_my_loyalty_experiences_v2");
+  });
+
+  it("normalizes V1 only when V3 and V2 are both absent", async () => {
+    rpc
+      .mockResolvedValueOnce({ data: null, error: { code: "42883" } })
       .mockResolvedValueOnce({ data: null, error: { code: "PGRST202" } })
       .mockResolvedValueOnce({
         data: [{ account_id: accountId, experience: experience("1") }],
@@ -117,10 +162,13 @@ describe("customer account aggregate", () => {
     const result = await getCustomerLoyaltyAccounts();
     expect(result).toMatchObject({
       kind: "ready",
-      accounts: [{ presentation: { version: "2" } }],
+      accounts: [
+        { presentation: { version: "2" }, campaign_opportunities: [] },
+      ],
     });
-    expect(rpc).toHaveBeenNthCalledWith(1, "get_my_loyalty_experiences_v2");
-    expect(rpc).toHaveBeenNthCalledWith(2, "get_my_loyalty_experiences_v1");
+    expect(rpc).toHaveBeenNthCalledWith(1, "get_my_loyalty_experiences_v3");
+    expect(rpc).toHaveBeenNthCalledWith(2, "get_my_loyalty_experiences_v2");
+    expect(rpc).toHaveBeenNthCalledWith(3, "get_my_loyalty_experiences_v1");
   });
 
   it("returns a bounded unavailable state for malformed containers", async () => {
@@ -165,7 +213,7 @@ describe("customer account aggregate", () => {
     });
   });
 
-  it("does not hide provider or malformed V2 failures behind legacy data", async () => {
+  it("does not hide provider or malformed V3 failures behind legacy data", async () => {
     rpc.mockResolvedValue({
       data: null,
       error: { code: "57014", message: "projection unavailable" },

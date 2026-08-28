@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   customerLoyaltyExperienceV1,
   customerLoyaltyExperienceV2,
+  customerLoyaltyExperienceV3,
 } from "./customer-experience";
 import { canonicalExperienceSectionOrderV2 } from "./experience";
 
@@ -98,6 +99,43 @@ function validExperienceV2() {
         earnMessage: "Earn points on every eligible order.",
       },
     },
+  };
+}
+
+function validExperienceV3() {
+  return {
+    ...validExperienceV2(),
+    version: "3" as const,
+    campaignOpportunities: [
+      {
+        code: "offer-a7f39c2d",
+        name: "Summer points boost",
+        description: "Earn more on eligible purchases this week.",
+        state: "active" as const,
+        startsAt: "2026-08-24T00:00:00Z",
+        endsAt: "2026-09-01T00:00:00Z",
+        hasPurchaseRestrictions: true,
+        effect: {
+          kind: "purchase_multiplier" as const,
+          multiplierBasisPoints: 20_000,
+          combination: "highest_eligible_multiplier" as const,
+        },
+      },
+      {
+        code: "offer-b8e40d3e",
+        name: "September bonus",
+        description: null,
+        state: "scheduled" as const,
+        startsAt: "2026-09-02T00:00:00Z",
+        endsAt: "2026-09-10T00:00:00Z",
+        hasPurchaseRestrictions: false,
+        effect: {
+          kind: "bonus_points" as const,
+          points: "9007199254740993",
+          combination: "additive_bonus" as const,
+        },
+      },
+    ],
   };
 }
 
@@ -249,5 +287,85 @@ describe("CustomerLoyaltyExperienceV2", () => {
         presentation: { ...base.presentation, customCss: "body{}" },
       }).success,
     ).toBe(false);
+  });
+});
+
+describe("CustomerLoyaltyExperienceV3", () => {
+  it("retains exact campaign benefits and controlled presentation", () => {
+    const parsed = customerLoyaltyExperienceV3.parse(validExperienceV3());
+    expect(parsed.campaignOpportunities[0]?.effect).toEqual({
+      kind: "purchase_multiplier",
+      multiplierBasisPoints: 20_000,
+      combination: "highest_eligible_multiplier",
+    });
+    expect(parsed.campaignOpportunities[1]?.effect).toEqual({
+      kind: "bonus_points",
+      points: "9007199254740993",
+      combination: "additive_bonus",
+    });
+    expect(
+      customerLoyaltyExperienceV2.safeParse(validExperienceV3()).success,
+    ).toBe(false);
+  });
+
+  it("rejects contradictory time states, duplicates, and unsafe extensions", () => {
+    const activeBeforeStart = structuredClone(validExperienceV3());
+    activeBeforeStart.campaignOpportunities[1]!.state = "active";
+    expect(
+      customerLoyaltyExperienceV3.safeParse(activeBeforeStart).success,
+    ).toBe(false);
+
+    const scheduledAfterStart = structuredClone(validExperienceV3());
+    scheduledAfterStart.campaignOpportunities[0]!.state = "scheduled";
+    expect(
+      customerLoyaltyExperienceV3.safeParse(scheduledAfterStart).success,
+    ).toBe(false);
+
+    const duplicate = structuredClone(validExperienceV3());
+    duplicate.campaignOpportunities[1]!.code =
+      duplicate.campaignOpportunities[0]!.code;
+    expect(customerLoyaltyExperienceV3.safeParse(duplicate).success).toBe(
+      false,
+    );
+
+    const privateExtension = {
+      ...validExperienceV3(),
+      campaignOpportunities: [
+        {
+          ...validExperienceV3().campaignOpportunities[0],
+          audienceSnapshotId: "89000000-0000-4000-8000-000000000099",
+        },
+      ],
+    };
+    expect(
+      customerLoyaltyExperienceV3.safeParse(privateExtension).success,
+    ).toBe(false);
+  });
+
+  it("rejects unsafe text, invalid multipliers, oversized lists, and ended offers", () => {
+    const unsafe = structuredClone(validExperienceV3());
+    unsafe.campaignOpportunities[0]!.description = "<script>private</script>";
+    expect(customerLoyaltyExperienceV3.safeParse(unsafe).success).toBe(false);
+
+    const invalidMultiplier = structuredClone(validExperienceV3());
+    invalidMultiplier.campaignOpportunities[0]!.effect.multiplierBasisPoints = 10_000;
+    expect(
+      customerLoyaltyExperienceV3.safeParse(invalidMultiplier).success,
+    ).toBe(false);
+
+    const oversized = {
+      ...validExperienceV3(),
+      campaignOpportunities: Array.from({ length: 9 }, (_, index) => ({
+        ...validExperienceV3().campaignOpportunities[1]!,
+        code: `offer-${index}`,
+      })),
+    };
+    expect(customerLoyaltyExperienceV3.safeParse(oversized).success).toBe(
+      false,
+    );
+
+    const ended = structuredClone(validExperienceV3());
+    ended.campaignOpportunities[0]!.endsAt = "2026-08-25T09:59:59Z";
+    expect(customerLoyaltyExperienceV3.safeParse(ended).success).toBe(false);
   });
 });

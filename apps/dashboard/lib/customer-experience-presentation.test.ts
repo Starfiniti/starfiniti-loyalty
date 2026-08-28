@@ -33,6 +33,7 @@ function account(accountId: string): CustomerLoyaltyAccount {
     activity: [],
     tier_progress: null,
     referral: null,
+    campaign_opportunities: [],
     presentation: DEFAULT_EXPERIENCE_PRESENTATION_V2,
   };
 }

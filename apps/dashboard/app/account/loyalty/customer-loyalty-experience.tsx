@@ -20,6 +20,7 @@ import {
   LayoutDashboard,
   LockKeyhole,
   LogOut,
+  Megaphone,
   MessageSquareMore,
   PackageCheck,
   PartyPopper,
@@ -30,6 +31,8 @@ import {
   Star,
   Store,
   TicketCheck,
+  TimerReset,
+  TrendingUp,
   UserRound,
   UserRoundPlus,
   UsersRound,
@@ -53,6 +56,7 @@ import { customerExportReauthenticationPath } from "@/lib/customer-export";
 import { experienceFontStack } from "@/lib/experience-theme";
 import { isSelfServiceRewardKind } from "@/lib/customer-rewards";
 import type {
+  CustomerCampaignOpportunity,
   CustomerEarningMethod,
   CustomerLoyaltyAccount,
   CustomerReward,
@@ -310,6 +314,10 @@ function MemberExperienceArea({
             </div>
           ) : null}
         </div>
+
+        <CampaignOpportunityPanel
+          opportunities={account.campaign_opportunities}
+        />
 
         <div className="member-hub-summary-grid">
           <SummaryCard
@@ -590,6 +598,126 @@ function MemberExperienceArea({
       <CustomerLinkedStores state={customerLinks} />
     </ExperienceSection>
   );
+}
+
+function CampaignOpportunityPanel({
+  opportunities,
+}: Readonly<{ opportunities: readonly CustomerCampaignOpportunity[] }>) {
+  if (!opportunities.length) return null;
+  return (
+    <section
+      aria-labelledby="member-campaign-opportunities-title"
+      className="member-campaign-opportunities"
+    >
+      <header>
+        <span aria-hidden="true">
+          <Megaphone />
+        </span>
+        <div>
+          <p>Picked for your account</p>
+          <h2 id="member-campaign-opportunities-title">Current offers</h2>
+        </div>
+        <small>
+          {opportunities.length}{" "}
+          {opportunities.length === 1 ? "offer" : "offers"}
+        </small>
+      </header>
+      <div className="member-campaign-grid">
+        {opportunities.map((opportunity) => (
+          <CampaignOpportunityCard
+            key={opportunity.code}
+            opportunity={opportunity}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function CampaignOpportunityCard({
+  opportunity,
+}: Readonly<{ opportunity: CustomerCampaignOpportunity }>) {
+  const multiplier =
+    opportunity.effect.kind === "purchase_multiplier"
+      ? formatCampaignMultiplier(opportunity.effect.multiplierBasisPoints)
+      : null;
+  return (
+    <article className={`member-campaign-card ${opportunity.state}`}>
+      <div className="member-campaign-card-topline">
+        <span className="member-campaign-state">
+          {opportunity.state === "active" ? (
+            <TrendingUp aria-hidden="true" />
+          ) : (
+            <TimerReset aria-hidden="true" />
+          )}
+          {opportunity.state === "active" ? "Live now" : "Coming soon"}
+        </span>
+        <time
+          dateTime={
+            opportunity.state === "active"
+              ? opportunity.endsAt
+              : opportunity.startsAt
+          }
+        >
+          {opportunity.state === "active" ? "Ends" : "Starts"}{" "}
+          {formatCustomerDate(
+            opportunity.state === "active"
+              ? opportunity.endsAt
+              : opportunity.startsAt,
+          )}
+        </time>
+      </div>
+      <div className="member-campaign-card-body">
+        <span
+          className="member-campaign-effect"
+          aria-label={
+            opportunity.effect.kind === "bonus_points"
+              ? `${formatCustomerPoints(opportunity.effect.points)} bonus points`
+              : `${multiplier} points multiplier`
+          }
+        >
+          {opportunity.effect.kind === "bonus_points" ? (
+            <>
+              <strong>
+                +{formatCustomerPoints(opportunity.effect.points)}
+              </strong>
+              <small>bonus points</small>
+            </>
+          ) : (
+            <>
+              <strong>{multiplier}</strong>
+              <small>points</small>
+            </>
+          )}
+        </span>
+        <div>
+          <h3>{opportunity.name}</h3>
+          {opportunity.description ? <p>{opportunity.description}</p> : null}
+        </div>
+      </div>
+      <footer>
+        <span>
+          <ShoppingBag aria-hidden="true" />
+          {opportunity.hasPurchaseRestrictions
+            ? "Eligible purchases only"
+            : "Programme purchases"}
+        </span>
+        <small>
+          {opportunity.effect.combination === "additive_bonus"
+            ? "Adds to eligible earning"
+            : "Highest eligible multiplier applies"}
+        </small>
+      </footer>
+    </article>
+  );
+}
+
+function formatCampaignMultiplier(multiplierBasisPoints: number): string {
+  const whole = Math.trunc(multiplierBasisPoints / 10_000);
+  const remainder = multiplierBasisPoints % 10_000;
+  if (remainder === 0) return `${whole}×`;
+  const fraction = remainder.toString().padStart(4, "0").replace(/0+$/u, "");
+  return `${whole}.${fraction}×`;
 }
 
 function SummaryCard({

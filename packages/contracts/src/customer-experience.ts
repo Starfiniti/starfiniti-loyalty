@@ -35,6 +35,15 @@ const customerText = z
   .refine((value) => !/[<>\u0000-\u001f\u007f]/u.test(value), {
     message: "Customer text contains unsupported markup or control characters",
   });
+const customerCampaignDescription = z
+  .string()
+  .trim()
+  .min(1)
+  .max(500)
+  .refine((value) => !/[<>\u0000-\u001f\u007f]/u.test(value), {
+    message:
+      "Campaign description contains unsupported markup or control characters",
+  });
 
 export const customerAccountStatusV1 = z.enum([
   "programme_unavailable",
@@ -111,6 +120,44 @@ export const customerActivityV1 = z
     effectiveAt: instant,
   })
   .strict();
+
+export const customerPurchaseCampaignEffectV1 = z.discriminatedUnion("kind", [
+  z
+    .object({
+      kind: z.literal("bonus_points"),
+      points: positivePoints,
+      combination: z.literal("additive_bonus"),
+    })
+    .strict(),
+  z
+    .object({
+      kind: z.literal("purchase_multiplier"),
+      multiplierBasisPoints: z.number().int().min(10_001).max(100_000),
+      combination: z.literal("highest_eligible_multiplier"),
+    })
+    .strict(),
+]);
+
+export const customerPurchaseCampaignOpportunityV1 = z
+  .object({
+    code,
+    name: customerText,
+    description: customerCampaignDescription.nullable(),
+    state: z.enum(["scheduled", "active"]),
+    startsAt: instant,
+    endsAt: instant,
+    hasPurchaseRestrictions: z.boolean(),
+    effect: customerPurchaseCampaignEffectV1,
+  })
+  .strict()
+  .refine(
+    (opportunity) =>
+      Date.parse(opportunity.startsAt) < Date.parse(opportunity.endsAt),
+    {
+      message: "Campaign opportunity end must follow start",
+      path: ["endsAt"],
+    },
+  );
 
 const customerLoyaltyExperienceBase = z
   .object({
@@ -220,13 +267,61 @@ export const customerLoyaltyExperienceV2 = customerLoyaltyExperienceBase
   .strict()
   .superRefine(validateCustomerLoyaltyExperience);
 
+export const customerLoyaltyExperienceV3 = customerLoyaltyExperienceBase
+  .extend({
+    version: z.literal("3"),
+    presentation: experiencePresentationV2,
+    campaignOpportunities: z
+      .array(customerPurchaseCampaignOpportunityV1)
+      .max(8),
+  })
+  .strict()
+  .superRefine((experience, context) => {
+    validateCustomerLoyaltyExperience(experience, context);
+    const projectionInstant = Date.parse(experience.asOf);
+    for (const [
+      index,
+      opportunity,
+    ] of experience.campaignOpportunities.entries()) {
+      const startsAt = Date.parse(opportunity.startsAt);
+      const endsAt = Date.parse(opportunity.endsAt);
+      const stateMatchesProjection =
+        opportunity.state === "active"
+          ? startsAt <= projectionInstant && endsAt > projectionInstant
+          : startsAt > projectionInstant;
+      if (!stateMatchesProjection) {
+        context.addIssue({
+          code: "custom",
+          message: "Campaign state does not match the projection instant",
+          path: ["campaignOpportunities", index, "state"],
+        });
+      }
+    }
+    const codes = experience.campaignOpportunities.map(
+      (opportunity) => opportunity.code,
+    );
+    if (new Set(codes).size !== codes.length) {
+      context.addIssue({
+        code: "custom",
+        message: "Campaign opportunity identifiers must be unique",
+        path: ["campaignOpportunities"],
+      });
+    }
+  });
+
 export type CustomerEarningMethodV1 = z.infer<typeof customerEarningMethodV1>;
 export type CustomerRewardV1 = z.infer<typeof customerRewardV1>;
 export type CustomerReservationV1 = z.infer<typeof customerReservationV1>;
 export type CustomerActivityV1 = z.infer<typeof customerActivityV1>;
+export type CustomerPurchaseCampaignOpportunityV1 = z.infer<
+  typeof customerPurchaseCampaignOpportunityV1
+>;
 export type CustomerLoyaltyExperienceV1 = z.infer<
   typeof customerLoyaltyExperienceV1
 >;
 export type CustomerLoyaltyExperienceV2 = z.infer<
   typeof customerLoyaltyExperienceV2
+>;
+export type CustomerLoyaltyExperienceV3 = z.infer<
+  typeof customerLoyaltyExperienceV3
 >;
