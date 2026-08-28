@@ -456,49 +456,262 @@ function expectedPublicEarningName(method: {
   return "Refer a friend";
 }
 
-export const publicLoyaltyExperienceV4 = z
+const publicLoyaltyExperienceV4Base = z
   .object({
     ...publicLoyaltyExperienceV3.shape,
     version: z.literal("4"),
     earningMethods: z.array(publicEarningMethodV1).max(12),
   })
-  .strict()
-  .superRefine((experience, context) => {
-    if (experience.tiers.length !== experience.vipCatalogue.levels.length) {
-      context.addIssue({
-        code: "custom",
-        path: ["vipCatalogue", "levels"],
-        message: "Public VIP catalogue must cover every published tier",
-      });
-    } else {
-      experience.tiers.forEach((tier, index) => {
-        const level = experience.vipCatalogue.levels[index];
-        if (
-          !level ||
-          level.code !== tier.code ||
-          level.name !== tier.name ||
-          level.pointsPerMajorUnit !== tier.pointsPerMajorUnit
-        ) {
-          context.addIssue({
-            code: "custom",
-            path: ["vipCatalogue", "levels", index],
-            message: "Public VIP catalogue does not match the published tier",
-          });
-        }
-      });
-    }
-    const codes = new Set<string>();
-    experience.earningMethods.forEach((method, index) => {
-      if (codes.has(method.code)) {
+  .strict();
+
+function enforcePublicLoyaltyExperienceInvariants(
+  experience: Pick<
+    z.infer<typeof publicLoyaltyExperienceV4Base>,
+    "tiers" | "vipCatalogue" | "earningMethods"
+  >,
+  context: z.RefinementCtx,
+): void {
+  if (experience.tiers.length !== experience.vipCatalogue.levels.length) {
+    context.addIssue({
+      code: "custom",
+      path: ["vipCatalogue", "levels"],
+      message: "Public VIP catalogue must cover every published tier",
+    });
+  } else {
+    experience.tiers.forEach((tier, index) => {
+      const level = experience.vipCatalogue.levels[index];
+      if (
+        !level ||
+        level.code !== tier.code ||
+        level.name !== tier.name ||
+        level.pointsPerMajorUnit !== tier.pointsPerMajorUnit
+      ) {
         context.addIssue({
           code: "custom",
-          path: ["earningMethods", index, "code"],
-          message: "Public earning method codes must be unique",
+          path: ["vipCatalogue", "levels", index],
+          message: "Public VIP catalogue does not match the published tier",
         });
       }
-      codes.add(method.code);
+    });
+  }
+  const codes = new Set<string>();
+  experience.earningMethods.forEach((method, index) => {
+    if (codes.has(method.code)) {
+      context.addIssue({
+        code: "custom",
+        path: ["earningMethods", index, "code"],
+        message: "Public earning method codes must be unique",
+      });
+    }
+    codes.add(method.code);
+  });
+}
+
+export const publicLoyaltyExperienceV4 =
+  publicLoyaltyExperienceV4Base.superRefine(
+    enforcePublicLoyaltyExperienceInvariants,
+  );
+
+export const publicRewardCurrencyV1 = z
+  .object({
+    code: z.string().regex(/^[A-Z]{3}$/u),
+    minorUnitDigits: z.number().int().min(0).max(6),
+  })
+  .strict();
+
+export const publicRewardBenefitV1 = z.discriminatedUnion("kind", [
+  z
+    .object({
+      kind: z.literal("fixed_discount"),
+      amountMinor: positivePostgresBigintString.nullable(),
+    })
+    .strict(),
+  z
+    .object({
+      kind: z.literal("percentage_discount"),
+      percentageBasisPoints: z.number().int().min(1).max(10_000).nullable(),
+    })
+    .strict(),
+  z.object({ kind: z.literal("free_shipping") }).strict(),
+  z
+    .object({
+      kind: z.literal("free_product"),
+      quantity: z.number().int().min(1).max(10).nullable(),
+    })
+    .strict(),
+  z.object({ kind: z.literal("exclusive_access") }).strict(),
+  z.object({ kind: z.literal("custom") }).strict(),
+]);
+
+export const publicRewardConditionsV1 = z
+  .object({
+    minimumSpendMinor: nonNegativePostgresBigintString.nullable(),
+    requiredTierNames: z.array(translatedCopy.min(1).max(200)).max(15),
+    hasProductOrCategoryRestrictions: z.boolean(),
+    excludesSaleItems: z.boolean(),
+    hasMemberLimit: z.boolean(),
+    limitedAvailability: z.boolean(),
+    stacking: z.enum(["exclusive", "combinable", "not_applicable", "unknown"]),
+  })
+  .strict();
+
+export const publicRewardOfferV1 = z
+  .object({
+    code: z.string().regex(/^reward-[1-9][0-9]{0,2}$/u),
+    name: translatedCopy.min(1).max(200),
+    costPoints: positivePostgresBigintString,
+    benefit: publicRewardBenefitV1,
+    currency: publicRewardCurrencyV1.nullable(),
+    delivery: z.enum(["woocommerce_coupon", "manual", "unknown"]),
+    validityDays: z.number().int().min(1).max(365).nullable(),
+    deliveryEstimateDays: z.number().int().min(1).max(90).nullable(),
+    state: z.enum(["available", "scheduled", "confirm_in_account"]),
+    startsAt: z.iso.datetime({ offset: true }).nullable(),
+    endsAt: z.iso.datetime({ offset: true }).nullable(),
+    conditions: publicRewardConditionsV1,
+  })
+  .strict()
+  .superRefine((offer, context) => {
+    if (
+      offer.startsAt !== null &&
+      offer.endsAt !== null &&
+      Date.parse(offer.startsAt) >= Date.parse(offer.endsAt)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["endsAt"],
+        message: "Public reward availability end must follow its start",
+      });
+    }
+    if (offer.state === "scheduled" && offer.startsAt === null) {
+      context.addIssue({
+        code: "custom",
+        path: ["startsAt"],
+        message: "Scheduled public rewards require a start instant",
+      });
+    }
+    if (
+      offer.state === "confirm_in_account" &&
+      (offer.startsAt !== null || offer.endsAt !== null)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["state"],
+        message: "Compatibility rewards cannot claim an exact schedule",
+      });
+    }
+    const native = [
+      "fixed_discount",
+      "percentage_discount",
+      "free_shipping",
+      "free_product",
+    ].includes(offer.benefit.kind);
+    if (offer.delivery === "manual" && native) {
+      context.addIssue({
+        code: "custom",
+        path: ["delivery"],
+        message: "Native public rewards cannot claim manual delivery",
+      });
+    }
+    if (offer.delivery === "woocommerce_coupon" && !native) {
+      context.addIssue({
+        code: "custom",
+        path: ["delivery"],
+        message: "Manual public rewards cannot claim coupon delivery",
+      });
+    }
+    if (
+      offer.delivery === "woocommerce_coupon" &&
+      (offer.validityDays === null || offer.deliveryEstimateDays !== null)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["validityDays"],
+        message: "Coupon delivery requires validity and no manual estimate",
+      });
+    }
+    if (
+      offer.delivery === "manual" &&
+      (offer.validityDays !== null || offer.deliveryEstimateDays === null)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["deliveryEstimateDays"],
+        message: "Manual delivery requires an estimate and no coupon validity",
+      });
+    }
+    if (
+      offer.delivery === "unknown" &&
+      (offer.state !== "confirm_in_account" ||
+        offer.validityDays !== null ||
+        offer.deliveryEstimateDays !== null)
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["delivery"],
+        message:
+          "Unknown delivery is allowed only for conservative compatibility offers",
+      });
+    }
+    if (
+      offer.benefit.kind === "fixed_discount" &&
+      offer.benefit.amountMinor !== null &&
+      offer.currency === null
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["currency"],
+        message: "Exact fixed discounts require public currency evidence",
+      });
+    }
+    if (
+      offer.conditions.minimumSpendMinor !== null &&
+      offer.currency === null
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["currency"],
+        message: "Exact minimum spend requires public currency evidence",
+      });
+    }
+  });
+
+export const publicRewardCatalogueV1 = z
+  .object({
+    version: z.literal("1"),
+    offers: z.array(publicRewardOfferV1).max(20),
+  })
+  .strict()
+  .superRefine((catalogue, context) => {
+    const codes = new Set<string>();
+    catalogue.offers.forEach((offer, index) => {
+      if (codes.has(offer.code)) {
+        context.addIssue({
+          code: "custom",
+          path: ["offers", index, "code"],
+          message: "Public reward offer codes must be unique",
+        });
+      }
+      codes.add(offer.code);
     });
   });
+
+const {
+  version: _publicV4Version,
+  rewards: _legacyPublicRewards,
+  ...publicLoyaltyExperienceV5BaseShape
+} = publicLoyaltyExperienceV4Base.shape;
+void _publicV4Version;
+void _legacyPublicRewards;
+
+export const publicLoyaltyExperienceV5 = z
+  .object({
+    ...publicLoyaltyExperienceV5BaseShape,
+    version: z.literal("5"),
+    rewardCatalogue: publicRewardCatalogueV1,
+  })
+  .strict()
+  .superRefine(enforcePublicLoyaltyExperienceInvariants);
 
 function srgbChannel(value: number): number {
   const normalized = value / 255;
@@ -557,4 +770,12 @@ export type PublicEarningEffectV1 = z.infer<typeof publicEarningEffectV1>;
 export type PublicEarningMethodV1 = z.infer<typeof publicEarningMethodV1>;
 export type PublicLoyaltyExperienceV4 = z.infer<
   typeof publicLoyaltyExperienceV4
+>;
+export type PublicRewardCurrencyV1 = z.infer<typeof publicRewardCurrencyV1>;
+export type PublicRewardBenefitV1 = z.infer<typeof publicRewardBenefitV1>;
+export type PublicRewardConditionsV1 = z.infer<typeof publicRewardConditionsV1>;
+export type PublicRewardOfferV1 = z.infer<typeof publicRewardOfferV1>;
+export type PublicRewardCatalogueV1 = z.infer<typeof publicRewardCatalogueV1>;
+export type PublicLoyaltyExperienceV5 = z.infer<
+  typeof publicLoyaltyExperienceV5
 >;

@@ -5,12 +5,40 @@ import {
   formatPublicEarningEffect,
   formatPublicEarningSource,
   formatPublicEarningWindow,
+  formatPublicMoneyMinor,
+  formatPublicRewardBenefit,
+  formatPublicRewardDelivery,
+  formatPublicRewardWindow,
   formatPublicVipPeriod,
   formatPublicVipThreshold,
   isPublicId,
   PUBLIC_LOYALTY_ACCOUNT_PATH,
+  publicRewardConditionLabels,
   resolvePublicLocale,
 } from "./public-loyalty";
+
+const publicReward = {
+  code: "reward-1",
+  name: "Five euro reward",
+  costPoints: "500",
+  benefit: { kind: "fixed_discount" as const, amountMinor: "500" },
+  currency: { code: "EUR", minorUnitDigits: 2 },
+  delivery: "woocommerce_coupon" as const,
+  validityDays: 30,
+  deliveryEstimateDays: null,
+  state: "available" as const,
+  startsAt: null,
+  endsAt: null,
+  conditions: {
+    minimumSpendMinor: "2000",
+    requiredTierNames: ["Bloom"],
+    hasProductOrCategoryRestrictions: true,
+    excludesSaleItems: true,
+    hasMemberLimit: true,
+    limitedAvailability: true,
+    stacking: "exclusive" as const,
+  },
+};
 
 describe("public loyalty presentation", () => {
   it("uses English for every locale selector", () => {
@@ -143,5 +171,78 @@ describe("public loyalty presentation", () => {
         "en",
       ),
     ).toBe("Available until Feb 3, 2027");
+  });
+
+  it("formats exact reward money and percentages without number coercion", () => {
+    expect(
+      formatPublicMoneyMinor(
+        "900719925474099312345",
+        { code: "EUR", minorUnitDigits: 2 },
+        "en",
+      ),
+    ).toBe("€9,007,199,254,740,993,123.45");
+    expect(formatPublicRewardBenefit(publicReward, "en")).toBe("€5 off");
+    expect(
+      formatPublicRewardBenefit(
+        {
+          ...publicReward,
+          benefit: {
+            kind: "percentage_discount",
+            percentageBasisPoints: 1_250,
+          },
+        },
+        "en",
+      ),
+    ).toBe("12.5% off");
+    expect(
+      formatPublicRewardBenefit(
+        {
+          ...publicReward,
+          benefit: { kind: "free_product", quantity: 2 },
+        },
+        "en",
+      ),
+    ).toBe("2 free products");
+  });
+
+  it("explains exact reward windows and summarized public conditions", () => {
+    expect(formatPublicRewardWindow(publicReward, "en")).toBe("Available now");
+    expect(
+      formatPublicRewardWindow(
+        {
+          ...publicReward,
+          state: "scheduled",
+          startsAt: "2027-02-03T10:00:00.000Z",
+        },
+        "en",
+      ),
+    ).toBe("Available from Feb 3, 2027");
+    expect(
+      formatPublicRewardWindow(
+        { ...publicReward, state: "confirm_in_account" },
+        "en",
+      ),
+    ).toBe("Confirm terms in your account");
+    expect(publicRewardConditionLabels(publicReward, "en")).toEqual([
+      "€20 minimum spend",
+      "Bloom tier",
+      "Selected products",
+      "Excludes sale items",
+      "Member limit",
+      "Limited availability",
+      "Used on its own",
+    ]);
+    expect(formatPublicRewardDelivery(publicReward)).toBe(
+      "WooCommerce reward · 30 days after claim",
+    );
+    expect(
+      formatPublicRewardDelivery({
+        ...publicReward,
+        benefit: { kind: "custom" },
+        delivery: "manual",
+        validityDays: null,
+        deliveryEstimateDays: 1,
+      }),
+    ).toBe("Delivered by the store within 1 day");
   });
 });

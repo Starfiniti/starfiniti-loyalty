@@ -6,13 +6,21 @@ Authenticated merchant reads and programme commands use the exposed `loyalty` sc
 
 Tenant and actor authority are not command inputs. Each command derives the Auth subject from PostgreSQL request claims and rechecks a live, unrevoked `organization_memberships` row. Only `owner` and `admin` may alter programme value policy; `operator`, `analyst`, `auditor`, revoked members, anonymous callers, and owners of another tenant fail closed.
 
+## Public loyalty experience V5
+
+`get_public_loyalty_experience_v5(target_workspace_public_id, target_programme_public_id)` is the current anonymous English guest projection. It retains strict V4 presentation, VIP, and earning data, removes the legacy raw `rewards` array, and adds at most twenty ordered offers under `rewardCatalogue`.
+
+Each offer contains a derived public code, explicitly customer-facing name, exact bigint-safe point cost, rebuilt supported benefit, validated public currency evidence where needed, availability state/window, native-coupon or manual delivery, validity or delivery estimate, and summarized public conditions. The summary may reveal minimum spend, resolved tier names, whether product/category restrictions, sale-item exclusion, member limits, or limited availability apply, and reviewed stacking behavior. Internal reward codes/IDs, exact selectors, fulfilment instructions, exact limits, global quantity, points budget, segment access, customer eligibility, configuration JSON, audit evidence, ledger state, and value authority never appear. Store credit, cash-like value, expired, segment-restricted, malformed, unsafe, duplicate-tier, and currency-mismatched rewards are excluded.
+
+The dashboard requests V5 first and normalizes V4/V3/V2/V1 only for recognized missing-function codes during a migration-first rollout. Legacy fixed/percentage/shipping offers are deliberately conservative and store credit is removed. Malformed, duplicate, oversized, contradictory, non-English, or provider-error documents fail closed. See ADR-0076.
+
 ## Public loyalty experience V4
 
-`get_public_loyalty_experience_v4(target_workspace_public_id, target_programme_public_id)` is the current anonymous English guest projection. It retains strict V3 presentation, rewards, and advanced VIP data and adds at most twelve ordered `earningMethods` derived from the immutable published version.
+`get_public_loyalty_experience_v4(target_workspace_public_id, target_programme_public_id)` is the compatible public-earning predecessor. It retains strict V3 presentation, rewards, and advanced VIP data and adds at most twelve ordered `earningMethods` derived from the immutable published version.
 
 Each method contains only a source/ordinal-derived public code, reviewed generic source/effect label, one public standard source, an exact bigint-safe base/fixed effect or bounded integer multiplier, a conservative restrictions boolean, optional validated schedule, and database-derived availability. Purchase, account-created, birthday, verified-product-review, and referral sources may appear. Merchant-authored rule codes/names, signed custom activities, raw condition selectors, activity/product/category/segment/tier/channel data, cap values, priority/stacking internals, customer eligibility, tenant/internal IDs, audit evidence, and ledger state never appear. If no safe standard method survives projection, the catalogue is empty. A legacy V1 programme may receive one conservative first-tier purchase method.
 
-The dashboard requests V4 first and normalizes V3/V2/V1 only for recognized missing-function codes during a migration-first rollout. Malformed, duplicate, oversized, contradictory, non-English, or provider-error documents fail closed. See ADR-0075.
+V5 readers use V4 only when the additive V5 function is genuinely absent. See ADR-0075.
 
 ## Public loyalty experience V3
 

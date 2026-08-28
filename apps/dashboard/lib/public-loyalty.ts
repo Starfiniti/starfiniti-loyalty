@@ -3,6 +3,8 @@ import type {
   PublicEarningEffectV1,
   PublicEarningMethodV1,
   PublicEarningSourceV1,
+  PublicRewardCurrencyV1,
+  PublicRewardOfferV1,
   PublicVipQualificationThresholdV1,
   TierQualificationPeriodV2,
 } from "@starfiniti/contracts";
@@ -114,4 +116,125 @@ export function formatPublicEarningWindow(
   return method.endsAt
     ? `Available until ${date(method.endsAt)}`
     : "Available now";
+}
+
+export function formatPublicMoneyMinor(
+  value: string,
+  currency: PublicRewardCurrencyV1,
+  locale: ExperienceLocaleV1,
+): string {
+  const minor = BigInt(value);
+  const scale = 10n ** BigInt(currency.minorUnitDigits);
+  const major = minor / scale;
+  const remainder = minor % scale;
+  const majorText = new Intl.NumberFormat(locale).format(major);
+  const fraction =
+    currency.minorUnitDigits === 0
+      ? ""
+      : remainder
+          .toString()
+          .padStart(currency.minorUnitDigits, "0")
+          .replace(/0+$/u, "");
+  const decimal = locale === "sl-SI" ? "," : ".";
+  const symbol =
+    new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency: currency.code,
+      currencyDisplay: "narrowSymbol",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    })
+      .formatToParts(0)
+      .find((part) => part.type === "currency")?.value ?? currency.code;
+  const amount = `${majorText}${fraction ? `${decimal}${fraction}` : ""}`;
+  return symbol === currency.code
+    ? `${currency.code} ${amount}`
+    : `${symbol}${amount}`;
+}
+
+export function formatPublicRewardBenefit(
+  offer: PublicRewardOfferV1,
+  locale: ExperienceLocaleV1,
+): string {
+  const benefit = offer.benefit;
+  if (benefit.kind === "fixed_discount") {
+    return benefit.amountMinor !== null && offer.currency
+      ? `${formatPublicMoneyMinor(benefit.amountMinor, offer.currency, locale)} off`
+      : "Fixed discount";
+  }
+  if (benefit.kind === "percentage_discount") {
+    if (benefit.percentageBasisPoints === null) return "Percentage discount";
+    const whole = Math.floor(benefit.percentageBasisPoints / 100);
+    const remainder = benefit.percentageBasisPoints % 100;
+    return `${whole}${remainder ? `.${remainder.toString().padStart(2, "0").replace(/0$/u, "")}` : ""}% off`;
+  }
+  if (benefit.kind === "free_shipping") return "Free shipping";
+  if (benefit.kind === "free_product") {
+    return benefit.quantity && benefit.quantity > 1
+      ? `${benefit.quantity} free products`
+      : "Free product";
+  }
+  if (benefit.kind === "exclusive_access") return "Exclusive access";
+  return "Custom perk";
+}
+
+export function formatPublicRewardWindow(
+  offer: PublicRewardOfferV1,
+  locale: ExperienceLocaleV1,
+): string {
+  const date = (value: string) =>
+    new Intl.DateTimeFormat(locale, {
+      dateStyle: "medium",
+      timeZone: "UTC",
+    }).format(new Date(value));
+  if (offer.state === "confirm_in_account")
+    return "Confirm terms in your account";
+  if (offer.state === "scheduled") {
+    return offer.startsAt
+      ? `Available from ${date(offer.startsAt)}`
+      : "Scheduled";
+  }
+  return offer.endsAt
+    ? `Available until ${date(offer.endsAt)}`
+    : "Available now";
+}
+
+export function publicRewardConditionLabels(
+  offer: PublicRewardOfferV1,
+  locale: ExperienceLocaleV1,
+): string[] {
+  const labels: string[] = [];
+  if (offer.conditions.minimumSpendMinor !== null && offer.currency) {
+    labels.push(
+      `${formatPublicMoneyMinor(offer.conditions.minimumSpendMinor, offer.currency, locale)} minimum spend`,
+    );
+  }
+  if (offer.conditions.requiredTierNames.length) {
+    labels.push(`${offer.conditions.requiredTierNames.join(" or ")} tier`);
+  }
+  if (offer.conditions.hasProductOrCategoryRestrictions) {
+    labels.push("Selected products");
+  }
+  if (offer.conditions.excludesSaleItems) labels.push("Excludes sale items");
+  if (offer.conditions.hasMemberLimit) labels.push("Member limit");
+  if (offer.conditions.limitedAvailability) labels.push("Limited availability");
+  if (offer.conditions.stacking === "exclusive") labels.push("Used on its own");
+  if (offer.conditions.stacking === "combinable") labels.push("Can combine");
+  return labels;
+}
+
+export function formatPublicRewardDelivery(offer: PublicRewardOfferV1): string {
+  if (offer.delivery === "manual") {
+    const days = offer.deliveryEstimateDays;
+    return days === null
+      ? "Sign in for delivery timing"
+      : `Delivered by the store within ${days} ${days === 1 ? "day" : "days"}`;
+  }
+  if (offer.delivery === "woocommerce_coupon") {
+    const days = offer.validityDays;
+    return days === null
+      ? "Sign in for coupon validity"
+      : `WooCommerce reward · ${days} ${days === 1 ? "day" : "days"} after claim`;
+  }
+  return "Sign in for fulfilment details";
 }

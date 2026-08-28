@@ -172,6 +172,7 @@ select is_empty(
           'loyalty.get_public_loyalty_experience_v2(uuid,uuid)',
           'loyalty.get_public_loyalty_experience_v3(uuid,uuid)',
           'loyalty.get_public_loyalty_experience_v4(uuid,uuid)',
+          'loyalty.get_public_loyalty_experience_v5(uuid,uuid)',
           'loyalty.retry_connector_effect_command(uuid,text,text,uuid)',
           'loyalty.retry_referral_reward_job_command(uuid,text,text,uuid)',
           'loyalty.schedule_programme_version_command(uuid,text,timestamp with time zone,text,uuid)',

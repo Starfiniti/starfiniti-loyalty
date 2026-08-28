@@ -5,10 +5,12 @@ import {
   publicLoyaltyExperienceV2,
   publicLoyaltyExperienceV3,
   publicLoyaltyExperienceV4,
+  publicLoyaltyExperienceV5,
   type PublicLoyaltyExperienceV1,
   type PublicLoyaltyExperienceV2,
   type PublicLoyaltyExperienceV3,
   type PublicLoyaltyExperienceV4,
+  type PublicLoyaltyExperienceV5,
 } from "@starfiniti/contracts";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
 
@@ -17,13 +19,25 @@ type ProjectionError = Readonly<{ code?: string | null }>;
 export async function getPublicLoyaltyExperience(
   workspaceId: string,
   programmeId: string,
-): Promise<PublicLoyaltyExperienceV4 | null> {
+): Promise<PublicLoyaltyExperienceV5 | null> {
   const loyalty = createPublicSupabaseClient().schema("loyalty");
+  const v5 = await loyalty.rpc("get_public_loyalty_experience_v5", {
+    target_workspace_public_id: workspaceId,
+    target_programme_public_id: programmeId,
+  });
+  if (!v5.error) return parseV5(v5.data);
+  if (!isMissingProjection(v5.error)) {
+    throw new Error("public_loyalty_read_unavailable");
+  }
+
   const v4 = await loyalty.rpc("get_public_loyalty_experience_v4", {
     target_workspace_public_id: workspaceId,
     target_programme_public_id: programmeId,
   });
-  if (!v4.error) return parseV4(v4.data);
+  if (!v4.error) {
+    const parsed = parseV4(v4.data);
+    return parsed ? normalizeV4(parsed) : null;
+  }
   if (!isMissingProjection(v4.error)) {
     throw new Error("public_loyalty_read_unavailable");
   }
@@ -34,7 +48,7 @@ export async function getPublicLoyaltyExperience(
   });
   if (!v3.error) {
     const parsed = parseV3(v3.data);
-    return parsed ? normalizeV3(parsed) : null;
+    return parsed ? normalizeV4(normalizeV3(parsed)) : null;
   }
   if (!isMissingProjection(v3.error)) {
     throw new Error("public_loyalty_read_unavailable");
@@ -46,7 +60,7 @@ export async function getPublicLoyaltyExperience(
   });
   if (!v2.error) {
     const parsed = parseV2(v2.data);
-    return parsed ? normalizeV3(normalizeV2(parsed)) : null;
+    return parsed ? normalizeV4(normalizeV3(normalizeV2(parsed))) : null;
   }
   if (!isMissingProjection(v2.error)) {
     throw new Error("public_loyalty_read_unavailable");
@@ -60,7 +74,32 @@ export async function getPublicLoyaltyExperience(
   });
   if (v1.error) throw new Error("public_loyalty_read_unavailable");
   const parsed = parseV1(v1.data);
-  return parsed ? normalizeV3(normalizeV2(normalizeV1(parsed))) : null;
+  return parsed
+    ? normalizeV4(normalizeV3(normalizeV2(normalizeV1(parsed))))
+    : null;
+}
+
+function parseV5(data: unknown): PublicLoyaltyExperienceV5 | null {
+  if (!Array.isArray(data)) throw new Error("public_loyalty_read_unavailable");
+  if (data.length === 0) return null;
+  if (data.length !== 1) throw new Error("public_loyalty_read_unavailable");
+  const row = data[0];
+  const parsed = publicLoyaltyExperienceV5.safeParse({
+    version: "5",
+    workspaceId: row.workspace_public_id,
+    programmeId: row.programme_public_id,
+    programmeGroupId: row.programme_group_public_id,
+    programmeName: row.programme_name,
+    requestedLocale: row.requested_locale,
+    resolvedLocale: row.resolved_locale,
+    presentation: row.presentation,
+    tiers: row.tiers,
+    vipCatalogue: row.vip_catalogue,
+    earningMethods: row.earning_methods,
+    rewardCatalogue: row.reward_catalogue,
+  });
+  if (!parsed.success) throw new Error("public_loyalty_read_unavailable");
+  return parsed.data;
 }
 
 function parseV4(data: unknown): PublicLoyaltyExperienceV4 | null {
@@ -264,6 +303,52 @@ function normalizeV3(
           },
         ]
       : [],
+  });
+}
+
+function normalizeV4(
+  experience: PublicLoyaltyExperienceV4,
+): PublicLoyaltyExperienceV5 {
+  const visibleRewards = experience.rewards.filter(
+    (reward) => reward.kind !== "store_credit",
+  );
+  const { rewards: _legacyRewards, ...base } = experience;
+  void _legacyRewards;
+  return publicLoyaltyExperienceV5.parse({
+    ...base,
+    version: "5",
+    rewardCatalogue: {
+      version: "1",
+      offers: visibleRewards.map((reward, index) => ({
+        code: `reward-${index + 1}`,
+        name: reward.name,
+        costPoints: reward.costPoints,
+        benefit:
+          reward.kind === "fixed_discount"
+            ? { kind: "fixed_discount", amountMinor: null }
+            : reward.kind === "percentage_discount"
+              ? { kind: "percentage_discount", percentageBasisPoints: null }
+              : reward.kind === "free_product"
+                ? { kind: "free_product", quantity: null }
+                : { kind: reward.kind },
+        currency: null,
+        delivery: "unknown",
+        validityDays: null,
+        deliveryEstimateDays: null,
+        state: "confirm_in_account",
+        startsAt: null,
+        endsAt: null,
+        conditions: {
+          minimumSpendMinor: null,
+          requiredTierNames: [],
+          hasProductOrCategoryRestrictions: false,
+          excludesSaleItems: false,
+          hasMemberLimit: false,
+          limitedAvailability: false,
+          stacking: "unknown",
+        },
+      })),
+    },
   });
 }
 

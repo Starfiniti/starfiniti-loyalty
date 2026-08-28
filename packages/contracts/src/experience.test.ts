@@ -14,6 +14,7 @@ import {
   publicLoyaltyExperienceV2,
   publicLoyaltyExperienceV3,
   publicLoyaltyExperienceV4,
+  publicLoyaltyExperienceV5,
 } from "./experience";
 
 const theme = {
@@ -48,6 +49,54 @@ const copyV2 = {
   joinLabel: "Join free",
   earnMessage: "Earn points on every eligible order.",
 };
+
+function publicV5Value() {
+  return {
+    version: "5" as const,
+    workspaceId: "a1000000-0000-4000-8000-000000000001",
+    programmeId: "a1000000-0000-4000-8000-000000000002",
+    programmeGroupId: "a1000000-0000-4000-8000-000000000003",
+    programmeName: "Rosy Rewards",
+    requestedLocale: "en" as const,
+    resolvedLocale: "en" as const,
+    presentation: { version: "2" as const, theme: themeV2, copy: copyV2 },
+    tiers: [],
+    vipCatalogue: {
+      version: "1" as const,
+      qualificationPeriod: { kind: "lifetime" as const },
+      downgradeGraceDays: 0,
+      levels: [],
+    },
+    earningMethods: [],
+    rewardCatalogue: {
+      version: "1" as const,
+      offers: [
+        {
+          code: "reward-1",
+          name: "Five euro reward",
+          costPoints: "500",
+          benefit: { kind: "fixed_discount" as const, amountMinor: "500" },
+          currency: { code: "EUR", minorUnitDigits: 2 },
+          delivery: "woocommerce_coupon" as const,
+          validityDays: 30,
+          deliveryEstimateDays: null,
+          state: "available" as const,
+          startsAt: null,
+          endsAt: "2027-12-31T23:59:59.000Z",
+          conditions: {
+            minimumSpendMinor: "2000",
+            requiredTierNames: ["Bloom"],
+            hasProductOrCategoryRestrictions: true,
+            excludesSaleItems: true,
+            hasMemberLimit: true,
+            limitedAvailability: true,
+            stacking: "exclusive" as const,
+          },
+        },
+      ],
+    },
+  };
+}
 
 describe("experience theme contracts", () => {
   it("accepts a bounded accessible token set", () => {
@@ -651,6 +700,109 @@ describe("experience theme contracts", () => {
             endsAt: "2026-01-01T00:00:00.000Z",
           },
         ],
+      }).success,
+    ).toBe(false);
+  });
+
+  it("accepts an exact guest-safe V5 reward catalogue without legacy reward rows", () => {
+    const value = publicV5Value();
+
+    expect(publicLoyaltyExperienceV5.parse(value)).toEqual(value);
+    expect(publicLoyaltyExperienceV4.safeParse(value).success).toBe(false);
+    expect("rewards" in value).toBe(false);
+  });
+
+  it("rejects private, contradictory, duplicate, and oversized V5 reward data", () => {
+    const base = publicV5Value();
+    const offer = base.rewardCatalogue.offers[0];
+
+    expect(
+      publicLoyaltyExperienceV5.safeParse({
+        ...base,
+        rewardCatalogue: {
+          ...base.rewardCatalogue,
+          offers: [{ ...offer, internalRewardId: "42" }],
+        },
+      }).success,
+    ).toBe(false);
+    expect(
+      publicLoyaltyExperienceV5.safeParse({
+        ...base,
+        rewardCatalogue: {
+          ...base.rewardCatalogue,
+          offers: [{ ...offer, delivery: "unknown" }],
+        },
+      }).success,
+    ).toBe(false);
+    expect(
+      publicLoyaltyExperienceV5.safeParse({
+        ...base,
+        rewardCatalogue: {
+          ...base.rewardCatalogue,
+          offers: [offer, offer],
+        },
+      }).success,
+    ).toBe(false);
+    expect(
+      publicLoyaltyExperienceV5.safeParse({
+        ...base,
+        rewardCatalogue: {
+          ...base.rewardCatalogue,
+          offers: [{ ...offer, delivery: "manual" }],
+        },
+      }).success,
+    ).toBe(false);
+    expect(
+      publicLoyaltyExperienceV5.safeParse({
+        ...base,
+        rewardCatalogue: {
+          ...base.rewardCatalogue,
+          offers: [{ ...offer, currency: null }],
+        },
+      }).success,
+    ).toBe(false);
+    expect(
+      publicLoyaltyExperienceV5.safeParse({
+        ...base,
+        rewardCatalogue: {
+          ...base.rewardCatalogue,
+          offers: [
+            {
+              ...offer,
+              state: "confirm_in_account",
+              startsAt: "2027-01-01T00:00:00.000Z",
+              endsAt: null,
+            },
+          ],
+        },
+      }).success,
+    ).toBe(false);
+    expect(
+      publicLoyaltyExperienceV5.safeParse({
+        ...base,
+        rewardCatalogue: {
+          ...base.rewardCatalogue,
+          offers: [
+            {
+              ...offer,
+              costPoints: "9223372036854775808",
+            },
+          ],
+        },
+      }).success,
+    ).toBe(false);
+    expect(
+      publicLoyaltyExperienceV5.safeParse({
+        ...base,
+        rewardCatalogue: {
+          ...base.rewardCatalogue,
+          offers: [
+            {
+              ...offer,
+              benefit: { kind: "store_credit", amountMinor: "500" },
+            },
+          ],
+        },
       }).success,
     ).toBe(false);
   });

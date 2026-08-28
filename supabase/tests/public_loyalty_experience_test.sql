@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(60);
+select plan(75);
 
 select has_function(
   'loyalty', 'get_public_loyalty_experience', array['uuid', 'uuid', 'text'],
@@ -126,6 +126,45 @@ select results_eq(
   array[2],
   'V4 accepts only public workspace and programme selectors'
 );
+select has_function(
+  'loyalty', 'get_public_loyalty_experience_v5', array['uuid', 'uuid'],
+  'guest-safe V5 public reward catalogue read model exists'
+);
+select ok(
+  has_function_privilege(
+    'anon', 'loyalty.get_public_loyalty_experience_v5(uuid,uuid)', 'EXECUTE'
+  ),
+  'anonymous callers can enter the bounded V5 read model'
+);
+select ok(
+  has_function_privilege(
+    'authenticated',
+    'loyalty.get_public_loyalty_experience_v5(uuid,uuid)', 'EXECUTE'
+  ),
+  'signed-in customers may enter the same V5 public projection'
+);
+select results_eq(
+  $$ select routine.prosecdef
+     from pg_proc as routine
+     join pg_namespace as namespace on namespace.oid = routine.pronamespace
+     where namespace.nspname = 'loyalty'
+       and routine.proname = 'get_public_loyalty_experience_v5'
+       and exists (
+         select 1 from unnest(routine.proconfig) as setting
+         where setting = 'search_path=""'
+       ) $$,
+  array[true],
+  'V5 public projection is security definer with an empty search path'
+);
+select results_eq(
+  $$ select routine.pronargs::integer
+     from pg_proc as routine
+     join pg_namespace as namespace on namespace.oid = routine.pronamespace
+     where namespace.nspname = 'loyalty'
+       and routine.proname = 'get_public_loyalty_experience_v5' $$,
+  array[2],
+  'V5 accepts only public workspace and programme selectors'
+);
 select ok(
   has_function_privilege('anon', 'loyalty.get_public_loyalty_experience(uuid,uuid,text)', 'EXECUTE'),
   'anonymous callers can enter only the public read model'
@@ -230,7 +269,9 @@ select
   case organization.slug when 'public-one' then '7b000000-0000-4000-8000-000000000140'::uuid
     else '7c000000-0000-4000-8000-000000000140'::uuid end,
   organization.id, programme.programme_group_id, programme.id, 1, 'published',
-  '{"version":"1","tiers":[],"rewards":[]}'::jsonb,
+  case when organization.slug = 'public-one' then
+    '{"version":"2","currencyCode":"EUR","currencyMinorUnitDigits":2,"tiers":[],"rewards":[]}'::jsonb
+  else '{"version":"1","tiers":[],"rewards":[]}'::jsonb end,
   extensions.digest('public-fixture', 'sha256'),
   case when organization.slug = 'public-one' then '7b000000-0000-4000-8000-000000000001'::uuid else null end,
   now()
@@ -268,10 +309,11 @@ select organization_id, programme_group_id, id, 'silver', 'Silver', 2, 25000, 5
 from loyalty.programme_versions where public_id = '7c000000-0000-4000-8000-000000000140';
 insert into loyalty.programme_rewards (
   organization_id, programme_group_id, programme_version_id, code, name,
-  reward_kind, cost_points
+  reward_kind, cost_points, configuration
 )
 select organization_id, programme_group_id, id, 'five-off', '€5 discount',
-  'fixed_discount', 500
+  'fixed_discount', 500,
+  '{"version":"2","fulfilmentMode":"woocommerce_coupon","validityDays":30,"amountMinor":"500","currencyMinorUnitDigits":2,"availability":{"startsAt":null,"endsAt":null,"tierCodes":["bloom"],"segmentCodes":[],"perCustomerLimit":2,"globalQuantity":"50","pointsBudget":"25000"},"restrictions":{"minimumSpendMinor":"2000","productIds":["42"],"excludedProductIds":[],"categoryIds":[],"excludedCategoryIds":[],"excludeSaleItems":true,"stacking":"combinable"}}'::jsonb
 from loyalty.programme_versions where public_id = '7b000000-0000-4000-8000-000000000140';
 insert into loyalty.programme_rewards (
   organization_id, programme_group_id, programme_version_id, code, name,
@@ -280,6 +322,14 @@ insert into loyalty.programme_rewards (
 select organization_id, programme_group_id, id, 'unsafe', '<script>reward</script>',
   'custom', 1
 from loyalty.programme_versions where public_id = '7b000000-0000-4000-8000-000000000140';
+insert into loyalty.programme_rewards (
+  organization_id, programme_group_id, programme_version_id, code, name,
+  reward_kind, cost_points, configuration
+)
+select organization_id, programme_group_id, id, 'legacy-ten-percent', 'Legacy 10% off',
+  'percentage_discount', 400,
+  '{"validityDays":30,"percentageBasisPoints":1000,"maximumDiscountMinor":null,"currencyMinorUnitDigits":2}'::jsonb
+from loyalty.programme_versions where public_id = '7c000000-0000-4000-8000-000000000140';
 insert into loyalty.programme_tier_policies (
   organization_id, programme_group_id, programme_version_id,
   qualification_period_kind, rolling_days, downgrade_grace_days
@@ -560,6 +610,186 @@ select results_eq(
   $$ values (1, 'eligible-purchases'::text, '4'::text) $$,
   'V4 synthesizes one conservative public purchase method for legacy V1'
 );
+
+reset role;
+insert into loyalty.programme_rewards (
+  organization_id, programme_group_id, programme_version_id, code, name,
+  reward_kind, cost_points, configuration
+)
+select organization_id, programme_group_id, id, 'summer-percent', 'Summer 15% off',
+  'percentage_discount', 900,
+  '{"version":"2","fulfilmentMode":"woocommerce_coupon","validityDays":14,"percentageBasisPoints":1500,"maximumDiscountMinor":null,"currencyMinorUnitDigits":2,"availability":{"startsAt":"2099-06-01T00:00:00Z","endsAt":"2099-09-01T00:00:00Z","tierCodes":[],"segmentCodes":[],"perCustomerLimit":null,"globalQuantity":null,"pointsBudget":null},"restrictions":{"minimumSpendMinor":null,"productIds":[],"excludedProductIds":[],"categoryIds":[],"excludedCategoryIds":[],"excludeSaleItems":false,"stacking":"exclusive"}}'::jsonb
+from loyalty.programme_versions where public_id = '7b000000-0000-4000-8000-000000000140';
+insert into loyalty.programme_rewards (
+  organization_id, programme_group_id, programme_version_id, code, name,
+  reward_kind, cost_points, configuration
+)
+select organization_id, programme_group_id, id, 'private-preview', 'Studio preview',
+  'exclusive_access', 1200,
+  '{"version":"2","fulfilmentMode":"manual","availability":{"startsAt":null,"endsAt":null,"tierCodes":[],"segmentCodes":[],"perCustomerLimit":1,"globalQuantity":null,"pointsBudget":null},"fulfilmentInstructions":"Internal delivery instructions must stay private.","fulfilmentSlaDays":5}'::jsonb
+from loyalty.programme_versions where public_id = '7b000000-0000-4000-8000-000000000140';
+insert into loyalty.programme_rewards (
+  organization_id, programme_group_id, programme_version_id, code, name,
+  reward_kind, cost_points, configuration
+)
+select organization_id, programme_group_id, id, 'credit', 'Store balance',
+  'store_credit', 300, '{}'::jsonb
+from loyalty.programme_versions where public_id = '7b000000-0000-4000-8000-000000000140';
+insert into loyalty.programme_rewards (
+  organization_id, programme_group_id, programme_version_id, code, name,
+  reward_kind, cost_points, configuration
+)
+select organization_id, programme_group_id, id, 'expired-shipping', 'Expired shipping',
+  'free_shipping', 250,
+  '{"version":"2","fulfilmentMode":"woocommerce_coupon","validityDays":30,"availability":{"startsAt":null,"endsAt":"2000-01-01T00:00:00Z","tierCodes":[],"segmentCodes":[],"perCustomerLimit":null,"globalQuantity":null,"pointsBudget":null},"restrictions":{"minimumSpendMinor":null,"productIds":[],"excludedProductIds":[],"categoryIds":[],"excludedCategoryIds":[],"excludeSaleItems":false,"stacking":"exclusive"}}'::jsonb
+from loyalty.programme_versions where public_id = '7b000000-0000-4000-8000-000000000140';
+insert into loyalty.programme_rewards (
+  organization_id, programme_group_id, programme_version_id, code, name,
+  reward_kind, cost_points, configuration
+)
+select organization_id, programme_group_id, id, 'invalid-product', 'Invalid product',
+  'free_product', 700,
+  '{"version":"2","fulfilmentMode":"woocommerce_coupon","validityDays":30,"productId":"42","quantity":99,"availability":{"startsAt":null,"endsAt":null,"tierCodes":[],"segmentCodes":[],"perCustomerLimit":null,"globalQuantity":null,"pointsBudget":null},"restrictions":{"minimumSpendMinor":null,"productIds":[],"excludedProductIds":[],"categoryIds":[],"excludedCategoryIds":[],"excludeSaleItems":false,"stacking":"exclusive"}}'::jsonb
+from loyalty.programme_versions where public_id = '7b000000-0000-4000-8000-000000000140';
+insert into loyalty.programme_rewards (
+  organization_id, programme_group_id, programme_version_id, code, name,
+  reward_kind, cost_points, configuration
+)
+select organization_id, programme_group_id, id, 'wrong-scale', 'Wrong currency scale',
+  'fixed_discount', 500,
+  '{"version":"2","fulfilmentMode":"woocommerce_coupon","validityDays":30,"amountMinor":"500","currencyMinorUnitDigits":3,"availability":{"startsAt":null,"endsAt":null,"tierCodes":[],"segmentCodes":[],"perCustomerLimit":null,"globalQuantity":null,"pointsBudget":null},"restrictions":{"minimumSpendMinor":null,"productIds":[],"excludedProductIds":[],"categoryIds":[],"excludedCategoryIds":[],"excludeSaleItems":false,"stacking":"exclusive"}}'::jsonb
+from loyalty.programme_versions where public_id = '7b000000-0000-4000-8000-000000000140';
+insert into loyalty.programme_rewards (
+  organization_id, programme_group_id, programme_version_id, code, name,
+  reward_kind, cost_points, configuration
+)
+select organization_id, programme_group_id, id, 'duplicate-tiers', 'Duplicate tier condition',
+  'free_shipping', 600,
+  '{"version":"2","fulfilmentMode":"woocommerce_coupon","validityDays":30,"availability":{"startsAt":null,"endsAt":null,"tierCodes":["bloom","bloom"],"segmentCodes":[],"perCustomerLimit":null,"globalQuantity":null,"pointsBudget":null},"restrictions":{"minimumSpendMinor":null,"productIds":[],"excludedProductIds":[],"categoryIds":[],"excludedCategoryIds":[],"excludeSaleItems":false,"stacking":"exclusive"}}'::jsonb
+from loyalty.programme_versions where public_id = '7b000000-0000-4000-8000-000000000140';
+insert into loyalty.programme_rewards (
+  organization_id, programme_group_id, programme_version_id, code, name,
+  reward_kind, cost_points, configuration
+)
+select organization_id, programme_group_id, id, 'missing-cap-evidence', 'Missing maximum evidence',
+  'percentage_discount', 800,
+  '{"version":"2","fulfilmentMode":"woocommerce_coupon","validityDays":30,"percentageBasisPoints":1000,"currencyMinorUnitDigits":2,"availability":{"startsAt":null,"endsAt":null,"tierCodes":[],"segmentCodes":[],"perCustomerLimit":null,"globalQuantity":null,"pointsBudget":null},"restrictions":{"minimumSpendMinor":null,"productIds":[],"excludedProductIds":[],"categoryIds":[],"excludedCategoryIds":[],"excludeSaleItems":false,"stacking":"exclusive"}}'::jsonb
+from loyalty.programme_versions where public_id = '7b000000-0000-4000-8000-000000000140';
+set local role anon;
+
+select results_eq(
+  $$ select
+       reward_catalogue ->> 'version',
+       pg_catalog.jsonb_array_length(reward_catalogue -> 'offers'),
+       reward_catalogue #>> '{offers,0,code}',
+       reward_catalogue #>> '{offers,0,name}',
+       reward_catalogue #>> '{offers,0,costPoints}',
+       reward_catalogue #>> '{offers,0,benefit,kind}',
+       reward_catalogue #>> '{offers,1,name}',
+       reward_catalogue #>> '{offers,2,name}'
+     from loyalty.get_public_loyalty_experience_v5(
+       '7b000000-0000-4000-8000-000000000110',
+       '7b000000-0000-4000-8000-000000000130') $$,
+  $$ values (
+    '1'::text, 3, 'reward-1'::text, '€5 discount'::text, '500'::text,
+    'fixed_discount'::text, 'Summer 15% off'::text, 'Studio preview'::text
+  ) $$,
+  'V5 returns the safe published reward catalogue in stable order'
+);
+select results_eq(
+  $$ select
+       reward_catalogue #>> '{offers,0,benefit,amountMinor}',
+       reward_catalogue #>> '{offers,0,currency,code}',
+       (reward_catalogue #>> '{offers,0,currency,minorUnitDigits}')::integer,
+       (reward_catalogue #>> '{offers,0,validityDays}')::integer,
+       reward_catalogue #>> '{offers,0,conditions,minimumSpendMinor}',
+       reward_catalogue #> '{offers,0,conditions,requiredTierNames}',
+       (reward_catalogue #>> '{offers,0,conditions,hasProductOrCategoryRestrictions}')::boolean,
+       (reward_catalogue #>> '{offers,0,conditions,excludesSaleItems}')::boolean,
+       (reward_catalogue #>> '{offers,0,conditions,hasMemberLimit}')::boolean,
+       (reward_catalogue #>> '{offers,0,conditions,limitedAvailability}')::boolean,
+       reward_catalogue #>> '{offers,0,conditions,stacking}'
+     from loyalty.get_public_loyalty_experience_v5(
+       '7b000000-0000-4000-8000-000000000110',
+       '7b000000-0000-4000-8000-000000000130') $$,
+  $$ values (
+    '500'::text, 'EUR'::text, 2, 30, '2000'::text, '["Bloom"]'::jsonb,
+    true, true, true, true, 'combinable'::text
+  ) $$,
+  'V5 exposes exact customer-relevant fixed benefit and summarized conditions'
+);
+select results_eq(
+  $$ select
+       reward_catalogue #>> '{offers,1,benefit,percentageBasisPoints}',
+       reward_catalogue #>> '{offers,1,state}',
+       reward_catalogue #>> '{offers,1,startsAt}',
+       reward_catalogue #>> '{offers,1,endsAt}',
+       reward_catalogue #>> '{offers,1,delivery}',
+       reward_catalogue #>> '{offers,1,conditions,stacking}'
+     from loyalty.get_public_loyalty_experience_v5(
+       '7b000000-0000-4000-8000-000000000110',
+       '7b000000-0000-4000-8000-000000000130') $$,
+  $$ values (
+    '1500'::text, 'scheduled'::text, '2099-06-01T00:00:00+00:00'::text,
+    '2099-09-01T00:00:00+00:00'::text, 'woocommerce_coupon'::text,
+    'exclusive'::text
+  ) $$,
+  'V5 distinguishes scheduled native rewards and exact checkout behavior'
+);
+select results_eq(
+  $$ select
+       reward_catalogue #>> '{offers,2,benefit,kind}',
+       reward_catalogue #>> '{offers,2,delivery}',
+       (reward_catalogue #>> '{offers,2,deliveryEstimateDays}')::integer,
+       reward_catalogue #>> '{offers,2,conditions,stacking}',
+       (reward_catalogue #>> '{offers,2,conditions,hasMemberLimit}')::boolean
+     from loyalty.get_public_loyalty_experience_v5(
+       '7b000000-0000-4000-8000-000000000110',
+       '7b000000-0000-4000-8000-000000000130') $$,
+  $$ values ('exclusive_access'::text, 'manual'::text, 5,
+             'not_applicable'::text, true) $$,
+  'V5 presents manual rewards without exposing fulfilment instructions'
+);
+select results_eq(
+  $$ select
+       reward_catalogue::text !~
+         '(five-off|summer-percent|private-preview|fulfilmentInstructions|Internal delivery|productIds|categoryIds|perCustomerLimit|globalQuantity|pointsBudget|programmeVersion|organization)',
+       not (reward_catalogue -> 'offers' -> 0 ? 'configuration'),
+       not (reward_catalogue -> 'offers' -> 0 ? 'publicId')
+     from loyalty.get_public_loyalty_experience_v5(
+       '7b000000-0000-4000-8000-000000000110',
+       '7b000000-0000-4000-8000-000000000130') $$,
+  $$ values (true, true, true) $$,
+  'V5 omits internal codes, selectors, instructions, exact limits, budgets, and identifiers'
+);
+select results_eq(
+  $$ select reward_catalogue::text !~
+       '(Store balance|Expired shipping|Invalid product|Wrong currency scale|Duplicate tier condition|Missing maximum evidence|script|store_credit)'
+     from loyalty.get_public_loyalty_experience_v5(
+       '7b000000-0000-4000-8000-000000000110',
+       '7b000000-0000-4000-8000-000000000130') $$,
+  $$ values (true) $$,
+  'V5 excludes unsupported stored value, ended, malformed, and unsafe rewards'
+);
+select results_eq(
+  $$ select
+       reward_catalogue #>> '{offers,0,code}',
+       reward_catalogue #>> '{offers,0,name}',
+       reward_catalogue #>> '{offers,0,benefit,kind}',
+       reward_catalogue #>> '{offers,0,benefit,percentageBasisPoints}',
+       reward_catalogue #>> '{offers,0,state}',
+       reward_catalogue #>> '{offers,0,delivery}',
+       reward_catalogue #> '{offers,0,currency}'
+     from loyalty.get_public_loyalty_experience_v5(
+       '7c000000-0000-4000-8000-000000000110',
+       '7c000000-0000-4000-8000-000000000130') $$,
+  $$ values (
+    'reward-1'::text, 'Legacy 10% off'::text, 'percentage_discount'::text,
+    '1000'::text, 'confirm_in_account'::text, 'woocommerce_coupon'::text,
+    'null'::jsonb
+  ) $$,
+  'V5 retains a conservative no-schedule compatibility offer for valid legacy rewards'
+);
 select results_eq(
   $$ select tiers from loyalty.get_public_loyalty_experience(
        '7b000000-0000-4000-8000-000000000110',
@@ -617,6 +847,13 @@ select results_eq(
   'V4 mixed-tenant selectors fail closed'
 );
 select results_eq(
+  $$ select count(*)::bigint from loyalty.get_public_loyalty_experience_v5(
+       '7c000000-0000-4000-8000-000000000110',
+       '7b000000-0000-4000-8000-000000000130') $$,
+  array[0::bigint],
+  'V5 mixed-tenant selectors fail closed'
+);
+select results_eq(
   $$ select count(*)::bigint from loyalty.get_public_loyalty_experience(
        '00000000-0000-4000-8000-000000000000',
        '7b000000-0000-4000-8000-000000000130', 'en') $$,
@@ -655,6 +892,13 @@ select results_eq(
        '7b000000-0000-4000-8000-000000000130') $$,
   array[0::bigint],
   'suspended workspace removes the V4 public document'
+);
+select results_eq(
+  $$ select count(*)::bigint from loyalty.get_public_loyalty_experience_v5(
+       '7b000000-0000-4000-8000-000000000110',
+       '7b000000-0000-4000-8000-000000000130') $$,
+  array[0::bigint],
+  'suspended workspace removes the V5 public document'
 );
 reset role;
 update loyalty.workspaces set status = 'active'
@@ -695,6 +939,13 @@ select results_eq(
        '7b000000-0000-4000-8000-000000000130') $$,
   array[0::bigint],
   'absence of a published version removes the V4 public document'
+);
+select results_eq(
+  $$ select count(*)::bigint from loyalty.get_public_loyalty_experience_v5(
+       '7b000000-0000-4000-8000-000000000110',
+       '7b000000-0000-4000-8000-000000000130') $$,
+  array[0::bigint],
+  'absence of a published version removes the V5 public document'
 );
 
 reset role;

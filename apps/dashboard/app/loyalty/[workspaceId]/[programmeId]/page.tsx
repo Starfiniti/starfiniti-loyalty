@@ -2,12 +2,14 @@ import type {
   ExperienceHeroAssetV2,
   ExperienceSectionV2,
   PublicEarningSourceV1,
-  PublicLoyaltyExperienceV4,
+  PublicLoyaltyExperienceV5,
+  PublicRewardBenefitV1,
 } from "@starfiniti/contracts";
 import type { Metadata } from "next";
 import type { LucideIcon } from "lucide-react";
 import {
   ArrowRight,
+  BadgePercent,
   CakeSlice,
   Check,
   CircleUserRound,
@@ -18,13 +20,17 @@ import {
   History,
   KeyRound,
   MessageSquareCheck,
+  PackageOpen,
   RefreshCw,
   ShieldAlert,
   ShieldCheck,
   ShoppingBag,
   Sparkles,
   Star,
+  TicketCheck,
+  Truck,
   UserPlus,
+  WandSparkles,
   Zap,
 } from "lucide-react";
 import type { CSSProperties } from "react";
@@ -37,10 +43,14 @@ import {
   formatPublicEarningEffect,
   formatPublicEarningSource,
   formatPublicEarningWindow,
+  formatPublicRewardBenefit,
+  formatPublicRewardDelivery,
+  formatPublicRewardWindow,
   formatPublicVipPeriod,
   formatPublicVipThreshold,
   isPublicId,
   PUBLIC_LOYALTY_ACCOUNT_PATH,
+  publicRewardConditionLabels,
 } from "@/lib/public-loyalty";
 import { getPublicLoyaltyExperience } from "@/lib/server/public-loyalty";
 
@@ -78,11 +88,21 @@ const earningIcons: Readonly<Record<PublicEarningSourceV1, LucideIcon>> = {
   referral: HeartHandshake,
 };
 
+const rewardIcons: Readonly<Record<PublicRewardBenefitV1["kind"], LucideIcon>> =
+  {
+    fixed_discount: TicketCheck,
+    percentage_discount: BadgePercent,
+    free_shipping: Truck,
+    free_product: PackageOpen,
+    exclusive_access: Star,
+    custom: WandSparkles,
+  };
+
 export default async function PublicLoyaltyPage({ params }: PageProps) {
   const { workspaceId, programmeId } = await params;
   if (!isPublicId(workspaceId) || !isPublicId(programmeId)) notFound();
 
-  let experience: PublicLoyaltyExperienceV4 | null;
+  let experience: PublicLoyaltyExperienceV5 | null;
   try {
     experience = await getPublicLoyaltyExperience(workspaceId, programmeId);
   } catch {
@@ -106,7 +126,7 @@ export default async function PublicLoyaltyPage({ params }: PageProps) {
 
   return (
     <main
-      className={`public-loyalty-page public-loyalty-v2 public-loyalty-v3 public-loyalty-v4 ${theme.density}`}
+      className={`public-loyalty-page public-loyalty-v2 public-loyalty-v3 public-loyalty-v4 public-loyalty-v5 ${theme.density}`}
       id="main-content"
       lang="en"
       style={style}
@@ -180,7 +200,7 @@ function PublicSection({
   index,
   section,
 }: Readonly<{
-  experience: PublicLoyaltyExperienceV4;
+  experience: PublicLoyaltyExperienceV5;
   index: number;
   section: ExperienceSectionV2;
 }>) {
@@ -280,23 +300,89 @@ function PublicSection({
     );
   }
   if (section === "rewards") {
+    const offers = experience.rewardCatalogue.offers;
     return (
       <section className="public-loyalty-section" id="rewards">
         <PublicHeading index={index} title={copy.rewardsLabel} />
-        {experience.rewards.length ? (
-          <div className="public-loyalty-cards">
-            {experience.rewards.map((reward) => (
-              <article key={reward.code}>
-                <small>{copy.redeemLabel}</small>
-                <h3>{reward.name}</h3>
-                <strong>
-                  {formatPublicPoints(reward.costPoints, "en")} points
-                </strong>
-              </article>
-            ))}
+        {offers.length ? (
+          <div className="public-reward-catalogue">
+            <header>
+              <div>
+                <small>Published rewards</small>
+                <p>
+                  Choose a benefit to work toward. Your account confirms
+                  eligibility and available points before redemption.
+                </p>
+              </div>
+              <Link href={PUBLIC_LOYALTY_ACCOUNT_PATH}>
+                Check my balance <ArrowRight aria-hidden="true" />
+              </Link>
+            </header>
+            <ol className="public-reward-offers">
+              {offers.map((offer) => {
+                const RewardIcon = rewardIcons[offer.benefit.kind];
+                const conditions = publicRewardConditionLabels(offer, "en");
+                return (
+                  <li key={offer.code}>
+                    <article>
+                      <header>
+                        <span className="public-reward-icon" aria-hidden="true">
+                          <RewardIcon />
+                        </span>
+                        <span className={`public-reward-status ${offer.state}`}>
+                          {offer.state === "available"
+                            ? "Available"
+                            : offer.state === "scheduled"
+                              ? "Coming soon"
+                              : "Confirm in account"}
+                        </span>
+                      </header>
+                      <div className="public-reward-copy">
+                        <small>{formatPublicRewardBenefit(offer, "en")}</small>
+                        <h3>{offer.name}</h3>
+                        <strong>
+                          {formatPublicPoints(offer.costPoints, "en")}
+                          <span> points</span>
+                        </strong>
+                      </div>
+                      <p className="public-reward-window">
+                        <Clock3 aria-hidden="true" />
+                        {formatPublicRewardWindow(offer, "en")}
+                      </p>
+                      {conditions.length ? (
+                        <ul className="public-reward-conditions">
+                          {conditions.map((condition) => (
+                            <li key={condition}>
+                              <Check aria-hidden="true" /> {condition}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="public-reward-simple">
+                          <ShieldCheck aria-hidden="true" /> No public
+                          conditions listed
+                        </p>
+                      )}
+                      <footer>
+                        <span>{formatPublicRewardDelivery(offer)}</span>
+                        <Link href={PUBLIC_LOYALTY_ACCOUNT_PATH}>
+                          {offer.state === "available"
+                            ? copy.redeemLabel
+                            : "View details"}{" "}
+                          <ArrowRight aria-hidden="true" />
+                        </Link>
+                      </footer>
+                    </article>
+                  </li>
+                );
+              })}
+            </ol>
           </div>
         ) : (
-          <PublicEmpty icon={Gift} text="New rewards are being prepared." />
+          <PublicEmpty
+            icon={Gift}
+            text="No public rewards are listed for this programme. Sign in to check account-specific benefits."
+          />
         )}
       </section>
     );

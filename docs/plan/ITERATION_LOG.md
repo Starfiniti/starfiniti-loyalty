@@ -1,5 +1,15 @@
 # Iteration Log
 
+## 2026-08-28 — Guest-safe public reward catalogue
+
+- Reconstructed the hosted reward path and found that legacy cards exposed only name, broad kind, and point cost even though immutable `RewardDefinitionV2` rows already support six non-cash benefits, schedules, public restrictions, tier access, limited capacity, native coupons, and audited manual fulfilment.
+- Compared retaining legacy cards, sending raw reward configuration, and a database-derived minimized version. ADR-0076 selects additive V5: PostgreSQL re-derives active tenant and immutable published version, constructs stable public offer codes, exposes only reviewed customer-relevant benefit, currency, timing, delivery, and summarized condition facts, and omits selectors, instructions, exact limits/budgets, internal codes/IDs, segment/customer state, audit, and ledger data. Store credit remains excluded.
+- Added strict contracts and missing-function-only V4/V3/V2/V1 compatibility. Unknown fields, duplicate offer codes, inconsistent schedules or delivery, exact money without currency evidence, oversized integers, malformed/duplicate rows, and provider errors fail closed. Legacy rewards normalize conservatively without inventing exact values, schedules, or fulfilment and without stored value.
+- Replaced legacy cards with a responsive editorial catalogue using benefit-specific Lucide icons, exact `BigInt`-safe money and point formatting, available/scheduled state, public windows, condition chips, validity or delivery expectation, and honest same-origin account actions. Accessibility guards prevent restoration of legacy or placeholder reward cards.
+- Focused reduced-motion browser review of the actual route at 1512×982 and 390×844 passed six supported benefit presentations, native/manual delivery, one H1, same-origin actions, 44-pixel mobile reward links, no duplicate IDs, zero horizontal overflow, and zero browser diagnostics. Desktop and mobile captures are retained under M09 evidence.
+- The first focused test run exposed that Zod cannot omit fields from an already refined object. V5 now owns a strict independent object shape and explicitly reuses the VIP and earning invariants; the regression suite proves V4 and V5 remain mutually strict. A second hardening pass requires reward/programme currency-scale agreement and rejects duplicate tier selectors before public projection.
+- Focused contract, server, presentation, type, accessibility, migration, and pgTAP static checks pass. Exact clean-database replay and repository CI/security evidence remain pending; production, customer value, programme evaluation, WooCommerce, checkout, and M09's 88/100 canary state remain unchanged.
+
 ## 2026-08-28 — Guest-safe public earning catalogue
 
 - Reconstructed the hosted earning path and found that a single generic “Eligible store activity” card hid the six versioned earning sources and exact published effects already supported by the platform. It could also imply purchase earning where a V2 programme published only private custom rules.

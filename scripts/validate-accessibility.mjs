@@ -49,8 +49,10 @@ for (const required of [
   /\.public-loyalty-v2 :where\(a, button\):focus-visible/u,
   /\.public-vip-levels/u,
   /\.public-earning-methods/u,
+  /\.public-reward-offers/u,
   /@media \(max-width: 420px\)[\s\S]*?\.public-vip-levels > li/u,
   /@media \(max-width: 420px\)[\s\S]*?\.public-earning-methods article > header/u,
+  /@media \(max-width: 420px\)[\s\S]*?\.public-reward-offers article > footer/u,
   /html\[data-dashboard-theme="dark"\][\s\S]*?\.experience-editor-v2[\s\S]*?\.experience-fields[\s\S]*?select,/u,
   /html\[data-dashboard-theme="dark"\][\s\S]*?\.experience-editor-v2[\s\S]*?\.experience-visibility-grid[\s\S]*?label[\s\S]*?strong,/u,
   /html\[data-dashboard-theme="dark"\][\s\S]*?\.experience-preview-v2[\s\S]*?\.experience-preview-toolbar[\s\S]*?button\[aria-pressed="true"\]/u,
@@ -86,10 +88,14 @@ const publicExperience = readFileSync(
 for (const required of [
   /public-loyalty-v3/u,
   /public-loyalty-v4/u,
+  /public-loyalty-v5/u,
   /catalogue\.levels\.map/u,
   /experience\.earningMethods\.map/u,
+  /experience\.rewardCatalogue\.offers/u,
   /formatPublicEarningEffect/u,
   /formatPublicEarningWindow/u,
+  /formatPublicRewardBenefit/u,
+  /formatPublicRewardWindow/u,
   /formatPublicVipThreshold/u,
   /aria-label="Tier benefits"/u,
 ]) {
@@ -105,6 +111,14 @@ if (/VIP milestones are coming soon/u.test(publicExperience)) {
 if (/<h3>Eligible store activity<\/h3>/u.test(publicExperience)) {
   throw new Error(
     "The public earning section must render exact published methods, not generic placeholder copy.",
+  );
+}
+if (
+  /experience\.rewards\.map/u.test(publicExperience) ||
+  /New rewards are being prepared/u.test(publicExperience)
+) {
+  throw new Error(
+    "The public reward section must render the minimized published catalogue, not legacy or placeholder cards.",
   );
 }
 
