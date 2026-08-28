@@ -1,0 +1,19 @@
+#!/bin/sh
+set -eu
+umask 077
+
+test "$(id -u)" -eq 0
+. /etc/os-release
+test "$ID" = debian
+test "$VERSION_ID" = 13
+test "$(dpkg --print-architecture)" = amd64
+test -f /output/manifest.tsv
+test ! -L /output/manifest.tsv
+test ! -e /output/facts.tsv
+
+apt-get update
+DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends \
+  ca-certificates curl gnupg python3
+apt-get clean
+
+exec python3 /workspace/verify.py

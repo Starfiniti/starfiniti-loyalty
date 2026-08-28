@@ -152,7 +152,7 @@ jobs:
 
   recovery-transport:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
@@ -163,6 +163,12 @@ jobs:
         run: npm ci
       - name: Validate exact recovery transport plan
         run: npm run recovery-transport:validate
+      - name: Validate exact Proxmox package provenance plan
+        run: npm run proxmox-security:packages:validate
+      - name: Run disposable no-install Proxmox package provenance canary
+        env:
+          STARFINITI_CANARY_RUNNER: github-hosted
+        run: npm run proxmox-security:packages:run -- --out dist/proxmox-security-packages/ci.json
       - name: Run isolated disposable recovery transport canary
         run: npm run recovery-transport:run -- --out dist/recovery-transport/ci.json
       - name: Upload minimized recovery transport evidence
@@ -171,6 +177,14 @@ jobs:
         with:
           name: security-recovery-transport-${{ github.sha }}
           path: dist/recovery-transport/ci.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload minimized Proxmox package provenance evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: security-proxmox-packages-${{ github.sha }}
+          path: dist/proxmox-security-packages/ci.json
           if-no-files-found: error
           retention-days: 30
 

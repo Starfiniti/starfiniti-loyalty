@@ -614,8 +614,19 @@ requireCondition(
       (step) =>
         step.run ===
         "npm run recovery-transport:run -- --out dist/recovery-transport/ci.json",
+    ) &&
+    recoveryTransportSteps.some(
+      (step) => step.run === "npm run proxmox-security:packages:validate",
+    ) &&
+    recoveryTransportSteps.some(
+      (step) =>
+        step.name ===
+          "Run disposable no-install Proxmox package provenance canary" &&
+        step.env?.STARFINITI_CANARY_RUNNER === "github-hosted" &&
+        step.run ===
+          "npm run proxmox-security:packages:run -- --out dist/proxmox-security-packages/ci.json",
     ),
-  `${securityWorkflowPath}: recovery transport must validate and execute the exact repository plan`,
+  `${securityWorkflowPath}: recovery transport and Proxmox package provenance must validate and execute their exact disposable plans`,
 );
 requireCondition(
   recoveryTransportSteps.some(
@@ -630,6 +641,20 @@ requireCondition(
       step.with?.["retention-days"] === 30,
   ),
   `${securityWorkflowPath}: minimized exact-head recovery transport evidence must upload or fail`,
+);
+requireCondition(
+  recoveryTransportSteps.some(
+    (step) =>
+      step.name === "Upload minimized Proxmox package provenance evidence" &&
+      step.if === "always()" &&
+      step.uses ===
+        "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a" &&
+      step.with?.name === "security-proxmox-packages-${{ github.sha }}" &&
+      step.with?.path === "dist/proxmox-security-packages/ci.json" &&
+      step.with?.["if-no-files-found"] === "error" &&
+      step.with?.["retention-days"] === 30,
+  ),
+  `${securityWorkflowPath}: minimized exact-head Proxmox package provenance evidence must upload or fail`,
 );
 requireCondition(
   !recoveryTransportText.includes("--publish") &&

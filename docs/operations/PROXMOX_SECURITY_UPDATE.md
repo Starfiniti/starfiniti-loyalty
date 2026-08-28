@@ -10,9 +10,12 @@ decisions. Repository validation authorizes none of those production actions.
 - The candidate is exactly twelve packages: eleven upgrades, one signed kernel
   install, no removals, and 165,341,024 package bytes.
 - `npm run proxmox-security:update:validate` proves the repository contract only.
-- Package-byte verification, repository-signature reverification,
-  compatibility, rollback escrow, recovery readiness, maintenance approval,
-  reboot approval, and production mutation are all false.
+- The repository contains a disposable independent package-byte and
+  repository-signature canary, but its exact-head networked artifact must pass
+  before those two candidate evidence fields can advance. Compatibility,
+  dependency simulation, installed-state preflight, rollback escrow, recovery
+  readiness, maintenance approval, reboot approval, and production mutation
+  remain false.
 - The configured `pve-no-subscription` repository is not Proxmox's recommended
   production repository. The owner must explicitly decide whether to procure and
   use the enterprise repository or accept a newly regenerated candidate from the
@@ -27,10 +30,13 @@ the repository. Record only the minimized package/version/digest, timestamps,
 approvals, check outcomes, and unexplained differences required by the evidence
 schema.
 
-Stop if the host's installed starting versions, repository identities, repository
-metadata, dependency solution, package bytes, removal count, or retained recovery
-packages differ from the V1 plan. Drift requires a new plan and review; do not
-edit V1 in place.
+Stop if the host's installed starting versions, repository identities,
+dependency solution, package bytes, removal count, or retained recovery packages
+differ from the V1 plan. Signed repository documents may rotate and must be
+recorded separately from the V1 observation; rotation is acceptable only when
+the disposable canary still proves the complete fresh signed chain for every
+exact package and the production preflight still resolves the exact V1 action
+set. Any other drift requires a new plan and review; do not edit V1 in place.
 
 ## Phase 1 — Repository-only validation
 
@@ -38,12 +44,22 @@ From a clean candidate checkout:
 
 ```sh
 npm run proxmox-security:update:validate
+npm run proxmox-security:packages:validate
 npm run recovery-transport:validate
 npm run recovery:validate
 ```
 
 Expected result: five advisories, twelve repair packages, four retained recovery
-packages, all adversarial cases passing, and production mutation false.
+packages, a candidate-bound disposable canary contract, all adversarial cases
+passing, and production mutation false. Local validation performs no network
+request or package download.
+
+The networked canary runs only on its GitHub-hosted disposable Security job. It
+independently authenticates every fresh `InRelease`, binds each uncompressed
+package index to the signed Release payload, proves all twelve APT-selected and
+exact-URL package copies are identical to the V1 fields, installs none of them,
+deletes their bytes, and emits minimized JSON. A pass advances only package-byte
+and signature evidence; it is not a production preflight or approval.
 
 ## Phase 2 — Production preflight (read-only unless separately approved)
 

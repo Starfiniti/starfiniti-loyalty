@@ -9,7 +9,7 @@ import {
   readFileSync,
   readSync,
 } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import YAML from "yaml";
@@ -558,12 +558,16 @@ function selfTest(plan) {
   );
 }
 
-const plan = YAML.parse(readFileSync(planPath, "utf8"));
-if (process.argv.includes("--print-provenance")) {
-  const result = validatePlan(plan, { allowPlaceholder: true });
-  process.stdout.write(`${result.candidateProvenanceSha256}\n`);
-} else if (process.argv.includes("--self-test")) {
-  selfTest(plan);
-} else {
-  fail("usage: --self-test | --print-provenance");
+if (
+  resolve(process.argv[1] ?? "") === resolve(fileURLToPath(import.meta.url))
+) {
+  const plan = YAML.parse(readFileSync(planPath, "utf8"));
+  if (process.argv.includes("--print-provenance")) {
+    const result = validatePlan(plan, { allowPlaceholder: true });
+    process.stdout.write(`${result.candidateProvenanceSha256}\n`);
+  } else if (process.argv.includes("--self-test")) {
+    selfTest(plan);
+  } else {
+    fail("usage: --self-test | --print-provenance");
+  }
 }
