@@ -40,7 +40,7 @@ cd /work/extract-candidate-current
 cmp /work/source/current.txt /work/extract-candidate-current/work/source/current.txt
 printf 'candidate-client\n' > /work/source/candidate.txt
 "$candidate_borg" create --remote-path borg "$current_repo::from-1.4.5" /work/source
-"$candidate_borg" prune --dry-run --keep-within 48h --glob-archives 'from-*' --remote-path borg "$current_repo"
+"$candidate_borg" prune --dry-run --keep-within 2d --glob-archives 'from-*' --remote-path borg "$current_repo"
 "$candidate_borg" compact --remote-path borg "$current_repo"
 
 cd /work/extract-current

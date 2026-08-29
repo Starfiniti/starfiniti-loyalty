@@ -675,7 +675,7 @@ function validateImplementation(files) {
       'export BORG_RSH="$fake_ssh"',
       "BORG_RELOCATED_REPO_ACCESS_IS_OK=no",
       "check --repository-only --max-duration 30",
-      "prune --dry-run --keep-within 48h",
+      "prune --dry-run --keep-within 2d",
       '"$candidate_borg" compact',
       '"$candidate_borg" extract --remote-path borg',
       '"$current_borg" extract --remote-path /opt/starfiniti/borg/1.4.5/borg-dir/borg.exe',
