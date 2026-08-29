@@ -168,6 +168,20 @@ function sarifSeverity(result, rule) {
   return "unknown";
 }
 
+function codeqlVersion(driver) {
+  const declared = [driver?.version, driver?.semanticVersion].filter(
+    (value) => typeof value === "string" && value.length,
+  );
+  if (!declared.length || new Set(declared).size !== 1) {
+    fail("CodeQL tool version is absent or inconsistent");
+  }
+  const [version] = declared;
+  if (!/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/u.test(version)) {
+    fail("CodeQL tool version is malformed");
+  }
+  return version;
+}
+
 function findingScope(result) {
   const scopes = new Set();
   for (const location of result?.locations ?? []) {
@@ -232,10 +246,7 @@ export function summarizeCodeql({ input, candidateCommit, analysisCommit }) {
       if (!/codeql/iu.test(String(driver?.name ?? ""))) {
         fail("SARIF tool is not CodeQL");
       }
-      if (typeof driver.version !== "string" || !driver.version.length) {
-        fail("CodeQL tool version is absent");
-      }
-      toolVersions.add(driver.version);
+      toolVersions.add(codeqlVersion(driver));
       const rules = new Map(
         (driver.rules ?? []).map((rule, index) => [rule.id ?? index, rule]),
       );
@@ -323,7 +334,8 @@ export function summarizeRepository({
   const { raw, document } = readJson(input);
   if (
     document?.SchemaVersion !== 2 ||
-    document.ArtifactType !== "filesystem" ||
+    document?.Trivy?.Version !== "0.74.0" ||
+    !["filesystem", "repository"].includes(document.ArtifactType) ||
     !Array.isArray(document.Results)
   ) {
     fail("repository Trivy report identity is invalid");
@@ -343,6 +355,9 @@ export function summarizeRepository({
     candidateCommit,
     analysisCommit,
     createdAt: document.CreatedAt,
+    artifactType: document.ArtifactType,
+    tool: "Trivy",
+    toolVersion: document.Trivy.Version,
     sourceSha256: sha256(raw),
     findings: counts,
     categories: categoryCounts,
@@ -442,7 +457,7 @@ function runSelfTest() {
           tool: {
             driver: {
               name: "CodeQL",
-              version: "2.26.4",
+              semanticVersion: "2.26.4",
               rules: [
                 {
                   id: "js/example",
@@ -479,6 +494,20 @@ function runSelfTest() {
     ) {
       fail("self-test CodeQL summary did not preserve the finding");
     }
+    sarif.runs[0].tool.driver.version = "2.26.3";
+    writeFileSync(join(sarifDirectory, "result.sarif"), JSON.stringify(sarif));
+    try {
+      summarizeCodeql({
+        input: sarifDirectory,
+        candidateCommit,
+        analysisCommit,
+      });
+      fail("self-test accepted inconsistent CodeQL versions");
+    } catch (error) {
+      if (!String(error?.message).includes("absent or inconsistent"))
+        throw error;
+    }
+    delete sarif.runs[0].tool.driver.version;
     sarif.runs[0].tool.driver.rules[0].properties["security-severity"] = "8.1";
     writeFileSync(join(sarifDirectory, "result.sarif"), JSON.stringify(sarif));
     try {
@@ -495,8 +524,9 @@ function runSelfTest() {
     const repositoryPath = join(temporary, "repository.json");
     const repository = {
       SchemaVersion: 2,
+      Trivy: { Version: "0.74.0" },
       CreatedAt: "2026-08-29T10:00:00Z",
-      ArtifactType: "filesystem",
+      ArtifactType: "repository",
       Results: [],
     };
     writeFileSync(repositoryPath, JSON.stringify(repository));
@@ -505,7 +535,11 @@ function runSelfTest() {
       candidateCommit,
       analysisCommit,
     });
-    if (repositorySummary.findings.total !== 0) {
+    if (
+      repositorySummary.findings.total !== 0 ||
+      repositorySummary.artifactType !== "repository" ||
+      repositorySummary.toolVersion !== "0.74.0"
+    ) {
       fail("self-test repository summary drifted");
     }
     repository.Results.push({
