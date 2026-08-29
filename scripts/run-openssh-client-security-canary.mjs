@@ -253,6 +253,24 @@ function sameMembers(actual, expected) {
   return actualSorted.every((value, index) => value === expectedSorted[index]);
 }
 
+function canonicalCapability(value) {
+  if (typeof value !== "string") return null;
+  const upper = value.toUpperCase();
+  if (upper === "ALL") return upper;
+  const name = upper.startsWith("CAP_") ? upper.slice(4) : upper;
+  if (!/^[A-Z0-9_]+$/u.test(name)) return null;
+  return `CAP_${name}`;
+}
+
+function sameCapabilities(actual, expected) {
+  if (!Array.isArray(actual) || actual.length !== expected.length) return false;
+  const actualCanonical = actual.map(canonicalCapability);
+  const expectedCanonical = expected.map(canonicalCapability);
+  if (actualCanonical.includes(null) || expectedCanonical.includes(null))
+    return false;
+  return sameMembers(actualCanonical, expectedCanonical);
+}
+
 function inspectIsolation(container, expected) {
   const details = JSON.parse(
     runDocker(["inspect", "--format", "{{json .}}", container], {
@@ -288,8 +306,8 @@ function inspectIsolation(container, expected) {
     ["read-only-root", host.ReadonlyRootfs === true],
     ["manual-lifecycle", host.AutoRemove === false],
     ["no-restart", host.RestartPolicy?.Name === "no"],
-    ["cap-drop", sameMembers(host.CapDrop, ["ALL"])],
-    ["cap-add", sameMembers(host.CapAdd ?? [], expected.capAdd)],
+    ["cap-drop", sameCapabilities(host.CapDrop, ["ALL"])],
+    ["cap-add", sameCapabilities(host.CapAdd ?? [], expected.capAdd)],
     [
       "no-new-privileges",
       sameMembers(host.SecurityOpt, ["no-new-privileges:true"]),
@@ -337,6 +355,13 @@ function main() {
     assert.match(planDigest(plan), /^[0-9a-f]{64}$/u);
     assert.throws(() => parseArguments(["--unknown"]));
     assert.throws(() => safeOutputPath("../report.json"));
+    assert.equal(sameCapabilities(["CAP_CHOWN"], ["CHOWN"]), true);
+    assert.equal(sameCapabilities(["cap_chown"], ["CHOWN"]), true);
+    assert.equal(
+      sameCapabilities(["CAP_CHOWN", "CAP_SETUID"], ["CHOWN"]),
+      false,
+    );
+    assert.equal(sameCapabilities(["CAP_SYS_ADMIN"], ["CHOWN"]), false);
     console.log("OpenSSH client security runner self-test passed.");
     return;
   }
