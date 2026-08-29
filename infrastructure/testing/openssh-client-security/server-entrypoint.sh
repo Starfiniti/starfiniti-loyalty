@@ -3,24 +3,50 @@ set -eu
 
 readonly state=/state
 readonly config=/tmp/starfiniti-sshd-config
+stage=state-preflight
+sshd_pid=
+
+on_exit() {
+  status=$?
+  trap - EXIT INT TERM
+  if test -n "$sshd_pid"; then
+    kill "$sshd_pid" 2>/dev/null || true
+    wait "$sshd_pid" 2>/dev/null || true
+  fi
+  if test "$status" -ne 0; then
+    printf 'starfiniti-openssh-server-stage:%s\n' "$stage"
+  fi
+  exit "$status"
+}
+
+trap on_exit EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 test -d "$state"
 test ! -L "$state"
 test -z "$(find "$state" -mindepth 1 -maxdepth 1 -print -quit)"
+stage=runtime-directory
 install -d -m 0755 /run/sshd
+stage=host-key
 ssh-keygen -q -t ed25519 -N '' -f "$state/ssh_host_ed25519_key"
+stage=client-key
 ssh-keygen -q -t ed25519 -N '' -f "$state/client_ed25519"
+stage=key-permissions
 chown 65532:65532 "$state/client_ed25519" "$state/client_ed25519.pub"
 chmod 0600 "$state/client_ed25519" "$state/ssh_host_ed25519_key"
 chmod 0644 "$state/client_ed25519.pub" "$state/ssh_host_ed25519_key.pub"
 
+stage=authorized-key
 printf 'command="/usr/local/bin/starfiniti-openssh-forced-command",restrict %s\n' "$(cat "$state/client_ed25519.pub")" >"$state/authorized_keys"
 chown 65532:65532 "$state/authorized_keys"
 chmod 0600 "$state/authorized_keys"
+stage=known-host
 printf '[openssh-server]:2222 %s\n' "$(cat "$state/ssh_host_ed25519_key.pub")" >"$state/known_hosts"
 chown 65532:65532 "$state/known_hosts"
 chmod 0444 "$state/known_hosts"
 
+stage=server-config
 cat >"$config" <<'EOF'
 Port 2222
 ListenAddress 0.0.0.0
@@ -44,10 +70,12 @@ LogLevel ERROR
 Subsystem sftp internal-sftp
 EOF
 chmod 0444 "$config"
+stage=configuration-validation
 /usr/sbin/sshd -t -f "$config"
+stage=server-launch
 /usr/sbin/sshd -D -e -f "$config" &
 sshd_pid=$!
-trap 'kill "$sshd_pid" 2>/dev/null || true; wait "$sshd_pid" 2>/dev/null || true' INT TERM EXIT
+stage=host-key-readiness
 expected_host_key="$(cut -d ' ' -f 1-2 "$state/ssh_host_ed25519_key.pub")"
 ready=false
 for attempt in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
@@ -60,9 +88,12 @@ for attempt in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
   sleep 0.1
 done
 test "$ready" = true
+stage=ready-publication
 touch "$state/ready"
 chmod 0444 "$state/ready"
+stage=server-wait
 wait "$sshd_pid"
 status=$?
-trap - INT TERM EXIT
+sshd_pid=
+trap - EXIT INT TERM
 exit "$status"

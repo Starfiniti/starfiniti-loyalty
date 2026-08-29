@@ -271,6 +271,37 @@ function sameCapabilities(actual, expected) {
   return sameMembers(actualCanonical, expectedCanonical);
 }
 
+function parseServerFailureStage(logs) {
+  const matches = [
+    ...logs.matchAll(
+      /(?:^|\n)starfiniti-openssh-server-stage:([a-z-]+)(?:\n|$)/gu,
+    ),
+  ];
+  const stage = matches.at(-1)?.[1];
+  const allowed = new Set([
+    "state-preflight",
+    "runtime-directory",
+    "host-key",
+    "client-key",
+    "key-permissions",
+    "authorized-key",
+    "known-host",
+    "server-config",
+    "configuration-validation",
+    "server-launch",
+    "host-key-readiness",
+    "ready-publication",
+    "server-wait",
+  ]);
+  return allowed.has(stage) ? stage : "unclassified";
+}
+
+function serverFailureStage(container) {
+  return parseServerFailureStage(
+    runDocker(["logs", container], { capture: true }),
+  );
+}
+
 function inspectIsolation(container, expected) {
   const details = JSON.parse(
     runDocker(["inspect", "--format", "{{json .}}", container], {
@@ -362,6 +393,13 @@ function main() {
       false,
     );
     assert.equal(sameCapabilities(["CAP_SYS_ADMIN"], ["CHOWN"]), false);
+    assert.equal(
+      parseServerFailureStage(
+        "starfiniti-openssh-server-stage:host-key-readiness",
+      ),
+      "host-key-readiness",
+    );
+    assert.equal(parseServerFailureStage("secret=value"), "unclassified");
     console.log("OpenSSH client security runner self-test passed.");
     return;
   }
@@ -543,7 +581,11 @@ function main() {
         Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 500);
       }
     }
-    if (!ready) fail("exact Ubuntu OpenSSH server did not become ready");
+    if (!ready) {
+      fail(
+        `exact Ubuntu OpenSSH server did not become ready at ${serverFailureStage(serverName)}`,
+      );
+    }
     runDocker(
       [
         "create",
