@@ -453,14 +453,13 @@ def verify_repositories(
         shutil.rmtree(repository_work)
 
 
-def parse_apt_uri_line(selector: str, line: str) -> tuple[str, str, int]:
-    # apt-get 3.0.3 deliberately forces MD5Sum in --print-uris output for
-    # compatibility. It is only a bounded record-shape field here: trust comes
-    # from the independently verified signed Packages SHA-256 and the fresh
-    # package-byte SHA-256 checks below.
+def parse_apt_uri_line(selector: str, line: str) -> tuple[str, str, int, str]:
+    # apt-get 3.0.3's `download` command prints the strongest repository hash.
+    # This canary requires SHA-256 and binds it to the independently verified
+    # signed Packages record before either download path is accepted.
     matched = re.fullmatch(
         r"'([^'\r\n]+)'\s+([A-Za-z0-9][A-Za-z0-9._+%:~-]{0,239})"
-        r"\s+([1-9][0-9]*)\s+MD5Sum:([0-9a-f]{32})",
+        r"\s+([1-9][0-9]*)\s+SHA256:([0-9a-f]{64})",
         line,
     )
     if not matched:
@@ -470,11 +469,21 @@ def parse_apt_uri_line(selector: str, line: str) -> tuple[str, str, int]:
         fail(
             f"APT selector {selector} returned an invalid URI record: {preview}"
         )
-    return matched.group(1), matched.group(2), int(matched.group(3))
+    return matched.group(1), matched.group(2), int(matched.group(3)), matched.group(4)
 
 
-def apt_uri(selector: str) -> tuple[str, str, int]:
-    output = run(["apt-get", "--quiet=2", "--print-uris", "download", selector])
+def apt_uri(selector: str) -> tuple[str, str, int, str]:
+    output = run(
+        [
+            "apt-get",
+            "--quiet=2",
+            "--option",
+            "Acquire::ForceHash=SHA256",
+            "--print-uris",
+            "download",
+            selector,
+        ]
+    )
     lines = [line.strip() for line in output.splitlines() if line.strip()]
     if len(lines) != 1:
         fail(f"APT selector {selector} returned an unexpected URI count")
@@ -495,13 +504,14 @@ def verify_packages(
         package_work.mkdir(mode=0o700)
         try:
             selector = f"{package['id']}={package['version']}"
-            uri, local_name, size = apt_uri(selector)
+            uri, local_name, size, digest = apt_uri(selector)
             repository = repository_map[package["sourceId"]]
             expected_uri = f"{repository['repositoryUri'].rstrip('/')}/{package['filename']}"
             if (
                 unquote(uri) != expected_uri
                 or Path(unquote(local_name)).name != Path(package["filename"]).name
                 or size != int(package["size"])
+                or digest != package["sha256"]
             ):
                 fail(f"{package['id']} APT signed-metadata selection differs")
 
@@ -593,18 +603,19 @@ def self_test() -> None:
         "http://download.proxmox.com/debian/pve/pool/pve-no-subscription/"
         "p/pve-qemu-kvm/pve-qemu-kvm_11.0.3-3_amd64.deb"
     )
-    valid = f"'{expected}' pve-qemu-kvm_11.0.3-3_amd64.deb 87389184 MD5Sum:{'a' * 32}"
+    valid = f"'{expected}' pve-qemu-kvm_11.0.3-3_amd64.deb 87389184 SHA256:{'a' * 64}"
     if parse_apt_uri_line(selector, valid) != (
         expected,
         "pve-qemu-kvm_11.0.3-3_amd64.deb",
         87389184,
+        "a" * 64,
     ):
         raise AssertionError("valid APT URI record failed parser self-test")
     invalid = [
-        valid.replace("MD5Sum:", "SHA256:").replace("a" * 32, "b" * 64),
-        valid.replace("MD5Sum:", "MD5Sum:00"),
+        valid.replace("SHA256:", "MD5Sum:").replace("a" * 64, "b" * 32),
+        valid.replace("SHA256:", "SHA256:00"),
         valid.replace(" 87389184 ", " 087389184 "),
-        f"'{expected}' 'quoted.deb' 87389184 MD5Sum:{'a' * 32}",
+        f"'{expected}' 'quoted.deb' 87389184 SHA256:{'a' * 64}",
         f"{valid}\n{valid}",
     ]
     for record in invalid:
