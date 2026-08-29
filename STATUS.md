@@ -14,12 +14,16 @@
   complete local `npm run check` gate passes with 995 tests, every validator,
   WooCommerce/client checks, and the production builds. Candidate `ccf1d89`
   then reduced the exact raw CodeQL result count from three to one; artifact
-  `9715725207` classified only `js/insecure-temporary-file` at the read-only
-  fault-input open. That call now includes an explicit owner-only creation-mode
-  fail-safe in addition to read-only/no-follow flags. A later exact-head
-  zero-result CI/Security artifact remains required. Production has no active
-  tenant federation or Klaviyo connection and remains unchanged; M15-S03 and
-  the goal remain open.
+  `9715725207` isolated the remaining read-only fault-input model. The final
+  owner-only creation-mode fail-safe at candidate `fe8a6ff` passed CI run
+  `33255970171` and Security run `33255970172`; all twelve checks are green,
+  CodeQL analysis `1691796393` has zero raw results, and retained artifact
+  `9715823372` has zero findings at every severity. The M15 security manifest
+  now passes 18 of 26 checks with fresh digest-bound Medium triage. Tagged
+  release/source attestations, production review, independent penetration
+  testing/retest, final finding reconciliation, and owner approval remain.
+  Production has no active tenant federation or Klaviyo connection and remains
+  unchanged; M15-S03 and the goal remain open.
 
 - ADR-0096 replaces the pending V2 rsync handoff with a fail-closed V3 inventory contract while preserving accepted V1/V2 policy and evidence byte-for-byte. The effective bundle is exactly seventy-four entries: thirty unchanged BorgBackup/OpenSSH inputs plus forty-four native-rsync inputs covering both endpoint-native executables, the shared wrapper, signed source and release key, unchanged distribution rollback packages, two endpoint-bound dependency inventories, the retained digest-lock report, build/runtime controls, runbooks, decisions, verifier, and historical/current evidence. The historical cross-suite `rsync-transport` provider cannot activate and a global library upgrade is forbidden. Exact implementation `21262cf08e265c61d3e76e1971ce7604916469cc` passed CI run `33250002574`, Security run `33250002462` including recovery-transport job `99093945140`, and independent CodeQL check `99094120148`; all twelve PR checks were green and PR #57 was clean and mergeable. Every source-signature, package-authority, native-build, consumer/selector compatibility, custody, review, restore, and production gate remains false; IMP-010 and R-004 remain Critical/open, M16 remains 77/100, production remains at 54/100, and VM 971 and SSH were not touched.
 

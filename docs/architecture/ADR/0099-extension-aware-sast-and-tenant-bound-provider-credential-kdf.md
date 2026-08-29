@@ -156,6 +156,15 @@ when the call omits a secure mode, independent of the read-only flag. The
 explicit `0600` fail-safe above is therefore part of this decision, and a later
 exact-head zero-result artifact remains required.
 
+Final candidate `fe8a6ff9881596a4800b093ac2433da1fe35d685` passed CI run
+`33255970171` and Security run `33255970172`. CodeQL 2.26.4 analysis
+`1691796393` at merge commit `7732495889feda477c9f3a757ebba5652b5c2d03`
+contains zero raw results. Minimized artifact `9715823372`, archive digest
+`sha256:939f29e3c82b3bb1d8954a92384ed5f944de103f489d06721978f1a9177b877e`,
+records zero Critical, High, Medium, Low, and unknown findings. DAST,
+supply-chain, recovery transport, database, containers, baseline, and all four
+WooCommerce runtime jobs passed on the same candidate.
+
 ## References
 
 - CodeQL file-system race query: https://codeql.github.com/codeql-query-help/javascript/js-file-system-race/

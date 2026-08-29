@@ -97,6 +97,12 @@ flags remain mandatory, and the fault reader additionally supplies `0600` as a
 defensive third argument. Node ignores it for the read-only open; it becomes
 protective if a future refactor adds a creation flag.
 
+Final candidate `fe8a6ff` passed CI `33255970171` and Security `33255970172`.
+Raw CodeQL analysis `1691796393` contains zero results, and minimized artifact
+`9715823372` independently records zero findings in every severity. The same
+candidate passed the exact repository/image/SBOM/DAST, database, container,
+WooCommerce, dependency, and recovery-transport gates.
+
 - Critical or High: automatic failure. Fix, replace, remove, or document why the result is objectively non-applicable and obtain an independent reviewer decision. A reviewer cannot override an exploitable finding.
 - Medium: triage before the module closes; create a linked risk and remediation date when accepted temporarily.
 - Low/Informational: review for systemic patterns and convert recurring findings into tests or configuration controls.

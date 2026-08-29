@@ -3369,6 +3369,7 @@ tasks:
             docs/plan/evidence/M15/security.yaml,
             docs/plan/evidence/M15/runs/security-medium-triage-f9c83ac.yaml,
             docs/plan/evidence/M15/runs/security-medium-triage-188d9d8.yaml,
+            docs/plan/evidence/M15/runs/security-medium-triage-fe8a6ff.yaml,
             docs/architecture/ADR/0064-deployable-artifact-security-and-isolated-dast.md,
             docs/architecture/ADR/0082-request-bound-dashboard-content-security-policy.md,
             docs/architecture/ADR/0083-release-bound-corresponding-source-artifacts.md,

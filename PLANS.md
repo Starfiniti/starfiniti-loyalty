@@ -12,12 +12,14 @@ connection-specific scrypt V2 fingerprint with a secret-safe operator command.
 ADR-0098's federation HMAC and four-file fail-closed boundary remain accepted
 hardening but were not the source of the older findings. The complete local
 `npm run check` gate passes with 995 tests, every validator, the production
-dashboard and worker builds, and both supported client packages. A zero-result
-exact-head CI/Security run is still required before M15 advances. Candidate
-`ccf1d89` reduced raw CodeQL results from three to one: its parser, deployment
-reader, and Klaviyo KDF passed, while the fault reader still required an
-explicit owner-only creation-mode fail-safe on its read-only descriptor open.
-That correction is now under local verification. Production remains unchanged.
+dashboard and worker builds, and both supported client packages. Final code
+candidate `fe8a6ff` passed CI run `33255970171` and Security run `33255970172`:
+all twelve PR checks are green, raw CodeQL analysis `1691796393` has zero
+results, and artifact `9715823372` records zero findings in every severity. The
+fresh Trivy, CycloneDX, DAST, dependency, image, database, WooCommerce, and
+recovery evidence is reconciled in M15; release, production review, independent
+penetration testing/retest, R-056 source obligations, and owner approval still
+gate M15. Production remains unchanged.
 
 ## Objective
 

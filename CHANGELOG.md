@@ -11,8 +11,11 @@
   the older two findings is explicitly corrected. The complete local gate passes
   with 995 tests and all builds/validators. Candidate `ccf1d89` reduced the raw
   CodeQL count from three to one; the remaining OS-temp-derived read-only fault
-  input now carries an explicit owner-only creation-mode fail-safe. A later
-  exact-head proof is pending.
+  input now carries an explicit owner-only creation-mode fail-safe. Final
+  candidate `fe8a6ff` passed all twelve exact-head checks, raw CodeQL analysis
+  has zero results, and fresh Trivy, image, SBOM, DAST, dependency, WooCommerce,
+  database, recovery, and Medium-triage evidence advances the M15 security
+  manifest to 18/26 checks without changing production.
 
 - Added ADR-0098 after the first retained CodeQL summary correctly blocked two
   previously unclassified results. The SARIF minimizer now reads exact
