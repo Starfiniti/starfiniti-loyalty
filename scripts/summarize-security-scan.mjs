@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import {
   closeSync,
@@ -49,13 +49,6 @@ function exactUtc(value, label) {
 
 function readStableFile(path, maximumBytes = MAX_INPUT_BYTES) {
   const resolved = resolve(path);
-  const linked = lstatSync(resolved);
-  if (!linked.isFile() || linked.isSymbolicLink()) {
-    fail(`security input is not a regular non-linked file: ${path}`);
-  }
-  if (linked.size < 1 || linked.size > maximumBytes) {
-    fail(`security input is outside its byte bound: ${path}`);
-  }
   let descriptor;
   try {
     descriptor = openSync(
@@ -63,8 +56,11 @@ function readStableFile(path, maximumBytes = MAX_INPUT_BYTES) {
       constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0),
     );
     const before = fstatSync(descriptor);
-    if (!before.isFile() || before.size !== linked.size) {
-      fail(`security input identity changed before read: ${path}`);
+    if (!before.isFile()) {
+      fail(`security input is not a regular file: ${path}`);
+    }
+    if (before.size < 1 || before.size > maximumBytes) {
+      fail(`security input is outside its byte bound: ${path}`);
     }
     const raw = readFileSync(descriptor);
     const after = fstatSync(descriptor);
@@ -99,31 +95,13 @@ function readJson(path, maximumBytes = MAX_INPUT_BYTES) {
 function writeAtomicJson(path, value) {
   const resolved = resolve(path);
   mkdirSync(dirname(resolved), { recursive: true });
-  if (statExists(resolved)) {
-    const current = lstatSync(resolved);
-    if (!current.isFile() || current.isSymbolicLink()) {
-      fail(`security output is not a replaceable regular file: ${path}`);
-    }
-  }
-  const temporary = `${resolved}.partial-${process.pid}`;
-  if (statExists(temporary))
-    fail(`security output staging path exists: ${path}`);
+  const temporary = `${resolved}.partial-${process.pid}-${randomUUID()}`;
   writeFileSync(temporary, `${JSON.stringify(value, null, 2)}\n`, {
     encoding: "utf8",
     flag: "wx",
     mode: 0o600,
   });
   renameSync(temporary, resolved);
-}
-
-function statExists(path) {
-  try {
-    lstatSync(path);
-    return true;
-  } catch (error) {
-    if (error?.code === "ENOENT") return false;
-    throw error;
-  }
 }
 
 function emptyCounts() {
