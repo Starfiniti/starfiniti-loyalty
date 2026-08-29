@@ -464,7 +464,12 @@ def parse_apt_uri_line(selector: str, line: str) -> tuple[str, str, int]:
         line,
     )
     if not matched:
-        fail(f"APT selector {selector} returned an invalid URI record")
+        preview = line[:512].encode("unicode_escape", errors="backslashreplace").decode(
+            "ascii"
+        )
+        fail(
+            f"APT selector {selector} returned an invalid URI record: {preview}"
+        )
     return matched.group(1), matched.group(2), int(matched.group(3))
 
 
