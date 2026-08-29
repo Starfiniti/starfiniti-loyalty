@@ -269,43 +269,60 @@ function inspectIsolation(container, expected) {
   const labels = details.Config.Labels ?? {};
   const portBindings = host.PortBindings ?? {};
   const health = details.Config.Healthcheck;
-  if (
-    Object.values(ports).some(
-      (bindings) => Array.isArray(bindings) && bindings.length > 0,
-    ) ||
-    Object.values(portBindings).some(
-      (bindings) => Array.isArray(bindings) && bindings.length > 0,
-    ) ||
-    networks.length !== 1 ||
-    networks[0] !== expected.network ||
-    host.NetworkMode !== expected.network ||
-    host.Privileged !== false ||
-    host.ReadonlyRootfs !== true ||
-    host.AutoRemove !== false ||
-    host.RestartPolicy?.Name !== "no" ||
-    !sameMembers(host.CapDrop, ["ALL"]) ||
-    !sameMembers(host.CapAdd ?? [], expected.capAdd) ||
-    !sameMembers(host.SecurityOpt, ["no-new-privileges:true"]) ||
-    host.PidsLimit !== expected.pidsLimit ||
-    host.Memory !== 268435456 ||
-    host.NanoCpus !== 1_000_000_000 ||
-    details.Config.User !== expected.user ||
-    !health ||
-    !sameMembers(health.Test, expected.health.test) ||
-    health.Interval !== expected.health.interval ||
-    health.Timeout !== expected.health.timeout ||
-    health.StartPeriod !== expected.health.startPeriod ||
-    health.Retries !== expected.health.retries ||
-    !sameMembers(tmpfs, expected.tmpfs) ||
-    stateMounts.length !== 1 ||
-    stateMounts[0].Type !== "volume" ||
-    stateMounts[0].Name !== expected.volume ||
-    stateMounts[0].RW !== !expected.stateReadOnly ||
-    (host.Binds ?? []).length !== 0 ||
-    labels["com.starfiniti.disposable"] !== "true" ||
-    labels["com.starfiniti.purpose"] !== expected.purpose
-  ) {
-    fail(`${container} differs from its isolated runtime contract`);
+  const controls = [
+    [
+      "network-port-bindings",
+      !Object.values(ports).some(
+        (bindings) => Array.isArray(bindings) && bindings.length > 0,
+      ),
+    ],
+    [
+      "host-port-bindings",
+      !Object.values(portBindings).some(
+        (bindings) => Array.isArray(bindings) && bindings.length > 0,
+      ),
+    ],
+    ["single-internal-network", sameMembers(networks, [expected.network])],
+    ["network-mode", host.NetworkMode === expected.network],
+    ["unprivileged-container", host.Privileged === false],
+    ["read-only-root", host.ReadonlyRootfs === true],
+    ["manual-lifecycle", host.AutoRemove === false],
+    ["no-restart", host.RestartPolicy?.Name === "no"],
+    ["cap-drop", sameMembers(host.CapDrop, ["ALL"])],
+    ["cap-add", sameMembers(host.CapAdd ?? [], expected.capAdd)],
+    [
+      "no-new-privileges",
+      sameMembers(host.SecurityOpt, ["no-new-privileges:true"]),
+    ],
+    ["pid-limit", host.PidsLimit === expected.pidsLimit],
+    ["memory-limit", host.Memory === 268435456],
+    ["cpu-limit", host.NanoCpus === 1_000_000_000],
+    ["runtime-user", details.Config.User === expected.user],
+    [
+      "health-command",
+      JSON.stringify(health?.Test) === JSON.stringify(expected.health.test),
+    ],
+    ["health-interval", health?.Interval === expected.health.interval],
+    ["health-timeout", health?.Timeout === expected.health.timeout],
+    [
+      "health-start-period",
+      health?.StartPeriod === expected.health.startPeriod,
+    ],
+    ["health-retries", health?.Retries === expected.health.retries],
+    ["tmpfs-set", sameMembers(tmpfs, expected.tmpfs)],
+    ["single-state-mount", stateMounts.length === 1],
+    ["state-volume-type", stateMounts[0]?.Type === "volume"],
+    ["state-volume-name", stateMounts[0]?.Name === expected.volume],
+    ["state-volume-direction", stateMounts[0]?.RW === !expected.stateReadOnly],
+    ["no-bind-mount", (host.Binds ?? []).length === 0],
+    ["disposable-label", labels["com.starfiniti.disposable"] === "true"],
+    ["purpose-label", labels["com.starfiniti.purpose"] === expected.purpose],
+  ];
+  const failed = controls.filter(([, passed]) => !passed).map(([name]) => name);
+  if (failed.length > 0) {
+    fail(
+      `${container} differs from its isolated runtime contract: ${failed.join(",")}`,
+    );
   }
 }
 
