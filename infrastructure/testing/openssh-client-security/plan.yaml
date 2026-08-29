@@ -1,5 +1,5 @@
 schema: starfiniti.openssh-client-security-plan.v1
-status: bootstrap
+status: candidate
 profile: privileged-recovery-client
 architecture: amd64
 baseImages:
@@ -44,7 +44,7 @@ candidate:
   version: 10.5p1
   installRoot: /opt/starfiniti/openssh/10.5p1
   executablePath: /opt/starfiniti/openssh/10.5p1/bin/ssh
-  executableSha256: null
+  executableSha256: be9dd9ee2550e3fca2a6fa15edb5ab9303e42ac783ac766928fa5380971bf081
   versionPrefix: OpenSSH_10.5p1
   source:
     url: https://cdn.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-10.5p1.tar.gz

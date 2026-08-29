@@ -5,7 +5,7 @@ candidate:
   commit: null
 plan:
   path: infrastructure/testing/openssh-client-security/plan.yaml
-  sha256: 5cd85b011e09a518f00d8f57b8a41de098b11c510712c8e0897863d43a91abb2
+  sha256: 130df45c95938a41e88558b313b1a4707dfd7c0701f43fe4187ceba20a3bd625
 canary: null
 checks:
   - id: threat_model
@@ -22,7 +22,7 @@ checks:
     evidence: Debian openssh-client 1:10.0p1-7+deb13u4 remains installed and is resolved through signed metadata plus an independently hashed exact archive URL before the synthetic client proof.
   - id: compatibility_canary
     status: pending
-    evidence: The bootstrap Linux run has not yet discovered and locked the stripped candidate executable digest, so no exact-plan current/candidate compatibility artifact is claimed.
+    evidence: Bootstrap Security run 33240398639 discovered candidate executable SHA-256 be9dd9ee2550e3fca2a6fa15edb5ab9303e42ac783ac766928fa5380971bf081; the digest-locked candidate plan still requires a fresh exact-plan pass before compatibility evidence is accepted.
   - id: operations_escrow
     status: pending
     evidence: Operations has not escrowed the exact source, signature, release key, build inputs, candidate binary, rollback package, digest inventory, and verification instructions.

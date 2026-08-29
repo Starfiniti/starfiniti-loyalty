@@ -6,10 +6,11 @@ candidate daemon. A disposable client exercises the current and candidate
 clients against the exact Ubuntu 24.04 OpenSSH package line used by the
 database guest on a Docker-internal network with no published ports.
 
-The `bootstrap` plan state permits one Linux build to discover the stripped
-candidate executable digest. That run is not production or final compatibility
-evidence. Lock the digest, change the plan to `candidate`, and rerun the exact
-head before evidence can pass.
+Bootstrap Security run `33240398639` discovered stripped candidate executable
+SHA-256 `be9dd9ee2550e3fca2a6fa15edb5ab9303e42ac783ac766928fa5380971bf081`.
+The plan is now `candidate` and binds that digest. The bootstrap run is not
+production or final compatibility evidence; a fresh exact-head run of this
+digest-locked plan must pass before evidence can advance.
 
 ```sh
 npm run openssh-client-security:validate

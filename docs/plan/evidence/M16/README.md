@@ -164,7 +164,7 @@ advance an M16 closeout check or product-score point, and production is unchange
 
 ADR-0092 now resolves the OpenSSH architecture question without replacing a
 daemon or distribution executable. The exact
-[`openssh-client-security.yaml`](openssh-client-security.yaml) bootstrap plan
+[`openssh-client-security.yaml`](openssh-client-security.yaml) candidate plan
 binds Debian Trixie `openssh-client=1:10.0p1-7+deb13u4`, Ubuntu Noble
 `openssh-server=1:9.6p1-3ubuntu13.18`, the official OpenSSH Portable 10.5p1
 archive, release-note checksum, detached signature, release key and full
@@ -177,9 +177,11 @@ remain untouched.
 extraction, client-only build, exact rollback and server packages, strict
 client options, restricted forced command, internal no-port network, resource
 ceilings, exclusive evidence publication, exact teardown, and adversarial
-false-pass mutations. The plan is intentionally `bootstrap`: the first Linux
-run may discover the stripped executable digest but cannot pass exact candidate
-evidence. A second run against a digest-locked `candidate` plan is required.
+false-pass mutations. Bootstrap Security run `33240398639` discovered stripped
+candidate executable SHA-256
+`be9dd9ee2550e3fca2a6fa15edb5ab9303e42ac783ac766928fa5380971bf081`, and the
+plan now locks that digest as `candidate`. The bootstrap run cannot pass exact
+candidate evidence; a fresh second run against this digest-locked plan is required.
 Escrow, exact real-provider rsync and Borg behavior, every consumer, rollout,
 monitoring, rollback, isolated restore, and independent review remain pending;
 production and the M16 score are unchanged.

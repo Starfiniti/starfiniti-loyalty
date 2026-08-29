@@ -134,6 +134,9 @@ base backups, stages, repositories, and archives.
 
 The threat model, architecture, exact source and package inputs, client-only
 build boundary, compatibility contract, rollback boundary, and adversarial
-repository validator exist. The plan is intentionally `bootstrap`; no candidate
-executable digest or passing exact-plan Linux artifact exists yet. Production is
-unchanged and M16 remains in progress.
+repository validator exist. Bootstrap Security run `33240398639` passed and
+discovered candidate executable SHA-256
+`be9dd9ee2550e3fca2a6fa15edb5ab9303e42ac783ac766928fa5380971bf081`.
+The plan now binds that digest as `candidate`; bootstrap is not accepted as
+final compatibility evidence, so a fresh exact-plan Linux run remains required.
+Production is unchanged and M16 remains in progress.

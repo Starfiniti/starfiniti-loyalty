@@ -484,8 +484,8 @@ function validateEvidence(evidence, plan) {
     fail("evidence plan binding is invalid");
   }
   if (testedCandidateCommit === null) {
-    if (plan.status !== "bootstrap" || evidence.canary !== null) {
-      fail("bootstrap evidence must not claim an exact canary");
+    if (evidence.canary !== null) {
+      fail("unverified evidence must not claim an exact canary");
     }
   } else {
     if (!commitPattern.test(testedCandidateCommit))
