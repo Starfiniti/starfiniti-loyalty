@@ -14,7 +14,7 @@ ARG CANDIDATE_SIGNATURE_URL=https://github.com/borgbackup/borg/releases/download
 ARG CANDIDATE_SIGNATURE_SHA256=9e7027a2573028e67d9138ccd3de4008d3fad22a5840ac4711f7d56fe89f850a
 ARG CANDIDATE_README_URL=https://github.com/borgbackup/borg/releases/download/1.4.5/00_README.txt
 ARG CANDIDATE_README_SHA256=9245dd1cfffb1b40d7f1b112e9e917902f2ca255b63a417f671d3da3a12e204a
-ARG SIGNING_KEY_URL=https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x6D5BEF9ADD2075805747B70F9F88FB52FAF7B393
+ARG SIGNER_IDENTITY_URL=https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x6D5BEF9ADD2075805747B70F9F88FB52FAF7B393
 ARG SIGNING_FINGERPRINT=6D5BEF9ADD2075805747B70F9F88FB52FAF7B393
 ARG CANDIDATE_EXECUTABLE_SHA256=e0a23534bf28aa90940f749bb25dbbeecd401e9bf1de1dd8872cedc45f98718d
 ARG CANDIDATE_TREE_ENTRIES=106
@@ -49,7 +49,7 @@ RUN test "$(dpkg --print-architecture)" = "$EXPECTED_ARCHITECTURE"; \
     printf '%s  %s\n' "$CANDIDATE_SHA256" candidate.tgz "$CANDIDATE_SIGNATURE_SHA256" candidate.tgz.asc "$CANDIDATE_README_SHA256" 00_README.txt | sha256sum --check --strict; \
     test "$(wc -c <candidate.tgz)" -eq "$CANDIDATE_BYTES"; \
     mkdir -m 0700 gnupg; \
-    curl --fail --location --proto '=https' --tlsv1.2 --output signer.asc "$SIGNING_KEY_URL"; \
+    curl --fail --location --proto '=https' --tlsv1.2 --output signer.asc "$SIGNER_IDENTITY_URL"; \
     GNUPGHOME=/tmp/starfiniti-borg-verify/gnupg gpg --batch --import signer.asc; \
     test "$(GNUPGHOME=/tmp/starfiniti-borg-verify/gnupg gpg --batch --with-colons --fingerprint "$SIGNING_FINGERPRINT" | awk -F: '$1 == "fpr" { print $10; exit }')" = "$SIGNING_FINGERPRINT"; \
     grep -Fq 'GPG key fingerprint: 6D5B EF9A DD20 7580 5747 B70F 9F88 FB52 FAF7 B393' 00_README.txt; \
@@ -66,7 +66,7 @@ RUN test "$(dpkg --print-architecture)" = "$EXPECTED_ARCHITECTURE"; \
     test "$(readlink -f "$candidate")" = "$candidate"; \
     test "$(stat -c '%u:%g:%a:%F' "$candidate")" = '0:0:555:regular file'; \
     printf '%s  %s\n' "$CANDIDATE_EXECUTABLE_SHA256" "$candidate" | sha256sum --check --strict; \
-    test "$("$candidate" --version)" = "borg $CANDIDATE_VERSION"; \
+    test "$("$candidate" --version)" = "borg.exe $CANDIDATE_VERSION"; \
     starfiniti-verify-borg-tree --tree /opt/starfiniti/borg/1.4.5/borg-dir "$CANDIDATE_TREE_ENTRIES" "$CANDIDATE_TREE_FILES" "$CANDIDATE_TREE_BYTES" "$CANDIDATE_TREE_MANIFEST_SHA256"; \
     rm -rf /tmp/starfiniti-borg-verify /var/lib/apt/lists/* /var/cache/apt/archives/*.deb; \
     test -z "$(find /tmp /var/cache/apt/archives -type f \( -name '*.deb' -o -name 'candidate.tgz*' -o -name 'signer.asc' \) -print -quit)"
@@ -76,6 +76,9 @@ COPY --chmod=0555 canary.sh /usr/local/bin/starfiniti-borg-canary
 
 LABEL com.starfiniti.disposable="true" \
       com.starfiniti.purpose="borgbackup-security-canary"
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=1 \
+  CMD /opt/starfiniti/borg/1.4.5/borg-dir/borg.exe --version >/dev/null || exit 1
 
 USER 65532:65532
 

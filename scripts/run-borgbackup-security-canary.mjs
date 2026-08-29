@@ -198,7 +198,7 @@ function buildArguments(plan, imageTag) {
     CANDIDATE_SIGNATURE_SHA256: plan.candidate.asset.signatureSha256,
     CANDIDATE_README_URL: plan.candidate.asset.readmeUrl,
     CANDIDATE_README_SHA256: plan.candidate.asset.readmeSha256,
-    SIGNING_KEY_URL: plan.candidate.signing.keyserverUrl,
+    SIGNER_IDENTITY_URL: plan.candidate.signing.keyserverUrl,
     SIGNING_FINGERPRINT: plan.candidate.signing.primaryFingerprint,
     CANDIDATE_EXECUTABLE_SHA256: plan.candidate.executableSha256,
     CANDIDATE_TREE_ENTRIES: String(plan.candidate.extractedTree.entries),

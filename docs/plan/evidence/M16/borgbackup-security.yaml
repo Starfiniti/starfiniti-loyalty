@@ -6,7 +6,7 @@ candidate:
   commit: null
 plan:
   path: infrastructure/testing/borgbackup-security/plan.yaml
-  sha256: 634bcf3c778098d31b5c4901f5280b35e69ed7cbeda3da11131e19ad7aad5ae0
+  sha256: f4a5ce0a8de4a34f6014cba06574292237821e0d1e17f1b67c30410a656ef1a3
 canary: null
 checks:
   - id: plan_contract

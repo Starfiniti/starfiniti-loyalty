@@ -32,7 +32,7 @@ candidate:
   installRoot: /opt/starfiniti/borg/1.4.5
   executablePath: /opt/starfiniti/borg/1.4.5/borg-dir/borg.exe
   executableSha256: e0a23534bf28aa90940f749bb25dbbeecd401e9bf1de1dd8872cedc45f98718d
-  versionLine: borg 1.4.5
+  versionLine: borg.exe 1.4.5
   asset:
     url: https://github.com/borgbackup/borg/releases/download/1.4.5/borg-linux-glibc231-x86_64.tgz
     sha256: b6cba6b5eee19d51fbf4d89c6090dd40647b856755fffe2e26417365536f2c58

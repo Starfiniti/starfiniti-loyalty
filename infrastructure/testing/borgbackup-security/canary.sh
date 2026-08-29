@@ -21,7 +21,7 @@ export LC_ALL=C
 export TMPDIR=/tmp
 
 test "$($current_borg --version)" = 'borg 1.4.0'
-test "$($candidate_borg --version)" = 'borg 1.4.5'
+test "$($candidate_borg --version)" = 'borg.exe 1.4.5'
 printf '%s  %s\n' 'babb2b42edd64283220d1f1ca57119d41d8f8b93e4af9c5606874b60dd43bc4d' "$current_borg" | sha256sum --check --strict
 printf '%s  %s\n' 'e0a23534bf28aa90940f749bb25dbbeecd401e9bf1de1dd8872cedc45f98718d' "$candidate_borg" | sha256sum --check --strict
 starfiniti-verify-borg-tree --tree /opt/starfiniti/borg/1.4.5/borg-dir 106 95 79942815 09fb420dce78c94814520628cf68ecdd77ab75d4fd9c794f8916874f2a767827

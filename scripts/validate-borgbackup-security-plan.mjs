@@ -217,7 +217,7 @@ export function validateBorgPlan(plan) {
       "/opt/starfiniti/borg/1.4.5/borg-dir/borg.exe" ||
     plan.candidate.executableSha256 !==
       "e0a23534bf28aa90940f749bb25dbbeecd401e9bf1de1dd8872cedc45f98718d" ||
-    plan.candidate.versionLine !== "borg 1.4.5"
+    plan.candidate.versionLine !== "borg.exe 1.4.5"
   ) {
     fail("candidate identity differs");
   }
@@ -590,6 +590,8 @@ function validateImplementation(files) {
       "starfiniti-verify-borg-tree --tree",
       "rm -rf /tmp/starfiniti-borg-verify",
       'com.starfiniti.disposable="true"',
+      "HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=1",
+      "/opt/starfiniti/borg/1.4.5/borg-dir/borg.exe --version >/dev/null || exit 1",
       "USER 65532:65532",
     ],
     "Dockerfile",
