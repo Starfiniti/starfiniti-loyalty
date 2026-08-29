@@ -1,6 +1,5 @@
 "use server";
 
-import { createHash } from "node:crypto";
 import {
   createOrganizationFederationSourceCommandV1,
   organizationFederationSourceCommandV1,
@@ -15,6 +14,7 @@ import { readSupabasePublicConfig } from "@/lib/supabase/config";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   applyTenantFederationAction,
+  fingerprintUpstreamClientSecret,
   provisionTenantFederation,
   TenantFederationError,
 } from "@/lib/server/tenant-federation";
@@ -141,12 +141,21 @@ export async function createFederationSourceAction(
           expectedEntityId:
             String(formData.get("expectedEntityId") ?? "").trim() || null,
         };
+  let actorUserId: string;
+  let clientSecretSha256: string | null;
+  try {
+    actorUserId = await authenticatedActor();
+    clientSecretSha256 =
+      rawSecret === null ? null : fingerprintUpstreamClientSecret(rawSecret);
+  } catch (error) {
+    return failure(federationFailureMessage(error));
+  }
   const command = createOrganizationFederationSourceCommandV1.safeParse({
     version: "1",
     organizationId: formData.get("organizationId"),
     displayName: formData.get("displayName"),
     configuration,
-    clientSecretSha256: rawSecret === null ? null : sha256(rawSecret),
+    clientSecretSha256,
     idempotencyKey: `federation:create:${operation}`,
     correlationId: operation,
   });
@@ -159,7 +168,6 @@ export async function createFederationSourceAction(
   }
 
   try {
-    const actorUserId = await authenticatedActor();
     const result = await provisionTenantFederation(
       actorUserId,
       command.data,
@@ -196,13 +204,22 @@ export async function updateFederationSourceAction(
   ) {
     return failure("Review and confirm the federation lifecycle change.");
   }
+  let actorUserId: string;
+  let clientSecretSha256: string | null;
+  try {
+    actorUserId = await authenticatedActor();
+    clientSecretSha256 =
+      rawSecret === null ? null : fingerprintUpstreamClientSecret(rawSecret);
+  } catch (error) {
+    return failure(federationFailureMessage(error));
+  }
   const command = organizationFederationSourceCommandV1.safeParse({
     version: "1",
     organizationId: formData.get("organizationId"),
     sourceId: formData.get("sourceId"),
     expectedRevision: revision,
     action,
-    clientSecretSha256: rawSecret === null ? null : sha256(rawSecret),
+    clientSecretSha256,
     reason: formData.get("reason"),
     idempotencyKey: `federation:${action}:${revision}:${operation}`,
     correlationId: operation,
@@ -214,7 +231,6 @@ export async function updateFederationSourceAction(
   }
 
   try {
-    const actorUserId = await authenticatedActor();
     const result = await applyTenantFederationAction(
       actorUserId,
       command.data,
@@ -264,10 +280,6 @@ function expectedRevision(formData: FormData): number | null {
   if (!/^[1-9][0-9]{0,14}$/u.test(value)) return null;
   const revision = Number(value);
   return Number.isSafeInteger(revision) ? revision : null;
-}
-
-function sha256(value: string): string {
-  return createHash("sha256").update(value, "utf8").digest("hex");
 }
 
 function failure(message: string): FederationActionState {

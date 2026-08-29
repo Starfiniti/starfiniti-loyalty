@@ -10,7 +10,13 @@ The M15 security gate separates source, full development/production
 dependencies, deployable artifact, dynamic, release,
 production-configuration, and independent-human evidence. CodeQL covers
 JavaScript/TypeScript; private SARIF is reduced to exact rule/severity/scope
-counts and Critical/High/unknown results fail. The complete npm audit includes
+counts and Critical/High/unknown results fail. Security scores are accepted from
+the SARIF direct property or exact `security-severity/<number>` rule/result tag;
+malformed or conflicting declarations remain unknown rather than inheriting a
+lower warning level. Temporary scan fixtures use explicit `0600` files. The
+federation suite proves domain-separated keyed fingerprints, wrong-key rejection
+before database/provider work, canonical 256-bit key parsing, and the optional
+four-file all-or-none deployment boundary. The complete npm audit includes
 development tooling. Repository Trivy uses a non-retained raw secret report, a
 count-only summary, and an independent enforcing scan; both production images
 fail on High/Critical vulnerability, secret, misconfiguration, and licence

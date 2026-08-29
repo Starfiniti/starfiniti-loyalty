@@ -1,6 +1,6 @@
 import "server-only";
 
-import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
+import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import type {
   CreateOrganizationFederationSourceCommandV1,
   OrganizationFederationSourceCommandV1,
@@ -63,7 +63,14 @@ type Dependencies = Readonly<{
   >;
   supabase: Pick<SupabaseFederationAdmin, "reconcileDisabled" | "setEnabled">;
   brokerSecret: () => string;
+  fingerprintSecret: (
+    value: string,
+    purpose: "upstream-client-secret" | "broker-client-secret",
+  ) => string;
 }>;
+
+const FEDERATION_FINGERPRINT_CONTEXT =
+  "starfiniti/tenant-federation/credential-fingerprint/v1";
 
 export async function provisionTenantFederation(
   actorUserId: string,
@@ -71,7 +78,11 @@ export async function provisionTenantFederation(
   upstreamClientSecret: string | null,
   dependencies: Dependencies = productionDependencies(),
 ): Promise<FederationProvisioningResult> {
-  assertSecret(command.clientSecretSha256, upstreamClientSecret);
+  assertSecret(
+    command.clientSecretSha256,
+    upstreamClientSecret,
+    dependencies.fingerprintSecret,
+  );
   const prepared = await dependencies.prepare(actorUserId, command);
   if (prepared.outcome === "duplicate" && prepared.status !== "draft") {
     if (prepared.status === "review_required") {
@@ -85,7 +96,10 @@ export async function provisionTenantFederation(
     prepared.configurationSha256,
   );
   const brokerSecret = dependencies.brokerSecret();
-  const brokerSecretSha256 = sha256(brokerSecret);
+  const brokerSecretSha256 = dependencies.fingerprintSecret(
+    brokerSecret,
+    "broker-client-secret",
+  );
   let authentikResources: AuthentikFederationResources | null = null;
   let externalError: unknown;
   try {
@@ -144,7 +158,11 @@ export async function applyTenantFederationAction(
   upstreamClientSecret: string | null,
   dependencies: Dependencies = productionDependencies(),
 ): Promise<FederationMutation> {
-  assertSecret(command.clientSecretSha256, upstreamClientSecret);
+  assertSecret(
+    command.clientSecretSha256,
+    upstreamClientSecret,
+    dependencies.fingerprintSecret,
+  );
   const projection = await dependencies.getProjection(
     actorUserId,
     command.organizationId,
@@ -356,6 +374,7 @@ function stableExternalCode(error: unknown, fallback: string): string {
 function assertSecret(
   expectedSha256: string | null,
   value: string | null,
+  fingerprintSecret: Dependencies["fingerprintSecret"],
 ): void {
   if ((expectedSha256 === null) !== (value === null)) {
     throw new TenantFederationError("federation_input_invalid");
@@ -368,15 +387,40 @@ function assertSecret(
   ) {
     throw new TenantFederationError("federation_input_invalid");
   }
-  const actual = Buffer.from(sha256(value), "hex");
+  const actual = Buffer.from(
+    fingerprintSecret(value, "upstream-client-secret"),
+    "hex",
+  );
   const expected = Buffer.from(expectedSha256, "hex");
   if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) {
     throw new TenantFederationError("federation_input_invalid");
   }
 }
 
-function sha256(value: string): string {
-  return createHash("sha256").update(value, "utf8").digest("hex");
+export function fingerprintUpstreamClientSecret(
+  value: string,
+  encodedKey = readFederationManagementConfig().credentialFingerprintKey,
+): string {
+  return fingerprintFederationSecret(
+    value,
+    "upstream-client-secret",
+    encodedKey,
+  );
+}
+
+export function fingerprintFederationSecret(
+  value: string,
+  purpose: "upstream-client-secret" | "broker-client-secret",
+  encodedKey: string,
+): string {
+  const key = Buffer.from(encodedKey, "base64");
+  if (key.length !== 32 || key.toString("base64") !== encodedKey) {
+    throw new TenantFederationError("federation_orchestration_unavailable");
+  }
+  return createHmac("sha256", key)
+    .update(`${FEDERATION_FINGERPRINT_CONTEXT}\0${purpose}\0`, "utf8")
+    .update(value, "utf8")
+    .digest("hex");
 }
 
 function phaseKey(phase: string, correlationId: string): string {
@@ -396,5 +440,11 @@ function productionDependencies(): Dependencies {
     authentik: new AuthentikFederationAdmin(config),
     supabase: new SupabaseFederationAdmin(config),
     brokerSecret: () => randomBytes(32).toString("base64url"),
+    fingerprintSecret: (value, purpose) =>
+      fingerprintFederationSecret(
+        value,
+        purpose,
+        config.credentialFingerprintKey,
+      ),
   };
 }

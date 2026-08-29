@@ -29,12 +29,14 @@ describe("federation management configuration", () => {
       ],
       ["/run/authentik-token", "a".repeat(48)],
       ["/run/supabase-key", "b".repeat(48)],
+      ["/run/fingerprint-key", "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="],
     ]);
     const config = readFederationManagementConfig(
       {
         LOYALTY_FEDERATION_CONFIG_FILE: "/run/federation.json",
         LOYALTY_AUTHENTIK_API_TOKEN_FILE: "/run/authentik-token",
         LOYALTY_SUPABASE_SERVICE_ROLE_KEY_FILE: "/run/supabase-key",
+        LOYALTY_FEDERATION_FINGERPRINT_KEY_FILE: "/run/fingerprint-key",
       },
       (path) => {
         const value = files.get(path);
@@ -51,6 +53,9 @@ describe("federation management configuration", () => {
     });
     expect(config.authentikToken).toBe("a".repeat(48));
     expect(config.supabaseServiceRoleKey).toBe("b".repeat(48));
+    expect(config.credentialFingerprintKey).toBe(
+      "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=",
+    );
   });
 
   it.each([
@@ -59,6 +64,10 @@ describe("federation management configuration", () => {
       { LOYALTY_FEDERATION_CONFIG_FILE: "config.json" },
     ],
     ["a missing secret path", { LOYALTY_AUTHENTIK_API_TOKEN_FILE: undefined }],
+    [
+      "a missing fingerprint path",
+      { LOYALTY_FEDERATION_FINGERPRINT_KEY_FILE: undefined },
+    ],
   ])("rejects %s", (_case, override) => {
     expect(() =>
       readFederationManagementConfig(
@@ -66,6 +75,7 @@ describe("federation management configuration", () => {
           LOYALTY_FEDERATION_CONFIG_FILE: "/run/federation.json",
           LOYALTY_AUTHENTIK_API_TOKEN_FILE: "/run/authentik-token",
           LOYALTY_SUPABASE_SERVICE_ROLE_KEY_FILE: "/run/supabase-key",
+          LOYALTY_FEDERATION_FINGERPRINT_KEY_FILE: "/run/fingerprint-key",
           ...override,
         },
         () => "{}",
@@ -96,6 +106,7 @@ describe("federation management configuration", () => {
             LOYALTY_FEDERATION_CONFIG_FILE: "/run/federation.json",
             LOYALTY_AUTHENTIK_API_TOKEN_FILE: "/run/authentik-token",
             LOYALTY_SUPABASE_SERVICE_ROLE_KEY_FILE: "/run/supabase-key",
+            LOYALTY_FEDERATION_FINGERPRINT_KEY_FILE: "/run/fingerprint-key",
           },
           (path) =>
             path.endsWith("federation.json")
@@ -109,5 +120,32 @@ describe("federation management configuration", () => {
         ),
       ).toThrow("federation_management_config_invalid");
     }
+  });
+
+  it("rejects a noncanonical or short credential fingerprint key", () => {
+    expect(() =>
+      readFederationManagementConfig(
+        {
+          LOYALTY_FEDERATION_CONFIG_FILE: "/run/federation.json",
+          LOYALTY_AUTHENTIK_API_TOKEN_FILE: "/run/authentik-token",
+          LOYALTY_SUPABASE_SERVICE_ROLE_KEY_FILE: "/run/supabase-key",
+          LOYALTY_FEDERATION_FINGERPRINT_KEY_FILE: "/run/fingerprint-key",
+        },
+        (path) => {
+          if (path.endsWith("federation.json")) {
+            return JSON.stringify({
+              authentikOrigin: "https://auth.example.com",
+              supabaseUrl: "https://api.example.com",
+              ...ids,
+              providerOpenidPropertyMappingId: ids.providerSigningKeyId,
+              sourceUserPropertyMappingIds: [ids.providerSigningKeyId],
+            });
+          }
+          return path.endsWith("fingerprint-key")
+            ? "not-a-256-bit-key"
+            : `secret-${"x".repeat(40)}`;
+        },
+      ),
+    ).toThrow("federation_management_secret_invalid");
   });
 });

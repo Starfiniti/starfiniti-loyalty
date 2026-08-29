@@ -1,5 +1,19 @@
 # Status
 
+- ADR-0098 is the active correction for Security run `33252683326`, whose
+  retained summary safely exposed one `js/insecure-temporary-file` and one
+  `js/insufficient-password-hash` result but initially could not classify their
+  tag-encoded 7.0/8.1 security scores. The minimizer now fails closed on exact
+  tag scores and conflicts, self-test files are `0600`, and tenant-federation
+  upstream/broker bindings are purpose-separated HMAC-SHA256 under a new
+  distinct owner-only 256-bit key. The earlier optional three-file boundary is
+  superseded by a four-file all-or-none deployment contract; production still
+  has none of these files and remains unchanged. The complete local
+  `npm run check` gate passes with 993 tests, the production dashboard build, and
+  all repository validators. Exact-head CI/Security, retained artifacts,
+  independent testing, production review, and security-owner approval remain
+  pending, so M15-S03 and the goal remain open.
+
 - ADR-0096 replaces the pending V2 rsync handoff with a fail-closed V3 inventory contract while preserving accepted V1/V2 policy and evidence byte-for-byte. The effective bundle is exactly seventy-four entries: thirty unchanged BorgBackup/OpenSSH inputs plus forty-four native-rsync inputs covering both endpoint-native executables, the shared wrapper, signed source and release key, unchanged distribution rollback packages, two endpoint-bound dependency inventories, the retained digest-lock report, build/runtime controls, runbooks, decisions, verifier, and historical/current evidence. The historical cross-suite `rsync-transport` provider cannot activate and a global library upgrade is forbidden. Exact implementation `21262cf08e265c61d3e76e1971ce7604916469cc` passed CI run `33250002574`, Security run `33250002462` including recovery-transport job `99093945140`, and independent CodeQL check `99094120148`; all twelve PR checks were green and PR #57 was clean and mergeable. Every source-signature, package-authority, native-build, consumer/selector compatibility, custody, review, restore, and production gate remains false; IMP-010 and R-004 remain Critical/open, M16 remains 77/100, production remains at 54/100, and VM 971 and SSH were not touched.
 
 - ADR-0095 replaces the proposed cross-suite rsync/libacl rollout shape without rewriting its historical canary or V2 escrow. Debian 13 and Ubuntu 24.04 build the exact signed upstream rsync 3.5.0 source independently against native libraries and copy only root-owned `0555` candidate files under `/opt/starfiniti/rsync/3.5.0`; `/usr/bin/rsync`, `/usr/bin/rrsync`, each distribution package, and native `libacl1` remain exact rollback anchors. Bootstrap Security run `33247037670`, recovery job `99086186056`, passed both native builds, current-host and candidate-host transfers, bounded two-file/21-byte payload, read-only non-root capability-free isolation, and exact teardown. Its retained report binds host executable SHA-256 `962b026fd37b68dce86a5601b24cddafc68db8d8c3b9d60c5b63c554fcee7b7c`, guest executable SHA-256 `5c754e6809d1ac79b81def92056059a31c12bb40fc476a81b5489ad318c7f188`, and shared wrapper SHA-256 `263d7bf7934442aa585e54152cf9ae8f93b01b1bd9719454deb4dc6f31b0bad8`. Corrected head `49aa5d1` passed all four Security jobs after adding the exact runtime health check and eliminating CodeQL's report-path race. Digest-locked Security run `33248120835`, recovery job `99089014687`, then reproduced all three pinned hashes under locked plan SHA-256 `46adc671b15fddead44c014edb334dc815ef14ee4d17bcdc3f18dd2ffb9c120f`; artifact `9713549190` and its exact retained report are independently hash-bound. Candidate plan SHA-256 is `cb6fee76b837c5274172182d7a58de71d2ccf13901722f856833b2ce6e7e0912`. No production access or mutation occurred, VM 971 and SSH were untouched, and IMP-010, R-004, V3 escrow, real archive/restore, and M16 remain open.

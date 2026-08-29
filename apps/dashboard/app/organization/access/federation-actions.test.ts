@@ -1,8 +1,10 @@
-import { createHash } from "node:crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const provisionTenantFederation = vi.hoisted(() => vi.fn());
 const applyTenantFederationAction = vi.hoisted(() => vi.fn());
+const fingerprintUpstreamClientSecret = vi.hoisted(() =>
+  vi.fn(() => "f".repeat(64)),
+);
 const revalidatePath = vi.hoisted(() => vi.fn());
 const getClaims = vi.hoisted(() => vi.fn());
 
@@ -23,6 +25,7 @@ vi.mock("@/lib/server/tenant-federation", () => {
   }
   return {
     applyTenantFederationAction,
+    fingerprintUpstreamClientSecret,
     provisionTenantFederation,
     TenantFederationError,
   };
@@ -73,11 +76,12 @@ describe("federation server actions", () => {
       actorId,
       expect.objectContaining({
         organizationId,
-        clientSecretSha256: createHash("sha256").update(secret).digest("hex"),
+        clientSecretSha256: "f".repeat(64),
         idempotencyKey: `federation:create:${operationId}`,
       }),
       secret,
     );
+    expect(fingerprintUpstreamClientSecret).toHaveBeenCalledWith(secret);
     const command = provisionTenantFederation.mock.calls[0]?.[1];
     expect(JSON.stringify(command)).not.toContain(secret);
     expect(revalidatePath).toHaveBeenCalledWith("/organization/access");
@@ -93,6 +97,34 @@ describe("federation server actions", () => {
       kind: "error",
     });
     expect(getClaims).not.toHaveBeenCalled();
+    expect(provisionTenantFederation).not.toHaveBeenCalled();
+  });
+
+  it("does not read fingerprint authority for an unauthenticated caller", async () => {
+    getClaims.mockResolvedValueOnce({ data: { claims: {} }, error: null });
+
+    await expect(
+      createFederationSourceAction(idle, oidcForm()),
+    ).resolves.toMatchObject({
+      kind: "error",
+      message: expect.stringContaining("authenticated organization authority"),
+    });
+    expect(fingerprintUpstreamClientSecret).not.toHaveBeenCalled();
+    expect(provisionTenantFederation).not.toHaveBeenCalled();
+  });
+
+  it("fails closed after authentication when fingerprint authority is unavailable", async () => {
+    fingerprintUpstreamClientSecret.mockImplementationOnce(() => {
+      throw new Error("fingerprint key unavailable");
+    });
+
+    await expect(
+      createFederationSourceAction(idle, oidcForm()),
+    ).resolves.toMatchObject({
+      kind: "error",
+      message: expect.stringContaining("No provider was enabled"),
+    });
+    expect(getClaims).toHaveBeenCalledTimes(1);
     expect(provisionTenantFederation).not.toHaveBeenCalled();
   });
 

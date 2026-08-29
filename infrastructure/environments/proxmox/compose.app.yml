@@ -15,6 +15,7 @@ services:
       LOYALTY_FEDERATION_CONFIG_FILE: /run/secrets/federation_management_config
       LOYALTY_AUTHENTIK_API_TOKEN_FILE: /run/secrets/authentik_federation_token
       LOYALTY_SUPABASE_SERVICE_ROLE_KEY_FILE: /run/secrets/supabase_service_role_key
+      LOYALTY_FEDERATION_FINGERPRINT_KEY_FILE: /run/secrets/federation_fingerprint_key
       LOYALTY_STRIPE_WEBHOOK_SECRET_FILE: /run/secrets/stripe_webhook_secret
       LOYALTY_STRIPE_API_KEY_FILE: /run/secrets/stripe_api_key
     extra_hosts:
@@ -37,6 +38,12 @@ services:
       - type: bind
         source: "${LOYALTY_SUPABASE_SERVICE_ROLE_KEY_PATH:-/dev/null}"
         target: /run/secrets/supabase_service_role_key
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: "${LOYALTY_FEDERATION_FINGERPRINT_KEY_PATH:-/dev/null}"
+        target: /run/secrets/federation_fingerprint_key
         read_only: true
         bind:
           create_host_path: false

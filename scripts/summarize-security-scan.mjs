@@ -138,17 +138,64 @@ function normalizeSeverity(value) {
   return severityOrder.includes(normalized) ? normalized : "unknown";
 }
 
+function declaredSarifSecurityScores(value) {
+  const properties = value?.properties;
+  if (!properties || typeof properties !== "object") {
+    return { declared: false, raw: [] };
+  }
+  const raw = [];
+  let declared = false;
+  if (Object.hasOwn(properties, "security-severity")) {
+    declared = true;
+    raw.push(properties["security-severity"]);
+  }
+  if (Array.isArray(properties.tags)) {
+    for (const tag of properties.tags) {
+      if (typeof tag === "string" && tag.startsWith("security-severity/")) {
+        declared = true;
+        raw.push(tag.slice("security-severity/".length));
+      }
+    }
+  }
+  return { declared, raw };
+}
+
+function parseSarifSecurityScore(value) {
+  if (typeof value === "number") {
+    return Number.isFinite(value) && value >= 0 && value <= 10 ? value : null;
+  }
+  if (
+    typeof value !== "string" ||
+    !/^(?:0|[1-9][0-9]*)(?:\.[0-9]+)?$/u.test(value)
+  ) {
+    return null;
+  }
+  const score = Number(value);
+  return Number.isFinite(score) && score >= 0 && score <= 10 ? score : null;
+}
+
 function sarifSeverity(result, rule) {
-  const rawScore =
-    result?.properties?.["security-severity"] ??
-    rule?.properties?.["security-severity"];
-  const score = Number(rawScore);
-  if (Number.isFinite(score) && score >= 0) {
+  const declarations = [
+    declaredSarifSecurityScores(result),
+    declaredSarifSecurityScores(rule),
+  ];
+  const declared = declarations.some((item) => item.declared);
+  const rawScores = declarations.flatMap((item) => item.raw);
+  const scores = rawScores.map(parseSarifSecurityScore);
+  const uniqueScores = new Set(scores);
+  if (
+    declared &&
+    rawScores.length > 0 &&
+    scores.every((score) => score !== null) &&
+    uniqueScores.size === 1
+  ) {
+    const [score] = uniqueScores;
     if (score >= 9) return "critical";
     if (score >= 7) return "high";
     if (score >= 4) return "medium";
     return "low";
   }
+  if (declared) return "unknown";
   const level = String(
     result?.level ?? rule?.defaultConfiguration?.level ?? "",
   ).toLowerCase();
@@ -444,6 +491,12 @@ function parseArgs(argv) {
 function runSelfTest() {
   const temporary = mkdtempSync(join(tmpdir(), "starfiniti-security-summary-"));
   try {
+    const writeFixture = (path, value) =>
+      writeFileSync(path, JSON.stringify(value), {
+        encoding: "utf8",
+        flag: "w",
+        mode: 0o600,
+      });
     const candidateCommit = "a".repeat(40);
     const analysisCommit = "b".repeat(40);
     const sarifDirectory = join(temporary, "sarif");
@@ -480,7 +533,7 @@ function runSelfTest() {
         },
       ],
     };
-    writeFileSync(join(sarifDirectory, "result.sarif"), JSON.stringify(sarif));
+    writeFixture(join(sarifDirectory, "result.sarif"), sarif);
     const codeql = summarizeCodeql({
       input: sarifDirectory,
       candidateCommit,
@@ -493,7 +546,7 @@ function runSelfTest() {
       fail("self-test CodeQL summary did not preserve the finding");
     }
     sarif.runs[0].tool.driver.version = "2.26.3";
-    writeFileSync(join(sarifDirectory, "result.sarif"), JSON.stringify(sarif));
+    writeFixture(join(sarifDirectory, "result.sarif"), sarif);
     try {
       summarizeCodeql({
         input: sarifDirectory,
@@ -506,8 +559,12 @@ function runSelfTest() {
         throw error;
     }
     delete sarif.runs[0].tool.driver.version;
-    sarif.runs[0].tool.driver.rules[0].properties["security-severity"] = "8.1";
-    writeFileSync(join(sarifDirectory, "result.sarif"), JSON.stringify(sarif));
+    delete sarif.runs[0].tool.driver.rules[0].properties["security-severity"];
+    sarif.runs[0].tool.driver.rules[0].properties.tags = [
+      "security",
+      "security-severity/8.1",
+    ];
+    writeFixture(join(sarifDirectory, "result.sarif"), sarif);
     try {
       summarizeCodeql({
         input: sarifDirectory,
@@ -524,6 +581,44 @@ function runSelfTest() {
         throw error;
       }
     }
+    sarif.runs[0].tool.driver.rules[0].properties["security-severity"] = "6.5";
+    writeFixture(join(sarifDirectory, "result.sarif"), sarif);
+    try {
+      summarizeCodeql({
+        input: sarifDirectory,
+        candidateCommit,
+        analysisCommit,
+      });
+      fail("self-test accepted conflicting CodeQL security severities");
+    } catch (error) {
+      if (
+        !String(error?.message).includes("unclassified") ||
+        error?.summary?.findings?.unknown !== 1
+      ) {
+        throw error;
+      }
+    }
+    delete sarif.runs[0].tool.driver.rules[0].properties["security-severity"];
+    sarif.runs[0].tool.driver.rules[0].properties.tags = [
+      "security",
+      "security-severity/",
+    ];
+    writeFixture(join(sarifDirectory, "result.sarif"), sarif);
+    try {
+      summarizeCodeql({
+        input: sarifDirectory,
+        candidateCommit,
+        analysisCommit,
+      });
+      fail("self-test accepted an empty CodeQL security severity as zero");
+    } catch (error) {
+      if (
+        !String(error?.message).includes("unclassified") ||
+        error?.summary?.findings?.unknown !== 1
+      ) {
+        throw error;
+      }
+    }
 
     const repositoryPath = join(temporary, "repository.json");
     const repository = {
@@ -533,7 +628,7 @@ function runSelfTest() {
       ArtifactType: "repository",
       Results: [],
     };
-    writeFileSync(repositoryPath, JSON.stringify(repository));
+    writeFixture(repositoryPath, repository);
     const repositorySummary = summarizeRepository({
       input: repositoryPath,
       candidateCommit,
@@ -549,7 +644,7 @@ function runSelfTest() {
     repository.Results.push({
       Secrets: [{ Severity: "CRITICAL", Match: "never retained" }],
     });
-    writeFileSync(repositoryPath, JSON.stringify(repository));
+    writeFixture(repositoryPath, repository);
     try {
       summarizeRepository({
         input: repositoryPath,

@@ -1,10 +1,11 @@
-import { createHash } from "node:crypto";
 import { describe, expect, it, vi } from "vitest";
 import { AuthentikFederationAdminError } from "./authentik-federation-admin";
 import type { FederationValidationResult } from "./federation-validation";
 import { SupabaseFederationAdminError } from "./supabase-federation-admin";
 import {
   applyTenantFederationAction,
+  fingerprintFederationSecret,
+  fingerprintUpstreamClientSecret,
   provisionTenantFederation,
 } from "./tenant-federation";
 
@@ -17,6 +18,7 @@ const correlationId = "40000000-0000-4000-8000-000000000001";
 const sourceSlug = "loyalty-0123456789abcdefghij";
 const providerIdentifier = `custom:${sourceSlug}`;
 const upstreamSecret = "upstream-secret-value";
+const fingerprintKey = "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=";
 
 const createCommand = {
   version: "1",
@@ -27,7 +29,10 @@ const createCommand = {
     discoveryUrl: "https://idp.vendor.com/.well-known/openid-configuration",
     clientId: "tenant-client",
   },
-  clientSecretSha256: sha256(upstreamSecret),
+  clientSecretSha256: fingerprintUpstreamClientSecret(
+    upstreamSecret,
+    fingerprintKey,
+  ),
   idempotencyKey: "federation-create-1",
   correlationId,
 } as const;
@@ -106,6 +111,16 @@ describe("tenant federation orchestration", () => {
         externalDetailCode: "validated",
       }),
     );
+    const brokerFingerprint =
+      dependencies.recordValidation.mock.calls[0]?.[1]?.brokerSecretSha256;
+    expect(brokerFingerprint).toMatch(/^[0-9a-f]{64}$/u);
+    expect(brokerFingerprint).not.toBe(
+      fingerprintFederationSecret(
+        "broker-secret-value",
+        "upstream-client-secret",
+        fingerprintKey,
+      ),
+    );
     expect(result.mutation.status).toBe("validated");
     expect(result.setup?.oauthCallbackUrl).toContain(sourceSlug);
   });
@@ -152,6 +167,27 @@ describe("tenant federation orchestration", () => {
     });
     expect(dependencies.prepare).not.toHaveBeenCalled();
     expect(dependencies.authentik.reconcileDisabled).not.toHaveBeenCalled();
+  });
+
+  it("rejects a fingerprint created under another deployment key", async () => {
+    const dependencies = provisioningDependencies([]);
+    const otherKey = "AgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgI=";
+
+    await expect(
+      provisionTenantFederation(
+        actorId,
+        {
+          ...createCommand,
+          clientSecretSha256: fingerprintUpstreamClientSecret(
+            upstreamSecret,
+            otherKey,
+          ),
+        },
+        upstreamSecret,
+        dependencies,
+      ),
+    ).rejects.toMatchObject({ code: "federation_input_invalid" });
+    expect(dependencies.prepare).not.toHaveBeenCalled();
   });
 
   it("enables Supabase before Authentik and records completion last", async () => {
@@ -377,15 +413,19 @@ function provisioningDependencies(order: string[]) {
         configurationSha256: "a".repeat(64),
       };
     }),
-    recordValidation: vi.fn(async () => {
-      order.push("record-validation");
-      return {
-        resourceId: sourceId,
-        outcome: "applied",
-        revision: 2,
-        status: "validated",
-      };
-    }),
+    recordValidation: vi.fn(
+      async (actor: string, input: { brokerSecretSha256: string }) => {
+        void actor;
+        void input;
+        order.push("record-validation");
+        return {
+          resourceId: sourceId,
+          outcome: "applied",
+          revision: 2,
+          status: "validated",
+        };
+      },
+    ),
     getProjection: vi.fn(),
     begin: vi.fn(),
     recover: vi.fn(),
@@ -410,6 +450,10 @@ function provisioningDependencies(order: string[]) {
       setEnabled: vi.fn(),
     },
     brokerSecret: () => "broker-secret-value",
+    fingerprintSecret: (
+      value: string,
+      purpose: "upstream-client-secret" | "broker-client-secret",
+    ) => fingerprintFederationSecret(value, purpose, fingerprintKey),
   };
 }
 
@@ -477,6 +521,10 @@ function lifecycleDependencies(order: string[]) {
       }),
     },
     brokerSecret: () => "broker-secret-value",
+    fingerprintSecret: (
+      value: string,
+      purpose: "upstream-client-secret" | "broker-client-secret",
+    ) => fingerprintFederationSecret(value, purpose, fingerprintKey),
   };
 }
 
@@ -492,8 +540,4 @@ function lifecycleCommand(action: "enable" | "disable") {
     idempotencyKey: `federation-${action}-1`,
     correlationId,
   } as const;
-}
-
-function sha256(value: string): string {
-  return createHash("sha256").update(value, "utf8").digest("hex");
 }

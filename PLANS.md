@@ -1,5 +1,17 @@
 # Execution Plan
 
+ADR-0098 addresses the two High results exposed by ADR-0097's first real
+minimized CodeQL run without suppressing either result. Security severity is now
+derived from direct SARIF metadata or exact CodeQL score tags, conflict remains
+unknown/release-blocking, and every temporary self-test fixture is explicit
+`0600`. The tenant-federation command retains its V1 64-hex shape but replaces
+plain upstream/broker SHA-256 with purpose-separated HMAC-SHA256 under a fourth
+distinct owner-only 256-bit mounted key. The zero-file disabled state remains
+valid; any partial, linked, or malformed four-file activation fails preflight.
+The complete local `npm run check` gate passes with 993 tests, every validator,
+the production dashboard build, and both client packages; exact-head
+CI/Security evidence is still required before the M15 finding gate advances.
+
 ## Objective
 
 Deliver the enterprise WooCommerce roadmap in `docs/plan/ENTERPRISE_ROADMAP.md` without weakening the immutable ledger, tenant RLS, idempotency, audit, recovery, or checkout-independence guarantees. Shopify, localization, store credit, gift cards, and cash redemption are deferred.

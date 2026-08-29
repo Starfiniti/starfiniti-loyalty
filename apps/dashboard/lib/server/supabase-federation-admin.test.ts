@@ -23,6 +23,7 @@ const config = {
   sourceUserPropertyMappingIds: ["10000000-0000-4000-8000-000000000007"],
   authentikToken: "authentik-token-abcdefghijklmnopqrstuvwxyz",
   supabaseServiceRoleKey: "service-role-abcdefghijklmnopqrstuvwxyz",
+  credentialFingerprintKey: "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=",
 } satisfies FederationManagementConfig;
 
 describe("Supabase tenant custom-provider reconciliation", () => {

@@ -66,17 +66,24 @@ Create two separate files containing only the raw credential and a trailing newl
 - `/etc/starfiniti-loyalty/authentik-federation-token`
 - `/etc/starfiniti-loyalty/supabase-service-role-key`
 
-All three files must be owned by dashboard UID/GID `1001:1001`, mode `0400`, and mounted only into the dashboard. The environment file contains only their host paths. Run:
+Create a fourth file containing a dedicated canonical base64-encoded 256-bit fingerprint key. It is not an Authentik, Supabase, signing, database, or application-session credential:
+
+```sh
+umask 077
+openssl rand -base64 32 > /etc/starfiniti-loyalty/federation-fingerprint-key
+```
+
+All four files must be distinct, owned by dashboard UID/GID `1001:1001`, mode `0400`, and mounted only into the dashboard. The environment file contains only their host paths. Run:
 
 ```text
 npm run deploy:preflight -- --env /absolute/path/to/starfiniti.env
 ```
 
-Preflight validates ownership, permissions, distinct paths, exact HTTPS origins, selector types, configuration shape, and secret structure without printing values.
+Preflight validates ownership, permissions, distinct paths, exact HTTPS origins, selector types, configuration shape, raw credential structure, and the exact 32-byte canonical fingerprint-key encoding without printing values.
 
 ## Merchant lifecycle
 
-1. An owner/admin adds OIDC discovery or SAML metadata from **Team & access**. The server performs pinned public-network validation, provisions both brokers disabled, and stores only fingerprints and public evidence.
+1. An owner/admin adds OIDC discovery or SAML metadata from **Team & access**. The server performs pinned public-network validation, provisions both brokers disabled, and stores only domain-separated HMAC-SHA256 fingerprints and public evidence. The legacy V1 `*Sha256` wire names carry these keyed fingerprints, not unkeyed password hashes.
 2. Configure the returned callback/metadata/ACS values in the upstream IdP. The raw OIDC client secret is write-only; losing it requires disabled rotation.
 3. Verify the provider from a separate browser with a pre-invited test member. Then enable it. Enablement first repeats bounded discovery/metadata validation and requires exact continuity with the stored document, endpoints, issuer/entity ID, and signing fingerprints. The database resolver becomes public only after continuity and both external enables succeed and the completion revision commits.
 4. Each existing member signs in locally and selects **Link company SSO**. Supabase manual linking binds the upstream subject to that existing Auth UUID. The callback rechecks the exact provider and live membership.
@@ -97,6 +104,8 @@ The database `enterprise.identity` entitlement controls only new source creation
 - Rotation disables both brokers before changing the upstream OIDC secret and remains disabled afterward.
 
 Never delete Auth users, database memberships, federation revisions, or audit evidence as rollback. Existing sessions continue to pass through live organization membership and RLS checks.
+
+Treat fingerprint-key rotation as a deployment event. First reconcile every pending federation action, replace the owner-only file atomically, recreate only the dashboard, rerun preflight, and exercise create/rotate/retry cases. A key mismatch fails before database preparation or provider mutation; it never disables an existing login by itself.
 
 ## Canary evidence
 

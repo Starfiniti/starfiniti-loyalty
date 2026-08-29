@@ -108,6 +108,7 @@ const acceptedAdrs = [
   "0089-minimized-whole-host-proxmox-consumer-inventory.md",
   "0090-isolated-whole-host-proxmox-compatibility-rehearsal.md",
   "0097-source-and-origin-bound-prototype-messages-and-minimized-sast-evidence.md",
+  "0098-keyed-federation-credential-fingerprints-and-secure-scan-fixtures.md",
 ];
 
 for (const adr of acceptedAdrs) {

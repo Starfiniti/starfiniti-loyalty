@@ -1,5 +1,16 @@
 # Changelog
 
+- Added ADR-0098 after the first retained CodeQL summary correctly blocked two
+  previously unclassified results. The SARIF minimizer now reads exact
+  `security-severity/<score>` tags and treats malformed/conflicting declarations
+  as unknown; temporary fixtures use explicit `0600` files. Tenant-federation
+  upstream and broker credential bindings now use purpose-separated
+  HMAC-SHA256 under a fourth distinct owner-only canonical 256-bit key while
+  preserving the V1 64-hex wire shape and disabled self-hosted deployments.
+  Authentication precedes secret-file reads, and deployment preflight rejects
+  linked or changing federation inputs through stable no-follow reads.
+  Exact-head CodeQL and retained artifact proof remain pending.
+
 - Repaired two Medium CodeQL message-origin findings in the executable design
   prototype by binding host/editor messages to the exact parent/self source and
   load-time origin before payload access.

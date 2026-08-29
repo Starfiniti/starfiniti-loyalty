@@ -19,6 +19,7 @@ export type FederationManagementConfig = Readonly<{
   sourceUserPropertyMappingIds: readonly string[];
   authentikToken: string;
   supabaseServiceRoleKey: string;
+  credentialFingerprintKey: string;
 }>;
 
 type Environment = Readonly<Record<string, string | undefined>>;
@@ -38,6 +39,10 @@ export function readFederationManagementConfig(
   );
   const supabaseKeyPath = absolutePath(
     environment.LOYALTY_SUPABASE_SERVICE_ROLE_KEY_FILE,
+    "federation_management_secret_unavailable",
+  );
+  const fingerprintKeyPath = absolutePath(
+    environment.LOYALTY_FEDERATION_FINGERPRINT_KEY_FILE,
     "federation_management_secret_unavailable",
   );
   let document: unknown;
@@ -85,6 +90,7 @@ export function readFederationManagementConfig(
     ),
     authentikToken: secret(readFile, authentikTokenPath),
     supabaseServiceRoleKey: secret(readFile, supabaseKeyPath),
+    credentialFingerprintKey: fingerprintKey(readFile, fingerprintKeyPath),
   });
   return config;
 }
@@ -156,6 +162,15 @@ function secret(readFile: FileReader, path: string): string {
     value.length > 8_192 ||
     /[\u0000-\u001f\u007f]/u.test(value)
   ) {
+    throw new Error("federation_management_secret_invalid");
+  }
+  return value;
+}
+
+function fingerprintKey(readFile: FileReader, path: string): string {
+  const value = secret(readFile, path);
+  const decoded = Buffer.from(value, "base64");
+  if (decoded.length !== 32 || decoded.toString("base64") !== value) {
     throw new Error("federation_management_secret_invalid");
   }
   return value;
