@@ -170,4 +170,7 @@ LABEL com.starfiniti.disposable="true" \
 
 USER 65532:65532
 
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+  CMD ["/bin/sh", "-ec", "test -x /opt/starfiniti/rsync/3.5.0/bin/rsync && /opt/starfiniti/rsync/3.5.0/bin/rsync --version | grep -Eq '^rsync  version 3\\.5\\.0  protocol version 32$'"]
+
 ENTRYPOINT ["/usr/bin/false"]

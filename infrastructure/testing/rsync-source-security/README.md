@@ -22,3 +22,6 @@ npm run rsync-source-security:run -- \
 The report is minimized and contains no route, credential, production path,
 archive, customer, or tenant data. A pass does not authorize production
 download, build, installation, selector changes, timer execution, or recovery.
+Bootstrap discovers endpoint hashes, `locked` pins them while the second run is
+pending, and only a fresh digest-locked pass may promote the plan to
+`candidate`. Both reports remain separately hash-bound.

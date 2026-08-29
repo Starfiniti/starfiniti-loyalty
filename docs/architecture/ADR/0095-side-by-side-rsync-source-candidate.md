@@ -68,6 +68,13 @@ The disposable canary must prove:
   rejects an unrelated forced command;
 - immutable minimized output and exact container, image, and network teardown.
 
+The plan has three fail-closed phases. `bootstrap` permits only null endpoint
+digests and may retain one discovery report. `locked` requires those endpoint
+digests to equal the retained bootstrap report but still forbids a digest-lock
+report or candidate claim. `candidate` requires a second exact-plan run whose
+report reproduces every pinned digest. The evidence keeps bootstrap discovery
+and digest-lock canaries separate so neither can be substituted for the other.
+
 The accepted ADR-0073 package plan, report, and V2 escrow evidence remain
 historical inputs. They are not rewritten or relabelled as failed. ADR-0095
 selects a safer production candidate because it removes the unresolved global
@@ -89,6 +96,8 @@ packages before production activation.
   advisory, and rebuild evidence are therefore mandatory.
 - A disposable canary still cannot prove the real SSH forced command, systemd
   timer, archive, retention, restore, or production host integrity.
+- The disposable runtime has an exact candidate-version health check; the
+  runner also inspects its command and timing rather than trusting image text.
 
 ## Migration and rollback
 

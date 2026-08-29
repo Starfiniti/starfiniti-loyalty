@@ -231,8 +231,12 @@ production shape: the Debian host candidate would replace the global Trixie
 binds exact signed upstream rsync 3.5.0 source, a closed safe-tree manifest,
 separate Debian 13 and Ubuntu 24.04 native builds, fixed side-by-side paths,
 unchanged distribution rollback files, an internal no-port two-pair canary, and
-exact teardown. Local validation passes, but endpoint hash discovery and the
-digest-locked Linux rerun remain pending. A future V3 operations bundle must
+exact teardown. Bootstrap Security run `33247037670`, recovery job
+`99086186056`, passed and its exact retained report now binds the separate
+Debian/Ubuntu executable hashes and shared wrapper hash. The evidence lifecycle
+keeps this discovery proof distinct from the still-pending digest-locked Linux
+rerun; the plan cannot become a candidate until that second exact-plan run
+reproduces every hash. A future V3 operations bundle must
 retain both native binaries and all source/build/rollback evidence; V2 remains
 immutable historical evidence. No production access, mutation, or authority is
 claimed, and IMP-010, R-004, M16, and the product score remain unchanged.

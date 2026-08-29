@@ -1,13 +1,26 @@
-schema: starfiniti.rsync-source-security-evidence.v1
+schema: starfiniti.rsync-source-security-evidence.v2
 status: in_progress
-observedAt: 2026-08-29T09:47:00Z
+observedAt: 2026-08-29T10:15:00Z
 candidate:
   branch: codex/enterprise-roadmap-integration
   commit: null
 plan:
   path: infrastructure/testing/rsync-source-security/plan.yaml
   sha256: 2a777b46ca6a63e26005ce4ff9e3d0aae1d26b7052e3892db600eb406172853c
-canary: null
+bootstrapCanary:
+  report:
+    path: docs/plan/evidence/M16/runs/rsync-source-security-f61c44b-2026-08-29T101026Z.json
+    sha256: d596b2a8d3ee1754d3d1f2ccbe56cafc58301b61087c228bf47eabb4a38e9483
+  github:
+    workflowRunId: 33247037670
+    jobId: 99086186056
+    artifactId: 9713232691
+    artifactName: security-rsync-source-30111881b41edc4d7af2dacca199e5bd2075ab18
+    artifactArchiveSha256: d7d85894ff62adfbc01e638ae7bea5d6b6b7f028dc77b6ad62944947068021b5
+    artifactCreatedAt: 2026-08-29T10:12:20Z
+    headCommit: f61c44bd306819593ff89110caf2da1174390cf6
+    mergeCommit: 30111881b41edc4d7af2dacca199e5bd2075ab18
+digestLockCanary: null
 checks:
   - id: architecture_decision
     status: passed
@@ -28,8 +41,8 @@ checks:
     status: passed
     evidence: The repository plan validator, runner self-test, source-verifier adversarial fixtures, focused ESLint, shell syntax checks, and workflow validation pass locally.
   - id: bootstrap_canary
-    status: pending
-    evidence: The disposable GitHub Docker canary must compile both native candidates and report the first observed endpoint executable and wrapper hashes without treating discovery as a production approval.
+    status: passed
+    evidence: GitHub Security run 33247037670 job 99086186056 compiled the signed source independently on digest-pinned Debian 13 and Ubuntu 24.04 images, passed both bounded transfer pairs, tore down every disposable resource, and retained the exact minimized report.
   - id: candidate_digest_lock
     status: pending
     evidence: Endpoint executable and wrapper digests remain null during bootstrap and must be committed into a candidate plan only after the isolated discovery run passes.

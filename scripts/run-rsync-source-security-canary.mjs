@@ -388,6 +388,7 @@ function inspectIsolation(container, expected) {
   const networks = Object.keys(details.NetworkSettings.Networks ?? {});
   const tmpfs = Object.keys(host.Tmpfs ?? {});
   const labels = details.Config.Labels ?? {};
+  const healthcheck = details.Config.Healthcheck ?? {};
   const controls = [
     [
       "network-port-bindings",
@@ -417,6 +418,20 @@ function inspectIsolation(container, expected) {
     ["memory-limit", host.Memory === 268435456],
     ["cpu-limit", host.NanoCpus === 1_000_000_000],
     ["runtime-user", details.Config.User === "65532:65532"],
+    [
+      "candidate-healthcheck",
+      JSON.stringify(healthcheck.Test) ===
+        JSON.stringify([
+          "CMD",
+          "/bin/sh",
+          "-ec",
+          "test -x /opt/starfiniti/rsync/3.5.0/bin/rsync && /opt/starfiniti/rsync/3.5.0/bin/rsync --version | grep -Eq '^rsync  version 3\\.5\\.0  protocol version 32$'",
+        ]) &&
+        healthcheck.Interval === 30_000_000_000 &&
+        healthcheck.Timeout === 5_000_000_000 &&
+        healthcheck.StartPeriod === 5_000_000_000 &&
+        healthcheck.Retries === 3,
+    ],
     [
       "entrypoint",
       JSON.stringify(details.Config.Entrypoint) ===

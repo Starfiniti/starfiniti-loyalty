@@ -137,7 +137,7 @@ export function validateRsyncSourcePlan(plan) {
   );
   if (
     plan.schema !== "starfiniti.rsync-source-security-plan.v1" ||
-    !["bootstrap", "candidate"].includes(plan.status) ||
+    !["bootstrap", "locked", "candidate"].includes(plan.status) ||
     plan.profile !== "privileged-recovery-transport" ||
     plan.architecture !== "amd64"
   ) {
@@ -353,7 +353,7 @@ export function validateRsyncSourcePlan(plan) {
       const value = endpoint[key];
       if (
         (plan.status === "bootstrap" && value !== null) ||
-        (plan.status === "candidate" &&
+        (["locked", "candidate"].includes(plan.status) &&
           (!digestPattern.test(value) || /^0{64}$/u.test(value)))
       ) {
         fail(`${endpointId} ${key} differs from the plan phase`);
@@ -544,6 +544,84 @@ export function validateCanaryReport(report, plan, options = {}) {
   return report;
 }
 
+function bootstrapPlan(plan) {
+  const bootstrap = clone(plan);
+  bootstrap.status = "bootstrap";
+  for (const endpoint of bootstrap.candidate.endpoints) {
+    endpoint.executableSha256 = null;
+    endpoint.wrapperSha256 = null;
+  }
+  return validateRsyncSourcePlan(bootstrap);
+}
+
+function validateCanaryEvidence(
+  canary,
+  canaryPlan,
+  evidenceObservedAt,
+  expectedHeadCommit = null,
+) {
+  exactKeys(canary, ["report", "github"], "evidence canary");
+  exactKeys(canary.report, ["path", "sha256"], "evidence canary report");
+  const reportPath = canary.report.path;
+  if (
+    typeof reportPath !== "string" ||
+    !/^docs\/plan\/evidence\/M16\/runs\/rsync-source-security-[0-9a-f]{7}-20\d{2}-\d{2}-\d{2}T\d{6}Z\.json$/u.test(
+      reportPath,
+    ) ||
+    !digestPattern.test(canary.report.sha256)
+  ) {
+    fail("evidence canary report binding differs");
+  }
+  const report = readBoundJsonArtifact(
+    reportPath,
+    canary.report.sha256,
+    "rsync source security canary",
+    {
+      fail,
+      resolvePath: (relativePath) => join(root, relativePath),
+      maximumBytes: 16 * 1024,
+    },
+  );
+  validateCanaryReport(report, canaryPlan, { completed: true });
+  exactKeys(
+    canary.github,
+    [
+      "workflowRunId",
+      "jobId",
+      "artifactId",
+      "artifactName",
+      "artifactArchiveSha256",
+      "artifactCreatedAt",
+      "headCommit",
+      "mergeCommit",
+    ],
+    "evidence GitHub binding",
+  );
+  const github = canary.github;
+  if (
+    !Number.isSafeInteger(github.workflowRunId) ||
+    github.workflowRunId < 1 ||
+    !Number.isSafeInteger(github.jobId) ||
+    github.jobId < 1 ||
+    !Number.isSafeInteger(github.artifactId) ||
+    github.artifactId < 1 ||
+    !commitPattern.test(github.headCommit) ||
+    (expectedHeadCommit !== null && github.headCommit !== expectedHeadCommit) ||
+    !reportPath.startsWith(
+      `docs/plan/evidence/M16/runs/rsync-source-security-${github.headCommit.slice(0, 7)}-`,
+    ) ||
+    !commitPattern.test(github.mergeCommit) ||
+    github.artifactName !== `security-rsync-source-${github.mergeCommit}` ||
+    !digestPattern.test(github.artifactArchiveSha256) ||
+    Number.isNaN(Date.parse(github.artifactCreatedAt)) ||
+    Date.parse(report.observedAt) > Date.parse(github.artifactCreatedAt) ||
+    Date.parse(github.artifactCreatedAt) > Date.parse(evidenceObservedAt)
+  ) {
+    fail("evidence GitHub identity or chronology differs");
+  }
+  return report;
+}
+
 function validateEvidence(evidence, plan) {
   exactKeys(
     evidence,
@@ -553,7 +631,8 @@ function validateEvidence(evidence, plan) {
       "observedAt",
       "candidate",
       "plan",
-      "canary",
+      "bootstrapCanary",
+      "digestLockCanary",
       "checks",
       "productionAccess",
       "productionMutation",
@@ -563,7 +642,7 @@ function validateEvidence(evidence, plan) {
     "evidence",
   );
   if (
-    evidence.schema !== "starfiniti.rsync-source-security-evidence.v1" ||
+    evidence.schema !== "starfiniti.rsync-source-security-evidence.v2" ||
     evidence.status !== "in_progress" ||
     Number.isNaN(Date.parse(evidence.observedAt)) ||
     evidence.productionAccess !== false ||
@@ -575,7 +654,8 @@ function validateEvidence(evidence, plan) {
   exactKeys(evidence.candidate, ["branch", "commit"], "evidence candidate");
   if (
     evidence.candidate.branch !== "codex/enterprise-roadmap-integration" ||
-    (plan.status === "bootstrap" && evidence.candidate.commit !== null) ||
+    (["bootstrap", "locked"].includes(plan.status) &&
+      evidence.candidate.commit !== null) ||
     (plan.status === "candidate" &&
       (!commitPattern.test(evidence.candidate.commit) ||
         /^0{40}$/u.test(evidence.candidate.commit)))
@@ -590,70 +670,41 @@ function validateEvidence(evidence, plan) {
   ) {
     fail("evidence plan binding differs");
   }
-  if (plan.status === "bootstrap") {
-    if (evidence.canary !== null)
-      fail("bootstrap evidence cannot bind a canary");
-  } else {
-    exactKeys(evidence.canary, ["report", "github"], "evidence canary");
-    exactKeys(
-      evidence.canary.report,
-      ["path", "sha256"],
-      "evidence canary report",
+  let bootstrapReport = null;
+  if (evidence.bootstrapCanary !== null) {
+    bootstrapReport = validateCanaryEvidence(
+      evidence.bootstrapCanary,
+      bootstrapPlan(plan),
+      evidence.observedAt,
     );
-    const reportPath = evidence.canary.report.path;
-    if (
-      typeof reportPath !== "string" ||
-      !/^docs\/plan\/evidence\/M16\/runs\/rsync-source-security-[0-9a-f]{7}-20\d{2}-\d{2}-\d{2}T\d{6}Z\.json$/u.test(
-        reportPath,
-      ) ||
-      !digestPattern.test(evidence.canary.report.sha256)
-    ) {
-      fail("evidence canary report binding differs");
-    }
-    const report = readBoundJsonArtifact(
-      reportPath,
-      evidence.canary.report.sha256,
-      "rsync source security canary",
-      {
-        fail,
-        resolvePath: (relativePath) => join(root, relativePath),
-        maximumBytes: 16 * 1024,
-      },
-    );
-    validateCanaryReport(report, plan, { completed: true });
-    exactKeys(
-      evidence.canary.github,
-      [
-        "workflowRunId",
-        "jobId",
-        "artifactId",
-        "artifactName",
-        "artifactArchiveSha256",
-        "artifactCreatedAt",
-        "headCommit",
-        "mergeCommit",
-      ],
-      "evidence GitHub binding",
-    );
-    const github = evidence.canary.github;
-    if (
-      !Number.isSafeInteger(github.workflowRunId) ||
-      github.workflowRunId < 1 ||
-      !Number.isSafeInteger(github.jobId) ||
-      github.jobId < 1 ||
-      !Number.isSafeInteger(github.artifactId) ||
-      github.artifactId < 1 ||
-      github.headCommit !== evidence.candidate.commit ||
-      !commitPattern.test(github.mergeCommit) ||
-      github.artifactName !== `security-rsync-source-${github.mergeCommit}` ||
-      !digestPattern.test(github.artifactArchiveSha256) ||
-      Number.isNaN(Date.parse(github.artifactCreatedAt)) ||
-      Date.parse(report.observedAt) > Date.parse(github.artifactCreatedAt) ||
-      Date.parse(github.artifactCreatedAt) > Date.parse(evidence.observedAt)
-    ) {
-      fail("evidence GitHub identity or chronology differs");
-    }
+  } else if (plan.status !== "bootstrap") {
+    fail("a locked or candidate plan requires its bootstrap canary");
   }
+  if (bootstrapReport && plan.status !== "bootstrap") {
+    bootstrapReport.endpoints.forEach((endpoint, index) => {
+      const pinned = plan.candidate.endpoints[index];
+      if (
+        endpoint.candidateExecutableSha256 !== pinned.executableSha256 ||
+        endpoint.candidateWrapperSha256 !== pinned.wrapperSha256
+      ) {
+        fail(`${endpoint.id} digest lock differs from bootstrap evidence`);
+      }
+    });
+  }
+  if (plan.status === "candidate") {
+    if (evidence.digestLockCanary === null) {
+      fail("candidate evidence requires its digest-lock canary");
+    }
+    validateCanaryEvidence(
+      evidence.digestLockCanary,
+      plan,
+      evidence.observedAt,
+      evidence.candidate.commit,
+    );
+  } else if (evidence.digestLockCanary !== null) {
+    fail("only candidate evidence may bind a digest-lock canary");
+  }
+  const bootstrapPassed = evidence.bootstrapCanary !== null;
   const expectedChecks = new Map([
     ["architecture_decision", "passed"],
     ["upstream_source", "passed"],
@@ -661,10 +712,10 @@ function validateEvidence(evidence, plan) {
     ["endpoint_native_builds", "passed"],
     ["distribution_rollback", "passed"],
     ["validator_self_test", "passed"],
-    ["bootstrap_canary", plan.status === "candidate" ? "passed" : "pending"],
+    ["bootstrap_canary", bootstrapPassed ? "passed" : "pending"],
     [
       "candidate_digest_lock",
-      plan.status === "candidate" ? "passed" : "pending",
+      ["locked", "candidate"].includes(plan.status) ? "passed" : "pending",
     ],
     ["digest_lock_canary", plan.status === "candidate" ? "passed" : "pending"],
     ["operations_escrow_v3", "pending"],
@@ -713,6 +764,7 @@ function validateWiring(candidateContent) {
     );
   const requirements = [
     ["adr", "global cross-suite ACL library"],
+    ["adr", "three fail-closed phases"],
     ["dockerfile", "GNUPGHOME=/tmp/starfiniti-rsync-gnupg"],
     ["dockerfile", "gpg --batch --status-fd=1 --verify"],
     ["dockerfile", '$2 == "VALIDSIG" && $3 == fingerprint'],
@@ -726,6 +778,7 @@ function validateWiring(candidateContent) {
     ["dockerfile", "BIND_NOW"],
     ["dockerfile", "RPATH|RUNPATH"],
     ["dockerfile", "EXPECTED_NATIVE_ACL_VERSION"],
+    ["dockerfile", "HEALTHCHECK --interval=30s --timeout=5s"],
     ["sourceVerifier", "source symlink escapes the expected root"],
     ["sourceVerifier", "archive contains a hard link or special member"],
     ["sourceVerifier", "archive member traverses a symbolic-link parent"],
@@ -737,6 +790,8 @@ function validateWiring(candidateContent) {
     ["runner", "constants.O_EXCL"],
     ["runner", "constants.O_NOFOLLOW"],
     ["runner", "output bytes or identity changed after publication"],
+    ["runner", '"candidate-healthcheck"'],
+    ["readme", "Bootstrap discovers endpoint hashes"],
     [
       "runner",
       "passing evidence requires exact container network and image teardown",
@@ -776,6 +831,32 @@ function selfTest() {
   const evidence = YAML.parse(readFileSync(evidencePath, "utf8"));
   assert.match(planDigest(plan), digestPattern);
   validateEvidence(evidence, plan);
+  const bootstrapReport = JSON.parse(
+    readFileSync(join(root, evidence.bootstrapCanary.report.path), "utf8"),
+  );
+  const lockedPlan = clone(plan);
+  lockedPlan.status = "locked";
+  lockedPlan.candidate.endpoints.forEach((endpoint, index) => {
+    endpoint.executableSha256 =
+      bootstrapReport.endpoints[index].candidateExecutableSha256;
+    endpoint.wrapperSha256 =
+      bootstrapReport.endpoints[index].candidateWrapperSha256;
+  });
+  validateRsyncSourcePlan(lockedPlan);
+  const lockedEvidence = clone(evidence);
+  lockedEvidence.plan.sha256 = planDigest(lockedPlan);
+  lockedEvidence.checks.find(
+    (check) => check.id === "candidate_digest_lock",
+  ).status = "passed";
+  validateEvidence(lockedEvidence, lockedPlan);
+  const mismatchedLock = clone(lockedPlan);
+  mismatchedLock.candidate.endpoints[0].executableSha256 = "7".repeat(64);
+  const mismatchedEvidence = clone(lockedEvidence);
+  mismatchedEvidence.plan.sha256 = planDigest(mismatchedLock);
+  assert.throws(() => validateEvidence(mismatchedEvidence, mismatchedLock));
+  const candidatePlan = clone(lockedPlan);
+  candidatePlan.status = "candidate";
+  assert.throws(() => validateEvidence(lockedEvidence, candidatePlan));
   const mutations = [
     (item) => {
       item.candidate.source.sha256 = "0".repeat(64);
