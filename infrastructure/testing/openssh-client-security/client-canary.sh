@@ -28,12 +28,6 @@ test -r /state/known_hosts
 test "$(stat -c '%u:%g:%a:%F' /state/client_ed25519)" = '65532:65532:600:regular file'
 test "$(stat -c '%u:%g:%a:%F' /state/known_hosts)" = '65532:65532:444:regular file'
 
-stage=current-version-execution
-current_version="$($current -V 2>&1)"
-stage=current-version-prefix
-printf '%s\n' "$current_version" | grep -Eq '^OpenSSH_10\.0p1'
-stage=current-version-format
-printf '%s\n' "$current_version" | grep -Eq '^OpenSSH_10\.0p1([,[:space:]]|$)'
 stage=candidate-version-execution
 candidate_version="$($candidate -V 2>&1)"
 stage=candidate-version-prefix

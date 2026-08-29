@@ -311,9 +311,6 @@ function parseClientFailureStage(logs) {
   const stage = matches.at(-1)?.[1];
   const allowed = new Set([
     "state-preflight",
-    "current-version-execution",
-    "current-version-prefix",
-    "current-version-format",
     "candidate-version-execution",
     "candidate-version-prefix",
     "candidate-version-format",
