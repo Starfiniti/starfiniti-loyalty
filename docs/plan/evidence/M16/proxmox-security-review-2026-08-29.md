@@ -137,3 +137,13 @@ confirmed that the link targets the package-owned regular root-owned
 that exact regular file, verifies package ownership, and continues to reject
 links. No candidate package or report artifact was produced and no production
 route, credential, or mutation was present.
+
+Regular-keyring correction `b325e4418ad7b0339b6681b9a0cb9a7bfad92230`
+authenticated the Debian repositories and reached the Proxmox `InRelease`, but
+recovery-transport job `99018583622` in Security run `33222253574` failed closed
+because Secure APT's unprivileged verifier could not read the freshly downloaded
+Proxmox keyring under the restrictive `0600` umask. The next correction retains
+the already verified published digest and root ownership but requires both
+public keyring inputs to be read-only `0444` regular files. No candidate package
+bytes or report artifact were produced, and no production route, credential, or
+mutation was present.

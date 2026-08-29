@@ -94,7 +94,7 @@ def trusted_root_file(path: Path, maximum: int, label: str) -> None:
     if (
         metadata.st_uid != 0
         or metadata.st_gid != 0
-        or metadata.st_mode & (stat.S_IWGRP | stat.S_IWOTH)
+        or stat.S_IMODE(metadata.st_mode) != 0o444
     ):
         fail(f"{label} ownership or permissions differ")
 
@@ -255,6 +255,7 @@ def configure_repositories(
     )
     if sha256_file(PROXMOX_KEYRING) != plan["keySha256"]:
         fail("Proxmox archive keyring digest differs")
+    PROXMOX_KEYRING.chmod(0o444)
     trusted_root_file(PROXMOX_KEYRING, 4 * 1024 * 1024, "Proxmox archive keyring")
     key_output = run(
         [
