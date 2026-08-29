@@ -206,3 +206,20 @@ signing-fingerprint, dependency, offline-copy/custody, recovery-usability,
 second-person, production, and `operationsEscrowComplete` gates false. The
 BorgBackup and OpenSSH operations-escrow rows, R-004, M16 score, and production
 state therefore remain unchanged.
+
+ADR-0094 preserves that accepted V1 policy and evidence by exact SHA-256 and
+defines the current shared V2 handoff. The
+[`recovery-artifact-escrow-v2.yaml`](recovery-artifact-escrow-v2.yaml) evidence
+binds sixty-four effective entries: the exact V1 thirty plus thirty-four rsync
+and governance inputs covering candidate, dependency, rollback, exact canary
+report, forced-command, controller, compatible rollback, systemd, sudoers,
+validator, verifier, canary, runbook, decisions, and current or historical policy
+and evidence. V2 uses distinct manifest/report schemas and the same bounded
+stable byte verifier; a V1 policy or evidence change fails before V2 loads.
+
+No real V2 private inventory exists. Package-authority and signing review,
+dependency and Proxmox-host consumer compatibility, redundant offline custody,
+independent review, the real forced-command/manual/timer path, isolated restore,
+rollout, and `operationsEscrowComplete` all remain pending. A local directory or
+CI artifact is not approved custody. IMP-010, R-004, the M16 score, and production
+therefore remain unchanged.

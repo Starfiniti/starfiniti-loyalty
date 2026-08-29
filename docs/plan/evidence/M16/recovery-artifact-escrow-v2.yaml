@@ -1,0 +1,76 @@
+schema: starfiniti.recovery-artifact-escrow-evidence.v2
+status: in_progress
+observedAt: 2026-08-29T09:08:38Z
+candidate:
+  branch: codex/enterprise-roadmap-integration
+  commit: null
+policy:
+  path: infrastructure/governance/recovery-artifact-escrow-v2.yaml
+  sha256: fc75ce85da05f98d1abf9fe2f3ab720a34109d331a351d1cea2fd3230e8315f4
+checks:
+  - id: design_contract
+    status: passed
+    evidence: ADR-0094 compares an in-place V1 rewrite, a separate rsync verifier, and a versioned shared V2 bundle; the selected path preserves history and carries no network, copy, execution, production, or mutation authority.
+  - id: historical_v1_preserved
+    status: passed
+    evidence: The accepted V1 policy and evidence remain byte-for-byte bound to their recorded SHA-256 digests and are validated before the V2 contract can load.
+  - id: closed_catalogue
+    status: passed
+    evidence: V2 inherits the exact thirty BorgBackup and OpenSSH entries and adds thirty-four rsync package, canary-report, rollback, runtime, verifier, runbook, decision, current or historical evidence, and policy entries for a closed total of sixty-four.
+  - id: stable_byte_verification
+    status: passed
+    evidence: The shared verifier rejects missing, extra, path-traversing, case-colliding, linked-final, linked-parent, special, mutable, over-bound, size-different, digest-different, repository-different, and mid-run Git-head-different inputs.
+  - id: rsync_package_binding
+    status: passed
+    evidence: Three candidate or dependency packages, all three rollback packages, and the exact minimized canary report are fixed to canonical plan or evidence hashes, with the Ubuntu candidate also bound to the complete rsync-project PPA fingerprint.
+  - id: rsync_runtime_binding
+    status: passed
+    evidence: The exact forced exporter, host controller and compatible rollback scripts, four systemd units, sudoers rule, validators, canary assets, runbook, verifier source, both escrow ADRs, V1 policy and evidence, V2 evidence, and provider decisions are repository-bound inputs.
+  - id: minimized_report_contract
+    status: passed
+    evidence: A V2 report contains only commit and policy or manifest digests, aggregate provider counts and bytes, fixed verification booleans, explicit false completion fields, and false production authority.
+  - id: validator_selftest
+    status: passed
+    evidence: The V1 immutability check, canonical sixty-four-entry V2 policy, wiring, positive V1/V2 inventory and report fixtures, deterministic corruptions, complete 988-test repository gate, static 87-migration and 69-pgTAP-file validation, 1,154-file secret scan, zero-vulnerability production audit, and licence gate pass locally; exact-head Linux verification remains separately pending.
+  - id: exact_head_ci
+    status: pending
+    evidence: Exact-head CI and Security runs will be recorded only after the implementation is committed and all repository gates pass against that immutable head.
+  - id: private_inventory
+    status: pending
+    evidence: Operations has not staged the exact sixty-four files in an approved private destination or produced a V2 private manifest and minimized verification report.
+  - id: package_authority_review
+    status: pending
+    evidence: A second person has not independently resolved the six rsync candidate, dependency, and rollback package bytes through their signed distribution metadata and rechecked the recorded hashes.
+  - id: signing_fingerprint_review
+    status: pending
+    evidence: A second person has not revalidated the BorgBackup, OpenSSH, and rsync-project signing fingerprints and applicable signatures or signed metadata against the escrowed candidate bytes.
+  - id: dependency_review
+    status: pending
+    evidence: BorgBackup and OpenSSH executable dependency inventories and the exact rsync host dependency have not completed independent runtime review in the approved environments.
+  - id: consumer_compatibility_review
+    status: pending
+    evidence: Operations has not proved that installing Debian libacl1 2.4.0 preserves every relevant Proxmox host consumer or documented the exact forward-fix and rollback decision.
+  - id: offline_copy_review
+    status: pending
+    evidence: Offline, encrypted, redundant, independently accessible custody has not been demonstrated; a repository, GitHub artifact, or local staging directory does not qualify.
+  - id: independent_review
+    status: pending
+    evidence: Operations, security, recovery, and an independent reviewer have not accepted the V2 manifest, minimized report, authority checks, custody, and recovery usability.
+  - id: isolated_restore
+    status: pending
+    evidence: No archive produced through the exact V2 rsync transport candidate has completed an independently observed isolated full-service recovery.
+  - id: operations_escrow
+    status: pending
+    evidence: Inventory verification cannot close BorgBackup, OpenSSH, or rsync operations escrow; every package, signature, dependency, compatibility, custody, rollout, and recovery gate remains independently required.
+productionAccess: false
+productionMutation: false
+productionAuthority: false
+operationsEscrowComplete: false
+automaticFails:
+  - the V1 policy or evidence differs from its accepted immutable digest or the V2 extension differs from the exact reviewed contract
+  - a required entry is absent extra duplicated case-colliding linked special mutable over-bound or digest-different
+  - a fixed artifact differs from its candidate plan or a repository instruction differs from the clean exact Git commit
+  - an rsync candidate dependency or rollback package is absent substituted reordered or detached from the exact endpoint plan
+  - a private-manifest-bound key or dependency inventory is missing malformed empty or represented as independently reviewed
+  - a minimized report contains private paths identities endpoints raw content or production authority
+  - inventory verification is presented as package-authority compatibility offline-custody signing-fingerprint dependency second-person isolated-restore production activation or operations-escrow completion

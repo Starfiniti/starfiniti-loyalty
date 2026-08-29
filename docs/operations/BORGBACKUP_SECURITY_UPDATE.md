@@ -50,9 +50,11 @@ a second reviewer recheck each value:
 No credential, repository key, infrastructure identifier, route, archive
 listing, or customer/tenant data belongs in repository evidence.
 
-Stage the required Borg and OpenSSH recovery artifacts together in the closed
+Stage the required Borg, OpenSSH, and rsync recovery artifacts together in the closed
 private layout from
-`infrastructure/governance/recovery-artifact-escrow-v1.yaml`. From a clean exact
+`infrastructure/governance/recovery-artifact-escrow-v2.yaml`. V2 hash-binds and
+preserves the accepted thirty-entry V1 policy while adding the exact rsync
+candidate, dependency, rollback, and runtime-control catalogue. From a clean exact
 commit, copy the policy into the private root as `escrow-policy.yaml`, then run:
 
 ```sh
@@ -66,7 +68,8 @@ The verifier downloads, copies, executes, installs, or deletes no artifact. It
 rejects an incomplete or open-ended directory and proves only the staged byte
 inventory. The private manifest stays out of Git. A second person must still
 verify the Borg signing fingerprint and signature, candidate dependency
-inventory, offline redundant custody, and recovery usability. Until that
+inventory, rsync package authority and host-consumer compatibility, offline
+redundant custody, and recovery usability. Until that
 separate review is accepted, `operations_escrow` remains pending.
 
 ## Preflight

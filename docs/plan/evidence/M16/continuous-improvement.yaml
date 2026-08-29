@@ -10,7 +10,7 @@ plan:
   sha256: a81bd908039352845ea2bc62675f64ff04ca3e988275d9f4374e98519bfb89ea
 backlog:
   path: docs/plan/IMPROVEMENT_BACKLOG.yaml
-  sha256: 11e283c7533e5652b5dfc49410a9713c72889f7598369257bd38860e96012543
+  sha256: 4e72af8a5e65da383eec5e0c9b3290fc706bdf91b2cae1e0f250b785a0849d58
 artifacts:
   monthlyReviewPrimaryPath: null
   monthlyReviewPrimarySha256: null

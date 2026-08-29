@@ -34,20 +34,32 @@ import YAML from "yaml";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const policyRelativePath =
-  "infrastructure/governance/recovery-artifact-escrow-v1.yaml";
+  "infrastructure/governance/recovery-artifact-escrow-v2.yaml";
 const policyPath = join(root, policyRelativePath);
 const evidenceRelativePath =
-  "docs/plan/evidence/M16/recovery-artifact-escrow.yaml";
+  "docs/plan/evidence/M16/recovery-artifact-escrow-v2.yaml";
 const evidencePath = join(root, evidenceRelativePath);
+const historicalPolicyRelativePath =
+  "infrastructure/governance/recovery-artifact-escrow-v1.yaml";
+const historicalEvidenceRelativePath =
+  "docs/plan/evidence/M16/recovery-artifact-escrow.yaml";
+const historicalPolicySha256 =
+  "eb9840652ab8e7ca2d20af9cc8eabf2d8bde7e0b696f8d51e334f859127eaa05";
+const historicalEvidenceSha256 =
+  "76ecf6d023eb8dbc7f4eb07be54f46a24ad31420faca815b0bd7f5f47672db58";
 const digestPattern = /^[a-f0-9]{64}$/u;
 const commitPattern = /^[a-f0-9]{40}$/u;
-const providerIds = new Set(["borgbackup", "openssh-client"]);
+const providerIds = new Set([
+  "borgbackup",
+  "openssh-client",
+  "rsync-transport",
+]);
 const privateEntryIds = new Set([
   "borg-signing-key",
   "borg-dependency-inventory",
   "openssh-dependency-inventory",
 ]);
-const authorityKeys = [
+const v1AuthorityKeys = [
   "networkAccess",
   "artifactCopy",
   "artifactExecution",
@@ -60,20 +72,46 @@ const authorityKeys = [
   "secondReviewerComplete",
   "operationsEscrowComplete",
 ];
+const v2AuthorityKeys = [
+  ...v1AuthorityKeys,
+  "packageAuthorityReviewComplete",
+  "consumerCompatibilityReviewComplete",
+  "isolatedRestoreComplete",
+];
+const v1ReportLimitationKeys = [
+  "signingFingerprintReviewComplete",
+  "dependencyReviewComplete",
+  "offlineCopyReviewComplete",
+  "secondReviewerComplete",
+  "operationsEscrowComplete",
+];
+const v2ReportLimitationKeys = [
+  ...v1ReportLimitationKeys,
+  "packageAuthorityReviewComplete",
+  "consumerCompatibilityReviewComplete",
+  "isolatedRestoreComplete",
+];
 const evidenceChecks = new Map([
   ["design_contract", "passed"],
+  ["historical_v1_preserved", "passed"],
   ["closed_catalogue", "passed"],
   ["stable_byte_verification", "passed"],
+  ["rsync_package_binding", "passed"],
+  ["rsync_runtime_binding", "passed"],
   ["minimized_report_contract", "passed"],
   ["validator_selftest", "passed"],
   ["exact_head_ci", new Set(["pending", "passed"])],
   ["private_inventory", "pending"],
+  ["package_authority_review", "pending"],
   ["signing_fingerprint_review", "pending"],
   ["dependency_review", "pending"],
+  ["consumer_compatibility_review", "pending"],
   ["offline_copy_review", "pending"],
   ["independent_review", "pending"],
+  ["isolated_restore", "pending"],
   ["operations_escrow", "pending"],
 ]);
+const effectiveProvidersByPolicy = new WeakMap();
 const expectedRepositoryEntries = new Map([
   [
     "borgbackup",
@@ -138,6 +176,101 @@ const expectedRepositoryEntries = new Map([
       ],
     ]),
   ],
+  [
+    "rsync-transport",
+    new Map([
+      ["rsync-plan", "infrastructure/testing/recovery-transport/plan.yaml"],
+      [
+        "rsync-build-instructions",
+        "infrastructure/testing/recovery-transport/Dockerfile",
+      ],
+      [
+        "rsync-canary-readme",
+        "infrastructure/testing/recovery-transport/README.md",
+      ],
+      ["rsync-plan-validator", "scripts/validate-rsync-transport-plan.mjs"],
+      ["rsync-canary-runner", "scripts/run-rsync-transport-canary.mjs"],
+      [
+        "rsync-guest-forced-exporter",
+        "infrastructure/environments/proxmox/scripts/starfiniti-postgres-backup-rsync",
+      ],
+      [
+        "rsync-host-controller",
+        "infrastructure/environments/proxmox/scripts/starfiniti-loyalty-postgres-borg-controller",
+      ],
+      [
+        "rsync-host-archive-rollback",
+        "infrastructure/environments/proxmox/scripts/starfiniti-loyalty-postgres-borg",
+      ],
+      [
+        "rsync-host-maintenance-rollback",
+        "infrastructure/environments/proxmox/scripts/starfiniti-loyalty-postgres-borg-maintain",
+      ],
+      [
+        "rsync-archive-service",
+        "infrastructure/environments/proxmox/systemd/starfiniti-loyalty-postgres-borg.service",
+      ],
+      [
+        "rsync-archive-timer",
+        "infrastructure/environments/proxmox/systemd/starfiniti-loyalty-postgres-borg.timer",
+      ],
+      [
+        "rsync-maintenance-service",
+        "infrastructure/environments/proxmox/systemd/starfiniti-loyalty-postgres-borg-maintain.service",
+      ],
+      [
+        "rsync-maintenance-timer",
+        "infrastructure/environments/proxmox/systemd/starfiniti-loyalty-postgres-borg-maintain.timer",
+      ],
+      [
+        "rsync-forced-command-sudoers",
+        "infrastructure/environments/proxmox/sudoers/starfiniti-postgres-backup-rsync",
+      ],
+      ["rsync-backup-asset-validator", "scripts/validate-backup-assets.mjs"],
+      ["rsync-runbook", "docs/operations/BACKUP_RESTORE.md"],
+      [
+        "rsync-adr-incremental-pull",
+        "docs/architecture/ADR/0013-incremental-pull-before-borg-archive.md",
+      ],
+      [
+        "rsync-adr-dedicated-repository",
+        "docs/architecture/ADR/0071-dedicated-postgresql-borg-repository.md",
+      ],
+      [
+        "rsync-adr-security-baseline",
+        "docs/architecture/ADR/0072-rsync-3-5-backup-transport-security-baseline.md",
+      ],
+      [
+        "rsync-adr-package-canary",
+        "docs/architecture/ADR/0073-exact-vendor-rsync-recovery-transport-canary.md",
+      ],
+      [
+        "rsync-canary-evidence",
+        "docs/plan/evidence/M15/recovery-transport.yaml",
+      ],
+      [
+        "rsync-historical-v1-policy",
+        "infrastructure/governance/recovery-artifact-escrow-v1.yaml",
+      ],
+      [
+        "rsync-historical-v1-evidence",
+        "docs/plan/evidence/M16/recovery-artifact-escrow.yaml",
+      ],
+      [
+        "rsync-escrow-v1-adr",
+        "docs/architecture/ADR/0093-private-recovery-artifact-escrow-verification.md",
+      ],
+      [
+        "rsync-escrow-v2-adr",
+        "docs/architecture/ADR/0094-versioned-shared-recovery-artifact-escrow.md",
+      ],
+      [
+        "rsync-escrow-v2-evidence",
+        "docs/plan/evidence/M16/recovery-artifact-escrow-v2.yaml",
+      ],
+      ["rsync-escrow-verifier", "scripts/verify-recovery-artifact-escrow.mjs"],
+    ]),
+  ],
 ]);
 
 function fail(message) {
@@ -162,6 +295,22 @@ function canonical(value) {
 
 function planDigest(plan) {
   return digest(Buffer.from(JSON.stringify(canonical(plan)), "utf8"));
+}
+
+function policyProviders(policy) {
+  return effectiveProvidersByPolicy.get(policy) ?? policy.providers;
+}
+
+function authorityKeysFor(policy) {
+  return policy.version === 2 ? v2AuthorityKeys : v1AuthorityKeys;
+}
+
+function reportLimitationKeysFor(policy) {
+  return policy.version === 2 ? v2ReportLimitationKeys : v1ReportLimitationKeys;
+}
+
+function schemaFor(policy, kind) {
+  return `starfiniti.recovery-artifact-escrow-${kind}.v${policy.version}`;
 }
 
 function exactSet(actual, expected, label) {
@@ -437,7 +586,7 @@ function uniqueEntries(providers) {
   return entries;
 }
 
-function validatePolicyShape(policy) {
+function validatePolicyShape(policy, historicalPolicy) {
   exactObjectKeys(
     policy,
     [
@@ -445,6 +594,7 @@ function validatePolicyShape(policy) {
       "version",
       "status",
       "scope",
+      "extends",
       "bounds",
       "filesystem",
       "authority",
@@ -454,8 +604,8 @@ function validatePolicyShape(policy) {
     "policy",
   );
   if (
-    policy.schema !== "starfiniti.recovery-artifact-escrow-plan.v1" ||
-    policy.version !== 1 ||
+    policy.schema !== "starfiniti.recovery-artifact-escrow-plan.v2" ||
+    policy.version !== 2 ||
     policy.status !== "ready"
   ) {
     fail("policy identity differs");
@@ -467,6 +617,13 @@ function validatePolicyShape(policy) {
     fail("policy scope count differs");
   }
   exactSet(new Set(policy.scope), providerIds, "policy scope");
+  exactObjectKeys(policy.extends, ["path", "sha256"], "policy extension");
+  if (
+    policy.extends.path !== historicalPolicyRelativePath ||
+    policy.extends.sha256 !== historicalPolicySha256
+  ) {
+    fail("policy extension differs from immutable V1");
+  }
   exactObjectKeys(
     policy.bounds,
     [
@@ -541,8 +698,11 @@ function validatePolicyShape(policy) {
       "inventoryVerificationCompletesEscrow",
       "signingFingerprintReviewRequired",
       "dependencyReviewRequired",
+      "packageAuthorityReviewRequired",
+      "consumerCompatibilityReviewRequired",
       "offlineCopyReviewRequired",
       "secondReviewerRequired",
+      "isolatedRestoreRequired",
     ],
     "authority policy",
   );
@@ -560,17 +720,20 @@ function validatePolicyShape(policy) {
   for (const key of [
     "signingFingerprintReviewRequired",
     "dependencyReviewRequired",
+    "packageAuthorityReviewRequired",
+    "consumerCompatibilityReviewRequired",
     "offlineCopyReviewRequired",
     "secondReviewerRequired",
+    "isolatedRestoreRequired",
   ]) {
     if (policy.authority[key] !== true) fail(`${key} must remain true`);
   }
-  if (!Array.isArray(policy.providers) || policy.providers.length !== 2) {
+  if (!Array.isArray(policy.providers) || policy.providers.length !== 1) {
     fail("provider catalogue differs");
   }
   exactSet(
     new Set(policy.providers.map((provider) => provider.id)),
-    providerIds,
+    new Set(["rsync-transport"]),
     "provider catalogue",
   );
   for (const provider of policy.providers) {
@@ -589,16 +752,35 @@ function validatePolicyShape(policy) {
     }
     for (const entry of provider.entries) validateEntry(entry, provider.id);
   }
-  const entries = uniqueEntries(policy.providers);
+  if (
+    historicalPolicy.schema !== "starfiniti.recovery-artifact-escrow-plan.v1" ||
+    historicalPolicy.version !== 1 ||
+    historicalPolicy.bounds?.maximumEntries !== 30 ||
+    !Array.isArray(historicalPolicy.providers) ||
+    historicalPolicy.providers.length !== 2
+  ) {
+    fail("immutable V1 policy identity differs");
+  }
+  const effectiveProviders = [
+    ...historicalPolicy.providers,
+    ...policy.providers,
+  ];
+  exactSet(
+    new Set(effectiveProviders.map((provider) => provider.id)),
+    providerIds,
+    "effective provider catalogue",
+  );
+  effectiveProvidersByPolicy.set(policy, effectiveProviders);
+  const entries = uniqueEntries(effectiveProviders);
   if (
     entries.length !== policy.bounds.maximumEntries ||
-    entries.length !== 30
+    entries.length !== 64
   ) {
     fail("entry catalogue count differs");
   }
   if (
     !Array.isArray(policy.automaticFails) ||
-    policy.automaticFails.length !== 6
+    policy.automaticFails.length !== 7
   ) {
     fail("automatic failure catalogue differs");
   }
@@ -679,7 +861,7 @@ function validateEntry(entry, providerId) {
 }
 
 function validateCanonicalBindings(policy, sourceRoot = root) {
-  for (const provider of policy.providers) {
+  for (const provider of policyProviders(policy)) {
     const raw = readStableFile(
       safeRepositoryPath(
         provider.plan.path,
@@ -751,7 +933,7 @@ function validateCanonicalBindings(policy, sourceRoot = root) {
       ) {
         fail("Borg candidate evidence binding differs");
       }
-    } else {
+    } else if (provider.id === "openssh-client") {
       validateFixedBinding(
         entries.get("openssh-source-archive"),
         plan.candidate.source.sha256,
@@ -796,6 +978,71 @@ function validateCanonicalBindings(policy, sourceRoot = root) {
       ) {
         fail("OpenSSH candidate evidence binding differs");
       }
+    } else {
+      const host = plan.endpoints?.find(
+        (endpoint) => endpoint.id === "proxmox-host",
+      );
+      const guest = plan.endpoints?.find(
+        (endpoint) => endpoint.id === "database-guest",
+      );
+      if (
+        !host ||
+        !guest ||
+        host.package?.dependencies?.length !== 1 ||
+        host.rollbackPackages?.length !== 2 ||
+        guest.rollbackPackages?.length !== 1
+      ) {
+        fail("rsync endpoint package plan differs");
+      }
+      validateFixedBinding(
+        entries.get("rsync-host-candidate-package"),
+        host.package.sha256,
+      );
+      validateFixedBinding(
+        entries.get("rsync-host-candidate-libacl1"),
+        host.package.dependencies[0].sha256,
+      );
+      validateFixedBinding(
+        entries.get("rsync-guest-candidate-package"),
+        guest.package.sha256,
+      );
+      validateFixedBinding(
+        entries.get("rsync-host-rollback-package"),
+        host.rollbackPackages[0].sha256,
+      );
+      validateFixedBinding(
+        entries.get("rsync-host-rollback-libacl1"),
+        host.rollbackPackages[1].sha256,
+      );
+      validateFixedBinding(
+        entries.get("rsync-guest-rollback-package"),
+        guest.rollbackPackages[0].sha256,
+      );
+      if (
+        entries.get("rsync-guest-candidate-package").signingFingerprint !==
+        guest.package.signingFingerprint
+      ) {
+        fail("rsync guest signing fingerprint differs from the plan");
+      }
+      const evidence = YAML.parse(
+        readStableFile(
+          join(sourceRoot, "docs/plan/evidence/M15/recovery-transport.yaml"),
+          262_144,
+          "rsync transport evidence",
+          { capture: true, enforceMode: false },
+        ).content.toString("utf8"),
+      );
+      if (
+        evidence.candidate.commit !== provider.candidateCommit ||
+        evidence.plan.sha256 !== provider.plan.sha256 ||
+        entries.get("rsync-canary-report")?.sha256 !==
+          evidence.canary.reportSha256 ||
+        evidence.checks?.find((check) => check.id === "rollback_escrow")
+          ?.status !== "pending" ||
+        evidence.productionMutation !== false
+      ) {
+        fail("rsync candidate evidence binding or authority differs");
+      }
     }
   }
 }
@@ -824,7 +1071,7 @@ function validateCanonicalEvidence(policyBytes) {
   );
   exactUtc(evidence.observedAt, "escrow evidence observedAt");
   if (
-    evidence.schema !== "starfiniti.recovery-artifact-escrow-evidence.v1" ||
+    evidence.schema !== "starfiniti.recovery-artifact-escrow-evidence.v2" ||
     evidence.status !== "in_progress" ||
     evidence.productionAccess !== false ||
     evidence.productionMutation !== false ||
@@ -889,7 +1136,7 @@ function validateCanonicalEvidence(policyBytes) {
   }
   if (
     !Array.isArray(evidence.automaticFails) ||
-    evidence.automaticFails.length !== 6
+    evidence.automaticFails.length !== 7
   ) {
     fail("escrow evidence automatic failures differ");
   }
@@ -935,6 +1182,7 @@ function validateRepositoryWiring(sourceRoot = root) {
       [
         "recovery-artifact-escrow:inventory",
         "recovery-artifact-escrow:verify",
+        "recovery-artifact-escrow-v2.yaml",
         "`operations_escrow` remains pending",
       ],
     ],
@@ -943,23 +1191,33 @@ function validateRepositoryWiring(sourceRoot = root) {
       [
         "recovery-artifact-escrow:inventory",
         "recovery-artifact-escrow:verify",
+        "recovery-artifact-escrow-v2.yaml",
         "cannot prove the signing fingerprint",
+      ],
+    ],
+    [
+      "docs/operations/BACKUP_RESTORE.md",
+      [
+        "recovery-artifact-escrow:inventory",
+        "recovery-artifact-escrow:verify",
+        "recovery-artifact-escrow-v2.yaml",
+        "Package-authority review",
       ],
     ],
     [
       "docs/plan/TASKS.yaml",
       [
         "npm run recovery-artifact-escrow:validate",
-        "docs/architecture/ADR/0093-private-recovery-artifact-escrow-verification.md",
-        "docs/plan/evidence/M16/recovery-artifact-escrow.yaml",
+        "docs/architecture/ADR/0094-versioned-shared-recovery-artifact-escrow.md",
+        "docs/plan/evidence/M16/recovery-artifact-escrow-v2.yaml",
       ],
     ],
     [
       "RISKS.md",
       [
         "R-004",
-        "closed 30-entry no-network private escrow byte verifier",
-        "private offline custody/review",
+        "closed 64-entry V2 no-network recovery escrow verifier",
+        "private custody/review",
       ],
     ],
   ]);
@@ -1107,12 +1365,12 @@ function readAndValidateEntries(
   sourceRoot,
   manifestEntries,
 ) {
-  const entries = uniqueEntries(policy.providers);
+  const entries = uniqueEntries(policyProviders(policy));
   const manifestById = manifestEntries
     ? new Map(manifestEntries.map((entry) => [entry.id, entry]))
     : undefined;
   const plans = new Map(
-    policy.providers.map((provider) => [
+    policyProviders(policy).map((provider) => [
       provider.id,
       YAML.parse(
         readStableFile(
@@ -1131,7 +1389,7 @@ function readAndValidateEntries(
   let totalBytes = 0;
   const resultEntries = [];
   for (const entry of entries) {
-    const provider = policy.providers.find(
+    const provider = policyProviders(policy).find(
       (item) => item.id === entry.providerId,
     );
     const actual = readStableFile(
@@ -1204,7 +1462,7 @@ function validateManifest(document, policy, policySha256, headCommit, now) {
   const createdAt = exactUtc(document.createdAt, "private manifest createdAt");
   if (createdAt > now + 300_000) fail("private manifest is from the future");
   if (
-    document.schema !== "starfiniti.recovery-artifact-escrow-manifest.v1" ||
+    document.schema !== schemaFor(policy, "manifest") ||
     document.candidateCommit !== headCommit ||
     document.policySha256 !== policySha256
   ) {
@@ -1212,7 +1470,7 @@ function validateManifest(document, policy, policySha256, headCommit, now) {
   }
   if (!Array.isArray(document.entries))
     fail("private manifest entries are invalid");
-  const expectedEntries = uniqueEntries(policy.providers);
+  const expectedEntries = uniqueEntries(policyProviders(policy));
   if (document.entries.length !== expectedEntries.length) {
     fail("private manifest entry count differs");
   }
@@ -1238,10 +1496,10 @@ function validateManifest(document, policy, policySha256, headCommit, now) {
   }
   exactObjectKeys(
     document.authority,
-    authorityKeys,
+    authorityKeysFor(policy),
     "private manifest authority",
   );
-  for (const key of authorityKeys) {
+  for (const key of authorityKeysFor(policy)) {
     if (document.authority[key] !== false) {
       fail(`${key} may not be asserted by inventory verification`);
     }
@@ -1251,7 +1509,9 @@ function validateManifest(document, policy, policySha256, headCommit, now) {
 function validateExpectedMembers(files, policy, includeManifest) {
   const expected = new Set([
     policy.filesystem.policyCopyPath,
-    ...uniqueEntries(policy.providers).map((entry) => entry.relativePath),
+    ...uniqueEntries(policyProviders(policy)).map(
+      (entry) => entry.relativePath,
+    ),
   ]);
   if (includeManifest) expected.add(policy.filesystem.privateManifestPath);
   exactSet(files, expected, "bundle members");
@@ -1344,12 +1604,14 @@ function inventoryBundle({
   verifyPolicyCopy(bundleRoot, policy, policyBytes);
   assertHeadStable(headCommit, verifyHead);
   const manifest = {
-    schema: "starfiniti.recovery-artifact-escrow-manifest.v1",
+    schema: schemaFor(policy, "manifest"),
     createdAt: nowUtc(now),
     candidateCommit: headCommit,
     policySha256: digest(policyBytes),
     entries: result.entries,
-    authority: Object.fromEntries(authorityKeys.map((key) => [key, false])),
+    authority: Object.fromEntries(
+      authorityKeysFor(policy).map((key) => [key, false]),
+    ),
   };
   const manifestBytes = Buffer.from(
     `${JSON.stringify(manifest, null, 2)}\n`,
@@ -1428,7 +1690,7 @@ function verifyBundle({
   );
   verifyPolicyCopy(bundleRoot, policy, policyBytes);
   assertHeadStable(headCommit, verifyHead);
-  const providers = policy.providers.map((provider) => {
+  const providers = policyProviders(policy).map((provider) => {
     const ids = new Set(provider.entries.map((entry) => entry.id));
     const entries = result.entries.filter((entry) => ids.has(entry.id));
     return {
@@ -1438,7 +1700,7 @@ function verifyBundle({
     };
   });
   const report = {
-    schema: "starfiniti.recovery-artifact-escrow-report.v1",
+    schema: schemaFor(policy, "report"),
     observedAt: nowUtc(now),
     candidateCommit: headCommit,
     policySha256: digest(policyBytes),
@@ -1456,13 +1718,9 @@ function verifyBundle({
       dependencyInventorySchemasValid: true,
       posixWriteProtectionChecked: process.platform !== "win32",
     },
-    limitations: {
-      signingFingerprintReviewComplete: false,
-      dependencyReviewComplete: false,
-      offlineCopyReviewComplete: false,
-      secondReviewerComplete: false,
-      operationsEscrowComplete: false,
-    },
+    limitations: Object.fromEntries(
+      reportLimitationKeysFor(policy).map((key) => [key, false]),
+    ),
     productionAccess: false,
     productionMutation: false,
     productionAuthority: false,
@@ -1503,7 +1761,7 @@ function validateReport(report, policy) {
   );
   exactUtc(report.observedAt, "minimized report observedAt");
   if (
-    report.schema !== "starfiniti.recovery-artifact-escrow-report.v1" ||
+    report.schema !== schemaFor(policy, "report") ||
     !commitPattern.test(report.candidateCommit) ||
     !digestPattern.test(report.policySha256) ||
     !digestPattern.test(report.privateManifestSha256) ||
@@ -1517,12 +1775,15 @@ function validateReport(report, policy) {
   ) {
     fail("minimized report identity, bounds, or authority differs");
   }
+  const expectedProviderIds = new Set(
+    policyProviders(policy).map((provider) => provider.id),
+  );
   exactSet(
     new Set(report.providers.map((provider) => provider.id)),
-    providerIds,
+    expectedProviderIds,
     "minimized report providers",
   );
-  if (report.providers.length !== providerIds.size) {
+  if (report.providers.length !== expectedProviderIds.size) {
     fail("minimized report provider count differs");
   }
   let providerEntryCount = 0;
@@ -1534,7 +1795,7 @@ function validateReport(report, policy) {
       `${provider.id} report provider`,
     );
     const expectedEntryCount =
-      policy.providers.find((item) => item.id === provider.id)?.entries
+      policyProviders(policy).find((item) => item.id === provider.id)?.entries
         .length ?? -1;
     if (
       provider.entryCount !== expectedEntryCount ||
@@ -1576,13 +1837,7 @@ function validateReport(report, policy) {
   }
   exactObjectKeys(
     report.limitations,
-    [
-      "signingFingerprintReviewComplete",
-      "dependencyReviewComplete",
-      "offlineCopyReviewComplete",
-      "secondReviewerComplete",
-      "operationsEscrowComplete",
-    ],
+    reportLimitationKeysFor(policy),
     "minimized report limitations",
   );
   for (const value of Object.values(report.limitations)) {
@@ -1605,11 +1860,37 @@ function validateReport(report, policy) {
   }
 }
 
+function loadHistoricalPolicy() {
+  const policy = readYaml(
+    join(root, historicalPolicyRelativePath),
+    131_072,
+    "historical V1 escrow policy",
+    { enforceMode: false },
+  );
+  const evidence = readStableFile(
+    join(root, historicalEvidenceRelativePath),
+    262_144,
+    "historical V1 escrow evidence",
+    { capture: true, enforceMode: false },
+  );
+  if (
+    policy.sha256 !== historicalPolicySha256 ||
+    evidence.sha256 !== historicalEvidenceSha256 ||
+    policy.document.schema !== "starfiniti.recovery-artifact-escrow-plan.v1" ||
+    policy.document.version !== 1 ||
+    policy.document.bounds?.maximumEntries !== 30
+  ) {
+    fail("accepted historical V1 policy or evidence differs");
+  }
+  return policy.document;
+}
+
 function loadCanonicalPolicy() {
+  const historicalPolicy = loadHistoricalPolicy();
   const loaded = readYaml(policyPath, 131_072, "escrow policy", {
     enforceMode: false,
   });
-  validatePolicyShape(loaded.document);
+  validatePolicyShape(loaded.document, historicalPolicy);
   validateCanonicalBindings(loaded.document);
   validateCanonicalEvidence(loaded.content);
   validateRepositoryWiring();
@@ -1830,9 +2111,60 @@ function createFixture(base, mutate) {
 
 function runSelfTest() {
   const canonical = loadCanonicalPolicy();
-  if (canonical.policy.bounds.maximumEntries !== 30) {
+  if (
+    canonical.policy.bounds.maximumEntries !== 64 ||
+    policyProviders(canonical.policy).length !== 3
+  ) {
     fail("canonical policy self-test did not load the closed catalogue");
   }
+  const historicalPolicy = loadHistoricalPolicy();
+  const expectCanonicalRejected = (label, expectedMessage, mutate, bind) => {
+    const policy = clone(canonical.policy);
+    mutate(policy);
+    try {
+      validatePolicyShape(policy, historicalPolicy);
+      if (bind) validateCanonicalBindings(policy);
+      fail(`${label} fixture was accepted`);
+    } catch (error) {
+      if (!String(error.message).includes(expectedMessage)) throw error;
+    }
+  };
+  expectCanonicalRejected(
+    "historical V1 drift",
+    "policy extension differs from immutable V1",
+    (policy) => {
+      policy.extends.sha256 = "0".repeat(64);
+    },
+  );
+  expectCanonicalRejected(
+    "rsync package drift",
+    "fixed artifact binding differs",
+    (policy) => {
+      policy.providers[0].entries.find(
+        (entry) => entry.id === "rsync-host-candidate-package",
+      ).sha256 = "0".repeat(63) + "1";
+    },
+    true,
+  );
+  expectCanonicalRejected(
+    "rsync canary-report drift",
+    "rsync candidate evidence binding or authority differs",
+    (policy) => {
+      policy.providers[0].entries.find(
+        (entry) => entry.id === "rsync-canary-report",
+      ).sha256 = "0".repeat(63) + "1";
+    },
+    true,
+  );
+  expectCanonicalRejected(
+    "rsync runtime omission",
+    "entry catalogue count differs",
+    (policy) => {
+      policy.providers[0].entries = policy.providers[0].entries.filter(
+        (entry) => entry.id !== "rsync-archive-service",
+      );
+    },
+  );
   const base = mkdtempSync(join(tmpdir(), "starfiniti-recovery-escrow-"));
   const expectRejected = (label, expectedMessage, setup, afterInventory) => {
     const fixture = createFixture(base, setup);
@@ -1880,6 +2212,32 @@ function runSelfTest() {
     });
     if (report.limitations.operationsEscrowComplete !== false) {
       fail("positive fixture overstated escrow completion");
+    }
+    const v2Fixture = createFixture(base, ({ policy }) => {
+      policy.schema = "starfiniti.recovery-artifact-escrow-plan.v2";
+      policy.version = 2;
+    });
+    inventoryBundle({
+      ...v2Fixture,
+      policy: v2Fixture.policy,
+      headCommit: "a".repeat(40),
+      now: Date.parse("2026-08-29T08:10:00Z"),
+    });
+    const v2FixtureReport = verifyBundle({
+      ...v2Fixture,
+      policy: v2Fixture.policy,
+      headCommit: "a".repeat(40),
+      now: Date.parse("2026-08-29T08:11:00Z"),
+    });
+    if (
+      v2FixtureReport.schema !==
+        "starfiniti.recovery-artifact-escrow-report.v2" ||
+      v2FixtureReport.limitations.packageAuthorityReviewComplete !== false ||
+      v2FixtureReport.limitations.consumerCompatibilityReviewComplete !==
+        false ||
+      v2FixtureReport.limitations.isolatedRestoreComplete !== false
+    ) {
+      fail("positive V2 fixture omitted versioned false-authority evidence");
     }
     const headDrift = createFixture(base);
     try {
@@ -1970,6 +2328,46 @@ function runSelfTest() {
       if (!String(error.message).includes("overstates escrow completion"))
         throw error;
     }
+    const v2Providers = policyProviders(canonical.policy).map((provider) => ({
+      id: provider.id,
+      entryCount: provider.entries.length,
+      totalBytes: provider.entries.length,
+    }));
+    const v2Report = {
+      schema: schemaFor(canonical.policy, "report"),
+      observedAt: "2026-08-29T08:11:00Z",
+      candidateCommit: "a".repeat(40),
+      policySha256: "b".repeat(64),
+      privateManifestSha256: "c".repeat(64),
+      entryCount: canonical.policy.bounds.maximumEntries,
+      totalBytes: canonical.policy.bounds.maximumEntries,
+      providers: v2Providers,
+      verification: {
+        policyCopyExact: true,
+        closedEntrySet: true,
+        stableDescriptorReads: true,
+        fixedDigestsExact: true,
+        repositoryFilesExact: true,
+        privateInputsPresent: true,
+        dependencyInventorySchemasValid: true,
+        posixWriteProtectionChecked: process.platform !== "win32",
+      },
+      limitations: Object.fromEntries(
+        reportLimitationKeysFor(canonical.policy).map((key) => [key, false]),
+      ),
+      productionAccess: false,
+      productionMutation: false,
+      productionAuthority: false,
+    };
+    validateReport(v2Report, canonical.policy);
+    v2Report.limitations.packageAuthorityReviewComplete = true;
+    try {
+      validateReport(v2Report, canonical.policy);
+      fail("V2 package-authority overclaim fixture was accepted");
+    } catch (error) {
+      if (!String(error.message).includes("overstates escrow completion"))
+        throw error;
+    }
     const providerLeak = clone(report);
     providerLeak.providers[0].bundlePath = "private/location";
     try {
@@ -1996,7 +2394,7 @@ function runSelfTest() {
     rmSync(base, { recursive: true, force: true });
   }
   console.log(
-    "Validated the 30-entry Borg/OpenSSH private escrow contract and adversarial inventory/report boundaries; no real escrow, network, production access, copy, execution, or mutation occurred.",
+    "Validated immutable V1 history plus the 64-entry Borg/OpenSSH/rsync V2 private escrow contract and adversarial inventory/report boundaries; no real escrow, network, production access, copy, execution, or mutation occurred.",
   );
 }
 
