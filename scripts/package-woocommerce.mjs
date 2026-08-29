@@ -98,21 +98,17 @@ const sameFileIdentity = (left, right) =>
   left.ctimeMs === right.ctimeMs;
 
 const readStableRegularFile = async (absolutePath, maximumBytes, label) => {
-  const beforePath = await lstat(absolutePath);
-  if (!beforePath.isFile() || beforePath.isSymbolicLink()) {
-    fail(`${label} is not a regular file`);
-  }
-  if (beforePath.size > maximumBytes) {
-    fail(`${label} exceeds the reviewed byte bound`);
-  }
   const descriptor = await open(
     absolutePath,
     constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0),
   );
   try {
     const beforeDescriptor = await descriptor.stat();
-    if (!sameFileIdentity(beforePath, beforeDescriptor)) {
-      fail(`${label} identity changed before reading`);
+    if (!beforeDescriptor.isFile() || beforeDescriptor.isSymbolicLink()) {
+      fail(`${label} is not a regular file`);
+    }
+    if (beforeDescriptor.size > maximumBytes) {
+      fail(`${label} exceeds the reviewed byte bound`);
     }
     const bytes = await descriptor.readFile();
     const afterDescriptor = await descriptor.stat();

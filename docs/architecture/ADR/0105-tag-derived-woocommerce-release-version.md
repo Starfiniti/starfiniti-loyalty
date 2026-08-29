@@ -29,7 +29,7 @@ WordPress's official Plugin Handbook was reviewed on 2026-08-29. The main plugin
 
 ## Security and integrity effects
 
-The tag is the only release-version authority, and only the fixed numeric form is accepted. The builder does not edit the checkout, execute plugin content, include tests, follow source symlinks, or accept arbitrary archive roots. The verifier treats the ZIP as untrusted bounded input and checks its closed inventory before reading bounded metadata entries. Reproducibility makes unintended source or timestamp drift visible. Checksums and provenance still bind the resulting bytes; this decision does not make an untagged artifact a release.
+The tag is the only release-version authority, and only the fixed numeric form is accepted. The builder does not edit the checkout, execute plugin content, include tests, follow source symlinks, or accept arbitrary archive roots. Source and archive inputs are opened read-only with no-follow where available before metadata is trusted; bytes and bounds come from that descriptor, and final path identity must still match after the read. The verifier treats the ZIP as untrusted bounded input and checks its closed inventory before reading bounded metadata entries. Reproducibility makes unintended source or timestamp drift visible. Checksums and provenance still bind the resulting bytes; this decision does not make an untagged artifact a release.
 
 ## Operations
 

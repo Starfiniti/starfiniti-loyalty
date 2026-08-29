@@ -10,8 +10,12 @@
   source mutation, and non-reproducible output. CI builds and re-verifies a
   synthetic numeric artifact; the release workflow derives the version from
   `GITHUB_REF_NAME` and verifies it before checksums or attestations. Focused
-  local gates pass. Exact-head CI, Security, CodeQL, and the first approved
-  corrected tag remain pending. Production and v0.1.11 are unchanged.
+  local gates pass. The first exact Security run `33272662903` correctly failed
+  closed on CodeQL alert 25: package input metadata was checked before opening
+  the file. The correction now opens each source/archive descriptor first with
+  no-follow where available, bounds and reads that descriptor, then verifies
+  descriptor/path identity after the read. Exact-head rerun and the first
+  approved corrected tag remain pending. Production and v0.1.11 are unchanged.
 
 - ADR-0103 refreshes only the repository Supabase boundary: CLI 2.116.0,
   supabase-js 2.112.4, and SSR 0.12.5 are exact-pinned with aligned platform and

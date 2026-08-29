@@ -22,6 +22,12 @@
   `pluginPackageVerified: true` and an exact tag-matching `pluginVersion`.
   Focused local gates pass; exact-head automation and a real approved corrected
   tag remain pending. No production state or historical release was changed.
+- The first exact Security run `33272662903` rejected the implementation with
+  CodeQL High alert 25 (`js/file-system-race`) because it checked pathname
+  metadata before opening each input. The refutation fix opens with read-only
+  no-follow flags first, validates and reads the descriptor, and only then
+  reconciles final path identity. The complete local gate passes again; fresh
+  exact-head automation remains required.
 
 ## 2026-08-29 — Supabase client/toolchain patch review
 
