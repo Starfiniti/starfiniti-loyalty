@@ -26,9 +26,11 @@ escrow. A different person rechecks the official signing fingerprint, every
 digest, executable ownership/mode, version, and dynamic libraries.
 
 Use the shared closed private layout in
-`infrastructure/governance/recovery-artifact-escrow-v2.yaml`; it also carries the
+`infrastructure/governance/recovery-artifact-escrow-v3.yaml`; it also carries the
 matching Borg and rsync recovery inputs so one dependency cannot be silently
-omitted. V2 preserves the accepted V1 policy and evidence byte-for-byte.
+omitted. V3 preserves the accepted V1/V2 policy and evidence bytes while
+excluding the superseded cross-suite rsync package candidate from the effective
+catalogue.
 From a clean exact commit, copy the policy to `escrow-policy.yaml` in the private
 root and run:
 
@@ -41,7 +43,8 @@ npm run recovery-artifact-escrow:verify -- \
 
 Keep `manifest.json` private. The minimized report proves only closed-set byte
 inventory. It cannot prove the signing fingerprint, dynamic-library review,
-rsync package authority or host-consumer compatibility, physical offline copies,
+rsync source signature, native build, rollback package authority, selector or
+host-consumer compatibility, physical offline copies,
 independent custody, or restoration. A local directory
 or GitHub artifact is not approved escrow, and neither candidate may be selected
 until the separate private and second-person reviews pass.

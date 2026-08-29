@@ -208,7 +208,7 @@ BorgBackup and OpenSSH operations-escrow rows, R-004, M16 score, and production
 state therefore remain unchanged.
 
 ADR-0094 preserves that accepted V1 policy and evidence by exact SHA-256 and
-defines the current shared V2 handoff. The
+records the then-current shared V2 handoff. The
 [`recovery-artifact-escrow-v2.yaml`](recovery-artifact-escrow-v2.yaml) evidence
 binds sixty-four effective entries: the exact V1 thirty plus thirty-four rsync
 and governance inputs covering candidate, dependency, rollback, exact canary
@@ -245,7 +245,22 @@ the exact retained report has file SHA-256
 Candidate plan SHA-256
 `cb6fee76b837c5274172182d7a58de71d2ccf13901722f856833b2ce6e7e0912`
 binds the distinct bootstrap and digest-lock canaries without rewriting either.
-A future V3 operations bundle must retain both native binaries and all
-source/build/rollback evidence; V2 remains
-immutable historical evidence. No production access, mutation, or authority is
-claimed, and IMP-010, R-004, M16, and the product score remain unchanged.
+ADR-0096 now defines that V3 operations contract. The exact
+[`recovery-artifact-escrow-v3.yaml`](recovery-artifact-escrow-v3.yaml) evidence
+preserves V1 and V2 by immutable SHA-256, marks the V2 `rsync-transport`
+provider historical-only, and selects only the native source-built replacement.
+The effective closed inventory is seventy-four entries: the accepted thirty V1
+BorgBackup/OpenSSH inputs plus forty-four native-rsync executable, wrapper,
+signed-source, rollback, endpoint-dependency, report, build, runtime, governance,
+and evidence inputs. Both private dependency inventories are mandatory and bind
+to distinct endpoint executable hashes. The shared verifier rejects substitute
+members, a wrong endpoint binding, historical candidate activation, or a global
+library upgrade and keeps source-signature, native-build, consumer/selector,
+custody, review, restore, and production completion false.
+
+Exact-head Linux verification and every real private inventory, redundant
+offline custody, independent source/package/build/dependency review, real
+forced-command/manual/timer archive, selector switch, and isolated restore remain
+pending. No production access, mutation, or authority is claimed, and IMP-010,
+R-004, M16 at 77/100, deployed readiness at 54/100, and production remain
+unchanged.

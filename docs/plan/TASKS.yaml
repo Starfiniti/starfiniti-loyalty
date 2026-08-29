@@ -3623,7 +3623,7 @@ tasks:
         a separate exact clean-commit installed-state snapshot binds both opaque recovery endpoints all six recovery providers public versions and exact executable provenance without retaining SSH routes command output identifiers or asserting candidate review impact approval or mutation,
         the installed BorgBackup impact review selects one exact upstream-signed fixed candidate without mixing Debian suites while a digest-bound disposable build and networkless current/candidate client/server canary preserve the exact Debian rollback client and prohibit production authority,
         the installed OpenSSH impact review distinguishes applicable client exposure from disabled agent forwarding multiplexed remote forwarding and tunnel behavior then selects only an upstream-signed side-by-side client while preserving both distribution daemons the exact Debian rollback client host keys known-host data and production authority,
-        a versioned closed private recovery escrow inventory preserves the accepted thirty-entry BorgBackup and OpenSSH V1 proof and binds a sixty-four-entry V2 catalogue including all rsync candidate dependency rollback canary-report forced-command controller unit sudoers validator verifier runbook decision current and historical policy or evidence inputs to exact plan or clean-commit bytes through no-network no-copy no-execution stable descriptor verification while package authority consumer compatibility offline custody fingerprint dependency second-person isolated recovery production and escrow-complete claims remain false,
+        a versioned closed private recovery escrow inventory preserves the accepted V1 and V2 proof byte-for-byte while binding a seventy-four-entry V3 effective catalogue of thirty BorgBackup and OpenSSH entries plus forty-four native rsync executable source signature key rollback dependency-inventory canary-report forced-command controller unit sudoers validator verifier runbook decision current and historical policy or evidence inputs to exact plan or clean-commit bytes through no-network no-copy no-execution stable descriptor verification; the superseded cross-suite rsync package candidate remains historical-only while source-signature package-authority native-build consumer and selector compatibility offline custody fingerprint dependency second-person isolated recovery production and escrow-complete claims remain false,
         the Proxmox review records every current published advisory gap and one exact dependency-complete zero-removal candidate while a disposable no-install canary independently proves the fresh signed-index-to-package byte chain and a separate route-free production preflight proves the exact current starting state and twelve-action zero-removal zero-downgrade simulation without refresh download install repository change service control reboot or production mutation,
         a separate route-free stable whole-host inventory accounts for every anonymous QEMU and LXC consumer profile plus storage management-service network HA kernel KVM IOMMU boot and local-tool facts without retaining VM IDs names addresses MACs paths routes credentials raw configuration or raw command output and without claiming compatibility,
         an isolated-equivalent-physical-host rehearsal contract binds the exact candidate immutable package/preflight/inventory baselines released Starfiniti v0.1.11 reviewed Supabase self-hosted v0.8.0 compatibility Compose and linux/amd64 image set plus a fresh minimized dependency preflight and same-projection production inventory read no more than five minutes old while synthetic guests cover every anonymous behavior profile only the application and database use separately approved read-only recovery inputs and an out-of-process auto-destroy lease equals the approval expiry,
@@ -3662,7 +3662,7 @@ tasks:
         bootstrap candidate digest discovery followed by an exact candidate-plan internal-network current/candidate client to current Ubuntu server artifact with strict host-key public-key forced-command and forwarding-disabled proof plus exact container network volume and image teardown,
         independently reviewed OpenSSH artifact escrow every real rsync and Borg consumer exact path digest options provider behavior monitoring rollback and isolated full-service restore evidence before candidate activation,
         npm run recovery-artifact-escrow:validate,
-        clean-commit sixty-four-entry V2 private inventory and independently repeated minimized verification report followed by separate package authority signing fingerprint dependency host-consumer compatibility offline custody isolated recovery and second-person review before any operations escrow row can pass,
+        clean-commit seventy-four-entry V3 private inventory and independently repeated minimized verification report followed by separate source-signature package-authority signing-fingerprint endpoint-dependency native-build host-consumer selector compatibility offline custody isolated recovery and second-person review before any operations escrow row can pass,
         npm run proxmox-security:update:validate,
         npm run proxmox-security:packages:validate,
         exact-head disposable Proxmox package-byte and signed-repository canary artifact with zero retained package bytes and no production route credential installation or mutation,
@@ -3709,6 +3709,8 @@ tasks:
         docs/architecture/ADR/0094-versioned-shared-recovery-artifact-escrow.md,
         infrastructure/governance/recovery-artifact-escrow-v2.yaml,
         docs/architecture/ADR/0095-side-by-side-rsync-source-candidate.md,
+        docs/architecture/ADR/0096-native-rsync-recovery-artifact-escrow.md,
+        infrastructure/governance/recovery-artifact-escrow-v3.yaml,
       ]
     evidence:
       [
@@ -3755,6 +3757,7 @@ tasks:
         docs/plan/evidence/M16/openssh-client-security.yaml,
         docs/plan/evidence/M16/recovery-artifact-escrow.yaml,
         docs/plan/evidence/M16/recovery-artifact-escrow-v2.yaml,
+        docs/plan/evidence/M16/recovery-artifact-escrow-v3.yaml,
         scripts/verify-recovery-artifact-escrow.mjs,
         infrastructure/testing/rsync-source-security/plan.yaml,
         infrastructure/testing/rsync-source-security/Dockerfile,
@@ -3793,6 +3796,6 @@ tasks:
         external CodeQL check 99039761560 at final-evidence head 38758c8931220ada201e516916077de19a3b46e7 correctly rejected a High lstat-before-open file race in the new validator; the correction opens through no-follow first then binds descriptor and path identity before and after the bounded same-byte read and requires fresh exact-head proof rather than waiving the finding,
         race-correction head 7526f5588b8b8e7b2f9b66300a7619a61b6ed636 passed all seven CI jobs in run 33229717718 all four Security jobs in run 33229717726 and external CodeQL check 99040438021 with all twelve PR checks green and PR 57 mergeable,
         ADR-0094 recovery escrow V2 implementation b2cbba0b01a0efeffc0fb62eee0c7599d6eb9887 passed all seven CI jobs in run 33244976784 all four Security jobs in run 33244976845 and independent CodeQL check 99080920204 with all twelve PR checks green while package authority consumer compatibility offline custody real rollout isolated recovery independent approval and production authority remain open,
-        ADR-0095 rejects the previously canaried cross-suite global libacl1 mutation and selects separate signed-source rsync 3.5.0 builds under one versioned side-by-side root against each endpoint native userspace; repository validation passes while bootstrap endpoint digest discovery exact-plan Linux compatibility V3 escrow real rollout and recovery remain pending and production is unchanged,
+        ADR-0095 rejects the previously canaried cross-suite global libacl1 mutation and selects separate signed-source rsync 3.5.0 builds under one versioned side-by-side root against each endpoint native userspace; the exact digest-locked Linux canary passes and ADR-0096 adds the closed V3 repository escrow contract while exact-head V3 proof private custody independent review real rollout and recovery remain pending and production is unchanged,
         delivery-chain audit found every open roadmap PR from 29 through 56 merge-clean with zero failed or pending checks after exact-head repairs to PRs 29 30 31 32 and 42,
       ]

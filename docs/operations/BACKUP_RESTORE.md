@@ -105,9 +105,9 @@ On 2026-08-28 a read-only follow-up proved the multi-terabyte VM counter was cum
 
 The ADR-0071/ADR-0072/ADR-0073 candidate is repository-tested but not deployed. Its automated maintenance requires a fresh archive before taking the dedicated lock, bounds every Borg operation, proves the post-prune canonical 48-hour timeline has no interval above 300 seconds, and fails before compaction on malformed or unsafe retention evidence. Both privileged jobs open their configuration once and source only the validated descriptor after proving an absolute canonical regular non-symlink file inside a service-owned non-group/other-writable directory with only service/root-owned and non-writable or sticky-protected higher ancestors, owned by the effective service user with exact mode `0400` or `0600`; permissive, executable, linked, differently owned, non-regular, or unsafe-directory-chain shell input fails before any external action. The archive job also requires a canonical trusted non-writable rsync 3.5-or-newer executable before stage or evidence changes, captures one C-locale pure-digit statistics pair, and atomically publishes the canonical received-byte and changed-to-wire amplification gauges. Missing, duplicate, malformed, or over-18-digit totals fail before repository access; a cycle strictly above both four-times amplification and one GiB retains aggregate alert evidence but does not invoke Borg. The database-VM forced exporter independently requires fixed root-owned safe-parent rsync and `rrsync`, the same minimum version, the upstream `--confine-root` integration, and a cleared inherited environment before `rrsync -ro` can list the fixed backup root. Read-only inspection found the Debian host on rsync 3.4.1 and the Ubuntu guest on 3.2.7, so the candidate intentionally refuses the current transport. ADR-0073 binds an exact Debian archive host package and exact rsync-project Launchpad Ubuntu package through digest-pinned disposable images, signed repository metadata, package checksums, protocol/confinement checks, an internal-only synthetic transfer, and zero-residue teardown. The plan also binds the exact pre-change host rsync, host `libacl1`, and guest rsync rollback artifacts. The exact-head Linux canary resolved each through signed base-distribution metadata and its exact HTTPS archive URL, proved byte equality, checksum and package metadata, installed none, published only minimized facts, removed the bytes before candidate acquisition, and completed the bounded transport and teardown. This passing canary is neither installation nor operations-escrow authority. Production continues using the shared repository and old transport and has no active monitoring plane until operations copies the three verified bytes to approved offline escrow, independently rechecks their hashes, approves and proves the dual-endpoint rollout, creates and escrows the dedicated repository, proves the exact repository distinction, configures and validates node-exporter/Prometheus routing, validates a retention dry run, installs both reviewed units, completes manual/timer/timeout/alert evidence, and restores the dedicated archive in isolation. Local WAL/base production continues independently if the off-site transport refuses. Existing shared-repository PostgreSQL archives must remain available throughout that transition.
 
-ADR-0094 makes the byte handoff for that gate executable without changing
-production. Operations stages the closed V2 catalogue from
-`infrastructure/governance/recovery-artifact-escrow-v2.yaml` outside the
+ADR-0096 makes the current native byte handoff for that gate executable without
+changing production. Operations stages the closed V3 catalogue from
+`infrastructure/governance/recovery-artifact-escrow-v3.yaml` outside the
 repository, copies that exact policy as `escrow-policy.yaml`, and runs:
 
 ```sh
@@ -118,12 +118,14 @@ npm run recovery-artifact-escrow:verify -- \
 ```
 
 The verifier has no network, artifact-copy, execution, installation, production,
-or mutation path. It requires the exact candidate host rsync and `libacl1`, guest
-rsync, all three rollback packages, and the reviewed forced-command, controller,
-unit, sudoers, validation, canary, decision, evidence, and runbook files. A pass
-proves only a stable closed byte inventory. Package-authority review, the
-`libacl1` host-consumer decision, redundant offline custody, real forced-command
-and timer evidence, independent review, and isolated recovery remain pending.
+or mutation path. It requires both exact endpoint-native rsync executables, the
+shared wrapper, signed source inputs, both unchanged distribution rollback
+packages, and the reviewed forced-command, controller, unit, sudoers, validation,
+canary, decision, evidence, and runbook files. A pass proves only a stable closed
+byte inventory. Native-build review, source-signature and rollback-package
+authority review, selector and consumer compatibility, redundant offline custody,
+real forced-command and timer evidence, independent review, and isolated recovery
+remain pending.
 
 The same read-only installed-state review found Debian Trixie `borgbackup=1.4.0-5`, which Debian marks affected by `CVE-2026-62268` with a no-DSA/minor disposition. ADR-0091 selects the official upstream-signed BorgBackup 1.4.5 single-directory release as a side-by-side candidate rather than mixing Debian unstable into the production host. Its closed plan verifies the exact current package through signed Trixie metadata and an independent byte-equal archive URL, then binds the candidate archive, signature, README-published full fingerprint, executable, and safe extracted-tree manifest. A networkless unprivileged compatibility canary exercises current/candidate clients and remote servers plus rollback extraction. The candidate is not deployed: exact-head CI, offline escrow, every real remote and consumer, manual/timer/maintenance checks, monitoring, rollback, isolated full-service restore, and independent approval remain required under `docs/operations/BORGBACKUP_SECURITY_UPDATE.md`.
 

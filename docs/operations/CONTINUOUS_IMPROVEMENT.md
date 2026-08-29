@@ -82,11 +82,13 @@ historical evidence.
 ### Private recovery artifact escrow preparation
 
 ADR-0093 makes the original BorgBackup and OpenSSH escrow byte inventory
-executable. ADR-0094 preserves that accepted thirty-entry V1 proof and makes the
-current sixty-four-entry V2 bundle include the exact rsync candidate,
-dependency, rollback, canary-report, runtime-control, verifier, and governance
-boundary without giving the repository
-a production route or custody authority. Validate
+executable. ADR-0094 preserves that accepted thirty-entry V1 proof and the
+historical sixty-four-entry V2 package-candidate bundle. ADR-0096 hash-binds
+both histories, excludes the superseded cross-suite rsync candidate from
+activation, and makes the current seventy-four-entry V3 bundle include the two
+endpoint-native executables, shared wrapper, signed source, rollback packages,
+endpoint dependency inventories, canary report, runtime controls, verifier, and
+governance boundary without giving the repository a production route or custody authority. Validate
 the contract with `npm run recovery-artifact-escrow:validate`. Operations then
 stages the exact closed catalogue outside the repository, copies the exact policy
 as `escrow-policy.yaml`, and runs the inventory and verification commands in the
@@ -95,8 +97,8 @@ the private manifest plus an external minimized report.
 
 Do not commit the private manifest, paths, operator identities, endpoints, or
 custody details. A passing byte inventory leaves signing-fingerprint,
-dependency, package-authority, consumer-compatibility, offline-copy,
-second-review, isolated-recovery, rollout, and
+source-signature, dependency, native-build, package-authority,
+consumer/selector-compatibility, offline-copy, second-review, isolated-recovery, rollout, and
 `operationsEscrowComplete` false. Those are independent monthly-review inputs,
 not booleans supplied by the inventory operator.
 

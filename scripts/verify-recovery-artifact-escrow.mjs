@@ -34,10 +34,10 @@ import YAML from "yaml";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const policyRelativePath =
-  "infrastructure/governance/recovery-artifact-escrow-v2.yaml";
+  "infrastructure/governance/recovery-artifact-escrow-v3.yaml";
 const policyPath = join(root, policyRelativePath);
 const evidenceRelativePath =
-  "docs/plan/evidence/M16/recovery-artifact-escrow-v2.yaml";
+  "docs/plan/evidence/M16/recovery-artifact-escrow-v3.yaml";
 const evidencePath = join(root, evidenceRelativePath);
 const historicalPolicyRelativePath =
   "infrastructure/governance/recovery-artifact-escrow-v1.yaml";
@@ -47,17 +47,32 @@ const historicalPolicySha256 =
   "eb9840652ab8e7ca2d20af9cc8eabf2d8bde7e0b696f8d51e334f859127eaa05";
 const historicalEvidenceSha256 =
   "76ecf6d023eb8dbc7f4eb07be54f46a24ad31420faca815b0bd7f5f47672db58";
+const historicalV2PolicyRelativePath =
+  "infrastructure/governance/recovery-artifact-escrow-v2.yaml";
+const historicalV2EvidenceRelativePath =
+  "docs/plan/evidence/M16/recovery-artifact-escrow-v2.yaml";
+const historicalV2PolicySha256 =
+  "fc75ce85da05f98d1abf9fe2f3ab720a34109d331a351d1cea2fd3230e8315f4";
+const historicalV2EvidenceSha256 =
+  "0cbdad6f219aa3f55d1d4ff9e33138fb3c60bfbaec35b7e99c4252b1f8238fe5";
 const digestPattern = /^[a-f0-9]{64}$/u;
 const commitPattern = /^[a-f0-9]{40}$/u;
-const providerIds = new Set([
+const v2ProviderIds = new Set([
   "borgbackup",
   "openssh-client",
   "rsync-transport",
+]);
+const v3ProviderIds = new Set([
+  "borgbackup",
+  "openssh-client",
+  "rsync-native-source",
 ]);
 const privateEntryIds = new Set([
   "borg-signing-key",
   "borg-dependency-inventory",
   "openssh-dependency-inventory",
+  "rsync-native-host-dependency-inventory",
+  "rsync-native-guest-dependency-inventory",
 ]);
 const v1AuthorityKeys = [
   "networkAccess",
@@ -78,6 +93,12 @@ const v2AuthorityKeys = [
   "consumerCompatibilityReviewComplete",
   "isolatedRestoreComplete",
 ];
+const v3AuthorityKeys = [
+  ...v2AuthorityKeys,
+  "sourceSignatureReviewComplete",
+  "nativeBuildReviewComplete",
+  "selectorCompatibilityReviewComplete",
+];
 const v1ReportLimitationKeys = [
   "signingFingerprintReviewComplete",
   "dependencyReviewComplete",
@@ -91,21 +112,34 @@ const v2ReportLimitationKeys = [
   "consumerCompatibilityReviewComplete",
   "isolatedRestoreComplete",
 ];
+const v3ReportLimitationKeys = [
+  ...v2ReportLimitationKeys,
+  "sourceSignatureReviewComplete",
+  "nativeBuildReviewComplete",
+  "selectorCompatibilityReviewComplete",
+];
 const evidenceChecks = new Map([
   ["design_contract", "passed"],
   ["historical_v1_preserved", "passed"],
+  ["historical_v2_preserved", "passed"],
+  ["superseded_candidate_excluded", "passed"],
   ["closed_catalogue", "passed"],
   ["stable_byte_verification", "passed"],
-  ["rsync_package_binding", "passed"],
-  ["rsync_runtime_binding", "passed"],
+  ["native_candidate_binding", "passed"],
+  ["signed_source_binding", "passed"],
+  ["rollback_binding", "passed"],
+  ["runtime_binding", "passed"],
   ["minimized_report_contract", "passed"],
   ["validator_selftest", "passed"],
   ["exact_head_ci", new Set(["pending", "passed"])],
   ["private_inventory", "pending"],
   ["package_authority_review", "pending"],
   ["signing_fingerprint_review", "pending"],
+  ["source_signature_review", "pending"],
   ["dependency_review", "pending"],
+  ["native_build_review", "pending"],
   ["consumer_compatibility_review", "pending"],
+  ["selector_compatibility_review", "pending"],
   ["offline_copy_review", "pending"],
   ["independent_review", "pending"],
   ["isolated_restore", "pending"],
@@ -271,6 +305,140 @@ const expectedRepositoryEntries = new Map([
       ["rsync-escrow-verifier", "scripts/verify-recovery-artifact-escrow.mjs"],
     ]),
   ],
+  [
+    "rsync-native-source",
+    new Map([
+      [
+        "rsync-native-plan",
+        "infrastructure/testing/rsync-source-security/plan.yaml",
+      ],
+      [
+        "rsync-native-build-instructions",
+        "infrastructure/testing/rsync-source-security/Dockerfile",
+      ],
+      [
+        "rsync-native-source-verifier",
+        "infrastructure/testing/rsync-source-security/verify-source.py",
+      ],
+      [
+        "rsync-native-guest-entrypoint",
+        "infrastructure/testing/rsync-source-security/guest-entrypoint.sh",
+      ],
+      [
+        "rsync-native-host-canary",
+        "infrastructure/testing/rsync-source-security/host-canary.sh",
+      ],
+      [
+        "rsync-native-canary-readme",
+        "infrastructure/testing/rsync-source-security/README.md",
+      ],
+      [
+        "rsync-native-plan-validator",
+        "scripts/validate-rsync-source-security-plan.mjs",
+      ],
+      [
+        "rsync-native-canary-runner",
+        "scripts/run-rsync-source-security-canary.mjs",
+      ],
+      [
+        "rsync-native-evidence",
+        "docs/plan/evidence/M16/rsync-source-security.yaml",
+      ],
+      [
+        "rsync-native-adr",
+        "docs/architecture/ADR/0095-side-by-side-rsync-source-candidate.md",
+      ],
+      [
+        "rsync-native-historical-v1-policy",
+        "infrastructure/governance/recovery-artifact-escrow-v1.yaml",
+      ],
+      [
+        "rsync-native-historical-v1-evidence",
+        "docs/plan/evidence/M16/recovery-artifact-escrow.yaml",
+      ],
+      [
+        "rsync-native-escrow-v1-adr",
+        "docs/architecture/ADR/0093-private-recovery-artifact-escrow-verification.md",
+      ],
+      [
+        "rsync-native-historical-v2-policy",
+        "infrastructure/governance/recovery-artifact-escrow-v2.yaml",
+      ],
+      [
+        "rsync-native-historical-v2-evidence",
+        "docs/plan/evidence/M16/recovery-artifact-escrow-v2.yaml",
+      ],
+      [
+        "rsync-native-escrow-v2-adr",
+        "docs/architecture/ADR/0094-versioned-shared-recovery-artifact-escrow.md",
+      ],
+      [
+        "rsync-native-escrow-v3-adr",
+        "docs/architecture/ADR/0096-native-rsync-recovery-artifact-escrow.md",
+      ],
+      [
+        "rsync-native-escrow-v3-evidence",
+        "docs/plan/evidence/M16/recovery-artifact-escrow-v3.yaml",
+      ],
+      [
+        "rsync-native-escrow-verifier",
+        "scripts/verify-recovery-artifact-escrow.mjs",
+      ],
+      [
+        "rsync-native-guest-forced-exporter",
+        "infrastructure/environments/proxmox/scripts/starfiniti-postgres-backup-rsync",
+      ],
+      [
+        "rsync-native-host-controller",
+        "infrastructure/environments/proxmox/scripts/starfiniti-loyalty-postgres-borg-controller",
+      ],
+      [
+        "rsync-native-host-archive-rollback",
+        "infrastructure/environments/proxmox/scripts/starfiniti-loyalty-postgres-borg",
+      ],
+      [
+        "rsync-native-host-maintenance-rollback",
+        "infrastructure/environments/proxmox/scripts/starfiniti-loyalty-postgres-borg-maintain",
+      ],
+      [
+        "rsync-native-archive-service",
+        "infrastructure/environments/proxmox/systemd/starfiniti-loyalty-postgres-borg.service",
+      ],
+      [
+        "rsync-native-archive-timer",
+        "infrastructure/environments/proxmox/systemd/starfiniti-loyalty-postgres-borg.timer",
+      ],
+      [
+        "rsync-native-maintenance-service",
+        "infrastructure/environments/proxmox/systemd/starfiniti-loyalty-postgres-borg-maintain.service",
+      ],
+      [
+        "rsync-native-maintenance-timer",
+        "infrastructure/environments/proxmox/systemd/starfiniti-loyalty-postgres-borg-maintain.timer",
+      ],
+      [
+        "rsync-native-forced-command-sudoers",
+        "infrastructure/environments/proxmox/sudoers/starfiniti-postgres-backup-rsync",
+      ],
+      [
+        "rsync-native-backup-asset-validator",
+        "scripts/validate-backup-assets.mjs",
+      ],
+      ["rsync-native-runbook", "docs/operations/BACKUP_RESTORE.md"],
+      [
+        "rsync-native-adr-incremental-pull",
+        "docs/architecture/ADR/0013-incremental-pull-before-borg-archive.md",
+      ],
+      [
+        "rsync-native-adr-dedicated-repository",
+        "docs/architecture/ADR/0071-dedicated-postgresql-borg-repository.md",
+      ],
+      [
+        "rsync-native-adr-security-baseline",
+        "docs/architecture/ADR/0072-rsync-3-5-backup-transport-security-baseline.md",
+      ],
+    ]),
+  ],
 ]);
 
 function fail(message) {
@@ -302,10 +470,12 @@ function policyProviders(policy) {
 }
 
 function authorityKeysFor(policy) {
+  if (policy.version === 3) return v3AuthorityKeys;
   return policy.version === 2 ? v2AuthorityKeys : v1AuthorityKeys;
 }
 
 function reportLimitationKeysFor(policy) {
+  if (policy.version === 3) return v3ReportLimitationKeys;
   return policy.version === 2 ? v2ReportLimitationKeys : v1ReportLimitationKeys;
 }
 
@@ -586,7 +756,7 @@ function uniqueEntries(providers) {
   return entries;
 }
 
-function validatePolicyShape(policy, historicalPolicy) {
+function validateV2PolicyShape(policy, historicalPolicy) {
   exactObjectKeys(
     policy,
     [
@@ -612,11 +782,11 @@ function validatePolicyShape(policy, historicalPolicy) {
   }
   if (
     !Array.isArray(policy.scope) ||
-    policy.scope.length !== providerIds.size
+    policy.scope.length !== v2ProviderIds.size
   ) {
     fail("policy scope count differs");
   }
-  exactSet(new Set(policy.scope), providerIds, "policy scope");
+  exactSet(new Set(policy.scope), v2ProviderIds, "policy scope");
   exactObjectKeys(policy.extends, ["path", "sha256"], "policy extension");
   if (
     policy.extends.path !== historicalPolicyRelativePath ||
@@ -767,7 +937,7 @@ function validatePolicyShape(policy, historicalPolicy) {
   ];
   exactSet(
     new Set(effectiveProviders.map((provider) => provider.id)),
-    providerIds,
+    v2ProviderIds,
     "effective provider catalogue",
   );
   effectiveProvidersByPolicy.set(policy, effectiveProviders);
@@ -787,6 +957,241 @@ function validatePolicyShape(policy, historicalPolicy) {
   return entries;
 }
 
+function validateV3PolicyShape(policy, historicalPolicy, historicalV2Policy) {
+  exactObjectKeys(
+    policy,
+    [
+      "schema",
+      "version",
+      "status",
+      "scope",
+      "extends",
+      "supersedes",
+      "bounds",
+      "filesystem",
+      "authority",
+      "providers",
+      "automaticFails",
+    ],
+    "policy",
+  );
+  if (
+    policy.schema !== "starfiniti.recovery-artifact-escrow-plan.v3" ||
+    policy.version !== 3 ||
+    policy.status !== "ready"
+  ) {
+    fail("policy identity differs");
+  }
+  if (
+    !Array.isArray(policy.scope) ||
+    policy.scope.length !== v3ProviderIds.size
+  ) {
+    fail("policy scope count differs");
+  }
+  exactSet(new Set(policy.scope), v3ProviderIds, "policy scope");
+  exactObjectKeys(policy.extends, ["path", "sha256"], "policy extension");
+  if (
+    policy.extends.path !== historicalV2PolicyRelativePath ||
+    policy.extends.sha256 !== historicalV2PolicySha256
+  ) {
+    fail("policy extension differs from immutable V2");
+  }
+  exactObjectKeys(
+    policy.supersedes,
+    [
+      "provider",
+      "disposition",
+      "replacementProvider",
+      "historicalCandidateActivationAllowed",
+      "globalLibraryUpgradeAllowed",
+    ],
+    "policy supersession",
+  );
+  if (
+    policy.supersedes.provider !== "rsync-transport" ||
+    policy.supersedes.disposition !== "historical-only" ||
+    policy.supersedes.replacementProvider !== "rsync-native-source" ||
+    policy.supersedes.historicalCandidateActivationAllowed !== false ||
+    policy.supersedes.globalLibraryUpgradeAllowed !== false
+  ) {
+    fail("policy supersession boundary differs");
+  }
+  exactObjectKeys(
+    policy.bounds,
+    [
+      "maximumEntries",
+      "maximumTotalBytes",
+      "maximumManifestBytes",
+      "maximumPolicyBytes",
+      "maximumReportBytes",
+      "readChunkBytes",
+    ],
+    "policy bounds",
+  );
+  if (
+    policy.bounds.maximumEntries !== 74 ||
+    policy.bounds.maximumTotalBytes !== 536_870_912 ||
+    policy.bounds.maximumManifestBytes !== 262_144 ||
+    policy.bounds.maximumPolicyBytes !== 131_072 ||
+    policy.bounds.maximumReportBytes !== 65_536 ||
+    policy.bounds.readChunkBytes !== 65_536
+  ) {
+    fail("policy bounds differ");
+  }
+  exactObjectKeys(
+    policy.filesystem,
+    [
+      "bundleMustBeAbsolute",
+      "bundleMustBeOutsideRepository",
+      "bundleRootMayNotBeFilesystemRoot",
+      "rejectSymlinks",
+      "rejectHardlinks",
+      "rejectSpecialFiles",
+      "rejectUnexpectedMembers",
+      "rejectCaseCollisions",
+      "rejectGroupOrOtherWritableOnPosix",
+      "policyCopyPath",
+      "privateManifestPath",
+    ],
+    "filesystem policy",
+  );
+  for (const key of [
+    "bundleMustBeAbsolute",
+    "bundleMustBeOutsideRepository",
+    "bundleRootMayNotBeFilesystemRoot",
+    "rejectSymlinks",
+    "rejectHardlinks",
+    "rejectSpecialFiles",
+    "rejectUnexpectedMembers",
+    "rejectCaseCollisions",
+    "rejectGroupOrOtherWritableOnPosix",
+  ]) {
+    if (policy.filesystem[key] !== true) fail(`${key} must remain true`);
+  }
+  if (
+    policy.filesystem.policyCopyPath !== "escrow-policy.yaml" ||
+    policy.filesystem.privateManifestPath !== "manifest.json"
+  ) {
+    fail("control file paths differ");
+  }
+  exactObjectKeys(
+    policy.authority,
+    [
+      "networkAccess",
+      "artifactCopy",
+      "artifactExecution",
+      "productionAccess",
+      "productionMutation",
+      "productionAuthority",
+      "inventoryVerificationCompletesEscrow",
+      "signingFingerprintReviewRequired",
+      "sourceSignatureReviewRequired",
+      "dependencyReviewRequired",
+      "nativeBuildReviewRequired",
+      "packageAuthorityReviewRequired",
+      "consumerCompatibilityReviewRequired",
+      "selectorCompatibilityReviewRequired",
+      "offlineCopyReviewRequired",
+      "secondReviewerRequired",
+      "isolatedRestoreRequired",
+    ],
+    "authority policy",
+  );
+  for (const key of [
+    "networkAccess",
+    "artifactCopy",
+    "artifactExecution",
+    "productionAccess",
+    "productionMutation",
+    "productionAuthority",
+    "inventoryVerificationCompletesEscrow",
+  ]) {
+    if (policy.authority[key] !== false) fail(`${key} must remain false`);
+  }
+  for (const key of [
+    "signingFingerprintReviewRequired",
+    "sourceSignatureReviewRequired",
+    "dependencyReviewRequired",
+    "nativeBuildReviewRequired",
+    "packageAuthorityReviewRequired",
+    "consumerCompatibilityReviewRequired",
+    "selectorCompatibilityReviewRequired",
+    "offlineCopyReviewRequired",
+    "secondReviewerRequired",
+    "isolatedRestoreRequired",
+  ]) {
+    if (policy.authority[key] !== true) fail(`${key} must remain true`);
+  }
+  if (!Array.isArray(policy.providers) || policy.providers.length !== 1) {
+    fail("provider catalogue differs");
+  }
+  exactSet(
+    new Set(policy.providers.map((provider) => provider.id)),
+    new Set(["rsync-native-source"]),
+    "provider catalogue",
+  );
+  for (const provider of policy.providers) {
+    exactObjectKeys(
+      provider,
+      ["id", "candidateCommit", "plan", "entries"],
+      `${provider.id} provider`,
+    );
+    if (!commitPattern.test(provider.candidateCommit)) {
+      fail(`${provider.id} candidate commit is invalid`);
+    }
+    exactObjectKeys(provider.plan, ["path", "sha256"], `${provider.id} plan`);
+    safeRepositoryPath(provider.plan.path, `${provider.id} plan path`);
+    if (!digestPattern.test(provider.plan.sha256)) {
+      fail(`${provider.id} plan digest is invalid`);
+    }
+    for (const entry of provider.entries) validateEntry(entry, provider.id);
+  }
+  if (
+    historicalPolicy.schema !== "starfiniti.recovery-artifact-escrow-plan.v1" ||
+    historicalPolicy.version !== 1 ||
+    historicalPolicy.bounds?.maximumEntries !== 30 ||
+    historicalPolicy.providers?.length !== 2 ||
+    historicalV2Policy.schema !==
+      "starfiniti.recovery-artifact-escrow-plan.v2" ||
+    historicalV2Policy.version !== 2 ||
+    historicalV2Policy.bounds?.maximumEntries !== 64 ||
+    historicalV2Policy.providers?.length !== 1
+  ) {
+    fail("immutable historical policy identity differs");
+  }
+  const effectiveProviders = [
+    ...historicalPolicy.providers,
+    ...policy.providers,
+  ];
+  exactSet(
+    new Set(effectiveProviders.map((provider) => provider.id)),
+    v3ProviderIds,
+    "effective provider catalogue",
+  );
+  effectiveProvidersByPolicy.set(policy, effectiveProviders);
+  const entries = uniqueEntries(effectiveProviders);
+  if (
+    entries.length !== policy.bounds.maximumEntries ||
+    entries.length !== 74
+  ) {
+    fail("entry catalogue count differs");
+  }
+  if (
+    !Array.isArray(policy.automaticFails) ||
+    policy.automaticFails.length !== 8
+  ) {
+    fail("automatic failure catalogue differs");
+  }
+  return entries;
+}
+
+function validatePolicyShape(policy, historicalPolicy, historicalV2Policy) {
+  if (policy.version === 2) {
+    return validateV2PolicyShape(policy, historicalPolicy);
+  }
+  return validateV3PolicyShape(policy, historicalPolicy, historicalV2Policy);
+}
+
 function validateEntry(entry, providerId) {
   const expectedKeys = [
     "id",
@@ -801,6 +1206,7 @@ function validateEntry(entry, providerId) {
   if (entry.signingFingerprint !== undefined)
     expectedKeys.push("signingFingerprint");
   if (entry.contentSchema !== undefined) expectedKeys.push("contentSchema");
+  if (entry.endpointId !== undefined) expectedKeys.push("endpointId");
   exactObjectKeys(entry, expectedKeys, `${entry.id ?? providerId} entry`);
   if (
     typeof entry.id !== "string" ||
@@ -857,6 +1263,17 @@ function validateEntry(entry, providerId) {
         "starfiniti.recovery-candidate-dependency-inventory.v1")
   ) {
     fail(`${entry.id} content schema is invalid`);
+  }
+  if (
+    (entry.endpointId !== undefined &&
+      (providerId !== "rsync-native-source" ||
+        entry.role !== "dependency-inventory" ||
+        !["proxmox-host", "database-guest"].includes(entry.endpointId))) ||
+    (providerId === "rsync-native-source" &&
+      entry.role === "dependency-inventory" &&
+      entry.endpointId === undefined)
+  ) {
+    fail(`${entry.id} endpoint binding is invalid`);
   }
 }
 
@@ -978,7 +1395,7 @@ function validateCanonicalBindings(policy, sourceRoot = root) {
       ) {
         fail("OpenSSH candidate evidence binding differs");
       }
-    } else {
+    } else if (provider.id === "rsync-transport") {
       const host = plan.endpoints?.find(
         (endpoint) => endpoint.id === "proxmox-host",
       );
@@ -1043,6 +1460,119 @@ function validateCanonicalBindings(policy, sourceRoot = root) {
       ) {
         fail("rsync candidate evidence binding or authority differs");
       }
+    } else if (provider.id === "rsync-native-source") {
+      exactSet(
+        new Set(
+          [...entries.values()]
+            .filter((entry) => entry.expected !== "repository-file")
+            .map((entry) => entry.id),
+        ),
+        new Set([
+          "rsync-native-host-executable",
+          "rsync-native-guest-executable",
+          "rsync-native-shared-wrapper",
+          "rsync-native-source-archive",
+          "rsync-native-source-signature",
+          "rsync-native-release-key",
+          "rsync-native-host-rollback-package",
+          "rsync-native-guest-rollback-package",
+          "rsync-native-host-dependency-inventory",
+          "rsync-native-guest-dependency-inventory",
+          "rsync-native-canary-report",
+        ]),
+        "native rsync fixed and private entries",
+      );
+      const host = plan.candidate?.endpoints?.find(
+        (endpoint) => endpoint.id === "proxmox-host",
+      );
+      const guest = plan.candidate?.endpoints?.find(
+        (endpoint) => endpoint.id === "database-guest",
+      );
+      if (
+        plan.status !== "candidate" ||
+        !host ||
+        !guest ||
+        plan.rollback?.globalLibraryUpgradeRequired !== false ||
+        plan.rollback?.preserveDistributionPackages !== true ||
+        plan.rollback?.preserveDistributionExecutables !== true ||
+        plan.rollback?.preserveNativeAclLibraries !== true
+      ) {
+        fail("native rsync candidate or rollback boundary differs");
+      }
+      if (
+        entries.get("rsync-native-host-dependency-inventory")?.endpointId !==
+          host.id ||
+        entries.get("rsync-native-guest-dependency-inventory")?.endpointId !==
+          guest.id
+      ) {
+        fail("native rsync dependency endpoint bindings differ");
+      }
+      validateFixedBinding(
+        entries.get("rsync-native-host-executable"),
+        host.executableSha256,
+      );
+      validateFixedBinding(
+        entries.get("rsync-native-guest-executable"),
+        guest.executableSha256,
+      );
+      if (host.wrapperSha256 !== guest.wrapperSha256) {
+        fail("native rsync shared wrapper differs between endpoints");
+      }
+      validateFixedBinding(
+        entries.get("rsync-native-shared-wrapper"),
+        host.wrapperSha256,
+      );
+      validateFixedBinding(
+        entries.get("rsync-native-source-archive"),
+        plan.candidate.source.sha256,
+        plan.candidate.source.bytes,
+      );
+      validateFixedBinding(
+        entries.get("rsync-native-source-signature"),
+        plan.candidate.source.signatureSha256,
+      );
+      validateFixedBinding(
+        entries.get("rsync-native-release-key"),
+        plan.candidate.source.releaseKeySha256,
+      );
+      validateFixedBinding(
+        entries.get("rsync-native-host-rollback-package"),
+        plan.installed["proxmox-host"].package.sha256,
+      );
+      validateFixedBinding(
+        entries.get("rsync-native-guest-rollback-package"),
+        plan.installed["database-guest"].package.sha256,
+      );
+      if (
+        entries.get("rsync-native-release-key").signingFingerprint !==
+        plan.candidate.source.signingFingerprint
+      ) {
+        fail("native rsync signing fingerprint differs from the plan");
+      }
+      const evidence = YAML.parse(
+        readStableFile(
+          join(sourceRoot, "docs/plan/evidence/M16/rsync-source-security.yaml"),
+          262_144,
+          "native rsync evidence",
+          { capture: true, enforceMode: false },
+        ).content.toString("utf8"),
+      );
+      if (
+        evidence.candidate.commit !== provider.candidateCommit ||
+        evidence.plan.sha256 !== provider.plan.sha256 ||
+        evidence.digestLockCanary?.report?.sha256 !==
+          entries.get("rsync-native-canary-report")?.sha256 ||
+        evidence.checks?.find((check) => check.id === "digest_lock_canary")
+          ?.status !== "passed" ||
+        evidence.checks?.find((check) => check.id === "operations_escrow_v3")
+          ?.status !== "pending" ||
+        evidence.productionMutation !== false ||
+        evidence.productionAuthority !== false
+      ) {
+        fail("native rsync candidate evidence binding or authority differs");
+      }
+    } else {
+      fail("unknown recovery provider");
     }
   }
 }
@@ -1071,7 +1601,7 @@ function validateCanonicalEvidence(policyBytes) {
   );
   exactUtc(evidence.observedAt, "escrow evidence observedAt");
   if (
-    evidence.schema !== "starfiniti.recovery-artifact-escrow-evidence.v2" ||
+    evidence.schema !== "starfiniti.recovery-artifact-escrow-evidence.v3" ||
     evidence.status !== "in_progress" ||
     evidence.productionAccess !== false ||
     evidence.productionMutation !== false ||
@@ -1136,7 +1666,7 @@ function validateCanonicalEvidence(policyBytes) {
   }
   if (
     !Array.isArray(evidence.automaticFails) ||
-    evidence.automaticFails.length !== 7
+    evidence.automaticFails.length !== 8
   ) {
     fail("escrow evidence automatic failures differ");
   }
@@ -1182,7 +1712,7 @@ function validateRepositoryWiring(sourceRoot = root) {
       [
         "recovery-artifact-escrow:inventory",
         "recovery-artifact-escrow:verify",
-        "recovery-artifact-escrow-v2.yaml",
+        "recovery-artifact-escrow-v3.yaml",
         "`operations_escrow` remains pending",
       ],
     ],
@@ -1191,7 +1721,7 @@ function validateRepositoryWiring(sourceRoot = root) {
       [
         "recovery-artifact-escrow:inventory",
         "recovery-artifact-escrow:verify",
-        "recovery-artifact-escrow-v2.yaml",
+        "recovery-artifact-escrow-v3.yaml",
         "cannot prove the signing fingerprint",
       ],
     ],
@@ -1200,23 +1730,23 @@ function validateRepositoryWiring(sourceRoot = root) {
       [
         "recovery-artifact-escrow:inventory",
         "recovery-artifact-escrow:verify",
-        "recovery-artifact-escrow-v2.yaml",
-        "Package-authority review",
+        "recovery-artifact-escrow-v3.yaml",
+        "Native-build review",
       ],
     ],
     [
       "docs/plan/TASKS.yaml",
       [
         "npm run recovery-artifact-escrow:validate",
-        "docs/architecture/ADR/0094-versioned-shared-recovery-artifact-escrow.md",
-        "docs/plan/evidence/M16/recovery-artifact-escrow-v2.yaml",
+        "docs/architecture/ADR/0096-native-rsync-recovery-artifact-escrow.md",
+        "docs/plan/evidence/M16/recovery-artifact-escrow-v3.yaml",
       ],
     ],
     [
       "RISKS.md",
       [
         "R-004",
-        "closed 64-entry V2 no-network recovery escrow verifier",
+        "closed 74-entry V3 no-network recovery escrow verifier",
         "private custody/review",
       ],
     ],
@@ -1307,7 +1837,11 @@ function validateDependencyInventory(bytes, entry, provider, plan) {
     ],
     `${entry.id} document`,
   );
-  const expectedSha = plan.candidate.executableSha256;
+  const expectedSha = entry.endpointId
+    ? plan.candidate.endpoints?.find(
+        (endpoint) => endpoint.id === entry.endpointId,
+      )?.executableSha256
+    : plan.candidate.executableSha256;
   const expectedVersion = plan.candidate.version;
   if (
     document.schema !== entry.contentSchema ||
@@ -1885,12 +2419,40 @@ function loadHistoricalPolicy() {
   return policy.document;
 }
 
+function loadHistoricalV2Policy(historicalPolicy) {
+  const policy = readYaml(
+    join(root, historicalV2PolicyRelativePath),
+    131_072,
+    "historical V2 escrow policy",
+    { enforceMode: false },
+  );
+  const evidence = readStableFile(
+    join(root, historicalV2EvidenceRelativePath),
+    262_144,
+    "historical V2 escrow evidence",
+    { capture: true, enforceMode: false },
+  );
+  if (
+    policy.sha256 !== historicalV2PolicySha256 ||
+    evidence.sha256 !== historicalV2EvidenceSha256 ||
+    policy.document.schema !== "starfiniti.recovery-artifact-escrow-plan.v2" ||
+    policy.document.version !== 2 ||
+    policy.document.bounds?.maximumEntries !== 64
+  ) {
+    fail("accepted historical V2 policy or evidence differs");
+  }
+  validateV2PolicyShape(policy.document, historicalPolicy);
+  validateCanonicalBindings(policy.document);
+  return policy.document;
+}
+
 function loadCanonicalPolicy() {
   const historicalPolicy = loadHistoricalPolicy();
+  const historicalV2Policy = loadHistoricalV2Policy(historicalPolicy);
   const loaded = readYaml(policyPath, 131_072, "escrow policy", {
     enforceMode: false,
   });
-  validatePolicyShape(loaded.document, historicalPolicy);
+  validatePolicyShape(loaded.document, historicalPolicy, historicalV2Policy);
   validateCanonicalBindings(loaded.document);
   validateCanonicalEvidence(loaded.content);
   validateRepositoryWiring();
@@ -2112,17 +2674,18 @@ function createFixture(base, mutate) {
 function runSelfTest() {
   const canonical = loadCanonicalPolicy();
   if (
-    canonical.policy.bounds.maximumEntries !== 64 ||
+    canonical.policy.bounds.maximumEntries !== 74 ||
     policyProviders(canonical.policy).length !== 3
   ) {
     fail("canonical policy self-test did not load the closed catalogue");
   }
   const historicalPolicy = loadHistoricalPolicy();
+  const historicalV2Policy = loadHistoricalV2Policy(historicalPolicy);
   const expectCanonicalRejected = (label, expectedMessage, mutate, bind) => {
     const policy = clone(canonical.policy);
     mutate(policy);
     try {
-      validatePolicyShape(policy, historicalPolicy);
+      validatePolicyShape(policy, historicalPolicy, historicalV2Policy);
       if (bind) validateCanonicalBindings(policy);
       fail(`${label} fixture was accepted`);
     } catch (error) {
@@ -2130,40 +2693,75 @@ function runSelfTest() {
     }
   };
   expectCanonicalRejected(
-    "historical V1 drift",
-    "policy extension differs from immutable V1",
+    "historical V2 drift",
+    "policy extension differs from immutable V2",
     (policy) => {
       policy.extends.sha256 = "0".repeat(64);
     },
   );
   expectCanonicalRejected(
-    "rsync package drift",
+    "historical candidate activation",
+    "policy supersession boundary differs",
+    (policy) => {
+      policy.supersedes.historicalCandidateActivationAllowed = true;
+    },
+  );
+  expectCanonicalRejected(
+    "native rsync executable drift",
     "fixed artifact binding differs",
     (policy) => {
       policy.providers[0].entries.find(
-        (entry) => entry.id === "rsync-host-candidate-package",
+        (entry) => entry.id === "rsync-native-host-executable",
       ).sha256 = "0".repeat(63) + "1";
     },
     true,
   );
   expectCanonicalRejected(
-    "rsync canary-report drift",
-    "rsync candidate evidence binding or authority differs",
+    "native rsync canary-report drift",
+    "native rsync candidate evidence binding or authority differs",
     (policy) => {
       policy.providers[0].entries.find(
-        (entry) => entry.id === "rsync-canary-report",
+        (entry) => entry.id === "rsync-native-canary-report",
       ).sha256 = "0".repeat(63) + "1";
     },
     true,
   );
   expectCanonicalRejected(
-    "rsync runtime omission",
+    "native rsync runtime omission",
     "entry catalogue count differs",
     (policy) => {
       policy.providers[0].entries = policy.providers[0].entries.filter(
-        (entry) => entry.id !== "rsync-archive-service",
+        (entry) => entry.id !== "rsync-native-archive-service",
       );
     },
+  );
+  expectCanonicalRejected(
+    "native rsync dependency inventory substitution",
+    "native rsync fixed and private entries differs",
+    (policy) => {
+      policy.providers[0].entries = policy.providers[0].entries.filter(
+        (entry) => entry.id !== "rsync-native-host-dependency-inventory",
+      );
+      policy.providers[0].entries.push({
+        id: "rsync-native-unreviewed-fixed-artifact",
+        relativePath: "rsync-native-source/private/unreviewed.bin",
+        role: "unreviewed-artifact",
+        expected: "fixed",
+        sha256: "0".repeat(63) + "1",
+        maximumBytes: 4096,
+      });
+    },
+    true,
+  );
+  expectCanonicalRejected(
+    "native rsync duplicate dependency endpoint",
+    "native rsync dependency endpoint bindings differ",
+    (policy) => {
+      policy.providers[0].entries.find(
+        (entry) => entry.id === "rsync-native-host-dependency-inventory",
+      ).endpointId = "database-guest";
+    },
+    true,
   );
   const base = mkdtempSync(join(tmpdir(), "starfiniti-recovery-escrow-"));
   const expectRejected = (label, expectedMessage, setup, afterInventory) => {
@@ -2238,6 +2836,31 @@ function runSelfTest() {
       v2FixtureReport.limitations.isolatedRestoreComplete !== false
     ) {
       fail("positive V2 fixture omitted versioned false-authority evidence");
+    }
+    const v3Fixture = createFixture(base, ({ policy }) => {
+      policy.schema = "starfiniti.recovery-artifact-escrow-plan.v3";
+      policy.version = 3;
+    });
+    inventoryBundle({
+      ...v3Fixture,
+      policy: v3Fixture.policy,
+      headCommit: "a".repeat(40),
+      now: Date.parse("2026-08-29T08:10:00Z"),
+    });
+    const v3FixtureReport = verifyBundle({
+      ...v3Fixture,
+      policy: v3Fixture.policy,
+      headCommit: "a".repeat(40),
+      now: Date.parse("2026-08-29T08:11:00Z"),
+    });
+    if (
+      v3FixtureReport.schema !==
+        "starfiniti.recovery-artifact-escrow-report.v3" ||
+      v3FixtureReport.limitations.sourceSignatureReviewComplete !== false ||
+      v3FixtureReport.limitations.nativeBuildReviewComplete !== false ||
+      v3FixtureReport.limitations.selectorCompatibilityReviewComplete !== false
+    ) {
+      fail("positive V3 fixture omitted versioned false-authority evidence");
     }
     const headDrift = createFixture(base);
     try {
@@ -2333,6 +2956,9 @@ function runSelfTest() {
       entryCount: provider.entries.length,
       totalBytes: provider.entries.length,
     }));
+    if (v2Providers.some((provider) => provider.id === "rsync-transport")) {
+      fail("V3 minimized report retained the historical rsync provider");
+    }
     const v2Report = {
       schema: schemaFor(canonical.policy, "report"),
       observedAt: "2026-08-29T08:11:00Z",
@@ -2360,10 +2986,31 @@ function runSelfTest() {
       productionAuthority: false,
     };
     validateReport(v2Report, canonical.policy);
+    const historicalProviderReport = clone(v2Report);
+    historicalProviderReport.providers[0].id = "rsync-transport";
+    try {
+      validateReport(historicalProviderReport, canonical.policy);
+      fail("V3 historical-provider report fixture was accepted");
+    } catch (error) {
+      if (
+        !String(error.message).includes("minimized report providers differs")
+      ) {
+        throw error;
+      }
+    }
     v2Report.limitations.packageAuthorityReviewComplete = true;
     try {
       validateReport(v2Report, canonical.policy);
       fail("V2 package-authority overclaim fixture was accepted");
+    } catch (error) {
+      if (!String(error.message).includes("overstates escrow completion"))
+        throw error;
+    }
+    v2Report.limitations.packageAuthorityReviewComplete = false;
+    v2Report.limitations.nativeBuildReviewComplete = true;
+    try {
+      validateReport(v2Report, canonical.policy);
+      fail("V3 native-build overclaim fixture was accepted");
     } catch (error) {
       if (!String(error.message).includes("overstates escrow completion"))
         throw error;
@@ -2394,7 +3041,7 @@ function runSelfTest() {
     rmSync(base, { recursive: true, force: true });
   }
   console.log(
-    "Validated immutable V1 history plus the 64-entry Borg/OpenSSH/rsync V2 private escrow contract and adversarial inventory/report boundaries; no real escrow, network, production access, copy, execution, or mutation occurred.",
+    "Validated immutable V1/V2 history plus the 74-entry Borg/OpenSSH/native-rsync V3 private escrow contract and adversarial inventory/report boundaries; no real escrow, network, production access, copy, execution, or mutation occurred.",
   );
 }
 

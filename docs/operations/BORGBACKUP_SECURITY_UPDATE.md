@@ -50,12 +50,14 @@ a second reviewer recheck each value:
 No credential, repository key, infrastructure identifier, route, archive
 listing, or customer/tenant data belongs in repository evidence.
 
-Stage the required Borg, OpenSSH, and rsync recovery artifacts together in the closed
-private layout from
-`infrastructure/governance/recovery-artifact-escrow-v2.yaml`. V2 hash-binds and
-preserves the accepted thirty-entry V1 policy while adding the exact rsync
-candidate, dependency, rollback, and runtime-control catalogue. From a clean exact
-commit, copy the policy into the private root as `escrow-policy.yaml`, then run:
+Stage the required Borg, OpenSSH, and native rsync recovery artifacts together in
+the closed private layout from
+`infrastructure/governance/recovery-artifact-escrow-v3.yaml`. V3 hash-binds the
+accepted V1/V2 history, keeps the thirty-entry Borg/OpenSSH catalogue, and
+replaces the historical cross-suite rsync package set with both native
+executables, the shared wrapper, signed source, rollback packages, build evidence,
+and runtime controls. From a clean exact commit, copy the policy into the private
+root as `escrow-policy.yaml`, then run:
 
 ```sh
 npm run recovery-artifact-escrow:inventory -- --bundle /absolute/private/escrow
@@ -68,8 +70,9 @@ The verifier downloads, copies, executes, installs, or deletes no artifact. It
 rejects an incomplete or open-ended directory and proves only the staged byte
 inventory. The private manifest stays out of Git. A second person must still
 verify the Borg signing fingerprint and signature, candidate dependency
-inventory, rsync package authority and host-consumer compatibility, offline
-redundant custody, and recovery usability. Until that
+inventory, rsync source signature, native builds, rollback package authority,
+selector and consumer compatibility, offline redundant custody, and recovery
+usability. Until that
 separate review is accepted, `operations_escrow` remains pending.
 
 ## Preflight
