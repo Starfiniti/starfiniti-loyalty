@@ -72,9 +72,13 @@ and deletion without installing a candidate package or contacting production.
    the local uncompressed `Packages` bytes and size to equal the payload's
    SHA-256 entry.
 4. For each of the twelve packages, require APT's exact-version URI, filename,
-   size, and SHA-256 to equal the V1 plan. Download once through APT and once
-   through that exact official URL, then require identical bytes, exact package
-   fields, size, and SHA-256.
+   size, and SHA-256 to equal the V1 plan. Apt 3 prints the strongest available
+   hash for `download --print-uris`; because Proxmox metadata includes SHA-512
+   while Debian currently selects SHA-256, set `Acquire::ForceHash=SHA256` only
+   for this machine-readable URI proof. Perform the real APT download with its
+   normal strongest-hash policy and one separate acquisition through that exact
+   official URL, then require identical bytes, exact package fields, size, and
+   SHA-256.
 5. Do not install any candidate package. Process one pair at a time, remove all
    `.deb` bytes, emit only bounded metadata, and tear down the container.
 6. Run the networked proof only on a GitHub-hosted disposable runner with no
@@ -161,16 +165,55 @@ are disabled. The correction explicitly installs `gpgv` through the same signed
 bootstrap and verifies its canonical executable path. It does not fall back to
 APT's result or weaken the independent signature step.
 
-That attempt's external CodeQL policy also rejected a check-then-write race at
+The first attempt's external CodeQL policy also rejected a check-then-write race at
 the final report path. The correction no longer tests and later reopens that
 path. It creates the report once with exclusive/no-follow flags, writes and
 syncs through the same descriptor, verifies size, mode, and path identity, and
 on failure removes only the inode it created. A passing network canary artifact
 therefore cannot overwrite or follow a pre-existing report path.
 
+The sixth attempt, head `66b0d32`, installed and verified `gpgv`, authenticated
+all five repositories, and then failed closed before acquisition because the
+verifier assumed the wrong Apt URI-output shape for `pve-qemu-kvm`. The seventh,
+head `02a90d8`, corrected the shape but incorrectly assumed Apt would always
+print MD5. The eighth, head `98c3127`, used a bounded diagnostic to establish
+that Apt 3 prints its selected strongest hash and again stopped before
+acquisition. These were parser-policy failures, not accepted package evidence;
+none produced an artifact or retained candidate bytes.
+
+The ninth attempt, head `0e6f066`, completed all twelve signed-index, Apt URI,
+independent URL, package-field, size, SHA-256, and byte-equality proofs, then
+failed closed while publishing the minimized facts because `os.replace` cannot
+atomically cross the container output mount. The controller now creates the
+exclusive no-follow temporary facts file beside its final path and renames only
+within that output filesystem. It never relaxes the artifact integrity check.
+
+Head `45e9a12a4bb75ece2a3e370dda35739cf253b1a7` then passed CI run
+`33223681162`, all four jobs in Security run `33223681183`, and external
+CodeQL check `99023166148`; recovery-transport job `99022913369` ran under
+synthetic PR merge commit `957e1ded55992331bfae703de5decf2e9913f4bb`. Artifact
+`9706126317` contains the first passing 9,606-byte report. Its file SHA-256 is
+`3eec19512a6b2535cf0c6359144c1807b78e01015f43c470ad53335c6eb1090e`
+and its independently verified internal report SHA-256 is
+`0b703cc553f2304de75f28160e7482b09718794205efa7615fb39f2eab0f0382`.
+It authenticates five fresh repositories with ten accepted signatures and
+binds all twelve packages totalling 165,341,024 bytes. The before/after dpkg
+status digest is identical; candidate installation, retained package bytes,
+production credentials, production route input, and production mutation are
+false, and teardown is true. Rotated signed repository observations remain
+explicit rather than being misreported as historical digest matches.
+
+This passing artifact advances only candidate package bytes, repository-tool
+signature reverification, and fresh signed-metadata binding. Dependency
+simulation, installed starting state, compatibility, rollback escrow, recovery,
+repository policy, maintenance, reboot, production mutation, running-kernel
+state, service smoke, and post-change reconciliation remain false or pending.
+
 ## Official sources
 
 - Debian `apt-secure`: https://manpages.debian.org/trixie/apt/apt-secure.8.en.html
+- Debian Apt 3 `download --print-uris` implementation:
+  https://sources.debian.org/src/apt/3.0.3/apt-private/private-download.cc
 - Debian Trixie `debian-archive-keyring` package and installed-file list:
   https://packages.debian.org/trixie/debian-archive-keyring and
   https://packages.debian.org/trixie/all/debian-archive-keyring/filelist

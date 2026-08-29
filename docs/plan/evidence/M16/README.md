@@ -10,7 +10,12 @@ is below its category floor and required live evidence is absent. The determinis
 validator is part of `npm run check`; two future elapsed monthly reviews must still
 rescore their affected modules and retain prior/current evidence.
 
-Approved run artifacts belong in `runs/` and must use the five schemas in `infrastructure/governance/continuous-improvement.yaml`. Do not commit raw telemetry, personal data, tenant identifiers, customer data, credentials, receiver destinations, provider payloads, or mutable review drafts.
+Approved closeout artifacts use the five schemas in
+`infrastructure/governance/continuous-improvement.yaml`; minimized preparation
+and provenance artifacts use their own ADR-governed schemas. All belong in
+`runs/`. Do not commit raw telemetry, personal data, tenant identifiers,
+customer data, credentials, receiver destinations, provider payloads, package
+bytes, or mutable review drafts.
 
 ADR-0084 adds a separate minimized `starfiniti.provider-source-snapshot.v1`
 pre-review artifact. `npm run continuous-improvement:sources:validate` proves the
@@ -63,9 +68,18 @@ inputs. The minimized review
 [`proxmox-security-review-2026-08-29.md`](proxmox-security-review-2026-08-29.md)
 shows that the observed host is below fixed floors in five official Proxmox
 advisories and binds an exact twelve-package, zero-removal candidate. The
-candidate's listed versions meet every advisory floor, but package-byte and
-signature reverification, compatibility, rollback escrow, recovery readiness,
-repository policy, maintenance, reboot, mutation, post-change reconciliation,
-and independent approval remain open. It advances Proxmox candidate metadata and
-Critical risk classification only; it does not complete a monthly provider
-review or any production gate.
+candidate's listed versions meet every advisory floor.
+
+ADR-0087 supplies the independent disposable provenance proof. The exact
+[`runs/proxmox-security-package-canary-957e1de-2026-08-29T003101Z.json`](runs/proxmox-security-package-canary-957e1de-2026-08-29T003101Z.json)
+artifact is 9,606 bytes with file SHA-256
+`3eec19512a6b2535cf0c6359144c1807b78e01015f43c470ad53335c6eb1090e`.
+It independently verifies five fresh signed repositories, ten accepted
+signatures, and all twelve exact packages totalling 165,341,024 bytes while
+proving unchanged dpkg status, zero installation, zero retained package bytes,
+no production credential or route, no production mutation, and teardown.
+Package-byte, repository-signature, and fresh signed-metadata gates pass;
+compatibility, dependency simulation, installed-state preflight, rollback
+escrow, recovery readiness, repository policy, maintenance, reboot, execution,
+post-change reconciliation, and independent approval remain open. Neither the
+candidate nor the canary completes a monthly provider review or production gate.

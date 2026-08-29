@@ -1,16 +1,16 @@
 schema: starfiniti.continuous-improvement.v1
 status: in_progress
-observedAt: 2026-08-28T22:59:37Z
+observedAt: 2026-08-29T00:31:01Z
 candidate:
   branch: codex/enterprise-roadmap-integration
-  commit: 387138271abbf3fcfd23ff1a9ede84ba2c3217d3
+  commit: 45e9a12a4bb75ece2a3e370dda35739cf253b1a7
   initialCloseApproved: false
 plan:
   path: infrastructure/governance/continuous-improvement.yaml
   sha256: a81bd908039352845ea2bc62675f64ff04ca3e988275d9f4374e98519bfb89ea
 backlog:
   path: docs/plan/IMPROVEMENT_BACKLOG.yaml
-  sha256: 1e48c2ecb4105c1fde4a709d2ad555c9ac3589a28b4970b9453f5d85db7379ba
+  sha256: 8f720f9eeb776b56a1f95da294a953b36c01d17043db2b45681b455225eb6105
 artifacts:
   monthlyReviewPrimaryPath: null
   monthlyReviewPrimarySha256: null
@@ -76,7 +76,7 @@ checks:
     evidence: The completion fixture and adversarial mutations prove that cadence, freshness, ranking, recurring controls, rescoring, experiment guardrails, exercises, artifacts, approvals, and score floors fail closed; the source collector rejects twenty-six source, network, response, digest, review-claim, output, and byte-preservation corruptions without network access, while the installed-state collector rejects thirty-six fact, endpoint, component, chronology, digest, historical-source, full-candidate, output, and false-authority corruptions without network or SSH access.
   - id: exact_head_ci
     status: passed
-    evidence: Corrected Proxmox candidate and manifest head 387138271abbf3fcfd23ff1a9ede84ba2c3217d3 passed all seven CI jobs in run 33218625530 all four Security jobs in run 33218625547 and external CodeQL check 99008025406; the earlier stale-manifest failure remains preserved.
+    evidence: Atomic-publication package-provenance head 45e9a12a4bb75ece2a3e370dda35739cf253b1a7 passed all seven CI jobs in run 33223681162 all four Security jobs in run 33223681183 and external CodeQL check 99023166148; prior fail-closed canary and stale-manifest attempts remain preserved.
   - id: owner_roster
     status: pending
     evidence: Product, engineering, security, operations, monthly-review, quarterly-exercise, and owner roles require named environment-owned assignments.
@@ -112,10 +112,10 @@ checks:
     evidence: Security findings and managed billing usage, invoice, entitlement, and protected-path evidence require an elapsed review.
   - id: provider_review
     status: pending
-    evidence: The verified 6534-byte source snapshot and 8813-byte installed snapshot bind all thirteen official sources both opaque recovery endpoints and all six installed recovery providers. ADR-0086 classifies Proxmox as Critical across five advisory gaps and binds an exact twelve-package candidate, while package-byte and signature review compatibility recovery maintenance reboot mutation post-change proof independent review and the other providers remain incomplete.
+    evidence: The verified 6534-byte source snapshot and 8813-byte installed snapshot bind all thirteen official sources both opaque recovery endpoints and all six installed recovery providers. ADR-0086 classifies Proxmox as Critical across five advisory gaps and binds an exact twelve-package candidate; the independently verified 9606-byte disposable artifact passes fresh signature signed-index and package-byte binding, while compatibility recovery repository policy maintenance reboot mutation post-change proof independent review and the other providers remain incomplete.
   - id: dependency_pins
     status: pending
-    evidence: Exact installed facts cover rsync BorgBackup OpenSSH Debian Ubuntu and Proxmox at both catalogue-declared endpoints; rsync binds its full candidate plan and Proxmox now binds candidate provenance 39f30c67a374b041944a598ce2334fed3fcb8e5f64264b3db08847d5ee23ff9f. Proxmox package bytes signatures compatibility owner approval and execution plus runtime container action SDK API WordPress WooCommerce PHP PostgreSQL Authentik and the remaining recovery candidates still require review impact ownership and disposition.
+    evidence: Exact installed facts cover rsync BorgBackup OpenSSH Debian Ubuntu and Proxmox at both catalogue-declared endpoints; rsync binds its full candidate plan and Proxmox binds candidate provenance 39f30c67a374b041944a598ce2334fed3fcb8e5f64264b3db08847d5ee23ff9f plus independently verified fresh signatures indexes and package bytes. Proxmox dependency simulation compatibility recovery repository policy owner approvals installation reboot and post-change evidence plus runtime container action SDK API WordPress WooCommerce PHP PostgreSQL Authentik and the remaining recovery candidates still require review impact ownership and disposition.
   - id: backlog_freshness
     status: pending
     evidence: The backlog must be regenerated from the completed review cutoff and contain no stale or silently closed item.

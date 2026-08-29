@@ -26,6 +26,12 @@ this review.
   `ec010eb667d6166ee5adc0ee0cd2d6ecdf5b2a114e345b018b51c704d64df075`.
 - Canonical candidate provenance:
   `39f30c67a374b041944a598ce2334fed3fcb8e5f64264b3db08847d5ee23ff9f`.
+- Independently verified disposable package artifact:
+  `docs/plan/evidence/M16/runs/proxmox-security-package-canary-957e1de-2026-08-29T003101Z.json`,
+  9,606 bytes, file SHA-256
+  `3eec19512a6b2535cf0c6359144c1807b78e01015f43c470ad53335c6eb1090e`,
+  internal report SHA-256
+  `0b703cc553f2304de75f28160e7482b09718794205efa7615fb39f2eab0f0382`.
 - Candidate observation ended at `2026-08-28T22:34:37Z`.
 
 The APT facts came through the approved read-only operator route. The repository
@@ -77,8 +83,8 @@ edited to disguise that difference.
 | ----------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | Candidate metadata                  | Passed                          | Five repository observations, twelve exact package records, four retained packages, and five advisories are bound. |
 | Listed advisory floors              | Candidate passes; current fails | Exact candidate versions meet every listed floor; the running host does not.                                       |
-| Candidate package bytes             | Pending                         | The twelve packages have not been independently downloaded and byte-verified.                                      |
-| Repository signature reverification | Pending                         | The first disposable run failed before candidate acquisition; the corrected exact-head run remains required.       |
+| Candidate package bytes             | Passed                          | A disposable runner verified both acquisitions, exact fields, size, and SHA-256 for all twelve packages.           |
+| Repository signature reverification | Passed                          | Five fresh `InRelease` files, ten accepted signatures, and all signed-index bindings passed independently.         |
 | Compatibility                       | Pending                         | No isolated host/guest rehearsal or consumer matrix is complete.                                                   |
 | Rollback escrow                     | Pending                         | Exact package/configuration inputs and retained-kernel recovery are not independently escrowed.                    |
 | Recovery readiness                  | Pending                         | Current clean-room host, database/WAL, VM, Auth, application, and connector recovery proof is incomplete.          |
@@ -162,3 +168,27 @@ separate `gpgv` package. The correction explicitly installs signed `gpgv` and
 verifies `/usr/bin/gpgv`; it does not substitute APT's result for the independent
 signature proof. No candidate package bytes or report artifact were produced,
 and no production route, credential, or mutation was present.
+
+Parser correction `66b0d32` then authenticated and independently reverified all
+five repositories but rejected Apt's URI output for `pve-qemu-kvm`. Head
+`02a90d8` failed closed on a false MD5 assumption, and bounded diagnostic head
+`98c3127` established that Apt 3 prints its selected strongest hash. None of
+those attempts acquired or retained candidate packages or emitted an artifact.
+
+Head `0e6f066` completed all twelve package proofs but failed only when an
+atomic rename crossed the container output mount (`EXDEV`), so no partial report
+was accepted. Head `45e9a12a4bb75ece2a3e370dda35739cf253b1a7`
+staged beside the final output and passed CI run `33223681162`, all four jobs in
+Security run `33223681183`, and external CodeQL check `99023166148`;
+recovery-transport job `99022913369` ran under synthetic PR merge SHA
+`957e1ded55992331bfae703de5decf2e9913f4bb`. Artifact `9706126317`
+expires on 2026-09-28; its exact committed report independently validates five
+repositories, ten signatures, twelve packages, 165,341,024 package bytes,
+unchanged dpkg status, no installation, no retained package bytes, no production
+credential or route, no production mutation, and successful teardown.
+
+The passing artifact advances only package bytes, repository signature
+reverification, and fresh signed-index binding. The remaining pending gates in
+the table are unchanged, and production is still vulnerable until an approved,
+recovery-ready maintenance and reboot sequence passes post-change smoke and
+reconciliation.
