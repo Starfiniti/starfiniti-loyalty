@@ -1,18 +1,21 @@
 # Status
 
-- ADR-0098 is the active correction for Security run `33252683326`, whose
-  retained summary safely exposed one `js/insecure-temporary-file` and one
-  `js/insufficient-password-hash` result but initially could not classify their
-  tag-encoded 7.0/8.1 security scores. The minimizer now fails closed on exact
-  tag scores and conflicts, self-test files are `0600`, and tenant-federation
-  upstream/broker bindings are purpose-separated HMAC-SHA256 under a new
-  distinct owner-only 256-bit key. The earlier optional three-file boundary is
-  superseded by a four-file all-or-none deployment contract; production still
-  has none of these files and remains unchanged. The complete local
-  `npm run check` gate passes with 993 tests, the production dashboard build, and
-  all repository validators. Exact-head CI/Security, retained artifacts,
-  independent testing, production review, and security-owner approval remain
-  pending, so M15-S03 and the goal remain open.
+- ADR-0099 corrects the attribution and parser boundary after exact candidate
+  `e71e62d` passed all seven CI jobs in run `33254530487` but failed CodeQL in
+  Security run `33254530449`. Minimized artifact `9715410381` contains three raw
+  unknown results because CodeQL 2.26.4 publishes query definitions under
+  `tool.extensions`: open alert 24 for a deployment-preflight path/open race and
+  the still-emitted dismissed alerts 15/16 for the fault-input reader and fast
+  Klaviyo API-key fingerprint. The minimizer now indexes driver and extension
+  rules, deployment and fault files are opened descriptor-first with explicit
+  read-only/no-follow flags, and Klaviyo uses a tenant-connection-bound scrypt V2
+  fingerprint plus an owner-file operator command. ADR-0098's federation HMAC
+  remains accepted defense in depth but did not remediate alerts 15/16. The
+  complete local `npm run check` gate passes with 995 tests, every validator,
+  WooCommerce/client checks, and the production builds. Exact-head zero-result
+  CI/Security evidence remains pending. Production has no active tenant
+  federation or Klaviyo connection and remains unchanged; M15-S03 and the goal
+  remain open.
 
 - ADR-0096 replaces the pending V2 rsync handoff with a fail-closed V3 inventory contract while preserving accepted V1/V2 policy and evidence byte-for-byte. The effective bundle is exactly seventy-four entries: thirty unchanged BorgBackup/OpenSSH inputs plus forty-four native-rsync inputs covering both endpoint-native executables, the shared wrapper, signed source and release key, unchanged distribution rollback packages, two endpoint-bound dependency inventories, the retained digest-lock report, build/runtime controls, runbooks, decisions, verifier, and historical/current evidence. The historical cross-suite `rsync-transport` provider cannot activate and a global library upgrade is forbidden. Exact implementation `21262cf08e265c61d3e76e1971ce7604916469cc` passed CI run `33250002574`, Security run `33250002462` including recovery-transport job `99093945140`, and independent CodeQL check `99094120148`; all twelve PR checks were green and PR #57 was clean and mergeable. Every source-signature, package-authority, native-build, consumer/selector compatibility, custody, review, restore, and production gate remains false; IMP-010 and R-004 remain Critical/open, M16 remains 77/100, production remains at 54/100, and VM 971 and SSH were not touched.
 

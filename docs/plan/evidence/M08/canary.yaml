@@ -256,7 +256,7 @@ automaticFails:
   - id: provider_authority
     rule: "SMTP Klaviyo webhook or provider response becomes authoritative for tenant consent identity value template or delivery history"
   - id: tenant_connection_mismatch
-    rule: "a tenant provider connection key fingerprint endpoint template customer event or delivery authority is mismatched or browser-selected"
+    rule: "a tenant provider connection V2 fingerprint endpoint template customer event or delivery authority is mismatched browser-selected fast-digested or not bound to the exact connection UUID"
   - id: deployment_mode_violation
     rule: "self-hosted invokes managed Klaviyo or remote entitlement while managed or disabled state starts an unapproved provider path"
   - id: webhook_destination_escape

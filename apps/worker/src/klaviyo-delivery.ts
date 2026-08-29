@@ -1,5 +1,12 @@
-import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { scryptSync } from "node:crypto";
+import {
+  closeSync,
+  constants,
+  fstatSync,
+  lstatSync,
+  openSync,
+  readFileSync,
+} from "node:fs";
 import { isAbsolute } from "node:path";
 import {
   klaviyoNotificationActionAuthorizationV1,
@@ -13,6 +20,14 @@ import type { Sql } from "postgres";
 
 const KLAVIYO_PRODUCTION_BASE_URL = "https://a.klaviyo.com/api";
 const KLAVIYO_API_REVISION = "2026-07-15";
+const KLAVIYO_CREDENTIAL_FINGERPRINT_CONTEXT =
+  "starfiniti/klaviyo/credential-fingerprint/v2";
+const KLAVIYO_CREDENTIAL_SCRYPT = Object.freeze({
+  N: 1 << 15,
+  r: 8,
+  p: 1,
+  maxmem: 64 * 1024 * 1024,
+});
 const MAX_RESPONSE_BYTES = 128 * 1024;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
@@ -112,7 +127,7 @@ export function readKlaviyoDeliveryConfig(
   if (!isAbsolute(keyFile)) {
     throw new Error("klaviyo_config_key_path_not_absolute");
   }
-  const apiKey = stripOneTrailingLineBreak(readFileSync(keyFile, "utf8"));
+  const apiKey = stripOneTrailingLineBreak(readKlaviyoKey(keyFile));
   if (!/^[^\s\r\n]{8,500}$/u.test(apiKey)) {
     throw new Error("klaviyo_config_invalid_key");
   }
@@ -137,13 +152,7 @@ export function readKlaviyoDeliveryConfig(
   } else if (testMode) {
     throw new Error("klaviyo_config_test_base_required");
   }
-  // This is a deterministic binding for a high-entropy provider credential,
-  // not password storage; changing the fast SHA-256 contract would break the
-  // separately provisioned database fingerprint without adding protection.
-  const credentialFingerprint = createHash("sha256");
-  // codeql[js/insufficient-password-hash]
-  credentialFingerprint.update(apiKey, "utf8");
-  const credentialSha256 = credentialFingerprint.digest("hex");
+  const credentialSha256 = fingerprintKlaviyoCredential(apiKey, connectionId);
   return {
     connectionId,
     apiKey,
@@ -152,6 +161,58 @@ export function readKlaviyoDeliveryConfig(
     baseUrl,
     timeoutMs,
   };
+}
+
+export function fingerprintKlaviyoCredential(
+  apiKey: string,
+  connectionId: string,
+): string {
+  if (!UUID_PATTERN.test(connectionId) || !/^[^\s\r\n]{8,500}$/u.test(apiKey)) {
+    throw new Error("klaviyo_config_invalid_fingerprint_input");
+  }
+  const salt = `${KLAVIYO_CREDENTIAL_FINGERPRINT_CONTEXT}\0${connectionId.toLowerCase()}`;
+  return scryptSync(apiKey, salt, 32, KLAVIYO_CREDENTIAL_SCRYPT).toString(
+    "hex",
+  );
+}
+
+function readKlaviyoKey(path: string): string {
+  let descriptor: number | undefined;
+  try {
+    descriptor = openSync(
+      path,
+      constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0),
+    );
+    const before = fstatSync(descriptor);
+    if (!before.isFile() || before.size < 8 || before.size > 502) {
+      throw new Error("invalid key file");
+    }
+    const raw = readFileSync(descriptor);
+    const after = fstatSync(descriptor);
+    const link = lstatSync(path);
+    if (
+      raw.length !== before.size ||
+      after.dev !== before.dev ||
+      after.ino !== before.ino ||
+      after.size !== before.size ||
+      after.mode !== before.mode ||
+      after.uid !== before.uid ||
+      after.mtimeMs !== before.mtimeMs ||
+      after.ctimeMs !== before.ctimeMs ||
+      link.isSymbolicLink() ||
+      !link.isFile() ||
+      link.dev !== before.dev ||
+      link.ino !== before.ino ||
+      link.size !== before.size
+    ) {
+      throw new Error("unstable key file");
+    }
+    return new TextDecoder("utf-8", { fatal: true }).decode(raw);
+  } catch {
+    throw new Error("klaviyo_config_key_unavailable");
+  } finally {
+    if (descriptor !== undefined) closeSync(descriptor);
+  }
 }
 
 export function createKlaviyoDeliveryRuntime(

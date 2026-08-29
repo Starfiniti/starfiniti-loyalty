@@ -284,14 +284,27 @@ export function summarizeCodeql({ input, candidateCommit, analysisCommit }) {
         fail("SARIF tool is not CodeQL");
       }
       toolVersions.add(codeqlVersion(driver));
-      const rules = new Map(
-        (driver.rules ?? []).map((rule, index) => [rule.id ?? index, rule]),
-      );
+      const extensions = run?.tool?.extensions ?? [];
+      if (!Array.isArray(extensions)) fail("CodeQL extensions are malformed");
+      const components = [driver, ...extensions];
+      const rules = new Map();
+      for (const component of components) {
+        if (component?.rules !== undefined && !Array.isArray(component.rules)) {
+          fail("CodeQL rule metadata is malformed");
+        }
+        for (const rule of component?.rules ?? []) {
+          const id = String(rule?.id ?? "");
+          if (!id || rules.has(id)) {
+            fail("CodeQL rule metadata is absent or ambiguous");
+          }
+          rules.set(id, rule);
+        }
+      }
       for (const result of run.results ?? []) {
         const kind = String(result?.kind ?? "fail");
         if (["pass", "notApplicable", "informational"].includes(kind)) continue;
-        const rule =
-          rules.get(result.ruleId) ?? driver.rules?.[result.ruleIndex];
+        const rule = rules.get(result.ruleId);
+        if (!rule) fail("CodeQL result references absent rule metadata");
         const id = String(result.ruleId ?? rule?.id ?? "");
         if (!/^[A-Za-z0-9][A-Za-z0-9._/-]{1,159}$/u.test(id)) {
           fail("CodeQL finding has an invalid rule identifier");
@@ -509,13 +522,19 @@ function runSelfTest() {
             driver: {
               name: "CodeQL",
               semanticVersion: "2.26.4",
-              rules: [
-                {
-                  id: "js/example",
-                  properties: { "security-severity": "6.5" },
-                },
-              ],
+              rules: [],
             },
+            extensions: [
+              {
+                name: "codeql/javascript-queries",
+                rules: [
+                  {
+                    id: "js/example",
+                    properties: { "security-severity": "6.5" },
+                  },
+                ],
+              },
+            ],
           },
           results: [
             {
@@ -533,6 +552,7 @@ function runSelfTest() {
         },
       ],
     };
+    const sarifRule = sarif.runs[0].tool.extensions[0].rules[0];
     writeFixture(join(sarifDirectory, "result.sarif"), sarif);
     const codeql = summarizeCodeql({
       input: sarifDirectory,
@@ -559,11 +579,8 @@ function runSelfTest() {
         throw error;
     }
     delete sarif.runs[0].tool.driver.version;
-    delete sarif.runs[0].tool.driver.rules[0].properties["security-severity"];
-    sarif.runs[0].tool.driver.rules[0].properties.tags = [
-      "security",
-      "security-severity/8.1",
-    ];
+    delete sarifRule.properties["security-severity"];
+    sarifRule.properties.tags = ["security", "security-severity/8.1"];
     writeFixture(join(sarifDirectory, "result.sarif"), sarif);
     try {
       summarizeCodeql({
@@ -581,7 +598,7 @@ function runSelfTest() {
         throw error;
       }
     }
-    sarif.runs[0].tool.driver.rules[0].properties["security-severity"] = "6.5";
+    sarifRule.properties["security-severity"] = "6.5";
     writeFixture(join(sarifDirectory, "result.sarif"), sarif);
     try {
       summarizeCodeql({
@@ -598,11 +615,8 @@ function runSelfTest() {
         throw error;
       }
     }
-    delete sarif.runs[0].tool.driver.rules[0].properties["security-severity"];
-    sarif.runs[0].tool.driver.rules[0].properties.tags = [
-      "security",
-      "security-severity/",
-    ];
+    delete sarifRule.properties["security-severity"];
+    sarifRule.properties.tags = ["security", "security-severity/"];
     writeFixture(join(sarifDirectory, "result.sarif"), sarif);
     try {
       summarizeCodeql({
@@ -618,6 +632,36 @@ function runSelfTest() {
       ) {
         throw error;
       }
+    }
+    delete sarifRule.properties.tags;
+    sarifRule.properties["security-severity"] = "6.5";
+    sarif.runs[0].tool.extensions.push({
+      name: "duplicate-query-pack",
+      rules: [{ ...sarifRule }],
+    });
+    writeFixture(join(sarifDirectory, "result.sarif"), sarif);
+    try {
+      summarizeCodeql({
+        input: sarifDirectory,
+        candidateCommit,
+        analysisCommit,
+      });
+      fail("self-test accepted ambiguous CodeQL extension rules");
+    } catch (error) {
+      if (!String(error?.message).includes("absent or ambiguous")) throw error;
+    }
+    sarif.runs[0].tool.extensions.pop();
+    sarif.runs[0].tool.extensions[0].rules = [];
+    writeFixture(join(sarifDirectory, "result.sarif"), sarif);
+    try {
+      summarizeCodeql({
+        input: sarifDirectory,
+        candidateCommit,
+        analysisCommit,
+      });
+      fail("self-test accepted absent CodeQL extension rule metadata");
+    } catch (error) {
+      if (!String(error?.message).includes("references absent")) throw error;
     }
 
     const repositoryPath = join(temporary, "repository.json");

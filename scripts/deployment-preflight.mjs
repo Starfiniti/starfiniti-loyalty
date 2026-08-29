@@ -196,15 +196,6 @@ function validateSigningPool(path, enforcePermissions) {
 
 function readOwnerOnlyFile(path, label, enforcePermissions) {
   if (!isAbsolute(path)) fail(`${label} path must be absolute`);
-  let initial;
-  try {
-    initial = lstatSync(path);
-  } catch {
-    fail(`${label} is unreadable`);
-  }
-  if (initial.isSymbolicLink() || !initial.isFile()) {
-    fail(`${label} must be a regular unlinked file`);
-  }
   let descriptor;
   try {
     descriptor = openSync(
@@ -216,13 +207,7 @@ function readOwnerOnlyFile(path, label, enforcePermissions) {
   }
   try {
     const before = fstatSync(descriptor);
-    if (
-      !before.isFile() ||
-      before.dev !== initial.dev ||
-      before.ino !== initial.ino
-    ) {
-      fail(`${label} changed before it could be read`);
-    }
+    if (!before.isFile()) fail(`${label} must be a regular file`);
     if (before.size < 1 || before.size > 64 * 1024) {
       fail(`${label} has an invalid size`);
     }

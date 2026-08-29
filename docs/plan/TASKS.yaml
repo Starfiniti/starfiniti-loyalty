@@ -1227,23 +1227,28 @@ tasks:
         status: completed
         acceptance:
           - managed Klaviyo profile event and consent synchronization pins an API revision unique IDs retry-after handling and minimized fields without becoming authority
-          - one managed organization is bound to one provider connection and API key fingerprint before verified contact can leave the database
+          - one managed organization is bound to one provider connection and connection-specific scrypt V2 API-key fingerprint before verified contact can leave the database
           - local consent withdrawal is rechecked at action authorization provider suppression can only tighten local eligibility and ambiguous opt-in never auto-retries
           - exact event and unsubscribe retries converge duplicate provider events use the immutable event UUID and provider outage cannot affect value processing or checkout
         failure_modes:
           - tenant selector and provider key are mismatched
+          - a fast provider-key digest or fingerprint not bound to the exact connection creates a reusable offline oracle
           - browser or Auth metadata becomes provider or tenant authority
           - provider unsubscribe or suppression is silently cleared
           - subscribe ambiguity sends repeated double-opt-in messages
           - 202 is reported as delivered rather than accepted
           - raw contact event secret or provider error body is persisted or logged
-        rollout: Deploy private schema and disabled worker first then bind one managed pilot tenant to a least-scope test key and reconcile a bounded canary.
-        rollback: Stop the isolated worker or disable its connection while retaining provider-neutral facts and immutable provider evidence; never reverse consent remotely during rollback.
+        rollout: Deploy private schema and disabled worker first then derive the V2 fingerprint with the exact release command bind one managed pilot tenant and connection to a least-scope test key and reconcile a bounded canary.
+        rollback: Stop the isolated worker or disable its connection while retaining provider-neutral facts and immutable provider evidence; a V1 image requires the prior disabled-row fingerprint and both algorithms are never accepted concurrently; never reverse consent remotely during rollback.
         verification:
           - contract tests for minimized claims authorizations provider responses and contact-smuggling rejection
           - pgTAP for grants tenant-key binding late consent and entitlement checks supersession suppression lease expiry replay and immutable evidence
           - local HTTP sink tests for profile event subscribe unsubscribe 429 503 timeout bounded bodies and pre/post-action worker death
           - exact-head baseline database replay images WooCommerce matrix secret scan and disabled deployment smoke
+        evidence:
+          - docs/architecture/ADR/0033-tenant-bound-klaviyo-projection-and-consent-sync.md
+          - docs/architecture/ADR/0099-extension-aware-sast-and-tenant-bound-provider-credential-kdf.md
+          - docs/operations/KLAVIYO.md
       - id: M08-S04-SIGNED-WEBHOOKS
         status: completed
         acceptance:
@@ -3342,6 +3347,7 @@ tasks:
             corresponding source omits an SBOM component source input build recipe patch licence text or checksum binding or is generated after image publication,
             a release envelope or staged source path changes between metadata validation reading and hashing,
             a deterministic finding is suppressed by severity exclusion or blanket waiver,
+            a raw finding is hidden by provider dismissal or query rules published under a SARIF tool extension are not classified,
             a declared SARIF security score is ignored downgraded by its warning level or accepted despite conflicting metadata,
             a weak tenant IdP client secret is reduced to an offline-guessable unkeyed digest or the fingerprint key shares a provider credential file,
             penetration scope or remediation retest is incomplete,
@@ -3368,7 +3374,9 @@ tasks:
             docs/architecture/ADR/0083-release-bound-corresponding-source-artifacts.md,
             docs/architecture/ADR/0097-source-and-origin-bound-prototype-messages-and-minimized-sast-evidence.md,
             docs/architecture/ADR/0098-keyed-federation-credential-fingerprints-and-secure-scan-fixtures.md,
+            docs/architecture/ADR/0099-extension-aware-sast-and-tenant-bound-provider-credential-kdf.md,
             docs/operations/SECURITY_SCANNING.md,
+            scripts/fingerprint-klaviyo-credential.mjs,
             scripts/summarize-security-scan.mjs,
             infrastructure/testing/security/reciprocal-source-plan.yaml,
             infrastructure/testing/security/trivy.yaml,

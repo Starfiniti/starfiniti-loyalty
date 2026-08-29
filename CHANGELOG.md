@@ -1,5 +1,16 @@
 # Changelog
 
+- Added ADR-0099 after exact candidate `e71e62d` passed CI but the raw CodeQL
+  artifact proved three findings remained. The minimizer now resolves rules from
+  CodeQL tool extensions, not only the driver, and dismissals never satisfy the
+  repository policy. Federation preflight and fault-exercise inputs use
+  descriptor-first read-only/no-follow file access. Klaviyo's legacy 64-hex
+  credential field now carries a connection-bound scrypt V2 fingerprint, with a
+  secret-safe operator CLI for disabled-first provisioning. ADR-0098's
+  federation HMAC remains accepted hardening, while its original attribution of
+  the older two findings is explicitly corrected. The complete local gate passes
+  with 995 tests and all builds/validators; exact-head proof is pending.
+
 - Added ADR-0098 after the first retained CodeQL summary correctly blocked two
   previously unclassified results. The SARIF minimizer now reads exact
   `security-severity/<score>` tags and treats malformed/conflicting declarations

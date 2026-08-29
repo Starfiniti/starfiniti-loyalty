@@ -1,16 +1,20 @@
 # Execution Plan
 
-ADR-0098 addresses the two High results exposed by ADR-0097's first real
-minimized CodeQL run without suppressing either result. Security severity is now
-derived from direct SARIF metadata or exact CodeQL score tags, conflict remains
-unknown/release-blocking, and every temporary self-test fixture is explicit
-`0600`. The tenant-federation command retains its V1 64-hex shape but replaces
-plain upstream/broker SHA-256 with purpose-separated HMAC-SHA256 under a fourth
-distinct owner-only 256-bit mounted key. The zero-file disabled state remains
-valid; any partial, linked, or malformed four-file activation fails preflight.
-The complete local `npm run check` gate passes with 993 tests, every validator,
-the production dashboard build, and both client packages; exact-head
-CI/Security evidence is still required before the M15 finding gate advances.
+ADR-0099 is the current exact-head security correction. CI run `33254530487`
+passed at `e71e62d`, but Security run `33254530449` failed closed with three raw
+CodeQL results. The minimizer had ignored direct security scores because CodeQL
+published its query rules under `tool.extensions`; GitHub showed only the new
+file race because the temporary-input and Klaviyo fingerprint results matched
+older dismissed alerts. The parser now indexes driver and extension rules and
+continues to reject dismissed raw findings. Deployment and fault inputs use
+descriptor-first `O_RDONLY|O_NOFOLLOW` reads, and the Klaviyo binding is a
+connection-specific scrypt V2 fingerprint with a secret-safe operator command.
+ADR-0098's federation HMAC and four-file fail-closed boundary remain accepted
+hardening but were not the source of the older findings. The complete local
+`npm run check` gate passes with 995 tests, every validator, the production
+dashboard and worker builds, and both supported client packages. A zero-result
+exact-head CI/Security run is still required before M15 advances. Production
+remains unchanged.
 
 ## Objective
 

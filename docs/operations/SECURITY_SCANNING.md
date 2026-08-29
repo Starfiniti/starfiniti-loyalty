@@ -10,7 +10,10 @@ The `Security` workflow runs on pull requests, `main`, Tuesdays at 03:17 UTC, an
 
 - CodeQL analyzes JavaScript/TypeScript with `security-extended` queries, then
   converts private SARIF into a count-only exact-candidate artifact and fails
-  on Critical, High, or unclassified results.
+  on Critical, High, or unclassified results. Rule definitions are resolved
+  from both the CodeQL driver and query-pack extensions; missing or ambiguous
+  metadata fails closed. Every raw result is counted even when GitHub's alert
+  view retains an earlier dismissal.
 - The complete npm dependency tree fails on every High or Critical advisory, including development-only tooling.
 - Trivy scans repository secrets/misconfiguration and both deployable images
   for Unknown/High/Critical vulnerability, secret, misconfiguration, and
@@ -81,6 +84,12 @@ prototype. Both vendored handlers now verify the exact parent/self source and
 load-time origin before reading message data; documentation classification is
 not a waiver. A green CodeQL job is analysis evidence, not a zero-finding claim,
 unless the minimized SARIF summary reconciles the result count.
+
+ADR-0099 records why provider alert state cannot replace raw-result policy.
+Exact candidate `e71e62d` had only one open GitHub alert but its minimized SARIF
+still contained three blocking results, including two older dismissed alerts.
+The parser now covers CodeQL extension rules, and all three locations are
+remediated rather than waived.
 
 - Critical or High: automatic failure. Fix, replace, remove, or document why the result is objectively non-applicable and obtain an independent reviewer decision. A reviewer cannot override an exploitable finding.
 - Medium: triage before the module closes; create a linked risk and remediation date when accepted temporarily.

@@ -109,7 +109,7 @@ const requiredAutomaticFails = new Map([
   ],
   [
     "tenant_connection_mismatch",
-    "a tenant provider connection key fingerprint endpoint template customer event or delivery authority is mismatched or browser-selected",
+    "a tenant provider connection V2 fingerprint endpoint template customer event or delivery authority is mismatched browser-selected fast-digested or not bound to the exact connection UUID",
   ],
   [
     "deployment_mode_violation",

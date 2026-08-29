@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
@@ -9,6 +9,7 @@ import {
   classifyKlaviyoError,
   createKlaviyoDeliveryRuntime,
   detectKlaviyoProviderSuppression,
+  fingerprintKlaviyoCredential,
   klaviyoEventRequest,
   klaviyoSubscribeRequest,
   klaviyoUnsubscribeRequest,
@@ -79,6 +80,52 @@ describe("Klaviyo notification delivery", () => {
       baseUrl: "https://a.klaviyo.com/api",
     });
     expect(config?.credentialSha256).toMatch(/^[a-f0-9]{64}$/u);
+    expect(config?.credentialSha256).toBe(
+      "1507304bee39ac083a95ded831e524fcb52aad114022ab1ca96e6dbcf08d9e59",
+    );
+    expect(config?.credentialSha256).not.toBe(
+      fingerprintKlaviyoCredential(
+        "pk_test_private_value",
+        "93000000-0000-4000-8000-000000000011",
+      ),
+    );
+  });
+
+  it("rejects invalid direct credential-fingerprint inputs", () => {
+    expect(() =>
+      fingerprintKlaviyoCredential(
+        "short",
+        "93000000-0000-4000-8000-000000000010",
+      ),
+    ).toThrow("klaviyo_config_invalid_fingerprint_input");
+    expect(() =>
+      fingerprintKlaviyoCredential("pk_test_private_value", "invalid"),
+    ).toThrow("klaviyo_config_invalid_fingerprint_input");
+  });
+
+  it("rejects a non-file or linked Klaviyo key input", () => {
+    const directory = mkdtempSync(join(tmpdir(), "loyalty-klaviyo-"));
+    temporaryDirectories.push(directory);
+    const environment = {
+      LOYALTY_KLAVIYO_ENABLED: "true",
+      LOYALTY_KLAVIYO_CONNECTION_ID: "93000000-0000-4000-8000-000000000010",
+      LOYALTY_KLAVIYO_API_KEY_FILE: directory,
+    };
+    expect(() => readKlaviyoDeliveryConfig(environment)).toThrow(
+      "klaviyo_config_key_unavailable",
+    );
+    if (process.platform !== "win32") {
+      const keyFile = join(directory, "private-key");
+      const linkedKeyFile = join(directory, "linked-private-key");
+      writeFileSync(keyFile, "pk_test_private_value", { mode: 0o600 });
+      symlinkSync(keyFile, linkedKeyFile);
+      expect(() =>
+        readKlaviyoDeliveryConfig({
+          ...environment,
+          LOYALTY_KLAVIYO_API_KEY_FILE: linkedKeyFile,
+        }),
+      ).toThrow("klaviyo_config_key_unavailable");
+    }
   });
 
   it.each([

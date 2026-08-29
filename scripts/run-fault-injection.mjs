@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import {
   closeSync,
+  constants,
   fstatSync,
   lstatSync,
   mkdtempSync,
@@ -110,10 +111,10 @@ function readRegularFile(path, label, maximumBytes, ownerOnly = false) {
   let initial;
   let raw;
   try {
-    // The runner opens an existing owner-controlled input read-only; it never
-    // creates a temporary file, and the descriptor is inode-checked below.
-    // codeql[js/insecure-temporary-file]
-    descriptor = openSync(path, "r");
+    descriptor = openSync(
+      path,
+      constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0),
+    );
     initial = fstatSync(descriptor);
     const link = lstatSync(path);
     if (
