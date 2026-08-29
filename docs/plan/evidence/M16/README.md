@@ -71,8 +71,16 @@ release sources, downloaded artifact sizes and SHA-256 values, prior rollback
 versions, HPOS and legacy workflow cells, pre-start SHA-256 checks, in-runtime
 version assertions, plugin headers, task evidence, and false production access,
 mutation, and store-upgrade authority. Run
-`npm run continuous-improvement:woocommerce-runtime:validate`; fresh exact-head
-Linux compatibility jobs and every production pilot/upgrade gate remain pending.
+`npm run continuous-improvement:woocommerce-runtime:validate`. Exact
+implementation `c3b29542035772ddcbc48d92e2b159ac605dd80f` passed the four
+minimum/current × HPOS/legacy jobs in CI run `33261152926`. The immutable
+4,291-byte
+[`runs/woocommerce-runtime-c3b2954-2026-08-29T163051Z.json`](runs/woocommerce-runtime-c3b2954-2026-08-29T163051Z.json)
+binds exact job chronology, runtime versions and storage modes, current artifact
+checks, native coupon order/reconciliation paths, cleanup, and false production
+authority under SHA-256
+`950091da92c90a5834a1020bed83d275e1d3b0891ff6ca565ac79d2a0682188e`.
+Every production pilot/upgrade gate remains pending.
 
 ADR-0102 records a separate Critical application-runtime impact review. Official
 Next.js 16.3.3 fixes two unauthenticated RCE advisories, while released

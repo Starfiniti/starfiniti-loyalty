@@ -18,14 +18,17 @@ DAST/database/WooCommerce evidence under SHA-256
 Separate merge, release, deployment, observation, and reconciliation approvals
 are still required. Production remains on 16.3.0 and unchanged.
 
-ADR-0101 is the active safe M16 compatibility slice. It pins the disposable
+ADR-0101 is the completed repository portion of the current M16 compatibility slice. It pins the disposable
 current matrix to WordPress 7.1, WooCommerce 11.0.1, and PHP 8.4 in HPOS and
 legacy modes while preserving the minimum cells and the prior current versions
 as rollback facts. The network-free validator binds exact official artifacts,
 release sources, workflow cells, compatibility headers, task acceptance, and
-false production authority. Linux CI additionally checks artifact bytes before
-startup and asserts the running versions. Fresh exact-head Linux runtime proof is next; a real
-store upgrade rehearsal, owner approval, deployment, observation, and
+false production authority. Exact implementation `c3b2954` passed all four
+minimum/current × HPOS/legacy jobs in CI `33261152926`; a 4,291-byte immutable
+record binds the reviewed artifact checks, exact runtime assertions, native coupon
+order/reconciliation path, cleanup, and chronology under SHA-256
+`950091da92c90a5834a1020bed83d275e1d3b0891ff6ca565ac79d2a0682188e`.
+A real store upgrade rehearsal, owner approval, deployment, observation, and
 reconciliation remain later production gates. No production mutation or score
 increase is authorized.
 

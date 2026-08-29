@@ -15,6 +15,8 @@ const paths = Object.freeze({
   pluginReadme: "plugins/woocommerce/readme.txt",
   matrix: "docs/testing/PLATFORM_MATRIX.md",
   tasks: "docs/plan/TASKS.yaml",
+  attributes: ".gitattributes",
+  prettierIgnore: ".prettierignore",
 });
 const digestPattern = /^[0-9a-f]{64}$/u;
 
@@ -66,6 +68,18 @@ const locked = Object.freeze({
     woocommerce: "https://downloads.wordpress.org/plugin/woocommerce.9.0.2.zip",
     phpMinor: "8.1",
   }),
+  evidence: Object.freeze({
+    path: "docs/plan/evidence/M16/runs/woocommerce-runtime-c3b2954-2026-08-29T163051Z.json",
+    bytes: 4_291,
+    fileSha256:
+      "950091da92c90a5834a1020bed83d275e1d3b0891ff6ca565ac79d2a0682188e",
+    observedAt: "2026-08-29T16:30:51Z",
+    implementationCommit: "c3b29542035772ddcbc48d92e2b159ac605dd80f",
+    runtimeReviewCommit: "a71a84b6d35438043ce3a0f7db86cf2231c9b3c5",
+    runId: 33_261_152_926,
+    createdAt: "2026-08-29T15:46:20Z",
+    completedAt: "2026-08-29T15:49:18Z",
+  }),
 });
 
 function fail(message) {
@@ -104,6 +118,303 @@ function exactDigest(value, expected, label) {
 
 function sha256(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
+}
+
+function exactUtc(value, expected, label) {
+  if (
+    value !== expected ||
+    !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/u.test(value) ||
+    !Number.isFinite(Date.parse(value))
+  ) {
+    fail(`${label} differs`);
+  }
+}
+
+function validateCiEvidence(evidence, evidenceBytes, review) {
+  if (
+    evidenceBytes.length !== locked.evidence.bytes ||
+    sha256(evidenceBytes) !== locked.evidence.fileSha256 ||
+    evidenceBytes.includes(13)
+  ) {
+    fail("CI evidence bytes differ");
+  }
+  exactKeys(
+    evidence,
+    [
+      "schema",
+      "observedAt",
+      "repository",
+      "implementation",
+      "review",
+      "ci",
+      "result",
+      "authority",
+    ],
+    "CI evidence",
+  );
+  if (
+    evidence.schema !== "starfiniti.woocommerce-runtime-ci-evidence.v1" ||
+    evidence.repository !== "Starfiniti/starfiniti-loyalty"
+  ) {
+    fail("CI evidence identity differs");
+  }
+  exactUtc(
+    evidence.observedAt,
+    locked.evidence.observedAt,
+    "CI evidence observation",
+  );
+  if (
+    Date.parse(evidence.observedAt) < Date.parse(locked.evidence.completedAt)
+  ) {
+    fail("CI evidence predates the completed run");
+  }
+
+  exactKeys(
+    evidence.implementation,
+    ["commit", "runtimeReviewCommit", "runtimeReviewIsAncestor"],
+    "CI implementation",
+  );
+  if (
+    evidence.implementation.commit !== locked.evidence.implementationCommit ||
+    evidence.implementation.runtimeReviewCommit !==
+      locked.evidence.runtimeReviewCommit ||
+    evidence.implementation.runtimeReviewIsAncestor !== true
+  ) {
+    fail("CI implementation binding differs");
+  }
+
+  exactKeys(
+    evidence.review,
+    ["schema", "path", "current", "minimum"],
+    "CI reviewed runtime",
+  );
+  if (
+    evidence.review.schema !== review.schema ||
+    evidence.review.path !== paths.review
+  ) {
+    fail("CI review binding differs");
+  }
+  exactKeys(
+    evidence.review.current,
+    ["wordpress", "woocommerce", "php"],
+    "CI current runtime",
+  );
+  for (const [name, expected] of [
+    ["wordpress", locked.candidate.wordpress],
+    ["woocommerce", locked.candidate.woocommerce],
+  ]) {
+    exactKeys(
+      evidence.review.current[name],
+      ["version", "bytes", "sha256"],
+      `CI current ${name}`,
+    );
+    if (
+      evidence.review.current[name].version !== expected.version ||
+      evidence.review.current[name].bytes !== expected.bytes
+    ) {
+      fail(`CI current ${name} identity differs`);
+    }
+    exactDigest(
+      evidence.review.current[name].sha256,
+      expected.sha256,
+      `CI current ${name} digest`,
+    );
+  }
+  if (evidence.review.current.php !== locked.candidate.phpMinor) {
+    fail("CI current PHP differs");
+  }
+  exactKeys(
+    evidence.review.minimum,
+    ["wordpress", "woocommerce", "php"],
+    "CI minimum runtime",
+  );
+  if (
+    evidence.review.minimum.wordpress !== "6.6.5" ||
+    evidence.review.minimum.woocommerce !== "9.0.2" ||
+    evidence.review.minimum.php !== locked.minimum.phpMinor
+  ) {
+    fail("CI minimum runtime differs");
+  }
+
+  exactKeys(
+    evidence.ci,
+    [
+      "workflow",
+      "runId",
+      "runAttempt",
+      "event",
+      "headSha",
+      "createdAt",
+      "completedAt",
+      "conclusion",
+      "jobs",
+    ],
+    "CI run",
+  );
+  if (
+    evidence.ci.workflow !== paths.workflow ||
+    evidence.ci.runId !== locked.evidence.runId ||
+    evidence.ci.runAttempt !== 1 ||
+    evidence.ci.event !== "pull_request" ||
+    evidence.ci.headSha !== locked.evidence.implementationCommit ||
+    evidence.ci.conclusion !== "success"
+  ) {
+    fail("CI run identity differs");
+  }
+  exactUtc(evidence.ci.createdAt, locked.evidence.createdAt, "CI run creation");
+  exactUtc(
+    evidence.ci.completedAt,
+    locked.evidence.completedAt,
+    "CI run completion",
+  );
+
+  const expectedJobs = [
+    {
+      name: "woocommerce-runtime (minimum-hpos)",
+      jobId: 99_123_210_797,
+      startedAt: "2026-08-29T15:46:22Z",
+      completedAt: "2026-08-29T15:48:50Z",
+      wordpress: "6.6.5",
+      woocommerce: "9.0.2",
+      php: "8.1",
+      storage: "hpos",
+      reviewedArtifacts: "skipped",
+    },
+    {
+      name: "woocommerce-runtime (minimum-legacy)",
+      jobId: 99_123_210_819,
+      startedAt: "2026-08-29T15:46:23Z",
+      completedAt: "2026-08-29T15:48:51Z",
+      wordpress: "6.6.5",
+      woocommerce: "9.0.2",
+      php: "8.1",
+      storage: "legacy",
+      reviewedArtifacts: "skipped",
+    },
+    {
+      name: "woocommerce-runtime (current-hpos)",
+      jobId: 99_123_210_753,
+      startedAt: "2026-08-29T15:46:24Z",
+      completedAt: "2026-08-29T15:48:44Z",
+      wordpress: "7.1",
+      woocommerce: "11.0.1",
+      php: "8.4",
+      storage: "hpos",
+      reviewedArtifacts: "success",
+    },
+    {
+      name: "woocommerce-runtime (current-legacy)",
+      jobId: 99_123_210_743,
+      startedAt: "2026-08-29T15:46:22Z",
+      completedAt: "2026-08-29T15:48:26Z",
+      wordpress: "7.1",
+      woocommerce: "11.0.1",
+      php: "8.4",
+      storage: "legacy",
+      reviewedArtifacts: "success",
+    },
+  ];
+  if (!Array.isArray(evidence.ci.jobs) || evidence.ci.jobs.length !== 4) {
+    fail("CI job matrix differs");
+  }
+  for (const [index, expected] of expectedJobs.entries()) {
+    const job = evidence.ci.jobs[index];
+    exactKeys(
+      job,
+      [
+        "name",
+        "jobId",
+        "startedAt",
+        "completedAt",
+        "conclusion",
+        "runtime",
+        "steps",
+      ],
+      `CI job ${index + 1}`,
+    );
+    if (
+      job.name !== expected.name ||
+      job.jobId !== expected.jobId ||
+      job.conclusion !== "success"
+    ) {
+      fail(`CI job ${index + 1} identity differs`);
+    }
+    exactUtc(job.startedAt, expected.startedAt, `${job.name} start`);
+    exactUtc(job.completedAt, expected.completedAt, `${job.name} completion`);
+    exactKeys(
+      job.runtime,
+      ["wordpress", "woocommerce", "php", "storage"],
+      `${job.name} runtime`,
+    );
+    for (const key of ["wordpress", "woocommerce", "php", "storage"]) {
+      if (job.runtime[key] !== expected[key]) {
+        fail(`${job.name} ${key} differs`);
+      }
+    }
+    exactKeys(
+      job.steps,
+      [
+        "reviewedArtifacts",
+        "runtimeStart",
+        "activationAndStorage",
+        "nativeCouponOrderAndReconciliation",
+        "cleanup",
+      ],
+      `${job.name} steps`,
+    );
+    if (
+      job.steps.reviewedArtifacts !== expected.reviewedArtifacts ||
+      job.steps.runtimeStart !== "success" ||
+      job.steps.activationAndStorage !== "success" ||
+      job.steps.nativeCouponOrderAndReconciliation !== "success" ||
+      job.steps.cleanup !== "success"
+    ) {
+      fail(`${job.name} step result differs`);
+    }
+  }
+
+  exactKeys(
+    evidence.result,
+    [
+      "matrixCells",
+      "passedCells",
+      "failedCells",
+      "currentArtifactsVerified",
+      "minimumMatrixPreserved",
+      "nativeCouponOrderAndReconciliationPassed",
+      "runtimeCleanupPassed",
+    ],
+    "CI result",
+  );
+  if (
+    evidence.result.matrixCells !== 4 ||
+    evidence.result.passedCells !== 4 ||
+    evidence.result.failedCells !== 0 ||
+    evidence.result.currentArtifactsVerified !== true ||
+    evidence.result.minimumMatrixPreserved !== true ||
+    evidence.result.nativeCouponOrderAndReconciliationPassed !== true ||
+    evidence.result.runtimeCleanupPassed !== true
+  ) {
+    fail("CI result differs");
+  }
+
+  exactKeys(
+    evidence.authority,
+    [
+      "productionAccessed",
+      "productionMutated",
+      "storeUpgradeApproved",
+      "connectorReleased",
+      "pilotStoreRehearsed",
+      "deployed",
+      "observed",
+      "reconciled",
+    ],
+    "CI authority",
+  );
+  if (Object.values(evidence.authority).some((value) => value !== false)) {
+    fail("CI evidence claims production authority");
+  }
 }
 
 function validateRelease(value, expected, label, candidate = false) {
@@ -295,6 +606,7 @@ function validate(review, inputs) {
       "matrix",
       "impact",
       "production",
+      "ciEvidence",
     ],
     "review",
   );
@@ -511,6 +823,69 @@ function validate(review, inputs) {
     fail("production boundary differs");
   }
 
+  exactKeys(
+    review.ciEvidence,
+    [
+      "path",
+      "fileSha256",
+      "bytes",
+      "implementationCommit",
+      "runtimeReviewCommit",
+      "runId",
+      "completedAt",
+      "conclusion",
+      "passedJobs",
+      "productionMutated",
+    ],
+    "CI evidence binding",
+  );
+  if (
+    review.ciEvidence.path !== locked.evidence.path ||
+    review.ciEvidence.bytes !== locked.evidence.bytes ||
+    review.ciEvidence.implementationCommit !==
+      locked.evidence.implementationCommit ||
+    review.ciEvidence.runtimeReviewCommit !==
+      locked.evidence.runtimeReviewCommit ||
+    review.ciEvidence.runId !== locked.evidence.runId ||
+    review.ciEvidence.conclusion !== "success" ||
+    review.ciEvidence.productionMutated !== false
+  ) {
+    fail("CI evidence binding differs");
+  }
+  exactDigest(
+    review.ciEvidence.fileSha256,
+    locked.evidence.fileSha256,
+    "CI evidence file digest",
+  );
+  exactUtc(
+    review.ciEvidence.completedAt,
+    locked.evidence.completedAt,
+    "CI evidence completion",
+  );
+  exactArray(
+    review.ciEvidence.passedJobs,
+    [
+      "woocommerce-runtime (minimum-hpos)",
+      "woocommerce-runtime (minimum-legacy)",
+      "woocommerce-runtime (current-hpos)",
+      "woocommerce-runtime (current-legacy)",
+    ],
+    "CI passed jobs",
+  );
+  validateCiEvidence(inputs.evidence, inputs.evidenceBytes, review);
+  if (
+    !inputs.attributes
+      .split(/\r?\n/u)
+      .includes(
+        "docs/plan/evidence/M16/runs/woocommerce-runtime-*.json -text",
+      ) ||
+    !inputs.prettierIgnore
+      .split(/\r?\n/u)
+      .includes("docs/plan/evidence/M16/runs/woocommerce-runtime-*.json")
+  ) {
+    fail("CI evidence byte-preservation controls differ");
+  }
+
   validateConfig(
     inputs.current,
     {
@@ -547,18 +922,29 @@ function validate(review, inputs) {
     "WordPress 6.6.5 WooCommerce 9.0.2 PHP 8.1 and WordPress 7.0.2 WooCommerce 10.9.4 PHP 8.3 pass in HPOS and legacy modes";
   const candidateTaskEvidence =
     "ADR-0101 binds official sources exact downloaded WordPress 7.1 and WooCommerce 11.0.1 artifact sizes and SHA-256 values PHP 8.4";
+  const exactHeadTaskEvidence =
+    "exact implementation c3b29542035772ddcbc48d92e2b159ac605dd80f passed all four WooCommerce runtime cells in CI run 33261152926";
+  const taskDocument = YAML.parse(inputs.tasks);
+  const task = taskDocument?.tasks?.find(
+    (candidate) => candidate.id === "M16-CONTINUOUS-IMPROVEMENT",
+  );
   if (
     !inputs.tasks.includes(historicalTaskEvidence) ||
     !inputs.tasks.includes(candidateTaskEvidence) ||
-    !inputs.tasks.includes("fresh exact-head runtime evidence remains pending")
+    !inputs.tasks.includes(exactHeadTaskEvidence) ||
+    !Array.isArray(task?.evidence) ||
+    task.evidence.filter((value) => value === locked.evidence.path).length !== 1
   ) {
     fail("TASKS historical or candidate compatibility evidence differs");
   }
 }
 
 const review = YAML.parse(readFileSync(join(root, paths.review), "utf8"));
+const evidenceBytes = readFileSync(join(root, locked.evidence.path));
 const inputs = {
   sourceBytes: readFileSync(join(root, locked.sourcePath)),
+  evidenceBytes,
+  evidence: JSON.parse(evidenceBytes.toString("utf8")),
   current: JSON.parse(readFileSync(join(root, paths.current), "utf8")),
   minimum: JSON.parse(readFileSync(join(root, paths.minimum), "utf8")),
   workflow: readFileSync(join(root, paths.workflow), "utf8"),
@@ -566,6 +952,8 @@ const inputs = {
   pluginReadme: readFileSync(join(root, paths.pluginReadme), "utf8"),
   matrix: readFileSync(join(root, paths.matrix), "utf8"),
   tasks: readFileSync(join(root, paths.tasks), "utf8"),
+  attributes: readFileSync(join(root, paths.attributes), "utf8"),
+  prettierIgnore: readFileSync(join(root, paths.prettierIgnore), "utf8"),
 };
 
 validate(review, inputs);
@@ -583,6 +971,53 @@ if (process.argv.includes("--self-test")) {
       "artifact digest drift",
       (candidate) =>
         (candidate.review.candidate.woocommerce.sha256 = "1".repeat(64)),
+    ],
+    [
+      "CI evidence byte drift",
+      (candidate) =>
+        (candidate.inputs.evidenceBytes = Buffer.from(
+          `${candidate.inputs.evidenceBytes.toString("utf8")} `,
+        )),
+    ],
+    [
+      "CI evidence job identity drift",
+      (candidate) => (candidate.inputs.evidence.ci.jobs[0].jobId += 1),
+    ],
+    [
+      "CI evidence failed runtime step",
+      (candidate) =>
+        (candidate.inputs.evidence.ci.jobs[2].steps.runtimeStart = "failure"),
+    ],
+    [
+      "CI evidence incomplete matrix",
+      (candidate) => candidate.inputs.evidence.ci.jobs.pop(),
+    ],
+    [
+      "CI evidence false production authority",
+      (candidate) =>
+        (candidate.inputs.evidence.authority.productionMutated = true),
+    ],
+    [
+      "CI evidence observation predates completion",
+      (candidate) =>
+        (candidate.inputs.evidence.observedAt = "2026-08-29T15:49:17Z"),
+    ],
+    [
+      "CI evidence line-ending control omission",
+      (candidate) =>
+        (candidate.inputs.attributes = candidate.inputs.attributes.replace(
+          "docs/plan/evidence/M16/runs/woocommerce-runtime-*.json -text",
+          "docs/plan/evidence/M16/runs/woocommerce-runtime-*.json text",
+        )),
+    ],
+    [
+      "CI evidence formatter exclusion omission",
+      (candidate) =>
+        (candidate.inputs.prettierIgnore =
+          candidate.inputs.prettierIgnore.replace(
+            "docs/plan/evidence/M16/runs/woocommerce-runtime-*.json",
+            "docs/plan/evidence/M16/runs/forged-woocommerce-runtime-*.json",
+          )),
     ],
     [
       "mutable latest artifact URL",
@@ -659,8 +1094,16 @@ if (process.argv.includes("--self-test")) {
       "TASKS acceptance drift",
       (candidate) =>
         (candidate.inputs.tasks = candidate.inputs.tasks.replace(
-          "fresh exact-head runtime evidence remains pending",
-          "runtime evidence passed",
+          "exact implementation c3b29542035772ddcbc48d92e2b159ac605dd80f passed all four WooCommerce runtime cells in CI run 33261152926",
+          "unbound runtime evidence passed",
+        )),
+    ],
+    [
+      "TASKS structured evidence omission",
+      (candidate) =>
+        (candidate.inputs.tasks = candidate.inputs.tasks.replace(
+          `        ${locked.evidence.path},`,
+          `        docs/plan/evidence/M16/runs/forged-woocommerce-runtime.json,`,
         )),
     ],
   ];
@@ -670,6 +1113,7 @@ if (process.argv.includes("--self-test")) {
       inputs: {
         ...structuredClone(inputs),
         sourceBytes: Buffer.from(inputs.sourceBytes),
+        evidenceBytes: Buffer.from(inputs.evidenceBytes),
       },
     };
     mutate(candidate);

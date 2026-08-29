@@ -26,10 +26,13 @@
   WooCommerce 9.0.2, and PHP 8.1 cells are unchanged. Exact downloaded artifact
   sizes and SHA-256 values, official sources, prior rollback versions, workflow
   cells, plugin headers, task acceptance, and false production authority are
-  enforced by a network-free validator with fourteen adversarial corruptions;
-  Linux CI separately hash-checks reviewed downloads before startup and asserts
-  the running WordPress, WooCommerce, and PHP versions.
-  Fresh exact-head Linux cells remain required. No production store, plugin,
+  enforced by a network-free validator with twenty-three adversarial corruptions.
+  Exact implementation `c3b2954` passed all four minimum/current × HPOS/legacy
+  jobs in CI `33261152926`; the immutable 4,291-byte evidence file has SHA-256
+  `950091da92c90a5834a1020bed83d275e1d3b0891ff6ca565ac79d2a0682188e`
+  and binds artifact checks, live version assertions, native coupon order and
+  reconciliation paths, cleanup, chronology, and false production authority.
+  A real pilot-store upgrade and release gates remain required. No production store, plugin,
   VM, database, checkout path, or loyalty value was changed, and M16 remains
   77/100.
 

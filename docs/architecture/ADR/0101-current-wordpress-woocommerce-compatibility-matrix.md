@@ -59,6 +59,20 @@ This decision does not upgrade a merchant store, publish a connector, alter
 production WordPress or WooCommerce, change checkout, or authorize release. A
 green disposable matrix is compatibility evidence, not a pilot-store upgrade.
 
+## Verification
+
+Exact integrated implementation `c3b29542035772ddcbc48d92e2b159ac605dd80f`
+passed all four disposable runtime jobs in CI run `33261152926`: minimum and
+current versions in both HPOS and legacy order-storage modes. The current jobs
+passed reviewed archive verification before startup; every job passed exact
+runtime assertions, connector activation, native coupon order and reconciliation
+paths, and cleanup. The immutable 4,291-byte evidence record has SHA-256
+`950091da92c90a5834a1020bed83d275e1d3b0891ff6ca565ac79d2a0682188e`.
+The validator binds its exact bytes, run/job chronology, matrix facts, step
+outcomes, and false production authority, and rejects twenty-three corruptions.
+This remains disposable CI evidence only; release, a real-store upgrade rehearsal,
+deployment, observation, and reconciliation are still separate gates.
+
 ## Rollback
 
 If either exact-head current cell fails, restore the current test configuration

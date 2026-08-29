@@ -11,3 +11,4 @@ docs/plan/evidence/M16/runs/borgbackup-security-*.json
 docs/plan/evidence/M16/runs/openssh-client-security-*.json
 docs/plan/evidence/M16/runs/node-runtime-*.json
 docs/plan/evidence/M16/runs/next-runtime-*.json
+docs/plan/evidence/M16/runs/woocommerce-runtime-*.json

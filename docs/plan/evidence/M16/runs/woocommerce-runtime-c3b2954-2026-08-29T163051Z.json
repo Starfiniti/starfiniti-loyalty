@@ -1,0 +1,143 @@
+{
+  "schema": "starfiniti.woocommerce-runtime-ci-evidence.v1",
+  "observedAt": "2026-08-29T16:30:51Z",
+  "repository": "Starfiniti/starfiniti-loyalty",
+  "implementation": {
+    "commit": "c3b29542035772ddcbc48d92e2b159ac605dd80f",
+    "runtimeReviewCommit": "a71a84b6d35438043ce3a0f7db86cf2231c9b3c5",
+    "runtimeReviewIsAncestor": true
+  },
+  "review": {
+    "schema": "starfiniti.woocommerce-runtime-review.v1",
+    "path": "infrastructure/governance/woocommerce-runtime-review.yaml",
+    "current": {
+      "wordpress": {
+        "version": "7.1",
+        "bytes": 37216004,
+        "sha256": "d1ae02b5ae18428031ffc3943659fa87ab361d827f4aa804adf9276e4dc75df6"
+      },
+      "woocommerce": {
+        "version": "11.0.1",
+        "bytes": 20218895,
+        "sha256": "da189b6616c610d15a2106f93151dab81b78f83e075bcefce221ac0d00b4fa21"
+      },
+      "php": "8.4"
+    },
+    "minimum": {
+      "wordpress": "6.6.5",
+      "woocommerce": "9.0.2",
+      "php": "8.1"
+    }
+  },
+  "ci": {
+    "workflow": ".github/workflows/ci.yml",
+    "runId": 33261152926,
+    "runAttempt": 1,
+    "event": "pull_request",
+    "headSha": "c3b29542035772ddcbc48d92e2b159ac605dd80f",
+    "createdAt": "2026-08-29T15:46:20Z",
+    "completedAt": "2026-08-29T15:49:18Z",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "name": "woocommerce-runtime (minimum-hpos)",
+        "jobId": 99123210797,
+        "startedAt": "2026-08-29T15:46:22Z",
+        "completedAt": "2026-08-29T15:48:50Z",
+        "conclusion": "success",
+        "runtime": {
+          "wordpress": "6.6.5",
+          "woocommerce": "9.0.2",
+          "php": "8.1",
+          "storage": "hpos"
+        },
+        "steps": {
+          "reviewedArtifacts": "skipped",
+          "runtimeStart": "success",
+          "activationAndStorage": "success",
+          "nativeCouponOrderAndReconciliation": "success",
+          "cleanup": "success"
+        }
+      },
+      {
+        "name": "woocommerce-runtime (minimum-legacy)",
+        "jobId": 99123210819,
+        "startedAt": "2026-08-29T15:46:23Z",
+        "completedAt": "2026-08-29T15:48:51Z",
+        "conclusion": "success",
+        "runtime": {
+          "wordpress": "6.6.5",
+          "woocommerce": "9.0.2",
+          "php": "8.1",
+          "storage": "legacy"
+        },
+        "steps": {
+          "reviewedArtifacts": "skipped",
+          "runtimeStart": "success",
+          "activationAndStorage": "success",
+          "nativeCouponOrderAndReconciliation": "success",
+          "cleanup": "success"
+        }
+      },
+      {
+        "name": "woocommerce-runtime (current-hpos)",
+        "jobId": 99123210753,
+        "startedAt": "2026-08-29T15:46:24Z",
+        "completedAt": "2026-08-29T15:48:44Z",
+        "conclusion": "success",
+        "runtime": {
+          "wordpress": "7.1",
+          "woocommerce": "11.0.1",
+          "php": "8.4",
+          "storage": "hpos"
+        },
+        "steps": {
+          "reviewedArtifacts": "success",
+          "runtimeStart": "success",
+          "activationAndStorage": "success",
+          "nativeCouponOrderAndReconciliation": "success",
+          "cleanup": "success"
+        }
+      },
+      {
+        "name": "woocommerce-runtime (current-legacy)",
+        "jobId": 99123210743,
+        "startedAt": "2026-08-29T15:46:22Z",
+        "completedAt": "2026-08-29T15:48:26Z",
+        "conclusion": "success",
+        "runtime": {
+          "wordpress": "7.1",
+          "woocommerce": "11.0.1",
+          "php": "8.4",
+          "storage": "legacy"
+        },
+        "steps": {
+          "reviewedArtifacts": "success",
+          "runtimeStart": "success",
+          "activationAndStorage": "success",
+          "nativeCouponOrderAndReconciliation": "success",
+          "cleanup": "success"
+        }
+      }
+    ]
+  },
+  "result": {
+    "matrixCells": 4,
+    "passedCells": 4,
+    "failedCells": 0,
+    "currentArtifactsVerified": true,
+    "minimumMatrixPreserved": true,
+    "nativeCouponOrderAndReconciliationPassed": true,
+    "runtimeCleanupPassed": true
+  },
+  "authority": {
+    "productionAccessed": false,
+    "productionMutated": false,
+    "storeUpgradeApproved": false,
+    "connectorReleased": false,
+    "pilotStoreRehearsed": false,
+    "deployed": false,
+    "observed": false,
+    "reconciled": false
+  }
+}

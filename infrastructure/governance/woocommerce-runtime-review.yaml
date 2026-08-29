@@ -62,4 +62,19 @@ production:
   storeUpgradeApproved: false
   rollbackWordPressVersion: 7.0.2
   rollbackWooCommerceVersion: 10.9.4
-  remainingGate: Exact-head HPOS and legacy runtime cells, the complete release matrix, a real pilot-store upgrade rehearsal, owner approval, deployment, observation, and reconciliation remain required.
+  remainingGate: The exact-head disposable HPOS and legacy runtime cells pass; the complete release matrix, a real pilot-store upgrade rehearsal, owner approval, deployment, observation, and reconciliation remain required.
+ciEvidence:
+  path: docs/plan/evidence/M16/runs/woocommerce-runtime-c3b2954-2026-08-29T163051Z.json
+  fileSha256: 950091da92c90a5834a1020bed83d275e1d3b0891ff6ca565ac79d2a0682188e
+  bytes: 4291
+  implementationCommit: c3b29542035772ddcbc48d92e2b159ac605dd80f
+  runtimeReviewCommit: a71a84b6d35438043ce3a0f7db86cf2231c9b3c5
+  runId: 33261152926
+  completedAt: 2026-08-29T15:49:18Z
+  conclusion: success
+  passedJobs:
+    - woocommerce-runtime (minimum-hpos)
+    - woocommerce-runtime (minimum-legacy)
+    - woocommerce-runtime (current-hpos)
+    - woocommerce-runtime (current-legacy)
+  productionMutated: false

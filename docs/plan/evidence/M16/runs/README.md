@@ -130,6 +130,17 @@ false merge, release, deployment, reconciliation, and production-mutation
 authority. It proves a repository candidate only; it does not prove production
 repair.
 
+WooCommerce runtime CI evidence uses
+`starfiniti.woocommerce-runtime-ci-evidence.v1`. The first accepted artifact is
+`woocommerce-runtime-c3b2954-2026-08-29T163051Z.json` (4,291 bytes, SHA-256
+`950091da92c90a5834a1020bed83d275e1d3b0891ff6ca565ac79d2a0682188e`).
+It binds exact implementation `c3b29542035772ddcbc48d92e2b159ac605dd80f`,
+CI run `33261152926`, all four minimum/current × HPOS/legacy job identities and
+chronology, reviewed current artifact checks, live runtime assertions, native
+coupon order/reconciliation paths, cleanup, and false release/pilot/deployment/
+observation/reconciliation authority. It proves a disposable compatibility
+matrix only; it does not prove a merchant-store upgrade or released connector.
+
 Never store provider bodies, credentials, raw ETags, hostnames, IP addresses,
 usernames, SSH routes or keys, raw command output, personal data, tenant/customer
 identifiers, mutable drafts, or unapproved operational telemetry here.

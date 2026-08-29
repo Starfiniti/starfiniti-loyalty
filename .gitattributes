@@ -9,6 +9,7 @@ docs/plan/evidence/M16/runs/openssh-client-security-*.json -text
 docs/plan/evidence/M16/runs/rsync-source-security-*.json -text
 docs/plan/evidence/M16/runs/node-runtime-*.json -text
 docs/plan/evidence/M16/runs/next-runtime-*.json -text
+docs/plan/evidence/M16/runs/woocommerce-runtime-*.json -text
 infrastructure/testing/openssh-client-security/*.Dockerfile text eol=lf
 infrastructure/testing/openssh-client-security/*.py text eol=lf
 infrastructure/testing/openssh-client-security/*.sh text eol=lf
