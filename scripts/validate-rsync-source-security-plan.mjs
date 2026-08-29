@@ -813,10 +813,15 @@ function validateWiring(candidateContent) {
     '"--publish"',
     "child_process.exec(",
     "shell: true",
+    "unlinkSync",
+    "existsSync(outputPath)",
   ]) {
     if (content.runner.includes(forbidden)) {
       fail(`runner contains forbidden control ${forbidden}`);
     }
+  }
+  if ((content.runner.match(/openSync\(\s*outputPath/gu) ?? []).length !== 1) {
+    fail("runner must open the immutable report path exactly once");
   }
 }
 

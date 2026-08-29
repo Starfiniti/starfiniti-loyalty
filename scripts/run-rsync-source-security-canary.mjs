@@ -4,7 +4,6 @@ import { execFileSync } from "node:child_process";
 import {
   closeSync,
   constants,
-  existsSync,
   fstatSync,
   fsyncSync,
   lstatSync,
@@ -13,7 +12,6 @@ import {
   readSync,
   readFileSync,
   realpathSync,
-  unlinkSync,
   writeSync,
 } from "node:fs";
 import { dirname, isAbsolute, join, resolve } from "node:path";
@@ -104,8 +102,6 @@ function ensureOutputParent(outputPath) {
 function writeReport(outputPath, parentIdentity, report) {
   const bytes = Buffer.from(`${JSON.stringify(report, null, 2)}\n`, "utf8");
   let descriptor;
-  let identity;
-  let complete = false;
   try {
     const parent = lstatSync(parentIdentity.path);
     if (
@@ -125,7 +121,6 @@ function writeReport(outputPath, parentIdentity, report) {
     );
     const opened = fstatSync(descriptor);
     if (!opened.isFile()) fail("output is not a regular file");
-    identity = { dev: opened.dev, ino: opened.ino };
     let offset = 0;
     while (offset < bytes.length) {
       const count = writeSync(
@@ -161,57 +156,43 @@ function writeReport(outputPath, parentIdentity, report) {
       readOffset += count;
     }
     if (!observed.equals(bytes)) fail("output bytes differ after write");
-    closeSync(descriptor);
-    descriptor = undefined;
-    descriptor = openSync(
-      outputPath,
-      constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0),
-    );
-    const reopened = fstatSync(descriptor);
-    if (
-      !reopened.isFile() ||
-      reopened.dev !== written.dev ||
-      reopened.ino !== written.ino ||
-      reopened.size !== bytes.length
-    ) {
-      fail("output identity changed before verification");
-    }
-    const reopenedBytes = Buffer.alloc(bytes.length);
+    const verifiedBytes = Buffer.alloc(bytes.length);
     readOffset = 0;
-    while (readOffset < reopenedBytes.length) {
+    while (readOffset < verifiedBytes.length) {
       const count = readSync(
         descriptor,
-        reopenedBytes,
+        verifiedBytes,
         readOffset,
-        reopenedBytes.length - readOffset,
+        verifiedBytes.length - readOffset,
         readOffset,
       );
-      if (count === 0) fail("reopened output verification ended early");
+      if (count === 0) fail("repeated output verification ended early");
       readOffset += count;
     }
     const reread = fstatSync(descriptor);
     if (
-      !reopenedBytes.equals(bytes) ||
-      reread.dev !== reopened.dev ||
-      reread.ino !== reopened.ino ||
+      !verifiedBytes.equals(bytes) ||
+      reread.dev !== written.dev ||
+      reread.ino !== written.ino ||
       reread.size !== bytes.length
     ) {
       fail("output bytes or identity changed after publication");
     }
-    closeSync(descriptor);
-    descriptor = undefined;
     const pathStatus = lstatSync(outputPath);
     const finalParent = lstatSync(parentIdentity.path);
+    const finalFile = fstatSync(descriptor);
     if (
       !pathStatus.isFile() ||
       pathStatus.dev !== written.dev ||
       pathStatus.ino !== written.ino ||
+      finalFile.dev !== written.dev ||
+      finalFile.ino !== written.ino ||
+      finalFile.size !== bytes.length ||
       finalParent.dev !== parentIdentity.dev ||
       finalParent.ino !== parentIdentity.ino
     ) {
       fail("output path identity differs after publication");
     }
-    complete = true;
   } catch (error) {
     if (error?.code === "EEXIST") {
       fail("output already exists; reports are immutable");
@@ -219,16 +200,6 @@ function writeReport(outputPath, parentIdentity, report) {
     throw error;
   } finally {
     if (descriptor !== undefined) closeSync(descriptor);
-    if (!complete && identity && existsSync(outputPath)) {
-      const status = lstatSync(outputPath);
-      if (
-        status.isFile() &&
-        status.dev === identity.dev &&
-        status.ino === identity.ino
-      ) {
-        unlinkSync(outputPath);
-      }
-    }
   }
 }
 
@@ -481,8 +452,6 @@ function main() {
 
   const outputPath = safeOutputPath(args.out);
   const parentIdentity = ensureOutputParent(outputPath);
-  if (existsSync(outputPath))
-    fail("output already exists; reports are immutable");
 
   const suffix = randomUUID().replaceAll("-", "").slice(0, 12);
   const network = `starfiniti-rsync-source-${suffix}`;
