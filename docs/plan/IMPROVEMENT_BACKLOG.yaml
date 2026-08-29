@@ -1,6 +1,6 @@
 schema: starfiniti.improvement-backlog.v1
 version: 1
-observedAt: 2026-08-29T16:06:06Z
+observedAt: 2026-08-29T19:12:01Z
 ranking:
   formula: severityPoints + (2 * merchantImpact) + (2 * customerImpact) + confidence - effort - dependencyPenalty
   severityPoints: { critical: 40, high: 30, medium: 20, low: 10 }
@@ -97,6 +97,19 @@ items:
     evidence: docs/plan/evidence/M15/recovery.yaml
     dependency: Approved isolated recovery host, protected evidence destination, and recovery owners.
     ownerInput: Operations and security approve the disposable recovery environment and roster.
+  - id: IMP-014
+    title: Exercise bounded whole-system faults and reconcile recovery
+    severity: critical
+    merchantImpact: 8
+    customerImpact: 10
+    effort: 7
+    confidence: 9
+    dependencyPenalty: 9
+    score: 69
+    status: blocked_external
+    evidence: docs/plan/evidence/M15/fault-injection.yaml
+    dependency: Approved marked disposable production-like Compose environment, bounded exercise window, fresh synthetic signed fixtures, monitoring exports, and independent database, WooCommerce, queue, WAL, checkout, and immutable-value reconciliation.
+    ownerInput: Operations and security approve the disposable environment and exercise window; an independent reviewer approves restoration and zero-difference reconciliation.
   - id: IMP-004
     title: Close independent penetration testing and exact-image security evidence
     severity: critical
@@ -110,6 +123,19 @@ items:
     evidence: docs/plan/evidence/M15/security.yaml
     dependency: Independent tester, production-safe scope, retest, and owner acceptance.
     ownerInput: Security owner commissions and approves the independent test and retest.
+  - id: IMP-013
+    title: Measure and reconcile the supported capacity envelope
+    severity: high
+    merchantImpact: 9
+    customerImpact: 9
+    effort: 6
+    confidence: 10
+    dependencyPenalty: 9
+    score: 61
+    status: blocked_external
+    evidence: docs/plan/evidence/M15/capacity.yaml
+    dependency: Approved disposable production-like target, exact environment and data-shape inventory, monitoring export, dedicated synthetic credentials, two primary-driver runs, one digest-pinned independent k6 run, first-failed higher boundary, and ledger plus WooCommerce reconciliation.
+    ownerInput: Operations and product approve the isolated target and run window; an independent reviewer approves the environment, driver headroom, results, reconciliation, and any published limit.
   - id: IMP-005
     title: Run the immutable thirty-day Starfiniti GA canary
     severity: high

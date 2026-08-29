@@ -1,5 +1,17 @@
 # Changelog
 
+- Refreshed M16 after the material M15 capacity change without inflating product
+  readiness. The V2 score now binds exact integrated candidate `cbe89b4` and
+  remains 83/100; deployed production remains 54/100. The recomputable backlog
+  grows from twelve to fourteen by ranking the still-unapproved whole-system
+  fault exercise at 69 and supported-capacity exercise at 61 as distinct
+  external gates. Adversarial review also closes a deletion/substitution bypass:
+  the validator now requires the exact fourteen-item blocker set and each
+  blocker's canonical evidence path in addition to recomputing its score and
+  order. M16 remains 77/100 with seven of 39 checks passing. No load, fault,
+  deployment, production mutation, checkout change, or loyalty value is
+  claimed.
+
 - Added ADR-0104 and replaced M15's label-only independent-capacity evidence
   with an exact Grafana k6 2.2.0 cross-check contract. The official OCI index,
   Linux/amd64 manifest, canonical workload, and reviewed script are

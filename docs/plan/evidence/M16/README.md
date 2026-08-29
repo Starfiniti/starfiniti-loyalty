@@ -21,10 +21,15 @@ pending.
 ADR-0080 closes the current score-subject ambiguity without claiming an elapsed
 review. `docs/plan/evaluations/product-score.json` V2 preserves the exact V1
 production history, reports deployed `v0.1.11` at 54/100, and reports the exact
-integration candidate at 83/100. The candidate remains ineligible because activation
-is below its category floor and required live evidence is absent. The deterministic
-validator is part of `npm run check`; two future elapsed monthly reviews must still
-rescore their affected modules and retain prior/current evidence.
+integration candidate at 83/100. The 2026-08-29 material-change rescore binds
+candidate `cbe89b4`, explicitly includes the digest-pinned k6 boundary, and keeps
+the score unchanged because no live capacity, fault, recovery, or activation
+evidence was added. The ranked backlog now contains fourteen items: capacity and
+whole-system fault exercises are distinct external gates rather than being hidden
+inside GA. The candidate remains ineligible because activation is below its
+category floor and required live evidence is absent. The deterministic validator
+is part of `npm run check`; two future elapsed monthly reviews must still rescore
+their affected modules and retain prior/current evidence.
 
 Approved closeout artifacts use the five schemas in
 `infrastructure/governance/continuous-improvement.yaml`; minimized preparation

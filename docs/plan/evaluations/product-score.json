@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "evaluatedAt": "2026-08-28",
+  "evaluatedAt": "2026-08-29",
   "target": 90,
   "minimumCategoryRatio": 0.8,
   "productionSubject": "production",
@@ -55,7 +55,7 @@
     {
       "id": "production",
       "kind": "release",
-      "evaluatedAt": "2026-08-28",
+      "evaluatedAt": "2026-08-29",
       "release": "v0.1.11",
       "branch": null,
       "sourceCommit": "0ced4b666a55d836bd3d4927337fe057a71bb4ba",
@@ -164,10 +164,10 @@
     {
       "id": "candidate",
       "kind": "integration_candidate",
-      "evaluatedAt": "2026-08-28",
+      "evaluatedAt": "2026-08-29",
       "release": null,
       "branch": "codex/enterprise-roadmap-integration",
-      "sourceCommit": "13d71988d7c05ddfad807320246c9ee613a13531",
+      "sourceCommit": "cbe89b4a61c657979b2ba317e6a5b7561dfa801b",
       "score": 83,
       "target": 90,
       "minimumCategoryRatio": 0.8,
@@ -215,8 +215,9 @@
           "id": "reliability",
           "weight": 15,
           "score": 13,
-          "evidence": "Ledger tenancy idempotency concurrency compensation database replay connector matrices and fail-closed canary contracts pass; full live outage and recovery proof remains.",
+          "evidence": "Ledger tenancy idempotency concurrency compensation database replay connector matrices and fail-closed canary contracts pass; the exact digest-pinned k6 repository boundary also passes, while real capacity fault outage and recovery proof remains.",
           "evidencePaths": [
+            "docs/plan/evidence/M15/capacity.yaml",
             "docs/plan/evidence/M15/fault-injection.yaml",
             "docs/plan/evidence/M15/recovery.yaml"
           ]
@@ -225,7 +226,7 @@
           "id": "operations",
           "weight": 10,
           "score": 8,
-          "evidence": "Versioned monitoring capacity fault recovery incident and canary controllers exist, but live routes exercises restore evidence and the thirty-day window remain external.",
+          "evidence": "Versioned monitoring, dual capacity drivers, fault, recovery, incident, and canary controllers exist, but approved load and fault runs, live routes, exercises, restore evidence, and the thirty-day window remain external.",
           "evidencePaths": [
             "docs/plan/evidence/M15/operations.yaml",
             "docs/plan/evidence/M15/ga-canary.yaml"
@@ -271,7 +272,7 @@
         {
           "id": "required_live_evidence_absent",
           "status": "active",
-          "evidence": "The real-store pilot complete clean-room recovery module canaries and thirty-day GA observation are absent."
+          "evidence": "The real-store pilot, approved capacity and fault runs, complete clean-room recovery, module canaries, and thirty-day GA observation are absent."
         }
       ],
       "remainingGate": "Merge and release approval, approved pilot and credentials, disabled deployments, exact reconciliation, recovery and monitoring exercises, independent penetration test, thirty-day canary, and final approvals."

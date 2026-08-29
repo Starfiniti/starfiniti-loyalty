@@ -143,6 +143,25 @@ const severityPoints = new Map([
   ["medium", 20],
   ["low", 10],
 ]);
+const requiredBacklogEvidence = new Map([
+  ["IMP-001", "docs/plan/evidence/M01/production-pilot.yaml"],
+  ["IMP-002", "docs/plan/evidence/M15/operations.yaml"],
+  ["IMP-003", "docs/plan/evidence/M15/recovery.yaml"],
+  ["IMP-004", "docs/plan/evidence/M15/security.yaml"],
+  ["IMP-005", "docs/plan/evidence/M15/ga-canary.yaml"],
+  ["IMP-006", "docs/plan/evidence/M14/managed-billing-canary.yaml"],
+  ["IMP-007", "docs/plan/evidence/M13/enterprise-identity-canary.yaml"],
+  ["IMP-008", "docs/plan/evidence/M08/notification-canary.yaml"],
+  [
+    "IMP-009",
+    "docs/plan/evidence/M01/backup-transfer-amplification-2026-08-14.md",
+  ],
+  ["IMP-010", "docs/plan/evidence/M16/rsync-source-security.yaml"],
+  ["IMP-011", "infrastructure/governance/proxmox-security-update-plan.yaml"],
+  ["IMP-012", "infrastructure/governance/next-runtime-review.yaml"],
+  ["IMP-013", "docs/plan/evidence/M15/capacity.yaml"],
+  ["IMP-014", "docs/plan/evidence/M15/fault-injection.yaml"],
+]);
 const allowedControls = new Set([
   "regressionTest",
   "validator",
@@ -376,7 +395,11 @@ function validateBacklog(candidateBacklog) {
   ) {
     fail("backlog ranking contract differs from the plan");
   }
-  uniqueIds(candidateBacklog.items, "backlog items");
+  exactSet(
+    uniqueIds(candidateBacklog.items, "backlog items"),
+    new Set(requiredBacklogEvidence.keys()),
+    "current backlog items",
+  );
   let previous = Number.POSITIVE_INFINITY;
   let previousId = "";
   for (const item of candidateBacklog.items) {
@@ -398,6 +421,9 @@ function validateBacklog(candidateBacklog) {
       if (typeof item[field] !== "string" || item[field].trim().length < 8) {
         fail(`${item.id}.${field} is missing or too short`);
       }
+    }
+    if (item.evidence !== requiredBacklogEvidence.get(item.id)) {
+      fail(`${item.id}.evidence differs from its required exact gate`);
     }
     if (
       ![
@@ -1573,6 +1599,23 @@ if (process.argv.includes("--self-test")) {
     "backlog score differs",
     ({ fixtureBacklog }) => {
       fixtureBacklog.items[0].score += 1;
+    },
+  );
+  expectRejected(
+    "missing current backlog blocker",
+    "current backlog items differs",
+    ({ fixtureBacklog }) => {
+      fixtureBacklog.items = fixtureBacklog.items.filter(
+        (item) => item.id !== "IMP-013",
+      );
+    },
+  );
+  expectRejected(
+    "substituted backlog evidence",
+    "IMP-014.evidence differs from its required exact gate",
+    ({ fixtureBacklog }) => {
+      fixtureBacklog.items.find((item) => item.id === "IMP-014").evidence =
+        "docs/plan/evidence/M15/capacity.yaml";
     },
   );
   expectRejected(
