@@ -182,22 +182,24 @@ function exactUtc(value, label) {
 }
 
 function readRegular(path, maximumBytes, label) {
-  const metadata = lstatSync(path, { throwIfNoEntry: false });
-  if (
-    !metadata?.isFile() ||
-    metadata.isSymbolicLink() ||
-    metadata.size < 1 ||
-    metadata.size > maximumBytes
-  ) {
-    fail(`${label} is not a bounded regular file`);
+  let descriptor;
+  try {
+    descriptor = openSync(
+      path,
+      constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0),
+    );
+  } catch {
+    fail(`${label} cannot be opened as a regular file`);
   }
-  const descriptor = openSync(
-    path,
-    constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0),
-  );
   try {
     const before = fstatSync(descriptor);
+    const metadata = lstatSync(path, { throwIfNoEntry: false });
     if (
+      !before.isFile() ||
+      before.size < 1 ||
+      before.size > maximumBytes ||
+      !metadata?.isFile() ||
+      metadata.isSymbolicLink() ||
       before.dev !== metadata.dev ||
       before.ino !== metadata.ino ||
       before.size !== metadata.size ||
@@ -219,11 +221,18 @@ function readRegular(path, maximumBytes, label) {
       offset += count;
     }
     const after = fstatSync(descriptor);
+    const afterPath = lstatSync(path, { throwIfNoEntry: false });
     if (
       before.dev !== after.dev ||
       before.ino !== after.ino ||
       before.size !== after.size ||
-      before.mtimeMs !== after.mtimeMs
+      before.mtimeMs !== after.mtimeMs ||
+      !afterPath?.isFile() ||
+      afterPath.isSymbolicLink() ||
+      metadata.dev !== afterPath.dev ||
+      metadata.ino !== afterPath.ino ||
+      metadata.size !== afterPath.size ||
+      metadata.mtimeMs !== afterPath.mtimeMs
     ) {
       fail(`${label} changed while reading`);
     }
@@ -1401,7 +1410,7 @@ function readBoundedStdin(maximumBytes, label) {
 
 function resolveInput(value, label) {
   const absolute = isAbsolute(value) ? resolve(value) : resolve(root, value);
-  if (!existsSync(absolute)) fail(`${label} does not exist`);
+  if (absolute.includes("\0")) fail(`${label} path is invalid`);
   return absolute;
 }
 
