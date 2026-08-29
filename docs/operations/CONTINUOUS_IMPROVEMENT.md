@@ -61,9 +61,12 @@ npm run continuous-improvement:installed:verify -- \
 The helper derives exactly six installed provider projections, binds them to the
 official-source artifact and the exact rsync candidate plan, and writes through an
 exclusive no-follow descriptor. `installedCaptureComplete` covers only this closed
-installed catalogue. Candidate evidence remains incomplete for BorgBackup,
-OpenSSH, Debian, Ubuntu, and Proxmox; review, impact, ownership, approval, package
-installation, and production mutation all remain false. The artifact is a monthly
+installed catalogue. ADR-0091 separately selects a digest-bound BorgBackup
+candidate and compatibility contract without rewriting this historical artifact.
+Candidate evidence remains incomplete for OpenSSH, Debian, Ubuntu, and Proxmox;
+operations escrow, exact-head Borg canary evidence, real-provider compatibility,
+review, ownership, approval, package installation, and production mutation all
+remain false. The artifact is a monthly
 review input, not remote attestation or an upgrade gate. Independent verification
 loads every governance/source/candidate binding from the artifact's exact candidate
 commit, so later working-tree or policy changes cannot silently reinterpret the

@@ -132,3 +132,26 @@ and no execution report. `rehearsalExecuted`, compatibility, independent review,
 rollback, recovery, repository policy, installation, reboot, production
 mutation, and post-change proof therefore remain false; the product score does
 not advance.
+
+ADR-0091 separately resolves BorgBackup's candidate-selection question without
+rewriting the immutable ADR-0085 installed-state artifact. The exact
+[`borgbackup-security.yaml`](borgbackup-security.yaml) evidence binds Debian
+Trixie `borgbackup=1.4.0-5` and `/usr/bin/borg` as the rollback anchor plus the
+upstream-signed BorgBackup 1.4.5 glibc 2.31 x86-64 single-directory candidate.
+The plan requires exact archive, signature, README, package, executable, and
+tree hashes; the README-published full primary fingerprint; a matching imported
+key and VALIDSIG primary fingerprint; safe pre-extraction archive inspection;
+and the same 106-entry, 95-file, 79,942,815-byte tree after extraction. The
+canonical relative-path manifest is
+`09fb420dce78c94814520628cf68ecdd77ab75d4fd9c794f8916874f2a767827`.
+
+`npm run borgbackup-security:validate` covers plan, evidence, build, runner,
+fake-SSH, archive, workflow, and false-pass mutations. Linux Security CI will
+run the runtime with no network, read-only root, UID/GID 65532, no capabilities,
+no-new-privileges, bounded resources, current/candidate clients and remote
+servers, and exact container/image teardown. Local Docker is unavailable and
+the exact-head artifact does not yet exist, so `compatibility_canary` remains
+pending. Operations escrow, real-provider compatibility, production rollout,
+rollback, monitoring, isolated restore, and independent review also remain
+pending. No M16 closeout check or product-score point advances, and production
+is unchanged.

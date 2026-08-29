@@ -1,0 +1,48 @@
+schema: starfiniti.borgbackup-security-evidence.v1
+status: in_progress
+observedAt: 2026-08-29T04:30:45Z
+candidate:
+  branch: codex/enterprise-roadmap-integration
+  commit: null
+plan:
+  path: infrastructure/testing/borgbackup-security/plan.yaml
+  sha256: 634bcf3c778098d31b5c4901f5280b35e69ed7cbeda3da11131e19ad7aad5ae0
+canary: null
+checks:
+  - id: plan_contract
+    status: passed
+    evidence: The closed plan binds the exact installed Debian package and executable, upstream candidate archive, signature, README, signing fingerprint, extracted tree, compatibility operations, and rollback invariants.
+  - id: official_release_impact
+    status: passed
+    evidence: Official Borg 1.4.5 release and upgrade guidance plus Debian package and CVE sources support the candidate; the Debian no-DSA disposition is preserved rather than inflated into a critical-severity claim.
+  - id: candidate_signature_contract
+    status: passed
+    evidence: The disposable build requires the exact archive, signature, and README hashes, the README-published full primary fingerprint, a matching imported key, a VALIDSIG result bound to that primary fingerprint, and the exact safe extracted-tree manifest before execution.
+  - id: rollback_package_contract
+    status: passed
+    evidence: The build resolves Debian borgbackup 1.4.0-5 through signed Trixie metadata, independently downloads the exact archive URL, requires byte equality and package metadata, and preserves that installed version as the rollback client.
+  - id: compatibility_canary
+    status: pending
+    evidence: The exact-head networkless current-client and candidate-client compatibility canary has not yet produced an independently retained CI artifact.
+  - id: operations_escrow
+    status: pending
+    evidence: Operations has not copied the candidate archive, signature, signing key, README, exact rollback package, manifest, and verification instructions to approved offline escrow or independently rechecked them.
+  - id: production_remote_compatibility
+    status: pending
+    evidence: The candidate has not yet exercised every real provider remote binary, repository, archive list, repository check, dry-run maintenance path, or bounded restore path used by the production controllers.
+  - id: production_rollout
+    status: pending
+    evidence: No approved maintenance window, timer pause, versioned installation, exact consumer-path switch, manual cycle, timer cycle, monitoring observation, or rollback exercise has occurred.
+  - id: isolated_restore
+    status: pending
+    evidence: No archive handled by the candidate executable has completed the full isolated application, Auth, database, connector-secret, and configuration recovery gate.
+  - id: independent_review
+    status: pending
+    evidence: Operations, security, recovery, and independent reviewers have not approved this candidate or its exact production activation and rollback evidence.
+productionMutation: false
+automaticFails:
+  - the candidate archive signature README fingerprint checksum size executable or extracted-tree manifest differs from the exact reviewed plan
+  - the rollback package does not resolve through signed Trixie metadata and match the independent exact HTTPS archive byte for byte or is removed before production proof
+  - any compatibility run has a production route credential writable root host networking published port elevated capability unbounded storage or retained exact container or image
+  - any production Borg consumer uses an unproved executable path or digest or activation changes archives repository policy retention local WAL base backups checkout behavior or loyalty value
+  - production changes before operations escrow exact real-remote compatibility isolated restore rollback monitoring review and approval are independently complete
