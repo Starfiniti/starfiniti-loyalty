@@ -1,5 +1,21 @@
 # Status
 
+- ADR-0100 advances one concrete M16 dependency review without claiming a
+  monthly close. The dashboard and worker build/runtime stages now replace the
+  reviewed 2026-08-03 Node 24.19.0 index with the official 2026-08-27
+  Node 24.20.0 LTS index
+  `sha256:e67514e5d0f6c46656005e1b693b2ec9d52e80b641307de684d4a015ba7a4eaf`.
+  A network-free validator binds the exact thirteen-source snapshot, official
+  release and Registry projections, both two-stage Dockerfiles, impact owner,
+  rollback image identities, and false production authority; ten corruptions
+  fail closed.
+  The focused validator and complete local `npm run check` gate pass with 995
+  tests, all validators, and both production builds; static 87-migration/69-pgTAP
+  validation, the 1,178-file secret scan, zero-vulnerability production audit,
+  and licence checks also pass. Exact-head Linux image builds, SBOM/Trivy/CodeQL,
+  release approval, deployment, and production observation remain pending;
+  production and the 83/100 candidate score are unchanged.
+
 - ADR-0099 corrects the attribution and parser boundary after exact candidate
   `e71e62d` passed all seven CI jobs in run `33254530487` but failed CodeQL in
   Security run `33254530449`. Minimized artifact `9715410381` contains three raw

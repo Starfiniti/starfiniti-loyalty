@@ -39,6 +39,20 @@ Independent verification passed, and `contentRetained`, `reviewComplete`,
 The path-scoped repository `-text` attribute preserves those exact bytes across
 Windows and POSIX checkouts.
 
+ADR-0100 completes one bounded Node.js review input without relabelling the
+source snapshot as a monthly review. The repository previously pinned official
+Node 24.19.0 image index
+`d32cdf619f63fe0471182d08996dd516c6275bb5fd31ae06e55a570bd9e1ad43`.
+The official Node 24 line is LTS, 24.20.0 was released on 2026-08-26, and the
+official `24-alpine` Registry index was rebuilt on 2026-08-27. The candidate now
+pins index `e67514e5d0f6c46656005e1b693b2ec9d52e80b641307de684d4a015ba7a4eaf`
+in both stages of both application Dockerfiles. The governance record binds the
+exact linux/amd64 manifest and configuration, impact owner/disposition, previous
+rollback index, and false production/deployment authority. Run
+`npm run continuous-improvement:node-runtime:validate`; exact-head image build,
+scan, release, deployment, rollback observation, and production reconciliation
+remain pending.
+
 ADR-0085 adds a separate installed-state preparation boundary for the six recovery
 providers. The repository helper has no SSH or production-discovery authority. It
 accepts only two bounded exact-schema fact envelopes obtained through the approved

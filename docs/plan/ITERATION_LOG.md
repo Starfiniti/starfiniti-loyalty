@@ -1,5 +1,12 @@
 # Iteration Log
 
+## 2026-08-29 — Reviewed Node 24 LTS runtime refresh
+
+- Reconstructed the Node.js row from the exact thirteen-source snapshot and found that both application Dockerfiles still used the official 2026-08-03 Node 24.19.0 image after Node 24.20.0 LTS and a refreshed official Alpine image were published on 2026-08-26/27.
+- Compared retaining the older immutable index, following the mutable `24-alpine` tag, and refreshing one reviewed immutable index. ADR-0100 selects the immutable refresh so the same source commit remains reproducible and the prior index remains the exact rollback boundary.
+- Bound the official release, Registry index, linux/amd64 manifest, image configuration, Node version, Alpine base, both build/runner stage sets, impact owner, disposition, complete rollback image identity, and false production authority in one network-free governance record. Ten adversarial mutations reject source or digest drift, mutable/partial/superseded image pins, rollback misdescription, engine drift, and production/deployment overclaims.
+- The focused validator and complete local gate pass with 995 tests, all validators, both production builds, static 87-migration/69-pgTAP validation, a 1,178-file secret scan, zero-vulnerability production audit, and licence checks. Exact-head Linux image builds, SBOM/Trivy/CodeQL, release approval, deployment, rollback observation, and production reconciliation remain required. No runtime was published or deployed, production was not accessed, and the candidate product score stays 83/100.
+
 ## 2026-08-29 — M16 rsync native side-by-side candidate bootstrap
 
 - Reconstructed the remaining IMP-010 host dependency and found that the accepted Debian unstable rsync package requires global `libacl1 2.4.0`, while Debian 13 and Ubuntu 24.04 retain native 2.3.2 lines. Installing that package would extend the recovery change into every host consumer of the ACL ABI.

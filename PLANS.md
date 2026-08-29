@@ -1,5 +1,16 @@
 # Execution Plan
 
+ADR-0100 is the next safe M16 provider/dependency slice. It refreshes all four
+dashboard/worker Node stages from the immutable Node 24.19.0 image index to the
+official Node 24.20.0 LTS index after exact source and Registry review. The new
+network-free validator binds the official-source snapshot, release, image index,
+linux/amd64 manifest, image configuration, Dockerfile stage set, impact owner,
+rollback index, and false production authority. The focused and complete local
+gates pass with 995 tests, all validators, both production builds, static
+migration/pgTAP validation, secret scanning, audit, and licences; fresh
+exact-head Linux image scans are next. No release, deployment, restart,
+production mutation, or score increase is authorized.
+
 ADR-0099 is the current exact-head security correction. CI run `33254530487`
 passed at `e71e62d`, but Security run `33254530449` failed closed with three raw
 CodeQL results. The minimizer had ignored direct security scores because CodeQL

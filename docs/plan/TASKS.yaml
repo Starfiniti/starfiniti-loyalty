@@ -3668,6 +3668,7 @@ tasks:
         npm run continuous-improvement:sources:validate,
         clean-head thirteen-source capture and independent snapshot verification,
         npm run continuous-improvement:installed:validate,
+        npm run continuous-improvement:node-runtime:validate,
         clean-head dual-endpoint installed-state capture and independent snapshot verification,
         npm run rsync-source-security:validate,
         bootstrap native endpoint digest discovery followed by an exact digest-locked internal-network current-host and candidate-host to candidate-guest compatibility artifact with signed-source safe-tree distribution-path native-libacl and exact teardown proof,
@@ -3727,6 +3728,7 @@ tasks:
         infrastructure/governance/recovery-artifact-escrow-v2.yaml,
         docs/architecture/ADR/0095-side-by-side-rsync-source-candidate.md,
         docs/architecture/ADR/0096-native-rsync-recovery-artifact-escrow.md,
+        docs/architecture/ADR/0100-reviewed-node-24-lts-runtime-refresh.md,
         infrastructure/governance/recovery-artifact-escrow-v3.yaml,
       ]
     evidence:
@@ -3782,6 +3784,8 @@ tasks:
         scripts/validate-rsync-source-security-plan.mjs,
         scripts/run-rsync-source-security-canary.mjs,
         docs/plan/evidence/M16/rsync-source-security.yaml,
+        infrastructure/governance/node-runtime-review.yaml,
+        scripts/validate-node-runtime-review.mjs,
         docs/plan/evidence/M16/proxmox-security-review-2026-08-29.md,
         ADR-0080 preserves the exact V1 production score under SHA-256 and the V2 validator separately recomputes deployed production at 54/100 and the exact integration candidate at 83/100 while both remain completion-ineligible,
         product-score governance implementation d1a78c04cefacad203c786edee85c4b3a20787a1 passed the complete local 983-test gate 86-migration and 68-pgTAP-file static validation 1069-file secret scan zero-vulnerability production audit licence validation formatting and diff review without a runtime schema or production change,

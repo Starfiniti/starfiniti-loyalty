@@ -1,5 +1,16 @@
 # Changelog
 
+- Added ADR-0100 and an exact Node 24 LTS runtime refresh. Both dashboard and
+  worker build/runtime stages move from the immutable 2026-08-03 Node 24.19.0
+  index to the official 2026-08-27 Node 24.20.0 index. The M16 review binds the
+  thirteen-source snapshot, official release and Registry index/platform/config
+  identities, impact owner, rollback pin, and false production authority. A
+  network-free validator rejects ten source, digest, mutable-tag, partial-stage,
+  rollback, engine, and authority corruptions. The complete 995-test local gate,
+  static migration/pgTAP validation, secret scan, zero-vulnerability audit, and
+  licence checks pass. Exact-head image build/scan evidence is still required,
+  and production is unchanged.
+
 - Added ADR-0099 after exact candidate `e71e62d` passed CI but the raw CodeQL
   artifact proved three findings remained. The minimizer now resolves rules from
   CodeQL tool extensions, not only the driver, and dismissals never satisfy the
