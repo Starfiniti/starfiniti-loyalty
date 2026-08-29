@@ -156,3 +156,11 @@ Independent verification passes, no forbidden identifier field or raw fact file
 was retained, and `consumerInventoryCaptured` is true in the report only. Every
 rehearsal plus compatibility, recovery, approval, installation, reboot, mutation,
 and post-change gate remains false.
+
+External CodeQL check `99039761560` then rejected a High path-check/open race in
+the new bounded reader at evidence head `38758c8`. The finding was not waived.
+Correction `7526f5588b8b8e7b2f9b66300a7619a61b6ed636` opens through no-follow
+first and binds descriptor/path identity before and after the same-byte read. It
+passed all seven CI jobs in run `33229717718`, all four Security jobs in run
+`33229717726`, and external CodeQL check `99040438021`; all twelve PR checks were
+green and the artifact continued to verify exactly.
