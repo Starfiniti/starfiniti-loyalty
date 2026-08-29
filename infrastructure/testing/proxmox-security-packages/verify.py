@@ -640,7 +640,11 @@ def main() -> None:
         fail("work root must be exclusive")
     WORK_ROOT.mkdir(mode=0o700)
     plan, repositories, packages = read_manifest()
-    temporary_facts = WORK_ROOT / "facts.tsv"
+    # Stage beside the final bind-mounted path so os.replace remains atomic on
+    # Linux; /tmp is a separate tmpfs in the disposable container.
+    temporary_facts = FACTS.with_name(".facts.tsv.tmp")
+    if temporary_facts.exists() or temporary_facts.is_symlink():
+        fail("temporary facts output must be exclusive")
     try:
         configure_repositories(plan, repositories)
         descriptor = os.open(
