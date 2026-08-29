@@ -1,0 +1,57 @@
+schema: starfiniti.recovery-artifact-escrow-evidence.v1
+status: in_progress
+observedAt: 2026-08-29T08:07:53Z
+candidate:
+  branch: codex/enterprise-roadmap-integration
+  commit: null
+policy:
+  path: infrastructure/governance/recovery-artifact-escrow-v1.yaml
+  sha256: eb9840652ab8e7ca2d20af9cc8eabf2d8bde7e0b696f8d51e334f859127eaa05
+checks:
+  - id: design_contract
+    status: passed
+    evidence: ADR-0093 compares generated archives, repository-hosted binaries, and in-place private verification; the selected boundary has no network, copy, artifact execution, production route, credential, mutation, or production authority.
+  - id: closed_catalogue
+    status: passed
+    evidence: The exact policy requires thirty BorgBackup and OpenSSH candidate, rollback, signing, dependency, build, runbook, ADR, evidence, and canary-report entries plus only two fixed control files.
+  - id: stable_byte_verification
+    status: passed
+    evidence: The verifier rejects missing, extra, path-traversing, case-colliding, linked-final, linked-parent, special, mutable, over-bound, size-different, digest-different, repository-different, and mid-run Git-head-different inputs through direct-parent resolution, repeated stable no-follow descriptor reads, final closed-set scans, and POSIX write-boundary checks.
+  - id: minimized_report_contract
+    status: passed
+    evidence: A report contains only commit, policy and private-manifest digests, aggregate counts and bytes, fixed verification booleans, explicit false completion fields, and false production access, mutation, and authority.
+  - id: validator_selftest
+    status: passed
+    evidence: The canonical thirty-entry policy, package/runbook/task/risk wiring, and positive inventory/report fixture pass; corrupt bytes, extra files, policy drift, Git-head drift, false authority, malformed dependency evidence, hard links, unsafe paths, inside-bundle output, provider-report field leakage, and completion overclaims fail.
+  - id: exact_head_ci
+    status: pending
+    evidence: The implementation requires a clean committed exact-head CI and Security rollup before this repository slice can be accepted.
+  - id: private_inventory
+    status: pending
+    evidence: Operations has not staged the exact thirty files in an approved private destination or produced the private manifest and minimized verification report.
+  - id: signing_fingerprint_review
+    status: pending
+    evidence: A second person has not revalidated both signing fingerprints and detached signatures against the escrowed candidate bytes.
+  - id: dependency_review
+    status: pending
+    evidence: The exact candidate executable dependency inventories have not been captured and independently reviewed in the approved runtime.
+  - id: offline_copy_review
+    status: pending
+    evidence: Offline, encrypted, redundant, independently accessible custody has not been demonstrated; a GitHub artifact or local staging directory does not qualify.
+  - id: independent_review
+    status: pending
+    evidence: Operations, security, recovery, and an independent reviewer have not accepted the private manifest, minimized report, custody, and recovery usability.
+  - id: operations_escrow
+    status: pending
+    evidence: Inventory verification alone cannot close the BorgBackup or OpenSSH operations-escrow rows; all preceding private reviews and approvals remain required.
+productionAccess: false
+productionMutation: false
+productionAuthority: false
+operationsEscrowComplete: false
+automaticFails:
+  - a required candidate rollback signing dependency build runbook decision evidence or canary input is missing extra linked mutable over-bound or digest-different
+  - the fixed candidate or rollback bytes differ from the exact BorgBackup or OpenSSH plan
+  - a repository instruction differs from the clean commit bound to the private manifest
+  - a private path endpoint identity raw file or arbitrary operational detail enters the minimized report
+  - a local directory or CI artifact is presented as approved offline redundant independently reviewed custody
+  - inventory verification is presented as signature dependency recovery rollout production authority or operations escrow completion

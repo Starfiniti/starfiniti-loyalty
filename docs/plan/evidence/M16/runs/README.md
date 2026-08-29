@@ -110,6 +110,14 @@ It proves only the isolated current/candidate client compatibility contract and
 zero production mutation. Escrow, real-provider behavior, rollout, restore,
 rollback, monitoring, and review remain pending.
 
+ADR-0093 adds no retained run here yet. Its private `manifest.json` must never be
+committed. When operations later completes the closed 30-entry inventory and an
+independent verification, only the minimized
+`starfiniti.recovery-artifact-escrow-report.v1` output may be considered for this
+directory after separate privacy review and exact SHA-256 binding. That report
+still cannot claim signing-fingerprint, dependency, offline-custody,
+second-person, recovery, rollout, production, or operations-escrow completion.
+
 Never store provider bodies, credentials, raw ETags, hostnames, IP addresses,
 usernames, SSH routes or keys, raw command output, personal data, tenant/customer
 identifiers, mutable drafts, or unapproved operational telemetry here.

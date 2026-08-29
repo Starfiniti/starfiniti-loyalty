@@ -38,7 +38,7 @@ checks:
     evidence: Exact implementation fe727d5 passed the networkless four-pair current/candidate client/server canary in Security run 33235799207 job 99056449824; the retained report and GitHub artifact archive are bound by distinct SHA-256 digests and production mutation is false.
   - id: operations_escrow
     status: pending
-    evidence: Operations has not copied the candidate archive, signature, signing key, README, exact rollback package, manifest, and verification instructions to approved offline escrow or independently rechecked them.
+    evidence: ADR-0093 and the closed 30-entry no-network verifier now make the shared Borg/OpenSSH byte inventory executable, but operations has not staged or independently reviewed the private inventory, signing fingerprint, dependency evidence, offline custody, recovery usability, and approvals required for actual escrow.
   - id: production_remote_compatibility
     status: pending
     evidence: The candidate has not yet exercised every real provider remote binary, repository, archive list, repository check, dry-run maintenance path, or bounded restore path used by the production controllers.

@@ -25,6 +25,25 @@ binary, Debian rollback package, checksums, and this runbook to approved offline
 escrow. A different person rechecks the official signing fingerprint, every
 digest, executable ownership/mode, version, and dynamic libraries.
 
+Use the shared closed private layout in
+`infrastructure/governance/recovery-artifact-escrow-v1.yaml`; it also carries the
+matching Borg recovery inputs so one dependency cannot be silently omitted.
+From a clean exact commit, copy the policy to `escrow-policy.yaml` in the private
+root and run:
+
+```sh
+npm run recovery-artifact-escrow:inventory -- --bundle /absolute/private/escrow
+npm run recovery-artifact-escrow:verify -- \
+  --bundle /absolute/private/escrow \
+  --out /absolute/new/minimized-report.json
+```
+
+Keep `manifest.json` private. The minimized report proves only closed-set byte
+inventory. It cannot prove the signing fingerprint, dynamic-library review,
+physical offline copies, independent custody, or restoration. A local directory
+or GitHub artifact is not approved escrow, and neither candidate may be selected
+until the separate private and second-person reviews pass.
+
 ## Real-provider preflight
 
 Inventory every `ssh`, `RSYNC_RSH`, `BORG_RSH`, systemd unit, timer, wrapper,

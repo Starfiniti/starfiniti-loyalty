@@ -38,7 +38,7 @@ checks:
     evidence: Exact candidate commit 275c9e8 passed the digest-locked current/candidate compatibility canary in Security run 33241151463 job 99070606112; the retained report and GitHub artifact archive have distinct SHA-256 bindings and production mutation is false.
   - id: operations_escrow
     status: pending
-    evidence: Operations has not escrowed the exact source, signature, release key, build inputs, candidate binary, rollback package, digest inventory, and verification instructions.
+    evidence: ADR-0093 and the closed 30-entry no-network verifier now make the shared Borg/OpenSSH byte inventory executable, but operations has not staged or independently reviewed the private inventory, signing fingerprint, dependency evidence, offline custody, recovery usability, and approvals required for actual escrow.
   - id: real_provider
     status: pending
     evidence: The candidate has not connected to every approved real recovery endpoint with the exact known-host, key, forced-command, rsync, Borg, retry, timeout, and monitoring behavior.

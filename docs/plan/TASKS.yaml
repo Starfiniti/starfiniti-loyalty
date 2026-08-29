@@ -3623,6 +3623,7 @@ tasks:
         a separate exact clean-commit installed-state snapshot binds both opaque recovery endpoints all six recovery providers public versions and exact executable provenance without retaining SSH routes command output identifiers or asserting candidate review impact approval or mutation,
         the installed BorgBackup impact review selects one exact upstream-signed fixed candidate without mixing Debian suites while a digest-bound disposable build and networkless current/candidate client/server canary preserve the exact Debian rollback client and prohibit production authority,
         the installed OpenSSH impact review distinguishes applicable client exposure from disabled agent forwarding multiplexed remote forwarding and tunnel behavior then selects only an upstream-signed side-by-side client while preserving both distribution daemons the exact Debian rollback client host keys known-host data and production authority,
+        a closed private BorgBackup and OpenSSH recovery escrow inventory binds all candidate rollback signing dependency build runbook decision evidence and canary inputs to exact plan or clean-commit bytes through no-network no-copy no-execution stable descriptor verification while offline custody fingerprint dependency second-person production and escrow-complete claims remain false,
         the Proxmox review records every current published advisory gap and one exact dependency-complete zero-removal candidate while a disposable no-install canary independently proves the fresh signed-index-to-package byte chain and a separate route-free production preflight proves the exact current starting state and twelve-action zero-removal zero-downgrade simulation without refresh download install repository change service control reboot or production mutation,
         a separate route-free stable whole-host inventory accounts for every anonymous QEMU and LXC consumer profile plus storage management-service network HA kernel KVM IOMMU boot and local-tool facts without retaining VM IDs names addresses MACs paths routes credentials raw configuration or raw command output and without claiming compatibility,
         an isolated-equivalent-physical-host rehearsal contract binds the exact candidate immutable package/preflight/inventory baselines released Starfiniti v0.1.11 reviewed Supabase self-hosted v0.8.0 compatibility Compose and linux/amd64 image set plus a fresh minimized dependency preflight and same-projection production inventory read no more than five minutes old while synthetic guests cover every anonymous behavior profile only the application and database use separately approved read-only recovery inputs and an out-of-process auto-destroy lease equals the approval expiry,
@@ -3657,6 +3658,8 @@ tasks:
         npm run openssh-client-security:validate,
         bootstrap candidate digest discovery followed by an exact candidate-plan internal-network current/candidate client to current Ubuntu server artifact with strict host-key public-key forced-command and forwarding-disabled proof plus exact container network volume and image teardown,
         independently reviewed OpenSSH artifact escrow every real rsync and Borg consumer exact path digest options provider behavior monitoring rollback and isolated full-service restore evidence before candidate activation,
+        npm run recovery-artifact-escrow:validate,
+        clean-commit private inventory and independently repeated minimized verification report followed by separate signing fingerprint dependency offline custody recovery and second-person review before either operations escrow row can pass,
         npm run proxmox-security:update:validate,
         npm run proxmox-security:packages:validate,
         exact-head disposable Proxmox package-byte and signed-repository canary artifact with zero retained package bytes and no production route credential installation or mutation,
@@ -3698,6 +3701,8 @@ tasks:
         docs/operations/PROXMOX_SECURITY_UPDATE.md,
         docs/operations/BORGBACKUP_SECURITY_UPDATE.md,
         docs/operations/OPENSSH_CLIENT_SECURITY_UPDATE.md,
+        docs/architecture/ADR/0093-private-recovery-artifact-escrow-verification.md,
+        infrastructure/governance/recovery-artifact-escrow-v1.yaml,
       ]
     evidence:
       [
@@ -3742,6 +3747,8 @@ tasks:
         scripts/validate-openssh-client-security-plan.mjs,
         scripts/run-openssh-client-security-canary.mjs,
         docs/plan/evidence/M16/openssh-client-security.yaml,
+        docs/plan/evidence/M16/recovery-artifact-escrow.yaml,
+        scripts/verify-recovery-artifact-escrow.mjs,
         docs/plan/evidence/M16/proxmox-security-review-2026-08-29.md,
         ADR-0080 preserves the exact V1 production score under SHA-256 and the V2 validator separately recomputes deployed production at 54/100 and the exact integration candidate at 83/100 while both remain completion-ineligible,
         product-score governance implementation d1a78c04cefacad203c786edee85c4b3a20787a1 passed the complete local 983-test gate 86-migration and 68-pgTAP-file static validation 1069-file secret scan zero-vulnerability production audit licence validation formatting and diff review without a runtime schema or production change,

@@ -79,6 +79,22 @@ historical evidence.
 
 ## Monthly review
 
+### Private recovery artifact escrow preparation
+
+ADR-0093 makes the BorgBackup and OpenSSH escrow byte inventory executable
+without giving the repository a production route or custody authority. Validate
+the contract with `npm run recovery-artifact-escrow:validate`. Operations then
+stages the exact closed catalogue outside the repository, copies the exact policy
+as `escrow-policy.yaml`, and runs the inventory and verification commands in the
+provider runbooks. The tool has no network or artifact-copy path and writes only
+the private manifest plus an external minimized report.
+
+Do not commit the private manifest, paths, operator identities, endpoints, or
+custody details. A passing byte inventory leaves signing-fingerprint,
+dependency, offline-copy, second-review, recovery, rollout, and
+`operationsEscrowComplete` false. Those are independent monthly-review inputs,
+not booleans supplied by the inventory operator.
+
 Close each calendar month within ten days. The initial M16 gate requires two distinct consecutive months; one review copied twice does not qualify.
 
 1. Bind the period, exact repository/release identities, source digests, reviewer, and observation time.

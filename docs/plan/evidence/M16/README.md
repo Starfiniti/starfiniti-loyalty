@@ -187,3 +187,22 @@ a bounded no-follow descriptor. Synthetic compatibility now passes. Escrow, exac
 real-provider rsync and Borg behavior, every consumer, rollout,
 monitoring, rollback, isolated restore, and independent review remain pending;
 production and the M16 score are unchanged.
+
+ADR-0093 closes the repository tooling gap between those passing synthetic
+canaries and a future operations-controlled offline handoff. The exact
+[`recovery-artifact-escrow.yaml`](recovery-artifact-escrow.yaml) evidence and
+`npm run recovery-artifact-escrow:validate` bind a closed 30-entry Borg/OpenSSH
+catalogue: signed candidate and rollback bytes, candidate executables, signing
+material, dependency inventories, plans, build/verifier inputs, runbooks, ADRs,
+evidence, and retained canary reports. Inventory and verification use bounded
+stable no-follow descriptors, reject links and unexpected members, compare
+repository inputs to a clean exact commit, and emit only aggregate minimized
+facts outside the private bundle.
+
+No real private inventory or minimized report exists yet. The verifier has no
+network, artifact-copy, execution, installation, production-route, credential,
+mutation, or deletion path. A passing future byte inventory will still leave
+signing-fingerprint, dependency, offline-copy/custody, recovery-usability,
+second-person, production, and `operationsEscrowComplete` gates false. The
+BorgBackup and OpenSSH operations-escrow rows, R-004, M16 score, and production
+state therefore remain unchanged.

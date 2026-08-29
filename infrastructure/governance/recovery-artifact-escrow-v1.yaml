@@ -1,0 +1,238 @@
+schema: starfiniti.recovery-artifact-escrow-plan.v1
+version: 1
+status: ready
+scope: [borgbackup, openssh-client]
+bounds:
+  maximumEntries: 30
+  maximumTotalBytes: 314572800
+  maximumManifestBytes: 262144
+  maximumPolicyBytes: 131072
+  maximumReportBytes: 65536
+  readChunkBytes: 65536
+filesystem:
+  bundleMustBeAbsolute: true
+  bundleMustBeOutsideRepository: true
+  bundleRootMayNotBeFilesystemRoot: true
+  rejectSymlinks: true
+  rejectHardlinks: true
+  rejectSpecialFiles: true
+  rejectUnexpectedMembers: true
+  rejectCaseCollisions: true
+  rejectGroupOrOtherWritableOnPosix: true
+  policyCopyPath: escrow-policy.yaml
+  privateManifestPath: manifest.json
+authority:
+  networkAccess: false
+  artifactCopy: false
+  artifactExecution: false
+  productionAccess: false
+  productionMutation: false
+  productionAuthority: false
+  inventoryVerificationCompletesEscrow: false
+  signingFingerprintReviewRequired: true
+  dependencyReviewRequired: true
+  offlineCopyReviewRequired: true
+  secondReviewerRequired: true
+providers:
+  - id: borgbackup
+    candidateCommit: fe727d53422a90f939218e510c9a028c4ba915ff
+    plan:
+      path: infrastructure/testing/borgbackup-security/plan.yaml
+      sha256: f4a5ce0a8de4a34f6014cba06574292237821e0d1e17f1b67c30410a656ef1a3
+    entries:
+      - id: borg-candidate-archive
+        relativePath: borgbackup/candidate.tgz
+        role: candidate-source
+        expected: fixed
+        sha256: b6cba6b5eee19d51fbf4d89c6090dd40647b856755fffe2e26417365536f2c58
+        exactBytes: 29702061
+        maximumBytes: 29702061
+      - id: borg-candidate-signature
+        relativePath: borgbackup/candidate.tgz.asc
+        role: detached-signature
+        expected: fixed
+        sha256: 9e7027a2573028e67d9138ccd3de4008d3fad22a5840ac4711f7d56fe89f850a
+        maximumBytes: 262144
+      - id: borg-candidate-readme
+        relativePath: borgbackup/00_README.txt
+        role: signing-instructions
+        expected: fixed
+        sha256: 9245dd1cfffb1b40d7f1b112e9e917902f2ca255b63a417f671d3da3a12e204a
+        maximumBytes: 262144
+      - id: borg-signing-key
+        relativePath: borgbackup/signer.asc
+        role: signing-key
+        expected: private-manifest
+        signingFingerprint: 6D5BEF9ADD2075805747B70F9F88FB52FAF7B393
+        maximumBytes: 1048576
+      - id: borg-candidate-executable
+        relativePath: borgbackup/borg.exe
+        role: candidate-executable
+        expected: fixed
+        sha256: e0a23534bf28aa90940f749bb25dbbeecd401e9bf1de1dd8872cedc45f98718d
+        maximumBytes: 100663296
+      - id: borg-rollback-package
+        relativePath: borgbackup/borgbackup_1.4.0-5_amd64.deb
+        role: rollback-package
+        expected: fixed
+        sha256: 51e1cbdee1fccb31e9c63b93fda81d5fffb14289dc31ba27984e04ebb0c85733
+        maximumBytes: 33554432
+      - id: borg-dependency-inventory
+        relativePath: borgbackup/dependency-inventory.json
+        role: dependency-inventory
+        expected: private-manifest
+        contentSchema: starfiniti.recovery-candidate-dependency-inventory.v1
+        maximumBytes: 262144
+      - id: borg-plan
+        relativePath: borgbackup/repository/plan.yaml
+        role: reviewed-plan
+        expected: repository-file
+        sourcePath: infrastructure/testing/borgbackup-security/plan.yaml
+        maximumBytes: 262144
+      - id: borg-build-instructions
+        relativePath: borgbackup/repository/Dockerfile
+        role: build-instructions
+        expected: repository-file
+        sourcePath: infrastructure/testing/borgbackup-security/Dockerfile
+        maximumBytes: 262144
+      - id: borg-tree-verifier
+        relativePath: borgbackup/repository/verify-tree.py
+        role: source-tree-verifier
+        expected: repository-file
+        sourcePath: infrastructure/testing/borgbackup-security/verify-tree.py
+        maximumBytes: 262144
+      - id: borg-canary-runner
+        relativePath: borgbackup/repository/run-canary.mjs
+        role: compatibility-runner
+        expected: repository-file
+        sourcePath: scripts/run-borgbackup-security-canary.mjs
+        maximumBytes: 524288
+      - id: borg-runbook
+        relativePath: borgbackup/repository/runbook.md
+        role: operations-runbook
+        expected: repository-file
+        sourcePath: docs/operations/BORGBACKUP_SECURITY_UPDATE.md
+        maximumBytes: 262144
+      - id: borg-adr
+        relativePath: borgbackup/repository/ADR-0091.md
+        role: architecture-decision
+        expected: repository-file
+        sourcePath: docs/architecture/ADR/0091-signed-borgbackup-security-candidate.md
+        maximumBytes: 262144
+      - id: borg-evidence
+        relativePath: borgbackup/repository/evidence.yaml
+        role: candidate-evidence
+        expected: repository-file
+        sourcePath: docs/plan/evidence/M16/borgbackup-security.yaml
+        maximumBytes: 262144
+      - id: borg-canary-report
+        relativePath: borgbackup/repository/canary-report.json
+        role: compatibility-report
+        expected: repository-file
+        sourcePath: docs/plan/evidence/M16/runs/borgbackup-security-fe727d5-2026-08-29T051944Z.json
+        maximumBytes: 262144
+  - id: openssh-client
+    candidateCommit: 275c9e8ebbd3d68d609976e04d31751c378b2967
+    plan:
+      path: infrastructure/testing/openssh-client-security/plan.yaml
+      sha256: 130df45c95938a41e88558b313b1a4707dfd7c0701f43fe4187ceba20a3bd625
+    entries:
+      - id: openssh-source-archive
+        relativePath: openssh-client/source.tar.gz
+        role: candidate-source
+        expected: fixed
+        sha256: d44d28a839ea9daf969cc69150fde59910b2b39361dad81a3bd6cbd19218db11
+        exactBytes: 2333659
+        maximumBytes: 2333659
+      - id: openssh-source-signature
+        relativePath: openssh-client/source.tar.gz.asc
+        role: detached-signature
+        expected: fixed
+        sha256: 77b48fd2657520db9229b82bc1bab3f5c00b1b6f7ac2dbb9111b1c8584d6e335
+        maximumBytes: 262144
+      - id: openssh-release-key
+        relativePath: openssh-client/release-key.asc
+        role: signing-key
+        expected: fixed
+        sha256: c4a6f4692c9b8e75ec096add049fe0314b3ceff9410321f1e85907cf7a864269
+        signingFingerprint: 7168B983815A5EEF59A4ADFD2A3F414E736060BA
+        maximumBytes: 262144
+      - id: openssh-candidate-executable
+        relativePath: openssh-client/ssh
+        role: candidate-executable
+        expected: fixed
+        sha256: be9dd9ee2550e3fca2a6fa15edb5ab9303e42ac783ac766928fa5380971bf081
+        maximumBytes: 16777216
+      - id: openssh-rollback-package
+        relativePath: openssh-client/openssh-client_10.0p1-7+deb13u4_amd64.deb
+        role: rollback-package
+        expected: fixed
+        sha256: 8fff343654f86c3b3266f94cd338c7b4da2e386da029327815118ea00bce03b9
+        maximumBytes: 33554432
+      - id: openssh-dependency-inventory
+        relativePath: openssh-client/dependency-inventory.json
+        role: dependency-inventory
+        expected: private-manifest
+        contentSchema: starfiniti.recovery-candidate-dependency-inventory.v1
+        maximumBytes: 262144
+      - id: openssh-plan
+        relativePath: openssh-client/repository/plan.yaml
+        role: reviewed-plan
+        expected: repository-file
+        sourcePath: infrastructure/testing/openssh-client-security/plan.yaml
+        maximumBytes: 262144
+      - id: openssh-client-build-instructions
+        relativePath: openssh-client/repository/client.Dockerfile
+        role: build-instructions
+        expected: repository-file
+        sourcePath: infrastructure/testing/openssh-client-security/client.Dockerfile
+        maximumBytes: 262144
+      - id: openssh-server-fixture
+        relativePath: openssh-client/repository/server.Dockerfile
+        role: compatibility-server-fixture
+        expected: repository-file
+        sourcePath: infrastructure/testing/openssh-client-security/server.Dockerfile
+        maximumBytes: 262144
+      - id: openssh-source-verifier
+        relativePath: openssh-client/repository/verify-source.py
+        role: source-tree-verifier
+        expected: repository-file
+        sourcePath: infrastructure/testing/openssh-client-security/verify-source.py
+        maximumBytes: 262144
+      - id: openssh-canary-runner
+        relativePath: openssh-client/repository/run-canary.mjs
+        role: compatibility-runner
+        expected: repository-file
+        sourcePath: scripts/run-openssh-client-security-canary.mjs
+        maximumBytes: 524288
+      - id: openssh-runbook
+        relativePath: openssh-client/repository/runbook.md
+        role: operations-runbook
+        expected: repository-file
+        sourcePath: docs/operations/OPENSSH_CLIENT_SECURITY_UPDATE.md
+        maximumBytes: 262144
+      - id: openssh-adr
+        relativePath: openssh-client/repository/ADR-0092.md
+        role: architecture-decision
+        expected: repository-file
+        sourcePath: docs/architecture/ADR/0092-side-by-side-openssh-recovery-client.md
+        maximumBytes: 262144
+      - id: openssh-evidence
+        relativePath: openssh-client/repository/evidence.yaml
+        role: candidate-evidence
+        expected: repository-file
+        sourcePath: docs/plan/evidence/M16/openssh-client-security.yaml
+        maximumBytes: 262144
+      - id: openssh-canary-report
+        relativePath: openssh-client/repository/canary-report.json
+        role: compatibility-report
+        expected: repository-file
+        sourcePath: docs/plan/evidence/M16/runs/openssh-client-security-275c9e8-2026-08-29T073759Z.json
+        maximumBytes: 262144
+automaticFails:
+  - the bundle policy or private manifest differs from the exact reviewed contract
+  - a required entry is absent extra duplicated case-colliding linked special mutable over-bound or digest-different
+  - a fixed artifact differs from its candidate plan or a repository instruction differs from the clean exact Git commit
+  - a private-manifest-bound key or dependency inventory is missing malformed empty or represented as independently reviewed
+  - a minimized report contains private paths identities endpoints raw content or production authority
+  - inventory verification is presented as offline custody signing-fingerprint dependency second-person production activation or operations escrow completion
