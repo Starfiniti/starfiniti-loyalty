@@ -71,9 +71,11 @@ The disposable canary must prove:
 The plan has three fail-closed phases. `bootstrap` permits only null endpoint
 digests and may retain one discovery report. `locked` requires those endpoint
 digests to equal the retained bootstrap report but still forbids a digest-lock
-report or candidate claim. `candidate` requires a second exact-plan run whose
-report reproduces every pinned digest. The evidence keeps bootstrap discovery
-and digest-lock canaries separate so neither can be substituted for the other.
+report or candidate claim. `candidate` requires a second run of that exact
+digest-locked plan whose report reproduces every pinned digest; the candidate
+evidence binds that report to the derived locked-plan digest and the exact
+implementation commit. The evidence keeps bootstrap discovery and digest-lock
+canaries separate so neither can be substituted for the other.
 
 The accepted ADR-0073 package plan, report, and V2 escrow evidence remain
 historical inputs. They are not rewritten or relabelled as failed. ADR-0095

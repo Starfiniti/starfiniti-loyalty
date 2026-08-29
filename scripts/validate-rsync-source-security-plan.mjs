@@ -554,6 +554,12 @@ function bootstrapPlan(plan) {
   return validateRsyncSourcePlan(bootstrap);
 }
 
+function digestLockedPlan(plan) {
+  const locked = clone(plan);
+  locked.status = "locked";
+  return validateRsyncSourcePlan(locked);
+}
+
 function validateCanaryEvidence(
   canary,
   canaryPlan,
@@ -697,7 +703,7 @@ function validateEvidence(evidence, plan) {
     }
     validateCanaryEvidence(
       evidence.digestLockCanary,
-      plan,
+      digestLockedPlan(plan),
       evidence.observedAt,
       evidence.candidate.commit,
     );
@@ -839,8 +845,7 @@ function selfTest() {
   const bootstrapReport = JSON.parse(
     readFileSync(join(root, evidence.bootstrapCanary.report.path), "utf8"),
   );
-  const lockedPlan = clone(plan);
-  lockedPlan.status = "locked";
+  const lockedPlan = digestLockedPlan(plan);
   lockedPlan.candidate.endpoints.forEach((endpoint, index) => {
     endpoint.executableSha256 =
       bootstrapReport.endpoints[index].candidateExecutableSha256;
@@ -849,10 +854,15 @@ function selfTest() {
   });
   validateRsyncSourcePlan(lockedPlan);
   const lockedEvidence = clone(evidence);
+  lockedEvidence.candidate.commit = null;
   lockedEvidence.plan.sha256 = planDigest(lockedPlan);
+  lockedEvidence.digestLockCanary = null;
   lockedEvidence.checks.find(
     (check) => check.id === "candidate_digest_lock",
   ).status = "passed";
+  lockedEvidence.checks.find(
+    (check) => check.id === "digest_lock_canary",
+  ).status = "pending";
   validateEvidence(lockedEvidence, lockedPlan);
   const mismatchedLock = clone(lockedPlan);
   mismatchedLock.candidate.endpoints[0].executableSha256 = "7".repeat(64);
@@ -862,6 +872,11 @@ function selfTest() {
   const candidatePlan = clone(lockedPlan);
   candidatePlan.status = "candidate";
   assert.throws(() => validateEvidence(lockedEvidence, candidatePlan));
+  if (plan.status === "candidate") {
+    const substitutedCanary = clone(evidence);
+    substitutedCanary.digestLockCanary = clone(evidence.bootstrapCanary);
+    assert.throws(() => validateEvidence(substitutedCanary, plan));
+  }
   const mutations = [
     (item) => {
       item.candidate.source.sha256 = "0".repeat(64);

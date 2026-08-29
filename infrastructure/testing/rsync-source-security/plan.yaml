@@ -1,5 +1,5 @@
 schema: starfiniti.rsync-source-security-plan.v1
-status: locked
+status: candidate
 profile: privileged-recovery-transport
 architecture: amd64
 baseImages:

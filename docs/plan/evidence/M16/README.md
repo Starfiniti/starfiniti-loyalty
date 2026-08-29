@@ -232,14 +232,20 @@ binds exact signed upstream rsync 3.5.0 source, a closed safe-tree manifest,
 separate Debian 13 and Ubuntu 24.04 native builds, fixed side-by-side paths,
 unchanged distribution rollback files, an internal no-port two-pair canary, and
 exact teardown. Bootstrap Security run `33247037670`, recovery job
-`99086186056`, passed and its exact retained report now binds the separate
-Debian/Ubuntu executable hashes and shared wrapper hash. The evidence lifecycle
-keeps this discovery proof distinct from the still-pending digest-locked Linux
-rerun. Locked plan SHA-256
+`99086186056`, passed and its exact retained report binds the separate
+Debian/Ubuntu executable hashes and shared wrapper hash. Locked plan SHA-256
 `46adc671b15fddead44c014edb334dc815ef14ee4d17bcdc3f18dd2ffb9c120f`
-now makes every discovered endpoint hash a mandatory build input, but the plan
-cannot become a candidate until that second exact-plan run reproduces every
-hash. A future V3 operations bundle must
-retain both native binaries and all source/build/rollback evidence; V2 remains
+made every discovered endpoint hash a mandatory build input. Security run
+`33248120835`, recovery job `99089014687`, then rebuilt that exact locked plan,
+reproduced all three hashes, passed both bounded transfer pairs and confinement
+rejection, and completed teardown. Artifact `9713549190` has archive SHA-256
+`79862829d75524c29b63a389b90e7eff379048219ee32f82bb66f1ae5ed70452`;
+the exact retained report has file SHA-256
+`54c55fdb56170308eca7becc5120254e540f8f58de0b7d03448688097149a2de`.
+Candidate plan SHA-256
+`cb6fee76b837c5274172182d7a58de71d2ccf13901722f856833b2ce6e7e0912`
+binds the distinct bootstrap and digest-lock canaries without rewriting either.
+A future V3 operations bundle must retain both native binaries and all
+source/build/rollback evidence; V2 remains
 immutable historical evidence. No production access, mutation, or authority is
 claimed, and IMP-010, R-004, M16, and the product score remain unchanged.
