@@ -1,12 +1,12 @@
 schema: starfiniti.capacity-evidence.v1
 status: in_progress
-observedAt: 2026-08-27T06:45:17Z
+observedAt: 2026-08-29T19:01:39Z
 currentProduction:
   release: v0.1.11
   applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
 candidate:
-  branch: codex/m15-capacity-envelope
-  commit: 10b07286c221740c7261f7a704465ca6329669c8
+  branch: codex/enterprise-roadmap-integration
+  commit: c8e343997e15762c1164e3ccbb780b43ac092787
   approvedEnvironment: false
   capacityClaimApproved: false
 workload:
@@ -52,7 +52,7 @@ checks:
     evidence: The passing boundary must be repeated with a mature independent fixed-arrival load driver before the supported envelope is published.
   - id: exact_head_ci
     status: passed
-    evidence: GitHub Actions run 33046822172 passed all seven jobs at exact implementation commit 10b07286c221740c7261f7a704465ca6329669c8 after adversarial review.
+    evidence: Exact implementation commit c8e343997e15762c1164e3ccbb780b43ac092787 passed CI run 33269532474, Security run 33269532376, and CodeQL check 99145597424; all 12 PR checks were green, including the network-disabled digest-pinned Linux k6 image and script inspection.
   - id: approved_environment
     status: pending
     evidence: A disposable production-like target and bounded run window require approval.

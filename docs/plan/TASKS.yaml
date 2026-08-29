@@ -3262,7 +3262,7 @@ tasks:
             infrastructure/testing/capacity/k6-crosscheck.js,
             docs/architecture/ADR/0104-pinned-k6-independent-capacity-crosscheck.md,
             docs/operations/CAPACITY_AND_LOAD.md,
-            exact-head GitHub Actions run 33046822172 at 10b07286c221740c7261f7a704465ca6329669c8 passed all seven jobs,
+            exact implementation commit c8e343997e15762c1164e3ccbb780b43ac092787 passed CI run 33269532474 Security run 33269532376 and CodeQL check 99145597424 with all 12 PR checks green including digest-pinned network-disabled Linux k6 inspection,
           ]
       - id: M15-S02-FAULT-INJECTION
         title: Bound chaos recovery and retry storms

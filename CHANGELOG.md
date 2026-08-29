@@ -22,6 +22,9 @@
   capacity/reconciliation gate remain pending, so no capacity number,
   deployment, production access, checkout change, or loyalty-value mutation is
   claimed.
+  Exact implementation commit `c8e3439` passed CI `33269532474`, Security
+  `33269532376`, and CodeQL `99145597424`; all 12 PR checks were green and the
+  Linux baseline successfully completed the pinned image/script inspection.
 
 - Added ADR-0103 and an exact Supabase repository patch refresh: CLI 2.116.0,
   supabase-js 2.112.4, and SSR 0.12.5, including every matching platform binary
