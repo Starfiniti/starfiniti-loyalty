@@ -14,8 +14,13 @@
   closed on CodeQL alert 25: package input metadata was checked before opening
   the file. The correction now opens each source/archive descriptor first with
   no-follow where available, bounds and reads that descriptor, then verifies
-  descriptor/path identity after the read. Exact-head rerun and the first
-  approved corrected tag remain pending. Production and v0.1.11 are unchanged.
+  descriptor/path identity after the read. Correction `695067c` passed CI
+  `33273056805`, Security `33273056780`, and external CodeQL `99155114588` with
+  all twelve PR checks green; the minimized CodeQL artifact contains zero
+  findings and alert 25 is fixed. M15-S03 now has 19 of 27 checks passing. A
+  real approved corrected tag, its attestations, production review, independent
+  penetration testing/retest, reconciliation, and owner approval remain
+  pending. Production and v0.1.11 are unchanged.
 
 - ADR-0103 refreshes only the repository Supabase boundary: CLI 2.116.0,
   supabase-js 2.112.4, and SSR 0.12.5 are exact-pinned with aligned platform and

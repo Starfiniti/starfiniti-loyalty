@@ -42,6 +42,7 @@ const requiredChecks = new Set([
   "deployable_image_boundary",
   "isolated_dast_plan",
   "release_evidence_contract",
+  "woocommerce_release_version_contract",
   "fail_closed_manifest",
   "exact_head_ci",
   "codeql_sast",
@@ -96,6 +97,19 @@ const expectedReleaseFiles = [
   "starfiniti-loyalty-third-party-notices.md",
   "starfiniti-loyalty.zip",
 ].sort();
+const wooCommerceReleaseCorrection = {
+  artifactArchiveDigest:
+    "sha256:7378735d6f2be12a93afee3a279ad803654345dfdaa1fbb86d7597bf9187039d",
+  artifactId: "9720688702",
+  commit: "695067cb26a5fddb32cc30af159962d17a7a4402",
+  ciRun: "33273056805",
+  codeqlAlert: "alert 25",
+  codeqlCheck: "99155114588",
+  rejectedSecurityRun: "33272662903",
+  securityRun: "33273056780",
+  summarySha256:
+    "81b9f181928f0319bbec0c329e2a1d5f15929649c7cbfc3bf4f2ece36ff74361",
+};
 const pendingLanguagePattern =
   /\b(await|pending|remain|requires?|must|not yet|has not|will|future|todo)\b/iu;
 const uuidPattern =
@@ -1073,6 +1087,18 @@ export function validateDocument(
   }
   const missing = [...requiredChecks].filter((id) => !seen.has(id));
   if (missing.length) fail(`missing check ${missing.join(", ")}`);
+  const wooCommerceVersionCheck = candidate.checks.find(
+    (check) => check.id === "woocommerce_release_version_contract",
+  );
+  if (
+    wooCommerceVersionCheck?.status !== "passed" ||
+    Object.values(wooCommerceReleaseCorrection).some(
+      (value) => !wooCommerceVersionCheck.evidence.includes(value),
+    ) ||
+    !candidateRisks.includes("| R-062 |")
+  ) {
+    fail("WooCommerce release-version evidence is not exact or risk-bound");
+  }
   if (
     !Array.isArray(candidate.automaticFails) ||
     candidate.automaticFails.length < 18 ||
@@ -1217,6 +1243,27 @@ if (process.argv.includes("--self-test")) {
   const duplicateCheck = structuredClone(evidence);
   duplicateCheck.checks.push(structuredClone(duplicateCheck.checks[0]));
   expectRejected(duplicateCheck, "duplicate check", "duplicate check");
+
+  const weakWooCommerceVersionEvidence = structuredClone(evidence);
+  weakWooCommerceVersionEvidence.checks.find(
+    (check) => check.id === "woocommerce_release_version_contract",
+  ).evidence =
+    "The package boundary passed an unspecified run without exact correction, rejection, or security identities.";
+  expectRejected(
+    weakWooCommerceVersionEvidence,
+    "release-version evidence",
+    "weak WooCommerce release-version evidence",
+  );
+
+  const missingWooCommerceRisk = risksText.replace("| R-062 |", "| R-999 |");
+  expectRejected(
+    evidence,
+    "release-version evidence",
+    "unbound WooCommerce release-version risk",
+    plan,
+    tasks,
+    missingWooCommerceRisk,
+  );
 
   const forwardPass = structuredClone(evidence);
   forwardPass.checks[0].evidence =

@@ -167,7 +167,7 @@
       "evaluatedAt": "2026-08-29",
       "release": null,
       "branch": "codex/enterprise-roadmap-integration",
-      "sourceCommit": "cbe89b4a61c657979b2ba317e6a5b7561dfa801b",
+      "sourceCommit": "695067cb26a5fddb32cc30af159962d17a7a4402",
       "score": 83,
       "target": 90,
       "minimumCategoryRatio": 0.8,

@@ -63,6 +63,9 @@ checks:
   - id: release_evidence_contract
     status: passed
     evidence: The tagged workflow derives the exact connector version from the numeric release tag, builds and independently verifies its closed ZIP inventory and four version surfaces, builds both images locally, inventories reciprocal components, verifies exact corresponding source before registry login, then checksums and attests all seven files plus both image digests.
+  - id: woocommerce_release_version_contract
+    status: passed
+    evidence: Exact correction 695067cb26a5fddb32cc30af159962d17a7a4402 passed CI run 33273056805 including baseline job 99154906373's independent synthetic package build and verification, Security run 33273056780, and external CodeQL check 99155114588 with all twelve PR checks green; prior Security run 33272662903 failed closed on alert 25, while corrected minimized artifact 9720688702 has archive digest sha256:7378735d6f2be12a93afee3a279ad803654345dfdaa1fbb86d7597bf9187039d, zero findings, and summary SHA-256 81b9f181928f0319bbec0c329e2a1d5f15929649c7cbfc3bf4f2ece36ff74361.
   - id: fail_closed_manifest
     status: passed
     evidence: Repository validators reject drift-sensitive evidence, false completion, missing checks, unsafe DAST, optimizer reintroduction, unplanned reciprocal components, incomplete source inputs, and release publication before source verification.

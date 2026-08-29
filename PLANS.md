@@ -9,11 +9,14 @@ from the release tag only while packaging, and independently verifies the
 plugin header, runtime constant, translation template, readme stable tag,
 closed non-test inventory, regular-file entry types, size bounds, and
 reproducibility. CI uses a synthetic numeric version and release evidence must
-prove that the connector version equals the tag. Focused local package,
-workflow, architecture, security-evidence, lint, and format gates are being
-closed before exact-head CI. Historical release assets remain immutable; no
-release, deployment, WordPress installation, VM, database, checkout path, or
-loyalty value changed.
+prove that the connector version equals the tag. The first exact Security run
+`33272662903` rejected the initial reader's metadata/open race; descriptor-first
+correction `695067c` then passed CI `33273056805`, Security `33273056780`, and
+external CodeQL `99155114588` with all twelve PR checks green and PR #57
+merge-clean. The whole-product candidate is rescored at an unchanged 83/100
+because no real tag or live evidence was added. Historical release assets remain
+immutable; no release, deployment, WordPress installation, VM, database,
+checkout path, or loyalty value changed.
 
 ADR-0103 is the active safe M16 Supabase client/toolchain slice. Official review
 found current patch releases for CLI 2.116.0, supabase-js 2.112.4, and SSR

@@ -13,9 +13,12 @@
   must prove tag/plugin equality. Exact Security run `33272662903` then found a
   High file metadata/open race in the new reader; the corrected boundary opens
   read-only/no-follow descriptors first and reconciles path identity only after
-  the bounded descriptor read. The complete local gate passes; exact-head rerun
-  and a real approved corrected tag remain pending. No release, deployment, or
-  production state changed.
+  the bounded descriptor read. Correction `695067c` passed CI `33273056805`,
+  Security `33273056780`, and external CodeQL `99155114588`; all twelve PR
+  checks are green, the minimized CodeQL artifact has zero findings, and PR #57
+  is merge-clean. The candidate remains 83/100 because a real corrected tag and
+  live evidence are still absent. No release, deployment, or production state
+  changed.
 
 - Refreshed M16 after the material M15 capacity change without inflating product
   readiness. The V2 score now binds exact integrated candidate `cbe89b4` and

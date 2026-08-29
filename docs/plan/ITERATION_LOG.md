@@ -26,8 +26,12 @@
   CodeQL High alert 25 (`js/file-system-race`) because it checked pathname
   metadata before opening each input. The refutation fix opens with read-only
   no-follow flags first, validates and reads the descriptor, and only then
-  reconciles final path identity. The complete local gate passes again; fresh
-  exact-head automation remains required.
+  reconciles final path identity. Correction
+  `695067cb26a5fddb32cc30af159962d17a7a4402` passed CI `33273056805`,
+  Security `33273056780`, and external CodeQL `99155114588`; all twelve PR
+  checks are green, alert 25 is fixed, and the fresh minimized CodeQL artifact
+  records zero findings. Product readiness remains 83/100 because no real tag
+  or live evidence was added.
 
 ## 2026-08-29 — Supabase client/toolchain patch review
 
