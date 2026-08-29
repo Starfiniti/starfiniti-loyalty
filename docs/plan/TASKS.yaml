@@ -3213,7 +3213,7 @@ tasks:
         status: in_progress
         dependencies: []
         hypothesis: A fixed-arrival workload bound to exact infrastructure, data shape, code, and reconciliation evidence prevents unsupported capacity claims and exposes overload before customer value drifts.
-        baseline: Product SLO targets exist but there is no reproducible mixed-workload runner or fail-closed capacity evidence contract.
+        baseline: The repository fixed-arrival runner exists, but the independent-driver closeout previously accepted an arbitrary tool name and three unverified passing phase booleans without workload, schedule, threshold, drop, provenance, or false-authority evidence.
         targets:
           [
             every measured phase meets its latency error lag and concurrency thresholds,
@@ -3230,6 +3230,7 @@ tasks:
           [
             versioned workload and thresholds validate,
             runner self-test proves fixed scheduling signing bounds secret minimization and nonzero failure exits,
+            exact digest-pinned Grafana k6 contract independently reproduces every canonical phase scenario rate threshold and public request contract while retaining zero raw authority,
             approved measured run is bound to full candidate and configuration digests,
             driver saturation and target saturation are distinguished,
             reconciliation and two-run repeatability pass before a capacity limit is published,
@@ -3242,18 +3243,24 @@ tasks:
             request or credential material leaks into evidence,
             API acceptance is mistaken for ledger completion,
             unmatched workload or hardware evidence is reused,
+            an arbitrary independent tool label or hand-authored passing phase bypasses workload parity and dropped-iteration evidence,
           ]
         rollout: Run only on an approved disposable production-like environment, then observe the read-only production canary below the proven envelope.
         rollback: Stop the load driver, revoke its service and connector credentials, remove generated test tenants/customers through the approved test teardown, and preserve the immutable report and reconciliation evidence.
         verification:
           [
             npm run capacity:validate,
+            npm run capacity:k6:container:validate,
             npm run capacity:run -- --config infrastructure/testing/capacity/workload.yaml --origin-file <absolute-file> --credential-dir <absolute-directory> --approval-file <absolute-file> --out <absolute-file>,
+            npm run capacity:k6:run -- --config infrastructure/testing/capacity/workload.yaml --origin-file <absolute-file> --credential-dir <absolute-directory> --approval-file <absolute-file> --out <absolute-file>,
           ]
         evidence:
           [
             docs/plan/evidence/M15/capacity.yaml,
             infrastructure/testing/capacity/workload.yaml,
+            infrastructure/testing/capacity/k6-plan.yaml,
+            infrastructure/testing/capacity/k6-crosscheck.js,
+            docs/architecture/ADR/0104-pinned-k6-independent-capacity-crosscheck.md,
             docs/operations/CAPACITY_AND_LOAD.md,
             exact-head GitHub Actions run 33046822172 at 10b07286c221740c7261f7a704465ca6329669c8 passed all seven jobs,
           ]

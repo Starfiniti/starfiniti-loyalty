@@ -44,6 +44,9 @@ checks:
   - id: minimized_report
     status: passed
     evidence: Aggregate output excludes target origin request paths bodies headers selectors identifiers credentials cookies tokens signatures customer data and provider material.
+  - id: independent_driver_contract
+    status: passed
+    evidence: Grafana k6 2.2.0 is bound to the exact official image index and Linux amd64 manifest, translates every canonical phase and scenario to constant arrival rates, retains minimized aggregates only, and rejects tool workload schedule drop threshold authority or provenance drift.
   - id: independent_driver_crosscheck
     status: pending
     evidence: The passing boundary must be repeated with a mature independent fixed-arrival load driver before the supported envelope is published.

@@ -8,16 +8,16 @@ import {
   openSync,
   readFileSync,
   readSync,
+  realpathSync,
   rmSync,
-  statSync,
   writeFileSync,
 } from "node:fs";
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
-import { isAbsolute, join, resolve } from "node:path";
+import { dirname, isAbsolute, join, resolve } from "node:path";
 import { monitorEventLoopDelay, performance } from "node:perf_hooks";
 import { execFileSync } from "node:child_process";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 import YAML from "yaml";
 
@@ -54,11 +54,11 @@ function canonicalJson(value) {
   return value;
 }
 
-function documentDigest(value) {
+export function documentDigest(value) {
   return digest(JSON.stringify(canonicalJson(value)));
 }
 
-function repositoryState({ allowDirty = false } = {}) {
+export function repositoryState({ allowDirty = false } = {}) {
   let commit;
   let dirty;
   try {
@@ -116,8 +116,27 @@ function parseArguments(argv) {
   return parsed;
 }
 
-function readRegularFile(path, label, maximumBytes, ownerOnly = false) {
+export function readRegularFile(path, label, maximumBytes, ownerOnly = false) {
   if (!isAbsolute(path)) fail(`${label} path must be absolute`);
+  if (ownerOnly) {
+    const parent = dirname(path);
+    let parentStatus;
+    try {
+      parentStatus = lstatSync(parent);
+      if (
+        !parentStatus.isDirectory() ||
+        realpathSync(parent) !== resolve(parent) ||
+        (process.platform !== "win32" &&
+          ((parentStatus.mode & 0o022) !== 0 ||
+            (typeof process.getuid === "function" &&
+              parentStatus.uid !== process.getuid())))
+      ) {
+        fail(`${label} parent must be private and stable`);
+      }
+    } catch {
+      fail(`${label} parent is unreadable`);
+    }
+  }
   let descriptor;
   let initial;
   let value;
@@ -176,9 +195,11 @@ function readRegularFile(path, label, maximumBytes, ownerOnly = false) {
   if (
     ownerOnly &&
     process.platform !== "win32" &&
-    (initial.mode & 0o077) !== 0
+    ((initial.mode & 0o077) !== 0 ||
+      (typeof process.getuid === "function" &&
+        initial.uid !== process.getuid()))
   ) {
-    fail(`${label} must not grant group or other access`);
+    fail(`${label} must be caller-owned without group or other access`);
   }
   return value;
 }
@@ -457,7 +478,7 @@ export function validateWorkload(
   };
 }
 
-function readOrigin(path, allowLoopbackHttp = false) {
+export function readOrigin(path, allowLoopbackHttp = false) {
   const value = readRegularFile(path, "origin", 2_048, true).trim();
   let parsed;
   try {
@@ -487,7 +508,7 @@ function readOrigin(path, allowLoopbackHttp = false) {
   return parsed;
 }
 
-function readApproval(path, expected) {
+export function readApproval(path, expected) {
   const raw = readRegularFile(path, "approval", 16_384, true);
   let approval;
   try {
@@ -577,19 +598,28 @@ function readApproval(path, expected) {
   return { approval, approvalSha256: documentDigest(approval) };
 }
 
-function loadCredentials(workload, directory) {
+export function loadCredentials(workload, directory) {
   if (!isAbsolute(directory))
     fail("credential directory path must be absolute");
   let directoryStatus;
   try {
-    directoryStatus = statSync(directory);
+    directoryStatus = lstatSync(directory);
   } catch {
     fail("credential directory is unreadable");
   }
-  if (!directoryStatus.isDirectory())
+  if (
+    !directoryStatus.isDirectory() ||
+    realpathSync(directory) !== resolve(directory)
+  ) {
     fail("credential directory must be a directory");
-  if (process.platform !== "win32" && (directoryStatus.mode & 0o077) !== 0) {
-    fail("credential directory must not grant group or other access");
+  }
+  if (
+    process.platform !== "win32" &&
+    ((directoryStatus.mode & 0o077) !== 0 ||
+      (typeof process.getuid === "function" &&
+        directoryStatus.uid !== process.getuid()))
+  ) {
+    fail("credential directory must be caller-owned and private");
   }
   const credentials = new Map();
   for (const scenario of workload.scenarios) {
@@ -1384,22 +1414,46 @@ async function selfTest() {
       )
         throw error;
     }
+    if (process.platform !== "win32") {
+      const { chmodSync } = await import("node:fs");
+      const unsafeAuthorityDirectory = join(temporary, "unsafe-authority");
+      mkdirSync(unsafeAuthorityDirectory, { mode: 0o700 });
+      chmodSync(unsafeAuthorityDirectory, 0o777);
+      const unsafeOriginPath = join(unsafeAuthorityDirectory, "origin.txt");
+      writeFileSync(unsafeOriginPath, origin, { mode: 0o600 });
+      try {
+        readOrigin(unsafeOriginPath, true);
+        fail("self-test accepted authority below a writable parent");
+      } catch (error) {
+        if (
+          !(error instanceof Error) ||
+          !error.message.includes("parent is unreadable")
+        ) {
+          throw error;
+        }
+      }
+    }
   } finally {
     await new Promise((resolveClose) => server.close(resolveClose));
     rmSync(temporary, { recursive: true, force: true });
   }
 }
 
-const options = parseArguments(process.argv.slice(2));
-if (options.selfTest) {
-  await selfTest();
-  console.log(
-    "Validated fixed-arrival scheduling, all four adapters, approval binding, mutation boundaries, and minimized capacity reports.",
-  );
-} else {
-  const report = await execute(options);
-  console.log(
-    `Capacity run ${report.status}; aggregate report written without request or credential material.`,
-  );
-  if (report.status !== "passed") process.exitCode = 1;
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(resolve(process.argv[1])).href
+) {
+  const options = parseArguments(process.argv.slice(2));
+  if (options.selfTest) {
+    await selfTest();
+    console.log(
+      "Validated fixed-arrival scheduling, all four adapters, approval binding, mutation boundaries, and minimized capacity reports.",
+    );
+  } else {
+    const report = await execute(options);
+    console.log(
+      `Capacity run ${report.status}; aggregate report written without request or credential material.`,
+    );
+    if (report.status !== "passed") process.exitCode = 1;
+  }
 }

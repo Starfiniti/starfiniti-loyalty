@@ -13,6 +13,8 @@ import { fileURLToPath } from "node:url";
 
 import YAML from "yaml";
 
+import { loadPlan as loadK6Plan } from "./run-k6-capacity-crosscheck.mjs";
+
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const evidencePath = join(root, "docs/plan/evidence/M15/capacity.yaml");
 const workloadPath = join(
@@ -22,6 +24,7 @@ const workloadPath = join(
 const tasksPath = join(root, "docs/plan/TASKS.yaml");
 const evidence = YAML.parse(readFileSync(evidencePath, "utf8"));
 const workload = YAML.parse(readFileSync(workloadPath, "utf8"));
+const { plan: k6Plan } = loadK6Plan(workload);
 const tasks = YAML.parse(readFileSync(tasksPath, "utf8"));
 
 const requiredChecks = new Set([
@@ -30,6 +33,7 @@ const requiredChecks = new Set([
   "domain_adapters",
   "approval_target_guard",
   "minimized_report",
+  "independent_driver_contract",
   "independent_driver_crosscheck",
   "exact_head_ci",
   "approved_environment",
@@ -60,6 +64,24 @@ const pendingLanguagePattern =
 
 function fail(message) {
   throw new Error(`Capacity evidence invalid: ${message}`);
+}
+
+function exactKeys(value, expected, label) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    fail(`${label} must be an object`);
+  }
+  const actual = Object.keys(value).sort();
+  const wanted = [...expected].sort();
+  if (
+    actual.length !== wanted.length ||
+    actual.some((key, index) => key !== wanted[index])
+  ) {
+    fail(`${label} has an unexpected shape`);
+  }
+}
+
+function finiteNonnegative(value) {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0;
 }
 
 function canonicalJson(value) {
@@ -374,7 +396,29 @@ function validateIndependentRun(
   report,
   candidateEvidence,
   primaryOriginSha256,
+  candidateWorkload = workload,
 ) {
+  exactKeys(
+    report,
+    [
+      "schema",
+      "status",
+      "candidateCommit",
+      "workloadProfile",
+      "workloadSha256",
+      "originSha256",
+      "approvalSha256",
+      "targetClass",
+      "startedAt",
+      "finishedAt",
+      "tool",
+      "planSha256",
+      "scriptSha256",
+      "execution",
+      "phases",
+    ],
+    "independent capacity report",
+  );
   if (
     report?.schema !== "starfiniti.capacity-independent-run.v1" ||
     report.status !== "passed" ||
@@ -382,19 +426,268 @@ function validateIndependentRun(
     report.workloadProfile !== candidateEvidence.workload.profile ||
     report.workloadSha256 !== candidateEvidence.workload.sha256 ||
     report.originSha256 !== primaryOriginSha256 ||
-    typeof report.tool?.name !== "string" ||
-    report.tool.name.length < 2 ||
-    typeof report.tool?.version !== "string" ||
-    report.tool.version.length < 1 ||
-    report.tool.name === "node-fixed-arrival-v1" ||
-    !Array.isArray(report.phases)
+    report.targetClass !== "disposable_staging" ||
+    !/^[0-9a-f]{64}$/u.test(report.approvalSha256) ||
+    report.approvalSha256 === "0".repeat(64) ||
+    report.planSha256 !== digestDocument(k6Plan) ||
+    report.scriptSha256 !== k6Plan.script.sha256 ||
+    !Array.isArray(report.phases) ||
+    report.phases.length !== candidateWorkload.phases.length
   ) {
-    fail("independent capacity report identity tool or status is invalid");
+    fail("independent capacity report identity or status is invalid");
   }
-  const phases = new Map(report.phases.map((phase) => [phase.id, phase]));
-  for (const id of ["sustained", "burst", "recovery"]) {
-    if (phases.get(id)?.passed !== true) {
-      fail(`independent capacity report did not pass ${id}`);
+  exactUtcTimestamp(report.startedAt, "independent capacity startedAt");
+  exactUtcTimestamp(report.finishedAt, "independent capacity finishedAt");
+  if (Date.parse(report.finishedAt) <= Date.parse(report.startedAt)) {
+    fail("independent capacity report interval is invalid");
+  }
+  exactKeys(
+    report.tool,
+    [
+      "name",
+      "version",
+      "license",
+      "sourceRepository",
+      "releaseUrl",
+      "imageReference",
+      "imageIndexSha256",
+      "platformManifestSha256",
+      "imageIdSha256",
+      "architecture",
+    ],
+    "independent capacity tool",
+  );
+  if (
+    report.tool.name !== k6Plan.tool.name ||
+    report.tool.version !== k6Plan.tool.version ||
+    report.tool.license !== k6Plan.tool.license ||
+    report.tool.sourceRepository !== k6Plan.tool.sourceRepository ||
+    report.tool.releaseUrl !== k6Plan.tool.releaseUrl ||
+    report.tool.imageReference !== k6Plan.image.reference ||
+    report.tool.imageIndexSha256 !== k6Plan.image.indexSha256 ||
+    report.tool.platformManifestSha256 !==
+      (report.tool.architecture === "amd64"
+        ? k6Plan.image.linuxAmd64ManifestSha256
+        : k6Plan.image.linuxArm64ManifestSha256) ||
+    !/^[0-9a-f]{64}$/u.test(report.tool.imageIdSha256) ||
+    /^0{64}$/u.test(report.tool.imageIdSha256) ||
+    !new Set(["amd64", "arm64"]).has(report.tool.architecture)
+  ) {
+    fail("independent capacity tool provenance is invalid");
+  }
+  exactKeys(
+    report.execution,
+    [
+      "executor",
+      "cloudOutputEnabled",
+      "usageReportEnabled",
+      "rawHttpOutputRetained",
+      "hostUserIdentity",
+      "productionAccess",
+      "productionMutated",
+    ],
+    "independent capacity execution",
+  );
+  if (
+    report.execution.executor !== "constant-arrival-rate" ||
+    report.execution.cloudOutputEnabled !== false ||
+    report.execution.usageReportEnabled !== false ||
+    report.execution.rawHttpOutputRetained !== false ||
+    report.execution.hostUserIdentity !== true ||
+    report.execution.productionAccess !== false ||
+    report.execution.productionMutated !== false
+  ) {
+    fail("independent capacity execution boundary is invalid");
+  }
+  const expectedPhases = new Map(
+    candidateWorkload.phases.map((phase) => [phase.id, phase]),
+  );
+  const expectedScenarios = new Map(
+    candidateWorkload.scenarios.map((scenario) => [scenario.id, scenario]),
+  );
+  const seenPhases = new Set();
+  for (const phase of report.phases) {
+    exactKeys(
+      phase,
+      [
+        "id",
+        "measured",
+        "rateMultiplier",
+        "durationSeconds",
+        "observedDurationMs",
+        "vusMax",
+        "scenarios",
+        "passed",
+      ],
+      "independent capacity phase",
+    );
+    const expectedPhase = expectedPhases.get(phase.id);
+    const maximumGraceMs =
+      (Math.max(
+        ...candidateWorkload.scenarios.map((scenario) => scenario.timeoutMs),
+      ) +
+        120_000) *
+      1.1;
+    if (
+      !expectedPhase ||
+      seenPhases.has(phase.id) ||
+      phase.measured !== expectedPhase.measured ||
+      phase.rateMultiplier !== expectedPhase.rateMultiplier ||
+      phase.durationSeconds !== expectedPhase.durationSeconds ||
+      typeof phase.observedDurationMs !== "number" ||
+      phase.observedDurationMs < expectedPhase.durationSeconds * 950 ||
+      phase.observedDurationMs >
+        expectedPhase.durationSeconds * 1_000 + maximumGraceMs ||
+      !Number.isSafeInteger(phase.vusMax) ||
+      phase.vusMax < 1 ||
+      phase.vusMax >
+        candidateWorkload.scenarios.reduce(
+          (total, scenario) => total + scenario.concurrencyLimit,
+          0,
+        ) ||
+      !Array.isArray(phase.scenarios) ||
+      phase.scenarios.length !== expectedScenarios.size ||
+      phase.passed !== true
+    ) {
+      fail(`independent capacity phase ${phase.id} drifted or failed`);
+    }
+    seenPhases.add(phase.id);
+    const seenScenarios = new Set();
+    for (const scenario of phase.scenarios) {
+      exactKeys(
+        scenario,
+        [
+          "scenarioId",
+          "adapter",
+          "ratePerSecond",
+          "arrivalRate",
+          "timeUnitSeconds",
+          "expectedScheduled",
+          "metrics",
+          "decisions",
+          "passed",
+        ],
+        "independent capacity scenario",
+      );
+      const expectedScenario = expectedScenarios.get(scenario.scenarioId);
+      const expectedRate =
+        expectedScenario?.ratePerSecond * expectedPhase.rateMultiplier;
+      const expectedScheduled = Math.floor(
+        expectedRate * expectedPhase.durationSeconds,
+      );
+      if (
+        !expectedScenario ||
+        seenScenarios.has(scenario.scenarioId) ||
+        scenario.adapter !== expectedScenario.adapter ||
+        Math.abs(scenario.ratePerSecond - expectedRate) > 0.000001 ||
+        !Number.isSafeInteger(scenario.arrivalRate) ||
+        scenario.arrivalRate < 1 ||
+        !Number.isSafeInteger(scenario.timeUnitSeconds) ||
+        scenario.timeUnitSeconds < 1 ||
+        Math.abs(
+          scenario.arrivalRate / scenario.timeUnitSeconds - expectedRate,
+        ) > 0.000001 ||
+        scenario.expectedScheduled !== expectedScheduled ||
+        scenario.passed !== true
+      ) {
+        fail(
+          `independent capacity scenario ${phase.id}/${scenario.scenarioId} drifted or failed`,
+        );
+      }
+      seenScenarios.add(scenario.scenarioId);
+      exactKeys(
+        scenario.metrics,
+        [
+          "scheduled",
+          "completed",
+          "dropped",
+          "errorCount",
+          "errorRate",
+          "expectedStatusCount",
+          "unexpectedStatusCount",
+          "networkErrorCount",
+          "invalidResponseCount",
+          "responseTooLargeCount",
+          "responseBytes",
+          "latencyMs",
+        ],
+        "independent capacity metrics",
+      );
+      exactKeys(
+        scenario.metrics.latencyMs,
+        ["p95", "p99", "maximum"],
+        "independent capacity latency",
+      );
+      const metrics = scenario.metrics;
+      const integerFields = [
+        "scheduled",
+        "completed",
+        "dropped",
+        "errorCount",
+        "expectedStatusCount",
+        "unexpectedStatusCount",
+        "networkErrorCount",
+        "invalidResponseCount",
+        "responseTooLargeCount",
+        "responseBytes",
+      ];
+      if (
+        integerFields.some(
+          (field) =>
+            !Number.isSafeInteger(metrics[field]) || metrics[field] < 0,
+        ) ||
+        metrics.scheduled !== expectedScheduled ||
+        metrics.completed + metrics.dropped !== metrics.scheduled ||
+        metrics.dropped !== 0 ||
+        metrics.expectedStatusCount +
+          metrics.unexpectedStatusCount +
+          metrics.networkErrorCount !==
+          metrics.completed ||
+        metrics.unexpectedStatusCount +
+          metrics.networkErrorCount +
+          metrics.invalidResponseCount +
+          metrics.responseTooLargeCount !==
+          metrics.errorCount ||
+        !finiteNonnegative(metrics.errorRate) ||
+        Math.abs(metrics.errorRate - metrics.errorCount / metrics.scheduled) >
+          0.000001 ||
+        metrics.errorRate > expectedScenario.thresholds.maximumErrorRate ||
+        !finiteNonnegative(metrics.latencyMs.p95) ||
+        metrics.latencyMs.p95 > expectedScenario.thresholds.maximumP95Ms ||
+        !finiteNonnegative(metrics.latencyMs.p99) ||
+        metrics.latencyMs.p99 > expectedScenario.thresholds.maximumP99Ms ||
+        !finiteNonnegative(metrics.latencyMs.maximum) ||
+        metrics.latencyMs.p95 > metrics.latencyMs.p99 ||
+        metrics.latencyMs.p99 > metrics.latencyMs.maximum
+      ) {
+        fail(
+          `independent capacity metrics ${phase.id}/${scenario.scenarioId} drifted or failed`,
+        );
+      }
+      const expectedDecisions = {
+        exactSchedule: true,
+        noDrops: true,
+        completed: true,
+        classifiedErrors: true,
+        errorRate: true,
+        p95: true,
+        p99: true,
+      };
+      if (
+        Object.keys(scenario.decisions).length !== 7 ||
+        Object.entries(expectedDecisions).some(
+          ([key, value]) => scenario.decisions[key] !== value,
+        )
+      ) {
+        fail(
+          `independent capacity decisions ${phase.id}/${scenario.scenarioId} are invalid`,
+        );
+      }
+    }
+  }
+  for (const id of ["warmup", "sustained", "burst", "recovery"]) {
+    if (!seenPhases.has(id)) {
+      fail(`independent capacity report is missing ${id}`);
     }
   }
 }
@@ -1070,6 +1363,188 @@ if (process.argv.includes("--self-test")) {
       throw error;
     }
   }
+
+  const syntheticIndependent = {
+    schema: "starfiniti.capacity-independent-run.v1",
+    status: "passed",
+    candidateCommit: evidence.candidate.commit,
+    workloadProfile: evidence.workload.profile,
+    workloadSha256: evidence.workload.sha256,
+    originSha256: syntheticRun.originSha256,
+    approvalSha256: "d".repeat(64),
+    targetClass: "disposable_staging",
+    startedAt: "2026-08-27T07:00:00.000Z",
+    finishedAt: "2026-08-27T07:30:00.000Z",
+    tool: {
+      name: k6Plan.tool.name,
+      version: k6Plan.tool.version,
+      license: k6Plan.tool.license,
+      sourceRepository: k6Plan.tool.sourceRepository,
+      releaseUrl: k6Plan.tool.releaseUrl,
+      imageReference: k6Plan.image.reference,
+      imageIndexSha256: k6Plan.image.indexSha256,
+      platformManifestSha256: k6Plan.image.linuxAmd64ManifestSha256,
+      imageIdSha256: "c".repeat(64),
+      architecture: "amd64",
+    },
+    planSha256: digestDocument(k6Plan),
+    scriptSha256: k6Plan.script.sha256,
+    execution: {
+      executor: "constant-arrival-rate",
+      cloudOutputEnabled: false,
+      usageReportEnabled: false,
+      rawHttpOutputRetained: false,
+      hostUserIdentity: true,
+      productionAccess: false,
+      productionMutated: false,
+    },
+    phases: workload.phases.map((phase) => ({
+      id: phase.id,
+      measured: phase.measured,
+      rateMultiplier: phase.rateMultiplier,
+      durationSeconds: phase.durationSeconds,
+      observedDurationMs: phase.durationSeconds * 1_000,
+      vusMax: workload.scenarios.length,
+      passed: true,
+      scenarios: workload.scenarios.map((scenario) => {
+        const ratePerSecond = scenario.ratePerSecond * phase.rateMultiplier;
+        const timeUnitSeconds = Number.isSafeInteger(ratePerSecond)
+          ? 1
+          : Number.isSafeInteger(ratePerSecond * 2)
+            ? 2
+            : 4;
+        const arrivalRate = ratePerSecond * timeUnitSeconds;
+        const scheduled = Math.floor(ratePerSecond * phase.durationSeconds);
+        return {
+          scenarioId: scenario.id,
+          adapter: scenario.adapter,
+          ratePerSecond,
+          arrivalRate,
+          timeUnitSeconds,
+          expectedScheduled: scheduled,
+          metrics: {
+            scheduled,
+            completed: scheduled,
+            dropped: 0,
+            errorCount: 0,
+            errorRate: 0,
+            expectedStatusCount: scheduled,
+            unexpectedStatusCount: 0,
+            networkErrorCount: 0,
+            invalidResponseCount: 0,
+            responseTooLargeCount: 0,
+            responseBytes: scheduled * 2,
+            latencyMs: { p95: 10, p99: 20, maximum: 30 },
+          },
+          decisions: {
+            exactSchedule: true,
+            noDrops: true,
+            completed: true,
+            classifiedErrors: true,
+            errorRate: true,
+            p95: true,
+            p99: true,
+          },
+          passed: true,
+        };
+      }),
+    })),
+  };
+  validateIndependentRun(
+    syntheticIndependent,
+    evidence,
+    syntheticRun.originSha256,
+  );
+  const expectIndependentRejected = (mutate, messagePart, label) => {
+    const candidate = structuredClone(syntheticIndependent);
+    mutate(candidate);
+    try {
+      validateIndependentRun(candidate, evidence, syntheticRun.originSha256);
+    } catch (error) {
+      if (error instanceof Error && error.message.includes(messagePart)) return;
+      throw error;
+    }
+    fail(`self-test accepted ${label}`);
+  };
+  expectIndependentRejected(
+    (candidate) => {
+      candidate.tool.version = "2.1.0";
+    },
+    "tool provenance",
+    "drifted k6 version",
+  );
+  expectIndependentRejected(
+    (candidate) => {
+      candidate.tool.imageIndexSha256 = "e".repeat(64);
+    },
+    "tool provenance",
+    "drifted k6 image digest",
+  );
+  expectIndependentRejected(
+    (candidate) => {
+      candidate.planSha256 = "e".repeat(64);
+    },
+    "identity or status",
+    "drifted k6 plan",
+  );
+  expectIndependentRejected(
+    (candidate) => {
+      candidate.execution.productionMutated = true;
+    },
+    "execution boundary",
+    "production-mutating cross-check",
+  );
+  expectIndependentRejected(
+    (candidate) => {
+      candidate.phases[1].scenarios[0].metrics.dropped = 1;
+      candidate.phases[1].scenarios[0].metrics.completed -= 1;
+    },
+    "metrics sustained/dashboard_readiness",
+    "dropped k6 iteration",
+  );
+  expectIndependentRejected(
+    (candidate) => {
+      candidate.phases[1].scenarios.pop();
+    },
+    "phase sustained drifted",
+    "missing k6 scenario",
+  );
+  expectIndependentRejected(
+    (candidate) => {
+      candidate.phases[1].scenarios[0].ratePerSecond += 1;
+    },
+    "scenario sustained/dashboard_readiness",
+    "drifted k6 rate",
+  );
+  expectIndependentRejected(
+    (candidate) => {
+      candidate.phases[1].scenarios[0].decisions.p95 = false;
+    },
+    "decisions sustained/dashboard_readiness",
+    "false k6 threshold decision",
+  );
+  expectIndependentRejected(
+    (candidate) => {
+      candidate.phases[1].scenarios[0].metrics.latencyMs.p95 = -1;
+    },
+    "metrics sustained/dashboard_readiness",
+    "negative k6 latency",
+  );
+  expectIndependentRejected(
+    (candidate) => {
+      candidate.phases[1].scenarios[0].metrics.latencyMs.p95 = 30;
+      candidate.phases[1].scenarios[0].metrics.latencyMs.p99 = 20;
+    },
+    "metrics sustained/dashboard_readiness",
+    "non-monotonic k6 latency",
+  );
+  expectIndependentRejected(
+    (candidate) => {
+      candidate.rawTarget = "https://forbidden.example";
+    },
+    "unexpected shape",
+    "raw target field",
+  );
 }
 
 console.log(

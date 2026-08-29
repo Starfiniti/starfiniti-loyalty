@@ -1,5 +1,28 @@
 # Changelog
 
+- Added ADR-0104 and replaced M15's label-only independent-capacity evidence
+  with an exact Grafana k6 2.2.0 cross-check contract. The official OCI index,
+  Linux/amd64 manifest, canonical workload, and reviewed script are
+  digest-bound; all four phases and scenarios use rational constant-arrival
+  rates, closed VU limits, contract-aware results, zero dropped iterations, and
+  recomputed schedule/error/latency decisions. Authority stays in read-only
+  files, cloud/usage/raw output is disabled, known production origins are
+  refused, temporary summaries are removed, and only minimized aggregates are
+  retained. Twenty-three evidence checks plus corruption fixtures reject tool,
+  image, workload, plan, phase, scenario, schedule, drop, threshold, raw-target,
+  and production-authority drift. The complete local repository gate passes
+  with 995 tests, both production builds, all 23 capacity checks/corruptions,
+  and every release, recovery, security, operations, score, accessibility, and
+  WooCommerce validator. Adversarial review additionally closed a false secret
+  collision on the public `v1` WooCommerce key selector, rejected impossible
+  duration/VU and non-monotonic or negative latency aggregates, and required
+  caller-owned private authority paths plus exclusive report publication below
+  a stable parent. The exact image/script inspection is delegated to Linux CI.
+  A real approved independent run and every
+  capacity/reconciliation gate remain pending, so no capacity number,
+  deployment, production access, checkout change, or loyalty-value mutation is
+  claimed.
+
 - Added ADR-0103 and an exact Supabase repository patch refresh: CLI 2.116.0,
   supabase-js 2.112.4, and SSR 0.12.5, including every matching platform binary
   and client subpackage. The reviewed CLI restores a true default for

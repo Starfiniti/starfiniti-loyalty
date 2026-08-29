@@ -1,0 +1,47 @@
+schema: starfiniti.capacity-k6-crosscheck-plan.v1
+status: ready
+reviewedAt: 2026-08-29T00:00:00Z
+tool:
+  name: grafana-k6
+  version: 2.2.0
+  license: AGPL-3.0-only
+  sourceRepository: https://github.com/grafana/k6
+  releaseUrl: https://github.com/grafana/k6/releases/tag/v2.2.0
+  releasePublishedAt: 2026-08-10T14:01:35Z
+image:
+  reference: grafana/k6:2.2.0@sha256:9bd01d6941fca969cb61bb57d2da5ee9b385fe2aa8881df3798c196564d6ace6
+  indexSha256: 9bd01d6941fca969cb61bb57d2da5ee9b385fe2aa8881df3798c196564d6ace6
+  linuxAmd64ManifestSha256: a070982921f37e1b891f8ed9fb2b507520c83228614c14640f7e28f635f4281b
+  linuxArm64ManifestSha256: ea746c18a0af5530f5501dbe50d2cda34a37376639c524ca3172da61394869ef
+workload:
+  path: infrastructure/testing/capacity/workload.yaml
+  sha256: 8e0bf683fadd7c75cdb48883aba0351fbc88a1151669ec0f4ea8d456151fe442
+script:
+  path: infrastructure/testing/capacity/k6-crosscheck.js
+  sha256: c0a52afaa507f3ab4b2077ff544ebcab1a431ed3828789e761a2738ea3da69e2
+execution:
+  executor: constant-arrival-rate
+  targetClass: disposable_staging
+  cloudOutputEnabled: false
+  usageReportEnabled: false
+  rawHttpOutputRetained: false
+  responseBodiesRetained: false
+  hostUserIdentity: true
+  systemTags:
+    - method
+    - status
+    - error_code
+    - expected_response
+    - scenario
+authority:
+  approvedEnvironment: false
+  runApproved: false
+  capacityClaimApproved: false
+  productionAccess: false
+  productionMutated: false
+documentation:
+  fixedArrivalRate: https://grafana.com/docs/k6/latest/using-k6/scenarios/executors/constant-arrival-rate/
+  thresholds: https://grafana.com/docs/k6/latest/using-k6/thresholds/
+  tags: https://grafana.com/docs/k6/latest/using-k6/tags-and-groups/
+  customSummary: https://grafana.com/docs/k6/latest/results-output/end-of-test/custom-summary/
+  vuAllocation: https://grafana.com/docs/k6/latest/using-k6/scenarios/concepts/arrival-rate-vu-allocation/
