@@ -179,9 +179,11 @@ client options, restricted forced command, internal no-port network, resource
 ceilings, exclusive evidence publication, exact teardown, and adversarial
 false-pass mutations. Bootstrap Security run `33240398639` discovered stripped
 candidate executable SHA-256
-`be9dd9ee2550e3fca2a6fa15edb5ab9303e42ac783ac766928fa5380971bf081`, and the
-plan now locks that digest as `candidate`. The bootstrap run cannot pass exact
-candidate evidence; a fresh second run against this digest-locked plan is required.
-Escrow, exact real-provider rsync and Borg behavior, every consumer, rollout,
+`be9dd9ee2550e3fca2a6fa15edb5ab9303e42ac783ac766928fa5380971bf081`.
+Digest-locked candidate `275c9e8` passed Security run `33241151463`, job
+`99070606112`; the retained 741-byte report and GitHub artifact archive have
+distinct SHA-256 bindings and the validator reopens the committed report through
+a bounded no-follow descriptor. Synthetic compatibility now passes. Escrow, exact
+real-provider rsync and Borg behavior, every consumer, rollout,
 monitoring, rollback, isolated restore, and independent review remain pending;
 production and the M16 score are unchanged.

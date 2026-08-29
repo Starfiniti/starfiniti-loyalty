@@ -6,6 +6,8 @@ import { fileURLToPath } from "node:url";
 
 import YAML from "yaml";
 
+import { readBoundJsonArtifact } from "./lib/read-bound-json-artifact.mjs";
+
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const context = join(root, "infrastructure/testing/openssh-client-security");
 const planPath = join(context, "plan.yaml");
@@ -25,13 +27,19 @@ const paths = {
 };
 const sha256Pattern = /^[0-9a-f]{64}$/u;
 const commitPattern = /^[0-9a-f]{40}$/u;
-const testedCandidateCommit = null;
-const testedWorkflowRunId = null;
-const testedWorkflowJobId = null;
-const testedArtifactId = null;
-const testedArtifactName = null;
-const testedArtifactSha256 = null;
-const testedReportSha256 = null;
+const canaryReportRelativePath =
+  "docs/plan/evidence/M16/runs/openssh-client-security-275c9e8-2026-08-29T073759Z.json";
+const testedCandidateCommit = "275c9e8ebbd3d68d609976e04d31751c378b2967";
+const testedMergeCommit = "6323723ddfbcf2d86606ca39d46adb79725bfbec";
+const testedWorkflowRunId = 33241151463;
+const testedWorkflowJobId = 99070606112;
+const testedArtifactId = 9711429356;
+const testedArtifactName = `security-openssh-client-${testedMergeCommit}`;
+const testedArtifactSha256 =
+  "ddfe3ea8a2450d39251be96c38c9de69505eb88a6da5ce058f3d8151fc75f1fc";
+const testedArtifactCreatedAt = "2026-08-29T07:38:03Z";
+const testedReportSha256 =
+  "91b68dd8180324042e7dbea18ba26dc0e976cb4d977527845dc08f4689e6e276";
 
 function fail(message) {
   throw new Error(`OpenSSH client security plan invalid: ${message}`);
@@ -452,6 +460,7 @@ function validateEvidence(evidence, plan) {
     [
       "schema",
       "status",
+      "observedAt",
       "candidate",
       "plan",
       "canary",
@@ -464,6 +473,7 @@ function validateEvidence(evidence, plan) {
   if (
     evidence.schema !== "starfiniti.openssh-client-security-evidence.v1" ||
     evidence.status !== "in_progress" ||
+    Number.isNaN(Date.parse(evidence.observedAt)) ||
     evidence.productionMutation !== false
   ) {
     fail("evidence identity is invalid");
@@ -490,29 +500,62 @@ function validateEvidence(evidence, plan) {
   } else {
     if (!commitPattern.test(testedCandidateCommit))
       fail("tested commit invalid");
+    exactKeys(evidence.canary, ["report", "github"], "evidence canary");
     exactKeys(
-      evidence.canary,
+      evidence.canary.report,
+      ["path", "sha256"],
+      "evidence canary report",
+    );
+    exactKeys(
+      evidence.canary.github,
       [
         "workflowRunId",
-        "workflowJobId",
+        "jobId",
         "artifactId",
         "artifactName",
-        "artifactSha256",
-        "reportPath",
-        "reportSha256",
+        "artifactArchiveSha256",
+        "artifactCreatedAt",
+        "headCommit",
+        "mergeCommit",
       ],
-      "evidence canary",
+      "evidence canary GitHub binding",
     );
+    const github = evidence.canary.github;
     if (
-      evidence.canary.workflowRunId !== testedWorkflowRunId ||
-      evidence.canary.workflowJobId !== testedWorkflowJobId ||
-      evidence.canary.artifactId !== testedArtifactId ||
-      evidence.canary.artifactName !== testedArtifactName ||
-      evidence.canary.artifactSha256 !== testedArtifactSha256 ||
-      evidence.canary.reportPath !== "ci.json" ||
-      evidence.canary.reportSha256 !== testedReportSha256
+      evidence.canary.report.path !== canaryReportRelativePath ||
+      evidence.canary.report.sha256 !== testedReportSha256 ||
+      github.workflowRunId !== testedWorkflowRunId ||
+      github.jobId !== testedWorkflowJobId ||
+      github.artifactId !== testedArtifactId ||
+      github.artifactName !== testedArtifactName ||
+      github.artifactArchiveSha256 !== testedArtifactSha256 ||
+      github.artifactCreatedAt !== testedArtifactCreatedAt ||
+      github.headCommit !== testedCandidateCommit ||
+      github.mergeCommit !== testedMergeCommit
     ) {
       fail("exact canary evidence binding is invalid");
+    }
+    const report = readBoundJsonArtifact(
+      evidence.canary.report.path,
+      evidence.canary.report.sha256,
+      "OpenSSH client canary",
+      {
+        fail,
+        resolvePath: (relativePath) => {
+          if (relativePath !== canaryReportRelativePath) {
+            fail("OpenSSH client canary path differs");
+          }
+          return join(root, relativePath);
+        },
+        maximumBytes: 8 * 1024,
+      },
+    );
+    validateCanaryReport(report, plan, { completed: true });
+    if (
+      Date.parse(report.observedAt) > Date.parse(github.artifactCreatedAt) ||
+      Date.parse(github.artifactCreatedAt) > Date.parse(evidence.observedAt)
+    ) {
+      fail("evidence canary chronology differs");
     }
   }
   const expectedChecks = new Map([
@@ -724,9 +767,12 @@ function selfTest(plan, evidence, files) {
   assert.doesNotThrow(() => validateEvidence(structuredClone(evidence), plan));
   for (const mutate of [
     (value) => (value.status = "complete"),
+    (value) => (value.observedAt = "invalid"),
     (value) => (value.candidate.commit = "0".repeat(40)),
     (value) => (value.plan.sha256 = "0".repeat(64)),
     (value) => (value.canary = {}),
+    (value) => (value.canary.report.sha256 = "0".repeat(64)),
+    (value) => (value.canary.github.mergeCommit = "0".repeat(40)),
     (value) => value.checks.pop(),
     (value) => (value.productionMutation = true),
   ]) {

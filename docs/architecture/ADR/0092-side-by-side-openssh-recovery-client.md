@@ -134,9 +134,14 @@ base backups, stages, repositories, and archives.
 
 The threat model, architecture, exact source and package inputs, client-only
 build boundary, compatibility contract, rollback boundary, and adversarial
-repository validator exist. Bootstrap Security run `33240398639` passed and
-discovered candidate executable SHA-256
+repository validator exist. Bootstrap Security run `33240398639` discovered
+candidate executable SHA-256
 `be9dd9ee2550e3fca2a6fa15edb5ab9303e42ac783ac766928fa5380971bf081`.
-The plan now binds that digest as `candidate`; bootstrap is not accepted as
-final compatibility evidence, so a fresh exact-plan Linux run remains required.
-Production is unchanged and M16 remains in progress.
+Digest-locked candidate `275c9e8` then passed Security run `33241151463`, job
+`99070606112`. The exact 741-byte report is retained under SHA-256
+`91b68dd8180324042e7dbea18ba26dc0e976cb4d977527845dc08f4689e6e276`,
+distinct from GitHub artifact archive SHA-256
+`ddfe3ea8a2450d39251be96c38c9de69505eb88a6da5ce058f3d8151fc75f1fc`.
+Synthetic compatibility now passes; production is unchanged and M16 remains in
+progress pending escrow, real-provider behavior, rollout, recovery, rollback,
+monitoring, and independent review.

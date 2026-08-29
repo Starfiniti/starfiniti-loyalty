@@ -1,0 +1,21 @@
+{
+  "schema": "starfiniti.openssh-client-security-canary.v1",
+  "status": "passed",
+  "currentVersion": "10.0p1",
+  "candidateVersion": "10.5p1",
+  "currentExecutableSha256": "af3b04ec5653755032fc18ad02445e4e51170e75d8bac4265647d423caa9a83e",
+  "candidateExecutableSha256": "be9dd9ee2550e3fca2a6fa15edb5ab9303e42ac783ac766928fa5380971bf081",
+  "serverVersion": "9.6p1",
+  "clients": 2,
+  "connections": 3,
+  "effectiveConfigChecks": 2,
+  "strictHostKey": true,
+  "publicKey": true,
+  "forcedCommand": true,
+  "internalNetwork": true,
+  "publishedPorts": 0,
+  "productionMutation": false,
+  "observedAt": "2026-08-29T07:37:59.797Z",
+  "planSha256": "130df45c95938a41e88558b313b1a4707dfd7c0701f43fe4187ceba20a3bd625",
+  "teardown": "passed"
+}

@@ -96,6 +96,20 @@ It can be independently reverified with
 Only `consumerInventoryCaptured` is true; compatibility and every rehearsal or
 production authority remain false.
 
+The first passing digest-locked OpenSSH client compatibility artifact is
+`openssh-client-security-275c9e8-2026-08-29T073759Z.json` (741 bytes,
+SHA-256
+`91b68dd8180324042e7dbea18ba26dc0e976cb4d977527845dc08f4689e6e276`).
+It binds exact candidate commit `275c9e8ebbd3d68d609976e04d31751c378b2967`,
+plan SHA-256
+`130df45c95938a41e88558b313b1a4707dfd7c0701f43fe4187ceba20a3bd625`,
+Security run `33241151463`, recovery job `99070606112`, and artifact
+`9711429356`; the separate artifact archive SHA-256 is
+`ddfe3ea8a2450d39251be96c38c9de69505eb88a6da5ce058f3d8151fc75f1fc`.
+It proves only the isolated current/candidate client compatibility contract and
+zero production mutation. Escrow, real-provider behavior, rollout, restore,
+rollback, monitoring, and review remain pending.
+
 Never store provider bodies, credentials, raw ETags, hostnames, IP addresses,
 usernames, SSH routes or keys, raw command output, personal data, tenant/customer
 identifiers, mutable drafts, or unapproved operational telemetry here.

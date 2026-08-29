@@ -64,10 +64,12 @@ exclusive no-follow descriptor. `installedCaptureComplete` covers only this clos
 installed catalogue. ADR-0091 separately selects a digest-bound BorgBackup
 candidate and compatibility contract without rewriting this historical artifact.
 ADR-0092 selects a client-only OpenSSH architecture. Bootstrap Security run
-`33240398639` discovered the stripped executable digest, and the candidate plan now
-binds it; a fresh second exact-plan run is still required before compatibility can
-pass. Candidate evidence remains incomplete for OpenSSH, Debian, Ubuntu, and Proxmox.
-The exact-head Borg canary now passes and is digest-bound; operations escrow,
+`33240398639` discovered the stripped executable digest; digest-locked candidate
+`275c9e8` then passed exact-plan Security run `33241151463` job `99070606112`,
+with independently bound report and artifact-archive digests. Synthetic OpenSSH
+compatibility therefore passes, while Debian, Ubuntu, and Proxmox candidate evidence
+remains incomplete. The exact-head Borg canary also passes and is digest-bound;
+operations escrow,
 real-provider compatibility, review, ownership, approval, package installation,
 and production mutation all remain false. The artifact is a monthly
 review input, not remote attestation or an upgrade gate. Independent verification

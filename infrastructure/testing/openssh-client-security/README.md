@@ -8,9 +8,11 @@ database guest on a Docker-internal network with no published ports.
 
 Bootstrap Security run `33240398639` discovered stripped candidate executable
 SHA-256 `be9dd9ee2550e3fca2a6fa15edb5ab9303e42ac783ac766928fa5380971bf081`.
-The plan is now `candidate` and binds that digest. The bootstrap run is not
-production or final compatibility evidence; a fresh exact-head run of this
-digest-locked plan must pass before evidence can advance.
+The plan is now `candidate` and binds that digest. Digest-locked candidate
+`275c9e8` passed exact-plan Security run `33241151463` job `99070606112`; its
+retained report and GitHub artifact archive are independently hash-bound.
+Synthetic compatibility passes, but this is not production or real-provider
+evidence.
 
 ```sh
 npm run openssh-client-security:validate

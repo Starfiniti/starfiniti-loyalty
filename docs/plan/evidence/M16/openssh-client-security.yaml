@@ -1,12 +1,25 @@
 schema: starfiniti.openssh-client-security-evidence.v1
 status: in_progress
+observedAt: 2026-08-29T07:38:03Z
 candidate:
   branch: codex/enterprise-roadmap-integration
-  commit: null
+  commit: 275c9e8ebbd3d68d609976e04d31751c378b2967
 plan:
   path: infrastructure/testing/openssh-client-security/plan.yaml
   sha256: 130df45c95938a41e88558b313b1a4707dfd7c0701f43fe4187ceba20a3bd625
-canary: null
+canary:
+  report:
+    path: docs/plan/evidence/M16/runs/openssh-client-security-275c9e8-2026-08-29T073759Z.json
+    sha256: 91b68dd8180324042e7dbea18ba26dc0e976cb4d977527845dc08f4689e6e276
+  github:
+    workflowRunId: 33241151463
+    jobId: 99070606112
+    artifactId: 9711429356
+    artifactName: security-openssh-client-6323723ddfbcf2d86606ca39d46adb79725bfbec
+    artifactArchiveSha256: ddfe3ea8a2450d39251be96c38c9de69505eb88a6da5ce058f3d8151fc75f1fc
+    artifactCreatedAt: 2026-08-29T07:38:03Z
+    headCommit: 275c9e8ebbd3d68d609976e04d31751c378b2967
+    mergeCommit: 6323723ddfbcf2d86606ca39d46adb79725bfbec
 checks:
   - id: threat_model
     status: passed
@@ -21,8 +34,8 @@ checks:
     status: passed
     evidence: Debian openssh-client 1:10.0p1-7+deb13u4 remains installed and is resolved through signed metadata plus an independently hashed exact archive URL before the synthetic client proof.
   - id: compatibility_canary
-    status: pending
-    evidence: Bootstrap Security run 33240398639 discovered candidate executable SHA-256 be9dd9ee2550e3fca2a6fa15edb5ab9303e42ac783ac766928fa5380971bf081; the digest-locked candidate plan still requires a fresh exact-plan pass before compatibility evidence is accepted.
+    status: passed
+    evidence: Exact candidate commit 275c9e8 passed the digest-locked current/candidate compatibility canary in Security run 33241151463 job 99070606112; the retained report and GitHub artifact archive have distinct SHA-256 bindings and production mutation is false.
   - id: operations_escrow
     status: pending
     evidence: Operations has not escrowed the exact source, signature, release key, build inputs, candidate binary, rollback package, digest inventory, and verification instructions.
