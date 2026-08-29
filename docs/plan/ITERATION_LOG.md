@@ -1,5 +1,25 @@
 # Iteration Log
 
+## 2026-08-29 — Responsive authentication rescore
+
+- Reconstructed the M09 and M16 score bindings after the production-rendered
+  authentication correction and found that both still identified older exact
+  candidates. The module and whole-product evidence now bind tested integrated
+  candidate `1e55a82a8f2feccdf3f55ace6a66e04b2595c7b0` without rewriting the
+  historical production score or earlier module evidence.
+- Exact CI `33276262061`, Security `33276262148`, and external CodeQL
+  `99163614374` passed all twelve PR checks: 995 workspace tests, 87 migrations,
+  69 pgTAP files with 3,790 assertions, all 22 concurrency probes, both images,
+  all four WooCommerce runtimes, DAST, supply chain, and recovery transport.
+  Retained browser evidence covers 1512×982, 390×844, and 320×500 production
+  renders, keyboard reachability, same-origin protected redirects, English-only
+  output, zero horizontal overflow, and zero diagnostics.
+- M09 remains 88/100, the integration candidate remains 83/100, and deployed
+  production remains 54/100. No approved store, live activation, release,
+  deployment, recovery, rollback, observation, or reconciliation evidence was
+  added, so score and completion gates remain fail closed. No production, Auth,
+  membership, checkout, connector, or loyalty-value state changed.
+
 ## 2026-08-29 — WooCommerce tagged-version release integrity
 
 - Reconstructed the shipped v0.1.11 connector and confirmed that both its

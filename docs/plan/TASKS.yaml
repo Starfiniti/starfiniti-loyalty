@@ -1640,11 +1640,12 @@ tasks:
           - seven-category module score reaches at least 90 with every category at least 80 percent and no deterministic failure
         evidence:
           - integrated exact-head CI run 33100009132 and Security run 33100009100 passed at c989229 with all eleven checks green
+          - exact integrated candidate 1e55a82 passed CI 33276262061 Security 33276262148 and external CodeQL 99163614374 with all twelve checks green; the material authentication correction was rescored without inflation and M09 remains 88 because no production canary rollback observation or reconciliation evidence changed
           - current production dashboard health and login return HTTP 200 while unauthenticated Auth and REST roots reject with HTTP 401 and the approved read-only Proxmox route confirms both VMs are running
           - adversarial validation requires exact manifest production candidate baseline score check artifact and automatic-failure shapes and rejects future timestamps cyclic evidence oversized text invalid task graphs and false completion
           - docs/plan/evidence/M09/canary.yaml records 34 checks four approvals nine path digest and semantic bound production artifacts fixed automatic failures and a deterministic seven-category pre-canary score of 88
           - docs/plan/evidence/M09/ARTIFACT_CONTRACT.md defines exact hosted WooCommerce snapshot placement coupon outage value privacy reconciliation rollback chronology and observation evidence
-          - production mutation remains intentionally pending because draft PR 57 is not an approved release and no real WooCommerce pilot or canary window is approved
+          - production mutation remains intentionally pending because open merge-ready PR 57 is not an approved release and no real WooCommerce pilot or canary window is approved
     risks: [R-005, R-009, R-030]
     docs:
       [

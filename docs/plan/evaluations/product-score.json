@@ -167,7 +167,7 @@
       "evaluatedAt": "2026-08-29",
       "release": null,
       "branch": "codex/enterprise-roadmap-integration",
-      "sourceCommit": "695067cb26a5fddb32cc30af159962d17a7a4402",
+      "sourceCommit": "1e55a82a8f2feccdf3f55ace6a66e04b2595c7b0",
       "score": 83,
       "target": 90,
       "minimumCategoryRatio": 0.8,
@@ -194,10 +194,11 @@
           "id": "merchant_usability",
           "weight": 15,
           "score": 14,
-          "evidence": "Hub-style builders previews queues analytics integration migration identity and billing operations pass responsive repository review; approved production observation remains.",
+          "evidence": "Hub-style builders previews queues analytics integration migration identity billing and responsive authentication operations pass production-rendered repository review; approved production observation remains.",
           "evidencePaths": [
             "docs/plan/evidence/M04/README.md",
             "docs/plan/evidence/M07/README.md",
+            "docs/plan/evidence/M09/README.md",
             "docs/plan/evidence/M10/README.md"
           ]
         },

@@ -1,9 +1,9 @@
 schema: starfiniti.continuous-improvement.v1
 status: in_progress
-observedAt: 2026-08-29T20:23:00Z
+observedAt: 2026-08-29T21:37:07Z
 candidate:
   branch: codex/enterprise-roadmap-integration
-  commit: 695067cb26a5fddb32cc30af159962d17a7a4402
+  commit: 1e55a82a8f2feccdf3f55ace6a66e04b2595c7b0
   initialCloseApproved: false
 plan:
   path: infrastructure/governance/continuous-improvement.yaml
@@ -76,7 +76,7 @@ checks:
     evidence: The completion fixture and adversarial mutations prove that cadence, freshness, exact blocker-set and evidence bindings, ranking, recurring controls, rescoring, experiment guardrails, exercises, artifacts, approvals, and score floors fail closed; the source collector rejects twenty-six source, network, response, digest, review-claim, output, and byte-preservation corruptions without network access, the installed-state collector rejects thirty-six fact, endpoint, component, chronology, digest, historical-source, full-candidate, output, and false-authority corruptions without network or SSH access, and the Supabase repository review rejects forty-seven source package lock alignment Node Data API schema automatic-grant immutable-CI task ADR byte-preservation and false-authority corruptions.
   - id: exact_head_ci
     status: passed
-    evidence: Exact material-change correction 695067cb26a5fddb32cc30af159962d17a7a4402 passed CI run 33273056805, Security run 33273056780, and CodeQL check 99155114588 with all twelve PR checks green and PR 57 merge-clean; the full baseline repeated the 995-test repository gate, synthetic versioned connector build and independent verification, database, both images, all four WooCommerce runtimes, DAST, supply chain, and recovery transport.
+    evidence: Exact integrated candidate 1e55a82a8f2feccdf3f55ace6a66e04b2595c7b0 passed CI run 33276262061, Security run 33276262148, and external CodeQL check 99163614374 with all twelve PR checks green and PR 57 merge-clean; the full baseline repeated the 995-test repository gate, 87-migration and 69-file pgTAP replay with 3,790 assertions, all 22 concurrency probes, synthetic versioned connector build and independent verification, both images, all four WooCommerce runtimes, DAST, supply chain, and recovery transport, while retained production-rendered authentication QA covered desktop mobile and compact keyboard access.
   - id: owner_roster
     status: pending
     evidence: Product, engineering, security, operations, monthly-review, quarterly-exercise, and owner roles require named environment-owned assignments.
@@ -133,7 +133,7 @@ checks:
     evidence: Every failure reaching the second occurrence must bind at least one merged test, validator, monitor, runbook, or agent rule.
   - id: module_rescoring
     status: pending
-    evidence: ADR-0080 and the product-score V2 validator preserve the 54/100 deployed-production history and rescore exact integrated candidate 695067cb26a5fddb32cc30af159962d17a7a4402 at an unchanged 83/100 after the WooCommerce release-integrity correction without conflating verified repository packaging with a real tagged release or live evidence; every module materially changed during the two future elapsed review periods still requires its own exact rescore.
+    evidence: ADR-0080 and the product-score V2 validator preserve the 54/100 deployed-production history and rescore exact integrated candidate 1e55a82a8f2feccdf3f55ace6a66e04b2595c7b0 at an unchanged 83/100 after the M09 authentication regression correction; M09 remains 88/100 because the responsive production-rendered browser proof adds no approved deployment canary activation recovery rollback observation or reconciliation evidence, and every module materially changed during the two future elapsed review periods still requires its own exact rescore.
   - id: score_history
     status: pending
     evidence: The original V1 whole-product score is now retained byte-for-byte under an exact SHA-256 binding and V2 separates production from candidate evidence; initial M16 close still requires two elapsed reviews with prior/current whole-product and affected-module history.

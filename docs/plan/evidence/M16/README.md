@@ -22,13 +22,15 @@ ADR-0080 closes the current score-subject ambiguity without claiming an elapsed
 review. `docs/plan/evaluations/product-score.json` V2 preserves the exact V1
 production history, reports deployed `v0.1.11` at 54/100, and reports the exact
 integration candidate at 83/100. The 2026-08-29 material-change rescore now binds
-candidate `695067c`, including the digest-pinned k6 boundary and ADR-0105's
-verified WooCommerce release-integrity correction, while keeping the score
-unchanged because no tag, live capacity, fault, recovery, or activation evidence
-was added. The ranked backlog remains fourteen items: capacity and whole-system
-fault exercises are distinct external gates rather than being hidden inside GA.
-Exact correction `695067c` passed CI `33273056805`, Security `33273056780`, and
-CodeQL `99155114588`; all twelve PR checks are green and PR #57 is merge-clean.
+candidate `1e55a82`, including the digest-pinned k6 boundary, ADR-0105's
+verified WooCommerce release-integrity correction, and M09's production-rendered
+responsive-authentication correction. M09 remains 88/100 and the whole-product
+candidate remains 83/100 because no tag, live capacity, fault, recovery,
+activation, deployment, rollback, observation, or reconciliation evidence was
+added. The ranked backlog remains fourteen items: capacity and whole-system fault
+exercises are distinct external gates rather than being hidden inside GA. Exact
+candidate `1e55a82` passed CI `33276262061`, Security `33276262148`, and external
+CodeQL `99163614374`; all twelve PR checks are green and PR #57 is merge-clean.
 The candidate remains ineligible because activation is below its category floor
 and required live evidence is absent. The deterministic validator is part of
 `npm run check`; two future elapsed monthly reviews must still rescore their
