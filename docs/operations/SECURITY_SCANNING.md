@@ -48,14 +48,17 @@ aware of every external worker package.
 For a signed `vMAJOR.MINOR.PATCH` tag, the release workflow:
 
 1. reruns application, database, connector, secret, audit, and licence gates;
-2. builds immutable dashboard and worker images locally;
-3. generates both exact image CycloneDX SBOMs;
-4. builds the exact corresponding-source archive, external manifest, and third-party notices from the release commit and source plan;
-5. independently streams, bounds, hashes, and reconciles every archive entry and both external envelopes to the two SBOMs before registry authentication, without filesystem extraction;
-6. checksums the connector, both SBOMs, source archive, source manifest, and notices;
-7. authenticates, pushes the images, and records exact registry digests;
-8. attests all seven release files and both image digests; and
-9. publishes all seven files.
+2. derives one numeric connector version from the validated tag, overlays it into exactly one plugin header, runtime constant, POT identity, and stable tag without changing tracked source, then independently reopens the bounded ZIP and proves the exact version and closed non-test source inventory;
+3. builds immutable dashboard and worker images locally;
+4. generates both exact image CycloneDX SBOMs;
+5. builds the exact corresponding-source archive, external manifest, and third-party notices from the release commit and source plan;
+6. independently streams, bounds, hashes, and reconciles every archive entry and both external envelopes to the two SBOMs before registry authentication, without filesystem extraction;
+7. checksums the connector, both SBOMs, source archive, source manifest, and notices;
+8. authenticates, pushes the images, and records exact registry digests;
+9. attests all seven release files and both image digests; and
+10. publishes all seven files.
+
+ADR-0105 governs connector version identity. Development source deliberately remains `0.1.0-dev`/`trunk`; a release ZIP containing either marker, multiple version authorities, a non-numeric tag value, a source/test inventory difference, encryption, unsafe path, or size/count overflow fails before publication. A previous attested release is historical evidence and is never rewritten to repair its metadata.
 
 ADR-0083 governs the source bundle. It includes the exact Starfiniti source tree, exact Alpine packaging directories and commits, every checksum-bound local or downloaded APKBUILD input, and pinned SPDX licence texts. Downloads are credential-free HTTPS, byte-bounded, and SHA-512 verified. The builder treats APKBUILD and upstream source as data and never executes either. Its verifier opens release envelopes and staged inputs without following the final symlink, hashes the exact descriptor bytes after descriptor/path identity checks, rejects metadata drift after the read, streams the gzip/tar envelope, rejects unsafe paths and symlinks before use, and compares each file, mode, byte count, and digest to the external and archived manifests without extracting to disk. An unexpected reciprocal SBOM component fails before image publication.
 

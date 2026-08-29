@@ -40,7 +40,11 @@ jobs:
         if: always()
         run: npm run db:stop
       - name: Build WooCommerce release artifact
-        run: npm run woocommerce:package
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          npm run woocommerce:package -- --version "$version"
+          npm run woocommerce:package:verify -- --archive dist/starfiniti-loyalty.zip --version "$version"
       - name: Build immutable application images
         id: image_build
         shell: bash

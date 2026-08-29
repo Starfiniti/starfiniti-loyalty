@@ -1,5 +1,20 @@
 # Execution Plan
 
+ADR-0105 is the active safe M15 release-integrity correction. The published
+v0.1.11 WooCommerce artifact and current development source identify the plugin
+as `0.1.0-dev`, so the existing tag workflow could not provide trustworthy
+installed-version, update, support, or reconciliation evidence. The selected
+boundary keeps development source unchanged, derives an exact numeric version
+from the release tag only while packaging, and independently verifies the
+plugin header, runtime constant, translation template, readme stable tag,
+closed non-test inventory, regular-file entry types, size bounds, and
+reproducibility. CI uses a synthetic numeric version and release evidence must
+prove that the connector version equals the tag. Focused local package,
+workflow, architecture, security-evidence, lint, and format gates are being
+closed before exact-head CI. Historical release assets remain immutable; no
+release, deployment, WordPress installation, VM, database, checkout path, or
+loyalty value changed.
+
 ADR-0103 is the active safe M16 Supabase client/toolchain slice. Official review
 found current patch releases for CLI 2.116.0, supabase-js 2.112.4, and SSR
 0.12.5; PostgreSQL client 3.4.9 remains current. The repository exact-pins the

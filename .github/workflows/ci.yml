@@ -40,7 +40,10 @@ jobs:
       - run: npm run secrets:scan
       - run: npm run audit:prod
       - run: npm run licenses
-      - run: npm run woocommerce:package
+      - name: Build and verify versioned WooCommerce artifact
+        run: |
+          npm run woocommerce:package -- --version 0.0.0
+          npm run woocommerce:package:verify -- --archive dist/starfiniti-loyalty.zip --version 0.0.0
 
   database:
     runs-on: ubuntu-latest

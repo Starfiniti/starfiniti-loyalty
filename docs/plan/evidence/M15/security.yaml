@@ -14,7 +14,7 @@ inputs:
     sha256: 5cdad86f33dd99f89546ae044b721cc9cfed3bc30cc10e70e6ed01beb4961864
   releaseWorkflow:
     path: .github/workflows/release.yml
-    sha256: 60ec9a315ce06ebea87bcfeac98a8e5583dfa6e34db3c06096e7c3265710b3df
+    sha256: b4f7fad806e27329e905d433be87d493835cb5df31a2fa6a75f4ce5e23318d75
   dastPlan:
     path: infrastructure/testing/security/zap-automation.yaml
     sha256: af8478c13983e575522077f7a8452d39c55cb1ec7386470bca1241f4fc2f0aff
@@ -62,7 +62,7 @@ checks:
     evidence: The canonical ZAP plan targets only the named disposable container with bounded crawl active-scan wait report and High-alert exit jobs.
   - id: release_evidence_contract
     status: passed
-    evidence: The tagged workflow builds both images locally, inventories their reciprocal components, creates and independently verifies exact corresponding source before registry login, then checksums and attests all seven files plus both image digests.
+    evidence: The tagged workflow derives the exact connector version from the numeric release tag, builds and independently verifies its closed ZIP inventory and four version surfaces, builds both images locally, inventories reciprocal components, verifies exact corresponding source before registry login, then checksums and attests all seven files plus both image digests.
   - id: fail_closed_manifest
     status: passed
     evidence: Repository validators reject drift-sensitive evidence, false completion, missing checks, unsafe DAST, optimizer reintroduction, unplanned reciprocal components, incomplete source inputs, and release publication before source verification.
@@ -98,7 +98,7 @@ checks:
     evidence: Exact security run 33255970172 used CodeQL 2.26.4, ZAP 2.17.0, and Trivy 0.74.0 database updated 2026-08-28T22:24:39.310Z, inside the approved twenty-four-hour start bound.
   - id: release_sbom_verification
     status: pending
-    evidence: A real tagged release must publish both SBOMs, exact corresponding source, manifest, notices, and connector package with all six pre-checksum payloads matching the attested checksum file.
+    evidence: A real tagged release must publish both SBOMs, exact corresponding source, manifest, notices, and connector package with all six pre-checksum payloads matching the attested checksum file; the release record must also prove the connector version equals the tag.
   - id: release_file_attestations
     status: pending
     evidence: GitHub CLI verification must accept repository provenance for the connector package, both SBOMs, source archive, source manifest, third-party notices, and exact checksum file.
@@ -135,6 +135,7 @@ automaticFails:
   - A prohibited or restricted production-image licence finding is suppressed without an exact package legal decision and independent review.
   - An SBOM is missing malformed generated from a different image or cannot be reconciled to the released image and candidate commit.
   - Release files or container images lack verifiable repository-scoped provenance for their exact checksum or registry digest.
+  - A tagged connector archive contains a development marker, mismatched or duplicate version metadata, an unreviewed file, or a non-regular archive entry.
   - The reciprocal source plan omits a distributed component or exact build input, an archive exceeds its bounds or differs from its manifest, or registry authentication occurs before independent source verification.
   - The dynamic scanner can route outside its internal disposable Docker network or can reach any public staging or production origin.
   - The deployable dashboard omits CSP framing or MIME controls permits unsafe-inline script or relies on an unverified reverse proxy to add them.

@@ -12,7 +12,7 @@ deployed production separate from the unmerged candidate.
 | Test strength                 |      15 |      15 | 995 workspace tests, 3,773 CI-passed pgTAP assertions, 22 concurrency probes, browser QA, and four WooCommerce runtimes                                                 |
 | Performance/storefront        |      10 |       7 | Checkout performs no hub call, responsive browser QA passes, and two fixed-arrival drivers validate; approved production-like load measurements remain absent           |
 | Observability/operability     |      10 |       9 | Tenant queue health/issues, minimized support bundle, safe replay/reconciliation, exact reporting, worker leases, watermarks, SLOs, and recovery procedures are defined |
-| Documentation/maintainability |      10 |      10 | Accepted ADRs, executable examples, operating files, task graph, integration/API docs, package tooling, and evidence remain versioned                                   |
+| Documentation/maintainability |      10 |      10 | Accepted ADRs, executable examples, operating files, task graph, integration/API docs, tag-derived package verification, and evidence remain versioned                  |
 | **Total**                     | **100** |  **95** | Exact candidate implementation quality is strong; the real-store pilot, full recovery, live operations, and load evidence remain automatic release gates                |
 
 Automatic fail remains active until complete application/Auth/signing-secret recovery and the real-store pilot exist. A higher total cannot override that missing critical gate.

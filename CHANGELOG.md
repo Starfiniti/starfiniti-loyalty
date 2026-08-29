@@ -1,5 +1,19 @@
 # Changelog
 
+- Added ADR-0105 and repaired the WooCommerce tagged-release identity contract.
+  Historical v0.1.11 and the development tree expose `0.1.0-dev`; future
+  release packages now derive an exact numeric version from the Git tag and
+  inject it only into the plugin header, runtime constant, POT project version,
+  and readme stable tag. Deterministic closed-inventory packaging and an
+  independent bounded ZIP verifier reject unsafe or non-regular entries,
+  encrypted paths, inventory drift, development markers, version mismatch or
+  duplication, missing metadata, source mutation, and non-reproducible output.
+  CI builds and verifies a synthetic package, the release workflow verifies the
+  tag-derived package before publication evidence, and the M15 release record
+  must prove tag/plugin equality. Focused local gates pass; exact-head CI and a
+  real approved corrected tag remain pending. No release, deployment, or
+  production state changed.
+
 - Refreshed M16 after the material M15 capacity change without inflating product
   readiness. The V2 score now binds exact integrated candidate `cbe89b4` and
   remains 83/100; deployed production remains 54/100. The recomputable backlog

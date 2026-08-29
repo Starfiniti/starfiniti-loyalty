@@ -77,7 +77,7 @@ Analytics report generation uses the same immutable worker image in a separate `
 
 ## Release process
 
-1. After all required checks pass on an approved commit, push one exact `vMAJOR.MINOR.PATCH` tag. The release workflow reruns the baseline and disposable database gate, publishes dashboard/worker GHCR images under the commit SHA and version, and attaches the WooCommerce ZIP plus `SHA256SUMS` to the GitHub release. Deploy the commit-SHA image tags or resolved digests, never a floating version tag.
+1. After all required checks pass on an approved commit, push one exact `vMAJOR.MINOR.PATCH` tag. The release workflow reruns the baseline and disposable database gate, derives the connector's numeric version from that tag, builds and independently verifies the finished WooCommerce ZIP's plugin header, runtime constant, POT identity, stable tag, and closed source inventory, then publishes dashboard/worker GHCR images under the commit SHA and version and attaches the ZIP plus `SHA256SUMS` to the GitHub release. Deploy the commit-SHA image tags or resolved digests, never a floating version tag.
 2. Back up and confirm WAL archive health before database migrations.
 3. Apply forward-compatible migrations with the old application still safe.
 4. Deploy one application/worker version with health checks and migrations disabled at runtime.

@@ -1,5 +1,18 @@
 # Status
 
+- ADR-0105 repairs the WooCommerce release-version boundary without changing
+  development source or historical assets. The existing v0.1.11 ZIP and source
+  expose `0.1.0-dev` in the plugin header and runtime constant, so future
+  numeric tags now drive a package-time overlay across those fields, the POT
+  project version, and the readme stable tag. A closed bounded verifier rejects
+  development markers, mismatches, duplicates, missing/extra files,
+  directories and other non-regular entries, encrypted entries, unsafe paths,
+  source mutation, and non-reproducible output. CI builds and re-verifies a
+  synthetic numeric artifact; the release workflow derives the version from
+  `GITHUB_REF_NAME` and verifies it before checksums or attestations. Focused
+  local gates pass. Exact-head CI, Security, CodeQL, and the first approved
+  corrected tag remain pending. Production and v0.1.11 are unchanged.
+
 - ADR-0103 refreshes only the repository Supabase boundary: CLI 2.116.0,
   supabase-js 2.112.4, and SSR 0.12.5 are exact-pinned with aligned platform and
   client subpackages; `postgres` 3.4.9 remains unchanged. Official CLI review

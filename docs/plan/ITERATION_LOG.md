@@ -1,5 +1,28 @@
 # Iteration Log
 
+## 2026-08-29 — WooCommerce tagged-version release integrity
+
+- Reconstructed the shipped v0.1.11 connector and confirmed that both its
+  plugin header and runtime constant still report `0.1.0-dev`; the development
+  POT has the same project version and the readme uses `Stable tag: trunk`.
+- Compared manual source bumps, trusting the Git tag without artifact metadata,
+  shell-only PHP replacement, and a package-time overlay with independent
+  verification. ADR-0105 selects the last approach because it keeps development
+  source honest while making the distributed artifact self-consistent.
+- Replaced glob packaging with a deterministic snapshot and closed inventory.
+  Numeric release identity is injected exactly once into four reviewed
+  surfaces, then a separate ZIP reader checks safe paths, bounds, entry types,
+  duplicates, encryption, exact source inventory, version equality, and absence
+  of development markers. Corruption fixtures cover mismatch, retained dev
+  metadata, duplicate version lines, missing files, non-file entries,
+  prerelease versions, source mutation, and reproducibility.
+- CI now builds and verifies `0.0.0`; release tags derive their numeric version
+  from `GITHUB_REF_NAME` and verify the ZIP before source checksums and
+  attestations. The final M15 release artifact schema also requires
+  `pluginPackageVerified: true` and an exact tag-matching `pluginVersion`.
+  Focused local gates pass; exact-head automation and a real approved corrected
+  tag remain pending. No production state or historical release was changed.
+
 ## 2026-08-29 — Supabase client/toolchain patch review
 
 - Official Supabase changelog, CLI, supabase-js, SSR, and Data API security

@@ -19,6 +19,9 @@ function requireCondition(condition, message) {
   if (!condition) throw new Error(`${workflowPath}: ${message}`);
 }
 
+const normalizeShell = (value) =>
+  value?.replaceAll("\\\n", " ").replace(/\s+/gu, " ").trim();
+
 requireCondition(
   workflow?.on?.pull_request !== undefined,
   "pull_request trigger is required",
@@ -56,6 +59,16 @@ const databaseSteps = workflow.jobs?.database?.steps ?? [];
 requireCondition(
   databaseSteps.some((step) => step.run === "npm run db:verify"),
   "database job must execute npm run db:verify",
+);
+
+const baselineSteps = workflow.jobs?.baseline?.steps ?? [];
+const ciWooCommercePackageStep = baselineSteps.find(
+  (step) => step.name === "Build and verify versioned WooCommerce artifact",
+);
+requireCondition(
+  normalizeShell(ciWooCommercePackageStep?.run) ===
+    "npm run woocommerce:package -- --version 0.0.0 npm run woocommerce:package:verify -- --archive dist/starfiniti-loyalty.zip --version 0.0.0",
+  "baseline must build and independently verify an exact versioned WooCommerce artifact",
 );
 requireCondition(
   databaseSteps.some(
@@ -208,12 +221,11 @@ const exactDistPaths = (value) =>
     .sort()
     .join(",");
 const exactAttestedReleasePaths = [...attestedReleaseFiles].sort().join(",");
-const normalizeShell = (value) =>
-  value?.replaceAll("\\\n", " ").replace(/\s+/gu, " ").trim();
 for (const requiredCommand of [
   "npm run check",
   "npm run db:verify",
   "npm run woocommerce:package",
+  "npm run woocommerce:package:verify",
   "docker login ghcr.io",
   "apps/dashboard/Dockerfile",
   "apps/worker/Dockerfile",
@@ -235,6 +247,14 @@ for (const requiredCommand of [
 }
 const releaseStepIndex = (name) =>
   releaseSteps.findIndex((step) => step.name === name);
+const wooCommercePackageStep =
+  releaseSteps[releaseStepIndex("Build WooCommerce release artifact")];
+requireCondition(
+  wooCommercePackageStep?.shell === "bash" &&
+    normalizeShell(wooCommercePackageStep.run) ===
+      'version="${GITHUB_REF_NAME#v}" npm run woocommerce:package -- --version "$version" npm run woocommerce:package:verify -- --archive dist/starfiniti-loyalty.zip --version "$version"',
+  `${releaseWorkflowPath}: WooCommerce artifact metadata must derive from and be verified against the exact release tag`,
+);
 const orderedReleaseSteps = [
   "Build immutable application images",
   "Generate dashboard CycloneDX SBOM",

@@ -864,6 +864,8 @@ function validateRelease(release, candidate) {
       "files",
       "imageAttestationsVerified",
       "imageDigests",
+      "pluginPackageVerified",
+      "pluginVersion",
       "reciprocalComponentsVerified",
       "sbomSha256",
       "schema",
@@ -884,6 +886,8 @@ function validateRelease(release, candidate) {
     !/^v\d+\.\d+\.\d+$/u.test(release.tag) ||
     release.checksumsVerified !== true ||
     release.fileAttestationsVerified !== 7 ||
+    release.pluginPackageVerified !== true ||
+    release.pluginVersion !== release.tag.slice(1) ||
     release.sourceArchiveVerified !== true ||
     release.sourceManifestVerified !== true ||
     release.reciprocalComponentsVerified !== 13 ||
@@ -1276,6 +1280,8 @@ if (process.argv.includes("--self-test")) {
     files: syntheticReleaseFiles,
     imageAttestationsVerified: 2,
     imageDigests: [`sha256:${"a".repeat(64)}`, `sha256:${"b".repeat(64)}`],
+    pluginPackageVerified: true,
+    pluginVersion: "1.0.0",
     reciprocalComponentsVerified: 13,
     sbomSha256: [
       syntheticReleaseFiles.find(
@@ -1295,6 +1301,20 @@ if (process.argv.includes("--self-test")) {
   try {
     validateRelease(incompleteReleaseFiles, evidence);
     fail("self-test accepted incomplete release file evidence");
+  } catch (error) {
+    if (
+      !(error instanceof Error) ||
+      !error.message.includes("release security verification is incomplete")
+    ) {
+      throw error;
+    }
+  }
+
+  const mismatchedPluginVersion = structuredClone(syntheticRelease);
+  mismatchedPluginVersion.pluginVersion = "1.0.1";
+  try {
+    validateRelease(mismatchedPluginVersion, evidence);
+    fail("self-test accepted a release-tag/plugin-version mismatch");
   } catch (error) {
     if (
       !(error instanceof Error) ||
