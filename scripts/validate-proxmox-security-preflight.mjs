@@ -1298,10 +1298,15 @@ function main() {
   );
 }
 
-try {
-  main();
-} catch (error) {
-  if (error instanceof Error) console.error(error.message);
-  else console.error("Proxmox security preflight failed with an unknown error");
-  process.exitCode = 1;
+if (
+  resolve(process.argv[1] ?? "") === resolve(fileURLToPath(import.meta.url))
+) {
+  try {
+    main();
+  } catch (error) {
+    if (error instanceof Error) console.error(error.message);
+    else
+      console.error("Proxmox security preflight failed with an unknown error");
+    process.exitCode = 1;
+  }
 }

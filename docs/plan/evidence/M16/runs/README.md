@@ -32,6 +32,16 @@ advances only dependency simulation and installed starting state; compatibility,
 rollback, recovery, repository policy, maintenance, reboot, execution, and
 post-change proof remain separate gates.
 
+Proxmox compatibility inventories use
+`starfiniti.proxmox-compatibility-inventory-report.v1`. They retain only
+anonymous guest-profile hashes/counts/statuses, the two semantic critical-
+workload aliases, minimized platform/storage/service/network/HA facts, and exact
+contract digests. They must contain no VM ID, guest name, raw configuration,
+storage ID, interface name, address, MAC, path, route, credential, or raw command
+output. A passing report advances only consumer-inventory capture; all six
+rehearsal rows and every compatibility, recovery, approval, reboot, mutation,
+and post-change gate remain false.
+
 The first committed installed-state artifact is
 `recovery-dependency-snapshot-c5678b6-2026-08-28T221524Z.json` (8,813 bytes,
 SHA-256

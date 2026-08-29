@@ -94,3 +94,16 @@ simulation and installed starting state therefore pass; compatibility, rollback
 escrow, recovery readiness, repository policy, maintenance, reboot, execution,
 post-change reconciliation, and independent approval remain open. None of these
 artifacts completes a monthly provider review or production repair gate.
+
+ADR-0089 defines the next independent preparation artifact. The reviewed plan
+binds the exact candidate and ADR-0088 report to a stable route-free projection
+of the whole production host: 22 anonymous guests form 19 distinct behavior
+profiles, alongside two storage profiles, nine required management services,
+aggregate network shape, host boot/KVM/IOMMU facts, exact local tool digests, and
+zero HA resources. The two loyalty workloads appear only as `application` and
+`database`; VM IDs, names, raw configuration, storage IDs, interface names,
+addresses, MACs, paths, routes, credentials, and raw output are excluded.
+`npm run proxmox-security:compatibility-inventory:validate` covers 56 adversarial
+cases. The accepted clean-commit capture is still pending, and every actual
+compatibility rehearsal, rollback, recovery, approval, installation, reboot,
+mutation, and post-change gate remains false.

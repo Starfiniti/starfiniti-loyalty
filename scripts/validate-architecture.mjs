@@ -105,6 +105,7 @@ const acceptedAdrs = [
   "0081-fail-closed-self-hosted-supabase-compatibility.md",
   "0082-request-bound-dashboard-content-security-policy.md",
   "0084-bounded-provider-source-provenance-snapshots.md",
+  "0089-minimized-whole-host-proxmox-consumer-inventory.md",
 ];
 
 for (const adr of acceptedAdrs) {

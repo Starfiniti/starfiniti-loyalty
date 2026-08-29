@@ -24,6 +24,11 @@ decisions. Repository validation authorizes none of those production actions.
   eleven upgrades, one install, zero removals/downgrades, twelve configurations,
   all four recovery packages retained, and all bounded package/APT/repository
   state identical before and after. It authorizes no later phase.
+- ADR-0089 defines a distinct route-free whole-host consumer inventory. Its
+  expected projection contains 22 anonymous guests across 19 exact behavior
+  profiles, two storage profiles, nine required management services, aggregate
+  network shape, and zero HA resources. The accepted capture is still pending;
+  observing this matrix does not prove compatibility.
 - The configured `pve-no-subscription` repository is not Proxmox's recommended
   production repository. The owner must explicitly decide whether to procure and
   use the enterprise repository or accept a newly regenerated candidate from the
@@ -54,6 +59,7 @@ From a clean candidate checkout:
 npm run proxmox-security:update:validate
 npm run proxmox-security:packages:validate
 npm run proxmox-security:preflight:validate
+npm run proxmox-security:compatibility-inventory:validate
 npm run recovery-transport:validate
 npm run recovery:validate
 ```
@@ -109,6 +115,29 @@ APT lists/archives, and repository configuration before and after. It also
 records that the running prior kernel package is currently autoremovable; this
 is an explicit instruction to retain it, never permission to run `autoremove`.
 
+ADR-0089 adds the next route-free read-only inventory contract. It covers every
+QEMU VM and LXC container sharing the production host plus storage, services,
+network shape, HA, kernel, KVM, IOMMU, boot, and local tool provenance. It emits
+anonymous behavior profiles and the two semantic critical-workload aliases only;
+raw VM IDs, names, configuration values, storage IDs, interface names, addresses,
+MACs, paths, routes, credentials, and command output are prohibited.
+
+An authorized operator transmits the exact committed
+`infrastructure/testing/proxmox-compatibility-inventory/collect-facts.py` bytes
+over the already approved session, independently compares its SHA-256 with the
+plan, and executes it as root under `python3 -I`. Pipe the bounded stdout directly
+to the clean committed checkout:
+
+```sh
+npm run proxmox-security:compatibility-inventory:capture -- --facts -
+```
+
+Do not create or commit a raw fact file. The collector executes only fixed local
+read operations and requires two identical projections. A passing report advances
+only `consumerInventoryCaptured`; every rehearsal and authority gate remains
+false. Reverify an accepted report with
+`node scripts/validate-proxmox-compatibility-inventory.mjs --verify-report <absolute-path>`.
+
 ## Phase 2 — Production preflight (read-only unless separately approved)
 
 The operator must independently record and compare, outside Git:
@@ -120,8 +149,10 @@ The operator must independently record and compare, outside Git:
 2. Exact enabled repository identities and successful signature verification.
 3. A fresh package dependency simulation with exactly eleven upgrades, one new
    package, zero removals, zero downgrades, and twelve configurations.
-4. Active VM/container inventory and the host consumers of rsync, BorgBackup,
-   OpenSSH, QEMU, storage, HA, and container tooling.
+4. Reverify the fresh ADR-0089 whole-host consumer report, then execute the six
+   isolated rehearsal rows for all 15 QEMU profiles, all four LXC profiles, both
+   storage profiles, all nine required management services, candidate-host boot,
+   and application/database clones. An inventory report alone fails this item.
 5. Current host configuration backup and package-status inventory.
 6. A bootable retained prior kernel and verified console access independent of
    the host network.

@@ -624,12 +624,19 @@ requireCondition(
     recoveryTransportSteps.some(
       (step) =>
         step.name ===
+          "Validate route-free Proxmox compatibility inventory contract" &&
+        step.run ===
+          "npm run proxmox-security:compatibility-inventory:validate",
+    ) &&
+    recoveryTransportSteps.some(
+      (step) =>
+        step.name ===
           "Run disposable no-install Proxmox package provenance canary" &&
         step.env?.STARFINITI_CANARY_RUNNER === "github-hosted" &&
         step.run ===
           "npm run proxmox-security:packages:run -- --out dist/proxmox-security-packages/ci.json",
     ),
-  `${securityWorkflowPath}: recovery transport, Proxmox package provenance, and route-free read-only preflight must validate while disposable plans execute`,
+  `${securityWorkflowPath}: recovery transport, Proxmox package provenance, route-free read-only preflight, and compatibility inventory must validate while disposable plans execute`,
 );
 requireCondition(
   recoveryTransportSteps.some(

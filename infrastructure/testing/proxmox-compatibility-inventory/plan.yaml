@@ -1,0 +1,283 @@
+schema: starfiniti.proxmox-compatibility-inventory-plan.v1
+version: 1
+status: candidate
+createdAt: 2026-08-29T02:05:00Z
+candidate:
+  path: infrastructure/governance/proxmox-security-update-plan.yaml
+  fileSha256: ec010eb667d6166ee5adc0ee0cd2d6ecdf5b2a114e345b018b51c704d64df075
+  provenanceSha256: 39f30c67a374b041944a598ce2334fed3fcb8e5f64264b3db08847d5ee23ff9f
+preflight:
+  planPath: infrastructure/testing/proxmox-security-preflight/plan.yaml
+  planSha256: af2b01cbdff3c6f88861c0e5285cd2cf2a98a7aa5b033f74d19c21b60b77461d
+  reportPath: docs/plan/evidence/M16/runs/proxmox-security-preflight-5659404-2026-08-29T013145Z.json
+  reportFileSha256: b18037b19263020fabce46c2b6b13ec69b640775d2747dae474521191cba8a85
+  reportSha256: 898d10bde0e5dd1103dfd8838f19febff3e781ac95ecf305d4767eadf20a110a
+collector:
+  path: infrastructure/testing/proxmox-compatibility-inventory/collect-facts.py
+  fileSha256: 44838b5c9cea4de61ea3cbde297c00772c862abd547f3fdca0581242e0ad7201
+  endpointId: proxmox-host
+  transport: operator-supplied-stdin-over-approved-session
+  routeInput: prohibited
+  credentialInput: prohibited
+  effectiveUid: 0
+  pythonIsolation: required
+  maximumDurationSeconds: 120
+  maximumFactBytes: 65536
+  maximumFactAgeSeconds: 300
+  packageManager: prohibited
+  configurationWrite: prohibited
+  serviceControl: prohibited
+  guestControl: prohibited
+  storageWrite: prohibited
+  reboot: prohibited
+expectedInventory:
+  projectionSha256: e5b11768254534c2f4bd18a2734b78c5c2a63250d32c7715b86dd18c7b3689de
+  pveVersion: "pve-manager/9.2.3/d0fde103346cf89a (running kernel: 7.0.6-2-pve)"
+  tools:
+    - {
+        id: python3,
+        sha256: 4703a3d15898c0b5d81c3f939e93bdd8ca6116342093fb160ab1e01860dd7d8b,
+      }
+    - {
+        id: pvesh,
+        sha256: 9ed13d4c2d82e7864ff0192c428da7669af263f81dfcc84d5a981ca98fee8439,
+      }
+    - {
+        id: qm,
+        sha256: 7657b1a0f13220499caf049e0196a470984bed40717e1dbfde7c4847dad746b5,
+      }
+    - {
+        id: pct,
+        sha256: 8c12d01fae8684228b4ed909da5464733d9028a6722bea5ed60619637424f8c2,
+      }
+    - {
+        id: pvesm,
+        sha256: f71f728fa89fde1b0643c210b39ba4b4fc6b68c43769cc613225f98b26c8f5ae,
+      }
+    - {
+        id: systemctl,
+        sha256: 848c70d7e2c2f43f4f93287897ac8946e8eda45e7daa5f2975d9728071856b1a,
+      }
+    - {
+        id: pveversion,
+        sha256: da231e9b2c17f265fd910ef524e77648c98c22e9220a8df9a4dbe32b7e7aff55,
+      }
+  platform:
+    architecture: x86_64
+    runningKernel: 7.0.6-2-pve
+    cpuCount: 16
+    hardwareVirtualizationFlag: vmx
+    kvmDevicePresent: true
+    iommuGroupCount: 11
+    bootMode: bios
+    loadedModules:
+      {
+        bridge: true,
+        kvm: true,
+        kvm_amd: false,
+        kvm_intel: true,
+        vfio_pci: false,
+        vhost_net: true,
+        zfs: false,
+      }
+  guests:
+    counts:
+      {
+        total: 22,
+        qemu: 18,
+        lxc: 4,
+        running: 20,
+        stopped: 2,
+        pausedOrSuspended: 0,
+      }
+    profileCount: 19
+    profiles:
+      - {
+          profileSha256: 058406295f8b8b04a98f764378832748ca5e709fad58194f592cf0a85504c820,
+          type: qemu,
+          count: 1,
+          statusCounts: { running: 1 },
+        }
+      - {
+          profileSha256: 133ecc15da0bacad7865a36582cf318389d2d47fbcc75d82e0ea70c107a6f3f0,
+          type: lxc,
+          count: 1,
+          statusCounts: { running: 1 },
+        }
+      - {
+          profileSha256: 182bd5dee2db513a64695d3f62dfe4d1e896b5fd70074473f5d84214b20c8bd7,
+          type: qemu,
+          count: 1,
+          statusCounts: { running: 1 },
+        }
+      - {
+          profileSha256: 29d11ad53a0dcfc6913c7ac2f54e54fc939c224c29d7cb2b163a0e89c87c7e53,
+          type: lxc,
+          count: 1,
+          statusCounts: { running: 1 },
+        }
+      - {
+          profileSha256: 2ff80906c020fd3f6a84816a8160e5553e4689783b7ac80efd99b39c9025feaf,
+          type: qemu,
+          count: 2,
+          statusCounts: { running: 2 },
+        }
+      - {
+          profileSha256: 399ec511c3d108a6f62f4134f019bdf2748b6f85c9601b4e8ba10be7a775a612,
+          type: qemu,
+          count: 1,
+          statusCounts: { running: 1 },
+        }
+      - {
+          profileSha256: 4f2ae2dc2117ce6a451dceb79992830aba4f39b66494efa4f03f405b911a39d1,
+          type: qemu,
+          count: 1,
+          statusCounts: { running: 1 },
+        }
+      - {
+          profileSha256: 58fd742756755bb924a52d3dc701e33f060913e85852c03ea3fa9c77be9a7a40,
+          type: qemu,
+          count: 1,
+          statusCounts: { running: 1 },
+        }
+      - {
+          profileSha256: 692f58829f2ee746c654e1e9551beff66f87aeee657f2e9d14f77ddc0e6f6dec,
+          type: qemu,
+          count: 2,
+          statusCounts: { running: 2 },
+        }
+      - {
+          profileSha256: 831722cbe0fa89eb661cd6b6eb708422ac092e2eeffafa159df852aaae807dc7,
+          type: lxc,
+          count: 1,
+          statusCounts: { running: 1 },
+        }
+      - {
+          profileSha256: 86997c2c302f53f1c96469069d562730598bf4e43675fbf513bca33c0961ce22,
+          type: qemu,
+          count: 2,
+          statusCounts: { running: 2 },
+        }
+      - {
+          profileSha256: ba46886273228cf1f2c89bf29209a76a03a9a86285a8d9257b544b3e53fd8d14,
+          type: qemu,
+          count: 1,
+          statusCounts: { running: 1 },
+        }
+      - {
+          profileSha256: bb38fcffa66363c9dc62b45ee606ca6185fbde3fcbabe132d3bd11da21241346,
+          type: qemu,
+          count: 1,
+          statusCounts: { running: 1 },
+        }
+      - {
+          profileSha256: be7f5207fc4c3194d8e8513c1992079d62eb185b87320e9ddef1b732fde8d58b,
+          type: qemu,
+          count: 1,
+          statusCounts: { running: 1 },
+        }
+      - {
+          profileSha256: c59f36ba8cf66695b8fa1931a5680da4209572dcfde12b1583beb2f50fd9ae6d,
+          type: lxc,
+          count: 1,
+          statusCounts: { stopped: 1 },
+        }
+      - {
+          profileSha256: ccaf3a2fbcb66d4fccad20f2ae2ec80a377f6c2a42b6efacd1cfe569307cc85c,
+          type: qemu,
+          count: 1,
+          statusCounts: { running: 1 },
+        }
+      - {
+          profileSha256: e0478bf7b599fe630f43eff9692a476d6d60c29f2b775c7290b8dad8063bf697,
+          type: qemu,
+          count: 1,
+          statusCounts: { stopped: 1 },
+        }
+      - {
+          profileSha256: ef1f5e51a0ec7e8cd448e80e3f48c7c47d85fd1cd2e8705d67f5f12a4892fce4,
+          type: qemu,
+          count: 1,
+          statusCounts: { running: 1 },
+        }
+      - {
+          profileSha256: f28d1dc600f90c9dd6a6950199eb8495f874578827fdcdf59573e96cb78eec79,
+          type: qemu,
+          count: 1,
+          statusCounts: { running: 1 },
+        }
+    criticalWorkloads:
+      - {
+          id: application,
+          type: qemu,
+          status: running,
+          profileSha256: 692f58829f2ee746c654e1e9551beff66f87aeee657f2e9d14f77ddc0e6f6dec,
+        }
+      - {
+          id: database,
+          type: qemu,
+          status: running,
+          profileSha256: 692f58829f2ee746c654e1e9551beff66f87aeee657f2e9d14f77ddc0e6f6dec,
+        }
+  storages:
+    - {
+        type: dir,
+        content: [backup, images, import, iso, rootdir, snippets, vztmpl],
+        active: true,
+        enabled: true,
+        shared: false,
+      }
+    - {
+        type: lvmthin,
+        content: [images, rootdir],
+        active: true,
+        enabled: true,
+        shared: false,
+      }
+  services:
+    - pve-cluster.service
+    - pvedaemon.service
+    - pveproxy.service
+    - pvestatd.service
+    - pvescheduler.service
+    - pve-ha-crm.service
+    - pve-ha-lrm.service
+    - qmeventd.service
+    - ssh.service
+  serviceState: active-running-enabled
+  network:
+    ipv4DefaultRouteCount: 1
+    kindCounts: { bridge: 4, guest-virtual: 71, loopback: 1, physical: 1 }
+    stateCounts: { unknown: 18, up: 59 }
+  haResourceCount: 0
+rehearsalMatrix:
+  - id: candidate-host-boot
+    scope: candidate kernel boot KVM IOMMU physical network and management services on an isolated equivalent host
+    status: pending
+  - id: qemu-profiles
+    scope: all 15 distinct QEMU profiles boot agent disk bridge firewall serial and shutdown behavior
+    status: pending
+  - id: lxc-profiles
+    scope: all 4 distinct LXC profiles start exec bridge nesting unprivileged and device pass-through behavior
+    status: pending
+  - id: storage-profiles
+    scope: dir and lvmthin read write snapshot backup restore and capacity behavior
+    status: pending
+  - id: management-services
+    scope: all 9 required host services API console authentication statistics scheduler and zero-resource HA behavior
+    status: pending
+  - id: critical-workload-clones
+    scope: isolated application and database clones plus Supabase Auth dashboard checkout backup WAL and reconciliation smoke
+    status: pending
+gates:
+  candidatePackageBytesVerified: true
+  repositoryToolSignatureReverified: true
+  candidateDependencySimulationReverified: true
+  installedStartingStateReverified: true
+  consumerInventoryCaptured: false
+  compatibilityProved: false
+  rollbackEscrowComplete: false
+  recoveryReady: false
+  maintenanceApproved: false
+  rebootApproved: false
+  productionMutation: false
