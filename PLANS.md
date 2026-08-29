@@ -9,9 +9,14 @@ configuration now explicitly sets it false while retaining only `public`,
 `graphql_public`, and `loyalty` in the Data API schema list. Explicit grants and
 RLS remain authoritative. A network-free validator binds official sources,
 package bytes, Node compatibility, transitive alignment, configuration, task
-evidence, and false production authority through thirty-one corruptions. No
-live self-hosted stack, database grant, migration, release, or loyalty value is
-changed; exact-head CI evidence remains the repository closeout gate.
+evidence, immutable CI results, and false production authority through
+forty-seven corruptions. Exact implementation `1b9a4d4` passed CI
+`33265165945`, Security `33265166008`, and external CodeQL with all twelve
+checks green. The 5,932-byte evidence record binds the complete database,
+image/security, and WooCommerce regression under SHA-256
+`3826e55e239bb4a2f9a3ee6d3d3f3e7541c5de0572d0d53dcd552b3cccd21aa7`.
+No live self-hosted stack, database grant, migration, release, or loyalty value
+changed; merge and every production gate remain separate.
 
 ADR-0102 is the active safe M16 security slice. Official Next.js 16.3.3 fixes
 two Critical unauthenticated RCE advisories, while released production v0.1.11

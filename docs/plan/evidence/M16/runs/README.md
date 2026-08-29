@@ -141,6 +141,17 @@ coupon order/reconciliation paths, cleanup, and false release/pilot/deployment/
 observation/reconciliation authority. It proves a disposable compatibility
 matrix only; it does not prove a merchant-store upgrade or released connector.
 
+Supabase repository runtime CI evidence uses
+`starfiniti.supabase-runtime-ci-evidence.v1`. The first accepted artifact is
+`supabase-runtime-1b9a4d4-2026-08-29T172357Z.json` (5,932 bytes, SHA-256
+`3826e55e239bb4a2f9a3ee6d3d3f3e7541c5de0572d0d53dcd552b3cccd21aa7`).
+It binds exact implementation `1b9a4d4767eb504b65b5e06d5d8e8ec444dd46c3`,
+CI `33265165945`, Security `33265166008`, external zero-result CodeQL, all
+twelve checks, exact package/configuration boundaries, both images/SBOMs/scans,
+the complete database and WooCommerce regression, and false production
+authority. It proves repository client/toolchain compatibility only; it does not
+approve or attest a live self-hosted stack upgrade.
+
 Never store provider bodies, credentials, raw ETags, hostnames, IP addresses,
 usernames, SSH routes or keys, raw command output, personal data, tenant/customer
 identifiers, mutable drafts, or unapproved operational telemetry here.

@@ -1,9 +1,9 @@
 schema: starfiniti.continuous-improvement.v1
 status: in_progress
-observedAt: 2026-08-29T16:30:51Z
+observedAt: 2026-08-29T17:23:57Z
 candidate:
   branch: codex/enterprise-roadmap-integration
-  commit: c3b29542035772ddcbc48d92e2b159ac605dd80f
+  commit: 1b9a4d4767eb504b65b5e06d5d8e8ec444dd46c3
   initialCloseApproved: false
 plan:
   path: infrastructure/governance/continuous-improvement.yaml
@@ -73,10 +73,10 @@ checks:
     evidence: ADR-0068 compares four approaches, cites canonical official providers, defines the decision, and preserves rollback and historical evidence semantics.
   - id: validator_selftest
     status: passed
-    evidence: The completion fixture and adversarial mutations prove that cadence, freshness, ranking, recurring controls, rescoring, experiment guardrails, exercises, artifacts, approvals, and score floors fail closed; the source collector rejects twenty-six source, network, response, digest, review-claim, output, and byte-preservation corruptions without network access, while the installed-state collector rejects thirty-six fact, endpoint, component, chronology, digest, historical-source, full-candidate, output, and false-authority corruptions without network or SSH access.
+    evidence: The completion fixture and adversarial mutations prove that cadence, freshness, ranking, recurring controls, rescoring, experiment guardrails, exercises, artifacts, approvals, and score floors fail closed; the source collector rejects twenty-six source, network, response, digest, review-claim, output, and byte-preservation corruptions without network access, the installed-state collector rejects thirty-six fact, endpoint, component, chronology, digest, historical-source, full-candidate, output, and false-authority corruptions without network or SSH access, and the Supabase repository review rejects forty-seven source package lock alignment Node Data API schema automatic-grant immutable-CI task ADR byte-preservation and false-authority corruptions.
   - id: exact_head_ci
     status: passed
-    evidence: Exact Next.js security implementation c3b29542035772ddcbc48d92e2b159ac605dd80f passed all seven CI jobs in run 33261152926 all four Security jobs in run 33261152934 and external CodeQL check 99123424225 with all twelve PR checks green and PR 57 merge-clean; immutable 5199-byte evidence SHA-256 d90150e1ec818f1fa092df6cf6a91137c1333cf5b97b4eafb4bcfe3b4ec205ca binds exact completion chronology rebuilt images SBOMs scans and complete regression while prior accepted evidence remains preserved.
+    evidence: Exact Supabase repository implementation 1b9a4d4767eb504b65b5e06d5d8e8ec444dd46c3 passed all seven CI jobs in run 33265165945 all four Security jobs in run 33265166008 and external CodeQL check 99134053293 with all twelve PR checks green and PR 57 merge-clean; immutable 5932-byte evidence SHA-256 3826e55e239bb4a2f9a3ee6d3d3f3e7541c5de0572d0d53dcd552b3cccd21aa7 binds exact package and Data API grant boundaries completion chronology rebuilt images SBOMs scans and complete regression while prior accepted evidence remains preserved.
   - id: owner_roster
     status: pending
     evidence: Product, engineering, security, operations, monthly-review, quarterly-exercise, and owner roles require named environment-owned assignments.

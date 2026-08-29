@@ -136,6 +136,16 @@ decision:
     - supabase-js 2.112.4 hardens zero-timeout lock handling and refresh rejection behavior.
     - SSR 0.12.5 warns when unsupported auth storage configuration would be ignored.
   rollback: Revert the repository package set as one unit and keep auto_expose_new_tables false; never restore implicit grants.
+ciEvidence:
+  path: docs/plan/evidence/M16/runs/supabase-runtime-1b9a4d4-2026-08-29T172357Z.json
+  sizeBytes: 5932
+  sha256: 3826e55e239bb4a2f9a3ee6d3d3f3e7541c5de0572d0d53dcd552b3cccd21aa7
+  implementationCommit: 1b9a4d4767eb504b65b5e06d5d8e8ec444dd46c3
+  analysisMergeCommit: bb19a18be4b889573cfb163df3d924933c90bfeb
+  ciRunId: 33265165945
+  securityRunId: 33265166008
+  externalCodeqlCheckRunId: 99134053293
+  conclusion: passed
 authority:
   productionAccess: false
   mergeApproved: false

@@ -6,10 +6,14 @@
   `auto_expose_new_tables`; the Supabase configuration and database validator now
   require explicit false while preserving the existing public API schema list,
   private-schema exclusion, explicit grants, and RLS. A network-free validator
-  rejects thirty-one official-source, package, lockfile, Node, configuration,
-  task, ADR, and false-authority corruptions. PostgreSQL client 3.4.9 is already
-  current and unchanged. No production stack, database, release, checkout path,
-  or loyalty value changed; exact-head CI evidence remains pending.
+  rejects forty-seven official-source, package, lockfile, Node, configuration,
+  immutable-evidence, task, ADR, and false-authority corruptions. Exact
+  implementation `1b9a4d4` passed CI `33265165945`, Security `33265166008`, and
+  external CodeQL with all twelve checks green; immutable 5,932-byte evidence
+  SHA-256 `3826e55e239bb4a2f9a3ee6d3d3f3e7541c5de0572d0d53dcd552b3cccd21aa7`
+  binds the complete database, image/security, and WooCommerce regression.
+  PostgreSQL client 3.4.9 is already current and unchanged. No production stack,
+  database, release, checkout path, or loyalty value changed.
 
 - Added ADR-0102 and an exact Next.js 16.3.3 security update for two official
   Critical unauthenticated RCE advisories affecting the previously pinned

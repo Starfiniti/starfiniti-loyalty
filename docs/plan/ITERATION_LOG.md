@@ -11,10 +11,17 @@
 - The network-free gate binds official release identities, exact npm provenance,
   all eight CLI platform binaries, five Supabase JS subpackages, the SSR peer,
   `jose`, Node compatibility, the three-schema Data API allowlist, task evidence,
-  rollback, and seven false production-authority fields. Thirty-one adversarial
-  corruptions and static validation of 87 migrations and 69 pgTAP files pass.
-- This is a repository-only candidate. Docker replay, exact-head CI/security,
-  merge, release, live stack upgrade, and production reconciliation remain open.
+  rollback, immutable exact-head evidence, and seven false production-authority
+  fields. Forty-seven adversarial corruptions pass.
+- Exact implementation `1b9a4d4767eb504b65b5e06d5d8e8ec444dd46c3`
+  passed CI `33265165945`, Security `33265166008`, and external CodeQL check
+  `99134053293`. All twelve checks are green: 995 tests, 87 migrations, 69 pgTAP
+  files with 3,790 assertions, 22 concurrency probes, both image/SBOM/Trivy
+  paths, DAST, CodeQL, recovery transport, and all four WooCommerce cells. The
+  immutable 5,932-byte evidence file has SHA-256
+  `3826e55e239bb4a2f9a3ee6d3d3f3e7541c5de0572d0d53dcd552b3cccd21aa7`.
+- This remains a repository-only candidate. Merge, release, live stack upgrade,
+  production mutation, and reconciliation remain open.
 
 ## 2026-08-29 — Next.js 16.3.3 Critical security candidate
 

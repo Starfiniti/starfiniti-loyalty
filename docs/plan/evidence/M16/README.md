@@ -9,9 +9,14 @@ unchanged. Because the reviewed CLI restores automatic table exposure as a true
 default, `supabase/config.toml` and the database validator require
 `auto_expose_new_tables = false`. Run
 `npm run continuous-improvement:supabase-runtime:validate`; it rejects
-thirty-one source, package, alignment, Node, schema, grant-boundary, task, ADR,
-and false-authority corruptions. Exact-head CI evidence, merge, release,
-deployment, stack upgrade, and production reconciliation remain pending.
+forty-seven source, package, alignment, Node, schema, grant-boundary,
+immutable-evidence, task, ADR, and false-authority corruptions. Exact
+implementation `1b9a4d4` passed all twelve CI/security checks. The 5,932-byte
+[`runs/supabase-runtime-1b9a4d4-2026-08-29T172357Z.json`](runs/supabase-runtime-1b9a4d4-2026-08-29T172357Z.json)
+has SHA-256
+`3826e55e239bb4a2f9a3ee6d3d3f3e7541c5de0572d0d53dcd552b3cccd21aa7`.
+Merge, release, deployment, stack upgrade, and production reconciliation remain
+pending.
 
 ADR-0080 closes the current score-subject ambiguity without claiming an elapsed
 review. `docs/plan/evaluations/product-score.json` V2 preserves the exact V1

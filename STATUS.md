@@ -8,10 +8,13 @@
   fails if the setting is absent or true. The Data API schema allowlist remains
   `public`, `graphql_public`, and `loyalty`; `loyalty_private` remains excluded,
   and explicit grants plus RLS remain authoritative. The network-free review
-  rejects thirty-one package, lockfile, configuration, task, ADR, and authority
-  corruptions. Focused repository and static database validation pass. Exact-head
-  CI, merge, release, deployment, live stack upgrade, and production
-  reconciliation remain pending; production is unchanged.
+  rejects forty-seven package, lockfile, configuration, immutable-evidence,
+  task, ADR, and authority corruptions. Exact implementation `1b9a4d4` passed CI
+  `33265165945`, Security `33265166008`, and external CodeQL with all twelve
+  checks green; the immutable 5,932-byte evidence file has SHA-256
+  `3826e55e239bb4a2f9a3ee6d3d3f3e7541c5de0572d0d53dcd552b3cccd21aa7`.
+  Merge, release, deployment, live stack upgrade, and production reconciliation
+  remain pending; production is unchanged.
 
 - ADR-0102 addresses a newly confirmed Critical application dependency gap
   without claiming production repair. Official Next.js 16.3.3 fixes
