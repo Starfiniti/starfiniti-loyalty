@@ -42,6 +42,24 @@ output. A passing report advances only consumer-inventory capture; all six
 rehearsal rows and every compatibility, recovery, approval, reboot, mutation,
 and post-change gate remain false.
 
+Proxmox compatibility rehearsal reports use
+`starfiniti.proxmox-compatibility-rehearsal-report.v1`. They bind an exact clean
+candidate commit, the immutable candidate/package/preflight/inventory evidence,
+released Starfiniti `v0.1.11`, the reviewed Supabase `self-hosted/v0.8.0`
+compatibility/Compose/image identities, an owner-only isolated
+target/control/driver set, and a same-projection
+production inventory read no more than five minutes old. It also requires a
+fresh minimized ADR-0088 preflight report whose exact file digest is bound by
+the approval. Raw production facts,
+driver output, infrastructure identifiers, and restricted recovery evidence do
+not belong in the report. Only fresh observation/report/file digests and
+timestamps survive. The target's out-of-process auto-destroy lease equals
+the approval expiry so controller death does not own the final cleanup boundary.
+A controller pass advances only `rehearsalExecuted`;
+independent review must separately bind the restricted evidence before
+compatibility can advance. No such rehearsal report has been accepted or
+committed.
+
 The first committed installed-state artifact is
 `recovery-dependency-snapshot-c5678b6-2026-08-28T221524Z.json` (8,813 bytes,
 SHA-256

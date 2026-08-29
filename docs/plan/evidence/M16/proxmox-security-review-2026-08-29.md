@@ -85,22 +85,22 @@ edited to disguise that difference.
 
 ## Gate state
 
-| Gate                                | State                           | Reason                                                                                                                                          |
-| ----------------------------------- | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| Candidate metadata                  | Passed                          | Five repository observations, twelve exact package records, four retained packages, and five advisories are bound.                              |
-| Listed advisory floors              | Candidate passes; current fails | Exact candidate versions meet every listed floor; the running host does not.                                                                    |
-| Candidate package bytes             | Passed                          | A disposable runner verified both acquisitions, exact fields, size, and SHA-256 for all twelve packages.                                        |
-| Repository signature reverification | Passed                          | Five fresh `InRelease` files, ten accepted signatures, and all signed-index bindings passed independently.                                      |
-| Dependency simulation               | Passed                          | The current host selects exactly eleven upgrades, one install, twelve configurations, zero removals, and zero downgrades.                       |
-| Installed starting state            | Passed                          | All twelve starting records, four retained recovery packages, running kernel/provider package, tools, indexes, and holds equal the V1 contract. |
-| Compatibility                       | Pending                         | No isolated host/guest rehearsal or consumer matrix is complete.                                                                                |
-| Rollback escrow                     | Pending                         | Exact package/configuration inputs and retained-kernel recovery are not independently escrowed.                                                 |
-| Recovery readiness                  | Pending                         | Current clean-room host, database/WAL, VM, Auth, application, and connector recovery proof is incomplete.                                       |
-| Maintenance approval                | Pending                         | Operations, security, and owner approval are absent.                                                                                            |
-| Reboot approval                     | Pending                         | Reboot is a distinct unissued decision.                                                                                                         |
-| Production mutation                 | False                           | This review was read-only.                                                                                                                      |
-| Post-change smoke/reconciliation    | Pending                         | No update has run.                                                                                                                              |
-| Independent review                  | Pending                         | No independent reviewer has approved evidence or closure.                                                                                       |
+| Gate                                | State                           | Reason                                                                                                                                                     |
+| ----------------------------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Candidate metadata                  | Passed                          | Five repository observations, twelve exact package records, four retained packages, and five advisories are bound.                                         |
+| Listed advisory floors              | Candidate passes; current fails | Exact candidate versions meet every listed floor; the running host does not.                                                                               |
+| Candidate package bytes             | Passed                          | A disposable runner verified both acquisitions, exact fields, size, and SHA-256 for all twelve packages.                                                   |
+| Repository signature reverification | Passed                          | Five fresh `InRelease` files, ten accepted signatures, and all signed-index bindings passed independently.                                                 |
+| Dependency simulation               | Passed                          | The current host selects exactly eleven upgrades, one install, twelve configurations, zero removals, and zero downgrades.                                  |
+| Installed starting state            | Passed                          | All twelve starting records, four retained recovery packages, running kernel/provider package, tools, indexes, and holds equal the V1 contract.            |
+| Compatibility                       | Pending                         | The anonymous consumer matrix and rehearsal contract are complete, but no isolated equivalent physical host/guest rehearsal or independent review has run. |
+| Rollback escrow                     | Pending                         | Exact package/configuration inputs and retained-kernel recovery are not independently escrowed.                                                            |
+| Recovery readiness                  | Pending                         | Current clean-room host, database/WAL, VM, Auth, application, and connector recovery proof is incomplete.                                                  |
+| Maintenance approval                | Pending                         | Operations, security, and owner approval are absent.                                                                                                       |
+| Reboot approval                     | Pending                         | Reboot is a distinct unissued decision.                                                                                                                    |
+| Production mutation                 | False                           | This review was read-only.                                                                                                                                 |
+| Post-change smoke/reconciliation    | Pending                         | No update has run.                                                                                                                                         |
+| Independent review                  | Pending                         | No independent reviewer has approved evidence or closure.                                                                                                  |
 
 ## Verification
 
@@ -234,3 +234,42 @@ This closes only the dependency-simulation and installed-starting-state rows.
 Compatibility, recovery, rollback escrow, repository policy, maintenance,
 installation, reboot, candidate-running-kernel proof, service smoke,
 reconciliation, independent review, and R-059 remain open.
+
+## Isolated compatibility rehearsal contract
+
+ADR-0090 selects an isolated equivalent physical Proxmox host because a nested
+host cannot close candidate-kernel boot, KVM, IOMMU, BIOS, or physical-network
+behavior. Synthetic guests cover all fifteen QEMU and four LXC profiles from
+the immutable matrix; only the `application` and `database` aliases use
+separately approved read-only recovery inputs. The host has no public ingress,
+external egress, production route, production credential, or production
+identity.
+
+`npm run proxmox-security:compatibility-rehearsal:validate` binds the exact
+candidate, package artifact, preflight, inventory plan/report/projection, both
+storage profiles, nine management services, two critical workloads, and all
+six rehearsal rows plus released Starfiniti `v0.1.11` and the exact reviewed
+Supabase `self-hosted/v0.8.0` compatibility, asymmetric-JWKS Compose, and
+`linux/amd64` image set. It requires both a fresh minimized ADR-0088 dependency
+simulation whose file digest is approval-bound and a fresh same-projection
+ADR-0089 read within five minutes. It runs thirty-nine adversarial cases over the
+thirteen-stage controller, including stale/future/mismatched dependency or
+inventory facts, nested or connected
+targets, an absent/late/unbound out-of-process auto-destroy lease, candidate or
+critical release/image drift, impossible chronology, wrong booted kernel,
+profile/service/storage drift,
+checkout dependency, reconciliation differences, cleanup residue, false
+compatibility promotion, and report overwrite. Before execution, the current
+ADR-0089 collector output must be piped directly through the validator; only a
+same projection observed within five minutes is accepted and only its digest
+and timestamp are retained.
+
+The repository contains no environment driver, owner approval, real target
+inventory, critical recovery source, or accepted execution report. No package
+was installed, no host rebooted, and no guest, storage, service, route,
+credential, production state, or product score changed. A future passing
+controller report may advance only `rehearsalExecuted`; compatibility requires
+separate independent review of restricted evidence. Recovery, rollback escrow,
+repository policy, maintenance/install/reboot approvals, production mutation,
+post-change reconciliation, R-059, `provider_review`, and `dependency_pins`
+remain open.

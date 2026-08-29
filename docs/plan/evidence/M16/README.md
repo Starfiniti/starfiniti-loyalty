@@ -115,3 +115,20 @@ Independent verification passes and no raw facts were retained. Only consumer
 inventory capture advances; every actual compatibility rehearsal, rollback,
 recovery, approval, installation, reboot, mutation, and post-change gate remains
 false.
+
+ADR-0090 defines the executable boundary for those still-pending rehearsal rows.
+`npm run proxmox-security:compatibility-rehearsal:validate` checks the exact
+candidate/package/preflight/inventory bindings, fifteen QEMU profiles, four LXC
+profiles, two storage profiles, nine services, two critical workloads at exact
+Starfiniti `v0.1.11` and reviewed Supabase `self-hosted/v0.8.0`
+compatibility/Compose/image identities, thirteen
+canonical stages, a fresh minimized approval-bound dependency simulation and
+same-projection inventory read, controller teardown, immutable private output,
+an approval-expiry-bound out-of-process auto-destroy lease, and thirty-nine
+adversarial false-pass cases. A real run requires an
+isolated equivalent physical host plus owner-only inventory, approval, and
+reviewed driver inputs outside Git. The repository contains none of those inputs
+and no execution report. `rehearsalExecuted`, compatibility, independent review,
+rollback, recovery, repository policy, installation, reboot, production
+mutation, and post-change proof therefore remain false; the product score does
+not advance.

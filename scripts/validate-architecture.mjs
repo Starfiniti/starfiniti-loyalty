@@ -106,6 +106,7 @@ const acceptedAdrs = [
   "0082-request-bound-dashboard-content-security-policy.md",
   "0084-bounded-provider-source-provenance-snapshots.md",
   "0089-minimized-whole-host-proxmox-consumer-inventory.md",
+  "0090-isolated-whole-host-proxmox-compatibility-rehearsal.md",
 ];
 
 for (const adr of acceptedAdrs) {

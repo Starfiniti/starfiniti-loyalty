@@ -60,6 +60,7 @@ npm run proxmox-security:update:validate
 npm run proxmox-security:packages:validate
 npm run proxmox-security:preflight:validate
 npm run proxmox-security:compatibility-inventory:validate
+npm run proxmox-security:compatibility-rehearsal:validate
 npm run recovery-transport:validate
 npm run recovery:validate
 ```
@@ -145,6 +146,54 @@ Its file SHA-256 is
 its internal report SHA-256 is
 `495d7960a59359794fdb5024171c2e2de66cf69fc7b6701447ae285b46ee376f`.
 It advances only consumer-inventory capture. It is not a compatibility pass.
+
+ADR-0090 adds the execution boundary for the six pending rehearsal rows. The
+versioned plan binds every one of the fifteen QEMU and four LXC profile hashes,
+both storage profiles, all nine management services, both critical workload
+aliases, released Starfiniti `v0.1.11`, the exact reviewed Supabase
+`self-hosted/v0.8.0` compatibility/Compose/`linux/amd64` image set, the exact
+candidate, and all prior evidence. Repository validation runs
+the complete controller against adversarial fixtures; it neither supplies a
+driver nor creates a target.
+
+A real run uses an isolated equivalent physical Proxmox host. Nested-only
+results cannot close boot, KVM, IOMMU, or physical-network compatibility.
+Candidate packages and approved read-only critical-workload recovery inputs are
+staged before public ingress, external egress, production routes, and production
+credentials are prohibited. Synthetic guests cover unrelated behavior profiles;
+only application and database clones receive the restricted recovery inputs.
+
+The owner-controlled target inventory, control, and driver stay outside Git and
+must be regular caller-owned mode-`0600` files. The output parent is a
+caller-owned mode-`0700` directory outside the repository. From a separate clean
+capture checkout, repeat the ADR-0088 preflight and keep its newly emitted
+minimized mode-`0600` report outside the rehearsal checkout. Immediately before
+execution, also repeat the route-free production inventory and pipe its bounded
+facts directly to the controller. Both observations must be no more than five
+minutes old; the inventory must retain the same projection and the approval must
+bind the fresh preflight file digest. The result retains only digests/timestamps
+and no raw inventory facts. A changed projection requires a new plan. From the
+clean exact rehearsal commit, run:
+
+```sh
+<fresh exact route-free collector stdout> | \
+npm run proxmox-security:compatibility-rehearsal:run -- \
+  --control-file /restricted/rehearsal-control.yaml \
+  --inventory-file /restricted/rehearsal-inventory.yaml \
+  --fresh-facts - \
+  --fresh-preflight-report /restricted/fresh-preflight.json \
+  --driver /restricted/rehearsal-driver.mjs \
+  --out /restricted/rehearsal-report.json
+```
+
+The controller invokes teardown after success or caught failure, and the target
+must have a separately enforced auto-destroy lease equal to the approval expiry
+before the first stage. A passing execution advances only
+`rehearsalExecuted`; it deliberately leaves independent review, compatibility,
+rollback, recovery, repository policy, maintenance, installation, reboot, and
+production mutation false. Independently bind the restricted stage evidence to
+the minimized report before accepting compatibility. No real driver, target,
+approval, or report exists in the repository today.
 
 ## Phase 2 — Production preflight (read-only unless separately approved)
 

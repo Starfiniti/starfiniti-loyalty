@@ -301,7 +301,7 @@ function validateSummaryProfile(profile, label) {
   if (total !== profile.count) fail(`${label} status count does not reconcile`);
 }
 
-function validatePlan(plan) {
+export function validatePlan(plan) {
   exactKeys(
     plan,
     [
@@ -1560,13 +1560,17 @@ function main() {
   );
 }
 
-try {
-  main();
-} catch (error) {
-  if (error instanceof Error) console.error(error.message);
-  else
-    console.error(
-      "Proxmox compatibility inventory failed with an unknown error",
-    );
-  process.exitCode = 1;
+if (
+  resolve(process.argv[1] ?? "") === resolve(fileURLToPath(import.meta.url))
+) {
+  try {
+    main();
+  } catch (error) {
+    if (error instanceof Error) console.error(error.message);
+    else
+      console.error(
+        "Proxmox compatibility inventory failed with an unknown error",
+      );
+    process.exitCode = 1;
+  }
 }

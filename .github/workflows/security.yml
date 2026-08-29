@@ -169,6 +169,8 @@ jobs:
         run: npm run proxmox-security:preflight:validate
       - name: Validate route-free Proxmox compatibility inventory contract
         run: npm run proxmox-security:compatibility-inventory:validate
+      - name: Validate isolated Proxmox compatibility rehearsal contract
+        run: npm run proxmox-security:compatibility-rehearsal:validate
       - name: Run disposable no-install Proxmox package provenance canary
         env:
           STARFINITI_CANARY_RUNNER: github-hosted
