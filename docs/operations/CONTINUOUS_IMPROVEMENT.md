@@ -63,8 +63,10 @@ official-source artifact and the exact rsync candidate plan, and writes through 
 exclusive no-follow descriptor. `installedCaptureComplete` covers only this closed
 installed catalogue. ADR-0091 separately selects a digest-bound BorgBackup
 candidate and compatibility contract without rewriting this historical artifact.
-Candidate evidence remains incomplete for OpenSSH, Debian, Ubuntu, and Proxmox.
-The exact-head Borg canary now passes and is digest-bound; operations escrow,
+ADR-0092 selects a client-only OpenSSH architecture but intentionally remains at
+bootstrap until Linux discovers and a second exact plan binds the executable
+digest. Candidate evidence remains incomplete for OpenSSH, Debian, Ubuntu, and
+Proxmox. The exact-head Borg canary now passes and is digest-bound; operations escrow,
 real-provider compatibility, review, ownership, approval, package installation,
 and production mutation all remain false. The artifact is a monthly
 review input, not remote attestation or an upgrade gate. Independent verification

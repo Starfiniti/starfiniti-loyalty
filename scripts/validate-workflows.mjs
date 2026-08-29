@@ -623,6 +623,18 @@ requireCondition(
     ) &&
     recoveryTransportSteps.some(
       (step) =>
+        step.name === "Validate exact OpenSSH recovery client candidate" &&
+        step.run === "npm run openssh-client-security:validate",
+    ) &&
+    recoveryTransportSteps.some(
+      (step) =>
+        step.name ===
+          "Run isolated OpenSSH recovery client compatibility canary" &&
+        step.run ===
+          "npm run openssh-client-security:run -- --out dist/openssh-client-security/ci.json",
+    ) &&
+    recoveryTransportSteps.some(
+      (step) =>
         step.name ===
           "Validate route-free Proxmox compatibility inventory contract" &&
         step.run ===
@@ -667,10 +679,24 @@ requireCondition(
   `${securityWorkflowPath}: minimized exact-head Proxmox package provenance evidence must upload or fail`,
 );
 requireCondition(
+  recoveryTransportSteps.some(
+    (step) =>
+      step.name === "Upload minimized OpenSSH recovery client evidence" &&
+      step.if === "always()" &&
+      step.uses ===
+        "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a" &&
+      step.with?.name === "security-openssh-client-${{ github.sha }}" &&
+      step.with?.path === "dist/openssh-client-security/ci.json" &&
+      step.with?.["if-no-files-found"] === "error" &&
+      step.with?.["retention-days"] === 30,
+  ),
+  `${securityWorkflowPath}: minimized exact-head OpenSSH client evidence must upload or fail`,
+);
+requireCondition(
   !recoveryTransportText.includes("--publish") &&
     !recoveryTransportText.includes("--network host") &&
     !recoveryTransportText.includes("production") &&
-    !recoveryTransportText.includes("ssh"),
+    !/(?:^|\s)ssh\s/u.test(recoveryTransportText),
   `${securityWorkflowPath}: recovery transport canary must not publish ports or name production access`,
 );
 

@@ -1,0 +1,94 @@
+schema: starfiniti.openssh-client-security-plan.v1
+status: bootstrap
+profile: privileged-recovery-client
+architecture: amd64
+baseImages:
+  client: debian:13-slim@sha256:d7e12182ce18b85b93007c1dedf31f2d29e01ccf3182cc4017c709b6259bc132
+  server: ubuntu:24.04@sha256:33ceb71981b602c1a7443a53469e4dba065f7503eab3078a2d7a57a2ab987517
+sources:
+  release: https://www.openssh.org/releasenotes.html#10.5
+  portable: https://www.openbsd.org/openssh/portable.html
+  install: https://cdn.openbsd.org/pub/OpenBSD/OpenSSH/portable/INSTALL
+  debianTracker: https://security-tracker.debian.org/tracker/source-package/openssh
+  ubuntuNotice: https://ubuntu.com/security/notices/USN-8533-1
+installed:
+  hostClient:
+    authority: debian-archive
+    name: openssh-client
+    version: 1:10.0p1-7+deb13u4
+    repositoryUrl: https://deb.debian.org/debian
+    suite: trixie
+    url: https://deb.debian.org/debian/pool/main/o/openssh/openssh-client_10.0p1-7+deb13u4_amd64.deb
+    sha256: 8fff343654f86c3b3266f94cd338c7b4da2e386da029327815118ea00bce03b9
+    executablePath: /usr/bin/ssh
+    executableSha256: af3b04ec5653755032fc18ad02445e4e51170e75d8bac4265647d423caa9a83e
+  guestServer:
+    authority: ubuntu-security
+    version: 1:9.6p1-3ubuntu13.18
+    repositoryUrl: https://security.ubuntu.com/ubuntu
+    suite: noble-security
+    packages:
+      - name: openssh-client
+        url: https://security.ubuntu.com/ubuntu/pool/main/o/openssh/openssh-client_9.6p1-3ubuntu13.18_amd64.deb
+        sha256: 900ee53c747920694bd508e598702aa794911a7c8273e66f292fe45144a00a9f
+      - name: openssh-server
+        url: https://security.ubuntu.com/ubuntu/pool/main/o/openssh/openssh-server_9.6p1-3ubuntu13.18_amd64.deb
+        sha256: 81a6c622a2b566a95f1939f25776e0ec05b6b40c2fa61f7cd9f148bca4344208
+      - name: openssh-sftp-server
+        url: https://security.ubuntu.com/ubuntu/pool/main/o/openssh/openssh-sftp-server_9.6p1-3ubuntu13.18_amd64.deb
+        sha256: 2287e3e9e3d0ace278173ca218d32d41a24b87afec3b42ef7dabfda4d9125edd
+    executablePath: /usr/sbin/sshd
+    executableSha256: 02580eb1cc489f0359e3008b62c8dee14183b9252c81bf638ed4d911fe624ae2
+candidate:
+  authority: openssh-portable-upstream
+  version: 10.5p1
+  installRoot: /opt/starfiniti/openssh/10.5p1
+  executablePath: /opt/starfiniti/openssh/10.5p1/bin/ssh
+  executableSha256: null
+  versionPrefix: OpenSSH_10.5p1
+  source:
+    url: https://cdn.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-10.5p1.tar.gz
+    sha256: d44d28a839ea9daf969cc69150fde59910b2b39361dad81a3bd6cbd19218db11
+    sha256Base64: 1E0oqDnqna+WnMaRUP3lmRCys5Nh2tgaO9bL0ZIY2xE=
+    bytes: 2333659
+    signatureUrl: https://cdn.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-10.5p1.tar.gz.asc
+    signatureSha256: 77b48fd2657520db9229b82bc1bab3f5c00b1b6f7ac2dbb9111b1c8584d6e335
+    releaseKeyUrl: https://cdn.openbsd.org/pub/OpenBSD/OpenSSH/RELEASE_KEY.asc
+    releaseKeySha256: c4a6f4692c9b8e75ec096add049fe0314b3ceff9410321f1e85907cf7a864269
+    signingFingerprint: 7168B983815A5EEF59A4ADFD2A3F414E736060BA
+  sourceTree:
+    root: openssh-10.5p1
+    entries: 930
+    files: 892
+    bytes: 10059047
+    manifestSha256: bfd3d616400f4d82a9418d8a3feab14ad2ba50d6cdb87ed2b2f14f38909d9dc9
+  build:
+    configure:
+      - --prefix=/opt/starfiniti/openssh/10.5p1
+      - --sysconfdir=/etc/ssh
+      - --without-pam
+      - --without-libedit
+      - --without-kerberos5
+      - --with-default-path=/usr/bin:/bin
+    target: ssh
+    strip: --strip-unneeded
+compatibility:
+  serverVersionPrefix: OpenSSH_9.6p1
+  requiredClients: [current, candidate]
+  requiredOperations:
+    [effective-config, strict-host-key, public-key, forced-command]
+  command: printf starfiniti-openssh-canary
+  expectedOutput: starfiniti-openssh-canary
+  port: 2222
+  internalNetwork: true
+  publishedPorts: 0
+  maximumConnections: 4
+  maximumOutputBytes: 4096
+rollback:
+  preserveDebianPackage: true
+  preserveDistroSshd: true
+  preserveKnownHosts: true
+  operationsEscrowRequiredBeforeProduction: true
+  productionActivationRequiresExactPath: true
+  productionActivationRequiresExactDigest: true
+  productionMutation: false

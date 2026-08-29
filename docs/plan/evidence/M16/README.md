@@ -161,3 +161,25 @@ teardown. `compatibility_canary` therefore passes. Operations escrow,
 real-provider compatibility, production rollout, rollback, monitoring, isolated
 restore, and independent review remain pending. This preparation proof does not
 advance an M16 closeout check or product-score point, and production is unchanged.
+
+ADR-0092 now resolves the OpenSSH architecture question without replacing a
+daemon or distribution executable. The exact
+[`openssh-client-security.yaml`](openssh-client-security.yaml) bootstrap plan
+binds Debian Trixie `openssh-client=1:10.0p1-7+deb13u4`, Ubuntu Noble
+`openssh-server=1:9.6p1-3ubuntu13.18`, the official OpenSSH Portable 10.5p1
+archive, release-note checksum, detached signature, release key and full
+fingerprint, and a safe 930-entry, 892-file, 10,059,047-byte source manifest.
+Only target `ssh` is built into a versioned side-by-side root; both distribution
+daemons, `/usr/bin/ssh`, host keys, known-host data, and production consumers
+remain untouched.
+
+`npm run openssh-client-security:validate` covers signed source, safe
+extraction, client-only build, exact rollback and server packages, strict
+client options, restricted forced command, internal no-port network, resource
+ceilings, exclusive evidence publication, exact teardown, and adversarial
+false-pass mutations. The plan is intentionally `bootstrap`: the first Linux
+run may discover the stripped executable digest but cannot pass exact candidate
+evidence. A second run against a digest-locked `candidate` plan is required.
+Escrow, exact real-provider rsync and Borg behavior, every consumer, rollout,
+monitoring, rollback, isolated restore, and independent review remain pending;
+production and the M16 score are unchanged.

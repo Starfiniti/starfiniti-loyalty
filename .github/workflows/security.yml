@@ -165,6 +165,8 @@ jobs:
         run: npm run recovery-transport:validate
       - name: Validate exact BorgBackup security candidate
         run: npm run borgbackup-security:validate
+      - name: Validate exact OpenSSH recovery client candidate
+        run: npm run openssh-client-security:validate
       - name: Validate exact Proxmox package provenance plan
         run: npm run proxmox-security:packages:validate
       - name: Validate route-free read-only Proxmox preflight contract
@@ -181,6 +183,8 @@ jobs:
         run: npm run recovery-transport:run -- --out dist/recovery-transport/ci.json
       - name: Run disposable networkless BorgBackup compatibility canary
         run: npm run borgbackup-security:run -- --out dist/borgbackup-security/ci.json
+      - name: Run isolated OpenSSH recovery client compatibility canary
+        run: npm run openssh-client-security:run -- --out dist/openssh-client-security/ci.json
       - name: Upload minimized recovery transport evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -203,6 +207,14 @@ jobs:
         with:
           name: security-borgbackup-${{ github.sha }}
           path: dist/borgbackup-security/ci.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload minimized OpenSSH recovery client evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: security-openssh-client-${{ github.sha }}
+          path: dist/openssh-client-security/ci.json
           if-no-files-found: error
           retention-days: 30
 
