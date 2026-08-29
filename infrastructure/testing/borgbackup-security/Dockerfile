@@ -71,6 +71,17 @@ RUN test "$(dpkg --print-architecture)" = "$EXPECTED_ARCHITECTURE"; \
     rm -rf /tmp/starfiniti-borg-verify /var/lib/apt/lists/* /var/cache/apt/archives/*.deb; \
     test -z "$(find /tmp /var/cache/apt/archives -type f \( -name '*.deb' -o -name 'candidate.tgz*' -o -name 'signer.asc' \) -print -quit)"
 
+RUN ! getent passwd 65532; \
+    ! getent group 65532; \
+    ! getent passwd starfiniti; \
+    ! getent group starfiniti; \
+    printf '%s\n' 'starfiniti:x:65532:' >>/etc/group; \
+    printf '%s\n' 'starfiniti:x:65532:65532:Starfiniti Borg canary:/nonexistent:/bin/false' >>/etc/passwd; \
+    test "$(getent group 65532)" = 'starfiniti:x:65532:'; \
+    test "$(getent group starfiniti)" = 'starfiniti:x:65532:'; \
+    test "$(getent passwd 65532)" = 'starfiniti:x:65532:65532:Starfiniti Borg canary:/nonexistent:/bin/false'; \
+    test "$(getent passwd starfiniti)" = 'starfiniti:x:65532:65532:Starfiniti Borg canary:/nonexistent:/bin/false'
+
 COPY --chmod=0555 starfiniti-borg-fake-ssh /usr/local/bin/starfiniti-borg-fake-ssh
 COPY --chmod=0555 canary.sh /usr/local/bin/starfiniti-borg-canary
 
