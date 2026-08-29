@@ -26,7 +26,9 @@ candidate `cbe89b4`, explicitly includes the digest-pinned k6 boundary, and keep
 the score unchanged because no live capacity, fault, recovery, or activation
 evidence was added. The ranked backlog now contains fourteen items: capacity and
 whole-system fault exercises are distinct external gates rather than being hidden
-inside GA. The candidate remains ineligible because activation is below its
+inside GA. Exact implementation `affa2ef` passed CI `33270731237`, Security
+`33270731250`, and CodeQL `99148811211`; all twelve PR checks are green and PR
+#57 is merge-clean. The candidate remains ineligible because activation is below its
 category floor and required live evidence is absent. The deterministic validator
 is part of `npm run check`; two future elapsed monthly reviews must still rescore
 their affected modules and retain prior/current evidence.

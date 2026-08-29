@@ -3,7 +3,7 @@ status: in_progress
 observedAt: 2026-08-29T19:12:01Z
 candidate:
   branch: codex/enterprise-roadmap-integration
-  commit: cbe89b4a61c657979b2ba317e6a5b7561dfa801b
+  commit: affa2efc065d7e8fe1711c007ab9ea05b2e53e34
   initialCloseApproved: false
 plan:
   path: infrastructure/governance/continuous-improvement.yaml
@@ -76,7 +76,7 @@ checks:
     evidence: The completion fixture and adversarial mutations prove that cadence, freshness, exact blocker-set and evidence bindings, ranking, recurring controls, rescoring, experiment guardrails, exercises, artifacts, approvals, and score floors fail closed; the source collector rejects twenty-six source, network, response, digest, review-claim, output, and byte-preservation corruptions without network access, the installed-state collector rejects thirty-six fact, endpoint, component, chronology, digest, historical-source, full-candidate, output, and false-authority corruptions without network or SSH access, and the Supabase repository review rejects forty-seven source package lock alignment Node Data API schema automatic-grant immutable-CI task ADR byte-preservation and false-authority corruptions.
   - id: exact_head_ci
     status: passed
-    evidence: Exact integrated evidence head cbe89b4a61c657979b2ba317e6a5b7561dfa801b passed CI run 33269879216, Security run 33269879219, and CodeQL check 99146545385 with all twelve PR checks green and PR 57 merge-clean; the Linux baseline repeated the digest-pinned network-disabled k6 inspection while prior Supabase, runtime, provider, and recovery evidence remains preserved.
+    evidence: Exact material-change implementation affa2efc065d7e8fe1711c007ab9ea05b2e53e34 passed CI run 33270731237, Security run 33270731250, and CodeQL check 99148811211 with all twelve PR checks green and PR 57 merge-clean; the full baseline repeated the 995-test repository gate while database, both images, all four WooCommerce runtimes, DAST, supply chain, and recovery transport remained green.
   - id: owner_roster
     status: pending
     evidence: Product, engineering, security, operations, monthly-review, quarterly-exercise, and owner roles require named environment-owned assignments.

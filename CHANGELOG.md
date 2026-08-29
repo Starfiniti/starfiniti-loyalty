@@ -8,8 +8,10 @@
   external gates. Adversarial review also closes a deletion/substitution bypass:
   the validator now requires the exact fourteen-item blocker set and each
   blocker's canonical evidence path in addition to recomputing its score and
-  order. M16 remains 77/100 with seven of 39 checks passing. No load, fault,
-  deployment, production mutation, checkout change, or loyalty value is
+  order. Exact implementation `affa2ef` passed CI `33270731237`, Security
+  `33270731250`, and CodeQL `99148811211` with all twelve PR checks green and PR
+  #57 merge-clean. M16 remains 77/100 with seven of 39 checks passing. No load,
+  fault, deployment, production mutation, checkout change, or loyalty value is
   claimed.
 
 - Added ADR-0104 and replaced M15's label-only independent-capacity evidence
