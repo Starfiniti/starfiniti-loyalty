@@ -264,6 +264,11 @@ ADR-0089 collector output must be piped directly through the validator; only a
 same projection observed within five minutes is accepted and only its digest
 and timestamp are retained.
 
+Exact implementation `741a375d67725dab0191d4f06bbd2779638c57b4`
+passed all seven CI jobs in run `33232583190`, all four Security jobs in run
+`33232583183`, and external CodeQL check `99048027493`; all twelve PR checks
+were green and PR #57 was merge-clean.
+
 The repository contains no environment driver, owner approval, real target
 inventory, critical recovery source, or accepted execution report. No package
 was installed, no host rebooted, and no guest, storage, service, route,

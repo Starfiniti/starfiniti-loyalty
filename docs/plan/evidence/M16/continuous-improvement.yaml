@@ -76,7 +76,7 @@ checks:
     evidence: The completion fixture and adversarial mutations prove that cadence, freshness, ranking, recurring controls, rescoring, experiment guardrails, exercises, artifacts, approvals, and score floors fail closed; the source collector rejects twenty-six source, network, response, digest, review-claim, output, and byte-preservation corruptions without network access, while the installed-state collector rejects thirty-six fact, endpoint, component, chronology, digest, historical-source, full-candidate, output, and false-authority corruptions without network or SSH access.
   - id: exact_head_ci
     status: passed
-    evidence: Exact artifact head 8f2934ba30c367d94d2142bcbe2a47d92fc74701 passed all seven CI jobs in run 33226696854 all four Security jobs in run 33226696825 and external CodeQL check 99031930348; recovery-transport job 99031721792 passed exact recovery transport package provenance and route-free production preflight validators plus both disposable canaries, while prior fail-closed attempts remain preserved.
+    evidence: Exact rehearsal implementation head 741a375d67725dab0191d4f06bbd2779638c57b4 passed all seven CI jobs in run 33232583190 all four Security jobs in run 33232583183 and external CodeQL check 99048027493 with all twelve PR checks green and PR 57 merge-clean; the earlier exact preflight/package head and fail-closed attempts remain preserved in the task evidence.
   - id: owner_roster
     status: pending
     evidence: Product, engineering, security, operations, monthly-review, quarterly-exercise, and owner roles require named environment-owned assignments.
