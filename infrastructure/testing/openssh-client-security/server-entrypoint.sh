@@ -33,18 +33,18 @@ ssh-keygen -q -t ed25519 -N '' -f "$state/ssh_host_ed25519_key"
 stage=client-key
 ssh-keygen -q -t ed25519 -N '' -f "$state/client_ed25519"
 stage=key-permissions
-chown 65532:65532 "$state/client_ed25519" "$state/client_ed25519.pub"
 chmod 0600 "$state/client_ed25519" "$state/ssh_host_ed25519_key"
 chmod 0644 "$state/client_ed25519.pub" "$state/ssh_host_ed25519_key.pub"
+chown 65532:65532 "$state/client_ed25519" "$state/client_ed25519.pub"
 
 stage=authorized-key
 printf 'command="/usr/local/bin/starfiniti-openssh-forced-command",restrict %s\n' "$(cat "$state/client_ed25519.pub")" >"$state/authorized_keys"
-chown 65532:65532 "$state/authorized_keys"
 chmod 0600 "$state/authorized_keys"
+chown 65532:65532 "$state/authorized_keys"
 stage=known-host
 printf '[openssh-server]:2222 %s\n' "$(cat "$state/ssh_host_ed25519_key.pub")" >"$state/known_hosts"
-chown 65532:65532 "$state/known_hosts"
 chmod 0444 "$state/known_hosts"
+chown 65532:65532 "$state/known_hosts"
 
 stage=server-config
 cat >"$config" <<'EOF'

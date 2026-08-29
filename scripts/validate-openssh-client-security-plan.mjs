@@ -621,6 +621,9 @@ function validateImplementation(files) {
       "PasswordAuthentication no",
       "/usr/sbin/sshd -t",
       "ssh-keyscan -T 1 -t ed25519 -p 2222 127.0.0.1",
+      'chmod 0600 "$state/client_ed25519" "$state/ssh_host_ed25519_key"\nchmod 0644 "$state/client_ed25519.pub" "$state/ssh_host_ed25519_key.pub"\nchown 65532:65532 "$state/client_ed25519" "$state/client_ed25519.pub"',
+      'chmod 0600 "$state/authorized_keys"\nchown 65532:65532 "$state/authorized_keys"',
+      'chmod 0444 "$state/known_hosts"\nchown 65532:65532 "$state/known_hosts"',
     ],
     "server entrypoint",
   );
