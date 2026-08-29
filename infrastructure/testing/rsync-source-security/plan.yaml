@@ -1,5 +1,5 @@
 schema: starfiniti.rsync-source-security-plan.v1
-status: bootstrap
+status: locked
 profile: privileged-recovery-transport
 architecture: amd64
 baseImages:
@@ -72,12 +72,12 @@ candidate:
   endpoints:
     - id: proxmox-host
       role: receiver
-      executableSha256: null
-      wrapperSha256: null
+      executableSha256: 962b026fd37b68dce86a5601b24cddafc68db8d8c3b9d60c5b63c554fcee7b7c
+      wrapperSha256: 263d7bf7934442aa585e54152cf9ae8f93b01b1bd9719454deb4dc6f31b0bad8
     - id: database-guest
       role: sender
-      executableSha256: null
-      wrapperSha256: null
+      executableSha256: 5c754e6809d1ac79b81def92056059a31c12bb40fc476a81b5489ad318c7f188
+      wrapperSha256: 263d7bf7934442aa585e54152cf9ae8f93b01b1bd9719454deb4dc6f31b0bad8
 compatibility:
   internalNetwork: true
   publishedPorts: 0

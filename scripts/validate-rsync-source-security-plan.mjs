@@ -516,7 +516,7 @@ export function validateCanaryReport(report, plan, options = {}) {
       }
     }
     if (
-      plan.status === "candidate" &&
+      ["locked", "candidate"].includes(plan.status) &&
       (endpoint.candidateExecutableSha256 !== pinned.executableSha256 ||
         endpoint.candidateWrapperSha256 !== pinned.wrapperSha256)
     ) {
@@ -905,8 +905,11 @@ function selfTest() {
     mutate(changed);
     assert.throws(() => validateEvidence(changed, plan));
   }
-  const endpointDigests = ["1".repeat(64), "2".repeat(64)];
-  const wrapperDigest = "3".repeat(64);
+  const endpointDigests = plan.candidate.endpoints.map(
+    (endpoint, index) => endpoint.executableSha256 ?? `${index + 1}`.repeat(64),
+  );
+  const wrapperDigest =
+    plan.candidate.endpoints[0].wrapperSha256 ?? "3".repeat(64);
   const report = {
     schema: "starfiniti.rsync-source-security-canary.v1",
     status: "passed",

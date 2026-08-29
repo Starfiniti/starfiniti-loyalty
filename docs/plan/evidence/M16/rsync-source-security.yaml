@@ -1,12 +1,12 @@
 schema: starfiniti.rsync-source-security-evidence.v2
 status: in_progress
-observedAt: 2026-08-29T10:15:00Z
+observedAt: 2026-08-29T10:33:00Z
 candidate:
   branch: codex/enterprise-roadmap-integration
   commit: null
 plan:
   path: infrastructure/testing/rsync-source-security/plan.yaml
-  sha256: 2a777b46ca6a63e26005ce4ff9e3d0aae1d26b7052e3892db600eb406172853c
+  sha256: 46adc671b15fddead44c014edb334dc815ef14ee4d17bcdc3f18dd2ffb9c120f
 bootstrapCanary:
   report:
     path: docs/plan/evidence/M16/runs/rsync-source-security-f61c44b-2026-08-29T101026Z.json
@@ -44,8 +44,8 @@ checks:
     status: passed
     evidence: GitHub Security run 33247037670 job 99086186056 compiled the signed source independently on digest-pinned Debian 13 and Ubuntu 24.04 images, passed both bounded transfer pairs, tore down every disposable resource, and retained the exact minimized report.
   - id: candidate_digest_lock
-    status: pending
-    evidence: Endpoint executable and wrapper digests remain null during bootstrap and must be committed into a candidate plan only after the isolated discovery run passes.
+    status: passed
+    evidence: The locked plan pins the distinct Debian and Ubuntu executable SHA-256 values and the shared wrapper SHA-256 exactly to the retained bootstrap report; candidate status and digest-lock evidence remain impossible until a fresh exact-plan run reproduces all three values.
   - id: digest_lock_canary
     status: pending
     evidence: The digest-locked plan must rebuild both endpoint artifacts and pass current-to-candidate and candidate-to-candidate bounded compatibility before the candidate is retained.
