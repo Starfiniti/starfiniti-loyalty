@@ -60,7 +60,7 @@ and deletion without installing a candidate package or contacting production.
 2. Use only the five candidate repositories. Bootstrap through the
    digest-pinned image's existing authenticated Debian source, explicitly
    install Debian's `debian-archive-keyring` package, and require its aggregate
-   `.pgp` keyring to be a bounded package-owned root-owned `0444` regular file.
+   `.pgp` keyring to be a bounded package-owned root-owned `0644` regular file.
    Do not use the image's `.gpg` compatibility symlink.
    Fetch the official Proxmox Trixie archive keyring over HTTPS and impose the
    same file controls plus SHA-256
@@ -144,8 +144,15 @@ the Proxmox `InRelease`, but Secure APT's unprivileged verifier correctly could
 not read the freshly downloaded Proxmox keyring under the process's restrictive
 `0600` umask. No candidate package bytes or report artifact were produced. The
 correction changes no trust decision: it first verifies the exact published
-SHA-256, then makes both public trust inputs root-owned `0444` regular files so
-the unprivileged APT verifier can read but no process can write them.
+SHA-256, then makes both public trust inputs root-owned `0644` regular files so
+only root can write while the unprivileged APT verifier can read them.
+
+The fourth exact-head attempt then failed closed on the Debian keyring because
+the proposed `0444` equality check was stricter than the package's exact `0644`
+mode already observed in the pinned layer. That was verifier-policy error, not
+trust failure. The final permission contract matches Debian's package-owned
+root-writable/public-readable regular file and applies the same exact `0644`
+mode to the separately digest-verified Proxmox keyring.
 
 That attempt's external CodeQL policy also rejected a check-then-write race at
 the final report path. The correction no longer tests and later reopens that

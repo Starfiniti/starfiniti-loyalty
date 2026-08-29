@@ -142,8 +142,14 @@ Regular-keyring correction `b325e4418ad7b0339b6681b9a0cb9a7bfad92230`
 authenticated the Debian repositories and reached the Proxmox `InRelease`, but
 recovery-transport job `99018583622` in Security run `33222253574` failed closed
 because Secure APT's unprivileged verifier could not read the freshly downloaded
-Proxmox keyring under the restrictive `0600` umask. The next correction retains
-the already verified published digest and root ownership but requires both
-public keyring inputs to be read-only `0444` regular files. No candidate package
-bytes or report artifact were produced, and no production route, credential, or
+Proxmox keyring under the restrictive `0600` umask. No candidate package bytes
+or report artifact were produced, and no production route, credential, or
 mutation was present.
+
+Permission correction `df2532a15bacfa85f65423dd2cc8f41f06b9b060` then
+required `0444` for both trust files, but recovery-transport job `99019649368`
+in Security run `33222605085` failed closed on Debian's exact package-owned
+`0644` regular file. The next contract uses root-owned `0644` for both inputs:
+only root can write and Secure APT's unprivileged verifier can read. No candidate
+package bytes or report artifact were produced, and no production route,
+credential, or mutation was present.
