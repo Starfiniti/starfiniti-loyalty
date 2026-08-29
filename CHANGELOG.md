@@ -1,5 +1,7 @@
 # Changelog
 
+- Repaired the authentication card at narrow and short viewports. Company SSO controls now stack below 480 pixels instead of collapsing the organization slug field, and tall login/access cards retain safe centering while owning a bounded vertical scroll range so final guidance and actions remain reachable. The accessibility validator guards those layout primitives. Production-rendered Chromium passed desktop, 390×844 mobile, and 320×500 keyboard stress checks with same-origin protected redirects, English-only output, no horizontal overflow, and zero browser diagnostics. No Auth, tenant, checkout, connector, or loyalty-value state changed.
+
 - Added ADR-0105 and repaired the WooCommerce tagged-release identity contract.
   Historical v0.1.11 and the development tree expose `0.1.0-dev`; future
   release packages now derive an exact numeric version from the Git tag and

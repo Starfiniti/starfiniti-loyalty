@@ -1,5 +1,7 @@
 # Status
 
+- M09 authentication regression hardening is repository-verified and undeployed. Exact source `f7e5a95` replaces the cramped 390-pixel company-SSO row with stacked 276-pixel controls and gives tall authentication cards a bounded vertical scroll owner without changing the established desktop card. Production-rendered Chromium passed at 1512×982, 390×844, and 320×500: the last SSO action remained keyboard reachable and visible, final session guidance was reachable, the protected programme redirect stayed same-origin, English-only output and fail-closed public recovery remained intact, and every checked surface had one H1/main, zero horizontal overflow, and zero browser diagnostics. The accessibility validator now guards the responsive and scroll primitives. Production, Auth configuration, memberships, checkout, and loyalty value are unchanged; real SSO and M09 canary evidence remain pending.
+
 - ADR-0105 repairs the WooCommerce release-version boundary without changing
   development source or historical assets. The existing v0.1.11 ZIP and source
   expose `0.1.0-dev` in the plugin header and runtime constant, so future
