@@ -1,5 +1,21 @@
 # Status
 
+- ADR-0102 addresses a newly confirmed Critical application dependency gap
+  without claiming production repair. Official Next.js 16.3.3 fixes
+  `GHSA-2xp9-vwfh-vxw4` and `GHSA-p293-qw3h-jr36` / `CVE-2026-75604`;
+  released production v0.1.11 and the prior candidate declared 16.3.0. The
+  candidate now exact-pins Next.js and eslint-config-next 16.3.3, retains
+  disabled image optimization as defence in depth, and prohibits a deployable
+  rollback to 16.3.0. Exact official release/advisory and npm package evidence,
+  production/candidate scope, lockfile bytes, task/risk/backlog bindings, and
+  false merge/release/deployment/reconciliation authority are enforced by a
+  network-free validator with twenty-three adversarial corruptions. The final
+  clean-install local gate passes with 995 tests, both production builds, 87
+  migrations, 69 pgTAP files, all roadmap validators, zero npm audit findings,
+  secret scanning, and licence validation. Exact-head image and security
+  evidence remains pending. R-060 and top-ranked IMP-012 remain open until an
+  approved patched release is deployed and reconciled; production is unchanged.
+
 - ADR-0101 refreshes only the disposable current WooCommerce compatibility
   matrix after official stable-release review: WordPress 7.1, WooCommerce 11.0.1,
   and PHP 8.4 now run in both HPOS and legacy cells; the minimum WordPress 6.6.5,

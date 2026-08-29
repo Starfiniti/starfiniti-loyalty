@@ -1,5 +1,19 @@
 # Changelog
 
+- Added ADR-0102 and an exact Next.js 16.3.3 security update for two official
+  Critical unauthenticated RCE advisories affecting the previously pinned
+  16.3.0 runtime. Next.js and eslint-config-next now use matching exact npm
+  package and lockfile integrity evidence; image optimization remains disabled
+  as defence in depth, and rollback to a deployable 16.3.0 artifact is
+  prohibited. A network-free validator binds advisory/release provenance,
+  released-production impact, task/risk/backlog evidence, package bytes, and
+  false merge/release/deployment/reconciliation authority through twenty-three
+  corruptions. A clean-install complete local gate passes with 995 tests, both
+  production builds, 87 migrations, 69 pgTAP files, all validators, zero npm
+  audit findings, secret scanning, and licence validation. Exact-head
+  CI/security evidence and explicit production gates remain pending; production
+  is unchanged.
+
 - Added ADR-0101 and a fail-closed current WordPress/WooCommerce compatibility review. The disposable current matrix now uses versioned WordPress 7.1 and WooCommerce 11.0.1 URLs on PHP 8.4 in both HPOS and legacy modes, while the WordPress 6.6.5/WooCommerce 9.0.2/PHP 8.1 minimum remains unchanged. A network-free validator binds official sources, artifact byte sizes and SHA-256 values, prior rollback versions, all four workflow cells, plugin compatibility headers, task evidence, and false production access/mutation/upgrade authority through fourteen corruptions. Linux CI separately hash-checks the reviewed downloads before startup and asserts the running WordPress, WooCommerce, and PHP versions. Fresh exact-head runtime evidence remains pending; no production store, VM, database, checkout path, or loyalty value changed, and M16 remains 77/100.
 
 - Added ADR-0100 and an exact Node 24 LTS runtime refresh. Both dashboard and

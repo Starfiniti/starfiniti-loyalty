@@ -74,6 +74,21 @@ mutation, and store-upgrade authority. Run
 `npm run continuous-improvement:woocommerce-runtime:validate`; fresh exact-head
 Linux compatibility jobs and every production pilot/upgrade gate remain pending.
 
+ADR-0102 records a separate Critical application-runtime impact review. Official
+Next.js 16.3.3 fixes two unauthenticated RCE advisories, while released
+production v0.1.11 and the integration candidate both declared 16.3.0. The
+candidate now pins Next.js and eslint-config-next to exact matching 16.3.3 npm
+tarball and lockfile integrity evidence, keeps image optimization disabled as
+defence in depth, and prohibits a deployable rollback to 16.3.0. Run
+`npm run continuous-improvement:next-runtime:validate`; its network-free
+self-test rejects twenty-three source, advisory, impact, package, lockfile,
+configuration, task, risk, backlog, and authority corruptions. Exact-head image,
+SBOM, Trivy, CodeQL, DAST, database, WooCommerce, application, audit, and licence
+evidence remains required. The clean-install local gate passes with 995 tests,
+both production builds, 87 migrations, 69 pgTAP files, all roadmap validators,
+zero npm audit findings, secret scanning, and licence validation. Merge, release,
+deployment, observation, reconciliation, and production repair remain false.
+
 ADR-0085 adds a separate installed-state preparation boundary for the six recovery
 providers. The repository helper has no SSH or production-discovery authority. It
 accepts only two bounded exact-schema fact envelopes obtained through the approved

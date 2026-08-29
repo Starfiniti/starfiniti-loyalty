@@ -1,11 +1,24 @@
 schema: starfiniti.improvement-backlog.v1
 version: 1
-observedAt: 2026-08-29T01:31:45Z
+observedAt: 2026-08-29T15:22:55Z
 ranking:
   formula: severityPoints + (2 * merchantImpact) + (2 * customerImpact) + confidence - effort - dependencyPenalty
   severityPoints: { critical: 40, high: 30, medium: 20, low: 10 }
   sort: [score-descending, id-ascending]
 items:
+  - id: IMP-012
+    title: Deploy the Next.js 16.3.3 Critical RCE security update
+    severity: critical
+    merchantImpact: 10
+    customerImpact: 10
+    effort: 2
+    confidence: 10
+    dependencyPenalty: 1
+    score: 87
+    status: blocked_external
+    evidence: infrastructure/governance/next-runtime-review.yaml
+    dependency: Exact-head CI image rebuild SBOM Trivy CodeQL DAST database and WooCommerce evidence followed by approved merge release deployment rollback observation and protected-value reconciliation.
+    ownerInput: Product and security approve merge and release; operations separately approves deployment and production reconciliation.
   - id: IMP-011
     title: Repair the production Proxmox host across five published security advisories
     severity: critical

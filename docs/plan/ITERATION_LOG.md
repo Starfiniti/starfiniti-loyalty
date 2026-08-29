@@ -1,5 +1,32 @@
 # Iteration Log
 
+## 2026-08-29 — Next.js 16.3.3 Critical security candidate
+
+- Official Next.js release and advisory review found that both released
+  production v0.1.11 and the integration candidate declared 16.3.0, inside the
+  patched ranges for two Critical unauthenticated RCE advisories. Production is
+  Linux, so the Windows-only advisory precondition is absent, but the released
+  configuration left image optimization enabled and is within the AVIF
+  advisory range.
+- ADR-0102 selects an exact patch to Next.js and eslint-config-next 16.3.3,
+  retains disabled image optimization only as defence in depth, and rejects
+  both advisory suppression and a deployable rollback to 16.3.0. Exact npm
+  tarball integrity and shasum evidence plus released/candidate scope are bound
+  in a network-free validator with twenty-three adversarial corruptions.
+- R-060 and top-ranked IMP-012 keep the production exposure visible. Repository
+  validation passes after a clean `npm ci`: 995 tests, both production builds,
+  87 migrations, 69 pgTAP files, all roadmap validators, zero npm audit
+  findings, secret scanning, and licence validation. Exact-head
+  rebuild/scan/regression evidence remains required before separate merge and
+  release approval; deployment, observation, protected-value reconciliation,
+  and production repair remain false.
+- The required adversarial diff review confirmed one evidence defect: the first
+  draft recorded the release publication time one minute late. Official release
+  metadata corrected it to `2026-08-25T16:17:10Z`; the refutation pass also
+  removed an unrelated resolver-only `fastq` refresh and extended the validator
+  to bind all eleven direct Next.js runtime, compiler, and lint lock packages.
+  No unresolved review finding remains.
+
 ## 2026-08-29 — Current WordPress/WooCommerce compatibility refresh
 
 - Reconstructed the current runtime matrix against official WordPress, WooCommerce, WooCommerce server-requirement, and `wp-env` documentation. The repository's disposable current cells were still WordPress 7.0.2, WooCommerce 10.9.4, and PHP 8.3 after WordPress 7.1 and the WooCommerce 11.0.1 security update became stable; the minimum cells were still intentional and supported.

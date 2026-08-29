@@ -1,5 +1,19 @@
 # Execution Plan
 
+ADR-0102 is the active safe M16 security slice. Official Next.js 16.3.3 fixes
+two Critical unauthenticated RCE advisories, while released production v0.1.11
+and the integration candidate both declared 16.3.0. The candidate now pins
+Next.js and eslint-config-next to exact 16.3.3 npm package bytes and retains
+disabled image optimization as defence in depth. A network-free validator binds
+the official release and advisories, released impact, lockfile provenance,
+task/risk/backlog evidence, no-vulnerable-rollback policy, and false production
+authority through twenty-three corruptions. The complete local gate passes with
+995 tests, both production builds, 87 migrations, 69 pgTAP files, every roadmap
+validator, zero npm audit findings, the secret scan, and licence validation.
+Exact-head image/SBOM/Trivy/CodeQL/DAST/database/WooCommerce evidence, then
+separate merge, release, deployment, observation, and reconciliation approvals
+are required. Production remains on 16.3.0 and unchanged.
+
 ADR-0101 is the active safe M16 compatibility slice. It pins the disposable
 current matrix to WordPress 7.1, WooCommerce 11.0.1, and PHP 8.4 in HPOS and
 legacy modes while preserving the minimum cells and the prior current versions
