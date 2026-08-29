@@ -152,7 +152,7 @@ jobs:
 
   recovery-transport:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
@@ -163,6 +163,8 @@ jobs:
         run: npm ci
       - name: Validate exact recovery transport plan
         run: npm run recovery-transport:validate
+      - name: Validate side-by-side rsync source candidate
+        run: npm run rsync-source-security:validate
       - name: Validate exact BorgBackup security candidate
         run: npm run borgbackup-security:validate
       - name: Validate exact OpenSSH recovery client candidate
@@ -181,6 +183,8 @@ jobs:
         run: npm run proxmox-security:packages:run -- --out dist/proxmox-security-packages/ci.json
       - name: Run isolated disposable recovery transport canary
         run: npm run recovery-transport:run -- --out dist/recovery-transport/ci.json
+      - name: Run side-by-side rsync source compatibility canary
+        run: npm run rsync-source-security:run -- --out dist/rsync-source-security/ci.json
       - name: Run disposable networkless BorgBackup compatibility canary
         run: npm run borgbackup-security:run -- --out dist/borgbackup-security/ci.json
       - name: Run isolated OpenSSH recovery client compatibility canary
@@ -215,6 +219,14 @@ jobs:
         with:
           name: security-openssh-client-${{ github.sha }}
           path: dist/openssh-client-security/ci.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload minimized rsync source security evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: security-rsync-source-${{ github.sha }}
+          path: dist/rsync-source-security/ci.json
           if-no-files-found: error
           retention-days: 30
 

@@ -369,10 +369,11 @@ requireCondition(
 );
 
 for (const [jobName, job] of Object.entries(securityWorkflow?.jobs ?? {})) {
+  const timeoutCeiling = jobName === "recovery-transport" ? 60 : 40;
   requireCondition(
     job["runs-on"] === "ubuntu-latest" &&
       Number.isInteger(job["timeout-minutes"]) &&
-      job["timeout-minutes"] <= 40,
+      job["timeout-minutes"] <= timeoutCeiling,
     `${securityWorkflowPath}: ${jobName} must be a bounded Ubuntu job`,
   );
   for (const step of job.steps ?? []) {

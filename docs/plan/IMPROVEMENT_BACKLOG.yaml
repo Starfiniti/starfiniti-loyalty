@@ -29,9 +29,9 @@ items:
     dependencyPenalty: 6
     score: 80
     status: blocked_external
-    evidence: docs/plan/evidence/M16/recovery-artifact-escrow-v2.yaml
-    dependency: Operations-controlled V2 private inventory and redundant offline custody of the six exact candidate dependency and rollback packages plus all reviewed runtime controls, independent package-authority and digest review, approved dual-endpoint maintenance and host-consumer compatibility, real forced-command/manual/timer archive evidence, and an isolated restore window.
-    ownerInput: Operations independently stages and verifies the sixty-four-entry V2 bundle with a second reviewer; operations and security then approve the candidate, dual-endpoint rollout, and restore review.
+    evidence: docs/plan/evidence/M16/rsync-source-security.yaml
+    dependency: Digest-locked Debian 13 and Ubuntu 24.04 native side-by-side candidate canary; operations-controlled V3 inventory and redundant offline custody of both candidate binaries, the shared wrapper, signed source and build inputs, unchanged distribution rollback packages, and reviewed runtime controls; independent source, dependency, and digest review; approved dual-endpoint maintenance and host-consumer compatibility; real forced-command/manual/timer archive evidence; and an isolated restore window.
+    ownerInput: Operations and security independently review the digest-locked native candidate, then operations stages and verifies the future V3 bundle with a second reviewer and separately approves dual-endpoint rollout and restore review.
   - id: IMP-009
     title: Isolate PostgreSQL off-host recovery from whole-VM Borg serialization
     severity: critical

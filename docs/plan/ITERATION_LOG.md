@@ -1,5 +1,12 @@
 # Iteration Log
 
+## 2026-08-29 — M16 rsync native side-by-side candidate bootstrap
+
+- Reconstructed the remaining IMP-010 host dependency and found that the accepted Debian unstable rsync package requires global `libacl1 2.4.0`, while Debian 13 and Ubuntu 24.04 retain native 2.3.2 lines. Installing that package would extend the recovery change into every host consumer of the ACL ABI.
+- Compared waiting for native distribution packages, retaining the proved cross-suite packages, copying one universal binary, and building the exact signed upstream source separately for each endpoint. ADR-0095 selects separate native side-by-side builds because it preserves the distribution package database, `/usr/bin` paths, and native ACL rollback boundary.
+- Added exact archive, signature, key, signer, safe 615-entry tree, build-feature, endpoint, package, compatibility, and rollback bindings plus an exclusive disposable runner. Adversarial review found and repaired a false two-file payload claim by separating minimized endpoint facts into a distinct read-only module; it also added archive-root and symbolic-link-parent rejection, native `dpkg-buildflags` hardening with executable-structure checks, runtime library validation, race-resistant report rereads, LF checkout rules, and a bounded 60-minute build ceiling.
+- Repository validation, focused lint, Python source-verifier fixtures, shell syntax, workflow validation, and the complete local gate pass. Docker is unavailable locally, so the bootstrap GitHub Security job must discover the two native executable hashes and common wrapper hash before the plan can become digest-locked. No production route, credential, access, package, library, selector, SSH, timer, archive, VM, checkout, or loyalty-value change occurred.
+
 ## 2026-08-29 — Signed BorgBackup security candidate
 
 - Reconstructed the exact Borg recovery boundary from ADR-0085 and production read-only evidence: Debian Trixie `borgbackup=1.4.0-5` at `/usr/bin/borg`, with the package and executable bound by SHA-256. Debian marks that package affected by `CVE-2026-62268` with a no-DSA/minor disposition; upstream 1.4.5 contains the fix, while stable Trixie still has no fixed package. This is a recovery-integrity gap, not evidence of archive corruption or a critical-severity incident.

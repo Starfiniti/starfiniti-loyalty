@@ -223,3 +223,16 @@ independent review, the real forced-command/manual/timer path, isolated restore,
 rollout, and `operationsEscrowComplete` all remain pending. A local directory or
 CI artifact is not approved custody. IMP-010, R-004, the M16 score, and production
 therefore remain unchanged.
+
+ADR-0095 records why that cross-suite package set is no longer the preferred
+production shape: the Debian host candidate would replace the global Trixie
+`libacl1` with a next-release library. The separate
+[`rsync-source-security.yaml`](rsync-source-security.yaml) evidence instead
+binds exact signed upstream rsync 3.5.0 source, a closed safe-tree manifest,
+separate Debian 13 and Ubuntu 24.04 native builds, fixed side-by-side paths,
+unchanged distribution rollback files, an internal no-port two-pair canary, and
+exact teardown. Local validation passes, but endpoint hash discovery and the
+digest-locked Linux rerun remain pending. A future V3 operations bundle must
+retain both native binaries and all source/build/rollback evidence; V2 remains
+immutable historical evidence. No production access, mutation, or authority is
+claimed, and IMP-010, R-004, M16, and the product score remain unchanged.

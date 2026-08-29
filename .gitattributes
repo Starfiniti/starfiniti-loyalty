@@ -6,10 +6,12 @@ docs/plan/evidence/M16/runs/proxmox-compatibility-inventory-*.json -text
 docs/plan/evidence/M16/runs/proxmox-compatibility-rehearsal-*.json -text
 docs/plan/evidence/M16/runs/borgbackup-security-*.json -text
 docs/plan/evidence/M16/runs/openssh-client-security-*.json -text
+docs/plan/evidence/M16/runs/rsync-source-security-*.json -text
 infrastructure/testing/openssh-client-security/*.Dockerfile text eol=lf
 infrastructure/testing/openssh-client-security/*.py text eol=lf
 infrastructure/testing/openssh-client-security/*.sh text eol=lf
 infrastructure/testing/openssh-client-security/*.yaml text eol=lf
+infrastructure/testing/rsync-source-security/* text eol=lf
 infrastructure/testing/proxmox-security-preflight/collect-facts.py text eol=lf
 infrastructure/testing/proxmox-compatibility-inventory/collect-facts.py text eol=lf
 infrastructure/testing/proxmox-compatibility-inventory/plan.yaml text eol=lf

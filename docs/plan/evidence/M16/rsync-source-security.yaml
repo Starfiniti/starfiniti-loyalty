@@ -1,0 +1,66 @@
+schema: starfiniti.rsync-source-security-evidence.v1
+status: in_progress
+observedAt: 2026-08-29T09:47:00Z
+candidate:
+  branch: codex/enterprise-roadmap-integration
+  commit: null
+plan:
+  path: infrastructure/testing/rsync-source-security/plan.yaml
+  sha256: 2a777b46ca6a63e26005ce4ff9e3d0aae1d26b7052e3892db600eb406172853c
+canary: null
+checks:
+  - id: architecture_decision
+    status: passed
+    evidence: ADR-0095 compares waiting, cross-suite packages, a universal binary, and separate native builds; it selects native side-by-side artifacts and documents selector-only rollback.
+  - id: upstream_source
+    status: passed
+    evidence: The plan binds the official rsync 3.5.0 archive, detached signature, release-key export, full signer fingerprint, exact sizes, and independent SHA-256 values.
+  - id: safe_source_tree
+    status: passed
+    evidence: The verifier binds the complete 615-entry source tree and rejects path traversal, duplicate roots or members, hard links, special files, escaping links, link chains, and symbolic-link parents.
+  - id: endpoint_native_builds
+    status: passed
+    evidence: The same signed source is compiled independently in digest-pinned Debian 13 and Ubuntu 24.04 builders with native dpkg-buildflags hardening; PIE, non-executable stack, RELRO, and immediate binding are mandatory before copy to the fixed versioned root.
+  - id: distribution_rollback
+    status: passed
+    evidence: Runtime construction revalidates the exact current distribution rsync package, executable paths, and native libacl version after the side-by-side candidate is copied.
+  - id: validator_self_test
+    status: passed
+    evidence: The repository plan validator, runner self-test, source-verifier adversarial fixtures, focused ESLint, shell syntax checks, and workflow validation pass locally.
+  - id: bootstrap_canary
+    status: pending
+    evidence: The disposable GitHub Docker canary must compile both native candidates and report the first observed endpoint executable and wrapper hashes without treating discovery as a production approval.
+  - id: candidate_digest_lock
+    status: pending
+    evidence: Endpoint executable and wrapper digests remain null during bootstrap and must be committed into a candidate plan only after the isolated discovery run passes.
+  - id: digest_lock_canary
+    status: pending
+    evidence: The digest-locked plan must rebuild both endpoint artifacts and pass current-to-candidate and candidate-to-candidate bounded compatibility before the candidate is retained.
+  - id: operations_escrow_v3
+    status: pending
+    evidence: Operations has not staged, verified, approved, and proved offline recovery use of a V3 escrow containing both native binaries, the shared wrapper, signed sources, build evidence, and rollback inputs.
+  - id: real_forced_command
+    status: pending
+    evidence: The exact candidate has not run through the production recovery SSH identity, reviewed rrsync forced command, key restrictions, path selector, and negative-command gate.
+  - id: manual_timer_archives
+    status: pending
+    evidence: No real manual archive or scheduled archive has used this candidate, and archive retention, retry, reconciliation, monitoring, and rollback remain unproved.
+  - id: production_rollout
+    status: pending
+    evidence: No production package, library, executable, selector, SSH service, timer, archive, database, guest, host, or VM has been changed by this repository slice.
+  - id: isolated_restore
+    status: pending
+    evidence: No archive transferred by these exact endpoint binaries has restored PostgreSQL, Auth, application, signing material, configuration, and connector secrets in an isolated environment.
+  - id: independent_review
+    status: pending
+    evidence: Recovery, operations, security, and an independent reviewer have not approved the exact artifact set, production activation procedure, rollback, and restore evidence.
+productionAccess: false
+productionMutation: false
+productionAuthority: false
+automaticFails:
+  - The source archive, detached signature, release key, signer fingerprint, safe source-tree manifest, endpoint build, or locked candidate digest differs from the reviewed plan.
+  - A build or rollout replaces a distribution rsync path, changes the host package database, upgrades the global ACL library, or requires a library downgrade for rollback.
+  - A canary uses host networking, a published port, a bind or persistent volume, a writable root, extra capabilities, a production route or credential, or survives teardown.
+  - The compatibility result counts metadata as recovery payload, exceeds the file byte or output bounds, omits either required version pair, or publishes before teardown succeeds.
+  - A production selector changes before V3 escrow, real forced-command, manual and timer archive, monitoring, reconciliation, rollback, isolated restore, and independent-review gates pass.
+  - Any evidence claims production access, mutation, authority, recovery readiness, security compliance, or module completion that was not deterministically observed on the exact candidate.
