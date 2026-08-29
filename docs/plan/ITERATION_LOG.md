@@ -1,5 +1,39 @@
 # Iteration Log
 
+## 2026-08-30 — Durable task-graph owner-input authority
+
+- Reconstructed all 27 top-level tasks and 108 task/slice nodes. M09 was the
+  only in-progress M01-M16 module with an empty parent owner-input contract even
+  though M09-S06 explicitly waits for an approved immutable release, real
+  WooCommerce pilot, recovery point, rollback authority, and bounded canary.
+- Added the three exact owner-input groups to both M09 and M09-S06. Completed
+  M03 remains correctly input-free; other active closeout slices continue to
+  inherit their non-empty module inputs unless they declare narrower inputs.
+- Added `scripts/validate-task-graph.mjs` and wired
+  `npm run task-graph:validate` into `npm run check`. The gate validates schema
+  version/date, locked scope, fixed score authority, measurable enterprise
+  fields, unique IDs, existing replacements/dependencies, dependency acyclicity,
+  exact M00-M16 inventory, and effective inputs for every active enterprise
+  slice.
+- The adversarial pass found that accepted `pending` work could evade active
+  owner-input checks and that M09's two named S02 follow-up slices were omitted
+  from the first traversal. Both paths now fail closed: pending is active,
+  recognized follow-ups are full graph nodes, and any other child task container
+  is rejected.
+- A second refutation pass reproduced dependency-removal and false-completion
+  bypasses, and targeted lint rejected a local `module` identifier under the
+  Next.js rule set. The final gate binds the approved M00-M16 parent edges,
+  rejects terminal modules with active descendants, requires completed module
+  scores of 90-100, locks the historical roadmap baseline, rejects M17-style
+  expansion under schema V3, and uses a lint-safe identifier.
+- Twenty-three corruption cases reject duplicate IDs/modules/inputs, absent modules
+  or dependencies, cycles, missing module/slice inputs, hidden follow-ups,
+  pending-work bypass, invalid dates/root shapes, removed dependencies, false or
+  sub-90 completion, baseline drift, extra locale/Shopify scope, weakened
+  completion/override rules, and unknown statuses. This is
+  planning-integrity evidence only: M00 remains 94/100, M09 remains 88/100, and
+  production, releases, canaries, checkout, and loyalty value remain unchanged.
+
 ## 2026-08-29 — Responsive authentication rescore
 
 - Reconstructed the M09 and M16 score bindings after the production-rendered

@@ -1,5 +1,23 @@
 # Status
 
+- Task-graph owner-input integrity is now deterministic. M09 was the only active
+  enterprise module whose closeout required an approved release, real
+  WooCommerce pilot, recovery point, rollback authority, and canary window but
+  declared no owner inputs. The module and M09-S06 now name those three exact
+  approval groups. `npm run task-graph:validate` is wired into the root gate and
+  validates 27 top-level tasks, 108 task/slice nodes, exact M00-M16 coverage,
+  unique IDs, existing acyclic dependencies, locked active/deferred scope, the
+  90/0.8 deterministic completion threshold, and effective owner inputs for
+  every active enterprise slice. Twenty-three mutation cases reject missing or
+  duplicate modules/IDs/inputs, hidden follow-ups, pending-work bypass,
+  dependency drift/cycles, invalid dates/root shapes, extra locale/Shopify
+  scope, dependency removal, terminal tasks with active slices, sub-90
+  completion, baseline drift, score weakening, and unknown status. M00 remains
+  94/100 and M09 remains
+  88/100 because this repairs planning authority, not product or production
+  evidence. No release, deployment, pilot, tenant, checkout, or loyalty value
+  changed.
+
 - M09 authentication regression hardening is repository-verified and undeployed. Exact source `f7e5a95` replaces the cramped 390-pixel company-SSO row with stacked 276-pixel controls and gives tall authentication cards a bounded vertical scroll owner without changing the established desktop card. Production-rendered Chromium passed at 1512×982, 390×844, and 320×500: the last SSO action remained keyboard reachable and visible, final session guidance was reachable, the protected programme redirect stayed same-origin, English-only output and fail-closed public recovery remained intact, and every checked surface had one H1/main, zero horizontal overflow, and zero browser diagnostics. Exact integrated candidate `1e55a82` passed CI `33276262061`, Security `33276262148`, and external CodeQL `99163614374` with all twelve checks green. The accessibility validator now guards the responsive and scroll primitives. Explicit rescoring leaves M09 at 88/100, the integration candidate at 83/100, and deployed production at 54/100 because no live activation, canary, recovery, rollback, observation, or reconciliation evidence changed. Production, Auth configuration, memberships, checkout, and loyalty value are unchanged; real SSO and M09 canary evidence remain pending.
 
 - ADR-0105 repairs the WooCommerce release-version boundary without changing

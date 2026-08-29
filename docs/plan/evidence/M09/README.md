@@ -154,6 +154,7 @@ Status: in progress. M09-S01 through M09-S05 are complete; M09-S06 disabled depl
 - Current pre-canary score: 88/100 after explicit rescoring of the responsive authentication correction. Correctness, security, ledger reliability, tests, performance, and maintainability clear their category floors; operability remains 4/10 until the disabled deployment, production rollback, observation, and reconciliation evidence exists.
 - Public/read-only baseline: canonical dashboard and API DNS resolve; dashboard health and login return HTTP 200; unauthenticated Auth and REST roots reject with HTTP 401; the approved Proxmox route confirms both VMs are running without mutation.
 - Safe stop: PR #57 is open and merge-ready but is not an approved release, and no real WooCommerce store or canary window is approved. The release contract forbids deployment or tenant enablement. These conditions preserve implementation evidence without permitting a false canary claim.
+- Owner-input authority: M09 and M09-S06 now explicitly require the approved immutable release and bounded Starfiniti storefront window, one linked real WooCommerce pilot member, and a pre-change recovery point with a named rollback decision owner. The root task-graph gate proves active slices cannot silently lose effective owner inputs.
 
 ## Remaining
 

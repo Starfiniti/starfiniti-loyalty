@@ -1,5 +1,15 @@
 # Execution Plan
 
+The M00 task authority now has a durable owner-input gate. M09 was the only
+active enterprise module whose canary-closeout evidence required external
+approval and a real store while its task declared an empty owner-input list;
+both the module and M09-S06 now identify the exact release/window, linked
+WooCommerce pilot, and recovery/rollback inputs. The root check validates all
+27 tasks, 108 task/slice nodes, exact M00-M16 inventory, dependency integrity,
+locked scope and completion thresholds, and active-slice input inheritance with
+twenty-three adversarial mutations. This changes no module or product score and
+does not authorize a merge, release, deployment, or canary.
+
 ADR-0105 is the active safe M15 release-integrity correction. The published
 v0.1.11 WooCommerce artifact and current development source identify the plugin
 as `0.1.0-dev`, so the existing tag workflow could not provide trustworthy

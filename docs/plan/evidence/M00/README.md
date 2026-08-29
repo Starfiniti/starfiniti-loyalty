@@ -56,3 +56,22 @@ M00 scores 94/100. Its largest discovered weakness—the undocumented developmen
 ## Rollout and rollback
 
 M00 changes documentation and task authority only; no runtime, database, tenant, or value state changes. Rollback is a commit revert. Completed P0–P7 evidence remains retained either way.
+
+## Follow-up — 2026-08-30 task-graph owner-input guard
+
+The historical M00 cutoff and 94/100 score above remain unchanged. The earlier
+inline task parse is now supplemented by a durable root gate:
+`npm run task-graph:validate`. It validates 27 top-level tasks, 108 task/slice
+nodes, exact M00-M16 coverage, unique bounded IDs, valid replacements and
+acyclic dependencies, locked active/deferred scope, Shopify deferral, fixed
+90/0.8 deterministic completion authority, measurable module fields, and
+effective owner inputs for every active enterprise slice. Twenty-three mutation
+cases include pending-work, hidden-follow-up, invalid-date/root-shape,
+dependency-removal, false/sub-90 completion, baseline-drift, and
+unreviewed-locale paths and prove the guard fails closed.
+
+The follow-up exposed and corrected one real planning defect: active M09 and its
+S06 closeout relied on an approved release/window, linked real WooCommerce
+pilot, and recovery/rollback authority but declared no owner inputs. Those
+dependencies are now explicit at both levels. This changes planning authority
+only and provides no release, canary, product-score, or production evidence.

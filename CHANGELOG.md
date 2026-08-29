@@ -1,5 +1,20 @@
 # Changelog
 
+- Added a durable enterprise task-graph validator and wired it into the root
+  quality gate. It requires exact M00-M16 coverage, unique bounded task/slice
+  IDs, valid acyclic dependencies, the approved active/deferred scope, Shopify
+  deferral, the fixed 90/0.8 deterministic completion boundary, measurable
+  enterprise module fields, and effective owner inputs for every active slice.
+  Twenty-three adversarial mutations cover module/ID/input omission or duplication,
+  hidden follow-up and pending-work bypass, missing dependencies, cycles,
+  invalid dates/root shapes, removed dependency edges, false/sub-90 completion,
+  baseline identity, scope and score weakening, and unsupported status.
+  M09 and M09-S06 now explicitly declare the approved immutable release
+  and storefront window, real linked WooCommerce pilot, and recovery/rollback
+  inputs already required by their canary evidence. M00 stays 94/100 and M09
+  stays 88/100; no runtime, release, deployment, pilot, checkout, or loyalty
+  value changed.
+
 - Repaired the authentication card at narrow and short viewports. Company SSO controls now stack below 480 pixels instead of collapsing the organization slug field, and tall login/access cards retain safe centering while owning a bounded vertical scroll range so final guidance and actions remain reachable. The accessibility validator guards those layout primitives. Production-rendered Chromium passed desktop, 390×844 mobile, and 320×500 keyboard stress checks with same-origin protected redirects, English-only output, no horizontal overflow, and zero browser diagnostics. Exact integrated candidate `1e55a82` passed CI `33276262061`, Security `33276262148`, and external CodeQL `99163614374` with all twelve checks green. Explicit material-change rescoring leaves M09 at 88/100, the integration candidate at 83/100, and deployed production at 54/100 because no live gate changed. No Auth, tenant, checkout, connector, or loyalty-value state changed.
 
 - Added ADR-0105 and repaired the WooCommerce tagged-release identity contract.

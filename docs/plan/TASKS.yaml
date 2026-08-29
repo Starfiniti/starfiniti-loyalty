@@ -1,5 +1,5 @@
 version: 3
-updated: 2026-08-29
+updated: 2026-08-30
 scope:
   active:
     [
@@ -471,6 +471,7 @@ tasks:
     verification:
       [
         parse TASKS.yaml and product-score.json,
+        npm run task-graph:validate,
         npm run product-score:validate,
         format changed files,
         git diff --check,
@@ -486,6 +487,7 @@ tasks:
       ]
     evidence:
       - docs/plan/evidence/M00/README.md
+      - the durable task-graph gate validates 27 top-level tasks 108 task and slice nodes all 17 enterprise modules and 23 adversarial corruptions including hidden follow-ups pending work dependency removal false completion and missing owner inputs
       - one registered exact M04-M14 canary-envelope catalogue is enforced by every module gate and 154 deterministic cross-module corruption fixtures
       - npm ci restored 962 packages and the declared worker esbuild binary
       - 177 unit tests lint all workspace typechecks dashboard and worker builds passed
@@ -1353,7 +1355,10 @@ tasks:
         compressed asset budget is explicit,
         checkout has zero synchronous hub dependency,
       ]
-    owner_inputs: []
+    owner_inputs:
+      - approved immutable release and bounded Starfiniti storefront canary window
+      - approved real WooCommerce pilot store with one linked test member
+      - approved pre-change recovery point and named rollback decision owner
     acceptance:
       [
         seven hosted areas store placements progressive panel controlled branding discovery sharing warnings and offline states pass,
@@ -1630,6 +1635,10 @@ tasks:
           - exact-source authentication regression review at 1512 by 982 390 by 844 and 320 by 500 repaired the cramped mobile company-SSO row and unreachable tall-card tail; narrow controls are full width, keyboard focus reaches the final action, the protected redirect remains same-origin, and the production bundle has zero horizontal overflow or browser diagnostics
       - id: M09-S06-CANARY-AND-CLOSE
         status: in_progress
+        owner_inputs:
+          - approved immutable release and bounded Starfiniti storefront canary window
+          - approved real WooCommerce pilot store with one linked test member
+          - approved pre-change recovery point and named rollback decision owner
         acceptance:
           - exact-head CI disabled deployment Starfiniti hosted and WooCommerce canary checkout trace reconciliation rollback and module score at least 90 pass
         verification:
