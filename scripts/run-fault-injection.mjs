@@ -114,6 +114,7 @@ function readRegularFile(path, label, maximumBytes, ownerOnly = false) {
     descriptor = openSync(
       path,
       constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0),
+      0o600,
     );
     initial = fstatSync(descriptor);
     const link = lstatSync(path);

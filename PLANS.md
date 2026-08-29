@@ -13,8 +13,11 @@ ADR-0098's federation HMAC and four-file fail-closed boundary remain accepted
 hardening but were not the source of the older findings. The complete local
 `npm run check` gate passes with 995 tests, every validator, the production
 dashboard and worker builds, and both supported client packages. A zero-result
-exact-head CI/Security run is still required before M15 advances. Production
-remains unchanged.
+exact-head CI/Security run is still required before M15 advances. Candidate
+`ccf1d89` reduced raw CodeQL results from three to one: its parser, deployment
+reader, and Klaviyo KDF passed, while the fault reader still required an
+explicit owner-only creation-mode fail-safe on its read-only descriptor open.
+That correction is now under local verification. Production remains unchanged.
 
 ## Objective
 

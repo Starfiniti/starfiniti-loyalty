@@ -9,7 +9,10 @@
   secret-safe operator CLI for disabled-first provisioning. ADR-0098's
   federation HMAC remains accepted hardening, while its original attribution of
   the older two findings is explicitly corrected. The complete local gate passes
-  with 995 tests and all builds/validators; exact-head proof is pending.
+  with 995 tests and all builds/validators. Candidate `ccf1d89` reduced the raw
+  CodeQL count from three to one; the remaining OS-temp-derived read-only fault
+  input now carries an explicit owner-only creation-mode fail-safe. A later
+  exact-head proof is pending.
 
 - Added ADR-0098 after the first retained CodeQL summary correctly blocked two
   previously unclassified results. The SARIF minimizer now reads exact

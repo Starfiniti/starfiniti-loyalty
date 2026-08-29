@@ -74,7 +74,10 @@ block-size, parallelism, memory, salt, and output-length parameters.
    and read only the returned descriptor, then confirm the path still names the
    same unlinked inode. Do not check a path and later open it.
 4. Open fault-exercise inputs through the same explicit read-only/no-follow
-   descriptor boundary. Remove the ineffective CodeQL dismissal comment.
+   descriptor boundary and supply an owner-only `0600` creation mode as a
+   fail-safe. Node ignores that third argument for a read-only open, while it
+   prevents an insecure default if a later refactor ever adds a creation flag.
+   Remove the ineffective CodeQL dismissal comment.
 5. Replace the Klaviyo fast SHA-256 fingerprint with scrypt using:
    - context `starfiniti/klaviyo/credential-fingerprint/v2`;
    - the canonical lowercase connection UUID in the salt;
@@ -143,6 +146,15 @@ The next exact-head CodeQL artifact must resolve extension scores and contain
 zero Critical, High, or unknown results. The GitHub code-scanning view must also
 mark alert 24 fixed; alerts 15 and 16 may retain their historical dismissal
 state, but their raw query results must disappear from the new analysis.
+
+Candidate `ccf1d897839448cfe150061af5b649f3937e0097` and merge analysis
+`01c3af5b7fc946b2cf7316ca8a64f661c9c37675` proved the parser and two of the
+three remediations: minimized artifact `9715725207` classified the only
+remaining raw result as High, `js/insecure-temporary-file`, at the read-only
+fault input. CodeQL models an OS-temporary-directory open as a creation sink
+when the call omits a secure mode, independent of the read-only flag. The
+explicit `0600` fail-safe above is therefore part of this decision, and a later
+exact-head zero-result artifact remains required.
 
 ## References
 

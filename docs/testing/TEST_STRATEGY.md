@@ -14,7 +14,9 @@ counts and Critical/High/unknown results fail. Rules are indexed from both the
 CodeQL driver and query-pack extensions; missing, duplicate, malformed, or
 conflicting rule/security-score metadata remains unknown rather than inheriting
 a lower warning level. A GitHub dismissal does not remove a raw result from this
-gate. Temporary scan fixtures use explicit `0600` files. Federation tests prove
+gate. Temporary scan fixtures use explicit `0600` files, and OS-temp-derived
+read-only fault inputs retain an explicit `0600` fail-safe mode on their
+descriptor open. Federation tests prove
 domain-separated keyed fingerprints, Auth-before-key-read, wrong-key rejection,
 canonical 256-bit parsing, and the four-file all-or-none boundary. Fault and
 deployment secret inputs use descriptor-first read-only/no-follow access.

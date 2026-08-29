@@ -91,6 +91,12 @@ still contained three blocking results, including two older dismissed alerts.
 The parser now covers CodeQL extension rules, and all three locations are
 remediated rather than waived.
 
+CodeQL also requires an explicit secure creation mode when an `openSync` path
+can derive from the operating-system temporary directory. Read-only/no-follow
+flags remain mandatory, and the fault reader additionally supplies `0600` as a
+defensive third argument. Node ignores it for the read-only open; it becomes
+protective if a future refactor adds a creation flag.
+
 - Critical or High: automatic failure. Fix, replace, remove, or document why the result is objectively non-applicable and obtain an independent reviewer decision. A reviewer cannot override an exploitable finding.
 - Medium: triage before the module closes; create a linked risk and remediation date when accepted temporarily.
 - Low/Informational: review for systemic patterns and convert recurring findings into tests or configuration controls.
