@@ -1,5 +1,34 @@
 # Iteration Log
 
+## 2026-08-30 — Bounded federation and notification dependency patches
+
+- Compared holding the installed set, updating every outdated dependency, and
+  applying only three compatible patches that share an untrusted-input failure
+  boundary. ADR-0106 selects the bounded option and records rollback effects.
+- Exact-pinned `fast-xml-parser` 5.11.1, Nodemailer 9.0.6, and test-only
+  `smtp-server` 3.19.4. The governance record binds prior/candidate Git commits,
+  comparisons, npm tarballs and integrity values, licences, Node floors,
+  workspace ownership, and lock resolution.
+- Retained the independent 256 KiB SAML size/declaration/syntax/entity controls
+  and transport-level plus message-level SMTP file/URL denial. Dependency
+  hardening is defence in depth and does not replace application policy.
+- Added `npm run continuous-improvement:dependency-patches:validate` to the
+  root gate. Its self-test rejects thirty-two provenance, pin, nested-lock,
+  compatibility, control, rollback, task, ADR, and false-authority mutations.
+- Adversarial review found that the first review shape conflated candidate
+  runtime change with unchanged live production and trusted YAML control flags
+  without binding the application source. The corrected contract records both
+  facts, rejects unknown review/package fields, verifies the exact SAML and
+  SMTP source controls, and adds runtime tests for the 256 KiB SAML bound plus
+  transport- and message-level SMTP denial.
+- Clean install audited 972 packages with zero vulnerabilities. Focused tests
+  pass 36/36 and 18/18; the root gate passes 997 tests and both production
+  builds. Static validation covers 87 migrations and 69 pgTAP files; secret,
+  production-audit, licence, and diff gates pass. Exact-head CI remains pending.
+- Deferred unrelated TypeScript, ESLint, Node type, Zod, and Lucide changes to
+  separate review boundaries. No product score or production authority changed;
+  exact-head verification remains in progress.
+
 ## 2026-08-30 — Durable task-graph owner-input authority
 
 - Reconstructed all 27 top-level tasks and 108 task/slice nodes. M09 was the

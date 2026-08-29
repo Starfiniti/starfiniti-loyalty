@@ -3670,6 +3670,7 @@ tasks:
         an isolated-equivalent-physical-host rehearsal contract binds the exact candidate immutable package/preflight/inventory baselines released Starfiniti v0.1.11 reviewed Supabase self-hosted v0.8.0 compatibility Compose and linux/amd64 image set plus a fresh minimized dependency preflight and same-projection production inventory read no more than five minutes old while synthetic guests cover every anonymous behavior profile only the application and database use separately approved read-only recovery inputs and an out-of-process auto-destroy lease equals the approval expiry,
         the dashboard runtime review binds both Critical Next.js 16.3 advisories the released 16.3.0 production impact exact 16.3.3 npm package bytes matching lint package image-optimization defence no-vulnerable-rollback policy and false merge release deployment and reconciliation authority,
         the Supabase repository review binds current CLI client and SSR patch releases exact npm platform and subpackage provenance compatible Node floors and an explicit false automatic-table-exposure setting while retaining the closed Data API schema list explicit grants RLS and false live-stack or production authority,
+        the notification and federation dependency review binds exact compatible fast-xml-parser Nodemailer and SMTP sink patch provenance while retaining independent bounded SAML validation transport-level and message-level file and URL denial and false merge release deployment mutation and reconciliation authority,
         the evidence-ranked backlog score and order recompute exactly with no overdue unaccepted Critical or High item,
         the second occurrence of a stable failure binds a merged regression test validator monitor runbook or agent rule,
         every material change rescored all affected modules while preserving prior scores and evidence,
@@ -3697,6 +3698,7 @@ tasks:
         npm run continuous-improvement:node-runtime:validate,
         npm run continuous-improvement:next-runtime:validate,
         npm run continuous-improvement:supabase-runtime:validate,
+        npm run continuous-improvement:dependency-patches:validate,
         clean-head dual-endpoint installed-state capture and independent snapshot verification,
         npm run rsync-source-security:validate,
         bootstrap native endpoint digest discovery followed by an exact digest-locked internal-network current-host and candidate-host to candidate-guest compatibility artifact with signed-source safe-tree distribution-path native-libacl and exact teardown proof,
@@ -3773,6 +3775,7 @@ tasks:
         docs/architecture/ADR/0101-current-wordpress-woocommerce-compatibility-matrix.md,
         docs/architecture/ADR/0102-nextjs-16-3-3-critical-security-update.md,
         docs/architecture/ADR/0103-reviewed-supabase-client-toolchain-refresh.md,
+        docs/architecture/ADR/0106-reviewed-notification-and-federation-dependency-patches.md,
         infrastructure/governance/recovery-artifact-escrow-v3.yaml,
       ]
     evidence:
@@ -3840,6 +3843,8 @@ tasks:
         scripts/validate-woocommerce-runtime-review.mjs,
         infrastructure/governance/supabase-runtime-review.yaml,
         scripts/validate-supabase-runtime-review.mjs,
+        infrastructure/governance/dependency-patch-review.yaml,
+        scripts/validate-dependency-patch-review.mjs,
         docs/plan/evidence/M16/proxmox-security-review-2026-08-29.md,
         ADR-0080 preserves the exact V1 production score under SHA-256 and the V2 validator separately recomputes deployed production at 54/100 and the exact integration candidate at 83/100 while both remain completion-ineligible,
         product-score governance implementation d1a78c04cefacad203c786edee85c4b3a20787a1 passed the complete local 983-test gate 86-migration and 68-pgTAP-file static validation 1069-file secret scan zero-vulnerability production audit licence validation formatting and diff review without a runtime schema or production change,
@@ -3875,5 +3880,6 @@ tasks:
         exact Node runtime implementation d2c347a271259a9a93958d02ded2fed732676b59 passed CI run 33257511194 Security run 33257511192 and external CodeQL with all twelve checks green; its 6104-byte evidence record has SHA-256 222cd276acfd37430db88c993f01301ccc14f0d97b1da5fb907edf4770e0c692 and binds the two Node 24.20.0 images 336 total SBOM components zero Trivy and CodeQL findings zero actionable DAST alerts 995 tests 87 migrations 3790 pgTAP assertions 22 concurrency probes and four WooCommerce runtime jobs while release deployment rollback observation and production reconciliation remain open,
         ADR-0101 binds official sources exact downloaded WordPress 7.1 and WooCommerce 11.0.1 artifact sizes and SHA-256 values PHP 8.4 both current HPOS and legacy workflow cells pre-start download verification in-runtime version assertions unchanged minimum cells prior rollback versions compatibility headers and false production authority; exact implementation c3b29542035772ddcbc48d92e2b159ac605dd80f passed all four WooCommerce runtime cells in CI run 33261152926 and the immutable 4291-byte evidence record binds the exact jobs versions storage modes artifact checks native coupon order reconciliation cleanup chronology and false production authority under SHA-256 950091da92c90a5834a1020bed83d275e1d3b0891ff6ca565ac79d2a0682188e; production store VM database checkout path release pilot deployment observation reconciliation and loyalty value remain unchanged or pending,
         ADR-0102 binds the two official Critical Next.js advisories released v0.1.11 and candidate 16.3.0 impact exact 16.3.3 Next.js and matching lint package provenance image-optimization defence and a no-vulnerable-rollback policy; exact implementation c3b29542035772ddcbc48d92e2b159ac605dd80f passed CI 33261152926 Security 33261152934 and external CodeQL with all twelve checks green and its immutable 5199-byte evidence file SHA-256 d90150e1ec818f1fa092df6cf6a91137c1333cf5b97b4eafb4bcfe3b4ec205ca binds both images SBOMs Trivy CodeQL DAST 995 tests 87 migrations 3790 pgTAP assertions 22 concurrency probes and four WooCommerce runtime jobs while merge release deployment reconciliation and every production mutation remain false,
+        ADR-0106 selects only fast-xml-parser 5.11.1 Nodemailer 9.0.6 and smtp-server 3.19.4 as one exact compatible untrusted-input patch set; the governance record and thirty-two-corruption validator bind Git tags commits npm tarballs integrity licences Node floors exact record shape nested lock resolution retained source-level SAML and SMTP controls coherent rollback candidate-runtime change and entirely false production authority while unrelated dependency changes remain deferred; clean install audited 972 packages with zero vulnerabilities focused SAML and SMTP tests pass 36 and 18 cases and the complete 997-test local root gate both production builds static database secret production-audit licence and diff checks pass while exact-head CI remains pending,
         delivery-chain audit found every open roadmap PR from 29 through 56 merge-clean with zero failed or pending checks after exact-head repairs to PRs 29 30 31 32 and 42,
       ]

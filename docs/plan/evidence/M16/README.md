@@ -2,6 +2,22 @@
 
 The active fail-closed manifest is `continuous-improvement.yaml`. It records repository controls now and leaves elapsed monthly reviews, the quarterly exercise bundle, the thirteen-source provider/platform/recovery-dependency review, regression controls, scoring, independent review, and owner approval pending.
 
+ADR-0106 records a bounded repository-only patch review for the federation and
+notification untrusted-input boundary. Exact `fast-xml-parser` 5.11.1,
+Nodemailer 9.0.6, and test-only `smtp-server` 3.19.4 package provenance is bound
+in `infrastructure/governance/dependency-patch-review.yaml`; unrelated updates
+remain deferred. The existing bounded independent SAML validation and SMTP
+transport/message file and URL denials remain required. Run
+`npm run continuous-improvement:dependency-patches:validate`; its self-test
+rejects thirty-two source, manifest, nested-lock, compatibility, source-control,
+rollback, task, ADR, and false-authority corruptions. This evidence does not
+claim an elapsed provider review, merge, release, deployment, or production
+change, so M16 remains 77/100. Clean install found zero vulnerabilities;
+focused SAML and SMTP suites pass 36 and 18 tests; the full local gate passes
+997 tests, both production builds, static database validation, secret scan,
+production audit, licence inventory, and diff review. Exact-head evidence is
+still pending.
+
 ADR-0103 records the bounded Supabase repository review without changing the
 live self-hosted stack. CLI 2.116.0, supabase-js 2.112.4, and SSR 0.12.5 are
 exact-pinned with aligned lockfile packages; PostgreSQL client 3.4.9 remains

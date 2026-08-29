@@ -1,5 +1,20 @@
 # Changelog
 
+- Added ADR-0106 and refreshed only the reviewed federation/notification
+  untrusted-input patch set: exact `fast-xml-parser` 5.11.1, Nodemailer 9.0.6,
+  and test-only `smtp-server` 3.19.4 pins with Git/npm provenance and coherent
+  rollback. Existing bounded independent SAML validation and SMTP transport-
+  plus-message file/URL denial remain unchanged. A new root-gated validator
+  rejects thirty-two package, lock, source-control, task, ADR, rollback, and
+  production-authority corruptions. No contract, migration, ledger, tenant,
+  checkout, release, deployment, or production state changed; M16 and product
+  scores remain unchanged. Adversarial review then separated candidate runtime
+  dependency change from live production mutation, bound the actual SAML/SMTP
+  source controls, rejected unknown review fields, and added runtime regression
+  tests for the 256 KiB SAML limit and both SMTP denial layers. Clean install,
+  all 997 workspace tests, both production builds, static database validation,
+  secret scan, production audit, licence inventory, and diff review pass.
+
 - Added a durable enterprise task-graph validator and wired it into the root
   quality gate. It requires exact M00-M16 coverage, unique bounded task/slice
   IDs, valid acyclic dependencies, the approved active/deferred scope, Shopify

@@ -1,5 +1,24 @@
 # Execution Plan
 
+ADR-0106 is the active safe M16 dependency-hardening slice. The current
+repository review selected only `fast-xml-parser` 5.11.1, Nodemailer 9.0.6,
+and `smtp-server` 3.19.4 from the available updates because they share the
+tenant-federation and notification untrusted-input boundary. Exact Git tag
+commits, npm tarballs, integrity values, licences, Node floors, owning
+manifests, and lock paths are versioned. The application still rejects SAML
+documents above 256 KiB and declarations before independent syntax/entity
+validation, and SMTP still denies file and URL access on both transport and
+message. A root-gated validator rejects thirty-two provenance, pin,
+lock-alignment, control, rollback, task, and false-authority corruptions.
+Unrelated compiler, lint, contract, and interface updates remain separate.
+This changes no contract, migration, ledger, tenant authority, checkout,
+release, or production runtime; M16 stays 77/100 and the candidate stays
+83/100. Clean install found zero vulnerabilities; focused SAML and SMTP tests
+pass 36/36 and 18/18; the complete local gate passes 997 tests, both production
+builds, 87-migration/69-pgTAP-file static validation, secret scan, production
+audit, licence inventory, and diff review. Exact-head evidence and the existing
+elapsed/live gates remain pending.
+
 The M00 task authority now has a durable owner-input gate. M09 was the only
 active enterprise module whose canary-closeout evidence required external
 approval and a real store while its task declared an empty owner-input list;

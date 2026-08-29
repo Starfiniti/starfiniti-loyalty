@@ -233,6 +233,55 @@ describe("SMTP notification delivery", () => {
     expect(messages[0]).not.toContain("secret-value");
   });
 
+  it("denies Nodemailer file and URL resolution on both transport and message", async () => {
+    const runtime = createSmtpDeliveryRuntime({
+      host: "127.0.0.1",
+      port: 2525,
+      security: "plaintext",
+      fromAddress: "loyalty@example.test",
+      username: null,
+      password: null,
+      messageIdDomain: "example.test",
+    });
+    const transportOptions = (
+      runtime.transporter as unknown as {
+        options: Record<string, unknown>;
+      }
+    ).options;
+    expect(transportOptions).toMatchObject({
+      disableFileAccess: true,
+      disableUrlAccess: true,
+    });
+    runtime.transporter.close();
+
+    let capturedMessage: unknown;
+    const guardedRuntime: SmtpDeliveryRuntime = {
+      config: runtime.config,
+      transporter: {
+        sendMail: async (message: unknown) => {
+          capturedMessage = message;
+          return {
+            accepted: ["member@example.test"],
+            rejected: [],
+            response: "250 accepted",
+          };
+        },
+        close: () => undefined,
+      } as unknown as SmtpDeliveryRuntime["transporter"],
+    };
+
+    await expect(
+      sendAuthorizedNotification(
+        guardedRuntime,
+        authorizedDispatch("Your {{points}} points are ready"),
+      ),
+    ).resolves.toBe(250);
+    expect(capturedMessage).toMatchObject({
+      disableFileAccess: true,
+      disableUrlAccess: true,
+    });
+  });
+
   it("claims and finishes the isolated test queue through its own database boundary", async () => {
     const authorization = authorizedDispatch(
       "[Starfiniti test] Your {{points}} points are ready",

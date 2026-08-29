@@ -1,0 +1,90 @@
+schema: starfiniti.dependency-patch-review.v1
+reviewedAt: 2026-08-30
+owner: engineering
+scope: notification-and-federation-untrusted-input-boundaries
+packages:
+  - id: fast-xml-parser
+    use: bounded parsing of tenant SAML metadata after independent syntax validation
+    manifest: apps/dashboard/package.json
+    lockPath: apps/dashboard/node_modules/fast-xml-parser
+    previous:
+      version: 5.11.0
+      integrity: sha512-9IGxMqvqLOnqP+Egi1nqDHKv5k8aZ7r9n558enxcucmyVGEBNPAU+MOg/8jPIS7rO7sSq4gFm1/nHtiaubMruw==
+      gitCommit: f3c69ae2a9a1a1df4e4be9ca954ddcdf6563d16a
+    candidate:
+      version: 5.11.1
+      tag: v5.11.1
+      gitCommit: 3617550adfb280989f482d662b7e9ece55a32a34
+      comparison: https://github.com/NaturalIntelligence/fast-xml-parser/compare/v5.11.0...v5.11.1
+      tarball: https://registry.npmjs.org/fast-xml-parser/-/fast-xml-parser-5.11.1.tgz
+      integrity: sha512-TBw6K/fxoQGGjCmZDw9w/ZwP3uDcnTM4YH/g+PFRWr8sbe5idXtxNN6vITh4+1ruCZaho6uBFurElsA7F0zzgw==
+      license: MIT
+    disposition: accept-single-pass-validator-patch
+  - id: nodemailer
+    use: provider-neutral SMTP notification delivery with file and URL access denied
+    manifest: apps/worker/package.json
+    lockPath: node_modules/nodemailer
+    previous:
+      version: 9.0.5
+      integrity: sha512-wvjiKvjczmsN7U/8006JOdXubgBk2XFAbioDMbT+sM7cPs0QrhJTa6KBRX7P5REGGkDcLUz/EarWidb8G8C1jQ==
+      gitCommit: 742cff9e2d5376962da19f8fcf2408e910ff2020
+    candidate:
+      version: 9.0.6
+      tag: v9.0.6
+      gitCommit: 4e467a8fd298f47b481fb96888dc4658fde70a5b
+      comparison: https://github.com/nodemailer/nodemailer/compare/v9.0.5...v9.0.6
+      tarball: https://registry.npmjs.org/nodemailer/-/nodemailer-9.0.6.tgz
+      integrity: sha512-IQUGFdhdGwI9+AWX+FpUt4DLmvFaOjTMEoneTIWX/RXxuy1TdenPwWrvFMSfLkPKl+HQEXWuSAxEMMbPYXtBmg==
+      license: MIT-0
+      minimumNode: ">=6.0.0"
+    disposition: accept-user-key-and-url-fetch-hardening
+  - id: smtp-server
+    use: isolated SMTP delivery test sink only
+    manifest: apps/worker/package.json
+    lockPath: node_modules/smtp-server
+    previous:
+      version: 3.19.3
+      integrity: sha512-1WkMlusxxy0Pdx3Bj4+nxzXLakON3EvV8+e0ZD/u6weNkHiX/ih2KGRV2A6Hg54Z30CQjE1OvNs79EZ0r0fBkw==
+      gitCommit: 2f21fb6b8764917c06c0dd9b70b181ca65e82528
+    candidate:
+      version: 3.19.4
+      tag: v3.19.4
+      gitCommit: b5bbf3d1209c5d0198f5e600714317c69ca79c71
+      comparison: https://github.com/nodemailer/smtp-server/compare/v3.19.3...v3.19.4
+      tarball: https://registry.npmjs.org/smtp-server/-/smtp-server-3.19.4.tgz
+      integrity: sha512-ThET3Upb7y6KfZArVPESLXafPurJ+bHAs5h0I+MzJKqVng2oDMgGo521HSuk4O+A8BfC1RgHjM7UvAVNRiDUOA==
+      license: MIT-0
+      minimumNode: ">=18.18.0"
+    disposition: accept-test-sink-nodemailer-alignment
+compatibility:
+  repositoryNode: ">=24.0.0"
+  candidateRuntimeDependencyChange: true
+  contractChange: false
+  migrationChange: false
+  ledgerChange: false
+  tenantAuthorityChange: false
+  checkoutChange: false
+  productionRuntimeMutation: false
+controls:
+  samlDocumentMaxBytes: 262144
+  samlDeclarationsRejected: true
+  independentSyntaxValidation: true
+  entityExpansionBounded: true
+  smtpTransportFileAccessDisabled: true
+  smtpTransportUrlAccessDisabled: true
+  smtpMessageFileAccessDisabled: true
+  smtpMessageUrlAccessDisabled: true
+deferred:
+  majorUpgrades: [typescript, eslint, types-node]
+  unrelatedMinorUpgrades: [zod, lucide-react]
+decision:
+  disposition: exact-compatible-untrusted-input-patch-refresh
+  breakingChangeIdentified: false
+  rollback: Revert all three manifest pins and the lockfile together while retaining SAML bounds and SMTP file and URL denial.
+authority:
+  productionAccess: false
+  mergeApproved: false
+  releaseApproved: false
+  deploymentApproved: false
+  productionMutation: false
+  productionReconciled: false

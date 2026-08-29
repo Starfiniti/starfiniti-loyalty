@@ -339,6 +339,20 @@ describe("tenant federation discovery and metadata validation", () => {
     ).rejects.toMatchObject({ code });
   });
 
+  it("rejects SAML metadata above the 256 KiB transport bound before parsing", async () => {
+    await expect(
+      validateOrganizationFederationConfiguration(
+        {
+          protocol: "saml",
+          metadataUrl: "https://metadata.vendor.com/idp.xml",
+          expectedEntityId: "urn:vendor:tenant:idp",
+        },
+        configurationSha256,
+        samlRuntime({ xml: `${samlDocument()}${" ".repeat(256 * 1024)}` }),
+      ),
+    ).rejects.toMatchObject({ code: "federation_document_too_large" });
+  });
+
   it("rejects a signing certificate outside the validation instant", async () => {
     const runtime = samlRuntime({ now: new Date("2040-01-01T00:00:00Z") });
     await expect(

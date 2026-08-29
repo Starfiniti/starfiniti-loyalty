@@ -1,5 +1,23 @@
 # Status
 
+- ADR-0106 refreshes a bounded untrusted-input patch set without broad
+  dependency churn. `fast-xml-parser` 5.11.1, Nodemailer 9.0.6, and the
+  test-only `smtp-server` 3.19.4 are exact-pinned to reviewed Git commits and
+  npm integrity values. The existing 256 KiB/declaration/syntax/entity SAML
+  boundary and transport-plus-message SMTP file/URL denial remain mandatory.
+  `npm run continuous-improvement:dependency-patches:validate` is part of the
+  root gate and rejects thirty-two source, manifest, lock, compatibility,
+  control, rollback, task, ADR, and production-authority corruptions. The
+  adversarial pass repaired a candidate/live-runtime claim ambiguity, rejected
+  unknown governance fields, and replaced circular control assertions with
+  source plus runtime evidence. Clean install, 36 SAML tests, 18 SMTP tests,
+  the 997-test root gate, both production builds, 87-migration/69-pgTAP-file
+  static validation, secret scan, production audit, licence inventory, and diff
+  review pass locally; exact-head CI remains pending. M16 remains 77/100, the
+  integration candidate remains 83/100, and
+  deployed production remains 54/100; no merge, release, deployment, tenant,
+  checkout, database, or loyalty value changed.
+
 - Task-graph owner-input integrity is now deterministic. M09 was the only active
   enterprise module whose closeout required an approved release, real
   WooCommerce pilot, recovery point, rollback authority, and canary window but
