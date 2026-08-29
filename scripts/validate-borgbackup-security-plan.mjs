@@ -672,6 +672,8 @@ function validateImplementation(files) {
   requireText(
     files.canary,
     [
+      "exec 3>&1",
+      "exec 1>/tmp/starfiniti-borg-canary.log",
       'export BORG_RSH="$fake_ssh"',
       "BORG_RELOCATED_REPO_ACCESS_IS_OK=no",
       "check --repository-only --max-duration 30",
@@ -682,6 +684,7 @@ function validateImplementation(files) {
       '"$current_borg" create --remote-path /opt/starfiniti/borg/1.4.5/borg-dir/borg.exe',
       'clientServerPairs":4',
       'productionMutation":false',
+      '"$archive_count" "$file_count" "$payload_bytes" >&3',
     ],
     "canary",
   );
@@ -807,6 +810,15 @@ function selfTest(plan, evidence, files) {
     const changed = files.runner.replace(source, "removed-control");
     assert.notEqual(changed, files.runner);
     assert.throws(() => validateImplementation({ ...files, runner: changed }));
+  }
+  for (const source of [
+    "exec 3>&1",
+    "exec 1>/tmp/starfiniti-borg-canary.log",
+    '"$archive_count" "$file_count" "$payload_bytes" >&3',
+  ]) {
+    const changed = files.canary.replace(source, "removed-control");
+    assert.notEqual(changed, files.canary);
+    assert.throws(() => validateImplementation({ ...files, canary: changed }));
   }
 }
 

@@ -1,6 +1,12 @@
 #!/bin/sh
 set -eu
 
+# Keep Borg and verification chatter out of the machine-readable evidence
+# channel. The disposable tmpfs retains operational stdout for the duration of
+# the run, while stderr remains attached so failures are still diagnosable.
+exec 3>&1
+exec 1>/tmp/starfiniti-borg-canary.log
+
 readonly current_borg=/usr/bin/borg
 readonly candidate_borg=/opt/starfiniti/borg/1.4.5/borg-dir/borg.exe
 readonly current_repo='ssh://canary@current-server/./repository-current'
@@ -69,4 +75,4 @@ test "$payload_bytes" -le 1048576
 archive_count=4
 file_count=2
 
-printf '{"schema":"starfiniti.borgbackup-security-canary.v1","status":"passed","currentVersion":"1.4.0","candidateVersion":"1.4.5","candidateExecutableSha256":"e0a23534bf28aa90940f749bb25dbbeecd401e9bf1de1dd8872cedc45f98718d","candidateTreeManifestSha256":"09fb420dce78c94814520628cf68ecdd77ab75d4fd9c794f8916874f2a767827","rollbackPackageSha256":"51e1cbdee1fccb31e9c63b93fda81d5fffb14289dc31ba27984e04ebb0c85733","clientServerPairs":4,"archives":%s,"files":%s,"payloadBytes":%s,"networkMode":"none","productionMutation":false}\n' "$archive_count" "$file_count" "$payload_bytes"
+printf '{"schema":"starfiniti.borgbackup-security-canary.v1","status":"passed","currentVersion":"1.4.0","candidateVersion":"1.4.5","candidateExecutableSha256":"e0a23534bf28aa90940f749bb25dbbeecd401e9bf1de1dd8872cedc45f98718d","candidateTreeManifestSha256":"09fb420dce78c94814520628cf68ecdd77ab75d4fd9c794f8916874f2a767827","rollbackPackageSha256":"51e1cbdee1fccb31e9c63b93fda81d5fffb14289dc31ba27984e04ebb0c85733","clientServerPairs":4,"archives":%s,"files":%s,"payloadBytes":%s,"networkMode":"none","productionMutation":false}\n' "$archive_count" "$file_count" "$payload_bytes" >&3
