@@ -258,8 +258,12 @@ members, a wrong endpoint binding, historical candidate activation, or a global
 library upgrade and keeps source-signature, native-build, consumer/selector,
 custody, review, restore, and production completion false.
 
-Exact-head Linux verification and every real private inventory, redundant
-offline custody, independent source/package/build/dependency review, real
+Exact implementation `21262cf08e265c61d3e76e1971ce7604916469cc`
+passed all seven CI jobs in run `33250002574`, all four Security jobs in run
+`33250002462` including recovery-transport job `99093945140`, and independent
+CodeQL check `99094120148`; all twelve PR checks were green and PR #57 was clean
+and mergeable. Every real private inventory, redundant offline custody,
+independent source/package/build/dependency review, real
 forced-command/manual/timer archive, selector switch, and isolated restore remain
 pending. No production access, mutation, or authority is claimed, and IMP-010,
 R-004, M16 at 77/100, deployed readiness at 54/100, and production remain

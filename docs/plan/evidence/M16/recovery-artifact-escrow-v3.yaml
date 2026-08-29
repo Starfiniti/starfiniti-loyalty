@@ -1,9 +1,9 @@
 schema: starfiniti.recovery-artifact-escrow-evidence.v3
 status: in_progress
-observedAt: 2026-08-29T10:59:31Z
+observedAt: 2026-08-29T11:29:07Z
 candidate:
   branch: codex/enterprise-roadmap-integration
-  commit: null
+  commit: 21262cf08e265c61d3e76e1971ce7604916469cc
 policy:
   path: infrastructure/governance/recovery-artifact-escrow-v3.yaml
   sha256: b7500c1989b98c08beb97213a90137c5a5d89599c29ead11e5ab537c7609b192
@@ -45,8 +45,8 @@ checks:
     status: passed
     evidence: Versioned policy loading, historical hash checks, canonical candidate bindings, positive inventory and report fixtures, deterministic corruptions, formatting, lint, and repository validation pass locally; exact-head Linux proof remains separate.
   - id: exact_head_ci
-    status: pending
-    evidence: The V3 implementation has not yet completed exact-head CI, Security, and independent CodeQL verification.
+    status: passed
+    evidence: Exact implementation 21262cf08e265c61d3e76e1971ce7604916469cc passed all seven CI jobs in run 33250002574, all four Security jobs in run 33250002462 including recovery-transport job 99093945140, and independent CodeQL check 99094120148; all twelve PR checks were green and PR 57 was clean and mergeable.
   - id: private_inventory
     status: pending
     evidence: Operations has not staged the exact seventy-four-file V3 bundle in an approved private destination or produced its private manifest and minimized verification report.
