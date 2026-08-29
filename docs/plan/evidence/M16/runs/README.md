@@ -21,6 +21,17 @@ simulation, installed-state compatibility, rollback escrow, recovery,
 repository policy, maintenance, reboot, production mutation, and post-change
 reconciliation remain separate gates.
 
+Proxmox start-state preflights use
+`starfiniti.proxmox-security-preflight.v1`. They bind the exact candidate and
+passing package-provenance report to current minimized production facts. The
+collector runs in isolated Python, executes exact-version APT simulation inside
+an empty network namespace, and requires identical package, APT state/cache/list,
+trust, repository configuration, and dpkg digests before and after. It contains
+no route or credential capability and stores no raw APT output. A passing report
+advances only dependency simulation and installed starting state; compatibility,
+rollback, recovery, repository policy, maintenance, reboot, execution, and
+post-change proof remain separate gates.
+
 The first committed installed-state artifact is
 `recovery-dependency-snapshot-c5678b6-2026-08-28T221524Z.json` (8,813 bytes,
 SHA-256
@@ -36,6 +47,15 @@ internal report SHA-256
 `0b703cc553f2304de75f28160e7482b09718794205efa7615fb39f2eab0f0382`).
 It can be independently reverified with
 `node scripts/validate-proxmox-security-package-canary.mjs --verify-report <absolute-path>`.
+
+The first passing production preflight artifact is
+`proxmox-security-preflight-5659404-2026-08-29T013145Z.json` (13,152 bytes,
+file SHA-256
+`b18037b19263020fabce46c2b6b13ec69b640775d2747dae474521191cba8a85`,
+internal report SHA-256
+`898d10bde0e5dd1103dfd8838f19febff3e781ac95ecf305d4767eadf20a110a`).
+It can be independently reverified with
+`node scripts/validate-proxmox-security-preflight.mjs --verify-report <absolute-path>`.
 
 Never store provider bodies, credentials, raw ETags, hostnames, IP addresses,
 usernames, SSH routes or keys, raw command output, personal data, tenant/customer

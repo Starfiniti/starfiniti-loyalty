@@ -32,6 +32,12 @@ this review.
   `3eec19512a6b2535cf0c6359144c1807b78e01015f43c470ad53335c6eb1090e`,
   internal report SHA-256
   `0b703cc553f2304de75f28160e7482b09718794205efa7615fb39f2eab0f0382`.
+- Independently verified read-only production preflight:
+  `docs/plan/evidence/M16/runs/proxmox-security-preflight-5659404-2026-08-29T013145Z.json`,
+  13,152 bytes, file SHA-256
+  `b18037b19263020fabce46c2b6b13ec69b640775d2747dae474521191cba8a85`,
+  internal report SHA-256
+  `898d10bde0e5dd1103dfd8838f19febff3e781ac95ecf305d4767eadf20a110a`.
 - Candidate observation ended at `2026-08-28T22:34:37Z`.
 
 The APT facts came through the approved read-only operator route. The repository
@@ -79,26 +85,35 @@ edited to disguise that difference.
 
 ## Gate state
 
-| Gate                                | State                           | Reason                                                                                                             |
-| ----------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Candidate metadata                  | Passed                          | Five repository observations, twelve exact package records, four retained packages, and five advisories are bound. |
-| Listed advisory floors              | Candidate passes; current fails | Exact candidate versions meet every listed floor; the running host does not.                                       |
-| Candidate package bytes             | Passed                          | A disposable runner verified both acquisitions, exact fields, size, and SHA-256 for all twelve packages.           |
-| Repository signature reverification | Passed                          | Five fresh `InRelease` files, ten accepted signatures, and all signed-index bindings passed independently.         |
-| Compatibility                       | Pending                         | No isolated host/guest rehearsal or consumer matrix is complete.                                                   |
-| Rollback escrow                     | Pending                         | Exact package/configuration inputs and retained-kernel recovery are not independently escrowed.                    |
-| Recovery readiness                  | Pending                         | Current clean-room host, database/WAL, VM, Auth, application, and connector recovery proof is incomplete.          |
-| Maintenance approval                | Pending                         | Operations, security, and owner approval are absent.                                                               |
-| Reboot approval                     | Pending                         | Reboot is a distinct unissued decision.                                                                            |
-| Production mutation                 | False                           | This review was read-only.                                                                                         |
-| Post-change smoke/reconciliation    | Pending                         | No update has run.                                                                                                 |
-| Independent review                  | Pending                         | No independent reviewer has approved evidence or closure.                                                          |
+| Gate                                | State                           | Reason                                                                                                                                          |
+| ----------------------------------- | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Candidate metadata                  | Passed                          | Five repository observations, twelve exact package records, four retained packages, and five advisories are bound.                              |
+| Listed advisory floors              | Candidate passes; current fails | Exact candidate versions meet every listed floor; the running host does not.                                                                    |
+| Candidate package bytes             | Passed                          | A disposable runner verified both acquisitions, exact fields, size, and SHA-256 for all twelve packages.                                        |
+| Repository signature reverification | Passed                          | Five fresh `InRelease` files, ten accepted signatures, and all signed-index bindings passed independently.                                      |
+| Dependency simulation               | Passed                          | The current host selects exactly eleven upgrades, one install, twelve configurations, zero removals, and zero downgrades.                       |
+| Installed starting state            | Passed                          | All twelve starting records, four retained recovery packages, running kernel/provider package, tools, indexes, and holds equal the V1 contract. |
+| Compatibility                       | Pending                         | No isolated host/guest rehearsal or consumer matrix is complete.                                                                                |
+| Rollback escrow                     | Pending                         | Exact package/configuration inputs and retained-kernel recovery are not independently escrowed.                                                 |
+| Recovery readiness                  | Pending                         | Current clean-room host, database/WAL, VM, Auth, application, and connector recovery proof is incomplete.                                       |
+| Maintenance approval                | Pending                         | Operations, security, and owner approval are absent.                                                                                            |
+| Reboot approval                     | Pending                         | Reboot is a distinct unissued decision.                                                                                                         |
+| Production mutation                 | False                           | This review was read-only.                                                                                                                      |
+| Post-change smoke/reconciliation    | Pending                         | No update has run.                                                                                                                              |
+| Independent review                  | Pending                         | No independent reviewer has approved evidence or closure.                                                                                       |
 
 ## Verification
 
 `npm run proxmox-security:update:validate` validates the exact V1 plan plus
 thirty-one adversarial drift and false-authority cases. The validator is part of
 the root `npm run check` gate.
+
+`npm run proxmox-security:preflight:validate` validates the route-free preflight
+plan, current collector bytes, passing package artifact binding, minimized fact
+and report shapes, exact action semantics, state equality, freshness on capture,
+and sixty adversarial corruptions. Independently reverify the committed report
+with `node scripts/validate-proxmox-security-preflight.mjs --verify-report
+<absolute-path>`.
 
 This document advances candidate metadata and risk classification only. It does
 not make `provider_review`, `dependency_pins`, M15 security, M16, R-059, or
@@ -192,3 +207,30 @@ reverification, and fresh signed-index binding. The remaining pending gates in
 the table are unchanged, and production is still vulnerable until an approved,
 recovery-ready maintenance and reboot sequence passes post-change smoke and
 reconciliation.
+
+## Read-only production start-state preflight
+
+ADR-0088 compares historical observation, a production APT refresh, the
+disposable canary alone, and an exact local simulation. It selects a bounded
+collector with no endpoint or credential capability. The operator transported
+the exact committed collector bytes from implementation
+`5659404cc4cbb24704f9b80103c589c1ae3c8e0b`, verified their SHA-256 before
+execution, and ran Python isolated safe-path mode. APT executed only
+`--simulate --no-remove` with the twelve exact versions inside a new empty
+network namespace.
+
+The report at `2026-08-29T01:31:45Z` proves eleven upgrades, one new signed
+kernel, twelve configurations, zero removals, zero downgrades, four unchanged
+recovery-boundary packages, no relevant holds, and exact current PVE and running
+kernel state. Dpkg status/selections/updates, APT state/cache/lists/archives,
+repository configuration, and trust digests are identical before and after.
+Package lists were not refreshed, package bytes were not downloaded or retained,
+and no install, repository edit, service control, reboot, route, credential, or
+production mutation occurred. APT labels the currently running prior kernel
+package autoremovable; the evidence turns that into an explicit retention guard,
+not removal authority.
+
+This closes only the dependency-simulation and installed-starting-state rows.
+Compatibility, recovery, rollback escrow, repository policy, maintenance,
+installation, reboot, candidate-running-kernel proof, service smoke,
+reconciliation, independent review, and R-059 remain open.

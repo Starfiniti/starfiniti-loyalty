@@ -79,7 +79,18 @@ signatures, and all twelve exact packages totalling 165,341,024 bytes while
 proving unchanged dpkg status, zero installation, zero retained package bytes,
 no production credential or route, no production mutation, and teardown.
 Package-byte, repository-signature, and fresh signed-metadata gates pass;
-compatibility, dependency simulation, installed-state preflight, rollback
+ADR-0088 then binds the route-free read-only production preflight. Exact
+[`runs/proxmox-security-preflight-5659404-2026-08-29T013145Z.json`](runs/proxmox-security-preflight-5659404-2026-08-29T013145Z.json)
+is 13,152 bytes with file SHA-256
+`b18037b19263020fabce46c2b6b13ec69b640775d2747dae474521191cba8a85`
+and internal report SHA-256
+`898d10bde0e5dd1103dfd8838f19febff3e781ac95ecf305d4767eadf20a110a`.
+It proves all twelve exact actions, eleven upgrades, one install, zero removals
+or downgrades, twelve configurations, all four retained recovery packages, no
+relevant holds, the exact running prior kernel/provider package, and identical
+package/APT/repository/dpkg state before and after. Refresh, download, install,
+service control, reboot, route, credential, and mutation are false. Dependency
+simulation and installed starting state therefore pass; compatibility, rollback
 escrow, recovery readiness, repository policy, maintenance, reboot, execution,
-post-change reconciliation, and independent approval remain open. Neither the
-candidate nor the canary completes a monthly provider review or production gate.
+post-change reconciliation, and independent approval remain open. None of these
+artifacts completes a monthly provider review or production repair gate.

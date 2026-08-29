@@ -50,6 +50,16 @@ installation, reboot, running-kernel proof, smoke, and reconciliation remain
 false or pending. Production remains unchanged and the Critical risk remains
 open.
 
+ADR-0088 subsequently supplies the distinct route-free production preflight.
+Its exact committed 13,152-byte report has file SHA-256
+`b18037b19263020fabce46c2b6b13ec69b640775d2747dae474521191cba8a85`
+and proves the V1 installed starting records plus the exact twelve-action,
+zero-removal, zero-downgrade dependency simulation with byte-identical bounded
+package/APT/repository state. It advances only the dependency-simulation and
+installed-starting-state gates. Every compatibility, recovery, rollback,
+repository-policy, approval, execution, reboot, smoke, and reconciliation gate
+remains open; production is still vulnerable and unchanged.
+
 The host currently uses Proxmox's `pve-no-subscription` repository. Proxmox
 documents that repository as suitable for testing and non-production use and
 recommends the enterprise repository for production. Changing repository class

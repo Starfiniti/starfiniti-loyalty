@@ -16,6 +16,14 @@ decisions. Repository validation authorizes none of those production actions.
   bytes. Compatibility, fresh production dependency simulation, installed-state
   preflight, rollback escrow, recovery readiness, repository policy, maintenance
   approval, reboot approval, and production mutation remain false or pending.
+- ADR-0088's exact 13,152-byte production preflight report has file SHA-256
+  `b18037b19263020fabce46c2b6b13ec69b640775d2747dae474521191cba8a85`
+  and internal report SHA-256
+  `898d10bde0e5dd1103dfd8838f19febff3e781ac95ecf305d4767eadf20a110a`.
+  It passes current installed-starting-state and dependency-simulation gates with
+  eleven upgrades, one install, zero removals/downgrades, twelve configurations,
+  all four recovery packages retained, and all bounded package/APT/repository
+  state identical before and after. It authorizes no later phase.
 - The configured `pve-no-subscription` repository is not Proxmox's recommended
   production repository. The owner must explicitly decide whether to procure and
   use the enterprise repository or accept a newly regenerated candidate from the
@@ -85,6 +93,11 @@ operator pipeline without retaining a raw local fact file. The remote Python
 interpreter must use isolated safe-path mode (`python3 -I`); the collector
 refuses any other interpreter mode. Independently compare the transmitted
 collector bytes with the SHA-256 bound in its plan before execution.
+
+The first passing report is
+`docs/plan/evidence/M16/runs/proxmox-security-preflight-5659404-2026-08-29T013145Z.json`.
+Reverify it with
+`node scripts/validate-proxmox-security-preflight.mjs --verify-report <absolute-path>`.
 
 The collector requires root for authoritative package configuration, creates an
 empty network namespace, and runs only `apt-get --simulate --no-remove` with the

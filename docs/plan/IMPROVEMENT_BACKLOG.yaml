@@ -1,6 +1,6 @@
 schema: starfiniti.improvement-backlog.v1
 version: 1
-observedAt: 2026-08-29T00:31:01Z
+observedAt: 2026-08-29T01:31:45Z
 ranking:
   formula: severityPoints + (2 * merchantImpact) + (2 * customerImpact) + confidence - effort - dependencyPenalty
   severityPoints: { critical: 40, high: 30, medium: 20, low: 10 }
@@ -17,7 +17,7 @@ items:
     score: 82
     status: blocked_external
     evidence: infrastructure/governance/proxmox-security-update-plan.yaml
-    dependency: Enterprise-versus-no-subscription repository decision, fresh production dependency simulation and installed-state compatibility, exact rollback escrow, current recovery proof, approved maintenance and reboot windows, post-change smoke, reconciliation, and independent review. Independent package-byte and repository-signature verification passed in artifact 9706126317.
+    dependency: Enterprise-versus-no-subscription repository decision, workload and consumer compatibility, exact rollback escrow, current recovery proof, approved maintenance and reboot windows, post-change smoke, reconciliation, and independent review. Independent package-byte and repository-signature verification passed in artifact 9706126317; exact read-only production dependency simulation and installed starting state passed in the committed ADR-0088 preflight report.
     ownerInput: Operations and security approve the exact candidate and recovery boundary; the owner resolves repository subscription policy and separately authorizes installation and reboot.
   - id: IMP-010
     title: Upgrade and prove the rsync 3.5 recovery transport boundary

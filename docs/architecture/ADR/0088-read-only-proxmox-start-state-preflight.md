@@ -134,3 +134,23 @@ security-update runbook.
 - Debian Trixie `apt-get`: https://manpages.debian.org/trixie/apt/apt-get.8.en.html
 - Debian Trixie `dpkg-query`: https://manpages.debian.org/trixie/dpkg/dpkg-query.1.en.html
 - Proxmox VE administration guide: https://pve.proxmox.com/pve-docs/pve-admin-guide.pdf
+
+## Evidence result
+
+Implementation `5659404cc4cbb24704f9b80103c589c1ae3c8e0b` passed the complete
+local repository gate and produced the first exact report at
+`2026-08-29T01:31:45Z`. The committed artifact is 13,152 bytes with file
+SHA-256
+`b18037b19263020fabce46c2b6b13ec69b640775d2747dae474521191cba8a85`
+and internal report SHA-256
+`898d10bde0e5dd1103dfd8838f19febff3e781ac95ecf305d4767eadf20a110a`.
+
+All twelve exact actions, eleven upgrades, one install, twelve configurations,
+zero removals, zero downgrades, four retained recovery packages, no relevant
+holds, exact current PVE/running-kernel state, isolated simulation, and
+before/after state equality pass. The running prior kernel is preserved despite
+APT's autoremovable classification. No raw facts file, package refresh,
+download, install, repository edit, service action, reboot, route, credential,
+or production mutation was retained. Compatibility, rollback, recovery,
+repository policy, approvals, execution, candidate-running-kernel proof, smoke,
+and reconciliation remain pending.
