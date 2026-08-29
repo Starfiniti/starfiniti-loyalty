@@ -20,4 +20,5 @@ test "$(dpkg-query -S /usr/share/keyrings/debian-archive-keyring.pgp)" = \
 test "$(command -v gpgv)" = /usr/bin/gpgv
 apt-get clean
 
+python3 /workspace/verify.py --self-test
 exec python3 /workspace/verify.py
