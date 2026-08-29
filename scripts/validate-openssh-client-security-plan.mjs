@@ -606,6 +606,8 @@ function validateImplementation(files) {
       "ForwardAgent=no",
       "ControlMaster=no",
       "starfiniti-openssh-client-stage:%s",
+      "current-version-execution",
+      "current-version-format",
       "current-effective-config",
       "candidate-connection",
       'effective="$($client $options -G "$endpoint")"',
