@@ -124,3 +124,16 @@ root-owned non-writable regular keyring, and creates the final report through
 one exclusive no-follow descriptor with same-inode verification. These
 corrections do not advance either pending gate until a fresh exact-head run and
 independent artifact verification pass.
+
+Correction head `d8dc1e5a0299e49186785bfcad2bf1c898e489ae` then reached the
+installed Debian archive-keyring check but recovery-transport job `99017536132`
+in Security run `33221910125` correctly rejected the `.gpg` compatibility
+symlink. CI run `33221910132` and the other eleven PR checks, including external
+CodeQL check `99017790505`, passed and independently confirm the report-path
+race is absent. Independent inspection of the exact pulled OCI layer under SHA-256
+`6310eb16bf4251731feab01e8f633bf5e2d75a657ccad97f420b1f83cce457be`
+confirmed that the link targets the package-owned regular root-owned
+`/usr/share/keyrings/debian-archive-keyring.pgp` file. The next contract names
+that exact regular file, verifies package ownership, and continues to reject
+links. No candidate package or report artifact was produced and no production
+route, credential, or mutation was present.

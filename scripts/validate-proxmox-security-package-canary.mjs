@@ -340,7 +340,7 @@ export function validateCanaryPlan(plan) {
   if (
     plan.trustAnchors.debian.authority !== "debian-archive-keyring" ||
     plan.trustAnchors.debian.path !==
-      "/usr/share/keyrings/debian-archive-keyring.gpg" ||
+      "/usr/share/keyrings/debian-archive-keyring.pgp" ||
     plan.trustAnchors.debian.provenance !==
       "digest-pinned-debian-base-image-and-signed-bootstrap"
   ) {

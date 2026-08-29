@@ -60,7 +60,8 @@ and deletion without installing a candidate package or contacting production.
 2. Use only the five candidate repositories. Bootstrap through the
    digest-pinned image's existing authenticated Debian source, explicitly
    install Debian's `debian-archive-keyring` package, and require its aggregate
-   keyring to be a bounded root-owned regular file with no group/world write.
+   `.pgp` keyring to be a bounded package-owned root-owned regular file with no
+   group/world write. Do not use the image's `.gpg` compatibility symlink.
    Fetch the official Proxmox Trixie archive keyring over HTTPS and impose the
    same file controls plus SHA-256
    `136673be77aba35dcce385b28737689ad64fd785a797e57897589aed08db6e45`
@@ -123,11 +124,20 @@ approved maintenance process.
 
 The first exact-head networked attempt failed closed before repository
 reconfiguration because the slim image could authenticate bootstrap APT but did
-not contain the aggregate `.gpg` file assumed by the verifier. No candidate
-package was downloaded and no production route or credential was present. The
-correction installs the Debian-owned archive-keyring package through that
-authenticated bootstrap and retains the strict regular-file boundary rather
-than accepting an arbitrary link or alternate path.
+not contain a regular aggregate `.gpg` file as assumed by the verifier. No
+candidate package was downloaded and no production route or credential was
+present. The correction installs the Debian-owned archive-keyring package
+through that authenticated bootstrap and retains the strict regular-file
+boundary rather than accepting an arbitrary link or alternate path.
+
+The next exact-head attempt confirmed that Debian's package was installed but
+again failed closed because the `.gpg` compatibility name is a symbolic link.
+Independent inspection of the exact pinned image layer
+`sha256:6310eb16bf4251731feab01e8f633bf5e2d75a657ccad97f420b1f83cce457be`
+confirmed that it targets the same directory's regular root-owned
+`debian-archive-keyring.pgp` file. The contract now names that exact
+package-owned regular file and still rejects symbolic links and alternate
+targets.
 
 That attempt's external CodeQL policy also rejected a check-then-write race at
 the final report path. The correction no longer tests and later reopens that

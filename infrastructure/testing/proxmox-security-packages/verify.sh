@@ -15,6 +15,8 @@ apt-get update
 DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends \
   ca-certificates curl debian-archive-keyring gnupg python3
 test "$(dpkg-query -W -f='${db:Status-Status}\n' debian-archive-keyring)" = installed
+test "$(dpkg-query -S /usr/share/keyrings/debian-archive-keyring.pgp)" = \
+  'debian-archive-keyring: /usr/share/keyrings/debian-archive-keyring.pgp'
 apt-get clean
 
 exec python3 /workspace/verify.py

@@ -26,7 +26,7 @@ execution:
 trustAnchors:
   debian:
     authority: debian-archive-keyring
-    path: /usr/share/keyrings/debian-archive-keyring.gpg
+    path: /usr/share/keyrings/debian-archive-keyring.pgp
     provenance: digest-pinned-debian-base-image-and-signed-bootstrap
   proxmox:
     authority: proxmox-archive-keyring-trixie
