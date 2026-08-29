@@ -146,12 +146,18 @@ canonical relative-path manifest is
 `09fb420dce78c94814520628cf68ecdd77ab75d4fd9c794f8916874f2a767827`.
 
 `npm run borgbackup-security:validate` covers plan, evidence, build, runner,
-fake-SSH, archive, workflow, and false-pass mutations. Linux Security CI will
-run the runtime with no network, read-only root, UID/GID 65532, no capabilities,
-no-new-privileges, bounded resources, current/candidate clients and remote
-servers, and exact container/image teardown. Local Docker is unavailable and
-the exact-head artifact does not yet exist, so `compatibility_canary` remains
-pending. Operations escrow, real-provider compatibility, production rollout,
-rollback, monitoring, isolated restore, and independent review also remain
-pending. No M16 closeout check or product-score point advances, and production
-is unchanged.
+fake-SSH, archive, workflow, and false-pass mutations. Exact implementation
+`fe727d53422a90f939218e510c9a028c4ba915ff` passed Security run `33235799207`,
+job `99056449824`. The retained 1,550-byte
+[`runs/borgbackup-security-fe727d5-2026-08-29T051944Z.json`](runs/borgbackup-security-fe727d5-2026-08-29T051944Z.json)
+report has SHA-256
+`f5336456b20afa1f188893019a63cd323562eea83dc1aacda3d698bb7bca113c`;
+GitHub artifact `9709902659` has archive SHA-256
+`d63b12169bbf03f292d7024d3a60fedf7444a9f6e0fc78d71d1348acd283cf67`.
+It proves all four current/candidate client/server pairs and eight required
+operation families under no network, read-only root, UID/GID 65532, no
+capabilities, no-new-privileges, bounded resources, and exact container/image
+teardown. `compatibility_canary` therefore passes. Operations escrow,
+real-provider compatibility, production rollout, rollback, monitoring, isolated
+restore, and independent review remain pending. This preparation proof does not
+advance an M16 closeout check or product-score point, and production is unchanged.

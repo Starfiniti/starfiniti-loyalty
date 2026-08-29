@@ -6,6 +6,8 @@ import { fileURLToPath } from "node:url";
 
 import YAML from "yaml";
 
+import { readBoundJsonArtifact } from "./lib/read-bound-json-artifact.mjs";
+
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const planPath = join(
   root,
@@ -33,6 +35,10 @@ const treeVerifierPath = join(
 );
 const runnerPath = join(root, "scripts/run-borgbackup-security-canary.mjs");
 const workflowPath = join(root, ".github/workflows/security.yml");
+const canaryReportRelativePath =
+  "docs/plan/evidence/M16/runs/borgbackup-security-fe727d5-2026-08-29T051944Z.json";
+const canaryCandidateCommit = "fe727d53422a90f939218e510c9a028c4ba915ff";
+const canaryMergeCommit = "9524786e6684484685269959f6084b5c9f952581";
 const digestPattern = /^[0-9a-f]{64}$/u;
 const fingerprintPattern = /^[0-9A-F]{40}$/u;
 
@@ -510,25 +516,82 @@ function validateEvidence(evidence, plan) {
   exactKeys(evidence.candidate, ["branch", "commit"], "evidence candidate");
   if (
     evidence.candidate.branch !== "codex/enterprise-roadmap-integration" ||
-    evidence.candidate.commit !== null
+    evidence.candidate.commit !== canaryCandidateCommit
   ) {
-    fail("unproved evidence must not claim an exact candidate commit");
+    fail("evidence candidate commit differs from the retained canary");
   }
   exactKeys(evidence.plan, ["path", "sha256"], "evidence plan");
   if (
     evidence.plan.path !==
       "infrastructure/testing/borgbackup-security/plan.yaml" ||
-    evidence.plan.sha256 !== planDigest(plan) ||
-    evidence.canary !== null
+    evidence.plan.sha256 !== planDigest(plan)
   ) {
-    fail("evidence plan or canary binding differs");
+    fail("evidence plan binding differs");
+  }
+  exactKeys(evidence.canary, ["report", "github"], "evidence canary");
+  exactKeys(
+    evidence.canary.report,
+    ["path", "sha256"],
+    "evidence canary report",
+  );
+  exactKeys(
+    evidence.canary.github,
+    [
+      "workflowRunId",
+      "jobId",
+      "artifactId",
+      "artifactName",
+      "artifactArchiveSha256",
+      "artifactCreatedAt",
+      "headCommit",
+      "mergeCommit",
+    ],
+    "evidence canary GitHub binding",
+  );
+  const github = evidence.canary.github;
+  if (
+    evidence.canary.report.path !== canaryReportRelativePath ||
+    !digestPattern.test(evidence.canary.report.sha256) ||
+    github.workflowRunId !== 33235799207 ||
+    github.jobId !== 99056449824 ||
+    github.artifactId !== 9709902659 ||
+    github.artifactName !== `security-borgbackup-${canaryMergeCommit}` ||
+    github.artifactArchiveSha256 !==
+      "d63b12169bbf03f292d7024d3a60fedf7444a9f6e0fc78d71d1348acd283cf67" ||
+    github.artifactCreatedAt !== "2026-08-29T05:19:48Z" ||
+    github.headCommit !== canaryCandidateCommit ||
+    github.mergeCommit !== canaryMergeCommit
+  ) {
+    fail("evidence canary artifact binding differs");
+  }
+  const report = readBoundJsonArtifact(
+    evidence.canary.report.path,
+    evidence.canary.report.sha256,
+    "BorgBackup canary",
+    {
+      fail,
+      resolvePath: (relativePath) => {
+        if (relativePath !== canaryReportRelativePath) {
+          fail("BorgBackup canary path differs");
+        }
+        return join(root, relativePath);
+      },
+      maximumBytes: 8 * 1024,
+    },
+  );
+  validateCanaryReport(report, plan);
+  if (
+    Date.parse(report.observedAt) > Date.parse(github.artifactCreatedAt) ||
+    Date.parse(github.artifactCreatedAt) > Date.parse(evidence.observedAt)
+  ) {
+    fail("evidence canary chronology differs");
   }
   const expected = new Map([
     ["plan_contract", "passed"],
     ["official_release_impact", "passed"],
     ["candidate_signature_contract", "passed"],
     ["rollback_package_contract", "passed"],
-    ["compatibility_canary", "pending"],
+    ["compatibility_canary", "passed"],
     ["operations_escrow", "pending"],
     ["production_remote_compatibility", "pending"],
     ["production_rollout", "pending"],
@@ -774,15 +837,19 @@ function selfTest(plan, evidence, files) {
   assert.doesNotThrow(() => validateEvidence(structuredClone(evidence), plan));
   for (const mutate of [
     (value) => (value.status = "complete"),
+    (value) => (value.candidate.commit = null),
     (value) => (value.candidate.commit = "0".repeat(40)),
     (value) => (value.plan.sha256 = "0".repeat(64)),
-    (value) => (value.canary = {}),
+    (value) => (value.canary = null),
+    (value) => (value.canary.report.sha256 = "0".repeat(64)),
+    (value) => (value.canary.github.artifactId += 1),
+    (value) => (value.canary.github.headCommit = "0".repeat(40)),
     (value) => (value.productionMutation = true),
     (value) => value.checks.pop(),
     (value) =>
       (value.checks.find(
         (check) => check.id === "compatibility_canary",
-      ).status = "passed"),
+      ).status = "pending"),
   ]) {
     const candidate = structuredClone(evidence);
     mutate(candidate);

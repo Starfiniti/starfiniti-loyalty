@@ -158,7 +158,10 @@ or roll back local WAL/base-backup production.
 
 The plan, source impact, signature boundary, rollback-package boundary,
 networkless compatibility controller, and adversarial repository validation are
-implemented. The exact-head CI canary, operations escrow, real remote-provider
-compatibility, production rollout, isolated restore, rollback exercise, and
-independent approvals do not yet exist. M16 remains `in_progress`, its score does
-not advance, and R-004 remains open.
+implemented. Exact implementation `fe727d53422a90f939218e510c9a028c4ba915ff`
+passed the four-pair, eight-operation Linux canary in Security run `33235799207`,
+job `99056449824`; the retained report and GitHub artifact archive are bound by
+distinct SHA-256 digests. Operations escrow, real remote-provider compatibility,
+production rollout, isolated restore, rollback exercise, and independent
+approvals do not yet exist. M16 remains `in_progress`, its score does not advance,
+and R-004 remains open.
