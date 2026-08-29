@@ -55,7 +55,7 @@
     "release:sources:build": "node scripts/build-reciprocal-source-bundle.mjs --build",
     "release:sources:verify": "node scripts/build-reciprocal-source-bundle.mjs --verify",
     "release:sources:inventory": "node scripts/build-reciprocal-source-bundle.mjs --inventory-only",
-    "security:validate": "node scripts/validate-security-evidence.mjs --self-test",
+    "security:validate": "node scripts/summarize-security-scan.mjs --self-test && node scripts/validate-security-evidence.mjs --self-test",
     "recovery:validate": "node scripts/validate-clean-room-recovery-evidence.mjs --self-test && node scripts/run-clean-room-recovery.mjs --self-test",
     "recovery:run": "node scripts/run-clean-room-recovery.mjs",
     "recovery-transport:validate": "node scripts/validate-rsync-transport-plan.mjs --self-test",

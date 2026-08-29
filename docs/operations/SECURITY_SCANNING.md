@@ -8,9 +8,14 @@ M15-S03 separates repository controls from the external evidence required for a 
 
 The `Security` workflow runs on pull requests, `main`, Tuesdays at 03:17 UTC, and manual dispatch:
 
-- CodeQL analyzes JavaScript/TypeScript with `security-extended` queries.
+- CodeQL analyzes JavaScript/TypeScript with `security-extended` queries, then
+  converts private SARIF into a count-only exact-candidate artifact and fails
+  on Critical, High, or unclassified results.
 - The complete npm dependency tree fails on every High or Critical advisory, including development-only tooling.
-- Trivy scans repository secrets/misconfiguration and both deployable images for Unknown/High/Critical vulnerability, secret, misconfiguration, and policy-classified licence findings.
+- Trivy scans repository secrets/misconfiguration and both deployable images
+  for Unknown/High/Critical vulnerability, secret, misconfiguration, and
+  policy-classified licence findings. Its exact database/check-bundle identity
+  and update/download instants must remain inside the 24-hour evidence bound.
 - Syft produces CycloneDX JSON SBOMs for both images.
 - The reciprocal-source validator rejects an SBOM component, version, licence expression, Alpine origin, packaging commit, architecture, or image placement outside the exact source plan.
 - ZAP 2.17.0 runs a bounded active scan against `starfiniti-dast-target` on the internal `starfiniti-dast` Docker network.
@@ -21,7 +26,19 @@ The repository misconfiguration scan is intentionally strict at every severity. 
 
 `infrastructure/testing/security/trivy.yaml` is the explicit AGPL-compatible licence policy. AGPL/GPL/LGPL findings remain visible as Medium reciprocal obligations; reviewed MIT-0 and SIL Open Font License identifiers are permissive Low findings; incompatible non-commercial, Commons Clause, Business Source, SSPL, Elastic, and other restricted terms fail. Unknown licences also fail. The policy contains no ignored licence IDs.
 
-Full-severity dashboard and worker JSON review reports exclude the secret scanner and are uploaded with both SBOMs. Secret detection remains enabled in the fail-closed table scan only, preventing a raw secret match from being copied into downloadable evidence. Runtime stages remove npm, npx, Corepack, and Yarn after the build and pin the reviewed Alpine OpenSSL security revision. The worker bundle leaves only `nodemailer`, `postgres`, and `zod` external, copies only those exact package directories, and imports all three from the built image before the scan. This prevents a root-workspace prune from silently shipping dashboard or build dependencies while keeping the SBOM aware of every external worker package.
+Full-severity dashboard and worker JSON review reports exclude the secret
+scanner and are uploaded with both SBOMs. Repository secret detection first
+writes raw JSON below `dist/security-private`; the bounded summarizer emits only
+zero/nonzero category and severity totals, and the upload list cannot include
+that private directory. An independent table scan remains fail closed. CodeQL
+uses the same boundary: raw SARIF remains private and only rule, severity,
+occurrence, and coarse source-scope counts are retained. Runtime stages remove
+npm, npx, Corepack, and Yarn after the build and pin the reviewed Alpine OpenSSL
+security revision. The worker bundle leaves only `nodemailer`, `postgres`, and
+`zod` external, copies only those exact package directories, and imports all
+three from the built image before the scan. This prevents a root-workspace prune
+from silently shipping dashboard or build dependencies while keeping the SBOM
+aware of every external worker package.
 
 ## Release boundary
 
@@ -58,6 +75,12 @@ gh attestation verify oci://ghcr.io/starfiniti/loyalty-worker:vX.Y.Z --repo Star
 Run these commands in a new empty directory. Treat the downloaded files and scanner reports as untrusted input; do not execute them.
 
 ## Finding disposition
+
+ADR-0097 repairs two PR-ref Medium CodeQL results in the executable design
+prototype. Both vendored handlers now verify the exact parent/self source and
+load-time origin before reading message data; documentation classification is
+not a waiver. A green CodeQL job is analysis evidence, not a zero-finding claim,
+unless the minimized SARIF summary reconciles the result count.
 
 - Critical or High: automatic failure. Fix, replace, remove, or document why the result is objectively non-applicable and obtain an independent reviewer decision. A reviewer cannot override an exploitable finding.
 - Medium: triage before the module closes; create a linked risk and remediation date when accepted temporarily.

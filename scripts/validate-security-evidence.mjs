@@ -25,6 +25,16 @@ const evidence = YAML.parse(readFileSync(evidencePath, "utf8"));
 const plan = YAML.parse(readFileSync(planPath, "utf8"));
 const tasks = YAML.parse(readFileSync(tasksPath, "utf8"));
 const risksText = readFileSync(risksPath, "utf8");
+const prototypeMessageSources = {
+  deckStage: readFileSync(
+    join(root, "docs/design/prototype-source/deck-stage.js"),
+    "utf8",
+  ),
+  support: readFileSync(
+    join(root, "docs/design/prototype-source/support.js"),
+    "utf8",
+  ),
+};
 
 const requiredChecks = new Set([
   "workflow_contract",
@@ -452,6 +462,54 @@ function zeroSeverity(record, label) {
     fail(
       `${label} severity totals are invalid or not zero for Critical and High`,
     );
+  }
+}
+
+function validatePrototypeMessageTrust(sources = prototypeMessageSources) {
+  const contracts = [
+    {
+      id: "deck-stage",
+      source: sources.deckStage,
+      handler: "_onMessage(e) {",
+      originSource: "return new URL(document.referrer).origin;",
+    },
+    {
+      id: "support",
+      source: sources.support,
+      handler: 'window.addEventListener("message", (e) => {',
+      originSource: "return new URL(doc.referrer).origin;",
+    },
+  ];
+  const sourceBinding =
+    "const HOST_MESSAGE_SOURCE = window.parent === window ? window : window.parent;";
+  const originBinding = "const HOST_MESSAGE_ORIGIN = (() => {";
+  const sourceGuard = "e.source !== HOST_MESSAGE_SOURCE ||";
+  const absentOriginGuard = "HOST_MESSAGE_ORIGIN === null ||";
+  const originGuard = "e.origin !== HOST_MESSAGE_ORIGIN";
+
+  for (const contract of contracts) {
+    if (typeof contract.source !== "string") {
+      fail(`${contract.id} message-trust source is missing`);
+    }
+    const handlerIndex = contract.source.indexOf(contract.handler);
+    const sourceGuardIndex = contract.source.indexOf(sourceGuard, handlerIndex);
+    const originGuardIndex = contract.source.indexOf(originGuard, handlerIndex);
+    const dataIndex = contract.source.indexOf("e.data", handlerIndex);
+    if (
+      !contract.source.includes(sourceBinding) ||
+      !contract.source.includes(originBinding) ||
+      !contract.source.includes(contract.originSource) ||
+      !contract.source.includes("return null;") ||
+      handlerIndex < 0 ||
+      sourceGuardIndex <= handlerIndex ||
+      originGuardIndex <= sourceGuardIndex ||
+      !contract.source
+        .slice(sourceGuardIndex, originGuardIndex)
+        .includes(absentOriginGuard) ||
+      dataIndex <= originGuardIndex
+    ) {
+      fail(`${contract.id} message handler is not source-and-origin bound`);
+    }
   }
 }
 
@@ -941,6 +999,7 @@ export function validateDocument(
   candidateRisks = risksText,
 ) {
   validateZapPlan(candidatePlan);
+  validatePrototypeMessageTrust();
   if (
     candidate?.schema !== "starfiniti.security-evidence.v1" ||
     !["in_progress", "complete"].includes(candidate.status)
@@ -1328,6 +1387,38 @@ if (process.argv.includes("--self-test")) {
     weakenedRemediation,
     "remediation evidence",
     "real defect relabelled false positive",
+  );
+
+  const expectMessageTrustRejected = (candidate, message, label) => {
+    try {
+      validatePrototypeMessageTrust(candidate);
+    } catch (error) {
+      if (error instanceof Error && error.message.includes(message)) return;
+      throw error;
+    }
+    fail(`self-test accepted ${label}`);
+  };
+
+  const missingDeckOrigin = structuredClone(prototypeMessageSources);
+  missingDeckOrigin.deckStage = missingDeckOrigin.deckStage.replace(
+    "e.origin !== HOST_MESSAGE_ORIGIN",
+    "false",
+  );
+  expectMessageTrustRejected(
+    missingDeckOrigin,
+    "deck-stage message handler",
+    "deck handler without origin verification",
+  );
+
+  const missingSupportSource = structuredClone(prototypeMessageSources);
+  missingSupportSource.support = missingSupportSource.support.replace(
+    "e.source !== HOST_MESSAGE_SOURCE ||",
+    "false ||",
+  );
+  expectMessageTrustRejected(
+    missingSupportSource,
+    "support message handler",
+    "support handler without source verification",
   );
 }
 

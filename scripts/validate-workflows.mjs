@@ -394,6 +394,15 @@ requireCondition(
   `${securityWorkflowPath}: CodeQL permissions must be exact`,
 );
 const codeqlSteps = securityWorkflow.jobs.codeql.steps;
+const codeqlAnalyzeIndex = codeqlSteps.findIndex(
+  (step) => step.name === "Analyze JavaScript and TypeScript",
+);
+const codeqlMinimizeIndex = codeqlSteps.findIndex(
+  (step) => step.name === "Minimize and enforce CodeQL results",
+);
+const codeqlUploadIndex = codeqlSteps.findIndex(
+  (step) => step.name === "Upload minimized CodeQL evidence",
+);
 requireCondition(
   codeqlSteps.some(
     (step) =>
@@ -406,12 +415,30 @@ requireCondition(
   `${securityWorkflowPath}: CodeQL must use the reviewed JavaScript security-extended configuration`,
 );
 requireCondition(
-  codeqlSteps.some(
-    (step) =>
-      step.uses ===
-      "github/codeql-action/analyze@cdf488f595d80d6e07e03d4674febd5ab45fa938",
-  ),
-  `${securityWorkflowPath}: CodeQL analysis step is required`,
+  codeqlAnalyzeIndex >= 0 &&
+    codeqlSteps[codeqlAnalyzeIndex].id === "analyze" &&
+    codeqlSteps[codeqlAnalyzeIndex].uses ===
+      "github/codeql-action/analyze@cdf488f595d80d6e07e03d4674febd5ab45fa938" &&
+    codeqlSteps[codeqlAnalyzeIndex].with?.category ===
+      "/language:javascript-typescript" &&
+    codeqlSteps[codeqlAnalyzeIndex].with?.output ===
+      "dist/security-private/codeql" &&
+    codeqlMinimizeIndex > codeqlAnalyzeIndex &&
+    codeqlUploadIndex > codeqlMinimizeIndex &&
+    codeqlSteps[codeqlMinimizeIndex].env?.CANDIDATE_COMMIT ===
+      "${{ github.event.pull_request.head.sha || github.sha }}" &&
+    normalizeShell(codeqlSteps[codeqlMinimizeIndex].run).includes(
+      "node scripts/summarize-security-scan.mjs --mode codeql --input dist/security-private/codeql --out dist/security/codeql-summary.json",
+    ) &&
+    codeqlSteps[codeqlUploadIndex].if === "always()" &&
+    codeqlSteps[codeqlUploadIndex].uses ===
+      "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a" &&
+    codeqlSteps[codeqlUploadIndex].with?.name ===
+      "security-codeql-${{ github.sha }}" &&
+    codeqlSteps[codeqlUploadIndex].with?.path ===
+      "dist/security/codeql-summary.json" &&
+    codeqlSteps[codeqlUploadIndex].with?.["if-no-files-found"] === "error",
+  `${securityWorkflowPath}: CodeQL must retain only a minimized exact-candidate SARIF summary after analysis`,
 );
 
 const supplySteps = securityWorkflow.jobs["supply-chain"].steps;
@@ -443,9 +470,9 @@ const trivySteps = supplySteps.filter(
     "aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25",
 );
 requireCondition(
-  trivySteps.length === 5 &&
+  trivySteps.length === 6 &&
     trivySteps.every((step) => step.with?.version === "v0.74.0"),
-  `${securityWorkflowPath}: five scans with the reviewed Trivy version are required`,
+  `${securityWorkflowPath}: six scans with the reviewed Trivy version are required`,
 );
 const imageReports = trivySteps.filter(
   (step) =>
@@ -500,8 +527,38 @@ requireCondition(
       step.with?.scanners === "secret,misconfig" &&
       step.with?.["exit-code"] === "1" &&
       step.with?.format === "table",
+  ) &&
+    trivySteps.some(
+      (step) =>
+        step.with?.["scan-type"] === "fs" &&
+        step.with?.["scan-ref"] === "." &&
+        step.with?.scanners === "secret,misconfig" &&
+        step.with?.["exit-code"] === "0" &&
+        step.with?.format === "json" &&
+        step.with?.output === "dist/security-private/repository-trivy.json",
+    ) &&
+    supplySteps.some(
+      (step) =>
+        step.name === "Minimize repository review report" &&
+        step.env?.CANDIDATE_COMMIT ===
+          "${{ github.event.pull_request.head.sha || github.sha }}" &&
+        normalizeShell(step.run).includes(
+          "node scripts/summarize-security-scan.mjs --mode repository --input dist/security-private/repository-trivy.json --out dist/security/repository-summary.json",
+        ),
+    ),
+  `${securityWorkflowPath}: repository secret and misconfiguration scans require a private raw report, minimized summary, and independent enforcing pass`,
+);
+requireCondition(
+  supplySteps.some(
+    (step) =>
+      step.name === "Capture bounded Trivy database metadata" &&
+      step.env?.CANDIDATE_COMMIT ===
+        "${{ github.event.pull_request.head.sha || github.sha }}" &&
+      normalizeShell(step.run).includes(
+        "node scripts/summarize-security-scan.mjs --mode trivy-version --cache-dir .cache/trivy --out dist/security/trivy-version-summary.json",
+      ),
   ),
-  `${securityWorkflowPath}: repository secret and misconfiguration scan is required`,
+  `${securityWorkflowPath}: exact Trivy database and check-bundle freshness evidence is required`,
 );
 const license = trivyPolicy?.license;
 const acceptedCopyleft = [
@@ -589,9 +646,12 @@ requireCondition(
       step.with?.name === "security-supply-chain-${{ github.sha }}" &&
       step.with?.path?.includes("dist/security/*-trivy.json") &&
       step.with?.path?.includes("dist/security/*.cdx.json") &&
+      step.with?.path?.includes("dist/security/repository-summary.json") &&
+      step.with?.path?.includes("dist/security/trivy-version-summary.json") &&
+      !step.with?.path?.includes("security-private") &&
       step.with?.["if-no-files-found"] === "error",
   ),
-  `${securityWorkflowPath}: minimized review reports and SBOMs must upload even when enforcement fails`,
+  `${securityWorkflowPath}: minimized review reports scanner metadata and SBOMs must upload without raw secret or SARIF inputs even when enforcement fails`,
 );
 
 const recoveryTransportSteps =

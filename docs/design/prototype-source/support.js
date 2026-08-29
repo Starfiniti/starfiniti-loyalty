@@ -1404,7 +1404,25 @@
         canvasStyleEl = null;
       }
     }
+    // Security patch to the vendored generated runtime: accept host control
+    // messages only from the exact parent/self WindowProxy and the origin
+    // fixed when this document loaded. If a parent suppresses or supplies an
+    // invalid referrer, host control messages fail closed.
+    const HOST_MESSAGE_SOURCE = window.parent === window ? window : window.parent;
+    const HOST_MESSAGE_ORIGIN = (() => {
+      if (window.parent === window) return window.location.origin;
+      try {
+        return new URL(doc.referrer).origin;
+      } catch {
+        return null;
+      }
+    })();
     window.addEventListener("message", (e) => {
+      if (
+        e.source !== HOST_MESSAGE_SOURCE ||
+        HOST_MESSAGE_ORIGIN === null ||
+        e.origin !== HOST_MESSAGE_ORIGIN
+      ) return;
       const type = e.data && e.data.type;
       if (type === "__dc_theme") {
         const t = e.data.theme;

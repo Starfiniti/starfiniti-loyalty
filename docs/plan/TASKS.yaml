@@ -3319,6 +3319,7 @@ tasks:
         acceptance:
           [
             CodeQL repository and both deployable-image scans pass on the exact candidate,
+            CodeQL and repository raw findings remain private while minimized summaries preserve exact candidate analysis commit tool version severity counts and scanner freshness,
             the worker image imports only its exact external nodemailer postgres and zod packages and carries no root-workspace dependency tree,
             dashboard and worker SBOMs reconcile to exact image digests,
             every reciprocal SBOM component reconciles to one checksum-bound source plan and the release publishes the exact product source Alpine build recipes patches upstream inputs licence texts manifest and notices before either image is pushed,
@@ -3361,7 +3362,9 @@ tasks:
             docs/architecture/ADR/0064-deployable-artifact-security-and-isolated-dast.md,
             docs/architecture/ADR/0082-request-bound-dashboard-content-security-policy.md,
             docs/architecture/ADR/0083-release-bound-corresponding-source-artifacts.md,
+            docs/architecture/ADR/0097-source-and-origin-bound-prototype-messages-and-minimized-sast-evidence.md,
             docs/operations/SECURITY_SCANNING.md,
+            scripts/summarize-security-scan.mjs,
             infrastructure/testing/security/reciprocal-source-plan.yaml,
             infrastructure/testing/security/trivy.yaml,
           ]

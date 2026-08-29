@@ -26,10 +26,32 @@ jobs:
           languages: javascript-typescript
           build-mode: none
           queries: security-extended
+      - name: Prepare private CodeQL and minimized evidence directories
+        run: mkdir -p dist/security-private/codeql dist/security
       - name: Analyze JavaScript and TypeScript
+        id: analyze
         uses: github/codeql-action/analyze@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
         with:
           category: "/language:javascript-typescript"
+          output: dist/security-private/codeql
+      - name: Minimize and enforce CodeQL results
+        env:
+          CANDIDATE_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: >-
+          node scripts/summarize-security-scan.mjs
+          --mode codeql
+          --input dist/security-private/codeql
+          --out dist/security/codeql-summary.json
+          --candidate "$CANDIDATE_COMMIT"
+          --analysis "$GITHUB_SHA"
+      - name: Upload minimized CodeQL evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: security-codeql-${{ github.sha }}
+          path: dist/security/codeql-summary.json
+          if-no-files-found: error
+          retention-days: 30
 
   supply-chain:
     runs-on: ubuntu-latest
@@ -51,8 +73,29 @@ jobs:
       - name: Verify exact worker runtime modules
         run: docker run --rm --entrypoint node starfiniti-worker:security --input-type=module --eval "await Promise.all(['nodemailer','postgres','zod'].map((name) => import(name)))"
       - name: Prepare minimized security artifact directory
-        run: mkdir -p dist/security
-      - name: Scan repository secrets and misconfiguration
+        run: mkdir -p dist/security dist/security-private
+      - name: Generate private repository review report
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: secret,misconfig
+          exit-code: "0"
+          format: json
+          output: dist/security-private/repository-trivy.json
+          timeout: 10m
+          version: v0.74.0
+      - name: Minimize repository review report
+        env:
+          CANDIDATE_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: >-
+          node scripts/summarize-security-scan.mjs
+          --mode repository
+          --input dist/security-private/repository-trivy.json
+          --out dist/security/repository-summary.json
+          --candidate "$CANDIDATE_COMMIT"
+          --analysis "$GITHUB_SHA"
+      - name: Enforce repository secrets and misconfiguration policy
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: fs
@@ -116,6 +159,16 @@ jobs:
           timeout: 10m
           trivy-config: infrastructure/testing/security/trivy.yaml
           version: v0.74.0
+      - name: Capture bounded Trivy database metadata
+        env:
+          CANDIDATE_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: >-
+          node scripts/summarize-security-scan.mjs
+          --mode trivy-version
+          --cache-dir .cache/trivy
+          --out dist/security/trivy-version-summary.json
+          --candidate "$CANDIDATE_COMMIT"
+          --analysis "$GITHUB_SHA"
       - name: Generate dashboard CycloneDX SBOM
         uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
         with:
@@ -147,6 +200,8 @@ jobs:
           path: |
             dist/security/*-trivy.json
             dist/security/*.cdx.json
+            dist/security/repository-summary.json
+            dist/security/trivy-version-summary.json
           if-no-files-found: error
           retention-days: 30
 

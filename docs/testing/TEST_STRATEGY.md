@@ -6,7 +6,27 @@ The M15 capacity-foundation gate validates the exact four-scenario fixed-arrival
 
 The M15 fault-foundation gate validates all six canonical scenarios and executes them against a loopback fixture with fake disposable service/proxy controls. It proves deterministic restoration, recovery probes, replay bounds, minimized reports, rejection of non-loopback origins, and rejection of missing fault coverage. A passing controller report cannot close the slice: two digest-bound disposable environment runs plus separate WAL, queue, immutable-ledger, wallet/lot, WooCommerce/coupon, provider-attempt, checkout, and no-loss reconciliation must pass with zero differences.
 
-The M15 security gate separates source, full development/production dependencies, deployable artifact, dynamic, release, production-configuration, and independent-human evidence. CodeQL covers JavaScript/TypeScript; the complete npm audit includes development tooling; repository Trivy covers secrets/misconfiguration; both production images fail on High/Critical vulnerability, secret, misconfiguration, and licence findings; Syft emits exact CycloneDX inventories. ZAP runs only against an unauthenticated disposable dashboard on an internal Docker network with no host port or external route, bounded spider/rule/scan/wait durations, and a High-alert failure. The 25-check validator corrupts tool/workflow/plan digests, task state, checks, failure rules, public targets, scan duration, and sensitive evidence. Completion additionally requires fresh database timestamps, exact SBOM/image/release reconciliation, verified file/image provenance, non-destructive production review, independent penetration test/retest, zero unresolved Critical/High findings, explicit Medium/false-positive dispositions, exact-head four-cell R-032 compatibility, and named security-owner approval.
+The M15 security gate separates source, full development/production
+dependencies, deployable artifact, dynamic, release,
+production-configuration, and independent-human evidence. CodeQL covers
+JavaScript/TypeScript; private SARIF is reduced to exact rule/severity/scope
+counts and Critical/High/unknown results fail. The complete npm audit includes
+development tooling. Repository Trivy uses a non-retained raw secret report, a
+count-only summary, and an independent enforcing scan; both production images
+fail on High/Critical vulnerability, secret, misconfiguration, and licence
+findings. Trivy database/check-bundle timestamps must remain within 24 hours,
+and Syft emits exact CycloneDX inventories. ZAP runs only against an
+unauthenticated disposable dashboard on an internal Docker network with no host
+port or external route, bounded spider/rule/scan/wait durations, and a
+High-alert failure. The 26-check manifest validator plus the scan-summary
+adversarial suite corrupt tool/workflow/plan digests, message source/origin
+guards, task state, checks, failure rules, public targets, scan duration,
+severity, secret, freshness, and sensitive-evidence boundaries. Completion
+additionally requires exact SBOM/image/release reconciliation, verified
+file/image provenance, non-destructive production review, independent
+penetration test/retest, zero unresolved Critical/High findings, explicit
+Medium/false-positive dispositions, exact-head four-cell R-032 compatibility,
+and named security-owner approval.
 
 Database migrations, seed replay, schema grants, RLS coverage, and privileged-function placement are exercised with `npm run db:verify`; see `DATABASE_TESTS.md`. Static validation alone cannot close a database task.
 
