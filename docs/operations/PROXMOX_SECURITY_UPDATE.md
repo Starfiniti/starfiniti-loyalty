@@ -25,9 +25,9 @@ decisions. Repository validation authorizes none of those production actions.
   all four recovery packages retained, and all bounded package/APT/repository
   state identical before and after. It authorizes no later phase.
 - ADR-0089 defines a distinct route-free whole-host consumer inventory. Its
-  expected projection contains 22 anonymous guests across 19 exact behavior
-  profiles, two storage profiles, nine required management services, aggregate
-  network shape, and zero HA resources. The accepted capture is still pending;
+  exact 9,236-byte accepted report contains 22 anonymous guests across 19 exact
+  behavior profiles, two storage profiles, nine required management services,
+  aggregate network shape, and zero HA resources. Consumer inventory now passes;
   observing this matrix does not prove compatibility.
 - The configured `pve-no-subscription` repository is not Proxmox's recommended
   production repository. The owner must explicitly decide whether to procure and
@@ -137,6 +137,14 @@ read operations and requires two identical projections. A passing report advance
 only `consumerInventoryCaptured`; every rehearsal and authority gate remains
 false. Reverify an accepted report with
 `node scripts/validate-proxmox-compatibility-inventory.mjs --verify-report <absolute-path>`.
+
+The first passing minimized report is
+`docs/plan/evidence/M16/runs/proxmox-compatibility-inventory-e7825b6-2026-08-29T023345Z.json`.
+Its file SHA-256 is
+`f6af50f506044e7578dcd02f800c1c71680e322460bf81cf4faa705b0ff5e25f`;
+its internal report SHA-256 is
+`495d7960a59359794fdb5024171c2e2de66cf69fc7b6701447ae285b46ee376f`.
+It advances only consumer-inventory capture. It is not a compatibility pass.
 
 ## Phase 2 — Production preflight (read-only unless separately approved)
 

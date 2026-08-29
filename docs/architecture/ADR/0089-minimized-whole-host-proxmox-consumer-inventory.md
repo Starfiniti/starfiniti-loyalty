@@ -145,8 +145,14 @@ running and share one anonymous QEMU profile. The host also exposes two storage
 profiles, nine required active management services, one default IPv4 route,
 77 aggregate network interfaces, and zero configured HA resources.
 
-This pre-commit reconstruction defines the rehearsal surface but is not the
-accepted capture. `consumerInventoryCaptured` remains false until the exact
-committed collector produces a fresh stable envelope that the committed
-validator accepts and independently reverifies. Every compatibility, recovery,
-approval, installation, reboot, mutation, and post-change gate remains false.
+Exact implementation `e7825b6230fba027c8477ece08c1c1b5cf364aaa`
+produced the first accepted minimized report at `2026-08-29T02:33:45Z`:
+`proxmox-compatibility-inventory-e7825b6-2026-08-29T023345Z.json`. The 9,236-byte
+file has SHA-256
+`f6af50f506044e7578dcd02f800c1c71680e322460bf81cf4faa705b0ff5e25f`
+and internal report SHA-256
+`495d7960a59359794fdb5024171c2e2de66cf69fc7b6701447ae285b46ee376f`.
+Independent verification passes, no forbidden identifier field or raw fact file
+was retained, and `consumerInventoryCaptured` is true in the report only. Every
+rehearsal plus compatibility, recovery, approval, installation, reboot, mutation,
+and post-change gate remains false.

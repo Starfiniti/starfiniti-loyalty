@@ -67,6 +67,17 @@ internal report SHA-256
 It can be independently reverified with
 `node scripts/validate-proxmox-security-preflight.mjs --verify-report <absolute-path>`.
 
+The first passing whole-host consumer-inventory artifact is
+`proxmox-compatibility-inventory-e7825b6-2026-08-29T023345Z.json` (9,236 bytes,
+file SHA-256
+`f6af50f506044e7578dcd02f800c1c71680e322460bf81cf4faa705b0ff5e25f`,
+internal report SHA-256
+`495d7960a59359794fdb5024171c2e2de66cf69fc7b6701447ae285b46ee376f`).
+It can be independently reverified with
+`node scripts/validate-proxmox-compatibility-inventory.mjs --verify-report <absolute-path>`.
+Only `consumerInventoryCaptured` is true; compatibility and every rehearsal or
+production authority remain false.
+
 Never store provider bodies, credentials, raw ETags, hostnames, IP addresses,
 usernames, SSH routes or keys, raw command output, personal data, tenant/customer
 identifiers, mutable drafts, or unapproved operational telemetry here.

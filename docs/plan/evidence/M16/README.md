@@ -104,6 +104,14 @@ zero HA resources. The two loyalty workloads appear only as `application` and
 `database`; VM IDs, names, raw configuration, storage IDs, interface names,
 addresses, MACs, paths, routes, credentials, and raw output are excluded.
 `npm run proxmox-security:compatibility-inventory:validate` covers 56 adversarial
-cases. The accepted clean-commit capture is still pending, and every actual
-compatibility rehearsal, rollback, recovery, approval, installation, reboot,
-mutation, and post-change gate remains false.
+cases plus exclusive non-overwriting publication. Exact implementation
+`e7825b6230fba027c8477ece08c1c1b5cf364aaa` produced
+[`runs/proxmox-compatibility-inventory-e7825b6-2026-08-29T023345Z.json`](runs/proxmox-compatibility-inventory-e7825b6-2026-08-29T023345Z.json),
+a 9,236-byte report with file SHA-256
+`f6af50f506044e7578dcd02f800c1c71680e322460bf81cf4faa705b0ff5e25f`
+and internal report SHA-256
+`495d7960a59359794fdb5024171c2e2de66cf69fc7b6701447ae285b46ee376f`.
+Independent verification passes and no raw facts were retained. Only consumer
+inventory capture advances; every actual compatibility rehearsal, rollback,
+recovery, approval, installation, reboot, mutation, and post-change gate remains
+false.
