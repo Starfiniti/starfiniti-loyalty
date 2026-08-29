@@ -62,3 +62,11 @@ Timestamped copies of the prior guest `authorized_keys` entry, host script, serv
 - A quiet 15-second sample added 1,559 bytes to `tap971i0` receive, or about 104 bytes/s. A 58-second watch spanning the next scheduled cycle added about 446 KiB, with the largest one-second step about 414 KiB rather than hundreds of megabytes.
 - The 10:27:07 cycle transferred four new files, 67,885 bytes of changed content, and 409,323 received rsync bytes. Borg created the new normal-file archive in 1.63 seconds and the service exited zero. Dashboard `/api/healthz` returned HTTP 200.
 - The healthy timer was left enabled and VM 971 was not restarted merely to clear its historical 3.604 TB cumulative counter. No production configuration, service, package, archive, database, route, checkout path, or loyalty value was changed.
+
+## Live revalidation — 2026-08-29 22:31 CEST
+
+- A read-only inspection after a renewed alert again confirmed that VM 971's approximately 3.604 TB transmit value is the cumulative tap counter from the VM process started on 2026-08-13, not a since-yesterday transfer total. PVE's latest 24-hour RRD contained approximately 228,734,708 bytes of outbound traffic, a 2,647 bytes/s average, and a 104,781 bytes/s maximum.
+- A quiet 50-second `tap971i0` sample increased by 16,473 bytes. The next complete scheduled cycle added about 490 KB to the tap counter rather than 22 GB.
+- The 22:31:17 cycle transferred four new files, 67,889 bytes of changed content, and 471,497 received rsync bytes. Borg archived the normal-file stage in 1.68 seconds, created `loyalty-postgres-20260829T203118Z`, and exited zero.
+- The active script still uses incremental `rrsync` staging. The PostgreSQL tar-over-stdin implementation exists only as the dated `pre-incremental-20260814T071828Z` rollback copy; no second frequent timer or cron path is active. The separate nightly whole-VM controller does not account for the recurring VM network pattern.
+- PostgreSQL's internal TCP endpoint was reachable and the Supabase gateway returned the expected unauthenticated HTTP 401. No related systemd unit was failed. The healthy recovery timer was left enabled, and no production service, database, archive, VM, or network configuration was changed.
