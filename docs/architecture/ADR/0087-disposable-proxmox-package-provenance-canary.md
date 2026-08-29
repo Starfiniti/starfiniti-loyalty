@@ -154,6 +154,13 @@ trust failure. The final permission contract matches Debian's package-owned
 root-writable/public-readable regular file and applies the same exact `0644`
 mode to the separately digest-verified Proxmox keyring.
 
+The fifth exact-head attempt then refreshed and authenticated all five APT
+repositories, including Proxmox, but failed before independent reverification
+because `gnupg` does not install the separate `gpgv` package when recommendations
+are disabled. The correction explicitly installs `gpgv` through the same signed
+bootstrap and verifies its canonical executable path. It does not fall back to
+APT's result or weaken the independent signature step.
+
 That attempt's external CodeQL policy also rejected a check-then-write race at
 the final report path. The correction no longer tests and later reopens that
 path. It creates the report once with exclusive/no-follow flags, writes and

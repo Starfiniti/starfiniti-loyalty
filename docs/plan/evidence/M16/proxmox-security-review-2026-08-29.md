@@ -153,3 +153,12 @@ in Security run `33222605085` failed closed on Debian's exact package-owned
 only root can write and Secure APT's unprivileged verifier can read. No candidate
 package bytes or report artifact were produced, and no production route,
 credential, or mutation was present.
+
+Exact-mode correction `c4a9d5fd7a499277c158c63399d69e22a1f81347`
+refreshed and authenticated all five repositories, including Proxmox, but
+recovery-transport job `99020151505` in Security run `33222771394` failed before
+independent signature checks because the no-recommends bootstrap omitted the
+separate `gpgv` package. The correction explicitly installs signed `gpgv` and
+verifies `/usr/bin/gpgv`; it does not substitute APT's result for the independent
+signature proof. No candidate package bytes or report artifact were produced,
+and no production route, credential, or mutation was present.
