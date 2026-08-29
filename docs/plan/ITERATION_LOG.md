@@ -24,10 +24,12 @@
 - Clean install audited 972 packages with zero vulnerabilities. Focused tests
   pass 36/36 and 18/18; the root gate passes 997 tests and both production
   builds. Static validation covers 87 migrations and 69 pgTAP files; secret,
-  production-audit, licence, and diff gates pass. Exact-head CI remains pending.
+  production-audit, licence, and diff gates pass. Exact implementation
+  `c14a8f5` passed CI `33281041057`, Security `33281041055`, and external CodeQL
+  `99176310303`; all twelve checks are green and PR #57 is merge-clean.
 - Deferred unrelated TypeScript, ESLint, Node type, Zod, and Lucide changes to
   separate review boundaries. No product score or production authority changed;
-  exact-head verification remains in progress.
+  elapsed review and live closeout remain in progress.
 
 ## 2026-08-30 — Durable task-graph owner-input authority
 

@@ -15,7 +15,10 @@ claim an elapsed provider review, merge, release, deployment, or production
 change, so M16 remains 77/100. Clean install found zero vulnerabilities;
 focused SAML and SMTP suites pass 36 and 18 tests; the full local gate passes
 997 tests, both production builds, static database validation, secret scan,
-production audit, licence inventory, and diff review. Exact-head evidence is
+production audit, licence inventory, and diff review. Exact implementation
+`c14a8f5` passed CI `33281041057`, Security `33281041055`, and external CodeQL
+`99176310303`; all twelve checks are green and PR #57 is merge-clean. Elapsed
+provider review, release, deployment, and live evidence are
 still pending.
 
 ADR-0103 records the bounded Supabase repository review without changing the

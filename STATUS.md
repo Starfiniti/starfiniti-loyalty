@@ -13,8 +13,10 @@
   source plus runtime evidence. Clean install, 36 SAML tests, 18 SMTP tests,
   the 997-test root gate, both production builds, 87-migration/69-pgTAP-file
   static validation, secret scan, production audit, licence inventory, and diff
-  review pass locally; exact-head CI remains pending. M16 remains 77/100, the
-  integration candidate remains 83/100, and
+  review pass. Exact implementation `c14a8f5` passed CI `33281041057`, Security
+  `33281041055`, and external CodeQL `99176310303`; all twelve checks are green
+  and PR #57 is merge-clean. M16 remains 77/100, the integration candidate
+  remains 83/100, and
   deployed production remains 54/100; no merge, release, deployment, tenant,
   checkout, database, or loyalty value changed.
 

@@ -99,7 +99,10 @@ decision because production is unchanged.
 
 Run `npm run continuous-improvement:dependency-patches:validate`, the focused
 federation and SMTP tests, `npm run audit:prod`, and the complete
-`npm run check` gate. Exact-head CI, Security, external CodeQL, and the four
-WooCommerce runtime cells remain required before handoff. This ADR records
-repository candidate authority only; it is not merge, release, deployment, or
-production approval.
+`npm run check` gate. Exact implementation
+`c14a8f5802ddee02882cceb2c2f3e01cdcd47fba` passed CI `33281041057`, Security
+`33281041055`, and external CodeQL `99176310303`, including both production
+images, database verification, and all four WooCommerce runtime cells. All
+twelve checks are green and PR #57 is merge-clean. This ADR records repository
+candidate authority only; it is not merge, release, deployment, or production
+approval.

@@ -13,7 +13,10 @@
   source controls, rejected unknown review fields, and added runtime regression
   tests for the 256 KiB SAML limit and both SMTP denial layers. Clean install,
   all 997 workspace tests, both production builds, static database validation,
-  secret scan, production audit, licence inventory, and diff review pass.
+  secret scan, production audit, licence inventory, and diff review pass. Exact
+  implementation `c14a8f5` passed CI `33281041057`, Security `33281041055`, and
+  external CodeQL `99176310303`; all twelve checks are green and PR #57 is
+  merge-clean.
 
 - Added a durable enterprise task-graph validator and wired it into the root
   quality gate. It requires exact M00-M16 coverage, unique bounded task/slice

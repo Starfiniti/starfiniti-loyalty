@@ -16,8 +16,10 @@ release, or production runtime; M16 stays 77/100 and the candidate stays
 83/100. Clean install found zero vulnerabilities; focused SAML and SMTP tests
 pass 36/36 and 18/18; the complete local gate passes 997 tests, both production
 builds, 87-migration/69-pgTAP-file static validation, secret scan, production
-audit, licence inventory, and diff review. Exact-head evidence and the existing
-elapsed/live gates remain pending.
+audit, licence inventory, and diff review. Exact implementation `c14a8f5`
+passed CI `33281041057`, Security `33281041055`, and external CodeQL
+`99176310303`, with all twelve checks green and PR #57 merge-clean. The
+existing elapsed/live gates remain pending.
 
 The M00 task authority now has a durable owner-input gate. M09 was the only
 active enterprise module whose canary-closeout evidence required external

@@ -52,9 +52,11 @@ The 2026-08-30 ADR-0106 dependency patch review does not raise any score. It
 binds three exact compatible federation/notification patches and thirty-two
 fail-closed corruption cases while retaining the application-level SAML and
 SMTP controls. Its complete local gate passes 997 workspace tests and both
-production builds, but it adds no elapsed monthly review, live canary,
-deployment, or reconciliation evidence. M16 therefore remains 77/100, the
-integration candidate remains 83/100, and deployed production remains 54/100.
+production builds. Exact implementation `c14a8f5` also passed all twelve CI,
+Security, and external CodeQL checks, but it adds no elapsed monthly review,
+live canary, deployment, or reconciliation evidence. M16 therefore remains
+77/100, the integration candidate remains 83/100, and deployed production
+remains 54/100.
 
 The 2026-08-28 merge-readiness review does not raise any module score. It removes impossible V2-V5 public application fallbacks, binds V6 display currency to the immutable published programme, repairs reward-editor row identity, and consolidates the shared M04-M14 manifest/artifact primitives. Focused tests and all eleven module validators pass, but M09 remains 88/100 until approved production canary, rollback, observation, and exact reconciliation evidence exists.
 
