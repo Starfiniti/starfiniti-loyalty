@@ -3645,6 +3645,7 @@ tasks:
         a separate route-free stable whole-host inventory accounts for every anonymous QEMU and LXC consumer profile plus storage management-service network HA kernel KVM IOMMU boot and local-tool facts without retaining VM IDs names addresses MACs paths routes credentials raw configuration or raw command output and without claiming compatibility,
         an isolated-equivalent-physical-host rehearsal contract binds the exact candidate immutable package/preflight/inventory baselines released Starfiniti v0.1.11 reviewed Supabase self-hosted v0.8.0 compatibility Compose and linux/amd64 image set plus a fresh minimized dependency preflight and same-projection production inventory read no more than five minutes old while synthetic guests cover every anonymous behavior profile only the application and database use separately approved read-only recovery inputs and an out-of-process auto-destroy lease equals the approval expiry,
         the dashboard runtime review binds both Critical Next.js 16.3 advisories the released 16.3.0 production impact exact 16.3.3 npm package bytes matching lint package image-optimization defence no-vulnerable-rollback policy and false merge release deployment and reconciliation authority,
+        the Supabase repository review binds current CLI client and SSR patch releases exact npm platform and subpackage provenance compatible Node floors and an explicit false automatic-table-exposure setting while retaining the closed Data API schema list explicit grants RLS and false live-stack or production authority,
         the evidence-ranked backlog score and order recompute exactly with no overdue unaccepted Critical or High item,
         the second occurrence of a stable failure binds a merged regression test validator monitor runbook or agent rule,
         every material change rescored all affected modules while preserving prior scores and evidence,
@@ -3671,6 +3672,7 @@ tasks:
         npm run continuous-improvement:installed:validate,
         npm run continuous-improvement:node-runtime:validate,
         npm run continuous-improvement:next-runtime:validate,
+        npm run continuous-improvement:supabase-runtime:validate,
         clean-head dual-endpoint installed-state capture and independent snapshot verification,
         npm run rsync-source-security:validate,
         bootstrap native endpoint digest discovery followed by an exact digest-locked internal-network current-host and candidate-host to candidate-guest compatibility artifact with signed-source safe-tree distribution-path native-libacl and exact teardown proof,
@@ -3704,7 +3706,19 @@ tasks:
         independent review and five-role approval,
       ]
     risks:
-      [R-004, R-030, R-031, R-051, R-052, R-054, R-057, R-058, R-059, R-060]
+      [
+        R-004,
+        R-030,
+        R-031,
+        R-051,
+        R-052,
+        R-054,
+        R-057,
+        R-058,
+        R-059,
+        R-060,
+        R-061,
+      ]
     docs:
       [
         docs/plan/ENTERPRISE_ROADMAP.md,
@@ -3734,6 +3748,7 @@ tasks:
         docs/architecture/ADR/0100-reviewed-node-24-lts-runtime-refresh.md,
         docs/architecture/ADR/0101-current-wordpress-woocommerce-compatibility-matrix.md,
         docs/architecture/ADR/0102-nextjs-16-3-3-critical-security-update.md,
+        docs/architecture/ADR/0103-reviewed-supabase-client-toolchain-refresh.md,
         infrastructure/governance/recovery-artifact-escrow-v3.yaml,
       ]
     evidence:
@@ -3798,6 +3813,8 @@ tasks:
         scripts/validate-next-runtime-review.mjs,
         infrastructure/governance/woocommerce-runtime-review.yaml,
         scripts/validate-woocommerce-runtime-review.mjs,
+        infrastructure/governance/supabase-runtime-review.yaml,
+        scripts/validate-supabase-runtime-review.mjs,
         docs/plan/evidence/M16/proxmox-security-review-2026-08-29.md,
         ADR-0080 preserves the exact V1 production score under SHA-256 and the V2 validator separately recomputes deployed production at 54/100 and the exact integration candidate at 83/100 while both remain completion-ineligible,
         product-score governance implementation d1a78c04cefacad203c786edee85c4b3a20787a1 passed the complete local 983-test gate 86-migration and 68-pgTAP-file static validation 1069-file secret scan zero-vulnerability production audit licence validation formatting and diff review without a runtime schema or production change,

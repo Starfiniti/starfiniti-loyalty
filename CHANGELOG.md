@@ -1,5 +1,16 @@
 # Changelog
 
+- Added ADR-0103 and an exact Supabase repository patch refresh: CLI 2.116.0,
+  supabase-js 2.112.4, and SSR 0.12.5, including every matching platform binary
+  and client subpackage. The reviewed CLI restores a true default for
+  `auto_expose_new_tables`; the Supabase configuration and database validator now
+  require explicit false while preserving the existing public API schema list,
+  private-schema exclusion, explicit grants, and RLS. A network-free validator
+  rejects thirty-one official-source, package, lockfile, Node, configuration,
+  task, ADR, and false-authority corruptions. PostgreSQL client 3.4.9 is already
+  current and unchanged. No production stack, database, release, checkout path,
+  or loyalty value changed; exact-head CI evidence remains pending.
+
 - Added ADR-0102 and an exact Next.js 16.3.3 security update for two official
   Critical unauthenticated RCE advisories affecting the previously pinned
   16.3.0 runtime. Next.js and eslint-config-next now use matching exact npm

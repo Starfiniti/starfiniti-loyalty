@@ -13,8 +13,8 @@
   "dependencies": {
     "@starfiniti/contracts": "0.0.0",
     "@starfiniti/domain": "0.0.0",
-    "@supabase/ssr": "0.12.4",
-    "@supabase/supabase-js": "2.112.3",
+    "@supabase/ssr": "0.12.5",
+    "@supabase/supabase-js": "2.112.4",
     "fast-xml-parser": "^5.11.0",
     "fast-xml-validator": "^1.4.2",
     "geist": "1.7.2",

@@ -1,5 +1,18 @@
 # Execution Plan
 
+ADR-0103 is the active safe M16 Supabase client/toolchain slice. Official review
+found current patch releases for CLI 2.116.0, supabase-js 2.112.4, and SSR
+0.12.5; PostgreSQL client 3.4.9 remains current. The repository exact-pins the
+three updates and their aligned platform/subpackage graph. Because CLI 2.116.0
+restores `auto_expose_new_tables` to a true default, the local/CI Supabase
+configuration now explicitly sets it false while retaining only `public`,
+`graphql_public`, and `loyalty` in the Data API schema list. Explicit grants and
+RLS remain authoritative. A network-free validator binds official sources,
+package bytes, Node compatibility, transitive alignment, configuration, task
+evidence, and false production authority through thirty-one corruptions. No
+live self-hosted stack, database grant, migration, release, or loyalty value is
+changed; exact-head CI evidence remains the repository closeout gate.
+
 ADR-0102 is the active safe M16 security slice. Official Next.js 16.3.3 fixes
 two Critical unauthenticated RCE advisories, while released production v0.1.11
 and the integration candidate both declared 16.3.0. The candidate now pins

@@ -2,6 +2,17 @@
 
 The active fail-closed manifest is `continuous-improvement.yaml`. It records repository controls now and leaves elapsed monthly reviews, the quarterly exercise bundle, the thirteen-source provider/platform/recovery-dependency review, regression controls, scoring, independent review, and owner approval pending.
 
+ADR-0103 records the bounded Supabase repository review without changing the
+live self-hosted stack. CLI 2.116.0, supabase-js 2.112.4, and SSR 0.12.5 are
+exact-pinned with aligned lockfile packages; PostgreSQL client 3.4.9 remains
+unchanged. Because the reviewed CLI restores automatic table exposure as a true
+default, `supabase/config.toml` and the database validator require
+`auto_expose_new_tables = false`. Run
+`npm run continuous-improvement:supabase-runtime:validate`; it rejects
+thirty-one source, package, alignment, Node, schema, grant-boundary, task, ADR,
+and false-authority corruptions. Exact-head CI evidence, merge, release,
+deployment, stack upgrade, and production reconciliation remain pending.
+
 ADR-0080 closes the current score-subject ambiguity without claiming an elapsed
 review. `docs/plan/evaluations/product-score.json` V2 preserves the exact V1
 production history, reports deployed `v0.1.11` at 54/100, and reports the exact

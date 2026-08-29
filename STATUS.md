@@ -1,5 +1,18 @@
 # Status
 
+- ADR-0103 refreshes only the repository Supabase boundary: CLI 2.116.0,
+  supabase-js 2.112.4, and SSR 0.12.5 are exact-pinned with aligned platform and
+  client subpackages; `postgres` 3.4.9 remains unchanged. Official CLI review
+  identified the restored true default for `auto_expose_new_tables`, so
+  `supabase/config.toml` now explicitly disables it and the migration validator
+  fails if the setting is absent or true. The Data API schema allowlist remains
+  `public`, `graphql_public`, and `loyalty`; `loyalty_private` remains excluded,
+  and explicit grants plus RLS remain authoritative. The network-free review
+  rejects thirty-one package, lockfile, configuration, task, ADR, and authority
+  corruptions. Focused repository and static database validation pass. Exact-head
+  CI, merge, release, deployment, live stack upgrade, and production
+  reconciliation remain pending; production is unchanged.
+
 - ADR-0102 addresses a newly confirmed Critical application dependency gap
   without claiming production repair. Official Next.js 16.3.3 fixes
   `GHSA-2xp9-vwfh-vxw4` and `GHSA-p293-qw3h-jr36` / `CVE-2026-75604`;

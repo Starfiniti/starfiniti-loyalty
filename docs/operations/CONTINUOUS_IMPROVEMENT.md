@@ -28,6 +28,14 @@ The collector resolves and pins a public socket address independently for every 
 
 After collection, a reviewer must still inspect current official changes, dependency pins, and every required installed host/guest endpoint; classify breaking, security, and support impact; identify affected modules and an owner; and record the disposition. A snapshot never changes `provider_review`, `dependency_pins`, installed evidence, approval, or monthly-close status. A failed source remains unknown; do not bypass the collector's DNS, redirect, TLS, type, encoding, size, timeout, or output controls.
 
+For the current Supabase repository boundary, ADR-0103 records that review in
+`infrastructure/governance/supabase-runtime-review.yaml`. Validate it with
+`npm run continuous-improvement:supabase-runtime:validate`. The check binds the
+exact CLI/client/SSR lock graph and requires
+`auto_expose_new_tables = false`, but it does not authorize or attest a live
+self-hosted stack upgrade. An intentional future Data API object still requires
+an additive migration, explicit grants, RLS, and adversarial tenancy evidence.
+
 ## Recovery installed-state capture
 
 The installed-state helper validates evidence supplied through an independently

@@ -1,5 +1,21 @@
 # Iteration Log
 
+## 2026-08-29 — Supabase client/toolchain patch review
+
+- Official Supabase changelog, CLI, supabase-js, SSR, and Data API security
+  review compared the repository pins with CLI 2.116.0, supabase-js 2.112.4,
+  and SSR 0.12.5. PostgreSQL client 3.4.9 was already current.
+- ADR-0103 rejects both leaving the known fixes unapplied and accepting the CLI's
+  restored automatic-table-exposure default. The selected exact patch refresh
+  sets `auto_expose_new_tables = false` and retains explicit grants plus RLS.
+- The network-free gate binds official release identities, exact npm provenance,
+  all eight CLI platform binaries, five Supabase JS subpackages, the SSR peer,
+  `jose`, Node compatibility, the three-schema Data API allowlist, task evidence,
+  rollback, and seven false production-authority fields. Thirty-one adversarial
+  corruptions and static validation of 87 migrations and 69 pgTAP files pass.
+- This is a repository-only candidate. Docker replay, exact-head CI/security,
+  merge, release, live stack upgrade, and production reconciliation remain open.
+
 ## 2026-08-29 — Next.js 16.3.3 Critical security candidate
 
 - Official Next.js release and advisory review found that both released
