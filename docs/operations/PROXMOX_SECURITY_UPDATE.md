@@ -80,6 +80,12 @@ runs:
 npm run proxmox-security:preflight:capture -- --facts <absolute-facts-path>
 ```
 
+Use `--facts -` to validate bounded collector stdout directly from the approved
+operator pipeline without retaining a raw local fact file. The remote Python
+interpreter must use isolated safe-path mode (`python3 -I`); the collector
+refuses any other interpreter mode. Independently compare the transmitted
+collector bytes with the SHA-256 bound in its plan before execution.
+
 The collector requires root for authoritative package configuration, creates an
 empty network namespace, and runs only `apt-get --simulate --no-remove` with the
 twelve exact validator-bound versions. It does not use `--no-download`: Apt

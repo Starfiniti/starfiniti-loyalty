@@ -72,7 +72,8 @@ no route or credential capability.
    argument, hostname, address, username, key, repository selector, package
    selector, output path, or command. An operator sends its exact committed
    bytes over an already approved session and captures stdout outside Git before
-   local validation.
+   local validation, or pipes the bounded stdout directly to local validation so
+   no raw fact file is retained. Python isolated safe-path mode is mandatory.
 3. Require root only to avoid the documented non-root simulation distortion and
    to read authoritative package state. Require fixed canonical root-owned,
    non-group/other-writable `apt-get`, `apt-mark`, `dpkg`, `dpkg-query`,

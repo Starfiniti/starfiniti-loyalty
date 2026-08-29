@@ -187,13 +187,32 @@ function loadYaml(absolutePath, maximumBytes, label) {
 
 function loadJson(absolutePath, maximumBytes, label) {
   const bytes = readStableBytes(absolutePath, maximumBytes, label);
+  return { bytes, value: parseJsonBytes(bytes, label) };
+}
+
+function parseJsonBytes(bytes, label) {
   let value;
   try {
     value = JSON.parse(bytes.toString("utf8"));
   } catch {
     fail(`${label} is not valid JSON`);
   }
-  return { bytes, value };
+  return value;
+}
+
+function readBoundedStdin(maximumBytes, label) {
+  const chunks = [];
+  let total = 0;
+  while (true) {
+    const buffer = Buffer.alloc(Math.min(16 * 1024, maximumBytes + 1 - total));
+    const count = readSync(0, buffer, 0, buffer.length, null);
+    if (count === 0) break;
+    total += count;
+    if (total > maximumBytes) fail(`${label} exceeds the byte bound`);
+    chunks.push(buffer.subarray(0, count));
+  }
+  if (total < 2) fail(`${label} is empty`);
+  return Buffer.concat(chunks, total);
 }
 
 export function preflightPlanDigest(plan) {
@@ -1240,13 +1259,23 @@ function main() {
     arguments_[0] === "--capture" &&
     arguments_[1] === "--facts"
   ) {
-    const factsPath = resolveInput(parseOption("--facts"), "preflight facts");
+    const factsInput = parseOption("--facts");
     const implementationCommit = exactCleanHead();
-    const { bytes, value: facts } = loadJson(
-      factsPath,
-      plan.collector.maximumFactBytes,
-      "preflight facts",
-    );
+    const factsResult =
+      factsInput === "-"
+        ? (() => {
+            const bytes = readBoundedStdin(
+              plan.collector.maximumFactBytes,
+              "preflight facts",
+            );
+            return { bytes, value: parseJsonBytes(bytes, "preflight facts") };
+          })()
+        : loadJson(
+            resolveInput(factsInput, "preflight facts"),
+            plan.collector.maximumFactBytes,
+            "preflight facts",
+          );
+    const { bytes, value: facts } = factsResult;
     if (bytes.includes(0)) fail("preflight facts contain a NUL byte");
     const report = buildReport(
       facts,
