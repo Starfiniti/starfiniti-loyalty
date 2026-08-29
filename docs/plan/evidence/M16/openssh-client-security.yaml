@@ -5,7 +5,7 @@ candidate:
   commit: null
 plan:
   path: infrastructure/testing/openssh-client-security/plan.yaml
-  sha256: c355e4100c45f9350b8a8c4114d1d1bbb9d29aeb318aa7cd02b7b04b1143a6b2
+  sha256: 5cd85b011e09a518f00d8f57b8a41de098b11c510712c8e0897863d43a91abb2
 canary: null
 checks:
   - id: threat_model

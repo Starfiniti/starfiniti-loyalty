@@ -43,4 +43,9 @@ LABEL com.starfiniti.disposable="true" \
 
 EXPOSE 2222
 
+USER 65532:65532
+
+HEALTHCHECK --interval=5s --timeout=2s --start-period=2s --retries=3 \
+    CMD ["/usr/bin/test", "-r", "/state/ready"]
+
 ENTRYPOINT ["/usr/local/bin/starfiniti-openssh-server"]

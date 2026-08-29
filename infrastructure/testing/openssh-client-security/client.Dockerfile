@@ -8,14 +8,14 @@ ARG SOURCE_SHA256=d44d28a839ea9daf969cc69150fde59910b2b39361dad81a3bd6cbd19218db
 ARG SOURCE_BYTES=2333659
 ARG SIGNATURE_URL=https://cdn.openbsd.org/pub/OpenBSD/OpenSSH/portable/openssh-10.5p1.tar.gz.asc
 ARG SIGNATURE_SHA256=77b48fd2657520db9229b82bc1bab3f5c00b1b6f7ac2dbb9111b1c8584d6e335
-ARG RELEASE_KEY_URL=https://cdn.openbsd.org/pub/OpenBSD/OpenSSH/RELEASE_KEY.asc
-ARG RELEASE_KEY_SHA256=c4a6f4692c9b8e75ec096add049fe0314b3ceff9410321f1e85907cf7a864269
+ARG SIGNING_IDENTITY_URL=https://cdn.openbsd.org/pub/OpenBSD/OpenSSH/RELEASE_KEY.asc
+ARG SIGNING_IDENTITY_SHA256=c4a6f4692c9b8e75ec096add049fe0314b3ceff9410321f1e85907cf7a864269
 ARG SIGNING_FINGERPRINT=7168B983815A5EEF59A4ADFD2A3F414E736060BA
 ARG SOURCE_TREE_ROOT=openssh-10.5p1
 ARG SOURCE_TREE_ENTRIES=930
 ARG SOURCE_TREE_FILES=892
 ARG SOURCE_TREE_BYTES=10059047
-ARG SOURCE_TREE_MANIFEST_SHA256=bfd3d616400f4d82a9418d8a3feab14ad2ba50d6cdb87ed2b2f14f38909d9dc9
+ARG SOURCE_TREE_MANIFEST_SHA256=b711344d08bc174e15067b936018eb4e07e308b6526228ba1afd927ba70759ab
 ARG INSTALL_ROOT=/opt/starfiniti/openssh/10.5p1
 ARG CANDIDATE_EXECUTABLE_SHA256
 
@@ -32,8 +32,8 @@ RUN test "$(dpkg --print-architecture)" = "$EXPECTED_ARCHITECTURE"; \
     cd /tmp/starfiniti-openssh-build; \
     curl --fail --location --proto '=https' --tlsv1.2 --output source.tar.gz "$SOURCE_URL"; \
     curl --fail --location --proto '=https' --tlsv1.2 --output source.tar.gz.asc "$SIGNATURE_URL"; \
-    curl --fail --location --proto '=https' --tlsv1.2 --output release-key.asc "$RELEASE_KEY_URL"; \
-    printf '%s  %s\n' "$SOURCE_SHA256" source.tar.gz "$SIGNATURE_SHA256" source.tar.gz.asc "$RELEASE_KEY_SHA256" release-key.asc | sha256sum --check --strict; \
+    curl --fail --location --proto '=https' --tlsv1.2 --output release-key.asc "$SIGNING_IDENTITY_URL"; \
+    printf '%s  %s\n' "$SOURCE_SHA256" source.tar.gz "$SIGNATURE_SHA256" source.tar.gz.asc "$SIGNING_IDENTITY_SHA256" release-key.asc | sha256sum --check --strict; \
     test "$(wc -c <source.tar.gz)" -eq "$SOURCE_BYTES"; \
     GNUPGHOME=/tmp/starfiniti-openssh-gnupg gpg --batch --import release-key.asc; \
     test "$(GNUPGHOME=/tmp/starfiniti-openssh-gnupg gpg --batch --with-colons --fingerprint "$SIGNING_FINGERPRINT" | awk -F: '$1 == "fpr" { print $10; exit }')" = "$SIGNING_FINGERPRINT"; \
@@ -101,5 +101,8 @@ LABEL com.starfiniti.disposable="true" \
       com.starfiniti.purpose="openssh-client-security-canary"
 
 USER 65532:65532
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=1 \
+    CMD ["/opt/starfiniti/openssh/10.5p1/bin/ssh", "-V"]
 
 ENTRYPOINT ["/usr/local/bin/starfiniti-openssh-client-canary"]

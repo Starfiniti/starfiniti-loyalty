@@ -268,6 +268,7 @@ function inspectIsolation(container, expected) {
   );
   const labels = details.Config.Labels ?? {};
   const portBindings = host.PortBindings ?? {};
+  const health = details.Config.Healthcheck;
   if (
     Object.values(ports).some(
       (bindings) => Array.isArray(bindings) && bindings.length > 0,
@@ -289,6 +290,12 @@ function inspectIsolation(container, expected) {
     host.Memory !== 268435456 ||
     host.NanoCpus !== 1_000_000_000 ||
     details.Config.User !== expected.user ||
+    !health ||
+    !sameMembers(health.Test, expected.health.test) ||
+    health.Interval !== expected.health.interval ||
+    health.Timeout !== expected.health.timeout ||
+    health.StartPeriod !== expected.health.startPeriod ||
+    health.Retries !== expected.health.retries ||
     !sameMembers(tmpfs, expected.tmpfs) ||
     stateMounts.length !== 1 ||
     stateMounts[0].Type !== "volume" ||
@@ -362,8 +369,8 @@ function main() {
         SOURCE_BYTES: plan.candidate.source.bytes,
         SIGNATURE_URL: plan.candidate.source.signatureUrl,
         SIGNATURE_SHA256: plan.candidate.source.signatureSha256,
-        RELEASE_KEY_URL: plan.candidate.source.releaseKeyUrl,
-        RELEASE_KEY_SHA256: plan.candidate.source.releaseKeySha256,
+        SIGNING_IDENTITY_URL: plan.candidate.source.releaseKeyUrl,
+        SIGNING_IDENTITY_SHA256: plan.candidate.source.releaseKeySha256,
         SIGNING_FINGERPRINT: plan.candidate.source.signingFingerprint,
         SOURCE_TREE_ROOT: plan.candidate.sourceTree.root,
         SOURCE_TREE_ENTRIES: plan.candidate.sourceTree.entries,
@@ -433,6 +440,8 @@ function main() {
       network,
       "--network-alias",
       "openssh-server",
+      "--user",
+      "0:0",
       "--read-only",
       "--cap-drop",
       "ALL",
@@ -468,8 +477,15 @@ function main() {
     inspectIsolation(serverName, {
       network,
       volume,
-      user: "",
+      user: "0:0",
       capAdd: ["CHOWN", "DAC_OVERRIDE", "SETGID", "SETUID", "SYS_CHROOT"],
+      health: {
+        test: ["CMD", "/usr/bin/test", "-r", "/state/ready"],
+        interval: 5_000_000_000,
+        timeout: 2_000_000_000,
+        startPeriod: 2_000_000_000,
+        retries: 3,
+      },
       pidsLimit: 128,
       purpose: "openssh-client-security-server",
       tmpfs: ["/tmp", "/run"],
@@ -522,6 +538,13 @@ function main() {
       volume,
       user: "65532:65532",
       capAdd: [],
+      health: {
+        test: ["CMD", "/opt/starfiniti/openssh/10.5p1/bin/ssh", "-V"],
+        interval: 30_000_000_000,
+        timeout: 5_000_000_000,
+        startPeriod: 5_000_000_000,
+        retries: 1,
+      },
       pidsLimit: 64,
       purpose: "openssh-client-security-canary",
       tmpfs: ["/tmp"],

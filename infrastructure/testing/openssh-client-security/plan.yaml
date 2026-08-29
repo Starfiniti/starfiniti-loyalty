@@ -61,7 +61,7 @@ candidate:
     entries: 930
     files: 892
     bytes: 10059047
-    manifestSha256: bfd3d616400f4d82a9418d8a3feab14ad2ba50d6cdb87ed2b2f14f38909d9dc9
+    manifestSha256: b711344d08bc174e15067b936018eb4e07e308b6526228ba1afd927ba70759ab
   build:
     configure:
       - --prefix=/opt/starfiniti/openssh/10.5p1

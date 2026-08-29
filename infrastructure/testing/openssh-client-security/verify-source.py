@@ -50,14 +50,17 @@ def archive_rows(path: pathlib.Path, root: str):
             if relative in seen:
                 fail("archive contains a duplicate member")
             seen.add(relative)
+            mode = stat.S_IMODE(member.mode)
+            if mode & 0o7000 or mode & 0o002:
+                fail("archive member has unsafe permissions")
             if member.isdir():
-                rows.append((relative, "d", member.mode, 0, "-"))
+                rows.append((relative, "d", mode, 0, "-"))
             elif member.isfile():
                 source = archive.extractfile(member)
                 if source is None:
                     fail("regular file could not be read")
                 content_hash = hashlib.sha256(source.read()).hexdigest()
-                rows.append((relative, "f", member.mode, member.size, content_hash))
+                rows.append((relative, "f", mode, member.size, content_hash))
             else:
                 fail("archive contains a link or special member")
     return rows
@@ -73,6 +76,8 @@ def tree_rows(path: pathlib.Path):
         if stat.S_ISLNK(status.st_mode):
             fail("extracted tree contains a symbolic link")
         mode = stat.S_IMODE(status.st_mode)
+        if mode & 0o7000 or mode & 0o002:
+            fail("extracted tree contains unsafe permissions")
         if stat.S_ISDIR(status.st_mode):
             rows.append((relative, "d", mode, 0, "-"))
         elif stat.S_ISREG(status.st_mode):

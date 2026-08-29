@@ -299,7 +299,7 @@ export function validateOpenSshPlan(plan) {
     candidate.sourceTree.files !== 892 ||
     candidate.sourceTree.bytes !== 10059047 ||
     candidate.sourceTree.manifestSha256 !==
-      "bfd3d616400f4d82a9418d8a3feab14ad2ba50d6cdb87ed2b2f14f38909d9dc9"
+      "b711344d08bc174e15067b936018eb4e07e308b6526228ba1afd927ba70759ab"
   ) {
     fail("source tree identity is invalid");
   }
@@ -578,6 +578,7 @@ function validateImplementation(files) {
       "cmp signed-metadata.deb exact-url.deb",
       "COPY --from=builder /opt/starfiniti/openssh/10.5p1",
       "USER 65532:65532",
+      'CMD ["/opt/starfiniti/openssh/10.5p1/bin/ssh", "-V"]',
     ],
     "client Dockerfile",
   );
@@ -591,6 +592,8 @@ function validateImplementation(files) {
       "cmp server-metadata.deb server-url.deb",
       "cmp sftp-metadata.deb sftp-url.deb",
       "printf '%s  %s\\n' \"$SERVER_EXECUTABLE_SHA256\" /usr/sbin/sshd",
+      "USER 65532:65532",
+      'CMD ["/usr/bin/test", "-r", "/state/ready"]',
     ],
     "server Dockerfile",
   );
@@ -628,6 +631,8 @@ function validateImplementation(files) {
       'any(part in ("", ".", "..")',
       'fail("archive contains a link or special member")',
       'fail("archive contains a duplicate member")',
+      'fail("archive member has unsafe permissions")',
+      "stat.S_IMODE(member.mode)",
       "expect_failure(lambda path=archives[name]: archive_rows(path, root))",
       "digest_rows(rows)",
     ],
@@ -647,12 +652,14 @@ function validateImplementation(files) {
       "imageAbsent(clientTag, clientImageId)",
       '["network", "create", "--internal", network]',
       '"--read-only"',
+      '"--user",\n      "0:0"',
       '"--user",\n        "65532:65532"',
       '"--cap-drop",\n        "ALL"',
       '"no-new-privileges:true"',
       "differs from its isolated runtime contract",
       "host.ReadonlyRootfs !== true",
       "host.Privileged !== false",
+      "health.Interval !== expected.health.interval",
       "stateMounts[0].RW !== !expected.stateReadOnly",
       '"create",\n        "--name",',
       '["start", "--attach", clientName]',
