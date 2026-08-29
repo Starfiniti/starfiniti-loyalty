@@ -1,6 +1,6 @@
 schema: starfiniti.improvement-backlog.v1
 version: 1
-observedAt: 2026-08-29T15:22:55Z
+observedAt: 2026-08-29T16:06:06Z
 ranking:
   formula: severityPoints + (2 * merchantImpact) + (2 * customerImpact) + confidence - effort - dependencyPenalty
   severityPoints: { critical: 40, high: 30, medium: 20, low: 10 }
@@ -17,7 +17,7 @@ items:
     score: 87
     status: blocked_external
     evidence: infrastructure/governance/next-runtime-review.yaml
-    dependency: Exact-head CI image rebuild SBOM Trivy CodeQL DAST database and WooCommerce evidence followed by approved merge release deployment rollback observation and protected-value reconciliation.
+    dependency: Exact-head CI image rebuild SBOM Trivy CodeQL DAST database and WooCommerce evidence passed at c3b29542035772ddcbc48d92e2b159ac605dd80f; approved merge release deployment rollback observation and protected-value reconciliation remain.
     ownerInput: Product and security approve merge and release; operations separately approves deployment and production reconciliation.
   - id: IMP-011
     title: Repair the production Proxmox host across five published security advisories

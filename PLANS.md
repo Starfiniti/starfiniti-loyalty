@@ -7,12 +7,16 @@ Next.js and eslint-config-next to exact 16.3.3 npm package bytes and retains
 disabled image optimization as defence in depth. A network-free validator binds
 the official release and advisories, released impact, lockfile provenance,
 task/risk/backlog evidence, no-vulnerable-rollback policy, and false production
-authority through twenty-three corruptions. The complete local gate passes with
+authority through twenty-nine corruptions. The complete local gate passes with
 995 tests, both production builds, 87 migrations, 69 pgTAP files, every roadmap
 validator, zero npm audit findings, the secret scan, and licence validation.
-Exact-head image/SBOM/Trivy/CodeQL/DAST/database/WooCommerce evidence, then
-separate merge, release, deployment, observation, and reconciliation approvals
-are required. Production remains on 16.3.0 and unchanged.
+Exact implementation `c3b2954` passed CI `33261152926`, Security
+`33261152934`, and external CodeQL with all twelve checks green. The immutable
+5,199-byte evidence record binds those results and the image/SBOM/Trivy/CodeQL/
+DAST/database/WooCommerce evidence under SHA-256
+`d90150e1ec818f1fa092df6cf6a91137c1333cf5b97b4eafb4bcfe3b4ec205ca`.
+Separate merge, release, deployment, observation, and reconciliation approvals
+are still required. Production remains on 16.3.0 and unchanged.
 
 ADR-0101 is the active safe M16 compatibility slice. It pins the disposable
 current matrix to WordPress 7.1, WooCommerce 11.0.1, and PHP 8.4 in HPOS and

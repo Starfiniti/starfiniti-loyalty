@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -7,6 +8,10 @@ import YAML from "yaml";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const paths = Object.freeze({
   review: "infrastructure/governance/next-runtime-review.yaml",
+  evidence:
+    "docs/plan/evidence/M16/runs/next-runtime-c3b2954-2026-08-29T155152Z.json",
+  attributes: ".gitattributes",
+  prettierIgnore: ".prettierignore",
   rootPackage: "package.json",
   dashboardPackage: "apps/dashboard/package.json",
   lock: "package-lock.json",
@@ -24,6 +29,12 @@ const locked = Object.freeze({
   releasePublishedAt: "2026-08-25T16:17:10Z",
   productionCommit: "0ced4b666a55d836bd3d4927337fe057a71bb4ba",
   candidatePreviousCommit: "a71a84b6d35438043ce3a0f7db86cf2231c9b3c5",
+  implementationCommit: "c3b29542035772ddcbc48d92e2b159ac605dd80f",
+  analysisMergeCommit: "4722ec6f5ca5ead74d4f80587150135c6b789e8e",
+  evidenceSha256:
+    "d90150e1ec818f1fa092df6cf6a91137c1333cf5b97b4eafb4bcfe3b4ec205ca",
+  evidenceAttribute: "docs/plan/evidence/M16/runs/next-runtime-*.json -text",
+  evidencePrettierIgnore: "docs/plan/evidence/M16/runs/next-runtime-*.json",
   next: {
     previousTarball: "https://registry.npmjs.org/next/-/next-16.3.0.tgz",
     previousIntegrity:
@@ -109,6 +120,10 @@ function fail(message) {
   throw new Error(`Next.js runtime review invalid: ${message}`);
 }
 
+function sha256(bytes) {
+  return createHash("sha256").update(bytes).digest("hex");
+}
+
 function exactKeys(value, expected, label) {
   if (value === null || typeof value !== "object" || Array.isArray(value)) {
     fail(`${label} must be an object`);
@@ -140,7 +155,207 @@ function validatePackageEvidence(actual, expected, label) {
   }
 }
 
+function validateCiEvidence(evidence, raw) {
+  if (sha256(raw) !== locked.evidenceSha256) {
+    fail("CI evidence bytes differ");
+  }
+  exactKeys(
+    evidence,
+    [
+      "schema",
+      "observedAt",
+      "candidate",
+      "github",
+      "artifacts",
+      "security",
+      "verification",
+      "production",
+    ],
+    "CI evidence",
+  );
+  if (
+    evidence.schema !== "starfiniti.next-runtime-ci-evidence.v1" ||
+    evidence.observedAt !== "2026-08-29T15:51:52Z" ||
+    evidence.candidate?.implementationCommit !== locked.implementationCommit ||
+    evidence.candidate?.analysisMergeCommit !== locked.analysisMergeCommit ||
+    evidence.candidate?.baseCommit !==
+      "2826b0bdc758cf224ac22d85940e73b25b61865f" ||
+    evidence.candidate?.pullRequest !== 57 ||
+    evidence.candidate?.pullRequestOpen !== true ||
+    evidence.candidate?.pullRequestMergeable !== true
+  ) {
+    fail("CI evidence candidate identity differs");
+  }
+  if (
+    evidence.github?.ci?.runId !== 33261152926 ||
+    evidence.github?.ci?.headCommit !== locked.implementationCommit ||
+    evidence.github?.ci?.completedAt !== "2026-08-29T15:49:18Z" ||
+    evidence.github?.ci?.conclusion !== "success" ||
+    evidence.github?.security?.runId !== 33261152934 ||
+    evidence.github?.security?.headCommit !== locked.implementationCommit ||
+    evidence.github?.security?.analysisMergeCommit !==
+      locked.analysisMergeCommit ||
+    evidence.github?.security?.completedAt !== "2026-08-29T15:51:52Z" ||
+    evidence.github?.security?.conclusion !== "success" ||
+    evidence.github?.requiredChecks !== 12 ||
+    evidence.github?.requiredChecksPassed !== 12
+  ) {
+    fail("CI or Security run evidence differs");
+  }
+  const observedAt = Date.parse(evidence.observedAt);
+  const completionTimes = [
+    evidence.github.ci.completedAt,
+    evidence.github.security.completedAt,
+    evidence.github.externalCodeql?.completedAt,
+  ].map((value) => Date.parse(value));
+  if (
+    !Number.isFinite(observedAt) ||
+    completionTimes.some(
+      (value) => !Number.isFinite(value) || value > observedAt,
+    )
+  ) {
+    fail("evidence predates a required check completion");
+  }
+  exactArray(
+    evidence.github.ci.jobs.map(
+      (job) => `${job.id}:${job.name}:${job.conclusion}`,
+    ),
+    [
+      "99123210642:containers:success",
+      "99123210743:woocommerce-runtime (current-legacy):success",
+      "99123210753:woocommerce-runtime (current-hpos):success",
+      "99123210785:baseline:success",
+      "99123210797:woocommerce-runtime (minimum-hpos):success",
+      "99123210800:database:success",
+      "99123210819:woocommerce-runtime (minimum-legacy):success",
+    ],
+    "CI jobs",
+  );
+  exactArray(
+    evidence.github.security.jobs.map(
+      (job) => `${job.id}:${job.name}:${job.conclusion}`,
+    ),
+    [
+      "99123210677:dast:success",
+      "99123210744:recovery-transport:success",
+      "99123210752:supply-chain:success",
+      "99123210754:codeql:success",
+    ],
+    "Security jobs",
+  );
+  if (
+    evidence.github.externalCodeql?.checkRunId !== 99123424225 ||
+    evidence.github.externalCodeql?.analysisId !== 1691996816 ||
+    evidence.github.externalCodeql?.analysisCommit !==
+      locked.analysisMergeCommit ||
+    evidence.github.externalCodeql?.completedAt !== "2026-08-29T15:48:10Z" ||
+    evidence.github.externalCodeql?.results !== 0 ||
+    evidence.github.externalCodeql?.rules !== 103 ||
+    evidence.github.externalCodeql?.conclusion !== "success"
+  ) {
+    fail("external CodeQL evidence differs");
+  }
+  const artifacts = [
+    [
+      "supplyChain",
+      9717321080,
+      "1f7a7f8292f537eec0758bbcce86afa9446d89b259982c6cb174760ec1c3f5e7",
+    ],
+    [
+      "codeql",
+      9717306479,
+      "0c09ce28decb6ea3b9432360e406cd3b71fa37b7c8369327b505c2200d8eaad6",
+    ],
+    [
+      "dast",
+      9717310530,
+      "b9ce9511a65da964d226e7812755b1f186e531489107d09285b3a616864a2d00",
+    ],
+  ];
+  for (const [name, id, digest] of artifacts) {
+    if (
+      evidence.artifacts?.[name]?.id !== id ||
+      evidence.artifacts?.[name]?.archiveSha256 !== digest
+    ) {
+      fail(`${name} artifact evidence differs`);
+    }
+  }
+  if (
+    evidence.security?.repository?.version !== "0.74.0" ||
+    evidence.security?.repository?.vulnerabilities !== 0 ||
+    evidence.security?.repository?.misconfigurations !== 0 ||
+    evidence.security?.repository?.secrets !== 0 ||
+    evidence.security?.repository?.licenceFindings !== 0 ||
+    evidence.security?.codeql?.version !== "2.26.4" ||
+    evidence.security?.codeql?.querySuite !== "security-extended" ||
+    evidence.security?.codeql?.findings !== 0 ||
+    evidence.security?.dast?.version !== "2.17.0" ||
+    evidence.security?.dast?.informationalAlerts !== 2 ||
+    evidence.security?.dast?.lowAlerts !== 0 ||
+    evidence.security?.dast?.mediumAlerts !== 0 ||
+    evidence.security?.dast?.highAlerts !== 0 ||
+    evidence.security?.dast?.criticalAlerts !== 0
+  ) {
+    fail("security result evidence differs");
+  }
+  const expectedImages = {
+    dashboard: {
+      imageId:
+        "1ee51bbbf36f0f5f26a76b0fe26dab40ce7d10924717feddc4710a05c478da93",
+      components: 228,
+    },
+    worker: {
+      imageId:
+        "8ab52b924b6b32a12c1c5412850f137fd74b818564c2994a3746f5d612d11611",
+      components: 108,
+    },
+  };
+  for (const [name, expected] of Object.entries(expectedImages)) {
+    const image = evidence.security.images?.[name];
+    if (
+      image?.imageId !== expected.imageId ||
+      image?.components !== expected.components ||
+      image?.vulnerabilities !== 0 ||
+      image?.misconfigurations !== 0 ||
+      image?.secrets !== 0
+    ) {
+      fail(`${name} image evidence differs`);
+    }
+  }
+  const verification = evidence.verification;
+  if (
+    verification?.tests !== 995 ||
+    verification?.migrations !== 87 ||
+    verification?.pgTapFiles !== 69 ||
+    verification?.pgTapAssertions !== 3790 ||
+    verification?.concurrencyProbes !== 22 ||
+    verification?.woocommerceRuntimeJobs !== 4 ||
+    verification?.npmAuditVulnerabilities !== 0 ||
+    verification?.secretScanFiles !== 1185
+  ) {
+    fail("verification evidence differs");
+  }
+  if (
+    evidence.production?.mutation !== false ||
+    evidence.production?.mergeApproved !== false ||
+    evidence.production?.releaseApproved !== false ||
+    evidence.production?.deploymentApproved !== false ||
+    evidence.production?.productionReconciled !== false ||
+    evidence.production?.deployedNextVersion !== locked.previousVersion
+  ) {
+    fail("production authority evidence differs");
+  }
+}
+
 function validateReview(review, files) {
+  if (
+    !files.attributes.split(/\r?\n/u).includes(locked.evidenceAttribute) ||
+    !files.prettierIgnore
+      .split(/\r?\n/u)
+      .includes(locked.evidencePrettierIgnore)
+  ) {
+    fail("immutable evidence byte-preservation controls differ");
+  }
   exactKeys(
     review,
     [
@@ -151,6 +366,7 @@ function validateReview(review, files) {
       "affected",
       "packages",
       "decision",
+      "ciEvidence",
       "authority",
     ],
     "review",
@@ -344,6 +560,31 @@ function validateReview(review, files) {
     "decision.requiredEvidence",
   );
   exactKeys(
+    review.ciEvidence,
+    [
+      "path",
+      "sha256",
+      "implementationCommit",
+      "analysisMergeCommit",
+      "ciRunId",
+      "securityRunId",
+      "conclusion",
+    ],
+    "ciEvidence",
+  );
+  if (
+    review.ciEvidence.path !== paths.evidence ||
+    review.ciEvidence.sha256 !== locked.evidenceSha256 ||
+    review.ciEvidence.implementationCommit !== locked.implementationCommit ||
+    review.ciEvidence.analysisMergeCommit !== locked.analysisMergeCommit ||
+    review.ciEvidence.ciRunId !== 33261152926 ||
+    review.ciEvidence.securityRunId !== 33261152934 ||
+    review.ciEvidence.conclusion !== "passed"
+  ) {
+    fail("CI evidence binding differs");
+  }
+  validateCiEvidence(files.evidence, files.evidenceRaw);
+  exactKeys(
     review.authority,
     [
       "productionAccess",
@@ -425,7 +666,8 @@ function validateReview(review, files) {
     !task.evidence?.includes(
       "infrastructure/governance/next-runtime-review.yaml",
     ) ||
-    !task.evidence?.includes("scripts/validate-next-runtime-review.mjs")
+    !task.evidence?.includes("scripts/validate-next-runtime-review.mjs") ||
+    !task.evidence?.includes(paths.evidence)
   ) {
     fail("M16 task binding differs");
   }
@@ -451,8 +693,13 @@ function validateReview(review, files) {
 function loadFiles() {
   const read = (path) => readFileSync(join(root, path), "utf8");
   const lockRaw = read(paths.lock);
+  const evidenceRaw = read(paths.evidence);
   return {
     review: YAML.parse(read(paths.review)),
+    evidence: JSON.parse(evidenceRaw),
+    evidenceRaw,
+    attributes: read(paths.attributes),
+    prettierIgnore: read(paths.prettierIgnore),
     rootPackage: JSON.parse(read(paths.rootPackage)),
     dashboardPackage: JSON.parse(read(paths.dashboardPackage)),
     lock: JSON.parse(lockRaw),
@@ -473,6 +720,16 @@ function clone(value) {
 function runSelfTest(files) {
   const cases = [
     (value) => (value.review.schema = "starfiniti.next-runtime-review.v2"),
+    (value) =>
+      (value.attributes = value.attributes.replace(
+        locked.evidenceAttribute,
+        "docs/plan/evidence/M16/runs/next-runtime-*.json text",
+      )),
+    (value) =>
+      (value.prettierIgnore = value.prettierIgnore.replace(
+        locked.evidencePrettierIgnore,
+        "docs/plan/evidence/M16/runs/forged-next-runtime-*.json",
+      )),
     (value) => (value.review.officialSources.release.version = "16.3.4"),
     (value) => (value.review.officialSources.advisories[0].severity = "high"),
     (value) => (value.review.officialSources.advisories[1].cve = null),
@@ -488,6 +745,10 @@ function runSelfTest(files) {
       (value.review.packages.candidate.lockPackages[4].integrity =
         "sha512-forged"),
     (value) => value.review.decision.requiredEvidence.pop(),
+    (value) => (value.evidenceRaw += " "),
+    (value) =>
+      (value.evidence.github.security.completedAt = "2026-08-29T15:51:53Z"),
+    (value) => (value.evidence.production.mergeApproved = true),
     (value) => (value.review.authority.mergeApproved = true),
     (value) =>
       (value.review.authority.rollbackToVulnerableVersionAllowed = true),
@@ -518,6 +779,12 @@ function runSelfTest(files) {
       ).risks = value.taskDocument.tasks
         .find((item) => item.id === "M16-CONTINUOUS-IMPROVEMENT")
         .risks.filter((risk) => risk !== "R-060")),
+    (value) =>
+      (value.taskDocument.tasks.find(
+        (item) => item.id === "M16-CONTINUOUS-IMPROVEMENT",
+      ).evidence = value.taskDocument.tasks
+        .find((item) => item.id === "M16-CONTINUOUS-IMPROVEMENT")
+        .evidence.filter((path) => path !== paths.evidence)),
     (value) => (value.risks = value.risks.replace("| R-060 |", "| R-999 |")),
     (value) =>
       (value.backlog.items.find((item) => item.id === "IMP-012").score = 86),

@@ -9,3 +9,5 @@ docs/plan/evidence/M16/runs/proxmox-security-preflight-*.json
 docs/plan/evidence/M16/runs/proxmox-compatibility-inventory-*.json
 docs/plan/evidence/M16/runs/borgbackup-security-*.json
 docs/plan/evidence/M16/runs/openssh-client-security-*.json
+docs/plan/evidence/M16/runs/node-runtime-*.json
+docs/plan/evidence/M16/runs/next-runtime-*.json

@@ -9,12 +9,16 @@
   rollback to 16.3.0. Exact official release/advisory and npm package evidence,
   production/candidate scope, lockfile bytes, task/risk/backlog bindings, and
   false merge/release/deployment/reconciliation authority are enforced by a
-  network-free validator with twenty-three adversarial corruptions. The final
+  network-free validator with twenty-nine adversarial corruptions. The final
   clean-install local gate passes with 995 tests, both production builds, 87
   migrations, 69 pgTAP files, all roadmap validators, zero npm audit findings,
-  secret scanning, and licence validation. Exact-head image and security
-  evidence remains pending. R-060 and top-ranked IMP-012 remain open until an
-  approved patched release is deployed and reconciled; production is unchanged.
+  secret scanning, and licence validation. Exact implementation `c3b2954`
+  passed CI `33261152926`, Security `33261152934`, and external CodeQL with all
+  twelve checks green; the immutable evidence file has SHA-256
+  `d90150e1ec818f1fa092df6cf6a91137c1333cf5b97b4eafb4bcfe3b4ec205ca`.
+  R-060 and top-ranked IMP-012 remain open only for explicit merge/release and
+  approved deployment, observation, and reconciliation; production is
+  unchanged on 16.3.0.
 
 - ADR-0101 refreshes only the disposable current WooCommerce compatibility
   matrix after official stable-release review: WordPress 7.1, WooCommerce 11.0.1,

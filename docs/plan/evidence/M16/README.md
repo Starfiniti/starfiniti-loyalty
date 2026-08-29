@@ -81,13 +81,18 @@ candidate now pins Next.js and eslint-config-next to exact matching 16.3.3 npm
 tarball and lockfile integrity evidence, keeps image optimization disabled as
 defence in depth, and prohibits a deployable rollback to 16.3.0. Run
 `npm run continuous-improvement:next-runtime:validate`; its network-free
-self-test rejects twenty-three source, advisory, impact, package, lockfile,
+self-test rejects twenty-nine source, advisory, impact, package, lockfile,
 configuration, task, risk, backlog, and authority corruptions. Exact-head image,
-SBOM, Trivy, CodeQL, DAST, database, WooCommerce, application, audit, and licence
-evidence remains required. The clean-install local gate passes with 995 tests,
-both production builds, 87 migrations, 69 pgTAP files, all roadmap validators,
-zero npm audit findings, secret scanning, and licence validation. Merge, release,
-deployment, observation, reconciliation, and production repair remain false.
+SBOM, Trivy, CodeQL, DAST, database, WooCommerce, application, audit, and
+licence evidence passed for exact implementation `c3b2954` in CI
+`33261152926`, Security `33261152934`, and external CodeQL. The immutable
+[`runs/next-runtime-c3b2954-2026-08-29T155152Z.json`](runs/next-runtime-c3b2954-2026-08-29T155152Z.json)
+is 5,199 bytes with SHA-256
+`d90150e1ec818f1fa092df6cf6a91137c1333cf5b97b4eafb4bcfe3b4ec205ca`.
+The clean-install local gate passes with 995 tests, both production builds, 87
+migrations, 69 pgTAP files, all roadmap validators, zero npm audit findings,
+secret scanning, and licence validation. Merge, release, deployment,
+observation, reconciliation, and production repair remain false.
 
 ADR-0085 adds a separate installed-state preparation boundary for the six recovery
 providers. The repository helper has no SSH or production-discovery authority. It

@@ -1,0 +1,159 @@
+{
+  "schema": "starfiniti.next-runtime-ci-evidence.v1",
+  "observedAt": "2026-08-29T15:51:52Z",
+  "candidate": {
+    "implementationCommit": "c3b29542035772ddcbc48d92e2b159ac605dd80f",
+    "analysisMergeCommit": "4722ec6f5ca5ead74d4f80587150135c6b789e8e",
+    "baseCommit": "2826b0bdc758cf224ac22d85940e73b25b61865f",
+    "pullRequest": 57,
+    "pullRequestOpen": true,
+    "pullRequestMergeable": true
+  },
+  "github": {
+    "ci": {
+      "runId": 33261152926,
+      "headCommit": "c3b29542035772ddcbc48d92e2b159ac605dd80f",
+      "completedAt": "2026-08-29T15:49:18Z",
+      "conclusion": "success",
+      "jobs": [
+        { "id": 99123210642, "name": "containers", "conclusion": "success" },
+        {
+          "id": 99123210743,
+          "name": "woocommerce-runtime (current-legacy)",
+          "conclusion": "success"
+        },
+        {
+          "id": 99123210753,
+          "name": "woocommerce-runtime (current-hpos)",
+          "conclusion": "success"
+        },
+        { "id": 99123210785, "name": "baseline", "conclusion": "success" },
+        {
+          "id": 99123210797,
+          "name": "woocommerce-runtime (minimum-hpos)",
+          "conclusion": "success"
+        },
+        { "id": 99123210800, "name": "database", "conclusion": "success" },
+        {
+          "id": 99123210819,
+          "name": "woocommerce-runtime (minimum-legacy)",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "security": {
+      "runId": 33261152934,
+      "headCommit": "c3b29542035772ddcbc48d92e2b159ac605dd80f",
+      "analysisMergeCommit": "4722ec6f5ca5ead74d4f80587150135c6b789e8e",
+      "completedAt": "2026-08-29T15:51:52Z",
+      "conclusion": "success",
+      "jobs": [
+        { "id": 99123210677, "name": "dast", "conclusion": "success" },
+        {
+          "id": 99123210744,
+          "name": "recovery-transport",
+          "conclusion": "success"
+        },
+        {
+          "id": 99123210752,
+          "name": "supply-chain",
+          "conclusion": "success"
+        },
+        { "id": 99123210754, "name": "codeql", "conclusion": "success" }
+      ]
+    },
+    "externalCodeql": {
+      "checkRunId": 99123424225,
+      "analysisId": 1691996816,
+      "analysisCommit": "4722ec6f5ca5ead74d4f80587150135c6b789e8e",
+      "completedAt": "2026-08-29T15:48:10Z",
+      "results": 0,
+      "rules": 103,
+      "conclusion": "success"
+    },
+    "requiredChecks": 12,
+    "requiredChecksPassed": 12
+  },
+  "artifacts": {
+    "supplyChain": {
+      "id": 9717321080,
+      "archiveSha256": "1f7a7f8292f537eec0758bbcce86afa9446d89b259982c6cb174760ec1c3f5e7",
+      "expiresAt": "2026-09-28T15:49:26Z"
+    },
+    "codeql": {
+      "id": 9717306479,
+      "archiveSha256": "0c09ce28decb6ea3b9432360e406cd3b71fa37b7c8369327b505c2200d8eaad6",
+      "expiresAt": "2026-09-28T15:48:14Z"
+    },
+    "dast": {
+      "id": 9717310530,
+      "archiveSha256": "b9ce9511a65da964d226e7812755b1f186e531489107d09285b3a616864a2d00",
+      "expiresAt": "2026-09-28T15:48:34Z"
+    }
+  },
+  "security": {
+    "repository": {
+      "tool": "Trivy",
+      "version": "0.74.0",
+      "vulnerabilities": 0,
+      "misconfigurations": 0,
+      "secrets": 0,
+      "licenceFindings": 0,
+      "summarySha256": "ed9e6c32453f912907c51f5bd2a7ba075f912580186b6f59eb642bc678c800dc"
+    },
+    "codeql": {
+      "version": "2.26.4",
+      "querySuite": "security-extended",
+      "findings": 0,
+      "summarySha256": "92ecc436981c0bac18a1c7cfa2522923b2d9a8adaa078faeb7e6ed005530b1eb"
+    },
+    "dast": {
+      "version": "2.17.0",
+      "informationalAlerts": 2,
+      "lowAlerts": 0,
+      "mediumAlerts": 0,
+      "highAlerts": 0,
+      "criticalAlerts": 0,
+      "reportSha256": "e60e3cf6071f0cf843e57f67ca5c909097e9f264b70d747d6748d6055e710467"
+    },
+    "images": {
+      "dashboard": {
+        "imageId": "1ee51bbbf36f0f5f26a76b0fe26dab40ce7d10924717feddc4710a05c478da93",
+        "trivySha256": "0f51180dc32eea30c548c1c05f78b0b0c1b8fb2a561498abfb956ac0b045987f",
+        "sbomSha256": "e0edb039df5d5835308d57aafeb0cc70af55cbebbd5c2ac12cf1281e859cfad8",
+        "components": 228,
+        "vulnerabilities": 0,
+        "misconfigurations": 0,
+        "secrets": 0
+      },
+      "worker": {
+        "imageId": "8ab52b924b6b32a12c1c5412850f137fd74b818564c2994a3746f5d612d11611",
+        "trivySha256": "7d98e097015e4edbdf7bf8269a61b13bb5feab39c7ba7e2facc3bd712d3da6a6",
+        "sbomSha256": "408e91debe27db043735af9cff0f0290ec2f89892b1eb79e3577dea1348f7943",
+        "components": 108,
+        "vulnerabilities": 0,
+        "misconfigurations": 0,
+        "secrets": 0
+      }
+    }
+  },
+  "verification": {
+    "tests": 995,
+    "migrations": 87,
+    "pgTapFiles": 69,
+    "pgTapAssertions": 3790,
+    "concurrencyProbes": 22,
+    "woocommerceRuntimeJobs": 4,
+    "npmAuditVulnerabilities": 0,
+    "secretScanFiles": 1185
+  },
+  "production": {
+    "mutation": false,
+    "mergeApproved": false,
+    "releaseApproved": false,
+    "deploymentApproved": false,
+    "productionReconciled": false,
+    "deployedNextVersion": "16.3.0",
+    "remainingGate": "Explicit merge and release approval, patched deployment, observation, and protected-value reconciliation remain required."
+  }
+}

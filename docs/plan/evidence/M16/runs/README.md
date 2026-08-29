@@ -118,6 +118,18 @@ directory after separate privacy review and exact SHA-256 binding. That report
 still cannot claim signing-fingerprint, dependency, offline-custody,
 second-person, recovery, rollout, production, or operations-escrow completion.
 
+Next.js runtime CI evidence uses
+`starfiniti.next-runtime-ci-evidence.v1`. The first accepted artifact is
+`next-runtime-c3b2954-2026-08-29T155152Z.json` (5,199 bytes, SHA-256
+`d90150e1ec818f1fa092df6cf6a91137c1333cf5b97b4eafb4bcfe3b4ec205ca`).
+It binds exact implementation `c3b29542035772ddcbc48d92e2b159ac605dd80f`,
+CI `33261152926`, Security `33261152934`, the external zero-result CodeQL
+analysis, all twelve required checks, retained artifact archive hashes, both
+image identities and SBOMs, the complete database/WooCommerce regression, and
+false merge, release, deployment, reconciliation, and production-mutation
+authority. It proves a repository candidate only; it does not prove production
+repair.
+
 Never store provider bodies, credentials, raw ETags, hostnames, IP addresses,
 usernames, SSH routes or keys, raw command output, personal data, tenant/customer
 identifiers, mutable drafts, or unapproved operational telemetry here.

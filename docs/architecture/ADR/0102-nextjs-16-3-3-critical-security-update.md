@@ -38,3 +38,18 @@ Accepted. The dashboard pins `next` and the matching `eslint-config-next` to exa
 This is a patch-level application dependency change. It has no database, API, event, WooCommerce, entitlement, ledger, or customer-value contract change. V1/V2 programme evaluation and historical effects are unchanged.
 
 Rollback means application release withdrawal or a forward rebuild, not restoration of Next.js 16.3.0. Production rollout must retain the existing immutable release for forensic comparison only, never as a deployable recovery target, and must prove dashboard health, authentication, customer access, checkout independence, protected-value reconciliation, and security-image evidence after deployment.
+
+## Verification
+
+Exact implementation `c3b29542035772ddcbc48d92e2b159ac605dd80f` passed
+CI `33261152926`, Security `33261152934`, and external CodeQL check
+`99123424225` with all twelve required checks green. The immutable 5,199-byte
+evidence file
+`docs/plan/evidence/M16/runs/next-runtime-c3b2954-2026-08-29T155152Z.json`
+has SHA-256
+`d90150e1ec818f1fa092df6cf6a91137c1333cf5b97b4eafb4bcfe3b4ec205ca`.
+It binds the rebuilt image identities, SBOMs, repository and image Trivy scans,
+zero-result CodeQL, DAST, application tests, database replay/pgTAP/concurrency,
+all four WooCommerce runtime jobs, audit, secret scan, licence validation, and
+false production authority. Merge, release, deployment, observation, and
+protected-value reconciliation remain separate approvals.

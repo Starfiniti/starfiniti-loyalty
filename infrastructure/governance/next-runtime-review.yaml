@@ -104,6 +104,14 @@ decision:
     - codeql-and-dast
     - database-and-woocommerce-regression
   rollback: Disable or withdraw the candidate and forward-fix; never restore a deployable artifact to Next.js 16.3.0.
+ciEvidence:
+  path: docs/plan/evidence/M16/runs/next-runtime-c3b2954-2026-08-29T155152Z.json
+  sha256: d90150e1ec818f1fa092df6cf6a91137c1333cf5b97b4eafb4bcfe3b4ec205ca
+  implementationCommit: c3b29542035772ddcbc48d92e2b159ac605dd80f
+  analysisMergeCommit: 4722ec6f5ca5ead74d4f80587150135c6b789e8e
+  ciRunId: 33261152926
+  securityRunId: 33261152934
+  conclusion: passed
 authority:
   productionAccess: false
   mergeApproved: false

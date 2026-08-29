@@ -12,20 +12,33 @@
   retains disabled image optimization only as defence in depth, and rejects
   both advisory suppression and a deployable rollback to 16.3.0. Exact npm
   tarball integrity and shasum evidence plus released/candidate scope are bound
-  in a network-free validator with twenty-three adversarial corruptions.
+  in a network-free validator with twenty-nine adversarial corruptions.
 - R-060 and top-ranked IMP-012 keep the production exposure visible. Repository
   validation passes after a clean `npm ci`: 995 tests, both production builds,
   87 migrations, 69 pgTAP files, all roadmap validators, zero npm audit
-  findings, secret scanning, and licence validation. Exact-head
-  rebuild/scan/regression evidence remains required before separate merge and
-  release approval; deployment, observation, protected-value reconciliation,
-  and production repair remain false.
+  findings, secret scanning, and licence validation. Exact implementation
+  `c3b29542035772ddcbc48d92e2b159ac605dd80f` passed all seven CI jobs in run
+  `33261152926`, all four Security jobs in run `33261152934`, and external
+  CodeQL check `99123424225`; all twelve PR checks are green. The retained
+  5,199-byte evidence file has SHA-256
+  `d90150e1ec818f1fa092df6cf6a91137c1333cf5b97b4eafb4bcfe3b4ec205ca`
+  and binds both image identities, SBOMs, Trivy, CodeQL, DAST, 995 tests, 87
+  migrations, 3,790 pgTAP assertions, 22 concurrency probes, and all four
+  WooCommerce runtime jobs. Separate merge/release approval, deployment,
+  observation, protected-value reconciliation, and production repair remain
+  false.
 - The required adversarial diff review confirmed one evidence defect: the first
   draft recorded the release publication time one minute late. Official release
   metadata corrected it to `2026-08-25T16:17:10Z`; the refutation pass also
   removed an unrelated resolver-only `fastq` refresh and extended the validator
   to bind all eleven direct Next.js runtime, compiler, and lint lock packages.
-  No unresolved review finding remains.
+  The evidence-closeout review then found that the new exact-byte JSON lacked
+  the repository's immutable `-text` and formatter-exclusion controls; both the
+  Next.js artifact and the preceding Node artifact now preserve their committed
+  bytes across platforms, and the Next.js validator enforces both controls. The
+  refutation pass also corrected an evidence timestamp that predated GitHub's
+  final Security-run completion by one second and now binds all three completion
+  times. No unresolved review finding remains.
 
 ## 2026-08-29 — Current WordPress/WooCommerce compatibility refresh
 
