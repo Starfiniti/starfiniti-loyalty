@@ -25,6 +25,18 @@ function fail(message) {
   throw new Error(message);
 }
 
+class SecurityPolicyError extends Error {
+  constructor(message, summary) {
+    super(message);
+    this.name = "SecurityPolicyError";
+    this.summary = summary;
+  }
+}
+
+function policyFail(message, summary) {
+  throw new SecurityPolicyError(message, summary);
+}
+
 function sha256(raw) {
   return createHash("sha256").update(raw).digest("hex");
 }
@@ -255,10 +267,7 @@ export function summarizeCodeql({ input, candidateCommit, analysisCommit }) {
     }
   }
   if (toolVersions.size !== 1) fail("CodeQL tool versions are inconsistent");
-  if (counts.critical || counts.high || counts.unknown) {
-    fail("CodeQL contains Critical High or unclassified findings");
-  }
-  return {
+  const summary = {
     schema: "starfiniti.codeql-summary.v1",
     candidateCommit,
     analysisCommit,
@@ -276,6 +285,13 @@ export function summarizeCodeql({ input, candidateCommit, analysisCommit }) {
       }))
       .sort((left, right) => left.id.localeCompare(right.id)),
   };
+  if (counts.critical || counts.high || counts.unknown) {
+    policyFail(
+      "CodeQL contains Critical High or unclassified findings",
+      summary,
+    );
+  }
+  return summary;
 }
 
 function trivyFindings(document) {
@@ -320,15 +336,7 @@ export function summarizeRepository({
   }
   exactUtc(document.CreatedAt, "repository Trivy createdAt");
   const { counts, categoryCounts } = trivyFindings(document);
-  if (
-    categoryCounts.secrets ||
-    counts.critical ||
-    counts.high ||
-    counts.unknown
-  ) {
-    fail("repository scan contains a secret Critical High or unknown finding");
-  }
-  return {
+  const summary = {
     schema: "starfiniti.repository-scan-summary.v1",
     candidateCommit,
     analysisCommit,
@@ -340,6 +348,18 @@ export function summarizeRepository({
     findings: counts,
     categories: categoryCounts,
   };
+  if (
+    categoryCounts.secrets ||
+    counts.critical ||
+    counts.high ||
+    counts.unknown
+  ) {
+    policyFail(
+      "repository scan contains a secret Critical High or unknown finding",
+      summary,
+    );
+  }
+  return summary;
 }
 
 export function summarizeTrivyVersion({
@@ -496,7 +516,13 @@ function runSelfTest() {
       });
       fail("self-test accepted a High CodeQL finding");
     } catch (error) {
-      if (!String(error?.message).includes("Critical High")) throw error;
+      if (
+        !String(error?.message).includes("Critical High") ||
+        error?.summary?.findings?.high !== 1 ||
+        JSON.stringify(error?.summary).includes("docs/example.js")
+      ) {
+        throw error;
+      }
     }
 
     const repositoryPath = join(temporary, "repository.json");
@@ -532,7 +558,11 @@ function runSelfTest() {
       });
       fail("self-test accepted a repository secret");
     } catch (error) {
-      if (!String(error?.message).includes("repository scan contains"))
+      if (
+        !String(error?.message).includes("repository scan contains") ||
+        error?.summary?.categories?.secrets !== 1 ||
+        JSON.stringify(error?.summary).includes("never retained")
+      )
         throw error;
     }
 
@@ -602,40 +632,54 @@ if (args.selfTest) {
   const analysisCommit = exactCommit(args.analysis, "analysis commit");
   if (!args.out) fail("--out is required");
   let summary;
-  if (args.mode === "codeql") {
-    if (!args.input) fail("--input is required for CodeQL mode");
-    summary = summarizeCodeql({
-      input: args.input,
-      candidateCommit,
-      analysisCommit,
-    });
-  } else if (args.mode === "repository") {
-    if (!args.input) fail("--input is required for repository mode");
-    summary = summarizeRepository({
-      input: args.input,
-      candidateCommit,
-      analysisCommit,
-    });
-  } else if (args.mode === "trivy-version") {
-    const raw = execFileSync(
-      "trivy",
-      [
-        "--cache-dir",
-        args["cache-dir"] ?? ".cache/trivy",
-        "version",
-        "--format",
-        "json",
-      ],
-      { encoding: "utf8", maxBuffer: 1024 * 1024 },
-    );
-    summary = summarizeTrivyVersion({
-      document: JSON.parse(raw),
-      candidateCommit,
-      analysisCommit,
-    });
-  } else {
-    fail("--mode must be codeql, repository, or trivy-version");
+  let policyError;
+  try {
+    if (args.mode === "codeql") {
+      if (!args.input) fail("--input is required for CodeQL mode");
+      summary = summarizeCodeql({
+        input: args.input,
+        candidateCommit,
+        analysisCommit,
+      });
+    } else if (args.mode === "repository") {
+      if (!args.input) fail("--input is required for repository mode");
+      summary = summarizeRepository({
+        input: args.input,
+        candidateCommit,
+        analysisCommit,
+      });
+    } else if (args.mode === "trivy-version") {
+      const raw = execFileSync(
+        "trivy",
+        [
+          "--cache-dir",
+          args["cache-dir"] ?? ".cache/trivy",
+          "version",
+          "--format",
+          "json",
+        ],
+        { encoding: "utf8", maxBuffer: 1024 * 1024 },
+      );
+      summary = summarizeTrivyVersion({
+        document: JSON.parse(raw),
+        candidateCommit,
+        analysisCommit,
+      });
+    } else {
+      fail("--mode must be codeql, repository, or trivy-version");
+    }
+  } catch (error) {
+    if (!(error instanceof SecurityPolicyError)) throw error;
+    summary = error.summary;
+    policyError = error;
   }
   writeAtomicJson(args.out, summary);
-  console.log(`Wrote minimized ${args.mode} evidence to ${args.out}.`);
+  if (policyError) {
+    console.error(
+      `${policyError.message}; retained only minimized evidence at ${args.out}.`,
+    );
+    process.exitCode = 1;
+  } else {
+    console.log(`Wrote minimized ${args.mode} evidence to ${args.out}.`);
+  }
 }
