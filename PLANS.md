@@ -22,7 +22,9 @@ ADRs, evidence, and retained canary reports. The no-network, no-copy,
 no-execution verifier inventories only an operations-staged directory, rejects
 missing/extra/linked/mutable/wrong-byte/wrong-commit inputs through stable
 no-follow descriptors, and emits only minimized aggregate evidence. The
-repository contract and adversarial fixtures pass; a real private inventory,
+repository contract and adversarial fixtures pass. Exact implementation
+`504555c` passed CI `33243336082`, Security `33243336070`, and separate CodeQL
+check `99076519435`; a real private inventory,
 signing/dependency review, offline redundant custody, second-person review,
 recovery proof, and approvals remain pending. Production, R-004, and the M16
 77/100 score are unchanged.

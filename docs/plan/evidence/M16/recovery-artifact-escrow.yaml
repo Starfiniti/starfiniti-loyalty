@@ -1,9 +1,9 @@
 schema: starfiniti.recovery-artifact-escrow-evidence.v1
 status: in_progress
-observedAt: 2026-08-29T08:07:53Z
+observedAt: 2026-08-29T08:34:38Z
 candidate:
   branch: codex/enterprise-roadmap-integration
-  commit: null
+  commit: 504555c3750a25e89ce8308c5e7cf72797104300
 policy:
   path: infrastructure/governance/recovery-artifact-escrow-v1.yaml
   sha256: eb9840652ab8e7ca2d20af9cc8eabf2d8bde7e0b696f8d51e334f859127eaa05
@@ -24,8 +24,8 @@ checks:
     status: passed
     evidence: The canonical thirty-entry policy, package/runbook/task/risk wiring, and positive inventory/report fixture pass; corrupt bytes, extra files, policy drift, Git-head drift, false authority, malformed dependency evidence, hard links, unsafe paths, inside-bundle output, provider-report field leakage, and completion overclaims fail.
   - id: exact_head_ci
-    status: pending
-    evidence: The implementation requires a clean committed exact-head CI and Security rollup before this repository slice can be accepted.
+    status: passed
+    evidence: Exact implementation 504555c3750a25e89ce8308c5e7cf72797104300 passed all seven CI jobs in run 33243336082, all four Security jobs in run 33243336070, and separate CodeQL check 99076519435.
   - id: private_inventory
     status: pending
     evidence: Operations has not staged the exact thirty files in an approved private destination or produced the private manifest and minimized verification report.
