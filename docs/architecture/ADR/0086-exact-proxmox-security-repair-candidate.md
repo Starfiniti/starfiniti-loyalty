@@ -29,6 +29,27 @@ not been independently reverified by the repository tooling, compatibility and
 recovery have not been proved, no maintenance or reboot has been approved, and
 production has not changed.
 
+## Subsequent evidence
+
+ADR-0087 retains the historical V1 plan and supplies the independent disposable
+proof required by Decision 4. Exact implementation head `45e9a12` passed CI
+`33223681162`, Security `33223681183`, and external CodeQL `99023166148`.
+Artifact `9706126317` independently authenticates five fresh repositories and
+ten accepted signatures, binds all twelve planned packages and 165,341,024
+bytes through the signed indexes, Apt selection, separate official-URL copies,
+package fields, size, SHA-256, and byte equality, and proves unchanged dpkg
+status, zero installation, zero retained package bytes, no production route or
+credential, no production mutation, and teardown. Its exact committed report is
+9,606 bytes with file SHA-256
+`3eec19512a6b2535cf0c6359144c1807b78e01015f43c470ad53335c6eb1090e`.
+
+This advances only package-byte, fresh signed-metadata, and repository-signature
+provenance. Fresh production dependency simulation, installed starting state,
+compatibility, rollback escrow, recovery, repository policy, maintenance,
+installation, reboot, running-kernel proof, smoke, and reconciliation remain
+false or pending. Production remains unchanged and the Critical risk remains
+open.
+
 The host currently uses Proxmox's `pve-no-subscription` repository. Proxmox
 documents that repository as suitable for testing and non-production use and
 recommends the enterprise repository for production. Changing repository class
