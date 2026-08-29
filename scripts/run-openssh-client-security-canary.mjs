@@ -302,6 +302,34 @@ function serverFailureStage(container) {
   );
 }
 
+function parseClientFailureStage(logs) {
+  const matches = [
+    ...logs.matchAll(
+      /(?:^|\n)starfiniti-openssh-client-stage:([a-z-]+)(?:\n|$)/gu,
+    ),
+  ];
+  const stage = matches.at(-1)?.[1];
+  const allowed = new Set([
+    "state-preflight",
+    "current-version",
+    "candidate-version",
+    "current-hash",
+    "candidate-hash",
+    "current-effective-config",
+    "candidate-effective-config",
+    "current-connection",
+    "candidate-connection",
+    "report-publication",
+  ]);
+  return allowed.has(stage) ? stage : "unclassified";
+}
+
+function clientFailureStage(container) {
+  return parseClientFailureStage(
+    runDocker(["logs", container], { capture: true }),
+  );
+}
+
 function inspectIsolation(container, expected) {
   const details = JSON.parse(
     runDocker(["inspect", "--format", "{{json .}}", container], {
@@ -400,6 +428,13 @@ function main() {
       "host-key-readiness",
     );
     assert.equal(parseServerFailureStage("secret=value"), "unclassified");
+    assert.equal(
+      parseClientFailureStage(
+        "starfiniti-openssh-client-stage:candidate-connection",
+      ),
+      "candidate-connection",
+    );
+    assert.equal(parseClientFailureStage("secret=value"), "unclassified");
     console.log("OpenSSH client security runner self-test passed.");
     return;
   }
@@ -634,13 +669,14 @@ function main() {
       tmpfs: ["/tmp"],
       stateReadOnly: true,
     });
-    const raw = runDocker(["start", "--attach", clientName], { capture: true });
-    const exitCode = Number(
-      runDocker(["inspect", "--format", "{{.State.ExitCode}}", clientName], {
-        capture: true,
-      }),
-    );
-    if (exitCode !== 0) fail("client canary container exited unsuccessfully");
+    runDocker(["start", clientName]);
+    const exitCode = Number(runDocker(["wait", clientName], { capture: true }));
+    if (exitCode !== 0) {
+      fail(
+        `client canary container exited unsuccessfully at ${clientFailureStage(clientName)}`,
+      );
+    }
+    const raw = runDocker(["logs", clientName], { capture: true });
     if (
       Buffer.byteLength(raw, "utf8") > plan.compatibility.maximumOutputBytes
     ) {
