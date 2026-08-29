@@ -66,15 +66,51 @@ jobs:
           - name: minimum-hpos
             config: .wp-env.woocommerce-min.json
             hpos: yes
+            wordpress: 6.6.5
+            woocommerce: 9.0.2
+            php: "8.1"
+            artifactReview: false
+            artifact: null
           - name: minimum-legacy
             config: .wp-env.woocommerce-min.json
             hpos: no
+            wordpress: 6.6.5
+            woocommerce: 9.0.2
+            php: "8.1"
+            artifactReview: false
+            artifact: null
           - name: current-hpos
             config: .wp-env.woocommerce.json
             hpos: yes
+            wordpress: "7.1"
+            woocommerce: 11.0.1
+            php: "8.4"
+            artifactReview: true
+            artifact:
+              wordpress:
+                url: https://wordpress.org/wordpress-7.1.zip
+                bytes: 37216004
+                sha256: d1ae02b5ae18428031ffc3943659fa87ab361d827f4aa804adf9276e4dc75df6
+              woocommerce:
+                url: https://downloads.wordpress.org/plugin/woocommerce.11.0.1.zip
+                bytes: 20218895
+                sha256: da189b6616c610d15a2106f93151dab81b78f83e075bcefce221ac0d00b4fa21
           - name: current-legacy
             config: .wp-env.woocommerce.json
             hpos: no
+            wordpress: "7.1"
+            woocommerce: 11.0.1
+            php: "8.4"
+            artifactReview: true
+            artifact:
+              wordpress:
+                url: https://wordpress.org/wordpress-7.1.zip
+                bytes: 37216004
+                sha256: d1ae02b5ae18428031ffc3943659fa87ab361d827f4aa804adf9276e4dc75df6
+              woocommerce:
+                url: https://downloads.wordpress.org/plugin/woocommerce.11.0.1.zip
+                bytes: 20218895
+                sha256: da189b6616c610d15a2106f93151dab81b78f83e075bcefce221ac0d00b4fa21
     name: woocommerce-runtime (${{ matrix.runtime.name }})
     env:
       WP_ENV_HOME: ${{ github.workspace }}/.wp-env-home
@@ -85,6 +121,22 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - name: Verify reviewed current runtime artifacts
+        if: matrix.runtime.artifactReview
+        env:
+          WORDPRESS_URL: ${{ matrix.runtime.artifact.wordpress.url }}
+          WORDPRESS_BYTES: ${{ matrix.runtime.artifact.wordpress.bytes }}
+          WORDPRESS_SHA256: ${{ matrix.runtime.artifact.wordpress.sha256 }}
+          WOOCOMMERCE_URL: ${{ matrix.runtime.artifact.woocommerce.url }}
+          WOOCOMMERCE_BYTES: ${{ matrix.runtime.artifact.woocommerce.bytes }}
+          WOOCOMMERCE_SHA256: ${{ matrix.runtime.artifact.woocommerce.sha256 }}
+        run: |
+          curl --fail --location --proto '=https' --tlsv1.2 --max-time 300 --output "$RUNNER_TEMP/wordpress-reviewed.zip" "$WORDPRESS_URL"
+          curl --fail --location --proto '=https' --tlsv1.2 --max-time 300 --output "$RUNNER_TEMP/woocommerce-reviewed.zip" "$WOOCOMMERCE_URL"
+          test "$(stat --format=%s "$RUNNER_TEMP/wordpress-reviewed.zip")" = "$WORDPRESS_BYTES"
+          test "$(stat --format=%s "$RUNNER_TEMP/woocommerce-reviewed.zip")" = "$WOOCOMMERCE_BYTES"
+          printf '%s  %s\n' "$WORDPRESS_SHA256" "$RUNNER_TEMP/wordpress-reviewed.zip" | sha256sum --check --strict
+          printf '%s  %s\n' "$WOOCOMMERCE_SHA256" "$RUNNER_TEMP/woocommerce-reviewed.zip" | sha256sum --check --strict
       - name: Start pinned WordPress and WooCommerce runtime
         run: npx wp-env start --config "${{ matrix.runtime.config }}"
       - name: Activate connector and configure order storage
@@ -92,6 +144,8 @@ jobs:
           npx wp-env run cli --config "${{ matrix.runtime.config }}" wp plugin activate starfiniti-loyalty
           npx wp-env run cli --config "${{ matrix.runtime.config }}" wp plugin deactivate starfiniti-loyalty
           npx wp-env run cli --config "${{ matrix.runtime.config }}" wp plugin activate starfiniti-loyalty
+          npx wp-env run cli --config "${{ matrix.runtime.config }}" wp eval 'if (get_bloginfo("version") !== "${{ matrix.runtime.wordpress }}" || !defined("WC_VERSION") || WC_VERSION !== "${{ matrix.runtime.woocommerce }}") { fwrite(STDERR, "Unexpected WordPress or WooCommerce runtime.\n"); exit(1); }'
+          npx wp-env run cli --config "${{ matrix.runtime.config }}" php -r 'if (PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION !== "${{ matrix.runtime.php }}") { fwrite(STDERR, "Unexpected PHP runtime.\n"); exit(1); }'
           npx wp-env run cli --config "${{ matrix.runtime.config }}" wp option update woocommerce_custom_orders_table_enabled "${{ matrix.runtime.hpos }}"
           npx wp-env run cli --config "${{ matrix.runtime.config }}" wp option update starfiniti_runtime_expected_hpos "${{ matrix.runtime.hpos }}"
       - name: Exercise native coupon order and reconciliation paths

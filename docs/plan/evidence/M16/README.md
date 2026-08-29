@@ -49,9 +49,30 @@ pins index `e67514e5d0f6c46656005e1b693b2ec9d52e80b641307de684d4a015ba7a4eaf`
 in both stages of both application Dockerfiles. The governance record binds the
 exact linux/amd64 manifest and configuration, impact owner/disposition, previous
 rollback index, and false production/deployment authority. Run
-`npm run continuous-improvement:node-runtime:validate`; exact-head image build,
-scan, release, deployment, rollback observation, and production reconciliation
+`npm run continuous-improvement:node-runtime:validate`. Exact implementation
+`d2c347a271259a9a93958d02ded2fed732676b59` passed CI run `33257511194`,
+Security run `33257511192`, and external CodeQL with all twelve checks green.
+The 6,104-byte
+[`runs/node-runtime-d2c347a-2026-08-29T142927Z.json`](runs/node-runtime-d2c347a-2026-08-29T142927Z.json)
+binds the image identities, 336 total SBOM components, zero Trivy image and
+repository findings, zero CodeQL findings, zero actionable ZAP alerts, 995 tests,
+87 migrations, 3,790 pgTAP assertions, 22 concurrency probes, and four
+WooCommerce runtime jobs under SHA-256
+`222cd276acfd37430db88c993f01301ccc14f0d97b1da5fb907edf4770e0c692`.
+Approved release deployment, rollback observation, and production reconciliation
 remain pending.
+
+ADR-0101 records the separate current WordPress/WooCommerce compatibility review.
+Compared retaining the stale current cells, mutable latest artifacts, and exact
+stable pins, it selects versioned WordPress 7.1 and WooCommerce 11.0.1 URLs with
+separately checked artifact bytes on PHP 8.4 for the disposable current matrix. WordPress 6.6.5, WooCommerce 9.0.2,
+and PHP 8.1 remain the unchanged minimum. The governance record binds official
+release sources, downloaded artifact sizes and SHA-256 values, prior rollback
+versions, HPOS and legacy workflow cells, pre-start SHA-256 checks, in-runtime
+version assertions, plugin headers, task evidence, and false production access,
+mutation, and store-upgrade authority. Run
+`npm run continuous-improvement:woocommerce-runtime:validate`; fresh exact-head
+Linux compatibility jobs and every production pilot/upgrade gate remain pending.
 
 ADR-0085 adds a separate installed-state preparation boundary for the six recovery
 providers. The repository helper has no SSH or production-discovery authority. It

@@ -31,6 +31,14 @@ docker:
     baseName: alpine:3.24
   dockerfiles: [apps/dashboard/Dockerfile, apps/worker/Dockerfile]
   requiredStages: [dependencies, runner]
+ciEvidence:
+  path: docs/plan/evidence/M16/runs/node-runtime-d2c347a-2026-08-29T142927Z.json
+  sha256: 222cd276acfd37430db88c993f01301ccc14f0d97b1da5fb907edf4770e0c692
+  implementationCommit: d2c347a271259a9a93958d02ded2fed732676b59
+  analysisMergeCommit: c2c3626d695b362eabe00b970ceed9d654f6ef53
+  ciRunId: 33257511194
+  securityRunId: 33257511192
+  conclusion: passed
 impact:
   classification: maintenance-lts
   securityRelevant: true
@@ -43,4 +51,4 @@ production:
   mutation: false
   deploymentApproved: false
   rollbackIndexSha256: d32cdf619f63fe0471182d08996dd516c6275bb5fd31ae06e55a570bd9e1ad43
-  remainingGate: Exact-head image builds and scans, approved release deployment, rollback observation, and production reconciliation remain required.
+  remainingGate: Exact-head image builds, SBOMs, Trivy, CodeQL, DAST, database, and WooCommerce checks passed; approved release deployment, rollback observation, and production reconciliation remain required.

@@ -1,15 +1,15 @@
 # Platform Matrix
 
-The plugin currently declares WordPress 6.6+, WordPress tested through 7.0, WooCommerce 9.0+, WooCommerce tested through 10.9, HPOS compatibility, and PHP 8.1+. It uses native coupons shared by classic checkout and Cart/Checkout Blocks. These declarations follow official WordPress/WooCommerce release and code-reference surfaces reviewed on 2026-08-12.
+The plugin currently declares WordPress 6.6+, WordPress tested through 7.1, WooCommerce 9.0+, WooCommerce tested through 11.0, HPOS compatibility, and PHP 8.1+. It uses native coupons shared by classic checkout and Cart/Checkout Blocks. The minimum cells remain unchanged; the current cells follow the official WordPress 7.1 release, WooCommerce 11.0.1 security release, WooCommerce PHP compatibility guidance, and `wp-env` source contract reviewed on 2026-08-29.
 
-Exact-head GitHub Actions run `31577312529` passed this pinned smoke matrix:
+The prior current matrix passed exact-head GitHub Actions run `31577312529`. The refreshed current cells remain candidate evidence until both exact-head jobs hash-check the reviewed downloads, start successfully, assert the running WordPress, WooCommerce, and PHP versions, and pass:
 
 | WordPress | WooCommerce | PHP | Order storage |
 | --------- | ----------- | --- | ------------- |
 | 6.6.5     | 9.0.2       | 8.1 | HPOS          |
 | 6.6.5     | 9.0.2       | 8.1 | Legacy        |
-| 7.0.2     | 10.9.4      | 8.3 | HPOS          |
-| 7.0.2     | 10.9.4      | 8.3 | Legacy        |
+| 7.1       | 11.0.1      | 8.4 | HPOS          |
+| 7.1       | 11.0.1      | 8.4 | Legacy        |
 
 Every case activates, deactivates, and reactivates the English-only plugin; creates a customer-bound native coupon; applies it through both the classic cart and the Cart/Checkout Blocks Store API controller while a configured hub is unreachable; proves zero checkout HTTP calls; completes and round-trips an order; captures coupon use without PII; creates partial and final refunds; reconciles without duplicates; refuses release of a used coupon; exhausts one local delivery into dead letter; and restores it through the operator retry path. Strict contracts, PHP syntax, package layout, signed delivery/command behavior, worker retries, tenant isolation, immutable ledger effects, and pgTAP assertions run alongside it.
 

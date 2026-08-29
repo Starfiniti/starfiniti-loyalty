@@ -6,7 +6,7 @@
  * Requires at least: 6.6
  * Requires PHP: 8.1
  * WC requires at least: 9.0
- * WC tested up to: 10.9
+ * WC tested up to: 11.0
  * License: GPL-2.0-or-later
  * Text Domain: starfiniti-loyalty
  * Domain Path: /languages

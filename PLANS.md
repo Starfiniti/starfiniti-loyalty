@@ -1,15 +1,29 @@
 # Execution Plan
 
-ADR-0100 is the next safe M16 provider/dependency slice. It refreshes all four
+ADR-0101 is the active safe M16 compatibility slice. It pins the disposable
+current matrix to WordPress 7.1, WooCommerce 11.0.1, and PHP 8.4 in HPOS and
+legacy modes while preserving the minimum cells and the prior current versions
+as rollback facts. The network-free validator binds exact official artifacts,
+release sources, workflow cells, compatibility headers, task acceptance, and
+false production authority. Linux CI additionally checks artifact bytes before
+startup and asserts the running versions. Fresh exact-head Linux runtime proof is next; a real
+store upgrade rehearsal, owner approval, deployment, observation, and
+reconciliation remain later production gates. No production mutation or score
+increase is authorized.
+
+ADR-0100 is the preceding safe M16 provider/dependency slice. It refreshes all four
 dashboard/worker Node stages from the immutable Node 24.19.0 image index to the
 official Node 24.20.0 LTS index after exact source and Registry review. The new
 network-free validator binds the official-source snapshot, release, image index,
 linux/amd64 manifest, image configuration, Dockerfile stage set, impact owner,
 rollback index, and false production authority. The focused and complete local
 gates pass with 995 tests, all validators, both production builds, static
-migration/pgTAP validation, secret scanning, audit, and licences; fresh
-exact-head Linux image scans are next. No release, deployment, restart,
-production mutation, or score increase is authorized.
+migration/pgTAP validation, secret scanning, audit, and licences. Exact head
+`d2c347a` subsequently passed CI `33257511194`, Security `33257511192`, and
+external CodeQL with all twelve checks green, including fresh images, SBOMs,
+Trivy, DAST, database, and WooCommerce evidence. Release deployment, rollback
+observation, and production reconciliation remain open. No release, deployment,
+restart, production mutation, or score increase is authorized.
 
 ADR-0099 is the current exact-head security correction. CI run `33254530487`
 passed at `e71e62d`, but Security run `33254530449` failed closed with three raw

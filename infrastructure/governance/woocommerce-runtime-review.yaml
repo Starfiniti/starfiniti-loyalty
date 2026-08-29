@@ -1,0 +1,65 @@
+schema: starfiniti.woocommerce-runtime-review.v1
+reviewedAt: 2026-08-29
+officialSources:
+  wordpressRelease: https://wordpress.org/news/2026/08/mary-lou/
+  wordpressArtifactBase: https://wordpress.org/
+  woocommerceChangelog: https://developer.woocommerce.com/changelog/
+  woocommerceRelease: https://developer.woocommerce.com/2026/08/10/woocommerce-11-0-1-release-notes/
+  woocommerceArtifactBase: https://downloads.wordpress.org/plugin/
+  phpCompatibility: https://woocommerce.com/document/server-requirements/
+sourceSnapshot:
+  path: docs/plan/evidence/M16/runs/provider-source-snapshot-257e99c-2026-08-28T212100Z.json
+  fileSha256: 5786186426b065493f5c01b5d76742322e2e8ed3fe92b8f80c30d787caa516be
+  providerId: woocommerce
+  observedAt: 2026-08-28T21:20:37Z
+  bytes: 225526
+  contentSha256: 0aaa1bfb692bc298d38b0d11edc7fed2a9b67348a37866b11d28e08393052caa
+previous:
+  wordpress:
+    version: 7.0.2
+    url: https://wordpress.org/wordpress-7.0.2.zip
+    bytes: 31435175
+    sha256: a616580ed2152ae71d81439884b4bcda329c5322f9bd2092ac7a3a68dbcea7a7
+  woocommerce:
+    version: 10.9.4
+    url: https://downloads.wordpress.org/plugin/woocommerce.10.9.4.zip
+    bytes: 20545768
+    sha256: 6e58fc3ba9b18d1c9aee6b0227d3c3c09e4fe2c1332823bd2e0ac54ffcff64a9
+  phpMinor: "8.3"
+candidate:
+  wordpress:
+    version: "7.1"
+    releasedAt: 2026-08-19
+    url: https://wordpress.org/wordpress-7.1.zip
+    bytes: 37216004
+    sha256: d1ae02b5ae18428031ffc3943659fa87ab361d827f4aa804adf9276e4dc75df6
+  woocommerce:
+    version: 11.0.1
+    releasedAt: 2026-08-10
+    securityUpdate: true
+    databaseUpdate: false
+    url: https://downloads.wordpress.org/plugin/woocommerce.11.0.1.zip
+    bytes: 20218895
+    sha256: da189b6616c610d15a2106f93151dab81b78f83e075bcefce221ac0d00b4fa21
+  phpMinor: "8.4"
+matrix:
+  config: .wp-env.woocommerce.json
+  storageModes: [hpos, legacy]
+  workflow: .github/workflows/ci.yml
+  pluginMain: plugins/woocommerce/starfiniti-loyalty.php
+  pluginReadme: plugins/woocommerce/readme.txt
+impact:
+  classification: security-and-current-compatibility
+  securityRelevant: true
+  breakingChangeIdentified: false
+  affectedModules: [M01, M04, M09, M15, M16]
+  owner: engineering
+  disposition: refresh-disposable-current-matrix
+  rationale: WordPress 7.1 is the current stable release and WooCommerce 11.0.1 is the current stable security update; the candidate changes only disposable compatibility evidence and plugin declarations until an approved release is deployed.
+production:
+  access: false
+  mutation: false
+  storeUpgradeApproved: false
+  rollbackWordPressVersion: 7.0.2
+  rollbackWooCommerceVersion: 10.9.4
+  remainingGate: Exact-head HPOS and legacy runtime cells, the complete release matrix, a real pilot-store upgrade rehearsal, owner approval, deployment, observation, and reconciliation remain required.

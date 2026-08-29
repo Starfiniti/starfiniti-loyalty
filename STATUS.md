@@ -1,5 +1,18 @@
 # Status
 
+- ADR-0101 refreshes only the disposable current WooCommerce compatibility
+  matrix after official stable-release review: WordPress 7.1, WooCommerce 11.0.1,
+  and PHP 8.4 now run in both HPOS and legacy cells; the minimum WordPress 6.6.5,
+  WooCommerce 9.0.2, and PHP 8.1 cells are unchanged. Exact downloaded artifact
+  sizes and SHA-256 values, official sources, prior rollback versions, workflow
+  cells, plugin headers, task acceptance, and false production authority are
+  enforced by a network-free validator with fourteen adversarial corruptions;
+  Linux CI separately hash-checks reviewed downloads before startup and asserts
+  the running WordPress, WooCommerce, and PHP versions.
+  Fresh exact-head Linux cells remain required. No production store, plugin,
+  VM, database, checkout path, or loyalty value was changed, and M16 remains
+  77/100.
+
 - ADR-0100 advances one concrete M16 dependency review without claiming a
   monthly close. The dashboard and worker build/runtime stages now replace the
   reviewed 2026-08-03 Node 24.19.0 index with the official 2026-08-27
@@ -12,8 +25,11 @@
   The focused validator and complete local `npm run check` gate pass with 995
   tests, all validators, and both production builds; static 87-migration/69-pgTAP
   validation, the 1,178-file secret scan, zero-vulnerability production audit,
-  and licence checks also pass. Exact-head Linux image builds, SBOM/Trivy/CodeQL,
-  release approval, deployment, and production observation remain pending;
+  and licence checks also pass. Exact implementation `d2c347a` then passed CI
+  `33257511194`, Security `33257511192`, and external CodeQL with all twelve
+  checks green; a digest-bound evidence record reconciles both images, SBOMs,
+  Trivy, CodeQL, DAST, database, concurrency, and runtime jobs. Release approval,
+  deployment, rollback observation, and production reconciliation remain pending;
   production and the 83/100 candidate score are unchanged.
 
 - ADR-0099 corrects the attribution and parser boundary after exact candidate

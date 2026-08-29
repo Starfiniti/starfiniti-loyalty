@@ -1,5 +1,7 @@
 # Changelog
 
+- Added ADR-0101 and a fail-closed current WordPress/WooCommerce compatibility review. The disposable current matrix now uses versioned WordPress 7.1 and WooCommerce 11.0.1 URLs on PHP 8.4 in both HPOS and legacy modes, while the WordPress 6.6.5/WooCommerce 9.0.2/PHP 8.1 minimum remains unchanged. A network-free validator binds official sources, artifact byte sizes and SHA-256 values, prior rollback versions, all four workflow cells, plugin compatibility headers, task evidence, and false production access/mutation/upgrade authority through fourteen corruptions. Linux CI separately hash-checks the reviewed downloads before startup and asserts the running WordPress, WooCommerce, and PHP versions. Fresh exact-head runtime evidence remains pending; no production store, VM, database, checkout path, or loyalty value changed, and M16 remains 77/100.
+
 - Added ADR-0100 and an exact Node 24 LTS runtime refresh. Both dashboard and
   worker build/runtime stages move from the immutable 2026-08-03 Node 24.19.0
   index to the official 2026-08-27 Node 24.20.0 index. The M16 review binds the
@@ -8,8 +10,11 @@
   network-free validator rejects ten source, digest, mutable-tag, partial-stage,
   rollback, engine, and authority corruptions. The complete 995-test local gate,
   static migration/pgTAP validation, secret scan, zero-vulnerability audit, and
-  licence checks pass. Exact-head image build/scan evidence is still required,
-  and production is unchanged.
+  licence checks pass. Exact head `d2c347a` passed CI `33257511194`, Security
+  `33257511192`, and external CodeQL with all twelve checks green; the immutable
+  evidence record binds fresh images, SBOMs, Trivy, CodeQL, DAST, database,
+  concurrency, and WooCommerce jobs. Release deployment, rollback observation,
+  and production reconciliation remain open, and production is unchanged.
 
 - Added ADR-0099 after exact candidate `e71e62d` passed CI but the raw CodeQL
   artifact proved three findings remained. The minimizer now resolves rules from
