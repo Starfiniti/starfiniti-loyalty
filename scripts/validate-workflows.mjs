@@ -619,6 +619,9 @@ requireCondition(
       (step) => step.run === "npm run proxmox-security:packages:validate",
     ) &&
     recoveryTransportSteps.some(
+      (step) => step.run === "npm run proxmox-security:preflight:validate",
+    ) &&
+    recoveryTransportSteps.some(
       (step) =>
         step.name ===
           "Run disposable no-install Proxmox package provenance canary" &&
@@ -626,7 +629,7 @@ requireCondition(
         step.run ===
           "npm run proxmox-security:packages:run -- --out dist/proxmox-security-packages/ci.json",
     ),
-  `${securityWorkflowPath}: recovery transport and Proxmox package provenance must validate and execute their exact disposable plans`,
+  `${securityWorkflowPath}: recovery transport, Proxmox package provenance, and route-free read-only preflight must validate while disposable plans execute`,
 );
 requireCondition(
   recoveryTransportSteps.some(

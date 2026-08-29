@@ -1,3 +1,5 @@
 docs/plan/evidence/M16/runs/provider-source-snapshot-*.json -text
 docs/plan/evidence/M16/runs/recovery-dependency-snapshot-*.json -text
 docs/plan/evidence/M16/runs/proxmox-security-package-canary-*.json -text
+docs/plan/evidence/M16/runs/proxmox-security-preflight-*.json -text
+infrastructure/testing/proxmox-security-preflight/collect-facts.py text eol=lf

@@ -1,0 +1,83 @@
+schema: starfiniti.proxmox-security-preflight-plan.v1
+version: 1
+status: candidate
+createdAt: 2026-08-29T01:15:00Z
+candidate:
+  path: infrastructure/governance/proxmox-security-update-plan.yaml
+  fileSha256: ec010eb667d6166ee5adc0ee0cd2d6ecdf5b2a114e345b018b51c704d64df075
+  provenanceSha256: 39f30c67a374b041944a598ce2334fed3fcb8e5f64264b3db08847d5ee23ff9f
+packageCanary:
+  path: docs/plan/evidence/M16/runs/proxmox-security-package-canary-957e1de-2026-08-29T003101Z.json
+  fileSha256: 3eec19512a6b2535cf0c6359144c1807b78e01015f43c470ad53335c6eb1090e
+  reportSha256: 0b703cc553f2304de75f28160e7482b09718794205efa7615fb39f2eab0f0382
+  generatedAt: 2026-08-29T00:31:01Z
+collector:
+  path: infrastructure/testing/proxmox-security-preflight/collect-facts.py
+  fileSha256: 8aebe8bcd03212dc545a3edef0c138281e9ac74b23bce2358dd5994ab491c0b7
+  endpointId: proxmox-host
+  transport: operator-supplied-stdin-over-approved-session
+  routeInput: prohibited
+  credentialInput: prohibited
+  effectiveUid: 0
+  pythonIsolation: required
+  maximumDurationSeconds: 90
+  maximumFactBytes: 65536
+  maximumFactAgeSeconds: 300
+  networkNamespace: isolated-empty
+  packageRefresh: prohibited
+  packageDownload: prohibited
+  packageInstallation: prohibited
+  repositoryChange: prohibited
+  serviceControl: prohibited
+  reboot: prohibited
+expectedStartingState:
+  architecture: amd64
+  pveVersion: "pve-manager/9.2.3/d0fde103346cf89a (running kernel: 7.0.6-2-pve)"
+  runningKernel: 7.0.6-2-pve
+  runningKernelPackage:
+    id: proxmox-kernel-7.0.6-2-pve-signed
+    version: 7.0.6-2
+    architecture: amd64
+  exactSourceIndexes:
+    - id: debian-trixie
+      packagesSha256: be70297f6ea499e8ef0bd93906719298c795bc3dc4ce72560f13e6c9836bfedb
+    - id: proxmox-trixie-no-subscription
+      packagesSha256: e3675a92287d0a77e15f1ca512fa95ca56564624eff7d4164f2bd91f3cd091c7
+  exactTools:
+    - id: python3
+      sha256: 4703a3d15898c0b5d81c3f939e93bdd8ca6116342093fb160ab1e01860dd7d8b
+    - id: apt-get
+      sha256: 67072be139e90c73ed25007ac92f0525909a7c6d6829aecc2ceff86f9568f98b
+    - id: apt-mark
+      sha256: 96f78bd8d768767f4ef78d85545f4e29d50a4754a658437e92d649ae4259c08d
+    - id: dpkg
+      sha256: 0a20f6015fbb7c011571f3ed227a138b12ce282e46b7fdfc239558bc5a7bc9e5
+    - id: dpkg-query
+      sha256: 095817337215129933918cacae5fd62e86202fe238591bea207a75b73561e8c5
+    - id: unshare
+      sha256: d82900dfd64b5dd01493d206236575623c2dcf306c466dbe127e171c18cb4614
+    - id: pveversion
+      sha256: da231e9b2c17f265fd910ef524e77648c98c22e9220a8df9a4dbe32b7e7aff55
+  relevantHolds: []
+simulation:
+  command: apt-get --simulate --no-remove install
+  downloadPrevention: apt-simulation-inside-empty-network-namespace
+  selectorsSha256: 2502fcc4037d72d2ec024972e4115e2d258aa43fd101267228e305330c8d20cd
+  expectedUpgrades: 11
+  expectedInstalls: 1
+  expectedRemovals: 0
+  expectedConfigurations: 12
+  expectedNotUpgraded: 95
+  autoremovablePackagesToRetain:
+    - proxmox-kernel-7.0.6-2-pve-signed
+gates:
+  candidatePackageBytesVerified: true
+  repositoryToolSignatureReverified: true
+  candidateDependencySimulationReverified: false
+  installedStartingStateReverified: false
+  compatibilityProved: false
+  rollbackEscrowComplete: false
+  recoveryReady: false
+  maintenanceApproved: false
+  rebootApproved: false
+  productionMutation: false

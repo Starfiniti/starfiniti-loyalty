@@ -45,6 +45,7 @@ From a clean candidate checkout:
 ```sh
 npm run proxmox-security:update:validate
 npm run proxmox-security:packages:validate
+npm run proxmox-security:preflight:validate
 npm run recovery-transport:validate
 npm run recovery:validate
 ```
@@ -68,15 +69,38 @@ Its file SHA-256 is
 Reverify it independently with
 `node scripts/validate-proxmox-security-package-canary.mjs --verify-report <absolute-path>`.
 
+ADR-0088 adds a route-free repository contract for the two next read-only
+production gates. The repository tool never opens SSH or accepts endpoint or
+credential input. An authorized operator transmits the exact committed
+`infrastructure/testing/proxmox-security-preflight/collect-facts.py` bytes over
+an existing approved session, captures its bounded JSON stdout outside Git, and
+runs:
+
+```sh
+npm run proxmox-security:preflight:capture -- --facts <absolute-facts-path>
+```
+
+The collector requires root for authoritative package configuration, creates an
+empty network namespace, and runs only `apt-get --simulate --no-remove` with the
+twelve exact validator-bound versions. It does not use `--no-download`: Apt
+rejects uncached archives when that option is combined with simulation, while
+simulation itself performs no acquisition and the empty namespace makes network
+access impossible. It requires byte-identical dpkg status/selections/updates,
+APT lists/archives, and repository configuration before and after. It also
+records that the running prior kernel package is currently autoremovable; this
+is an explicit instruction to retain it, never permission to run `autoremove`.
+
 ## Phase 2 — Production preflight (read-only unless separately approved)
 
 The operator must independently record and compare, outside Git:
 
-1. Exact installed package versions and running kernel against the V1 start
-   state.
+1. Reverify the ADR-0088 minimized report: exact installed package versions,
+   running kernel/provider package, retained recovery packages, relevant holds,
+   candidate-resolving signed-index digests, and byte-identical state before and
+   after the isolated simulation.
 2. Exact enabled repository identities and successful signature verification.
 3. A fresh package dependency simulation with exactly eleven upgrades, one new
-   package, and zero removals.
+   package, zero removals, zero downgrades, and twelve configurations.
 4. Active VM/container inventory and the host consumers of rsync, BorgBackup,
    OpenSSH, QEMU, storage, HA, and container tooling.
 5. Current host configuration backup and package-status inventory.

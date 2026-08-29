@@ -165,6 +165,8 @@ jobs:
         run: npm run recovery-transport:validate
       - name: Validate exact Proxmox package provenance plan
         run: npm run proxmox-security:packages:validate
+      - name: Validate route-free read-only Proxmox preflight contract
+        run: npm run proxmox-security:preflight:validate
       - name: Run disposable no-install Proxmox package provenance canary
         env:
           STARFINITI_CANARY_RUNNER: github-hosted

@@ -5,3 +5,4 @@ coverage
 docs/design/prototype-source
 package-lock.json
 docs/plan/evidence/M16/runs/proxmox-security-package-canary-*.json
+docs/plan/evidence/M16/runs/proxmox-security-preflight-*.json
