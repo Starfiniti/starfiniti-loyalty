@@ -1,5 +1,16 @@
 # Changelog
 
+- Added ADR-0107 and a cutoff-bound M16 provider-impact register. The register
+  binds the immutable thirteen-source and six-provider installed snapshots,
+  classifies every canonical entry as two Critical, five High, three Medium,
+  and three Low, assigns engineering dispositions, and records
+  provider-specific rollback. A root-gated network- and SSH-free validator
+  rejects forty-six snapshot, catalogue, pin, candidate, evidence, task, ADR,
+  and false-authority corruptions. Unknown state remains blocking, automatic
+  upgrades remain prohibited, and the elapsed monthly review, acceptance,
+  approvals, deployment, production mutation, and reconciliation remain
+  incomplete. M16 and product scores are unchanged.
+
 - Added ADR-0106 and refreshed only the reviewed federation/notification
   untrusted-input patch set: exact `fast-xml-parser` 5.11.1, Nodemailer 9.0.6,
   and test-only `smtp-server` 3.19.4 pins with Git/npm provenance and coherent

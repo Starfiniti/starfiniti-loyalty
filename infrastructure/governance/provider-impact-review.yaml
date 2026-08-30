@@ -1,0 +1,387 @@
+# Engineering classification only; all production authority remains false.
+schema: starfiniti.provider-impact-review.v1
+reviewedAt: 2026-08-30
+reviewCutoff: 2026-08-28T21:20:42Z
+owner: engineering
+inputs:
+  sourceSnapshot:
+    path: docs/plan/evidence/M16/runs/provider-source-snapshot-257e99c-2026-08-28T212100Z.json
+    sha256: 5786186426b065493f5c01b5d76742322e2e8ed3fe92b8f80c30d787caa516be
+  installedSnapshot:
+    path: docs/plan/evidence/M16/runs/recovery-dependency-snapshot-c5678b6-2026-08-28T221524Z.json
+    sha256: 9960e01bea1a66856a2e0ed36493b28e183f5e316ce027fef3534ba5043448f7
+rules:
+  providerCount: 13
+  sourceCoverageComplete: true
+  entryImpactClassified: true
+  installedRecoveryCoverageComplete: true
+  unknownInstalledStateBlocksAcceptance: true
+  automaticUpgradeAllowed: false
+  monthlyReviewComplete: false
+  independentReviewComplete: false
+  ownerApprovalComplete: false
+providers:
+  - id: supabase
+    reviewedThrough: self-hosted/v0.8.0 and official changelog through the review cutoff
+    observedState: self-hosted/v0.8.0; postgres=17.6.1.136; cli=2.116.0; supabase-js=2.112.4; ssr=0.12.5
+    candidateState: Current reviewed repository baseline; no later self-hosted candidate is selected.
+    impact:
+      classification: compatible-current-baseline
+      severity: medium
+      securityRelevant: true
+      affectedModules: [M01, M11, M13, M15, M16]
+      riskIds: [R-003, R-055, R-061]
+      owner: engineering
+      disposition: retain-pinned-baseline-and-rehearse-next-self-hosted-release
+      rationale: The exact v0.8.0 platform and current client/toolchain already cover the Envoy, Auth URL, PostgreSQL 17, Studio ownership, and explicit Data API grant changes; a future platform tag still requires an exact upgrade and restore rehearsal.
+      rollback: Preserve the exact v0.8.0 Compose assets and image identities; never restore implicit Data API grants or an unverified platform image.
+    evidence:
+      - infrastructure/environments/proxmox/supabase-compatibility.json
+      - infrastructure/governance/supabase-runtime-review.yaml
+      - docs/architecture/ADR/0081-fail-closed-self-hosted-supabase-compatibility.md
+      - docs/architecture/ADR/0103-reviewed-supabase-client-toolchain-refresh.md
+    remainingGates:
+      [
+        studio-recreation-smoke,
+        future-exact-upgrade-rehearsal,
+        clean-room-recovery,
+        owner-approval,
+      ]
+  - id: postgresql
+    reviewedThrough: PostgreSQL 17.11 released 2026-08-13
+    observedState: Supabase platform image supabase/postgres:17.6.1.136 on supported PostgreSQL major 17.
+    candidateState: No independently approved image; the next candidate must remain an official Supabase-compatible bundle.
+    impact:
+      classification: supported-major-with-upstream-minor-lag
+      severity: medium
+      securityRelevant: true
+      affectedModules: [M01, M15, M16]
+      riskIds: [R-003, R-021, R-055]
+      owner: engineering
+      disposition: do-not-decouple-postgres-image-from-supabase-release
+      rationale: PostgreSQL recommends the current minor, but replacing only the database image would break the exact self-hosted platform contract; track an official compatible Supabase image and rehearse it with extensions, migrations, RLS, WAL, and restore.
+      rollback: Retain the exact current database image and data/WAL recovery chain until a platform-bound candidate has passed forward upgrade and clean restore.
+    evidence:
+      - infrastructure/environments/proxmox/supabase-compatibility.json
+      - docs/architecture/ADR/0081-fail-closed-self-hosted-supabase-compatibility.md
+    remainingGates:
+      [
+        official-compatible-image,
+        extension-review,
+        exact-upgrade-rehearsal,
+        clean-room-recovery,
+        owner-approval,
+      ]
+  - id: woocommerce
+    reviewedThrough: WooCommerce 11.0.1 stable security release
+    observedState: Disposable current matrix pins WordPress 7.1, WooCommerce 11.0.1, and PHP 8.4 in HPOS and legacy modes.
+    candidateState: Exact current artifacts passed the connector matrix; production pilot-store version and upgrade evidence remain external.
+    impact:
+      classification: current-security-compatibility-matrix
+      severity: low
+      securityRelevant: true
+      affectedModules: [M01, M04, M09, M15, M16]
+      riskIds: [R-008, R-062]
+      owner: engineering
+      disposition: retain-current-matrix-and-rehearse-real-pilot-upgrade
+      rationale: The current stable security release is covered by exact artifact and runtime evidence without changing a merchant store.
+      rollback: Keep the prior WordPress 7.0.2, WooCommerce 10.9.4, and PHP 8.3 current-cell identities available only for a supervised compatibility rollback.
+    evidence:
+      - infrastructure/governance/woocommerce-runtime-review.yaml
+      - docs/architecture/ADR/0101-current-wordpress-woocommerce-compatibility-matrix.md
+      - docs/architecture/ADR/0105-tag-derived-woocommerce-release-version.md
+    remainingGates:
+      [
+        full-supported-matrix,
+        real-pilot-store,
+        release-package,
+        upgrade-observation,
+        owner-approval,
+      ]
+  - id: stripe
+    reviewedThrough: Stripe API 2026-08-26.dahlia
+    observedState: Managed billing code pins 2026-02-25.clover for Checkout, Billing Portal, and meter event requests; no live managed billing credentials are present.
+    candidateState: The latest reviewed Dahlia changes on the used Billing and Checkout surfaces appear additive, but the complete Clover-to-Dahlia change range, contracts, and replay behavior have not been verified.
+    impact:
+      classification: managed-billing-api-version-review-required
+      severity: medium
+      securityRelevant: true
+      affectedModules: [M02, M14, M15, M16]
+      riskIds: []
+      owner: engineering
+      disposition: retain-clover-until-dahlia-contract-and-test-clock-canary
+      rationale: A newer API date alone is not upgrade authority; billing value preservation requires exact webhook replay, out-of-order, test-clock, portal, checkout, and usage reconciliation evidence.
+      rollback: Keep the versioned Clover request/response fixtures and do not change stored Stripe object references or entitlement history during an API-date rollback.
+    evidence:
+      - apps/dashboard/lib/server/stripe-billing-sessions.ts
+      - apps/worker/src/billing-usage.ts
+      - docs/architecture/ADR/0056-database-authoritative-managed-billing-mirror.md
+    remainingGates:
+      [
+        exact-dahlia-contract-diff,
+        stripe-test-credentials,
+        webhook-replay,
+        test-clock-canary,
+        owner-approval,
+      ]
+  - id: authentik
+    reviewedThrough: authentik 2026.8 release line
+    observedState: The broker is reachable, but its exact deployed runtime version is absent from minimized repository evidence.
+    candidateState: The 2026.8 line includes OIDC, session-revocation, SAML, and SCIM fixes plus documented breaking and deprecation changes.
+    impact:
+      classification: installed-version-unknown-blocks-upgrade-decision
+      severity: high
+      securityRelevant: true
+      affectedModules: [M01, M13, M15, M16]
+      riskIds: [R-029, R-044, R-048]
+      owner: engineering
+      disposition: capture-version-then-test-current-patch-oidc-saml-scim
+      rationale: Public reachability cannot establish patch level; version capture and configuration export must precede any broker change or tenant SSO/SCIM production claim.
+      rollback: Preserve the current broker database, configuration export, signing material, local break-glass path, and Supabase callback contract before changing the image.
+    evidence:
+      - docs/operations/DEPLOYMENT.md
+      - docs/operations/TENANT_FEDERATION.md
+      - docs/architecture/ADR/0008-broker-workforce-authentik-through-supabase-auth.md
+      - docs/architecture/ADR/0054-authentik-correlated-scim-and-live-membership-reconciliation.md
+    remainingGates:
+      [
+        minimized-runtime-version,
+        configuration-export,
+        oidc-saml-scim-fixtures,
+        deprovisioning-canary,
+        recovery,
+        owner-approval,
+      ]
+  - id: klaviyo
+    reviewedThrough: Klaviyo API revision 2026-07-15 GA
+    observedState: Worker and public contract pin revision 2026-07-15; no managed Klaviyo credential or live send is present.
+    candidateState: The repository pin equals the current GA revision through the review cutoff.
+    impact:
+      classification: exact-current-revision-not-production-enabled
+      severity: low
+      securityRelevant: true
+      affectedModules: [M08, M15, M16]
+      riskIds: []
+      owner: engineering
+      disposition: retain-exact-revision-and-run-consent-aware-canary
+      rationale: No API-date change is needed; the remaining risk is credential, consent, suppression, retry, and minimized-payload behavior in a real provider environment.
+      rollback: Disable the provider tenant flag and preserve provider-neutral events, SMTP transactional delivery, and signed webhook escape paths.
+    evidence:
+      - apps/worker/src/klaviyo-delivery.ts
+      - packages/contracts/src/notification.ts
+      - docs/architecture/ADR/0033-tenant-bound-klaviyo-projection-and-consent-sync.md
+    remainingGates:
+      [
+        klaviyo-credentials,
+        consent-suppression-canary,
+        provider-outage,
+        reconciliation,
+        owner-approval,
+      ]
+  - id: nodejs
+    reviewedThrough: Node.js 24.20.0 LTS
+    observedState: Both candidate images resolve Node.js 24.20.0 with exact index, platform manifest, and configuration digests.
+    candidateState: Current LTS candidate passed build, SBOM, vulnerability, application, database, and connector gates.
+    impact:
+      classification: current-maintenance-lts
+      severity: low
+      securityRelevant: true
+      affectedModules: [M15, M16]
+      riskIds: []
+      owner: engineering
+      disposition: retain-exact-image-index-and-deploy-only-through-release-gate
+      rationale: The repository runtime is current and compatible; production remains on the prior release until the complete release chain is approved.
+      rollback: Preserve the prior exact Node 24.19.0 image index and never roll back application security fixes independently.
+    evidence:
+      - infrastructure/governance/node-runtime-review.yaml
+      - docs/architecture/ADR/0100-reviewed-node-24-lts-runtime-refresh.md
+    remainingGates:
+      [
+        merge-approval,
+        release-approval,
+        deployment-observation,
+        production-reconciliation,
+      ]
+  - id: rsync
+    reviewedThrough: rsync 3.5.0 security release
+    observedState: Proxmox host runs 3.4.1+ds1-5+deb13u3 and database guest runs 3.2.7-1ubuntu1.5.
+    candidateState: Exact signed-source 3.5.0 side-by-side native builds are digest locked for both endpoints.
+    impact:
+      classification: critical-recovery-transport-upgrade-required
+      severity: critical
+      securityRelevant: true
+      affectedModules: [M01, M15, M16]
+      riskIds: [R-004, R-033, R-052]
+      owner: engineering
+      disposition: activate-only-after-escrow-real-provider-and-restore-proof
+      rationale: Both production endpoints predate directly applicable 3.5 security fixes; the candidate avoids the rejected global libacl cross-suite mutation but still crosses a privileged recovery boundary.
+      rollback: Preserve distribution binaries and native ACL libraries; selector rollback is supervised and cannot bypass the 3.5 confinement gate.
+    evidence:
+      - infrastructure/testing/rsync-source-security/plan.yaml
+      - infrastructure/governance/recovery-artifact-escrow-v3.yaml
+      - docs/architecture/ADR/0095-side-by-side-rsync-source-candidate.md
+      - docs/architecture/ADR/0096-native-rsync-recovery-artifact-escrow.md
+    remainingGates:
+      [
+        private-escrow,
+        independent-review,
+        forced-command,
+        manual-and-timer-archives,
+        monitoring,
+        isolated-restore,
+        owner-approval,
+      ]
+  - id: borgbackup
+    reviewedThrough: BorgBackup 1.4.5 released 2026-07-19
+    observedState: Proxmox host runs affected Debian borgbackup 1.4.0-5.
+    candidateState: Exact upstream-signed side-by-side 1.4.5 executable and current/candidate compatibility artifact are digest bound.
+    impact:
+      classification: high-recovery-client-upgrade-required
+      severity: high
+      securityRelevant: true
+      affectedModules: [M01, M15, M16]
+      riskIds: [R-004, R-048]
+      owner: engineering
+      disposition: activate-only-after-escrow-real-repository-and-restore-proof
+      rationale: The installed client is affected by CVE-2026-62268; synthetic compatibility does not prove the real remote repository, timers, maintenance, or recovery.
+      rollback: Preserve the Debian package, repositories, archives, cache/security state, and exact selector; pause affected timers on ambiguous behavior.
+    evidence:
+      - infrastructure/testing/borgbackup-security/plan.yaml
+      - docs/plan/evidence/M16/borgbackup-security.yaml
+      - docs/architecture/ADR/0091-signed-borgbackup-security-candidate.md
+    remainingGates:
+      [
+        private-escrow,
+        independent-review,
+        real-repository,
+        manual-timer-maintenance,
+        monitoring,
+        isolated-restore,
+        owner-approval,
+      ]
+  - id: openssh
+    reviewedThrough: OpenSSH Portable 10.5p1
+    observedState: Host client/server are 10.0p1 Debian packages and guest client/server are 9.6p1 Ubuntu packages.
+    candidateState: Exact upstream-signed side-by-side 10.5p1 client passed strict-host-key, public-key, forwarding-disabled, and forced-command synthetic checks.
+    impact:
+      classification: high-privileged-recovery-client-upgrade-required
+      severity: high
+      securityRelevant: true
+      affectedModules: [M01, M13, M15, M16]
+      riskIds: [R-004, R-044, R-048]
+      owner: engineering
+      disposition: replace-only-recovery-client-after-consumer-and-restore-proof
+      rationale: Only the recovery client is selected; both distribution daemons, host keys, known-host data, and server behavior remain untouched until every real consumer is proven.
+      rollback: Preserve both distribution daemons and the exact Debian client package; selector rollback pauses the affected recovery timer and never rewrites host identity.
+    evidence:
+      - infrastructure/testing/openssh-client-security/plan.yaml
+      - docs/plan/evidence/M16/openssh-client-security.yaml
+      - docs/architecture/ADR/0092-side-by-side-openssh-recovery-client.md
+    remainingGates:
+      [
+        private-escrow,
+        independent-review,
+        consumer-inventory,
+        real-provider,
+        monitoring,
+        isolated-restore,
+        owner-approval,
+      ]
+  - id: debian
+    reviewedThrough: Debian security index through the review cutoff
+    observedState: Proxmox host runs Debian 13 trixie with exact recovery packages and a dependency-complete Proxmox security candidate still undeployed.
+    candidateState: Recovery tools use side-by-side upstream candidates; host security repair uses exact signed Debian and Proxmox package metadata with zero removals.
+    impact:
+      classification: high-host-security-and-recovery-candidates-pending
+      severity: high
+      securityRelevant: true
+      affectedModules: [M01, M15, M16]
+      riskIds: [R-004, R-052, R-059]
+      owner: engineering
+      disposition: keep-native-packages-for-rollback-and-rehearse-exact-host-set
+      rationale: Repository provenance is proven, but real host compatibility, recovery, repository policy, installation, and reboot approval remain absent.
+      rollback: Retain current kernel and exact recovery-boundary packages plus configuration escrow; never allow automatic removal of the running rollback kernel.
+    evidence:
+      - infrastructure/governance/proxmox-security-update-plan.yaml
+      - infrastructure/testing/rsync-source-security/plan.yaml
+      - infrastructure/testing/borgbackup-security/plan.yaml
+      - infrastructure/testing/openssh-client-security/plan.yaml
+    remainingGates:
+      [
+        repository-policy,
+        physical-host-rehearsal,
+        recovery-escrow,
+        maintenance-approval,
+        reboot-approval,
+        owner-approval,
+      ]
+  - id: ubuntu
+    reviewedThrough: Ubuntu security notices through the review cutoff
+    observedState: Database guest runs Ubuntu 24.04.4 LTS with rsync 3.2.7-1ubuntu1.5 and OpenSSH 9.6p1-3ubuntu13.18.
+    candidateState: rsync 3.5.0 is selected side by side; the distribution OpenSSH server remains unchanged and is the compatibility target.
+    impact:
+      classification: high-guest-recovery-transport-candidate-pending
+      severity: high
+      securityRelevant: true
+      affectedModules: [M01, M15, M16]
+      riskIds: [R-004, R-048, R-052]
+      owner: engineering
+      disposition: preserve-server-and-activate-rsync-only-after-recovery-proof
+      rationale: The guest remains the privileged recovery sender; distro patch status does not substitute for the directly applicable rsync 3.5 confinement baseline or a real restore.
+      rollback: Preserve Ubuntu packages, sshd, keys, forced-command configuration, local base backups, and WAL while the off-site selector is paused or forward-fixed.
+    evidence:
+      - infrastructure/testing/rsync-source-security/plan.yaml
+      - infrastructure/testing/openssh-client-security/plan.yaml
+      - docs/architecture/ADR/0072-rsync-3-5-backup-transport-security-baseline.md
+    remainingGates:
+      [
+        private-escrow,
+        forced-command,
+        manual-and-timer-archives,
+        monitoring,
+        isolated-restore,
+        owner-approval,
+      ]
+  - id: proxmox
+    reviewedThrough: PSA-2026-00037-1, PSA-2026-00038-1, PSA-2026-00039-1, PSA-2026-00040-1, and PSA-2026-00042-1
+    observedState: Production pve-manager 9.2.3, qemu-server 9.1.16, pve-container 6.1.10, and running kernel 7.0.6-2 are below five fixed advisory floors.
+    candidateState: Exact twelve-package candidate has eleven upgrades, one signed-kernel install, zero removals, zero downgrades, and independently verified package bytes.
+    impact:
+      classification: critical-host-security-upgrade-required
+      severity: critical
+      securityRelevant: true
+      affectedModules: [M01, M15, M16]
+      riskIds: [R-004, R-048, R-059]
+      owner: engineering
+      disposition: execute-only-after-repository-policy-physical-rehearsal-and-recovery-approval
+      rationale: The current host is vulnerable; provenance and simulation do not prove candidate kernel boot, KVM/IOMMU, every guest profile, recovery, or post-reboot value reconciliation.
+      rollback: Retain the running prior kernel and exact packages/configuration in independent escrow; installation and reboot remain separate approvals.
+    evidence:
+      - infrastructure/governance/proxmox-security-update-plan.yaml
+      - docs/plan/evidence/M16/proxmox-security-review-2026-08-29.md
+      - docs/architecture/ADR/0090-isolated-whole-host-proxmox-compatibility-rehearsal.md
+    remainingGates:
+      [
+        repository-policy,
+        equivalent-physical-host-rehearsal,
+        recovery-escrow,
+        independent-review,
+        maintenance-approval,
+        reboot-approval,
+        post-change-reconciliation,
+      ]
+outcomes:
+  sourceReviewCoverage: complete
+  impactClassification: complete
+  candidateSelection: partial
+  deploymentReadiness: incomplete
+  monthlyReview: incomplete
+  limitation: This engineering classification binds all thirteen provider entries to one cutoff, but it is not an elapsed monthly review, independent approval, upgrade acceptance, deployment authorization, production mutation, or reconciliation record.
+authority:
+  productionAccess: false
+  mergeApproved: false
+  releaseApproved: false
+  deploymentApproved: false
+  providerUpgradeApproved: false
+  productionMutation: false
+  productionReconciled: false

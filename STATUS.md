@@ -1,5 +1,20 @@
 # Status
 
+- ADR-0107 adds one fail-closed provider-impact register across all thirteen
+  canonical M16 sources. It binds the exact 6,534-byte source and 8,813-byte
+  installed-state snapshots, records two Critical, five High, three Medium,
+  and three Low classifications, and requires unknown installed state to block
+  acceptance. The canonical decision digest is
+  `ee97ed58f003c8148a19b1e6afc5683bbc9c5b9652b6b43fc55dfd5647667645`;
+  the focused validator passes and rejects forty-six corruptions without
+  network or SSH access. Authentik's exact deployed version remains unknown;
+  PostgreSQL remains coupled to the reviewed Supabase platform image; Stripe
+  remains on Clover pending a complete Dahlia comparison and canary. No
+  candidate, automatic upgrade, merge, release, deployment, production
+  mutation, or reconciliation is approved. The monthly provider check remains
+  pending, M16 stays 77/100, the candidate stays 83/100, and production stays
+  54/100 and unchanged.
+
 - ADR-0106 refreshes a bounded untrusted-input patch set without broad
   dependency churn. `fast-xml-parser` 5.11.1, Nodemailer 9.0.6, and the
   test-only `smtp-server` 3.19.4 are exact-pinned to reviewed Git commits and

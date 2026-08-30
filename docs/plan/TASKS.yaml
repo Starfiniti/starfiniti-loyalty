@@ -3660,6 +3660,7 @@ tasks:
       [
         two distinct consecutive UTC monthly reviews cover activation errors support reconciliation fraud campaigns churn usability performance security billing providers backlog and module scores,
         every Supabase PostgreSQL WooCommerce Stripe Authentik Klaviyo Node.js rsync BorgBackup OpenSSH Debian Ubuntu and Proxmox official source is reviewed through the same cutoff with installed evidence for every required endpoint candidate provenance or dated entry impact owner and disposition,
+        one cutoff-bound thirteen-entry engineering register composes the immutable source and installed snapshots with current repository pins candidate facts affected modules risk links rollback and remaining gates while unknown state monthly cadence independent review every approval and production authority remain explicitly incomplete or false,
         an exact clean-commit metadata-only snapshot binds bounded streamed SHA-256 evidence for all thirteen official sources without retaining provider content or asserting review impact installed evidence or approval,
         a separate exact clean-commit installed-state snapshot binds both opaque recovery endpoints all six recovery providers public versions and exact executable provenance without retaining SSH routes command output identifiers or asserting candidate review impact approval or mutation,
         the installed BorgBackup impact review selects one exact upstream-signed fixed candidate without mixing Debian suites while a digest-bound disposable build and networkless current/candidate client/server canary preserve the exact Debian rollback client and prohibit production authority,
@@ -3699,6 +3700,7 @@ tasks:
         npm run continuous-improvement:next-runtime:validate,
         npm run continuous-improvement:supabase-runtime:validate,
         npm run continuous-improvement:dependency-patches:validate,
+        npm run continuous-improvement:provider-impact:validate,
         clean-head dual-endpoint installed-state capture and independent snapshot verification,
         npm run rsync-source-security:validate,
         bootstrap native endpoint digest discovery followed by an exact digest-locked internal-network current-host and candidate-host to candidate-guest compatibility artifact with signed-source safe-tree distribution-path native-libacl and exact teardown proof,
@@ -3776,6 +3778,7 @@ tasks:
         docs/architecture/ADR/0102-nextjs-16-3-3-critical-security-update.md,
         docs/architecture/ADR/0103-reviewed-supabase-client-toolchain-refresh.md,
         docs/architecture/ADR/0106-reviewed-notification-and-federation-dependency-patches.md,
+        docs/architecture/ADR/0107-cutoff-bound-provider-impact-register.md,
         infrastructure/governance/recovery-artifact-escrow-v3.yaml,
       ]
     evidence:
@@ -3845,6 +3848,8 @@ tasks:
         scripts/validate-supabase-runtime-review.mjs,
         infrastructure/governance/dependency-patch-review.yaml,
         scripts/validate-dependency-patch-review.mjs,
+        infrastructure/governance/provider-impact-review.yaml,
+        scripts/validate-provider-impact-review.mjs,
         docs/plan/evidence/M16/proxmox-security-review-2026-08-29.md,
         ADR-0080 preserves the exact V1 production score under SHA-256 and the V2 validator separately recomputes deployed production at 54/100 and the exact integration candidate at 83/100 while both remain completion-ineligible,
         product-score governance implementation d1a78c04cefacad203c786edee85c4b3a20787a1 passed the complete local 983-test gate 86-migration and 68-pgTAP-file static validation 1069-file secret scan zero-vulnerability production audit licence validation formatting and diff review without a runtime schema or production change,

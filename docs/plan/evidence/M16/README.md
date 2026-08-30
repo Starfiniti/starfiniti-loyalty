@@ -1,6 +1,27 @@
 # M16 Evidence — Continuous Improvement
 
-The active fail-closed manifest is `continuous-improvement.yaml`. It records repository controls now and leaves elapsed monthly reviews, the quarterly exercise bundle, the thirteen-source provider/platform/recovery-dependency review, regression controls, scoring, independent review, and owner approval pending.
+The active fail-closed manifest is `continuous-improvement.yaml`. It records
+repository controls now and leaves elapsed monthly reviews, the quarterly
+exercise bundle, candidate acceptance, regression controls, scoring,
+independent review, and owner approval pending.
+
+ADR-0107 closes the narrower reconstructability gap across the thirteen
+official provider, platform, and recovery entries. The cutoff-bound
+`infrastructure/governance/provider-impact-review.yaml` binds the immutable
+6,534-byte source snapshot and 8,813-byte installed-state snapshot, classifies
+all thirteen entries through `2026-08-28T21:20:42Z`, and records two Critical,
+five High, three Medium, and three Low engineering impacts. Its canonical
+provider-decision SHA-256 is
+`ee97ed58f003c8148a19b1e6afc5683bbc9c5b9652b6b43fc55dfd5647667645`.
+Run `npm run continuous-improvement:provider-impact:validate`; the network- and
+SSH-free self-test rejects forty-six source, installed-state, catalogue, pin,
+candidate, evidence, task, ADR, and false-authority corruptions.
+Classification is not acceptance: Authentik's installed version remains
+unknown, candidate selection is partial, automatic upgrades are prohibited,
+and every merge, release, provider-upgrade, deployment, production mutation,
+reconciliation, independent-review, owner-approval, and elapsed-monthly claim
+remains false. M16 therefore remains 77/100 with seven of 39 closeout controls
+passing.
 
 ADR-0106 records a bounded repository-only patch review for the federation and
 notification untrusted-input boundary. Exact `fast-xml-parser` 5.11.1,

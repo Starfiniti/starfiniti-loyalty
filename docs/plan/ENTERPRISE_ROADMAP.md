@@ -1,6 +1,6 @@
 # Starfiniti Loyalty Enterprise Roadmap
 
-Last reviewed: 2026-08-13
+Last reviewed: 2026-08-30
 
 This is the active delivery plan after production `v0.1.10`. It supersedes the broad unfinished phases in `docs/product/MASTER_PLAN.md`; completed phase evidence remains historical truth in `docs/plan/TASKS.yaml`.
 
@@ -134,6 +134,7 @@ M01 may wait for real-store access while M02 proceeds. Later modules remain sequ
 ### M16 — Continuous self-improvement
 
 - Monthly metrics/error/support/reconciliation/fraud/campaign/churn/usability/performance/security/billing review; convert recurring failures into tests/validators/monitors/runbooks/rules; review provider changes; rescore material changes; run quarterly recovery/isolation/privacy/SCIM/incident exercises; maintain an evidence-ranked backlog and ADR history.
+- ADR-0107 now provides one cutoff-bound engineering classification for all thirteen provider/platform/recovery entries. It does not satisfy the elapsed monthly review, candidate acceptance, independent review, owner approval, deployment, or reconciliation gates; M16 remains 77/100.
 
 ## Compatibility and authority boundaries
 

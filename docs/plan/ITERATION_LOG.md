@@ -1,5 +1,28 @@
 # Iteration Log
 
+## 2026-08-30 — Cutoff-bound provider impact classification
+
+- Reconstructed the immutable 6,534-byte thirteen-source snapshot, the
+  8,813-byte two-endpoint/six-provider installed snapshot, exact runtime/API
+  pins, and existing provider-specific candidate reviews.
+- Compared waiting for an elapsed monthly record, retaining fragmented
+  narratives, using a mutable ticket list, and creating one closed engineering
+  register. ADR-0107 selects the closed register and records provider-specific
+  rollback consequences without rewriting either historical input.
+- Classified all thirteen entries through the same Aug 28 cutoff: two Critical,
+  five High, three Medium, and three Low. The canonical provider decision set is
+  SHA-256
+  `ee97ed58f003c8148a19b1e6afc5683bbc9c5b9652b6b43fc55dfd5647667645`.
+  Authentik's installed version remains unknown and blocking; PostgreSQL stays
+  coupled to the reviewed Supabase bundle; Stripe remains on Clover pending a
+  complete Dahlia contract/replay/test-clock canary.
+- Added a network- and SSH-free root validator whose focused self-test rejects
+  forty-six source, installed-state, catalogue, pin, candidate, evidence,
+  task, ADR, and false-authority corruptions. Classification is not acceptance:
+  candidate selection, elapsed cadence, independent review, approvals,
+  deployment, and reconciliation remain incomplete. M16 remains 77/100, the
+  candidate 83/100, production 54/100, and no production state changed.
+
 ## 2026-08-30 — Bounded federation and notification dependency patches
 
 - Compared holding the installed set, updating every outdated dependency, and

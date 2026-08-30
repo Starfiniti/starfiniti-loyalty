@@ -1,6 +1,21 @@
 # Execution Plan
 
-ADR-0106 is the active safe M16 dependency-hardening slice. The current
+ADR-0107 is the active safe M16 reconstructability slice. One cutoff-bound
+register now composes the immutable thirteen-source and six-provider installed
+snapshots, classifies every canonical provider/platform/recovery entry, assigns
+an engineering disposition, and records provider-specific rollback. The
+canonical decision set contains two Critical, five High, three Medium, and
+three Low entries under SHA-256
+`ee97ed58f003c8148a19b1e6afc5683bbc9c5b9652b6b43fc55dfd5647667645`.
+The root-gated validator rejects forty-six source, snapshot, catalogue, pin,
+candidate, evidence, task, ADR, and false-authority corruptions. Classification
+does not accept any candidate: Authentik's deployed version remains unknown,
+automatic upgrades are prohibited, and candidate selection, monthly cadence,
+independent review, owner approval, deployment, and reconciliation remain
+incomplete. M16 stays 77/100, the candidate stays 83/100, and production stays
+54/100 and unchanged.
+
+ADR-0106 is the preceding safe M16 dependency-hardening slice. The current
 repository review selected only `fast-xml-parser` 5.11.1, Nodemailer 9.0.6,
 and `smtp-server` 3.19.4 from the available updates because they share the
 tenant-federation and notification untrusted-input boundary. Exact Git tag
