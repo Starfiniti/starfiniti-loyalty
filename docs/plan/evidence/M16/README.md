@@ -23,6 +23,12 @@ reconciliation, independent-review, owner-approval, and elapsed-monthly claim
 remains false. M16 therefore remains 77/100 with seven of 39 closeout controls
 passing.
 
+Exact implementation
+`e4a1e573281555912b9dbbfa3d1b5e50aca073e8` passed CI `33306849568`,
+Security `33306849601`, and external CodeQL `99244979080`; all twelve checks
+are green. This evidence authorizes no merge, release, provider upgrade,
+deployment, or production mutation.
+
 ADR-0106 records a bounded repository-only patch review for the federation and
 notification untrusted-input boundary. Exact `fast-xml-parser` 5.11.1,
 Nodemailer 9.0.6, and test-only `smtp-server` 3.19.4 package provenance is bound

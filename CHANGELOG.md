@@ -9,7 +9,9 @@
   and false-authority corruptions. Unknown state remains blocking, automatic
   upgrades remain prohibited, and the elapsed monthly review, acceptance,
   approvals, deployment, production mutation, and reconciliation remain
-  incomplete. M16 and product scores are unchanged.
+  incomplete. M16 and product scores are unchanged. Exact implementation
+  `e4a1e573` passed CI `33306849568`, Security `33306849601`, and external
+  CodeQL `99244979080`; all twelve checks are green.
 
 - Added ADR-0106 and refreshed only the reviewed federation/notification
   untrusted-input patch set: exact `fast-xml-parser` 5.11.1, Nodemailer 9.0.6,

@@ -13,7 +13,9 @@
   candidate, automatic upgrade, merge, release, deployment, production
   mutation, or reconciliation is approved. The monthly provider check remains
   pending, M16 stays 77/100, the candidate stays 83/100, and production stays
-  54/100 and unchanged.
+  54/100 and unchanged. Exact implementation `e4a1e573` passed CI
+  `33306849568`, Security `33306849601`, and external CodeQL `99244979080`;
+  all twelve checks are green.
 
 - ADR-0106 refreshes a bounded untrusted-input patch set without broad
   dependency churn. `fast-xml-parser` 5.11.1, Nodemailer 9.0.6, and the

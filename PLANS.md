@@ -13,7 +13,9 @@ does not accept any candidate: Authentik's deployed version remains unknown,
 automatic upgrades are prohibited, and candidate selection, monthly cadence,
 independent review, owner approval, deployment, and reconciliation remain
 incomplete. M16 stays 77/100, the candidate stays 83/100, and production stays
-54/100 and unchanged.
+54/100 and unchanged. Exact implementation `e4a1e573` passed CI `33306849568`,
+Security `33306849601`, and external CodeQL `99244979080`; all twelve checks
+are green.
 
 ADR-0106 is the preceding safe M16 dependency-hardening slice. The current
 repository review selected only `fast-xml-parser` 5.11.1, Nodemailer 9.0.6,

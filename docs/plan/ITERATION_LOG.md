@@ -22,6 +22,9 @@
   candidate selection, elapsed cadence, independent review, approvals,
   deployment, and reconciliation remain incomplete. M16 remains 77/100, the
   candidate 83/100, production 54/100, and no production state changed.
+- Exact implementation `e4a1e573281555912b9dbbfa3d1b5e50aca073e8` passed CI
+  `33306849568`, Security `33306849601`, and external CodeQL `99244979080`;
+  all twelve checks are green.
 
 ## 2026-08-30 — Bounded federation and notification dependency patches
 

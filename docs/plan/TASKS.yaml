@@ -3850,6 +3850,7 @@ tasks:
         scripts/validate-dependency-patch-review.mjs,
         infrastructure/governance/provider-impact-review.yaml,
         scripts/validate-provider-impact-review.mjs,
+        provider impact implementation e4a1e573281555912b9dbbfa3d1b5e50aca073e8 passed CI 33306849568 Security 33306849601 and external CodeQL 99244979080 with all twelve checks green while every provider acceptance and production authority remains false,
         docs/plan/evidence/M16/proxmox-security-review-2026-08-29.md,
         ADR-0080 preserves the exact V1 production score under SHA-256 and the V2 validator separately recomputes deployed production at 54/100 and the exact integration candidate at 83/100 while both remain completion-ineligible,
         product-score governance implementation d1a78c04cefacad203c786edee85c4b3a20787a1 passed the complete local 983-test gate 86-migration and 68-pgTAP-file static validation 1069-file secret scan zero-vulnerability production audit licence validation formatting and diff review without a runtime schema or production change,
