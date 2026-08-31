@@ -661,7 +661,7 @@ try {
       () => serviceDiagnostics(project, environment, "blackbox-exporter"),
     ),
     postgresExporter: await waitForJson(
-      `http://127.0.0.1:${ports.prometheus}/api/v1/query?query=pg_exporter_build_info`,
+      `http://127.0.0.1:${ports.prometheus}/api/v1/query?query=postgres_exporter_build_info`,
       (body) =>
         body?.data?.result?.length === 1 &&
         body.data.result[0]?.metric?.version === "0.20.1" &&

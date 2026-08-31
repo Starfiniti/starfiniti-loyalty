@@ -17,7 +17,7 @@
 - Added a hardened Compose candidate, minimized file discovery, safe empty
   provider configurations, locked Grafana source, environment-owned paths, a
   textfile-only systemd unit, operator runbook, and a 16-check evidence gate.
-  Thirty deployment cases reject mutable images, public administration,
+  Thirty-one deployment cases reject mutable images, public administration,
   privilege, authority expansion, unsafe probes, embedded identity/secrets,
   asset drift, and false production claims. Eleven portable environment-
   preflight cases plus the POSIX mode boundary additionally reject unknown or

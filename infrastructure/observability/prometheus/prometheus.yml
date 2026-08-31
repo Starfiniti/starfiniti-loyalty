@@ -24,7 +24,7 @@ scrape_configs:
         labels: { environment: monitoring, service: postgres-exporter }
     metric_relabel_configs:
       - source_labels: [__name__]
-        regex: (?:prometheus_build_info|alertmanager_build_info|blackbox_exporter_build_info|pg_exporter_build_info)
+        regex: (?:prometheus_build_info|alertmanager_build_info|blackbox_exporter_build_info|postgres_exporter_build_info)
         action: keep
       - regex: (?:__name__|job|environment|service|version|revision|goversion|goarch|goos|tags)
         action: labelkeep

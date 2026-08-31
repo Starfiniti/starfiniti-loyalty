@@ -18,7 +18,7 @@ assets:
     sha256: 21449fa8bae851fc5e1d7d02b827b16991f38e3e3177d093fded2dd5ff9b4536
   - id: prometheus
     path: infrastructure/observability/prometheus/prometheus.yml
-    sha256: a426be49a9c85e714dbd850dd55e46dcbf6c7648db720bd34d748f5e0471a9f5
+    sha256: 20e2b074ce2cfc9d5c629cec7cc2b0c5eac1d3f888e678d2baed9bd7893462ae
   - id: rules
     path: infrastructure/observability/prometheus/rules.yaml
     sha256: fa20afac82fdd5d93d95c9b1b4fed9d590c8118b3377865ddfa4a1948cde2fcf

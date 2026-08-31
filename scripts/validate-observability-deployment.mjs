@@ -506,6 +506,20 @@ function validatePrometheus(config, raw) {
     ]),
     "Prometheus jobs",
   );
+  const expectedBuildInfoMetrics =
+    "(?:prometheus_build_info|alertmanager_build_info|blackbox_exporter_build_info|postgres_exporter_build_info)";
+  if (
+    !jobs
+      .get("monitoring-plane")
+      .metric_relabel_configs?.some(
+        (rule) =>
+          rule.action === "keep" &&
+          rule.source_labels?.[0] === "__name__" &&
+          rule.regex === expectedBuildInfoMetrics,
+      )
+  ) {
+    fail("monitoring-plane build-info metric contract drifted");
+  }
   const expectedGlobs = {
     "starfiniti-runtime": "/etc/prometheus/targets/runtime-*.json",
     "starfiniti-host-textfile": "/etc/prometheus/targets/host-*.json",
@@ -891,6 +905,10 @@ if (process.argv.includes("--self-test")) {
     candidate.raws.prometheus += "\n# 10.0.0.1\n";
   }, /private topology/u);
   mutate((candidate) => {
+    candidate.prometheus.scrape_configs[0].metric_relabel_configs[0].regex =
+      "(?:prometheus_build_info|pg_exporter_build_info)";
+  }, /build-info metric contract/u);
+  mutate((candidate) => {
     delete candidate.prometheus.scrape_configs[1].relabel_configs;
   }, /identity minimization/u);
   mutate((candidate) => {
@@ -957,5 +975,5 @@ if (process.argv.includes("--self-test")) {
 }
 
 console.log(
-  `Validated ${componentIds.size} pinned observability services, one native textfile agent, ${requiredChecks.size} evidence checks, and 30 adversarial cases; ${passedRepositoryChecks.size} checks pass and ${requiredChecks.size - passedRepositoryChecks.size} remain external or runtime-gated.`,
+  `Validated ${componentIds.size} pinned observability services, one native textfile agent, ${requiredChecks.size} evidence checks, and 31 adversarial cases; ${passedRepositoryChecks.size} checks pass and ${requiredChecks.size - passedRepositoryChecks.size} remain external or runtime-gated.`,
 );
