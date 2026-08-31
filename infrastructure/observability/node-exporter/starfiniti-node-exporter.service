@@ -1,0 +1,44 @@
+[Unit]
+Description=Starfiniti aggregate textfile metrics exporter
+Documentation=https://github.com/prometheus/node_exporter
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=starfiniti-node-exporter
+Group=starfiniti-node-exporter
+Environment=STARFINITI_NODE_EXPORTER_LISTEN_ADDRESS=127.0.0.1:9100
+EnvironmentFile=-/etc/starfiniti/node-exporter.env
+ExecStart=/opt/starfiniti/monitoring/node_exporter --web.listen-address=${STARFINITI_NODE_EXPORTER_LISTEN_ADDRESS} --collector.disable-defaults --collector.textfile --collector.textfile.directory=/var/lib/node_exporter/textfile_collector --log.format=json
+Restart=on-failure
+RestartSec=5s
+TimeoutStartSec=30s
+TimeoutStopSec=30s
+UMask=0027
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+ProtectProc=invisible
+ProcSubset=pid
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+RestrictRealtime=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+ReadOnlyPaths=/var/lib/node_exporter/textfile_collector
+
+[Install]
+WantedBy=multi-user.target

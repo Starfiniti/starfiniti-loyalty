@@ -462,6 +462,13 @@ requireCondition(
 );
 
 const supplySteps = securityWorkflow.jobs["supply-chain"].steps;
+const supplyCheckoutIndex = supplySteps.findIndex(
+  (step) =>
+    step.uses === "actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09" &&
+    step.with?.ref ===
+      "${{ github.event.pull_request.head.sha || github.sha }}" &&
+    step.with?.["persist-credentials"] === false,
+);
 const supplyInstallIndex = supplySteps.findIndex(
   (step) =>
     step.name ===
@@ -470,6 +477,19 @@ const supplyInstallIndex = supplySteps.findIndex(
 );
 const supplyInventoryIndex = supplySteps.findIndex(
   (step) => step.name === "Verify exact reciprocal source inventory",
+);
+const observabilityValidateIndex = supplySteps.findIndex(
+  (step) =>
+    step.name === "Validate production-disabled observability deployment" &&
+    step.run === "npm run observability:deployment:validate" &&
+    Object.keys(step).sort().join(",") === "name,run",
+);
+const observabilityCanaryIndex = supplySteps.findIndex(
+  (step) =>
+    step.name === "Run disposable observability deployment canary" &&
+    step.run ===
+      "npm run observability:deployment:run -- --out dist/observability-deployment/ci.json" &&
+    Object.keys(step).sort().join(",") === "name,run",
 );
 requireCondition(
   supplySteps.some(
@@ -480,9 +500,13 @@ requireCondition(
       step.with?.cache === "npm",
   ) &&
     supplySteps.some((step) => step.run === "npm audit --audit-level=high") &&
+    supplyCheckoutIndex >= 0 &&
+    supplyCheckoutIndex < supplyInstallIndex &&
     supplyInstallIndex >= 0 &&
-    supplyInstallIndex < supplyInventoryIndex,
-  `${securityWorkflowPath}: exact no-lifecycle dependency installation and full dependency audit are required before source inventory`,
+    supplyInstallIndex < observabilityValidateIndex &&
+    observabilityValidateIndex < observabilityCanaryIndex &&
+    observabilityCanaryIndex < supplyInventoryIndex,
+  `${securityWorkflowPath}: exact credential-free candidate checkout, no-lifecycle dependency installation, production-disabled observability canary, and full dependency audit are required before source inventory`,
 );
 const trivySteps = supplySteps.filter(
   (step) =>
@@ -668,10 +692,11 @@ requireCondition(
       step.with?.path?.includes("dist/security/*.cdx.json") &&
       step.with?.path?.includes("dist/security/repository-summary.json") &&
       step.with?.path?.includes("dist/security/trivy-version-summary.json") &&
+      step.with?.path?.includes("dist/observability-deployment/ci.json") &&
       !step.with?.path?.includes("security-private") &&
       step.with?.["if-no-files-found"] === "error",
   ),
-  `${securityWorkflowPath}: minimized review reports scanner metadata and SBOMs must upload without raw secret or SARIF inputs even when enforcement fails`,
+  `${securityWorkflowPath}: minimized review reports scanner metadata SBOMs and observability canary must upload without raw secret or SARIF inputs even when enforcement fails`,
 );
 
 const recoveryTransportSteps =

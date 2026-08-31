@@ -1,0 +1,10 @@
+[
+  {
+    "targets": ["database.example.invalid:5432"],
+    "labels": {
+      "environment": "example",
+      "service": "loyalty-database",
+      "auth_module": "example"
+    }
+  }
+]

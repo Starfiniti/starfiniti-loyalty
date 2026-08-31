@@ -3396,6 +3396,7 @@ tasks:
             docs/plan/evidence/M15/runs/security-medium-triage-fe8a6ff.yaml,
             docs/plan/evidence/M15/runs/security-medium-triage-74a37e9.yaml,
             reviewed artifact head 74a37e930cda44e4eedb550bd4a6237da03c75c5 passed CI 33384160196 and Security 33384160199 with 19 of 27 checks passing while eight release production review independent test reconciliation and approval gates remain open,
+            the ADR-0112 Security workflow change preserves that run as historical evidence and resets the current manifest to 7 of 27 until fresh exact-head automated observability and Medium-review artifacts reconcile,
             docs/architecture/ADR/0064-deployable-artifact-security-and-isolated-dast.md,
             docs/architecture/ADR/0082-request-bound-dashboard-content-security-policy.md,
             docs/architecture/ADR/0083-release-bound-corresponding-source-artifacts.md,
@@ -3504,7 +3505,7 @@ tasks:
         status: in_progress
         dependencies: [M15-S02-FAULT-INJECTION, M15-S04-CLEAN-ROOM-RECOVERY]
         hypothesis: A versioned bounded-label signal catalogue with exact Prometheus rules locked dashboards independent paging and monotonic incident evidence can detect every protected-value failure without turning monitoring into value authority or checkout dependency.
-        baseline: Production has application readiness and backup service checks but no active Prometheus Alertmanager Grafana Loki Promtail or node-exporter service; the historical 3.60 TB VM 971 transmit counter required manual diagnosis, and a 2026-08-31 raw whole-VM migration repeated shared-lock starvation and caused an exact 1h34m36s off-site gap without deployed archive-age paging; no measured alert delivery escalation or incident exercise exists.
+        baseline: Production has application readiness and backup service checks but no active Prometheus Alertmanager Grafana Loki Promtail or node-exporter service; the historical 3.60 TB VM 971 transmit counter required manual diagnosis, and a 2026-08-31 raw whole-VM migration repeated shared-lock starvation and caused an exact 1h34m36s off-site gap without deployed archive-age paging; repository rules and dashboards exist but no digest-pinned deployable plane or measured alert delivery escalation incident exercise exists.
         targets:
           [
             every availability latency queue provider database WAL backup ledger tenant privacy checkout security and evidence-freshness signal has one bounded source owner route runbook threshold and dashboard,
@@ -3522,6 +3523,10 @@ tasks:
         acceptance:
           [
             the exact catalogue rules routing policy and locked Grafana dashboard validate and every alert maps to a bounded signal owner route severity runbook and summary,
+            one digest-pinned central Compose boundary provides Prometheus Alertmanager Grafana blackbox_exporter and postgres_exporter with loopback-only administration read-only roots no capabilities no-new-privileges bounded resources separate control and egress networks and no embedded production target receiver credential or identity,
+            one owner-controlled environment preflight rejects noncanonical in-repository linked missing overbroad shared or permission-unsafe target and secret paths plus wildcard binding port collision or non-HTTPS Grafana administration without printing values,
+            one exact official node_exporter archive and hardened native systemd profile exposes only aggregate textfile metrics without process filesystem network Docker backup database or loyalty authority,
+            a disposable Linux canary validates native component configurations starts all five central services verifies exact versions loopback health and exporter non-publication and tears down every container network volume and temporary secret,
             telemetry contains no tenant customer order coupon credential token payload or correlation labels and missing time series never become healthy zero,
             backup amplification detects both more than four-times changed-byte transfer and more than one GiB without relying on cumulative VM counters,
             archive-age and retention evidence fail when PostgreSQL resolves to the whole-VM repository or any recent recovery interval exceeds the declared bound,
@@ -3535,6 +3540,9 @@ tasks:
         failure_modes:
           [
             monitoring becomes value authority or a synchronous checkout dependency,
+            a mutable latest image unreviewed platform manifest public administration port privileged container Docker socket host namespace or committed destination credential enters the monitoring plane,
+            an unchecked relative linked in-repository world-readable shared or target-exposed operator path reaches Compose or a preflight result is mistaken for production authority,
+            a host exporter reads more than the approved aggregate textfile directory or gains backup database container or loyalty mutation authority,
             absent or stale telemetry is coerced to zero or a critical alert is delayed or inhibited by billing state,
             high-cardinality or identifying labels leak tenant customer commerce credential or payload data,
             rules dashboards sources routes or exercises drift from their approved digests,
@@ -3549,6 +3557,9 @@ tasks:
         verification:
           [
             npm run operations:validate,
+            npm run observability:deployment:validate,
+            npm run observability:environment:validate -- --env <absolute-owner-file>,
+            npm run observability:deployment:run -- --out <new-bounded-json-file>,
             npm run check,
             exact-head GitHub Actions CI and Security workflows,
             approved production source route dashboard and two-exercise evidence plus independent reconciliation,
@@ -3556,13 +3567,18 @@ tasks:
         evidence:
           [
             docs/plan/evidence/M15/operations.yaml,
+            docs/plan/evidence/M15/observability-deployment.yaml,
             infrastructure/observability/catalog.yaml,
+            infrastructure/observability/deployment/plan.yaml,
+            infrastructure/observability/compose.yml,
             infrastructure/observability/prometheus/rules.yaml,
             infrastructure/observability/routing-policy.yaml,
             infrastructure/observability/grafana/provisioning/starfiniti-dashboards/starfiniti-operations.json,
             docs/architecture/ADR/0066-bounded-observability-and-independent-incident-evidence.md,
+            docs/architecture/ADR/0112-digest-pinned-observability-deployment-boundary.md,
             docs/architecture/ADR/0071-dedicated-postgresql-borg-repository.md,
             docs/plan/evidence/M01/backup-transfer-amplification-2026-08-14.md,
+            docs/operations/OBSERVABILITY_DEPLOYMENT.md,
             infrastructure/environments/proxmox/scripts/starfiniti-loyalty-postgres-borg-controller,
             infrastructure/environments/proxmox/scripts/starfiniti-loyalty-postgres-borg,
             infrastructure/environments/proxmox/scripts/starfiniti-loyalty-postgres-borg-maintain,

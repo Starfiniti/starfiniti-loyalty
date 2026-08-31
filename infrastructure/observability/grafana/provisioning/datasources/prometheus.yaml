@@ -14,5 +14,5 @@ datasources:
       httpMethod: POST
       manageAlerts: false
       prometheusType: Prometheus
-      prometheusVersion: 3.5.0
+      prometheusVersion: 3.14.0
       timeInterval: 30s

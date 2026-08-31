@@ -1,5 +1,38 @@
 # Iteration Log
 
+## 2026-08-31 — Production-disabled observability deployment candidate
+
+- Reconstructed M15-S05 after the second shared Borg-lock archive gap showed
+  that source-controlled alerts and a dashboard were not deployable and could
+  not page. Production still has no Prometheus, Alertmanager, Grafana, or
+  node_exporter service.
+- Compared distribution-native packages, a fully containerized host monitor,
+  external uptime alone, and a digest-pinned central Compose plane with a
+  native least-authority host agent. ADR-0112 selects the last approach for
+  exact reconstruction and a smaller Proxmox authority boundary.
+- Bound current official Prometheus 3.14.0, Alertmanager 0.34.0, Grafana 13.2.0,
+  blackbox_exporter 0.28.0, postgres_exporter 0.20.1, and node_exporter 1.12.1
+  source/release/artifact provenance. Central images use exact OCI indexes and
+  the host archive has an exact size and SHA-256.
+- Added a hardened Compose candidate, minimized file discovery, safe empty
+  provider configurations, locked Grafana source, environment-owned paths, a
+  textfile-only systemd unit, operator runbook, and a 16-check evidence gate.
+  Twenty-nine deployment cases reject mutable images, public administration,
+  privilege, authority expansion, unsafe probes, embedded identity/secrets,
+  asset drift, and false production claims. Eleven portable environment-
+  preflight cases plus the POSIX mode boundary additionally reject unknown or
+  duplicate inputs, wildcard binding, colliding ports, non-HTTPS
+  administration, placeholder destinations, relative/root/shared/target-
+  exposed paths, and group/other-readable authority.
+- Added a clean Linux amd64 Security-job canary that runs promtool and amtool,
+  starts all five services, reads exact runtime versions, inspects ports,
+  networks, capabilities, and read-only roots, and tears down containers,
+  networks, volumes, and temporary material before writing minimized evidence.
+- Repository checks pass 9/16. Docker is unavailable on this Windows host, so
+  the exact-head Linux canary remains pending alongside approved environment,
+  live targets, receivers, dead-man paging, activation, and observation. M15
+  operations remains 14/35 and all scores and production state are unchanged.
+
 ## 2026-08-31 — Evidence-bound recurring backup-starvation control
 
 - Reconstructed ADR-0068's second-occurrence contract after the live

@@ -1,0 +1,10 @@
+[
+  {
+    "targets": ["https://service.example.invalid/health"],
+    "labels": {
+      "environment": "example",
+      "service": "loyalty-api",
+      "target_class": "public-readiness"
+    }
+  }
+]

@@ -1,5 +1,24 @@
 # Changelog
 
+- Added ADR-0112 and a production-disabled M15 observability deployment
+  candidate. Exact OCI indexes bind Prometheus 3.14.0, Alertmanager 0.34.0,
+  Grafana 13.2.0, blackbox_exporter 0.28.0, and postgres_exporter 0.20.1 in a
+  read-only, capability-free, loopback-administered Compose plane with
+  unpublished exporters, isolated control traffic, bounded resources, and
+  environment-owned targets and secrets. An exact-archive non-root
+  node_exporter enables only aggregate textfile collection. Repository and
+  adversarial validation pass 9/16 deployment checks; the Security workflow
+  now runs a clean Linux exact-version/configuration/teardown canary. Production
+  activation, receivers, live targets, dead-man paging, observation,
+  reconciliation, module/product scores, and loyalty value remain unchanged or
+  pending.
+- Rebound the M15 security manifest to the changed Security workflow and
+  intentionally invalidated prior exact-head CodeQL, repository, image, SBOM,
+  DAST, header, scanner-freshness, Medium-triage, development-audit, and
+  WooCommerce claims. Seven repository contracts remain passing and twenty
+  checks are pending until the new exact candidate and artifacts are reviewed;
+  historical evidence was preserved rather than relabelled.
+
 - Added ADR-0111 and a fail-closed M16 recurring-failure registry. The register
   records the 2026-08-28 and 2026-08-31 PostgreSQL off-site shared-lock gaps as
   two distinct digest-bound evidence anchors under one Critical R-004

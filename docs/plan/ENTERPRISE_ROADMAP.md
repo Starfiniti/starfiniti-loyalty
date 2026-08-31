@@ -1,6 +1,6 @@
 # Starfiniti Loyalty Enterprise Roadmap
 
-Last reviewed: 2026-08-30
+Last reviewed: 2026-08-31
 
 This is the active delivery plan after production `v0.1.10`. It supersedes the broad unfinished phases in `docs/product/MASTER_PLAN.md`; completed phase evidence remains historical truth in `docs/plan/TASKS.yaml`.
 
@@ -130,6 +130,10 @@ M01 may wait for real-store access while M02 proceeds. Later modules remain sequ
 ### M15 — Enterprise hardening and GA
 
 - Measure capacity; inject worker/network/database/provider/retry failures; complete code/dependency/container/secret/licence/SBOM/DAST/infra scans; resolve independent penetration findings; prove clean-room recovery/RPO/RTO; complete dashboards/alerts/runbooks/on-call/incidents; run a 30-day reconciled canary; verify product claims and obtain owner GA approval.
+- ADR-0112 supplies a production-disabled digest-pinned central monitoring
+  candidate plus a least-authority native textfile agent and disposable Linux
+  canary. It does not satisfy approved-host, live-source, receiver, dead-man,
+  exercise, reconciliation, or production-activation gates.
 
 ### M16 — Continuous self-improvement
 

@@ -58,12 +58,19 @@ jobs:
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: 24
           cache: npm
       - name: Install exact repository dependencies without lifecycle scripts
         run: npm ci --ignore-scripts
+      - name: Validate production-disabled observability deployment
+        run: npm run observability:deployment:validate
+      - name: Run disposable observability deployment canary
+        run: npm run observability:deployment:run -- --out dist/observability-deployment/ci.json
       - name: Audit complete development and production dependency tree
         run: npm audit --audit-level=high
       - name: Build deployable dashboard image
@@ -202,6 +209,7 @@ jobs:
             dist/security/*.cdx.json
             dist/security/repository-summary.json
             dist/security/trivy-version-summary.json
+            dist/observability-deployment/ci.json
           if-no-files-found: error
           retention-days: 30
 

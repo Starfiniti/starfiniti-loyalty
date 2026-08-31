@@ -1,6 +1,6 @@
 # Observability package
 
-This directory is the version-controlled operational contract for Starfiniti Loyalty. It does not install a monitoring system or authorize production access by itself.
+This directory is the version-controlled operational contract and production-disabled deployment candidate for Starfiniti Loyalty. It does not install a monitoring system or authorize production access by itself.
 
 ## Assets
 
@@ -8,6 +8,10 @@ This directory is the version-controlled operational contract for Starfiniti Loy
 - `prometheus/rules.yaml` is the Prometheus-compatible projection of every catalogue alert.
 - `routing-policy.yaml` defines routing behavior without storing destination identities or credentials.
 - `grafana/provisioning` provides a locked, source-controlled dashboard and Prometheus data-source template.
+- `deployment/plan.yaml` binds official releases, exact image indexes, the native node exporter archive, false production authority, and the disposable canary contract.
+- `compose.yml` packages the central monitoring plane with loopback-only administration, unpublished exporters, read-only roots, dropped capabilities, resource limits, isolated control traffic, and environment-owned target/secret mounts.
+- `prometheus/prometheus.yml`, `alertmanager/safe-default.yml`, `blackbox/blackbox.yml`, and `postgres-exporter/safe-default.yml` provide a safe no-receiver/no-live-target starting boundary.
+- `node-exporter/starfiniti-node-exporter.service` permits only aggregate textfile collection under a non-root system account.
 
 The deployment environment must provide the named signal sources, bind receiver classes to approved destinations outside Git, run configuration validation, and prove alert delivery, acknowledgement, escalation, inhibition safety, dashboard queries, source freshness, and an independently hosted dead-man switch for loss of the monitoring plane itself. Missing time series are a failed source-coverage check; they are not interpreted as healthy zeroes.
 
@@ -21,4 +25,12 @@ Validate the repository contract with:
 npm run operations:validate
 ```
 
-Production activation remains blocked until `docs/plan/evidence/M15/operations.yaml` passes every source, routing, dashboard, exercise, reconciliation, and owner-approval check.
+Run the isolated exact-version Linux canary with:
+
+```text
+npm run observability:deployment:run -- --out dist/observability-deployment/operator-review.json
+```
+
+See `docs/operations/OBSERVABILITY_DEPLOYMENT.md` for environment preparation, activation, observation, and rollback. The canary uses no production route, credential, or target and removes its containers, networks, and volumes before publishing a minimized report.
+
+Production activation remains blocked until `docs/plan/evidence/M15/observability-deployment.yaml` and `docs/plan/evidence/M15/operations.yaml` pass every environment, source, routing, dashboard, dead-man, exercise, reconciliation, and owner-approval check.

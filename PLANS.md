@@ -1,5 +1,24 @@
 # Execution Plan
 
+ADR-0112 is the active safe M15 observability-deployment slice. It turns the
+existing 31-signal/27-alert contract into a production-disabled deployment
+candidate: Prometheus 3.14.0, Alertmanager 0.34.0, Grafana 13.2.0,
+blackbox_exporter 0.28.0, and postgres_exporter 0.20.1 are bound to exact OCI
+indexes in an isolated hardened Compose plane, while node_exporter 1.12.1 is a
+separate non-root textfile-only native agent. Target files, receivers, Grafana
+administrator material, and PostgreSQL exporter modules remain environment
+owned. A clean Linux amd64 Security-job canary must prove native configuration,
+exact versions, loopback administration, unpublished exporters, and zero
+residue. Repository validation passes 9/16 deployment checks; exact-head Linux,
+approved-host, live-target, receiver, dead-man, activation, and observation
+evidence remain pending. The broader M15 operations gate remains 14/35,
+production has no monitoring plane, and product/module scores do not change.
+Because this slice changes the Security workflow and exact checkout semantics,
+the older exact-head scanner, image, SBOM, DAST, header, freshness, Medium-
+triage, development-audit, and WooCommerce evidence is historical only. M15
+Security is intentionally back at 7/27 until the new exact head passes and its
+artifacts are reconciled; prior runs were not relabelled.
+
 An active read-only production incident review on 2026-08-31 confirms the old
 VM 971 full-tree transfer loop is not running: the guest sent only 13,508 bytes
 over twenty seconds and its local WAL source remained current. A distinct

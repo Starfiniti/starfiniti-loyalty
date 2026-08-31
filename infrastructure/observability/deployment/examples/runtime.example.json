@@ -1,0 +1,10 @@
+[
+  {
+    "targets": ["runtime.example.invalid:9464"],
+    "labels": {
+      "environment": "example",
+      "service": "loyalty-runtime",
+      "component": "dashboard"
+    }
+  }
+]

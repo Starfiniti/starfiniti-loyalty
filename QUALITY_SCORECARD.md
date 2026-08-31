@@ -48,6 +48,19 @@ M15-S06 is provisionally 77/100 across correctness, security, ledger reliability
 
 M16 is provisionally 77/100 with correctness 17/20, security 12/15, ledger reliability 12/15, tests 15/15, performance 5/10, operability 2/10, and maintainability 14/15. Its 39-check gate has seven repository controls passing and 32 elapsed-cadence, source, exercise, reconciliation, review, and approval checks pending. The evidence-ranked backlog contains fourteen exact blockers after separately ranking the approved capacity and fault exercises. Performance and operability are below their mandatory floors; source-controlled fixtures prove only that honest closeout is representable, never that two monthly reviews or a quarterly bundle occurred.
 
+The 2026-08-31 ADR-0112 observability deployment candidate does not raise a
+score. It adds a digest-pinned hardened central plane, least-authority native
+textfile agent, 29 deployment and eleven portable environment corruption cases,
+the POSIX mode boundary, and an exact-head Linux canary contract, but only 9/16
+deployment checks pass and the broader M15 operations evidence
+remains 14/35. Production still has no monitoring host, live source inventory,
+receiver routes, independent dead-man page, incident exercise, or observation.
+M15, M16, the 83/100 integration candidate, and 54/100 production score remain
+unchanged.
+The workflow change also returns M15 Security from 19/27 to 7/27 until fresh
+exact-head automated artifacts and a new Medium/false-positive review pass; no
+score is raised from the historical scans.
+
 The 2026-08-30 ADR-0106 dependency patch review does not raise any score. It
 binds three exact compatible federation/notification patches and thirty-two
 fail-closed corruption cases while retaining the application-level SAML and

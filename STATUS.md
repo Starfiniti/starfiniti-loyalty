@@ -1,5 +1,25 @@
 # Status
 
+- ADR-0112 packages the previously non-deployable M15 observability contract as
+  a production-disabled candidate. Five current official components are pinned
+  to exact image indexes; every central service has a read-only root, dropped
+  capabilities, no-new-privileges, resource bounds, separate control/egress
+  policy, and no Docker socket or host namespace. Administration is loopback
+  only, exporters are unpublished, Grafana has no egress, and all live targets,
+  receivers, database modules, and administrator material remain outside Git.
+  The native node_exporter candidate is exact-archive-bound, non-root, and
+  textfile-only. Repository validation, 29 deployment mutations, eleven
+  portable environment-preflight mutations, and the POSIX mode boundary pass
+  9/16 checks. The Security workflow now owns the clean Linux amd64 exact-version
+  and zero-residue canary; its exact-head result is pending. Production still
+  has no monitoring plane or node exporter, so M15 operations remains 14/35 and
+  live source, route, dead-man, exercise, reconciliation, and approval gates
+  remain open. No release, deployment, route, database, checkout, or loyalty
+  value changed, and scores remain production 54, candidate 83, and M16 77.
+  The Security workflow change invalidates all older exact-head automated and
+  Medium-triage bindings; `security.yaml` now records 7/27 repository contracts
+  passing and 20 pending until fresh CI/Security artifacts are reconciled.
+
 - Read-only production inspection on 2026-08-31 distinguishes two backup
   conditions. VM 971's historical multi-terabyte counter is not current
   traffic: its tap received only 13,508 bytes over twenty seconds, public
