@@ -21,6 +21,11 @@
   symlinks. A separate refutation pass confirmed cross-platform source bytes,
   prospective evidence handling, exact gate coverage, and formatter-stable
   output; no correctness or security finding remains in the reviewed diff.
+- The first exact-head Security supply-chain job correctly rejected one
+  secret-shaped synthetic self-test literal. The fixture remains behaviorally
+  identical but is assembled from inert fragments at runtime, so source and
+  generated evidence contain no credential-shaped value. A new exact-head run
+  is required; the failed run is not accepted as security evidence.
 - Integrated the validator into the root repository gate and M16 task/evidence
   contract. This changes no production system, product score, module score,
   feature flag, billing state, customer value, or authority boundary.

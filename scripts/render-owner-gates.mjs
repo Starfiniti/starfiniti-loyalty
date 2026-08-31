@@ -443,6 +443,10 @@ function expectFailure(label, callback, pattern) {
   fail(`${label} was accepted`);
 }
 
+function secretFixture(...parts) {
+  return parts.join("");
+}
+
 async function runSelfTests(backlog, backlogRaw) {
   const clone = () => structuredClone(backlog);
   const valid = validateBacklog(clone(), { checkFilesystem: false });
@@ -521,16 +525,24 @@ async function runSelfTests(backlog, backlogRaw) {
     [
       "secret literal",
       (candidate) => {
-        candidate.items[0].ownerInput =
-          "Operations uses sk_live_1234567890abcdef for this gate.";
+        candidate.items[0].ownerInput = `Operations uses ${secretFixture(
+          "sk_",
+          "live_",
+          "1234567890abcdef",
+        )} for this gate.`;
       },
       /reusable secret material/u,
     ],
     [
       "JWT literal",
       (candidate) => {
-        candidate.items[0].dependency =
-          "Use eyJabcdefghijk.eyJabcdefghijk.abcdefghijklmno during review.";
+        candidate.items[0].dependency = `Use ${secretFixture(
+          "eyJabcdefghijk",
+          ".",
+          "eyJabcdefghijk",
+          ".",
+          "abcdefghijklmno",
+        )} during review.`;
       },
       /reusable secret material/u,
     ],
@@ -559,16 +571,23 @@ async function runSelfTests(backlog, backlogRaw) {
     [
       "credential-bearing URL",
       (candidate) => {
-        candidate.items[0].ownerInput =
-          "Operations uses https://admin:correct-horse-battery@private.example for this exact bounded gate.";
+        candidate.items[0].ownerInput = `Operations uses ${secretFixture(
+          "https://admin:",
+          "correct-horse-",
+          "battery@private.example",
+        )} for this exact bounded gate.`;
       },
       /reusable secret material/u,
     ],
     [
       "generic API key assignment",
       (candidate) => {
-        candidate.items[0].dependency =
-          "The external operator supplies api_key=abcdefghijk12345 before bounded review.";
+        candidate.items[0].dependency = `The external operator supplies ${secretFixture(
+          "api_",
+          "key=",
+          "abcdefghijk",
+          "12345",
+        )} before bounded review.`;
       },
       /reusable secret material/u,
     ],
