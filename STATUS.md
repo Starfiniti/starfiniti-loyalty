@@ -1,5 +1,22 @@
 # Status
 
+- ADR-0108 replaces only ADR-0107's Authentik installed-version unknown through
+  an append-only V2 amendment. A clean implementation-bound public capture
+  proves exact served runtime `2026.5.6`, three independently retrieved same-
+  version asset digests, TLS 1.3, and HTTP 200 live/ready health in a 3,257-byte
+  metadata artifact under SHA-256
+  `4e89321c09f46bb4b3cd7e2690eed54110c9e516c0537d88b2c4424b141b5cb0`.
+  It retains no raw content, headers, cookies, addresses, credentials, or
+  private configuration. Official policy still supports the prior `2026.5`
+  line at its latest patch; Authentik therefore moves from High unknown to
+  Medium supported-prior-line. V1 remains immutable and V2's effective digest
+  is `3b8372a74aee6128b947e43c3ff3beba34029434b197c4340dff0d9cb3f6dfc3`
+  with two Critical, four High, four Medium, and three Low entries. Image and
+  outpost inventory, private configuration/signing recovery, `2026.8` identity
+  compatibility, recovery, independent review, approvals, and every production
+  authority remain open/false. M16 remains 77/100, the candidate 83/100, and
+  production 54/100 and unchanged.
+
 - ADR-0107 adds one fail-closed provider-impact register across all thirteen
   canonical M16 sources. It binds the exact 6,534-byte source and 8,813-byte
   installed-state snapshots, records two Critical, five High, three Medium,
@@ -7,7 +24,8 @@
   acceptance. The canonical decision digest is
   `ee97ed58f003c8148a19b1e6afc5683bbc9c5b9652b6b43fc55dfd5647667645`;
   the focused validator passes and rejects forty-six corruptions without
-  network or SSH access. Authentik's exact deployed version remains unknown;
+  network or SSH access. ADR-0108 later resolves Authentik's served patch while
+  leaving image, outpost, private configuration, and compatibility unknown;
   PostgreSQL remains coupled to the reviewed Supabase platform image; Stripe
   remains on Clover pending a complete Dahlia comparison and canary. No
   candidate, automatic upgrade, merge, release, deployment, production

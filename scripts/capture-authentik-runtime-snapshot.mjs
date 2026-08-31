@@ -8,11 +8,20 @@ import {
   lstatSync,
   openSync,
   readSync,
+  realpathSync,
   writeFileSync,
 } from "node:fs";
 import { request as httpsRequest } from "node:https";
 import { BlockList, isIP } from "node:net";
-import { dirname, isAbsolute, join, relative, resolve } from "node:path";
+import {
+  basename,
+  dirname,
+  isAbsolute,
+  join,
+  relative,
+  resolve,
+  sep,
+} from "node:path";
 import { Readable } from "node:stream";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -490,12 +499,16 @@ async function fetchEndpoint(
         response.discard();
         fail("redirect is not allowed");
       }
-      const target = sameOriginRelativeRedirect(
-        current,
-        boundedHeader(response.headers, "location"),
-        plan.origin,
-      );
-      response.discard();
+      let target;
+      try {
+        target = sameOriginRelativeRedirect(
+          current,
+          boundedHeader(response.headers, "location"),
+          plan.origin,
+        );
+      } finally {
+        response.discard();
+      }
       redirects.push({ status: response.status, path: target.pathname });
       current = target;
       continue;
@@ -701,23 +714,48 @@ function snapshot(plan, commit, observedAt, result) {
   };
 }
 
-function writeSnapshot(outputPath, value) {
-  const absolute = resolve(outputPath);
-  if (
-    !isAbsolute(absolute) ||
-    absolute === root ||
-    absolute.startsWith(`${root}\\`)
-  ) {
+function containsPath(base, target) {
+  const child = relative(base, target);
+  return (
+    child === "" ||
+    (child !== ".." && !child.startsWith(`..${sep}`) && !isAbsolute(child))
+  );
+}
+
+function validateOutputPath(outputPath) {
+  if (typeof outputPath !== "string" || !isAbsolute(outputPath)) {
     fail("capture output must be a new file outside the repository");
   }
+  const absolute = resolve(outputPath);
+  const parent = dirname(absolute);
+  const parentStat = lstatSync(parent);
+  if (!parentStat.isDirectory() || parentStat.isSymbolicLink()) {
+    fail("capture output parent must be a real directory");
+  }
+  const realParent = realpathSync(parent);
+  const realRoot = realpathSync(root);
+  if (containsPath(realRoot, join(realParent, basename(absolute)))) {
+    fail("capture output must be a new file outside the repository");
+  }
+  return absolute;
+}
+
+function writeSnapshot(outputPath, value) {
+  const absolute = validateOutputPath(outputPath);
   const bytes = Buffer.from(`${JSON.stringify(value, null, 2)}\n`, "utf8");
   let descriptor;
   try {
     descriptor = openSync(
       absolute,
-      constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL,
+      constants.O_WRONLY |
+        constants.O_CREAT |
+        constants.O_EXCL |
+        (constants.O_NOFOLLOW ?? 0),
       0o600,
     );
+    if (!fstatSync(descriptor).isFile()) {
+      fail("capture output is not a regular file");
+    }
     writeFileSync(descriptor, bytes);
   } finally {
     if (descriptor !== undefined) closeSync(descriptor);
@@ -815,6 +853,15 @@ async function selfTest(plan) {
     positive.health.live.status !== 200
   ) {
     fail("positive self-test result differs");
+  }
+  let repositoryOutputRejected = false;
+  try {
+    validateOutputPath(join(root, "forbidden-authentik-snapshot.json"));
+  } catch {
+    repositoryOutputRejected = true;
+  }
+  if (!repositoryOutputRejected) {
+    fail("self-test accepted a repository-contained output path");
   }
   const cases = [
     [

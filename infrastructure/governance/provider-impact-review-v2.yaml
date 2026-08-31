@@ -1,0 +1,69 @@
+schema: starfiniti.provider-impact-review.v2
+reviewedAt: 2026-08-31
+amendmentCutoff: 2026-08-31T05:55:01Z
+supersedes:
+  path: infrastructure/governance/provider-impact-review.yaml
+  fileSha256: 16eeeb5943b37c0d3608ddbcea77e1993828f6437f08f4def5a97d98845a5928
+  schema: starfiniti.provider-impact-review.v1
+  decisionSha256: ee97ed58f003c8148a19b1e6afc5683bbc9c5b9652b6b43fc55dfd5647667645
+runtimeReview:
+  path: infrastructure/governance/authentik-runtime-review.yaml
+  evidencePath: docs/plan/evidence/M16/runs/authentik-runtime-88c8046-2026-08-31T055501Z.json
+  evidenceSha256: 4e89321c09f46bb4b3cd7e2690eed54110c9e516c0537d88b2c4424b141b5cb0
+change:
+  providerId: authentik
+  expectedPreviousClassification: installed-version-unknown-blocks-upgrade-decision
+  expectedPreviousSeverity: high
+  replacement:
+    id: authentik
+    reviewedThrough: authentik 2026.8.0 and security policy through 2026-08-31T05:55:01Z
+    observedState: Public login-shell capture proves exact served runtime 2026.5.6 across one version family and three independently fetched same-version assets; image digest outposts and private configuration remain unobserved.
+    candidateState: Authentik 2026.8.0 is the current feature release; it is not accepted until the exact OIDC SAML SCIM deprovisioning deprecation and recovery rehearsal passes.
+    impact:
+      classification: supported-prior-feature-line-current-patch
+      severity: medium
+      securityRelevant: true
+      affectedModules: [M01, M13, M15, M16]
+      riskIds: [R-029, R-044, R-048]
+      owner: engineering
+      disposition: retain-2026-5-6-until-2026-8-identity-and-recovery-rehearsal
+      rationale: Exact public-runtime evidence resolves the installed-version unknown and the observed patch is the latest patch in the still-supported prior feature line through the cutoff; public assets cannot establish image outpost private configuration identity compatibility recovery or upgrade safety.
+      rollback: Preserve the current broker database configuration export signing material local break-glass path Supabase callback contract and exact image/outpost inventory before changing any candidate; failed rehearsal leaves 2026.5.6 running.
+    evidence:
+      - infrastructure/governance/authentik-runtime-review.yaml
+      - docs/plan/evidence/M16/runs/authentik-runtime-88c8046-2026-08-31T055501Z.json
+      - docs/architecture/ADR/0008-broker-workforce-authentik-through-supabase-auth.md
+      - docs/architecture/ADR/0054-authentik-correlated-scim-and-live-membership-reconciliation.md
+    remainingGates:
+      - container-image-and-outpost-inventory
+      - private-configuration-and-signing-recovery-export
+      - exact-2026-8-release-and-deprecation-diff
+      - oidc-saml-scim-fixtures
+      - stale-session-and-deprovisioning-canary
+      - clean-room-recovery
+      - independent-review
+      - owner-approval
+effectiveDecision:
+  providerCount: 13
+  decisionSha256: 3b8372a74aee6128b947e43c3ff3beba34029434b197c4340dff0d9cb3f6dfc3
+  severityInventory:
+    critical: 2
+    high: 4
+    medium: 4
+    low: 3
+outcomes:
+  installedRuntimeVersionUnknown: false
+  installedRuntimeVersionObservedFromPublicShell: true
+  containerAndOutpostInventory: incomplete
+  candidateSelection: partial
+  deploymentReadiness: incomplete
+  monthlyReview: incomplete
+  limitation: This V2 amendment resolves only the served Authentik runtime patch unknown. It is not a thirteen-source review at the amendment cutoff, an image or outpost inventory, private configuration evidence, identity compatibility, recovery, independent review, upgrade acceptance, deployment authorization, production mutation, or reconciliation record.
+authority:
+  productionAccess: false
+  mergeApproved: false
+  releaseApproved: false
+  deploymentApproved: false
+  providerUpgradeApproved: false
+  productionMutation: false
+  productionReconciled: false

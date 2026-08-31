@@ -5,6 +5,24 @@ repository controls now and leaves elapsed monthly reviews, the quarterly
 exercise bundle, candidate acceptance, regression controls, scoring,
 independent review, and owner approval pending.
 
+ADR-0108 resolves only the served Authentik runtime-version unknown. The clean
+implementation-bound collector retained a 3,257-byte metadata artifact with
+SHA-256
+`4e89321c09f46bb4b3cd7e2690eed54110c9e516c0537d88b2c4424b141b5cb0`:
+one `2026.5` family, exact patch `2026.5.6`, three independently fetched same-
+version asset hashes, TLS 1.3, and HTTP 200 live/ready results. No body, header,
+cookie, address, credential, or private configuration is retained. Official
+policy supports this latest patch of the prior feature line, so the append-only
+V2 provider amendment changes Authentik from High unknown to Medium supported-
+prior-line. The effective provider inventory is now two Critical, four High,
+four Medium, and three Low under SHA-256
+`3b8372a74aee6128b947e43c3ff3beba34029434b197c4340dff0d9cb3f6dfc3`.
+Run `npm run continuous-improvement:authentik-runtime:validate`. Image/outpost
+inventory, private configuration/signing recovery, identity compatibility,
+current-line upgrade acceptance, recovery, elapsed cadence, independent review,
+approval, deployment, mutation, and reconciliation remain false or incomplete.
+M16 therefore remains 77/100.
+
 ADR-0107 closes the narrower reconstructability gap across the thirteen
 official provider, platform, and recovery entries. The cutoff-bound
 `infrastructure/governance/provider-impact-review.yaml` binds the immutable
@@ -16,8 +34,8 @@ provider-decision SHA-256 is
 Run `npm run continuous-improvement:provider-impact:validate`; the network- and
 SSH-free self-test rejects forty-six source, installed-state, catalogue, pin,
 candidate, evidence, task, ADR, and false-authority corruptions.
-Classification is not acceptance: Authentik's installed version remains
-unknown, candidate selection is partial, automatic upgrades are prohibited,
+Classification is not acceptance: ADR-0108 later resolves Authentik's served
+version only, candidate selection is partial, automatic upgrades are prohibited,
 and every merge, release, provider-upgrade, deployment, production mutation,
 reconciliation, independent-review, owner-approval, and elapsed-monthly claim
 remains false. M16 therefore remains 77/100 with seven of 39 closeout controls

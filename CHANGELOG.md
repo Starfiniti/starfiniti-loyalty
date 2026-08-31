@@ -1,5 +1,17 @@
 # Changelog
 
+- Added ADR-0108, a clean-commit bounded public Authentik runtime collector,
+  exact 3,257-byte minimized evidence for served patch `2026.5.6`, and an
+  append-only V2 provider-impact amendment. Three independent same-version
+  assets and both health endpoints are digest/status bound without retaining
+  bodies, headers, cookies, addresses, credentials, or private configuration.
+  Official policy supports the exact patch on the prior feature line, changing
+  only Authentik from High unknown to Medium supported-prior-line; V1 remains
+  immutable. Image/outpost inventory, private recovery evidence, `2026.8`
+  compatibility, candidate acceptance, approvals, deployment, production
+  mutation, and reconciliation remain open. M16 and product scores are
+  unchanged.
+
 - Added ADR-0107 and a cutoff-bound M16 provider-impact register. The register
   binds the immutable thirteen-source and six-provider installed snapshots,
   classifies every canonical entry as two Critical, five High, three Medium,

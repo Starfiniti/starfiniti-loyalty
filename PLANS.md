@@ -1,6 +1,24 @@
 # Execution Plan
 
-ADR-0107 is the active safe M16 reconstructability slice. One cutoff-bound
+ADR-0108 is the active safe M16 installed-runtime slice. A clean exact-commit,
+bounded public capture proves that the served Authentik login runtime is exact
+`2026.5.6` across one version family and three independently retrieved static
+assets; live and ready health both returned HTTP 200. The 3,257-byte artifact
+has SHA-256
+`4e89321c09f46bb4b3cd7e2690eed54110c9e516c0537d88b2c4424b141b5cb0`
+and retains no page bodies, headers, cookies, addresses, credentials, or private
+configuration. Official policy places it at the latest patch of the supported
+prior feature line, so V2 changes only Authentik from High unknown to Medium
+supported-prior-line. The exact V1 register remains immutable; the effective
+V2 digest is
+`3b8372a74aee6128b947e43c3ff3beba34029434b197c4340dff0d9cb3f6dfc3`
+with two Critical, four High, four Medium, and three Low entries. Image/outpost
+inventory, private configuration/signing recovery, `2026.8` compatibility,
+identity canaries, recovery, independent review, every approval, and production
+authority remain false. M16 stays 77/100, the candidate 83/100, and production
+54/100 and unchanged.
+
+ADR-0107 is the preceding M16 reconstructability slice. One cutoff-bound
 register now composes the immutable thirteen-source and six-provider installed
 snapshots, classifies every canonical provider/platform/recovery entry, assigns
 an engineering disposition, and records provider-specific rollback. The
@@ -9,8 +27,9 @@ three Low entries under SHA-256
 `ee97ed58f003c8148a19b1e6afc5683bbc9c5b9652b6b43fc55dfd5647667645`.
 The root-gated validator rejects forty-six source, snapshot, catalogue, pin,
 candidate, evidence, task, ADR, and false-authority corruptions. Classification
-does not accept any candidate: Authentik's deployed version remains unknown,
-automatic upgrades are prohibited, and candidate selection, monthly cadence,
+does not accept any candidate: ADR-0108 later resolves Authentik's served patch
+but not its image, outposts, private configuration, or compatibility; automatic
+upgrades are prohibited, and candidate selection, monthly cadence,
 independent review, owner approval, deployment, and reconciliation remain
 incomplete. M16 stays 77/100, the candidate stays 83/100, and production stays
 54/100 and unchanged. Exact implementation `e4a1e573` passed CI `33306849568`,

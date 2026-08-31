@@ -1,5 +1,29 @@
 # Iteration Log
 
+## 2026-08-31 — Minimized Authentik served-runtime evidence
+
+- Compared retaining the installed-version unknown, taking credentialed host or
+  administration evidence, and a bounded public-shell capture. ADR-0108 selects
+  the public capture for the narrower served-version question and leaves image,
+  outpost, private configuration, identity compatibility, and recovery as
+  separate gates.
+- Bound a clean exact implementation commit to a 3,257-byte snapshot under
+  SHA-256
+  `4e89321c09f46bb4b3cd7e2690eed54110c9e516c0537d88b2c4424b141b5cb0`.
+  It proves exact Authentik `2026.5.6`, three independently fetched same-version
+  asset digests, TLS 1.3, and HTTP 200 live/ready health while retaining no raw
+  content, headers, cookies, addresses, credentials, or private configuration.
+- Official policy places `2026.5.6` at the latest patch of the supported prior
+  feature line through the cutoff; `2026.8.0` remains an unaccepted current-
+  line candidate. V2 changes only Authentik from High unknown to Medium
+  supported-prior-line. The immutable V1 remains intact and the effective
+  thirteen-provider digest becomes
+  `3b8372a74aee6128b947e43c3ff3beba34029434b197c4340dff0d9cb3f6dfc3`.
+- No production state changed. M16 remains 77/100, the integration candidate
+  83/100, and deployed production 54/100. Image/outpost inventory, private
+  recovery, identity canaries, independent review, approvals, deployment, and
+  reconciliation remain open.
+
 ## 2026-08-30 — Cutoff-bound provider impact classification
 
 - Reconstructed the immutable 6,534-byte thirteen-source snapshot, the
