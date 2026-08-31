@@ -1,5 +1,30 @@
 # Iteration Log
 
+## 2026-08-31 — Deterministic final owner-gate handoff
+
+- Compared the hand-maintained six-example owner-input paragraph with a
+  generated view over the authoritative fourteen-item ranked backlog. The
+  generated approach prevents omission and priority drift while leaving the
+  source task graph and evidence gates authoritative.
+- Added `docs/plan/OWNER_GATES.md` with thirteen external-input gates, one
+  dependency-blocked GA canary, exact owner actions, dependencies, current or
+  pending evidence state, passing boundaries, and a scoped authorization
+  template.
+- Added a fail-closed generator and twenty-three adversarial cases for inventory,
+  schema, ranking, arithmetic, order, path containment and canonicality,
+  impossible timestamps, missing completed evidence, common reusable
+  credential forms, Markdown control characters, multiline injection,
+  deterministic output, and generated-file drift.
+- Adversarial diff review found and corrected normalized impossible dates,
+  credential-bearing URLs and generic key assignments, bidirectional/control
+  text, unsafe owner/dependency Markdown, and unchecked generated-output
+  symlinks. A separate refutation pass confirmed cross-platform source bytes,
+  prospective evidence handling, exact gate coverage, and formatter-stable
+  output; no correctness or security finding remains in the reviewed diff.
+- Integrated the validator into the root repository gate and M16 task/evidence
+  contract. This changes no production system, product score, module score,
+  feature flag, billing state, customer value, or authority boundary.
+
 ## 2026-08-31 — Fresh exact-head M15 security reconciliation
 
 - Reconstructed M15-S03 after ADR-0112 intentionally invalidated older

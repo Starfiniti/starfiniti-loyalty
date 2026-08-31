@@ -1,5 +1,15 @@
 # M16 Evidence — Continuous Improvement
 
+The final owner-only action queue is generated as
+[`docs/plan/OWNER_GATES.md`](../../OWNER_GATES.md) from the exact ranked
+`IMPROVEMENT_BACKLOG.yaml` bytes. Run `npm run owner-gates:validate` to prove
+the fixed fourteen-gate inventory, deterministic rendering, priority
+arithmetic, safe repository-local evidence paths, pending-artifact labels,
+common reusable credential rejection, and scoped authority language through
+twenty-three adversarial
+cases. It does not approve, merge, release, deploy, reboot, run a destructive
+exercise, start a canary, reveal credentials, or close any evidence gate.
+
 The active fail-closed manifest is `continuous-improvement.yaml`. It records
 repository controls now and leaves elapsed monthly reviews, the quarterly
 exercise bundle, candidate acceptance, regression controls, scoring,

@@ -1,5 +1,16 @@
 # Execution Plan
 
+The active safe M16 slice is a generated final owner-gate handoff. The existing
+ranked improvement backlog remains authoritative; `docs/plan/OWNER_GATES.md`
+renders all fourteen entries into one priority queue with exact owner action,
+dependency, evidence state, and passing boundary. `npm run
+owner-gates:validate` must reject score/order drift, missing or duplicate gates,
+unsafe or non-canonical evidence paths, common reusable credential forms,
+Markdown injection,
+false completion, and edited generated output. This slice changes no product
+score or production state and grants no merge, release, deployment, reboot,
+exercise, canary, tenant, ledger, database, billing, or GA authority.
+
 ADR-0112 is the active safe M15 observability-deployment slice. It turns the
 existing 31-signal/27-alert contract into a production-disabled deployment
 candidate: Prometheus 3.14.0, Alertmanager 0.34.0, Grafana 13.2.0,

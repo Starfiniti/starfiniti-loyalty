@@ -3699,6 +3699,7 @@ tasks:
         the Supabase repository review binds current CLI client and SSR patch releases exact npm platform and subpackage provenance compatible Node floors and an explicit false automatic-table-exposure setting while retaining the closed Data API schema list explicit grants RLS and false live-stack or production authority,
         the notification and federation dependency review binds exact compatible fast-xml-parser Nodemailer and SMTP sink patch provenance while retaining independent bounded SAML validation transport-level and message-level file and URL denial and false merge release deployment mutation and reconciliation authority,
         the evidence-ranked backlog score and order recompute exactly with no overdue unaccepted Critical or High item,
+        a deterministic generated owner handoff contains every ranked backlog item in exact priority order distinguishes current from pending evidence rejects common reusable credential forms and limits approval to one explicit gate without granting merge release deployment reboot destructive-exercise canary tenant ledger database billing or GA authority,
         a fail-closed interim registry binds every observed second occurrence to distinct chronological evidence anchors and exact decision implementation validator monitor and runbook bytes while candidate controls cannot claim merge or production activation,
         the second occurrence of a stable failure binds a merged regression test validator monitor runbook or agent rule,
         every material change rescored all affected modules while preserving prior scores and evidence,
@@ -3720,6 +3721,7 @@ tasks:
     verification:
       [
         npm run continuous-improvement:validate,
+        npm run owner-gates:validate,
         npm run continuous-improvement:sources:validate,
         clean-head thirteen-source capture and independent snapshot verification,
         npm run continuous-improvement:installed:validate,
@@ -3787,6 +3789,7 @@ tasks:
         docs/plan/ENTERPRISE_ROADMAP.md,
         docs/plan/ITERATION_LOG.md,
         docs/plan/IMPROVEMENT_BACKLOG.yaml,
+        docs/plan/OWNER_GATES.md,
         docs/operations/CONTINUOUS_IMPROVEMENT.md,
         docs/architecture/ADR/0068-evidence-bound-continuous-improvement.md,
         docs/architecture/ADR/0111-evidence-bound-recurring-failure-register.md,
@@ -3845,6 +3848,7 @@ tasks:
         docs/plan/evaluations/product-score.json,
         docs/plan/evaluations/product-score-v1-2026-08-13.json,
         scripts/validate-product-score.mjs,
+        scripts/render-owner-gates.mjs,
         scripts/validate-recurring-failure-registry.mjs,
         infrastructure/governance/continuous-improvement.yaml,
         scripts/capture-provider-source-snapshot.mjs,

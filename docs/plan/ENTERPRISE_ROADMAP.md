@@ -150,4 +150,6 @@ M01 may wait for real-store access while M02 proceeds. Later modules remain sequ
 
 ## External owner inputs
 
-Only these inputs may remain for their production gates: an approved real WooCommerce store, Stripe and Klaviyo test/production credentials, an enterprise IdP test tenant, independent penetration testing, production prices/Price IDs, and explicit GA approval. They do not block repository implementation of the next safe module.
+[`OWNER_GATES.md`](OWNER_GATES.md) is the generated, priority-ordered handoff for every remaining owner, approved-environment, credential, independent-review, maintenance, elapsed-canary, and GA gate. It is derived from the authoritative fourteen-item [`IMPROVEMENT_BACKLOG.yaml`](IMPROVEMENT_BACKLOG.yaml), validated by `npm run owner-gates:validate`, and distinguishes current evidence artifacts from evidence that can only be created after the external action occurs.
+
+Credentials, receiver destinations, private inventories, customer data, and provider payloads remain outside Git. An owner approval is scoped to one gate and does not imply merge, release, deployment, reboot, destructive exercise, canary, tenant, ledger, database, billing, or GA authority. External inputs do not block repository implementation of the next safe module.

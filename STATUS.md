@@ -1,5 +1,16 @@
 # Status
 
+- M16 now has one deterministic final owner handoff instead of a partial
+  prose list. `docs/plan/OWNER_GATES.md` is generated from the exact ranked
+  fourteen-item improvement backlog and exposes all thirteen external-input
+  gates plus the one dependency-blocked GA canary in priority order. Its
+  validator recomputes scores and order, distinguishes current from pending
+  evidence artifacts, constrains paths, rejects common reusable credential
+  forms, and exercises twenty-three adversarial mutations. Approval remains gate-specific:
+  this adds no merge, release, deployment, reboot, destructive exercise,
+  canary, tenant, ledger, database, billing, or GA authority. Production and
+  product/module scores are unchanged.
+
 - ADR-0112 packages the previously non-deployable M15 observability contract as
   a production-disabled candidate. Five current official components are pinned
   to exact image indexes; every central service has a read-only root, dropped
