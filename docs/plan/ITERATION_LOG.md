@@ -1,5 +1,34 @@
 # Iteration Log
 
+## 2026-08-31 — Isolated Authentik 2026.8 runtime rehearsal
+
+- Compared a host-published disposable stack, a second in-memory API fake, and
+  an internal-network operator. ADR-0110 selects the internal operator because
+  it exercises the exact candidate and production federation client without an
+  ingress port or duplicating the reconciler.
+- Pinned exact Linux/amd64 manifests for Authentik 2026.8.0, PostgreSQL 16,
+  and Node 24.20.0. The harness follows the current official 2026.8 topology
+  rather than retaining the removed Redis dependency. Images are pulled before a unique
+  internal-only network is created; no container receives the Docker socket,
+  production route, real credential, or host port.
+- Added a bounded bearer-protected RFC-focused SCIM sink and a read-only
+  operator bundle that creates disabled OIDC and SAML sources, proves two
+  bindings per source-only flow, rotates the OIDC secret idempotently, validates
+  the hidden authorization-code/hashed-subject provider and strict Supabase
+  callback, and reads downstream OpenID discovery.
+- The real Authentik worker performs SCIM service-provider discovery,
+  `startIndex`/`count` pagination, user/group provisioning, membership, quoted
+  member removal, and deactivation. Fourteen scenarios and exact resource
+  teardown precede publication of one minimized report.
+- Wired network-free plan/report corruption and bundle self-tests into the root
+  gate and runtime execution/artifact retention into the existing Security
+  recovery job. Local validation passes; exact-head Linux execution remains
+  pending.
+- Preserved the evidence boundary: this does not advance M13's 12/51 production
+  canary, M15 recovery/GA, M16 score, the integration/product scores, or any
+  merge, release, upgrade, deployment, rollback, approval, observation, or
+  reconciliation gate. Production remains unchanged on Authentik 2026.5.6.
+
 ## 2026-08-31 — Authentik 2026.8 source compatibility contract
 
 - Compared an immediate production canary, waiting for a complete disposable

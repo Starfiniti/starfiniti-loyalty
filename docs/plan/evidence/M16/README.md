@@ -5,6 +5,23 @@ repository controls now and leaves elapsed monthly reviews, the quarterly
 exercise bundle, candidate acceptance, regression controls, scoring,
 independent review, and owner approval pending.
 
+ADR-0110 adds a separate exact-candidate runtime rehearsal without changing the
+live Authentik 2026.5.6 broker. Run
+`npm run continuous-improvement:authentik-2026-8:runtime:validate` for the
+network-free plan, report, source, sink, bundle, and corruption self-tests. The
+existing Security recovery job executes the reviewed 2026.8.0 Authentik image
+plus exact PostgreSQL and Node Linux/amd64 manifests on one internal-
+only network with no published port or Docker socket. The production federation
+client—not a duplicate—creates and reconciles disabled OIDC/SAML sources and a
+strict downstream OIDC provider. Authentik's worker drives service-provider
+discovery, pagination, provisioning, group membership/removal, and deactivation
+against a synthetic bearer-protected SCIM sink. Fourteen scenarios must pass and
+teardown must finish before a minimized report is published. Local validation
+passes; exact-head Linux runtime evidence is pending. This is not a real
+enterprise IdP, production configuration/outpost, Starfiniti RLS, recovery,
+rollback, upgrade, or approval result. It changes no M13 production-canary check
+and leaves M16 at 77/100.
+
 ADR-0109 closes only the deterministic Authentik 2026.8 source-contract
 question. The versioned governance record pins exact 2026.5.6/2026.8.0 tag,
 commit, OpenAPI, release, OCI/GHCR, attestation, and eight protocol-source facts.

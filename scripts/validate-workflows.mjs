@@ -728,6 +728,19 @@ requireCondition(
         step.env?.STARFINITI_CANARY_RUNNER === "github-hosted" &&
         step.run ===
           "npm run proxmox-security:packages:run -- --out dist/proxmox-security-packages/ci.json",
+    ) &&
+    recoveryTransportSteps.some(
+      (step) =>
+        step.name ===
+          "Validate exact Authentik 2026.8 runtime rehearsal contract" &&
+        step.run ===
+          "npm run continuous-improvement:authentik-2026-8:runtime:validate",
+    ) &&
+    recoveryTransportSteps.some(
+      (step) =>
+        step.name === "Run isolated Authentik 2026.8 runtime rehearsal" &&
+        step.run ===
+          "npm run continuous-improvement:authentik-2026-8:runtime:run -- --out dist/authentik-2026-8-runtime/ci.json",
     ),
   `${securityWorkflowPath}: recovery transport, Proxmox package provenance, route-free read-only preflight, and compatibility inventory must validate while disposable plans execute`,
 );
@@ -772,6 +785,21 @@ requireCondition(
       step.with?.["retention-days"] === 30,
   ),
   `${securityWorkflowPath}: minimized exact-head OpenSSH client evidence must upload or fail`,
+);
+requireCondition(
+  recoveryTransportSteps.some(
+    (step) =>
+      step.name === "Upload minimized Authentik 2026.8 runtime evidence" &&
+      step.if === "always()" &&
+      step.uses ===
+        "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a" &&
+      step.with?.name ===
+        "security-authentik-2026-8-runtime-${{ github.sha }}" &&
+      step.with?.path === "dist/authentik-2026-8-runtime/ci.json" &&
+      step.with?.["if-no-files-found"] === "error" &&
+      step.with?.["retention-days"] === 30,
+  ),
+  `${securityWorkflowPath}: minimized exact-head Authentik runtime evidence must upload or fail`,
 );
 requireCondition(
   !recoveryTransportText.includes("--publish") &&

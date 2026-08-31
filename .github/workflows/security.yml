@@ -232,6 +232,8 @@ jobs:
         run: npm run proxmox-security:compatibility-inventory:validate
       - name: Validate isolated Proxmox compatibility rehearsal contract
         run: npm run proxmox-security:compatibility-rehearsal:validate
+      - name: Validate exact Authentik 2026.8 runtime rehearsal contract
+        run: npm run continuous-improvement:authentik-2026-8:runtime:validate
       - name: Run disposable no-install Proxmox package provenance canary
         env:
           STARFINITI_CANARY_RUNNER: github-hosted
@@ -244,6 +246,8 @@ jobs:
         run: npm run borgbackup-security:run -- --out dist/borgbackup-security/ci.json
       - name: Run isolated OpenSSH recovery client compatibility canary
         run: npm run openssh-client-security:run -- --out dist/openssh-client-security/ci.json
+      - name: Run isolated Authentik 2026.8 runtime rehearsal
+        run: npm run continuous-improvement:authentik-2026-8:runtime:run -- --out dist/authentik-2026-8-runtime/ci.json
       - name: Upload minimized recovery transport evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -282,6 +286,14 @@ jobs:
         with:
           name: security-rsync-source-${{ github.sha }}
           path: dist/rsync-source-security/ci.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload minimized Authentik 2026.8 runtime evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: security-authentik-2026-8-runtime-${{ github.sha }}
+          path: dist/authentik-2026-8-runtime/ci.json
           if-no-files-found: error
           retention-days: 30
 

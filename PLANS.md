@@ -1,23 +1,33 @@
 # Execution Plan
 
-ADR-0109 is the active safe M16 identity-compatibility slice. It pins the exact
-Authentik 2026.5.6 baseline and 2026.8.0 candidate tag objects, commits,
-OpenAPI schemas, release source and asset, GHCR linux/amd64 manifest, and eight
-protocol source files. The explicit upstream verifier recomputes that all 27
-administration operations and 248 sent request-field occurrences across 18
-schemas remain supported—240 exactly and eight through compatible
-widenings/additions. The offline root gate binds that frozen result plus OIDC,
-SAML, SCIM, stale-session, callback, and database-authority invariants to the
-implementation and runbooks.
-This is source-contract evidence only. Production remains on 2026.5.6 and was
-not accessed or changed. Private configuration, exact current image/outposts,
-the disposable 2026.8 runtime, protocol traffic, deprovisioning, clean-room
-recovery, rollback, independent review, owner approval, merge, release,
-deployment, and reconciliation remain false or pending. M16 stays 77/100, the
-candidate 83/100, and production 54/100. Exact implementation
+ADR-0110 is the active safe M13/M15/M16 identity-runtime slice. It preserves
+ADR-0109's exact Authentik 2026.8.0 source/OpenAPI result and adds a fourteen-
+scenario executable rehearsal with digest-pinned Authentik, PostgreSQL, and
+Node Linux/amd64 manifests. One internal-only Docker network has no
+published port, Docker socket, production route, or real credential. A
+short-lived read-only operator bundles the production federation client and
+exercises disabled OIDC/SAML reconciliation, exact source-only flows,
+idempotent rotation, hidden authorization-code/hashed-subject provider, strict
+Supabase callback, OpenID discovery, and the real Authentik SCIM worker against
+a bounded bearer-protected synthetic sink. SCIM service-provider discovery,
+pagination, external IDs, membership, quoted removal, deactivation, evidence
+minimization, and teardown are deterministic gates. The offline plan and bundle
+self-tests pass locally; the existing Security recovery job will run the exact
+candidate and retain only the minimized report. This still does not test a real
+enterprise IdP, current private configuration/outposts, Starfiniti database
+authorization, recovery, rollback, or production. M13 remains 12/51, M16 stays
+77/100, the candidate 83/100, and production 54/100 and unchanged. Merge,
+release, upgrade, approval, deployment, observation, and reconciliation remain
+false or pending.
+
+ADR-0109 is the preceding source-contract slice. It pins the exact Authentik
+2026.5.6 baseline and 2026.8.0 candidate tag objects, commits, OpenAPI schemas,
+release source and asset, GHCR linux/amd64 manifest, and eight protocol source
+files. All 27 administration operations and 248 sent request-field occurrences
+across 18 schemas remain supported—240 exactly and eight through compatible
+widenings/additions. Exact implementation
 `5b9419acdfe0e4cd84db81d258ed3692b88ed85c` passed CI `33368245319`, Security
-`33368245722`, and external CodeQL `99413667343`; all 12 PR checks are green and
-PR #57 is merge-clean.
+`33368245722`, and external CodeQL `99413667343`; all 12 PR checks were green.
 
 ADR-0108 is the active safe M16 installed-runtime slice. A clean exact-commit,
 bounded public capture proves that the served Authentik login runtime is exact

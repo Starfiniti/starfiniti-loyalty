@@ -1,5 +1,13 @@
 # M15 Evidence — GA Hardening
 
+ADR-0110 adds an exact Authentik 2026.8 disposable runtime rehearsal to the
+existing Security recovery job. Its internal-only, zero-port, zero-Docker-socket
+topology can prove candidate boot, production-client OIDC/SAML reconciliation,
+outbound SCIM behavior, minimization, and teardown with synthetic data. Local
+contract tests pass; exact-head Linux execution is pending. It does not restore
+private Authentik configuration, signing material, users, sessions, or audit and
+therefore cannot advance M15-S04 recovery or M15-S06 GA checks.
+
 M15-S01 is active with seven of 23 checks passing. `capacity.yaml` separates repository readiness from an approved production-like measured run and exact value reconciliation. ADR-0104 adds an exact digest-pinned Grafana k6 contract that must match the canonical phases, scenarios, rates, drops, contracts, thresholds, target digest, and false production authority; repository validation and Linux image inspection cannot substitute for the still-pending approved real independent run. No supported capacity is claimed while that manifest is in progress.
 
 M15-S02 is active. `fault-injection.yaml` separates the disposable-only controller from the two approved production-like runs and independent WAL, queue, ledger, WooCommerce, checkout, and no-loss reconciliation. No production fault is authorized by repository readiness.

@@ -1,5 +1,19 @@
 # Changelog
 
+- Added ADR-0110 and a fourteen-scenario exact Authentik 2026.8 runtime
+  rehearsal. Digest-pinned Authentik, PostgreSQL, and Node Linux/amd64
+  manifests run on one internal-only Docker network with no published port,
+  Docker socket, production route, or real credential. A read-only operator
+  bundles the production federation client and covers disabled OIDC/SAML
+  reconciliation, idempotent rotation, strict downstream OIDC discovery, and
+  Authentik's outbound SCIM discovery, pagination, provisioning, membership,
+  quoted removal, and deactivation against a bounded synthetic sink. The root
+  gate runs only the network-free contract and bundle self-test; the existing
+  Security recovery job runs the containers and retains a minimized report
+  after exact teardown. Local validation passes and exact-head Linux execution
+  is pending. This is not M13 production-canary, RLS, recovery, rollback,
+  upgrade, or deployment authority; production and scores are unchanged.
+
 - Added ADR-0109 and an exact Authentik 2026.8 source/OpenAPI compatibility
   contract. It pins the 2026.5.6 baseline and 2026.8.0 candidate tag, commit,
   schema, release, OCI/GHCR, attestation, and protocol-source provenance. A new

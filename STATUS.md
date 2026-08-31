@@ -1,5 +1,23 @@
 # Status
 
+- ADR-0110 adds the still-missing exact Authentik 2026.8.0 runtime rehearsal
+  without touching the live 2026.5.6 broker. Exact Authentik, PostgreSQL, and
+  Node Linux/amd64 manifests run on one internal-only Docker network with
+  zero published ports, zero Docker-socket mounts, and synthetic credentials and
+  identities only. A read-only operator bundles the production federation
+  client and exercises disabled OIDC and SAML sources, idempotent rotation, a
+  hidden authorization-code/hashed-subject provider, strict Supabase callback,
+  OpenID discovery, and Authentik's real outbound SCIM worker against a bounded
+  bearer-protected sink. Fourteen scenarios cover discovery, pagination,
+  external IDs, group membership, quoted member removal, deactivation,
+  minimization, and exact teardown. The offline validator and bundle self-test
+  pass locally; the executable runtime is wired into the existing Security
+  recovery job and awaits exact-head Linux CI evidence. It cannot pass one of
+  M13-S06's production checks or replace database RLS/stale-session tests.
+  Production, scores, M13's 12/51 count, and every merge, release, upgrade,
+  recovery, rollback, IdP-fixture, approval, deployment, and reconciliation
+  gate remain unchanged.
+
 - ADR-0109 pins an exact, immutable Authentik 2026.8.0 source candidate without
   touching the live broker. The contract binds the 2026.5.6 and 2026.8.0 tag
   objects/commits, OpenAPI bytes, release asset, GHCR linux/amd64 manifest and

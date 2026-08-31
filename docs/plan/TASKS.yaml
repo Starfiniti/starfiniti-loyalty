@@ -2818,6 +2818,8 @@ tasks:
           - ADR-0069 and deployment preflight allow the complete disabled file set reject partial configuration and retain strict validation for a complete set without changing database authority
           - exact candidate Compose with disabled read-only non-file binds validates through Docker Compose 2.40.3 on VM 970 without creating or changing a container
           - commit 945c92f7a1e4782e959756dd168dda553480e3eb passed CI 33126151633 Security 33126151639 and external CodeQL with all eleven checks green before integration into draft PR 57
+          - ADR-0110 defines a separate fourteen-scenario exact Authentik 2026.8 runtime rehearsal with an internal-only network zero published ports zero Docker socket synthetic fixtures the production federation client outbound SCIM behavior minimized evidence and exact teardown
+          - the runtime contract and bundle self-tests pass locally while exact-head Linux execution remains pending and cannot advance any of the twelve passed or thirty-nine pending M13 production canary checks
 
   - id: M14-MANAGED-BILLING
     title: Add managed Stripe billing and idempotent usage metering
@@ -3663,6 +3665,7 @@ tasks:
         one cutoff-bound thirteen-entry engineering register composes the immutable source and installed snapshots with current repository pins candidate facts affected modules risk links rollback and remaining gates while unknown state monthly cadence independent review every approval and production authority remain explicitly incomplete or false,
         a clean exact-commit bounded public Authentik runtime snapshot proves one unique version family and exact patch across the login shell and three independently fetched same-version assets plus HTTP 200 live and ready health while retaining no raw content headers cookies addresses credentials private configuration or production authority and explicitly leaving image digest outpost identity compatibility upgrade recovery approval deployment and reconciliation unproved,
         an exact Authentik 2026.8 source and OpenAPI contract pins the baseline and candidate tag commit schema release asset registry and protocol-source provenance and proves all twenty-seven owned administration operations plus two hundred forty-eight sent request-field occurrences across eighteen schemas remain structurally compatible with two hundred forty exact and eight compatible while runtime identity recovery rollback upgrade and every production authority remain false,
+        an exact Authentik 2026.8 disposable runtime rehearsal uses digest-pinned Linux manifests one internal-only network zero published ports zero Docker socket synthetic credentials and the production federation client to prove disabled OIDC and SAML reconciliation downstream authorization-code hashed-subject discovery plus SCIM service-provider discovery pagination provisioning membership quoted removal and deactivation while real IdP database authorization recovery rollback upgrade and every production authority remain false,
         an exact clean-commit metadata-only snapshot binds bounded streamed SHA-256 evidence for all thirteen official sources without retaining provider content or asserting review impact installed evidence or approval,
         a separate exact clean-commit installed-state snapshot binds both opaque recovery endpoints all six recovery providers public versions and exact executable provenance without retaining SSH routes command output identifiers or asserting candidate review impact approval or mutation,
         the installed BorgBackup impact review selects one exact upstream-signed fixed candidate without mixing Debian suites while a digest-bound disposable build and networkless current/candidate client/server canary preserve the exact Debian rollback client and prohibit production authority,
@@ -3706,6 +3709,8 @@ tasks:
         npm run continuous-improvement:authentik-runtime:validate,
         npm run continuous-improvement:authentik-2026-8:validate,
         npm run continuous-improvement:authentik-2026-8:upstream:verify,
+        npm run continuous-improvement:authentik-2026-8:runtime:validate,
+        exact-head isolated Authentik 2026.8 runtime artifact with all fourteen scenarios minimized evidence and exact teardown,
         node scripts/capture-authentik-runtime-snapshot.mjs --self-test,
         clean exact-commit public Authentik runtime capture and independent snapshot verification,
         clean-head dual-endpoint installed-state capture and independent snapshot verification,
@@ -3788,8 +3793,14 @@ tasks:
         docs/architecture/ADR/0107-cutoff-bound-provider-impact-register.md,
         docs/architecture/ADR/0108-minimized-public-authentik-runtime-evidence.md,
         docs/architecture/ADR/0109-authentik-2026-8-source-compatibility-contract.md,
+        docs/architecture/ADR/0110-isolated-authentik-2026-8-runtime-rehearsal.md,
         infrastructure/governance/recovery-artifact-escrow-v3.yaml,
         infrastructure/governance/authentik-runtime-capture.yaml,
+        infrastructure/testing/authentik-2026-8-runtime/plan.yaml,
+        infrastructure/testing/authentik-2026-8-runtime/scim-sink.mjs,
+        scripts/validate-authentik-2026-8-runtime-plan.mjs,
+        scripts/authentik-2026-8-runtime-operator.mjs,
+        scripts/run-authentik-2026-8-runtime-canary.mjs,
       ]
     evidence:
       [
