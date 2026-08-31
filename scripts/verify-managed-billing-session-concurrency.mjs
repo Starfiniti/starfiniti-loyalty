@@ -38,7 +38,7 @@ function reserve(
 
 function recordSession(sql, targetOperationId) {
   return sql`
-    select operation_state, provider_session_id
+    select operation_state
     from loyalty_private.record_managed_billing_session_attempt_v1(
       ${actorId}, ${targetOperationId}, ${sessionAttemptId}, 'session',
       'succeeded', ${`cs_test_BillingSessionRace${suffix}`},
