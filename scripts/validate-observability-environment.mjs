@@ -182,7 +182,9 @@ function validatePathValues(values, envPath) {
   if (
     [...resolved.values()].some(
       (path) =>
-        !isAbsolute(path) || resolve(path) !== path || parse(path).root === path,
+        !isAbsolute(path) ||
+        resolve(path) !== path ||
+        parse(path).root === path,
     )
   ) {
     fail("operator paths must be canonical non-root absolute paths");
