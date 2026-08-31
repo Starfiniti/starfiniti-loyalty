@@ -11,7 +11,9 @@
   gate runs only the network-free contract and bundle self-test; the existing
   Security recovery job runs the containers and retains a minimized report
   after exact teardown. Local validation passes and exact-head Linux execution
-  is pending. This is not M13 production-canary, RLS, recovery, rollback,
+  is pending. The workflow change invalidates the prior exact-head M15 Security
+  run and Medium triage, leaving 7/27 passed and 20 pending until fresh evidence
+  is reconciled. This is not M13 production-canary, RLS, recovery, rollback,
   upgrade, or deployment authority; production and scores are unchanged.
 
 - Added ADR-0109 and an exact Authentik 2026.8 source/OpenAPI compatibility

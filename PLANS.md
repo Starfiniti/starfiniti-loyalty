@@ -19,6 +19,10 @@ authorization, recovery, rollback, or production. M13 remains 12/51, M16 stays
 77/100, the candidate 83/100, and production 54/100 and unchanged. Merge,
 release, upgrade, approval, deployment, observation, and reconciliation remain
 false or pending.
+The workflow digest is rebound to implementation
+`ee5e0f5b3e823909fdaf0b20d0cc4cd3d5b2c2f8`; historical exact-head scans and
+Medium triage are not inherited, so M15 Security is 7/27 passed and 20 pending
+until the fresh run and minimized artifacts are reconciled.
 
 ADR-0109 is the preceding source-contract slice. It pins the exact Authentik
 2026.5.6 baseline and 2026.8.0 candidate tag objects, commits, OpenAPI schemas,

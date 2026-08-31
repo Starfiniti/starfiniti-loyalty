@@ -12,7 +12,10 @@
   external IDs, group membership, quoted member removal, deactivation,
   minimization, and exact teardown. The offline validator and bundle self-test
   pass locally; the executable runtime is wired into the existing Security
-  recovery job and awaits exact-head Linux CI evidence. It cannot pass one of
+  recovery job and awaits exact-head Linux CI evidence. Because that workflow
+  changed, the prior exact-head Security run and Medium triage are intentionally
+  no longer inherited: M15 security now records 7/27 passed and 20 pending until
+  fresh evidence is reconciled. The rehearsal cannot pass one of
   M13-S06's production checks or replace database RLS/stale-session tests.
   Production, scores, M13's 12/51 count, and every merge, release, upgrade,
   recovery, rollback, IdP-fixture, approval, deployment, and reconciliation

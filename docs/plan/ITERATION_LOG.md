@@ -24,6 +24,11 @@
   gate and runtime execution/artifact retention into the existing Security
   recovery job. Local validation passes; exact-head Linux execution remains
   pending.
+- Rebound the Security workflow digest to exact implementation
+  `ee5e0f5b3e823909fdaf0b20d0cc4cd3d5b2c2f8` and invalidated the older
+  exact-head scan and Medium-triage claims instead of relabeling historical
+  results. M15 security is therefore 7/27 passed and 20 pending until fresh CI
+  and artifact reconciliation complete.
 - Preserved the evidence boundary: this does not advance M13's 12/51 production
   canary, M15 recovery/GA, M16 score, the integration/product scores, or any
   merge, release, upgrade, deployment, rollback, approval, observation, or

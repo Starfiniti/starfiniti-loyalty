@@ -8,6 +8,12 @@ contract tests pass; exact-head Linux execution is pending. It does not restore
 private Authentik configuration, signing material, users, sessions, or audit and
 therefore cannot advance M15-S04 recovery or M15-S06 GA checks.
 
+The Security workflow change intentionally invalidates the older exact-head
+scan and Medium-triage bindings. `security.yaml` now records 7/27 passed and 20
+pending against implementation `ee5e0f5b3e823909fdaf0b20d0cc4cd3d5b2c2f8`;
+fresh CI and minimized artifact reconciliation are required before those claims
+can advance again.
+
 M15-S01 is active with seven of 23 checks passing. `capacity.yaml` separates repository readiness from an approved production-like measured run and exact value reconciliation. ADR-0104 adds an exact digest-pinned Grafana k6 contract that must match the canonical phases, scenarios, rates, drops, contracts, thresholds, target digest, and false production authority; repository validation and Linux image inspection cannot substitute for the still-pending approved real independent run. No supported capacity is claimed while that manifest is in progress.
 
 M15-S02 is active. `fault-injection.yaml` separates the disposable-only controller from the two approved production-like runs and independent WAL, queue, ledger, WooCommerce, checkout, and no-loss reconciliation. No production fault is authorized by repository readiness.
