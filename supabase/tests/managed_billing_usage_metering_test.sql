@@ -705,6 +705,7 @@ declare
   iteration integer;
   attempt_at timestamptz;
   claimed_count bigint;
+  dispatch_diagnostic text;
 begin
   for iteration in 0..10 loop
     attempt_at := '2041-01-05 00:10:00+00'::timestamptz
@@ -716,9 +717,23 @@ begin
     );
     select count(*) into claimed_count from usage_v2_hold_claim;
     if claimed_count <> 1 then
+      select coalesce(pg_catalog.jsonb_agg(pg_catalog.jsonb_build_object(
+        'meter', fact.meter_key,
+        'evidence', fact.source_evidence_public_id,
+        'state', dispatch.state,
+        'attemptCount', dispatch.attempt_count,
+        'providerAttemptCount', dispatch.provider_attempt_count,
+        'claimSequenceCount', dispatch.claim_sequence_count,
+        'nextAttemptAt', dispatch.next_attempt_at
+      ) order by fact.id)::text, '[]')
+      into dispatch_diagnostic
+      from loyalty_private.managed_billing_usage_facts as fact
+      left join loyalty_private.managed_billing_usage_dispatches as dispatch
+        on dispatch.organization_id = fact.organization_id
+       and dispatch.usage_fact_id = fact.id;
       raise exception
-        'usage V2 hold claim unavailable at iteration %, time %, count %',
-        iteration, attempt_at, claimed_count;
+        'usage V2 hold claim unavailable at iteration %, time %, count %, state %',
+        iteration, attempt_at, claimed_count, dispatch_diagnostic;
     end if;
     perform *
     from usage_v2_hold_claim as claim
