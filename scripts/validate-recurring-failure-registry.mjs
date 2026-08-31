@@ -6,13 +6,15 @@ import {
   lstatSync,
   openSync,
   readFileSync,
+  realpathSync,
 } from "node:fs";
-import { dirname, join, resolve, sep } from "node:path";
+import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import YAML from "yaml";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const realRoot = realpathSync.native(root);
 const registryPath = "docs/plan/evidence/M16/recurring-failures.yaml";
 const planPath = "infrastructure/governance/continuous-improvement.yaml";
 const digestPattern = /^[0-9a-f]{64}$/u;
@@ -141,6 +143,10 @@ function readRegularRepositoryFile(relativePath) {
   const absolute = safeRepositoryPath(relativePath, `${relativePath} path`);
   let descriptor;
   try {
+    descriptor = openSync(
+      absolute,
+      constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0),
+    );
     let parent = root;
     for (const segment of relativePath.split("/").slice(0, -1)) {
       parent = join(parent, segment);
@@ -149,17 +155,43 @@ function readRegularRepositoryFile(relativePath) {
         fail(`${relativePath} parent chain must contain only real directories`);
       }
     }
-    if (lstatSync(absolute).isSymbolicLink()) {
-      fail(`${relativePath} must not be a symbolic link`);
-    }
-    descriptor = openSync(
-      absolute,
-      constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0),
-    );
-    if (!fstatSync(descriptor).isFile()) {
+    const opened = fstatSync(descriptor);
+    const linked = lstatSync(absolute);
+    if (
+      !opened.isFile() ||
+      !linked.isFile() ||
+      opened.dev !== linked.dev ||
+      opened.ino !== linked.ino
+    ) {
       fail(`${relativePath} must be a regular file`);
     }
-    return readFileSync(descriptor, "utf8");
+    const openedReal = realpathSync.native(absolute);
+    const openedInside = relative(realRoot, openedReal);
+    if (
+      openedInside === "" ||
+      openedInside === ".." ||
+      openedInside.startsWith(`..${sep}`)
+    ) {
+      fail(`${relativePath} resolved outside the repository`);
+    }
+    const content = readFileSync(descriptor, "utf8");
+    const final = fstatSync(descriptor);
+    const finalLink = lstatSync(absolute);
+    const finalReal = realpathSync.native(absolute);
+    if (
+      Buffer.byteLength(content, "utf8") !== opened.size ||
+      final.dev !== opened.dev ||
+      final.ino !== opened.ino ||
+      final.size !== opened.size ||
+      final.mtimeMs !== opened.mtimeMs ||
+      final.ctimeMs !== opened.ctimeMs ||
+      finalLink.dev !== opened.dev ||
+      finalLink.ino !== opened.ino ||
+      finalReal !== openedReal
+    ) {
+      fail(`${relativePath} changed while reading`);
+    }
+    return content;
   } catch (error) {
     if (error instanceof Error && error.message.includes("must")) throw error;
     fail(`${relativePath} cannot be read as a regular repository file`);

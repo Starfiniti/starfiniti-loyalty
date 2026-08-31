@@ -25,6 +25,12 @@
   isolated restore, merge, independent review, and approval remain open. M16
   stays 77/100, the integration candidate stays 83/100, and production stays
   54/100.
+- First exact-head Security run `33393515758` failed closed on one High CodeQL
+  filesystem-race finding in the new repository reader. The original reader
+  inspected the final path before opening it. The correction opens once with
+  no-follow semantics, reconciles descriptor and path identity before and after
+  reading, and rejects byte, metadata, or link drift. The failed run is not
+  accepted evidence; a fresh exact-head Security run is required.
 
 ## 2026-08-31 — Exact-artifact M15 Medium and false-positive reconciliation
 
