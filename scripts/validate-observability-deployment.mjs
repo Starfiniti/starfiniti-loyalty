@@ -325,6 +325,9 @@ function validateCompose(compose, raw) {
     ) {
       fail(`${id} administration port is not loopback-defaulted`);
     }
+    if (!raw.includes(`- "${expectedPorts[id]}"`)) {
+      fail(`${id} administration port must use quoted Compose syntax`);
+    }
   }
   for (const id of ["blackbox-exporter", "postgres-exporter"]) {
     if (services[id].ports !== undefined) {
@@ -842,6 +845,13 @@ if (process.argv.includes("--self-test")) {
     candidate.compose.services.grafana.ports = ["0.0.0.0:3000:3000"];
   }, /loopback-defaulted/u);
   mutate((candidate) => {
+    const port = candidate.compose.services.prometheus.ports[0];
+    candidate.raws.compose = candidate.raws.compose.replace(
+      `- "${port}"`,
+      `- ${port}`,
+    );
+  }, /quoted Compose syntax/u);
+  mutate((candidate) => {
     candidate.compose.services["blackbox-exporter"].ports = ["9115:9115"];
   }, /service keys|must not publish/u);
   mutate((candidate) => {
@@ -939,5 +949,5 @@ if (process.argv.includes("--self-test")) {
 }
 
 console.log(
-  `Validated ${componentIds.size} pinned observability services, one native textfile agent, ${requiredChecks.size} evidence checks, and 29 adversarial cases; ${passedRepositoryChecks.size} checks pass and ${requiredChecks.size - passedRepositoryChecks.size} remain external or runtime-gated.`,
+  `Validated ${componentIds.size} pinned observability services, one native textfile agent, ${requiredChecks.size} evidence checks, and 30 adversarial cases; ${passedRepositoryChecks.size} checks pass and ${requiredChecks.size - passedRepositoryChecks.size} remain external or runtime-gated.`,
 );

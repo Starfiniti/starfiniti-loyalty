@@ -8,7 +8,7 @@
   only, exporters are unpublished, Grafana has no egress, and all live targets,
   receivers, database modules, and administrator material remain outside Git.
   The native node_exporter candidate is exact-archive-bound, non-root, and
-  textfile-only. Repository validation, 29 deployment mutations, eleven
+  textfile-only. Repository validation, 30 deployment mutations, eleven
   portable environment-preflight mutations, and the POSIX mode boundary pass
   9/16 checks. The Security workflow now owns the clean Linux amd64 exact-version
   and zero-residue canary; its exact-head result is pending. Production still

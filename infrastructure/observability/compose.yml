@@ -26,7 +26,7 @@ services:
       - --storage.tsdb.retention.size=20GB
       - --log.format=json
     ports:
-      - ${STARFINITI_MONITORING_BIND_ADDRESS:-127.0.0.1}:${STARFINITI_PROMETHEUS_PORT:-9090}:9090
+      - "${STARFINITI_MONITORING_BIND_ADDRESS:-127.0.0.1}:${STARFINITI_PROMETHEUS_PORT:-9090}:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./prometheus/rules.yaml:/etc/prometheus/rules/starfiniti-rules.yaml:ro
@@ -43,7 +43,7 @@ services:
       - --data.retention=120h
       - --log.format=json
     ports:
-      - ${STARFINITI_MONITORING_BIND_ADDRESS:-127.0.0.1}:${STARFINITI_ALERTMANAGER_PORT:-9093}:9093
+      - "${STARFINITI_MONITORING_BIND_ADDRESS:-127.0.0.1}:${STARFINITI_ALERTMANAGER_PORT:-9093}:9093"
     volumes:
       - ${STARFINITI_ALERTMANAGER_CONFIG:?owner-controlled Alertmanager config required}:/etc/alertmanager/alertmanager.yml:ro
       - alertmanager-data:/alertmanager
@@ -53,7 +53,7 @@ services:
     <<: *security
     image: grafana/grafana@sha256:3fd54ae1214669f8355f065ec9f6445d5279a3d77095ab048ca045685272429b
     ports:
-      - ${STARFINITI_MONITORING_BIND_ADDRESS:-127.0.0.1}:${STARFINITI_GRAFANA_PORT:-3000}:3000
+      - "${STARFINITI_MONITORING_BIND_ADDRESS:-127.0.0.1}:${STARFINITI_GRAFANA_PORT:-3000}:3000"
     environment:
       GF_SERVER_HTTP_ADDR: 0.0.0.0
       GF_SERVER_ROOT_URL: ${STARFINITI_GRAFANA_ROOT_URL:?approved externally terminated HTTPS URL required}
