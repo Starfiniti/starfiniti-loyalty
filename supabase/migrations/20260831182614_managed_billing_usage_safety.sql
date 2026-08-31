@@ -90,7 +90,8 @@ create table loyalty_private.managed_billing_usage_policy_holds (
   started_at timestamptz not null,
   completed_at timestamptz not null,
   created_at timestamptz not null default now(),
-  unique (dispatch_id, claim_sequence),
+  constraint managed_billing_usage_policy_hold_identity
+    unique (dispatch_id, claim_sequence),
   foreign key (organization_id, dispatch_id)
     references loyalty_private.managed_billing_usage_dispatches(
       organization_id, id
@@ -212,7 +213,8 @@ begin
     dispatch.organization_id, dispatch.id, dispatch.claim_sequence_count,
     pg_catalog.btrim(target_worker_id), target_error_code,
     dispatch.locked_at, target_at
-  ) on conflict (dispatch_id, claim_sequence) do nothing;
+  ) on conflict on constraint managed_billing_usage_policy_hold_identity
+    do nothing;
 
   update loyalty_private.managed_billing_usage_dispatches
   set state = 'held', next_attempt_at = retry_at,
@@ -509,7 +511,8 @@ begin
   where dispatch.state = 'processing'
     and dispatch.lease_expires_at <= target_at
     and dispatch.authorized_at is null
-  on conflict (dispatch_id, claim_sequence) do nothing;
+  on conflict on constraint managed_billing_usage_policy_hold_identity
+    do nothing;
 
   update loyalty_private.managed_billing_usage_dispatches as dispatch
   set state = 'retryable', next_attempt_at = target_at + interval '30 seconds',
@@ -687,7 +690,8 @@ begin
       dispatch.organization_id, dispatch.id, dispatch.claim_sequence_count,
       pg_catalog.btrim(target_worker_id), target_hold_code,
       dispatch.locked_at, target_at
-    ) on conflict (dispatch_id, claim_sequence) do nothing;
+    ) on conflict on constraint managed_billing_usage_policy_hold_identity
+      do nothing;
     update loyalty_private.managed_billing_usage_dispatches
     set state = 'held', next_attempt_at = target_at + interval '5 minutes',
       last_detail_code = target_hold_code, locked_by = null,
