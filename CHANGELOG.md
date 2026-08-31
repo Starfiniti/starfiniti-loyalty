@@ -1,5 +1,17 @@
 # Changelog
 
+- Recorded a repeat production off-site recovery gap without changing the
+  server. VM 971's tap remained quiet and its local base/WAL source was fresh,
+  but a one-time whole-VM raw migration held the shared Borg lock while the
+  deployed PostgreSQL service waited under a 14,400-second lock/five-hour unit
+  boundary. No backup metrics were deployed to page. The migration later exited
+  successfully and the waiting service created a new incremental archive, but
+  the exact completed-archive gap was 1h34m36s. Exact live script/unit hashes
+  prove production is neither the ADR-0070 bounded-failure artifact nor the
+  ADR-0071 dedicated-repository controller. R-004 and M15 recovery/operations
+  remain open; scores, release, production configuration, routes, checkout, and
+  loyalty value are unchanged.
+
 - Reconciled the reviewed `74a37e9` M15 security artifacts from CI
   `33384160196` and Security `33384160199`. The fresh digest-bound review
   records zero Critical/High vulnerability findings, zero DAST

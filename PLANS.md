@@ -1,5 +1,23 @@
 # Execution Plan
 
+An active read-only production incident review on 2026-08-31 confirms the old
+VM 971 full-tree transfer loop is not running: the guest sent only 13,508 bytes
+over twenty seconds and its local WAL source remained current. A distinct
+one-time whole-VM raw migration has nevertheless held the shared Borg lock
+since 12:35 CEST. The PostgreSQL off-site unit has waited since 12:36:50 under
+a repository-unbound 14,400-second lock wait/five-hour service deadline, while the last
+archive completed at 12:33:41. The five-minute off-site objective is therefore
+breached again and no deployed metrics can page. The accepted ADR-0071
+dedicated repository/controller remains the correct repair; this observation
+does not weaken its rsync provenance, custody, rollout, restore, monitoring, or
+approval gates. Application health and local WAL continuity pass, but R-004,
+M15 recovery/operations, and GA remain open. No production process or value was
+changed. The migration later exited successfully and the waiting service created
+a new incremental archive at 14:08:17 CEST, but the exact completed-archive gap
+was 1 hour 34 minutes 36 seconds. Automatic recovery clears the immediate stale
+archive; it does not satisfy the five-minute objective or repair the shared-lock
+design.
+
 ADR-0110 is the active safe M13/M15/M16 identity-runtime slice. It preserves
 ADR-0109's exact Authentik 2026.8.0 source/OpenAPI result and adds a fourteen-
 scenario executable rehearsal with digest-pinned Authentik, PostgreSQL, and

@@ -3504,7 +3504,7 @@ tasks:
         status: in_progress
         dependencies: [M15-S02-FAULT-INJECTION, M15-S04-CLEAN-ROOM-RECOVERY]
         hypothesis: A versioned bounded-label signal catalogue with exact Prometheus rules locked dashboards independent paging and monotonic incident evidence can detect every protected-value failure without turning monitoring into value authority or checkout dependency.
-        baseline: Production has application readiness and backup service checks but no active Prometheus Alertmanager Grafana Loki Promtail or node-exporter service; the historical 3.60 TB VM 971 transmit counter required manual diagnosis and no measured alert delivery escalation or incident exercise exists.
+        baseline: Production has application readiness and backup service checks but no active Prometheus Alertmanager Grafana Loki Promtail or node-exporter service; the historical 3.60 TB VM 971 transmit counter required manual diagnosis, and a 2026-08-31 raw whole-VM migration repeated shared-lock starvation and caused an exact 1h34m36s off-site gap without deployed archive-age paging; no measured alert delivery escalation or incident exercise exists.
         targets:
           [
             every availability latency queue provider database WAL backup ledger tenant privacy checkout security and evidence-freshness signal has one bounded source owner route runbook threshold and dashboard,
@@ -3562,6 +3562,7 @@ tasks:
             infrastructure/observability/grafana/provisioning/starfiniti-dashboards/starfiniti-operations.json,
             docs/architecture/ADR/0066-bounded-observability-and-independent-incident-evidence.md,
             docs/architecture/ADR/0071-dedicated-postgresql-borg-repository.md,
+            docs/plan/evidence/M01/backup-transfer-amplification-2026-08-14.md,
             infrastructure/environments/proxmox/scripts/starfiniti-loyalty-postgres-borg-controller,
             infrastructure/environments/proxmox/scripts/starfiniti-loyalty-postgres-borg,
             infrastructure/environments/proxmox/scripts/starfiniti-loyalty-postgres-borg-maintain,

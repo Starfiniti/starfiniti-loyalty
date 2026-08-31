@@ -1,5 +1,26 @@
 # Status
 
+- Read-only production inspection on 2026-08-31 distinguishes two backup
+  conditions. VM 971's historical multi-terabyte counter is not current
+  traffic: its tap received only 13,508 bytes over twenty seconds, public
+  health returned 200, and the guest's restricted recovery inventory showed a
+  current WAL artifact plus today's completed base set. Separately, a one-time
+  whole-VM raw migration has held the shared Borg lock since 12:35 CEST. The
+  PostgreSQL off-site unit has waited since 12:36:50 under a deployed
+  14,400-second lock wait and five-hour service timeout, blocking timer retries;
+  the last archive completed at 12:33:41 and was already about 79 minutes old
+  at observation. No node-exporter backup metrics were deployed to page. The
+  production script/unit hashes match neither the accepted ADR-0070 bounded
+  failure nor ADR-0071 dedicated-repository controller. R-004 and M15
+  recovery/operations remain non-passing. The raw migration and PostgreSQL
+  waiter were not interrupted. The migration later exited successfully and the
+  waiting service created a new archive at 14:08:17 CEST, establishing an exact
+  completed-archive gap of 1 hour 34 minutes 36 seconds. Local WAL was already
+  newer; the next timer-triggered run created a second archive and exited zero
+  at 14:12:08, restoring normal cadence. No production configuration, service,
+  database, route, checkout path, or loyalty value was changed by the
+  inspection; automatic catch-up does not close the recovery design failure.
+
 - ADR-0110 adds the still-missing exact Authentik 2026.8.0 runtime rehearsal
   without touching the live 2026.5.6 broker. Exact Authentik, PostgreSQL, and
   Node Linux/amd64 manifests run on one internal-only Docker network with zero
