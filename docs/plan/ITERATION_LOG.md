@@ -64,7 +64,8 @@
   the terminal cause. Failure diagnostics now redact the complete synthetic
   stream before retaining its bounded tail; success criteria, teardown, report
   publication, and production remain unchanged. No success artifact was
-  published by the failed run.
+  published by the failed run. The pending Security manifest now points to
+  diagnostic implementation `d53f63373b27f2ecee49edb1da09959d2cf58118`.
 - Preserved the evidence boundary: this does not advance M13's 12/51 production
   canary, M15 recovery/GA, M16 score, the integration/product scores, or any
   merge, release, upgrade, deployment, rollback, approval, observation, or
