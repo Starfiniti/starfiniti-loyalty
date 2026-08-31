@@ -117,6 +117,12 @@ shape used by the configured `hashed_user_id` OIDC subject and default SCIM
 digest is an opaque correlation identifier; it is never decoded or treated as
 tenant authority.
 
+When a Docker command fails, the runner normalizes and redacts the complete
+synthetic stdout/stderr stream before retaining only its bounded tail. This
+preserves the terminal cause instead of bootstrap noise, prevents a secret split
+at the truncation boundary from escaping replacement, and still publishes no
+runtime report on failure.
+
 ## Evidence and gates
 
 Run:

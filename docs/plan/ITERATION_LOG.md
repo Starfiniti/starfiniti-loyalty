@@ -57,6 +57,14 @@
   UUID-shaped group primary key; teardown completed and no success artifact was
   published. The pending Security manifest now points to corrected
   implementation `707691d68443903acdf5346cab7290266c308a08`.
+- Exact-head Security run `33378380863`, recovery job `99444903958`, passed the
+  hashed-user-ID setup boundary and then failed closed inside Authentik's
+  supported `ak scim_sync` command. The runner's bounded error summary retained
+  the beginning of stderr, which contained only bootstrap logs, and discarded
+  the terminal cause. Failure diagnostics now redact the complete synthetic
+  stream before retaining its bounded tail; success criteria, teardown, report
+  publication, and production remain unchanged. No success artifact was
+  published by the failed run.
 - Preserved the evidence boundary: this does not advance M13's 12/51 production
   canary, M15 recovery/GA, M16 score, the integration/product scores, or any
   merge, release, upgrade, deployment, rollback, approval, observation, or

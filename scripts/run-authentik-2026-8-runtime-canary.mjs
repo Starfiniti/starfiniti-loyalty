@@ -163,6 +163,17 @@ function loadPlan(path) {
   return { bytes, plan };
 }
 
+function dockerFailureDetail(error) {
+  let detail = [error?.stderr, error?.stdout]
+    .filter((value) => typeof value === "string")
+    .join(" ")
+    .replaceAll(/[\r\n]+/gu, " ");
+  for (const value of sensitiveRuntimeValues) {
+    detail = detail.replaceAll(value, "[REDACTED]");
+  }
+  return detail.length > 2_000 ? `[tail] ${detail.slice(-2_000)}` : detail;
+}
+
 function docker(args, options = {}) {
   try {
     return execFileSync("docker", args, {
@@ -174,14 +185,7 @@ function docker(args, options = {}) {
       maxBuffer: 4 * 1024 * 1024,
     })?.trim();
   } catch (error) {
-    let detail = [error?.stderr, error?.stdout]
-      .filter((value) => typeof value === "string")
-      .join(" ")
-      .replaceAll(/[\r\n]+/gu, " ")
-      .slice(0, 1_000);
-    for (const value of sensitiveRuntimeValues) {
-      detail = detail.replaceAll(value, "[REDACTED]");
-    }
+    const detail = dockerFailureDetail(error);
     fail(detail || "Docker command failed");
   }
 }
@@ -821,6 +825,24 @@ function selfTest(plan, bytes, bundle) {
       () => exactSetup({ ...syntheticSetup, userUid }),
       /regular expression/u,
     );
+  }
+  const diagnosticSecret = "synthetic-self-test-secret";
+  sensitiveRuntimeValues.add(diagnosticSecret);
+  try {
+    const diagnostic = dockerFailureDetail({
+      stderr: `${diagnosticSecret} ${"discarded-prefix ".repeat(200)}decisive-tail`,
+      stdout: "",
+    });
+    assert.equal(diagnostic.includes(diagnosticSecret), false);
+    assert.ok(diagnostic.startsWith("[tail] "));
+    assert.ok(diagnostic.endsWith("decisive-tail "));
+    assert.equal(diagnostic.includes("[REDACTED]"), false);
+    assert.equal(
+      dockerFailureDetail({ stderr: `terminal ${diagnosticSecret}` }),
+      "terminal [REDACTED]",
+    );
+  } finally {
+    sensitiveRuntimeValues.delete(diagnosticSecret);
   }
   const synthetic = buildReport(plan, bytes, {
     federationResources: 2,
