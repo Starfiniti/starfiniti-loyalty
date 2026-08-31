@@ -96,6 +96,25 @@ async function requestJson(
 const authentik = (path, options) =>
   requestJson(authentikOrigin, path, options);
 
+async function waitForAuthentikBootstrapResource(label, operation) {
+  const deadline = Date.now() + 180_000;
+  let lastFailure = "not available";
+  while (Date.now() < deadline) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastFailure =
+        error instanceof Error
+          ? error.message.replaceAll(/[\r\n]+/gu, " ").slice(0, 256)
+          : "unknown failure";
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
+  }
+  throw new Error(
+    `Authentik bootstrap resource ${label} did not converge: ${lastFailure}`,
+  );
+}
+
 async function createSourceMapping(protocol) {
   const endpoint = `/api/v3/propertymappings/source/${protocol}/`;
   const existing = results(
@@ -118,9 +137,11 @@ async function createSourceMapping(protocol) {
 }
 
 async function discoverFlow(slug) {
-  const resource = await authentik(`/api/v3/flows/instances/${slug}/`);
-  assert.equal(resource.slug, slug, `flow ${slug} differs`);
-  return uuid(resource.pk, `flow ${slug}`);
+  return waitForAuthentikBootstrapResource(`flow ${slug}`, async () => {
+    const resource = await authentik(`/api/v3/flows/instances/${slug}/`);
+    assert.equal(resource.slug, slug, `flow ${slug} differs`);
+    return uuid(resource.pk, `flow ${slug}`);
+  });
 }
 
 async function generateSigningKey() {
@@ -140,34 +161,42 @@ async function generateSigningKey() {
 }
 
 async function discoverOpenidMapping() {
-  const mappings = results(
-    await authentik(
-      "/api/v3/propertymappings/provider/scope/?scope_name=openid&page_size=10",
-    ),
-    "OpenID mappings",
-  ).filter(
-    (item) =>
-      item.scope_name === "openid" &&
-      item.managed === "goauthentik.io/providers/oauth2/scope-openid",
-  );
-  assert.equal(mappings.length, 1, "exact built-in OpenID mapping is required");
-  return uuid(mappings[0].pk, "OpenID mapping");
+  return waitForAuthentikBootstrapResource("OpenID mapping", async () => {
+    const mappings = results(
+      await authentik(
+        "/api/v3/propertymappings/provider/scope/?scope_name=openid&page_size=10",
+      ),
+      "OpenID mappings",
+    ).filter(
+      (item) =>
+        item.scope_name === "openid" &&
+        item.managed === "goauthentik.io/providers/oauth2/scope-openid",
+    );
+    assert.equal(
+      mappings.length,
+      1,
+      "exact built-in OpenID mapping is required",
+    );
+    return uuid(mappings[0].pk, "OpenID mapping");
+  });
 }
 
 async function discoverScimMappings() {
-  const mappings = results(
-    await authentik("/api/v3/propertymappings/provider/scim/?page_size=100"),
-    "SCIM mappings",
-  );
-  const pick = (managed) => {
-    const matches = mappings.filter((item) => item.managed === managed);
-    assert.equal(matches.length, 1, `SCIM mapping ${managed} differs`);
-    return uuid(matches[0].pk, managed);
-  };
-  return {
-    user: pick("goauthentik.io/providers/scim/user"),
-    group: pick("goauthentik.io/providers/scim/group"),
-  };
+  return waitForAuthentikBootstrapResource("SCIM mappings", async () => {
+    const mappings = results(
+      await authentik("/api/v3/propertymappings/provider/scim/?page_size=100"),
+      "SCIM mappings",
+    );
+    const pick = (managed) => {
+      const matches = mappings.filter((item) => item.managed === managed);
+      assert.equal(matches.length, 1, `SCIM mapping ${managed} differs`);
+      return uuid(matches[0].pk, managed);
+    };
+    return {
+      user: pick("goauthentik.io/providers/scim/user"),
+      group: pick("goauthentik.io/providers/scim/group"),
+    };
+  });
 }
 
 function federationConfig(shared, sourceMapping) {

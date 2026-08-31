@@ -29,6 +29,14 @@
   exact-head scan and Medium-triage claims instead of relabeling historical
   results. M15 security is therefore 7/27 passed and 20 pending until fresh CI
   and artifact reconciliation complete.
+- Exact-head Security run `33374846693`, recovery job `99433907489`, failed
+  closed before federation mutation because the operator queried
+  `default-source-authentication` while first-start blueprints were still
+  converging; teardown completed and the missing report failed artifact upload.
+  The pinned 2026.8 source still defines that exact built-in flow. The operator
+  now waits a bounded 180 seconds for the required flow and managed mapping
+  resources, retaining exact identities and surfacing the last bounded failure
+  if convergence never occurs.
 - Preserved the evidence boundary: this does not advance M13's 12/51 production
   canary, M15 recovery/GA, M16 score, the integration/product scores, or any
   merge, release, upgrade, deployment, rollback, approval, observation, or

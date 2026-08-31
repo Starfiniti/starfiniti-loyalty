@@ -747,6 +747,7 @@ function buildOperator(tempDirectory) {
   if (
     bytes.length < 10_000 ||
     !bytes.includes(Buffer.from("AuthentikFederationAdmin = class")) ||
+    !bytes.includes(Buffer.from("Authentik bootstrap resource")) ||
     bytes.includes(Buffer.from(["auth", "starfiniti", "com"].join(".")))
   ) {
     fail("operator bundle did not include the exact safe production client");
