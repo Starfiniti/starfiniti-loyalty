@@ -267,21 +267,35 @@ function serviceDiagnostics(project, environment, service) {
   return `container=${status || "missing"}; logs=${logs || "empty"}`;
 }
 
-function supportsComposeVersion(value) {
-  const match = /^(\d+)\.(\d+)\.(\d+)$/u.exec(value);
+function supportsVersion(value, minimum) {
+  const match = /^(\d+)\.(\d+)\.(\d+)(?:[-+][A-Za-z0-9.-]+)?$/u.exec(value);
+  if (!match) return false;
+  const actual = match.slice(1, 4).map(Number);
+  for (let index = 0; index < minimum.length; index += 1) {
+    if (actual[index] > minimum[index]) return true;
+    if (actual[index] < minimum[index]) return false;
+  }
+  return true;
+}
+
+function assertContainerRuntimeVersions() {
+  const composeVersion = run("docker", ["compose", "version", "--short"], {
+    capture: true,
+  });
+  const engineVersion = run(
+    "docker",
+    ["version", "--format", "{{.Server.Version}}"],
+    { capture: true },
+  );
   return Boolean(
-    match &&
-    (Number(match[1]) > 2 ||
-      (Number(match[1]) === 2 && Number(match[2]) >= 36)),
+    supportsVersion(composeVersion, [2, 33, 1]) &&
+    supportsVersion(engineVersion, [28, 0, 0]),
   );
 }
 
-function assertComposeVersion() {
-  const value = run("docker", ["compose", "version", "--short"], {
-    capture: true,
-  });
-  if (!supportsComposeVersion(value)) {
-    fail("Docker Compose 2.36.0 or newer is required");
+function requireContainerRuntimeVersions() {
+  if (!assertContainerRuntimeVersions()) {
+    fail("Docker Engine 28.0.0 and Compose 2.33.1 or newer are required");
   }
 }
 
@@ -338,7 +352,22 @@ function assertGrafanaDefaultRoute(project, environment) {
   const routes = run("docker", ["exec", id, "/bin/cat", "/proc/net/route"], {
     capture: true,
   });
-  const defaultInterfaces = routes
+  const inspected = JSON.parse(
+    run("docker", ["inspect", id], { capture: true }),
+  )[0];
+  const controlGateway =
+    inspected.NetworkSettings.Networks?.[`${project}_monitoring-control`]
+      ?.Gateway;
+  if (!/^(?:\d{1,3}\.){3}\d{1,3}$/u.test(controlGateway)) {
+    fail("Grafana internal control gateway is invalid");
+  }
+  const expectedGateway = controlGateway
+    .split(".")
+    .map((part) => Number(part).toString(16).padStart(2, "0"))
+    .reverse()
+    .join("")
+    .toUpperCase();
+  const defaultGateways = routes
     .split(/\r?\n/gu)
     .slice(1)
     .map((line) => line.trim().split(/\s+/u))
@@ -348,9 +377,9 @@ function assertGrafanaDefaultRoute(project, environment) {
         fields[1] === "00000000" &&
         fields[7] === "00000000",
     )
-    .map((fields) => fields[0]);
-  if (defaultInterfaces.length !== 1 || defaultInterfaces[0] !== "eth0") {
-    fail("Grafana default route is not the internal control interface");
+    .map((fields) => fields[2]);
+  if (defaultGateways.length !== 1 || defaultGateways[0] !== expectedGateway) {
+    fail("Grafana default route does not use the internal control gateway");
   }
 }
 
@@ -482,10 +511,12 @@ function zeroResidue(project) {
 const parsed = parseArguments(process.argv.slice(2));
 if (parsed.selfTest) {
   assert.throws(() => parseArguments([]), /--out is required/u);
-  assert.equal(supportsComposeVersion("2.36.0"), true);
-  assert.equal(supportsComposeVersion("3.0.0"), true);
-  assert.equal(supportsComposeVersion("2.35.9"), false);
-  assert.equal(supportsComposeVersion("v2.36.0"), false);
+  assert.equal(supportsVersion("2.33.1", [2, 33, 1]), true);
+  assert.equal(supportsVersion("3.0.0", [2, 33, 1]), true);
+  assert.equal(supportsVersion("2.33.0", [2, 33, 1]), false);
+  assert.equal(supportsVersion("28.0.1+azure", [28, 0, 0]), true);
+  assert.equal(supportsVersion("27.5.9", [28, 0, 0]), false);
+  assert.equal(supportsVersion("v28.0.0", [28, 0, 0]), false);
   assert.throws(() => safeOutputPath("../outside.json"), /bounded JSON path/u);
   assert.throws(
     () => safeOutputPath("dist/observability-deployment/report.txt"),
@@ -521,7 +552,7 @@ if (parsed.selfTest) {
     /report keys/u,
   );
   console.log(
-    "Validated observability canary arguments, Compose version, minimized report, false-authority, and output boundaries.",
+    "Validated observability canary arguments, container runtime versions, minimized report, false-authority, and output boundaries.",
   );
   process.exit(0);
 }
@@ -570,7 +601,7 @@ let composeTouched = false;
 let teardownPassed = false;
 let report;
 try {
-  assertComposeVersion();
+  requireContainerRuntimeVersions();
   run("node", ["scripts/validate-observability-deployment.mjs"], {
     env: environment,
   });

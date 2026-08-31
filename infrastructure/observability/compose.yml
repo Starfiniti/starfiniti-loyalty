@@ -71,10 +71,8 @@ services:
       - grafana-data:/var/lib/grafana
     networks:
       monitoring-control:
-        interface_name: eth0
         gw_priority: 1
       monitoring-egress:
-        interface_name: eth1
         gw_priority: 0
 
   blackbox-exporter:

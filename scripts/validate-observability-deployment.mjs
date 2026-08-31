@@ -191,7 +191,8 @@ function validatePlan(plan) {
     plan.platform?.os !== "linux" ||
     plan.platform?.architecture !== "amd64" ||
     plan.platform?.centralRuntime !== "docker-compose" ||
-    plan.platform?.minimumComposeVersion !== "2.36.0" ||
+    plan.platform?.minimumComposeVersion !== "2.33.1" ||
+    plan.platform?.minimumDockerEngineVersion !== "28.0.0" ||
     plan.platform?.hostExporterRuntime !== "native-systemd" ||
     plan.platform?.productionActivationApproved !== false ||
     plan.platform?.receiverBindingApproved !== false ||
@@ -354,8 +355,8 @@ function validateCompose(compose, raw) {
   if (
     JSON.stringify(services.grafana.networks) !==
     JSON.stringify({
-      "monitoring-control": { interface_name: "eth0", gw_priority: 1 },
-      "monitoring-egress": { interface_name: "eth1", gw_priority: 0 },
+      "monitoring-control": { gw_priority: 1 },
+      "monitoring-egress": { gw_priority: 0 },
     })
   ) {
     fail("Grafana network route boundary drifted");
