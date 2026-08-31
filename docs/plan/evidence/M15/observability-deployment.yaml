@@ -15,7 +15,7 @@ assets:
     sha256: 88695da1b481f169cc0e0632610896fba8b7f2bb13a2838262ca73ff3b059676
   - id: compose
     path: infrastructure/observability/compose.yml
-    sha256: da1ed234cb1fc11dc300d54e33615a79ae4a310c3b3b1d387179d52ea7dab8ba
+    sha256: 1b7f6d488a1013569defdab729a385ebcba5d97f1d545c6129aa530b98181b26
   - id: prometheus
     path: infrastructure/observability/prometheus/prometheus.yml
     sha256: a426be49a9c85e714dbd850dd55e46dcbf6c7648db720bd34d748f5e0471a9f5

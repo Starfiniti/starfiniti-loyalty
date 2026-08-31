@@ -406,7 +406,6 @@ function validateCompose(compose, raw) {
       "--storage.tsdb.path=/prometheus",
       "--storage.tsdb.retention.time=30d",
       "--storage.tsdb.retention.size=20GB",
-      "--web.enable-admin-api=false",
       "--log.format=json",
     ],
     alertmanager: [
@@ -453,7 +452,9 @@ function validateCompose(compose, raw) {
   }
   if (
     services.prometheus.command.includes("--web.enable-lifecycle") ||
-    !services.prometheus.command.includes("--web.enable-admin-api=false") ||
+    services.prometheus.command.some((argument) =>
+      argument.startsWith("--web.enable-admin-api"),
+    ) ||
     services.grafana.environment?.GF_AUTH_ANONYMOUS_ENABLED !== "false" ||
     services.grafana.environment?.GF_USERS_ALLOW_SIGN_UP !== "false" ||
     services.grafana.environment?.GF_ANALYTICS_REPORTING_ENABLED !== "false" ||

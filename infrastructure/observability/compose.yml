@@ -24,7 +24,6 @@ services:
       - --storage.tsdb.path=/prometheus
       - --storage.tsdb.retention.time=30d
       - --storage.tsdb.retention.size=20GB
-      - --web.enable-admin-api=false
       - --log.format=json
     ports:
       - ${STARFINITI_MONITORING_BIND_ADDRESS:-127.0.0.1}:${STARFINITI_PROMETHEUS_PORT:-9090}:9090
