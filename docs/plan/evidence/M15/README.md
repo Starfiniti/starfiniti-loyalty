@@ -10,7 +10,7 @@ therefore cannot advance M15-S04 recovery or M15-S06 GA checks.
 
 The Security workflow change intentionally invalidates the older exact-head
 scan and Medium-triage bindings. `security.yaml` now records 7/27 passed and 20
-pending against implementation `3662c4a4abf63946acfd77e562c5ff523533ffe3`;
+pending against implementation `8360639d0720f6504f23d5c5c8c5e13a3fe46ffe`;
 fresh CI and minimized artifact reconciliation are required before those claims
 can advance again.
 

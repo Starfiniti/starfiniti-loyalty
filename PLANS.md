@@ -20,7 +20,7 @@ authorization, recovery, rollback, or production. M13 remains 12/51, M16 stays
 release, upgrade, approval, deployment, observation, and reconciliation remain
 false or pending.
 The workflow digest is rebound to corrected implementation
-`3662c4a4abf63946acfd77e562c5ff523533ffe3`; historical exact-head scans and
+`8360639d0720f6504f23d5c5c8c5e13a3fe46ffe`; historical exact-head scans and
 Medium triage are not inherited, so M15 Security is 7/27 passed and 20 pending
 until the fresh run and minimized artifacts are reconciled.
 
