@@ -123,6 +123,26 @@ preserves the terminal cause instead of bootstrap noise, prevents a secret split
 at the truncation boundary from escaping replacement, and still publishes no
 runtime report on failure.
 
+The first full-sync attempt used Authentik's `ak scim_sync` management command.
+The exact 2026.8 source schedules the task and immediately calls the result
+backend's non-blocking `get_result()`, so the real runtime raised
+`dramatiq.results.errors.ResultMissing` before the asynchronous worker could
+return a value. Three alternatives were compared: retain the management command
+and poll its process, rely only on the provider model's implicit `send_on_save`,
+or use the authenticated schedule API. Process polling cannot repair the
+command's task-result race, while `send_on_save` occurs before the provider is
+associated with the application and does not bind the intended run. The
+operator therefore discovers exactly one unpaused schedule whose actor,
+content-type application/model, related-object ID, and identifier all bind the
+new SCIM provider, validates its UUID, and invokes the permission-protected
+`POST /api/v3/tasks/schedules/{id}/send/` endpoint. Candidate completion is
+still established only by bounded observation of the sink's resulting state.
+The candidate's provider sync lock safely collapses any overlap with the
+automatic task, and its task implementation ignores an unassigned provider;
+neither behavior is substituted for the explicit post-association trigger.
+The runner forbids both `ak scim_sync` and `ak shell`; no container shell is an
+identity administration boundary.
+
 ## Evidence and gates
 
 Run:

@@ -57,7 +57,7 @@ scenarios:
   - id: R08-SCIM-BEARER-FAIL-CLOSED
     proves: A missing or incorrect SCIM bearer token is rejected before resource access.
   - id: R09-SCIM-DISCOVERY-AND-PAGINATION
-    proves: Authentik consumes ServiceProviderConfig and sends bounded startIndex and count pagination.
+    proves: The exact SCIM schedule is triggered through Authentik's permissioned schedule API before ServiceProviderConfig discovery and bounded startIndex and count pagination.
   - id: R10-SCIM-USER-GROUP-PROVISIONING
     proves: A synthetic Authentik user and group reach the SCIM sink with candidate externalId semantics.
   - id: R11-SCIM-GROUP-MEMBERSHIP
@@ -90,6 +90,11 @@ officialSources:
   - https://docs.goauthentik.io/install-config/install/docker-compose/
   - https://docs.goauthentik.io/add-secure-apps/providers/scim/
   - https://docs.goauthentik.io/releases/2026.8/
+  - https://github.com/goauthentik/authentik/blob/f3753ec20ce13ef672401a131379d1a5a2d3439b/authentik/tasks/schedules/api.py
+  - https://github.com/goauthentik/authentik/blob/f3753ec20ce13ef672401a131379d1a5a2d3439b/authentik/tasks/schedules/signals.py
+  - https://github.com/goauthentik/authentik/blob/f3753ec20ce13ef672401a131379d1a5a2d3439b/authentik/lib/sync/outgoing/models.py
+  - https://github.com/goauthentik/authentik/blob/f3753ec20ce13ef672401a131379d1a5a2d3439b/authentik/lib/sync/outgoing/tasks.py
+  - https://github.com/goauthentik/authentik/blob/f3753ec20ce13ef672401a131379d1a5a2d3439b/authentik/providers/scim/management/commands/scim_sync.py
   - https://supabase.com/docs/guides/self-hosting/self-hosted-oauth
   - https://supabase.com/docs/guides/auth/sessions
 limitations:

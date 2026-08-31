@@ -347,6 +347,7 @@ function exactSetup(value) {
     [
       "schema",
       "scimProviderId",
+      "scimScheduleId",
       "userId",
       "userUid",
       "groupPk",
@@ -368,6 +369,10 @@ function exactSetup(value) {
     );
   }
   assert.match(value.userUid, /^[0-9a-f]{64}$/u);
+  assert.match(
+    value.scimScheduleId,
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u,
+  );
   assert.match(
     value.groupPk,
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u,
@@ -672,10 +677,6 @@ function executeCanary(plan, bytes, bundle) {
         arguments: ["setup"],
       }),
     );
-    docker(
-      ["exec", names.server, "ak", "scim_sync", "Starfiniti runtime SCIM"],
-      { timeout: plan.runtime.scenarioTimeoutSeconds * 1_000 },
-    );
     result = exactRuntimeResult(
       runOperator({
         plan,
@@ -686,6 +687,8 @@ function executeCanary(plan, bytes, bundle) {
           "mutate",
           "--provider",
           String(setup.scimProviderId),
+          "--schedule",
+          setup.scimScheduleId,
           "--user",
           String(setup.userId),
           "--uid",
@@ -800,14 +803,30 @@ function selfTest(plan, bytes, bundle) {
   assert.ok(sourceContract.includes("/^[0-9a-f]{64}$/u"));
   assert.equal(sourceContract.includes('uuid(user.uid, "user UID")'), false);
   assert.equal(sourceContract.includes('"healthcheck", "worker"'), false);
-  assert.ok(sourceContract.includes('"ak", "scim_sync"'));
-  assert.equal(sourceContract.includes('"ak", "shell"'), false);
+  assert.ok(sourceContract.includes("/api/v3/tasks/schedules/"));
+  assert.ok(sourceContract.includes("/send/"));
+  for (const ownershipField of [
+    "authentik.providers.scim.tasks.scim_sync",
+    "authentik_providers_scim",
+    "scimprovider",
+    "rel_obj_id",
+    "identifier",
+    "paused",
+  ]) {
+    assert.ok(sourceContract.includes(ownershipField));
+  }
+  assert.equal(
+    /["']ak["']\s*,\s*["']scim_sync["']/u.test(sourceContract),
+    false,
+  );
+  assert.equal(/["']ak["']\s*,\s*["']shell["']/u.test(sourceContract), false);
   assert.ok(sourceContract.includes("timingSafeEqual"));
   assert.ok(sourceContract.includes("members\\[value eq"));
   assert.ok(readFileSync(bundle).length > 10_000);
   const syntheticSetup = {
     schema: "starfiniti.authentik-2026-8-runtime-setup.v1",
     scimProviderId: 1,
+    scimScheduleId: "00000000-0000-4000-8000-000000000002",
     userId: 2,
     userUid: "a".repeat(64),
     groupPk: "00000000-0000-4000-8000-000000000001",
@@ -816,6 +835,17 @@ function selfTest(plan, bytes, bundle) {
     flowBindings: 4,
   };
   exactSetup(structuredClone(syntheticSetup));
+  for (const scimScheduleId of [
+    "00000000-0000-9000-8000-000000000002",
+    "00000000-0000-4000-0000-000000000002",
+    "00000000-0000-4000-8000-00000000002",
+    "00000000-0000-4000-8000-00000000000A",
+  ]) {
+    assert.throws(
+      () => exactSetup({ ...syntheticSetup, scimScheduleId }),
+      /regular expression/u,
+    );
+  }
   for (const userUid of [
     "00000000-0000-4000-8000-000000000001",
     "A".repeat(64),

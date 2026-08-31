@@ -204,6 +204,36 @@ async function discoverScimMappings() {
   });
 }
 
+async function discoverScimSchedule(scimProviderId) {
+  const actorName = "authentik.providers.scim.tasks.scim_sync";
+  const providerId = String(
+    positiveInteger(scimProviderId, "SCIM schedule provider"),
+  );
+  const query = new URLSearchParams({
+    actor_name: actorName,
+    rel_obj_content_type__app_label: "authentik_providers_scim",
+    rel_obj_content_type__model: "scimprovider",
+    rel_obj_id: providerId,
+    page_size: "10",
+  });
+  return waitForAuthentikBootstrapResource("SCIM schedule", async () => {
+    const schedules = results(
+      await authentik(`/api/v3/tasks/schedules/?${query.toString()}`),
+      "SCIM schedules",
+    ).filter(
+      (item) =>
+        item.actor_name === actorName &&
+        item.rel_obj_app_label === "authentik_providers_scim" &&
+        item.rel_obj_model === "scimprovider" &&
+        String(item.rel_obj_id) === providerId &&
+        String(item.identifier) === providerId &&
+        item.paused === false,
+    );
+    assert.equal(schedules.length, 1, "exact SCIM schedule is required");
+    return uuid(schedules[0].id, "SCIM schedule");
+  });
+}
+
 function federationConfig(shared, sourceMapping) {
   return {
     authentikOrigin,
@@ -455,10 +485,12 @@ async function setup() {
     method: "PATCH",
     body: { backchannel_providers: [scimProviderId] },
   });
+  const scimScheduleId = await discoverScimSchedule(scimProviderId);
 
   return {
     schema: "starfiniti.authentik-2026-8-runtime-setup.v1",
     scimProviderId,
+    scimScheduleId,
     userId: positiveInteger(user.pk, "user"),
     userUid: hashedUserId(user.uid, "user UID"),
     groupPk: uuid(group.pk, "group"),
@@ -495,6 +527,13 @@ function runtimeTarget(state, setupInput) {
 }
 
 async function mutate(setupInput) {
+  await authentik(
+    `/api/v3/tasks/schedules/${setupInput.scimScheduleId}/send/`,
+    {
+      method: "POST",
+      expected: [200, 204],
+    },
+  );
   const provisioned = await waitFor((state) => {
     const { user, group } = runtimeTarget(state, setupInput);
     return Boolean(user && group && group.members.includes(user.id));
@@ -569,10 +608,17 @@ async function mutate(setupInput) {
 
 function parseArguments(argv) {
   if (argv.length === 1 && argv[0] === "setup") return { phase: "setup" };
-  if (argv[0] !== "mutate" || argv.length !== 11) {
+  if (argv[0] !== "mutate" || argv.length !== 13) {
     throw new Error("operator expects setup or exact mutate arguments");
   }
-  const expected = ["--provider", "--user", "--uid", "--group", "--bindings"];
+  const expected = [
+    "--provider",
+    "--schedule",
+    "--user",
+    "--uid",
+    "--group",
+    "--bindings",
+  ];
   const values = {};
   for (let index = 1; index < argv.length; index += 2) {
     assert.equal(
@@ -586,6 +632,7 @@ function parseArguments(argv) {
     phase: "mutate",
     setup: {
       scimProviderId: positiveInteger(Number(values.provider), "SCIM provider"),
+      scimScheduleId: uuid(values.schedule, "SCIM schedule"),
       userId: positiveInteger(Number(values.user), "user"),
       userUid: hashedUserId(values.uid, "user UID"),
       groupPk: uuid(values.group, "group"),

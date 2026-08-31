@@ -66,6 +66,18 @@
   publication, and production remain unchanged. No success artifact was
   published by the failed run. The pending Security manifest now points to
   diagnostic implementation `d53f63373b27f2ecee49edb1da09959d2cf58118`.
+- Diagnostic Security run `33379515023`, recovery job `99448423812`, passed all
+  five preceding recovery canaries and reached the exact Authentik SCIM task.
+  The corrected bounded tail exposed
+  `dramatiq.results.errors.ResultMissing: authentik.providers.scim.tasks.scim_sync(3)`;
+  teardown completed and no success artifact was published. Exact 2026.8 source
+  confirms that `ak scim_sync` sends the schedule and immediately calls a
+  non-blocking result accessor. The harness now discovers the provider's exact
+  unpaused schedule and invokes Authentik's permissioned schedule `/send/` API,
+  then proves completion only from bounded synthetic sink state. Implicit
+  `send_on_save` was rejected as the sole trigger because it precedes application
+  association, and both the broken management command and `ak shell` are
+  forbidden in the runtime source contract.
 - Preserved the evidence boundary: this does not advance M13's 12/51 production
   canary, M15 recovery/GA, M16 score, the integration/product scores, or any
   merge, release, upgrade, deployment, rollback, approval, observation, or
