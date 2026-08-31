@@ -3568,6 +3568,7 @@ tasks:
           [
             docs/plan/evidence/M15/operations.yaml,
             docs/plan/evidence/M15/observability-deployment.yaml,
+            docs/plan/evidence/M15/runs/observability-deployment-canary-532458e.json,
             infrastructure/observability/catalog.yaml,
             infrastructure/observability/deployment/plan.yaml,
             infrastructure/observability/compose.yml,

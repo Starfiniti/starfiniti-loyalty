@@ -9,14 +9,20 @@
   the internal control bridge without egress, and all live targets,
   receivers, database modules, and administrator material remain outside Git.
   The native node_exporter candidate is exact-archive-bound, non-root, and
-  textfile-only. Repository validation, 31 deployment mutations, eleven
+  textfile-only. Repository validation, 36 deployment mutations, eleven
   portable environment-preflight mutations, and the POSIX mode boundary pass
-  9/16 checks. The Security workflow now owns the clean Linux amd64 exact-version
-  and zero-residue canary; its exact-head result is pending. Production still
-  has no monitoring plane or node exporter, so M15 operations remains 14/35 and
-  live source, route, dead-man, exercise, reconciliation, and approval gates
-  remain open. No release, deployment, route, database, checkout, or loyalty
-  value changed, and scores remain production 54, candidate 83, and M16 77.
+  10/16 checks. Exact implementation head
+  `532458eab54242649d47d5e6485169830407e058` passed all seven CI jobs in run
+  `33404179626` and all four Security jobs in run `33404179664`. Security job
+  `99527528327` proved the clean Linux amd64 exact-version, internal Grafana,
+  loopback administration, unpublished exporters, runtime hardening, and
+  zero-residue canary; retained artifact `9762587898` and minimized report
+  SHA-256 `1053150436c29aca013eab3dd1db6d00e4003972d1c212cfbff9693f4b6a775f`
+  bind the result. Production still has no monitoring plane or node exporter,
+  so M15 operations remains 14/35 and live source, route, dead-man, exercise,
+  reconciliation, and approval gates remain open. No release, deployment,
+  route, database, checkout, or loyalty value changed, and scores remain
+  production 54, candidate 83, and M16 77.
   The Security workflow change invalidates all older exact-head automated and
   Medium-triage bindings; `security.yaml` now records 7/27 repository contracts
   passing and 20 pending until fresh CI/Security artifacts are reconciled.

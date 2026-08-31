@@ -1,14 +1,18 @@
 schema: starfiniti.observability-deployment-evidence.v1
 status: in_progress
-observedAt: 2026-08-31T14:45:00Z
+observedAt: 2026-08-31T14:46:06Z
 production:
   monitoringActivated: false
   receiverRoutingActivated: false
   nodeExporterInstalled: false
 claim:
   enabled: false
-  linuxCanaryPath: null
-  linuxCanarySha256: null
+  linuxCanaryPath: docs/plan/evidence/M15/runs/observability-deployment-canary-532458e.json
+  linuxCanarySha256: 1053150436c29aca013eab3dd1db6d00e4003972d1c212cfbff9693f4b6a775f
+  linuxCanaryRunId: 33404179664
+  linuxCanaryJobId: 99527528327
+  linuxCanaryArtifactId: 9762587898
+  linuxCanaryArtifactSha256: 982ec5e82aeefb561eccc2fccd52b6d07413ad66c862753c6699ba260dcdd4f2
 assets:
   - id: plan
     path: infrastructure/observability/deployment/plan.yaml
@@ -72,8 +76,8 @@ checks:
     status: passed
     evidence: Deterministic validation rejects mutable images, public ports, privilege, egress drift, embedded targets or credentials, unsafe probes, false authority, and digest mismatch.
   - id: exact_head_linux_canary
-    status: pending
-    evidence: A clean exact-head GitHub Linux amd64 run must prove exact versions, promtool and amtool checks, runtime hardening, loopback ports, unpublished exporters, and zero residue.
+    status: passed
+    evidence: Security run 33404179664 job 99527528327 passed the clean Linux amd64 canary at exact implementation head 532458eab54242649d47d5e6485169830407e058; retained artifact 9762587898 binds exact versions and indexes, promtool and amtool checks, loopback administration, internal-only unpublished Grafana, unpublished exporters, hardened runtimes, false production authority, and zero-residue teardown.
   - id: approved_monitoring_environment
     status: pending
     evidence: A dedicated monitoring host, storage, retention, access, time synchronization, backup, rollback ownership, and bounded activation window require explicit approval.

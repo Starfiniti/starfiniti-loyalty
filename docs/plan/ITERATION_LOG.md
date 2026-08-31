@@ -35,10 +35,21 @@
   starts all five services, reads exact runtime versions, inspects ports,
   networks, capabilities, and read-only roots, and tears down containers,
   networks, volumes, and temporary material before writing minimized evidence.
-- Repository checks pass 9/16. Docker is unavailable on this Windows host, so
-  the exact-head Linux canary remains pending alongside approved environment,
-  live targets, receivers, dead-man paging, activation, and observation. M15
-  operations remains 14/35 and all scores and production state are unchanged.
+- Exact implementation head `532458eab54242649d47d5e6485169830407e058`
+  passed all seven CI jobs in run `33404179626` and all four Security jobs in
+  run `33404179664`. Security job `99527528327` passed the disposable Linux
+  amd64 canary, including all five exact runtime probes and zero-residue
+  teardown. Retained artifact `9762587898` binds the exact workflow head and
+  has GitHub archive digest
+  `sha256:982ec5e82aeefb561eccc2fccd52b6d07413ad66c862753c6699ba260dcdd4f2`;
+  its minimized committed report has SHA-256
+  `1053150436c29aca013eab3dd1db6d00e4003972d1c212cfbff9693f4b6a775f`.
+- The evidence validator now binds the accepted commit, run, job, artifact,
+  report, versions, image indexes, hardening results, false production
+  authority, and teardown through 36 adversarial cases. Repository checks pass
+  10/16. Approved environment, live targets, receivers, dead-man paging,
+  activation, and observation remain pending. M15 operations remains 14/35 and
+  all scores and production state are unchanged.
 
 ## 2026-08-31 — Evidence-bound recurring backup-starvation control
 

@@ -136,7 +136,7 @@ const requiredChecks = new Set([
   "production_activation",
   "observation_and_reconciliation",
 ]);
-const passedRepositoryChecks = new Set([
+const passedEvidenceChecks = new Set([
   "official_provenance",
   "image_digest_binding",
   "compose_isolation",
@@ -146,7 +146,21 @@ const passedRepositoryChecks = new Set([
   "grafana_locked_provisioning",
   "native_textfile_exporter",
   "validator_selftest",
+  "exact_head_linux_canary",
 ]);
+const acceptedLinuxCanary = {
+  path: "docs/plan/evidence/M15/runs/observability-deployment-canary-532458e.json",
+  reportSha256:
+    "1053150436c29aca013eab3dd1db6d00e4003972d1c212cfbff9693f4b6a775f",
+  candidateCommit: "532458eab54242649d47d5e6485169830407e058",
+  runId: 33404179664,
+  jobId: 99527528327,
+  artifactId: 9762587898,
+  artifactSha256:
+    "982ec5e82aeefb561eccc2fccd52b6d07413ad66c862753c6699ba260dcdd4f2",
+};
+const linuxCanaryPathPattern =
+  /^docs\/plan\/evidence\/M15\/runs\/observability-deployment-canary-[0-9a-f]{7}\.json$/u;
 const componentIds = new Set(Object.keys(knownComponents));
 const operatorVariables = new Set([
   "STARFINITI_ALERTMANAGER_CONFIG",
@@ -719,19 +733,146 @@ function validateEnvironmentExample(raw) {
   }
 }
 
-function validateEvidence(evidence, raws, tasks, adr, runbook) {
+function validateLinuxCanary(claim, canaryRaw) {
+  exactSet(
+    Object.keys(claim ?? {}),
+    new Set([
+      "enabled",
+      "linuxCanaryPath",
+      "linuxCanarySha256",
+      "linuxCanaryRunId",
+      "linuxCanaryJobId",
+      "linuxCanaryArtifactId",
+      "linuxCanaryArtifactSha256",
+    ]),
+    "evidence claim",
+  );
+  if (
+    claim.enabled !== false ||
+    typeof claim.linuxCanaryPath !== "string" ||
+    !linuxCanaryPathPattern.test(claim.linuxCanaryPath) ||
+    claim.linuxCanaryPath !== acceptedLinuxCanary.path ||
+    claim.linuxCanarySha256 !== acceptedLinuxCanary.reportSha256 ||
+    claim.linuxCanaryRunId !== acceptedLinuxCanary.runId ||
+    claim.linuxCanaryJobId !== acceptedLinuxCanary.jobId ||
+    claim.linuxCanaryArtifactId !== acceptedLinuxCanary.artifactId ||
+    claim.linuxCanaryArtifactSha256 !== acceptedLinuxCanary.artifactSha256
+  ) {
+    fail("Linux canary identity or provenance drifted");
+  }
+  if (digest(canaryRaw) !== claim.linuxCanarySha256) {
+    fail("Linux canary report digest drifted");
+  }
+
+  let canary;
+  try {
+    canary = JSON.parse(canaryRaw);
+  } catch {
+    fail("Linux canary report is not valid JSON");
+  }
+  exactSet(
+    Object.keys(canary ?? {}),
+    new Set([
+      "schema",
+      "status",
+      "candidateCommit",
+      "platform",
+      "componentVersions",
+      "imageIndexes",
+      "configChecks",
+      "administrationLoopbackOnly",
+      "exporterPortsUnpublished",
+      "readOnlyRoots",
+      "capabilitiesDropped",
+      "noNewPrivileges",
+      "separateControlAndEgressNetworks",
+      "productionRoute",
+      "realCredential",
+      "rawTargetRetained",
+      "teardown",
+    ]),
+    "Linux canary report",
+  );
+  if (
+    canary.schema !== "starfiniti.observability-deployment-canary.v1" ||
+    canary.status !== "passed" ||
+    canary.candidateCommit !== acceptedLinuxCanary.candidateCommit
+  ) {
+    fail("Linux canary result identity drifted");
+  }
+  exactSet(
+    Object.keys(canary.platform ?? {}),
+    new Set(["os", "architecture"]),
+    "Linux canary platform",
+  );
+  if (
+    canary.platform.os !== "linux" ||
+    canary.platform.architecture !== "amd64"
+  ) {
+    fail("Linux canary platform drifted");
+  }
+
+  const expectedVersions = {
+    prometheus: knownComponents.prometheus.version,
+    alertmanager: knownComponents.alertmanager.version,
+    grafana: knownComponents.grafana.version,
+    blackboxExporter: knownComponents["blackbox-exporter"].version,
+    postgresExporter: knownComponents["postgres-exporter"].version,
+  };
+  exactSet(
+    Object.keys(canary.componentVersions ?? {}),
+    new Set(Object.keys(expectedVersions)),
+    "Linux canary component versions",
+  );
+  for (const [id, version] of Object.entries(expectedVersions)) {
+    if (canary.componentVersions[id] !== version) {
+      fail(`Linux canary ${id} version drifted`);
+    }
+  }
+  exactSet(
+    Object.keys(canary.imageIndexes ?? {}),
+    componentIds,
+    "Linux canary image indexes",
+  );
+  for (const [id, component] of Object.entries(knownComponents)) {
+    if (canary.imageIndexes[id] !== component.imageIndex) {
+      fail(`Linux canary ${id} image index drifted`);
+    }
+  }
+  exactSet(
+    Object.keys(canary.configChecks ?? {}),
+    new Set(["compose", "prometheus", "alertmanager"]),
+    "Linux canary configuration checks",
+  );
+  if (
+    Object.values(canary.configChecks).some((value) => value !== true) ||
+    canary.administrationLoopbackOnly !== true ||
+    canary.exporterPortsUnpublished !== true ||
+    canary.readOnlyRoots !== true ||
+    canary.capabilitiesDropped !== true ||
+    canary.noNewPrivileges !== true ||
+    canary.separateControlAndEgressNetworks !== true ||
+    canary.productionRoute !== false ||
+    canary.realCredential !== false ||
+    canary.rawTargetRetained !== false ||
+    canary.teardown !== true
+  ) {
+    fail("Linux canary hardening or false-authority result drifted");
+  }
+}
+
+function validateEvidence(evidence, canaryRaw, raws, tasks, adr, runbook) {
   if (
     evidence?.schema !== "starfiniti.observability-deployment-evidence.v1" ||
     evidence.status !== "in_progress" ||
     evidence.production?.monitoringActivated !== false ||
     evidence.production?.receiverRoutingActivated !== false ||
     evidence.production?.nodeExporterInstalled !== false ||
-    evidence.claim?.enabled !== false ||
-    evidence.claim?.linuxCanaryPath !== null ||
-    evidence.claim?.linuxCanarySha256 !== null
+    evidence.claim?.enabled !== false
   ) {
     fail("evidence identity or false production claim drifted");
   }
+  validateLinuxCanary(evidence.claim, canaryRaw);
   const assets = uniqueById(evidence.assets, "evidence assets");
   exactSet(assets.keys(), new Set(Object.keys(raws)), "evidence assets");
   for (const [id, raw] of Object.entries(raws)) {
@@ -750,8 +891,8 @@ function validateEvidence(evidence, raws, tasks, adr, runbook) {
     ) {
       fail(`${id} evidence state is invalid`);
     }
-    if (passedRepositoryChecks.has(id) !== (check.status === "passed")) {
-      fail(`${id} repository versus external status drifted`);
+    if (passedEvidenceChecks.has(id) !== (check.status === "passed")) {
+      fail(`${id} verified versus pending status drifted`);
     }
   }
   const slice = tasks.tasks
@@ -768,6 +909,7 @@ function validateEvidence(evidence, raws, tasks, adr, runbook) {
   }
   for (const required of [
     paths.evidence,
+    acceptedLinuxCanary.path,
     paths.plan,
     paths.compose,
     paths.adr,
@@ -797,6 +939,7 @@ function validateDocument(input) {
   validateEnvironmentExample(input.raws.envExample);
   validateEvidence(
     input.evidence,
+    input.canaryRaw,
     input.raws,
     input.tasks,
     input.adr,
@@ -821,6 +964,14 @@ function load() {
   const raws = Object.fromEntries(
     rawIds.map((id) => [id, readText(paths[id])]),
   );
+  const evidence = parseYaml(readText(paths.evidence));
+  const canaryPath = evidence?.claim?.linuxCanaryPath;
+  if (
+    typeof canaryPath !== "string" ||
+    !linuxCanaryPathPattern.test(canaryPath)
+  ) {
+    fail("Linux canary evidence path is unsafe");
+  }
   return {
     raws,
     plan: parseYaml(raws.plan),
@@ -837,7 +988,8 @@ function load() {
       postgres: readText(paths.postgresExample),
       blackbox: readText(paths.blackboxExample),
     },
-    evidence: parseYaml(readText(paths.evidence)),
+    evidence,
+    canaryRaw: readText(canaryPath),
     tasks: parseYaml(readText(paths.tasks)),
     adr: readText(paths.adr),
     runbook: readText(paths.runbook),
@@ -967,12 +1119,34 @@ if (process.argv.includes("--self-test")) {
     candidate.evidence.checks.find(
       (check) => check.id === "production_activation",
     ).status = "passed";
-  }, /repository versus external status/u);
+  }, /verified versus pending status/u);
   mutate((candidate) => {
     candidate.evidence.assets[0].sha256 = "f".repeat(64);
   }, /evidence path or digest drifted/u);
+  mutate((candidate) => {
+    candidate.canaryRaw = candidate.canaryRaw.replace(
+      '"teardown": true',
+      '"teardown": false',
+    );
+  }, /report digest drifted/u);
+  mutate((candidate) => {
+    candidate.evidence.claim.linuxCanaryPath =
+      "docs/plan/evidence/M15/runs/../../../../STATUS.md";
+  }, /identity or provenance drifted/u);
+  mutate((candidate) => {
+    candidate.evidence.claim.linuxCanaryArtifactSha256 = "0".repeat(64);
+  }, /identity or provenance drifted/u);
+  mutate((candidate) => {
+    candidate.evidence.claim.linuxCanaryRunId = 1;
+  }, /identity or provenance drifted/u);
+  mutate((candidate) => {
+    const parsed = JSON.parse(candidate.canaryRaw);
+    parsed.productionRoute = true;
+    candidate.canaryRaw = `${JSON.stringify(parsed, null, 2)}\n`;
+    candidate.evidence.claim.linuxCanarySha256 = digest(candidate.canaryRaw);
+  }, /identity or provenance drifted/u);
 }
 
 console.log(
-  `Validated ${componentIds.size} pinned observability services, one native textfile agent, ${requiredChecks.size} evidence checks, and 31 adversarial cases; ${passedRepositoryChecks.size} checks pass and ${requiredChecks.size - passedRepositoryChecks.size} remain external or runtime-gated.`,
+  `Validated ${componentIds.size} pinned observability services, one native textfile agent, ${requiredChecks.size} evidence checks, and 36 adversarial cases; ${passedEvidenceChecks.size} checks pass and ${requiredChecks.size - passedEvidenceChecks.size} remain external or runtime-gated.`,
 );
