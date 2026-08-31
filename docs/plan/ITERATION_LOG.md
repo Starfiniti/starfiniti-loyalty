@@ -1,5 +1,11 @@
 # Iteration Log
 
+## 2026-08-31 — Current-candidate rescore and owner-queue refresh
+
+- Reconstructed the unfinished task graph after PR #57 became exact-head green. Every remaining product slice is a real-environment closeout; no hidden repository feature slice remains. The M16 product score and generated owner queue still bound an August 29 candidate, so the material-change rule required a current rescore after the M14 managed-session and usage recovery repair.
+- Rescored exact code head `7fb4403863e7409e38bf4fbfc1f3ec68d6325e3f` without inflating repository evidence into production proof. CI `33434852244`, Security `33434852266`, and external CodeQL passed with 999 workspace tests, both images, 89 migrations, 70 pgTAP files and 3,831 assertions, 22 concurrency probes, and all four WooCommerce runtime cells. Production remains 54/100, the candidate remains 83/100, M14 remains provisional 90/100 with operability below its floor, and M16 remains 77/100.
+- Refreshed the fourteen-item evidence-ranked owner backlog and generated handoff to include the 3,604,822,111,248-byte recovery-transfer incident and the exact M14 repair. No item is silently closed or reprioritized; thirteen gates still require external input and the thirty-day GA canary remains dependency-blocked. This is repository governance only and grants no merge, release, deployment, provider, production, database, checkout, or loyalty-value authority.
+
 ## 2026-08-31 — Managed-usage rolling-upgrade recovery repair
 
 - Exact Linux database replay for PR #57 exposed three deterministic test failures: two public-function allowlists omitted the minimized V2 usage summary, the subscription safety fixture attempted an impossible second open account version, and V2 recovery treated an authorized V1 claim as provider attempt zero.

@@ -17,14 +17,14 @@ failures:
         observedAt: "2026-08-28T01:21:10Z"
         evidence:
           path: docs/plan/evidence/M01/backup-transfer-amplification-2026-08-14.md
-          sha256: acf04ca286c01a519edea43878cd2bdc1bb9f4ca7724865387cf8cb6c660d814
+          sha256: ce2d46c03b5b136dff0b6236521ffac7162e88e8789da2bc4b979eb6ea8457b7
           anchor: "## Live follow-up — 2026-08-28"
         productionMutation: false
       - id: shared-lock-starvation-2026-08-31
         observedAt: "2026-08-31T12:08:18Z"
         evidence:
           path: docs/plan/evidence/M01/backup-transfer-amplification-2026-08-14.md
-          sha256: acf04ca286c01a519edea43878cd2bdc1bb9f4ca7724865387cf8cb6c660d814
+          sha256: ce2d46c03b5b136dff0b6236521ffac7162e88e8789da2bc4b979eb6ea8457b7
           anchor: "## Repeat off-site lock starvation — 2026-08-31 13:50 CEST"
         productionMutation: false
     decision:
@@ -68,7 +68,7 @@ failures:
       lastVerifiedAt: "2026-08-31T12:12:08Z"
       evidence:
         path: docs/plan/evidence/M01/backup-transfer-amplification-2026-08-14.md
-        sha256: acf04ca286c01a519edea43878cd2bdc1bb9f4ca7724865387cf8cb6c660d814
+        sha256: ce2d46c03b5b136dff0b6236521ffac7162e88e8789da2bc4b979eb6ea8457b7
         anchor: "## Repeat off-site lock starvation — 2026-08-31 13:50 CEST"
     remainingGates:
       - merge reviewed candidate

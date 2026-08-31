@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "evaluatedAt": "2026-08-29",
+  "evaluatedAt": "2026-08-31",
   "target": 90,
   "minimumCategoryRatio": 0.8,
   "productionSubject": "production",
@@ -55,7 +55,7 @@
     {
       "id": "production",
       "kind": "release",
-      "evaluatedAt": "2026-08-29",
+      "evaluatedAt": "2026-08-31",
       "release": "v0.1.11",
       "branch": null,
       "sourceCommit": "0ced4b666a55d836bd3d4927337fe057a71bb4ba",
@@ -164,10 +164,10 @@
     {
       "id": "candidate",
       "kind": "integration_candidate",
-      "evaluatedAt": "2026-08-29",
+      "evaluatedAt": "2026-08-31",
       "release": null,
       "branch": "codex/enterprise-roadmap-integration",
-      "sourceCommit": "1e55a82a8f2feccdf3f55ace6a66e04b2595c7b0",
+      "sourceCommit": "7fb4403863e7409e38bf4fbfc1f3ec68d6325e3f",
       "score": 83,
       "target": 90,
       "minimumCategoryRatio": 0.8,
@@ -216,8 +216,9 @@
           "id": "reliability",
           "weight": 15,
           "score": 13,
-          "evidence": "Ledger tenancy idempotency concurrency compensation database replay connector matrices and fail-closed canary contracts pass; the exact digest-pinned k6 repository boundary also passes, while real capacity fault outage and recovery proof remains.",
+          "evidence": "Ledger tenancy idempotency concurrency compensation database replay connector matrices and fail-closed canary contracts pass; exact mixed V1/V2 billing recovery, the digest-pinned k6 repository boundary, all 89 migrations, 3831 pgTAP assertions, and 22 concurrency probes pass, while real capacity fault outage and recovery proof remains.",
           "evidencePaths": [
+            "docs/plan/evidence/M14/README.md",
             "docs/plan/evidence/M15/capacity.yaml",
             "docs/plan/evidence/M15/fault-injection.yaml",
             "docs/plan/evidence/M15/recovery.yaml"
@@ -237,7 +238,7 @@
           "id": "enterprise_commercial",
           "weight": 10,
           "score": 8,
-          "evidence": "Tenant federation SCIM agency support service APIs metering and protected managed billing are implemented and disabled; enterprise IdP and Stripe canaries remain external.",
+          "evidence": "Tenant federation SCIM agency support service APIs metering and protected managed billing are implemented and disabled; exact session retry, one-live-subscription, usage claim versus provider-attempt accounting, and mixed-version recovery pass, while enterprise IdP and Stripe canaries remain external.",
           "evidencePaths": [
             "docs/plan/evidence/M13/README.md",
             "docs/plan/evidence/M14/README.md"
@@ -258,7 +259,7 @@
         {
           "id": "duplicate_or_unrecoverable_effect",
           "status": "clear",
-          "evidence": "All twenty-two exact-head two-session probes and immutable effect tests pass."
+          "evidence": "All twenty-two exact-head two-session probes, mixed V1/V2 usage recovery cases, and immutable effect tests pass."
         },
         {
           "id": "checkout_hub_dependency",
@@ -268,7 +269,7 @@
         {
           "id": "unresolved_critical_high",
           "status": "clear",
-          "evidence": "Exact-head CodeQL DAST dependency image secret and supply-chain gates pass; independent penetration testing remains a separate prerequisite."
+          "evidence": "Exact code head 7fb4403863e7409e38bf4fbfc1f3ec68d6325e3f passed CI 33434852244 and Security 33434852266, including CodeQL DAST dependency image secret and supply-chain gates; independent penetration testing remains a separate prerequisite."
         },
         {
           "id": "required_live_evidence_absent",

@@ -1,16 +1,16 @@
 schema: starfiniti.continuous-improvement.v1
 status: in_progress
-observedAt: 2026-08-31T12:15:33Z
+observedAt: 2026-08-31T20:35:50Z
 candidate:
   branch: codex/enterprise-roadmap-integration
-  commit: 1e55a82a8f2feccdf3f55ace6a66e04b2595c7b0
+  commit: 7fb4403863e7409e38bf4fbfc1f3ec68d6325e3f
   initialCloseApproved: false
 plan:
   path: infrastructure/governance/continuous-improvement.yaml
   sha256: b39db2fc0d83f1f1aea7500c9196e32b04bf962d5592f333947362ec4155185a
 backlog:
   path: docs/plan/IMPROVEMENT_BACKLOG.yaml
-  sha256: 88a58490a78dc7e146e64e4c162ff3e63addaec3d269ae128aba8bfc861adc02
+  sha256: af5c5a6bd2d132c6b31c0e27add9677a6571faaa68a785b5593106bca4fbabbe
 artifacts:
   monthlyReviewPrimaryPath: null
   monthlyReviewPrimarySha256: null
@@ -61,7 +61,7 @@ checks:
     evidence: The canonical contract fixes UTC cadence, review sections, thirteen official sources, bounded content-free source snapshots, exact recovery host and guest endpoints, installed and candidate provenance digests, ranking arithmetic, regression threshold, score floors, experiment guardrails, five closed minimized V1 closeout artifacts, and automatic failures.
   - id: backlog_contract
     status: passed
-    evidence: The evidence-ranked backlog records fourteen current external and dependency gates with exact integer inputs, recomputable scores, stable order, evidence paths, and owner inputs; capacity and whole-system fault runs are separate blockers.
+    evidence: The evidence-ranked backlog records fourteen current external and dependency gates with exact integer inputs, recomputable scores, stable order, evidence paths, and owner inputs; the 2026-08-31 managed-billing repair and 3604822111248-byte recovery-transfer incident are reflected without changing any gate state or score, and capacity plus whole-system fault runs remain separate blockers.
   - id: task_graph_binding
     status: passed
     evidence: M16 declares measurable cadence, provider, regression, experiment, exercise, scoring, rollout, rollback, owner-input, and evidence requirements.
@@ -77,7 +77,7 @@ checks:
   - id: exact_head_ci
     status: passed
     evidence: >-
-      Exact integrated candidate 1e55a82a8f2feccdf3f55ace6a66e04b2595c7b0 passed CI run 33276262061, Security run 33276262148, and external CodeQL check 99163614374 with all twelve PR checks green and PR 57 merge-clean; the full baseline repeated the 995-test repository gate, 87-migration and 69-file pgTAP replay with 3,790 assertions, all 22 concurrency probes, synthetic versioned connector build and independent verification, both images, all four WooCommerce runtimes, DAST, supply chain, and recovery transport, while retained production-rendered authentication QA covered desktop mobile and compact keyboard access. Dependency implementation c14a8f5802ddee02882cceb2c2f3e01cdcd47fba subsequently passed CI run 33281041057, Security run 33281041055, and external CodeQL check 99176310303 with all twelve checks green and PR 57 merge-clean. Cutoff-bound provider-impact implementation e4a1e573281555912b9dbbfa3d1b5e50aca073e8 passed CI run 33306849568, Security run 33306849601, and external CodeQL check 99244979080 with all twelve checks green. Authentik 2026.8 source-contract implementation 5b9419acdfe0e4cd84db81d258ed3692b88ed85c passed CI run 33368245319, Security run 33368245722, and external CodeQL check 99413667343 with all twelve checks green and PR 57 merge-clean. Authentik 2026.8 runtime implementation c94cc9e2181079ac80524fc3d9c9496ad6d0d6a6 and evidence head e96cd18aa416c16c9523c46a49a9cdcd14cbd020 passed CI run 33381604540, Security run 33381604545, and external CodeQL check 99455421534 with all twelve checks green; recovery job 99454991777 and artifact 9754193837 bind fourteen passing synthetic scenarios and exact teardown. These records prove repository and disposable candidate-runtime verification only and change no provider acceptance or production authority.
+      Exact integrated code head 7fb4403863e7409e38bf4fbfc1f3ec68d6325e3f passed CI run 33434852244 and Security run 33434852266 with all eleven workflow jobs green; external CodeQL also passed. The complete baseline contains 999 workspace tests, both production images, all 89 migrations, all 70 pgTAP files with 3831 assertions, all 22 concurrency probes, all four WooCommerce runtimes, DAST, supply chain, and recovery transport. It includes the post-review managed-session and usage boundary, preserving V1 claim identity, separating provider attempts from policy holds, and failing closed across snapshot visibility. Evidence-only head 609705692d2fe38e64b12360d392e1c62aabdf74 subsequently passed CI 33435854855, Security 33435854858, and external CodeQL with all twelve PR checks green and PR 57 merge-clean. Earlier dependency, provider-impact, Authentik source-contract, and fourteen-scenario disposable Authentik runtime records remain effective. These records prove repository and disposable candidate-runtime verification only and change no provider acceptance or production authority.
   - id: owner_roster
     status: pending
     evidence: Product, engineering, security, operations, monthly-review, quarterly-exercise, and owner roles require named environment-owned assignments.
@@ -136,7 +136,7 @@ checks:
     evidence: The repeated PostgreSQL off-site starvation record binds exact candidate bytes for the backup-assets validator archive-RPO and repository-isolation alerts and OPS-007. Every delivery status is honestly candidate with null merge production and observation evidence; repository merge dedicated-repository provisioning paging activation continuity retention and isolated restore remain required before the monthly merged-control gate can pass.
   - id: module_rescoring
     status: pending
-    evidence: ADR-0080 and the product-score V2 validator preserve the 54/100 deployed-production history and rescore exact integrated candidate 1e55a82a8f2feccdf3f55ace6a66e04b2595c7b0 at an unchanged 83/100 after the M09 authentication regression correction; M09 remains 88/100 because the responsive production-rendered browser proof adds no approved deployment canary activation recovery rollback observation or reconciliation evidence, and every module materially changed during the two future elapsed review periods still requires its own exact rescore.
+    evidence: ADR-0080 and the product-score V2 validator preserve the 54/100 deployed-production history and rescore exact integrated code head 7fb4403863e7409e38bf4fbfc1f3ec68d6325e3f at an unchanged 83/100 after the M14 managed-session and usage recovery repair; M09 remains 88/100 and M14 remains provisional 90/100 because repository verification adds no approved deployment canary activation recovery rollback observation or reconciliation evidence, and every module materially changed during the two future elapsed review periods still requires its own exact rescore.
   - id: score_history
     status: pending
     evidence: The original V1 whole-product score is now retained byte-for-byte under an exact SHA-256 binding and V2 separates production from candidate evidence; initial M16 close still requires two elapsed reviews with prior/current whole-product and affected-module history.
