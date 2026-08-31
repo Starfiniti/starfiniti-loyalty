@@ -36,7 +36,7 @@
     "supabase:preflight": "node scripts/validate-supabase-compatibility.mjs",
     "tenant:bootstrap": "node scripts/bootstrap-initial-tenant.mjs",
     "pilot:validate": "node scripts/validate-production-pilot-evidence.mjs",
-    "canary-envelope:validate": "node scripts/validate-canary-manifest-envelopes.mjs",
+    "canary-envelope:validate": "node scripts/validate-canary-manifest-envelopes.mjs && node scripts/validate-minimized-evidence.mjs",
     "rewards:canary:validate": "node scripts/validate-rewards-canary-evidence.mjs --self-test",
     "vip:canary:validate": "node scripts/validate-vip-canary-evidence.mjs --self-test",
     "referral:canary:validate": "node scripts/validate-referral-canary-evidence.mjs --self-test",

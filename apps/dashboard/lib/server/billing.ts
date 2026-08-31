@@ -37,7 +37,7 @@ export async function getManagedBillingUsageSummary(
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .schema("loyalty")
-    .rpc("get_my_managed_billing_usage_summary_v1", {
+    .rpc("get_my_managed_billing_usage_summary_v2", {
       target_organization_public_id: organizationId,
       target_period_start: periodStart,
     });

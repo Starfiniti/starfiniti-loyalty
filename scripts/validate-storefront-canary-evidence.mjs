@@ -6,6 +6,10 @@ import { fileURLToPath } from "node:url";
 import YAML from "yaml";
 import { validateCanaryManifestEnvelope } from "./lib/validate-canary-manifest-envelope.mjs";
 import { readBoundJsonArtifact } from "./lib/read-bound-json-artifact.mjs";
+import {
+  inspectMinimizedEvidence,
+  maximumEvidenceTextLength,
+} from "./lib/inspect-minimized-evidence.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const evidencePath = join(root, "docs/plan/evidence/M09/canary.yaml");
@@ -181,53 +185,14 @@ const completionApprovals = [
   "pilotStoreApproved",
   "canaryApproved",
 ];
-const maximumEvidenceTextLength = 4_096;
 const fail = (message) => {
   throw new Error(`Storefront canary evidence invalid: ${message}`);
 };
 
 const digest = (value) => createHash("sha256").update(value).digest("hex");
 const digestPattern = /^[0-9a-f]{64}$/u;
-const forbiddenKey =
-  /(password|passphrase|secret|private.?key|access.?token|refresh.?token|bearer|credential.?value|raw.?body|coupon.?code|email|customer.?id|order.?id|auth.?uuid|tenant.?id|wallet.?id|reservation.?id|case.?id|connection.?id|idempotency.?key)/i;
-const forbiddenValue =
-  /(-----BEGIN [A-Z ]*PRIVATE KEY-----|\bBearer\s+[A-Za-z0-9._~+/=-]{12,}|\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b|\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b|\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b)/i;
-
-const inspectEvidence = (
-  value,
-  path = "evidence",
-  ancestors = new WeakSet(),
-) => {
-  if (typeof value === "string") {
-    if (value.length > maximumEvidenceTextLength) {
-      fail(`evidence text at ${path} exceeds the bounded length`);
-    }
-    if (forbiddenValue.test(value)) {
-      fail(`forbidden sensitive value at ${path}`);
-    }
-    return;
-  }
-  if (Array.isArray(value)) {
-    if (ancestors.has(value)) fail(`cyclic evidence at ${path}`);
-    ancestors.add(value);
-    value.forEach((item, index) =>
-      inspectEvidence(item, `${path}[${index}]`, ancestors),
-    );
-    ancestors.delete(value);
-    return;
-  }
-  if (value && typeof value === "object") {
-    if (ancestors.has(value)) fail(`cyclic evidence at ${path}`);
-    ancestors.add(value);
-    for (const [key, nested] of Object.entries(value)) {
-      if (forbiddenKey.test(key))
-        fail(`forbidden sensitive key ${path}.${key}`);
-      inspectEvidence(nested, `${path}.${key}`, ancestors);
-    }
-    ancestors.delete(value);
-    return;
-  }
-};
+const inspectEvidence = (value, path = "evidence") =>
+  inspectMinimizedEvidence(value, { fail, path });
 
 const safeArtifactPath = (relativePath, artifactId) => {
   const artifactStem = artifactId.replaceAll("_", "-");

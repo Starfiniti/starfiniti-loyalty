@@ -14,17 +14,35 @@ let managedModeSet = false;
 const actorId = randomUUID();
 const operationId = randomUUID();
 const attemptId = randomUUID();
+const sessionAttemptId = randomUUID();
 const modeAt = new Date();
 const enabledAt = new Date(modeAt.getTime() + 1);
 
-function reserve(sql, organizationId, planId, targetOperationId) {
+function reserve(
+  sql,
+  organizationId,
+  planId,
+  targetOperationId,
+  checkedAt = new Date(),
+) {
   return sql`
     select deployment_mode, operation_id, operation_state,
       provider_customer_id, provider_price_id, live_mode,
       customer_idempotency_key, session_idempotency_key
-    from loyalty_private.reserve_managed_billing_session_v1(
+    from loyalty_private.reserve_managed_billing_session_v2(
       ${actorId}, ${organizationId}, 'checkout', ${planId},
-      ${targetOperationId}, statement_timestamp()
+      ${targetOperationId}, ${checkedAt}
+    )
+  `;
+}
+
+function recordSession(sql, targetOperationId) {
+  return sql`
+    select operation_state, provider_session_id
+    from loyalty_private.record_managed_billing_session_attempt_v1(
+      ${actorId}, ${targetOperationId}, ${sessionAttemptId}, 'session',
+      'succeeded', ${`cs_test_BillingSessionRace${suffix}`},
+      'session_created', statement_timestamp()
     )
   `;
 }
@@ -128,10 +146,39 @@ try {
     );
   }
 
-  const changedOperationId = randomUUID();
+  const exactSessionResults = await Promise.allSettled([
+    recordSession(first, operationId),
+    recordSession(second, operationId),
+  ]);
+  if (
+    exactSessionResults.some((result) => result.status !== "fulfilled") ||
+    exactSessionResults.some(
+      (result) => result.value[0]?.operation_state !== "completed",
+    )
+  ) {
+    throw new Error(
+      `exact session result race diverged: ${JSON.stringify(exactSessionResults)}`,
+    );
+  }
+
+  const firstCompetingOperationId = randomUUID();
+  const secondCompetingOperationId = randomUUID();
+  const afterReplayWindow = new Date(Date.now() + 25 * 60 * 60 * 1000);
   const changedReservations = await Promise.allSettled([
-    reserve(first, organization.public_id, firstPlanId, changedOperationId),
-    reserve(second, organization.public_id, secondPlanId, changedOperationId),
+    reserve(
+      first,
+      organization.public_id,
+      firstPlanId,
+      firstCompetingOperationId,
+      afterReplayWindow,
+    ),
+    reserve(
+      second,
+      organization.public_id,
+      secondPlanId,
+      secondCompetingOperationId,
+      afterReplayWindow,
+    ),
   ]);
   const changedSuccesses = changedReservations.filter(
     (result) => result.status === "fulfilled",
@@ -139,8 +186,8 @@ try {
   const changedFailures = changedReservations.filter(
     (result) =>
       result.status === "rejected" &&
-      result.reason?.code === "23505" &&
-      result.reason?.message === "managed billing session idempotency conflict",
+      result.reason?.code === "55000" &&
+      result.reason?.message === "managed billing checkout already in progress",
   );
 
   const [state] = await admin`
@@ -161,7 +208,7 @@ try {
     changedSuccesses.length !== 1 ||
     changedFailures.length !== 1 ||
     state.operations !== 2 ||
-    state.attempts !== 1 ||
+    state.attempts !== 2 ||
     state.accounts !== 1 ||
     state.ledger_transactions !== 0
   ) {
@@ -171,7 +218,7 @@ try {
   }
 
   console.log(
-    "Managed billing session concurrency probe passed: exact reservations and customer bindings converged, changed plan races failed one caller closed, and no loyalty ledger value changed.",
+    "Managed billing session concurrency probe passed: exact reservations, customer bindings, and session results converged; two distinct post-replay-window checkouts produced one winner and one fail-closed conflict; and no loyalty ledger value changed.",
   );
 } finally {
   if (managedModeSet) {

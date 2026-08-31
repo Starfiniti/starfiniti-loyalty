@@ -112,7 +112,7 @@ describe("managed billing usage server read", () => {
       getManagedBillingUsageSummary(organizationId, usage.periodStart),
     ).resolves.toEqual(usage);
     expect(rpc).toHaveBeenCalledWith(
-      "get_my_managed_billing_usage_summary_v1",
+      "get_my_managed_billing_usage_summary_v2",
       {
         target_organization_public_id: organizationId,
         target_period_start: usage.periodStart,

@@ -1,5 +1,27 @@
 # Iteration Log
 
+## 2026-08-31 — Integration safety review and release containment
+
+- Reconstructed PR #57 after the enterprise module implementation and reviewed
+  merchant UI state, managed Stripe sessions, usage metering, M04–M11 canary
+  evidence, and the privileged release path adversarially.
+- Added additive V2 session and usage boundaries: 23-hour exact provider retry,
+  immutable owner-only reconciliation, one-live-subscription serialization,
+  separate claim/send counts, canonical order occurrence, and SMTP-only
+  delivered-message usage. Historical V1 rows and readers remain intact.
+- Centralized minimized canary evidence inspection with bounded depth/string
+  size, cycle rejection, shared-reference support, and sensitive key/value
+  checks; all eight affected module validators retain their prior scores.
+- Replaced tag-controlled release execution with a default-branch preflight,
+  exact read-only build, sealed artifact, independent release-environment gate,
+  and no-code publisher. Manually disabled the existing Release workflow as
+  reversible containment and left it disabled pending external GitHub controls.
+- Corrected service-account and programme-sharing component identity across
+  route revalidation and removed an unused billing boundary plus dead styling.
+  Production remains `v0.1.11`; managed billing, release, deployment, canary,
+  and loyalty value are unchanged. Exact-head full CI and Linux database replay
+  remain required before handoff.
+
 ## 2026-08-31 — Current M15 production-reality evidence
 
 - Audited all 600 pending evidence checks across 27 manifests after the

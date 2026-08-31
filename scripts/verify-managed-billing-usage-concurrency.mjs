@@ -19,8 +19,8 @@ const changedCorrectionId = randomUUID();
 
 function claim(sql, workerId) {
   return sql`
-    select dispatch_public_id, lease_token, attempt_number
-    from loyalty_private.claim_managed_billing_usage_dispatches_v1(
+    select dispatch_public_id, lease_token, claim_sequence::text
+    from loyalty_private.claim_managed_billing_usage_dispatches_v2(
       ${workerId}, 1, 60, statement_timestamp()
     )
   `;
@@ -99,7 +99,7 @@ try {
     claim(second, `billing-usage-b-${suffix}`),
   ]);
   const claimed = claimResults.flat();
-  if (claimed.length !== 1 || claimed[0]?.attempt_number !== 1) {
+  if (claimed.length !== 1 || claimed[0]?.claim_sequence !== "1") {
     throw new Error(
       `usage claim race diverged: ${JSON.stringify(claimResults)}`,
     );

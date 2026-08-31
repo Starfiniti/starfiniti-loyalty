@@ -140,6 +140,20 @@ export const managedBillingUsageDispatchClaimV1 = z
   })
   .strict();
 
+export const managedBillingUsageDispatchClaimV2 = z
+  .object({
+    dispatchId: z.uuid(),
+    leaseToken: z.uuid(),
+    claimSequence: z.string().regex(/^[1-9][0-9]{0,18}$/u),
+  })
+  .strict();
+
+export const managedBillingUsageProviderAttemptV1 = z
+  .object({
+    attemptNumber: z.number().int().min(1).max(10),
+  })
+  .strict();
+
 export const managedBillingUsageDispatchAuthorityV1 = z
   .object({
     eventName: z.string().regex(/^[a-z][a-z0-9_]{1,99}$/u),
@@ -598,6 +612,12 @@ export type ManagedBillingUsageSummaryV1 = z.infer<
 >;
 export type ManagedBillingUsageDispatchClaimV1 = z.infer<
   typeof managedBillingUsageDispatchClaimV1
+>;
+export type ManagedBillingUsageDispatchClaimV2 = z.infer<
+  typeof managedBillingUsageDispatchClaimV2
+>;
+export type ManagedBillingUsageProviderAttemptV1 = z.infer<
+  typeof managedBillingUsageProviderAttemptV1
 >;
 export type ManagedBillingUsageDispatchAuthorityV1 = z.infer<
   typeof managedBillingUsageDispatchAuthorityV1

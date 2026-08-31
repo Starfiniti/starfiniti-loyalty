@@ -86,6 +86,37 @@ describe("managed billing session orchestration", () => {
     expect(mocks.customer).not.toHaveBeenCalled();
     expect(mocks.checkout).not.toHaveBeenCalled();
     expect(mocks.statements).toHaveLength(1);
+    expect(mocks.statements[0]?.text).toContain(
+      "reserve_managed_billing_session_v2",
+    );
+  });
+
+  it("does not read provider configuration for an expired ambiguous operation", async () => {
+    mocks.rows.push([
+      {
+        deployment_mode: "managed",
+        operation_id: operationId,
+        operation_state: "reconciliation_required",
+        provider_customer_id: "cus_BillingSession0001",
+        provider_price_id: "price_BillingSession0001",
+        live_mode: false,
+        customer_idempotency_key: `m14:customer:${operationId}`,
+        session_idempotency_key: `m14:checkout:${operationId}`,
+      },
+    ]);
+
+    await expect(
+      createManagedBillingSession(actorUserId, {
+        schemaVersion: "1",
+        organizationId,
+        action: "checkout",
+        planId,
+        operationId,
+      }),
+    ).rejects.toThrow("billing_session_unavailable");
+    expect(mocks.readKey).not.toHaveBeenCalled();
+    expect(mocks.checkout).not.toHaveBeenCalled();
+    expect(mocks.statements).toHaveLength(1);
   });
 
   it("does not read a provider key when the database returns no live authority", async () => {
@@ -190,6 +221,9 @@ describe("managed billing session orchestration", () => {
     });
     expect(mocks.portal).not.toHaveBeenCalled();
     expect(mocks.statements).toHaveLength(5);
+    expect(mocks.statements[1]?.text).toContain(
+      "authorize_managed_billing_session_attempt_v2",
+    );
     expect(mocks.statements[2]?.text).toContain(
       "record_managed_billing_session_attempt_v1",
     );

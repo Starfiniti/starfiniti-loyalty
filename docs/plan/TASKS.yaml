@@ -2073,6 +2073,8 @@ tasks:
           - 26 focused contract cases strict route and action cases all 223 dashboard 107 worker and 62 domain regression tests 72 focused pgTAP assertions and the tenth two-session probe pass
           - exact-head run 32927596360 at 479f605 passes all seven jobs after the browser-driven repair including clean 66-migration replay all 53 pgTAP files with 2846 assertions all ten concurrency probes both images and all four WooCommerce runtimes
           - Playwright desktop mobile dark reduced-motion keyboard and diagnostic review passes 16.48-to-1 confirmation contrast 40-pixel actions aligned labels English-only output zero overflow and zero browser errors after repairing three deterministic visual defects
+          - post-review action state now binds every completed create rotate and revoke result to its operation UUID; route revalidation remounts programme sharing by revision while one-time credentials survive revalidation until the owner explicitly starts a fresh rotation
+          - the complete local repository gate passes 999 workspace tests both production builds and every static roadmap security accessibility and WooCommerce validator; exact-head CI remains required before this post-review repair is accepted
           - production issuance remains disabled and Starfiniti-only customer activity replay rotation revocation event-ledger reconciliation rollback and observation remain owned by M11-S06
       - id: M11-S05-OUTBOUND-WEBHOOKS-CLIENTS-AND-OPERATIONS
         status: complete
@@ -2972,6 +2974,8 @@ tasks:
         acceptance:
           - owner-only checkout and portal sessions are created on demand and cannot cross tenants
           - provider success pages never grant access before webhook and database reconciliation
+          - one organization cannot authorize a second live provider subscription and unresolved provider stages lose retry authority at the 23-hour cutoff
+          - expired ambiguous operations require immutable owner-only reconciliation before a later reviewed operation
           - self-hosted returns before plan account provider configuration key or client access
           - entitlement or provider disablement commits a recoverable hold and returns no provider authority
           - a post-provider customer or session hold returns no Checkout or Portal redirect to the browser
@@ -2997,8 +3001,10 @@ tasks:
           - nineteenth two-session concurrency probe for exact reservation exact customer binding changed-plan races one-account convergence and zero ledger effects
           - production-rendered desktop/mobile owner/read-only/unavailable browser review with navigation focus English-only reflow and zero diagnostics
           - npm run check clean database replay both production images and all four WooCommerce runtimes
+          - post-review safety migration adds 30 focused pgTAP assertions plus a V2 two-session cutoff and concurrent-checkout probe; the complete local repository gate and 89-migration static validation pass while exact Linux replay remains required
         evidence:
           - docs/architecture/ADR/0058-database-reserved-stripe-sessions-and-webhook-authority.md
+          - docs/architecture/ADR/0114-billing-replay-subscription-and-usage-safety.md
           - docs/api/BILLING.md
           - docs/operations/STRIPE_BILLING.md
           - docs/plan/evidence/M14/README.md
@@ -3018,6 +3024,8 @@ tasks:
         acceptance:
           - usage is bigint-safe UTC-bound attributable correctable and idempotent beyond provider windows
           - metering failure queues independently and never changes loyalty behavior
+          - claim and policy-hold churn cannot consume the ten-attempt provider-send budget
+          - order usage retains canonical event occurrence time and message usage requires immutable SMTP delivery evidence
         rollout: Shadow local totals then sandbox meters then one managed tenant.
         rollback: Stop dispatch retain source facts and reconciliation then forward-correct provider usage.
         failure_modes:
@@ -3040,8 +3048,10 @@ tasks:
           - fixed-origin loopback provider tests for exact request duplicate retry rejection malformed response secret-file and self-hosted no-client behavior
           - production-rendered 1440 by 1000 and 390 by 844 light and dark browser review for exact bigint display responsive cards queue health current navigation drawer focus Escape overflow and diagnostics
           - npm run check clean database replay both production images and all four WooCommerce runtimes
+          - post-review V2 metering adds 72 focused pgTAP assertions, bigint claim/provider-attempt contracts, and an updated two-session probe; the complete local repository gate passes 999 workspace tests while exact Linux replay remains required
         evidence:
           - docs/architecture/ADR/0059-immutable-source-fact-usage-metering.md
+          - docs/architecture/ADR/0114-billing-replay-subscription-and-usage-safety.md
           - docs/api/BILLING.md
           - docs/operations/STRIPE_BILLING.md
           - docs/plan/evidence/M14/README.md

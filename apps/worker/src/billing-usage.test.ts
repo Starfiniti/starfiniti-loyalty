@@ -222,6 +222,11 @@ describe("isolated billing usage lifecycle", () => {
     expect(calls.some(({ query }) => query.includes("finish_managed"))).toBe(
       true,
     );
+    expect(
+      calls.findIndex(({ query }) => query.includes("begin_managed")),
+    ).toBeLessThan(
+      calls.findIndex(({ query }) => query.includes("finish_managed")),
+    );
     expect(JSON.stringify(calls)).not.toMatch(
       /UsageFixture|starfiniti_orders/u,
     );
@@ -258,6 +263,12 @@ describe("isolated billing usage lifecycle", () => {
     expect(outcome.held).toBe(1);
     expect(calls.flatMap(({ values }) => values)).toContain(
       "stripe_usage_provider_config_unavailable",
+    );
+    expect(calls.some(({ query }) => query.includes("begin_managed"))).toBe(
+      false,
+    );
+    expect(calls.some(({ query }) => query.includes("hold_managed"))).toBe(
+      true,
     );
   });
 
@@ -297,18 +308,18 @@ function lifecycleSql(
   ): Promise<unknown[]> => {
     const query = strings.join("?");
     calls.push({ query, values });
-    if (query.includes("capture_managed_billing_usage_facts_v1")) {
+    if (query.includes("capture_managed_billing_usage_facts_v2")) {
       return options.captured ? [{ captured_count: options.captured }] : [];
     }
-    if (query.includes("claim_managed_billing_usage_dispatches_v1")) {
+    if (query.includes("claim_managed_billing_usage_dispatches_v2")) {
       if (options.claim === false) return [];
       return Array.from({ length: options.claimCount ?? 1 }, (_, index) => ({
         dispatch_public_id: dispatchId.replace(/.$/u, String(index)),
         lease_token: leaseToken.replace(/.$/u, String(index + 1)),
-        attempt_number: 1,
+        claim_sequence: "1",
       }));
     }
-    if (query.includes("authorize_managed_billing_usage_dispatch_v1")) {
+    if (query.includes("authorize_managed_billing_usage_dispatch_v2")) {
       if (options.authority === false) return [];
       return [
         {
@@ -321,7 +332,13 @@ function lifecycleSql(
         },
       ];
     }
-    if (query.includes("finish_managed_billing_usage_dispatch_v1")) {
+    if (query.includes("begin_managed_billing_usage_provider_attempt_v1")) {
+      return [{ attempt_number: 1 }];
+    }
+    if (query.includes("hold_managed_billing_usage_dispatch_v1")) {
+      return [{ state: "held", next_attempt_at: null }];
+    }
+    if (query.includes("finish_managed_billing_usage_dispatch_v2")) {
       return [{ state: values[3], next_attempt_at: null }];
     }
     throw new Error("unexpected_billing_usage_sql");

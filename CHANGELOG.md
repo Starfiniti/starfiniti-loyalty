@@ -1,5 +1,27 @@
 # Changelog
 
+- Added ADR-0115 and replaced the unsafe tag-sourced release design with a
+  default-branch `repository_dispatch` workflow. Read-only preflight verifies
+  external branch, tag, check, and environment policy; an exact candidate build
+  creates one sealed short-lived artifact; and only an independently approved
+  publisher without checkout or build steps receives write access. The Release
+  workflow remains manually disabled until every external control, licence,
+  security, and owner gate is complete; no tag, package, release, or deployment
+  was created.
+
+- Added ADR-0114 and additive V2 billing safety. Managed Checkout now loses
+  provider retry authority after 23 hours, requires immutable owner-only
+  reconciliation, and rejects a second live subscription. Usage metering now
+  separates claim churn from actual sends, preserves canonical order occurrence
+  time, and counts only immutable SMTP delivery rather than Klaviyo acceptance.
+  Self-hosted mode still returns before provider access and every billing path
+  remains disabled in production.
+
+- Hardened M04–M11 canary evidence with one bounded, cycle-safe minimization
+  scanner and corrected merchant action state so one-time service credentials
+  survive route revalidation while completed operations cannot be silently
+  replayed. Focused checks pass locally; exact-head CI remains pending.
+
 - Refreshed M15's stale production-reality snapshot from a bounded read-only
   observation. VM 971's cumulative counter was 3,604,822,111,248 bytes while
   the latest hour averaged 3,263 bytes/s and peaked at 9,761 bytes/s; three real

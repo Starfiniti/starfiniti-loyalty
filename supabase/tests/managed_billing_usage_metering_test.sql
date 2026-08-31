@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(63);
+select plan(72);
 
 grant loyalty_runtime, loyalty_worker to current_user;
 grant usage on schema extensions to loyalty_runtime, loyalty_worker;
@@ -49,6 +49,28 @@ select ok((
       'managed_billing_usage_dispatch_attempts'
     )
 ), 'all four usage tables enable RLS');
+select ok(
+  (select relation.relrowsecurity and relation.relforcerowsecurity
+   from pg_class as relation
+   where relation.oid =
+     'loyalty_private.managed_billing_usage_policy_holds'::regclass)
+  and exists (
+    select 1 from pg_policies
+    where schemaname = 'loyalty_private'
+      and tablename = 'managed_billing_usage_policy_holds'
+      and policyname = 'managed_billing_usage_policy_holds_owner'
+      and roles @> array['loyalty_owner']::name[]
+      and cmd = 'ALL'
+  )
+  and (
+    select data_type = 'bigint'
+    from information_schema.columns
+    where table_schema = 'loyalty_private'
+      and table_name = 'managed_billing_usage_dispatch_attempts'
+      and column_name = 'attempt_number'
+  ),
+  'policy holds force the owner-only RLS path and claim evidence is bigint-safe'
+);
 select ok(
   exists (select 1 from pg_trigger
     where tgrelid = 'loyalty_private.managed_billing_usage_meter_versions'::regclass
@@ -629,6 +651,116 @@ $$, $$ values ('starfiniti_orders'::text, 'cus_BillingUsageTest0001'::text,
   '-1'::text) $$,
   'correction dispatch reuses its accepted source meter and account');
 
+-- Policy/local configuration holds are independent from provider attempts.
+update loyalty_private.managed_billing_usage_dispatches
+set next_attempt_at = '2050-01-01 00:00:00+00'
+where state = 'held';
+insert into loyalty_private.managed_billing_usage_facts (
+  organization_id, meter_key, source_kind, source_subject_public_id,
+  source_evidence_public_id, source_reference_sha256, quantity,
+  usage_period_start, usage_period_end, occurred_at,
+  actor_reference, reason, fact_sha256, created_at
+)
+select organization.id, 'api_requests', 'service_customer_command',
+  'c1000000-0000-4000-8000-000000000430',
+  'c1000000-0000-4000-8000-000000000431',
+  extensions.digest(convert_to('source:v2-hold', 'UTF8'), 'sha256'),
+  1, '2041-01-01 00:00:00+00', '2041-02-01 00:00:00+00',
+  '2041-01-05 00:03:20+00', 'worker:billing-usage-capture',
+  'Captured for policy hold attempt isolation test',
+  extensions.digest(convert_to('fact:v2-hold', 'UTF8'), 'sha256'),
+  '2041-01-05 00:03:20+00'
+from loyalty.organizations as organization
+where organization.slug = 'billing-usage-one';
+create temporary table usage_v2_hold_claim (
+  dispatch_public_id uuid primary key,
+  lease_token uuid not null,
+  claim_sequence bigint not null
+) on commit drop;
+do $$
+declare
+  iteration integer;
+  attempt_at timestamptz;
+begin
+  for iteration in 0..10 loop
+    attempt_at := '2041-01-05 00:10:00+00'::timestamptz
+      + pg_catalog.make_interval(mins => iteration * 6);
+    delete from usage_v2_hold_claim;
+    insert into usage_v2_hold_claim
+    select * from loyalty_private.claim_managed_billing_usage_dispatches_v2(
+      'billing-usage-v2-worker', 1, 60, attempt_at
+    );
+    if (select count(*) from usage_v2_hold_claim) <> 1 then
+      raise exception 'usage V2 hold claim unavailable';
+    end if;
+    perform *
+    from usage_v2_hold_claim as claim
+    cross join lateral loyalty_private.authorize_managed_billing_usage_dispatch_v2(
+      claim.dispatch_public_id, claim.lease_token,
+      'billing-usage-v2-worker', attempt_at + interval '1 second'
+    );
+    perform *
+    from usage_v2_hold_claim as claim
+    cross join lateral loyalty_private.hold_managed_billing_usage_dispatch_v1(
+      claim.dispatch_public_id, claim.lease_token,
+      'billing-usage-v2-worker',
+      'stripe_usage_provider_config_unavailable',
+      attempt_at + interval '2 seconds'
+    );
+  end loop;
+end;
+$$;
+select results_eq($$
+  select dispatch.provider_attempt_count, dispatch.claim_sequence_count
+  from loyalty_private.managed_billing_usage_dispatches as dispatch
+  join loyalty_private.managed_billing_usage_facts as fact
+    on fact.id = dispatch.usage_fact_id
+  where fact.source_evidence_public_id =
+    'c1000000-0000-4000-8000-000000000431'
+$$, $$ values (0, 11::bigint) $$,
+  'eleven local holds consume zero provider attempts');
+select results_eq($$
+  select count(*)::bigint
+  from loyalty_private.managed_billing_usage_policy_holds as hold
+  join loyalty_private.managed_billing_usage_dispatches as dispatch
+    on dispatch.id = hold.dispatch_id
+  join loyalty_private.managed_billing_usage_facts as fact
+    on fact.id = dispatch.usage_fact_id
+  where fact.source_evidence_public_id =
+    'c1000000-0000-4000-8000-000000000431'
+$$, array[11::bigint], 'every local hold remains immutable evidence');
+delete from usage_v2_hold_claim;
+insert into usage_v2_hold_claim
+select * from loyalty_private.claim_managed_billing_usage_dispatches_v2(
+  'billing-usage-v2-worker', 1, 60, '2041-01-05 01:16:00+00'
+);
+select results_eq($$ select count(*)::bigint from usage_v2_hold_claim $$,
+  array[1::bigint], 'configuration recovery permits a twelfth claim');
+select authority.provider_event_name
+from usage_v2_hold_claim as claim
+cross join lateral loyalty_private.authorize_managed_billing_usage_dispatch_v2(
+  claim.dispatch_public_id, claim.lease_token,
+  'billing-usage-v2-worker', '2041-01-05 01:16:01+00'
+) as authority;
+select results_eq($$
+  select attempt.attempt_number
+  from usage_v2_hold_claim as claim
+  cross join lateral loyalty_private.begin_managed_billing_usage_provider_attempt_v1(
+    claim.dispatch_public_id, claim.lease_token,
+    'billing-usage-v2-worker', '2041-01-05 01:16:02+00'
+  ) as attempt
+$$, array[1], 'first real provider send consumes attempt one');
+select results_eq($$
+  select result.state
+  from usage_v2_hold_claim as claim
+  cross join lateral loyalty_private.finish_managed_billing_usage_dispatch_v2(
+    claim.dispatch_public_id, claim.lease_token,
+    'billing-usage-v2-worker', 'accepted', 'success', 200, null,
+    '2041-01-05 01:16:03+00'
+  ) as result
+$$, array['accepted'::text],
+  'recovered provider send closes after eleven non-provider holds');
+
 -- Tenant summary, privacy, immutability, and final zero-ledger proof.
 set local role authenticated;
 select set_config('request.jwt.claim.sub',
@@ -709,6 +841,58 @@ select throws_ok($$
   delete from loyalty_private.managed_billing_usage_dispatches
 $$, '55000', 'managed billing usage dispatch identity is immutable',
   'provider dispatch identity cannot be deleted');
+
+insert into loyalty_private.commerce_delivery_inbox (
+  receipt_id, organization_id, connection_id, source_delivery_id,
+  envelope_version, source_event_id, event_type, source_object_id,
+  occurred_at, delivered_at, key_version, nonce, body_sha256, raw_body,
+  state, accepted_at, last_received_at
+)
+select 'c1000000-0000-4000-8000-000000000425', organization.id,
+  connection.id, 'usage-delayed-delivery', '1', 'usage-event-delayed',
+  'commerce.order.status_changed', 'usage-order-delayed',
+  '2041-01-31 23:59:00+00', '2041-02-02 12:00:00+00', 'v1',
+  'usage-nonce-delayed', repeat('b', 64), '{}'::jsonb, 'applied',
+  '2041-02-02 12:00:00+00', '2041-02-02 12:00:00+00'
+from loyalty.organizations as organization
+join loyalty.commerce_connections as connection
+  on connection.organization_id = organization.id
+where organization.slug = 'billing-usage-one';
+insert into loyalty_private.canonical_commerce_events (
+  public_id, organization_id, connection_id, delivery_inbox_id,
+  source_event_id, normalization_version, event_type, source_object_id,
+  occurred_at, payload, effect_state, effect_processed_at, created_at
+)
+select 'c1000000-0000-4000-8000-000000000426', inbox.organization_id,
+  inbox.connection_id, inbox.id, inbox.source_event_id, 'v1',
+  inbox.event_type, inbox.source_object_id, inbox.occurred_at, '{}'::jsonb,
+  'applied', '2041-02-02 12:00:00+00', '2041-02-02 12:00:00+00'
+from loyalty_private.commerce_delivery_inbox as inbox
+where inbox.source_delivery_id = 'usage-delayed-delivery';
+select results_eq($$
+  select meter_key, captured_count
+  from loyalty_private.capture_managed_billing_usage_facts_v2(
+    100, '2041-02-02 12:00:01+00'
+  )
+$$, $$ values ('orders'::text, 1::bigint) $$,
+  'delayed order capture uses occurrence eligibility after ingestion');
+select results_eq($$
+  select occurred_at, usage_period_start
+  from loyalty_private.managed_billing_usage_facts
+  where source_evidence_public_id =
+    'c1000000-0000-4000-8000-000000000426'
+$$, $$ values (
+  '2041-01-31 23:59:00+00'::timestamptz,
+  '2041-01-01 00:00:00+00'::timestamptz
+) $$, 'delayed ingestion remains in the January occurrence period');
+select ok(
+  pg_catalog.position(
+    'notification_klaviyo_operations' in pg_catalog.pg_get_functiondef(
+      'loyalty_private.capture_managed_billing_usage_facts_v2(integer,timestamptz)'::regprocedure
+    )
+  ) = 0,
+  'Klaviyo event acceptance is not a delivered-message source'
+);
 select results_eq($$ select count(*)::bigint from loyalty.ledger_transactions $$,
   array[0::bigint], 'capture dispatch correction and summary create zero loyalty value effects');
 

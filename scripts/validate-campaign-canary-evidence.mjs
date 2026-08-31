@@ -7,6 +7,7 @@ import YAML from "yaml";
 
 import { validateCanaryManifestEnvelope } from "./lib/validate-canary-manifest-envelope.mjs";
 import { readBoundJsonArtifact } from "./lib/read-bound-json-artifact.mjs";
+import { inspectMinimizedEvidence } from "./lib/inspect-minimized-evidence.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const evidencePath = join(root, "docs/plan/evidence/M07/canary.yaml");
@@ -216,28 +217,8 @@ const fail = (message) => {
 
 const digest = (value) => createHash("sha256").update(value).digest("hex");
 const digestPattern = /^[0-9a-f]{64}$/u;
-const forbiddenKey =
-  /(password|passphrase|secret|private.?key|access.?token|refresh.?token|bearer|credential.?value|raw.?body|coupon.?code|email|customer.?id|order.?id|auth.?uuid|tenant.?id|wallet.?id|reservation.?id|case.?id|connection.?id|idempotency.?key)/i;
-const forbiddenValue =
-  /(-----BEGIN [A-Z ]*PRIVATE KEY-----|\bBearer\s+[A-Za-z0-9._~+/=-]{12,}|\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b|\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b|\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b)/i;
-
-const inspectEvidence = (value, path = "evidence") => {
-  if (Array.isArray(value)) {
-    value.forEach((item, index) => inspectEvidence(item, `${path}[${index}]`));
-    return;
-  }
-  if (value && typeof value === "object") {
-    for (const [key, nested] of Object.entries(value)) {
-      if (forbiddenKey.test(key))
-        fail(`forbidden sensitive key ${path}.${key}`);
-      inspectEvidence(nested, `${path}.${key}`);
-    }
-    return;
-  }
-  if (typeof value === "string" && forbiddenValue.test(value)) {
-    fail(`forbidden sensitive value at ${path}`);
-  }
-};
+const inspectEvidence = (value, path = "evidence") =>
+  inspectMinimizedEvidence(value, { fail, path });
 
 const safeArtifactPath = (relativePath, artifactId) => {
   const artifactStem = artifactId.replaceAll("_", "-");

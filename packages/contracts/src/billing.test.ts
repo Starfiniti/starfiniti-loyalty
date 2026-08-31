@@ -5,7 +5,9 @@ import {
   billingSummaryV2,
   managedBillingUsageDispatchAuthorityV1,
   managedBillingUsageDispatchClaimV1,
+  managedBillingUsageDispatchClaimV2,
   managedBillingUsageDispatchResultV1,
+  managedBillingUsageProviderAttemptV1,
   managedBillingUsageSummaryV1,
   managedBillingPlanOptionV1,
   managedBillingSessionRequestV1,
@@ -516,6 +518,17 @@ describe("managed billing usage summary v1", () => {
         attemptNumber: 1,
       }).attemptNumber,
     ).toBe(1);
+    expect(
+      managedBillingUsageDispatchClaimV2.parse({
+        dispatchId: "a4000000-0000-4000-8000-000000000100",
+        leaseToken: "a4000000-0000-4000-8000-000000000101",
+        claimSequence: "1000000",
+      }).claimSequence,
+    ).toBe("1000000");
+    expect(
+      managedBillingUsageProviderAttemptV1.parse({ attemptNumber: 10 })
+        .attemptNumber,
+    ).toBe(10);
     expect(
       managedBillingUsageDispatchAuthorityV1.parse({
         eventName: "starfiniti_orders",

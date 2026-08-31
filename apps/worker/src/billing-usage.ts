@@ -1,7 +1,8 @@
 import {
   managedBillingUsageDispatchAuthorityV1,
-  managedBillingUsageDispatchClaimV1,
+  managedBillingUsageDispatchClaimV2,
   managedBillingUsageDispatchResultV1,
+  managedBillingUsageProviderAttemptV1,
   type ManagedBillingUsageDispatchAuthorityV1,
   type ManagedBillingUsageDispatchResultV1,
 } from "@starfiniti/contracts/billing";
@@ -26,7 +27,7 @@ const MAX_BIGINT = 2n ** 63n - 1n;
 type ClaimRow = {
   dispatch_public_id: string;
   lease_token: string;
-  attempt_number: number;
+  claim_sequence: string;
 };
 
 type AuthorityRow = {
@@ -286,7 +287,7 @@ export async function runBillingUsageLifecycle(
     try {
       const captureRows = await sql<{ captured_count: string }[]>`
         select captured_count::text
-        from loyalty_private.capture_managed_billing_usage_facts_v1(500, now())
+        from loyalty_private.capture_managed_billing_usage_facts_v2(500, now())
       `;
       captured = captureRows.reduce(
         (total, row) => total + boundedCount(row.captured_count),
@@ -298,8 +299,9 @@ export async function runBillingUsageLifecycle(
   }
 
   const rows = await sql<ClaimRow[]>`
-    select dispatch_public_id::text, lease_token::text, attempt_number
-    from loyalty_private.claim_managed_billing_usage_dispatches_v1(
+    select dispatch_public_id::text, lease_token::text,
+      claim_sequence::text
+    from loyalty_private.claim_managed_billing_usage_dispatches_v2(
       ${normalizedWorker}, ${batchSize}, 60, now()
     )
   `;
@@ -319,16 +321,16 @@ export async function runBillingUsageLifecycle(
   const runtimes = new Map<boolean, StripeUsageRuntime>();
 
   for (const row of rows) {
-    const claim = managedBillingUsageDispatchClaimV1.parse({
+    const claim = managedBillingUsageDispatchClaimV2.parse({
       dispatchId: row.dispatch_public_id,
       leaseToken: row.lease_token,
-      attemptNumber: row.attempt_number,
+      claimSequence: row.claim_sequence,
     });
     try {
       const authorityRows = await sql<AuthorityRow[]>`
         select provider_event_name, provider_customer_id, provider_identifier,
           quantity, occurred_at, live_mode
-        from loyalty_private.authorize_managed_billing_usage_dispatch_v1(
+        from loyalty_private.authorize_managed_billing_usage_dispatch_v2(
           ${claim.dispatchId}::uuid, ${claim.leaseToken}::uuid,
           ${normalizedWorker}, now()
         )
@@ -361,20 +363,31 @@ export async function runBillingUsageLifecycle(
             );
         runtimes.set(authority.liveMode, runtime);
       }
+      const attemptRows = await sql<{ attempt_number: number }[]>`
+        select attempt_number
+        from loyalty_private.begin_managed_billing_usage_provider_attempt_v1(
+          ${claim.dispatchId}::uuid, ${claim.leaseToken}::uuid,
+          ${normalizedWorker}, now()
+        )
+      `;
+      if (attemptRows.length !== 1)
+        throw new Error("billing_usage_provider_attempt_unavailable");
+      managedBillingUsageProviderAttemptV1.parse({
+        attemptNumber: attemptRows[0]?.attempt_number,
+      });
       const providerResult = await runtime.send(authority);
       const parsed = managedBillingUsageDispatchResultV1.parse(providerResult);
       await finish(sql, normalizedWorker, claim, parsed);
       counts[parsed.outcome] += 1;
     } catch (error) {
       if (error instanceof StripeUsageConfigurationError) {
-        const held = result(
-          "held",
-          "policy",
-          null,
-          "stripe_usage_provider_config_unavailable",
-        );
         try {
-          await finish(sql, normalizedWorker, claim, held);
+          await holdBeforeProviderAttempt(
+            sql,
+            normalizedWorker,
+            claim,
+            "stripe_usage_provider_config_unavailable",
+          );
           counts.held += 1;
         } catch {
           counts.deferred += 1;
@@ -395,10 +408,25 @@ async function finish(
 ): Promise<void> {
   await sql`
     select state, next_attempt_at
-    from loyalty_private.finish_managed_billing_usage_dispatch_v1(
+    from loyalty_private.finish_managed_billing_usage_dispatch_v2(
       ${claim.dispatchId}::uuid, ${claim.leaseToken}::uuid, ${workerId},
       ${providerResult.outcome}, ${providerResult.responseClass},
       ${providerResult.responseCode}, ${providerResult.errorCode}, now()
+    )
+  `;
+}
+
+async function holdBeforeProviderAttempt(
+  sql: Sql,
+  workerId: string,
+  claim: { dispatchId: string; leaseToken: string },
+  errorCode: "stripe_usage_provider_config_unavailable",
+): Promise<void> {
+  await sql`
+    select state, next_attempt_at
+    from loyalty_private.hold_managed_billing_usage_dispatch_v1(
+      ${claim.dispatchId}::uuid, ${claim.leaseToken}::uuid, ${workerId},
+      ${errorCode}, now()
     )
   `;
 }

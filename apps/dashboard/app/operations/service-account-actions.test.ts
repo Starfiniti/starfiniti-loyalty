@@ -38,7 +38,11 @@ const programmeId = "99000000-0000-4000-8000-000000000003";
 const serviceAccountId = "99000000-0000-4000-8000-000000000004";
 const credentialId = "99000000-0000-4000-8000-000000000005";
 const operationId = "99000000-0000-4000-8000-000000000006";
-const idle = { kind: "idle", message: "" } as const;
+const idle = {
+  kind: "idle",
+  message: "",
+  completedOperationId: null,
+} as const;
 const credentialIdle = { ...idle, token: null } as const;
 
 function createForm(): FormData {
@@ -89,6 +93,7 @@ describe("service account management actions", () => {
       {
         kind: "error",
         message: "Review and confirm the service account.",
+        completedOperationId: null,
       },
     );
 
@@ -114,6 +119,7 @@ describe("service account management actions", () => {
     ).resolves.toEqual({
       kind: "success",
       message: "Service account created. Issue its first credential below.",
+      completedOperationId: operationId,
     });
 
     expect(createServiceAccount).toHaveBeenCalledWith(
@@ -152,6 +158,7 @@ describe("service account management actions", () => {
       message:
         "This issuance was already completed, so its secret cannot be shown again. Start a new rotation if the original response was lost.",
       token: null,
+      completedOperationId: operationId,
     });
     expect(issueServiceAccountCredential).toHaveBeenCalledWith(
       actorId,
@@ -182,6 +189,7 @@ describe("service account management actions", () => {
       message:
         "Credential issued. Copy it now; Starfiniti cannot reveal it again.",
       token,
+      completedOperationId: operationId,
     });
     expect(revalidatePath).toHaveBeenCalledWith("/operations");
   });
@@ -197,6 +205,7 @@ describe("service account management actions", () => {
     ).resolves.toEqual({
       kind: "success",
       message: "Credential revoked immediately.",
+      completedOperationId: operationId,
     });
     expect(revokeServiceAccountCredential).toHaveBeenCalledWith(
       actorId,
@@ -214,6 +223,7 @@ describe("service account management actions", () => {
     ).resolves.toEqual({
       kind: "error",
       message: "Your verified session expired.",
+      completedOperationId: null,
     });
     expect(revokeServiceAccountCredential).not.toHaveBeenCalled();
   });

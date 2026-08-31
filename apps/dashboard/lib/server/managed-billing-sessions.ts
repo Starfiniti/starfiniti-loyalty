@@ -94,6 +94,7 @@ export async function createManagedBillingSession(
   if (
     reserved.operation_state === "held" ||
     reserved.operation_state === "rejected" ||
+    reserved.operation_state === "reconciliation_required" ||
     reserved.operation_state === "completed"
   ) {
     throw new Error("billing_session_unavailable");
@@ -220,7 +221,7 @@ async function reserve(
     select deployment_mode, operation_id, operation_state,
       provider_customer_id, provider_price_id, live_mode,
       customer_idempotency_key, session_idempotency_key
-    from loyalty_private.reserve_managed_billing_session_v1(
+    from loyalty_private.reserve_managed_billing_session_v2(
       ${actorUserId}::uuid, ${command.organizationId}::uuid, ${command.action},
       ${command.planId}::uuid, ${command.operationId}::uuid
     )
@@ -237,7 +238,7 @@ async function authorize(
   const rows = await sql<AuthorizationRow[]>`
     select action, provider_customer_id, provider_price_id, live_mode,
       provider_idempotency_key
-    from loyalty_private.authorize_managed_billing_session_attempt_v1(
+    from loyalty_private.authorize_managed_billing_session_attempt_v2(
       ${actorUserId}::uuid, ${operationId}::uuid, ${stage}
     )
   `;

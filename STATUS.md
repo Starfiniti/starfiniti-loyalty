@@ -1,5 +1,25 @@
 # Status
 
+- The current PR #57 integration candidate adds post-review safety without
+  changing production. ADR-0114 bounds ambiguous Stripe session retry to 23
+  hours, requires immutable reconciliation afterward, enforces one live
+  subscription per organization, separates usage claims from actual provider
+  attempts, uses canonical order occurrence time, and counts only proven SMTP
+  delivery. ADR-0115 replaces tag-controlled release execution with a
+  default-branch dispatch, read-only preflight/build, sealed artifact, and
+  independently approved no-code publisher. M04–M11 canary evidence now shares
+  one bounded cycle-safe minimization validator, and service-account UI state
+  retains one-time credentials across route refreshes. Focused local checks are
+  passing; exact-head Linux database replay and full CI remain pending.
+  Production remains `v0.1.11`, managed billing stays disabled, and the GitHub
+  Release workflow is manually disabled until protected-main, version-tag
+  ruleset, independent release-environment review, policy-token, licence, and
+  release-security gates are complete. The complete local repository gate now
+  passes 999 workspace tests, both production builds, and every static roadmap,
+  security, accessibility, and WooCommerce validator. Exact-head Linux database
+  replay and CI remain pending. No merge, tag, release, deployment, tenant,
+  provider, checkout, database, or loyalty-value mutation is claimed.
+
 - ADR-0113 closes a privacy and integrity gap in the future M16 closeout
   artifacts. Every V1 object level now rejects unknown members; arrays, text,
   metrics, role slugs, and identifiers are bounded; and the validator rejects

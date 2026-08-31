@@ -208,6 +208,26 @@ describe("billingStatePresentation", () => {
     ).toMatchObject({ title: "Secure plan checkout available" });
   });
 
+  it("does not mistake a linked customer account for an existing subscription", () => {
+    const linkedWithoutSubscription = managedSummary({
+      commercialState: "unconfigured",
+      stateSource: "unconfigured",
+      restrictionReason: "billing_unconfigured",
+      subscriptionPresent: false,
+      growthConfigurationAllowed: false,
+      restriction: "new_growth_only",
+      currentPeriodEndsAt: null,
+      stateUpdatedAt: null,
+    });
+
+    expect(
+      billingProviderControlsPresentation(linkedWithoutSubscription, true, 1),
+    ).toMatchObject({ title: "Secure plan checkout available" });
+    expect(
+      billingRecoveryGuidance(linkedWithoutSubscription, true, 1)?.steps[0],
+    ).toContain("Choose an available managed plan");
+  });
+
   it("does not promise an unpublished plan or self-serve contract management", () => {
     const unconfigured = managedSummary({
       commercialState: "unconfigured",

@@ -37,15 +37,15 @@ The database gate runs before body or secret access. Self-hosted usage capture r
 
 Only after an approved M14 canary:
 
-1. Create reviewed Stripe sandbox Prices, four sum-aggregation raw-ingestion meters, and a webhook endpoint at the canonical HTTPS URL. Subscribe only to the event allowlist documented in `docs/api/BILLING.md`. Record meter event names externally; never commit a Price or meter ID.
+1. Create reviewed Stripe sandbox Prices, four sum-aggregation raw-ingestion meters, and a webhook endpoint at the canonical HTTPS URL. Enable Stripe's control that limits a customer to one subscription. Subscribe only to the event allowlist documented in `docs/api/BILLING.md`. Record meter event names externally; never commit a Price or meter ID.
 2. Place the session API key, meter-event restricted key, and endpoint signing secret in three separate root-managed files outside the repository. The dashboard runs as UID/GID `1001`; expose each file read-only with the minimum ownership/mode required. Never place a value in `.env`, a command line, logs, evidence, or support output.
 3. Configure the private append-only provider mode, plan versions, and meter event-name versions through a privileged operator connection. Confirm each key's test/live mode matches the database provider mode.
 4. Set all three absolute host secret paths, recreate the dashboard container, create the explicit tenant `managed.billing` canary entitlement, and keep every other tenant disabled.
 5. Start only the isolated worker with `docker compose --profile billing up -d billing-worker`. It receives the least-privilege worker database URL and only the meter-event key; webhook normalization still performs no provider request.
-6. As the canary organization owner, create Checkout and Portal sessions. Confirm an admin, revoked owner, and other-tenant owner fail; browser requests cannot select a customer, Price, mode, or return URL; and provider failure records a bounded rejected or ambiguous attempt.
+6. As the canary organization owner, create Checkout and Portal sessions. Confirm an admin, revoked owner, and other-tenant owner fail; browser requests cannot select a customer, Price, mode, or return URL; a current live subscription blocks a second Checkout; and provider failure records a bounded rejected or ambiguous attempt. Prove exact retry before the 23-hour deadline and `reconciliation_required` at or after it. Resolve expired operations only through the owner-only private reconciliation function after an approved provider read.
 7. Complete official sandbox and test-clock subscription create/update/delete/pause/resume plus invoice paid/payment-failed/payment-action-required cases. A clock advance is asynchronous: wait for the clock's ready state through its event or bounded polling before reconciling subscription and invoice evidence. Exercise duplicate, delayed, changed-replay, out-of-order, stale-signature, worker-stop, lease-expiry, entitlement-revocation, cancelled return, and lost browser-return cases.
-8. In shadow mode, reconcile all four local source totals before enabling meter versions. Then exercise exact meter replay, negative compensation, HTTP `409`/`429`/`5xx`, timeout, malformed response, expired provider window, worker loss before/after authorization, key removal, and meter/account version changes.
-9. Reconcile each operation, provider event, account, session, receipt, job, usage fact, permanent meter identifier, provider aggregate, attempt, and normalized state revision. Stripe meter processing is asynchronous, so poll bounded meter summaries until they converge before comparing invoice quantities. Confirm the return page and provider aggregate change nothing, no redirect URL or payment/contact/source data is stored, zero loyalty ledger changes occur, and checkout remains independent.
+8. In shadow mode, reconcile all four local source totals before enabling meter versions. Order facts must retain canonical commerce occurrence time. Message facts count only immutable SMTP `delivered` evidence; Klaviyo HTTP acceptance is not delivery. Then exercise exact meter replay, negative compensation, HTTP `409`/`429`/`5xx`, timeout, malformed response, expired provider window, worker loss before/after authorization, key removal, and meter/account version changes.
+9. Reconcile each operation, provider event, account, session, receipt, job, usage fact, permanent meter identifier, provider aggregate, claim sequence, actual provider-attempt number, and normalized state revision. Local holds and repeated claims must not consume the ten-send provider budget. Stripe meter processing is asynchronous, so poll bounded meter summaries until they converge before comparing invoice quantities. Confirm the return page and provider aggregate change nothing, no redirect URL or payment/contact/source data is stored, zero loyalty ledger changes occur, and checkout remains independent.
 
 Exact sandbox credentials, approved test Prices, and a real Stripe endpoint remain owner inputs for the M14 production canary. Local deterministic fixtures are repository evidence, not a claim that the external endpoint has passed.
 
@@ -55,6 +55,8 @@ Official behavior reviewed for the gate:
 - [Stripe test-clock API and asynchronous advancement](https://docs.stripe.com/billing/testing/test-clocks/api-advanced-usage)
 - [Stripe usage-based billing and asynchronous meter summaries](https://docs.stripe.com/billing/subscriptions/usage-based/implementation-guide)
 - [Stripe subscription webhook and invoice behavior](https://docs.stripe.com/billing/subscriptions/webhooks)
+- [Stripe idempotent-request retention](https://docs.stripe.com/api/idempotent_requests)
+- [Stripe one-subscription control](https://docs.stripe.com/payments/checkout/limit-subscriptions)
 
 ## Canary evidence gate
 
@@ -66,11 +68,11 @@ Do not put keys, webhook signatures, contact or payment data, raw provider bodie
 
 ## Observation and recovery
 
-Monitor aggregate receipt/job/attempt and usage pending/attention counts without selecting raw provider identifiers into logs. Alert on `retryable`, `held`, `ambiguous`, `rejected`, `dead_letter`, expired leases, changed-event conflicts, sustained `503` responses, and provider/local aggregate drift. The receipt body digest and usage source digest are evidence, not recoverable payloads.
+Monitor aggregate receipt/job/attempt and usage pending/attention counts without selecting raw provider identifiers into logs. Track usage claim sequence separately from actual provider attempts; a growing claim count with no provider attempt is a local policy/configuration problem, while an authorized attempt without a terminal result is ambiguous. Alert on `retryable`, `held`, `ambiguous`, `reconciliation_required`, `rejected`, `dead_letter`, expired leases, changed-event conflicts, sustained `503` responses, and provider/local aggregate drift. The receipt body digest and usage source digest are evidence, not recoverable payloads.
 
-If intake is healthy but processing is stopped, keep the endpoint available and restart the isolated worker; pending receipts remain durable. If a lease expires, the next claim records `lease_expired` and retries up to ten total attempts. If entitlement changes after claim, the job is held with `billing_webhook_disabled` and creates no state revision.
+If intake is healthy but processing is stopped, keep the endpoint available and restart the isolated worker; pending receipts remain durable. Billing-webhook normalization retains its existing bounded retry behavior. For usage dispatch, a lease expiry or local configuration hold increments claim sequence but not provider attempts. Only the explicit pre-network begin step consumes one of ten provider attempts. If entitlement changes after claim, the usage row is held and creates no provider request or loyalty effect.
 
-For an ambiguous provider outcome, stop new intake if necessary, retain every receipt and attempt, and reconcile by event ID using a separately approved provider-read tool. Never edit a receipt, attempt, or normalized state row. Forward-correct commercial state with a new reviewed event or later manual-contract evidence.
+For an ambiguous provider outcome, stop new intake if necessary, retain every receipt and attempt, and reconcile by event ID using a separately approved provider-read tool. A session operation at or after its 23-hour deadline must remain `reconciliation_required`; append the owner-only minimized reconciliation result and never replay it blindly. Never edit a receipt, attempt, reconciliation, usage fact, policy hold, or normalized state row. Forward-correct commercial state with a new reviewed event or later manual-contract evidence.
 
 ## Rollback
 

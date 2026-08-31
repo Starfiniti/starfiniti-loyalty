@@ -159,6 +159,7 @@ export default async function OperationsPage({
 
         {sharing.kind === "ready" ? (
           <ProgrammeSharingForm
+            key={`${sharing.policy.programmeGroupId}:${sharing.policy.revision}`}
             mayConfigure={mayProvision}
             policy={sharing.policy}
           />

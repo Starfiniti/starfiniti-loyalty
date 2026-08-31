@@ -98,7 +98,7 @@ export function billingRecoveryGuidance(
 
   if (summary.growthConfigurationAllowed) return null;
 
-  if (canManage && !summary.providerLinked && planCount === 0) {
+  if (canManage && !summary.subscriptionPresent && planCount === 0) {
     return {
       title: "Managed plan setup is unavailable",
       description:
@@ -113,13 +113,13 @@ export function billingRecoveryGuidance(
   return {
     title: "Restore new configuration",
     description: canManage
-      ? summary.providerLinked
+      ? summary.subscriptionPresent
         ? "Resolve the subscription in the billing portal. Commercial access reopens only after verified lifecycle evidence reaches PostgreSQL."
         : "Choose an approved plan below. Commercial access reopens only after verified lifecycle evidence reaches PostgreSQL."
       : "An active organization owner must restore commercial access. Existing configuration and loyalty operations remain available while you wait.",
     steps: canManage
       ? [
-          summary.providerLinked
+          summary.subscriptionPresent
             ? "Open the billing portal below and resolve the subscription state."
             : "Choose an available managed plan below to start secure checkout.",
           "Return after provider verification; a checkout or portal redirect is never treated as authority.",
@@ -158,7 +158,7 @@ export function billingProviderControlsPresentation(
         "Only an active organization owner can open provider payment settings or choose a managed plan.",
     };
   }
-  if (summary.providerLinked) {
+  if (summary.subscriptionPresent) {
     return {
       title: "Secure billing portal available",
       description:
@@ -449,6 +449,7 @@ export function BillingOverview({
             plans={plans}
             portalOperationId={portalOperationId}
             providerLinked={summary.providerLinked}
+            subscriptionPresent={summary.subscriptionPresent}
             contractManaged={summary.commercialState === "contract_managed"}
             startSessionAction={startSessionAction}
           />
@@ -648,6 +649,7 @@ function ManagedBillingControls({
   plans,
   portalOperationId,
   providerLinked,
+  subscriptionPresent,
   startSessionAction,
 }: Readonly<{
   canManage: boolean;
@@ -656,6 +658,7 @@ function ManagedBillingControls({
   plans: readonly ManagedBillingPlanOptionV1[];
   portalOperationId: string;
   providerLinked: boolean;
+  subscriptionPresent: boolean;
   startSessionAction: (formData: FormData) => Promise<never>;
 }>) {
   return (
@@ -697,6 +700,12 @@ function ManagedBillingControls({
         <p className="billing-plan-empty">
           Only an active organization owner can change the managed plan or open
           payment settings.
+        </p>
+      ) : subscriptionPresent ? (
+        <p className="billing-plan-empty">
+          This organization already has a managed subscription. Use the billing
+          portal to change or cancel it; a second subscription checkout is not
+          available.
         </p>
       ) : plans.length === 0 ? (
         <p className="billing-plan-empty">

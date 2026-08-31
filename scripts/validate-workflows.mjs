@@ -163,15 +163,20 @@ requireCondition(
 );
 
 requireCondition(
-  releaseWorkflow?.on?.push?.tags?.includes("v*.*.*"),
-  `${releaseWorkflowPath}: semantic version tag trigger is required`,
+  releaseWorkflow?.on?.repository_dispatch?.types?.length === 1 &&
+    releaseWorkflow.on.repository_dispatch.types[0] === "release" &&
+    releaseWorkflow?.on?.push === undefined &&
+    releaseWorkflow?.on?.workflow_dispatch === undefined,
+  `${releaseWorkflowPath}: release must use only the default-branch repository_dispatch authority`,
 );
 requireCondition(
-  releaseWorkflow?.permissions?.contents === "write" &&
-    releaseWorkflow?.permissions?.packages === "write" &&
-    releaseWorkflow?.permissions?.attestations === "write" &&
-    releaseWorkflow?.permissions?.["id-token"] === "write",
-  `${releaseWorkflowPath}: release package and provenance permissions are required`,
+  Object.keys(releaseWorkflow?.permissions ?? {}).length === 0,
+  `${releaseWorkflowPath}: workflow-level permissions must remain empty`,
+);
+requireCondition(
+  releaseWorkflow?.concurrency?.group === "release" &&
+    releaseWorkflow.concurrency["cancel-in-progress"] === false,
+  `${releaseWorkflowPath}: release publication must be globally serialized`,
 );
 
 for (const [jobName, job] of Object.entries(releaseWorkflow?.jobs ?? {})) {
@@ -193,8 +198,100 @@ for (const [jobName, job] of Object.entries(releaseWorkflow?.jobs ?? {})) {
   }
 }
 
-const releaseSteps = releaseWorkflow.jobs?.release?.steps ?? [];
-const releaseStepContract = JSON.stringify(releaseSteps);
+requireCondition(
+  Object.keys(releaseWorkflow?.jobs ?? {})
+    .sort()
+    .join(",") === "build,preflight,publish",
+  `${releaseWorkflowPath}: exact preflight build and publish jobs are required`,
+);
+const preflightJob = releaseWorkflow.jobs.preflight;
+const buildJob = releaseWorkflow.jobs.build;
+const publishJob = releaseWorkflow.jobs.publish;
+const preflightSteps = preflightJob.steps ?? [];
+const buildSteps = buildJob.steps ?? [];
+const publishSteps = publishJob.steps ?? [];
+const preflightContract = JSON.stringify(preflightSteps);
+const buildContract = JSON.stringify(buildSteps);
+const publishContract = JSON.stringify(publishSteps);
+const releaseSteps = [...buildSteps, ...publishSteps];
+const releaseStepContract = `${buildContract}${publishContract}`;
+requireCondition(
+  Object.keys(preflightJob.permissions ?? {})
+    .sort()
+    .join(",") === "checks,contents" &&
+    preflightJob.permissions.checks === "read" &&
+    preflightJob.permissions.contents === "read" &&
+    Object.keys(buildJob.permissions ?? {}).length === 1 &&
+    buildJob.permissions.contents === "read" &&
+    Object.keys(publishJob.permissions ?? {})
+      .sort()
+      .join(",") === "actions,attestations,contents,id-token,packages" &&
+    publishJob.permissions.actions === "read" &&
+    publishJob.permissions.attestations === "write" &&
+    publishJob.permissions.contents === "write" &&
+    publishJob.permissions["id-token"] === "write" &&
+    publishJob.permissions.packages === "write",
+  `${releaseWorkflowPath}: least-privilege permissions must remain separated by job`,
+);
+requireCondition(
+  buildJob.needs === "preflight" &&
+    Array.isArray(publishJob.needs) &&
+    publishJob.needs.join(",") === "preflight,build" &&
+    publishJob.environment === "release",
+  `${releaseWorkflowPath}: publication must consume the approved preflight and build through the release environment`,
+);
+requireCondition(
+  !preflightContract.includes("actions/checkout") &&
+    !publishContract.includes("actions/checkout") &&
+    !publishContract.includes("actions/setup-node") &&
+    !publishContract.includes("npm ") &&
+    !publishContract.includes("docker build"),
+  `${releaseWorkflowPath}: authority and publication jobs must not execute candidate repository code`,
+);
+const authorityStep = preflightSteps.find(
+  (step) => step.name === "Validate protected release authority",
+);
+const authorityContract = `${authorityStep?.run ?? ""}${JSON.stringify(authorityStep?.env ?? {})}`;
+for (const authorityBoundary of [
+  "RELEASE_POLICY_TOKEN",
+  "github.event.client_payload.candidate_sha",
+  "github.event.client_payload.tag",
+  "git/ref/heads/main",
+  "git/ref/tags/$RELEASE_TAG",
+  '"$(jq -r \'.object.type\' <<<"$tag_ref")" == "tag"',
+  '"$(jq -r \'.verification.verified\' <<<"$tag_object")" == "true"',
+  "releases?per_page=100",
+  'grep -Fqx "$RELEASE_TAG"',
+  ".required_status_checks.strict == true",
+  ".required_pull_request_reviews.required_approving_review_count >= 1",
+  ".enforce_admins.enabled == true",
+  ".allow_force_pushes.enabled == false",
+  ".allow_deletions.enabled == false",
+  "commits/$CANDIDATE_SHA/check-runs",
+  "commits/$CANDIDATE_SHA/statuses",
+  ".app.id == $appId",
+  '.conditions.ref_name.include == ["refs/tags/v*.*.*"]',
+  'contains(["creation", "update", "deletion", "required_signatures"])',
+  '.bypass_mode != "exempt"',
+  "environments/release",
+  '.type == "required_reviewers"',
+  ".prevent_self_review == true",
+  ".deployment_branch_policy.protected_branches == true",
+]) {
+  requireCondition(
+    authorityContract.includes(authorityBoundary),
+    `${releaseWorkflowPath}: preflight must enforce ${authorityBoundary}`,
+  );
+}
+const releaseCheckout = buildSteps.find((step) =>
+  step.uses?.startsWith("actions/checkout@"),
+);
+requireCondition(
+  releaseCheckout?.with?.ref ===
+    "${{ needs.preflight.outputs.candidate_sha }}" &&
+    releaseCheckout.with["persist-credentials"] === false,
+  `${releaseWorkflowPath}: candidate checkout must be exact and credential-free`,
+);
 const reciprocalArtifactNames = reciprocalSourcePlan?.artifact;
 requireCondition(
   reciprocalSourcePlan?.schema === "starfiniti.reciprocal-source-plan.v1" &&
@@ -252,7 +349,7 @@ const wooCommercePackageStep =
 requireCondition(
   wooCommercePackageStep?.shell === "bash" &&
     normalizeShell(wooCommercePackageStep.run) ===
-      'version="${GITHUB_REF_NAME#v}" npm run woocommerce:package -- --version "$version" npm run woocommerce:package:verify -- --archive dist/starfiniti-loyalty.zip --version "$version"',
+      'version="${RELEASE_TAG#v}" npm run woocommerce:package -- --version "$version" npm run woocommerce:package:verify -- --archive dist/starfiniti-loyalty.zip --version "$version"',
   `${releaseWorkflowPath}: WooCommerce artifact metadata must derive from and be verified against the exact release tag`,
 );
 const orderedReleaseSteps = [
@@ -262,6 +359,12 @@ const orderedReleaseSteps = [
   "Build exact corresponding source release artifacts",
   "Verify exact corresponding source release artifacts",
   "Write release checksums",
+  "Seal publication bundle",
+  "Upload sealed publication bundle",
+  "Download sealed publication bundle",
+  "Verify sealed publication bundle",
+  "Revalidate immutable release authority",
+  "Load prebuilt application images",
   "Authenticate to GitHub Container Registry",
   "Publish immutable application images and capture digests",
   "Attest release files",
@@ -275,7 +378,7 @@ requireCondition(
       (index, position) =>
         position === 0 || index > orderedReleaseSteps[position - 1],
     ),
-  `${releaseWorkflowPath}: build SBOM source verification checksum publication attestation and release order must fail before publishing unsupported evidence`,
+  `${releaseWorkflowPath}: build seal verification publication attestation and release order must fail before publishing unsupported evidence`,
 );
 const imageBuildStep =
   releaseSteps[releaseStepIndex("Build immutable application images")];
@@ -310,8 +413,8 @@ const registryAuthIndex = releaseStepIndex(
 const sourceArgumentContract = [
   "--dashboard-sbom dist/loyalty-dashboard.cdx.json",
   "--worker-sbom dist/loyalty-worker.cdx.json",
-  '--candidate-commit "$GITHUB_SHA"',
-  '--tag "$GITHUB_REF_NAME"',
+  '--candidate-commit "$CANDIDATE_SHA"',
+  '--tag "$RELEASE_TAG"',
   '--source-date-epoch "$source_date_epoch"',
   "--output-dir dist",
 ];
@@ -335,6 +438,68 @@ requireCondition(
     exactDistPaths(checksumStep.run) === exactAttestedReleasePaths,
   `${releaseWorkflowPath}: the checksum file must bind every release payload`,
 );
+const sealStep = releaseSteps[releaseStepIndex("Seal publication bundle")];
+const uploadStep =
+  releaseSteps[releaseStepIndex("Upload sealed publication bundle")];
+const downloadStep =
+  releaseSteps[releaseStepIndex("Download sealed publication bundle")];
+const verifyBundleStep =
+  releaseSteps[releaseStepIndex("Verify sealed publication bundle")];
+const revalidateStep =
+  releaseSteps[releaseStepIndex("Revalidate immutable release authority")];
+requireCondition(
+  sealStep?.run?.includes("docker save") &&
+    sealStep.run.includes("dist/loyalty-images.tar") &&
+    sealStep.run.includes("starfiniti.release-publication-bundle.v1") &&
+    sealStep.run.includes("dist/release-metadata.json") &&
+    sealStep.run.includes("dist/BUILD_SHA256SUMS") &&
+    uploadStep?.id === "bundle" &&
+    uploadStep.uses ===
+      "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a" &&
+    uploadStep.with?.name ===
+      "release-candidate-${{ needs.preflight.outputs.candidate_sha }}" &&
+    uploadStep.with?.path === "dist" &&
+    uploadStep.with?.["if-no-files-found"] === "error" &&
+    uploadStep.with?.["retention-days"] === 1 &&
+    uploadStep.with?.["compression-level"] === 0 &&
+    downloadStep?.uses ===
+      "actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c" &&
+    downloadStep.with?.name === uploadStep.with.name &&
+    downloadStep.with?.path === "dist",
+  `${releaseWorkflowPath}: the read-only build must seal one digest-bound short-lived publication bundle`,
+);
+for (const verificationBoundary of [
+  '[[ "$ARTIFACT_DIGEST" =~ ^[0-9a-f]{64}$ ]]',
+  '[[ "$ARTIFACT_ID" =~ ^[0-9]+$ ]]',
+  '"sha256:$ARTIFACT_DIGEST"',
+  "actions/artifacts/$ARTIFACT_ID",
+  "actual_entries",
+  "find dist -mindepth 1 -printf '%P\\n'",
+  "sha256sum --check dist/BUILD_SHA256SUMS",
+  "sha256sum --check dist/SHA256SUMS",
+  "starfiniti.release-publication-bundle.v1",
+  ".candidateSha == $candidateSha",
+  ".releaseTag == $releaseTag",
+  ".dashboardImage == $dashboardImage",
+  ".workerImage == $workerImage",
+]) {
+  requireCondition(
+    verifyBundleStep?.run?.includes(verificationBoundary),
+    `${releaseWorkflowPath}: publication bundle must verify ${verificationBoundary}`,
+  );
+}
+requireCondition(
+  revalidateStep?.run?.includes("git/ref/heads/main") &&
+    revalidateStep.run.includes("git/ref/tags/$RELEASE_TAG") &&
+    revalidateStep.run.includes(".verification.verified") &&
+    revalidateStep.run.includes("releases?per_page=100") &&
+    revalidateStep.run.includes('grep -Fqx "$RELEASE_TAG"') &&
+    releaseStepIndex("Revalidate immutable release authority") <
+      releaseStepIndex("Load prebuilt application images") &&
+    releaseStepIndex("Load prebuilt application images") <
+      releaseStepIndex("Authenticate to GitHub Container Registry"),
+  `${releaseWorkflowPath}: immutable authority must be revalidated before registry authentication`,
+);
 const fileAttestationStep =
   releaseSteps[releaseStepIndex("Attest release files")];
 const releasePublicationStep =
@@ -346,7 +511,7 @@ requireCondition(
     .filter(Boolean)
     .join(",") === attestedReleaseFiles.join(",") &&
     normalizeShell(releasePublicationStep?.run) ===
-      `gh release create "$GITHUB_REF_NAME" ${attestedReleaseFiles.join(" ")} --verify-tag --generate-notes --title "Starfiniti Loyalty $GITHUB_REF_NAME"` &&
+      `gh release create "$RELEASE_TAG" ${attestedReleaseFiles.join(" ")} --verify-tag --generate-notes --title "Starfiniti Loyalty $RELEASE_TAG"` &&
     exactDistPaths(releasePublicationStep.run) === exactAttestedReleasePaths,
   `${releaseWorkflowPath}: release publication and file provenance must include all seven exact files`,
 );

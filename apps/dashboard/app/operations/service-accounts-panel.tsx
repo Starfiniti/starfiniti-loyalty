@@ -11,11 +11,16 @@ import {
   type ServiceCredentialActionState,
 } from "./service-account-actions";
 
-const idle: ServiceAccountActionState = { kind: "idle", message: "" };
+const idle: ServiceAccountActionState = {
+  kind: "idle",
+  message: "",
+  completedOperationId: null,
+};
 const credentialIdle: ServiceCredentialActionState = {
   kind: "idle",
   message: "",
   token: null,
+  completedOperationId: null,
 };
 
 export function ServiceAccountsPanel({
@@ -35,6 +40,7 @@ export function ServiceAccountsPanel({
   programmeId: string | null;
   programmeName: string | null;
 }>) {
+  const [creationAttempt, setCreationAttempt] = useState(0);
   return (
     <section className="customer-panel service-accounts-panel">
       <div className="customer-result-heading">
@@ -60,8 +66,10 @@ export function ServiceAccountsPanel({
 
       {configurationEnabled && mayConfigure && workspaceId && programmeId ? (
         <CreateServiceAccountForm
+          key={creationAttempt}
           programmeId={programmeId}
           programmeName={programmeName ?? "Current programme"}
+          startFreshAttempt={() => setCreationAttempt((current) => current + 1)}
           workspaceId={workspaceId}
           workspaceName={workspaceName ?? "Current workspace"}
         />
@@ -81,11 +89,13 @@ function CreateServiceAccountForm({
   workspaceName,
   programmeId,
   programmeName,
+  startFreshAttempt,
 }: Readonly<{
   workspaceId: string;
   workspaceName: string;
   programmeId: string;
   programmeName: string;
+  startFreshAttempt: () => void;
 }>) {
   const [operationId] = useState(() => crypto.randomUUID());
   const [reviewing, setReviewing] = useState(false);
@@ -93,6 +103,18 @@ function CreateServiceAccountForm({
     createServiceAccountAction,
     idle,
   );
+  if (state.completedOperationId === operationId) {
+    return (
+      <div className="service-account-create">
+        <p className="action-message success" role="status">
+          {state.message}
+        </p>
+        <button className="secondary" onClick={startFreshAttempt} type="button">
+          Create another service account
+        </button>
+      </div>
+    );
+  }
   return (
     <form action={action} className="service-account-create" autoComplete="off">
       <input name="operationId" type="hidden" value={operationId} />
@@ -185,13 +207,7 @@ function ServiceAccountCard({
   account,
   mayConfigure,
 }: Readonly<{ account: ServiceAccountReadV1; mayConfigure: boolean }>) {
-  const [operationId] = useState(() => crypto.randomUUID());
-  const [reviewing, setReviewing] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [state, action, pending] = useActionState(
-    issueServiceCredentialAction,
-    credentialIdle,
-  );
+  const [issuanceAttempt, setIssuanceAttempt] = useState(0);
   return (
     <article className="service-account-card">
       <header>
@@ -224,6 +240,33 @@ function ServiceAccountCard({
           ))
         )}
       </div>
+      {mayConfigure ? (
+        <CredentialIssuanceAttempt
+          account={account}
+          key={issuanceAttempt}
+          startFreshAttempt={() => setIssuanceAttempt((current) => current + 1)}
+        />
+      ) : null}
+    </article>
+  );
+}
+
+function CredentialIssuanceAttempt({
+  account,
+  startFreshAttempt,
+}: Readonly<{
+  account: ServiceAccountReadV1;
+  startFreshAttempt: () => void;
+}>) {
+  const [operationId] = useState(() => crypto.randomUUID());
+  const [reviewing, setReviewing] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [state, action, pending] = useActionState(
+    issueServiceCredentialAction,
+    credentialIdle,
+  );
+  return (
+    <div className="service-credential-attempt">
       {state.token ? (
         <div className="connector-provisioning-result" aria-live="polite">
           <strong>One-time service credential</strong>
@@ -248,8 +291,15 @@ function ServiceAccountCard({
             Store this in the calling server&apos;s secret manager. It is never
             persisted in plaintext and cannot be revealed again.
           </p>
+          <button
+            className="secondary"
+            onClick={startFreshAttempt}
+            type="button"
+          >
+            I stored it — start another rotation
+          </button>
         </div>
-      ) : mayConfigure ? (
+      ) : (
         <form action={action} className="service-credential-issue">
           <input name="operationId" type="hidden" value={operationId} />
           <input name="serviceAccountId" type="hidden" value={account.id} />
@@ -296,16 +346,27 @@ function ServiceAccountCard({
             </div>
           )}
         </form>
-      ) : null}
+      )}
       {state.kind !== "idle" && !state.token ? (
-        <p
-          className={`action-message ${state.kind}`}
-          role={state.kind === "error" ? "alert" : "status"}
-        >
-          {state.message}
-        </p>
+        <div>
+          <p
+            className={`action-message ${state.kind}`}
+            role={state.kind === "error" ? "alert" : "status"}
+          >
+            {state.message}
+          </p>
+          {state.completedOperationId ? (
+            <button
+              className="secondary"
+              onClick={startFreshAttempt}
+              type="button"
+            >
+              Start a fresh rotation
+            </button>
+          ) : null}
+        </div>
       ) : null}
-    </article>
+    </div>
   );
 }
 
