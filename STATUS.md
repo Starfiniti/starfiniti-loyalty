@@ -1,6 +1,6 @@
 # Status
 
-- PR #57's first exact-head Linux replay found three deterministic database-test failures rather than passing the candidate: missing V2 usage-summary allowlists, an invalid two-open-account fixture, and V1-to-V2 usage recovery assigning provider attempt zero. The local repair now preserves a processing V1 claim across evidence normalization, promotes the tenth authorized claim after nine policy holds to claim sequence ten/provider attempt one, and keeps pre-network holds outside the send budget. Later replays exposed an ambiguous inferred conflict target and same-statement visibility that leased but could not normalize a new row; policy holds now use one named identity constraint and compatible claim/normalization execute as separate fail-closed statements. The complete local gate passes 999 tests, all validators, both production builds, 89 static migrations, and 70 static pgTAP files; a new exact-head Linux replay is still required. Production, managed billing, release, deployment, and loyalty value remain unchanged.
+- PR #57's exact code head `7fb4403863e7409e38bf4fbfc1f3ec68d6325e3f` repairs the deterministic database-test failures found by the first Linux replay: missing V2 usage-summary allowlists, an invalid two-open-account fixture, and V1-to-V2 usage recovery assigning provider attempt zero. The repair preserves a processing V1 claim across evidence normalization, promotes the tenth authorized claim after nine policy holds to claim sequence ten/provider attempt one, keeps pre-network holds outside the send budget, uses one named immutable hold-identity constraint, and separates compatible claim and normalization statements so snapshot visibility cannot strand a processing row. Exact-head CI run `33434852244` passed all seven jobs, including 999 workspace tests, both production images, all 89 migrations, all 70 pgTAP files with 3,831 assertions, all 22 two-session concurrency probes, and all four WooCommerce runtime cells. Security run `33434852266` passed CodeQL, supply-chain, DAST, and recovery-transport. Production, managed billing, release, deployment, and loyalty value remain unchanged.
 
 - The current PR #57 integration candidate adds post-review safety without
   changing production. ADR-0114 bounds ambiguous Stripe session retry to 23
@@ -11,15 +11,15 @@
   default-branch dispatch, read-only preflight/build, sealed artifact, and
   independently approved no-code publisher. M04–M11 canary evidence now shares
   one bounded cycle-safe minimization validator, and service-account UI state
-  retains one-time credentials across route refreshes. Focused local checks are
-  passing; exact-head Linux database replay and full CI remain pending.
+  retains one-time credentials across route refreshes. The exact code head
+  passed all seven CI jobs and all four Security jobs.
   Production remains `v0.1.11`, managed billing stays disabled, and the GitHub
   Release workflow is manually disabled until protected-main, version-tag
   ruleset, independent release-environment review, policy-token, licence, and
   release-security gates are complete. The complete local repository gate now
   passes 999 workspace tests, both production builds, and every static roadmap,
-  security, accessibility, and WooCommerce validator. Exact-head Linux database
-  replay and CI remain pending. No merge, tag, release, deployment, tenant,
+  security, accessibility, and WooCommerce validator. No merge, tag, release,
+  deployment, tenant,
   provider, checkout, database, or loyalty-value mutation is claimed.
 
 - ADR-0113 closes a privacy and integrity gap in the future M16 closeout

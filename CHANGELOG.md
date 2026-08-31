@@ -1,6 +1,6 @@
 # Changelog
 
-- Repaired additive V2 managed-usage recovery for mixed V1/V2 worker rollout. Counter backfill and active evidence normalization no longer destroy an in-flight V1 claim identity; an expired authorized V1 claim consumes exactly one provider attempt even after nine prior policy holds, while an expired pre-network claim consumes none. Compatible lease creation and V2 normalization now use separate fail-closed statements so PostgreSQL snapshot visibility cannot strand a processing row. Public-function security allowlists and the one-live-subscription fixture now match the intended schema. Production billing remains disabled and unchanged.
+- Repaired additive V2 managed-usage recovery for mixed V1/V2 worker rollout. Counter backfill and active evidence normalization no longer destroy an in-flight V1 claim identity; an expired authorized V1 claim consumes exactly one provider attempt even after nine prior policy holds, while an expired pre-network claim consumes none. Compatible lease creation and V2 normalization now use separate fail-closed statements so PostgreSQL snapshot visibility cannot strand a processing row. Public-function security allowlists and the one-live-subscription fixture now match the intended schema. Exact code head `7fb4403863e7409e38bf4fbfc1f3ec68d6325e3f` passed CI `33434852244` and Security `33434852266`, including all 89 migrations, 3,831 pgTAP assertions, 22 concurrency probes, both images, and all four WooCommerce runtime cells. Production billing remains disabled and unchanged.
 
 - Added ADR-0115 and replaced the unsafe tag-sourced release design with a
   default-branch `repository_dispatch` workflow. Read-only preflight verifies
@@ -22,7 +22,8 @@
 - Hardened M04–M11 canary evidence with one bounded, cycle-safe minimization
   scanner and corrected merchant action state so one-time service credentials
   survive route revalidation while completed operations cannot be silently
-  replayed. Focused checks pass locally; exact-head CI remains pending.
+  replayed. Exact code head `7fb4403863e7409e38bf4fbfc1f3ec68d6325e3f`
+  passed CI `33434852244` and Security `33434852266`.
 
 - Refreshed M15's stale production-reality snapshot from a bounded read-only
   observation. VM 971's cumulative counter was 3,604,822,111,248 bytes while
