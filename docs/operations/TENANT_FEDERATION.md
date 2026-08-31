@@ -126,6 +126,7 @@ The database `enterprise.identity` entitlement controls only new source creation
 - Disable and retire hide the database resolver before external calls. Disable attempts both brokers even if one fails.
 - Enable orders Supabase first and Authentik second. If Authentik rejects, the coordinator compensates by disabling Supabase. An uncertain compensation supersedes the original rejection and records an ambiguous review outcome.
 - Rotation disables both brokers before changing the upstream OIDC secret and remains disabled afterward.
+- Authentik OIDC enablement and secret rotation replay the existing source's provider type and three public endpoint URLs because current serializers revalidate those fields on partial updates. The client accepts only the expected `openidconnect` type and bounded credential-free HTTPS URLs; any drift fails before mutation and requires reconciliation.
 
 Never delete Auth users, database memberships, federation revisions, or audit evidence as rollback. Existing sessions continue to pass through live organization membership and RLS checks.
 

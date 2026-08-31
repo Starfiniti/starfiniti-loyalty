@@ -126,9 +126,13 @@ export class AuthentikFederationAdmin {
     if (sourceType === null) {
       throw new AuthentikFederationAdminError("authentik_conflict", "failed");
     }
-    await this.mutate("PATCH", `/api/v3/sources/${sourceType}/${sourceSlug}/`, {
-      enabled,
-    });
+    await this.mutate(
+      "PATCH",
+      `/api/v3/sources/${sourceType}/${sourceSlug}/`,
+      sourceType === "oauth" && oauthSource
+        ? { ...oidcPartialUpdateContext(oauthSource), enabled }
+        : { enabled },
+    );
   }
 
   async rotateOidcSecret(
@@ -150,6 +154,7 @@ export class AuthentikFederationAdmin {
       throw new AuthentikFederationAdminError("authentik_conflict", "failed");
     }
     await this.mutate("PATCH", `/api/v3/sources/oauth/${sourceSlug}/`, {
+      ...oidcPartialUpdateContext(source),
       enabled: false,
       consumer_secret: upstreamClientSecret,
     });
@@ -679,6 +684,58 @@ function requiredPositiveInteger(
     );
   }
   return Number(candidate);
+}
+
+function oidcPartialUpdateContext(source: Record<string, unknown>): Readonly<{
+  provider_type: "openidconnect";
+  authorization_url: string;
+  access_token_url: string;
+  profile_url: string;
+}> {
+  if (source.provider_type !== "openidconnect") {
+    throw new AuthentikFederationAdminError("authentik_conflict", "failed");
+  }
+  return {
+    provider_type: "openidconnect",
+    authorization_url: requiredHttpsUrl(source, "authorization_url"),
+    access_token_url: requiredHttpsUrl(source, "access_token_url"),
+    profile_url: requiredHttpsUrl(source, "profile_url"),
+  };
+}
+
+function requiredHttpsUrl(
+  value: Record<string, unknown>,
+  field: string,
+): string {
+  const candidate = value[field];
+  if (
+    typeof candidate !== "string" ||
+    candidate.length < 10 ||
+    candidate.length > 2_048 ||
+    /[\u0000-\u001f\u007f]/u.test(candidate)
+  ) {
+    throw new AuthentikFederationAdminError(
+      "authentik_invalid_response",
+      "failed",
+    );
+  }
+  try {
+    const parsed = new URL(candidate);
+    if (
+      parsed.protocol !== "https:" ||
+      !parsed.hostname ||
+      parsed.username ||
+      parsed.password
+    ) {
+      throw new Error("unsafe URL");
+    }
+  } catch {
+    throw new AuthentikFederationAdminError(
+      "authentik_invalid_response",
+      "failed",
+    );
+  }
+  return candidate;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

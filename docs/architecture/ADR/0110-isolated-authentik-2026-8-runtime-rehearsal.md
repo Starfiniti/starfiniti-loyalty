@@ -98,6 +98,17 @@ artifact. The root `npm run check` executes only the network-free validator and
 bundle self-test; Docker execution is reserved for Linux CI or an explicitly
 controlled clean Linux host.
 
+The first runtime executions also established two candidate-specific
+convergence requirements. First-start built-in flows and managed mappings can
+appear after API authentication becomes available, so the operator waits a
+bounded 180 seconds for their exact identities. Authentik 2026.8's OAuth source
+serializer also revalidates the three provider endpoint fields on otherwise
+partial enablement and secret-rotation updates. The production client therefore
+replays only the existing `openidconnect` source's bounded HTTPS authorization,
+token, and profile URLs with those mutations. It does not echo any read-back
+secret or accept a different provider type, insecure scheme, embedded
+credential, control character, or oversized URL.
+
 ## Evidence and gates
 
 Run:

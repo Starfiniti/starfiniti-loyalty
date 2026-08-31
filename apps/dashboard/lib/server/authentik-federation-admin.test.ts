@@ -152,6 +152,40 @@ describe("Authentik tenant federation reconciliation", () => {
     });
   });
 
+  it("replays the bounded OIDC context required by Authentik partial updates", async () => {
+    const fake = new FakeAuthentik();
+    const admin = new AuthentikFederationAdmin(config, { fetch: fake.fetch });
+    await admin.reconcileDisabled(oidcInput);
+
+    await admin.rotateOidcSecret(sourceSlug, "rotated-upstream-secret");
+    await admin.setEnabled(sourceSlug, true);
+
+    expect(fake.source).toMatchObject({
+      provider_type: "openidconnect",
+      authorization_url: oidcInput.evidence.authorizationEndpoint,
+      access_token_url: oidcInput.evidence.tokenEndpoint,
+      profile_url: oidcInput.provisioning.userinfoEndpoint,
+      consumer_secret: "rotated-upstream-secret",
+      enabled: true,
+    });
+  });
+
+  it("fails closed when an OIDC partial-update context is no longer safe", async () => {
+    const fake = new FakeAuthentik();
+    const admin = new AuthentikFederationAdmin(config, { fetch: fake.fetch });
+    await admin.reconcileDisabled(oidcInput);
+    if (!fake.source) throw new Error("source missing");
+    fake.source.authorization_url = "http://unsafe.runtime.invalid/authorize";
+
+    await expect(
+      admin.rotateOidcSecret(sourceSlug, "must-not-be-written"),
+    ).rejects.toMatchObject({
+      code: "authentik_invalid_response",
+      outcome: "failed",
+    });
+    expect(fake.source.consumer_secret).toBe("upstream-secret-value");
+  });
+
   it("classifies a mutation transport failure as ambiguous", async () => {
     const fake = new FakeAuthentik({ failSourceCreate: true });
     const admin = new AuthentikFederationAdmin(config, { fetch: fake.fetch });
@@ -240,6 +274,16 @@ class FakeAuthentik {
     if (path === `/api/v3/sources/oauth/${sourceSlug}/`) {
       if (method === "GET")
         return response(this.source, this.source ? 200 : 404);
+      if (
+        [
+          "provider_type",
+          "authorization_url",
+          "access_token_url",
+          "profile_url",
+        ].some((field) => typeof body?.[field] !== "string")
+      ) {
+        return response({ detail: "OIDC update context required" }, 400);
+      }
       this.source = { ...this.source, ...body, pk: ids.source };
       return response(this.source);
     }

@@ -38,6 +38,14 @@
   resources, retaining exact identities and surfacing the last bounded failure
   if convergence never occurs. The pending Security manifest now points to
   corrected implementation `3662c4a4abf63946acfd77e562c5ff523533ffe3`.
+- Corrected Security run `33375807635`, recovery job `99436911129`, passed the
+  bounded first-start gate and then failed closed on Authentik 2026.8 rejecting
+  the production client's two-field OIDC secret-rotation PATCH. Candidate
+  serializer source confirms that the authorization, token, and profile URL
+  fields are revalidated even on a partial update. The client now replays only
+  the existing source's exact `openidconnect` type and bounded credential-free
+  HTTPS endpoints for OIDC enablement and rotation; unsafe or malformed
+  read-back state fails before mutation.
 - Preserved the evidence boundary: this does not advance M13's 12/51 production
   canary, M15 recovery/GA, M16 score, the integration/product scores, or any
   merge, release, upgrade, deployment, rollback, approval, observation, or
