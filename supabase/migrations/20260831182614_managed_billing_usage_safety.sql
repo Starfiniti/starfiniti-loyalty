@@ -380,6 +380,9 @@ security definer
 set search_path = ''
 set statement_timeout = '10s'
 as $$
+declare
+  claimed record;
+  normalized record;
 begin
   -- V1 workers remain a supported rolling-upgrade boundary. They incremented
   -- attempt_count when claiming and wrote provider outcomes without the V2
@@ -523,29 +526,36 @@ begin
     and dispatch.lease_expires_at <= target_at
     and dispatch.authorized_at is null;
 
-  return query
-  with claimed as materialized (
+  -- The compatible V1 claimer writes the lease inside a volatile function.
+  -- Normalize each returned lease in a separate PL/pgSQL statement so the
+  -- next command sees that write; one data-modifying CTE retains the outer
+  -- statement snapshot and can strand the row in processing.
+  for claimed in
     select source.dispatch_public_id, source.lease_token
     from loyalty_private.claim_managed_billing_usage_dispatches_v1(
       target_worker_id, target_batch_size, target_lease_seconds, target_at
     ) as source
-  ),
-  normalized as (
+  loop
     update loyalty_private.managed_billing_usage_dispatches as dispatch
     set claim_sequence_count = dispatch.claim_sequence_count + 1,
       -- V1 increments this compatibility column while claiming. Restore the
       -- database-authoritative provider-send count before releasing the row.
       attempt_count = dispatch.provider_attempt_count,
       updated_at = target_at
-    from claimed
     where dispatch.public_id = claimed.dispatch_public_id
       and dispatch.lease_token = claimed.lease_token
     returning dispatch.public_id, dispatch.lease_token,
       dispatch.claim_sequence_count
-  )
-  select normalized.public_id, normalized.lease_token,
-    normalized.claim_sequence_count
-  from normalized;
+    into normalized;
+    if not found then
+      raise exception using errcode = '55000',
+        message = 'managed billing usage claim normalization failed';
+    end if;
+    dispatch_public_id := normalized.public_id;
+    lease_token := normalized.lease_token;
+    claim_sequence := normalized.claim_sequence_count;
+    return next;
+  end loop;
 end;
 $$;
 

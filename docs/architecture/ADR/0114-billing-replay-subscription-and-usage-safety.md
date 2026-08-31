@@ -37,7 +37,7 @@ The database retains one operation and stable keys, authorizes exact provider re
 8. Message usage counts only immutable SMTP `delivered` evidence. Klaviyo HTTP acceptance or completed event synchronization is not delivery evidence and is excluded until a provider-neutral delivered-event contract exists.
 9. Forced-RLS reconciliation and policy-hold tables have explicit `loyalty_owner` policies while runtime, browser, and general worker access remains denied. Their rows are immutable and create no loyalty-ledger effect.
 10. V1 contracts and historical rows remain readable for compatibility. Current dashboard and worker paths use V2 authority and summaries.
-11. The additive counter backfill and V2 claim recovery reconstruct completed V1 evidence while preserving a processing V1 claim's legacy counter. An expired authorized V1 claim advances the V2 claim sequence to that durable identity and consumes exactly one provider attempt; an expired pre-authorization V1 claim becomes immutable policy-hold evidence and consumes none. A processing V2 claim is already normalized and is never double-counted.
+11. The additive counter backfill and V2 claim recovery reconstruct completed V1 evidence while preserving a processing V1 claim's legacy counter. An expired authorized V1 claim advances the V2 claim sequence to that durable identity and consumes exactly one provider attempt; an expired pre-authorization V1 claim becomes immutable policy-hold evidence and consumes none. V1 lease creation and V2 counter normalization run as separate PL/pgSQL statements so PostgreSQL command visibility cannot strand a newly claimed row. A processing V2 claim is already normalized and is never double-counted.
 
 ## Consequences
 
