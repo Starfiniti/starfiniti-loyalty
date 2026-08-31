@@ -23,9 +23,16 @@
   reconciliation, and approval gates remain open. No release, deployment,
   route, database, checkout, or loyalty value changed, and scores remain
   production 54, candidate 83, and M16 77.
-  The Security workflow change invalidates all older exact-head automated and
-  Medium-triage bindings; `security.yaml` now records 7/27 repository contracts
-  passing and 20 pending until fresh CI/Security artifacts are reconciled.
+  Fresh exact-head reconciliation at `fec7f86fd0d7db91e8527bf9d5ed82976fcc8615`
+  now binds CI run `33405444851`, Security run `33405444839`, external CodeQL,
+  both exact image digests and reports, both CycloneDX inventories, Trivy
+  database/check-bundle freshness, isolated DAST, response headers, and a new
+  digest-bound Medium review. `security.yaml` therefore records 19/27 checks
+  passing and eight tagged-release, production-review, independent-test,
+  finding-reconciliation, and approval gates pending. The review preserves
+  R-056: 14 third-party corresponding-source/notice obligations still block
+  tagged image distribution. No security completion or zero-open final claim
+  is made.
 
 - Read-only production inspection on 2026-08-31 distinguishes two backup
   conditions. VM 971's historical multi-terabyte counter is not current

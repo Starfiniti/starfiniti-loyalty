@@ -1,0 +1,188 @@
+schema: starfiniti.security-medium-triage.v1
+candidateCommit: fec7f86fd0d7db91e8527bf9d5ed82976fcc8615
+observedAt: 2026-08-31T15:05:00Z
+source:
+  securityRunId: 33405444839
+  securityWorkflowSha256: 9ca550c1fdee420424b375f6284f56f78c19715ecbc0d3ffa8f7eebff4beefb5
+  trivyVersion: 0.74.0
+  zapVersion: 2.17.0
+  completedAt: 2026-08-31T15:03:54Z
+  supplyChain:
+    jobId: 99531771114
+    artifactId: 9763094036
+    artifactName: security-supply-chain-b674e9fe9fc54b0d45c554efe574d2dacd50d342
+    artifactArchiveSha256: 858ad26c97d173f87041c02bbbed4139bc88fe9cc7ef671d76c61bad043061f6
+    artifactExpiresAt: 2026-09-30T14:59:45Z
+    dashboardReportSha256: 9d9ea009cb86150cc3ff872387cf309c66536ec0af86d6d4a0f8954f0884ae27
+    workerReportSha256: f5979e2a979761dc3e6c6b765a8b99b80806c48147ee122bf5eaa63674b1c2ef
+    dashboardSbomSha256: c67405f6b6ae6f86f34b76c2fa84d788b2de1b8beea5cd657c1c9191fdb087a3
+    workerSbomSha256: d67708f1ae9225d55274ef6466d3e76975b40ad3d8a5852224e58e6ba87c9f9c
+    dashboardImageDigest: sha256:f98f815095e476c208a627b0142bf90229a8ea37d0877fb77578ece138f3e356
+    workerImageDigest: sha256:d9d5a21899c9c3f7b127d16dc4d999b3b00fc618fa4a179a7d8274a786a1d01a
+  dast:
+    jobId: 99531771578
+    artifactId: 9763011272
+    artifactName: security-dast-b674e9fe9fc54b0d45c554efe574d2dacd50d342
+    artifactArchiveSha256: 790832b98bf98cd1241b531ff623c6de767576d48bc634f4157cf5d42cd1b964
+    artifactExpiresAt: 2026-09-30T14:57:31Z
+    reportSha256: ca76b8a26e2b6d208ad4ca18f314283c78e6b7670b873a8970b42136a73bc360
+  previousDast:
+    securityRunId: 33193701597
+    artifactId: 9694890673
+    artifactArchiveSha256: 78fa03726d7750e7341429ca36a3c7fc8b2b077f2d55228f142456fbb8be1f98
+    artifactExpiresAt: 2026-09-27T17:15:55Z
+    reportSha256: 9bbd80a6a72e962e412990f4dacfaa42bd582a659b12812db07bfc8082d763cc
+reconciliation:
+  currentCritical: 0
+  currentHigh: 0
+  currentMedium: 29
+  currentMediumLicenses: 29
+  currentMediumDast: 0
+  currentDastInformational: 2
+  distinctMediumFindings: 15
+  rawMediumOccurrences: 29
+  remediatedPriorDastMedium: 2
+  falsePositives: 0
+  sourceAvailable: 1
+  openReleaseObligations: 14
+review:
+  status: triaged_release_blocked
+  ownerRole: release_security
+  risk: R-056
+  reviewedAt: 2026-08-31T15:05:00Z
+  expiresAt: 2026-09-27T17:15:55Z
+  allMediumTriaged: true
+  falsePositivesReviewed: true
+  blockingTaggedRelease: true
+  requiredAction: Publish exact corresponding-source and third-party-notice evidence for every open reciprocal component before distributing a tagged dashboard or worker image.
+  rationale: The exact candidate images contain no vulnerability, misconfiguration, secret, or DAST Medium finding. The two ZAP observations are informational only. All 29 Medium occurrences are allowlisted reciprocal licence obligations, not false positives; product source is available, while all fourteen third-party dispositions remain release-blocking until one real tag publishes and verifies its bound source, notices, checksums, and attestations.
+findings:
+  - id: alpine-baselayout-gpl-2-only
+    package: alpine-baselayout
+    version: 3.7.2-r1
+    license: GPL-2.0-only
+    images: [dashboard, worker]
+    rawOccurrences: 2
+    disposition: release_obligation_open
+  - id: alpine-baselayout-data-gpl-2-only
+    package: alpine-baselayout-data
+    version: 3.7.2-r1
+    license: GPL-2.0-only
+    images: [dashboard, worker]
+    rawOccurrences: 2
+    disposition: release_obligation_open
+  - id: apk-tools-gpl-2-only
+    package: apk-tools
+    version: 3.0.6-r0
+    license: GPL-2.0-only
+    images: [dashboard, worker]
+    rawOccurrences: 2
+    disposition: release_obligation_open
+  - id: busybox-gpl-2-only
+    package: busybox
+    version: 1.37.0-r31
+    license: GPL-2.0-only
+    images: [dashboard, worker]
+    rawOccurrences: 2
+    disposition: release_obligation_open
+  - id: busybox-binsh-gpl-2-only
+    package: busybox-binsh
+    version: 1.37.0-r31
+    license: GPL-2.0-only
+    images: [dashboard, worker]
+    rawOccurrences: 2
+    disposition: release_obligation_open
+  - id: ca-certificates-bundle-mpl-2
+    package: ca-certificates-bundle
+    version: 20260611-r0
+    license: MPL-2.0
+    images: [dashboard, worker]
+    rawOccurrences: 2
+    disposition: release_obligation_open
+  - id: libapk-gpl-2-only
+    package: libapk
+    version: 3.0.6-r0
+    license: GPL-2.0-only
+    images: [dashboard, worker]
+    rawOccurrences: 2
+    disposition: release_obligation_open
+  - id: libgcc-gpl-2-or-later
+    package: libgcc
+    version: 15.2.0-r5
+    license: GPL-2.0-or-later
+    images: [dashboard, worker]
+    rawOccurrences: 2
+    disposition: release_obligation_open
+  - id: libgcc-lgpl-2-1-or-later
+    package: libgcc
+    version: 15.2.0-r5
+    license: LGPL-2.1-or-later
+    images: [dashboard, worker]
+    rawOccurrences: 2
+    disposition: release_obligation_open
+  - id: libstdcxx-gpl-2-or-later
+    package: libstdc++
+    version: 15.2.0-r5
+    license: GPL-2.0-or-later
+    images: [dashboard, worker]
+    rawOccurrences: 2
+    disposition: release_obligation_open
+  - id: libstdcxx-lgpl-2-1-or-later
+    package: libstdc++
+    version: 15.2.0-r5
+    license: LGPL-2.1-or-later
+    images: [dashboard, worker]
+    rawOccurrences: 2
+    disposition: release_obligation_open
+  - id: musl-utils-gpl-2-or-later
+    package: musl-utils
+    version: 1.2.6-r2
+    license: GPL-2.0-or-later
+    images: [dashboard, worker]
+    rawOccurrences: 2
+    disposition: release_obligation_open
+  - id: scanelf-gpl-2-only
+    package: scanelf
+    version: 1.3.9-r1
+    license: GPL-2.0-only
+    images: [dashboard, worker]
+    rawOccurrences: 2
+    disposition: release_obligation_open
+  - id: ssl-client-gpl-2-only
+    package: ssl_client
+    version: 1.37.0-r31
+    license: GPL-2.0-only
+    images: [dashboard, worker]
+    rawOccurrences: 2
+    disposition: release_obligation_open
+  - id: starfiniti-dashboard-agpl-3-or-later
+    package: "@starfiniti/dashboard"
+    version: 0.0.0
+    license: AGPL-3.0-or-later
+    images: [dashboard]
+    rawOccurrences: 1
+    disposition: source_available
+remediations:
+  - ruleId: "10038"
+    name: Content Security Policy header not set
+    status: remediated
+    falsePositive: false
+    remediationCommit: f9c83ac5de0fc7c73aed7528dc8e158ef45df17d
+    priorReportSha256: 9bbd80a6a72e962e412990f4dacfaa42bd582a659b12812db07bfc8082d763cc
+    currentReportSha256: ca76b8a26e2b6d208ad4ca18f314283c78e6b7670b873a8970b42136a73bc360
+    regressionControls:
+      - apps/dashboard/lib/security-headers.test.ts
+      - apps/dashboard/proxy.test.ts
+      - .github/workflows/security.yml
+  - ruleId: "10020"
+    name: Anti-clickjacking header missing
+    status: remediated
+    falsePositive: false
+    remediationCommit: f9c83ac5de0fc7c73aed7528dc8e158ef45df17d
+    priorReportSha256: 9bbd80a6a72e962e412990f4dacfaa42bd582a659b12812db07bfc8082d763cc
+    currentReportSha256: ca76b8a26e2b6d208ad4ca18f314283c78e6b7670b873a8970b42136a73bc360
+    regressionControls:
+      - apps/dashboard/lib/security-headers.test.ts
+      - apps/dashboard/proxy.test.ts
+      - .github/workflows/security.yml
+falsePositives: []

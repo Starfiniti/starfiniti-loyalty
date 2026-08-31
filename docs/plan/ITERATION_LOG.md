@@ -1,5 +1,34 @@
 # Iteration Log
 
+## 2026-08-31 — Fresh exact-head M15 security reconciliation
+
+- Reconstructed M15-S03 after ADR-0112 intentionally invalidated older
+  exact-head automated and Medium-review bindings. The manifest correctly fell
+  from 19/27 to 7/27 rather than carrying scan authority across a changed
+  Security workflow.
+- Exact candidate `fec7f86fd0d7db91e8527bf9d5ed82976fcc8615`
+  passed all seven CI jobs in run `33405444851`, all four Security jobs in run
+  `33405444839`, external CodeQL check `99532343137`, database replay, both
+  container builds, and all four minimum/current HPOS/legacy WooCommerce cells.
+- Bound CodeQL artifact `9763001068`, supply-chain artifact `9763094036`, and
+  DAST artifact `9763011272` to their GitHub archive and extracted report
+  digests. CodeQL, repository, dashboard image, and worker image sources contain
+  zero Critical or High findings; repository and image scans contain zero
+  vulnerability, misconfiguration, or secret finding.
+- The exact dashboard and worker image digests bind fresh CycloneDX inventories.
+  Trivy 0.74.0 database and check-bundle timestamps satisfy the 24-hour bound.
+  ZAP 2.17.0 ran only on the internal, unpublished disposable target, retained
+  two informational observations and zero Low/Medium/High alert, and tore down.
+- New digest-bound review `security-medium-triage-fec7f86.yaml` reconciles 29
+  Medium licence occurrences into 15 dispositions with zero false positives.
+  Product source is available, but 14 third-party corresponding-source and
+  notice obligations remain release-blocking under R-056.
+- M15 security advances to 19/27. The three tagged-release verification gates,
+  production configuration review, independent penetration test and retest,
+  final zero-open finding reconciliation, and security-owner approval remain
+  pending. Security is not complete; production, scores, release state,
+  checkout, database, routes, and loyalty value are unchanged.
+
 ## 2026-08-31 — Production-disabled observability deployment candidate
 
 - Reconstructed M15-S05 after the second shared Borg-lock archive gap showed
