@@ -10,11 +10,14 @@
   quoted removal, and deactivation against a bounded synthetic sink. The root
   gate runs only the network-free contract and bundle self-test; the existing
   Security recovery job runs the containers and retains a minimized report
-  after exact teardown. Local validation passes and exact-head Linux execution
-  is pending. The workflow change invalidates the prior exact-head M15 Security
-  run and Medium triage, leaving 7/27 passed and 20 pending until fresh evidence
-  is reconciled. This is not M13 production-canary, RLS, recovery, rollback,
-  upgrade, or deployment authority; production and scores are unchanged.
+  after exact teardown. Exact implementation `c94cc9e` and evidence head
+  `e96cd18` passed CI `33381604540`, Security `33381604545`, and external
+  CodeQL `99455421534`; recovery job `99454991777` passed all fourteen runtime
+  scenarios and published only the minimized digest-bound artifact. Fresh
+  automated evidence advances M15 Security to 18/27; the prior Medium triage is
+  intentionally not inherited. This is not M13 production-canary, RLS,
+  recovery, rollback, upgrade, or deployment authority; production and scores
+  are unchanged.
 
 - Added ADR-0109 and an exact Authentik 2026.8 source/OpenAPI compatibility
   contract. It pins the 2026.5.6 baseline and 2026.8.0 candidate tag, commit,

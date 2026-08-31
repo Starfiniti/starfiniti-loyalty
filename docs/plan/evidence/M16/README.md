@@ -16,11 +16,17 @@ client—not a duplicate—creates and reconciles disabled OIDC/SAML sources and
 strict downstream OIDC provider. Authentik's worker drives service-provider
 discovery, pagination, provisioning, group membership/removal, and deactivation
 against a synthetic bearer-protected SCIM sink. Fourteen scenarios must pass and
-teardown must finish before a minimized report is published. Local validation
-passes; exact-head Linux runtime evidence is pending. This is not a real
-enterprise IdP, production configuration/outpost, Starfiniti RLS, recovery,
-rollback, upgrade, or approval result. It changes no M13 production-canary check
-and leaves M16 at 77/100.
+teardown must finish before a minimized report is published. Exact implementation
+`c94cc9e2181079ac80524fc3d9c9496ad6d0d6a6` and evidence head
+`e96cd18aa416c16c9523c46a49a9cdcd14cbd020` passed CI `33381604540`, Security
+`33381604545`, and external CodeQL `99455421534`. Recovery job `99454991777`
+passed 14/14 scenarios; artifact `9754193837` has archive digest
+`sha256:36c024a8ec3e41c9538bc6d6d8b959324e295abd21c1927635841417015e9772`
+and independently verified report SHA-256
+`df528a9de5d0b7f99c1d833f6fdbf7c542c252b0ba9a4580ef5da7441803b84c`.
+This is not a real enterprise IdP, production configuration/outpost, Starfiniti
+RLS, recovery, rollback, upgrade, or approval result. It changes no M13
+production-canary check and leaves M16 at 77/100.
 
 ADR-0109 closes only the deterministic Authentik 2026.8 source-contract
 question. The versioned governance record pins exact 2026.5.6/2026.8.0 tag,
@@ -31,9 +37,10 @@ request schemas—240 exact and eight compatible—plus OIDC/SAML/SCIM and stale
 session implementation invariants, rollback,
 remaining gates, task/ADR evidence, and false production authority. This is not
 runtime compatibility or upgrade approval. Production remains on 2026.5.6 and
-unchanged. Private configuration, image/outposts, disposable candidate runtime,
-protocol traffic, deprovisioning, recovery, rollback, independent review, owner
-approval, deployment, and reconciliation remain pending. M16 remains 77/100.
+unchanged. ADR-0110 later proves the disposable candidate runtime and synthetic
+protocol traffic only. Private configuration, current image/outposts, real IdP
+deprovisioning, recovery, rollback, independent review, owner approval,
+deployment, and reconciliation remain pending. M16 remains 77/100.
 `npm run continuous-improvement:authentik-2026-8:upstream:verify` separately
 re-fetches the immutable commits, verifies the pinned schema, release-note, and
 protocol-source bytes, and recomputes the OpenAPI census; it is explicit
