@@ -946,10 +946,11 @@ $$, $$ values (
   '2041-01-01 00:00:00+00'::timestamptz
 ) $$, 'delayed ingestion remains in the January occurrence period');
 select ok(
-  pg_catalog.position(
-    'notification_klaviyo_operations' in pg_catalog.pg_get_functiondef(
+  pg_catalog.strpos(
+    pg_catalog.pg_get_functiondef(
       'loyalty_private.capture_managed_billing_usage_facts_v2(integer,timestamptz)'::regprocedure
-    )
+    ),
+    'notification_klaviyo_operations'
   ) = 0,
   'Klaviyo event acceptance is not a delivered-message source'
 );
