@@ -36,7 +36,8 @@
   The pinned 2026.8 source still defines that exact built-in flow. The operator
   now waits a bounded 180 seconds for the required flow and managed mapping
   resources, retaining exact identities and surfacing the last bounded failure
-  if convergence never occurs.
+  if convergence never occurs. The pending Security manifest now points to
+  corrected implementation `3662c4a4abf63946acfd77e562c5ff523533ffe3`.
 - Preserved the evidence boundary: this does not advance M13's 12/51 production
   canary, M15 recovery/GA, M16 score, the integration/product scores, or any
   merge, release, upgrade, deployment, rollback, approval, observation, or
