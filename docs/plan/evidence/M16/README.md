@@ -22,6 +22,11 @@ inventory, private configuration/signing recovery, identity compatibility,
 current-line upgrade acceptance, recovery, elapsed cadence, independent review,
 approval, deployment, mutation, and reconciliation remain false or incomplete.
 M16 therefore remains 77/100.
+Exact implementation and evidence head
+`de8e19f00252faf4c4170d0cdad354206213fd96` passed CI `33363302645`,
+Security `33363302635`, and external CodeQL check `99399102937`; all twelve PR
+checks are green. PR #57 is clean and mergeable. This evidence does not approve
+a merge, release, provider upgrade, deployment, or production mutation.
 
 ADR-0107 closes the narrower reconstructability gap across the thirteen
 official provider, platform, and recovery entries. The cutoff-bound

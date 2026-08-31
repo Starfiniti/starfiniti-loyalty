@@ -3862,6 +3862,7 @@ tasks:
         infrastructure/governance/authentik-runtime-review.yaml,
         infrastructure/governance/provider-impact-review-v2.yaml,
         scripts/validate-authentik-runtime-review.mjs,
+        Authentik runtime implementation and evidence head de8e19f00252faf4c4170d0cdad354206213fd96 passed CI 33363302645 Security 33363302635 and external CodeQL check 99399102937 with all twelve PR checks green while merge release provider-upgrade deployment mutation and reconciliation authority remain false,
         provider impact implementation e4a1e573281555912b9dbbfa3d1b5e50aca073e8 passed CI 33306849568 Security 33306849601 and external CodeQL 99244979080 with all twelve checks green while every provider acceptance and production authority remains false,
         docs/plan/evidence/M16/proxmox-security-review-2026-08-29.md,
         ADR-0080 preserves the exact V1 production score under SHA-256 and the V2 validator separately recomputes deployed production at 54/100 and the exact integration candidate at 83/100 while both remain completion-ineligible,

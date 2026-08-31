@@ -23,6 +23,10 @@
   83/100, and deployed production 54/100. Image/outpost inventory, private
   recovery, identity canaries, independent review, approvals, deployment, and
   reconciliation remain open.
+- Exact implementation and evidence head
+  `de8e19f00252faf4c4170d0cdad354206213fd96` passed CI `33363302645`,
+  Security `33363302635`, and external CodeQL check `99399102937`; all twelve
+  PR checks are green and PR #57 is clean and mergeable.
 
 ## 2026-08-30 — Cutoff-bound provider impact classification
 

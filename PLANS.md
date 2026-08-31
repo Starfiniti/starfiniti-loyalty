@@ -17,6 +17,11 @@ inventory, private configuration/signing recovery, `2026.8` compatibility,
 identity canaries, recovery, independent review, every approval, and production
 authority remain false. M16 stays 77/100, the candidate 83/100, and production
 54/100 and unchanged.
+Exact implementation and evidence head
+`de8e19f00252faf4c4170d0cdad354206213fd96` passed CI `33363302645`,
+Security `33363302635`, and external CodeQL check `99399102937`; all twelve PR
+checks are green and PR #57 is clean and mergeable. This authorizes no merge,
+release, provider upgrade, deployment, or production mutation.
 
 ADR-0107 is the preceding M16 reconstructability slice. One cutoff-bound
 register now composes the immutable thirteen-source and six-provider installed

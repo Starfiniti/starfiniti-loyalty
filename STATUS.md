@@ -16,6 +16,10 @@
   compatibility, recovery, independent review, approvals, and every production
   authority remain open/false. M16 remains 77/100, the candidate 83/100, and
   production 54/100 and unchanged.
+  Exact `de8e19f00252faf4c4170d0cdad354206213fd96` passed CI `33363302645`,
+  Security `33363302635`, and external CodeQL check `99399102937`; all twelve
+  PR checks are green and PR #57 is clean and mergeable. No merge, release,
+  deployment, or production mutation was performed.
 
 - ADR-0107 adds one fail-closed provider-impact register across all thirteen
   canonical M16 sources. It binds the exact 6,534-byte source and 8,813-byte

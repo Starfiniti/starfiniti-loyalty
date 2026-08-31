@@ -10,7 +10,9 @@
   immutable. Image/outpost inventory, private recovery evidence, `2026.8`
   compatibility, candidate acceptance, approvals, deployment, production
   mutation, and reconciliation remain open. M16 and product scores are
-  unchanged.
+  unchanged. Exact `de8e19f` passed CI `33363302645`, Security `33363302635`,
+  and external CodeQL check `99399102937`; all twelve PR checks are green and
+  PR #57 is clean and mergeable.
 
 - Added ADR-0107 and a cutoff-bound M16 provider-impact register. The register
   binds the immutable thirteen-source and six-provider installed snapshots,
