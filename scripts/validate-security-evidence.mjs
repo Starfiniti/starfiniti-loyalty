@@ -1371,11 +1371,11 @@ if (process.argv.includes("--self-test")) {
     }
   }
 
-  const historicalTriagePath =
-    "docs/plan/evidence/M15/runs/security-medium-triage-188d9d8.yaml";
+  const currentTriagePath =
+    "docs/plan/evidence/M15/runs/security-medium-triage-74a37e9.yaml";
   const mediumTriage = readBoundArtifact(
-    historicalTriagePath,
-    rawDigest(historicalTriagePath),
+    currentTriagePath,
+    rawDigest(currentTriagePath),
   );
   const mediumTriageEvidence = structuredClone(evidence);
   mediumTriageEvidence.observedAt = mediumTriage.observedAt;
@@ -1433,7 +1433,9 @@ if (process.argv.includes("--self-test")) {
   );
 
   const expiredMediumSource = structuredClone(mediumTriage);
-  expiredMediumSource.source.dast.artifactExpiresAt = "2026-08-28T19:40:53Z";
+  expiredMediumSource.source.dast.artifactExpiresAt = new Date(
+    Date.parse(mediumTriage.observedAt) + 1_000,
+  ).toISOString();
   expectTriageRejected(
     expiredMediumSource,
     "source artifact has expired",

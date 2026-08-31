@@ -21,16 +21,19 @@ checks.
 The Security workflow change intentionally invalidated the older exact-head
 scan and Medium-triage bindings. Fresh CodeQL, repository, image, SBOM, DAST,
 header, scanner-freshness, and WooCommerce evidence is now reconciled against
-implementation `c94cc9e2181079ac80524fc3d9c9496ad6d0d6a6` through evidence head
-`e96cd18aa416c16c9523c46a49a9cdcd14cbd020`. `security.yaml` records 18/27
-passed and nine pending. The previous Medium and false-positive review remains
-superseded until a new digest-bound triage reconciles these exact artifacts.
+implementation `c94cc9e2181079ac80524fc3d9c9496ad6d0d6a6` through reviewed artifact
+head `74a37e930cda44e4eedb550bd4a6237da03c75c5`. CI run `33384160196` and
+Security run `33384160199` passed. `security.yaml` records 19/27 passed and
+eight pending. The fresh digest-bound review reconciles all 29 Medium
+reciprocal-licence occurrences to 15 exact dispositions with zero false
+positives; product source is available, while 14 third-party dispositions
+remain release-blocking under R-056.
 
 M15-S01 is active with seven of 23 checks passing. `capacity.yaml` separates repository readiness from an approved production-like measured run and exact value reconciliation. ADR-0104 adds an exact digest-pinned Grafana k6 contract that must match the canonical phases, scenarios, rates, drops, contracts, thresholds, target digest, and false production authority; repository validation and Linux image inspection cannot substitute for the still-pending approved real independent run. No supported capacity is claimed while that manifest is in progress.
 
 M15-S02 is active. `fault-injection.yaml` separates the disposable-only controller from the two approved production-like runs and independent WAL, queue, ledger, WooCommerce, checkout, and no-loss reconciliation. No production fault is authorized by repository readiness.
 
-M15-S03 is active with 18 of 27 checks passing. `security.yaml` binds CI run `33381604540` and Security run `33381604545` to evidence head `e96cd18` and implementation `c94cc9e`: CodeQL, repository, both production images, both CycloneDX inventories, bounded DAST, response headers, scanner freshness, development audit, and all four WooCommerce runtime cells pass. The historical Medium/false-positive triage is deliberately not inherited. Release-bound corresponding-source generation under ADR-0083, a real corrected tag and its package/attestation verification, approved non-destructive production review, independent penetration testing/retest, final finding reconciliation, and owner approval remain gated. R-056 and R-062 stay open until those real release controls pass. Repository readiness authorizes no release, production scan, or mutation.
+M15-S03 is active with 19 of 27 checks passing. `security.yaml` binds CI run `33384160196` and Security run `33384160199` to evidence head `74a37e9` and implementation `c94cc9e`: CodeQL, repository, both production images, both CycloneDX inventories, bounded DAST, response headers, scanner freshness, development audit, all four WooCommerce runtime cells, and the fresh Medium/false-positive review pass. The new review inherits no historical scanner result: it binds the exact reviewed-head archives and extracted reports, records zero false positives, and preserves 14 release-blocking third-party source/notice dispositions. Release-bound corresponding-source generation under ADR-0083, a real corrected tag and its package/attestation verification, approved non-destructive production review, independent penetration testing/retest, final Critical/High reconciliation, and owner approval remain gated. R-056 and R-062 stay open until those real release controls pass. Repository readiness authorizes no release, production scan, or mutation.
 
 M15-S04 is active. `recovery.yaml` separates the digest-bound fourteen-stage full-service clean-room controller from two approved isolated recoveries, measured RPO/RTO, identity/configuration/signing/privacy/value reconciliation, independent review, and zero-residue teardown. ADR-0071 additionally supplies an undeployed dedicated PostgreSQL Borg repository/lock/cache and exact recent-retention candidate after live timing disproved shared-repository RPO. `recovery-transport.yaml` binds ADR-0073's exact candidate and pre-change rollback packages, signed authorities, URLs, checksums, metadata, OS images, passing rollback-aware exact-head internal-only disposable canary, artifact/report hashes, and false-completion boundary. Operations escrow, host-consumer compatibility, real dual-endpoint rollout, and isolated restore remain pending. Repository readiness authorizes no repository provisioning, package installation, backup, credential, retention action, identity, route, or recovery execution.
 

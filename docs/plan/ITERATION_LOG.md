@@ -1,5 +1,38 @@
 # Iteration Log
 
+## 2026-08-31 — Exact-artifact M15 Medium and false-positive reconciliation
+
+- Reconstructed the reviewed PR #57 artifacts at head
+  `74a37e930cda44e4eedb550bd4a6237da03c75c5`. CI run `33384160196` and
+  Security run `33384160199` passed all required jobs, including external
+  CodeQL check `99463328597`.
+- Downloaded the exact retained CodeQL, DAST, deployable-image Trivy, and
+  CycloneDX artifacts without committing raw scanner output. The triage binds
+  their GitHub archive digests, extracted-report SHA-256 values, job IDs,
+  scanner versions/freshness, image digests, and expiry dates.
+- Reconciled zero CodeQL findings, zero repository/image vulnerability,
+  misconfiguration, or secret findings, and two informational-only ZAP
+  observations. The 29 Medium records are reciprocal-licence occurrences, not
+  vulnerability or DAST findings; they map to 15 exact dispositions with zero
+  false positives.
+- Preserved R-056 instead of converting inventory into compliance: product
+  source is available, but 14 third-party source/notice dispositions across 12
+  packages still block tagged dashboard and worker image distribution until a
+  real release bundle and attestations reconcile and the release-security owner
+  approves them.
+- The first focused validation failed on its own historical corruption fixture:
+  its hard-coded source-expiry timestamp predated the new review, so it exercised
+  `expired before review` instead of the intended `expired now` rejection. The
+  fixture now derives a timestamp one second after the bound review while still
+  in the past; the production chronology and expiry checks are unchanged.
+  `npm run security:validate` then passed all 27 controls and self-test
+  corruptions, with 19 passed and eight honestly non-passing.
+- This advances only M15's automated Medium/false-positive review. A corrected
+  tag and release-bound source/attestation proof, approved production review,
+  independent penetration test/retest, final Critical/High reconciliation, and
+  owner approval remain open. Production, module/product scores, merge,
+  release, deployment, and loyalty value remain unchanged.
+
 ## 2026-08-31 — Isolated Authentik 2026.8 runtime rehearsal
 
 - Compared a host-published disposable stack, a second in-memory API fake, and

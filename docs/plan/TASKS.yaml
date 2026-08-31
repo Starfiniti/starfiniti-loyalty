@@ -3394,6 +3394,8 @@ tasks:
             docs/plan/evidence/M15/runs/security-medium-triage-f9c83ac.yaml,
             docs/plan/evidence/M15/runs/security-medium-triage-188d9d8.yaml,
             docs/plan/evidence/M15/runs/security-medium-triage-fe8a6ff.yaml,
+            docs/plan/evidence/M15/runs/security-medium-triage-74a37e9.yaml,
+            reviewed artifact head 74a37e930cda44e4eedb550bd4a6237da03c75c5 passed CI 33384160196 and Security 33384160199 with 19 of 27 checks passing while eight release production review independent test reconciliation and approval gates remain open,
             docs/architecture/ADR/0064-deployable-artifact-security-and-isolated-dast.md,
             docs/architecture/ADR/0082-request-bound-dashboard-content-security-policy.md,
             docs/architecture/ADR/0083-release-bound-corresponding-source-artifacts.md,

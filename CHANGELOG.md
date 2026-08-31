@@ -1,5 +1,14 @@
 # Changelog
 
+- Reconciled the reviewed `74a37e9` M15 security artifacts from CI
+  `33384160196` and Security `33384160199`. The fresh digest-bound review
+  records zero Critical/High vulnerability findings, zero DAST
+  Critical/High/Medium/Low alerts, zero false positives, and maps all 29 Medium
+  reciprocal-licence occurrences to 15 exact dispositions. M15 Security is now
+  19/27; 14 third-party source/notice dispositions still block tagged image
+  distribution, and all eight release, production-review, independent-test,
+  reconciliation, and approval gates remain open.
+
 - Added ADR-0110 and a fourteen-scenario exact Authentik 2026.8 runtime
   rehearsal. Digest-pinned Authentik, PostgreSQL, and Node Linux/amd64
   manifests run on one internal-only Docker network with no published port,
