@@ -1,13 +1,13 @@
 schema: starfiniti.continuous-improvement.v1
 status: in_progress
-observedAt: 2026-08-31T10:24:34Z
+observedAt: 2026-08-31T12:15:33Z
 candidate:
   branch: codex/enterprise-roadmap-integration
   commit: 1e55a82a8f2feccdf3f55ace6a66e04b2595c7b0
   initialCloseApproved: false
 plan:
   path: infrastructure/governance/continuous-improvement.yaml
-  sha256: a81bd908039352845ea2bc62675f64ff04ca3e988275d9f4374e98519bfb89ea
+  sha256: 4e0a91ad5ef5a06fe3c18c1732a87d8d94571207e132d8ef601aef155310d3d9
 backlog:
   path: docs/plan/IMPROVEMENT_BACKLOG.yaml
   sha256: 88a58490a78dc7e146e64e4c162ff3e63addaec3d269ae128aba8bfc861adc02
@@ -73,7 +73,7 @@ checks:
     evidence: ADR-0068 compares four approaches, cites canonical official providers, defines the decision, and preserves rollback and historical evidence semantics.
   - id: validator_selftest
     status: passed
-    evidence: The completion fixture and adversarial mutations prove that cadence, freshness, exact blocker-set and evidence bindings, ranking, recurring controls, rescoring, experiment guardrails, exercises, artifacts, approvals, and score floors fail closed; the source collector rejects twenty-six source, network, response, digest, review-claim, output, and byte-preservation corruptions without network access, the installed-state collector rejects thirty-six fact, endpoint, component, chronology, digest, historical-source, full-candidate, output, and false-authority corruptions without network or SSH access, the Supabase repository review rejects forty-seven source package lock alignment Node Data API schema automatic-grant immutable-CI task ADR byte-preservation and false-authority corruptions, the bounded federation/notification dependency review rejects thirty-two provenance exact-shape manifest nested-lock compatibility source-control rollback task ADR and false-authority corruptions, the cutoff-bound provider-impact register rejects forty-six source installed-state catalogue pin candidate evidence task ADR and false-authority corruptions without network or SSH access, and the Authentik 2026.8 source-contract validator binds twenty-seven owned operations and two hundred forty-eight sent request-field occurrences across eighteen schemas with two hundred forty exact and eight compatible while rejecting provenance route protocol rollback limitation task ADR and false-authority corruptions offline.
+    evidence: The completion fixture and adversarial mutations prove that cadence, freshness, exact blocker-set and evidence bindings, ranking, recurring controls, rescoring, experiment guardrails, exercises, artifacts, approvals, and score floors fail closed; the recurring-failure registry additionally rejects twenty schema threshold occurrence chronology anchor path digest control delivery production plan-bound and remaining-gate corruptions; the source collector rejects twenty-six source, network, response, digest, review-claim, output, and byte-preservation corruptions without network access, the installed-state collector rejects thirty-six fact, endpoint, component, chronology, digest, historical-source, full-candidate, output, and false-authority corruptions without network or SSH access, the Supabase repository review rejects forty-seven source package lock alignment Node Data API schema automatic-grant immutable-CI task ADR byte-preservation and false-authority corruptions, the bounded federation/notification dependency review rejects thirty-two provenance exact-shape manifest nested-lock compatibility source-control rollback task ADR and false-authority corruptions, the cutoff-bound provider-impact register rejects forty-six source installed-state catalogue pin candidate evidence task ADR and false-authority corruptions without network or SSH access, and the Authentik 2026.8 source-contract validator binds twenty-seven owned operations and two hundred forty-eight sent request-field occurrences across eighteen schemas with two hundred forty exact and eight compatible while rejecting provenance route protocol rollback limitation task ADR and false-authority corruptions offline.
   - id: exact_head_ci
     status: passed
     evidence: >-
@@ -130,10 +130,10 @@ checks:
     evidence: Completion requires no overdue unaccepted Critical or High item at the review cutoff.
   - id: recurring_failure_inventory
     status: pending
-    evidence: Stable fingerprints and occurrence counts require two elapsed review periods and incident/support evidence.
+    evidence: The interim evidence-bound registry now records the 2026-08-28 and 2026-08-31 PostgreSQL off-site shared-lock starvation incidents as two distinct chronological anchors under one Critical R-004 fingerprint. It binds the exact decision implementation and production evidence while the defect remains present. Two elapsed monthly review periods and their independently reviewed incident/support inventories are still required, so this check remains pending.
   - id: durable_regression_controls
     status: pending
-    evidence: Every failure reaching the second occurrence must bind at least one merged test, validator, monitor, runbook, or agent rule.
+    evidence: The repeated PostgreSQL off-site starvation record binds exact candidate bytes for the backup-assets validator archive-RPO and repository-isolation alerts and OPS-007. Every delivery status is honestly candidate with null merge production and observation evidence; repository merge dedicated-repository provisioning paging activation continuity retention and isolated restore remain required before the monthly merged-control gate can pass.
   - id: module_rescoring
     status: pending
     evidence: ADR-0080 and the product-score V2 validator preserve the 54/100 deployed-production history and rescore exact integrated candidate 1e55a82a8f2feccdf3f55ace6a66e04b2595c7b0 at an unchanged 83/100 after the M09 authentication regression correction; M09 remains 88/100 because the responsive production-rendered browser proof adds no approved deployment canary activation recovery rollback observation or reconciliation evidence, and every module materially changed during the two future elapsed review periods still requires its own exact rescore.

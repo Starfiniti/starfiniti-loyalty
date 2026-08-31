@@ -1,5 +1,31 @@
 # Iteration Log
 
+## 2026-08-31 — Evidence-bound recurring backup-starvation control
+
+- Reconstructed ADR-0068's second-occurrence contract after the live
+  PostgreSQL off-site archive gap repeated. The existing monthly fixture accepted
+  only an integer count and a free-form reference, so it could not prove two
+  distinct incidents, current control bytes, or truthful delivery state.
+- Compared retaining free-form monthly references, putting incidents in the
+  task graph, using only the environment-owned incident system, and an additive
+  minimized repository register. ADR-0111 selects the register so private
+  operational details stay external while source-controlled prevention remains
+  independently reconstructable.
+- Added one stable Critical R-004 fingerprint with distinct 2026-08-28 and
+  2026-08-31 UTC occurrence records. Exact SHA-256 bindings cover both incident
+  anchors, ADR-0071, the dedicated PostgreSQL controller, backup-assets
+  validator, Prometheus archive-RPO/repository-isolation rules, and OPS-007.
+- The validator derives recurrence from chronology, rejects reused evidence
+  anchors and unsafe or drifted paths, requires controls at the second
+  occurrence, and separates candidate, merged, and active proof. Twenty
+  adversarial cases pass. Every current control stays candidate with null merge,
+  production, and observation evidence.
+- This does not substitute for two elapsed monthly reviews or change production.
+  Dedicated-repository provisioning, metrics/paging, continuity, retention,
+  isolated restore, merge, independent review, and approval remain open. M16
+  stays 77/100, the integration candidate stays 83/100, and production stays
+  54/100.
+
 ## 2026-08-31 — Exact-artifact M15 Medium and false-positive reconciliation
 
 - Reconstructed the reviewed PR #57 artifacts at head

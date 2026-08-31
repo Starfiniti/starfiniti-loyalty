@@ -1,0 +1,79 @@
+schema: starfiniti.recurring-failure-registry.v1
+status: in_progress
+observedAt: "2026-08-31T12:12:08Z"
+policy:
+  thresholdOccurrences: 2
+  allowedControls: [regressionTest, validator, monitor, runbook, agentRule]
+  evidenceDigestsRequired: true
+  candidateCannotClaimMergeOrActivation: true
+failures:
+  - fingerprint: recovery.postgres-offsite.shared-borg-lock-starvation
+    riskId: R-004
+    severity: Critical
+    state: control_candidate
+    summary: The whole-VM Borg lock twice starved the PostgreSQL off-site archive beyond its five-minute recovery objective.
+    occurrences:
+      - id: shared-lock-starvation-2026-08-28
+        observedAt: "2026-08-28T01:21:10Z"
+        evidence:
+          path: docs/plan/evidence/M01/backup-transfer-amplification-2026-08-14.md
+          sha256: acf04ca286c01a519edea43878cd2bdc1bb9f4ca7724865387cf8cb6c660d814
+          anchor: "## Live follow-up — 2026-08-28"
+        productionMutation: false
+      - id: shared-lock-starvation-2026-08-31
+        observedAt: "2026-08-31T12:08:18Z"
+        evidence:
+          path: docs/plan/evidence/M01/backup-transfer-amplification-2026-08-14.md
+          sha256: acf04ca286c01a519edea43878cd2bdc1bb9f4ca7724865387cf8cb6c660d814
+          anchor: "## Repeat off-site lock starvation — 2026-08-31 13:50 CEST"
+        productionMutation: false
+    decision:
+      path: docs/architecture/ADR/0071-dedicated-postgresql-borg-repository.md
+      sha256: 8ef0a03cb5c7fff18ce3269f1a1319df6e9b5a4d3a5befdeb0688c5439854835
+    implementation:
+      path: infrastructure/environments/proxmox/scripts/starfiniti-loyalty-postgres-borg-controller
+      sha256: 3692c7bc830300ce63594b8dbceb77cb8942fb136a6ba405a7b5a589f4ab44dc
+    controls:
+      - id: backup-assets-validator
+        type: validator
+        reference:
+          path: scripts/validate-backup-assets.mjs
+          sha256: 61420ebdb03bea3a6b0ce9ecbea299aae699971bedb5905c58fa81b300d68844
+        deliveryStatus: candidate
+        mergeEvidence: null
+        productionEvidence: null
+        observationEvidence: null
+      - id: archive-rpo-monitor
+        type: monitor
+        reference:
+          path: infrastructure/observability/prometheus/rules.yaml
+          sha256: fa20afac82fdd5d93d95c9b1b4fed9d590c8118b3377865ddfa4a1948cde2fcf
+        deliveryStatus: candidate
+        mergeEvidence: null
+        productionEvidence: null
+        observationEvidence: null
+      - id: recovery-rpo-runbook
+        type: runbook
+        reference:
+          path: docs/operations/RUNBOOKS.md
+          sha256: 8e17a789ee0cf13991baf716cec2062959c098071d02672fd87e7671d48b5b82
+        deliveryStatus: candidate
+        mergeEvidence: null
+        productionEvidence: null
+        observationEvidence: null
+    production:
+      defectPresent: true
+      dedicatedRepositoryActive: false
+      pagingActive: false
+      lastVerifiedAt: "2026-08-31T12:12:08Z"
+      evidence:
+        path: docs/plan/evidence/M01/backup-transfer-amplification-2026-08-14.md
+        sha256: acf04ca286c01a519edea43878cd2bdc1bb9f4ca7724865387cf8cb6c660d814
+        anchor: "## Repeat off-site lock starvation — 2026-08-31 13:50 CEST"
+    remainingGates:
+      - merge reviewed candidate
+      - provision dedicated repository and owner-only configuration
+      - activate repository-isolated archive and maintenance units
+      - activate node-exporter metrics and protected-value paging
+      - prove manual and timer archive continuity
+      - prove retention and isolated restore

@@ -121,6 +121,16 @@ Close each calendar month within ten days. The initial M16 gate requires two dis
 7. Review experiments. Promotion requires a predeclared primary metric, baseline, target, guardrails, measured improvement, and every guardrail passing. Stop an experiment immediately on guardrail breach.
 8. Sign and checksum the completed monthly artifact. Do not overwrite it after review.
 
+Between monthly closes, record an observed second occurrence in
+`docs/plan/evidence/M16/recurring-failures.yaml`. Bind each distinct occurrence
+to one exact repository evidence path, SHA-256, UTC instant, and unique section
+anchor. Bind decisions, implementations, and candidate controls to their exact
+repository bytes. A candidate control records null merge, production, and
+observation evidence; it cannot satisfy the monthly merged-control gate until
+those distinct proofs exist. Validate this fail-closed register with
+`npm run continuous-improvement:validate`. The register accelerates incident
+follow-up but does not substitute for either elapsed monthly review.
+
 ## Quarterly exercises
 
 Within thirty days after each calendar quarter, execute and reconcile all five exercises against the approved release and environment:

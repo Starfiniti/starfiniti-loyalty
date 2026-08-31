@@ -101,7 +101,7 @@
     "continuous-improvement:authentik-2026-8:upstream:verify": "node scripts/validate-authentik-2026-8-compatibility.mjs --upstream-verify",
     "continuous-improvement:authentik-2026-8:runtime:validate": "node scripts/validate-authentik-2026-8-runtime-plan.mjs --self-test && node scripts/run-authentik-2026-8-runtime-canary.mjs --self-test",
     "continuous-improvement:authentik-2026-8:runtime:run": "node scripts/run-authentik-2026-8-runtime-canary.mjs",
-    "continuous-improvement:validate": "node scripts/validate-continuous-improvement-evidence.mjs --self-test",
+    "continuous-improvement:validate": "node scripts/validate-recurring-failure-registry.mjs --self-test && node scripts/validate-continuous-improvement-evidence.mjs --self-test",
     "product-score:validate": "node scripts/validate-product-score.mjs --self-test",
     "entitlements:validate": "node scripts/validate-entitlements.mjs",
     "architecture:validate": "node scripts/validate-architecture.mjs",

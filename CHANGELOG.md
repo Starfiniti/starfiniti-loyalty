@@ -1,5 +1,16 @@
 # Changelog
 
+- Added ADR-0111 and a fail-closed M16 recurring-failure registry. The register
+  records the 2026-08-28 and 2026-08-31 PostgreSQL off-site shared-lock gaps as
+  two distinct digest-bound evidence anchors under one Critical R-004
+  fingerprint. It binds exact candidate decision, implementation, validator,
+  monitor, and runbook bytes while explicitly retaining null merge, production,
+  and observation proof. Twenty adversarial cases reject false occurrence,
+  path, digest, control, delivery, and activation claims. This adds no production
+  authority or mutation; the dedicated repository, paging, continuity,
+  retention, restore, elapsed monthly reviews, scores, and approvals remain
+  unchanged or open.
+
 - Recorded a repeat production off-site recovery gap without changing the
   server. VM 971's tap remained quiet and its local base/WAL source was fresh,
   but a one-time whole-VM raw migration held the shared Borg lock while the

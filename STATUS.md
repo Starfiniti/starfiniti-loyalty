@@ -21,6 +21,18 @@
   database, route, checkout path, or loyalty value was changed by the
   inspection; automatic catch-up does not close the recovery design failure.
 
+- ADR-0111 converts that repeated protected-path failure into an additive M16
+  control record without claiming the fix is delivered. The new registry binds
+  two distinct UTC occurrences and exact evidence anchors to one stable
+  `recovery.postgres-offsite.shared-borg-lock-starvation` fingerprint. It also
+  binds exact ADR-0071, controller, validator, monitor, and OPS-007 bytes.
+  Twenty adversarial cases reject one-occurrence substitution, reused
+  anchors, path escape, digest drift, missing or duplicate controls, and false
+  merge or production activation. Every control remains `candidate`; production
+  still has the defect, no dedicated repository or paging, and no merge,
+  continuity, retention, restore, elapsed-monthly, independent-review, or owner
+  evidence. M16 remains 77/100, candidate 83/100, and production 54/100.
+
 - ADR-0110 adds the still-missing exact Authentik 2026.8.0 runtime rehearsal
   without touching the live 2026.5.6 broker. Exact Authentik, PostgreSQL, and
   Node Linux/amd64 manifests run on one internal-only Docker network with zero

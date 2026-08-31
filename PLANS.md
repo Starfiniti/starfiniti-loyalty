@@ -18,6 +18,19 @@ was 1 hour 34 minutes 36 seconds. Automatic recovery clears the immediate stale
 archive; it does not satisfy the five-minute objective or repair the shared-lock
 design.
 
+ADR-0111 is the active safe M16 recurrence-control slice. An additive
+evidence-bound register records the 2026-08-28 and 2026-08-31 shared Borg-lock
+starvation incidents as two distinct chronological anchors under one Critical
+R-004 fingerprint. It SHA-256 binds ADR-0071, the dedicated controller, the
+backup-assets validator, the archive-RPO monitor, and OPS-007. All three
+controls remain `candidate`, with null merge, production, and observation
+evidence. Twenty adversarial cases reject invented recurrence, path or digest
+drift, missing controls, and delivery overclaims. This is durable repository
+prevention work, not production closure: M16 stays 77/100, the candidate stays
+83/100, production stays 54/100, and the elapsed monthly, merge, provisioning,
+monitoring, continuity, retention, restore, review, and approval gates remain
+open.
+
 ADR-0110 is the active safe M13/M15/M16 identity-runtime slice. It preserves
 ADR-0109's exact Authentik 2026.8.0 source/OpenAPI result and adds a fourteen-
 scenario executable rehearsal with digest-pinned Authentik, PostgreSQL, and

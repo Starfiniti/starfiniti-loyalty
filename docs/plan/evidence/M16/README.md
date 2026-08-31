@@ -5,6 +5,18 @@ repository controls now and leaves elapsed monthly reviews, the quarterly
 exercise bundle, candidate acceptance, regression controls, scoring,
 independent review, and owner approval pending.
 
+ADR-0111 adds the interim `recurring-failures.yaml` register after one protected
+recovery failure reached its second observed occurrence. Run
+`npm run continuous-improvement:validate`; the registry gate binds two distinct
+chronological incident anchors plus exact ADR-0071, dedicated-controller,
+backup-validator, Prometheus-rule, and OPS-007 bytes. Twenty adversarial cases
+reject invented or collapsed recurrence, reused anchors, unsafe paths, digest
+drift, missing or duplicate controls, and false merge or production activation.
+All current controls are `candidate`, all delivery proofs are null, and
+production explicitly retains the shared-lock defect without dedicated-repository
+or paging activation. This record does not substitute for the two elapsed monthly
+reviews or pass `recurring_failure_inventory` or `durable_regression_controls`.
+
 ADR-0110 adds a separate exact-candidate runtime rehearsal without changing the
 live Authentik 2026.5.6 broker. Run
 `npm run continuous-improvement:authentik-2026-8:runtime:validate` for the
