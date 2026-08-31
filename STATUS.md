@@ -2,24 +2,27 @@
 
 - ADR-0110 adds the still-missing exact Authentik 2026.8.0 runtime rehearsal
   without touching the live 2026.5.6 broker. Exact Authentik, PostgreSQL, and
-  Node Linux/amd64 manifests run on one internal-only Docker network with
-  zero published ports, zero Docker-socket mounts, and synthetic credentials and
-  identities only. A read-only operator bundles the production federation
-  client and exercises disabled OIDC and SAML sources, idempotent rotation, a
-  hidden authorization-code/hashed-subject provider, strict Supabase callback,
-  OpenID discovery, and Authentik's real outbound SCIM worker against a bounded
-  bearer-protected sink. Fourteen scenarios cover discovery, pagination,
-  external IDs, group membership, quoted member removal, deactivation,
-  minimization, and exact teardown. The offline validator and bundle self-test
-  pass locally; the executable runtime is wired into the existing Security
-  recovery job and awaits exact-head Linux CI evidence. Because that workflow
-  changed, the prior exact-head Security run and Medium triage are intentionally
-  no longer inherited: M15 security now records 7/27 passed and 20 pending until
-  fresh evidence is reconciled. The rehearsal cannot pass one of
-  M13-S06's production checks or replace database RLS/stale-session tests.
-  Production, scores, M13's 12/51 count, and every merge, release, upgrade,
-  recovery, rollback, IdP-fixture, approval, deployment, and reconciliation
-  gate remain unchanged.
+  Node Linux/amd64 manifests run on one internal-only Docker network with zero
+  published ports, zero Docker-socket mounts, and synthetic credentials and
+  identities only. After five fail-closed diagnostic runs, exact implementation
+  `c94cc9e2181079ac80524fc3d9c9496ad6d0d6a6` replaced Authentik 2026.8's
+  broken `ak scim_sync` result wait with exact provider-schedule discovery and
+  the permissioned schedule `/send/` API. Evidence head
+  `e96cd18aa416c16c9523c46a49a9cdcd14cbd020` passed CI `33381604540`,
+  Security `33381604545`, and external CodeQL `99455421534`; all twelve PR
+  checks are green and PR #57 is clean and mergeable. Recovery job
+  `99454991777` completed all fourteen OIDC, SAML, SCIM, minimization, and
+  teardown scenarios. Retained artifact `9754193837` has archive digest
+  `sha256:36c024a8ec3e41c9538bc6d6d8b959324e295abd21c1927635841417015e9772`
+  and report SHA-256
+  `df528a9de5d0b7f99c1d833f6fdbf7c542c252b0ba9a4580ef5da7441803b84c`.
+  Fresh CodeQL, repository, image, SBOM, DAST, header, database-freshness, and
+  WooCommerce evidence advances M15 security to 18/27; the superseded Medium
+  triage is not inherited. The synthetic rehearsal cannot pass M13-S06's
+  production checks or replace private configuration, real IdP fixtures,
+  database RLS/stale-session tests, recovery, rollback, observation, or
+  reconciliation. Production, scores, M13's 12/51 count, and every merge,
+  release, upgrade, approval, and deployment gate remain unchanged.
 
 - ADR-0109 pins an exact, immutable Authentik 2026.8.0 source candidate without
   touching the live broker. The contract binds the 2026.5.6 and 2026.8.0 tag
@@ -137,7 +140,9 @@
   descriptor/path identity after the read. Correction `695067c` passed CI
   `33273056805`, Security `33273056780`, and external CodeQL `99155114588` with
   all twelve PR checks green; the minimized CodeQL artifact contains zero
-  findings and alert 25 is fixed. M15-S03 now has 19 of 27 checks passing. A
+  findings and alert 25 is fixed. That historical digest-bound candidate had
+  19 of 27 checks passing before ADR-0110 changed the Security workflow and
+  invalidated inherited scan/triage evidence. A
   real approved corrected tag, its attestations, production review, independent
   penetration testing/retest, reconciliation, and owner approval remain
   pending. Production and v0.1.11 are unchanged.

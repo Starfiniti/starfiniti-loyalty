@@ -6,22 +6,31 @@ topology can prove candidate boot, production-client OIDC/SAML reconciliation,
 outbound SCIM behavior, minimization, and teardown with synthetic data. Exact
 implementation `c94cc9e2181079ac80524fc3d9c9496ad6d0d6a6` replaces the broken
 2026.8 management-command wait with exact provider-schedule discovery and the
-permissioned schedule API. Local contract tests pass; exact-head Linux execution
-is pending. It does not restore
-private Authentik configuration, signing material, users, sessions, or audit and
-therefore cannot advance M15-S04 recovery or M15-S06 GA checks.
+permissioned schedule API. Evidence head
+`e96cd18aa416c16c9523c46a49a9cdcd14cbd020` passed CI `33381604540`,
+Security `33381604545`, and external CodeQL `99455421534`; all twelve PR checks
+are green. Recovery job `99454991777` passed 14/14 scenarios. Artifact
+`9754193837` has archive digest
+`sha256:36c024a8ec3e41c9538bc6d6d8b959324e295abd21c1927635841417015e9772`
+and independently parsed report SHA-256
+`df528a9de5d0b7f99c1d833f6fdbf7c542c252b0ba9a4580ef5da7441803b84c`.
+It does not restore private Authentik configuration, signing material, users,
+sessions, or audit and therefore cannot advance M15-S04 recovery or M15-S06 GA
+checks.
 
-The Security workflow change intentionally invalidates the older exact-head
-scan and Medium-triage bindings. `security.yaml` now records 7/27 passed and 20
-pending against implementation `c94cc9e2181079ac80524fc3d9c9496ad6d0d6a6`;
-fresh CI and minimized artifact reconciliation are required before those claims
-can advance again.
+The Security workflow change intentionally invalidated the older exact-head
+scan and Medium-triage bindings. Fresh CodeQL, repository, image, SBOM, DAST,
+header, scanner-freshness, and WooCommerce evidence is now reconciled against
+implementation `c94cc9e2181079ac80524fc3d9c9496ad6d0d6a6` through evidence head
+`e96cd18aa416c16c9523c46a49a9cdcd14cbd020`. `security.yaml` records 18/27
+passed and nine pending. The previous Medium and false-positive review remains
+superseded until a new digest-bound triage reconciles these exact artifacts.
 
 M15-S01 is active with seven of 23 checks passing. `capacity.yaml` separates repository readiness from an approved production-like measured run and exact value reconciliation. ADR-0104 adds an exact digest-pinned Grafana k6 contract that must match the canonical phases, scenarios, rates, drops, contracts, thresholds, target digest, and false production authority; repository validation and Linux image inspection cannot substitute for the still-pending approved real independent run. No supported capacity is claimed while that manifest is in progress.
 
 M15-S02 is active. `fault-injection.yaml` separates the disposable-only controller from the two approved production-like runs and independent WAL, queue, ledger, WooCommerce, checkout, and no-loss reconciliation. No production fault is authorized by repository readiness.
 
-M15-S03 is active with 19 of 27 checks passing. `security.yaml` preserves the digest-bound `fe8a6ff` image/DAST/triage candidate and separately records exact WooCommerce release-integrity correction `695067c`: CI `33273056805`, Security `33273056780`, and external CodeQL `99155114588` passed all twelve PR checks after prior Security run `33272662903` exposed and rejected the initial file metadata/open race. The current correction builds and independently verifies a synthetic numeric connector package and has zero CodeQL findings. Release-bound corresponding-source generation under ADR-0083, a real corrected tag and its package/attestation verification, approved non-destructive production review, independent penetration testing/retest, final finding reconciliation, and owner approval remain gated. R-056 and R-062 stay open until those real release controls pass. Repository readiness authorizes no release, production scan, or mutation.
+M15-S03 is active with 18 of 27 checks passing. `security.yaml` binds CI run `33381604540` and Security run `33381604545` to evidence head `e96cd18` and implementation `c94cc9e`: CodeQL, repository, both production images, both CycloneDX inventories, bounded DAST, response headers, scanner freshness, development audit, and all four WooCommerce runtime cells pass. The historical Medium/false-positive triage is deliberately not inherited. Release-bound corresponding-source generation under ADR-0083, a real corrected tag and its package/attestation verification, approved non-destructive production review, independent penetration testing/retest, final finding reconciliation, and owner approval remain gated. R-056 and R-062 stay open until those real release controls pass. Repository readiness authorizes no release, production scan, or mutation.
 
 M15-S04 is active. `recovery.yaml` separates the digest-bound fourteen-stage full-service clean-room controller from two approved isolated recoveries, measured RPO/RTO, identity/configuration/signing/privacy/value reconciliation, independent review, and zero-residue teardown. ADR-0071 additionally supplies an undeployed dedicated PostgreSQL Borg repository/lock/cache and exact recent-retention candidate after live timing disproved shared-repository RPO. `recovery-transport.yaml` binds ADR-0073's exact candidate and pre-change rollback packages, signed authorities, URLs, checksums, metadata, OS images, passing rollback-aware exact-head internal-only disposable canary, artifact/report hashes, and false-completion boundary. Operations escrow, host-consumer compatibility, real dual-endpoint rollout, and isolated restore remain pending. Repository readiness authorizes no repository provisioning, package installation, backup, credential, retention action, identity, route, or recovery execution.
 

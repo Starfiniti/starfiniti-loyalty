@@ -12,8 +12,8 @@ Supabase callback, OpenID discovery, and the real Authentik SCIM worker against
 a bounded bearer-protected synthetic sink. SCIM service-provider discovery,
 pagination, external IDs, membership, quoted removal, deactivation, evidence
 minimization, and teardown are deterministic gates. The offline plan and bundle
-self-tests pass locally; the existing Security recovery job will run the exact
-candidate and retain only the minimized report. This still does not test a real
+self-tests pass locally; the existing Security recovery job runs the exact
+candidate and retains only the minimized report. This still does not test a real
 enterprise IdP, current private configuration/outposts, Starfiniti database
 authorization, recovery, rollback, or production. M13 remains 12/51, M16 stays
 77/100, the candidate 83/100, and production 54/100 and unchanged. Merge,
@@ -24,9 +24,18 @@ management command raises `ResultMissing` after scheduling its asynchronous
 task. Exact implementation `c94cc9e2181079ac80524fc3d9c9496ad6d0d6a6`
 instead discovers the provider-owned schedule and triggers the supported
 permissioned `/send/` API after application association; container shell and
-management-command paths remain forbidden. Historical exact-head scans and
-Medium triage are not inherited, so M15 Security is 7/27 passed and 20 pending
-until the fresh run and minimized artifacts are reconciled.
+management-command paths remain forbidden. Evidence head
+`e96cd18aa416c16c9523c46a49a9cdcd14cbd020` passed CI `33381604540`,
+Security `33381604545`, and external CodeQL `99455421534`; all twelve PR checks
+are green and PR #57 is clean and mergeable. Recovery job `99454991777`
+completed all fourteen synthetic runtime scenarios. Artifact `9754193837`
+binds the exact candidate commit, 14/14 result, minimized report SHA-256
+`df528a9de5d0b7f99c1d833f6fdbf7c542c252b0ba9a4580ef5da7441803b84c`,
+and archive digest
+`sha256:36c024a8ec3e41c9538bc6d6d8b959324e295abd21c1927635841417015e9772`.
+Fresh CodeQL, repository, image, SBOM, DAST, header, scanner-freshness, and
+WooCommerce evidence advances M15 Security to 18/27 passed and nine pending.
+The historical Medium triage remains superseded and cannot be inherited.
 
 ADR-0109 is the preceding source-contract slice. It pins the exact Authentik
 2026.5.6 baseline and 2026.8.0 candidate tag objects, commits, OpenAPI schemas,

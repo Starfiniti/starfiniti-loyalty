@@ -27,8 +27,8 @@
 - Rebound the Security workflow digest to exact implementation
   `ee5e0f5b3e823909fdaf0b20d0cc4cd3d5b2c2f8` and invalidated the older
   exact-head scan and Medium-triage claims instead of relabeling historical
-  results. M15 security is therefore 7/27 passed and 20 pending until fresh CI
-  and artifact reconciliation complete.
+  results. M15 security temporarily returned to 7/27 passed and 20 pending
+  until fresh CI and artifact reconciliation completed later in this slice.
 - Exact-head Security run `33374846693`, recovery job `99433907489`, failed
   closed before federation mutation because the operator queried
   `default-source-authentication` while first-start blueprints were still
@@ -80,7 +80,26 @@
   forbidden in the runtime source contract. Focused source/runtime validation,
   adversarial command/ownership/UUID checks, and the complete repository gate
   pass at exact implementation `c94cc9e2181079ac80524fc3d9c9496ad6d0d6a6`;
-  fresh exact-head Linux execution remains pending.
+  evidence head `e96cd18aa416c16c9523c46a49a9cdcd14cbd020` then passed CI run
+  `33381604540`, Security run `33381604545`, and external CodeQL check
+  `99455421534`; all twelve PR checks were green and PR #57 was clean and
+  mergeable.
+- Recovery job `99454991777` passed every preceding transport canary and all
+  fourteen Authentik runtime scenarios. Retained artifact `9754193837` has
+  archive digest
+  `sha256:36c024a8ec3e41c9538bc6d6d8b959324e295abd21c1927635841417015e9772`;
+  its independently parsed 2,543-byte report has SHA-256
+  `df528a9de5d0b7f99c1d833f6fdbf7c542c252b0ba9a4580ef5da7441803b84c`,
+  exact Authentik commit `f3753ec20ce13ef672401a131379d1a5a2d3439b`,
+  14/14 scenarios, two federation resources, four flow bindings, twenty SCIM
+  operations, one authorization rejection, and zero failed scenario.
+- Fresh CodeQL artifact `9754000667`, DAST artifact `9754016677`, and
+  supply-chain artifact `9754050656` bind exact evidence head `e96cd18`: zero
+  CodeQL and repository findings, zero dashboard/worker vulnerabilities, both
+  CycloneDX inventories, two informational-only ZAP observations, current
+  Trivy data, and all four WooCommerce runtime cells. M15 Security advances to
+  18/27; Medium/false-positive triage remains pending because the digest-bound
+  historical review was intentionally not relabeled for these artifacts.
 - Preserved the evidence boundary: this does not advance M13's 12/51 production
   canary, M15 recovery/GA, M16 score, the integration/product scores, or any
   merge, release, upgrade, deployment, rollback, approval, observation, or
