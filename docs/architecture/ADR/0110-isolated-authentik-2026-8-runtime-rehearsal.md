@@ -109,6 +109,14 @@ token, and profile URLs with those mutations. It does not echo any read-back
 secret or accept a different provider type, insecure scheme, embedded
 credential, control character, or oversized URL.
 
+Authentik's `User.uid` is not the database UUID: the 2026.8 model derives it as
+the lowercase SHA-256 hexadecimal digest of the user ID and instance-specific
+identifier. The rehearsal therefore validates the exact 64-character digest
+shape used by the configured `hashed_user_id` OIDC subject and default SCIM
+`externalId`, while continuing to validate group primary keys as UUIDs. The
+digest is an opaque correlation identifier; it is never decoded or treated as
+tenant authority.
+
 ## Evidence and gates
 
 Run:

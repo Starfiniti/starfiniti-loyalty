@@ -33,6 +33,11 @@ function uuid(value, label) {
   return value.toLowerCase();
 }
 
+function hashedUserId(value, label) {
+  assert.match(value, /^[0-9a-f]{64}$/u, `${label} must be a SHA-256 hex ID`);
+  return value;
+}
+
 function positiveInteger(value, label) {
   assert.ok(
     Number.isSafeInteger(value) && value > 0,
@@ -455,7 +460,7 @@ async function setup() {
     schema: "starfiniti.authentik-2026-8-runtime-setup.v1",
     scimProviderId,
     userId: positiveInteger(user.pk, "user"),
-    userUid: uuid(user.uid, "user UID"),
+    userUid: hashedUserId(user.uid, "user UID"),
     groupPk: uuid(group.pk, "group"),
     oidcProviderId: positiveInteger(firstOidc.providerId, "OIDC provider"),
     samlProviderId: positiveInteger(saml.providerId, "SAML provider"),
@@ -582,7 +587,7 @@ function parseArguments(argv) {
     setup: {
       scimProviderId: positiveInteger(Number(values.provider), "SCIM provider"),
       userId: positiveInteger(Number(values.user), "user"),
-      userUid: uuid(values.uid, "user UID"),
+      userUid: hashedUserId(values.uid, "user UID"),
       groupPk: uuid(values.group, "group"),
       flowBindings: positiveInteger(Number(values.bindings), "flow bindings"),
     },

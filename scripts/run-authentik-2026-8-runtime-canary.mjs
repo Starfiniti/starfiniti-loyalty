@@ -363,12 +363,11 @@ function exactSetup(value) {
       `${key} differs`,
     );
   }
-  for (const key of ["userUid", "groupPk"]) {
-    assert.match(
-      value[key],
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u,
-    );
-  }
+  assert.match(value.userUid, /^[0-9a-f]{64}$/u);
+  assert.match(
+    value.groupPk,
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u,
+  );
   assert.equal(value.flowBindings, 4);
   return value;
 }
@@ -793,12 +792,36 @@ function selfTest(plan, bytes, bundle) {
   );
   assert.equal(sourceContract.match(/"ak", "healthcheck"/gu)?.length, 2);
   assert.equal(sourceContract.includes('"healthcheck", "server"'), false);
+  assert.ok(sourceContract.includes("function hashedUserId("));
+  assert.ok(sourceContract.includes("/^[0-9a-f]{64}$/u"));
+  assert.equal(sourceContract.includes('uuid(user.uid, "user UID")'), false);
   assert.equal(sourceContract.includes('"healthcheck", "worker"'), false);
   assert.ok(sourceContract.includes('"ak", "scim_sync"'));
   assert.equal(sourceContract.includes('"ak", "shell"'), false);
   assert.ok(sourceContract.includes("timingSafeEqual"));
   assert.ok(sourceContract.includes("members\\[value eq"));
   assert.ok(readFileSync(bundle).length > 10_000);
+  const syntheticSetup = {
+    schema: "starfiniti.authentik-2026-8-runtime-setup.v1",
+    scimProviderId: 1,
+    userId: 2,
+    userUid: "a".repeat(64),
+    groupPk: "00000000-0000-4000-8000-000000000001",
+    oidcProviderId: 3,
+    samlProviderId: 4,
+    flowBindings: 4,
+  };
+  exactSetup(structuredClone(syntheticSetup));
+  for (const userUid of [
+    "00000000-0000-4000-8000-000000000001",
+    "A".repeat(64),
+    "a".repeat(63),
+  ]) {
+    assert.throws(
+      () => exactSetup({ ...syntheticSetup, userUid }),
+      /regular expression/u,
+    );
+  }
   const synthetic = buildReport(plan, bytes, {
     federationResources: 2,
     flowBindings: 4,

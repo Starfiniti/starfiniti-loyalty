@@ -48,6 +48,14 @@
   read-back state fails before mutation. The pending Security manifest now
   points to corrected implementation
   `8360639d0720f6504f23d5c5c8c5e13a3fe46ffe`.
+- Exact-head Security run `33377139798`, recovery job `99441056576`, passed the
+  corrected OIDC rotation and failed closed when the harness required
+  Authentik's user `uid` to be a UUID. The pinned 2026.8 model instead derives
+  `uid` as a lowercase SHA-256 hexadecimal digest, matching the configured
+  `hashed_user_id` OIDC subject and default SCIM `externalId`. The harness now
+  validates that exact 64-character opaque identifier separately from the
+  UUID-shaped group primary key; teardown completed and no success artifact was
+  published.
 - Preserved the evidence boundary: this does not advance M13's 12/51 production
   canary, M15 recovery/GA, M16 score, the integration/product scores, or any
   merge, release, upgrade, deployment, rollback, approval, observation, or
