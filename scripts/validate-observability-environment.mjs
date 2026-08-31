@@ -180,6 +180,14 @@ function validatePathValues(values, envPath) {
     pathVariables.map((name) => [name, values.get(name)]),
   );
   if (
+    [...resolved.values()].some(
+      (path) =>
+        !isAbsolute(path) || resolve(path) !== path || parse(path).root === path,
+    )
+  ) {
+    fail("operator paths must be canonical non-root absolute paths");
+  }
+  if (
     process.platform !== "win32" &&
     [...resolved.values()].some((path) => !/^\/[A-Za-z0-9_./-]+$/u.test(path))
   ) {
