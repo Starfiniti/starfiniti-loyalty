@@ -55,7 +55,8 @@
   `hashed_user_id` OIDC subject and default SCIM `externalId`. The harness now
   validates that exact 64-character opaque identifier separately from the
   UUID-shaped group primary key; teardown completed and no success artifact was
-  published.
+  published. The pending Security manifest now points to corrected
+  implementation `707691d68443903acdf5346cab7290266c308a08`.
 - Preserved the evidence boundary: this does not advance M13's 12/51 production
   canary, M15 recovery/GA, M16 score, the integration/product scores, or any
   merge, release, upgrade, deployment, rollback, approval, observation, or

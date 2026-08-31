@@ -1,12 +1,12 @@
 schema: starfiniti.security-evidence.v1
 status: in_progress
-observedAt: 2026-08-31T09:15:32Z
+observedAt: 2026-08-31T09:30:41Z
 currentProduction:
   release: v0.1.11
   applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
 candidate:
   branch: codex/enterprise-roadmap-integration
-  commit: 8360639d0720f6504f23d5c5c8c5e13a3fe46ffe
+  commit: 707691d68443903acdf5346cab7290266c308a08
   securityOwnerApproved: false
 inputs:
   securityWorkflow:
@@ -71,7 +71,7 @@ checks:
     evidence: Repository validators reject drift-sensitive evidence, false completion, missing checks, unsafe DAST, optimizer reintroduction, unplanned reciprocal components, incomplete source inputs, and release publication before source verification.
   - id: exact_head_ci
     status: pending
-    evidence: Exact implementation 8360639d0720f6504f23d5c5c8c5e13a3fe46ffe requires a fresh complete CI run before candidate evidence can advance.
+    evidence: Exact implementation 707691d68443903acdf5346cab7290266c308a08 requires a fresh complete CI run before candidate evidence can advance.
   - id: codeql_sast
     status: pending
     evidence: The workflow extension requires fresh exact-head CodeQL security-extended evidence before the current candidate can inherit no finding claim.
