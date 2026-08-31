@@ -76,6 +76,15 @@
   at 14:12:08, restoring normal cadence. No production configuration, service,
   database, route, checkout path, or loyalty value was changed by the
   inspection; automatic catch-up does not close the recovery design failure.
+  A second bounded read-only check at 19:01 CEST found six consecutive real
+  archives from 18:42:58 through 18:59:48 with 199–211-second intervals. The
+  newest was 110 seconds old, the timer was waiting normally, the whole-VM
+  service was inactive, and no contention appeared in the preceding ten
+  minutes. VM 971 received only 13,611 bytes over twenty seconds; its one-hour
+  RRD maximum was 9,753 bytes/s. Normal cadence is therefore currently
+  restored, but the post-incident window does not close R-004, replace the
+  shared lock, deploy paging, validate retention, or prove isolated restore.
+  The follow-up changed no production state.
 
 - ADR-0111 converts that repeated protected-path failure into an additive M16
   control record without claiming the fix is delivered. The new registry binds

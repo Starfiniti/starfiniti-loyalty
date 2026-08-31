@@ -40,23 +40,25 @@ triage, development-audit, and WooCommerce evidence is historical only. M15
 Security is intentionally back at 7/27 until the new exact head passes and its
 artifacts are reconciled; prior runs were not relabelled.
 
-An active read-only production incident review on 2026-08-31 confirms the old
-VM 971 full-tree transfer loop is not running: the guest sent only 13,508 bytes
+An active read-only production incident review on 2026-08-31 confirmed the old
+VM 971 full-tree transfer loop was not running: the guest sent only 13,508 bytes
 over twenty seconds and its local WAL source remained current. A distinct
-one-time whole-VM raw migration has nevertheless held the shared Borg lock
-since 12:35 CEST. The PostgreSQL off-site unit has waited since 12:36:50 under
-a repository-unbound 14,400-second lock wait/five-hour service deadline, while the last
-archive completed at 12:33:41. The five-minute off-site objective is therefore
-breached again and no deployed metrics can page. The accepted ADR-0071
-dedicated repository/controller remains the correct repair; this observation
-does not weaken its rsync provenance, custody, rollout, restore, monitoring, or
-approval gates. Application health and local WAL continuity pass, but R-004,
-M15 recovery/operations, and GA remain open. No production process or value was
-changed. The migration later exited successfully and the waiting service created
-a new incremental archive at 14:08:17 CEST, but the exact completed-archive gap
-was 1 hour 34 minutes 36 seconds. Automatic recovery clears the immediate stale
-archive; it does not satisfy the five-minute objective or repair the shared-lock
-design.
+one-time whole-VM raw migration nevertheless held the shared Borg lock from
+12:35 CEST. The PostgreSQL off-site unit waited from 12:36:50 under a
+repository-unbound 14,400-second lock wait/five-hour service deadline, while the
+last archive had completed at 12:33:41. The five-minute off-site objective was
+breached again and no deployed metrics could page. The migration later exited
+successfully and the waiting service created a new incremental archive at
+14:08:17 CEST, but the exact completed-archive gap was 1 hour 34 minutes 36
+seconds. A bounded 19:01 CEST follow-up found six consecutive real archives
+from 18:42:58 through 18:59:48 at 199–211-second intervals; the newest was 110
+seconds old, the whole-VM service was inactive, and VM 971's one-hour RRD
+maximum was only 9,753 bytes/s. Current cadence has recovered, but the accepted
+ADR-0071 dedicated repository/controller remains the correct repair. Neither
+automatic catch-up nor this observation closes R-004, M15 recovery/operations,
+or GA; it adds no rsync provenance, custody, rollout, retention, restore,
+monitoring, or approval evidence. No production process or loyalty value was
+changed.
 
 ADR-0111 is the active safe M16 recurrence-control slice. An additive
 evidence-bound register records the 2026-08-28 and 2026-08-31 shared Borg-lock

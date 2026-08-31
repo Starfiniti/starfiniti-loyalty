@@ -592,6 +592,7 @@ tasks:
       - docs/plan/evidence/M01/production-baseline-2026-08-28.md
       - docs/plan/evidence/M01/backup-export-repair-2026-08-13.md
       - docs/plan/evidence/M01/backup-transfer-amplification-2026-08-14.md
+      - docs/plan/evidence/M01/post-incident-cadence-revalidation-2026-08-31.md
       - docs/plan/evidence/M01/supabase-compatibility-2026-08-28.json
       - infrastructure/environments/proxmox/supabase-compatibility.json
       - migration 20260828190000 enables RLS on the three previously uncovered private tenant coordination tables while retaining reviewed owner-function bypass and zero direct-role policies
@@ -3580,6 +3581,7 @@ tasks:
             docs/architecture/ADR/0112-digest-pinned-observability-deployment-boundary.md,
             docs/architecture/ADR/0071-dedicated-postgresql-borg-repository.md,
             docs/plan/evidence/M01/backup-transfer-amplification-2026-08-14.md,
+            docs/plan/evidence/M01/post-incident-cadence-revalidation-2026-08-31.md,
             docs/operations/OBSERVABILITY_DEPLOYMENT.md,
             infrastructure/environments/proxmox/scripts/starfiniti-loyalty-postgres-borg-controller,
             infrastructure/environments/proxmox/scripts/starfiniti-loyalty-postgres-borg,

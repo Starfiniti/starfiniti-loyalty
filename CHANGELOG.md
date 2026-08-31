@@ -1,5 +1,15 @@
 # Changelog
 
+- Recorded a bounded post-incident production revalidation without changing
+  the server. Six real PostgreSQL off-site archives completed at
+  199–211-second intervals, the newest was 110 seconds old, the timer was
+  waiting normally, and the one-time whole-VM service was inactive. VM 971's
+  live receive rate was about 680 bytes/s and its one-hour maximum was 9,753
+  bytes/s, so neither the historical full-tree transfer nor immediate archive
+  staleness was active. R-004 and M15 recovery/operations remain open because
+  the shared lock, unbounded wait, missing paging, retention, and isolated
+  restore defects are unchanged.
+
 - Added ADR-0113 and closed every future M16 monthly, quarterly,
   reconciliation, score, and approval V1 artifact schema. The validator now
   rejects unknown nested members, identity keys, embedded email or credentials,

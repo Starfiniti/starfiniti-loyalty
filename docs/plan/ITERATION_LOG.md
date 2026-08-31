@@ -1,5 +1,23 @@
 # Iteration Log
 
+## 2026-08-31 — Post-incident PostgreSQL archive cadence revalidation
+
+- Rechecked the protected production path read-only after the shared Borg lock
+  cleared instead of treating one successful catch-up archive as continuity
+  evidence.
+- Six real archives completed from 18:42:58 through 18:59:48 CEST with
+  199–211-second intervals. At 19:01:38 the newest was 110 seconds old, the
+  timer was active and waiting, the whole-VM service was inactive, and the
+  preceding ten minutes contained no contention message.
+- VM 971 received 13,611 bytes over twenty seconds, about 680 bytes/s; its
+  one-hour RRD mean and maximum were 3,260 and 9,753 bytes/s. The latest rsync
+  received 547,767 bytes and Borg added 4.71 kB of unique compressed data, so
+  the historical full-tree transfer remained absent.
+- Kept R-004, M15 recovery, and M15 operations open because a bounded healthy
+  window cannot repair the shared repository/lock, unbounded wait, missing
+  metrics and paging, retention, or isolated restore. No production state was
+  changed.
+
 ## 2026-08-31 — Closed minimized M16 closeout artifacts
 
 - Reconstructed the positive M16 completion fixture and proved that valid V1
