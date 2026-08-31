@@ -68,3 +68,8 @@
 ## Current deployment-boundary note
 
 - R-029: ADR-0069 makes per-organization federation administration files optional only as an all-or-none set. Disabled deployments mount no usable credential, partial or whitespace-only configuration fails preflight, and workforce SSO remains independent; approved IdP/SCIM fixtures, private egress, live canaries, rollback, reconciliation, and observation remain open.
+- R-029/R-044/R-048: ADR-0109 now proves the exact Authentik 2026.8 source/API
+  boundary only. Production remains on 2026.5.6; private configuration,
+  image/outpost and Base URL/deprecated-option inventory, candidate protocol and
+  stale-session fixtures, recovery, rollback, independent review, and owner
+  approval remain open.

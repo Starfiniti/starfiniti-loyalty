@@ -1,5 +1,21 @@
 # Execution Plan
 
+ADR-0109 is the active safe M16 identity-compatibility slice. It pins the exact
+Authentik 2026.5.6 baseline and 2026.8.0 candidate tag objects, commits,
+OpenAPI schemas, release source and asset, GHCR linux/amd64 manifest, and eight
+protocol source files. The explicit upstream verifier recomputes that all 27
+administration operations and 248 sent request-field occurrences across 18
+schemas remain supported—240 exactly and eight through compatible
+widenings/additions. The offline root gate binds that frozen result plus OIDC,
+SAML, SCIM, stale-session, callback, and database-authority invariants to the
+implementation and runbooks.
+This is source-contract evidence only. Production remains on 2026.5.6 and was
+not accessed or changed. Private configuration, exact current image/outposts,
+the disposable 2026.8 runtime, protocol traffic, deprovisioning, clean-room
+recovery, rollback, independent review, owner approval, merge, release,
+deployment, and reconciliation remain false or pending. M16 stays 77/100, the
+candidate 83/100, and production 54/100.
+
 ADR-0108 is the active safe M16 installed-runtime slice. A clean exact-commit,
 bounded public capture proves that the served Authentik login runtime is exact
 `2026.5.6` across one version family and three independently retrieved static

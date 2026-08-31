@@ -67,6 +67,13 @@ and retry-safe resource creation. Request bodies are capped at 512 KiB, groups
 at 2,000 members, list responses at 200 records, and endpoints at their
 database-configured per-minute quota.
 
+Authentik 2026.8 discovery sends bounded `startIndex` and `count` parameters,
+and membership removal may use `members[value eq "<uuid>"]`; both forms are
+covered by Starfiniti's contract and database tests. ADR-0109 establishes that
+source-level match only. A disposable exact-version fixture must still exercise
+discovery, Users, Groups, additions, filtered removals, deactivation, retry, and
+the correlated OIDC subject before the candidate can be accepted.
+
 ## Review group access
 
 1. Wait for the opaque group to appear under **Group role mappings**.
@@ -89,8 +96,7 @@ blindly retrying.
 - `active: false`, User deletion, removal from the last mapped group, mapping
   removal, a conflicting second role, or endpoint revocation invalidates the
   SCIM-managed membership in the same database transaction.
-- Existing sessions fail on their next live tenant-context check. Database RLS
-  is authoritative even if an application cookie has not expired.
+- Existing sessions fail on their next live tenant-context check. Database RLS is authoritative even if an application cookie has not expired.
 - A live invitation-created membership remains valid after authentication by
   the exact organization provider and is not silently converted to SCIM. A
   revoked manual membership remains revoked.

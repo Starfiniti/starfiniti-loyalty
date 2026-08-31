@@ -1,5 +1,34 @@
 # Iteration Log
 
+## 2026-08-31 — Authentik 2026.8 source compatibility contract
+
+- Compared an immediate production canary, waiting for a complete disposable
+  rehearsal, semantic-version trust, and an exact immutable source/OpenAPI
+  contract. ADR-0109 selects the source contract as the safe present slice and
+  retains the full disposable runtime rehearsal as the mandatory upgrade gate.
+- Pinned exact 2026.5.6 and 2026.8.0 tag/commit/schema provenance, the 2026.8
+  release source and `server.oci.tar`, GHCR linux/amd64 manifest and attestation,
+  and eight OIDC/SAML/SCIM source files.
+- Confirmed all 27 repository-owned API operations and 248 sent request-field
+  occurrences across 18 request schemas remain compatible: 240 retain exact
+  descriptors and eight have compatible changes. The relevant changes
+  are compatible widenings or additive capabilities, plus an unused SAML
+  issuer request/response change that still requires a runtime metadata fixture.
+- Added an explicit upstream verifier that downloads only immutable commit
+  paths, authenticates the fetched schema, release-note, and protocol-source
+  byte counts and SHA-256 values, reparses both OpenAPI schemas, and recomputes
+  the operation/field census. The root gate
+  remains network-free and validates the frozen result plus 60 corruptions.
+- Bound OIDC `openid`/authorization-code/strict callback/`hashed_user_id`, signed
+  service-provider-initiated SAML, SCIM `startIndex`/`count` and filtered member
+  removal, and live PostgreSQL membership/RLS stale-session authorization to
+  the implementation and runbooks.
+- Source compatibility does not prove runtime compatibility. The live broker
+  remains on 2026.5.6 and untouched. Image/outpost/private-config inventory,
+  exact candidate runtime, protocol/deprovisioning fixtures, recovery, rollback,
+  independent review, approval, and every production authority remain open.
+  M16 stays 77/100, candidate 83/100, and production 54/100.
+
 ## 2026-08-31 — Minimized Authentik served-runtime evidence
 
 - Compared retaining the installed-version unknown, taking credentialed host or

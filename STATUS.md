@@ -1,5 +1,22 @@
 # Status
 
+- ADR-0109 pins an exact, immutable Authentik 2026.8.0 source candidate without
+  touching the live broker. The contract binds the 2026.5.6 and 2026.8.0 tag
+  objects/commits, OpenAPI bytes, release asset, GHCR linux/amd64 manifest and
+  attestation, and eight OIDC/SAML/SCIM source files. All 27 owned admin
+  operations and 248 sent request-field occurrences across 18 schemas remain
+  structurally supported: 240 are exact and eight have compatible descriptor
+  changes, with zero missing operation, removed sent field, or new required
+  request field. The offline validator also binds
+  `openid`, authorization code, strict `/auth/v1/callback`, `hashed_user_id`,
+  signed service-provider-initiated SAML, SCIM pagination/member removal, and
+  live PostgreSQL membership/RLS checks for stale sessions. This does not prove
+  runtime compatibility. Production remains on 2026.5.6 and unchanged; private
+  configuration, image/outposts, exact candidate runtime, protocol fixtures,
+  deprovisioning canary, recovery, rollback, independent review, owner approval,
+  merge, release, deployment, and reconciliation remain open. M16 remains
+  77/100, candidate 83/100, and production 54/100.
+
 - ADR-0108 replaces only ADR-0107's Authentik installed-version unknown through
   an append-only V2 amendment. A clean implementation-bound public capture
   proves exact served runtime `2026.5.6`, three independently retrieved same-

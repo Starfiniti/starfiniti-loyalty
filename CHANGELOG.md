@@ -1,5 +1,18 @@
 # Changelog
 
+- Added ADR-0109 and an exact Authentik 2026.8 source/OpenAPI compatibility
+  contract. It pins the 2026.5.6 baseline and 2026.8.0 candidate tag, commit,
+  schema, release, OCI/GHCR, attestation, and protocol-source provenance. A new
+  offline root validator binds all 27 owned admin operations and 248 sent field
+  occurrences across 18 request schemas—240 exact and eight compatible—plus
+  OIDC/SAML/SCIM and stale-session invariants,
+  rollback, remaining runtime gates, and false production authority. Source
+  facts can be independently recomputed from immutable commit URLs with an
+  explicit networked verifier; the root gate remains offline. Source
+  compatibility is not runtime acceptance: production stays on 2026.5.6 and no
+  provider, tenant, session, database, checkout, or loyalty value changed. M16
+  and product scores remain unchanged.
+
 - Added ADR-0108, a clean-commit bounded public Authentik runtime collector,
   exact 3,257-byte minimized evidence for served patch `2026.5.6`, and an
   append-only V2 provider-impact amendment. Three independent same-version

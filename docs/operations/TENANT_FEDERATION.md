@@ -18,6 +18,30 @@ This runbook enables per-organization OIDC or SAML through Authentik while Supab
 5. Confirm the installed Supabase Auth build exposes the custom-provider administration API used by the pinned JavaScript client. Test create, disabled update, enable, disable, and ambiguous timeout behavior in staging before production.
 6. Keep one active organization owner with a local password. PostgreSQL rejects federation enablement without this break-glass path.
 
+### Authentik 2026.8 candidate boundary
+
+ADR-0109 proves only that the exact Authentik 2026.8.0 source and OpenAPI
+contract preserve Starfiniti's 27 owned administration operations and reviewed
+request fields. It is not runtime or upgrade approval. Before a 2026.8 canary:
+
+1. inventory the exact current and candidate server image plus every outpost;
+   all candidate outposts must match the server version;
+2. export the private configuration, database, signing/encryption material, and
+   local break-glass path and prove clean-room restore;
+3. configure and assert Authentik's Base URL and inventory the deprecated
+   `AUTHENTIK_POSTGRESQL__CONN_OPTIONS` and replica option;
+4. exercise the Rust entrypoint health path, upstream OIDC and SAML, downstream
+   OIDC, SCIM, user deactivation, stale application sessions, and rollback in a
+   disposable environment;
+5. retain 2026.5.6 in production unless independent review and the owner approve
+   the exact candidate evidence.
+
+The SAML source schema now exposes `issuer_override` and a derived response
+`url_issuer`; Starfiniti writes neither issuer field, but the candidate metadata
+and callback fixture must still prove the expected issuer. Authentik deleting
+its own sessions when a user is deactivated is defense in depth only and never
+replaces live PostgreSQL membership and RLS authorization.
+
 ## Authentik administration identity
 
 Create a dedicated service account and a non-expiring API token held only in the dashboard secret file. Grant the minimum tested view/add/change permissions for these resources and no superuser access:

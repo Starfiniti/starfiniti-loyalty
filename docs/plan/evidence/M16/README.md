@@ -5,6 +5,23 @@ repository controls now and leaves elapsed monthly reviews, the quarterly
 exercise bundle, candidate acceptance, regression controls, scoring,
 independent review, and owner approval pending.
 
+ADR-0109 closes only the deterministic Authentik 2026.8 source-contract
+question. The versioned governance record pins exact 2026.5.6/2026.8.0 tag,
+commit, OpenAPI, release, OCI/GHCR, attestation, and eight protocol-source facts.
+Run `npm run continuous-improvement:authentik-2026-8:validate`; the offline gate
+binds all 27 owned admin operations and 248 sent field occurrences across 18
+request schemas—240 exact and eight compatible—plus OIDC/SAML/SCIM and stale-
+session implementation invariants, rollback,
+remaining gates, task/ADR evidence, and false production authority. This is not
+runtime compatibility or upgrade approval. Production remains on 2026.5.6 and
+unchanged. Private configuration, image/outposts, disposable candidate runtime,
+protocol traffic, deprovisioning, recovery, rollback, independent review, owner
+approval, deployment, and reconciliation remain pending. M16 remains 77/100.
+`npm run continuous-improvement:authentik-2026-8:upstream:verify` separately
+re-fetches the immutable commits, verifies the pinned schema, release-note, and
+protocol-source bytes, and recomputes the OpenAPI census; it is explicit
+networked research and not part of the root gate.
+
 ADR-0108 resolves only the served Authentik runtime-version unknown. The clean
 implementation-bound collector retained a 3,257-byte metadata artifact with
 SHA-256
