@@ -3,14 +3,17 @@
 ADR-0110 adds an exact Authentik 2026.8 disposable runtime rehearsal to the
 existing Security recovery job. Its internal-only, zero-port, zero-Docker-socket
 topology can prove candidate boot, production-client OIDC/SAML reconciliation,
-outbound SCIM behavior, minimization, and teardown with synthetic data. Local
-contract tests pass; exact-head Linux execution is pending. It does not restore
+outbound SCIM behavior, minimization, and teardown with synthetic data. Exact
+implementation `c94cc9e2181079ac80524fc3d9c9496ad6d0d6a6` replaces the broken
+2026.8 management-command wait with exact provider-schedule discovery and the
+permissioned schedule API. Local contract tests pass; exact-head Linux execution
+is pending. It does not restore
 private Authentik configuration, signing material, users, sessions, or audit and
 therefore cannot advance M15-S04 recovery or M15-S06 GA checks.
 
 The Security workflow change intentionally invalidates the older exact-head
 scan and Medium-triage bindings. `security.yaml` now records 7/27 passed and 20
-pending against implementation `d53f63373b27f2ecee49edb1da09959d2cf58118`;
+pending against implementation `c94cc9e2181079ac80524fc3d9c9496ad6d0d6a6`;
 fresh CI and minimized artifact reconciliation are required before those claims
 can advance again.
 

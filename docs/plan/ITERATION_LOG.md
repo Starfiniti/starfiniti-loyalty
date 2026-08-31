@@ -77,7 +77,10 @@
   then proves completion only from bounded synthetic sink state. Implicit
   `send_on_save` was rejected as the sole trigger because it precedes application
   association, and both the broken management command and `ak shell` are
-  forbidden in the runtime source contract.
+  forbidden in the runtime source contract. Focused source/runtime validation,
+  adversarial command/ownership/UUID checks, and the complete repository gate
+  pass at exact implementation `c94cc9e2181079ac80524fc3d9c9496ad6d0d6a6`;
+  fresh exact-head Linux execution remains pending.
 - Preserved the evidence boundary: this does not advance M13's 12/51 production
   canary, M15 recovery/GA, M16 score, the integration/product scores, or any
   merge, release, upgrade, deployment, rollback, approval, observation, or

@@ -19,8 +19,12 @@ authorization, recovery, rollback, or production. M13 remains 12/51, M16 stays
 77/100, the candidate 83/100, and production 54/100 and unchanged. Merge,
 release, upgrade, approval, deployment, observation, and reconciliation remain
 false or pending.
-The workflow digest is rebound to corrected implementation
-`d53f63373b27f2ecee49edb1da09959d2cf58118`; historical exact-head scans and
+Security run `33379515023` proved that Authentik 2026.8's `ak scim_sync`
+management command raises `ResultMissing` after scheduling its asynchronous
+task. Exact implementation `c94cc9e2181079ac80524fc3d9c9496ad6d0d6a6`
+instead discovers the provider-owned schedule and triggers the supported
+permissioned `/send/` API after application association; container shell and
+management-command paths remain forbidden. Historical exact-head scans and
 Medium triage are not inherited, so M15 Security is 7/27 passed and 20 pending
 until the fresh run and minimized artifacts are reconciled.
 
