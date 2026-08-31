@@ -267,38 +267,6 @@ function serviceDiagnostics(project, environment, service) {
   return `container=${status || "missing"}; logs=${logs || "empty"}`;
 }
 
-function supportsVersion(value, minimum) {
-  const match = /^(\d+)\.(\d+)\.(\d+)(?:[-+][A-Za-z0-9.-]+)?$/u.exec(value);
-  if (!match) return false;
-  const actual = match.slice(1, 4).map(Number);
-  for (let index = 0; index < minimum.length; index += 1) {
-    if (actual[index] > minimum[index]) return true;
-    if (actual[index] < minimum[index]) return false;
-  }
-  return true;
-}
-
-function assertContainerRuntimeVersions() {
-  const composeVersion = run("docker", ["compose", "version", "--short"], {
-    capture: true,
-  });
-  const engineVersion = run(
-    "docker",
-    ["version", "--format", "{{.Server.Version}}"],
-    { capture: true },
-  );
-  return Boolean(
-    supportsVersion(composeVersion, [2, 33, 1]) &&
-    supportsVersion(engineVersion, [28, 0, 0]),
-  );
-}
-
-function requireContainerRuntimeVersions() {
-  if (!assertContainerRuntimeVersions()) {
-    fail("Docker Engine 28.0.0 and Compose 2.33.1 or newer are required");
-  }
-}
-
 function containerInspection(project, environment, service) {
   const id = compose(project, environment, ["ps", "--quiet", service], {
     capture: true,
@@ -331,10 +299,13 @@ function verifyInspection(project, inspection, component) {
   ) {
     fail(`${component} runtime identity or hardening differs`);
   }
-  const expectedNetworks = [
-    `${project}_monitoring-control`,
-    `${project}_monitoring-egress`,
-  ].sort();
+  const expectedNetworks =
+    component === "grafana"
+      ? [`${project}_monitoring-control`]
+      : [
+          `${project}_monitoring-control`,
+          `${project}_monitoring-egress`,
+        ].sort();
   if (
     inspection.networks.length !== expectedNetworks.length ||
     inspection.networks.some(
@@ -342,44 +313,6 @@ function verifyInspection(project, inspection, component) {
     )
   ) {
     fail(`${component} runtime network set differs`);
-  }
-}
-
-function assertGrafanaDefaultRoute(project, environment) {
-  const id = compose(project, environment, ["ps", "--quiet", "grafana"], {
-    capture: true,
-  });
-  const routes = run("docker", ["exec", id, "/bin/cat", "/proc/net/route"], {
-    capture: true,
-  });
-  const inspected = JSON.parse(
-    run("docker", ["inspect", id], { capture: true }),
-  )[0];
-  const controlGateway =
-    inspected.NetworkSettings.Networks?.[`${project}_monitoring-control`]
-      ?.Gateway;
-  if (!/^(?:\d{1,3}\.){3}\d{1,3}$/u.test(controlGateway)) {
-    fail("Grafana internal control gateway is invalid");
-  }
-  const expectedGateway = controlGateway
-    .split(".")
-    .map((part) => Number(part).toString(16).padStart(2, "0"))
-    .reverse()
-    .join("")
-    .toUpperCase();
-  const defaultGateways = routes
-    .split(/\r?\n/gu)
-    .slice(1)
-    .map((line) => line.trim().split(/\s+/u))
-    .filter(
-      (fields) =>
-        fields.length >= 8 &&
-        fields[1] === "00000000" &&
-        fields[7] === "00000000",
-    )
-    .map((fields) => fields[2]);
-  if (defaultGateways.length !== 1 || defaultGateways[0] !== expectedGateway) {
-    fail("Grafana default route does not use the internal control gateway");
   }
 }
 
@@ -401,7 +334,7 @@ function assertNoPublishedPort(inspection, label) {
       (bindings) => Array.isArray(bindings) && bindings.length > 0,
     )
   ) {
-    fail(`${label} published an exporter port`);
+    fail(`${label} published a host port`);
   }
 }
 
@@ -511,12 +444,6 @@ function zeroResidue(project) {
 const parsed = parseArguments(process.argv.slice(2));
 if (parsed.selfTest) {
   assert.throws(() => parseArguments([]), /--out is required/u);
-  assert.equal(supportsVersion("2.33.1", [2, 33, 1]), true);
-  assert.equal(supportsVersion("3.0.0", [2, 33, 1]), true);
-  assert.equal(supportsVersion("2.33.0", [2, 33, 1]), false);
-  assert.equal(supportsVersion("28.0.1+azure", [28, 0, 0]), true);
-  assert.equal(supportsVersion("27.5.9", [28, 0, 0]), false);
-  assert.equal(supportsVersion("v28.0.0", [28, 0, 0]), false);
   assert.throws(() => safeOutputPath("../outside.json"), /bounded JSON path/u);
   assert.throws(
     () => safeOutputPath("dist/observability-deployment/report.txt"),
@@ -552,7 +479,7 @@ if (parsed.selfTest) {
     /report keys/u,
   );
   console.log(
-    "Validated observability canary arguments, container runtime versions, minimized report, false-authority, and output boundaries.",
+    "Validated observability canary arguments, minimized report, false-authority, and output boundaries.",
   );
   process.exit(0);
 }
@@ -582,14 +509,12 @@ const project = `starfiniti-observability-${randomUUID().replaceAll("-", "").sli
 const ports = {
   prometheus: "19090",
   alertmanager: "19093",
-  grafana: "13000",
 };
 const environment = {
   ...process.env,
   STARFINITI_MONITORING_BIND_ADDRESS: "127.0.0.1",
   STARFINITI_PROMETHEUS_PORT: ports.prometheus,
   STARFINITI_ALERTMANAGER_PORT: ports.alertmanager,
-  STARFINITI_GRAFANA_PORT: ports.grafana,
   STARFINITI_GRAFANA_ROOT_URL: "https://grafana.example.invalid",
   STARFINITI_PROMETHEUS_TARGETS_DIR: targets,
   STARFINITI_ALERTMANAGER_CONFIG: alertmanagerConfig,
@@ -601,7 +526,6 @@ let composeTouched = false;
 let teardownPassed = false;
 let report;
 try {
-  requireContainerRuntimeVersions();
   run("node", ["scripts/validate-observability-deployment.mjs"], {
     env: environment,
   });
@@ -646,8 +570,11 @@ try {
       () => serviceDiagnostics(project, environment, "alertmanager"),
     ),
     grafana: await waitForJson(
-      `http://127.0.0.1:${ports.grafana}/api/health`,
-      (body) => body?.version === "13.2.0" && body.version,
+      `http://127.0.0.1:${ports.prometheus}/api/v1/query?query=grafana_build_info`,
+      (body) =>
+        body?.data?.result?.length === 1 &&
+        body.data.result[0]?.metric?.version === "13.2.0" &&
+        body.data.result[0].metric.version,
       "Grafana",
       () => serviceDiagnostics(project, environment, "grafana"),
     ),
@@ -682,8 +609,7 @@ try {
   }
   assertLoopbackPort(inspections.prometheus, 9090, "Prometheus");
   assertLoopbackPort(inspections.alertmanager, 9093, "Alertmanager");
-  assertLoopbackPort(inspections.grafana, 3000, "Grafana");
-  assertGrafanaDefaultRoute(project, environment);
+  assertNoPublishedPort(inspections.grafana, "Grafana");
   assertNoPublishedPort(inspections["blackbox-exporter"], "blackbox exporter");
   assertNoPublishedPort(
     inspections["postgres-exporter"],

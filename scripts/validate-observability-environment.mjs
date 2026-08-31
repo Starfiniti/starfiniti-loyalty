@@ -23,7 +23,6 @@ const requiredVariables = new Set([
   "STARFINITI_MONITORING_BIND_ADDRESS",
   "STARFINITI_PROMETHEUS_PORT",
   "STARFINITI_ALERTMANAGER_PORT",
-  "STARFINITI_GRAFANA_PORT",
   "STARFINITI_GRAFANA_ROOT_URL",
   "STARFINITI_PROMETHEUS_TARGETS_DIR",
   "STARFINITI_ALERTMANAGER_CONFIG",
@@ -92,7 +91,6 @@ function validateScalarValues(values) {
   const ports = [
     "STARFINITI_PROMETHEUS_PORT",
     "STARFINITI_ALERTMANAGER_PORT",
-    "STARFINITI_GRAFANA_PORT",
   ].map((name) => {
     const raw = values.get(name);
     if (!/^[1-9][0-9]{0,4}$/u.test(raw)) fail(`${name} is not a valid port`);
@@ -268,7 +266,6 @@ if (parsed.selfTest) {
     "STARFINITI_MONITORING_BIND_ADDRESS=127.0.0.1",
     "STARFINITI_PROMETHEUS_PORT=9090",
     "STARFINITI_ALERTMANAGER_PORT=9093",
-    "STARFINITI_GRAFANA_PORT=3000",
     "STARFINITI_GRAFANA_ROOT_URL=https://monitoring.starfiniti.example",
     "STARFINITI_PROMETHEUS_TARGETS_DIR=/operator/targets",
     "STARFINITI_ALERTMANAGER_CONFIG=/operator/alertmanager.yml",
@@ -293,8 +290,8 @@ if (parsed.selfTest) {
   };
   mutate("127.0.0.1", "0.0.0.0", /loopback/u);
   mutate(
-    "STARFINITI_GRAFANA_PORT=3000",
-    "STARFINITI_GRAFANA_PORT=9090",
+    "STARFINITI_ALERTMANAGER_PORT=9093",
+    "STARFINITI_ALERTMANAGER_PORT=9090",
     /distinct/u,
   );
   mutate(

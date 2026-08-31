@@ -25,12 +25,12 @@
   administration, placeholder destinations, relative/root/shared/target-
   exposed paths, and group/other-readable authority.
 - The Linux canary showed that Docker does not publish Grafana's loopback port
-  while it is attached only to an internal network. The corrected boundary
-  requires Docker Engine 28.0+ and Compose 2.33.1+, attaches Grafana to the
-  ingress-capable bridge, selects the internal control network as its sole
-  default route, leaves the second bridge without gateway priority, and retains
-  dropped `CAP_NET_ADMIN`. Static validation and the canary match the kernel
-  gateway to Docker's internal-network gateway and prove the loopback publisher.
+  while it is attached only to an internal network, and that attaching the
+  egress bridge would silently widen authority. The final boundary keeps
+  Grafana internal-only and unpublished, adds its exact build-info metric to the
+  minimized Prometheus scrape, and leaves approved HTTPS reverse-proxy ingress
+  to the explicit production route gate. Static validation and the canary prove
+  both the internal version signal and absence of a Grafana host publisher.
 - Added a clean Linux amd64 Security-job canary that runs promtool and amtool,
   starts all five services, reads exact runtime versions, inspects ports,
   networks, capabilities, and read-only roots, and tears down containers,

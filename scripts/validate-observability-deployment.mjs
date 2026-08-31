@@ -191,8 +191,6 @@ function validatePlan(plan) {
     plan.platform?.os !== "linux" ||
     plan.platform?.architecture !== "amd64" ||
     plan.platform?.centralRuntime !== "docker-compose" ||
-    plan.platform?.minimumComposeVersion !== "2.33.1" ||
-    plan.platform?.minimumDockerEngineVersion !== "28.0.0" ||
     plan.platform?.hostExporterRuntime !== "native-systemd" ||
     plan.platform?.productionActivationApproved !== false ||
     plan.platform?.receiverBindingApproved !== false ||
@@ -278,7 +276,7 @@ function validateCompose(compose, raw) {
   const expectedKeys = {
     prometheus: new Set([...commonKeys, "command", "ports"]),
     alertmanager: new Set([...commonKeys, "command", "ports"]),
-    grafana: new Set([...commonKeys, "environment", "ports"]),
+    grafana: new Set([...commonKeys, "environment"]),
     "blackbox-exporter": new Set([...commonKeys, "command"]),
     "postgres-exporter": new Set([...commonKeys, "command"]),
   };
@@ -315,10 +313,8 @@ function validateCompose(compose, raw) {
       "${STARFINITI_MONITORING_BIND_ADDRESS:-127.0.0.1}:${STARFINITI_PROMETHEUS_PORT:-9090}:9090",
     alertmanager:
       "${STARFINITI_MONITORING_BIND_ADDRESS:-127.0.0.1}:${STARFINITI_ALERTMANAGER_PORT:-9093}:9093",
-    grafana:
-      "${STARFINITI_MONITORING_BIND_ADDRESS:-127.0.0.1}:${STARFINITI_GRAFANA_PORT:-3000}:3000",
   };
-  for (const id of ["prometheus", "alertmanager", "grafana"]) {
+  for (const id of ["prometheus", "alertmanager"]) {
     const ports = services[id].ports;
     if (
       !Array.isArray(ports) ||
@@ -331,7 +327,7 @@ function validateCompose(compose, raw) {
       fail(`${id} administration port must use quoted Compose syntax`);
     }
   }
-  for (const id of ["blackbox-exporter", "postgres-exporter"]) {
+  for (const id of ["grafana", "blackbox-exporter", "postgres-exporter"]) {
     if (services[id].ports !== undefined) {
       fail(`${id} must not publish a host port`);
     }
@@ -352,15 +348,11 @@ function validateCompose(compose, raw) {
     new Set(["prometheus-data", "alertmanager-data", "grafana-data"]),
     "Compose data volumes",
   );
-  if (
-    JSON.stringify(services.grafana.networks) !==
-    JSON.stringify({
-      "monitoring-control": { gw_priority: 1 },
-      "monitoring-egress": { gw_priority: 0 },
-    })
-  ) {
-    fail("Grafana network route boundary drifted");
-  }
+  exactSet(
+    services.grafana.networks,
+    new Set(["monitoring-control"]),
+    "Grafana networks",
+  );
   for (const id of [
     "prometheus",
     "alertmanager",
@@ -507,19 +499,29 @@ function validatePrometheus(config, raw) {
     "Prometheus jobs",
   );
   const expectedBuildInfoMetrics =
-    "(?:prometheus_build_info|alertmanager_build_info|blackbox_exporter_build_info|postgres_exporter_build_info)";
+    "(?:prometheus_build_info|alertmanager_build_info|grafana_build_info|blackbox_exporter_build_info|postgres_exporter_build_info)";
+  const monitoringPlane = jobs.get("monitoring-plane");
   if (
-    !jobs
-      .get("monitoring-plane")
-      .metric_relabel_configs?.some(
-        (rule) =>
-          rule.action === "keep" &&
-          rule.source_labels?.[0] === "__name__" &&
-          rule.regex === expectedBuildInfoMetrics,
-      )
+    !monitoringPlane.metric_relabel_configs?.some(
+      (rule) =>
+        rule.action === "keep" &&
+        rule.source_labels?.[0] === "__name__" &&
+        rule.regex === expectedBuildInfoMetrics,
+    )
   ) {
     fail("monitoring-plane build-info metric contract drifted");
   }
+  exactSet(
+    monitoringPlane.static_configs?.flatMap((config) => config.targets ?? []),
+    new Set([
+      "prometheus:9090",
+      "alertmanager:9093",
+      "grafana:3000",
+      "blackbox-exporter:9115",
+      "postgres-exporter:9187",
+    ]),
+    "monitoring-plane targets",
+  );
   const expectedGlobs = {
     "starfiniti-runtime": "/etc/prometheus/targets/runtime-*.json",
     "starfiniti-host-textfile": "/etc/prometheus/targets/host-*.json",
@@ -688,7 +690,6 @@ function validateEnvironmentExample(raw) {
     ["STARFINITI_MONITORING_BIND_ADDRESS", "127.0.0.1"],
     ["STARFINITI_PROMETHEUS_PORT", "9090"],
     ["STARFINITI_ALERTMANAGER_PORT", "9093"],
-    ["STARFINITI_GRAFANA_PORT", "3000"],
     ["STARFINITI_GRAFANA_ROOT_URL", "https://grafana.example.invalid"],
     [
       "STARFINITI_PROMETHEUS_TARGETS_DIR",
@@ -863,7 +864,7 @@ if (process.argv.includes("--self-test")) {
   }, /service keys|hardening/u);
   mutate((candidate) => {
     candidate.compose.services.grafana.ports = ["0.0.0.0:3000:3000"];
-  }, /loopback-defaulted/u);
+  }, /service keys|must not publish/u);
   mutate((candidate) => {
     const port = candidate.compose.services.prometheus.ports[0];
     candidate.raws.compose = candidate.raws.compose.replace(
@@ -878,10 +879,8 @@ if (process.argv.includes("--self-test")) {
     candidate.compose.services.prometheus.cap_drop = [];
   }, /hardening/u);
   mutate((candidate) => {
-    candidate.compose.services.grafana.networks[
-      "monitoring-control"
-    ].gw_priority = 0;
-  }, /Grafana network route boundary/u);
+    candidate.compose.services.grafana.networks.push("monitoring-egress");
+  }, /Grafana networks/u);
   mutate((candidate) => {
     candidate.compose.services.grafana.environment.GF_SERVER_ROOT_URL =
       "http://127.0.0.1:3000";

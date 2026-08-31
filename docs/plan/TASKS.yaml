@@ -3523,7 +3523,7 @@ tasks:
         acceptance:
           [
             the exact catalogue rules routing policy and locked Grafana dashboard validate and every alert maps to a bounded signal owner route severity runbook and summary,
-            one digest-pinned central Compose boundary provides Prometheus Alertmanager Grafana blackbox_exporter and postgres_exporter with loopback-only administration read-only roots no capabilities no-new-privileges bounded resources separate control and egress networks and no embedded production target receiver credential or identity,
+            one digest-pinned central Compose boundary provides Prometheus Alertmanager Grafana blackbox_exporter and postgres_exporter with loopback-only published administration internal-only unpublished Grafana unpublished exporters read-only roots no capabilities no-new-privileges bounded resources separate control and egress networks and no embedded production target receiver credential or identity,
             one owner-controlled environment preflight rejects noncanonical in-repository linked missing overbroad shared or permission-unsafe target and secret paths plus wildcard binding port collision or non-HTTPS Grafana administration without printing values,
             one exact official node_exporter archive and hardened native systemd profile exposes only aggregate textfile metrics without process filesystem network Docker backup database or loyalty authority,
             a disposable Linux canary validates native component configurations starts all five central services verifies exact versions loopback health and exporter non-publication and tears down every container network volume and temporary secret,

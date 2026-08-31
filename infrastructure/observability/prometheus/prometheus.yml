@@ -18,13 +18,15 @@ scrape_configs:
         labels: { environment: monitoring, service: prometheus }
       - targets: [alertmanager:9093]
         labels: { environment: monitoring, service: alertmanager }
+      - targets: [grafana:3000]
+        labels: { environment: monitoring, service: grafana }
       - targets: [blackbox-exporter:9115]
         labels: { environment: monitoring, service: blackbox-exporter }
       - targets: [postgres-exporter:9187]
         labels: { environment: monitoring, service: postgres-exporter }
     metric_relabel_configs:
       - source_labels: [__name__]
-        regex: (?:prometheus_build_info|alertmanager_build_info|blackbox_exporter_build_info|postgres_exporter_build_info)
+        regex: (?:prometheus_build_info|alertmanager_build_info|grafana_build_info|blackbox_exporter_build_info|postgres_exporter_build_info)
         action: keep
       - regex: (?:__name__|job|environment|service|version|revision|goversion|goarch|goos|tags)
         action: labelkeep

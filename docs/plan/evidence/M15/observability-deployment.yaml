@@ -12,13 +12,13 @@ claim:
 assets:
   - id: plan
     path: infrastructure/observability/deployment/plan.yaml
-    sha256: 3d057a84fed8ed108f18b0381371bf046d2c39c40eed0bb521a30052c00c58e2
+    sha256: 88695da1b481f169cc0e0632610896fba8b7f2bb13a2838262ca73ff3b059676
   - id: compose
     path: infrastructure/observability/compose.yml
-    sha256: 21449fa8bae851fc5e1d7d02b827b16991f38e3e3177d093fded2dd5ff9b4536
+    sha256: 06c7c2120e7357afe3894640aefacd7c4c8a9d25bf73ff305dfd84681995f9e5
   - id: prometheus
     path: infrastructure/observability/prometheus/prometheus.yml
-    sha256: 20e2b074ce2cfc9d5c629cec7cc2b0c5eac1d3f888e678d2baed9bd7893462ae
+    sha256: 10b78229acac453f356eb4c85b2133011b08e45ba9def00a937982a9487fb583
   - id: rules
     path: infrastructure/observability/prometheus/rules.yaml
     sha256: fa20afac82fdd5d93d95c9b1b4fed9d590c8118b3377865ddfa4a1948cde2fcf
@@ -42,7 +42,7 @@ assets:
     sha256: 02697a3aa868fd9e4026eb7bb82017de0767d86f3f033fe9bbe88a1782d50eff
   - id: envExample
     path: infrastructure/observability/deployment/.env.example
-    sha256: cfff84cdcd37e651cb88da79a9e4dd0a832fb360de74f02caa63d2bccf64d34d
+    sha256: 88466c89ce938845f8b2d993c2fce113dd58deaabb973553dd20e78fc5d33dc0
 checks:
   - id: official_provenance
     status: passed

@@ -52,8 +52,6 @@ services:
   grafana:
     <<: *security
     image: grafana/grafana@sha256:3fd54ae1214669f8355f065ec9f6445d5279a3d77095ab048ca045685272429b
-    ports:
-      - "${STARFINITI_MONITORING_BIND_ADDRESS:-127.0.0.1}:${STARFINITI_GRAFANA_PORT:-3000}:3000"
     environment:
       GF_SERVER_HTTP_ADDR: 0.0.0.0
       GF_SERVER_ROOT_URL: ${STARFINITI_GRAFANA_ROOT_URL:?approved externally terminated HTTPS URL required}
@@ -69,11 +67,7 @@ services:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ${STARFINITI_GRAFANA_ADMIN_PASSWORD_FILE:?owner-controlled Grafana password file required}:/run/secrets/grafana_admin_password:ro
       - grafana-data:/var/lib/grafana
-    networks:
-      monitoring-control:
-        gw_priority: 1
-      monitoring-egress:
-        gw_priority: 0
+    networks: [monitoring-control]
 
   blackbox-exporter:
     <<: *security

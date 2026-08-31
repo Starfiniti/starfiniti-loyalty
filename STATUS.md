@@ -4,9 +4,9 @@
   a production-disabled candidate. Five current official components are pinned
   to exact image indexes; every central service has a read-only root, dropped
   capabilities, no-new-privileges, resource bounds, separate control/egress
-  policy, and no Docker socket or host namespace. Administration is loopback
-  only, exporters are unpublished, Grafana's sole default route is the internal
-  control bridge with route mutation capability removed, and all live targets,
+  policy, and no Docker socket or host namespace. Published administration is
+  loopback only; Grafana and both exporters are unpublished, Grafana remains on
+  the internal control bridge without egress, and all live targets,
   receivers, database modules, and administrator material remain outside Git.
   The native node_exporter candidate is exact-archive-bound, non-root, and
   textfile-only. Repository validation, 31 deployment mutations, eleven
