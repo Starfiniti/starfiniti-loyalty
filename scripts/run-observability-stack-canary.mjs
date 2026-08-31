@@ -267,6 +267,24 @@ function serviceDiagnostics(project, environment, service) {
   return `container=${status || "missing"}; logs=${logs || "empty"}`;
 }
 
+function supportsComposeVersion(value) {
+  const match = /^(\d+)\.(\d+)\.(\d+)$/u.exec(value);
+  return Boolean(
+    match &&
+    (Number(match[1]) > 2 ||
+      (Number(match[1]) === 2 && Number(match[2]) >= 36)),
+  );
+}
+
+function assertComposeVersion() {
+  const value = run("docker", ["compose", "version", "--short"], {
+    capture: true,
+  });
+  if (!supportsComposeVersion(value)) {
+    fail("Docker Compose 2.36.0 or newer is required");
+  }
+}
+
 function containerInspection(project, environment, service) {
   const id = compose(project, environment, ["ps", "--quiet", service], {
     capture: true,
@@ -299,13 +317,10 @@ function verifyInspection(project, inspection, component) {
   ) {
     fail(`${component} runtime identity or hardening differs`);
   }
-  const expectedNetworks =
-    component === "grafana"
-      ? [`${project}_monitoring-control`]
-      : [
-          `${project}_monitoring-control`,
-          `${project}_monitoring-egress`,
-        ].sort();
+  const expectedNetworks = [
+    `${project}_monitoring-control`,
+    `${project}_monitoring-egress`,
+  ].sort();
   if (
     inspection.networks.length !== expectedNetworks.length ||
     inspection.networks.some(
@@ -313,6 +328,29 @@ function verifyInspection(project, inspection, component) {
     )
   ) {
     fail(`${component} runtime network set differs`);
+  }
+}
+
+function assertGrafanaDefaultRoute(project, environment) {
+  const id = compose(project, environment, ["ps", "--quiet", "grafana"], {
+    capture: true,
+  });
+  const routes = run("docker", ["exec", id, "/bin/cat", "/proc/net/route"], {
+    capture: true,
+  });
+  const defaultInterfaces = routes
+    .split(/\r?\n/gu)
+    .slice(1)
+    .map((line) => line.trim().split(/\s+/u))
+    .filter(
+      (fields) =>
+        fields.length >= 8 &&
+        fields[1] === "00000000" &&
+        fields[7] === "00000000",
+    )
+    .map((fields) => fields[0]);
+  if (defaultInterfaces.length !== 1 || defaultInterfaces[0] !== "eth0") {
+    fail("Grafana default route is not the internal control interface");
   }
 }
 
@@ -444,6 +482,10 @@ function zeroResidue(project) {
 const parsed = parseArguments(process.argv.slice(2));
 if (parsed.selfTest) {
   assert.throws(() => parseArguments([]), /--out is required/u);
+  assert.equal(supportsComposeVersion("2.36.0"), true);
+  assert.equal(supportsComposeVersion("3.0.0"), true);
+  assert.equal(supportsComposeVersion("2.35.9"), false);
+  assert.equal(supportsComposeVersion("v2.36.0"), false);
   assert.throws(() => safeOutputPath("../outside.json"), /bounded JSON path/u);
   assert.throws(
     () => safeOutputPath("dist/observability-deployment/report.txt"),
@@ -479,7 +521,7 @@ if (parsed.selfTest) {
     /report keys/u,
   );
   console.log(
-    "Validated observability canary arguments, minimized report, false-authority, and output boundaries.",
+    "Validated observability canary arguments, Compose version, minimized report, false-authority, and output boundaries.",
   );
   process.exit(0);
 }
@@ -528,6 +570,7 @@ let composeTouched = false;
 let teardownPassed = false;
 let report;
 try {
+  assertComposeVersion();
   run("node", ["scripts/validate-observability-deployment.mjs"], {
     env: environment,
   });
@@ -609,6 +652,7 @@ try {
   assertLoopbackPort(inspections.prometheus, 9090, "Prometheus");
   assertLoopbackPort(inspections.alertmanager, 9093, "Alertmanager");
   assertLoopbackPort(inspections.grafana, 3000, "Grafana");
+  assertGrafanaDefaultRoute(project, environment);
   assertNoPublishedPort(inspections["blackbox-exporter"], "blackbox exporter");
   assertNoPublishedPort(
     inspections["postgres-exporter"],

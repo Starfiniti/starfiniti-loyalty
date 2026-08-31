@@ -191,6 +191,7 @@ function validatePlan(plan) {
     plan.platform?.os !== "linux" ||
     plan.platform?.architecture !== "amd64" ||
     plan.platform?.centralRuntime !== "docker-compose" ||
+    plan.platform?.minimumComposeVersion !== "2.36.0" ||
     plan.platform?.hostExporterRuntime !== "native-systemd" ||
     plan.platform?.productionActivationApproved !== false ||
     plan.platform?.receiverBindingApproved !== false ||
@@ -350,11 +351,15 @@ function validateCompose(compose, raw) {
     new Set(["prometheus-data", "alertmanager-data", "grafana-data"]),
     "Compose data volumes",
   );
-  exactSet(
-    services.grafana.networks,
-    new Set(["monitoring-control"]),
-    "Grafana networks",
-  );
+  if (
+    JSON.stringify(services.grafana.networks) !==
+    JSON.stringify({
+      "monitoring-control": { interface_name: "eth0", gw_priority: 1 },
+      "monitoring-egress": { interface_name: "eth1", gw_priority: 0 },
+    })
+  ) {
+    fail("Grafana network route boundary drifted");
+  }
   for (const id of [
     "prometheus",
     "alertmanager",
@@ -858,8 +863,10 @@ if (process.argv.includes("--self-test")) {
     candidate.compose.services.prometheus.cap_drop = [];
   }, /hardening/u);
   mutate((candidate) => {
-    candidate.compose.services.grafana.networks.push("monitoring-egress");
-  }, /Grafana networks/u);
+    candidate.compose.services.grafana.networks[
+      "monitoring-control"
+    ].gw_priority = 0;
+  }, /Grafana network route boundary/u);
   mutate((candidate) => {
     candidate.compose.services.grafana.environment.GF_SERVER_ROOT_URL =
       "http://127.0.0.1:3000";

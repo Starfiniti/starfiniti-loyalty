@@ -5,7 +5,7 @@ This runbook packages the M15 monitoring candidate without granting it productio
 ## Security boundary
 
 - Prometheus, Alertmanager, and Grafana publish only to `127.0.0.1`; use an approved HTTPS reverse proxy outside this bundle if remote administration is later approved.
-- Blackbox and PostgreSQL exporters publish no host port. Grafana has no egress network. No service receives the Docker socket, a host namespace, Linux capabilities, a writable root, or a production credential from Git.
+- Blackbox and PostgreSQL exporters publish no host port. Grafana joins the ingress-capable bridge only for loopback NAT; Docker Compose 2.36+ fixes its interfaces, selects the internal control bridge as its sole default route, and dropped `CAP_NET_ADMIN` prevents route expansion. No service receives the Docker socket, a host namespace, Linux capabilities, a writable root, or a production credential from Git.
 - Target files, Alertmanager receiver configuration, the Grafana administrator password file, and PostgreSQL exporter authentication modules are operator-owned absolute paths. Never copy their contents into Git, CI artifacts, logs, or incident evidence.
 - Discovery labels are bounded operational classes. Tenant, organization, workspace, customer, member, order, email, coupon, token, payload, correlation, private topology, and raw target identity are forbidden.
 - Monitoring is never authority for checkout, ledger effects, refunds, reconciliation, promised rewards, exports, or customer balance/history access.
@@ -24,7 +24,7 @@ On a clean Linux amd64 exact commit with Docker Compose, run the disposable cana
 npm run observability:deployment:run -- --out dist/observability-deployment/operator-review.json
 ```
 
-The canary runs `promtool check config`, `amtool check-config`, pulls the five exact image indexes, confirms their exact runtime versions and hardening, binds administration to loopback, publishes no exporter port, and removes every container, network, and volume before writing a minimized report. It uses only safe empty provider configuration and `.example.invalid` targets. A canary report is not production evidence.
+The canary requires Docker Compose 2.36.0 or newer, runs `promtool check config`, `amtool check-config`, pulls the five exact image indexes, confirms their exact runtime versions and hardening, binds administration to loopback, proves Grafana's sole default route is the internal `eth0` control interface, publishes no exporter port, and removes every container, network, and volume before writing a minimized report. It uses only safe empty provider configuration and `.example.invalid` targets. A canary report is not production evidence.
 
 ## Prepare an approved environment
 

@@ -5,7 +5,8 @@
   to exact image indexes; every central service has a read-only root, dropped
   capabilities, no-new-privileges, resource bounds, separate control/egress
   policy, and no Docker socket or host namespace. Administration is loopback
-  only, exporters are unpublished, Grafana has no egress, and all live targets,
+  only, exporters are unpublished, Grafana's sole default route is the internal
+  control bridge with route mutation capability removed, and all live targets,
   receivers, database modules, and administrator material remain outside Git.
   The native node_exporter candidate is exact-archive-bound, non-root, and
   textfile-only. Repository validation, 30 deployment mutations, eleven

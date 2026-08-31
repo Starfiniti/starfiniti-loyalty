@@ -4,6 +4,7 @@ platform:
   os: linux
   architecture: amd64
   centralRuntime: docker-compose
+  minimumComposeVersion: 2.36.0
   hostExporterRuntime: native-systemd
   productionActivationApproved: false
   receiverBindingApproved: false
