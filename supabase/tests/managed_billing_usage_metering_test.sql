@@ -704,6 +704,7 @@ do $$
 declare
   iteration integer;
   attempt_at timestamptz;
+  claimed_count bigint;
 begin
   for iteration in 0..10 loop
     attempt_at := '2041-01-05 00:10:00+00'::timestamptz
@@ -713,8 +714,11 @@ begin
     select * from loyalty_private.claim_managed_billing_usage_dispatches_v2(
       'billing-usage-v2-worker', 1, 60, attempt_at
     );
-    if (select count(*) from usage_v2_hold_claim) <> 1 then
-      raise exception 'usage V2 hold claim unavailable';
+    select count(*) into claimed_count from usage_v2_hold_claim;
+    if claimed_count <> 1 then
+      raise exception
+        'usage V2 hold claim unavailable at iteration %, time %, count %',
+        iteration, attempt_at, claimed_count;
     end if;
     perform *
     from usage_v2_hold_claim as claim
