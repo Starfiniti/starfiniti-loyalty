@@ -144,6 +144,20 @@ decisions:
   supersedeByAdr: true
   rewriteHistoricalEvidence: false
 artifacts:
+  schemaPolicy:
+    objectMembers: closed
+    minimumArtifactBytes: 2
+    maximumArtifactBytes: 262144
+    maximumStringCodeUnits: 4096
+    maximumArrayItems: 100
+    rejectLeadingOrTrailingWhitespace: true
+    rejectControlOrBidirectionalText: true
+    rejectMachineDetectablePersonalOrCredentialMaterial: true
+    strictUtf8: true
+    stableNoFollowRead: true
+    reviewerIdentity: role-slug
+    privateInputs: environment-owned
+    extensionRequires: superseding-schema-and-adr
   governanceBindings: [candidateCommit, planSha256, backlogSha256]
   approvalBindsPriorArtifacts: true
   required:
@@ -167,4 +181,5 @@ automaticFails:
   - a provider or dependency change is accepted without official-source review impact classification and an owner
   - a quarterly restore tenancy privacy SCIM or incident exercise has an unexplained failure or protected-value difference
   - an obsolete decision is silently rewritten instead of being superseded through an ADR
+  - a closeout artifact contains an unknown member unbounded content duplicate evidence or machine-detectable personal credential control or bidirectional material
   - completion is claimed below 90 total below a category floor or without distinct digest-bound artifacts and all approvals

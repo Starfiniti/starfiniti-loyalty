@@ -1,5 +1,25 @@
 # Iteration Log
 
+## 2026-08-31 — Closed minimized M16 closeout artifacts
+
+- Reconstructed the positive M16 completion fixture and proved that valid V1
+  artifacts could previously carry unknown nested members outside the intended
+  minimized contract.
+- Compared permissive reviewer-controlled artifacts, encrypted full inputs, and
+  closed minimized repository receipts. ADR-0113 selects exact V1 schemas while
+  keeping complete private inputs in the approved environment-owned system.
+- Added exact nested key sets, array and text bounds, finite metrics, minimized
+  role slugs, stable identifiers, duplicate rejection, normalized sensitive-key
+  checks, machine-detectable email and credential checks, and control,
+  zero-width, and bidirectional-character rejection.
+- The initial normalized-key defense incorrectly rejected the legitimate
+  `tenantBoundary` quarterly recovery result. Narrowed authority detection to
+  precise identity fields and suffixes while retaining the exact schema as the
+  primary boundary.
+- Expanded the completion fixture from twenty-three to thirty-seven adversarial
+  cases. No elapsed monthly review, quarterly exercise, approval, production
+  evidence, or score was created.
+
 ## 2026-08-31 — Deterministic final owner-gate handoff
 
 - Compared the hand-maintained six-example owner-input paragraph with a

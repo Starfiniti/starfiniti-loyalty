@@ -21,6 +21,8 @@ const paths = {
   tasks: "docs/plan/TASKS.yaml",
   runbook: "docs/operations/CONTINUOUS_IMPROVEMENT.md",
   adr: "docs/architecture/ADR/0068-evidence-bound-continuous-improvement.md",
+  closeoutAdr:
+    "docs/architecture/ADR/0113-closed-minimized-continuous-improvement-artifacts.md",
 };
 const readText = (relativePath) =>
   readFileSync(join(root, relativePath), "utf8");
@@ -30,6 +32,7 @@ const backlog = YAML.parse(readText(paths.backlog));
 const tasks = YAML.parse(readText(paths.tasks));
 const runbook = readText(paths.runbook);
 const adr = readText(paths.adr);
+const closeoutAdr = readText(paths.closeoutAdr);
 const planRaw = readText(paths.plan);
 const backlogRaw = readText(paths.backlog);
 
@@ -209,8 +212,193 @@ const artifactBindings = [
     "starfiniti.improvement-approval-record.v1",
   ],
 ];
+const artifactKeys = {
+  monthlyReview: new Set([
+    "schema",
+    "period",
+    "observedAt",
+    "candidateCommit",
+    "planSha256",
+    "backlogSha256",
+    "reviewerRole",
+    "sections",
+    "providers",
+    "materiallyChangedModules",
+    "moduleRescores",
+    "failures",
+    "experiments",
+  ]),
+  monthlySection: new Set([
+    "id",
+    "sourceFresh",
+    "sourceSha256",
+    "sourceObservedAt",
+    "baseline",
+    "observed",
+    "target",
+    "disposition",
+  ]),
+  provider: new Set([
+    "id",
+    "source",
+    "reviewedAt",
+    "observedVersionOrEntry",
+    "impact",
+    "ownerRole",
+    "disposition",
+  ]),
+  recoveryProvider: new Set([
+    "id",
+    "source",
+    "reviewedAt",
+    "observedVersionOrEntry",
+    "impact",
+    "ownerRole",
+    "disposition",
+    "installed",
+    "candidateVersionOrEntry",
+    "candidateProvenanceSha256",
+  ]),
+  installedProvider: new Set(["id", "versionOrRelease", "provenanceSha256"]),
+  moduleRescore: new Set([
+    "id",
+    "previousTotal",
+    "currentTotal",
+    "evidenceSha256",
+  ]),
+  failure: new Set(["fingerprint", "occurrences", "controls"]),
+  control: new Set(["type", "reference"]),
+  experiment: new Set([
+    "id",
+    "primaryMetric",
+    "declarationSha256",
+    "direction",
+    "baseline",
+    "target",
+    "observed",
+    "guardrails",
+    "decision",
+  ]),
+  guardrail: new Set(["id", "passed"]),
+  quarterlyBundle: new Set([
+    "schema",
+    "quarter",
+    "observedAt",
+    "candidateCommit",
+    "planSha256",
+    "backlogSha256",
+    "exercises",
+  ]),
+  exercise: new Set([
+    "id",
+    "status",
+    "sourceCoverageRatio",
+    "startedAt",
+    "endedAt",
+    "approvalSha256",
+    "environmentSha256",
+    "inputSha256",
+    "ownerRole",
+    "reportSha256",
+    "differences",
+  ]),
+  reconciliation: new Set([
+    "schema",
+    "observedAt",
+    "candidateCommit",
+    "planSha256",
+    "backlogSha256",
+    "dueReviewGaps",
+    "providerStale",
+    "overdueCriticalHigh",
+    "recurringWithoutControl",
+    "unrescoredMaterialChanges",
+    "promotedExperimentGuardrailFailures",
+    "exerciseDifferences",
+    "livingDocumentDrift",
+    "unresolvedCritical",
+    "unresolvedHigh",
+    "moduleScore",
+    "moduleScores",
+  ]),
+  completionScore: new Set([
+    "total",
+    "target",
+    "minimumCategoryRatio",
+    "categories",
+  ]),
+  scoreCategory: new Set(["id", "weight", "score"]),
+  moduleScore: new Set(["id", "total", "minimumCategoryRatioObserved"]),
+  approval: new Set([
+    "schema",
+    "observedAt",
+    "candidateCommit",
+    "independentReview",
+    "schedulesActive",
+    "nextMonthlyReviewAt",
+    "nextQuarterlyExerciseAt",
+    "artifactSha256",
+    "approvals",
+  ]),
+  approvalEntry: new Set(["id", "approved", "evidenceSha256"]),
+};
 const digestPattern = /^[a-f0-9]{64}$/u;
 const commitPattern = /^[a-f0-9]{40}$/u;
+const minimumArtifactBytes = 2;
+const maximumArtifactBytes = 256 * 1024;
+const maximumArtifactStringCodeUnits = 4096;
+const maximumArtifactArrayItems = 100;
+const rolePattern = /^[a-z][a-z0-9-]{4,63}$/u;
+const identifierPattern = /^[a-z0-9][a-z0-9._:-]{2,127}$/u;
+const prohibitedNormalizedKeys = new Set([
+  "address",
+  "cookie",
+  "coupon",
+  "customeremail",
+  "customerid",
+  "email",
+  "firstname",
+  "fullname",
+  "hostname",
+  "ipaddress",
+  "lastname",
+  "memberemail",
+  "memberid",
+  "password",
+  "phone",
+  "providerpayload",
+  "receiverdestination",
+  "route",
+  "secret",
+  "tenantemail",
+  "tenantid",
+  "token",
+  "username",
+]);
+const prohibitedKeySuffixes = [
+  "cookie",
+  "email",
+  "password",
+  "phone",
+  "secret",
+  "token",
+];
+const prohibitedValuePatterns = [
+  /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/iu,
+  /\b(?:sk|rk|pk)_(?:live|test)_[A-Za-z0-9]{8,}\b/u,
+  /\bwhsec_[A-Za-z0-9]{8,}\b/u,
+  /-----BEGIN [A-Z ]*PRIVATE KEY-----/u,
+  /\bAKIA[0-9A-Z]{16}\b/u,
+  /\bgh[opsu]_[A-Za-z0-9]{20,}\b/u,
+  /\bgithub_pat_[A-Za-z0-9_]{20,}\b/u,
+  /\bglpat-[A-Za-z0-9_-]{20,}\b/u,
+  /\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/u,
+  /\b(?:Basic|Bearer)\s+[A-Za-z0-9+/_=-]{16,}\b/iu,
+  /\b(?:xox[baprs]-[A-Za-z0-9-]{16,}|SG\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}|AIza[A-Za-z0-9_-]{20,})\b/u,
+  /\bASIA[0-9A-Z]{16}\b/u,
+  /\b[a-z][a-z0-9+.-]*:\/\/[^\s/:@]+:[^\s/@]+@/iu,
+  /\b(?:api[_-]?key|access[_-]?token|client[_-]?secret|password|passwd|pwd)\s*[:=]\s*["']?[A-Za-z0-9+/_=.-]{8,}/iu,
+];
 
 function fail(message) {
   throw new Error(`M16 continuous-improvement evidence invalid: ${message}`);
@@ -227,6 +415,78 @@ function exactSet(actual, expected, label) {
   ) {
     fail(`${label} differs from the required closed set`);
   }
+}
+
+function exactKeys(value, expected, label) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    fail(`${label} must be an object`);
+  }
+  exactSet(new Set(Object.keys(value)), expected, `${label} keys`);
+}
+
+function exactText(
+  value,
+  label,
+  minimum = 1,
+  maximum = maximumArtifactStringCodeUnits,
+) {
+  if (
+    typeof value !== "string" ||
+    value.trim() !== value ||
+    value.length < minimum ||
+    value.length > maximum ||
+    /[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff]/u.test(
+      value,
+    )
+  ) {
+    fail(`${label} is not bounded minimized text`);
+  }
+  return value;
+}
+
+function exactRole(value, label) {
+  exactText(value, label, 5, 64);
+  if (!rolePattern.test(value)) fail(`${label} is not a minimized role slug`);
+  return value;
+}
+
+function exactIdentifier(value, label, minimum = 3) {
+  exactText(value, label, minimum, 128);
+  if (!identifierPattern.test(value)) {
+    fail(`${label} is not a minimized stable identifier`);
+  }
+  return value;
+}
+
+function exactMetric(value, label) {
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) fail(`${label} must be finite`);
+    return value;
+  }
+  return exactText(value, label, 1, 512);
+}
+
+function boundedArray(value, label, maximum, allowEmpty = true) {
+  if (
+    !Array.isArray(value) ||
+    (!allowEmpty && value.length === 0) ||
+    value.length > maximum
+  ) {
+    fail(`${label} is not a bounded array`);
+  }
+  return value;
+}
+
+function optionalUniqueIds(items, label, maximum) {
+  boundedArray(items, label, maximum);
+  const ids = new Set();
+  for (const item of items) {
+    if (!item || typeof item.id !== "string" || ids.has(item.id)) {
+      fail(`${label} contains a missing or duplicate id`);
+    }
+    ids.add(item.id);
+  }
+  return ids;
 }
 
 function uniqueIds(items, label) {
@@ -294,8 +554,8 @@ function readBoundArtifact(relativePath, expectedDigest, artifactId) {
       !linkStatus.isFile() ||
       status.dev !== linkStatus.dev ||
       status.ino !== linkStatus.ino ||
-      status.size < 2 ||
-      status.size > 256 * 1024
+      status.size < minimumArtifactBytes ||
+      status.size > maximumArtifactBytes
     ) {
       fail(`${artifactId} is not a bounded stable file`);
     }
@@ -312,27 +572,30 @@ function readBoundArtifact(relativePath, expectedDigest, artifactId) {
       if (count === 0) fail(`${artifactId} changed while reading`);
       offset += count;
     }
+    const finalStatus = fstatSync(descriptor);
+    const finalLinkStatus = lstatSync(absolute);
+    if (
+      finalStatus.dev !== status.dev ||
+      finalStatus.ino !== status.ino ||
+      finalStatus.size !== status.size ||
+      !finalLinkStatus.isFile() ||
+      finalStatus.dev !== finalLinkStatus.dev ||
+      finalStatus.ino !== finalLinkStatus.ino
+    ) {
+      fail(`${artifactId} changed identity while reading`);
+    }
   } finally {
     if (descriptor !== undefined) closeSync(descriptor);
   }
   const text = raw.toString("utf8");
-  if (digest(text) !== expectedDigest) fail(`${artifactId} digest differs`);
+  if (!raw.equals(Buffer.from(text, "utf8"))) {
+    fail(`${artifactId} is not strict UTF-8`);
+  }
+  if (digest(raw) !== expectedDigest) fail(`${artifactId} digest differs`);
   return JSON.parse(text);
 }
 
 function scanMinimized(value, label, path = "$") {
-  const prohibitedKeys = new Set([
-    "email",
-    "token",
-    "secret",
-    "password",
-    "cookie",
-    "customerId",
-    "tenantId",
-    "coupon",
-    "providerPayload",
-    "receiverDestination",
-  ]);
   if (Array.isArray(value)) {
     value.forEach((item, index) =>
       scanMinimized(item, label, `${path}[${index}]`),
@@ -341,17 +604,22 @@ function scanMinimized(value, label, path = "$") {
   }
   if (value && typeof value === "object") {
     for (const [key, child] of Object.entries(value)) {
-      if (prohibitedKeys.has(key))
+      const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/gu, "");
+      if (
+        prohibitedNormalizedKeys.has(normalizedKey) ||
+        prohibitedKeySuffixes.some((suffix) => normalizedKey.endsWith(suffix))
+      ) {
         fail(`${label} contains prohibited key ${path}.${key}`);
+      }
       scanMinimized(child, label, `${path}.${key}`);
     }
     return;
   }
-  if (
-    typeof value === "string" &&
-    /(sk_(?:live|test)_|whsec_|-----BEGIN [A-Z ]+PRIVATE KEY-----)/u.test(value)
-  ) {
-    fail(`${label} contains reusable secret material`);
+  if (typeof value === "string") {
+    exactText(value, `${label} ${path}`, 1, 4096);
+    if (prohibitedValuePatterns.some((pattern) => pattern.test(value))) {
+      fail(`${label} contains prohibited personal or credential material`);
+    }
   }
 }
 
@@ -483,6 +751,7 @@ function monthIndex(period) {
 }
 
 function validateMonthlyReview(document, candidate, bindings) {
+  exactKeys(document, artifactKeys.monthlyReview, "monthly review");
   if (document.schema !== "starfiniti.monthly-improvement-review.v1") {
     fail("monthly review schema differs");
   }
@@ -501,18 +770,22 @@ function validateMonthlyReview(document, candidate, bindings) {
   if (
     document.candidateCommit !== candidate.commit ||
     document.planSha256 !== bindings.planSha256 ||
-    document.backlogSha256 !== bindings.backlogSha256 ||
-    typeof document.reviewerRole !== "string" ||
-    document.reviewerRole.length < 5
+    document.backlogSha256 !== bindings.backlogSha256
   ) {
     fail(`${document.period} candidate governance or reviewer binding differs`);
   }
+  exactRole(document.reviewerRole, `${document.period} reviewerRole`);
   exactSet(
     uniqueIds(document.sections, `${document.period} sections`),
     reviewSections,
     `${document.period} sections`,
   );
   for (const section of document.sections) {
+    exactKeys(
+      section,
+      artifactKeys.monthlySection,
+      `${document.period}.${section.id} section`,
+    );
     if (
       section.sourceFresh !== true ||
       !digestPattern.test(section.sourceSha256 ?? "") ||
@@ -524,15 +797,19 @@ function validateMonthlyReview(document, candidate, bindings) {
       exactUtc(
         section.sourceObservedAt,
         `${document.period}.${section.id} sourceObservedAt`,
-      ) > observedAt ||
-      !["string", "number"].includes(typeof section.baseline) ||
-      !["string", "number"].includes(typeof section.observed) ||
-      !["string", "number"].includes(typeof section.target) ||
-      typeof section.disposition !== "string" ||
-      section.disposition.length < 20
+      ) > observedAt
     ) {
       fail(`${document.period}.${section.id} section is incomplete or stale`);
     }
+    exactMetric(section.baseline, `${document.period}.${section.id} baseline`);
+    exactMetric(section.observed, `${document.period}.${section.id} observed`);
+    exactMetric(section.target, `${document.period}.${section.id} target`);
+    exactText(
+      section.disposition,
+      `${document.period}.${section.id} disposition`,
+      20,
+      2048,
+    );
   }
   exactSet(
     uniqueIds(document.providers, `${document.period} providers`),
@@ -540,6 +817,12 @@ function validateMonthlyReview(document, candidate, bindings) {
     `${document.period} providers`,
   );
   for (const provider of document.providers) {
+    const requiredEndpoints = recoverySourceEndpoints.get(provider.id);
+    exactKeys(
+      provider,
+      requiredEndpoints ? artifactKeys.recoveryProvider : artifactKeys.provider,
+      `${document.period}.${provider.id} provider`,
+    );
     if (
       provider.source !== providerSources.get(provider.id) ||
       exactUtc(provider.reviewedAt, `${provider.id} reviewedAt`) <
@@ -552,17 +835,26 @@ function validateMonthlyReview(document, candidate, bindings) {
         "support",
         "deprecation",
         "feature",
-      ].includes(provider.impact) ||
-      typeof provider.observedVersionOrEntry !== "string" ||
-      provider.observedVersionOrEntry.length < 4 ||
-      typeof provider.ownerRole !== "string" ||
-      provider.ownerRole.length < 5 ||
-      typeof provider.disposition !== "string" ||
-      provider.disposition.length < 20
+      ].includes(provider.impact)
     ) {
       fail(`${document.period}.${provider.id} provider review is incomplete`);
     }
-    const requiredEndpoints = recoverySourceEndpoints.get(provider.id);
+    exactText(
+      provider.observedVersionOrEntry,
+      `${document.period}.${provider.id} observedVersionOrEntry`,
+      4,
+      256,
+    );
+    exactRole(
+      provider.ownerRole,
+      `${document.period}.${provider.id} ownerRole`,
+    );
+    exactText(
+      provider.disposition,
+      `${document.period}.${provider.id} disposition`,
+      20,
+      2048,
+    );
     if (requiredEndpoints) {
       exactSet(
         uniqueIds(
@@ -573,9 +865,12 @@ function validateMonthlyReview(document, candidate, bindings) {
         `${document.period}.${provider.id} installed endpoints`,
       );
       for (const installed of provider.installed) {
+        exactKeys(
+          installed,
+          artifactKeys.installedProvider,
+          `${document.period}.${provider.id}.${installed.id} installed evidence`,
+        );
         if (
-          typeof installed.versionOrRelease !== "string" ||
-          installed.versionOrRelease.length < 4 ||
           !digestPattern.test(installed.provenanceSha256 ?? "") ||
           /^0{64}$/u.test(installed.provenanceSha256)
         ) {
@@ -583,10 +878,14 @@ function validateMonthlyReview(document, candidate, bindings) {
             `${document.period}.${provider.id}.${installed.id} installed evidence is incomplete`,
           );
         }
+        exactText(
+          installed.versionOrRelease,
+          `${document.period}.${provider.id}.${installed.id} versionOrRelease`,
+          4,
+          256,
+        );
       }
       if (
-        typeof provider.candidateVersionOrEntry !== "string" ||
-        provider.candidateVersionOrEntry.length < 4 ||
         !digestPattern.test(provider.candidateProvenanceSha256 ?? "") ||
         /^0{64}$/u.test(provider.candidateProvenanceSha256)
       ) {
@@ -594,20 +893,41 @@ function validateMonthlyReview(document, candidate, bindings) {
           `${document.period}.${provider.id} candidate evidence is incomplete`,
         );
       }
+      exactText(
+        provider.candidateVersionOrEntry,
+        `${document.period}.${provider.id} candidateVersionOrEntry`,
+        4,
+        256,
+      );
     }
   }
-  const material = new Set(document.materiallyChangedModules ?? []);
-  if ([...material].some((id) => !moduleIds.has(id))) {
+  boundedArray(
+    document.materiallyChangedModules,
+    `${document.period} materially changed modules`,
+    moduleIds.size,
+  );
+  const material = new Set(document.materiallyChangedModules);
+  if (
+    material.size !== document.materiallyChangedModules.length ||
+    [...material].some((id) => !moduleIds.has(id))
+  ) {
     fail(`${document.period} materially changed modules are invalid`);
   }
-  const rescored = new Set(
-    document.moduleRescores?.map((item) => item.id) ?? [],
+  const rescored = optionalUniqueIds(
+    document.moduleRescores,
+    `${document.period} module rescores`,
+    moduleIds.size,
   );
   for (const id of material) {
     if (!rescored.has(id))
       fail(`${document.period}.${id} material change was not rescored`);
   }
-  for (const rescore of document.moduleRescores ?? []) {
+  for (const rescore of document.moduleRescores) {
+    exactKeys(
+      rescore,
+      artifactKeys.moduleRescore,
+      `${document.period}.${rescore.id} module rescore`,
+    );
     if (
       !moduleIds.has(rescore.id) ||
       !Number.isInteger(rescore.previousTotal) ||
@@ -621,34 +941,60 @@ function validateMonthlyReview(document, candidate, bindings) {
       fail(`${document.period} module rescore is invalid`);
     }
   }
-  for (const failure of document.failures ?? []) {
+  boundedArray(document.failures, `${document.period} failures`, 100);
+  const failureFingerprints = new Set();
+  for (const failure of document.failures) {
+    exactKeys(failure, artifactKeys.failure, `${document.period} failure`);
     if (
-      typeof failure.fingerprint !== "string" ||
-      failure.fingerprint.length < 12 ||
+      failureFingerprints.has(failure.fingerprint) ||
       !Number.isInteger(failure.occurrences) ||
       failure.occurrences < 1 ||
-      !Array.isArray(failure.controls)
+      failure.occurrences > 1_000
     ) {
       fail(`${document.period} failure inventory is invalid`);
     }
+    failureFingerprints.add(failure.fingerprint);
+    exactIdentifier(
+      failure.fingerprint,
+      `${document.period} failure fingerprint`,
+      12,
+    );
+    boundedArray(failure.controls, `${failure.fingerprint} controls`, 10);
     if (failure.occurrences >= 2 && failure.controls.length < 1) {
       fail(`${failure.fingerprint} recurred without a durable control`);
     }
+    const controlKeys = new Set();
     for (const control of failure.controls) {
-      if (
-        !allowedControls.has(control.type) ||
-        typeof control.reference !== "string" ||
-        control.reference.length < 8
-      ) {
+      exactKeys(
+        control,
+        artifactKeys.control,
+        `${failure.fingerprint} control`,
+      );
+      const controlKey = `${control.type}:${control.reference}`;
+      if (!allowedControls.has(control.type) || controlKeys.has(controlKey)) {
         fail(`${failure.fingerprint} durable control is invalid`);
       }
+      controlKeys.add(controlKey);
+      exactText(
+        control.reference,
+        `${failure.fingerprint} control reference`,
+        8,
+        512,
+      );
     }
   }
-  for (const experiment of document.experiments ?? []) {
+  optionalUniqueIds(
+    document.experiments,
+    `${document.period} experiments`,
+    100,
+  );
+  for (const experiment of document.experiments) {
+    exactKeys(
+      experiment,
+      artifactKeys.experiment,
+      `${document.period}.${experiment.id} experiment`,
+    );
     if (
-      typeof experiment.id !== "string" ||
-      typeof experiment.primaryMetric !== "string" ||
-      experiment.primaryMetric.length < 5 ||
       !digestPattern.test(experiment.declarationSha256 ?? "") ||
       /^0{64}$/u.test(experiment.declarationSha256) ||
       !["maximize", "minimize"].includes(experiment.direction) ||
@@ -660,10 +1006,30 @@ function validateMonthlyReview(document, candidate, bindings) {
     ) {
       fail(`${document.period} experiment is invalid`);
     }
+    exactIdentifier(experiment.id, `${document.period} experiment id`, 3);
+    exactIdentifier(
+      experiment.primaryMetric,
+      `${experiment.id} primary metric`,
+      5,
+    );
+    boundedArray(
+      experiment.guardrails,
+      `${experiment.id} guardrails`,
+      20,
+      false,
+    );
     const guardrailIds = uniqueIds(
       experiment.guardrails,
       `${experiment.id} guardrails`,
     );
+    for (const guardrail of experiment.guardrails) {
+      exactKeys(
+        guardrail,
+        artifactKeys.guardrail,
+        `${experiment.id}.${guardrail.id} guardrail`,
+      );
+      exactIdentifier(guardrail.id, `${experiment.id} guardrail id`, 3);
+    }
     if (
       guardrailIds.size < 1 ||
       experiment.guardrails.some(
@@ -691,6 +1057,7 @@ function validateMonthlyReview(document, candidate, bindings) {
 }
 
 function validateQuarterlyBundle(document, candidate, bindings) {
+  exactKeys(document, artifactKeys.quarterlyBundle, "quarterly bundle");
   if (
     document.schema !== "starfiniti.quarterly-exercise-bundle.v1" ||
     !/^\d{4}-Q[1-4]$/u.test(document.quarter)
@@ -719,6 +1086,11 @@ function validateQuarterlyBundle(document, candidate, bindings) {
   );
   const reportDigests = new Set();
   for (const exercise of document.exercises) {
+    exactKeys(
+      exercise,
+      artifactKeys.exercise,
+      `${exercise.id} quarterly exercise`,
+    );
     const startedAt = exactUtc(exercise.startedAt, `${exercise.id} startedAt`);
     const endedAt = exactUtc(exercise.endedAt, `${exercise.id} endedAt`);
     if (
@@ -732,14 +1104,13 @@ function validateQuarterlyBundle(document, candidate, bindings) {
       /^0{64}$/u.test(exercise.environmentSha256) ||
       !digestPattern.test(exercise.inputSha256 ?? "") ||
       /^0{64}$/u.test(exercise.inputSha256) ||
-      typeof exercise.ownerRole !== "string" ||
-      exercise.ownerRole.length < 5 ||
       !digestPattern.test(exercise.reportSha256) ||
       /^0{64}$/u.test(exercise.reportSha256) ||
       reportDigests.has(exercise.reportSha256)
     ) {
       fail(`${exercise.id} quarterly exercise is incomplete or reused`);
     }
+    exactRole(exercise.ownerRole, `${exercise.id} ownerRole`);
     reportDigests.add(exercise.reportSha256);
     exactSet(
       new Set(Object.keys(exercise.differences ?? {})),
@@ -756,6 +1127,7 @@ function validateQuarterlyBundle(document, candidate, bindings) {
 }
 
 function validateReconciliation(document, candidate, bindings) {
+  exactKeys(document, artifactKeys.reconciliation, "final reconciliation");
   if (document.schema !== "starfiniti.improvement-reconciliation.v1") {
     fail("final reconciliation schema differs");
   }
@@ -783,6 +1155,24 @@ function validateReconciliation(document, candidate, bindings) {
       fail(`final reconciliation ${field} is nonzero`);
     }
   }
+  exactKeys(
+    document.moduleScore,
+    artifactKeys.completionScore,
+    "M16 completion score",
+  );
+  boundedArray(
+    document.moduleScore.categories,
+    "M16 completion score categories",
+    scoreWeights.size,
+    false,
+  );
+  for (const category of document.moduleScore.categories) {
+    exactKeys(
+      category,
+      artifactKeys.scoreCategory,
+      `M16 completion score ${category.id}`,
+    );
+  }
   validateScore(document.moduleScore, "M16 completion score", true);
   exactSet(
     uniqueIds(document.moduleScores, "final module scores"),
@@ -790,6 +1180,11 @@ function validateReconciliation(document, candidate, bindings) {
     "final module scores",
   );
   for (const moduleScore of document.moduleScores) {
+    exactKeys(
+      moduleScore,
+      artifactKeys.moduleScore,
+      `${moduleScore.id} final module score`,
+    );
     if (
       !Number.isInteger(moduleScore.total) ||
       moduleScore.total < 90 ||
@@ -805,6 +1200,7 @@ function validateReconciliation(document, candidate, bindings) {
 }
 
 function validateApproval(document, candidate, expectedArtifacts) {
+  exactKeys(document, artifactKeys.approval, "approval record");
   if (
     document.schema !== "starfiniti.improvement-approval-record.v1" ||
     document.candidateCommit !== candidate.commit ||
@@ -838,6 +1234,7 @@ function validateApproval(document, candidate, expectedArtifacts) {
     "improvement approvals",
   );
   for (const approval of document.approvals) {
+    exactKeys(approval, artifactKeys.approvalEntry, `${approval.id} approval`);
     if (
       approval.approved !== true ||
       !digestPattern.test(approval.evidenceSha256) ||
@@ -997,6 +1394,43 @@ function validateDocument(
   ) {
     fail("experiment guardrails or history semantics differ");
   }
+  const schemaPolicy = candidatePlan.artifacts.schemaPolicy;
+  exactKeys(
+    schemaPolicy,
+    new Set([
+      "objectMembers",
+      "minimumArtifactBytes",
+      "maximumArtifactBytes",
+      "maximumStringCodeUnits",
+      "maximumArrayItems",
+      "rejectLeadingOrTrailingWhitespace",
+      "rejectControlOrBidirectionalText",
+      "rejectMachineDetectablePersonalOrCredentialMaterial",
+      "strictUtf8",
+      "stableNoFollowRead",
+      "reviewerIdentity",
+      "privateInputs",
+      "extensionRequires",
+    ]),
+    "closeout artifact schema policy",
+  );
+  if (
+    schemaPolicy.objectMembers !== "closed" ||
+    schemaPolicy.minimumArtifactBytes !== minimumArtifactBytes ||
+    schemaPolicy.maximumArtifactBytes !== maximumArtifactBytes ||
+    schemaPolicy.maximumStringCodeUnits !== maximumArtifactStringCodeUnits ||
+    schemaPolicy.maximumArrayItems !== maximumArtifactArrayItems ||
+    schemaPolicy.rejectLeadingOrTrailingWhitespace !== true ||
+    schemaPolicy.rejectControlOrBidirectionalText !== true ||
+    schemaPolicy.rejectMachineDetectablePersonalOrCredentialMaterial !== true ||
+    schemaPolicy.strictUtf8 !== true ||
+    schemaPolicy.stableNoFollowRead !== true ||
+    schemaPolicy.reviewerIdentity !== "role-slug" ||
+    schemaPolicy.privateInputs !== "environment-owned" ||
+    schemaPolicy.extensionRequires !== "superseding-schema-and-adr"
+  ) {
+    fail("closeout artifact schema policy differs");
+  }
   exactSet(
     new Set(candidatePlan.artifacts.governanceBindings),
     new Set(["candidateCommit", "planSha256", "backlogSha256"]),
@@ -1063,6 +1497,8 @@ function validateDocument(
     "quarterly",
     "90/100",
     "continuous-improvement.yaml",
+    "closed v1",
+    paths.closeoutAdr.toLowerCase(),
   ]) {
     if (!taskText.includes(term)) fail(`M16 task is missing ${term} binding`);
   }
@@ -1073,6 +1509,8 @@ function validateDocument(
     "all guardrails",
     "quarterly",
     "historical evidence",
+    "closed v1",
+    "machine-detectable",
   ]) {
     if (!runbook.toLowerCase().includes(term)) {
       fail(`continuous-improvement runbook is missing ${term}`);
@@ -1080,6 +1518,17 @@ function validateDocument(
   }
   for (const source of providerSources.values()) {
     if (!adr.includes(source)) fail(`ADR is missing official source ${source}`);
+  }
+  for (const term of [
+    "unknown members",
+    "private inputs",
+    "role slugs",
+    "superseding adr",
+    "no runtime or production authority",
+  ]) {
+    if (!closeoutAdr.toLowerCase().includes(term)) {
+      fail(`closeout ADR is missing ${term}`);
+    }
   }
 
   const incomplete = candidateEvidence.checks.filter(
@@ -1499,6 +1948,31 @@ if (process.argv.includes("--self-test")) {
     }
     fail(`self-test accepted ${label}`);
   };
+  const expectPlanRejected = (label, expectedMessage, mutate) => {
+    const fixture = completionFixture();
+    const candidatePlan = structuredClone(plan);
+    mutate(candidatePlan);
+    const candidatePlanRaw = YAML.stringify(candidatePlan);
+    fixture.fixtureEvidence.plan.sha256 = digest(candidatePlanRaw);
+    fixture.rebindArtifacts();
+    try {
+      validateDocument(
+        fixture.fixtureEvidence,
+        candidatePlan,
+        fixture.fixtureBacklog,
+        fixture.fixtureTasks,
+        fixture.artifactReader,
+        candidatePlanRaw,
+        fixture.getBacklogRaw(),
+      );
+    } catch (error) {
+      if (error instanceof Error && error.message.includes(expectedMessage)) {
+        return;
+      }
+      throw error;
+    }
+    fail(`self-test accepted ${label}`);
+  };
 
   const positive = completionFixture();
   validateDocument(
@@ -1509,6 +1983,132 @@ if (process.argv.includes("--self-test")) {
     positive.artifactReader,
     planRaw,
     positive.getBacklogRaw(),
+  );
+  expectPlanRejected(
+    "weakened closeout schema policy",
+    "closeout artifact schema policy differs",
+    (candidatePlan) => {
+      candidatePlan.artifacts.schemaPolicy.maximumStringCodeUnits = 8192;
+    },
+  );
+  expectRejected(
+    "unknown monthly review member",
+    "monthly review keys differs from the required closed set",
+    ({ documents }) => {
+      documents.get("monthly-review-primary").notes =
+        "Unrecognized V1 members must not become an implicit evidence channel.";
+    },
+  );
+  expectRejected(
+    "unknown monthly section member",
+    "section keys differs from the required closed set",
+    ({ documents }) => {
+      documents.get("monthly-review-primary").sections[0].notes =
+        "Full source material stays outside the minimized repository artifact.";
+    },
+  );
+  expectRejected(
+    "customer identity field",
+    "contains prohibited key $.customerEmail",
+    ({ documents }) => {
+      documents.get("monthly-review-primary").customerEmail = [
+        "reviewer",
+        "@",
+        "example.invalid",
+      ].join("");
+    },
+  );
+  expectRejected(
+    "email hidden in a disposition",
+    "contains prohibited personal or credential material",
+    ({ documents }) => {
+      documents.get("monthly-review-primary").sections[0].disposition = [
+        "Escalated privately to reviewer",
+        "@",
+        "example.invalid after the deterministic review.",
+      ].join("");
+    },
+  );
+  expectRejected(
+    "credential hidden in a disposition",
+    "contains prohibited personal or credential material",
+    ({ documents }) => {
+      documents.get("monthly-review-primary").sections[0].disposition = [
+        "Private source was accessed at https://operator:",
+        "not-a-real-password",
+        "@example.invalid/input and reviewed.",
+      ].join("");
+    },
+  );
+  expectRejected(
+    "provider credential hidden in a disposition",
+    "contains prohibited personal or credential material",
+    ({ documents }) => {
+      documents.get("monthly-review-primary").sections[0].disposition = [
+        "Escalation used provider credential ",
+        "xoxb-",
+        "1234567890abcdef",
+        " before deterministic review.",
+      ].join("");
+    },
+  );
+  expectRejected(
+    "bidirectional control text",
+    "is not bounded minimized text",
+    ({ documents }) => {
+      documents.get("monthly-review-primary").sections[0].disposition =
+        "Reviewed evidence and found no difference.\u202eexe.txt";
+    },
+  );
+  expectRejected(
+    "oversized minimized text",
+    "is not bounded minimized text",
+    ({ documents }) => {
+      documents.get("monthly-review-primary").sections[0].disposition =
+        "x".repeat(4097);
+    },
+  );
+  expectRejected(
+    "duplicate failure fingerprint",
+    "failure inventory is invalid",
+    ({ documents }) => {
+      const review = documents.get("monthly-review-primary");
+      review.failures.push(structuredClone(review.failures[0]));
+    },
+  );
+  expectRejected(
+    "unknown quarterly exercise member",
+    "quarterly exercise keys differs from the required closed set",
+    ({ documents }) => {
+      documents.get("quarterly-exercise-bundle").exercises[0].notes =
+        "Private exercise detail is represented only by the report digest.";
+    },
+  );
+  expectRejected(
+    "unknown reconciliation score member",
+    "final module score keys differs from the required closed set",
+    ({ documents }) => {
+      documents.get("final-reconciliation").moduleScores[0].notes =
+        "The authoritative score remains in the closed score fields.";
+    },
+  );
+  expectRejected(
+    "unknown approval member",
+    "approval keys differs from the required closed set",
+    ({ documents }) => {
+      documents.get("approval-record").approvals[0].notes =
+        "The signed approval is represented by its evidence digest.";
+    },
+  );
+  expectRejected(
+    "unexpected installed-provider evidence",
+    "provider keys differs from the required closed set",
+    ({ documents }) => {
+      const provider = documents
+        .get("monthly-review-primary")
+        .providers.find((item) => item.id === "woocommerce");
+      provider.installed = [];
+    },
   );
   expectRejected(
     "pending completion check",

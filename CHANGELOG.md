@@ -1,5 +1,14 @@
 # Changelog
 
+- Added ADR-0113 and closed every future M16 monthly, quarterly,
+  reconciliation, score, and approval V1 artifact schema. The validator now
+  rejects unknown nested members, identity keys, embedded email or credentials,
+  credential-bearing URLs, control and bidirectional text, unbounded content,
+  duplicate evidence, malformed role slugs, and non-finite metrics through
+  thirty-seven completion mutations. Full private inputs remain environment-
+  owned, schema extension requires a superseding version, and no elapsed gate,
+  approval, score, runtime, or production state changed.
+
 - Added ADR-0112 and a production-disabled M15 observability deployment
   candidate. Exact OCI indexes bind Prometheus 3.14.0, Alertmanager 0.34.0,
   Grafana 13.2.0, blackbox_exporter 0.28.0, and postgres_exporter 0.20.1 in a

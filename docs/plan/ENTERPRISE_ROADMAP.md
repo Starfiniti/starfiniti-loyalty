@@ -139,6 +139,7 @@ M01 may wait for real-store access while M02 proceeds. Later modules remain sequ
 
 - Monthly metrics/error/support/reconciliation/fraud/campaign/churn/usability/performance/security/billing review; convert recurring failures into tests/validators/monitors/runbooks/rules; review provider changes; rescore material changes; run quarterly recovery/isolation/privacy/SCIM/incident exercises; maintain an evidence-ranked backlog and ADR history.
 - ADR-0107 now provides one cutoff-bound engineering classification for all thirteen provider/platform/recovery entries. It does not satisfy the elapsed monthly review, candidate acceptance, independent review, owner approval, deployment, or reconciliation gates; M16 remains 77/100.
+- ADR-0113 makes every future monthly, quarterly, reconciliation, score, and approval V1 artifact a closed minimized schema. Unknown members, boundedness failures, duplicates, machine-detectable personal or credential material, and control or bidirectional text fail closed; private inputs remain environment-owned and extension requires a superseding version.
 
 ## Compatibility and authority boundaries
 

@@ -1,5 +1,16 @@
 # Status
 
+- ADR-0113 closes a privacy and integrity gap in the future M16 closeout
+  artifacts. Every V1 object level now rejects unknown members; arrays, text,
+  metrics, role slugs, and identifiers are bounded; and the validator rejects
+  duplicate evidence, identity keys, embedded email or credential material,
+  credentials in URLs, control characters, zero-width text, and bidirectional
+  overrides. Thirty-seven positive/adversarial completion mutations pass. Full
+  private inputs remain outside Git and any extension requires a new schema and
+  superseding ADR. No elapsed artifact was invented, so M16 remains 77/100 with
+  7 of 39 checks passing and 32 pending. Production remains v0.1.11 and
+  unchanged; production, candidate, and module scores do not move.
+
 - M16 now has one deterministic final owner handoff instead of a partial
   prose list. `docs/plan/OWNER_GATES.md` is generated from the exact ranked
   fourteen-item improvement backlog and exposes all thirteen external-input

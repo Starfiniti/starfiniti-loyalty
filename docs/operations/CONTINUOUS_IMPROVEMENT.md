@@ -157,9 +157,25 @@ M16 initial close requires five distinct digest-bound artifacts: two consecutive
 - the roadmap, task graph, status, risks, scorecard, iteration log, and evidence index agree;
 - the M16 score is at least 90/100 and every category reaches 80% of its weight.
 
+All five artifacts use closed V1 schemas. Every nested object has an exact key
+set; arrays and text are bounded; identifiers are stable and unique; human
+reviewers are represented by role slugs; and finite metrics are required.
+The validator reads bounded regular files through no-follow descriptors, requires
+the path identity to remain stable, accepts strict UTF-8, and hashes exact raw
+bytes before JSON parsing.
+Unknown members, machine-detectable personal or credential material, credentials
+in URLs, control or bidirectional characters, and duplicate evidence fail the
+gate. Full telemetry, logs, provider responses, private infrastructure facts,
+human names, customer or tenant records, and other private inputs stay in the
+approved environment-owned evidence system; the repository retains only exact
+digests and minimized dispositions. Automated patterns are defense in depth,
+not proof that arbitrary prose contains no personal name, so minimized authoring,
+secret scanning, and independent review remain mandatory. Extend these artifacts
+only through a superseding version and ADR; never add an undocumented V1 field.
+
 An independent reviewer checks artifact digests, chronology, source freshness, backlog arithmetic, score history, regression links, experiment decisions, and exercise separation. Product, engineering, security, operations, and the owner approve the final record. The recurring schedule continues after initial close; a later missed cadence reopens the operational gate and creates a ranked backlog item.
 
-Run `npm run product-score:validate` and `npm run continuous-improvement:validate` before review. The first command verifies score arithmetic, subject identity, category floors, automatic failures, exact evidence and commit bindings, preserved history, and the human scorecard marker. The second verifies the elapsed-cadence and closeout contract. Both must pass; neither creates missing live evidence.
+Run `npm run product-score:validate` and `npm run continuous-improvement:validate` before review. The first command verifies score arithmetic, subject identity, category floors, automatic failures, exact evidence and commit bindings, preserved history, and the human scorecard marker. The second verifies the elapsed-cadence, closed V1 artifact boundary, and closeout contract. Both must pass; neither creates missing live evidence.
 
 ## Rollback and stop conditions
 

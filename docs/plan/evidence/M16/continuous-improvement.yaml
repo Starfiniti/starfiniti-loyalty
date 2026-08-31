@@ -7,7 +7,7 @@ candidate:
   initialCloseApproved: false
 plan:
   path: infrastructure/governance/continuous-improvement.yaml
-  sha256: 4e0a91ad5ef5a06fe3c18c1732a87d8d94571207e132d8ef601aef155310d3d9
+  sha256: b39db2fc0d83f1f1aea7500c9196e32b04bf962d5592f333947362ec4155185a
 backlog:
   path: docs/plan/IMPROVEMENT_BACKLOG.yaml
   sha256: 88a58490a78dc7e146e64e4c162ff3e63addaec3d269ae128aba8bfc861adc02
@@ -58,7 +58,7 @@ score:
 checks:
   - id: repository_contract
     status: passed
-    evidence: The canonical contract fixes UTC cadence, review sections, thirteen official sources, bounded content-free source snapshots, exact recovery host and guest endpoints, installed and candidate provenance digests, ranking arithmetic, regression threshold, score floors, experiment guardrails, five closeout artifacts, and automatic failures.
+    evidence: The canonical contract fixes UTC cadence, review sections, thirteen official sources, bounded content-free source snapshots, exact recovery host and guest endpoints, installed and candidate provenance digests, ranking arithmetic, regression threshold, score floors, experiment guardrails, five closed minimized V1 closeout artifacts, and automatic failures.
   - id: backlog_contract
     status: passed
     evidence: The evidence-ranked backlog records fourteen current external and dependency gates with exact integer inputs, recomputable scores, stable order, evidence paths, and owner inputs; capacity and whole-system fault runs are separate blockers.
@@ -70,10 +70,10 @@ checks:
     evidence: The runbook defines monthly and quarterly operation, evidence minimization, absence handling, regression promotion, exercise safety, independent review, and append-only correction.
   - id: adr_contract
     status: passed
-    evidence: ADR-0068 compares four approaches, cites canonical official providers, defines the decision, and preserves rollback and historical evidence semantics.
+    evidence: ADR-0068 compares four approaches, cites canonical official providers, defines the cadence decision, and preserves rollback and historical evidence semantics; ADR-0113 selects closed minimized V1 closeout artifacts over permissive or encrypted repository payloads and requires a superseding version for future extension.
   - id: validator_selftest
     status: passed
-    evidence: The completion fixture and adversarial mutations prove that cadence, freshness, exact blocker-set and evidence bindings, ranking, recurring controls, rescoring, experiment guardrails, exercises, artifacts, approvals, and score floors fail closed; the recurring-failure registry additionally rejects twenty schema threshold occurrence chronology anchor path digest control delivery production plan-bound and remaining-gate corruptions; the source collector rejects twenty-six source, network, response, digest, review-claim, output, and byte-preservation corruptions without network access, the installed-state collector rejects thirty-six fact, endpoint, component, chronology, digest, historical-source, full-candidate, output, and false-authority corruptions without network or SSH access, the Supabase repository review rejects forty-seven source package lock alignment Node Data API schema automatic-grant immutable-CI task ADR byte-preservation and false-authority corruptions, the bounded federation/notification dependency review rejects thirty-two provenance exact-shape manifest nested-lock compatibility source-control rollback task ADR and false-authority corruptions, the cutoff-bound provider-impact register rejects forty-six source installed-state catalogue pin candidate evidence task ADR and false-authority corruptions without network or SSH access, and the Authentik 2026.8 source-contract validator binds twenty-seven owned operations and two hundred forty-eight sent request-field occurrences across eighteen schemas with two hundred forty exact and eight compatible while rejecting provenance route protocol rollback limitation task ADR and false-authority corruptions offline.
+    evidence: The completion fixture and thirty-seven adversarial mutations prove that cadence, freshness, exact blocker-set and evidence bindings, ranking, recurring controls, rescoring, experiment guardrails, canonical closed-artifact policy, closed nested artifact schemas, unknown fields, identity keys, embedded email and common credential material, control or bidirectional text, bounded content, duplicate evidence, exercises, approvals, and score floors fail closed; the recurring-failure registry additionally rejects twenty schema threshold occurrence chronology anchor path digest control delivery production plan-bound and remaining-gate corruptions; the source collector rejects twenty-six source, network, response, digest, review-claim, output, and byte-preservation corruptions without network access, the installed-state collector rejects thirty-six fact, endpoint, component, chronology, digest, historical-source, full-candidate, output, and false-authority corruptions without network or SSH access, the Supabase repository review rejects forty-seven source package lock alignment Node Data API schema automatic-grant immutable-CI task ADR byte-preservation and false-authority corruptions, the bounded federation/notification dependency review rejects thirty-two provenance exact-shape manifest nested-lock compatibility source-control rollback task ADR and false-authority corruptions, the cutoff-bound provider-impact register rejects forty-six source installed-state catalogue pin candidate evidence task ADR and false-authority corruptions without network or SSH access, and the Authentik 2026.8 source-contract validator binds twenty-seven owned operations and two hundred forty-eight sent request-field occurrences across eighteen schemas with two hundred forty exact and eight compatible while rejecting provenance route protocol rollback limitation task ADR and false-authority corruptions offline.
   - id: exact_head_ci
     status: passed
     evidence: >-
@@ -185,4 +185,5 @@ automaticFails:
   - a provider or dependency change is accepted without official-source review impact classification and an owner
   - a quarterly restore tenancy privacy SCIM or incident exercise has an unexplained failure or protected-value difference
   - an obsolete decision is silently rewritten instead of being superseded through an ADR
+  - a closeout artifact contains an unknown member unbounded content duplicate evidence or machine-detectable personal credential control or bidirectional material
   - completion is claimed below 90 total below a category floor or without distinct digest-bound artifacts and all approvals

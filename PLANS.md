@@ -1,5 +1,15 @@
 # Execution Plan
 
+ADR-0113 is the active safe M16 closeout-artifact hardening slice. The five
+future monthly, quarterly, reconciliation, score, and approval V1 artifacts now
+use exact nested key sets, bounded arrays and text, finite metrics, minimized
+role slugs, stable unique identifiers, and machine-detectable personal,
+credential, control-character, bidirectional-text, duplicate, and unknown-field
+rejection. Full private inputs stay outside Git and future extension requires a
+superseding schema and ADR. Thirty-seven completion mutations pass locally. This
+creates no elapsed review, exercise, approval, production authority, or score
+change; M16 remains 77/100 with 32 checks pending.
+
 The active safe M16 slice is a generated final owner-gate handoff. The existing
 ranked improvement backlog remains authoritative; `docs/plan/OWNER_GATES.md`
 renders all fourteen entries into one priority queue with exact owner action,

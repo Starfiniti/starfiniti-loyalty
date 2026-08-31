@@ -3707,6 +3707,7 @@ tasks:
         one quarterly bundle proves restore tenant isolation privacy SCIM deprovisioning and incident exercises with zero unexplained protected difference,
         obsolete material decisions are superseded by ADR without rewriting historical evidence,
         the roadmap task graph scorecard status risks changelog iteration log backlog and evidence index agree,
+        all five closeout artifacts use closed V1 schemas with exact nested key sets bounded arrays finite metrics minimized role slugs stable unique identifiers and machine-detectable personal credential control-character bidirectional-text duplicate and unbounded-content rejection while full private inputs remain outside Git,
         five distinct digest-bound artifacts independent review all approvals and a 90/100 score with category floors close the initial gate,
       ]
     failure_modes:
@@ -3792,6 +3793,7 @@ tasks:
         docs/plan/OWNER_GATES.md,
         docs/operations/CONTINUOUS_IMPROVEMENT.md,
         docs/architecture/ADR/0068-evidence-bound-continuous-improvement.md,
+        docs/architecture/ADR/0113-closed-minimized-continuous-improvement-artifacts.md,
         docs/architecture/ADR/0111-evidence-bound-recurring-failure-register.md,
         docs/architecture/ADR/0080-versioned-production-and-candidate-product-scores.md,
         docs/architecture/ADR/0084-bounded-provider-source-provenance-snapshots.md,
@@ -3834,6 +3836,7 @@ tasks:
         docs/plan/evidence/M16/README.md,
         docs/plan/evidence/M16/continuous-improvement.yaml,
         docs/plan/evidence/M16/recurring-failures.yaml,
+        scripts/validate-continuous-improvement-evidence.mjs,
         docs/plan/evidence/M16/runs/provider-source-snapshot-257e99c-2026-08-28T212100Z.json,
         docs/plan/evidence/M16/runs/recovery-dependency-snapshot-c5678b6-2026-08-28T221524Z.json,
         docs/plan/evidence/M16/runs/proxmox-security-package-canary-957e1de-2026-08-29T003101Z.json,

@@ -1,5 +1,15 @@
 # M16 Evidence — Continuous Improvement
 
+ADR-0113 closes the repository boundary for the five future closeout artifacts.
+`npm run continuous-improvement:validate` now treats every V1 object level as a
+closed schema and runs thirty-seven completion corruptions covering unknown
+members, identity fields, embedded email or credentials, control and
+bidirectional text, bounds, duplicates, cadence, reconciliation, score floors,
+and approvals. Full private review inputs remain environment-owned and only
+their minimized result and SHA-256 binding belong in Git. This hardening creates
+no elapsed artifact, approval, production authority, or score change: M16
+remains 77/100 with 32 checks pending.
+
 The final owner-only action queue is generated as
 [`docs/plan/OWNER_GATES.md`](../../OWNER_GATES.md) from the exact ranked
 `IMPROVEMENT_BACKLOG.yaml` bytes. Run `npm run owner-gates:validate` to prove
