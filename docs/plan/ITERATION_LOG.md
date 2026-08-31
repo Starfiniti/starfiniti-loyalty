@@ -1,5 +1,21 @@
 # Iteration Log
 
+## 2026-08-31 — Current M15 production-reality evidence
+
+- Audited all 600 pending evidence checks across 27 manifests after the
+  generated owner queue showed fourteen remaining gates. The pending work is
+  real deployment, canary, credential, recovery, independent-review, or elapsed
+  evidence rather than an unimplemented local test placeholder.
+- Found one safe consistency defect: `operations.yaml` still used the 27 August
+  VM 971 traffic observation even though later protected-path evidence existed.
+- Rechecked the path read-only at 19:22 CEST. VM 971's cumulative tap counter
+  was 3,604,822,111,248 bytes, while the latest hour averaged 3,263 bytes/s and
+  peaked at 9,761 bytes/s. Three real archives completed in ten minutes without
+  contention; the timer was waiting and the whole-VM service was inactive.
+- Refreshed only the production-reality evidence. No check, score, monitoring
+  activation, recovery claim, production state, or owner authority changed;
+  R-004 and M15 recovery/operations remain open.
+
 ## 2026-08-31 — Post-incident PostgreSQL archive cadence revalidation
 
 - Rechecked the protected production path read-only after the shared Borg lock

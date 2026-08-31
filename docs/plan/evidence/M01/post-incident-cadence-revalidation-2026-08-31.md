@@ -26,3 +26,20 @@ configuration was read or retained.
   evidence. R-004 and the M15 recovery and operations gates remain open.
 - No production configuration, service, timer, archive, database, VM, network,
   route, checkout path, or loyalty value was changed by the inspection.
+
+## M15 operations freshness follow-up — 2026-08-31 19:22 CEST
+
+- A later bounded read-only check observed VM 971's cumulative tap receive
+  counter at 3,604,822,111,248 bytes. The latest one-hour PVE RRD contained 60
+  samples with a 3,263 bytes/s mean and a 9,761 bytes/s maximum; the cumulative
+  multi-terabyte value therefore remained historical rather than a current
+  transfer rate.
+- Three real PostgreSQL archives were present in the preceding ten minutes,
+  the latest was `loyalty-postgres-20260831T172101Z`, and no contention message
+  was present. The latest unit exited zero at 19:21:07 CEST, its timer was active
+  and waiting, and the one-time whole-VM service was inactive.
+- The M15 operations manifest now uses this observation as its current
+  production-reality baseline. No monitoring service or archive-age page is
+  deployed, so R-004 and the M15 operations and recovery gates remain open.
+- No production configuration, service, timer, archive, database, VM, network,
+  route, checkout path, or loyalty value was changed by this follow-up.

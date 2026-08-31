@@ -53,7 +53,11 @@ successfully and the waiting service created a new incremental archive at
 seconds. A bounded 19:01 CEST follow-up found six consecutive real archives
 from 18:42:58 through 18:59:48 at 199–211-second intervals; the newest was 110
 seconds old, the whole-VM service was inactive, and VM 971's one-hour RRD
-maximum was only 9,753 bytes/s. Current cadence has recovered, but the accepted
+maximum was only 9,753 bytes/s. A 19:22 CEST freshness check then found three
+real archives in ten minutes without contention, a waiting timer, an inactive
+whole-VM service, and a 9,761 bytes/s one-hour maximum. M15 operations now uses
+that bounded observation instead of its 27 August traffic snapshot. Current
+cadence has recovered, but the accepted
 ADR-0071 dedicated repository/controller remains the correct repair. Neither
 automatic catch-up nor this observation closes R-004, M15 recovery/operations,
 or GA; it adds no rsync provenance, custody, rollout, retention, restore,

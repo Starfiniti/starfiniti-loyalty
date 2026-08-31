@@ -85,6 +85,11 @@
   restored, but the post-incident window does not close R-004, replace the
   shared lock, deploy paging, validate retention, or prove isolated restore.
   The follow-up changed no production state.
+  A 19:22 CEST freshness check retained the same conclusion: the latest hour
+  averaged 3,263 bytes/s and peaked at 9,761 bytes/s, three real archives
+  completed in ten minutes without contention, the timer was waiting, and the
+  whole-VM service was inactive. M15 operations now records that observation
+  rather than the superseded 27 August traffic snapshot.
 
 - ADR-0111 converts that repeated protected-path failure into an additive M16
   control record without claiming the fix is delivered. The new registry binds

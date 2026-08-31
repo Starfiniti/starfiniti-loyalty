@@ -1,15 +1,15 @@
 schema: starfiniti.operations-evidence.v1
 status: in_progress
-observedAt: 2026-08-27T10:40:35Z
+observedAt: 2026-08-31T17:22:56Z
 currentProduction:
   release: v0.1.11
   applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
   monitoringServicesActive: false
   observedServices:
     [prometheus, alertmanager, grafana, loki, promtail, node-exporter]
-  historicalVm971TransmitBytes: 3603840581426
-  recentVm971MaximumNetoutBytesPerSecond: 6807
-  interpretation: The VM counter is cumulative evidence from the contained full-stream backup incident; the latest twelve one-minute samples are quiet and no active monitoring plane exists.
+  historicalVm971TransmitBytes: 3604822111248
+  recentVm971MaximumNetoutBytesPerSecond: 9761
+  interpretation: The VM counter remains cumulative evidence from the contained full-stream backup incident; the latest hour averaged 3263 bytes per second and peaked at 9761 bytes per second, three real PostgreSQL archives completed in the latest ten minutes without contention, and no active monitoring plane exists.
 candidate:
   branch: codex/m15-operations-incidents
   commit: c2a6fd5ceb80ae4a8b564e19f148d4a63cc85872
@@ -46,7 +46,7 @@ claim:
 checks:
   - id: production_reality
     status: passed
-    evidence: Read-only Proxmox inspection found no active Prometheus Alertmanager Grafana Loki Promtail or node-exporter unit; VM 971 cumulative transmit is historical while recent one-minute egress is quiet.
+    evidence: Read-only Proxmox inspection at 2026-08-31T17:22:56Z found VM 971 cumulative receive at 3604822111248 bytes while its latest hour averaged 3263 and peaked at 9761 bytes per second; three real PostgreSQL archives completed in ten minutes without contention, the timer was waiting, the whole-VM service was inactive, and no active monitoring plane exists.
   - id: catalog_contract
     status: passed
     evidence: The versioned catalogue defines thirty-one bounded signals twenty-seven alerts four owner roles four billing-independent routes and exact source boundaries.

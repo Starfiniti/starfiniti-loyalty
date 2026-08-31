@@ -1,5 +1,13 @@
 # Changelog
 
+- Refreshed M15's stale production-reality snapshot from a bounded read-only
+  observation. VM 971's cumulative counter was 3,604,822,111,248 bytes while
+  the latest hour averaged 3,263 bytes/s and peaked at 9,761 bytes/s; three real
+  PostgreSQL archives completed in ten minutes without contention, the timer
+  was waiting, and the whole-VM service was inactive. This updates evidence
+  only: no monitoring service, recovery design, score, production state, or
+  owner authority changed, and R-004 remains open.
+
 - Recorded a bounded post-incident production revalidation without changing
   the server. Six real PostgreSQL off-site archives completed at
   199–211-second intervals, the newest was 110 seconds old, the timer was
