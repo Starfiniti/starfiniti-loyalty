@@ -11,7 +11,10 @@
   explicit networked verifier; the root gate remains offline. Source
   compatibility is not runtime acceptance: production stays on 2026.5.6 and no
   provider, tenant, session, database, checkout, or loyalty value changed. M16
-  and product scores remain unchanged.
+  and product scores remain unchanged. Exact implementation
+  `5b9419acdfe0e4cd84db81d258ed3692b88ed85c` passed CI `33368245319`, Security
+  `33368245722`, and external CodeQL `99413667343`; all 12 PR checks are green
+  and PR #57 is merge-clean.
 
 - Added ADR-0108, a clean-commit bounded public Authentik runtime collector,
   exact 3,257-byte minimized evidence for served patch `2026.5.6`, and an

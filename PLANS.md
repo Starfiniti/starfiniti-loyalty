@@ -14,7 +14,10 @@ not accessed or changed. Private configuration, exact current image/outposts,
 the disposable 2026.8 runtime, protocol traffic, deprovisioning, clean-room
 recovery, rollback, independent review, owner approval, merge, release,
 deployment, and reconciliation remain false or pending. M16 stays 77/100, the
-candidate 83/100, and production 54/100.
+candidate 83/100, and production 54/100. Exact implementation
+`5b9419acdfe0e4cd84db81d258ed3692b88ed85c` passed CI `33368245319`, Security
+`33368245722`, and external CodeQL `99413667343`; all 12 PR checks are green and
+PR #57 is merge-clean.
 
 ADR-0108 is the active safe M16 installed-runtime slice. A clean exact-commit,
 bounded public capture proves that the served Authentik login runtime is exact

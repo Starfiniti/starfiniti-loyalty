@@ -28,6 +28,9 @@
   exact candidate runtime, protocol/deprovisioning fixtures, recovery, rollback,
   independent review, approval, and every production authority remain open.
   M16 stays 77/100, candidate 83/100, and production 54/100.
+- Exact implementation `5b9419acdfe0e4cd84db81d258ed3692b88ed85c`
+  passed CI `33368245319`, Security `33368245722`, and external CodeQL
+  `99413667343`; all 12 PR checks are green and PR #57 is merge-clean.
 
 ## 2026-08-31 — Minimized Authentik served-runtime evidence
 

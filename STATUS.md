@@ -15,7 +15,10 @@
   configuration, image/outposts, exact candidate runtime, protocol fixtures,
   deprovisioning canary, recovery, rollback, independent review, owner approval,
   merge, release, deployment, and reconciliation remain open. M16 remains
-  77/100, candidate 83/100, and production 54/100.
+  77/100, candidate 83/100, and production 54/100. Exact implementation
+  `5b9419acdfe0e4cd84db81d258ed3692b88ed85c` passed CI `33368245319`, Security
+  `33368245722`, and external CodeQL `99413667343`; all 12 PR checks are green
+  and PR #57 is merge-clean.
 
 - ADR-0108 replaces only ADR-0107's Authentik installed-version unknown through
   an append-only V2 amendment. A clean implementation-bound public capture
