@@ -218,24 +218,53 @@ function compose(project, environment, args, options = {}) {
   );
 }
 
-async function waitForJson(url, validator, label) {
+async function waitForJson(url, validator, label, diagnostics) {
+  let lastResult = "no HTTP response";
   for (let attempt = 0; attempt < 60; attempt += 1) {
     try {
       const response = await fetch(url, {
         redirect: "error",
         signal: AbortSignal.timeout(2_000),
       });
+      lastResult = `HTTP ${response.status}`;
       if (response.ok) {
         const body = await response.json();
         const value = validator(body);
         if (value) return value;
+        lastResult = `HTTP ${response.status} returned JSON outside the exact-version contract`;
       }
-    } catch {
+    } catch (error) {
+      const code = error?.cause?.code;
+      lastResult =
+        typeof code === "string" && /^[A-Z0-9_]{2,40}$/u.test(code)
+          ? code
+          : "request failed";
       // Startup is bounded by the loop below.
     }
     await new Promise((resolvePromise) => setTimeout(resolvePromise, 1_000));
   }
-  fail(`${label} did not become healthy with the exact version`);
+  const detail = diagnostics()
+    .replaceAll(/[\r\n]+/gu, " ")
+    .slice(0, 3_000);
+  fail(
+    `${label} did not become healthy with the exact version (${lastResult}; ${detail})`,
+  );
+}
+
+function serviceDiagnostics(project, environment, service) {
+  const status = compose(
+    project,
+    environment,
+    ["ps", "--all", "--format", "json", service],
+    { capture: true },
+  );
+  const logs = compose(
+    project,
+    environment,
+    ["logs", "--no-color", "--tail", "40", service],
+    { capture: true },
+  );
+  return `container=${status || "missing"}; logs=${logs || "empty"}`;
 }
 
 function containerInspection(project, environment, service) {
@@ -533,17 +562,20 @@ try {
       `http://127.0.0.1:${ports.prometheus}/api/v1/status/buildinfo`,
       (body) => body?.data?.version === "3.14.0" && body.data.version,
       "Prometheus",
+      () => serviceDiagnostics(project, environment, "prometheus"),
     ),
     alertmanager: await waitForJson(
       `http://127.0.0.1:${ports.alertmanager}/api/v2/status`,
       (body) =>
         body?.versionInfo?.version === "0.34.0" && body.versionInfo.version,
       "Alertmanager",
+      () => serviceDiagnostics(project, environment, "alertmanager"),
     ),
     grafana: await waitForJson(
       `http://127.0.0.1:${ports.grafana}/api/health`,
       (body) => body?.version === "13.2.0" && body.version,
       "Grafana",
+      () => serviceDiagnostics(project, environment, "grafana"),
     ),
     blackboxExporter: await waitForJson(
       `http://127.0.0.1:${ports.prometheus}/api/v1/query?query=blackbox_exporter_build_info`,
@@ -552,6 +584,7 @@ try {
         body.data.result[0]?.metric?.version === "0.28.0" &&
         body.data.result[0].metric.version,
       "blackbox exporter",
+      () => serviceDiagnostics(project, environment, "blackbox-exporter"),
     ),
     postgresExporter: await waitForJson(
       `http://127.0.0.1:${ports.prometheus}/api/v1/query?query=pg_exporter_build_info`,
@@ -560,6 +593,7 @@ try {
         body.data.result[0]?.metric?.version === "0.20.1" &&
         body.data.result[0].metric.version,
       "PostgreSQL exporter",
+      () => serviceDiagnostics(project, environment, "postgres-exporter"),
     ),
   };
 
