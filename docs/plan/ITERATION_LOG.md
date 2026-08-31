@@ -1,5 +1,11 @@
 # Iteration Log
 
+## 2026-08-31 — Managed-usage rolling-upgrade recovery repair
+
+- Exact Linux database replay for PR #57 exposed three deterministic test failures: two public-function allowlists omitted the minimized V2 usage summary, the subscription safety fixture attempted an impossible second open account version, and V2 recovery treated an authorized V1 claim as provider attempt zero.
+- Reconstructed the mixed-version state machine and found deeper identity hazards both during the additive counter backfill and after repeated V1 policy holds. The backfill and active-only evidence normalization now preserve the only durable counter for a processing V1 claim, advance an expired authorized claim by exactly one provider send, and reset expired pre-authorization claims without consuming the provider budget.
+- Added a regression with nine completed V1 policy holds followed by the tenth authorized, expired claim. Recovery must retain claim sequence ten, record provider attempt one as ambiguous, and leave historical policy evidence immutable. The complete local gate passes 999 tests, all validators, both production builds, 89 static migrations, and 70 static pgTAP files; exact Linux replay remains required before this repair is accepted.
+
 ## 2026-08-31 — Integration safety review and release containment
 
 - Reconstructed PR #57 after the enterprise module implementation and reviewed

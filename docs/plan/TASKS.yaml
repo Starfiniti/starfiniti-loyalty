@@ -3048,7 +3048,7 @@ tasks:
           - fixed-origin loopback provider tests for exact request duplicate retry rejection malformed response secret-file and self-hosted no-client behavior
           - production-rendered 1440 by 1000 and 390 by 844 light and dark browser review for exact bigint display responsive cards queue health current navigation drawer focus Escape overflow and diagnostics
           - npm run check clean database replay both production images and all four WooCommerce runtimes
-          - post-review V2 metering adds 72 focused pgTAP assertions, bigint claim/provider-attempt contracts, and an updated two-session probe; the complete local repository gate passes 999 workspace tests while exact Linux replay remains required
+          - post-review V2 metering adds 74 focused pgTAP assertions, bigint claim/provider-attempt contracts, V1-to-V2 recovery after nine policy holds, and an updated two-session probe; the complete local repository gate passes 999 workspace tests while exact Linux replay remains required
         evidence:
           - docs/architecture/ADR/0059-immutable-source-fact-usage-metering.md
           - docs/architecture/ADR/0114-billing-replay-subscription-and-usage-safety.md

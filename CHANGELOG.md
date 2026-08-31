@@ -1,5 +1,7 @@
 # Changelog
 
+- Repaired additive V2 managed-usage recovery for mixed V1/V2 worker rollout. Counter backfill and active evidence normalization no longer destroy an in-flight V1 claim identity; an expired authorized V1 claim consumes exactly one provider attempt even after nine prior policy holds, while an expired pre-network claim consumes none. Public-function security allowlists and the one-live-subscription fixture now match the intended schema. Production billing remains disabled and unchanged.
+
 - Added ADR-0115 and replaced the unsafe tag-sourced release design with a
   default-branch `repository_dispatch` workflow. Read-only preflight verifies
   external branch, tag, check, and environment policy; an exact candidate build

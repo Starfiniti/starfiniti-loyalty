@@ -39,7 +39,13 @@ alter table loyalty_private.managed_billing_usage_dispatches
 update loyalty_private.managed_billing_usage_dispatches as dispatch
 set claim_sequence_count = dispatch.attempt_count,
   provider_attempt_count = existing.provider_attempt_count,
-  attempt_count = existing.provider_attempt_count
+  -- A V1 claim can already be processing while this additive migration runs.
+  -- Preserve its only durable claim identity until V2 recovery classifies the
+  -- expired lease; terminal/claimable rows can adopt the send-only counter.
+  attempt_count = case when dispatch.state = 'processing'
+    then dispatch.attempt_count
+    else existing.provider_attempt_count
+  end
 from (
   select target.id,
     pg_catalog.count(attempt.id) filter (
@@ -373,6 +379,84 @@ set search_path = ''
 set statement_timeout = '10s'
 as $$
 begin
+  -- V1 workers remain a supported rolling-upgrade boundary. They incremented
+  -- attempt_count when claiming and wrote provider outcomes without the V2
+  -- provider_attempt_number. Reconstruct those completed sends before the V2
+  -- claimer delegates to V1 so a rolling upgrade cannot reset the ten-send
+  -- ceiling or reuse a claim identity.
+  with evidence as (
+    select dispatch.id as dispatch_id,
+      pg_catalog.max(attempt.attempt_number) as last_claim_sequence,
+      pg_catalog.count(*) filter (
+        where attempt.provider_attempt_number is not null
+          or (
+            attempt.provider_attempt_number is null
+            and attempt.response_class <> 'policy'
+            and attempt.error_code is distinct from
+              'billing_usage_lease_expired_before_authorization'
+          )
+      )::integer as provider_attempt_count
+    from loyalty_private.managed_billing_usage_dispatches as dispatch
+    join loyalty_private.managed_billing_usage_dispatch_attempts as attempt
+      on attempt.dispatch_id = dispatch.id
+    where dispatch.state in ('pending', 'retryable', 'held', 'processing')
+    group by dispatch.id
+  )
+  update loyalty_private.managed_billing_usage_dispatches as dispatch
+  set claim_sequence_count = greatest(
+        dispatch.claim_sequence_count, evidence.last_claim_sequence
+      ),
+    provider_attempt_count = greatest(
+      dispatch.provider_attempt_count, evidence.provider_attempt_count
+    ),
+    -- A processing V1 claim has no attempt row yet. Its legacy counter is the
+    -- only durable identity for that in-flight claim and must survive evidence
+    -- normalization until the expired-lease branches below classify it.
+    attempt_count = case when dispatch.state = 'processing'
+      then dispatch.attempt_count
+      else greatest(
+        dispatch.provider_attempt_count, evidence.provider_attempt_count
+      )
+    end
+  from evidence
+  where dispatch.id = evidence.dispatch_id
+    and (
+      dispatch.claim_sequence_count < evidence.last_claim_sequence
+      or dispatch.provider_attempt_count < evidence.provider_attempt_count
+      or (
+        dispatch.state <> 'processing'
+        and dispatch.attempt_count <> greatest(
+          dispatch.provider_attempt_count, evidence.provider_attempt_count
+        )
+      )
+    );
+
+  -- A V1 worker can die after database authorization but before recording its
+  -- result. In that state its current claim is represented only by the legacy
+  -- attempt_count. Promote that claim to both V2 counters before appending the
+  -- ambiguous provider-attempt evidence below.
+  with expired as (
+    select dispatch.id,
+      greatest(
+        dispatch.claim_sequence_count, dispatch.attempt_count::bigint
+      ) as recovered_claim_sequence,
+      dispatch.provider_attempt_count + case
+        when dispatch.attempt_count > dispatch.provider_attempt_count then 1
+        else 0
+      end as recovered_provider_attempt_count
+    from loyalty_private.managed_billing_usage_dispatches as dispatch
+    where dispatch.state = 'processing'
+      and dispatch.lease_expires_at <= target_at
+      and dispatch.authorized_at is not null
+    for update
+  )
+  update loyalty_private.managed_billing_usage_dispatches as dispatch
+  set claim_sequence_count = expired.recovered_claim_sequence,
+    provider_attempt_count = expired.recovered_provider_attempt_count,
+    attempt_count = expired.recovered_provider_attempt_count
+  from expired
+  where dispatch.id = expired.id;
+
   insert into loyalty_private.managed_billing_usage_dispatch_attempts (
     organization_id, dispatch_id, attempt_number,
     provider_attempt_number, worker_reference, outcome, response_class,
@@ -402,6 +486,17 @@ begin
   -- A dead worker before provider authorization is a policy/lease hold, not a
   -- provider attempt. Resolve those leases before the compatible V1 claimer
   -- handles authorized (therefore potentially sent) leases.
+  update loyalty_private.managed_billing_usage_dispatches as dispatch
+  set claim_sequence_count = greatest(
+        dispatch.claim_sequence_count, dispatch.attempt_count::bigint
+      ),
+    -- Reset V1's compatibility counter only after its current claim sequence
+    -- has been preserved. Local holds do not consume the provider-send budget.
+    attempt_count = dispatch.provider_attempt_count
+  where dispatch.state = 'processing'
+    and dispatch.lease_expires_at <= target_at
+    and dispatch.authorized_at is null;
+
   insert into loyalty_private.managed_billing_usage_policy_holds (
     organization_id, dispatch_id, claim_sequence, worker_reference,
     error_code, started_at, completed_at

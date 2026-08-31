@@ -332,21 +332,35 @@ select throws_ok($$
   ) from billing_safety_refs
 $$, '55000', 'managed billing subscription identity conflict',
   'a second live subscription identity is quarantined');
-update billing_safety_refs set second_account_id =
-  loyalty_private.record_managed_billing_account_v1(
-    'c1000000-0000-4000-8000-000000000100',
-    'cus_BillingSafety0002', false, 'operator:m14',
-    'Bind replacement provider customer for organization-wide safety',
-    '2042-01-06 00:00:00+00',
-    'c1000000-0000-4000-8000-000000000608'
-  );
+with inserted_account as (
+  insert into loyalty_private.managed_billing_account_versions (
+    organization_id, provider, provider_customer_id, live_mode,
+    actor_reference, reason, effective_from, effective_until,
+    idempotency_key, request_fingerprint
+  )
+  select organization.id, 'stripe', 'cus_BillingSafety0002', false,
+    'operator:m14',
+    'Seed a fixed-term second account version for organization-wide safety',
+    '2042-01-06 00:00:00+00', '2042-01-07 00:00:00+00',
+    'c1000000-0000-4000-8000-000000000608',
+    extensions.digest(
+      pg_catalog.convert_to('billing-safety-second-account', 'UTF8'),
+      'sha256'
+    )
+  from loyalty.organizations as organization
+  where organization.public_id = 'c1000000-0000-4000-8000-000000000100'
+  returning public_id
+)
+update billing_safety_refs
+set second_account_id = inserted_account.public_id
+from inserted_account;
 select throws_ok($$
   select loyalty_private.record_managed_billing_state_v1(
     'c1000000-0000-4000-8000-000000000100', second_account_id,
     'sub_BillingSafety0004', 'evt_BillingSafety0005', 'active',
     '2042-01-06 00:01:00+00', '2042-02-06 00:00:00+00',
     null, null, 'worker:billing-webhook',
-    'Reject second subscription through a replacement billing account',
+    'Reject second subscription through another billing account version',
     'c1000000-0000-4000-8000-000000000609'
   ) from billing_safety_refs
 $$, '55000', 'managed billing subscription identity conflict',

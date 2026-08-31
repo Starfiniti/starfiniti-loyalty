@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(72);
+select plan(74);
 
 grant loyalty_runtime, loyalty_worker to current_user;
 grant usage on schema extensions to loyalty_runtime, loyalty_worker;
@@ -651,6 +651,29 @@ $$, $$ values ('starfiniti_orders'::text, 'cus_BillingUsageTest0001'::text,
   '-1'::text) $$,
   'correction dispatch reuses its accepted source meter and account');
 
+-- Reproduce a rolling-upgrade boundary where a V1 worker had nine completed
+-- policy holds, claimed a tenth time, authorized the provider send, and died
+-- before writing its result. The current claim exists only in attempt_count.
+insert into loyalty_private.managed_billing_usage_dispatch_attempts (
+  organization_id, dispatch_id, attempt_number, worker_reference,
+  outcome, response_class, error_code, started_at, completed_at
+)
+select dispatch.organization_id, dispatch.id, sequence.value,
+  'billing-usage-legacy-worker', 'held', 'policy',
+  'stripe_usage_provider_config_unavailable',
+  '2041-01-05 00:00:00+00'::timestamptz
+    + pg_catalog.make_interval(secs => sequence.value * 2),
+  '2041-01-05 00:00:01+00'::timestamptz
+    + pg_catalog.make_interval(secs => sequence.value * 2)
+from usage_correction_claim as claim
+join loyalty_private.managed_billing_usage_dispatches as dispatch
+  on dispatch.public_id = claim.dispatch_public_id
+cross join pg_catalog.generate_series(1, 9) as sequence(value);
+update loyalty_private.managed_billing_usage_dispatches as dispatch
+set attempt_count = 10
+from usage_correction_claim as claim
+where dispatch.public_id = claim.dispatch_public_id;
+
 -- Policy/local configuration holds are independent from provider attempts.
 update loyalty_private.managed_billing_usage_dispatches
 set next_attempt_at = '2050-01-01 00:00:00+00'
@@ -710,6 +733,24 @@ begin
   end loop;
 end;
 $$;
+select results_eq($$
+  select dispatch.state, dispatch.provider_attempt_count,
+    dispatch.claim_sequence_count
+  from usage_correction_claim as claim
+  join loyalty_private.managed_billing_usage_dispatches as dispatch
+    on dispatch.public_id = claim.dispatch_public_id
+$$, $$ values ('ambiguous'::text, 1, 10::bigint) $$,
+  'V2 recovery preserves one ambiguous provider send authorized by a V1 worker');
+select results_eq($$
+  select attempt.attempt_number, attempt.provider_attempt_number
+  from usage_correction_claim as claim
+  join loyalty_private.managed_billing_usage_dispatches as dispatch
+    on dispatch.public_id = claim.dispatch_public_id
+  join loyalty_private.managed_billing_usage_dispatch_attempts as attempt
+    on attempt.dispatch_id = dispatch.id
+  where attempt.outcome = 'ambiguous'
+$$, $$ values (10::bigint, 1) $$,
+  'V1 recovery preserves claim ten while consuming provider attempt one');
 select results_eq($$
   select dispatch.provider_attempt_count, dispatch.claim_sequence_count
   from loyalty_private.managed_billing_usage_dispatches as dispatch

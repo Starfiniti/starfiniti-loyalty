@@ -7,7 +7,7 @@
 
 ## Context
 
-The repository review found four deterministic gaps in the disabled managed-billing candidate. Stripe may prune an idempotency result after at least 24 hours, so replaying an unresolved Checkout request indefinitely can create a new provider object. A database customer binding does not by itself prevent two live subscriptions. Usage claims were consuming the ten-attempt provider budget before any network request, and order usage could inherit ingestion time rather than the canonical event occurrence. Finally, a Klaviyo operation completed after HTTP acceptance is not evidence that a message was delivered.
+The repository review found four deterministic gaps in the disabled managed-billing candidate. Stripe may prune an idempotency result after at least 24 hours, so replaying an unresolved Checkout request indefinitely can create a new provider object. A database customer binding does not by itself prevent two live subscriptions. Usage claims were consuming the ten-attempt provider budget before any network request, and order usage could inherit ingestion time rather than the canonical event occurrence. Finally, a Klaviyo operation completed after HTTP acceptance is not evidence that a message was delivered. Exact Linux replay then exposed a fifth rolling-upgrade gap: V2 recovery could overwrite the only durable identity of an authorized V1 claim after earlier V1 policy holds.
 
 The earlier immutable operation, source-fact, webhook-authority, self-hosted, and checkout-independence decisions remain sound. This decision narrows their retry and measurement semantics without rewriting accepted history.
 
@@ -37,10 +37,11 @@ The database retains one operation and stable keys, authorizes exact provider re
 8. Message usage counts only immutable SMTP `delivered` evidence. Klaviyo HTTP acceptance or completed event synchronization is not delivery evidence and is excluded until a provider-neutral delivered-event contract exists.
 9. Forced-RLS reconciliation and policy-hold tables have explicit `loyalty_owner` policies while runtime, browser, and general worker access remains denied. Their rows are immutable and create no loyalty-ledger effect.
 10. V1 contracts and historical rows remain readable for compatibility. Current dashboard and worker paths use V2 authority and summaries.
+11. The additive counter backfill and V2 claim recovery reconstruct completed V1 evidence while preserving a processing V1 claim's legacy counter. An expired authorized V1 claim advances the V2 claim sequence to that durable identity and consumes exactly one provider attempt; an expired pre-authorization V1 claim becomes immutable policy-hold evidence and consumes none. A processing V2 claim is already normalized and is never double-counted.
 
 ## Consequences
 
-An owner may need an approved provider read to resolve an operation after 23 hours instead of immediately starting another Checkout. This is deliberate: ambiguity is visible and cannot silently become duplicate commercial state. Provider-attempt counts now describe actual sends rather than local scheduling churn. Managed messaging usage is conservative until delivery can be proved, so provider acceptance will not inflate invoices.
+An owner may need an approved provider read to resolve an operation after 23 hours instead of immediately starting another Checkout. This is deliberate: ambiguity is visible and cannot silently become duplicate commercial state. Provider-attempt counts now describe actual sends rather than local scheduling churn. A rolling worker upgrade may promote one expired V1 send to ambiguous evidence, but it cannot reset or multiply that send. Managed messaging usage is conservative until delivery can be proved, so provider acceptance will not inflate invoices.
 
 ## Rollback implications
 
