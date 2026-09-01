@@ -1,5 +1,29 @@
 # Iteration Log
 
+## 2026-09-01 — Fail-closed GitHub branch and release-tag policy
+
+- Reconstructed current repository authority, exact check providers, settings,
+  and collaborators. The authenticated repository owner has Administration
+  authority; twelve successful checks are supplied by GitHub Actions app 15368
+  and GitHub Advanced Security app 57789. Only one administrator/collaborator
+  exists, so no eligible independent reviewer can be selected honestly.
+- Protected `main` with strict exact app-bound checks, signed commits, one
+  approval, stale-review dismissal, last-pusher separation, conversation
+  resolution, administrator enforcement, and blocked force pushes/deletion.
+  PR #58 moved from clean-but-unreviewed to `REVIEW_REQUIRED`, which is the
+  intended fail-closed result until a second reviewer exists.
+- Added two complementary active `refs/tags/v*.*.*` rulesets. One restricts
+  creation to the explicitly identified owner in audited non-exempt bypass mode.
+  The second independently requires signatures and blocks update/deletion with
+  no bypass. Adversarial review caught and corrected an initial arrangement that
+  placed the signature rule beside the bypassed creation rule; the final split
+  prevents creation authority from bypassing signature or immutability.
+- Retained the earlier absence audit byte-for-byte and added a successor evidence
+  record with exact rule identities, rollback endpoints, unresolved reviewer,
+  environment, token, tag, security/licence, and approval gates. Release workflow
+  `333373957` remains manually disabled; no tag, release, deployment, or
+  production mutation occurred.
+
 ## 2026-09-01 — Live release-policy audit
 
 - Queried the current GitHub workflow, branch-protection, ruleset, environment,

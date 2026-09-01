@@ -1,5 +1,15 @@
 # Changelog
 
+- Enforced the repository-side release authority boundary without enabling
+  Release. Protected `main` now requires twelve exact app-bound checks, signed
+  commits, one review, stale-review dismissal, last-pusher separation, resolved
+  conversations, and administrator enforcement while blocking force pushes and
+  deletion. Two active tag rulesets allow only audited signed `v*.*.*` creation
+  and prohibit matching-tag update or deletion without bypass. The repository
+  still has no eligible independent reviewer, protected release environment, or
+  policy token, so PR #58 is intentionally blocked and eight external gates stay
+  open. No tag, release, deployment, or production state changed.
+
 - Added a closed live GitHub release-policy audit and adversarial validator.
   The read-only snapshot records eleven green checks on merged `main` while
   proving that branch protection, rulesets, environments, and the repository

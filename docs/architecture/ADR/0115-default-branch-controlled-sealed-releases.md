@@ -50,7 +50,7 @@ Keep the workflow disabled or disable it again. Revoking the policy token, remov
 
 ## Current evidence — 2026-09-01
 
-The read-only audit in
+The initial read-only audit in
 `docs/plan/evidence/M15/release-policy-audit-2026-09-01.yaml` confirms that the
 replacement workflow remains manually disabled and exact merged `main` has
 eleven green check runs. It also proves the required external boundary is not
@@ -59,6 +59,18 @@ and no repository `RELEASE_POLICY_TOKEN` secret is configured. Eight gates stay
 open, including the signed annotated release tag and explicit owner approval.
 The audit changed no GitHub or production state. Its validator rejects any
 attempt to reinterpret these absences as release authority.
+
+The chronological successor
+`docs/plan/evidence/M15/release-policy-hardening-2026-09-01.yaml` records the
+repository-policy mutation without rewriting that precondition. Protected
+`main` now has strict app-bound checks, verified signatures, review and
+last-pusher separation, stale-review dismissal, conversation resolution,
+administrator enforcement, and force-push/deletion blocks. Complementary tag
+rulesets separate audited signed creation from no-bypass update/deletion denial.
+Only one collaborator exists, so branch approval is deliberately unsatisfied;
+the environment, independent environment reviewer, policy token, exact release
+tag, security/licence closure, and owner approval remain external. Release stays
+disabled, and no release or production authority was exercised.
 
 ## References
 

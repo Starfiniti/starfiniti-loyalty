@@ -1,5 +1,16 @@
 # M15 Evidence — GA Hardening
 
+The chronological release-policy successor
+`release-policy-hardening-2026-09-01.yaml` proves strict app-bound protection on
+`main`, signed commits, review/last-pusher separation, stale-review dismissal,
+conversation resolution, administrator enforcement, blocked force pushes and
+deletion, and two active complementary version-tag rulesets. The earlier absence
+audit remains byte-bound as its precondition. Only one collaborator exists, so
+PR #58 is intentionally review-blocked; the release environment, independent
+reviewers, policy token, exact signed tag, security/licence closure, and owner
+approval remain absent. The workflow remains disabled and no tag, release,
+deployment, or production state changed.
+
 The 2026-09-01 VM 971 investigation is retained in
 `backup-traffic-containment-2026-09-01.yaml`. It proves that the multi-terabyte
 counter and 249.6 MB/s peak are historical 2026-08-14 evidence, while the

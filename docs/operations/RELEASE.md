@@ -4,7 +4,29 @@
 
 The GitHub `Release` workflow is manually disabled. Production remains `v0.1.11`. Do not enable or dispatch the replacement workflow until every prerequisite below is present and independently reviewed.
 
-### Audited state — 2026-09-01
+### Hardened state — 2026-09-01
+
+Protected `main` now requires the twelve exact current checks with their GitHub
+App identities, strict current-base evaluation, verified signatures, one
+approval, stale-review dismissal, last-pusher separation, resolved conversations,
+and administrator enforcement. Force pushes and branch deletion are disabled.
+Two active rulesets cover `refs/tags/v*.*.*`: the first restricts creation to
+the explicitly recorded owner through audited non-exempt bypass. The second has
+no bypass and independently requires a signature while denying update and
+deletion, so creation authority cannot bypass signature or immutability.
+
+Only one administrator/collaborator currently exists, so the required branch
+approval is not satisfiable yet. This is intentionally fail-closed. Add an
+eligible independent collaborator and obtain that person's approval; do not
+weaken the rule to merge. The protected `release` environment, independent
+environment reviewer, policy token, exact signed annotated tag,
+security/licence closure, and explicit release approval also remain absent.
+
+`release-policy-hardening-2026-09-01.yaml` records exact rule identities and
+rollback endpoints. `npm run release-policy:audit:validate` validates it against
+the immutable precondition snapshot.
+
+### Pre-hardening audited state — 2026-09-01
 
 A read-only live audit found eleven successful check runs on exact merged `main`,
 but no branch protection on `main`, zero repository rulesets, zero repository
@@ -20,8 +42,8 @@ evidence and a fail-closed checklist, not release approval.
 
 ## Required external controls
 
-- Protect `main`: pull requests required, at least one approving review, stale approvals dismissed, conversations resolved, required CI checks strict and successful, force pushes and deletion disabled, and administrator enforcement enabled.
-- Create an active tag ruleset targeting exactly `refs/tags/v*.*.*`. Require tag creation control and signed commits/tags; block update and deletion. Any bypass actor must be explicit, non-exempt, and audited.
+- Keep the current `main` protection exact. Add an eligible independent reviewer and obtain one approval; never remove checks, signature enforcement, last-pusher separation, conversation resolution, force-push/deletion blocks, or administrator enforcement to bypass the missing reviewer.
+- Keep both active `refs/tags/v*.*.*` rulesets. Creation authority must remain limited to the explicit audited non-exempt actor; the separate no-bypass ruleset must continue enforcing signatures and blocking update/deletion.
 - Create a `release` environment restricted to protected branches. Add an independent required reviewer, enable prevent-self-review, and disable administrator bypass.
 - Create a fine-grained `RELEASE_POLICY_TOKEN` secret with repository Administration, Actions, Checks, Commit statuses, and Contents permissions set to read only. It must not write contents, tags, packages, releases, actions, environments, or any other repository resource.
 - Close the release-security and licence obligations tracked in `RISKS.md`, and obtain the explicit release/production approvals required by the enterprise task graph.

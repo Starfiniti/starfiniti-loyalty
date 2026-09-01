@@ -1,5 +1,19 @@
 # Status
 
+- GitHub release policy is now fail-closed at the repository boundary. At
+  `2026-09-01T10:00:52Z`, protected `main` required the twelve exact current
+  checks from GitHub Actions and GitHub Advanced Security, verified signatures,
+  one approval, stale-review dismissal, last-pusher separation, resolved
+  conversations, and administrator enforcement; force pushes and deletion were
+  disabled. Active complementary version-tag rulesets permit only audited signed
+  creation and reject update or deletion with no bypass. Because the repository
+  still has only one administrator/collaborator, no eligible independent reviewer
+  exists and PR #58 is correctly `REVIEW_REQUIRED`. The Release workflow remains
+  manually disabled. The protected release environment, independent environment
+  reviewer, policy token, signed exact release tag, security/licence closure, and
+  explicit release approval remain open; no tag, release, deployment, or
+  production state changed.
+
 - A read-only GitHub policy audit at `2026-09-01T09:09:45Z` found that the
   replacement release workflow is still manually disabled and exact merged
   `main` has eleven green check runs, but `main` has no branch protection,

@@ -1,6 +1,6 @@
 schema: starfiniti.improvement-backlog.v1
 version: 1
-observedAt: 2026-09-01T09:25:02Z
+observedAt: 2026-09-01T10:00:52Z
 ranking:
   formula: severityPoints + (2 * merchantImpact) + (2 * customerImpact) + confidence - effort - dependencyPenalty
   severityPoints: { critical: 40, high: 30, medium: 20, low: 10 }
@@ -17,8 +17,8 @@ items:
     score: 88
     status: blocked_external
     evidence: infrastructure/governance/next-runtime-review.yaml
-    dependency: PR 57 merged exact reviewed head 149724a3a2fad89d1a7990e0c3114be2754ecab6 into main as c85d93d0e6e0273543078050e697f04309f11d93; post-merge CI 33475350770 and Security 33475350801 passed on that merge commit. The live audit found the Release workflow disabled_manually, unprotected main, zero rulesets, zero environments, no repository release-policy secret, and eight external release gates; production remains v0.1.11, and approved release deployment rollback observation and protected-value reconciliation remain.
-    ownerInput: Product and security approve the exact release; operations separately approves deployment and production reconciliation.
+    dependency: PR 57 merged exact reviewed head 149724a3a2fad89d1a7990e0c3114be2754ecab6 into main as c85d93d0e6e0273543078050e697f04309f11d93; post-merge CI 33475350770 and Security 33475350801 passed on that merge commit. Main now requires twelve exact app-bound checks, signed commits, one review, stale-review dismissal, last-pusher separation, conversation resolution, administrator enforcement, and blocked force pushes/deletion; two active tag rulesets separate audited signed creation from no-bypass immutability. Only one collaborator exists, PR 58 is review-blocked, the Release workflow remains disabled_manually, eight external reviewer/environment/token/tag/security/licence/approval gates remain, production remains v0.1.11, and approved release deployment rollback observation and protected-value reconciliation remain.
+    ownerInput: Repository owner adds an eligible independent reviewer without weakening policy; that reviewer approves the exact candidate. Product and security then approve the exact release, and operations separately approves deployment and production reconciliation.
   - id: IMP-011
     title: Repair the production Proxmox host across five published security advisories
     severity: critical

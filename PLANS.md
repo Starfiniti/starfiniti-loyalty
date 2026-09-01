@@ -1,13 +1,21 @@
 # Execution Plan
 
-The 2026-09-01 read-only GitHub policy audit makes the next release boundary
-explicit: the workflow remains manually disabled, `main` is unprotected, and
-the repository has zero rulesets, zero environments, and no repository
-`RELEASE_POLICY_TOKEN`. Keep release and deployment disabled until all eight
-independent controls in `docs/plan/evidence/M15/release-policy-audit-2026-09-01.yaml`
-are present and reviewed. Validate the closed snapshot with
-`npm run release-policy:audit:validate`; never treat merged green checks as
-publication or production authority.
+The repository-side release boundary is now fail-closed. Protected `main`
+requires all twelve exact checks, verified signatures, one independent approval,
+stale-review dismissal, last-pusher separation, resolved conversations, and
+administrator enforcement; force pushes and deletion are blocked. Two active
+version-tag rulesets separate audited signed creation from no-bypass immutability.
+Only one collaborator exists, so PR #58 intentionally cannot merge until an
+eligible independent reviewer is added and approves it. Keep Release disabled
+while the protected release environment, independent environment reviewer,
+policy token, signed exact tag, security/licence closure, and owner release
+approval remain open.
+
+The earlier `2026-09-01T09:09:45Z` read-only audit is retained as immutable
+precondition evidence rather than rewritten. Its successor
+`release-policy-hardening-2026-09-01.yaml` records the exact policy mutation and
+rollback endpoints. `npm run release-policy:audit:validate` must validate both
+states and continue rejecting publication or production overclaim.
 
 Production containment on 2026-09-01 disabled only the scheduled whole-host raw
 Borg timer after proving it still shared the authoritative PostgreSQL archive
