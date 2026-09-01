@@ -1,5 +1,17 @@
 # Changelog
 
+- Added ADR-0119 and a generalized M16 recurring-failure registry without
+  rewriting the accepted recovery-specific V1 bytes. V2 retains the two R-004
+  Borg-lock occurrences and adds the R-065 GitHub Actions startup failure plus
+  both supply-chain setup failures as three distinct chronological occurrences.
+  It binds the exact thirteen-pattern policy, full-SHA requirement, false broad
+  GitHub-owned and verified-creator trust, successful third attempt, candidate
+  preflight/validator controls, and an explicit prohibition on claiming
+  exhaustive future composite-action discovery. Fifty-eight adversarial cases
+  now reject erased negative evidence, policy drift, false merge/release/
+  deployment authority, and V1 history drift. PR #58, Release, deployment,
+  production, product scores, and protected loyalty value remain unchanged.
+
 - Enabled repository-native continuous security without enabling Release.
   ADR-0118 corrects ADR-0117's first direct-only action inventory after
   fail-closed startup/setup evidence: Actions now allow thirteen exact patterns

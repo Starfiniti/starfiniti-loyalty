@@ -7,7 +7,7 @@ candidate:
   initialCloseApproved: false
 plan:
   path: infrastructure/governance/continuous-improvement.yaml
-  sha256: b39db2fc0d83f1f1aea7500c9196e32b04bf962d5592f333947362ec4155185a
+  sha256: 24560694530bb46bf647b97fb048e29ce77a57afbc45e40b5cdd2de14ae5384d
 backlog:
   path: docs/plan/IMPROVEMENT_BACKLOG.yaml
   sha256: 838ab14781313cfd07b8f7748fd312cace6205ae487ad4bf557946a0e21d5115
@@ -130,10 +130,27 @@ checks:
     evidence: Completion requires no overdue unaccepted Critical or High item at the review cutoff.
   - id: recurring_failure_inventory
     status: pending
-    evidence: The interim evidence-bound registry records the 2026-08-28 and 2026-08-31 PostgreSQL off-site shared-lock starvation incidents as two distinct chronological anchors under one Critical R-004 fingerprint. On 2026-09-01 the conflicting raw whole-VM timer was disabled while PostgreSQL cadence stayed healthy, but the shared repository design and permanent recovery gates remain unresolved. Two elapsed monthly review periods and their independently reviewed incident/support inventories are still required, so this check remains pending.
+    evidence: >-
+      ADR-0119 preserves the accepted V1 bytes and the generalized V2 evidence-bound
+      registry records five distinct chronological anchors under two Critical
+      fingerprints: the 2026-08-28 and 2026-08-31 PostgreSQL shared-lock incidents
+      under R-004 plus one GitHub Actions startup failure and two supply-chain setup
+      failures under R-065. The conflicting raw whole-VM timer is contained and the
+      corrected thirteen-pattern selected-actions policy is active, but recovery
+      activation, candidate-control merge, later observation, and two elapsed
+      independently reviewed monthly incident/support inventories remain required,
+      so this check stays pending.
   - id: durable_regression_controls
     status: pending
-    evidence: The repeated PostgreSQL off-site starvation record binds exact bytes for the backup-assets validator archive-RPO alert contract and OPS-007. All three controls are merged through PR 57 under one digest-bound main-integration receipt, while production and observation evidence remain null; dedicated-repository provisioning paging activation continuity retention and isolated restore remain required before the active-control gate can pass.
+    evidence: >-
+      The repeated PostgreSQL starvation record binds exact merged bytes for the
+      backup-assets validator archive-RPO alert contract and OPS-007, while activation
+      and observation evidence remain null. The repeated GitHub Actions record binds
+      the exact release preflight and three validators as candidate controls, retains
+      every failed attempt and the successful correction, and prohibits exhaustive
+      future dependency claims; independent merge and later observation remain
+      pending. Dedicated-repository provisioning paging continuity retention restore
+      and both active-control proofs are still required before this gate can pass.
   - id: module_rescoring
     status: pending
     evidence: ADR-0080 and ADR-0116 preserve the 54/100 deployed-production history and promote exact merged main c85d93d0e6e0273543078050e697f04309f11d93 as the unchanged 83/100 candidate subject after post-merge CI and Security passed; M09 remains 88/100 and M14 remains provisional 90/100 because merge adds no approved deployment canary activation recovery rollback observation or reconciliation evidence, and every module materially changed during the two future elapsed review periods still requires its own exact rescore.

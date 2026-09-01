@@ -117,10 +117,15 @@ recurringFailure:
   minimumDurableControls: 1
   allowedControls: [regressionTest, validator, monitor, runbook, agentRule]
   registry:
-    schema: starfiniti.recurring-failure-registry.v1
-    path: docs/plan/evidence/M16/recurring-failures.yaml
+    schema: starfiniti.recurring-failure-registry.v2
+    path: docs/plan/evidence/M16/recurring-failures-v2.yaml
+    supersedes:
+      schema: starfiniti.recurring-failure-registry.v1
+      path: docs/plan/evidence/M16/recurring-failures.yaml
+      sha256: 5b9bd0b668818b276266420d61afdea4b75dff2fb059ba6f91406a7ecf584c81
     evidenceDigestsRequired: true
     candidateCannotClaimMergeOrActivation: true
+    exhaustiveDiscoveryClaimsAllowed: false
 moduleRescoring:
   materialChangeRequiresRescore: true
   target: 90

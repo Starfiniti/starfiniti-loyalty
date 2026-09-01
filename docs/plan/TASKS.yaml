@@ -3732,7 +3732,7 @@ tasks:
         the notification and federation dependency review binds exact compatible fast-xml-parser Nodemailer and SMTP sink patch provenance while retaining independent bounded SAML validation transport-level and message-level file and URL denial and false merge release deployment mutation and reconciliation authority,
         the evidence-ranked backlog score and order recompute exactly with no overdue unaccepted Critical or High item,
         a deterministic generated owner handoff contains every ranked backlog item in exact priority order distinguishes current from pending evidence rejects common reusable credential forms and limits approval to one explicit gate without granting merge release deployment reboot destructive-exercise canary tenant ledger database billing or GA authority,
-        a fail-closed interim registry binds every observed second occurrence to distinct chronological evidence anchors and exact decision implementation validator monitor and runbook bytes while candidate controls cannot claim merge or production activation,
+        a fail-closed generalized V2 registry preserves the accepted recovery-specific V1 bytes and binds five distinct chronological occurrence anchors across Critical R-004 and R-065 to exact decisions implementations and durable controls while candidate controls cannot claim merge activation observation release deployment or production authority and reviewed current composite dependencies cannot be relabelled as exhaustive future discovery,
         the second occurrence of a stable failure binds a merged regression test validator monitor runbook or agent rule,
         every material change rescored all affected modules while preserving prior scores and evidence,
         an experiment is promoted only when its declared primary metric improves and all guardrails pass,
@@ -3797,7 +3797,7 @@ tasks:
         complete provider and dependency review,
         exact backlog arithmetic and due-date audit,
         recurring-failure inventory and durable regression links,
-        docs/plan/evidence/M16/recurring-failures.yaml and its adversarial validator,
+        docs/plan/evidence/M16/recurring-failures-v2.yaml its immutable V1 predecessor and its adversarial validator,
         affected-module score history,
         experiment metric and guardrail evidence,
         five distinct quarterly exercise reports and reconciliation,
@@ -3817,6 +3817,7 @@ tasks:
         R-060,
         R-061,
         R-064,
+        R-065,
       ]
     docs:
       [
@@ -3828,6 +3829,7 @@ tasks:
         docs/architecture/ADR/0068-evidence-bound-continuous-improvement.md,
         docs/architecture/ADR/0113-closed-minimized-continuous-improvement-artifacts.md,
         docs/architecture/ADR/0111-evidence-bound-recurring-failure-register.md,
+        docs/architecture/ADR/0119-generalized-recurring-failure-registry.md,
         docs/architecture/ADR/0080-versioned-production-and-candidate-product-scores.md,
         docs/architecture/ADR/0084-bounded-provider-source-provenance-snapshots.md,
         docs/architecture/ADR/0085-bounded-recovery-dependency-installed-state-snapshots.md,
@@ -3871,6 +3873,7 @@ tasks:
         docs/plan/evidence/M16/README.md,
         docs/plan/evidence/M16/continuous-improvement.yaml,
         docs/plan/evidence/M16/recurring-failures.yaml,
+        docs/plan/evidence/M16/recurring-failures-v2.yaml,
         docs/plan/evidence/M16/main-integration-2026-09-01.yaml,
         scripts/validate-continuous-improvement-evidence.mjs,
         docs/plan/evidence/M16/runs/provider-source-snapshot-257e99c-2026-08-28T212100Z.json,
@@ -3991,4 +3994,5 @@ tasks:
         ADR-0106 selects only fast-xml-parser 5.11.1 Nodemailer 9.0.6 and smtp-server 3.19.4 as one exact compatible untrusted-input patch set; the governance record and thirty-two-corruption validator bind Git tags commits npm tarballs integrity licences Node floors exact record shape nested lock resolution retained source-level SAML and SMTP controls coherent rollback candidate-runtime change and entirely false production authority while unrelated dependency changes remain deferred; clean install audited 972 packages with zero vulnerabilities focused SAML and SMTP tests pass 36 and 18 cases and the complete 997-test local root gate both production builds static database secret production-audit licence and diff checks pass; exact implementation c14a8f5802ddee02882cceb2c2f3e01cdcd47fba passed CI 33281041057 Security 33281041055 and external CodeQL 99176310303 with all twelve checks green and PR 57 merge-clean while merge release deployment and elapsed review remain pending,
         delivery-chain audit found every open roadmap PR from 29 through 56 merge-clean with zero failed or pending checks after exact-head repairs to PRs 29 30 31 32 and 42,
         PR 57 merged reviewed head 149724a3a2fad89d1a7990e0c3114be2754ecab6 into main as c85d93d0e6e0273543078050e697f04309f11d93 on 2026-09-01; post-merge CI 33475350770 and Security 33475350801 passed on the merge commit while Release workflow 333373957 remained disabled_manually production remained v0.1.11 and no tag release deployment or loyalty-value mutation occurred; ADR-0116 promotes exact merged main only as the unchanged 83/100 candidate subject and advances three R-004 controls to merged_pending_activation without claiming production repair,
+        ADR-0119 preserves the accepted V1 recurring-failure registry under exact SHA-256 and adds a generalized V2 record with two R-004 plus three R-065 chronological occurrence anchors; fifty-eight adversarial cases retain every GitHub Actions startup and setup failure require the exact thirteen-pattern full-SHA policy with both broad-trust switches false preserve the successful correction separately forbid exhaustive future composite-dependency claims and keep all four source controls candidate-only while independent merge later observation release deployment production and protected-value authority remain false,
       ]
