@@ -5,6 +5,7 @@ import type {
   ProgrammeDefinitionV2,
   PurchaseExclusionsV2,
 } from "@starfiniti/contracts/programme-v2";
+import type { CurrencyConversionEvidenceSummaryV1 } from "@starfiniti/contracts/currency";
 
 const BASIS_POINTS = 10_000n;
 
@@ -30,6 +31,9 @@ interface EarningFactBaseV2 {
 export interface PurchaseEarningFactV2 extends EarningFactBaseV2 {
   readonly source: "purchase";
   readonly currencyCode: string;
+  readonly sourceCurrencyCode?: string;
+  readonly sourceCurrencyMinorUnitDigits?: number;
+  readonly currencyConversion?: CurrencyConversionEvidenceSummaryV1;
   readonly market: string;
   readonly lines: readonly PurchaseLineFactV2[];
   readonly shippingMinor: string;
@@ -147,7 +151,9 @@ function commonConditionsMatch(
     (!startsAt || occurredAt >= startsAt) &&
     (!endsAt || occurredAt < endsAt) &&
     (fact.source !== "purchase" ||
-      (matchesAny(conditions.currencyCodes, [fact.currencyCode]) &&
+      (matchesAny(conditions.currencyCodes, [
+        fact.sourceCurrencyCode ?? fact.currencyCode,
+      ]) &&
         matchesAny(conditions.markets, [fact.market]))) &&
     (fact.source !== "verified_product_review" ||
       (fact.productId !== null &&
@@ -463,6 +469,29 @@ function evaluatePurchase(
   if (fact.currencyCode !== programme.currencyCode) {
     throw new RangeError(`Purchase currency must be ${programme.currencyCode}`);
   }
+  const hasSourceCurrency = fact.sourceCurrencyCode !== undefined;
+  if (
+    hasSourceCurrency !== (fact.currencyConversion !== undefined) ||
+    hasSourceCurrency !== (fact.sourceCurrencyMinorUnitDigits !== undefined)
+  ) {
+    throw new TypeError(
+      "Converted purchases require source currency, precision, and evidence",
+    );
+  }
+  if (fact.currencyConversion) {
+    const evidence = fact.currencyConversion;
+    if (
+      fact.sourceCurrencyCode === fact.currencyCode ||
+      evidence.sourceCurrencyCode !== fact.sourceCurrencyCode ||
+      evidence.sourceMinorUnitDigits !== fact.sourceCurrencyMinorUnitDigits ||
+      evidence.baseCurrencyCode !== fact.currencyCode ||
+      evidence.baseMinorUnitDigits !== programme.currencyMinorUnitDigits
+    ) {
+      throw new RangeError(
+        "Purchase conversion evidence does not match currency scope",
+      );
+    }
+  }
   const linesById = new Set<string>();
   for (const line of fact.lines) {
     if (linesById.has(line.lineId))
@@ -478,13 +507,26 @@ function evaluatePurchase(
   }
   const baseEligible = matchingPurchaseSpend(base, fact);
   const minorUnitsPerMajor = 10n ** BigInt(programme.currencyMinorUnitDigits);
-  const denominator = minorUnitsPerMajor * BASIS_POINTS;
+  const tierLevel = programme.tierPolicy?.levels.find(
+    (level) => level.tierCode === fact.tierCode,
+  );
+  if (programme.tierPolicy && !tierLevel) {
+    throw new TypeError(`Tier ${fact.tierCode} has no advanced-policy level`);
+  }
+  const tierMultiplierBasisPoints = BigInt(
+    tierLevel?.benefits.earningMultiplierBasisPoints ?? 10_000,
+  );
+  const denominator = programme.tierPolicy
+    ? minorUnitsPerMajor * BASIS_POINTS * BASIS_POINTS
+    : minorUnitsPerMajor * BASIS_POINTS;
   const contributions: EarningRuleContributionV2[] = [];
 
   const baseNumerator =
     baseEligible.spend *
     parsePositive(base.effect.pointsPerMajorUnit, "Base rate") *
-    BASIS_POINTS;
+    (programme.tierPolicy
+      ? tierMultiplierBasisPoints * BASIS_POINTS
+      : BASIS_POINTS);
   const baseContribution = ruleContribution(
     base,
     baseNumerator,
@@ -507,7 +549,8 @@ function evaluatePurchase(
     const extraNumerator =
       multiplierSpend *
       parsePositive(base.effect.pointsPerMajorUnit, "Base rate") *
-      (BigInt(selectedMultiplier.effect.multiplierBasisPoints) - BASIS_POINTS);
+      (BigInt(selectedMultiplier.effect.multiplierBasisPoints) - BASIS_POINTS) *
+      (programme.tierPolicy ? tierMultiplierBasisPoints : 1n);
     const contribution = ruleContribution(
       selectedMultiplier,
       extraNumerator,

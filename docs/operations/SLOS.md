@@ -21,6 +21,10 @@
 - Synthetic probes never create value and use dedicated identities/tenants.
 - Metrics/log labels cannot include customer identifiers or unbounded tenant IDs.
 - Error-budget exhaustion stops feature rollout and prioritizes reliability work.
+- A missing required time series is unknown/unhealthy source coverage, never a healthy zero.
+- The canonical signal/alert/owner/route contract is `infrastructure/observability/catalog.yaml`; Prometheus rules and the provisioned Grafana dashboard are validated projections of that contract.
+- Alert delivery, acknowledgement, escalation, handoff, and source freshness are operational SLIs and require monthly evidence.
+- Billing state and entitlements cannot inhibit ledger, tenancy, privacy, recovery, checkout, refund, release, reconciliation, or promised-value alerts.
 
 ## Capacity envelope to prove
 

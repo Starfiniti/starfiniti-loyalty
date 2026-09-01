@@ -1,0 +1,9 @@
+[
+  {
+    "targets": ["host.example.invalid:9100"],
+    "labels": {
+      "environment": "example",
+      "service": "backup-host"
+    }
+  }
+]

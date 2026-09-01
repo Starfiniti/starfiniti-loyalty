@@ -1,0 +1,175 @@
+{
+  "schema": "starfiniti.node-runtime-ci-evidence.v1",
+  "observedAt": "2026-08-29T14:29:27Z",
+  "candidate": {
+    "branch": "codex/enterprise-roadmap-integration",
+    "implementationCommit": "d2c347a271259a9a93958d02ded2fed732676b59",
+    "analysisMergeCommit": "c2c3626d695b362eabe00b970ceed9d654f6ef53",
+    "baseCommit": "2826b0bdc758cf224ac22d85940e73b25b61865f",
+    "pullRequest": 57,
+    "pullRequestOpen": true,
+    "pullRequestMergeable": true
+  },
+  "github": {
+    "ci": {
+      "runId": 33257511194,
+      "url": "https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/33257511194",
+      "headCommit": "d2c347a271259a9a93958d02ded2fed732676b59",
+      "conclusion": "success",
+      "jobs": [
+        { "id": 99113691755, "name": "containers", "conclusion": "success" },
+        { "id": 99113691839, "name": "baseline", "conclusion": "success" },
+        { "id": 99113691856, "name": "database", "conclusion": "success" },
+        {
+          "id": 99113691869,
+          "name": "woocommerce-runtime (minimum-legacy)",
+          "conclusion": "success"
+        },
+        {
+          "id": 99113691885,
+          "name": "woocommerce-runtime (current-hpos)",
+          "conclusion": "success"
+        },
+        {
+          "id": 99113691895,
+          "name": "woocommerce-runtime (current-legacy)",
+          "conclusion": "success"
+        },
+        {
+          "id": 99113691938,
+          "name": "woocommerce-runtime (minimum-hpos)",
+          "conclusion": "success"
+        }
+      ]
+    },
+    "security": {
+      "runId": 33257511192,
+      "url": "https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/33257511192",
+      "headCommit": "d2c347a271259a9a93958d02ded2fed732676b59",
+      "analysisMergeCommit": "c2c3626d695b362eabe00b970ceed9d654f6ef53",
+      "conclusion": "success",
+      "jobs": [
+        { "id": 99113691786, "name": "supply-chain", "conclusion": "success" },
+        {
+          "id": 99113691906,
+          "name": "recovery-transport",
+          "conclusion": "success"
+        },
+        { "id": 99113691934, "name": "dast", "conclusion": "success" },
+        { "id": 99113691986, "name": "codeql", "conclusion": "success" }
+      ]
+    },
+    "externalCodeql": {
+      "checkRunId": 99113856918,
+      "analysisId": 1691856923,
+      "analysisCommit": "c2c3626d695b362eabe00b970ceed9d654f6ef53",
+      "ref": "refs/pull/57/merge",
+      "conclusion": "success",
+      "results": 0,
+      "rules": 103
+    },
+    "requiredChecks": 12,
+    "requiredChecksPassed": 12
+  },
+  "artifacts": {
+    "supplyChain": {
+      "id": 9716294905,
+      "name": "security-supply-chain-c2c3626d695b362eabe00b970ceed9d654f6ef53",
+      "sizeBytes": 52399,
+      "archiveSha256": "f0f14d44fc849ae5193e73defd2f96e0539626b8d584d61f5361ae39a2479c1d",
+      "createdAt": "2026-08-29T14:27:37Z"
+    },
+    "codeql": {
+      "id": 9716271177,
+      "name": "security-codeql-c2c3626d695b362eabe00b970ceed9d654f6ef53",
+      "sizeBytes": 462,
+      "archiveSha256": "30d6a34678c8d1b3051895b371cb49a5da41711e06e157c21b64d2c19895a0a0",
+      "createdAt": "2026-08-29T14:25:46Z",
+      "summarySha256": "baff892ec0c7244ba90ea3239c18836527ce192c12df71285943dc7fe5f31c29"
+    },
+    "dast": {
+      "id": 9716282080,
+      "name": "security-dast-c2c3626d695b362eabe00b970ceed9d654f6ef53",
+      "sizeBytes": 1557,
+      "archiveSha256": "671539df41bab2729cca51e690ab606df212761d442ea7812d3062f267077304",
+      "createdAt": "2026-08-29T14:26:36Z",
+      "reportSha256": "231eb48d181b5026596c29e7ace05424c73b5a72d607bf79f30ee6274d1db957"
+    }
+  },
+  "security": {
+    "repository": {
+      "tool": "Trivy",
+      "version": "0.74.0",
+      "summarySha256": "35e2e20a3ed57f1902b44369e4ed61e6bcb8e59fa8cb48a7f41751f1356712ef",
+      "vulnerabilities": 0,
+      "misconfigurations": 0,
+      "secrets": 0,
+      "licenceFindings": 0
+    },
+    "trivyDatabase": {
+      "version": 2,
+      "updatedAt": "2026-08-28T22:24:39.310423821Z",
+      "checkBundleSha256": "1583562f8b90ed2a071b99f0e5ffff6b57e4ceb6ca3e4796577b4e6a339eb74c"
+    },
+    "codeql": {
+      "version": "2.26.4",
+      "querySuite": "security-extended",
+      "findings": 0
+    },
+    "dast": {
+      "tool": "ZAP",
+      "version": "2.17.0",
+      "informationalAlerts": 2,
+      "lowAlerts": 0,
+      "mediumAlerts": 0,
+      "highAlerts": 0,
+      "criticalAlerts": 0
+    }
+  },
+  "images": {
+    "dashboard": {
+      "nodeVersion": "24.20.0",
+      "operatingSystem": "alpine-3.24.1",
+      "imageId": "f72f97a61904d1de33c4a5393f0930124ad8dc98a7af5a0c64a4cddba03bf311",
+      "artifactId": "2ca8414ee2d461db4a06007c7d7a15d716ab230ce1e1d1ad352707ca471b82f5",
+      "trivyReportSha256": "cfab29a98ede10ea8ca85343ad2928c5c228dff55b3b289258f39606d1fa8374",
+      "sbomSha256": "98d4f794cd5c34149ccf8a7845776102f3582c30cf9b296ce78829b85f815d75",
+      "sbomSerial": "urn:uuid:47f30837-7274-4e8d-a54b-bc15e17d3820",
+      "sbomComponents": 228,
+      "vulnerabilities": 0,
+      "misconfigurations": 0,
+      "secrets": 0
+    },
+    "worker": {
+      "nodeVersion": "24.20.0",
+      "operatingSystem": "alpine-3.24.1",
+      "imageId": "b6aaf7091c51a39c176d970b1b55fbae263fdfbd934f93735455ba5bc2ff37ae",
+      "artifactId": "04086ff5a86b854bb570353b02ce573535eb38f28734e1754eaabd814e4d514d",
+      "trivyReportSha256": "73e07a64e74e38187c1e67135ed61a7f24d7931d3a4f169a6d8a4c885e891eea",
+      "sbomSha256": "c4de960a5d901929315d45bc87522cdb466769e00d691154460491fbc6dbc60a",
+      "sbomSerial": "urn:uuid:f623d698-caff-4525-9fc3-22c7055b7a04",
+      "sbomComponents": 108,
+      "vulnerabilities": 0,
+      "misconfigurations": 0,
+      "secrets": 0
+    }
+  },
+  "verification": {
+    "unitAndContractTests": 995,
+    "migrations": 87,
+    "pgtapFiles": 69,
+    "pgtapAssertions": 3790,
+    "concurrencyProbes": 22,
+    "woocommerceRuntimeCells": 4,
+    "productionAuditVulnerabilities": 0
+  },
+  "production": {
+    "access": false,
+    "mutation": false,
+    "imagesPublished": false,
+    "deploymentApproved": false,
+    "deployed": false,
+    "rollbackObserved": false,
+    "reconciled": false
+  }
+}

@@ -4,6 +4,7 @@ import { join } from "node:path";
 const pluginRoot = "plugins/woocommerce";
 const bootstrap = readFileSync(`${pluginRoot}/starfiniti-loyalty.php`, "utf8");
 const plugin = readFileSync(`${pluginRoot}/src/class-plugin.php`, "utf8");
+const blocksJavascript = readFileSync(`${pluginRoot}/assets/blocks.js`, "utf8");
 const pot = readFileSync(
   `${pluginRoot}/languages/starfiniti-loyalty.pot`,
   "utf8",
@@ -54,6 +55,14 @@ for (const file of phpFiles(pluginRoot)) {
     validCalls += 1;
     sourceMessages.add(decodePhpSingleQuoted(match[1] ?? ""));
   }
+}
+const javascriptGettextCall =
+  /\b__\(\s*"((?:\\.|[^"\\])*)"\s*,\s*"starfiniti-loyalty"\s*,?\s*\)/gsu;
+const javascriptAnyGettextCall = /\b__\s*\(/gu;
+totalCalls += blocksJavascript.match(javascriptAnyGettextCall)?.length ?? 0;
+for (const match of blocksJavascript.matchAll(javascriptGettextCall)) {
+  validCalls += 1;
+  sourceMessages.add(JSON.parse(`"${match[1] ?? ""}"`));
 }
 if (validCalls !== totalCalls) {
   throw new Error(

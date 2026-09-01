@@ -14,7 +14,7 @@ import {
 export type AuthenticatedTenantState =
   | Readonly<{ kind: "unauthenticated" }>
   | Readonly<{ kind: "unassigned" }>
-  | Readonly<{ kind: "ready"; context: TenantContext }>;
+  | Readonly<{ kind: "ready"; context: TenantContext; userId: string }>;
 
 export async function getAuthenticatedTenantState(): Promise<AuthenticatedTenantState> {
   const supabase = await createSupabaseServerClient();
@@ -86,5 +86,5 @@ export async function getAuthenticatedTenantState(): Promise<AuthenticatedTenant
     preference,
   );
 
-  return context ? { kind: "ready", context } : { kind: "unassigned" };
+  return context ? { kind: "ready", context, userId } : { kind: "unassigned" };
 }

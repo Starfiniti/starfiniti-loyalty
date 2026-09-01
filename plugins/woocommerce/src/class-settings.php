@@ -10,6 +10,8 @@ final class Settings
     private const CONNECTION_ID = 'starfiniti_loyalty_connection_id';
     private const KEY_VERSION = 'starfiniti_loyalty_key_version';
     private const SIGNING_KEY = 'starfiniti_loyalty_signing_key_encrypted';
+    private const BLOCKS_DATA = 'starfiniti_loyalty_blocks_data_enabled';
+    private const PROGRESSIVE_PANEL = 'starfiniti_loyalty_progressive_panel_enabled';
 
     public static function endpoint(): string
     {
@@ -34,6 +36,16 @@ final class Settings
     public static function hasSigningKey(): bool
     {
         return '' !== (string) get_option(self::SIGNING_KEY, '');
+    }
+
+    public static function progressivePanelEnabled(): bool
+    {
+        return 'yes' === (string) get_option(self::PROGRESSIVE_PANEL, 'no');
+    }
+
+    public static function blocksDataEnabled(): bool
+    {
+        return 'yes' === (string) get_option(self::BLOCKS_DATA, 'no');
     }
 
     public static function signingKey(): string
@@ -68,6 +80,13 @@ final class Settings
         $keyVersion = sanitize_key((string) wp_unslash($_POST['key_version'] ?? ''));
         $encodedSigningKey = trim((string) wp_unslash($_POST['signing_key'] ?? ''));
         $setupCode = trim((string) wp_unslash($_POST['setup_code'] ?? ''));
+        $progressivePanel = 'yes' === (string) wp_unslash($_POST['progressive_panel'] ?? '')
+            ? 'yes'
+            : 'no';
+        $blocksData = 'yes' === $progressivePanel
+            || 'yes' === (string) wp_unslash($_POST['blocks_data'] ?? '')
+            ? 'yes'
+            : 'no';
         if ('' !== $setupCode) {
             $connectionPackage = self::decodeConnectionPackage($setupCode);
             if (null === $connectionPackage) {
@@ -93,6 +112,8 @@ final class Settings
         self::store(self::ENDPOINT, untrailingslashit($endpoint));
         self::store(self::CONNECTION_ID, strtolower($connectionId));
         self::store(self::KEY_VERSION, $keyVersion);
+        self::store(self::BLOCKS_DATA, $blocksData);
+        self::store(self::PROGRESSIVE_PANEL, $progressivePanel);
         if (null !== $encrypted) {
             self::store(self::SIGNING_KEY, $encrypted);
         }

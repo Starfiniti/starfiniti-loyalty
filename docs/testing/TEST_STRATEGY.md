@@ -2,9 +2,46 @@
 
 Use unit and property tests for domain invariants, database integration tests for transactions/RLS/migrations, contract tests for signed commerce envelopes, plugin tests across supported PHP/WP/WC, browser tests for merchant/customer flows, and failure/load tests for retries, concurrency, and recovery. Mocks cannot be the only evidence for authoritative behavior.
 
+The M15 capacity-foundation gate validates the exact four-scenario fixed-arrival workload plus a loopback execution of readiness, authenticated account, scoped Service API, and exact-body signed WooCommerce adapters. It corrupts evidence, approval digests and target class, sample topology, task state, claims, sensitive keys/identities, and generated schedule results. A successful HTTP run cannot close the slice: committed aggregate reports must retain driver headroom and zero drops, an independent mature driver must reproduce the boundary, and separately hashed environment and reconciliation documents must prove the exact production-like topology, data shape, sub-300 ms wallet p95, sub-10-second event-to-ledger p95, and zero unexplained request/ledger/WooCommerce difference.
+
+The M15 fault-foundation gate validates all six canonical scenarios and executes them against a loopback fixture with fake disposable service/proxy controls. It proves deterministic restoration, recovery probes, replay bounds, minimized reports, rejection of non-loopback origins, and rejection of missing fault coverage. A passing controller report cannot close the slice: two digest-bound disposable environment runs plus separate WAL, queue, immutable-ledger, wallet/lot, WooCommerce/coupon, provider-attempt, checkout, and no-loss reconciliation must pass with zero differences.
+
+The M15 security gate separates source, full development/production
+dependencies, deployable artifact, dynamic, release,
+production-configuration, and independent-human evidence. CodeQL covers
+JavaScript/TypeScript; private SARIF is reduced to exact rule/severity/scope
+counts and Critical/High/unknown results fail. Rules are indexed from both the
+CodeQL driver and query-pack extensions; missing, duplicate, malformed, or
+conflicting rule/security-score metadata remains unknown rather than inheriting
+a lower warning level. A GitHub dismissal does not remove a raw result from this
+gate. Temporary scan fixtures use explicit `0600` files, and OS-temp-derived
+read-only fault inputs retain an explicit `0600` fail-safe mode on their
+descriptor open. Federation tests prove
+domain-separated keyed fingerprints, Auth-before-key-read, wrong-key rejection,
+canonical 256-bit parsing, and the four-file all-or-none boundary. Fault and
+deployment secret inputs use descriptor-first read-only/no-follow access.
+Klaviyo tests and the operator-command vector prove the connection-bound scrypt
+V2 fingerprint while the provider remains disabled. The complete npm audit includes
+development tooling. Repository Trivy uses a non-retained raw secret report, a
+count-only summary, and an independent enforcing scan; both production images
+fail on High/Critical vulnerability, secret, misconfiguration, and licence
+findings. Trivy database/check-bundle timestamps must remain within 24 hours,
+and Syft emits exact CycloneDX inventories. ZAP runs only against an
+unauthenticated disposable dashboard on an internal Docker network with no host
+port or external route, bounded spider/rule/scan/wait durations, and a
+High-alert failure. The 26-check manifest validator plus the scan-summary
+adversarial suite corrupt tool/workflow/plan digests, message source/origin
+guards, task state, checks, failure rules, public targets, scan duration,
+severity, secret, freshness, and sensitive-evidence boundaries. Completion
+additionally requires exact SBOM/image/release reconciliation, verified
+file/image provenance, non-destructive production review, independent
+penetration test/retest, zero unresolved Critical/High findings, explicit
+Medium/false-positive dispositions, exact-head four-cell R-032 compatibility,
+and named security-owner approval.
+
 Database migrations, seed replay, schema grants, RLS coverage, and privileged-function placement are exercised with `npm run db:verify`; see `DATABASE_TESTS.md`. Static validation alone cannot close a database task.
 
-`npm run accessibility:validate` statically enforces the shared first-focus skip link, one focusable main target on all 13 route surfaces, text-area focus visibility, and reduced-motion coverage. It complements, rather than replaces, keyboard and responsive browser inspection of primary workflows. The authenticated redemption route is also checked at a 390-pixel viewport for safe login continuation, private/no-store and no-referrer handling, and a bounded confirmation layout.
+`npm run accessibility:validate` statically enforces the shared first-focus skip link, one focusable main target on all 17 route/component surfaces, text-area focus visibility, and reduced-motion coverage. It complements, rather than replaces, keyboard and responsive browser inspection of primary workflows. The authenticated redemption route is also checked at a 390-pixel viewport for safe login continuation, private/no-store and no-referrer handling, and a bounded confirmation layout.
 
 Support-diagnostic tests serialize adversarial inputs and assert forbidden customer, payload, store-name, item-identity, and signing values are absent. Noncanonical error/operation strings are redacted rather than trusted as safe codes.
 
@@ -29,5 +66,13 @@ The guided WooCommerce-provisioning gate adds 44 pgTAP assertions for the unique
 The readiness gate adds one pgTAP assertion that executes the exact production catalog query as `loyalty_runtime`, plus one pure dashboard test covering positive, absent, null, duplicate-row, denied-privilege, and empty-pool outcomes. The public route catches internal failures and returns only a no-store `503 unavailable`; CI also builds that route into the production image used by Proxmox Compose.
 
 The initial-tenant bootstrap gate verifies the private function signature, empty search path, absent browser/runtime/worker execution privileges, atomic organization/workspace/programme-group/owner creation, exact retry behavior, changed-request and existing-slug rejection, existing Auth identity requirement, canonical inputs, bounded secret-free audit metadata, immutable evidence, and deliberate separation from authenticated programme creation. The operator-command self-test covers UUID/slug/name validation, exact confirmation, administration-role separation, deterministic idempotency, and secret-free failures without connecting to a database.
+
+The M13 agency/support/recovery gate combines 73 focused pgTAP assertions with a three-race, two-session concurrency probe. It proves bilateral relationships never become membership, support approval is separate and scope/expiry/session bound, every support or break-glass read appends tenant-visible evidence, AAL2 recovery checks a live Auth session without exposing `auth.sessions`, terminal offboarding removes every supported credential path including live webhook destinations/fingerprints, cooled deletion pseudonymizes only mutable identity, and immutable ledger/programme/audit evidence remains unchanged. Production-build browser review separately covers the real Hub workflows at desktop/mobile/narrow widths, keyboard/focus restoration, reduced motion, dark mode, 44-pixel mobile controls, cooling-state denial, overflow, and diagnostics.
+
+The M13 production-closeout gate adds an exact 50-check enterprise identity manifest to `npm run check`. It rejects pending, failed, missing, duplicate, or unknown checks at completion; non-exact candidate commits; score drift; any category below 80% of its weight; incomplete M13-S01–S05 prerequisites; unsafe public status; sensitive keys or obvious raw identity/credential value shapes; hollow automatic-failure claims; and completion without all explicit approvals. Its self-test corrupts each boundary and must observe a deterministic rejection before the validator accepts the in-progress manifest.
+
+The M14 billing-foundation gate adds 61 focused pgTAP assertions for private grants/RLS/search paths, live-membership tenancy, forged-claim denial, revocation, immutable account/state evidence, exact request/provider-customer/provider-event retries, changed-replay conflict, delayed-event ordering, grace/suspension/cancellation, six literal protected paths, and zero loyalty ledger effects. A two-session probe races exact provider customers and events under different caller keys, then races changed normalized payloads under the same provider event. Contract/server/UI tests enforce strict minimized output and prove self-hosted returns before provider construction; mocks are not authoritative for database behavior.
+
+The M14 webhook-inbox gate adds 67 focused pgTAP assertions for runtime/worker separation, RLS/search paths, storage minimization, database-first self-hosted and entitlement gates, exact/changed provider-event replay, immutable receipts/attempts, bounded claims, peer exclusion, lease ownership/expiry/reclaim, entitlement revocation after claim, invoice no-authority behavior, event-time state normalization, and zero ledger effects. Sixteen dashboard tests exercise exact-byte HMAC tamper/skew/rotation, JSON minimization, current/legacy and terminal-period Stripe shapes, regular-file secret handling, route ordering, response minimization, and safe failures. Three worker tests cover bounded claim/result parsing and private failure deferral. A two-session probe races exact and changed event intake and two distinct worker claims.
 
 Merchant presentation tests prove a canonical English document and copy boundary, removal of legacy locale queries, and English formatting. Programme publication and customer credit-expiry tests still convert winter and summer Europe/Ljubljana wall times to exact UTC instants and reject malformed dates, spring DST gaps, and autumn ambiguous times. Playwright renders the real Overview, programme, operations, customer-adjustment, and experience-editor components at 390×844 and 1440×1000, exercises add/review/preview interactions, asserts no horizontal overflow, and rejects console or failed-network responses. Production login smoke verifies the English document language and first-focus keyboard bypass.

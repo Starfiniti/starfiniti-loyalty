@@ -1,8 +1,8 @@
 {
   "$schema": "https://schemas.wp.org/trunk/wp-env.json",
-  "core": "https://wordpress.org/wordpress-7.0.2.zip",
-  "phpVersion": "8.3",
-  "plugins": ["https://downloads.wordpress.org/plugin/woocommerce.10.9.4.zip"],
+  "core": "https://wordpress.org/wordpress-7.1.zip",
+  "phpVersion": "8.4",
+  "plugins": ["https://downloads.wordpress.org/plugin/woocommerce.11.0.1.zip"],
   "mappings": {
     "wp-content/plugins/starfiniti-loyalty": "./plugins/woocommerce"
   },

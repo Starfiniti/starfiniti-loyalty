@@ -1,9 +1,15 @@
 import {
   chmodSync,
+  closeSync,
+  constants,
+  fstatSync,
+  lstatSync,
   mkdtempSync,
+  openSync,
   readFileSync,
   rmSync,
   statSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -26,11 +32,29 @@ const requiredVariables = [
   "WOOCOMMERCE_SIGNING_MATERIAL_PATH",
 ];
 
+const federationVariables = [
+  "LOYALTY_FEDERATION_CONFIG_PATH",
+  "LOYALTY_AUTHENTIK_API_TOKEN_PATH",
+  "LOYALTY_SUPABASE_SERVICE_ROLE_KEY_PATH",
+  "LOYALTY_FEDERATION_FINGERPRINT_KEY_PATH",
+];
+
+const federationMountTargets = {
+  LOYALTY_FEDERATION_CONFIG_PATH: "/run/secrets/federation_management_config",
+  LOYALTY_AUTHENTIK_API_TOKEN_PATH: "/run/secrets/authentik_federation_token",
+  LOYALTY_SUPABASE_SERVICE_ROLE_KEY_PATH:
+    "/run/secrets/supabase_service_role_key",
+  LOYALTY_FEDERATION_FINGERPRINT_KEY_PATH:
+    "/run/secrets/federation_fingerprint_key",
+};
+
 const referencePattern =
   /^pool:[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}:v1$/u;
 const immutableImagePattern =
   /^(?:[a-z0-9.-]+(?::[0-9]+)?\/)?[a-z0-9._/-]+(?:@sha256:[0-9a-f]{64}|:[0-9a-f]{40})$/u;
 const dashboardRuntimeUid = 1001;
+const uuidPattern =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
 
 function fail(message) {
   throw new Error(`Deployment preflight failed: ${message}`);
@@ -170,6 +194,176 @@ function validateSigningPool(path, enforcePermissions) {
   return entries.length;
 }
 
+function readOwnerOnlyFile(path, label, enforcePermissions) {
+  if (!isAbsolute(path)) fail(`${label} path must be absolute`);
+  let descriptor;
+  try {
+    descriptor = openSync(
+      path,
+      constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0),
+    );
+  } catch {
+    fail(`${label} is unreadable`);
+  }
+  try {
+    const before = fstatSync(descriptor);
+    if (!before.isFile()) fail(`${label} must be a regular file`);
+    if (before.size < 1 || before.size > 64 * 1024) {
+      fail(`${label} has an invalid size`);
+    }
+    if (enforcePermissions && (before.mode & 0o077) !== 0) {
+      fail(`${label} must not grant group or other access`);
+    }
+    if (enforcePermissions && before.uid !== dashboardRuntimeUid) {
+      fail(
+        `${label} must be owned by dashboard runtime UID ${dashboardRuntimeUid}`,
+      );
+    }
+    const value = readFileSync(descriptor);
+    const after = fstatSync(descriptor);
+    const final = lstatSync(path);
+    if (
+      value.length !== before.size ||
+      after.size !== before.size ||
+      after.dev !== before.dev ||
+      after.ino !== before.ino ||
+      after.mode !== before.mode ||
+      after.uid !== before.uid ||
+      final.isSymbolicLink() ||
+      !final.isFile() ||
+      final.size !== before.size ||
+      final.dev !== before.dev ||
+      final.ino !== before.ino ||
+      final.mode !== before.mode ||
+      final.uid !== before.uid
+    ) {
+      fail(`${label} changed while it was read`);
+    }
+    return value.toString("utf8");
+  } finally {
+    closeSync(descriptor);
+  }
+}
+
+function validateFederationManagementFiles(environment, enforcePermissions) {
+  const paths = [
+    environment.LOYALTY_FEDERATION_CONFIG_PATH,
+    environment.LOYALTY_AUTHENTIK_API_TOKEN_PATH,
+    environment.LOYALTY_SUPABASE_SERVICE_ROLE_KEY_PATH,
+    environment.LOYALTY_FEDERATION_FINGERPRINT_KEY_PATH,
+  ];
+  if (new Set(paths).size !== paths.length) {
+    fail("federation configuration and credentials must use distinct files");
+  }
+  const rawConfiguration = readOwnerOnlyFile(
+    paths[0],
+    "Federation management configuration",
+    enforcePermissions,
+  );
+  let configuration;
+  try {
+    configuration = JSON.parse(rawConfiguration);
+  } catch {
+    fail("Federation management configuration is not valid JSON");
+  }
+  const requiredKeys = [
+    "authentikOrigin",
+    "supabaseUrl",
+    "sourceAuthenticationFlowId",
+    "sourceEnrollmentFlowId",
+    "providerAuthorizationFlowId",
+    "providerInvalidationFlowId",
+    "providerSigningKeyId",
+    "providerOpenidPropertyMappingId",
+    "sourceUserPropertyMappingIds",
+  ];
+  if (
+    !configuration ||
+    typeof configuration !== "object" ||
+    Array.isArray(configuration) ||
+    Object.keys(configuration).length !== requiredKeys.length ||
+    requiredKeys.some((key) => !Object.hasOwn(configuration, key))
+  ) {
+    fail("Federation management configuration has an invalid shape");
+  }
+  validateHttpsOrigin(
+    "Federation Authentik origin",
+    configuration.authentikOrigin,
+  );
+  const configuredSupabase = validateHttpsOrigin(
+    "Federation Supabase origin",
+    configuration.supabaseUrl,
+  );
+  if (configuredSupabase.origin !== environment.NEXT_PUBLIC_SUPABASE_URL) {
+    fail("Federation Supabase origin must match NEXT_PUBLIC_SUPABASE_URL");
+  }
+  for (const key of requiredKeys.slice(2, 8)) {
+    if (!uuidPattern.test(configuration[key])) {
+      fail("Federation management configuration contains an invalid selector");
+    }
+  }
+  if (
+    !Array.isArray(configuration.sourceUserPropertyMappingIds) ||
+    configuration.sourceUserPropertyMappingIds.length < 1 ||
+    configuration.sourceUserPropertyMappingIds.length > 20 ||
+    configuration.sourceUserPropertyMappingIds.some(
+      (value) => typeof value !== "string" || !uuidPattern.test(value),
+    ) ||
+    new Set(configuration.sourceUserPropertyMappingIds).size !==
+      configuration.sourceUserPropertyMappingIds.length
+  ) {
+    fail("Federation source mappings are invalid");
+  }
+  for (const [path, label] of [
+    [paths[1], "Authentik federation API token"],
+    [paths[2], "Supabase service-role key"],
+  ]) {
+    const value = readOwnerOnlyFile(path, label, enforcePermissions).trim();
+    if (
+      value.length < 32 ||
+      value.length > 8_192 ||
+      /[\u0000-\u001f\u007f]/u.test(value)
+    ) {
+      fail(`${label} is malformed`);
+    }
+  }
+  const fingerprintKey = readOwnerOnlyFile(
+    paths[3],
+    "Federation credential fingerprint key",
+    enforcePermissions,
+  ).trim();
+  const decodedFingerprintKey = Buffer.from(fingerprintKey, "base64");
+  if (
+    decodedFingerprintKey.length !== 32 ||
+    decodedFingerprintKey.toString("base64") !== fingerprintKey
+  ) {
+    fail("Federation credential fingerprint key is malformed");
+  }
+}
+
+function validateOptionalFederationManagementFiles(
+  environment,
+  enforcePermissions,
+) {
+  const configured = [];
+  for (const name of federationVariables) {
+    const value = environment[name];
+    if (value === undefined || value === "") continue;
+    if (typeof value !== "string" || value.trim() === "") {
+      fail(`${name} must be empty or an absolute file path`);
+    }
+    configured.push(name);
+  }
+  if (configured.length === 0) return false;
+  if (configured.length !== federationVariables.length) {
+    fail(
+      "tenant federation configuration and credentials must be supplied together",
+    );
+  }
+  validateFederationManagementFiles(environment, enforcePermissions);
+  return true;
+}
+
 export function validateDeploymentConfiguration(
   environment,
   { enforcePermissions = process.platform !== "win32" } = {},
@@ -246,17 +440,19 @@ export function validateDeploymentConfiguration(
   ) {
     fail("runtime and worker database credentials must use distinct logins");
   }
-  return validateSigningPool(
+  const poolSize = validateSigningPool(
     environment.WOOCOMMERCE_SIGNING_MATERIAL_PATH,
     enforcePermissions,
   );
+  validateOptionalFederationManagementFiles(environment, enforcePermissions);
+  return poolSize;
 }
 
 export function validateDeploymentAssets() {
   const compose = readFileSync(
     "infrastructure/environments/proxmox/compose.app.yml",
     "utf8",
-  );
+  ).replace(/\r\n?/gu, "\n");
   const template = parseEnvironment(
     readFileSync("infrastructure/environments/proxmox/.env.example", "utf8"),
   );
@@ -265,12 +461,43 @@ export function validateDeploymentAssets() {
       (match) => match[1],
     ),
   );
+  const dashboardStart = compose.indexOf("  dashboard:\n");
+  const workerStart = compose.indexOf("\n  worker:\n", dashboardStart);
+  if (dashboardStart < 0 || workerStart < 0) {
+    fail("Proxmox Compose must declare dashboard before worker");
+  }
+  const dashboard = compose.slice(dashboardStart, workerStart);
   for (const name of requiredVariables) {
     if (!Object.hasOwn(template, name)) {
       fail(`Proxmox environment template does not declare ${name}`);
     }
     if (name !== "COMPOSE_PROJECT_NAME" && !composeVariables.has(name)) {
       fail(`Proxmox Compose does not require ${name}`);
+    }
+  }
+  for (const name of federationVariables) {
+    if (!Object.hasOwn(template, name)) {
+      fail(`Proxmox environment template does not declare ${name}`);
+    }
+    if (template[name] !== "") {
+      fail(`Proxmox environment template must keep optional ${name} empty`);
+    }
+    const reference = `\${${name}:-/dev/null}`;
+    if (compose.split(reference).length !== 2) {
+      fail(`Proxmox Compose must reference optional ${name} exactly once`);
+    }
+    const mount = [
+      "      - type: bind",
+      `        source: "${reference}"`,
+      `        target: ${federationMountTargets[name]}`,
+      "        read_only: true",
+      "        bind:",
+      "          create_host_path: false",
+    ].join("\n");
+    if (!dashboard.includes(mount)) {
+      fail(
+        `Proxmox Compose must mount optional ${name} read-only at its fixed dashboard target without creating a host path`,
+      );
     }
   }
   if (!compose.includes("http://127.0.0.1:3000/api/healthz")) {
@@ -299,7 +526,12 @@ function runSelfTest() {
   validateDeploymentAssets();
   const directory = mkdtempSync(join(tmpdir(), "starfiniti-preflight-"));
   const poolPath = join(directory, "signing-material.json");
+  const federationConfigPath = join(directory, "federation-management.json");
+  const authentikTokenPath = join(directory, "authentik-token");
+  const supabaseServiceKeyPath = join(directory, "supabase-service-role-key");
+  const fingerprintKeyPath = join(directory, "federation-fingerprint-key");
   const encodedKey = Buffer.alloc(32, 7).toString("base64");
+  const fingerprintKey = Buffer.alloc(32, 9).toString("base64");
   writeFileSync(
     poolPath,
     `${JSON.stringify({
@@ -307,6 +539,26 @@ function runSelfTest() {
     })}\n`,
     { mode: 0o600 },
   );
+  writeFileSync(
+    federationConfigPath,
+    `${JSON.stringify({
+      authentikOrigin: "https://auth.loyalty.invalid",
+      supabaseUrl: "https://api.loyalty.invalid",
+      sourceAuthenticationFlowId: "10000000-0000-4000-8000-000000000001",
+      sourceEnrollmentFlowId: "10000000-0000-4000-8000-000000000002",
+      providerAuthorizationFlowId: "10000000-0000-4000-8000-000000000003",
+      providerInvalidationFlowId: "10000000-0000-4000-8000-000000000004",
+      providerSigningKeyId: "10000000-0000-4000-8000-000000000005",
+      providerOpenidPropertyMappingId: "10000000-0000-4000-8000-000000000006",
+      sourceUserPropertyMappingIds: ["10000000-0000-4000-8000-000000000007"],
+    })}\n`,
+    { mode: 0o600 },
+  );
+  writeFileSync(authentikTokenPath, `${"t".repeat(64)}\n`, { mode: 0o600 });
+  writeFileSync(supabaseServiceKeyPath, `${"s".repeat(64)}\n`, {
+    mode: 0o600,
+  });
+  writeFileSync(fingerprintKeyPath, `${fingerprintKey}\n`, { mode: 0o600 });
   const valid = {
     COMPOSE_PROJECT_NAME: "starfiniti-loyalty",
     DASHBOARD_IMAGE: `ghcr.io/starfiniti/loyalty-dashboard:${"a".repeat(40)}`,
@@ -322,6 +574,10 @@ function runSelfTest() {
     LOYALTY_WORKER_DATABASE_URL:
       "postgresql://loyalty_jobs:worker-password@10.0.0.2:5432/postgres",
     WOOCOMMERCE_SIGNING_MATERIAL_PATH: poolPath,
+    LOYALTY_FEDERATION_CONFIG_PATH: federationConfigPath,
+    LOYALTY_AUTHENTIK_API_TOKEN_PATH: authentikTokenPath,
+    LOYALTY_SUPABASE_SERVICE_ROLE_KEY_PATH: supabaseServiceKeyPath,
+    LOYALTY_FEDERATION_FINGERPRINT_KEY_PATH: fingerprintKeyPath,
   };
   try {
     if (
@@ -330,6 +586,28 @@ function runSelfTest() {
     ) {
       throw new Error(
         "Deployment preflight self-test returned the wrong count.",
+      );
+    }
+    const withoutFederation = { ...valid };
+    for (const name of federationVariables) delete withoutFederation[name];
+    if (
+      validateDeploymentConfiguration(withoutFederation, {
+        enforcePermissions: false,
+      }) !== 1
+    ) {
+      throw new Error(
+        "Deployment preflight self-test rejected disabled tenant federation.",
+      );
+    }
+    const emptyFederation = { ...withoutFederation };
+    for (const name of federationVariables) emptyFederation[name] = "";
+    if (
+      validateDeploymentConfiguration(emptyFederation, {
+        enforcePermissions: false,
+      }) !== 1
+    ) {
+      throw new Error(
+        "Deployment preflight self-test rejected empty tenant federation paths.",
       );
     }
     const messages = [
@@ -376,7 +654,52 @@ function runSelfTest() {
         ),
       ),
       expectFailure(() => parseEnvironment("DUPLICATE=one\nDUPLICATE=two\n")),
+      expectFailure(() =>
+        validateDeploymentConfiguration(
+          {
+            ...valid,
+            LOYALTY_AUTHENTIK_API_TOKEN_PATH: supabaseServiceKeyPath,
+          },
+          { enforcePermissions: false },
+        ),
+      ),
+      expectFailure(() =>
+        validateDeploymentConfiguration(
+          {
+            ...valid,
+            LOYALTY_FEDERATION_FINGERPRINT_KEY_PATH: authentikTokenPath,
+          },
+          { enforcePermissions: false },
+        ),
+      ),
+      expectFailure(() =>
+        validateDeploymentConfiguration(
+          {
+            ...withoutFederation,
+            LOYALTY_FEDERATION_CONFIG_PATH: federationConfigPath,
+          },
+          { enforcePermissions: false },
+        ),
+      ),
+      expectFailure(() =>
+        validateDeploymentConfiguration(
+          {
+            ...withoutFederation,
+            LOYALTY_FEDERATION_CONFIG_PATH: "   ",
+          },
+          { enforcePermissions: false },
+        ),
+      ),
     ];
+    writeFileSync(fingerprintKeyPath, "not-a-canonical-256-bit-key\n", {
+      mode: 0o600,
+    });
+    messages.push(
+      expectFailure(() =>
+        validateDeploymentConfiguration(valid, { enforcePermissions: false }),
+      ),
+    );
+    writeFileSync(fingerprintKeyPath, `${fingerprintKey}\n`, { mode: 0o600 });
     writeFileSync(poolPath, '{"invalid":"material"}\n', { mode: 0o600 });
     messages.push(
       expectFailure(() =>
@@ -391,6 +714,22 @@ function runSelfTest() {
       { mode: 0o600 },
     );
     if (process.platform !== "win32") {
+      const linkedFingerprintKeyPath = join(
+        directory,
+        "linked-federation-fingerprint-key",
+      );
+      symlinkSync(fingerprintKeyPath, linkedFingerprintKeyPath);
+      messages.push(
+        expectFailure(() =>
+          validateDeploymentConfiguration(
+            {
+              ...valid,
+              LOYALTY_FEDERATION_FINGERPRINT_KEY_PATH: linkedFingerprintKeyPath,
+            },
+            { enforcePermissions: false },
+          ),
+        ),
+      );
       chmodSync(poolPath, 0o644);
       messages.push(
         expectFailure(() => validateDeploymentConfiguration(valid)),
@@ -402,6 +741,7 @@ function runSelfTest() {
         "runtime-password",
         "worker-password",
         encodedKey,
+        fingerprintKey,
         valid.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
       ]) {
         if (message.includes(secret)) {
@@ -413,7 +753,7 @@ function runSelfTest() {
     rmSync(directory, { recursive: true, force: true });
   }
   console.log(
-    "Validated deployment asset parity, immutable selectors, credential separation, HTTPS origins, explicit dashboard binding, internal Supabase proxy mapping, signing-pool structure/ownership, and redacted failures.",
+    "Validated deployment asset parity, immutable selectors, credential separation, HTTPS origins, explicit dashboard binding, internal Supabase proxy mapping, signing-pool structure, optional all-or-none federation-secret and keyed-fingerprint structure/ownership, and redacted failures.",
   );
 }
 

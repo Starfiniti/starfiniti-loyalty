@@ -1,0 +1,441 @@
+{
+  "schema": "starfiniti.proxmox-security-preflight.v1",
+  "generatedAt": "2026-08-29T01:31:45Z",
+  "candidate": {
+    "path": "infrastructure/governance/proxmox-security-update-plan.yaml",
+    "fileSha256": "ec010eb667d6166ee5adc0ee0cd2d6ecdf5b2a114e345b018b51c704d64df075",
+    "provenanceSha256": "39f30c67a374b041944a598ce2334fed3fcb8e5f64264b3db08847d5ee23ff9f"
+  },
+  "packageCanary": {
+    "path": "docs/plan/evidence/M16/runs/proxmox-security-package-canary-957e1de-2026-08-29T003101Z.json",
+    "fileSha256": "3eec19512a6b2535cf0c6359144c1807b78e01015f43c470ad53335c6eb1090e",
+    "reportSha256": "0b703cc553f2304de75f28160e7482b09718794205efa7615fb39f2eab0f0382",
+    "generatedAt": "2026-08-29T00:31:01Z"
+  },
+  "preflight": {
+    "path": "infrastructure/testing/proxmox-security-preflight/plan.yaml",
+    "fileSha256": "af2b01cbdff3c6f88861c0e5285cd2cf2a98a7aa5b033f74d19c21b60b77461d",
+    "planDigest": "095f5e37b273c22de68bd9972ee9e323f56fd2b6974694080e6ec346fbbc88ec",
+    "collectorPath": "infrastructure/testing/proxmox-security-preflight/collect-facts.py",
+    "collectorFileSha256": "8aebe8bcd03212dc545a3edef0c138281e9ac74b23bce2358dd5994ab491c0b7",
+    "implementationCommit": "5659404cc4cbb24704f9b80103c589c1ae3c8e0b",
+    "factsSha256": "73b76dcf18f30e14ab655e118c04758d10a5e84f5fb26382b790ce6f35bec629"
+  },
+  "endpoint": {
+    "aptIndexes": [
+      {
+        "id": "debian-trixie",
+        "packagesSha256": "be70297f6ea499e8ef0bd93906719298c795bc3dc4ce72560f13e6c9836bfedb"
+      },
+      {
+        "id": "proxmox-trixie-no-subscription",
+        "packagesSha256": "e3675a92287d0a77e15f1ca512fa95ca56564624eff7d4164f2bd91f3cd091c7"
+      }
+    ],
+    "architecture": "amd64",
+    "elapsedMilliseconds": 3513,
+    "endpointId": "proxmox-host",
+    "installedPackages": [
+      {
+        "architecture": "amd64",
+        "id": "base-files",
+        "status": "installed",
+        "version": "13.8+deb13u5"
+      },
+      {
+        "architecture": "amd64",
+        "id": "pve-qemu-kvm",
+        "status": "installed",
+        "version": "11.0.0-4"
+      },
+      {
+        "architecture": "all",
+        "id": "libpve-storage-perl",
+        "status": "installed",
+        "version": "9.1.5"
+      },
+      {
+        "architecture": "amd64",
+        "id": "qemu-server",
+        "status": "installed",
+        "version": "9.1.16"
+      },
+      {
+        "architecture": "all",
+        "id": "pve-manager",
+        "status": "installed",
+        "version": "9.2.3"
+      },
+      {
+        "architecture": "all",
+        "id": "libpve-common-perl",
+        "status": "installed",
+        "version": "9.1.16"
+      },
+      {
+        "architecture": "all",
+        "id": "pve-container",
+        "status": "installed",
+        "version": "6.1.10"
+      },
+      {
+        "architecture": "amd64",
+        "id": "pve-ha-manager",
+        "status": "installed",
+        "version": "5.2.4"
+      },
+      {
+        "architecture": "amd64",
+        "id": "proxmox-mini-journalreader",
+        "status": "installed",
+        "version": "1.6"
+      },
+      {
+        "architecture": "all",
+        "id": "proxmox-widget-toolkit",
+        "status": "installed",
+        "version": "5.2.3"
+      },
+      {
+        "architecture": null,
+        "id": "proxmox-kernel-7.0.14-14-pve-signed",
+        "status": "absent",
+        "version": null
+      },
+      {
+        "architecture": "amd64",
+        "id": "proxmox-kernel-7.0",
+        "status": "installed",
+        "version": "7.0.6-2"
+      }
+    ],
+    "observedAt": "2026-08-29T01:31:45Z",
+    "pveVersion": "pve-manager/9.2.3/d0fde103346cf89a (running kernel: 7.0.6-2-pve)",
+    "relevantHolds": [],
+    "retainedBoundaryPackages": [
+      {
+        "architecture": "amd64",
+        "id": "rsync",
+        "status": "installed",
+        "version": "3.4.1+ds1-5+deb13u3"
+      },
+      {
+        "architecture": "amd64",
+        "id": "borgbackup",
+        "status": "installed",
+        "version": "1.4.0-5"
+      },
+      {
+        "architecture": "amd64",
+        "id": "openssh-client",
+        "status": "installed",
+        "version": "1:10.0p1-7+deb13u4"
+      },
+      {
+        "architecture": "amd64",
+        "id": "openssh-server",
+        "status": "installed",
+        "version": "1:10.0p1-7+deb13u4"
+      }
+    ],
+    "runningKernel": "7.0.6-2-pve",
+    "runningKernelPackage": {
+      "architecture": "amd64",
+      "id": "proxmox-kernel-7.0.6-2-pve-signed",
+      "status": "installed",
+      "version": "7.0.6-2"
+    },
+    "schema": "starfiniti.proxmox-security-preflight-facts.v1",
+    "simulation": {
+      "actions": [
+        {
+          "architecture": "amd64",
+          "fromVersion": "13.8+deb13u5",
+          "id": "base-files",
+          "toVersion": "13.8+deb13u6"
+        },
+        {
+          "architecture": "amd64",
+          "fromVersion": "11.0.0-4",
+          "id": "pve-qemu-kvm",
+          "toVersion": "11.0.3-3"
+        },
+        {
+          "architecture": "all",
+          "fromVersion": "9.1.5",
+          "id": "libpve-storage-perl",
+          "toVersion": "9.1.9"
+        },
+        {
+          "architecture": "amd64",
+          "fromVersion": "9.1.16",
+          "id": "qemu-server",
+          "toVersion": "9.2.7"
+        },
+        {
+          "architecture": "all",
+          "fromVersion": "9.2.3",
+          "id": "pve-manager",
+          "toVersion": "9.2.11"
+        },
+        {
+          "architecture": "all",
+          "fromVersion": "9.1.16",
+          "id": "libpve-common-perl",
+          "toVersion": "9.2.1"
+        },
+        {
+          "architecture": "all",
+          "fromVersion": "6.1.10",
+          "id": "pve-container",
+          "toVersion": "6.1.13"
+        },
+        {
+          "architecture": "amd64",
+          "fromVersion": "5.2.4",
+          "id": "pve-ha-manager",
+          "toVersion": "5.2.5"
+        },
+        {
+          "architecture": "amd64",
+          "fromVersion": "1.6",
+          "id": "proxmox-mini-journalreader",
+          "toVersion": "1.7"
+        },
+        {
+          "architecture": "all",
+          "fromVersion": "5.2.3",
+          "id": "proxmox-widget-toolkit",
+          "toVersion": "5.2.8"
+        },
+        {
+          "architecture": "amd64",
+          "fromVersion": null,
+          "id": "proxmox-kernel-7.0.14-14-pve-signed",
+          "toVersion": "7.0.14-14"
+        },
+        {
+          "architecture": "amd64",
+          "fromVersion": "7.0.6-2",
+          "id": "proxmox-kernel-7.0",
+          "toVersion": "7.0.14-14"
+        }
+      ],
+      "autoremovablePackages": [
+        "proxmox-kernel-7.0.6-2-pve-signed"
+      ],
+      "configurations": [
+        {
+          "architecture": "amd64",
+          "id": "base-files",
+          "version": "13.8+deb13u6"
+        },
+        {
+          "architecture": "amd64",
+          "id": "pve-qemu-kvm",
+          "version": "11.0.3-3"
+        },
+        {
+          "architecture": "all",
+          "id": "libpve-storage-perl",
+          "version": "9.1.9"
+        },
+        {
+          "architecture": "amd64",
+          "id": "qemu-server",
+          "version": "9.2.7"
+        },
+        {
+          "architecture": "all",
+          "id": "pve-manager",
+          "version": "9.2.11"
+        },
+        {
+          "architecture": "all",
+          "id": "libpve-common-perl",
+          "version": "9.2.1"
+        },
+        {
+          "architecture": "all",
+          "id": "pve-container",
+          "version": "6.1.13"
+        },
+        {
+          "architecture": "amd64",
+          "id": "pve-ha-manager",
+          "version": "5.2.5"
+        },
+        {
+          "architecture": "amd64",
+          "id": "proxmox-mini-journalreader",
+          "version": "1.7"
+        },
+        {
+          "architecture": "all",
+          "id": "proxmox-widget-toolkit",
+          "version": "5.2.8"
+        },
+        {
+          "architecture": "amd64",
+          "id": "proxmox-kernel-7.0.14-14-pve-signed",
+          "version": "7.0.14-14"
+        },
+        {
+          "architecture": "amd64",
+          "id": "proxmox-kernel-7.0",
+          "version": "7.0.14-14"
+        }
+      ],
+      "networkNamespace": "isolated-empty",
+      "outputSha256": "680594f64a34afd827055883137f38459898f22739b0c619e8c4f4e60934ba87",
+      "removals": [],
+      "selectorsSha256": "2502fcc4037d72d2ec024972e4115e2d258aa43fd101267228e305330c8d20cd",
+      "summary": {
+        "installs": 1,
+        "kept": 95,
+        "removals": 0,
+        "upgrades": 11
+      }
+    },
+    "stateAfter": {
+      "aptArchives": {
+        "bytes": 0,
+        "fileCount": 1,
+        "sha256": "99a520e0590bb2e56d687525261f0b8ee13fb50199bbf6eff07087bb61ade150"
+      },
+      "aptCache": {
+        "bytes": 100158260,
+        "fileCount": 3,
+        "sha256": "e29658db4bea18862f148e62a891630de18642e9f0c897444ffc720579068d99"
+      },
+      "aptConfiguration": {
+        "bytes": 80542,
+        "fileCount": 23,
+        "sha256": "52825dff81b3edf1035f6b36e368109b34cee9c15621a92ae1a50333ff2e76d5"
+      },
+      "aptLists": {
+        "bytes": 102439233,
+        "fileCount": 31,
+        "sha256": "89ee4e15af89405cf31d7c17025877ee14289a8b75a0a17c6884825df93f342d"
+      },
+      "aptState": {
+        "bytes": 102471163,
+        "fileCount": 35,
+        "sha256": "9a9677ca2efd99463a6d061d9c56f22574811fe621636d01a6a03114accf1a8e"
+      },
+      "aptTrust": {
+        "bytes": 189329,
+        "fileCount": 15,
+        "sha256": "ac2434ffaa7db661bf65b200bf269f361030915b7ad841e6d7cf180b412e238b"
+      },
+      "dpkgSelectionsSha256": "949f8ab0c90b93d9e6d18d4fa1f7606c9cdd924768475d62831b129a8bacefa5",
+      "dpkgStatusSha256": "0f6805a76bc4756ac49e2cd705b89d842e0ed64374bfe48f52ab4f0e813f075f",
+      "dpkgUpdates": {
+        "bytes": 0,
+        "fileCount": 0,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "stateBefore": {
+      "aptArchives": {
+        "bytes": 0,
+        "fileCount": 1,
+        "sha256": "99a520e0590bb2e56d687525261f0b8ee13fb50199bbf6eff07087bb61ade150"
+      },
+      "aptCache": {
+        "bytes": 100158260,
+        "fileCount": 3,
+        "sha256": "e29658db4bea18862f148e62a891630de18642e9f0c897444ffc720579068d99"
+      },
+      "aptConfiguration": {
+        "bytes": 80542,
+        "fileCount": 23,
+        "sha256": "52825dff81b3edf1035f6b36e368109b34cee9c15621a92ae1a50333ff2e76d5"
+      },
+      "aptLists": {
+        "bytes": 102439233,
+        "fileCount": 31,
+        "sha256": "89ee4e15af89405cf31d7c17025877ee14289a8b75a0a17c6884825df93f342d"
+      },
+      "aptState": {
+        "bytes": 102471163,
+        "fileCount": 35,
+        "sha256": "9a9677ca2efd99463a6d061d9c56f22574811fe621636d01a6a03114accf1a8e"
+      },
+      "aptTrust": {
+        "bytes": 189329,
+        "fileCount": 15,
+        "sha256": "ac2434ffaa7db661bf65b200bf269f361030915b7ad841e6d7cf180b412e238b"
+      },
+      "dpkgSelectionsSha256": "949f8ab0c90b93d9e6d18d4fa1f7606c9cdd924768475d62831b129a8bacefa5",
+      "dpkgStatusSha256": "0f6805a76bc4756ac49e2cd705b89d842e0ed64374bfe48f52ab4f0e813f075f",
+      "dpkgUpdates": {
+        "bytes": 0,
+        "fileCount": 0,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      }
+    },
+    "tools": [
+      {
+        "id": "python3",
+        "sha256": "4703a3d15898c0b5d81c3f939e93bdd8ca6116342093fb160ab1e01860dd7d8b"
+      },
+      {
+        "id": "apt-get",
+        "sha256": "67072be139e90c73ed25007ac92f0525909a7c6d6829aecc2ceff86f9568f98b"
+      },
+      {
+        "id": "apt-mark",
+        "sha256": "96f78bd8d768767f4ef78d85545f4e29d50a4754a658437e92d649ae4259c08d"
+      },
+      {
+        "id": "dpkg",
+        "sha256": "0a20f6015fbb7c011571f3ed227a138b12ce282e46b7fdfc239558bc5a7bc9e5"
+      },
+      {
+        "id": "dpkg-query",
+        "sha256": "095817337215129933918cacae5fd62e86202fe238591bea207a75b73561e8c5"
+      },
+      {
+        "id": "unshare",
+        "sha256": "d82900dfd64b5dd01493d206236575623c2dcf306c466dbe127e171c18cb4614"
+      },
+      {
+        "id": "pveversion",
+        "sha256": "da231e9b2c17f265fd910ef524e77648c98c22e9220a8df9a4dbe32b7e7aff55"
+      }
+    ]
+  },
+  "summary": {
+    "candidateActions": 12,
+    "configurations": 12,
+    "upgrades": 11,
+    "installs": 1,
+    "removals": 0,
+    "downgrades": 0,
+    "retainedBoundaryPackages": 4,
+    "relevantHolds": 0,
+    "oldKernelRetained": true,
+    "stateUnchanged": true,
+    "packageListsRefreshed": false,
+    "packageDownloads": false,
+    "packageInstallation": false,
+    "repositoryChange": false,
+    "serviceControl": false,
+    "reboot": false,
+    "productionMutation": false
+  },
+  "gates": {
+    "candidatePackageBytesVerified": true,
+    "repositoryToolSignatureReverified": true,
+    "candidateDependencySimulationReverified": true,
+    "installedStartingStateReverified": true,
+    "compatibilityProved": false,
+    "rollbackEscrowComplete": false,
+    "recoveryReady": false,
+    "maintenanceApproved": false,
+    "rebootApproved": false,
+    "productionMutation": false
+  },
+  "reportSha256": "898d10bde0e5dd1103dfd8838f19febff3e781ac95ecf305d4767eadf20a110a"
+}

@@ -27,4 +27,28 @@ describe("merchant programme navigation", () => {
       expect(matches.map((item) => item.href)).toEqual([current.href]);
     }
   });
+
+  it("exposes campaigns as a real Grow destination", () => {
+    const campaign = merchantNavigation.find(
+      (item) => item.href === "/campaigns",
+    );
+    expect(campaign?.label).toBe("Campaigns");
+    expect(campaign?.match("/campaigns/history")).toBe(true);
+  });
+
+  it("exposes enterprise access as a real Platform destination", () => {
+    const access = merchantNavigation.find(
+      (item) => item.href === "/organization/access",
+    );
+    expect(access?.label).toBe("Team & access");
+    expect(access?.group).toBeUndefined();
+    expect(access?.match("/organization/access")).toBe(true);
+  });
+
+  it("exposes billing as a real Platform destination", () => {
+    const billing = merchantNavigation.find((item) => item.href === "/billing");
+    expect(billing?.label).toBe("Billing & plan");
+    expect(billing?.group).toBeUndefined();
+    expect(billing?.match("/billing/history")).toBe(true);
+  });
 });

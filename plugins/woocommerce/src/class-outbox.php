@@ -522,7 +522,7 @@ final class Outbox
             $market = 'ZZ';
         }
 
-        return [
+        $fact = [
             'kind' => 'order',
             'orderId' => (string) $order->get_id(),
             'status' => sanitize_key($order->get_status()),
@@ -543,6 +543,11 @@ final class Outbox
             'discountTotal' => self::money($order->get_total_discount(), true),
             'refundedTotal' => self::money($order->get_total_refunded(), true),
         ];
+        $referral = Referrals::orderEvidence($order);
+        if (null !== $referral) {
+            $fact['referral'] = $referral;
+        }
+        return $fact;
     }
 
     /** @param mixed $value */

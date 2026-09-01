@@ -1,0 +1,21 @@
+{
+  "schema": "starfiniti.notification-canary-artifact.v1",
+  "artifactId": "read_only_baseline",
+  "candidateCommit": "d81526183ab2ce685c3cea8166d8c3886ecb03ba",
+  "observedAt": "2026-08-27T16:16:45Z",
+  "result": "verified",
+  "summary": "The canonical public endpoints and approved read-only Proxmox route passed the notification pre-canary availability and isolation baseline without mutation.",
+  "checks": ["public_production_baseline", "operator_access"],
+  "details": {
+    "dashboardHealth": 200,
+    "login": 200,
+    "unsignedWooCommerceIngress": 401,
+    "canonicalDns": true,
+    "applicationVm": 970,
+    "databaseVm": 971,
+    "applicationVmState": "running",
+    "databaseVmState": "running",
+    "scope": "read_only",
+    "mutationCount": 0
+  }
+}

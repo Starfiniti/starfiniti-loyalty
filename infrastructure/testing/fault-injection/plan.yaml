@@ -1,0 +1,69 @@
+schema: starfiniti.fault-plan.v1
+status: candidate
+profile: single-site-enterprise-pilot
+bounds:
+  maximumScenarioSeconds: 180
+  maximumRecoverySeconds: 300
+  maximumReplayRequests: 500
+  maximumReplayRatePerSecond: 20
+  maximumConcurrency: 8
+  maximumResponseBytes: 16384
+probes:
+  - id: dashboard_readiness
+    originAlias: dashboard
+    path: /api/healthz
+    timeoutMs: 5000
+    expectedStatuses: [200]
+    responseContract: readiness_v1
+  - id: woocommerce_checkout
+    originAlias: storefront
+    path: /checkout/
+    timeoutMs: 10000
+    expectedStatuses: [200, 302]
+    responseContract: html_or_redirect_v1
+scenarios:
+  - id: worker_sigkill
+    adapter: docker_service_sigkill
+    targetAlias: worker
+    faultSeconds: 5
+    recoveryTimeoutSeconds: 120
+    probeIds: [dashboard_readiness, woocommerce_checkout]
+  - id: database_crash_restart
+    adapter: docker_service_sigkill
+    targetAlias: database
+    faultSeconds: 5
+    recoveryTimeoutSeconds: 180
+    probeIds: [dashboard_readiness, woocommerce_checkout]
+  - id: network_latency
+    adapter: toxiproxy_latency
+    targetAlias: database
+    faultSeconds: 15
+    recoveryTimeoutSeconds: 120
+    latencyMs: 750
+    jitterMs: 50
+    probeIds: [dashboard_readiness, woocommerce_checkout]
+  - id: duplicate_delivery
+    adapter: duplicate_http_replay
+    targetAlias: duplicateDelivery
+    faultSeconds: 1
+    recoveryTimeoutSeconds: 120
+    requestCount: 2
+    ratePerSecond: 2
+    concurrency: 1
+    probeIds: [dashboard_readiness, woocommerce_checkout]
+  - id: provider_outage
+    adapter: toxiproxy_disable
+    targetAlias: provider
+    faultSeconds: 15
+    recoveryTimeoutSeconds: 120
+    probeIds: [dashboard_readiness, woocommerce_checkout]
+  - id: retry_storm
+    adapter: toxiproxy_disable_with_replay
+    targetAlias: provider
+    fixtureAlias: retryTrigger
+    faultSeconds: 30
+    recoveryTimeoutSeconds: 180
+    requestCount: 100
+    ratePerSecond: 5
+    concurrency: 4
+    probeIds: [dashboard_readiness, woocommerce_checkout]

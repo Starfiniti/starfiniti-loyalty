@@ -1,0 +1,308 @@
+import { z } from "zod";
+
+const code = z.string().regex(/^[a-z][a-z0-9_-]{0,79}$/u);
+const POSTGRES_BIGINT_MAX = 9_223_372_036_854_775_807n;
+const nonNegativeBigintString = z
+  .string()
+  .regex(/^(?:0|[1-9][0-9]*)$/u)
+  .refine((value) => BigInt(value) <= POSTGRES_BIGINT_MAX, {
+    message: "Value exceeds PostgreSQL bigint capacity",
+  });
+const positiveBigintString = z
+  .string()
+  .regex(/^[1-9][0-9]*$/u)
+  .refine((value) => BigInt(value) <= POSTGRES_BIGINT_MAX, {
+    message: "Value exceeds PostgreSQL bigint capacity",
+  });
+
+export const tierQualificationMetricV2 = z.enum([
+  "eligible_spend",
+  "earned_points",
+  "order_count",
+  "referral_count",
+  "verified_action_count",
+]);
+
+export const tierQualificationThresholdV2 = z
+  .object({
+    metric: tierQualificationMetricV2,
+    minimum: positiveBigintString,
+    activityCodes: z.array(code).max(100).default([]),
+  })
+  .strict()
+  .superRefine((threshold, context) => {
+    if (
+      threshold.metric !== "verified_action_count" &&
+      threshold.activityCodes.length > 0
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["activityCodes"],
+        message: "Only verified-action thresholds may select activity codes",
+      });
+    }
+    if (
+      new Set(threshold.activityCodes).size !== threshold.activityCodes.length
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["activityCodes"],
+        message: "Activity codes must be unique",
+      });
+    }
+  });
+
+export const tierQualificationExpressionV2 = z
+  .object({
+    operator: z.enum(["all", "any"]),
+    thresholds: z.array(tierQualificationThresholdV2).min(1).max(20),
+  })
+  .strict()
+  .superRefine((expression, context) => {
+    const identities = new Set<string>();
+    expression.thresholds.forEach((threshold, index) => {
+      const identity = `${threshold.metric}:${[...threshold.activityCodes]
+        .sort()
+        .join(",")}`;
+      if (identities.has(identity)) {
+        context.addIssue({
+          code: "custom",
+          path: ["thresholds", index],
+          message: "Qualification thresholds must be unique",
+        });
+      }
+      identities.add(identity);
+    });
+  });
+
+export const tierQualificationPeriodV2 = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("lifetime") }).strict(),
+  z
+    .object({
+      kind: z.literal("rolling_days"),
+      days: z.number().int().min(1).max(3650),
+    })
+    .strict(),
+  z
+    .object({
+      kind: z.literal("calendar_year"),
+      timeZone: z
+        .string()
+        .trim()
+        .min(1)
+        .max(100)
+        .regex(/^[A-Za-z_+-]+(?:\/[A-Za-z0-9_+-]+)+$/u),
+    })
+    .strict(),
+]);
+
+export const tierBenefitsV2 = z
+  .object({
+    earningMultiplierBasisPoints: z
+      .number()
+      .int()
+      .min(10_000)
+      .max(100_000)
+      .default(10_000),
+    rewardCodes: z.array(code).max(100).default([]),
+    earlyAccess: z.boolean().default(false),
+  })
+  .strict()
+  .superRefine((benefits, context) => {
+    if (new Set(benefits.rewardCodes).size !== benefits.rewardCodes.length) {
+      context.addIssue({
+        code: "custom",
+        path: ["rewardCodes"],
+        message: "Tier reward codes must be unique",
+      });
+    }
+  });
+
+export const tierPolicyLevelV2 = z
+  .object({
+    tierCode: code,
+    entry: tierQualificationExpressionV2.nullable(),
+    retention: tierQualificationExpressionV2.nullable(),
+    reentry: tierQualificationExpressionV2.nullable(),
+    benefits: tierBenefitsV2,
+  })
+  .strict();
+
+export const tierPolicyV2 = z
+  .object({
+    version: z.literal("2"),
+    qualificationPeriod: tierQualificationPeriodV2,
+    downgradeGraceDays: z.number().int().min(0).max(365),
+    levels: z.array(tierPolicyLevelV2).min(1).max(15),
+  })
+  .strict()
+  .superRefine((policy, context) => {
+    const tierCodes = new Set<string>();
+    policy.levels.forEach((level, index) => {
+      if (tierCodes.has(level.tierCode)) {
+        context.addIssue({
+          code: "custom",
+          path: ["levels", index, "tierCode"],
+          message: "Tier policy codes must be unique",
+        });
+      }
+      tierCodes.add(level.tierCode);
+      const expressions = [level.entry, level.retention, level.reentry];
+      if (
+        index === 0 &&
+        expressions.some((expression) => expression !== null)
+      ) {
+        context.addIssue({
+          code: "custom",
+          path: ["levels", index],
+          message: "The base tier cannot require qualification thresholds",
+        });
+      }
+      if (index > 0 && expressions.some((expression) => expression === null)) {
+        context.addIssue({
+          code: "custom",
+          path: ["levels", index],
+          message:
+            "Every non-base tier requires entry, retention, and re-entry thresholds",
+        });
+      }
+    });
+  });
+
+export const tierMetricSnapshotV2 = z
+  .object({
+    eligibleSpendMinor: nonNegativeBigintString,
+    earnedPoints: nonNegativeBigintString,
+    orderCount: nonNegativeBigintString,
+    referralCount: nonNegativeBigintString,
+    verifiedActionCount: nonNegativeBigintString,
+    verifiedActionCounts: z.record(code, nonNegativeBigintString),
+  })
+  .strict()
+  .superRefine((metrics, context) => {
+    const actionTotal = Object.values(metrics.verifiedActionCounts).reduce(
+      (total, value) => total + BigInt(value),
+      0n,
+    );
+    if (actionTotal !== BigInt(metrics.verifiedActionCount)) {
+      context.addIssue({
+        code: "custom",
+        path: ["verifiedActionCounts"],
+        message:
+          "Verified action total must equal its per-activity metric values",
+      });
+    }
+  });
+
+export const tierQualificationWindowV2 = z
+  .object({
+    kind: z.enum(["lifetime", "rolling_days", "calendar_year"]),
+    startsAt: z.iso.datetime({ offset: true }).nullable(),
+    endsAt: z.iso.datetime({ offset: true }).nullable(),
+  })
+  .strict();
+
+export const tierThresholdProgressV2 = z
+  .object({
+    metric: tierQualificationMetricV2,
+    activityCodes: z.array(code).max(100),
+    actual: nonNegativeBigintString,
+    minimum: positiveBigintString,
+    remaining: nonNegativeBigintString,
+    matched: z.boolean(),
+  })
+  .strict();
+
+export const tierLevelProgressV2 = z
+  .object({
+    tierCode: code,
+    thresholdKind: z.enum(["base", "entry", "retention", "reentry"]),
+    operator: z.enum(["all", "any"]).nullable(),
+    matched: z.boolean(),
+    thresholds: z.array(tierThresholdProgressV2).max(20),
+  })
+  .strict();
+
+export const tierQualificationEvaluationV2 = z
+  .object({
+    version: z.literal("2"),
+    evaluatedAt: z.iso.datetime({ offset: true }),
+    window: tierQualificationWindowV2,
+    metrics: tierMetricSnapshotV2,
+    currentTierCode: code.nullable(),
+    qualifiedTierCode: code,
+    effectiveTierCode: code,
+    transition: z.enum([
+      "entry",
+      "none",
+      "upgrade",
+      "reentry",
+      "grace",
+      "downgrade",
+    ]),
+    belowThresholdSince: z.iso.datetime({ offset: true }).nullable(),
+    graceUntil: z.iso.datetime({ offset: true }).nullable(),
+    levels: z.array(tierLevelProgressV2).min(1).max(15),
+    nextMilestone: tierLevelProgressV2.nullable(),
+  })
+  .strict();
+
+export const merchantSetTierOverrideCommandV1 = z
+  .object({
+    version: z.literal("1"),
+    customerId: z.uuid(),
+    programmeGroupId: z.uuid(),
+    programmeVersionId: z.uuid(),
+    tierCode: code,
+    expiresAt: z.iso.datetime({ offset: true }),
+    reason: z
+      .string()
+      .trim()
+      .min(8)
+      .max(500)
+      .regex(/^[^\u0000-\u001f\u007f]*$/u),
+    idempotencyKey: z.string().trim().min(1).max(255),
+    correlationId: z.uuid(),
+  })
+  .strict();
+
+export const merchantSetTierOverrideResultV1 = z
+  .object({
+    overrideId: z.uuid(),
+    tierDecisionId: z.uuid(),
+    outcome: z.enum(["created", "duplicate"]),
+    effectiveTierCode: code,
+    expiresAt: z.iso.datetime({ offset: true }),
+  })
+  .strict();
+
+export type TierQualificationMetricV2 = z.infer<
+  typeof tierQualificationMetricV2
+>;
+export type TierQualificationThresholdV2 = z.infer<
+  typeof tierQualificationThresholdV2
+>;
+export type TierQualificationExpressionV2 = z.infer<
+  typeof tierQualificationExpressionV2
+>;
+export type TierQualificationPeriodV2 = z.infer<
+  typeof tierQualificationPeriodV2
+>;
+export type TierBenefitsV2 = z.infer<typeof tierBenefitsV2>;
+export type TierPolicyLevelV2 = z.infer<typeof tierPolicyLevelV2>;
+export type TierPolicyV2 = z.infer<typeof tierPolicyV2>;
+export type TierMetricSnapshotV2 = z.infer<typeof tierMetricSnapshotV2>;
+export type TierQualificationWindowV2 = z.infer<
+  typeof tierQualificationWindowV2
+>;
+export type TierThresholdProgressV2 = z.infer<typeof tierThresholdProgressV2>;
+export type TierLevelProgressV2 = z.infer<typeof tierLevelProgressV2>;
+export type TierQualificationEvaluationV2 = z.infer<
+  typeof tierQualificationEvaluationV2
+>;
+export type MerchantSetTierOverrideCommandV1 = z.infer<
+  typeof merchantSetTierOverrideCommandV1
+>;
+export type MerchantSetTierOverrideResultV1 = z.infer<
+  typeof merchantSetTierOverrideResultV1
+>;

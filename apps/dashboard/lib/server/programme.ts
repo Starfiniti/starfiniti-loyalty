@@ -1,4 +1,8 @@
 import "server-only";
+import {
+  tierPerformanceV1,
+  type TierPerformanceV1,
+} from "@starfiniti/contracts";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { TenantContext } from "@/lib/tenant-context";
 
@@ -30,6 +34,16 @@ export type MerchantProgrammeState = Readonly<{
   }> | null;
   versions: readonly MerchantProgrammeVersion[];
   audit: readonly MerchantProgrammeAudit[];
+}>;
+
+export type ProgrammeExpiryLiability = Readonly<{
+  outstandingPoints: string;
+  overduePoints: string;
+  reservedPastExpiryPoints: string;
+  expiring30Days: string;
+  expiring90Days: string;
+  affectedMembers: string;
+  nextExpiryAt: string | null;
 }>;
 
 type ProgrammeRow = Readonly<{
@@ -136,4 +150,69 @@ export async function getMerchantProgrammeState(
       createdAt: audit.created_at,
     })),
   };
+}
+
+export async function getProgrammeExpiryLiability(
+  programmeId: string,
+): Promise<ProgrammeExpiryLiability> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .schema("loyalty")
+    .rpc("get_programme_expiry_liability_v2", {
+      target_programme_public_id: programmeId,
+      target_as_of: new Date().toISOString(),
+    });
+  if (error) throw new Error("programme_expiry_liability_unavailable");
+  const raw = (Array.isArray(data) ? data[0] : data) as
+    | Readonly<{
+        outstanding_points: string;
+        overdue_points: string;
+        reserved_past_expiry_points: string;
+        expiring_30_days: string;
+        expiring_90_days: string;
+        affected_members: string;
+        next_expiry_at: string | null;
+      }>
+    | undefined;
+  if (!raw) throw new Error("programme_expiry_liability_unavailable");
+  const exactValues = [
+    raw.outstanding_points,
+    raw.overdue_points,
+    raw.reserved_past_expiry_points,
+    raw.expiring_30_days,
+    raw.expiring_90_days,
+    raw.affected_members,
+  ];
+  if (exactValues.some((value) => !/^(?:0|[1-9][0-9]*)$/u.test(value))) {
+    throw new Error("programme_expiry_liability_unavailable");
+  }
+  return {
+    outstandingPoints: raw.outstanding_points,
+    overduePoints: raw.overdue_points,
+    reservedPastExpiryPoints: raw.reserved_past_expiry_points,
+    expiring30Days: raw.expiring_30_days,
+    expiring90Days: raw.expiring_90_days,
+    affectedMembers: raw.affected_members,
+    nextExpiryAt: raw.next_expiry_at,
+  };
+}
+
+export async function getProgrammeTierPerformance(
+  programmeId: string,
+  asOf: string,
+): Promise<TierPerformanceV1> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .schema("loyalty")
+    .rpc("get_programme_tier_performance_v1", {
+      target_programme_public_id: programmeId,
+      target_as_of: asOf,
+    });
+  const row = (Array.isArray(data) ? data[0] : data) as
+    Readonly<{ tier_performance?: unknown }> | undefined;
+  const parsed = tierPerformanceV1.safeParse(row?.tier_performance);
+  if (error || !parsed.success) {
+    throw new Error("programme_tier_performance_unavailable");
+  }
+  return parsed.data;
 }

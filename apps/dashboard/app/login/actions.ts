@@ -10,6 +10,11 @@ import {
   STARFINITI_WORKFORCE_PROVIDER,
   workforceSsoCallbackUrl,
 } from "@/lib/workforce-sso";
+import { resolveOrganizationFederationLogin } from "@/lib/server/enterprise-identity";
+import {
+  isExpectedTenantFederationAuthorizeUrl,
+  tenantFederationLoginCallbackUrl,
+} from "@/lib/tenant-federation-navigation";
 import { CUSTOMER_COPY, resolveCustomerLocale } from "@/lib/customer-locale";
 import { customerExportPath, isSupabaseSessionId } from "@/lib/customer-export";
 import {
@@ -18,6 +23,66 @@ import {
 } from "@/lib/server/customer-data-export";
 
 export type LoginState = Readonly<{ message: string }>;
+
+export async function signInWithTenantSso(formData: FormData): Promise<never> {
+  const organizationSlug = String(
+    formData.get("organizationSlug") ?? "",
+  ).trim();
+  const nextPath = safeAppPath(formData.get("next"));
+  const failurePath = `/login?${new URLSearchParams({
+    error: "tenant_sso_failed",
+    next: nextPath,
+  }).toString()}`;
+  const publicOrigin = process.env.DASHBOARD_PUBLIC_ORIGIN?.trim();
+  if (
+    !publicOrigin ||
+    organizationSlug.length < 2 ||
+    organizationSlug.length > 80 ||
+    !/^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(organizationSlug)
+  ) {
+    redirect(failurePath);
+  }
+
+  let authorizationUrl: string | null = null;
+  let provider = "";
+  let supabaseUrl = "";
+  try {
+    const login = await resolveOrganizationFederationLogin(organizationSlug);
+    if (login) {
+      provider = login.provider;
+      const publicConfig = readSupabasePublicConfig();
+      supabaseUrl = publicConfig.url;
+      const supabase = await createSupabaseServerClient();
+      const result = await supabase.auth.signInWithOAuth({
+        provider: provider as `custom:${string}`,
+        options: {
+          redirectTo: tenantFederationLoginCallbackUrl(
+            publicOrigin,
+            nextPath,
+            login.organizationId,
+          ),
+          scopes: "openid",
+          skipBrowserRedirect: true,
+        },
+      });
+      if (!result.error) authorizationUrl = result.data.url;
+    }
+  } catch {
+    redirect(failurePath);
+  }
+
+  if (
+    !isExpectedTenantFederationAuthorizeUrl(
+      authorizationUrl,
+      supabaseUrl,
+      provider,
+      "login",
+    )
+  ) {
+    redirect(failurePath);
+  }
+  redirect(authorizationUrl);
+}
 
 function workforceSsoFailurePath(locale: string, nextPath: string): string {
   const parameters = new URLSearchParams({

@@ -1,7 +1,7 @@
 import {
   verifyWooCommerceDelivery,
   wooCommerceCommandRequestV1,
-  wooCommerceConnectorCommandEnvelopeV1,
+  wooCommerceConnectorCommandEnvelope,
   type WooCommerceSignatureHeaders,
 } from "@starfiniti/contracts";
 import { getDatabase } from "@/lib/server/database";
@@ -52,6 +52,7 @@ export async function POST(request: Request): Promise<Response> {
       select public_id, current_key_version, signing_material_ref
       from loyalty.commerce_connections
       where public_id = ${headers.connectionId}::uuid
+        and platform = 'woocommerce'
         and status in ('active', 'rotating')
       limit 1
     `;
@@ -96,17 +97,28 @@ export async function POST(request: Request): Promise<Response> {
       return Response.json({ outcome: parsed.data.outcome }, { status: 200 });
     }
 
+    if (parsed.data.snapshotCustomerIds.length > 0) {
+      await sql`
+        select *
+        from loyalty_private.queue_woocommerce_customer_snapshots_v1(
+          ${connection.public_id}::uuid,
+          ${sql.array(parsed.data.snapshotCustomerIds)}::text[]
+        )
+      `;
+    }
+
     const rows = await sql<CommandRow[]>`
       select command_id::text, connection_id::text, topic, payload_version, payload
       from loyalty_private.claim_woocommerce_commands(
         ${connection.public_id}::uuid,
         ${parsed.data.batchSize},
-        60
+        60,
+        ${sql.array(parsed.data.capabilities)}::text[]
       )
     `;
     const commands = [];
     for (const row of rows) {
-      const command = wooCommerceConnectorCommandEnvelopeV1.safeParse({
+      const command = wooCommerceConnectorCommandEnvelope.safeParse({
         version: "1",
         commandId: row.command_id,
         connectionId: row.connection_id,

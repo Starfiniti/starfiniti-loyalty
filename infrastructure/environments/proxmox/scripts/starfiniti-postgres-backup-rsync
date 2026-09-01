@@ -4,6 +4,74 @@ set -Eeuo pipefail
 umask 077
 
 readonly backup_root="/opt/starfiniti/supabase-prod/backups"
+readonly rsync_binary="/usr/bin/rsync"
+readonly rrsync_binary="/usr/bin/rrsync"
+
+fail() {
+  printf 'starfiniti-postgres-backup-rsync: %s\n' "$*" >&2
+  exit 1
+}
+
+validate_root_executable() {
+  local executable_path="$1"
+  local canonical_executable executable_metadata executable_owner executable_mode executable_mode_octal
+  local current_directory directory_metadata directory_owner directory_mode directory_mode_octal next_directory
+
+  [[ "$executable_path" == /* ]] || fail "backup transport executable path must be absolute"
+  [[ ! -L "$executable_path" ]] || fail "backup transport executable must not be a symbolic link"
+  canonical_executable="$(/usr/bin/readlink -f -- "$executable_path")" ||
+    fail "backup transport executable path could not be resolved"
+  [[ "$canonical_executable" == "$executable_path" ]] ||
+    fail "backup transport executable path must be canonical and contain no symbolic links"
+  [[ -f "$executable_path" && -x "$executable_path" ]] ||
+    fail "backup transport executable must be an executable regular file"
+  executable_metadata="$(/usr/bin/stat -Lc '%u|%a' "$executable_path")" ||
+    fail "backup transport executable metadata could not be read"
+  IFS='|' read -r executable_owner executable_mode <<<"$executable_metadata"
+  [[ "$executable_owner" == "0" ]] || fail "backup transport executable must be owned by root"
+  [[ "$executable_mode" =~ ^[0-7]{3,4}$ ]] || fail "backup transport executable mode is invalid"
+  executable_mode_octal=$((8#$executable_mode))
+  (( (executable_mode_octal & 0022) == 0 )) ||
+    fail "backup transport executable must not be writable by group or others"
+
+  current_directory="$(/usr/bin/dirname -- "$executable_path")"
+  while true; do
+    [[ -d "$current_directory" ]] ||
+      fail "backup transport executable parent chain must contain only directories"
+    directory_metadata="$(/usr/bin/stat -Lc '%u|%a' "$current_directory")" ||
+      fail "backup transport executable parent metadata could not be read"
+    IFS='|' read -r directory_owner directory_mode <<<"$directory_metadata"
+    [[ "$directory_owner" == "0" ]] ||
+      fail "backup transport executable parent must be owned by root"
+    [[ "$directory_mode" =~ ^[0-7]{3,4}$ ]] ||
+      fail "backup transport executable parent mode is invalid"
+    directory_mode_octal=$((8#$directory_mode))
+    if (( (directory_mode_octal & 0022) != 0 && (directory_mode_octal & 01000) == 0 )); then
+      fail "backup transport executable parent must not be writable without sticky-directory protection"
+    fi
+
+    [[ "$current_directory" == "/" ]] && break
+    next_directory="$(/usr/bin/dirname -- "$current_directory")"
+    [[ "$next_directory" != "$current_directory" ]] ||
+      fail "backup transport executable parent chain could not be resolved"
+    current_directory="$next_directory"
+  done
+}
+
+require_rsync_security_baseline() {
+  local version_output version_line major minor
+
+  version_output="$(LC_ALL=C "$rsync_binary" --version)" ||
+    fail "rsync security version could not be read"
+  version_line="${version_output%%$'\n'*}"
+  [[ "$version_line" =~ ^rsync[[:space:]]+version[[:space:]]+([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})[[:space:]]+protocol[[:space:]]+version[[:space:]]+[0-9]{1,3}$ ]] ||
+    fail "rsync security version is malformed"
+  major=$((10#${BASH_REMATCH[1]}))
+  minor=$((10#${BASH_REMATCH[2]}))
+  if ((major < 3 || (major == 3 && minor < 5))); then
+    fail "rsync 3.5.0 or newer is required by the backup transport security baseline"
+  fi
+}
 
 if [[ ! -d "$backup_root/base" || ! -d "$backup_root/wal" ]]; then
   printf 'starfiniti-postgres-backup-rsync: backup set unavailable\n' >&2
@@ -20,13 +88,24 @@ if (( EUID != 0 )); then
     exit 1
   fi
 
-  exec sudo -n "$0" "$SSH_ORIGINAL_COMMAND"
+  exec /usr/bin/sudo -n "$0" "$SSH_ORIGINAL_COMMAND"
 fi
 
 if [[ $# -ne 1 ]]; then
-  printf 'starfiniti-postgres-backup-rsync: invalid privileged invocation\n' >&2
-  exit 1
+  fail "invalid privileged invocation"
 fi
 
 export SSH_ORIGINAL_COMMAND="$1"
-exec /usr/bin/rrsync -ro "$backup_root"
+validate_root_executable "$rsync_binary"
+validate_root_executable "$rrsync_binary"
+require_rsync_security_baseline
+/usr/bin/grep -Fq -- "rsync_opts.append('--confine-root=' + os.getcwd())" "$rrsync_binary" ||
+  fail "restricted rsync wrapper lacks the 3.5 confinement integration"
+/usr/bin/grep -Fq -- 'subprocess.run(cmd, pass_fds=tuple(pinned_fds))' "$rrsync_binary" ||
+  fail "restricted rsync wrapper lacks the 3.5 inode-pinning integration"
+
+exec /usr/bin/env -i \
+  PATH=/usr/bin:/bin \
+  LC_ALL=C \
+  SSH_ORIGINAL_COMMAND="$SSH_ORIGINAL_COMMAND" \
+  "$rrsync_binary" -ro "$backup_root"

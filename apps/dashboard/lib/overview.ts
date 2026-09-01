@@ -196,7 +196,7 @@ export function overviewMetrics(
       suffix: "captured ÷ awarded points",
     },
     {
-      label: "Points liability",
+      label: "Outstanding points",
       value: `${formatExactInteger(report.outstandingPoints, locale)} ${
         locale === "sl-SI" ? "točk" : "pts"
       }`,

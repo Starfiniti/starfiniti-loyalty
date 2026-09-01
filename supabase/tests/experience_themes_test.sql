@@ -2,9 +2,64 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(41);
+select plan(62);
 
 select has_table('loyalty', 'experience_themes', 'experience theme table exists');
+select has_column('loyalty', 'experience_themes', 'density', 'V2 density column exists');
+select has_column('loyalty', 'experience_themes', 'hero_asset', 'V2 controlled hero asset column exists');
+select has_column('loyalty', 'experience_themes', 'show_referrals', 'V2 referral visibility column exists');
+select has_column('loyalty', 'experience_themes', 'section_order', 'V2 section composition column exists');
+select has_function(
+  'loyalty',
+  'save_experience_theme_v2_command',
+  array[
+    'uuid', 'uuid', 'text', 'text', 'integer', 'text', 'text', 'boolean',
+    'boolean', 'text', 'text', 'text', 'boolean', 'text[]', 'text', 'uuid'
+  ],
+  'guarded V2 theme command exists'
+);
+select ok(
+  has_function_privilege(
+    'authenticated',
+    'loyalty.save_experience_theme_v2_command(uuid,uuid,text,text,integer,text,text,boolean,boolean,text,text,text,boolean,text[],text,uuid)',
+    'EXECUTE'
+  ),
+  'authenticated users can enter the guarded V2 command'
+);
+select ok(
+  not has_function_privilege(
+    'anon',
+    'loyalty.save_experience_theme_v2_command(uuid,uuid,text,text,integer,text,text,boolean,boolean,text,text,text,boolean,text[],text,uuid)',
+    'EXECUTE'
+  ),
+  'anonymous users cannot enter the V2 command'
+);
+select results_eq(
+  $$
+    select routine.prosecdef
+    from pg_proc as routine
+    join pg_namespace as namespace on namespace.oid = routine.pronamespace
+    where namespace.nspname = 'loyalty'
+      and routine.proname = 'save_experience_theme_v2_command'
+      and exists (
+        select 1 from unnest(routine.proconfig) as setting
+        where setting = 'search_path=""'
+      )
+  $$,
+  array[true],
+  'V2 command is security definer with an empty search path'
+);
+select results_eq(
+  $$
+    select count(*)::bigint
+    from pg_constraint as constraint_row
+    where constraint_row.conname = 'experience_themes_section_order_v2_check'
+      and pg_get_constraintdef(constraint_row.oid) ~ 'cardinality'
+      and pg_get_constraintdef(constraint_row.oid) ~ 'array_position'
+  $$,
+  array[1::bigint],
+  'PostgreSQL independently constrains exact non-null section membership'
+);
 select has_function(
   'loyalty',
   'save_experience_theme_command',
@@ -370,6 +425,130 @@ select results_eq(
   $$ select count(*)::bigint from loyalty.experience_themes $$,
   array[0::bigint],
   'another tenant cannot read the theme row'
+);
+
+set local request.jwt.claim.sub = '75000000-0000-4000-8000-000000000001';
+select results_eq(
+  $$ select outcome from loyalty.save_experience_theme_v2_command(
+    '75000000-0000-4000-8000-000000000110',
+    '75000000-0000-4000-8000-000000000120',
+    '#4f46e5', 'modern-serif', 22, 'A clearer loyalty home', 'Stars',
+    true, true, 'right', 'compact', 'crown', false,
+    array['overview','rewards','earning','vip','history','referrals','account'],
+    'theme:v2:save:one', '75000000-0000-4000-8000-000000000220'
+  ) $$,
+  array['updated'::text],
+  'owner revisions the controlled V2 presentation'
+);
+select results_eq(
+  $$ select density, hero_asset, show_referrals from loyalty.experience_themes $$,
+  $$ values ('compact'::text, 'crown'::text, false) $$,
+  'V2 stores only the controlled density asset and visibility tokens'
+);
+select results_eq(
+  $$ select section_order from loyalty.experience_themes $$,
+  $$ values (array['overview','rewards','earning','vip','history','referrals','account']::text[]) $$,
+  'V2 preserves the exact approved semantic section order'
+);
+select results_eq(
+  $$ select action from loyalty.admin_audit_events where idempotency_key = 'theme:v2:save:one' $$,
+  array['experience.theme.v2.save'::text],
+  'V2 writes distinct immutable audit evidence'
+);
+select results_eq(
+  $$ select outcome from loyalty.save_experience_theme_v2_command(
+    '75000000-0000-4000-8000-000000000110',
+    '75000000-0000-4000-8000-000000000120',
+    '#4f46e5', 'modern-serif', 22, 'A clearer loyalty home', 'Stars',
+    true, true, 'right', 'compact', 'crown', false,
+    array['overview','rewards','earning','vip','history','referrals','account'],
+    'theme:v2:save:one', '75000000-0000-4000-8000-000000000221'
+  ) $$,
+  array['duplicate'::text],
+  'an exact V2 retry creates one effect'
+);
+select throws_ok(
+  $$ select * from loyalty.save_experience_theme_v2_command(
+    '75000000-0000-4000-8000-000000000110',
+    '75000000-0000-4000-8000-000000000120',
+    '#4f46e5', 'modern-serif', 22, 'A clearer loyalty home', 'Stars',
+    true, true, 'right', 'comfortable', 'crown', false,
+    array['overview','rewards','earning','vip','history','referrals','account'],
+    'theme:v2:save:one', '75000000-0000-4000-8000-000000000222'
+  ) $$,
+  '23514', 'experience theme V2 idempotency conflict',
+  'V2 idempotency covers every presentation token'
+);
+select throws_ok(
+  $$ select * from loyalty.save_experience_theme_v2_command(
+    '75000000-0000-4000-8000-000000000110',
+    '75000000-0000-4000-8000-000000000120',
+    '#4f46e5', 'modern-serif', 22, 'A clearer loyalty home', 'Stars',
+    true, true, 'right', 'compact', 'crown', false,
+    array['overview','rewards','earning','vip','history','history','account'],
+    'theme:v2:invalid:order', '75000000-0000-4000-8000-000000000223'
+  ) $$,
+  '22023', 'invalid experience theme V2 input',
+  'duplicate or missing sections fail before persistence'
+);
+select throws_ok(
+  $$ select * from loyalty.save_experience_theme_v2_command(
+    '75000000-0000-4000-8000-000000000110',
+    '75000000-0000-4000-8000-000000000120',
+    '#4f46e5', 'modern-serif', 22, '<script>not copy</script>', 'Stars',
+    true, true, 'right', 'compact', 'crown', false,
+    array['overview','earning','rewards','vip','referrals','history','account'],
+    'theme:v2:invalid:markup', '75000000-0000-4000-8000-000000000225'
+  ) $$,
+  '22023', 'invalid experience theme V2 input',
+  'V2 presentation text rejects markup-shaped input before persistence'
+);
+set local request.jwt.claim.sub = '75000000-0000-4000-8000-000000000003';
+select throws_ok(
+  $$ select * from loyalty.save_experience_theme_v2_command(
+    '75000000-0000-4000-8000-000000000110',
+    '75000000-0000-4000-8000-000000000120',
+    '#4f46e5', 'modern-serif', 22, 'Operator', 'Stars', true, true, 'right',
+    'compact', 'crown', false,
+    array['overview','earning','rewards','vip','referrals','history','account'],
+    'theme:v2:operator', '75000000-0000-4000-8000-000000000224'
+  ) $$,
+  '42501', 'experience theme V2 change not authorized',
+  'operator cannot change V2 presentation authority'
+);
+set local request.jwt.claim.sub = '76000000-0000-4000-8000-000000000001';
+select throws_ok(
+  $$ select * from loyalty.save_experience_theme_v2_command(
+    '75000000-0000-4000-8000-000000000110',
+    '75000000-0000-4000-8000-000000000120',
+    '#4f46e5', 'modern-serif', 22, 'Cross tenant', 'Stars', true, true, 'right',
+    'compact', 'crown', false,
+    array['overview','earning','rewards','vip','referrals','history','account'],
+    'theme:v2:cross', '76000000-0000-4000-8000-000000000224'
+  ) $$,
+  '42501', 'experience theme V2 change not authorized',
+  'another tenant owner cannot target V2 presentation authority'
+);
+set local request.jwt.claim.sub = '75000000-0000-4000-8000-000000000001';
+select results_eq(
+  $$ select outcome from loyalty.save_experience_theme_command(
+    '75000000-0000-4000-8000-000000000110',
+    '75000000-0000-4000-8000-000000000120',
+    '#1f3a5f', 'system-sans', 14, 'Legacy update remains safe', 'Points',
+    true, true, 'left', 'theme:legacy:after:v2',
+    '75000000-0000-4000-8000-000000000225'
+  ) $$,
+  array['updated'::text],
+  'legacy clients remain writable after the additive V2 rollout'
+);
+select results_eq(
+  $$ select density, hero_asset, show_referrals, section_order
+     from loyalty.experience_themes $$,
+  $$ values (
+    'compact'::text, 'crown'::text, false,
+    array['overview','rewards','earning','vip','history','referrals','account']::text[]
+  ) $$,
+  'a legacy update cannot erase controlled V2 presentation state'
 );
 
 reset role;

@@ -8,16 +8,13 @@ import {
   customerExportReauthenticationPath,
   isSupabaseSessionId,
 } from "@/lib/customer-export";
-import { resolveCustomerLocale } from "@/lib/customer-locale";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 export const maxDuration = 20;
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
-  const locale = resolveCustomerLocale(
-    request.nextUrl.searchParams.get("lang"),
-  );
+  const locale = "en" as const;
   const reauthenticationUrl = new URL(
     customerExportReauthenticationPath(locale),
     request.url,

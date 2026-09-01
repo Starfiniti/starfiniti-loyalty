@@ -6,6 +6,30 @@ Authenticated merchant reads and programme commands use the exposed `loyalty` sc
 
 Tenant and actor authority are not command inputs. Each command derives the Auth subject from PostgreSQL request claims and rechecks a live, unrevoked `organization_memberships` row. Only `owner` and `admin` may alter programme value policy; `operator`, `analyst`, `auditor`, revoked members, anonymous callers, and owners of another tenant fail closed.
 
+## Public loyalty experience V5
+
+`get_public_loyalty_experience_v5(target_workspace_public_id, target_programme_public_id)` is the current anonymous English guest projection. It retains strict V4 presentation, VIP, and earning data, removes the legacy raw `rewards` array, and adds at most twenty ordered offers under `rewardCatalogue`.
+
+Each offer contains a derived public code, explicitly customer-facing name, exact bigint-safe point cost, rebuilt supported benefit, validated public currency evidence where needed, availability state/window, native-coupon or manual delivery, validity or delivery estimate, and summarized public conditions. The summary may reveal minimum spend, resolved tier names, whether product/category restrictions, sale-item exclusion, member limits, or limited availability apply, and reviewed stacking behavior. Internal reward codes/IDs, exact selectors, fulfilment instructions, exact limits, global quantity, points budget, segment access, customer eligibility, configuration JSON, audit evidence, ledger state, and value authority never appear. Store credit, cash-like value, expired, segment-restricted, malformed, unsafe, duplicate-tier, and currency-mismatched rewards are excluded.
+
+The dashboard requests V5 first and normalizes V4/V3/V2/V1 only for recognized missing-function codes during a migration-first rollout. Legacy fixed/percentage/shipping offers are deliberately conservative and store credit is removed. Malformed, duplicate, oversized, contradictory, non-English, or provider-error documents fail closed. See ADR-0076.
+
+## Public loyalty experience V4
+
+`get_public_loyalty_experience_v4(target_workspace_public_id, target_programme_public_id)` is the compatible public-earning predecessor. It retains strict V3 presentation, rewards, and advanced VIP data and adds at most twelve ordered `earningMethods` derived from the immutable published version.
+
+Each method contains only a source/ordinal-derived public code, reviewed generic source/effect label, one public standard source, an exact bigint-safe base/fixed effect or bounded integer multiplier, a conservative restrictions boolean, optional validated schedule, and database-derived availability. Purchase, account-created, birthday, verified-product-review, and referral sources may appear. Merchant-authored rule codes/names, signed custom activities, raw condition selectors, activity/product/category/segment/tier/channel data, cap values, priority/stacking internals, customer eligibility, tenant/internal IDs, audit evidence, and ledger state never appear. If no safe standard method survives projection, the catalogue is empty. A legacy V1 programme may receive one conservative first-tier purchase method.
+
+V5 readers use V4 only when the additive V5 function is genuinely absent. See ADR-0075.
+
+## Public loyalty experience V3
+
+`get_public_loyalty_experience_v3(target_workspace_public_id, target_programme_public_id)` is the anonymous English guest projection. Both UUIDs are public selectors only: PostgreSQL derives one active tenant, linked programme group, active programme, and immutable published version. Mixed-tenant selectors, a suspended workspace/programme, or the absence of a published version returns no row.
+
+V3 retains the strict V2 presentation, tier, and reward fields and adds one `vipCatalogue`. The catalogue contains at most fifteen ordered levels, the qualification period and grace days, exact text-form entry thresholds with `all`/`any` semantics, exact points-per-major-unit rates, and booleans for early access and exclusive reward availability. Legacy programmes receive an equivalent lifetime/spend catalogue. Private activity selectors, reward codes/configuration, retention/re-entry internals, customer progress, organization/internal IDs, audit evidence, and ledger state are not returned.
+
+V3 remains the compatible advanced-VIP predecessor. V4 readers use it only when the additive V4 function is genuinely absent. See ADR-0074.
+
 ## Signed Merchant Activity API v1
 
 `POST /api/v1/activities/events` is a server-to-server earning-fact endpoint, not a browser API. A live tenant owner/admin provisions one source for an active workspace and published ProgrammeDefinitionV2. The trusted runtime consumes a unique deployment key reference and displays one exact package containing `version`, HTTPS `endpoint`, public `sourceId`, `keyVersion`, and a 256-bit-or-stronger base64 `signingKey`. The database and audit retain the reference only; the browser Data API cannot read it and the package is not recoverable after leaving the result page.
@@ -15,6 +39,14 @@ The sender serializes the exact JSON body and sends `X-Starfiniti-Activity-Sourc
 The strict v1 envelope contains `version`, `deliveryId`, `sourceId`, `eventId`, `occurredAt`, `deliveredAt`, optional `correlationId`, and `payload`. Payload fields are exactly `kind: activity`, `source`, public `customerId`, `activityCode`, nullable `productId`, and bounded `categoryIds`. Sources are `account_created`, `birthday`, `verified_product_review`, `referral`, and `custom_activity`. Built-in sources require their canonical code; only verified reviews may carry product selectors. Email, name, address, review content, referral identity, tenant ID, points, rule ID, programme ID, wallet ID, and any unknown field are rejected. The signed referral fact is an authoritative M03 input only; M06 still owns first-party attribution, cooling, fraud review, and reversible referral decisions.
 
 The public customer ID remains only a selector. PostgreSQL derives tenant and programme from the active source; the worker resolves that customer inside the same organization, evaluates the immutable published V2 version, enters serialized cap accounting, and appends evaluation plus ledger effects atomically. Duplicate events create one effect. Signature/provider outage does not affect WooCommerce checkout or previously accepted value.
+
+## Scoped Service API v1
+
+`POST /api/v1/service/customers` and `POST /api/v1/service/activities` are the merchant-scoped server-to-server customer/activity boundary. They complement rather than replace the deployment-managed signed Merchant Activity endpoint. Owners/admins create a workspace/programme-bound service account behind `ecosystem.api`, select only `customers:write` and/or `activities:write`, and issue one high-entropy bearer token that is shown once.
+
+The trusted runtime parses the public credential selector and passes it plus the complete-token SHA-256 digest to private PostgreSQL commands. PostgreSQL resolves live organization, workspace, programme, connection, entitlement, scope, credential lifecycle, and fixed-minute quota. The API body never accepts those authorities or any points, wallet, rule, tier, or reward selector. Raw external customer references are retained only as HMAC-SHA256 values under a private random per-account pepper and are never matched by email.
+
+Customer synchronization is idempotent and must precede activity submission. Activity acceptance reuses the existing commerce inbox, normalization, canonical-event, worker, immutable evaluation, cap, effect-receipt, and ledger path; a `202` response is acceptance evidence rather than an award claim. Exact retries create one effect, changed reuse fails closed, rotation overlap is bounded, and revocation fails on the next request. The full contract, retry/error behavior, quota headers, and compromise procedure are documented in `SERVICE_API.md`; ADR-0045 records the decision.
 
 ## Read models
 
@@ -57,6 +89,24 @@ The wrapper does not return customer or channel identifiers, raw commerce payloa
 ## Programme commands
 
 All commands are `SECURITY DEFINER`, owned by the `NOLOGIN` `loyalty_owner` role, use an empty search path, schema-qualify every object, revoke default `PUBLIC` execution, and expose `EXECUTE` only to `authenticated`.
+
+### Programme-group workspace sharing V1
+
+`get_programme_group_sharing_policy_v1(target_programme_group_public_id)` returns one minimized, reconciled policy to a live organization member. It exposes the public programme-group selector/name, immutable revision, `isolated` or `explicit-workspace-allowlist` mode, current entitlement state, and at most 100 active workspace selectors/names/slugs with exact link and connector-removal-protection flags. It exposes no organization key, actor, customer, wallet, ledger, connector credential, source identity, or commerce payload. Unknown, revoked, cross-tenant, inactive, empty, over-limit, or projection-drift scope returns no document or fails closed.
+
+`configure_programme_group_sharing_v1(target_programme_group_public_id, target_sharing_mode, target_workspace_public_ids, target_expected_revision, target_idempotency_key, target_correlation_id)` is an owner/admin-only browser command gated by the database-authoritative `ecosystem.api` entitlement. Isolated mode requires exactly one active same-tenant workspace; explicit sharing requires 2–25 unique exact workspace selectors. PostgreSQL derives organization, actor, internal group/workspace keys, locks the scope, enforces optimistic revision and idempotency, and atomically writes the current link projection, one immutable policy version, exact version membership, and a minimized audit event.
+
+A workspace with a provisioned commerce connection for a programme inside the group is removal-protected. The command never copies or merges wallets, never links customers by email, writes no ledger value, and issues no WooCommerce command. Same-organization workspaces remain isolated unless their public IDs are present in an accepted exact allowlist. See ADR-0042; M11-S02 owns explicit verified cross-workspace customer linking.
+
+### Verified cross-workspace customer linking V1
+
+Cross-workspace customer linking is customer-initiated and does not add a general merchant merge API. The existing server-only WooCommerce claim consumes one fresh five-minute store-key HMAC proof for one exact registered customer and one live Supabase Auth subject. A second store must supply its own independent proof. Email, name, address, domain, organization membership, JWT metadata, and browser-supplied tenant/customer/channel keys are never matching authority.
+
+When both connections belong to the latest reconciled `explicit-workspace-allowlist` policy and `ecosystem.api` is enabled, PostgreSQL serializes the Auth subject and source customer, selects one stable canonical customer, and appends an immutable exact link revision. The source customer remains recorded separately while the protected identity/Auth-link projection points all verified store paths to the canonical customer and existing programme-group wallet. If the secondary customer already has any wallet in the group, the claim returns `rejected_value_conflict`; no account, identity, or value is changed and a traceable M12 migration is required.
+
+`get_my_cross_workspace_customer_links_v1()` accepts no selector. It derives the Auth subject and returns at most 20 link sets with at most 25 public account/workspace selectors, display names, one canonical marker, safe unlink state, revision, and status. It exposes no organization key, internal customer, channel customer number, email, proof hash, identity decision, wallet, balance, ledger, or connector secret and fails closed on projection drift.
+
+`unlink_my_cross_workspace_customer_account_v1(target_account_public_id, target_idempotency_key, target_correlation_id)` derives all tenant, subject, identity, connection, workspace, programme-group, and canonical-customer authority. Only an active non-canonical account may be disconnected. The command restores the exact source identity, revokes that store's Auth link, appends an immutable revision, and does not update ledger transactions, entries, lots, reservations, tier history, commerce events, or WooCommerce. The canonical account cannot be removed while shared value depends on it. See ADR-0043.
 
 ### `create_programme_command`
 
@@ -177,6 +227,8 @@ The response is capped at 12 tiers and 20 rewards. It contains public programme/
 ### Authenticated customer account
 
 `get_my_loyalty_accounts()` accepts no arguments and derives the Auth user from PostgreSQL request claims. It follows only active `customer_user_links` into an active customer, organization, and workspace, caps accounts and rewards at 20, reservations/activity at 10, and returns all bigint balances/costs as text. The result contains public account/customer/workspace/programme IDs, public-facing store/programme names, wallet readiness, pending/available/reserved points, minimized current tier, next expiry, safe current rewards with bigint affordability, active reservation summaries, and redacted transaction kind/points/time.
+
+`get_my_loyalty_experiences_v1()` is the strict M09 successor consumed by the hosted application. It also accepts no arguments and derives every scope from active Auth links. One PostgreSQL statement snapshot composes exact balances, safe earning summaries, rewards, reservations, expiry, tier progress, referral state, and redacted activity into a versioned JSON container. The result omits the internal customer ID, tenant IDs, contacts, raw selectors/exclusions, evaluation evidence, and ledger metadata. `storefront.experience` controls only the `enhancementsEnabled` presentation bit; disabling it does not remove balances, history, reservations, redemption access, or native coupons. The older functions remain available for compatible readers and independent module rollback.
 
 ### Authenticated customer reward redemption
 

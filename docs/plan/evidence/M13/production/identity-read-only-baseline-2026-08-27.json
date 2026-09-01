@@ -1,0 +1,28 @@
+{
+  "schema": "starfiniti.enterprise-identity-canary-artifact.v1",
+  "artifactId": "read_only_baseline",
+  "candidateCommit": "0ae43ea092ffdb3aef8664a7fde27e18a2782b64",
+  "observedAt": "2026-08-27T18:40:05Z",
+  "result": "verified",
+  "summary": "The canonical Loyalty, Supabase, Authentik, DNS, and approved read-only Proxmox probes passed the enterprise identity pre-canary baseline without mutation.",
+  "checks": [
+    "public_production_baseline",
+    "authentik_public_baseline",
+    "operator_access"
+  ],
+  "details": {
+    "dashboardHealth": 200,
+    "login": 200,
+    "authWithoutKey": 401,
+    "restWithoutKey": 401,
+    "authentikLive": 200,
+    "authentikReady": 200,
+    "canonicalDns": true,
+    "applicationVm": 970,
+    "databaseVm": 971,
+    "applicationVmState": "running",
+    "databaseVmState": "running",
+    "scope": "read_only",
+    "mutationCount": 0
+  }
+}

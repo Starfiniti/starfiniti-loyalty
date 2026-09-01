@@ -62,7 +62,7 @@ describe("Overview presentation", () => {
       "Eligible loyalty spend",
       "Repeat-member rate",
       "Points redemption rate",
-      "Points liability",
+      "Outstanding points",
     ]);
     expect(metrics[0]).toMatchObject({ delta: "+2", tone: "positive" });
     expect(metrics[3]).toMatchObject({ delta: "−0.40 pts", tone: "negative" });

@@ -1,0 +1,104 @@
+x-security: &security
+  restart: unless-stopped
+  read_only: true
+  init: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  pids_limit: 256
+  mem_limit: 1g
+  cpus: 1.0
+  tmpfs:
+    - /tmp:rw,noexec,nosuid,nodev,size=64m,mode=1777
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: "3"
+
+services:
+  prometheus:
+    <<: *security
+    image: prom/prometheus@sha256:5ce7540c3c00ef4ab0c9d2c995c6a5b9c421f44b4a115d97a2c7af3b1c21cbb0
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=30d
+      - --storage.tsdb.retention.size=20GB
+      - --log.format=json
+    ports:
+      - "${STARFINITI_MONITORING_BIND_ADDRESS:-127.0.0.1}:${STARFINITI_PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/rules.yaml:/etc/prometheus/rules/starfiniti-rules.yaml:ro
+      - ${STARFINITI_PROMETHEUS_TARGETS_DIR:?owner-controlled target directory required}:/etc/prometheus/targets:ro
+      - prometheus-data:/prometheus
+    networks: [monitoring-control, monitoring-egress]
+
+  alertmanager:
+    <<: *security
+    image: prom/alertmanager@sha256:690c7b525f4367aa91f73e2f91c632206d32e97c6384bdbf2fb7a861b420340d
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+      - --data.retention=120h
+      - --log.format=json
+    ports:
+      - "${STARFINITI_MONITORING_BIND_ADDRESS:-127.0.0.1}:${STARFINITI_ALERTMANAGER_PORT:-9093}:9093"
+    volumes:
+      - ${STARFINITI_ALERTMANAGER_CONFIG:?owner-controlled Alertmanager config required}:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager-data:/alertmanager
+    networks: [monitoring-control, monitoring-egress]
+
+  grafana:
+    <<: *security
+    image: grafana/grafana@sha256:3fd54ae1214669f8355f065ec9f6445d5279a3d77095ab048ca045685272429b
+    environment:
+      GF_SERVER_HTTP_ADDR: 0.0.0.0
+      GF_SERVER_ROOT_URL: ${STARFINITI_GRAFANA_ROOT_URL:?approved externally terminated HTTPS URL required}
+      GF_SECURITY_ADMIN_PASSWORD__FILE: /run/secrets/grafana_admin_password
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_PLUGINS_PLUGIN_ADMIN_ENABLED: "false"
+      GF_SECURITY_COOKIE_SECURE: "true"
+      STARFINITI_PROMETHEUS_URL: http://prometheus:9090
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ${STARFINITI_GRAFANA_ADMIN_PASSWORD_FILE:?owner-controlled Grafana password file required}:/run/secrets/grafana_admin_password:ro
+      - grafana-data:/var/lib/grafana
+    networks: [monitoring-control]
+
+  blackbox-exporter:
+    <<: *security
+    image: prom/blackbox-exporter@sha256:e753ff9f3fc458d02cca5eddab5a77e1c175eee484a8925ac7d524f04366c2fc
+    command:
+      - --config.file=/etc/blackbox_exporter/blackbox.yml
+      - --log.prober=warn
+      - --log.format=json
+    volumes:
+      - ./blackbox/blackbox.yml:/etc/blackbox_exporter/blackbox.yml:ro
+    networks: [monitoring-control, monitoring-egress]
+
+  postgres-exporter:
+    <<: *security
+    image: prometheuscommunity/postgres-exporter@sha256:ac5ec343104fae0e2d84a27bb8d69b38430a11910c5382cad85d478d2bab713e
+    command:
+      - --config.file=/run/secrets/postgres_exporter.yml
+      - --log.format=json
+      - --no-collector.stat_statements
+      - --no-collector.settings
+    volumes:
+      - ${STARFINITI_POSTGRES_EXPORTER_CONFIG:?owner-controlled PostgreSQL exporter config required}:/run/secrets/postgres_exporter.yml:ro
+    networks: [monitoring-control, monitoring-egress]
+
+networks:
+  monitoring-control:
+    internal: true
+  monitoring-egress:
+    internal: false
+
+volumes:
+  prometheus-data: {}
+  alertmanager-data: {}
+  grafana-data: {}

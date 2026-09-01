@@ -1,0 +1,123 @@
+schema: starfiniti.fault-evidence.v1
+status: in_progress
+observedAt: 2026-08-27T07:27:57Z
+currentProduction:
+  release: v0.1.11
+  applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
+candidate:
+  branch: codex/m15-fault-injection
+  commit: adf6d9d6bfbd13c6c892e574b2339f3172bc8075
+  approvedEnvironment: false
+  reconciliationApproved: false
+plan:
+  path: infrastructure/testing/fault-injection/plan.yaml
+  profile: single-site-enterprise-pilot
+  sha256: fca2cbe3e6578e527337438662d2525d5d9b3ae6fb32cba7cce426fb7157ac7e
+artifacts:
+  environmentPath: null
+  environmentSha256: null
+  primaryRunPath: null
+  primaryRunSha256: null
+  repeatRunPath: null
+  repeatRunSha256: null
+  reconciliationPath: null
+  reconciliationSha256: null
+checks:
+  - id: plan_contract
+    status: passed
+    evidence: The canonical candidate plan contains six exact bounded scenarios and both readiness and checkout probes with no arbitrary command adapter.
+  - id: controller_selftest
+    status: passed
+    evidence: The in-process controller test applies restores and recovers service death latency duplicate replay provider outage and bounded retry behavior.
+  - id: disposable_target_guard
+    status: passed
+    evidence: Control accepts only a separate marked sandbox loopback origins exact file digests a prefixed Compose project disposable container labels and no production label.
+  - id: deterministic_restore
+    status: passed
+    evidence: Every applied container or proxy fault restores in a finally boundary and an absent or failed restoration makes the run fail closed.
+  - id: minimized_report
+    status: passed
+    evidence: Reports contain aggregate probe replay restoration and digest evidence without origins paths headers bodies selectors credentials customer data or provider material.
+  - id: exact_head_ci
+    status: passed
+    evidence: GitHub Actions run 33049635069 passed all seven jobs at exact implementation commit adf6d9d6bfbd13c6c892e574b2339f3172bc8075 after adversarial review.
+  - id: approved_environment
+    status: pending
+    evidence: A production-like disposable Compose project and bounded exercise window require explicit approval.
+  - id: exact_environment_inventory
+    status: pending
+    evidence: Exact application database proxy worker storefront WooCommerce image migration and configuration evidence must bind both runs.
+  - id: proxy_routing_verified
+    status: pending
+    evidence: The exercised database and provider paths must be proven to traverse their exact named proxies before faults are applied.
+  - id: monitoring_coverage
+    status: pending
+    evidence: Application database pool queue WAL storage proxy network worker checkout and driver observations must cover every scenario and recovery window.
+  - id: baseline_reconciliation
+    status: pending
+    evidence: Accepted events effects immutable ledger wallets lots connector commands coupons queues and dead letters require a zero-difference pre-exercise baseline.
+  - id: worker_death_before_effect
+    status: pending
+    evidence: Worker termination before an accepted item is applied must recover through its bounded lease and create exactly one business effect.
+  - id: worker_death_after_effect
+    status: pending
+    evidence: Worker termination after an effect commits but before acknowledgement must replay to the same immutable effect without duplicate value.
+  - id: network_delay
+    status: pending
+    evidence: Bounded database-path latency must expose backpressure without unbounded work connection exhaustion checkout dependency or value drift.
+  - id: duplicate_delivery
+    status: pending
+    evidence: Two byte-identical signed deliveries must produce one canonical fact and one attributable business effect.
+  - id: database_crash_recovery
+    status: pending
+    evidence: An immediate disposable database stop and restart must recover inside the declared bound with committed loyalty value intact.
+  - id: wal_integrity
+    status: pending
+    evidence: PostgreSQL recovery logs checkpoint and WAL evidence must show no corruption missing committed transaction or unexplained replay result.
+  - id: provider_outage
+    status: pending
+    evidence: Provider unavailability must remain asynchronous while checkout accepted loyalty value refunds releases and customer access continue.
+  - id: retry_storm_bounded
+    status: pending
+    evidence: The bounded outage burst must respect attempt ceilings backoff jitter tenant fairness connection limits and dead-letter policy without amplification.
+  - id: queue_recovery
+    status: pending
+    evidence: Every queue must return to its declared age depth lease and retry bounds without manual history edits after faults are removed.
+  - id: checkout_independence
+    status: pending
+    evidence: Native WooCommerce checkout must remain operable in every fault scenario with no synchronous hub dependency.
+  - id: idempotency_and_ledger
+    status: pending
+    evidence: Duplicate delayed retried and ambiguous input must reconcile to exactly one immutable attributable value effect or one explicit rejection.
+  - id: coupon_reconciliation
+    status: pending
+    evidence: Native coupons reservations commands redemptions refunds and releases must reconcile with no stranded or speculative points release.
+  - id: no_data_loss
+    status: pending
+    evidence: Canonical facts ledger entries audit evidence customer links configurations and committed provider intents must have zero unexplained loss.
+  - id: repeatability
+    status: pending
+    evidence: A second run at the same exact environment and plan with separately approved equivalent fresh synthetic fixtures must pass with independently reconciled outcomes.
+  - id: operator_observation
+    status: pending
+    evidence: Alerts must identify injection failure recovery queue lag checkout impact and restoration status without leaking secrets or personal data.
+  - id: final_reconciliation
+    status: pending
+    evidence: The final aggregate reconciliation artifact must bind both raw run digests and record zero differences duplicates losses checkout failures and WAL errors.
+automaticFails:
+  - any controller action reaches production or a container without the exact disposable Compose project and disposable label
+  - a remote origin Docker socket mount arbitrary command production Compose asset or unmarked sandbox is accepted by the controller
+  - a target origin path header body credential cookie token signature customer selector or provider payload enters a report or repository artifact
+  - an approval candidate plan control marker Compose fixture project duration count or expiry differs from the executed run
+  - a fault remains applied after its bounded scenario or restoration failure is reported as a successful exercise
+  - worker death retry duplicate or ambiguous delivery creates more than one immutable business effect
+  - a committed accepted effect ledger transaction entry wallet lot audit fact or provider intent is lost or rewritten
+  - database crash recovery reports success without exact WAL recovery and committed-value reconciliation evidence
+  - checkout waits synchronously for the hub worker database fault proxy or external provider during any exercise
+  - retry attempts rates concurrency leases response sizes or recovery waits exceed their declared bounds
+  - provider outage interrupts protected value customer access refund release export or checkout behavior
+  - a queue remains outside its age depth attempt lease or dead-letter bounds after the recovery window
+  - native coupon reservation issuance redemption refund or release differs from immutable loyalty evidence
+  - a passing controller report is treated as proof of ledger correctness without independent database and WooCommerce reconciliation
+  - environment image migration plugin proxy route monitoring or data-shape evidence is absent stale or not bound to both runs
+  - any critical security tenancy ledger privacy recovery data-loss or immutable-history failure remains

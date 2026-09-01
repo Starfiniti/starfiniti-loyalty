@@ -1,0 +1,54 @@
+schema: starfiniti.node-runtime-review.v1
+reviewedAt: 2026-08-29
+sourceSnapshot:
+  path: docs/plan/evidence/M16/runs/provider-source-snapshot-257e99c-2026-08-28T212100Z.json
+  fileSha256: 5786186426b065493f5c01b5d76742322e2e8ed3fe92b8f80c30d787caa516be
+  observedAt: 2026-08-28T21:20:39Z
+  providerId: nodejs
+  bytes: 296072
+  contentSha256: 81789e800321e12053f7b815745d481b625192447ad93655578cdc532a66b673
+officialRelease:
+  url: https://nodejs.org/en/blog/release/v24.20.0
+  version: 24.20.0
+  major: 24
+  status: LTS
+  releasedAt: 2026-08-26
+docker:
+  repository: library/node
+  tag: 24-alpine
+  previous:
+    indexSha256: d32cdf619f63fe0471182d08996dd516c6275bb5fd31ae06e55a570bd9e1ad43
+    linuxAmd64ManifestSha256: 2a49bdf71e9fd965a58c1703fd9ddd205b34e5782b692a72dd1d248abb0beb43
+    configSha256: 1746248f2a138f128577ca74d86c9d4a0a17fcc9922c77dfdf92ba7307a4fa3c
+    version: 24.19.0
+    createdAt: 2026-08-03T20:26:09.891764423Z
+  candidate:
+    indexSha256: e67514e5d0f6c46656005e1b693b2ec9d52e80b641307de684d4a015ba7a4eaf
+    linuxAmd64ManifestSha256: 4caaaf42195bcd6f6f3559a413b20cb8f8ad089e231ee874cf7701643966689f
+    configSha256: ee289c69ed1ac50a5a042112ea97f132800e2dd53e832da27784f00e45b3289c
+    version: 24.20.0
+    createdAt: 2026-08-27T17:03:03.001954681Z
+    baseName: alpine:3.24
+  dockerfiles: [apps/dashboard/Dockerfile, apps/worker/Dockerfile]
+  requiredStages: [dependencies, runner]
+ciEvidence:
+  path: docs/plan/evidence/M16/runs/node-runtime-d2c347a-2026-08-29T142927Z.json
+  sha256: 222cd276acfd37430db88c993f01301ccc14f0d97b1da5fb907edf4770e0c692
+  implementationCommit: d2c347a271259a9a93958d02ded2fed732676b59
+  analysisMergeCommit: c2c3626d695b362eabe00b970ceed9d654f6ef53
+  ciRunId: 33257511194
+  securityRunId: 33257511192
+  conclusion: passed
+impact:
+  classification: maintenance-lts
+  securityRelevant: true
+  breakingChangeIdentified: false
+  affectedModules: [M15, M16]
+  owner: engineering
+  disposition: refresh-candidate-and-rescan
+  rationale: The LTS refresh updates root certificates and bundled runtime dependencies without changing Starfiniti contracts; exact candidate images still require build, scan, test, and release evidence.
+production:
+  mutation: false
+  deploymentApproved: false
+  rollbackIndexSha256: d32cdf619f63fe0471182d08996dd516c6275bb5fd31ae06e55a570bd9e1ad43
+  remainingGate: Exact-head image builds, SBOMs, Trivy, CodeQL, DAST, database, and WooCommerce checks passed; approved release deployment, rollback observation, and production reconciliation remain required.

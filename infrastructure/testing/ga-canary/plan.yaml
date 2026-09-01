@@ -1,0 +1,111 @@
+schema: starfiniti.ga-canary-plan.v1
+version: 1
+timezone: UTC
+minimumWindowHours: 720
+minimumDailyIntervals: 30
+pilotTenantCount: 1
+releaseIdentity:
+  immutable: true
+  requiredBindings:
+    [
+      gitCommit,
+      dashboardImage,
+      workerImage,
+      connectorPackage,
+      migrations,
+      configuration,
+    ]
+materialChangesRestartWindow:
+  [
+    release,
+    applicationImage,
+    workerImage,
+    connectorPackage,
+    migrationSet,
+    valueContract,
+    entitlementCatalogue,
+    monitoringContract,
+  ]
+prerequisiteModules:
+  [
+    M00,
+    M01,
+    M02,
+    M03,
+    M04,
+    M05,
+    M06,
+    M07,
+    M08,
+    M09,
+    M10,
+    M11,
+    M12,
+    M13,
+    M14,
+    M15,
+  ]
+prerequisiteEvidence:
+  - id: capacity
+    path: docs/plan/evidence/M15/capacity.yaml
+  - id: fault-injection
+    path: docs/plan/evidence/M15/fault-injection.yaml
+  - id: security
+    path: docs/plan/evidence/M15/security.yaml
+  - id: recovery
+    path: docs/plan/evidence/M15/recovery.yaml
+  - id: operations
+    path: docs/plan/evidence/M15/operations.yaml
+artifacts:
+  - id: release-inventory
+    schema: starfiniti.ga-release-inventory.v1
+  - id: canary-journal
+    schema: starfiniti.ga-canary-journal.v1
+  - id: final-reconciliation
+    schema: starfiniti.ga-final-reconciliation.v1
+  - id: claims-review
+    schema: starfiniti.ga-claims-review.v1
+  - id: approval-record
+    schema: starfiniti.ga-approval-record.v1
+dailyZeroDifferences:
+  - unexplainedValue
+  - duplicateEffects
+  - ledger
+  - walletLotsTiersRewards
+  - queues
+  - woocommerceCoupons
+  - tenantBoundary
+  - privacy
+  - checkoutDependency
+  - dataLoss
+  - ambiguousProviderOutcomes
+finalZeroDifferences:
+  - canonicalEvents
+  - immutableEffects
+  - ledger
+  - walletLotsTiersRewards
+  - woocommerceCoupons
+  - referralsCampaigns
+  - notifications
+  - analytics
+  - ecosystemApisWebhooks
+  - migrations
+  - identityLifecycle
+  - usageInvoices
+  - privacy
+  - tenantAuthorization
+  - dataLoss
+requiredApprovalRoles:
+  [product, engineering, security, operations, value-integrity, owner]
+score:
+  target: 90
+  minimumCategoryRatio: 0.8
+automaticFails:
+  - the window is shorter than 720 consecutive hours or has fewer than 30 complete UTC daily intervals
+  - the release configuration value entitlement or monitoring identity changes without restarting the window
+  - a daily source is absent stale or represented as a healthy zero
+  - an unexplained value coupon queue tenant privacy checkout or data-loss difference is nonzero
+  - a Critical or High issue remains unresolved or a deterministic safety failure is overridden by scoring
+  - any prerequisite module or M15 evidence manifest remains incomplete
+  - a claim is publishable without all required exact-release evidence independent review and owner approval
+  - completion is claimed without distinct digest-bound artifacts final reconciliation category floors and all approvals

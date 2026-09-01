@@ -1,0 +1,219 @@
+schema: starfiniti.analytics-canary.v1
+status: in_progress
+observedAt: 2026-08-27T16:16:45Z
+currentProduction:
+  release: v0.1.11
+  applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
+candidate:
+  pullRequest: 57
+  commit: b760cec734513ee5aa3bded551dac46ed14db43e
+  approvedRelease: false
+  operatorAccess: true
+  pilotStoreApproved: false
+  canaryApproved: false
+publicBaseline:
+  dashboardHealth: 200
+  login: 200
+  authWithoutKey: 401
+  restWithoutKey: 401
+  canonicalDns: true
+score:
+  total: 90
+  target: 90
+  minimumCategoryRatio: 0.8
+  categories:
+    - id: correctness
+      weight: 20
+      score: 20
+      evidence: "Four strict versioned reports reconcile immutable point, commerce, programme, cohort, and causal evidence with explicit unavailable states and exact shared snapshots."
+    - id: security
+      weight: 15
+      score: 15
+      evidence: "PostgreSQL re-derives scope and roles; RLS, grants, private payloads, one-use subject/session capabilities, late authorization, and minimized projections pass adversarial tests."
+    - id: ledger_reliability
+      weight: 15
+      score: 15
+      evidence: "Reports are read-only, value truth fails on projection drift, exports and schedules cannot mutate loyalty value, and all concurrency and protected-path fences pass."
+    - id: tests
+      weight: 15
+      score: 15
+      evidence: "Exact candidate checks cover 958 workspace tests, 81 migrations, 68 pgTAP files, all concurrency probes, both images, and four WooCommerce runtime cells."
+    - id: performance
+      weight: 10
+      score: 8
+      evidence: "Periods, series, payloads, claims, leases, retries, statements, and workers are bounded; responsive browser checks pass while production latency and load observation remain pending."
+    - id: operability
+      weight: 10
+      score: 3
+      evidence: "Disabled-first rollout, isolated reporting mode, expiry, audit, reconciliation, and rollback contracts exist; approved release, canary, rehearsal, and observation remain pending."
+    - id: maintainability
+      weight: 15
+      score: 14
+      evidence: "Four dictionary generations, strict parsers, additive SQL, versioned contracts, ADRs, tests, runbooks, living evidence, and V1 compatibility remain synchronized."
+checks:
+  - id: exact_head_ci
+    status: passed
+    evidence: "CI run 33101099338 and Security run 33101099291 passed at integrated candidate commit b760cec734513ee5aa3bded551dac46ed14db43e with all eleven PR checks green."
+  - id: migration_replay
+    status: passed
+    evidence: "Exact candidate CI replayed all 81 additive migration files and all 68 pgTAP files with the complete database and concurrency boundary green."
+  - id: contract_and_parser_matrix
+    status: passed
+    evidence: "Dictionary V4 and all four reports plus the aggregate export reject arithmetic, currency, cohort, causal, bigint, prohibited-key, digest, period, and snapshot drift."
+  - id: database_authority_matrix
+    status: passed
+    evidence: "PostgreSQL derives live organization, workspace, programme, actor, role, entitlement, report, schedule, job, payload, and capability authority behind explicit grants and RLS."
+  - id: concurrency_matrix
+    status: passed
+    evidence: "All repository two-session probes pass, including value, capacity, audience, export scheduling, lease claims, capability consumption, and later enterprise boundaries."
+  - id: woocommerce_runtime_matrix
+    status: passed
+    evidence: "Minimum and current WordPress and WooCommerce pass with HPOS and legacy storage while analytics remains outside checkout and native coupon paths."
+  - id: browser_accessibility
+    status: passed
+    evidence: "The real command center and reporting controls pass desktop, mobile, keyboard, focus, reduced motion, contrast, reflow, overflow, stale, empty, error, and English-only review."
+  - id: shared_snapshot_boundary
+    status: passed
+    evidence: "One server-chosen exact UTC instant binds all four report functions; invalid, future, divergent, and stale-without-warning states fail closed."
+  - id: legacy_overview_shadow
+    status: passed
+    evidence: "The read-only compatibility shadow compares identical-instant workspace-linked member and outstanding-point semantics without replacing either versioned contract."
+  - id: public_production_baseline
+    status: passed
+    evidence: "Canonical DNS resolves; dashboard health and login return HTTP 200 while unauthenticated Auth and REST roots return HTTP 401."
+  - id: operator_access
+    status: passed
+    evidence: "The approved read-only Proxmox route confirms application VM 970 and Supabase VM 971 are running without changing service, reports, exports, production data, checkout, or loyalty value."
+  - id: approved_release
+    status: pending
+    evidence: "Draft PR 57 is exact-head green but explicit merge, immutable release, and deployment approval remain required."
+  - id: approved_pilot_store
+    status: pending
+    evidence: "One real WooCommerce pilot with approved commerce, member, reward, tier, referral, campaign, cohort, export, schedule, download, and outage fixtures requires owner approval."
+  - id: canary_approval
+    status: pending
+    evidence: "No approved maintenance window, analytics scope, export ceiling, observation interval, stop condition, or rollback decision owner is recorded."
+  - id: pre_change_recovery_point
+    status: pending
+    evidence: "A fresh verified PostgreSQL base, WAL position, incremental off-host archive, application configuration snapshot, and reporting-reference inventory must precede deployment."
+  - id: production_source_baseline
+    status: pending
+    evidence: "Fresh minimized ledger, lot, wallet, commerce, programme, cohort, report, export, schedule, job, payload, capability, and queue aggregates require capture."
+  - id: disabled_deployment
+    status: pending
+    evidence: "Candidate images and additive migrations have not been deployed with analytics navigation, entitlement, schedules, and reporting worker disabled."
+  - id: migration_registration
+    status: pending
+    evidence: "Production must record every candidate migration version and source digest exactly once before analytics reads can be enabled."
+  - id: non_canary_disabled
+    status: pending
+    evidence: "Unrelated organizations, workspaces, programmes, stores, members, sessions, schedules, exports, and reporting workers must receive no analytics capability."
+  - id: analytics_entitlement_canary
+    status: pending
+    evidence: "Analytics must remain disabled globally and enable only for the approved Starfiniti organization after disabled-deployment smoke."
+  - id: value_truth_reconciliation
+    status: pending
+    evidence: "Issued, pending, available, reserved, spent, expired, reversed, manual, outstanding, expiry, lot, and projection evidence must reconcile exactly."
+  - id: commerce_reconciliation
+    status: pending
+    evidence: "Activation, participation, eligible orders and spend, refunds, repeat rate, AOV, observed LTV, guest, linkage, currency, and coverage must reconcile exactly."
+  - id: programme_outcome_reconciliation
+    status: pending
+    evidence: "Reward transitions, tier decisions, referral issuance and compensation, campaign influence, capacity, controls, reversals, and unresolved work must reconcile exactly."
+  - id: cohort_reconciliation
+    status: pending
+    evidence: "Mature activation and retention cohorts plus experiment assignment, zero outcomes, sample, currency, estimator, and unavailable reasons must reconcile exactly."
+  - id: manual_export_canary
+    status: pending
+    evidence: "One bounded aggregate JSON report must retain strict contracts, source digest, response digest, exact scope and instant, minimized payload, expiry, and audit."
+  - id: download_privacy_and_replay
+    status: pending
+    evidence: "Another session, replay, expiry, revocation, lower role, cross-tenant selector, and prohibited identity inspection must reveal no private report content."
+  - id: schedule_materialization
+    status: pending
+    evidence: "One approved IANA-local occurrence must materialize once across normal and daylight-saving boundaries, then pause before any unapproved recurrence."
+  - id: reporting_worker_isolation
+    status: pending
+    evidence: "Stopping and restarting only reporting must preserve checkout, ledger, refunds, reconciliation, connectors, notifications, and every protected value path."
+  - id: interactive_latency
+    status: pending
+    evidence: "Record bounded report latency, statement timeout behavior, database load, browser timing, worker throughput, stale counters, and unavailable states."
+  - id: rollback_rehearsal
+    status: pending
+    evidence: "Disable analytics, stop reporting, drain or hold accepted work, restore prior images, and retain additive history, audits, payload expiry, checkout, and loyalty value."
+  - id: observation_window
+    status: pending
+    evidence: "Observe the bounded canary after rollback rehearsal and record source, report, export, schedule, latency, load, queue, privacy, checkout, and reconciliation health."
+  - id: final_reconciliation
+    status: pending
+    evidence: "Confirm zero unexplained source, metric, report, cohort, export, schedule, payload, capability, queue, privacy, tenancy, checkout, or loyalty-value difference."
+artifacts:
+  - id: read_only_baseline
+    status: verified
+    path: docs/plan/evidence/M10/production/analytics-read-only-baseline-2026-08-27.json
+    sha256: 7d86b391f68f7d0af59ef2275d09a4e78d62b7bf5de184e5cd669eb198c6d485
+  - id: release_inventory
+    status: pending
+    path: null
+    sha256: null
+  - id: approval_record
+    status: pending
+    path: null
+    sha256: null
+  - id: recovery_point
+    status: pending
+    path: null
+    sha256: null
+  - id: production_baseline
+    status: pending
+    path: null
+    sha256: null
+  - id: canary_journal
+    status: pending
+    path: null
+    sha256: null
+  - id: reconciliation_report
+    status: pending
+    path: null
+    sha256: null
+  - id: rollback_report
+    status: pending
+    path: null
+    sha256: null
+  - id: observation_report
+    status: pending
+    path: null
+    sha256: null
+automaticFails:
+  - id: mutable_projection_truth
+    rule: "a mutable wallet aggregate current programme state or browser-computed value replaces immutable ledger commerce programme or assignment evidence"
+  - id: cross_tenant_exposure
+    rule: "an unrelated organization workspace programme report export schedule payload capability cohort or operational selector becomes visible mutable or consumable"
+  - id: arithmetic_precision_loss
+    rule: "large integer decimal currency timezone refund cohort rate or rational estimator arithmetic loses exact source meaning or changes across layers"
+  - id: causal_claim_overreach
+    rule: "influenced revenue observation or incomplete treatment-control evidence is labelled incremental predictive significant or accounting revenue"
+  - id: duplicate_report_effect
+    rule: "retry concurrency schedule materialization lease recovery or capability consumption creates another export payload download or immutable business result"
+  - id: private_export_leak
+    rule: "report export download audit log support output or evidence exposes row-level identity contact coupon assignment signing capability or private operational data"
+  - id: capability_replay
+    rule: "another subject session tenant expired capability revoked actor or replay consumes or reconstructs private report content"
+  - id: snapshot_divergence
+    rule: "one analytics command center mixes invalid future stale-without-warning or materially different source instants across its four reports"
+  - id: unbounded_reporting_load
+    rule: "period series payload candidate schedule lease retry response or database statement exceeds its declared bound or starves protected value processing"
+  - id: analytics_value_dependency
+    rule: "checkout awards refunds releases reservations reconciliation notifications or provider processing depends on analytics report export schedule or worker availability"
+  - id: accepted_work_stranded
+    rule: "disablement rollback expiry or prior-image recovery hides deletes or strands accepted export schedule job payload capability audit or required reconciliation"
+  - id: unsafe_rollout
+    rule: "analytics migration navigation entitlement schedule or reporting worker is enabled outside the approved pilot before recovery baseline and disabled-deployment checks pass"
+  - id: reconciliation_gap
+    rule: "ledger projection commerce programme cohort export schedule payload capability or customer aggregate differs from immutable source evidence"
+  - id: sensitive_evidence
+    rule: "contact identity raw payload capability reusable signing material coupon plaintext private selector or ledger metadata enters browser logs support output or evidence"
+  - id: score_or_approval_bypass
+    rule: "module status completion approval artifact score total category floor metric limitation or unavailable state is changed without exact synchronized evidence"
+  - id: unexplained_or_unapproved_close
+    rule: "any metric source report export schedule capability latency privacy tenancy value checkout approval artifact score floor or critical finding remains unresolved"

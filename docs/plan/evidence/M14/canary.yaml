@@ -1,0 +1,271 @@
+schema: starfiniti.managed-billing-canary.v1
+status: in_progress
+observedAt: 2026-08-27T18:52:44Z
+currentProduction:
+  release: v0.1.11
+  applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
+candidate:
+  pullRequest: 57
+  commit: 9bea3d4d210dd222d739495d3b1741c62462c7a2
+  approvedRelease: false
+  operatorAccess: true
+  stripeSandboxApproved: false
+  commercialPolicyApproved: false
+  canaryApproved: false
+publicBaseline:
+  dashboardHealth: 200
+  login: 200
+  authWithoutKey: 401
+  restWithoutKey: 401
+  canonicalDns: true
+score:
+  total: 90
+  target: 90
+  minimumCategoryRatio: 0.8
+  categories:
+    - id: correctness
+      weight: 20
+      score: 20
+      evidence: Subscription lifecycle, immutable usage, deterministic commercial policy, manual contracts, and merchant recovery have one versioned database-authoritative outcome.
+    - id: security
+      weight: 15
+      score: 15
+      evidence: PostgreSQL derives tenant, membership, entitlement, account, plan, meter, policy, and operation authority before isolated provider access.
+    - id: ledger_reliability
+      weight: 15
+      score: 15
+      evidence: Billing creates no loyalty value and commercial restrictions structurally exclude ledger, commerce, refunds, reconciliation, export, redemption, and checkout paths.
+    - id: tests
+      weight: 15
+      score: 15
+      evidence: "Exact candidate evidence covers 958 workspace tests, 81 migrations, 68 pgTAP files, the full concurrency matrix, both images, and all four WooCommerce runtimes."
+    - id: performance
+      weight: 10
+      score: 8
+      evidence: Webhook bodies, provider responses, leases, attempts, retries, summaries, and browser layouts are bounded; sandbox and production latency observation remain pending.
+    - id: operability
+      weight: 10
+      score: 3
+      evidence: Disabled-first setup, independent workers, recovery, reconciliation, and rollback instructions exist; sandbox, invoice, canary, and observation evidence remain pending.
+    - id: maintainability
+      weight: 15
+      score: 14
+      evidence: Strict contracts, additive migrations, narrow adapters, ADRs, tests, runbooks, compatibility boundaries, and living evidence are maintained; production closeout remains.
+checks:
+  - id: exact_head_ci
+    status: passed
+    evidence: "CI run 33105154521 and Security run 33105155321 passed at integrated candidate commit 9bea3d4d210dd222d739495d3b1741c62462c7a2 with all eleven PR checks green."
+  - id: migration_replay
+    status: passed
+    evidence: "Exact candidate CI replayed all 81 additive migration files and all 68 pgTAP files with the complete database and concurrency boundary green."
+  - id: contract_provider_matrix
+    status: passed
+    evidence: Strict public summaries, signed webhook intake, Checkout and Portal reservations, provider adapters, usage dispatch, and commercial-policy contracts pass bounded adversarial tests.
+  - id: database_authority_matrix
+    status: passed
+    evidence: RLS, grants, live membership, deployment, entitlement, account, plan, meter, policy, contract, minimization, immutability, and zero-value boundaries pass.
+  - id: concurrency_matrix
+    status: passed
+    evidence: "The complete repository two-session matrix covers loyalty value plus billing account, event, session, usage, policy, contract, migration, identity, and growth-command convergence."
+  - id: woocommerce_runtime_matrix
+    status: passed
+    evidence: Minimum and current WordPress and WooCommerce pass with HPOS and legacy storage while managed billing remains outside checkout.
+  - id: browser_accessibility
+    status: passed
+    evidence: Production-rendered desktop, narrow, and mobile reviews pass English copy, exact authority, keyboard focus, reflow, dark mode, reduced motion, contrast, and diagnostics.
+  - id: privacy_retention_matrix
+    status: passed
+    evidence: Public responses, database evidence, logs, attempts, and canary records exclude card, payment, contact, redirect, raw provider, secret, and reusable authority material.
+  - id: checkout_independence_matrix
+    status: passed
+    evidence: WooCommerce runtime tests and the table-bound inventory prove billing availability or state cannot become a synchronous checkout or accepted-value dependency.
+  - id: operations_documentation
+    status: passed
+    evidence: Provider setup, secret isolation, sandbox sequencing, commercial policy, ambiguity recovery, reconciliation, observation, and rollback have maintained documentation.
+  - id: public_production_baseline
+    status: passed
+    evidence: Canonical DNS resolves; dashboard health and login return 200 while unauthenticated Supabase Auth and REST roots return 401.
+  - id: operator_access
+    status: passed
+    evidence: The approved read-only route reached the production Proxmox node and confirmed application VM 970 and database VM 971 running without mutation.
+  - id: self_hosted_no_call_repository
+    status: passed
+    evidence: Server, worker, database, Compose, contract, and adapter tests return before Stripe key reads, source scans, provider construction, or provider requests in self-hosted mode.
+  - id: approved_release
+    status: pending
+    evidence: "Draft PR 57 is exact-head green but explicit merge, immutable release, and deployment approval remain required."
+  - id: approved_stripe_sandbox
+    status: pending
+    evidence: A reviewed Stripe sandbox, three purpose-separated test credentials, and an exact webhook endpoint have not been approved for the canary.
+  - id: approved_catalogue
+    status: pending
+    evidence: Reviewed sandbox Prices, four sum-aggregation meter event names, effective intervals, currencies, and billable-unit definitions remain external approval inputs.
+  - id: approved_commercial_policy
+    status: pending
+    evidence: Grace length, restricted-growth behavior, cancellation handling, manual-contract authority, approver, and rollback policy await explicit owner approval.
+  - id: canary_approval
+    status: pending
+    evidence: No owner-approved maintenance, sandbox, or Starfiniti managed-tenant canary window is recorded.
+  - id: pre_change_recovery_point
+    status: pending
+    evidence: A fresh verified PostgreSQL base, WAL position, encrypted incremental archive, and application configuration recovery point must precede deployment.
+  - id: production_billing_baseline
+    status: pending
+    evidence: Minimized subscription, entitlement, source-fact, dispatch, invoice-observation, commercial-policy, contract, protected-path, and zero-ledger baselines require the approved window.
+  - id: secret_mounts
+    status: pending
+    evidence: The endpoint, session, and meter-event test credentials must be mounted as separate owner-managed read-only regular files and excluded from environment, browser, logs, and evidence.
+  - id: disabled_deployment
+    status: pending
+    evidence: Candidate images and M14 migrations have not been deployed; production remains globally self-hosted with no provider configuration or billing worker.
+  - id: migration_registration
+    status: pending
+    evidence: Production must record each additive M14 migration version and source hash exactly once before any managed-billing enablement.
+  - id: non_canary_disabled
+    status: pending
+    evidence: "Unrelated organizations, accounts, plans, subscriptions, Prices, meters, policies, contracts, provider events, sessions, and workers must receive no managed-billing capability or provider call."
+  - id: self_hosted_runtime_no_call
+    status: pending
+    evidence: Capture network and file-access evidence from deployed disabled images proving zero Stripe request, key read, source scan, or billing-worker construction in self-hosted mode.
+  - id: managed_entitlement_canary
+    status: pending
+    evidence: Keep managed billing disabled globally, configure one approved Starfiniti organization, then enable only its exact tenant canary after disabled-deployment smoke.
+  - id: checkout_session_canary
+    status: pending
+    evidence: One live owner creates exactly one sandbox Checkout resource while retries converge and admin, revoked, unrelated, changed-plan, and browser-authority attempts fail.
+  - id: portal_session_canary
+    status: pending
+    evidence: One live owner creates a short-lived sandbox Portal resource while non-owner, revoked, unrelated, changed-return, and disabled-provider attempts fail.
+  - id: verified_webhook_intake
+    status: pending
+    evidence: The canonical endpoint accepts one exact current signed allowlisted sandbox event and rejects unsigned, stale, oversized, malformed, unsupported, and changed replay input.
+  - id: webhook_replay_disorder
+    status: pending
+    evidence: Duplicate, delayed, and out-of-order subscription and invoice delivery retains one receipt/effect and cannot regress the event-time current projection.
+  - id: subscription_trial_activation
+    status: pending
+    evidence: An official sandbox simulation advances from trial to active, waits for the ready state, reconciles verified events, and grants growth only from committed PostgreSQL evidence.
+  - id: subscription_renewal
+    status: pending
+    evidence: An official sandbox simulation advances through renewal, reconciles the finalized invoice and subscription revision, and produces no loyalty-value difference.
+  - id: payment_failure_grace
+    status: pending
+    evidence: A controlled sandbox payment failure enters the approved immutable grace interval and preserves every protected path while only new managed growth follows policy.
+  - id: suspension_cancellation
+    status: pending
+    evidence: Grace expiry, provider suspension, and cancellation restrict only reviewed new growth while ingestion, refunds, releases, redemption, reconciliation, export, account access, and checkout continue.
+  - id: subscription_recovery
+    status: pending
+    evidence: A later verified provider recovery reopens configuration from committed event-time evidence without editing or hiding the restricted interval.
+  - id: usage_source_capture
+    status: pending
+    evidence: Approved order, active-member, delivered-message, and Service API source facts reconcile exactly by immutable source identity and UTC billing period.
+  - id: usage_dispatch_replay
+    status: pending
+    evidence: Each eligible fact reaches one permanent sandbox meter-event identity; duplicate and concurrent dispatch converge while timeout remains ambiguous until reconciled.
+  - id: usage_correction
+    status: pending
+    evidence: One source-bound in-period compensating correction reuses the accepted account and meter, cannot make cumulative usage negative, and leaves history immutable.
+  - id: provider_usage_reconciliation
+    status: pending
+    evidence: Poll asynchronous sandbox meter summaries to convergence and reconcile all four provider totals exactly to immutable local source facts and compensations.
+  - id: invoice_reconciliation
+    status: pending
+    evidence: Reconcile sandbox invoice line quantities, periods, currency, rates, fixed plan amounts, usage amounts, totals, and status exactly to approved catalogue and local evidence.
+  - id: manual_contract_override
+    status: pending
+    evidence: A separately approved effective contract reopens growth during provider restriction, expires or defers deterministically, records minimized audit, and changes no loyalty value.
+  - id: protected_operations_matrix
+    status: pending
+    evidence: Trial, active, grace, restricted, cancelled, contract-managed, provider-outage, and worker-outage states all preserve the six protected paths plus accepted operational work.
+  - id: provider_outage_recovery
+    status: pending
+    evidence: Checkout, Portal, webhook, and meter provider failures remain isolated with bounded rejected, retryable, held, or ambiguous evidence and no guessed provider success.
+  - id: worker_outage_recovery
+    status: pending
+    evidence: Stopped workers, expired leases, restarts, entitlement changes, and key removal recover or hold accepted jobs exactly once without affecting checkout or loyalty value.
+  - id: return_navigation_no_authority
+    status: pending
+    evidence: Checkout success, cancellation, lost return, repeated return, and Portal navigation change no subscription, entitlement, tenant, or commercial state before verified reconciliation.
+  - id: cross_tenant_denial
+    status: pending
+    evidence: Unrelated organization, plan, operation, event, account, meter, policy, contract, and summary selectors reveal no provider evidence and create no effect.
+  - id: rollback_rehearsal
+    status: pending
+    evidence: Disable the tenant canary, stop the billing worker, remove all three key mounts, restore prior images, and retain accepted evidence while protected paths remain healthy.
+  - id: observation_window
+    status: pending
+    evidence: Observe the controlled canary after rollback rehearsal and record bounded latency, error, retry, ambiguity, drift, checkout, value, and protected-operation health.
+  - id: final_reconciliation
+    status: pending
+    evidence: Confirm zero unexplained subscription, entitlement, Price, meter, usage, invoice, policy, contract, attempt, protected-path, checkout, or ledger difference.
+artifacts:
+  - id: read_only_baseline
+    status: verified
+    path: docs/plan/evidence/M14/production/billing-read-only-baseline-2026-08-27.json
+    sha256: 5cbd2629d1d3f431e467c29a06a63f62e429f41b69d52af7441d4400db974696
+  - id: release_inventory
+    status: pending
+    path: null
+    sha256: null
+  - id: approval_record
+    status: pending
+    path: null
+    sha256: null
+  - id: recovery_point
+    status: pending
+    path: null
+    sha256: null
+  - id: production_baseline
+    status: pending
+    path: null
+    sha256: null
+  - id: canary_journal
+    status: pending
+    path: null
+    sha256: null
+  - id: reconciliation_report
+    status: pending
+    path: null
+    sha256: null
+  - id: rollback_report
+    status: pending
+    path: null
+    sha256: null
+  - id: observation_report
+    status: pending
+    path: null
+    sha256: null
+automaticFails:
+  - id: sensitive_provider_data
+    rule: "card payment contact redirect provider response raw webhook or reusable authority material is stored logged exported shown in support output or copied into evidence"
+  - id: self_hosted_provider_call
+    rule: "self-hosted mode reads a Stripe key scans billable sources constructs a provider client starts a billing worker or makes a Stripe request"
+  - id: browser_or_provider_authority
+    rule: "browser input Auth claims provider metadata navigation return or mutable response grants tenant customer Price meter subscription entitlement or commercial authority"
+  - id: unverified_webhook
+    rule: "unsigned stale oversized malformed unsupported or changed replay input enters the verified provider inbox or changes commercial state"
+  - id: provider_replay_regression
+    rule: "duplicate delayed changed or out-of-order provider delivery creates another receipt effect entitlement revision or regresses event-time commercial state"
+  - id: duplicate_usage_effect
+    rule: "duplicate source retry concurrency correction or dispatch creates another billable unit loses source period account or meter attribution or makes usage negative"
+  - id: premature_reconciliation
+    rule: "asynchronous provider usage invoice subscription or ambiguity evidence is declared reconciled before bounded convergence polling and exact local comparison succeed"
+  - id: protected_path_block
+    rule: "delinquency contract provider outage billing worker failure or commercial restriction blocks checkout ingestion refunds releases redemption reconciliation export account access or promised value"
+  - id: manual_contract_bypass
+    rule: "a manual contract is self-approved unbounded unaudited backdated over conflicting evidence mutable in place or effective outside its exact interval"
+  - id: cross_tenant_exposure
+    rule: "an unrelated organization account plan operation event usage policy contract summary provider or protected-path selector becomes visible mutable or externally actionable"
+  - id: credential_or_resource_leak
+    rule: "reusable Stripe keys signatures raw provider resource identifiers payment values or secret mounts appear in repository browser database logs support output or canary artifacts"
+  - id: ambiguous_outcome_guess
+    rule: "an ambiguous provider outcome is retried as success released for changed reuse discarded or used as entitlement authority without exact reconciliation"
+  - id: unsafe_rollout
+    rule: "managed billing Price meter policy contract Checkout Portal webhook or usage dispatch is enabled outside the approved tenant before recovery baseline disabled deployment and isolation pass"
+  - id: reconciliation_gap
+    rule: "subscription entitlement Price meter usage invoice policy contract attempt protected-path checkout or ledger evidence differs from immutable source facts"
+  - id: score_or_approval_bypass
+    rule: "module status completion approval catalogue policy artifact score total or category floor is changed without exact synchronized evidence"
+  - id: unexplained_or_unapproved_close
+    rule: "any billing lifecycle usage invoice protected-path privacy approval artifact score floor or critical security tenancy ledger recovery accessibility data-loss finding remains unresolved"

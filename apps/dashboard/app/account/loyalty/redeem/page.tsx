@@ -5,17 +5,11 @@ import { redeemCustomerReward } from "./actions";
 import {
   CUSTOMER_COPY,
   customerLocalePath,
-  resolveCustomerLocale,
   type CustomerLocale,
 } from "@/lib/customer-locale";
+import { isSelfServiceRewardKind } from "@/lib/customer-rewards";
 
 type Search = Record<string, string | string[] | undefined>;
-
-const NATIVE_REWARD_KINDS = new Set([
-  "fixed_discount",
-  "percentage_discount",
-  "free_shipping",
-]);
 
 export default async function CustomerRewardConfirmationPage({
   searchParams,
@@ -26,11 +20,12 @@ export default async function CustomerRewardConfirmationPage({
     searchParams,
     getCustomerLoyaltyAccounts(),
   ]);
-  const locale = resolveCustomerLocale(search.lang);
+  const locale: CustomerLocale = "en";
   const copy = CUSTOMER_COPY[locale];
   if (state.kind === "unauthenticated") {
     redirect(customerLocalePath("/login?next=%2Faccount%2Floyalty", locale));
   }
+  if (state.kind === "unavailable") redirect("/account/loyalty");
   const accountId = typeof search.account === "string" ? search.account : "";
   const rewardCode = typeof search.reward === "string" ? search.reward : "";
   const account = state.accounts.find((item) => item.account_id === accountId);
@@ -40,7 +35,7 @@ export default async function CustomerRewardConfirmationPage({
   const canRedeem =
     account.account_status === "ready" &&
     reward.affordable &&
-    NATIVE_REWARD_KINDS.has(reward.kind);
+    isSelfServiceRewardKind(reward.kind);
   const resultingBalance = canRedeem
     ? (
         BigInt(account.available_points) - BigInt(reward.costPoints)

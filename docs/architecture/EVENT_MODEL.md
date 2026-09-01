@@ -77,6 +77,10 @@ Initial versioned types are:
 
 Platform payloads are preserved only in the restricted delivery record. Canonical payloads contain integer minor units, ISO currency, stable source IDs, line/refund attribution, and the minimum customer attributes required by policy. Once a `commerce.customer.deleted` effect is applied, both the restricted delivery body and canonical event are reduced to an opaque privacy-case reference; a private keyed tombstone retains only what is needed to suppress re-import.
 
+An order may carry `ReferralAttributionEvidenceV1`: one opaque advocate UUID, capture instant, and nullable purpose-separated network, device, payment, and shipping HMAC fingerprints. WooCommerce retains the raw inputs locally. The canonical event contains no IP address, user agent, email, name, payment token, or shipping address. PostgreSQL derives the tenant, programme, advocate, and friend from the signed event and connection-scoped identities, then serializes first attribution before the worker records its business-effect fence.
+
+Referral qualification derives the attribution's original immutable programme version from the canonical status event. The worker runs the shared V2 evaluator against that historical definition; PostgreSQL verifies event identity/time and result bounds, derives prior paid-order history and minimum-spend eligibility, and appends cooling/rejection/review-held evidence. An eligible cooling transition enqueues private leased work at its event-time deadline. One database transaction issues and releases the advocate/friend points, records both tier facts and immutable issuance evidence, then appends `qualified`. A signed source-order refund either rejects/cancels value-neutral work or atomically reverses both issued sides before appending `reversed`.
+
 ## Processing states
 
 Deliveries transition only through:

@@ -1,0 +1,175 @@
+{
+  "schemaVersion": "starfiniti.supabase-production-baseline.v1",
+  "observedAt": "2026-08-28T16:12:00Z",
+  "environment": "production",
+  "vmId": 971,
+  "compatibilityStatus": "repository_and_files_compatible_runtime_follow_up_required",
+  "compatibilityContractSha256": "1add7b7e0df5580ea36e032f26849515fdbbb2e960247013ab72fb1cbaa0ac1a",
+  "upstream": {
+    "releaseRef": "self-hosted/v0.8.0",
+    "tagObjectSha": "e1af732589cd468edb49500ebc04e4367d4c56ad",
+    "commitSha": "241bb11c0627f2981746d37033f57dbfa81d29b0"
+  },
+  "compose": {
+    "variantId": "asymmetric-jwks-enabled",
+    "sha256": "3c0cc8d931fba8e40923b1e05961d10692cbd7e7cb378d59cdb7f2b590ca4a55",
+    "officialSha256": "ccff9999a5ec72de91082eef84e2cac7bb6d92dd0057feb4e474c38ebf0b21cb",
+    "criticalAssetManifestSha256": "75f3858219a8d579536c1d6777db613eb5e14bb7ac76191cfff20adb73ea5b46",
+    "reviewedDifference": "four asymmetric-JWKS mappings enabled"
+  },
+  "runtime": {
+    "platform": "linux/amd64",
+    "gateway": "envoy",
+    "postgresMajor": 17,
+    "postgresMetaUser": "postgres",
+    "apiExternalPath": "/auth/v1",
+    "postgrestSchemas": "public,graphql_public,loyalty",
+    "kongPresent": false,
+    "analyticsPresent": false,
+    "vectorPresent": false,
+    "asymmetricJwtPrivateKeyCount": 2,
+    "asymmetricJwksPublicKeyCount": 2,
+    "studioPostgrestSchemaParity": false
+  },
+  "imageInventory": [
+    {
+      "service": "studio",
+      "configuredImage": "supabase/studio:2026.08.03-sha-022b374",
+      "resolvedDigest": "sha256:606aca9fdaa753b60968d5c304e2ada83869b76c9043684e63d5885aca9550e8",
+      "healthy": true
+    },
+    {
+      "service": "envoy",
+      "configuredImage": "envoyproxy/envoy:v1.39.0",
+      "resolvedDigest": "sha256:d59f7f5fa10cff6d5892b6c5e7df5c9297ddfb2c3683e33fbfb82da24de4fa66",
+      "healthy": true
+    },
+    {
+      "service": "auth",
+      "configuredImage": "supabase/gotrue:v2.189.0",
+      "resolvedDigest": "sha256:385184459f57569c54c25209f51f3b2be99ddd7c4ce9e3555b5d3eea8447b7cf",
+      "healthy": true
+    },
+    {
+      "service": "rest",
+      "configuredImage": "postgrest/postgrest:v14.12",
+      "resolvedDigest": "sha256:54000f24847d01a2c2302e0041cf0618b875c57fb48507d743cfa9aaa50bf43c",
+      "healthy": true
+    },
+    {
+      "service": "realtime",
+      "configuredImage": "supabase/realtime:v2.102.3",
+      "resolvedDigest": "sha256:aa1c92c0cf326007563641730ec9da9c60478caa6853887775365fa2c097a471",
+      "healthy": true
+    },
+    {
+      "service": "storage",
+      "configuredImage": "supabase/storage-api:v1.60.4",
+      "resolvedDigest": "sha256:c8eb9858eafec891a97c27125470aaad54703c3f4eb4d55ca7f1bf6c6411febf",
+      "healthy": true
+    },
+    {
+      "service": "imgproxy",
+      "configuredImage": "darthsim/imgproxy:v3.30.1",
+      "resolvedDigest": "sha256:3b709e4a0e5e8e0e959b556b7031229202b4b8e7e7d955c517ea7abed68ee34d",
+      "healthy": true
+    },
+    {
+      "service": "meta",
+      "configuredImage": "supabase/postgres-meta:v0.96.6",
+      "resolvedDigest": "sha256:a84cc713585eea7b401e4a2561ec4a1e48c87083d1c7ecb4502f204bb4391300",
+      "healthy": true
+    },
+    {
+      "service": "functions",
+      "configuredImage": "supabase/edge-runtime:v1.74.0",
+      "resolvedDigest": "sha256:2781daf92394db91f7e94129cc3d04ec474ad16a8fe64b3fbeef6e7d557ab120",
+      "healthy": true
+    },
+    {
+      "service": "db",
+      "configuredImage": "supabase/postgres:17.6.1.136",
+      "resolvedDigest": "sha256:f371b5f3f2ac0a05703f33d6e6134515fb2498cab708fb948a0aeb7481467c00",
+      "healthy": true
+    },
+    {
+      "service": "supavisor",
+      "configuredImage": "supabase/supavisor:2.9.5",
+      "resolvedDigest": "sha256:31c2f05b13b11069660fdfae2f6cfd37b509748d2710aca121cfee8b16cb8b07",
+      "healthy": true
+    }
+  ],
+  "checks": [
+    {
+      "id": "release_provenance",
+      "status": "passed",
+      "evidence": "The production release ref and recorded tag-object SHA match the official resolved self-hosted v0.8.0 source."
+    },
+    {
+      "id": "compose_official_source",
+      "status": "passed",
+      "evidence": "The official tagged Compose bytes and all fifteen mounted static assets hash to the contract's exact upstream digests."
+    },
+    {
+      "id": "compose_variant",
+      "status": "passed",
+      "evidence": "The live Compose differs only by enabling the four reviewed asymmetric-JWKS mappings and matches the exact approved variant digest."
+    },
+    {
+      "id": "image_inventory",
+      "status": "passed",
+      "evidence": "All eleven required running services use the reviewed configured tags and have captured healthy resolved image digests."
+    },
+    {
+      "id": "envoy_gateway",
+      "status": "passed",
+      "evidence": "Envoy is healthy and no Kong service or container is present."
+    },
+    {
+      "id": "auth_external_path",
+      "status": "passed",
+      "evidence": "The live Auth environment uses the canonical HTTPS API origin ending in /auth/v1."
+    },
+    {
+      "id": "postgrest_schema",
+      "status": "passed",
+      "evidence": "The live PostgREST container exposes exactly public, graphql_public, and loyalty."
+    },
+    {
+      "id": "postgres_major",
+      "status": "passed",
+      "evidence": "The healthy database container resolves the reviewed PostgreSQL 17.6 Supabase image."
+    },
+    {
+      "id": "postgres_meta_owner",
+      "status": "passed",
+      "evidence": "The live postgres-meta container connects as postgres rather than the retired supabase_admin ownership path."
+    },
+    {
+      "id": "optional_services",
+      "status": "passed",
+      "evidence": "Kong, Analytics, and Vector are absent from the live default service set."
+    },
+    {
+      "id": "studio_runtime_schema_parity",
+      "status": "pending",
+      "evidence": "The current files select loyalty, but the older Studio container still carries public,graphql_public and requires an approved isolated recreation plus smoke test."
+    },
+    {
+      "id": "upgrade_rehearsal",
+      "status": "pending",
+      "evidence": "No later Supabase release is approved and no exact next-release upgrade rehearsal has been performed."
+    },
+    {
+      "id": "clean_room_restore",
+      "status": "pending",
+      "evidence": "The current stack and image inventory have not yet passed the complete M15 clean-room Auth, database, configuration, and application restore."
+    }
+  ],
+  "productionChanged": false,
+  "limitations": [
+    "This is a read-only production baseline and does not authorize or record a Supabase upgrade, restart, or container recreation.",
+    "The stale Studio environment requires a separately approved isolated recreation and browser smoke test before runtime parity can pass.",
+    "Exact upgrade rehearsal and complete clean-room recovery remain mandatory M15 gates and are not inferred from healthy containers."
+  ]
+}

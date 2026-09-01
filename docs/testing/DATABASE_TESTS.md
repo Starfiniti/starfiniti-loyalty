@@ -14,7 +14,7 @@
 npm run db:verify
 ```
 
-This requires Docker or Podman. It starts only the Supabase PostgreSQL service, applies migrations and seed, performs a destructive local reset to replay the chain from scratch, runs every SQL file in `supabase/tests` through pgTAP, and executes the two-session ledger concurrency/property probe. It never links to or mutates a remote project.
+This requires Docker or Podman. It starts only the Supabase PostgreSQL service, applies migrations and seed, performs a destructive local reset to replay the chain from scratch, runs every SQL file in `supabase/tests` through pgTAP, and executes every registered two-session concurrency/property probe. It never links to or mutates a remote project.
 
 Clean up local containers and their test volumes with:
 
@@ -42,7 +42,21 @@ The last two checks are durable guards: they fail automatically when future migr
 
 `initial_tenant_bootstrap_test.sql` adds 30 assertions for the deployment-only function boundary, absent browser/runtime/worker privileges, atomic tenant scope and owner creation, exact idempotent retry, changed-request and existing-slug denial, existing Auth identity, canonical inputs, minimized immutable audit evidence, and separation from authenticated programme launch.
 
+`enterprise_access_catalogue_test.sql` adds 29 assertions for the immutable seven-profile catalogue, six exact membership roles, grant-only support, private tables/helpers, one-selector minimized projection, active-versus-suspended effectiveness, aggregate-count reconciliation, marketer least privilege, stale-JWT revocation, cross-tenant denial, and forged email/domain/group/role/organization-claim rejection.
+
+`organization_team_lifecycle_test.sql` adds 62 assertions for additive lifecycle columns/tables, RLS and grant boundaries, seven exact public function signatures, fixed search path and timeout, actor/tenant/email-free commands, idempotent organization creation, one-use digest-only invitations, cross-subject replay, expiry/revocation, owner/admin separation, optimistic role changes, last-owner protection, stale-JWT denial, cross-tenant and forged-claim denial, reversible suspension, irreversible close/offboard, owner recovery, projection minimization, immutable audit evidence, guarded direct mutation, and zero ledger effects.
+
+`organization_agency_support_offboarding_test.sql` adds 73 assertions for private RLS/grants, digest-only bilateral invitations, cross-organization acceptance, exact retry/conflict behavior, authority-free portfolio projection, separate support approval, canonical scopes, bounded expiry, relationship/grant/session revocation, tenant-visible use evidence, signed AAL2 recovery, boolean-only live-session lookup, minimized export, comprehensive credential cleanup, terminal webhook destination/fingerprint scrubbing, cooled deletion/cancellation, identity pseudonymization, immutable evidence, and zero ledger drift.
+
+`expanded_reward_fulfilment_test.sql` adds 90 assertions for V2 reward publication, entitlement denial, WooCommerce capability negotiation, atomic points/quantity/budget reservation, per-customer limits, native capture, manual-case role separation, exactly-once fulfilment capture, definitive-rejection compensation, uncertainty preservation, private source tables, immutable transitions, and tenant isolation.
+
 `scripts/verify-ledger-concurrency.mjs` opens two independent PostgreSQL sessions. One holds an 80-point reservation on a 100-point wallet while the other competes for the same 80 points. Exactly one commits. It then runs 20 deterministic adjust/reserve/capture/cancel sequences with retry probes and verifies every transaction remains balanced and every projection remains exact.
+
+`scripts/verify-reward-capacity-concurrency.mjs` opens two independent PostgreSQL sessions against one published V2 reward with one remaining global unit. Exactly one reservation commits, the losing transaction has no ledger/reservation/outbox residue, an exact retry remains idempotent, and the allocation counters reconcile to the accepted reservation.
+
+`scripts/verify-organization-lifecycle-concurrency.mjs` opens independent PostgreSQL sessions for two adversarial races. Reciprocal owner revocations serialize on the organization and leave exactly one live owner; two different users accepting the same invitation produce exactly one membership, one acceptance audit effect, and one rejected loser. The probe also proves the lifecycle path creates no ledger transaction.
+
+`scripts/verify-agency-support-concurrency.mjs` opens independent PostgreSQL sessions for three authority races: competing agencies accepting one bilateral capability, an exact support approval retry, and terminal deletion completion. Stable organization/relationship/case locks produce one accepted effect, deterministic duplicate or stale outcomes, complete audit evidence, and zero ledger changes.
 
 ## CI
 

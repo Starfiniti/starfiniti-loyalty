@@ -1,0 +1,266 @@
+schema: starfiniti.referral-canary.v1
+status: in_progress
+observedAt: 2026-08-27T16:16:45Z
+currentProduction:
+  release: v0.1.11
+  applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
+candidate:
+  pullRequest: 57
+  commit: f5da506cc6d9dc4e992172bc87256ba97d7dd4a3
+  approvedRelease: false
+  operatorAccess: true
+  pilotStoreApproved: false
+  canaryApproved: false
+publicBaseline:
+  dashboardHealth: 200
+  login: 200
+  unsignedWooCommerceIngress: 401
+  canonicalDns: true
+score:
+  total: 90
+  target: 90
+  minimumCategoryRatio: 0.8
+  categories:
+    - id: correctness
+      weight: 20
+      score: 20
+      evidence: "Versioned first attribution, historical qualification, cooling, give-get value, refund compensation, fraud review, and customer and merchant outcomes have one deterministic result."
+    - id: security
+      weight: 15
+      score: 15
+      evidence: "PostgreSQL derives tenant, programme, connection, customer, attribution, review, job, wallet, and value authority behind explicit grants and RLS."
+    - id: ledger_reliability
+      weight: 15
+      score: 15
+      evidence: "Atomic two-sided issue and compensation, immutable lots and tier facts, exact retries, bounded leases, and accepted-work continuity preserve referral value."
+    - id: tests
+      weight: 15
+      score: 15
+      evidence: "Exact candidate checks cover 958 workspace tests, 81 migration files, 68 pgTAP files, all concurrency probes, both images, and four WooCommerce runtimes."
+    - id: performance
+      weight: 10
+      score: 8
+      evidence: "Bounded contracts, claims, retention, projections, retries, and local checkout behavior pass; production latency and sustained observation remain pending."
+    - id: operability
+      weight: 10
+      score: 3
+      evidence: "Disabled-first rollout, manual review, recovery, reconciliation, and rollback boundaries exist; release, pilot, production rehearsal, and observation remain pending."
+    - id: maintainability
+      weight: 15
+      score: 14
+      evidence: "Versioned contracts, additive migrations, shared evaluators, independent validation, ADRs, regression tests, runbooks, and living evidence remain synchronized."
+checks:
+  - id: exact_head_ci
+    status: passed
+    evidence: "CI run 33097025815 and Security run 33097025893 passed at integrated candidate commit f5da506cc6d9dc4e992172bc87256ba97d7dd4a3 with all eleven PR checks green."
+  - id: contract_referral_matrix
+    status: passed
+    evidence: "Strict contracts cover one opaque advocate code, 1-to-90-day attribution, paid and new-customer qualification, cooling, monthly caps, points-only give-get value, risk, review, progress, and history."
+  - id: database_authority_matrix
+    status: passed
+    evidence: "PostgreSQL derives tenant, programme, customer, connection, attribution, policy, wallets, review, job, value, and audit authority behind explicit grants, RLS, and private helpers."
+  - id: first_attribution_concurrency
+    status: passed
+    evidence: "Independent sessions serialize replay and competing advocates so first eligible attribution wins once while self-referral and reused evidence remain blocked or review-held."
+  - id: qualification_cooling_matrix
+    status: passed
+    evidence: "Historical policy, exact purchase evaluation, paid status, minimum spend, prior-order evidence, event-time cooling, delayed status, review hold, and pre-value refund behavior pass."
+  - id: give_get_ledger_matrix
+    status: passed
+    evidence: "Bounded leased jobs atomically issue or compensate both advocate and friend through immutable award, release, lot, tier, transition, and attempt evidence exactly once."
+  - id: fraud_review_matrix
+    status: passed
+    evidence: "Owner admin and operator review is Auth-derived, tenant-scoped, reason-bound, idempotent, reversible before value, immutable, fingerprint-free, and capped across recovery cycles."
+  - id: browser_accessibility
+    status: passed
+    evidence: "Production components pass desktop and mobile share fallback, progress, history, funnel, fraud operations, keyboard landmarks, focus, navigation, contained overflow, and diagnostic review."
+  - id: privacy_minimization
+    status: passed
+    evidence: "WooCommerce exports only purpose-separated keyed fingerprints; customer, merchant, worker, support, logs, and evidence omit raw identity, network, payment, shipping, and fingerprint values."
+  - id: checkout_independence
+    status: passed
+    evidence: "WooCommerce captures referral evidence locally and checkout never waits for Hub attribution, fraud review, qualification, cooling, worker, entitlement, or reward issuance."
+  - id: rollback_compatibility_repository
+    status: passed
+    evidence: "Disabling referrals stops new entry while accepted attribution, review, cooling, jobs, ledger effects, compensation, history, and customer value remain visible and recoverable."
+  - id: operations_documentation
+    status: passed
+    evidence: "Referral, WooCommerce, privacy, deployment, backup, reconciliation, dead-letter, incident, and rollback documentation define deterministic operator and retention boundaries."
+  - id: public_production_baseline
+    status: passed
+    evidence: "Canonical DNS resolves; dashboard health and login return HTTP 200 with no-store or private caching, and unsigned WooCommerce ingestion returns HTTP 401."
+  - id: operator_access
+    status: passed
+    evidence: "The approved read-only Proxmox route confirms application VM 970 and Supabase VM 971 are running without changing service, configuration, data, or value."
+  - id: approved_release
+    status: pending
+    evidence: "Draft PR 57 is exact-head green but explicit merge, immutable release, and deployment approval remain required."
+  - id: approved_pilot_store
+    status: pending
+    evidence: "One real WooCommerce store and bounded advocate, friend, order, refund, cooling, fraud, and reward fixtures require owner approval before value canary work."
+  - id: canary_approval
+    status: pending
+    evidence: "No approved maintenance window, exact pilot scope, referral value ceiling, observation interval, stop condition, or rollback decision owner is recorded."
+  - id: pre_change_recovery_point
+    status: pending
+    evidence: "A fresh verified PostgreSQL base, WAL position, incremental off-host archive, application configuration snapshot, and signing-reference inventory must precede deployment."
+  - id: production_value_baseline
+    status: pending
+    evidence: "Read-only programme, customer, wallet, attribution, transition, qualification, review, job, ledger, lot, tier, funnel, and fingerprint-retention aggregates require capture."
+  - id: disabled_deployment
+    status: pending
+    evidence: "Candidate images and additive migrations have not been deployed with referrals disabled."
+  - id: migration_registration
+    status: pending
+    evidence: "Production must record every candidate migration version and source digest exactly once before referrals can be enabled."
+  - id: non_canary_disabled
+    status: pending
+    evidence: "Unrelated organizations, workspaces, programmes, customers, connectors, and sessions must receive no referral capability."
+  - id: advocate_link_canary
+    status: pending
+    evidence: "One approved Auth-linked advocate must receive one opaque stable code and canonical HTTPS share URL without customer or channel identity."
+  - id: first_attribution_canary
+    status: pending
+    evidence: "The first eligible advocate must win one referred customer and canonical order while exact replay and a competing later advocate create no second attribution."
+  - id: attribution_window_canary
+    status: pending
+    evidence: "Attribution must accept exact configured window boundaries from 1 to 90 days and reject evidence before or after the immutable policy interval."
+  - id: self_referral_canary
+    status: pending
+    evidence: "Matching advocate and friend evidence must block self-referral before cooling or value and expose only the allowlisted minimized outcome."
+  - id: duplicate_identity_canary
+    status: pending
+    evidence: "Repeated purpose-separated payment or shipping evidence must route to bounded review without exposing fingerprint values or merging customer identity."
+  - id: velocity_risk_canary
+    status: pending
+    evidence: "Configured device and network velocity plus monthly advocate caps must produce deterministic allow, block, or review outcomes from minimized retained evidence."
+  - id: paid_minimum_new_customer
+    status: pending
+    evidence: "Only the configured paid status, exact eligible minimum spend, and first paid-order rule may advance the historical attribution policy."
+  - id: cooling_canary
+    status: pending
+    evidence: "One eligible attribution must remain value-neutral until the event-time return-cooling deadline and exact retry must create one claimable job."
+  - id: refund_before_issue
+    status: pending
+    evidence: "A canonical refund during captured, held, or cooling state must reject or cancel work without any ledger, lot, tier, or reward effect."
+  - id: advocate_reward_canary
+    status: pending
+    evidence: "The approved advocate reward must issue and release one immutable policy-bound points effect with exact historical expiry and tier evidence."
+  - id: friend_reward_canary
+    status: pending
+    evidence: "The approved friend reward must issue and release one immutable policy-bound points effect with exact historical expiry and tier evidence."
+  - id: atomic_give_get_canary
+    status: pending
+    evidence: "Advocate and friend effects must commit together under one canonical attribution or neither side may change."
+  - id: post_issue_refund_canary
+    status: pending
+    evidence: "A qualifying post-issuance refund must append one atomic two-sided compensation and exact tier reversal without deleting or rewriting original value."
+  - id: fraud_review_approval
+    status: pending
+    evidence: "An authorized reason-bound approval must advance one held case through the correct pre- or post-qualification state without directly issuing value."
+  - id: fraud_review_rejection
+    status: pending
+    evidence: "An authorized reason-bound rejection must append one terminal transition, create no job or value, and remain an immutable reversible decision record."
+  - id: exhausted_recovery_canary
+    status: pending
+    evidence: "A controlled exhausted job must enter visible manual review, receive one authorized bounded recovery cycle, preserve cumulative attempts, and respect the hard ceiling."
+  - id: customer_share_progress
+    status: pending
+    evidence: "Advocate sharing, referral progress, status, minimized history, and earned outcomes must derive from active Auth links and remain useful during unrelated projection outage."
+  - id: merchant_funnel_fraud
+    status: pending
+    evidence: "Tenant-scoped funnel, issued points, top-advocate references, recent canonical orders, and fraud operations must reconcile to facts without exposing private evidence."
+  - id: cross_tenant_denial
+    status: pending
+    evidence: "Unrelated organization, programme, customer, attribution, transition, review, job, wallet, ledger, fingerprint, and evidence selectors must reveal nothing and create no effect."
+  - id: attribution_reconciliation
+    status: pending
+    evidence: "Every code capture, attribution, qualification, cooling, review, rejection, reversal, and transition must reconcile to one historical policy and canonical source fact."
+  - id: ledger_reconciliation
+    status: pending
+    evidence: "Every advocate and friend award, release, lot, tier fact, balance, refund compensation, and reversal must reconcile exactly with zero partial side."
+  - id: fraud_evidence_reconciliation
+    status: pending
+    evidence: "Every allowlisted risk outcome, retained fingerprint row, purge, review reason, audit record, and public projection must reconcile without raw evidence leakage."
+  - id: queue_continuity_reconciliation
+    status: pending
+    evidence: "No cooling or reward job may be lost, duplicated, leased indefinitely, reset across recovery, hidden by disablement, or left without one explicit recoverable state."
+  - id: rollback_rehearsal
+    status: pending
+    evidence: "Disable referrals, stop new capture, drain or hold accepted work, restore prior images, and retain additive attribution, review, job, ledger, customer-value, and audit history."
+  - id: observation_window
+    status: pending
+    evidence: "Observe the bounded canary after rollback rehearsal and record attribution, review, cooling, queue, value, refund, checkout, retention, privacy, and reconciliation health."
+  - id: final_reconciliation
+    status: pending
+    evidence: "Confirm zero unexplained attribution, transition, review, job, advocate, friend, ledger, lot, tier, refund, funnel, fraud, checkout, tenancy, or privacy difference."
+artifacts:
+  - id: read_only_baseline
+    status: verified
+    path: docs/plan/evidence/M06/production/referral-read-only-baseline-2026-08-27.json
+    sha256: e8fe38d10baeda2d122c542832b1d06c90cd870f94a8efb48996df5b085da211
+  - id: release_inventory
+    status: pending
+    path: null
+    sha256: null
+  - id: approval_record
+    status: pending
+    path: null
+    sha256: null
+  - id: recovery_point
+    status: pending
+    path: null
+    sha256: null
+  - id: production_baseline
+    status: pending
+    path: null
+    sha256: null
+  - id: canary_journal
+    status: pending
+    path: null
+    sha256: null
+  - id: reconciliation_report
+    status: pending
+    path: null
+    sha256: null
+  - id: rollback_report
+    status: pending
+    path: null
+    sha256: null
+  - id: observation_report
+    status: pending
+    path: null
+    sha256: null
+automaticFails:
+  - id: identity_or_channel_leak
+    rule: "an advocate code share URL projection log or artifact exposes customer channel network payment or address identity"
+  - id: self_referral_value
+    rule: "a self-referral reaches attribution cooling qualification reward issuance or another value-bearing state"
+  - id: multiple_advocate_attribution
+    rule: "one referred customer or canonical order becomes attributed to more than one advocate or programme policy"
+  - id: browser_authority
+    rule: "browser input Auth claims email domain share parameters or connector metadata grants tenant customer referral or value authority"
+  - id: early_referral_value
+    rule: "advocate or friend value issues before paid minimum new-customer cooling and review requirements all pass"
+  - id: duplicate_referral_effect
+    rule: "duplicate replay delayed delivery or concurrent processing creates another attribution transition reward or compensation effect"
+  - id: partial_give_get
+    rule: "advocate and friend rewards or their refund compensation commit partially or reconcile to different canonical referral evidence"
+  - id: refund_retains_value
+    rule: "a qualifying refund fails to cancel value-neutral work or compensate each issued referral side exactly once"
+  - id: fraud_review_bypass
+    rule: "a held or uncertain referral issues value without a live authorized reason-bound immutable review decision"
+  - id: unbounded_recovery
+    rule: "fraud or reward recovery resets cumulative attempt identity exceeds its hard ceiling or hides terminal manual review"
+  - id: fraud_data_overretention
+    rule: "raw identity network payment shipping evidence or purpose-separated fingerprints survive beyond the bounded private retention policy"
+  - id: cross_tenant_exposure
+    rule: "an unrelated tenant programme customer attribution review job ledger effect fingerprint or evidence becomes visible or mutable"
+  - id: checkout_dependency
+    rule: "WooCommerce checkout synchronously depends on the Hub worker entitlement attribution fraud review or referral reward outcome"
+  - id: accepted_work_stranded
+    rule: "disabling referrals hides or strands an accepted attribution cooling review reward job or required compensation"
+  - id: sensitive_evidence
+    rule: "reusable signing material raw payload personal data fingerprint values or private ledger metadata enters logs support output or evidence"
+  - id: unexplained_or_unapproved_close
+    rule: "any attribution review job reward ledger funnel fraud tenancy or privacy difference approval artifact score floor or critical finding remains unresolved"

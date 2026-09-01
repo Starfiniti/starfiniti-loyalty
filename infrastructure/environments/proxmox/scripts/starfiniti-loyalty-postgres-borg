@@ -3,19 +3,386 @@ set -Eeuo pipefail
 
 umask 077
 
-source /etc/starfiniti-backup/pve-borg.env
+fail() {
+  printf 'starfiniti-loyalty-postgres-borg: %s\n' "$*" >&2
+  exit 1
+}
+
+readonly config_file="${STARFINITI_POSTGRES_BORG_CONFIG:-/etc/starfiniti-backup/pve-borg.env}"
+
+[[ "$config_file" == /* ]] || fail "configuration path must be absolute"
+[[ ! -L "$config_file" ]] || fail "configuration must not be a symbolic link"
+for bootstrap_command in dirname id readlink stat; do
+  command -v "$bootstrap_command" >/dev/null 2>&1 ||
+    fail "required command is missing: $bootstrap_command"
+done
+canonical_config_file="$(readlink -f -- "$config_file")" ||
+  fail "configuration path could not be resolved"
+[[ "$canonical_config_file" == "$config_file" ]] ||
+  fail "configuration path must be canonical and contain no symbolic links"
+config_parent="$(dirname -- "$config_file")"
+effective_uid="$(id -u)"
+
+validate_config_directory_chain() {
+  local current_directory="$config_parent"
+  local directory_metadata directory_owner directory_mode directory_mode_octal next_directory
+
+  while true; do
+    [[ -d "$current_directory" ]] || fail "configuration parent chain must contain only directories"
+    directory_metadata="$(stat -Lc '%u|%a' "$current_directory")" ||
+      fail "configuration parent metadata could not be read"
+    IFS='|' read -r directory_owner directory_mode <<<"$directory_metadata"
+    [[ "$directory_mode" =~ ^[0-7]{3,4}$ ]] ||
+      fail "configuration parent mode is invalid"
+    directory_mode_octal=$((8#$directory_mode))
+
+    if [[ "$current_directory" == "$config_parent" ]]; then
+      [[ "$directory_owner" == "$effective_uid" ]] ||
+        fail "configuration parent must be owned by the service user"
+      (( (directory_mode_octal & 0022) == 0 )) ||
+        fail "configuration parent must not be writable by group or others"
+    else
+      [[ "$directory_owner" == "$effective_uid" || "$directory_owner" == "0" ]] ||
+        fail "configuration ancestor must be owned by the service user or root"
+      if (( (directory_mode_octal & 0022) != 0 && (directory_mode_octal & 01000) == 0 )); then
+        fail "configuration ancestor must not be writable without sticky-directory protection"
+      fi
+    fi
+
+    [[ "$current_directory" == "/" ]] && break
+    next_directory="$(dirname -- "$current_directory")"
+    [[ "$next_directory" != "$current_directory" ]] ||
+      fail "configuration parent chain could not be resolved"
+    current_directory="$next_directory"
+  done
+}
+
+validate_config_directory_chain
+[[ -f "$config_file" ]] || fail "configuration must be a regular file"
+
+# The configuration is executable shell syntax and therefore root-equivalent
+# when this system unit runs as root. Open it once, validate the opened object,
+# and source only that descriptor. The canonical service-owned parent prevents
+# an untrusted replacement before open; the descriptor prevents replacement
+# between opened-object validation and evaluation.
+exec {config_fd}<"$config_file" || fail "configuration is not readable: $config_file"
+[[ -f "/dev/fd/$config_fd" ]] || fail "configuration must be a regular file"
+config_metadata="$(stat -Lc '%u|%a' "/dev/fd/$config_fd")" ||
+  fail "configuration metadata could not be read"
+IFS='|' read -r config_owner config_mode <<<"$config_metadata"
+[[ "$config_owner" == "$effective_uid" ]] ||
+  fail "configuration must be owned by the service user"
+[[ "$config_mode" =~ ^[46]00$ ]] ||
+  fail "configuration must be owner-readable, non-executable, and inaccessible to group and others"
+
+# shellcheck source=/dev/null
+source "/dev/fd/$config_fd"
+exec {config_fd}<&-
+
+: "${BORG_REPO:?BORG_REPO is required}"
+: "${STARFINITI_POSTGRES_BORG_REPO:?STARFINITI_POSTGRES_BORG_REPO is required}"
+: "${STARFINITI_WHOLE_VM_BORG_REPOSITORY_ID:?STARFINITI_WHOLE_VM_BORG_REPOSITORY_ID is required}"
+: "${STARFINITI_POSTGRES_BORG_REPOSITORY_ID:?STARFINITI_POSTGRES_BORG_REPOSITORY_ID is required}"
+: "${BORG_RSH:?BORG_RSH is required}"
+: "${BORG_PASSCOMMAND:?BORG_PASSCOMMAND is required}"
+: "${BORG_REMOTE_PATH:?BORG_REMOTE_PATH is required}"
+: "${BORG_COMPRESSION:?BORG_COMPRESSION is required}"
+
+readonly whole_vm_borg_repo="$BORG_REPO"
+[[ "$STARFINITI_POSTGRES_BORG_REPO" != "$whole_vm_borg_repo" ]] ||
+  fail "PostgreSQL and whole-VM backups must use distinct Borg repositories"
+[[ "$STARFINITI_WHOLE_VM_BORG_REPOSITORY_ID" =~ ^[0-9a-f]{64}$ ]] ||
+  fail "whole-VM Borg repository ID must be 64 lowercase hexadecimal characters"
+[[ "$STARFINITI_POSTGRES_BORG_REPOSITORY_ID" =~ ^[0-9a-f]{64}$ ]] ||
+  fail "PostgreSQL Borg repository ID must be 64 lowercase hexadecimal characters"
+[[ "$STARFINITI_POSTGRES_BORG_REPOSITORY_ID" != "$STARFINITI_WHOLE_VM_BORG_REPOSITORY_ID" ]] ||
+  fail "PostgreSQL and whole-VM Borg repository IDs must differ"
+
+BORG_REPO="$STARFINITI_POSTGRES_BORG_REPO"
 export BORG_REPO BORG_RSH BORG_PASSCOMMAND
 export BORG_UNKNOWN_UNENCRYPTED_REPO_ACCESS_IS_OK=no
 export BORG_RELOCATED_REPO_ACCESS_IS_OK=no
 
 readonly guest_host="${STARFINITI_POSTGRES_GUEST_HOST:-10.10.10.71}"
 readonly stage_root="${STARFINITI_POSTGRES_STAGE_ROOT:-/var/lib/starfiniti-postgres-backup-stage}"
-readonly lock_file="/run/lock/starfiniti-pve-borg.lock"
+readonly lock_file="${STARFINITI_POSTGRES_BORG_LOCK_FILE:-/run/lock/starfiniti-loyalty-postgres-borg.lock}"
+readonly lock_wait_seconds="${STARFINITI_POSTGRES_BORG_LOCK_WAIT_SECONDS:-120}"
+readonly whole_vm_lock_file="/run/lock/starfiniti-pve-borg.lock"
+readonly monitoring_environment="${STARFINITI_MONITORING_ENVIRONMENT:-production}"
+readonly metrics_dir="${STARFINITI_POSTGRES_BORG_METRICS_DIR:-/var/lib/node_exporter/textfile_collector}"
+readonly metrics_state_dir="${STARFINITI_POSTGRES_BORG_METRICS_STATE_DIR:-/var/lib/starfiniti-postgres-borg/metrics-state}"
+readonly archive_metrics_file="$metrics_dir/starfiniti-postgres-borg-archive.prom"
+readonly repository_metrics_file="$metrics_dir/starfiniti-postgres-borg-repository.prom"
+readonly transfer_metrics_file="$metrics_dir/starfiniti-postgres-borg-transfer.prom"
+readonly archive_success_state="$metrics_state_dir/archive-last-success"
+readonly repository_isolated_state="$metrics_state_dir/repository-isolated"
+readonly transfer_amplification_limit=4
+readonly transfer_absolute_limit_bytes=1073741824
+readonly rsync_binary="${STARFINITI_RSYNC_BINARY:-/usr/bin/rsync}"
 
-exec 9>"$lock_file"
-flock -n 9 || {
-  printf 'starfiniti-loyalty-postgres-borg: another backup holds the lock\n'
-  exit 0
+[[ "$lock_file" != "$whole_vm_lock_file" ]] ||
+  fail "PostgreSQL backup must not use the whole-VM repository lock"
+
+[[ "$lock_wait_seconds" =~ ^[1-9][0-9]{0,2}$ ]] &&
+  ((lock_wait_seconds <= 120)) ||
+  fail "lock wait must be an integer from 1 through 120 seconds"
+
+[[ "$monitoring_environment" =~ ^[a-z][a-z0-9-]{1,31}$ ]] ||
+  fail "monitoring environment must be a bounded lowercase label"
+
+for command_name in awk borg chmod dirname flock id install jq mktemp mv readlink rm stat; do
+  command -v "$command_name" >/dev/null 2>&1 || fail "required command is missing: $command_name"
+done
+
+validate_trusted_executable() {
+  local executable_path="$1"
+  local canonical_executable executable_metadata executable_owner executable_mode executable_mode_octal
+  local current_directory directory_metadata directory_owner directory_mode directory_mode_octal next_directory
+
+  [[ "$executable_path" == /* ]] || fail "rsync executable path must be absolute"
+  [[ ! -L "$executable_path" ]] || fail "rsync executable must not be a symbolic link"
+  canonical_executable="$(readlink -f -- "$executable_path")" ||
+    fail "rsync executable path could not be resolved"
+  [[ "$canonical_executable" == "$executable_path" ]] ||
+    fail "rsync executable path must be canonical and contain no symbolic links"
+  [[ -f "$executable_path" && -x "$executable_path" ]] ||
+    fail "rsync executable must be an executable regular file"
+
+  executable_metadata="$(stat -Lc '%u|%a' "$executable_path")" ||
+    fail "rsync executable metadata could not be read"
+  IFS='|' read -r executable_owner executable_mode <<<"$executable_metadata"
+  [[ "$executable_owner" == "0" || "$executable_owner" == "$effective_uid" ]] ||
+    fail "rsync executable must be owned by root or the service user"
+  [[ "$executable_mode" =~ ^[0-7]{3,4}$ ]] || fail "rsync executable mode is invalid"
+  executable_mode_octal=$((8#$executable_mode))
+  (( (executable_mode_octal & 0022) == 0 )) ||
+    fail "rsync executable must not be writable by group or others"
+
+  current_directory="$(dirname -- "$executable_path")"
+  while true; do
+    [[ -d "$current_directory" ]] || fail "rsync executable parent chain must contain only directories"
+    directory_metadata="$(stat -Lc '%u|%a' "$current_directory")" ||
+      fail "rsync executable parent metadata could not be read"
+    IFS='|' read -r directory_owner directory_mode <<<"$directory_metadata"
+    [[ "$directory_owner" == "0" || "$directory_owner" == "$effective_uid" ]] ||
+      fail "rsync executable parent must be owned by root or the service user"
+    [[ "$directory_mode" =~ ^[0-7]{3,4}$ ]] || fail "rsync executable parent mode is invalid"
+    directory_mode_octal=$((8#$directory_mode))
+    if (( (directory_mode_octal & 0022) != 0 && (directory_mode_octal & 01000) == 0 )); then
+      fail "rsync executable parent must not be writable without sticky-directory protection"
+    fi
+
+    [[ "$current_directory" == "/" ]] && break
+    next_directory="$(dirname -- "$current_directory")"
+    [[ "$next_directory" != "$current_directory" ]] ||
+      fail "rsync executable parent chain could not be resolved"
+    current_directory="$next_directory"
+  done
+}
+
+require_rsync_security_baseline() {
+  local version_output version_line major minor
+
+  version_output="$(LC_ALL=C "$rsync_binary" --version)" ||
+    fail "rsync security version could not be read"
+  version_line="${version_output%%$'\n'*}"
+  [[ "$version_line" =~ ^rsync[[:space:]]+version[[:space:]]+([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})[[:space:]]+protocol[[:space:]]+version[[:space:]]+[0-9]{1,3}$ ]] ||
+    fail "rsync security version is malformed"
+  major=$((10#${BASH_REMATCH[1]}))
+  minor=$((10#${BASH_REMATCH[2]}))
+  if ((major < 3 || (major == 3 && minor < 5))); then
+    fail "rsync 3.5.0 or newer is required by the backup transport security baseline"
+  fi
+}
+
+validate_trusted_executable "$rsync_binary"
+require_rsync_security_baseline
+
+prepare_metrics_storage() {
+  if [[ -L "$metrics_dir" || ( -e "$metrics_dir" && ! -d "$metrics_dir" ) ]]; then
+    return 1
+  fi
+  if [[ ! -d "$metrics_dir" ]]; then
+    install -d -m 0755 "$metrics_dir" || return 1
+  fi
+  [[ -w "$metrics_dir" && -x "$metrics_dir" ]] || return 1
+
+  if [[ -L "$metrics_state_dir" || ( -e "$metrics_state_dir" && ! -d "$metrics_state_dir" ) ]]; then
+    return 1
+  fi
+  install -d -m 0700 "$metrics_state_dir"
+}
+
+metrics_ready=1
+if ! prepare_metrics_storage; then
+  metrics_ready=0
+  printf 'starfiniti-loyalty-postgres-borg: metrics storage unavailable; archive will continue and the completed unit will fail evidence publication\n' >&2
+fi
+
+read_numeric_state() {
+  local state_file="$1"
+  local fallback="$2"
+  local value
+
+  if [[ -r "$state_file" ]]; then
+    IFS= read -r value <"$state_file" || value=""
+    if [[ "$value" =~ ^[0-9]{1,19}$ ]]; then
+      printf '%s\n' "$value"
+      return
+    fi
+  fi
+  printf '%s\n' "$fallback"
+}
+
+write_numeric_state() {
+  local state_file="$1"
+  local value="$2"
+  local temporary
+
+  temporary="$(mktemp "${state_file}.tmp.XXXXXX")"
+  printf '%s\n' "$value" >"$temporary"
+  mv -f "$temporary" "$state_file"
+}
+
+publish_archive_metrics() {
+  local attempt_success="$1"
+  local completed_at="$2"
+  local temporary
+
+  temporary="$(mktemp "${archive_metrics_file}.tmp.XXXXXX")"
+  {
+    printf '# HELP starfiniti_postgres_offsite_archive_unixtime_seconds Unix time of the last completed dedicated PostgreSQL Borg archive.\n'
+    printf '# TYPE starfiniti_postgres_offsite_archive_unixtime_seconds gauge\n'
+    printf 'starfiniti_postgres_offsite_archive_unixtime_seconds{environment="%s",service="starfiniti-loyalty"} %s\n' "$monitoring_environment" "$completed_at"
+    printf '# HELP starfiniti_postgres_offsite_archive_last_attempt_success Whether the last completed dedicated PostgreSQL Borg archive attempt succeeded.\n'
+    printf '# TYPE starfiniti_postgres_offsite_archive_last_attempt_success gauge\n'
+    printf 'starfiniti_postgres_offsite_archive_last_attempt_success{environment="%s",service="starfiniti-loyalty"} %s\n' "$monitoring_environment" "$attempt_success"
+  } >"$temporary"
+  chmod 0644 "$temporary"
+  mv -f "$temporary" "$archive_metrics_file"
+}
+
+publish_repository_metric() {
+  local isolated="$1"
+  local temporary
+
+  temporary="$(mktemp "${repository_metrics_file}.tmp.XXXXXX")"
+  {
+    printf '# HELP starfiniti_postgres_borg_repository_isolated Whether the configured and actual PostgreSQL Borg repository is distinct from the whole-VM repository.\n'
+    printf '# TYPE starfiniti_postgres_borg_repository_isolated gauge\n'
+    printf 'starfiniti_postgres_borg_repository_isolated{environment="%s",service="starfiniti-loyalty"} %s\n' "$monitoring_environment" "$isolated"
+  } >"$temporary"
+  chmod 0644 "$temporary"
+  mv -f "$temporary" "$repository_metrics_file"
+}
+
+publish_transfer_metrics() {
+  local transferred_bytes="$1"
+  local amplification_ratio="$2"
+  local temporary
+
+  temporary="$(mktemp "${transfer_metrics_file}.tmp.XXXXXX")"
+  {
+    printf '# HELP starfiniti_backup_cycle_transferred_bytes Non-message bytes received by the incremental backup controller in the last completed rsync cycle.\n'
+    printf '# TYPE starfiniti_backup_cycle_transferred_bytes gauge\n'
+    printf 'starfiniti_backup_cycle_transferred_bytes{environment="%s",service="starfiniti-loyalty"} %s\n' "$monitoring_environment" "$transferred_bytes"
+    printf '# HELP starfiniti_backup_cycle_transfer_amplification_ratio Received bytes divided by immutable changed-file bytes in the last completed rsync cycle.\n'
+    printf '# TYPE starfiniti_backup_cycle_transfer_amplification_ratio gauge\n'
+    printf 'starfiniti_backup_cycle_transfer_amplification_ratio{environment="%s",service="starfiniti-loyalty"} %s\n' "$monitoring_environment" "$amplification_ratio"
+  } >"$temporary"
+  chmod 0644 "$temporary"
+  mv -f "$temporary" "$transfer_metrics_file"
+}
+
+parse_rsync_stats() {
+  local stats_file="$1"
+  local line
+  local changed_count=0
+  local transferred_count=0
+
+  rsync_changed_bytes=""
+  rsync_transferred_bytes=""
+  while IFS= read -r line; do
+    if [[ "$line" =~ ^Total\ transferred\ file\ size:\ ([0-9]+)\ bytes$ ]]; then
+      ((changed_count += 1))
+      rsync_changed_bytes="${BASH_REMATCH[1]}"
+    elif [[ "$line" =~ ^Total\ bytes\ received:\ ([0-9]+)$ ]]; then
+      ((transferred_count += 1))
+      rsync_transferred_bytes="${BASH_REMATCH[1]}"
+    fi
+  done <"$stats_file"
+
+  ((changed_count == 1 && transferred_count == 1)) ||
+    fail "rsync transfer evidence must contain exactly one changed-byte and received-byte total"
+  [[ "$rsync_changed_bytes" =~ ^[0-9]{1,18}$ ]] ||
+    fail "rsync changed-byte evidence is missing or invalid"
+  [[ "$rsync_transferred_bytes" =~ ^[0-9]{1,18}$ ]] ||
+    fail "rsync transferred-byte evidence is missing or invalid"
+
+  transfer_amplification_ratio="$(
+    awk \
+      -v transferred="$rsync_transferred_bytes" \
+      -v changed="$rsync_changed_bytes" \
+      'BEGIN { denominator = changed > 0 ? changed : 1; printf "%.6f", transferred / denominator }'
+  )" || fail "rsync transfer-amplification evidence could not be calculated"
+  [[ "$transfer_amplification_ratio" =~ ^[0-9]+\.[0-9]{6}$ ]] ||
+    fail "rsync transfer-amplification evidence is invalid"
+}
+
+archive_last_success=0
+repository_isolated=0
+transfer_metrics_published=0
+rsync_stats_file=""
+if ((metrics_ready)); then
+  archive_last_success="$(read_numeric_state "$archive_success_state" 0)"
+  repository_isolated="$(read_numeric_state "$repository_isolated_state" 0)"
+fi
+
+record_failed_attempt() {
+  local status=$?
+
+  if [[ -n "$rsync_stats_file" && -e "$rsync_stats_file" ]]; then
+    rm -f -- "$rsync_stats_file" || true
+  fi
+  if ((status != 0 && metrics_ready)); then
+    publish_archive_metrics 0 "$archive_last_success" ||
+      printf 'starfiniti-loyalty-postgres-borg: failed to publish failed-attempt metrics\n' >&2
+  fi
+  return "$status"
+}
+
+trap record_failed_attempt EXIT
+
+verify_repository_identity() {
+  local actual_repository_id
+
+  actual_repository_id="$(
+    borg info \
+      --remote-path "$BORG_REMOTE_PATH" \
+      --json \
+      --lock-wait "$lock_wait_seconds" \
+      "$BORG_REPO" |
+      jq -er '.repository.id | select(type == "string" and test("^[0-9a-f]{64}$"))'
+  )" || fail "dedicated PostgreSQL Borg repository identity could not be verified"
+
+  if [[ "$actual_repository_id" != "$STARFINITI_POSTGRES_BORG_REPOSITORY_ID" ]]; then
+    repository_isolated=0
+    if ((metrics_ready)); then
+      write_numeric_state "$repository_isolated_state" "$repository_isolated" &&
+        publish_repository_metric "$repository_isolated" ||
+        printf 'starfiniti-loyalty-postgres-borg: failed to publish repository-isolation failure\n' >&2
+    fi
+    fail "dedicated PostgreSQL Borg repository identity does not match approved configuration"
+  fi
+
+  repository_isolated=1
+  if ((metrics_ready)); then
+    if ! write_numeric_state "$repository_isolated_state" "$repository_isolated" ||
+      ! publish_repository_metric "$repository_isolated"; then
+      metrics_ready=0
+      printf 'starfiniti-loyalty-postgres-borg: repository isolation verified but evidence publication failed\n' >&2
+    fi
+  fi
 }
 
 install -d -m 0700 "$stage_root"
@@ -25,7 +392,8 @@ install -d -m 0700 "$stage_root"
 # Borg's files cache, and removes local staging files only after the source no
 # longer retains them. It never deletes or writes a file on the database VM.
 export RSYNC_RSH="ssh -i /root/.ssh/starfiniti-loyalty-backup-pull -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=/etc/starfiniti-backup/loyalty-guest-known-hosts"
-rsync \
+rsync_stats_file="$(mktemp)" || fail "rsync evidence file could not be created"
+LC_ALL=C "$rsync_binary" \
   --archive \
   --chmod=D700,F600 \
   --chown=root:root \
@@ -34,21 +402,61 @@ rsync \
   --delete-delay \
   --exclude='*.partial' \
   --ignore-existing \
+  --no-human-readable \
   --stats \
   --timeout=120 \
   "vault-admin@${guest_host}:/" \
-  "$stage_root/"
+  "$stage_root/" >"$rsync_stats_file"
+
+parse_rsync_stats "$rsync_stats_file"
+rm -f -- "$rsync_stats_file"
+rsync_stats_file=""
+
+if ((metrics_ready)); then
+  if publish_transfer_metrics "$rsync_transferred_bytes" "$transfer_amplification_ratio"; then
+    transfer_metrics_published=1
+  else
+    metrics_ready=0
+    printf 'starfiniti-loyalty-postgres-borg: transfer measured but evidence publication failed\n' >&2
+  fi
+fi
+
+printf 'starfiniti-loyalty-postgres-borg: changed bytes %s; transferred bytes %s; amplification ratio %s\n' \
+  "$rsync_changed_bytes" "$rsync_transferred_bytes" "$transfer_amplification_ratio"
+
+if ((
+  rsync_transferred_bytes > transfer_absolute_limit_bytes &&
+    rsync_transferred_bytes > transfer_amplification_limit * rsync_changed_bytes
+)); then
+  fail "incremental transfer exceeded both the four-times amplification and one-GiB safety boundaries; Borg archive not created"
+fi
 
 if [[ ! -d "$stage_root/base" || ! -d "$stage_root/wal" ]]; then
-  printf 'starfiniti-loyalty-postgres-borg: staged backup set unavailable\n' >&2
-  exit 1
+  fail "staged backup set unavailable"
 fi
+
+# Staging does not access the Borg repository and must continue even while
+# retention owns the repository. Only the repository write is serialized.
+exec 9>"$lock_file"
+flock \
+  --exclusive \
+  --timeout "$lock_wait_seconds" \
+  --conflict-exit-code 75 \
+  9 || {
+  lock_status=$?
+  readonly lock_status
+  printf 'starfiniti-loyalty-postgres-borg: dedicated repository lock unavailable after %s seconds; incremental archive not created\n' "$lock_wait_seconds" >&2
+  exit "$lock_status"
+}
+
+verify_repository_identity
 
 stamp=$(date -u +%Y%m%dT%H%M%SZ)
 readonly archive="loyalty-postgres-$stamp"
 
 ionice -c2 -n7 nice -n 10 borg create \
   --remote-path "$BORG_REMOTE_PATH" \
+  --lock-wait "$lock_wait_seconds" \
   --compression "$BORG_COMPRESSION" \
   --files-cache ctime,size,inode \
   --one-file-system \
@@ -57,4 +465,15 @@ ionice -c2 -n7 nice -n 10 borg create \
   "${BORG_REPO}::${archive}" \
   "$stage_root"
 
+archive_last_success="$(date -u +%s)"
+metrics_published=0
+if ((metrics_ready)) &&
+  write_numeric_state "$archive_success_state" "$archive_last_success" &&
+  publish_archive_metrics 1 "$archive_last_success"; then
+  metrics_published=1
+fi
+trap - EXIT
+
 printf 'starfiniti-loyalty-postgres-borg: created %s\n' "$archive"
+((metrics_published && transfer_metrics_published)) ||
+  fail "archive exists but observability evidence was not published"

@@ -7,13 +7,10 @@ import {
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import {
-  customerLocalePath,
-  resolveCustomerLocale,
-} from "@/lib/customer-locale";
+import { customerLocalePath } from "@/lib/customer-locale";
 
 export async function redeemCustomerReward(formData: FormData): Promise<void> {
-  const locale = resolveCustomerLocale(formData.get("lang"));
+  const locale = "en" as const;
   const command = customerRewardRedemptionRequestV1.safeParse({
     version: "1",
     accountId: formData.get("accountId"),

@@ -1,0 +1,12 @@
+[Unit]
+Description=Daily retention for the dedicated Starfiniti Loyalty PostgreSQL Borg repository
+Conflicts=starfiniti-loyalty-postgres-borg-prune.timer
+
+[Timer]
+OnCalendar=*-*-* 03:30:00 Europe/Ljubljana
+RandomizedDelaySec=15m
+Persistent=true
+Unit=starfiniti-loyalty-postgres-borg-maintain.service
+
+[Install]
+WantedBy=timers.target

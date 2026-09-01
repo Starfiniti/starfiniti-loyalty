@@ -18,6 +18,10 @@ Email, phone, name, cookie, IP address, and shipping/billing details are attribu
 - Authentik application entitlement (`app-loyalty-admin`) permits central sign-in but grants no organization or role. OIDC groups, email domain, and user metadata are never tenant authority.
 - Organization roles come from `organization_memberships`, not `raw_user_meta_data`, email domain, or client-supplied organization ID.
 - The first production membership is created only after the Auth principal exists and a real Authentik SSO session has linked and verified its custom identity, through the deployment-only `loyalty_private.bootstrap_initial_tenant` boundary. Its direct PostgreSQL operator must assume `loyalty_owner`; browser, authenticated Data API, dashboard runtime, and worker roles have no execute privilege.
+- A signed-in principal may create an additional organization through the public V1 command. PostgreSQL derives the live subject and atomically creates that organization, one owner membership, a private idempotency receipt, and immutable audit evidence. No caller supplies actor or tenant authority.
+- Team invitations use a browser-generated 256-bit `stfi_v1_...` bearer capability. Next.js submits only its SHA-256 digest for storage, shows the raw value once, and never persists it. Acceptance hashes the presented capability and binds the live `auth.uid()` subject to the invitation's exact organization and role. Email, domain, OIDC/SAML groups, and JWT metadata cannot satisfy or redirect an invitation.
+- Invitation issuance is owner/admin-only; administrators cannot grant owner. Owner/admin member changes require exact optimistic revisions and an explicit reason/confirmation. PostgreSQL locks the organization and rechecks live actor authority after the lock, so competing owner removals cannot both succeed and at least one live owner remains.
+- Organization suspension immediately makes every membership ineffective for tenant commands while preserving owner recovery review. Closing cannot be reversed; offboarding revokes every membership except the initiating owner plus all pending invitations and retains exactly one recovery owner with immutable value, audit, and bounded identity-export evidence.
 - RLS helpers query live membership rows. Sensitive writes recheck membership inside the database command.
 - Revocation sets `revoked_at` immediately. Because access tokens may remain valid after Auth deletion/revocation, live membership checks fail closed; high-risk operations may additionally validate the Auth session ID.
 - `app_metadata` may carry non-authoritative UI hints, never the sole tenant authorization decision.
@@ -33,6 +37,12 @@ Workforce and customer authentication remain distinct presentation and lifecycle
 - Cross-brand sharing exists only inside an approved programme group and never crosses organizations.
 
 An external ID can be re-used only if the source platform contract proves reuse semantics and the original identity is explicitly retired; otherwise conflicts quarantine for review.
+
+## Referral identity
+
+A referral advocate code is a random UUID identifier bound to one existing customer and programme group. It is not authentication, does not reveal an external customer ID, and never grants tenant, wallet, reward, or ledger authority. Customers obtain it only through an active Auth/customer link; PostgreSQL derives the store origin and programme scope and returns a URL containing only `stf_ref=<opaque UUID>`.
+
+The referred friend is resolved from the signed canonical WooCommerce order's exact connection-scoped registered or guest identity. Email, domain, cookie, IP address, device, payment, and shipping similarity never merge customers or select an advocate. A database lock and unique first-attribution constraint make the first eligible advocate authoritative for that friend/programme group; later codes become immutable conflict evidence rather than rewriting identity.
 
 ## Channel claim flow
 
@@ -90,14 +100,17 @@ WooCommerce-originated deletion is implemented as a signed minimized event. Its 
 
 ## Identity threat controls
 
-| Threat                              | Control                                                           |
-| ----------------------------------- | ----------------------------------------------------------------- |
-| Email takeover links another wallet | Channel-bound verified claim; no email-only merge                 |
-| Forged organization ID              | Live membership/RLS and composite tenant foreign keys             |
-| Stale JWT after membership removal  | Database membership check on every tenant path                    |
-| Cross-brand leakage                 | Programme-group allowlist plus organization boundary              |
-| Support impersonation               | Expiring scoped grant, approval, visible audit                    |
-| Account-link race                   | Unique active links, row locks, idempotent claim token            |
-| Erasure destroys ledger explanation | Pseudonymize identity attributes; retain immutable value evidence |
+| Threat                              | Control                                                            |
+| ----------------------------------- | ------------------------------------------------------------------ |
+| Email takeover links another wallet | Channel-bound verified claim; no email-only merge                  |
+| Forged organization ID              | Live membership/RLS and composite tenant foreign keys              |
+| Stale JWT after membership removal  | Database membership check on every tenant path                     |
+| Stolen or replayed team invitation  | 256-bit one-use capability, digest-only storage, subject-bound use |
+| Concurrent last-owner removal       | Tenant lock, post-lock actor recheck, owner quorum                 |
+| Forged email/domain/IdP group       | Provisioned live membership is the only tenant authority           |
+| Cross-brand leakage                 | Programme-group allowlist plus organization boundary               |
+| Support impersonation               | Expiring scoped grant, approval, visible audit                     |
+| Account-link race                   | Unique active links, row locks, idempotent claim token             |
+| Erasure destroys ledger explanation | Pseudonymize identity attributes; retain immutable value evidence  |
 
-Phase 9 tests prove channel/tenant isolation, one-use replay conflict, active-link races, revocation, no-email authority, minimized customer self-access, and absent Auth subject all fail closed. Redemption tests additionally prove live-link derivation, exact retry identity, changed-request conflict, native-config bounds, insufficient-balance rollback, private outbox visibility, immutable ledger attribution, and coupon/result minimization.
+Phase 9 tests prove channel/tenant isolation, one-use replay conflict, active-link races, revocation, no-email authority, minimized customer self-access, and absent Auth subject all fail closed. Redemption tests additionally prove live-link derivation, exact retry identity, changed-request conflict, native-config bounds, insufficient-balance rollback, private outbox visibility, immutable ledger attribution, and coupon/result minimization. M13-S02 tests add organization creation idempotency, one-use invitation digest/expiry/revocation, cross-subject replay denial, role separation, stale membership denial, owner quorum, tenant lifecycle, projection minimization, and two-session owner/invitation races.

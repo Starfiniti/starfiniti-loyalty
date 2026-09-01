@@ -1,0 +1,94 @@
+schema: starfiniti.proxmox-security-package-canary-plan.v1
+version: 1
+status: candidate
+createdAt: 2026-08-28T23:13:42Z
+candidate:
+  path: infrastructure/governance/proxmox-security-update-plan.yaml
+  fileSha256: ec010eb667d6166ee5adc0ee0cd2d6ecdf5b2a114e345b018b51c704d64df075
+  provenanceSha256: 39f30c67a374b041944a598ce2334fed3fcb8e5f64264b3db08847d5ee23ff9f
+baseImage: debian:13-slim@sha256:d7e12182ce18b85b93007c1dedf31f2d29e01ccf3182cc4017c709b6259bc132
+architecture: amd64
+execution:
+  environment: github-hosted-disposable-container
+  maximumDurationSeconds: 1200
+  maximumPackageBytes: 200000000
+  maximumTransientBytes: 536870912
+  requiredOfficialHosts:
+    - enterprise.proxmox.com
+    - deb.debian.org
+    - security.debian.org
+    - download.proxmox.com
+  productionCredentials: prohibited
+  productionRouteInput: prohibited
+  packageInstallation: prohibited
+  packageBytesRetained: false
+  productionMutation: false
+trustAnchors:
+  debian:
+    authority: debian-archive-keyring
+    path: /usr/share/keyrings/debian-archive-keyring.pgp
+    provenance: digest-pinned-debian-base-image-and-signed-bootstrap
+  proxmox:
+    authority: proxmox-archive-keyring-trixie
+    url: https://enterprise.proxmox.com/debian/proxmox-archive-keyring-trixie.gpg
+    sha256: 136673be77aba35dcce385b28737689ad64fd785a797e57897589aed08db6e45
+    releaseFingerprint: 24B30F06ECC1836A4E5EFECBA7BCD1420BFE778E
+repositories:
+  - id: debian-trixie
+    repositoryUri: https://deb.debian.org/debian
+    suite: trixie
+    component: main
+    inReleaseUrl: https://deb.debian.org/debian/dists/trixie/InRelease
+    keyring: debian
+    listToken: deb.debian.org_debian_dists_trixie_main_binary-amd64_Packages
+    observationInReleaseSha256: 98b25b5cd185c59d34aa6e4c3e9b5b8f01bbe9d104fe2dcfbcd30dc0a14a59ed
+    observationPackagesSha256: be70297f6ea499e8ef0bd93906719298c795bc3dc4ce72560f13e6c9836bfedb
+  - id: debian-trixie-backports
+    repositoryUri: https://deb.debian.org/debian
+    suite: trixie-backports
+    component: main
+    inReleaseUrl: https://deb.debian.org/debian/dists/trixie-backports/InRelease
+    keyring: debian
+    listToken: deb.debian.org_debian_dists_trixie-backports_main_binary-amd64_Packages
+    observationInReleaseSha256: 3247937e0d6cb8c93fdb2e1b8d56cea50c948a2994e3fb54e181b1b6b087835c
+    observationPackagesSha256: 81bcaf47638ee46541f01b05644e74b0bf5f3d8364ce263b9085ee8bbdad051b
+  - id: debian-trixie-updates
+    repositoryUri: https://deb.debian.org/debian
+    suite: trixie-updates
+    component: main
+    inReleaseUrl: https://deb.debian.org/debian/dists/trixie-updates/InRelease
+    keyring: debian
+    listToken: deb.debian.org_debian_dists_trixie-updates_main_binary-amd64_Packages
+    observationInReleaseSha256: be5a746af262ae0104341022497ef78f0ce514f5ba1371fec11f58ccaecbb6c5
+    observationPackagesSha256: a855cb0d5a041e97b7e449de8de7c233ef6207f10c7ba62df6a77a887a461f13
+  - id: debian-trixie-security
+    repositoryUri: https://security.debian.org/debian-security
+    suite: trixie-security
+    component: main
+    inReleaseUrl: https://security.debian.org/debian-security/dists/trixie-security/InRelease
+    keyring: debian
+    listToken: security.debian.org_debian-security_dists_trixie-security_main_binary-amd64_Packages
+    observationInReleaseSha256: 151004a23f43898094f3c91567c2f7c80301d3f59a8880da3a3de3fe6e55059d
+    observationPackagesSha256: 6368d31b5be929f65d1030da91917b0c335f9c54645bd37010945f6acad7a82b
+  - id: proxmox-trixie-no-subscription
+    repositoryUri: http://download.proxmox.com/debian/pve
+    suite: trixie
+    component: pve-no-subscription
+    inReleaseUrl: http://download.proxmox.com/debian/pve/dists/trixie/InRelease
+    keyring: proxmox
+    listToken: download.proxmox.com_debian_pve_dists_trixie_pve-no-subscription_binary-amd64_Packages
+    observationInReleaseSha256: 26f5215ee5b5d11a0fa72b3015a73131d4c08165362149d28a1c7dd9f3a4144b
+    observationPackagesSha256: 504803ebbf1b5428ae35bd35c95ff6519553fe7b586d28174755ebb6266a032a
+    productionRecommended: false
+    subscriptionDecisionRequired: true
+gates:
+  candidatePackageBytesVerified: false
+  repositoryToolSignatureReverified: false
+  candidateDependencySimulationReverified: false
+  installedStartingStateReverified: false
+  compatibilityProved: false
+  rollbackEscrowComplete: false
+  recoveryReady: false
+  maintenanceApproved: false
+  rebootApproved: false
+  productionMutation: false

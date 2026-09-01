@@ -5,6 +5,7 @@ enabled = true
 port = 54321
 schemas = ["public", "graphql_public", "loyalty"]
 extra_search_path = ["public", "extensions"]
+auto_expose_new_tables = false
 
 [db]
 port = 54322

@@ -3,9 +3,13 @@
 use Automattic\WooCommerce\Utilities\OrderUtil;
 use Automattic\WooCommerce\StoreApi\Utilities\CartController;
 use Starfiniti\Loyalty\Commands;
+use Starfiniti\Loyalty\Blocks;
 use Starfiniti\Loyalty\CustomerClaim;
+use Starfiniti\Loyalty\ExperienceSnapshot;
 use Starfiniti\Loyalty\Outbox;
 use Starfiniti\Loyalty\Plugin;
+use Starfiniti\Loyalty\Privacy;
+use Starfiniti\Loyalty\Referrals;
 use Starfiniti\Loyalty\Settings;
 
 defined('ABSPATH') || exit(1);
@@ -37,6 +41,8 @@ starfiniti_runtime_assert(
 Outbox::install();
 global $wpdb;
 $outboxTable = $wpdb->prefix . 'starfiniti_loyalty_outbox';
+$claimConnectionId = '62000000-0000-4000-8000-000000000001';
+update_option('starfiniti_loyalty_connection_id', $claimConnectionId, false);
 starfiniti_runtime_assert(
     $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $outboxTable)) === $outboxTable,
     'plugin activation creates the durable local outbox'
@@ -112,12 +118,22 @@ starfiniti_runtime_assert(
 );
 
 $percentageCouponCode = 'SFPERCENT0123456789ABCDEF0123456789';
+$v2Restrictions = [
+    'minimumSpendMinor' => '2500',
+    'currencyMinorUnitDigits' => 2,
+    'productIds' => [(string) $productId],
+    'excludedProductIds' => [],
+    'categoryIds' => [],
+    'excludedCategoryIds' => [],
+    'excludeSaleItems' => true,
+    'stacking' => 'combinable',
+];
 $percentageIssue = $execute->invoke(null, [
     'version' => '1',
     'commandId' => '61000000-0000-4000-8000-000000000002',
     'connectionId' => '62000000-0000-4000-8000-000000000001',
     'topic' => 'woocommerce.coupon.issue',
-    'payloadVersion' => 'v1',
+    'payloadVersion' => 'v2',
     'deliveredAt' => gmdate('c'),
     'payload' => [
         'kind' => 'issue_coupon',
@@ -130,6 +146,7 @@ $percentageIssue = $execute->invoke(null, [
             'percentageBasisPoints' => 1500,
             'maximumDiscountMinor' => null,
             'currencyMinorUnitDigits' => 2,
+            'restrictions' => $v2Restrictions,
         ],
     ],
 ]);
@@ -139,8 +156,12 @@ starfiniti_runtime_assert(
     ($percentageIssue['outcome'] ?? null) === 'delivered'
     && $percentageCouponId > 0
     && $percentageCoupon->get_discount_type() === 'percent'
-    && abs((float) $percentageCoupon->get_amount() - 15.0) < 0.000001,
-    'uncapped percentage reward creates the matching native coupon'
+    && abs((float) $percentageCoupon->get_amount() - 15.0) < 0.000001
+    && abs((float) $percentageCoupon->get_minimum_amount() - 25.0) < 0.000001
+    && $percentageCoupon->get_product_ids() === [$productId]
+    && $percentageCoupon->get_exclude_sale_items()
+    && ! $percentageCoupon->get_individual_use(),
+    'v2 percentage reward creates a restricted, combinable native coupon'
 );
 $cappedPercentageIssue = $execute->invoke(null, [
     'version' => '1',
@@ -169,12 +190,98 @@ starfiniti_runtime_assert(
     'defensive connector boundary rejects unsupported percentage caps'
 );
 
+$shippingCode = 'SFSHIPPING0123456789ABCDEF0123456789';
+$shippingIssue = $execute->invoke(null, [
+    'version' => '1',
+    'commandId' => '61000000-0000-4000-8000-000000000006',
+    'connectionId' => '62000000-0000-4000-8000-000000000001',
+    'topic' => 'woocommerce.coupon.issue',
+    'payloadVersion' => 'v2',
+    'deliveredAt' => gmdate('c'),
+    'payload' => [
+        'kind' => 'issue_coupon',
+        'reservationId' => '63000000-0000-4000-8000-000000000006',
+        'code' => $shippingCode,
+        'externalCustomerId' => (string) $customerId,
+        'expiresAt' => gmdate('c', time() + DAY_IN_SECONDS),
+        'reward' => [
+            'kind' => 'free_shipping',
+            'restrictions' => [
+                ...$v2Restrictions,
+                'productIds' => [],
+                'stacking' => 'exclusive',
+            ],
+        ],
+    ],
+]);
+$shippingCoupon = new WC_Coupon(wc_get_coupon_id_by_code($shippingCode));
+starfiniti_runtime_assert(
+    ($shippingIssue['outcome'] ?? null) === 'delivered'
+    && $shippingCoupon->get_free_shipping()
+    && $shippingCoupon->get_individual_use(),
+    'v2 free-shipping reward creates an exclusive native coupon'
+);
+
+$freeProductCode = 'SFFREEPRODUCT0123456789ABCDEF01234567';
+$freeProductIssue = $execute->invoke(null, [
+    'version' => '1',
+    'commandId' => '61000000-0000-4000-8000-000000000007',
+    'connectionId' => '62000000-0000-4000-8000-000000000001',
+    'topic' => 'woocommerce.coupon.issue',
+    'payloadVersion' => 'v2',
+    'deliveredAt' => gmdate('c'),
+    'payload' => [
+        'kind' => 'issue_coupon',
+        'reservationId' => '63000000-0000-4000-8000-000000000007',
+        'code' => $freeProductCode,
+        'externalCustomerId' => (string) $customerId,
+        'expiresAt' => gmdate('c', time() + DAY_IN_SECONDS),
+        'reward' => [
+            'kind' => 'free_product',
+            'productId' => (string) $productId,
+            'quantity' => 2,
+            'restrictions' => [
+                ...$v2Restrictions,
+                'productIds' => [],
+                'stacking' => 'exclusive',
+            ],
+        ],
+    ],
+]);
+$freeProductCoupon = new WC_Coupon(wc_get_coupon_id_by_code($freeProductCode));
+starfiniti_runtime_assert(
+    ($freeProductIssue['outcome'] ?? null) === 'delivered'
+    && $freeProductCoupon->get_discount_type() === 'percent'
+    && (float) $freeProductCoupon->get_amount() === 100.0
+    && $freeProductCoupon->get_product_ids() === [$productId]
+    && $freeProductCoupon->get_limit_usage_to_x_items() === 2,
+    'v2 free-product reward creates a product-bound native coupon'
+);
+
+$invalidVersion = $execute->invoke(null, [
+    'version' => '1',
+    'commandId' => '61000000-0000-4000-8000-000000000008',
+    'connectionId' => '62000000-0000-4000-8000-000000000001',
+    'topic' => 'woocommerce.coupon.cancel',
+    'payloadVersion' => 'v2',
+    'deliveredAt' => gmdate('c'),
+    'payload' => [
+        'kind' => 'cancel_coupon',
+        'reservationId' => '63000000-0000-4000-8000-000000000008',
+        'code' => 'SFINVALID0123456789ABCDEF0123456789',
+    ],
+]);
+starfiniti_runtime_assert(
+    ($invalidVersion['outcome'] ?? null) === 'dead_letter'
+    && ($invalidVersion['errorCode'] ?? null) === 'unsupported_payload_version',
+    'connector rejects a payload version that is not valid for its topic'
+);
+
 update_option(
     'starfiniti_loyalty_endpoint',
     'https://unreachable.invalid/api/v1/integrations/woocommerce/events',
     false
 );
-$claimConnectionId = '62000000-0000-4000-8000-000000000001';
 $claimKeyVersion = 'v1';
 $claimSigningKey = str_repeat("\x42", 32);
 $decodeConnectionPackage = new ReflectionMethod(Settings::class, 'decodeConnectionPackage');
@@ -225,6 +332,126 @@ starfiniti_runtime_assert(
     && ! array_key_exists('email', $claimQuery),
     'customer claim is short-lived, channel-bound, PII-free, signed locally, and language-neutral'
 );
+$missingSnapshot = ExperienceSnapshot::stateForUser((int) $customerId);
+starfiniti_runtime_assert(
+    ($missingSnapshot['state'] ?? null) === 'missing'
+    && ExperienceSnapshot::pendingCustomerIds() === [(string) $customerId],
+    'a local request queues one bounded background snapshot selector without calling the hub'
+);
+$snapshot = [
+    'version' => '1',
+    'revision' => '2',
+    'externalCustomerId' => (string) $customerId,
+    'generatedAt' => gmdate('c', time() - MINUTE_IN_SECONDS),
+    'refreshAfter' => gmdate('c', time() + 14 * MINUTE_IN_SECONDS),
+    'staleAfter' => gmdate('c', time() + DAY_IN_SECONDS - MINUTE_IN_SECONDS),
+    'accountStatus' => 'ready',
+    'enhancementsEnabled' => true,
+    'programmeName' => 'Starfiniti Loyalty',
+    'balances' => ['pending' => '30', 'available' => '150', 'reserved' => '20'],
+    'currentTier' => ['name' => 'Bloom'],
+    'nextExpiry' => [
+        'points' => '25',
+        'expiresAt' => gmdate('c', time() + 30 * DAY_IN_SECONDS),
+    ],
+    'earningMethods' => [
+        ['name' => 'Eligible purchases', 'availableNow' => true],
+    ],
+    'rewards' => [
+        [
+            'name' => 'Free shipping',
+            'kind' => 'free_shipping',
+            'costPoints' => '100',
+            'affordable' => true,
+        ],
+    ],
+];
+$snapshotResult = $execute->invoke(null, [
+    'version' => '1',
+    'commandId' => '61000000-0000-4000-8000-000000000012',
+    'connectionId' => $claimConnectionId,
+    'topic' => 'woocommerce.customer_experience.put',
+    'payloadVersion' => 'v1',
+    'deliveredAt' => gmdate('c'),
+    'payload' => [
+        'kind' => 'put_customer_experience_snapshot',
+        'snapshot' => $snapshot,
+    ],
+]);
+$storedSnapshot = get_option('starfiniti_loyalty_snapshot_' . $customerId);
+$snapshotAutoload = $wpdb->get_var($wpdb->prepare(
+    "SELECT autoload FROM {$wpdb->options} WHERE option_name = %s",
+    'starfiniti_loyalty_snapshot_' . $customerId
+));
+starfiniti_runtime_assert(
+    ($snapshotResult['outcome'] ?? null) === 'delivered'
+    && ($snapshotResult['resultReference'] ?? null) ===
+        'wordpress:snapshot:' . $customerId . ':2'
+    && is_array($storedSnapshot)
+    && ($storedSnapshot['balances']['available'] ?? null) === '150'
+    && ! in_array($snapshotAutoload, ['yes', 'on', 'auto-on'], true)
+    && ExperienceSnapshot::pendingCustomerIds() === [],
+    'a strict snapshot is stored durably without autoload and clears its refresh selector'
+);
+$olderSnapshot = $execute->invoke(null, [
+    'version' => '1',
+    'commandId' => '61000000-0000-4000-8000-000000000013',
+    'connectionId' => $claimConnectionId,
+    'topic' => 'woocommerce.customer_experience.put',
+    'payloadVersion' => 'v1',
+    'deliveredAt' => gmdate('c'),
+    'payload' => [
+        'kind' => 'put_customer_experience_snapshot',
+        'snapshot' => [...$snapshot, 'revision' => '1'],
+    ],
+]);
+$conflictingSnapshot = $execute->invoke(null, [
+    'version' => '1',
+    'commandId' => '61000000-0000-4000-8000-000000000014',
+    'connectionId' => $claimConnectionId,
+    'topic' => 'woocommerce.customer_experience.put',
+    'payloadVersion' => 'v1',
+    'deliveredAt' => gmdate('c'),
+    'payload' => [
+        'kind' => 'put_customer_experience_snapshot',
+        'snapshot' => [
+            ...$snapshot,
+            'balances' => [...$snapshot['balances'], 'available' => '151'],
+        ],
+    ],
+]);
+$privateSnapshot = $execute->invoke(null, [
+    'version' => '1',
+    'commandId' => '61000000-0000-4000-8000-000000000015',
+    'connectionId' => $claimConnectionId,
+    'topic' => 'woocommerce.customer_experience.put',
+    'payloadVersion' => 'v1',
+    'deliveredAt' => gmdate('c'),
+    'payload' => [
+        'kind' => 'put_customer_experience_snapshot',
+        'snapshot' => [...$snapshot, 'email' => 'runtime-smoke@example.test'],
+    ],
+]);
+$crossConnectionSnapshot = $execute->invoke(null, [
+    'version' => '1',
+    'commandId' => '61000000-0000-4000-8000-000000000016',
+    'connectionId' => '62000000-0000-4000-8000-000000000099',
+    'topic' => 'woocommerce.customer_experience.put',
+    'payloadVersion' => 'v1',
+    'deliveredAt' => gmdate('c'),
+    'payload' => [
+        'kind' => 'put_customer_experience_snapshot',
+        'snapshot' => [...$snapshot, 'revision' => '3'],
+    ],
+]);
+starfiniti_runtime_assert(
+    ($olderSnapshot['outcome'] ?? null) === 'delivered'
+    && ($conflictingSnapshot['errorCode'] ?? null) === 'snapshot_revision_conflict'
+    && ($privateSnapshot['errorCode'] ?? null) === 'invalid_customer_experience_snapshot'
+    && ($crossConnectionSnapshot['errorCode'] ?? null) === 'invalid_command_payload'
+    && (get_option('starfiniti_loyalty_snapshot_' . $customerId)['balances']['available'] ?? null) === '150',
+    'older conflicting private and cross-connection snapshots never replace the last known good revision'
+);
 $checkoutHttpRequests = 0;
 $rejectCheckoutHttp = static function ($preempt) use (&$checkoutHttpRequests) {
     $checkoutHttpRequests++;
@@ -233,33 +460,130 @@ $rejectCheckoutHttp = static function ($preempt) use (&$checkoutHttpRequests) {
 add_filter('pre_http_request', $rejectCheckoutHttp, 10, 1);
 
 wp_set_current_user((int) $customerId);
+starfiniti_runtime_assert(
+    ! Settings::blocksDataEnabled()
+    && ! Settings::progressivePanelEnabled()
+    && [] === Blocks::storeApiData(),
+    'Blocks data and panel default to server-side disabled without hiding core value'
+);
+update_option('starfiniti_loyalty_blocks_data_enabled', 'yes', false);
+update_option('starfiniti_loyalty_progressive_panel_enabled', 'yes', false);
+$blocksData = Blocks::storeApiData();
+$blocksRegistry = new class {
+    public $integration = null;
+
+    public function register($integration): void
+    {
+        $this->integration = $integration;
+    }
+};
+Blocks::registerIntegration($blocksRegistry);
+$blocksIntegration = $blocksRegistry->integration;
+starfiniti_runtime_assert(
+    is_object($blocksIntegration)
+    && $blocksIntegration->get_name() === 'starfiniti-loyalty'
+    && $blocksIntegration->get_editor_script_handles() === []
+    && ($blocksData['availablePoints'] ?? null) === '150'
+    && ($blocksData['currentTierName'] ?? null) === 'Bloom'
+    && count($blocksData['rewards'] ?? []) === 1
+    && ! array_key_exists('email', $blocksData)
+    && ! array_key_exists('customerId', $blocksData),
+    'Blocks integration consumes only the bounded local PII-free snapshot'
+);
+$blocksIntegration->initialize();
+$blocksScript = wp_scripts()->registered['starfiniti-loyalty-blocks'] ?? null;
+starfiniti_runtime_assert(
+    is_object($blocksScript)
+    && $blocksScript->deps === ['wc-blocks-checkout', 'wp-element', 'wp-i18n', 'wp-plugins']
+    && wp_style_is('starfiniti-loyalty-blocks', 'enqueued'),
+    'official Blocks integration registers only its reviewed dependency and style handles'
+);
+$noScriptMarkup = Blocks::appendNoScript('<div>cart</div>', []);
+starfiniti_runtime_assert(
+    str_contains($noScriptMarkup, '<noscript>')
+    && str_contains($noScriptMarkup, '150 points available')
+    && str_contains($noScriptMarkup, wc_get_account_endpoint_url('loyalty')),
+    'Cart and Checkout Blocks retain a local no-script loyalty path'
+);
+update_option('starfiniti_loyalty_progressive_panel_enabled', 'no', false);
+$disabledRegistry = new class {
+    public $integration = null;
+
+    public function register($integration): void
+    {
+        $this->integration = $integration;
+    }
+};
+Blocks::registerIntegration($disabledRegistry);
+$disabledBlocksData = Blocks::storeApiData();
+starfiniti_runtime_assert(
+    ($disabledBlocksData['availablePoints'] ?? null) === '150'
+    && null === $disabledRegistry->integration
+    && '<div>cart</div>' === Blocks::appendNoScript('<div>cart</div>', []),
+    'Blocks data canary remains independently observable while the panel and no-script enhancement are disabled'
+);
+update_option('starfiniti_loyalty_blocks_data_enabled', 'no', false);
+starfiniti_runtime_assert(
+    [] === Blocks::storeApiData(),
+    'the Store API presentation projection can be disabled independently'
+);
+update_option('starfiniti_loyalty_blocks_data_enabled', 'yes', false);
+update_option('starfiniti_loyalty_progressive_panel_enabled', 'yes', false);
 ob_start();
 Plugin::renderAccount();
 $accountMarkup = (string) ob_get_clean();
 ob_start();
 Plugin::renderCartNotice();
 $cartMarkup = (string) ob_get_clean();
+$placementOrder = wc_create_order(['customer_id' => $customerId]);
+starfiniti_runtime_assert(! is_wp_error($placementOrder), 'post-purchase placement order is created');
+ob_start();
+Plugin::renderProductLoyalty();
+$productMarkup = (string) ob_get_clean();
+ob_start();
+Plugin::renderCheckoutLoyalty();
+$checkoutMarkup = (string) ob_get_clean();
+ob_start();
+Plugin::renderPostPurchaseLoyalty($placementOrder->get_id());
+$postPurchaseMarkup = (string) ob_get_clean();
 starfiniti_runtime_assert(
     0 === $checkoutHttpRequests,
-    'customer account and cart loyalty rendering make no hub request during outage'
+    'all classic customer placements make no hub request during outage'
 );
 starfiniti_runtime_assert(
     str_contains($accountMarkup, '<h2>')
+    && str_contains($accountMarkup, '150 points available')
+    && str_contains($accountMarkup, 'VIP tier: Bloom')
+    && str_contains($accountMarkup, 'Free shipping')
+    && str_contains($accountMarkup, 'Last updated')
     && str_contains($accountMarkup, '/claim/woocommerce?')
     && str_contains($accountMarkup, 'rel="noreferrer"')
     && str_contains($accountMarkup, esc_html($coupon->get_code()))
     && substr_count($accountMarkup, '<li>') <= 20
-    && strlen($accountMarkup) <= 32768
+    && strlen($accountMarkup) <= 49152
     && ! str_contains($accountMarkup, '<script')
     && ! str_contains($accountMarkup, '<style'),
     'customer account loyalty markup is semantic, bounded, and asset-free'
 );
 starfiniti_runtime_assert(
     str_contains($cartMarkup, wc_get_account_endpoint_url('loyalty'))
-    && strlen($cartMarkup) <= 4096
+    && str_contains($cartMarkup, '150 loyalty points')
+    && strlen($cartMarkup) <= 8192
     && ! str_contains($cartMarkup, '<script')
     && ! str_contains($cartMarkup, '<style'),
     'cart loyalty notice is bounded, linked, and asset-free'
+);
+starfiniti_runtime_assert(
+    str_contains($productMarkup, '150 loyalty points')
+    && str_contains($checkoutMarkup, 'Loyalty balance: 150 points')
+    && str_contains($postPurchaseMarkup, 'Current balance: 150 points')
+    && str_contains($productMarkup . $checkoutMarkup . $postPurchaseMarkup, wc_get_account_endpoint_url('loyalty'))
+    && strlen($productMarkup) <= 4096
+    && strlen($checkoutMarkup) <= 4096
+    && strlen($postPurchaseMarkup) <= 4096
+    && ! str_contains($productMarkup . $checkoutMarkup . $postPurchaseMarkup, '<script')
+    && ! str_contains($productMarkup . $checkoutMarkup . $postPurchaseMarkup, '<style'),
+    'product checkout and post-purchase placements are local bounded semantic and asset-free'
 );
 
 $cartController = new CartController();
@@ -268,6 +592,47 @@ $cart = $cartController->get_cart_instance();
 $cart->empty_cart();
 $cartItemKey = $cart->add_to_cart($productId, 1);
 starfiniti_runtime_assert(false !== $cartItemKey, 'classic cart fixture contains the product');
+$storeApiResponse = rest_do_request(new WP_REST_Request('GET', '/wc/store/v1/cart'));
+$storeApiEncoded = wp_json_encode($storeApiResponse->get_data());
+$storeApiPayload = is_string($storeApiEncoded)
+    ? json_decode($storeApiEncoded, true)
+    : null;
+$storeApiLoyalty = is_array($storeApiPayload)
+    ? ($storeApiPayload['extensions']['starfiniti-loyalty'] ?? null)
+    : null;
+starfiniti_runtime_assert(
+    ! $storeApiResponse->is_error()
+    && is_array($storeApiLoyalty)
+    && ($storeApiLoyalty['version'] ?? null) === '1'
+    && ($storeApiLoyalty['availablePoints'] ?? null) === '150'
+    && count($storeApiLoyalty['rewards'] ?? []) <= 3,
+    'the real namespaced Store API cart response exposes the bounded local projection'
+);
+$staleSnapshot = [
+    ...$storedSnapshot,
+    'generatedAt' => gmdate('c', time() - 3 * HOUR_IN_SECONDS),
+    'refreshAfter' => gmdate('c', time() - 2 * HOUR_IN_SECONDS),
+    'staleAfter' => gmdate('c', time() - HOUR_IN_SECONDS),
+];
+update_option('starfiniti_loyalty_snapshot_' . $customerId, $staleSnapshot, false);
+$staleStoreApiResponse = rest_do_request(new WP_REST_Request('GET', '/wc/store/v1/cart'));
+$staleStoreApiEncoded = wp_json_encode($staleStoreApiResponse->get_data());
+$staleStoreApiPayload = is_string($staleStoreApiEncoded)
+    ? json_decode($staleStoreApiEncoded, true)
+    : null;
+$staleStoreApiLoyalty = is_array($staleStoreApiPayload)
+    ? ($staleStoreApiPayload['extensions']['starfiniti-loyalty'] ?? null)
+    : null;
+starfiniti_runtime_assert(
+    ! $staleStoreApiResponse->is_error()
+    && is_array($staleStoreApiLoyalty)
+    && ($staleStoreApiLoyalty['state'] ?? null) === 'stale'
+    && ($staleStoreApiLoyalty['availablePoints'] ?? null) === ''
+    && ($staleStoreApiLoyalty['currentTierName'] ?? null) === ''
+    && ($staleStoreApiLoyalty['rewards'] ?? null) === [],
+    'the real Store API fails closed without balance tier or reward value when local data is stale'
+);
+update_option('starfiniti_loyalty_snapshot_' . $customerId, $storedSnapshot, false);
 starfiniti_runtime_assert(
     $cart->apply_coupon($couponCode) && $cart->has_discount($couponCode),
     'classic cart applies the native loyalty coupon'
@@ -284,6 +649,22 @@ $cart->empty_cart();
 $order = wc_create_order(['customer_id' => $customerId]);
 starfiniti_runtime_assert(! is_wp_error($order), 'order fixture is created through WooCommerce CRUD');
 $order->add_product($product, 1);
+$referralCode = '64000000-0000-4000-8000-000000000001';
+$referralCapturedAt = gmdate('c', time() - HOUR_IN_SECONDS);
+$referralFingerprint = str_repeat('a1', 32);
+$order->update_meta_data('_starfiniti_referral_code', $referralCode);
+$order->update_meta_data('_starfiniti_referral_captured_at', $referralCapturedAt);
+$order->update_meta_data('_starfiniti_referral_network', $referralFingerprint);
+$order->update_meta_data('_starfiniti_referral_device', str_repeat('b2', 32));
+$order->update_meta_data('_starfiniti_referral_payment', str_repeat('c3', 32));
+$order->update_meta_data('_starfiniti_referral_shipping', str_repeat('d4', 32));
+$referralEvidence = Referrals::orderEvidence($order);
+starfiniti_runtime_assert(
+    is_array($referralEvidence)
+    && ($referralEvidence['advocateCode'] ?? null) === $referralCode
+    && ($referralEvidence['sourceNetworkFingerprint'] ?? null) === $referralFingerprint,
+    'order referral evidence contains only the opaque advocate code and keyed fingerprints'
+);
 $applyResult = $order->apply_coupon($couponCode);
 starfiniti_runtime_assert(! is_wp_error($applyResult), 'native coupon applies through WooCommerce core');
 starfiniti_runtime_assert(
@@ -298,6 +679,24 @@ $orderId = $order->get_id();
 starfiniti_runtime_assert(
     wc_get_order($orderId) instanceof WC_Order,
     'completed order round-trips through WooCommerce CRUD getters'
+);
+$orderStatusPayload = (string) $wpdb->get_var($wpdb->prepare(
+    "SELECT event_payload FROM {$outboxTable} WHERE event_type = %s AND source_object_id = %s ORDER BY id DESC LIMIT 1",
+    'commerce.order.status_changed',
+    (string) $orderId
+));
+$decodedOrderStatusPayload = json_decode($orderStatusPayload, true);
+$emittedReferral = is_array($decodedOrderStatusPayload)
+    ? ($decodedOrderStatusPayload['order']['referral'] ?? null)
+    : null;
+starfiniti_runtime_assert(
+    is_array($emittedReferral)
+    && ($emittedReferral['advocateCode'] ?? null) === $referralCode
+    && ($emittedReferral['sourceNetworkFingerprint'] ?? null) === $referralFingerprint
+    && ! str_contains($orderStatusPayload, 'runtime-smoke@example.test')
+    && ! str_contains($orderStatusPayload, '127.0.0.1')
+    && ! str_contains($orderStatusPayload, 'Runtime customer'),
+    'signed order fact emits privacy-minimized referral evidence without raw identity or network data'
 );
 
 $reviewId = wp_insert_comment([
@@ -508,8 +907,20 @@ starfiniti_runtime_assert(
     && ! array_key_exists('email', $privacyPayload),
     'customer erasure is queued once with an opaque key and the minimum channel subject'
 );
+$privacyExport = Privacy::export('runtime-smoke@example.test', 1);
+$exportedGroups = array_column($privacyExport['data'] ?? [], 'group_id');
+$privacyErase = Privacy::erase('runtime-smoke@example.test', 1);
+starfiniti_runtime_assert(
+    in_array('starfiniti-loyalty-snapshot', $exportedGroups, true)
+    && ($privacyErase['items_removed'] ?? false)
+    && false === get_option('starfiniti_loyalty_snapshot_' . $customerId, false),
+    'WordPress privacy export includes and erasure removes the local customer summary'
+);
 starfiniti_runtime_assert(
     has_action('woocommerce_before_cart', ['Starfiniti\\Loyalty\\Plugin', 'renderCartNotice']) !== false
+    && has_action('woocommerce_single_product_summary', ['Starfiniti\\Loyalty\\Plugin', 'renderProductLoyalty']) !== false
+    && has_action('woocommerce_review_order_before_payment', ['Starfiniti\\Loyalty\\Plugin', 'renderCheckoutLoyalty']) !== false
+    && has_action('woocommerce_thankyou', ['Starfiniti\\Loyalty\\Plugin', 'renderPostPurchaseLoyalty']) !== false
     && has_filter('woocommerce_coupon_is_valid', [Commands::class, 'validateCustomer']) !== false
     && has_action('woocommerce_created_customer', [Outbox::class, 'captureCustomerCreation']) !== false
     && has_action('transition_comment_status', [Outbox::class, 'captureReviewVerification']) !== false

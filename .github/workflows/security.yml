@@ -1,0 +1,369 @@
+name: Security
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 3 * * 2"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  codeql:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
+        with:
+          languages: javascript-typescript
+          build-mode: none
+          queries: security-extended
+      - name: Prepare private CodeQL and minimized evidence directories
+        run: mkdir -p dist/security-private/codeql dist/security
+      - name: Analyze JavaScript and TypeScript
+        id: analyze
+        uses: github/codeql-action/analyze@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
+        with:
+          category: "/language:javascript-typescript"
+          output: dist/security-private/codeql
+      - name: Minimize and enforce CodeQL results
+        env:
+          CANDIDATE_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: >-
+          node scripts/summarize-security-scan.mjs
+          --mode codeql
+          --input dist/security-private/codeql
+          --out dist/security/codeql-summary.json
+          --candidate "$CANDIDATE_COMMIT"
+          --analysis "$GITHUB_SHA"
+      - name: Upload minimized CodeQL evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: security-codeql-${{ github.sha }}
+          path: dist/security/codeql-summary.json
+          if-no-files-found: error
+          retention-days: 30
+
+  supply-chain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install exact repository dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts
+      - name: Validate production-disabled observability deployment
+        run: npm run observability:deployment:validate
+      - name: Run disposable observability deployment canary
+        run: npm run observability:deployment:run -- --out dist/observability-deployment/ci.json
+      - name: Audit complete development and production dependency tree
+        run: npm audit --audit-level=high
+      - name: Build deployable dashboard image
+        run: docker build --file apps/dashboard/Dockerfile --tag starfiniti-dashboard:security .
+      - name: Build deployable worker image
+        run: docker build --file apps/worker/Dockerfile --tag starfiniti-worker:security .
+      - name: Verify exact worker runtime modules
+        run: docker run --rm --entrypoint node starfiniti-worker:security --input-type=module --eval "await Promise.all(['nodemailer','postgres','zod'].map((name) => import(name)))"
+      - name: Prepare minimized security artifact directory
+        run: mkdir -p dist/security dist/security-private
+      - name: Generate private repository review report
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: secret,misconfig
+          exit-code: "0"
+          format: json
+          output: dist/security-private/repository-trivy.json
+          timeout: 10m
+          version: v0.74.0
+      - name: Minimize repository review report
+        env:
+          CANDIDATE_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: >-
+          node scripts/summarize-security-scan.mjs
+          --mode repository
+          --input dist/security-private/repository-trivy.json
+          --out dist/security/repository-summary.json
+          --candidate "$CANDIDATE_COMMIT"
+          --analysis "$GITHUB_SHA"
+      - name: Enforce repository secrets and misconfiguration policy
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: secret,misconfig
+          exit-code: "1"
+          format: table
+          timeout: 10m
+          version: v0.74.0
+      - name: Generate minimized dashboard review report
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: starfiniti-dashboard:security
+          scanners: vuln,misconfig,license
+          severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+          ignore-unfixed: "false"
+          exit-code: "0"
+          format: json
+          output: dist/security/dashboard-trivy.json
+          timeout: 10m
+          trivy-config: infrastructure/testing/security/trivy.yaml
+          version: v0.74.0
+      - name: Generate minimized worker review report
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: starfiniti-worker:security
+          scanners: vuln,misconfig,license
+          severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+          ignore-unfixed: "false"
+          exit-code: "0"
+          format: json
+          output: dist/security/worker-trivy.json
+          timeout: 10m
+          trivy-config: infrastructure/testing/security/trivy.yaml
+          version: v0.74.0
+      - name: Enforce deployable dashboard image policy
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: starfiniti-dashboard:security
+          scanners: vuln,secret,misconfig,license
+          severity: UNKNOWN,HIGH,CRITICAL
+          ignore-unfixed: "false"
+          exit-code: "1"
+          format: table
+          timeout: 10m
+          trivy-config: infrastructure/testing/security/trivy.yaml
+          version: v0.74.0
+      - name: Enforce deployable worker image policy
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: starfiniti-worker:security
+          scanners: vuln,secret,misconfig,license
+          severity: UNKNOWN,HIGH,CRITICAL
+          ignore-unfixed: "false"
+          exit-code: "1"
+          format: table
+          timeout: 10m
+          trivy-config: infrastructure/testing/security/trivy.yaml
+          version: v0.74.0
+      - name: Capture bounded Trivy database metadata
+        env:
+          CANDIDATE_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: >-
+          node scripts/summarize-security-scan.mjs
+          --mode trivy-version
+          --cache-dir .cache/trivy
+          --out dist/security/trivy-version-summary.json
+          --candidate "$CANDIDATE_COMMIT"
+          --analysis "$GITHUB_SHA"
+      - name: Generate dashboard CycloneDX SBOM
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        with:
+          image: starfiniti-dashboard:security
+          format: cyclonedx-json
+          output-file: dist/security/dashboard.cdx.json
+          syft-version: v1.51.0
+          upload-artifact: "false"
+          upload-release-assets: "false"
+      - name: Generate worker CycloneDX SBOM
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        with:
+          image: starfiniti-worker:security
+          format: cyclonedx-json
+          output-file: dist/security/worker.cdx.json
+          syft-version: v1.51.0
+          upload-artifact: "false"
+          upload-release-assets: "false"
+      - name: Verify exact reciprocal source inventory
+        run: |
+          npm run release:sources:inventory -- \
+            --dashboard-sbom dist/security/dashboard.cdx.json \
+            --worker-sbom dist/security/worker.cdx.json
+      - name: Upload minimized supply-chain evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: security-supply-chain-${{ github.sha }}
+          path: |
+            dist/security/*-trivy.json
+            dist/security/*.cdx.json
+            dist/security/repository-summary.json
+            dist/security/trivy-version-summary.json
+            dist/observability-deployment/ci.json
+          if-no-files-found: error
+          retention-days: 30
+
+  recovery-transport:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install exact repository dependencies
+        run: npm ci
+      - name: Validate exact recovery transport plan
+        run: npm run recovery-transport:validate
+      - name: Validate side-by-side rsync source candidate
+        run: npm run rsync-source-security:validate
+      - name: Validate exact BorgBackup security candidate
+        run: npm run borgbackup-security:validate
+      - name: Validate exact OpenSSH recovery client candidate
+        run: npm run openssh-client-security:validate
+      - name: Validate exact Proxmox package provenance plan
+        run: npm run proxmox-security:packages:validate
+      - name: Validate route-free read-only Proxmox preflight contract
+        run: npm run proxmox-security:preflight:validate
+      - name: Validate route-free Proxmox compatibility inventory contract
+        run: npm run proxmox-security:compatibility-inventory:validate
+      - name: Validate isolated Proxmox compatibility rehearsal contract
+        run: npm run proxmox-security:compatibility-rehearsal:validate
+      - name: Validate exact Authentik 2026.8 runtime rehearsal contract
+        run: npm run continuous-improvement:authentik-2026-8:runtime:validate
+      - name: Run disposable no-install Proxmox package provenance canary
+        env:
+          STARFINITI_CANARY_RUNNER: github-hosted
+        run: npm run proxmox-security:packages:run -- --out dist/proxmox-security-packages/ci.json
+      - name: Run isolated disposable recovery transport canary
+        run: npm run recovery-transport:run -- --out dist/recovery-transport/ci.json
+      - name: Run side-by-side rsync source compatibility canary
+        run: npm run rsync-source-security:run -- --out dist/rsync-source-security/ci.json
+      - name: Run disposable networkless BorgBackup compatibility canary
+        run: npm run borgbackup-security:run -- --out dist/borgbackup-security/ci.json
+      - name: Run isolated OpenSSH recovery client compatibility canary
+        run: npm run openssh-client-security:run -- --out dist/openssh-client-security/ci.json
+      - name: Run isolated Authentik 2026.8 runtime rehearsal
+        run: npm run continuous-improvement:authentik-2026-8:runtime:run -- --out dist/authentik-2026-8-runtime/ci.json
+      - name: Upload minimized recovery transport evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: security-recovery-transport-${{ github.sha }}
+          path: dist/recovery-transport/ci.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload minimized Proxmox package provenance evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: security-proxmox-packages-${{ github.sha }}
+          path: dist/proxmox-security-packages/ci.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload minimized BorgBackup compatibility evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: security-borgbackup-${{ github.sha }}
+          path: dist/borgbackup-security/ci.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload minimized OpenSSH recovery client evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: security-openssh-client-${{ github.sha }}
+          path: dist/openssh-client-security/ci.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload minimized rsync source security evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: security-rsync-source-${{ github.sha }}
+          path: dist/rsync-source-security/ci.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Upload minimized Authentik 2026.8 runtime evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: security-authentik-2026-8-runtime-${{ github.sha }}
+          path: dist/authentik-2026-8-runtime/ci.json
+          if-no-files-found: error
+          retention-days: 30
+
+  dast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - name: Build disposable DAST target
+        run: docker build --file apps/dashboard/Dockerfile --tag starfiniti-dashboard:dast .
+      - name: Pull pinned ZAP scanner before isolation
+        run: docker pull ghcr.io/zaproxy/zaproxy@sha256:781a2bdaea47324e7bab583e2263f21d257b0aee61ed51521a5be45f5f5081ef
+      - name: Start isolated disposable target
+        shell: bash
+        run: |
+          docker network create --internal starfiniti-dast
+          docker run --detach --name starfiniti-dast-target --network starfiniti-dast \
+            --label com.starfiniti.disposable=true \
+            --label com.starfiniti.environment=dast \
+            --env NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321 \
+            --env NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_dast_ci \
+            starfiniti-dashboard:dast
+          for attempt in $(seq 1 30); do
+            if docker exec starfiniti-dast-target node -e "fetch('http://127.0.0.1:3000/login').then(r=>{if(r.status!==200)process.exit(1)}).catch(()=>process.exit(1))"; then
+              exit 0
+            fi
+            sleep 1
+          done
+          docker logs starfiniti-dast-target
+          exit 1
+      - name: Enforce dashboard response security headers
+        shell: bash
+        run: |
+          headers="$(docker exec starfiniti-dast-target wget --server-response --spider http://127.0.0.1:3000/login 2>&1)"
+          printf '%s\n' "$headers" | grep -Eiq "^[[:space:]]+Content-Security-Policy:.*script-src 'self' 'nonce-[A-Za-z0-9+/]{48}' 'strict-dynamic'.*frame-ancestors 'none'"
+          printf '%s\n' "$headers" | grep -Eiq "^[[:space:]]+X-Frame-Options:[[:space:]]+DENY"
+          printf '%s\n' "$headers" | grep -Eiq "^[[:space:]]+X-Content-Type-Options:[[:space:]]+nosniff"
+          if printf '%s\n' "$headers" | grep -Eiq "script-src[^;]*'unsafe-inline'"; then
+            exit 1
+          fi
+          docker exec starfiniti-dast-target node -e \
+            "fetch('http://127.0.0.1:3000/_next/image?url=%2Flogo.png&w=64&q=75').then(r=>{if(r.status!==404)process.exit(1)}).catch(()=>process.exit(1))"
+      - name: Run bounded ZAP Automation Framework scan
+        shell: bash
+        run: |
+          mkdir -p dist/security
+          chmod 0777 dist/security
+          docker run --rm --network starfiniti-dast \
+            --volume "$PWD:/zap/wrk:rw" \
+            ghcr.io/zaproxy/zaproxy@sha256:781a2bdaea47324e7bab583e2263f21d257b0aee61ed51521a5be45f5f5081ef \
+            zap.sh -cmd -autorun /zap/wrk/infrastructure/testing/security/zap-automation.yaml
+      - name: Upload DAST report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: security-dast-${{ github.sha }}
+          path: dist/security/zap-report.json
+          if-no-files-found: error
+          retention-days: 30
+      - name: Remove disposable DAST target and network
+        if: always()
+        shell: bash
+        run: |
+          docker rm --force starfiniti-dast-target 2>/dev/null || true
+          docker network rm starfiniti-dast 2>/dev/null || true

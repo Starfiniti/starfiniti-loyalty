@@ -6,7 +6,7 @@
  * Requires at least: 6.6
  * Requires PHP: 8.1
  * WC requires at least: 9.0
- * WC tested up to: 10.9
+ * WC tested up to: 11.0
  * License: GPL-2.0-or-later
  * Text Domain: starfiniti-loyalty
  * Domain Path: /languages
@@ -34,6 +34,11 @@ add_action('before_woocommerce_init', static function (): void {
             __FILE__,
             true
         );
+        \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
+            'cart_checkout_blocks',
+            __FILE__,
+            true
+        );
     }
 });
 
@@ -51,6 +56,9 @@ add_action('plugins_loaded', static function (): void {
     require_once __DIR__ . '/src/class-plugin.php';
     require_once __DIR__ . '/src/class-settings.php';
     require_once __DIR__ . '/src/class-customer-claim.php';
+    require_once __DIR__ . '/src/class-experience-snapshot.php';
+    require_once __DIR__ . '/src/class-blocks.php';
+    require_once __DIR__ . '/src/class-referrals.php';
     require_once __DIR__ . '/src/class-outbox.php';
     require_once __DIR__ . '/src/class-commands.php';
     require_once __DIR__ . '/src/class-privacy.php';

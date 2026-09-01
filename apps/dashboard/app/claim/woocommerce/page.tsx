@@ -76,14 +76,28 @@ function ClaimFailure({
 }) {
   const conflict = status === "conflict";
   const copy = CUSTOMER_COPY[locale];
+  const valueConflict = status === "value-conflict";
+  const sharingUnavailable = status === "sharing-unavailable";
+  const title = valueConflict
+    ? "These loyalty accounts need a reviewed migration"
+    : sharingUnavailable
+      ? "Shared-store linking is temporarily unavailable"
+      : conflict
+        ? copy.accountConnectedTitle
+        : copy.linkUnavailableTitle;
+  const body = valueConflict
+    ? "Both store identities already have loyalty wallet state. We did not merge, move, or hide any points. Contact the merchant to review a traceable migration."
+    : sharingUnavailable
+      ? "The store proof was valid, but the current shared-wallet scope could not be verified. No account or points were changed."
+      : conflict
+        ? copy.accountConflict
+        : copy.invalidLink;
   return (
     <main className="access-page" id="main-content" tabIndex={-1}>
       <section className="access-card" aria-labelledby="claim-title">
         <p className="login-eyebrow">Starfiniti Loyalty</p>
-        <h1 id="claim-title">
-          {conflict ? copy.accountConnectedTitle : copy.linkUnavailableTitle}
-        </h1>
-        <p>{conflict ? copy.accountConflict : copy.invalidLink}</p>
+        <h1 id="claim-title">{title}</h1>
+        <p>{body}</p>
       </section>
     </main>
   );

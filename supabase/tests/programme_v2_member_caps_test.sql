@@ -178,7 +178,8 @@ begin
   )
   select organization.id, connection.id, created_inbox_id,
     'cap-event-' || target_number, 'v1', 'commerce.order.status_changed',
-    'order-' || target_number, target_occurred_at, '{}'::jsonb
+    'order-' || target_number, target_occurred_at,
+    '{"order":{"currency":"EUR","currencyMinorUnitDigits":2}}'::jsonb
   from loyalty.organizations as organization
   join loyalty.commerce_connections as connection
     on connection.organization_id = organization.id

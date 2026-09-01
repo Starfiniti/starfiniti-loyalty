@@ -1,0 +1,261 @@
+schema: starfiniti.recovery-artifact-escrow-plan.v2
+version: 2
+status: ready
+scope: [borgbackup, openssh-client, rsync-transport]
+extends:
+  path: infrastructure/governance/recovery-artifact-escrow-v1.yaml
+  sha256: eb9840652ab8e7ca2d20af9cc8eabf2d8bde7e0b696f8d51e334f859127eaa05
+bounds:
+  maximumEntries: 64
+  maximumTotalBytes: 419430400
+  maximumManifestBytes: 262144
+  maximumPolicyBytes: 131072
+  maximumReportBytes: 65536
+  readChunkBytes: 65536
+filesystem:
+  bundleMustBeAbsolute: true
+  bundleMustBeOutsideRepository: true
+  bundleRootMayNotBeFilesystemRoot: true
+  rejectSymlinks: true
+  rejectHardlinks: true
+  rejectSpecialFiles: true
+  rejectUnexpectedMembers: true
+  rejectCaseCollisions: true
+  rejectGroupOrOtherWritableOnPosix: true
+  policyCopyPath: escrow-policy.yaml
+  privateManifestPath: manifest.json
+authority:
+  networkAccess: false
+  artifactCopy: false
+  artifactExecution: false
+  productionAccess: false
+  productionMutation: false
+  productionAuthority: false
+  inventoryVerificationCompletesEscrow: false
+  signingFingerprintReviewRequired: true
+  dependencyReviewRequired: true
+  packageAuthorityReviewRequired: true
+  consumerCompatibilityReviewRequired: true
+  offlineCopyReviewRequired: true
+  secondReviewerRequired: true
+  isolatedRestoreRequired: true
+providers:
+  - id: rsync-transport
+    candidateCommit: ed5eb7f315e2136d43d1f5a0b4cbdb75941b1c26
+    plan:
+      path: infrastructure/testing/recovery-transport/plan.yaml
+      sha256: 56600763ba44ab85221ecbc4effbac09055e42d135a04429ee27980389f73405
+    entries:
+      - id: rsync-host-candidate-package
+        relativePath: rsync-transport/packages/rsync_3.5.0+ds1-2_amd64.deb
+        role: candidate-package
+        expected: fixed
+        sha256: 5f0ecada9a0b4729f18aca43260bb8bcb16f95750c562409f84555b9de59a094
+        maximumBytes: 33554432
+      - id: rsync-host-candidate-libacl1
+        relativePath: rsync-transport/packages/libacl1_2.4.0-1_amd64.deb
+        role: candidate-dependency
+        expected: fixed
+        sha256: e9da0e00387e31c1709b70497f1eda91389c962c3940e6d233d4c57f5ea6f635
+        maximumBytes: 33554432
+      - id: rsync-guest-candidate-package
+        relativePath: rsync-transport/packages/rsync_3.5.0-1ppa-noble1_amd64.deb
+        role: candidate-package
+        expected: fixed
+        sha256: 3ae102d79c9a82d1f1aee94bde3afa3142a7ef6f367484f130d6fba05c3c1648
+        signingFingerprint: 72BBF83452B11E5B5A8F99123CC6C2BBC7F3DB85
+        maximumBytes: 33554432
+      - id: rsync-host-rollback-package
+        relativePath: rsync-transport/packages/rsync_3.4.1+ds1-5+deb13u3_amd64.deb
+        role: rollback-package
+        expected: fixed
+        sha256: fee3fa3b5924cc7e0964603945e0edfd63b7f29fc3cd4cf7613ad970e05a55be
+        maximumBytes: 33554432
+      - id: rsync-host-rollback-libacl1
+        relativePath: rsync-transport/packages/libacl1_2.3.2-2+b1_amd64.deb
+        role: rollback-package
+        expected: fixed
+        sha256: 08074f01e384bc07c0c2d79a58cf4a6523f71cf75d1808101c79617656c9a39d
+        maximumBytes: 33554432
+      - id: rsync-guest-rollback-package
+        relativePath: rsync-transport/packages/rsync_3.2.7-1ubuntu1.5_amd64.deb
+        role: rollback-package
+        expected: fixed
+        sha256: 8f952895697d19a6f1caa71f17c7d4e8c1f1fb485eb824ffe3e4c77dd587b338
+        maximumBytes: 33554432
+      - id: rsync-canary-report
+        relativePath: rsync-transport/canary-report.json
+        role: compatibility-report
+        expected: fixed
+        sha256: a35f4dbd8bd892f41718fb639022350084ee67e535919558393c0d98ce4320d3
+        maximumBytes: 262144
+      - id: rsync-plan
+        relativePath: rsync-transport/repository/plan.yaml
+        role: reviewed-plan
+        expected: repository-file
+        sourcePath: infrastructure/testing/recovery-transport/plan.yaml
+        maximumBytes: 262144
+      - id: rsync-build-instructions
+        relativePath: rsync-transport/repository/Dockerfile
+        role: build-instructions
+        expected: repository-file
+        sourcePath: infrastructure/testing/recovery-transport/Dockerfile
+        maximumBytes: 262144
+      - id: rsync-canary-readme
+        relativePath: rsync-transport/repository/README.md
+        role: canary-instructions
+        expected: repository-file
+        sourcePath: infrastructure/testing/recovery-transport/README.md
+        maximumBytes: 262144
+      - id: rsync-plan-validator
+        relativePath: rsync-transport/repository/validate-plan.mjs
+        role: plan-validator
+        expected: repository-file
+        sourcePath: scripts/validate-rsync-transport-plan.mjs
+        maximumBytes: 524288
+      - id: rsync-canary-runner
+        relativePath: rsync-transport/repository/run-canary.mjs
+        role: compatibility-runner
+        expected: repository-file
+        sourcePath: scripts/run-rsync-transport-canary.mjs
+        maximumBytes: 524288
+      - id: rsync-guest-forced-exporter
+        relativePath: rsync-transport/repository/starfiniti-postgres-backup-rsync
+        role: guest-forced-command
+        expected: repository-file
+        sourcePath: infrastructure/environments/proxmox/scripts/starfiniti-postgres-backup-rsync
+        maximumBytes: 262144
+      - id: rsync-host-controller
+        relativePath: rsync-transport/repository/starfiniti-loyalty-postgres-borg-controller
+        role: host-archive-controller
+        expected: repository-file
+        sourcePath: infrastructure/environments/proxmox/scripts/starfiniti-loyalty-postgres-borg-controller
+        maximumBytes: 524288
+      - id: rsync-host-archive-rollback
+        relativePath: rsync-transport/repository/starfiniti-loyalty-postgres-borg
+        role: compatible-controller-rollback
+        expected: repository-file
+        sourcePath: infrastructure/environments/proxmox/scripts/starfiniti-loyalty-postgres-borg
+        maximumBytes: 524288
+      - id: rsync-host-maintenance-rollback
+        relativePath: rsync-transport/repository/starfiniti-loyalty-postgres-borg-maintain
+        role: compatible-controller-rollback
+        expected: repository-file
+        sourcePath: infrastructure/environments/proxmox/scripts/starfiniti-loyalty-postgres-borg-maintain
+        maximumBytes: 524288
+      - id: rsync-archive-service
+        relativePath: rsync-transport/repository/starfiniti-loyalty-postgres-borg.service
+        role: systemd-service
+        expected: repository-file
+        sourcePath: infrastructure/environments/proxmox/systemd/starfiniti-loyalty-postgres-borg.service
+        maximumBytes: 262144
+      - id: rsync-archive-timer
+        relativePath: rsync-transport/repository/starfiniti-loyalty-postgres-borg.timer
+        role: systemd-timer
+        expected: repository-file
+        sourcePath: infrastructure/environments/proxmox/systemd/starfiniti-loyalty-postgres-borg.timer
+        maximumBytes: 262144
+      - id: rsync-maintenance-service
+        relativePath: rsync-transport/repository/starfiniti-loyalty-postgres-borg-maintain.service
+        role: systemd-service
+        expected: repository-file
+        sourcePath: infrastructure/environments/proxmox/systemd/starfiniti-loyalty-postgres-borg-maintain.service
+        maximumBytes: 262144
+      - id: rsync-maintenance-timer
+        relativePath: rsync-transport/repository/starfiniti-loyalty-postgres-borg-maintain.timer
+        role: systemd-timer
+        expected: repository-file
+        sourcePath: infrastructure/environments/proxmox/systemd/starfiniti-loyalty-postgres-borg-maintain.timer
+        maximumBytes: 262144
+      - id: rsync-forced-command-sudoers
+        relativePath: rsync-transport/repository/starfiniti-postgres-backup-rsync.sudoers
+        role: privilege-policy
+        expected: repository-file
+        sourcePath: infrastructure/environments/proxmox/sudoers/starfiniti-postgres-backup-rsync
+        maximumBytes: 262144
+      - id: rsync-backup-asset-validator
+        relativePath: rsync-transport/repository/validate-backup-assets.mjs
+        role: runtime-validator
+        expected: repository-file
+        sourcePath: scripts/validate-backup-assets.mjs
+        maximumBytes: 2097152
+      - id: rsync-runbook
+        relativePath: rsync-transport/repository/BACKUP_RESTORE.md
+        role: operations-runbook
+        expected: repository-file
+        sourcePath: docs/operations/BACKUP_RESTORE.md
+        maximumBytes: 524288
+      - id: rsync-adr-incremental-pull
+        relativePath: rsync-transport/repository/ADR-0013.md
+        role: architecture-decision
+        expected: repository-file
+        sourcePath: docs/architecture/ADR/0013-incremental-pull-before-borg-archive.md
+        maximumBytes: 262144
+      - id: rsync-adr-dedicated-repository
+        relativePath: rsync-transport/repository/ADR-0071.md
+        role: architecture-decision
+        expected: repository-file
+        sourcePath: docs/architecture/ADR/0071-dedicated-postgresql-borg-repository.md
+        maximumBytes: 262144
+      - id: rsync-adr-security-baseline
+        relativePath: rsync-transport/repository/ADR-0072.md
+        role: architecture-decision
+        expected: repository-file
+        sourcePath: docs/architecture/ADR/0072-rsync-3-5-backup-transport-security-baseline.md
+        maximumBytes: 262144
+      - id: rsync-adr-package-canary
+        relativePath: rsync-transport/repository/ADR-0073.md
+        role: architecture-decision
+        expected: repository-file
+        sourcePath: docs/architecture/ADR/0073-exact-vendor-rsync-recovery-transport-canary.md
+        maximumBytes: 262144
+      - id: rsync-canary-evidence
+        relativePath: rsync-transport/repository/evidence.yaml
+        role: candidate-evidence
+        expected: repository-file
+        sourcePath: docs/plan/evidence/M15/recovery-transport.yaml
+        maximumBytes: 262144
+      - id: rsync-historical-v1-policy
+        relativePath: rsync-transport/repository/recovery-artifact-escrow-v1.yaml
+        role: historical-policy
+        expected: repository-file
+        sourcePath: infrastructure/governance/recovery-artifact-escrow-v1.yaml
+        maximumBytes: 131072
+      - id: rsync-historical-v1-evidence
+        relativePath: rsync-transport/repository/recovery-artifact-escrow-v1-evidence.yaml
+        role: historical-evidence
+        expected: repository-file
+        sourcePath: docs/plan/evidence/M16/recovery-artifact-escrow.yaml
+        maximumBytes: 262144
+      - id: rsync-escrow-v1-adr
+        relativePath: rsync-transport/repository/ADR-0093.md
+        role: architecture-decision
+        expected: repository-file
+        sourcePath: docs/architecture/ADR/0093-private-recovery-artifact-escrow-verification.md
+        maximumBytes: 262144
+      - id: rsync-escrow-v2-adr
+        relativePath: rsync-transport/repository/ADR-0094.md
+        role: architecture-decision
+        expected: repository-file
+        sourcePath: docs/architecture/ADR/0094-versioned-shared-recovery-artifact-escrow.md
+        maximumBytes: 262144
+      - id: rsync-escrow-v2-evidence
+        relativePath: rsync-transport/repository/recovery-artifact-escrow-v2-evidence.yaml
+        role: current-evidence
+        expected: repository-file
+        sourcePath: docs/plan/evidence/M16/recovery-artifact-escrow-v2.yaml
+        maximumBytes: 262144
+      - id: rsync-escrow-verifier
+        relativePath: rsync-transport/repository/verify-recovery-artifact-escrow.mjs
+        role: byte-verifier
+        expected: repository-file
+        sourcePath: scripts/verify-recovery-artifact-escrow.mjs
+        maximumBytes: 524288
+automaticFails:
+  - the V1 policy or evidence differs from its accepted immutable digest or the V2 extension differs from the exact reviewed contract
+  - a required entry is absent extra duplicated case-colliding linked special mutable over-bound or digest-different
+  - a fixed artifact differs from its candidate plan or a repository instruction differs from the clean exact Git commit
+  - an rsync candidate dependency or rollback package is absent substituted reordered or detached from the exact endpoint plan
+  - a private-manifest-bound key or dependency inventory is missing malformed empty or represented as independently reviewed
+  - a minimized report contains private paths identities endpoints raw content or production authority
+  - inventory verification is presented as package-authority compatibility offline-custody signing-fingerprint dependency second-person isolated-restore production activation or operations-escrow completion

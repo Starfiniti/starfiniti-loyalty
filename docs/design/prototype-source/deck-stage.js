@@ -141,6 +141,21 @@
 
   const pad2 = (n) => String(n).padStart(2, '0');
 
+  // The design host is the only authority for presentation/editor messages.
+  // In an iframe, document.referrer fixes that origin at load time; a missing
+  // or malformed referrer fails closed instead of trusting an arbitrary
+  // embedding page. Top-level self-messages retain their normal same-origin
+  // behavior for standalone prototype review.
+  const HOST_MESSAGE_SOURCE = window.parent === window ? window : window.parent;
+  const HOST_MESSAGE_ORIGIN = (() => {
+    if (window.parent === window) return window.location.origin;
+    try {
+      return new URL(document.referrer).origin;
+    } catch {
+      return null;
+    }
+  })();
+
   // Label precedence: data-label → data-screen-label (number stripped) → first heading → "Slide".
   const getSlideLabel = (el) => {
     const explicit = el.getAttribute('data-label');
@@ -1620,6 +1635,11 @@
     }
 
     _onMessage(e) {
+      if (
+        e.source !== HOST_MESSAGE_SOURCE ||
+        HOST_MESSAGE_ORIGIN === null ||
+        e.origin !== HOST_MESSAGE_ORIGIN
+      ) return;
       const d = e.data;
       if (d && typeof d.__omelette_presenting === 'boolean') {
         // Unchanged value → idempotent re-delivery (the guest bundle

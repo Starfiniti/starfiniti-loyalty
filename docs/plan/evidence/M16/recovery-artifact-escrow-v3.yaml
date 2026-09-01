@@ -1,0 +1,98 @@
+schema: starfiniti.recovery-artifact-escrow-evidence.v3
+status: in_progress
+observedAt: 2026-08-29T11:29:07Z
+candidate:
+  branch: codex/enterprise-roadmap-integration
+  commit: 21262cf08e265c61d3e76e1971ce7604916469cc
+policy:
+  path: infrastructure/governance/recovery-artifact-escrow-v3.yaml
+  sha256: b7500c1989b98c08beb97213a90137c5a5d89599c29ead11e5ab537c7609b192
+checks:
+  - id: design_contract
+    status: passed
+    evidence: ADR-0096 compares rewriting V2, inheriting two apparently active rsync candidates, and a versioned replacement; V3 preserves history while selecting only the native source-built candidate.
+  - id: historical_v1_preserved
+    status: passed
+    evidence: The accepted V1 policy and evidence remain byte-for-byte bound to their recorded SHA-256 values and supply the unchanged BorgBackup and OpenSSH effective providers.
+  - id: historical_v2_preserved
+    status: passed
+    evidence: The accepted V2 policy and evidence remain byte-for-byte hash-bound and are validated against V1 before V3 can load; their historical rsync entries are not rewritten.
+  - id: superseded_candidate_excluded
+    status: passed
+    evidence: V3 marks the V2 rsync-transport provider historical-only, forbids its activation and any global library upgrade, and excludes all thirty-four old rsync entries from the effective bundle.
+  - id: closed_catalogue
+    status: passed
+    evidence: V3 combines exactly thirty V1 BorgBackup/OpenSSH entries with forty-four native rsync binary, source, rollback, dependency-inventory, report, build, runtime, governance, and verification entries for a closed total of seventy-four.
+  - id: stable_byte_verification
+    status: passed
+    evidence: The shared verifier rejects missing, extra, traversing, case-colliding, linked, special, mutable, over-bound, digest-different, repository-different, and mid-run Git-head-different inputs.
+  - id: native_candidate_binding
+    status: passed
+    evidence: The Debian and Ubuntu executable SHA-256 values and the one shared wrapper SHA-256 are fixed to the exact candidate plan and retained digest-lock canary evidence.
+  - id: signed_source_binding
+    status: passed
+    evidence: The source archive exact bytes and SHA-256, detached-signature SHA-256, release-key SHA-256, full signer fingerprint, safe-tree verifier, and native build instructions are closed inputs.
+  - id: rollback_binding
+    status: passed
+    evidence: The unchanged Debian and Ubuntu distribution rsync package SHA-256 values are retained as rollback bytes while V3 explicitly forbids a global ACL library upgrade or historical package-candidate activation.
+  - id: runtime_binding
+    status: passed
+    evidence: The forced exporter, host controller, rollback scripts, four systemd units, sudoers rule, validator, canary, runbook, governing decisions, historical policies and evidence, and verifier are repository-bound inputs.
+  - id: minimized_report_contract
+    status: passed
+    evidence: V3 reports contain only policy, manifest, commit, aggregate provider, stable-byte, and explicit false completion facts; private paths, endpoints, identities, content, and production authority are forbidden.
+  - id: validator_selftest
+    status: passed
+    evidence: Versioned policy loading, historical hash checks, canonical candidate bindings, positive inventory and report fixtures, deterministic corruptions, formatting, lint, and repository validation pass locally; exact-head Linux proof remains separate.
+  - id: exact_head_ci
+    status: passed
+    evidence: Exact implementation 21262cf08e265c61d3e76e1971ce7604916469cc passed all seven CI jobs in run 33250002574, all four Security jobs in run 33250002462 including recovery-transport job 99093945140, and independent CodeQL check 99094120148; all twelve PR checks were green and PR 57 was clean and mergeable.
+  - id: private_inventory
+    status: pending
+    evidence: Operations has not staged the exact seventy-four-file V3 bundle in an approved private destination or produced its private manifest and minimized verification report.
+  - id: package_authority_review
+    status: pending
+    evidence: A second person has not independently resolved the two rollback package bytes through signed distribution metadata and rechecked their exact hashes.
+  - id: signing_fingerprint_review
+    status: pending
+    evidence: A second person has not revalidated the BorgBackup, OpenSSH, and rsync source signing fingerprints against independently trusted primary sources.
+  - id: source_signature_review
+    status: pending
+    evidence: An independent reviewer has not verified the escrowed rsync archive detached signature with the escrowed key and separately confirmed the full primary fingerprint.
+  - id: dependency_review
+    status: pending
+    evidence: BorgBackup, OpenSSH, and both native rsync executable dependency inventories have not completed independent runtime review in approved endpoint-equivalent environments.
+  - id: native_build_review
+    status: pending
+    evidence: A second person has not independently reproduced both endpoint-native builds from the escrowed signed source and compared executables, wrapper, hardening, features, and runtime libraries.
+  - id: consumer_compatibility_review
+    status: pending
+    evidence: Operations has not proved the native binaries against every real recovery consumer and endpoint library set or reviewed the exact selector-only forward-fix and rollback procedure.
+  - id: selector_compatibility_review
+    status: pending
+    evidence: The versioned selector has not run the real restricted SSH identity, forced command, manual archive, scheduled archive, retry, monitoring, reconciliation, and rollback paths.
+  - id: offline_copy_review
+    status: pending
+    evidence: Offline encrypted redundant independently accessible custody has not been demonstrated; a repository, GitHub artifact, or local staging directory does not qualify.
+  - id: independent_review
+    status: pending
+    evidence: Operations, security, recovery, and an independent reviewer have not accepted the V3 manifest, minimized report, signatures, builds, dependencies, custody, and recovery usability.
+  - id: isolated_restore
+    status: pending
+    evidence: No archive transferred by the exact V3 native binaries has completed an independently observed isolated PostgreSQL, Auth, application, signing, configuration, and connector recovery.
+  - id: operations_escrow
+    status: pending
+    evidence: Repository inventory verification cannot close BorgBackup, OpenSSH, or rsync operations escrow; every private custody, review, real-path, restore, rollout, and approval gate remains required.
+productionAccess: false
+productionMutation: false
+productionAuthority: false
+operationsEscrowComplete: false
+automaticFails:
+  - the accepted V1 or V2 policy or evidence differs from its immutable digest or the V3 extension differs from the exact reviewed contract
+  - the historical cross-suite rsync package candidate is treated as active eligible or equivalent to the native source-built candidate
+  - a required entry is absent extra duplicated case-colliding linked special mutable over-bound or digest-different
+  - a native executable shared wrapper source signature release key rollback package or retained canary report differs from the exact candidate plan and evidence
+  - a repository instruction differs from the clean exact Git commit or a private dependency inventory is missing malformed empty or represented as independently reviewed
+  - a minimized report contains private paths identities endpoints raw content or production authority
+  - inventory verification is presented as source signature native build package authority compatibility custody second-person restore activation or operations-escrow completion
+  - a production selector changes before V3 private inventory redundant custody independent review real forced-command manual and timer archive and isolated restore gates pass

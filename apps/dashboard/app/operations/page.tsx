@@ -1,5 +1,13 @@
 import { redirect } from "next/navigation";
-import { Activity, PlugZap, ShieldCheck, TriangleAlert } from "lucide-react";
+import {
+  Activity,
+  BadgeDollarSign,
+  GitFork,
+  PlugZap,
+  ShieldCheck,
+  TriangleAlert,
+} from "lucide-react";
+import { programmeDefinitionV2 } from "@starfiniti/contracts";
 import { MerchantShell } from "@/components/merchant-shell";
 import {
   canRetryConnectorEffect,
@@ -16,15 +24,21 @@ import {
 } from "@/lib/merchant-locale";
 import { hasEntitlement } from "@/lib/entitlements";
 import { getConnectorOperations } from "@/lib/server/connector-operations";
+import { getProgrammeCurrencyPolicies } from "@/lib/server/currency-policies";
 import { getEntitlementSnapshot } from "@/lib/server/entitlements";
+import { getProgrammeGroupSharingPolicy } from "@/lib/server/ecosystem";
 import { getMerchantProgrammeState } from "@/lib/server/programme";
+import { getServiceAccounts } from "@/lib/server/service-accounts";
 import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
 import { buildSupportDiagnostics } from "@/lib/support-diagnostics";
 import { RetryEffectForm } from "./retry-effect-form";
 import { ActivitySourceProvisioningForm } from "./activity-source-provisioning-form";
 import { ConnectorProvisioningForm } from "./connector-provisioning-form";
+import { CurrencyPolicyForm } from "./currency-policy-form";
 import { ReconciliationForm } from "./reconciliation-form";
+import { ProgrammeSharingForm } from "./programme-sharing-form";
 import { SupportDiagnosticsDownload } from "./support-diagnostics-download";
+import { ServiceAccountsPanel } from "./service-accounts-panel";
 
 function formatDate(value: string | null, locale: MerchantLocale): string {
   if (!value) return merchantText(locale, "Never");
@@ -53,16 +67,25 @@ export default async function OperationsPage({
     );
   }
   if (tenant.kind === "unassigned") redirect(merchantLocalePath("/", locale));
-  const [connections, programme, entitlements] = await Promise.all([
-    getConnectorOperations(tenant.context),
-    getMerchantProgrammeState(tenant.context),
-    getEntitlementSnapshot(tenant.context),
-  ]);
-  const programmeV2Enabled = hasEntitlement(entitlements, "programme.v2");
-  const mayRetry = canRetryConnectorEffect(tenant.context.membershipRole);
   const mayProvision = ["owner", "admin"].includes(
     tenant.context.membershipRole,
   );
+  const [connections, programme, entitlements, sharing, serviceAccounts] =
+    await Promise.all([
+      getConnectorOperations(tenant.context),
+      getMerchantProgrammeState(tenant.context),
+      getEntitlementSnapshot(tenant.context),
+      tenant.context.programmeGroup
+        ? getProgrammeGroupSharingPolicy(
+            tenant.context.programmeGroup.public_id,
+          )
+        : Promise.resolve({ kind: "not_configured" } as const),
+      mayProvision
+        ? getServiceAccounts(tenant.context.organization.public_id)
+        : Promise.resolve(null),
+    ]);
+  const programmeV2Enabled = hasEntitlement(entitlements, "programme.v2");
+  const mayRetry = canRetryConnectorEffect(tenant.context.membershipRole);
   const hasPublishedProgramme = programme.versions.some(
     (version) => version.status === "published",
   );
@@ -74,6 +97,18 @@ export default async function OperationsPage({
       "version" in version.configuration &&
       version.configuration.version === "2",
   );
+  const publishedV2Version = programme.versions.find(
+    (version) =>
+      version.status === "published" &&
+      programmeDefinitionV2.safeParse(version.configuration).success,
+  );
+  const publishedV2Definition = publishedV2Version
+    ? programmeDefinitionV2.safeParse(publishedV2Version.configuration)
+    : null;
+  const currencyPolicies = publishedV2Version
+    ? await getProgrammeCurrencyPolicies(publishedV2Version.id)
+    : ({ kind: "unavailable" } as const);
+  const ecosystemEnabled = hasEntitlement(entitlements, "ecosystem.api");
   const wooConnections = connections.filter(
     (connection) => connection.platform === "woocommerce",
   );
@@ -121,6 +156,64 @@ export default async function OperationsPage({
         </div>
 
         <SupportDiagnosticsDownload diagnostics={diagnostics} locale={locale} />
+
+        {sharing.kind === "ready" ? (
+          <ProgrammeSharingForm
+            key={`${sharing.policy.programmeGroupId}:${sharing.policy.revision}`}
+            mayConfigure={mayProvision}
+            policy={sharing.policy}
+          />
+        ) : (
+          <section className="customer-panel sharing-policy-unavailable">
+            <GitFork aria-hidden="true" />
+            <div>
+              <h2>Multi-store wallet scope unavailable</h2>
+              <p>
+                {sharing.kind === "not_configured"
+                  ? "Create and link the first active workspace before configuring programme sharing."
+                  : "The reviewed policy could not be verified. Existing wallet value and WooCommerce checkout are unaffected."}
+              </p>
+            </div>
+          </section>
+        )}
+
+        {publishedV2Version && publishedV2Definition?.success ? (
+          currencyPolicies.kind === "ready" ? (
+            <CurrencyPolicyForm
+              baseCurrencyCode={publishedV2Definition.data.currencyCode}
+              baseMinorUnitDigits={
+                publishedV2Definition.data.currencyMinorUnitDigits
+              }
+              configurationEnabled={ecosystemEnabled}
+              mayConfigure={mayProvision}
+              policies={currencyPolicies.value.policies}
+              programmeVersionId={publishedV2Version.id}
+              programmeVersionNumber={publishedV2Version.versionNumber}
+            />
+          ) : (
+            <section className="customer-panel sharing-policy-unavailable">
+              <BadgeDollarSign aria-hidden="true" />
+              <div>
+                <h2>Currency conversion evidence unavailable</h2>
+                <p>
+                  The minimized policy projection could not be verified.
+                  Existing balances, refunds, reconciliation, and checkout are
+                  unaffected.
+                </p>
+              </div>
+            </section>
+          )
+        ) : null}
+
+        <ServiceAccountsPanel
+          accounts={serviceAccounts?.serviceAccounts ?? []}
+          configurationEnabled={ecosystemEnabled}
+          mayConfigure={mayProvision}
+          programmeId={programme.programme?.id ?? null}
+          programmeName={programme.programme?.name ?? null}
+          workspaceId={tenant.context.workspace?.public_id ?? null}
+          workspaceName={tenant.context.workspace?.name ?? null}
+        />
 
         {wooConnections.length === 0 ? (
           mayProvision &&

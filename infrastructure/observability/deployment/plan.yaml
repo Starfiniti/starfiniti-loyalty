@@ -1,0 +1,133 @@
+schema: starfiniti.observability-deployment-plan.v1
+reviewedAt: 2026-08-31T14:20:00Z
+platform:
+  os: linux
+  architecture: amd64
+  centralRuntime: docker-compose
+  hostExporterRuntime: native-systemd
+  productionActivationApproved: false
+  receiverBindingApproved: false
+  liveTargetsApproved: false
+approach:
+  selected: digest-pinned-central-compose-native-textfile-agent
+  alternatives:
+    - id: all-native-distribution-packages
+      disposition: rejected
+      reason: Mixed distribution cadences weaken exact runtime reconstruction and widen host rollback dependencies.
+    - id: containerized-host-exporter
+      disposition: rejected
+      reason: Proxmox needs only aggregate textfile collection and must not gain Docker or container inspection authority.
+components:
+  - id: prometheus
+    repository: prom/prometheus
+    version: 3.14.0
+    tag: v3.14.0
+    tagObject: b0fe514e0dd48d35050bda4da9bd35aafcfd159b
+    commit: d7598b7141418fa35be2b5ec5d0fefb634199610
+    imageIndex: sha256:5ce7540c3c00ef4ab0c9d2c995c6a5b9c421f44b4a115d97a2c7af3b1c21cbb0
+    linuxAmd64Manifest: sha256:e906cef998316bbe319f98711e1b4d8613ad37e14b08ff831d7036e77b7464f9
+    release: https://github.com/prometheus/prometheus/releases/tag/v3.14.0
+    registry: https://hub.docker.com/v2/repositories/prom/prometheus/tags/v3.14.0
+    license: Apache-2.0
+  - id: alertmanager
+    repository: prom/alertmanager
+    version: 0.34.0
+    tag: v0.34.0
+    tagObject: dd880f3d3ce50aab11167f2f45ba16ce8d1ff73a
+    commit: 085f0ef7eb41da24cab8cd000f1345b6250f2edb
+    imageIndex: sha256:690c7b525f4367aa91f73e2f91c632206d32e97c6384bdbf2fb7a861b420340d
+    linuxAmd64Manifest: sha256:268d4bf0e4bc0fe6dbdef6a59ce81a2918c88458bf8edf7dd0572ad372a093e6
+    release: https://github.com/prometheus/alertmanager/releases/tag/v0.34.0
+    registry: https://hub.docker.com/v2/repositories/prom/alertmanager/tags/v0.34.0
+    license: Apache-2.0
+  - id: grafana
+    repository: grafana/grafana
+    version: 13.2.0
+    tag: v13.2.0
+    tagObject: 71fb24253535ba580fd0ded62430270afe8fd30e
+    commit: f681b1359f6a0b8ecb9f2c49a88ac72b75bde73b
+    imageIndex: sha256:3fd54ae1214669f8355f065ec9f6445d5279a3d77095ab048ca045685272429b
+    linuxAmd64Manifest: sha256:95a8098fb092130e111b0264a9be4d3a2bd5405e5dba88d4b8f1f630b389614e
+    release: https://github.com/grafana/grafana/releases/tag/v13.2.0
+    registry: https://hub.docker.com/v2/repositories/grafana/grafana/tags/13.2.0
+    license: AGPL-3.0-only
+  - id: blackbox-exporter
+    repository: prom/blackbox-exporter
+    version: 0.28.0
+    tag: v0.28.0
+    tagObject: null
+    commit: 5a059bee8d8ffa4e75947c5055fb0abeefc582e6
+    imageIndex: sha256:e753ff9f3fc458d02cca5eddab5a77e1c175eee484a8925ac7d524f04366c2fc
+    linuxAmd64Manifest: sha256:43027b43fb785b7c5adc53bd3b5dbc1a258270a2e8aff24f477b45c4e38dac68
+    release: https://github.com/prometheus/blackbox_exporter/releases/tag/v0.28.0
+    registry: https://hub.docker.com/v2/repositories/prom/blackbox-exporter/tags/v0.28.0
+    license: Apache-2.0
+  - id: postgres-exporter
+    repository: prometheuscommunity/postgres-exporter
+    version: 0.20.1
+    tag: v0.20.1
+    tagObject: eeda61f11c918c1b8c0d410b911e4b004669e57a
+    commit: 867fbcac31cd18c143e244190ea9168cca069827
+    imageIndex: sha256:ac5ec343104fae0e2d84a27bb8d69b38430a11910c5382cad85d478d2bab713e
+    linuxAmd64Manifest: sha256:4f3d82803c1f99ea5e767890de3557d2479ebbc711f63f2e04c663daa840057a
+    release: https://github.com/prometheus-community/postgres_exporter/releases/tag/v0.20.1
+    registry: https://hub.docker.com/v2/repositories/prometheuscommunity/postgres-exporter/tags/v0.20.1
+    license: Apache-2.0
+hostExporter:
+  id: node-exporter
+  repository: prometheus/node_exporter
+  version: 1.12.1
+  tag: v1.12.1
+  tagObject: fc12f2c0ca65e65f046a5583bbcaf996a578afb4
+  commit: 6044da783597cc3b57aef7580ddcdcff58a4ee99
+  archive: node_exporter-1.12.1.linux-amd64.tar.gz
+  archiveSize: 12168577
+  archiveSha256: b51d8a76aa2a9156a55d501aca6276fae09e262259a5e4e831d2c2222f084e63
+  download: https://github.com/prometheus/node_exporter/releases/download/v1.12.1/node_exporter-1.12.1.linux-amd64.tar.gz
+  release: https://github.com/prometheus/node_exporter/releases/tag/v1.12.1
+  license: Apache-2.0
+policy:
+  administrationBind: 127.0.0.1
+  publishedServices: [prometheus, alertmanager, grafana]
+  unpublishedServices: [blackbox-exporter, postgres-exporter]
+  centralServices:
+    [prometheus, alertmanager, grafana, blackbox-exporter, postgres-exporter]
+  centralNetworks: [monitoring-control, monitoring-egress]
+  requiredHardening:
+    [
+      read_only_root,
+      drop_all_capabilities,
+      no_new_privileges,
+      resource_limits,
+      bounded_logs,
+    ]
+  forbidden:
+    [
+      latest_tag,
+      privileged,
+      host_network,
+      host_pid,
+      host_ipc,
+      docker_socket,
+      embedded_receiver,
+      embedded_target,
+      embedded_credential,
+    ]
+  operatorPaths:
+    [
+      STARFINITI_ALERTMANAGER_CONFIG,
+      STARFINITI_GRAFANA_ADMIN_PASSWORD_FILE,
+      STARFINITI_POSTGRES_EXPORTER_CONFIG,
+      STARFINITI_PROMETHEUS_TARGETS_DIR,
+    ]
+  hostExporterCollectors: [textfile]
+  hostExporterTextfileDirectory: /var/lib/node_exporter/textfile_collector
+  productionAuthority: false
+canary:
+  environment: disposable-github-linux-amd64
+  publicIngress: false
+  productionRoute: false
+  realCredential: false
+  rawTargetRetention: false
+  exactVersionRequired: true
+  exactTeardownRequired: true

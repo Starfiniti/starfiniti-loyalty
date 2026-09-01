@@ -1,0 +1,103 @@
+schema: starfiniti.rsync-source-security-plan.v1
+status: candidate
+profile: privileged-recovery-transport
+architecture: amd64
+baseImages:
+  proxmox-host: debian:13-slim@sha256:d7e12182ce18b85b93007c1dedf31f2d29e01ccf3182cc4017c709b6259bc132
+  database-guest: ubuntu:24.04@sha256:33ceb71981b602c1a7443a53469e4dba065f7503eab3078a2d7a57a2ab987517
+sources:
+  release: https://rsync.samba.org/
+  download: https://rsync.samba.org/download.html
+  install: https://download.samba.org/pub/rsync/INSTALL.html
+  security: https://download.samba.org/pub/unpacked/rsync/rsync-web/security.html
+  restrictedWrapper: https://download.samba.org/pub/rsync/rrsync.1
+  debianAcl: https://sources.debian.org/src/acl/
+installed:
+  proxmox-host:
+    os: { id: debian, versionId: "13" }
+    package:
+      authority: debian-security
+      name: rsync
+      version: 3.4.1+ds1-5+deb13u3
+      url: https://security.debian.org/debian-security/pool/updates/main/r/rsync/rsync_3.4.1+ds1-5+deb13u3_amd64.deb
+      sha256: fee3fa3b5924cc7e0964603945e0edfd63b7f29fc3cd4cf7613ad970e05a55be
+    executablePath: /usr/bin/rsync
+    wrapperPath: /usr/bin/rrsync
+    nativeAclPackage: libacl1
+    nativeAclVersion: 2.3.2-2+b1
+  database-guest:
+    os: { id: ubuntu, versionId: "24.04" }
+    package:
+      authority: ubuntu-security
+      name: rsync
+      version: 3.2.7-1ubuntu1.5
+      url: https://security.ubuntu.com/ubuntu/pool/main/r/rsync/rsync_3.2.7-1ubuntu1.5_amd64.deb
+      sha256: 8f952895697d19a6f1caa71f17c7d4e8c1f1fb485eb824ffe3e4c77dd587b338
+    executablePath: /usr/bin/rsync
+    wrapperPath: /usr/bin/rrsync
+    nativeAclPackage: libacl1
+    nativeAclVersion: 2.3.2-1build1.1
+candidate:
+  authority: rsync-upstream
+  version: 3.5.0
+  protocol: 32
+  installRoot: /opt/starfiniti/rsync/3.5.0
+  executablePath: /opt/starfiniti/rsync/3.5.0/bin/rsync
+  wrapperPath: /opt/starfiniti/rsync/3.5.0/bin/rrsync
+  source:
+    url: https://download.samba.org/pub/rsync/rsync-3.5.0.tar.gz
+    sha256: c7ffd1ef653e99540f661e47cb00b7f9cad1ee6b972399b16f93d672656e0d33
+    bytes: 1892222
+    signatureUrl: https://download.samba.org/pub/rsync/rsync-3.5.0.tar.gz.asc
+    signatureSha256: d1991847892c02ba81834273f6bb9aa9107a30ba8bf5d16cc3e4560e4c2140d6
+    releaseKeyUrl: https://keys.openpgp.org/vks/v1/by-fingerprint/9FEF112DCE19A0DC7E882CB81BB24997A8535F6F
+    releaseKeySha256: 4129e90b0b62e915a453f071641f363e8b07d888c763be00f83128fd63447a6f
+    signingFingerprint: 9FEF112DCE19A0DC7E882CB81BB24997A8535F6F
+  sourceTree:
+    root: rsync-3.5.0
+    entries: 615
+    files: 597
+    links: 5
+    bytes: 6354197
+    manifestSha256: 7c70dfbc4a9c1cddd433a1eeca6b08b2fe244922aeb5b585addb9be776e4d38a
+  build:
+    hardening: debian-dpkg-buildflags-hardening-all
+    configure:
+      - --prefix=/opt/starfiniti/rsync/3.5.0
+      - --with-rrsync
+      - --with-included-popt
+      - --disable-debug
+    requiredCapabilities:
+      [ACLs, xattrs, iconv, openssl-crypto, xxhash, zstd, lz4]
+  endpoints:
+    - id: proxmox-host
+      role: receiver
+      executableSha256: 962b026fd37b68dce86a5601b24cddafc68db8d8c3b9d60c5b63c554fcee7b7c
+      wrapperSha256: 263d7bf7934442aa585e54152cf9ae8f93b01b1bd9719454deb4dc6f31b0bad8
+    - id: database-guest
+      role: sender
+      executableSha256: 5c754e6809d1ac79b81def92056059a31c12bb40fc476a81b5489ad318c7f188
+      wrapperSha256: 263d7bf7934442aa585e54152cf9ae8f93b01b1bd9719454deb4dc6f31b0bad8
+compatibility:
+  internalNetwork: true
+  publishedPorts: 0
+  module: recovery
+  port: 2873
+  requiredPairs:
+    [current-host-to-candidate-guest, candidate-host-to-candidate-guest]
+  files: 2
+  bytes: 21
+  maximumFiles: 4
+  maximumBytes: 1048576
+  maximumOutputBytes: 16384
+rollback:
+  preserveDistributionPackages: true
+  preserveDistributionExecutables: true
+  preserveNativeAclLibraries: true
+  globalLibraryUpgradeRequired: false
+  selectorOnly: true
+  operationsEscrowRequiredBeforeProduction: true
+  realForcedCommandRequiredBeforeProduction: true
+  manualAndTimerArchivesRequiredBeforeProduction: true
+  isolatedRestoreRequiredBeforeProduction: true
+  productionMutation: false

@@ -1,0 +1,266 @@
+schema: starfiniti.rewards-canary.v1
+status: in_progress
+observedAt: 2026-08-27T16:16:45Z
+currentProduction:
+  release: v0.1.11
+  applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
+candidate:
+  pullRequest: 57
+  commit: 785e9702abf139e7c61124d27c61441b6891c7bf
+  approvedRelease: false
+  operatorAccess: true
+  pilotStoreApproved: false
+  canaryApproved: false
+publicBaseline:
+  dashboardHealth: 200
+  login: 200
+  unsignedWooCommerceIngress: 401
+  canonicalDns: true
+score:
+  total: 90
+  target: 90
+  minimumCategoryRatio: 0.8
+  categories:
+    - id: correctness
+      weight: 20
+      score: 20
+      evidence: Every supported native and manual reward has one strict versioned definition, reservation boundary, fulfilment outcome, and compensating failure path.
+    - id: security
+      weight: 15
+      score: 15
+      evidence: PostgreSQL derives tenant, membership, programme, wallet, customer, reward, capacity, and operation authority behind explicit grants and RLS.
+    - id: ledger_reliability
+      weight: 15
+      score: 15
+      evidence: Atomic FIFO reservation, exact capture or compensation, immutable transition history, concurrency fences, and ambiguity retention preserve loyalty value.
+    - id: tests
+      weight: 15
+      score: 15
+      evidence: Exact candidate checks cover 958 workspace tests, 81 migration files, 68 pgTAP files, all concurrency probes, both images, and four WooCommerce runtimes.
+    - id: performance
+      weight: 10
+      score: 8
+      evidence: Bounded contracts, queue reads, retries, payloads, storefront budgets, and local checkout behavior pass; production latency and sustained observation remain pending.
+    - id: operability
+      weight: 10
+      score: 3
+      evidence: Disabled-first rollout, recovery, reconciliation, and rollback boundaries exist; release, pilot, production rehearsal, and observation evidence remain pending.
+    - id: maintainability
+      weight: 15
+      score: 14
+      evidence: Versioned contracts, additive migrations, independent validation, capability negotiation, regression tests, ADRs, runbooks, and living evidence remain synchronized.
+checks:
+  - id: exact_head_ci
+    status: passed
+    evidence: CI run 33091813679 and Security run 33091813624 passed at candidate commit 785e9702abf139e7c61124d27c61441b6891c7bf with all eleven PR checks green.
+  - id: migration_replay
+    status: passed
+    evidence: Exact candidate validation covers all 81 additive migrations and 68 pgTAP files; the focused M04 database run independently exercised reward publication and fulfilment boundaries.
+  - id: contract_reward_matrix
+    status: passed
+    evidence: Strict V2 contracts cover fixed discount, uncapped percentage, free shipping, free product, exclusive access, custom perk, restrictions, availability, and capacity.
+  - id: database_authority_matrix
+    status: passed
+    evidence: Explicit grants, RLS, live role checks, private privileged functions, independent publication validation, minimized reads, and immutable effects pass adversarial database tests.
+  - id: concurrency_matrix
+    status: passed
+    evidence: Independent sessions race the last global reward unit while exact retries converge, conflicts fail, and quantity, budget, wallet, reservation, and ledger totals reconcile.
+  - id: woocommerce_runtime_matrix
+    status: passed
+    evidence: Minimum and current WordPress and WooCommerce pass HPOS and legacy storage with native fixed, percentage, shipping, product, cancellation, and outage behavior.
+  - id: browser_accessibility
+    status: passed
+    evidence: Production components pass desktop, mobile, 320-pixel, keyboard, drawer focus, reduced-motion, invalid-submit, readable-text, target-size, overflow, and diagnostic review.
+  - id: privacy_minimization
+    status: passed
+    evidence: Merchant, customer, connector, queue, audit, and support projections omit reusable coupon material, raw payloads, private identities, actors, and ledger internals.
+  - id: checkout_independence
+    status: passed
+    evidence: The connector runtime proves native checkout and coupon behavior make zero synchronous Hub requests while reward commands remain bounded, leased, signed, and asynchronous.
+  - id: rollback_compatibility_repository
+    status: passed
+    evidence: V1 readers and validated legacy rewards coexist with V2; disabling expanded rewards blocks new value while accepted manual cases remain inspectable and resolvable.
+  - id: operations_documentation
+    status: passed
+    evidence: Programme, fulfilment, WooCommerce, deployment, backup, reconciliation, dead-letter, incident, and rollback documentation define deterministic operator boundaries.
+  - id: public_production_baseline
+    status: passed
+    evidence: Canonical DNS resolves; dashboard health and login return HTTP 200 with no-store or private caching, and unsigned WooCommerce ingestion returns HTTP 401.
+  - id: operator_access
+    status: passed
+    evidence: The approved read-only Proxmox route confirms application VM 970 and Supabase VM 971 are running without changing service, configuration, data, or value.
+  - id: approved_release
+    status: pending
+    evidence: Draft PR 57 is exact-head green but has not received explicit merge, immutable release, or deployment approval.
+  - id: approved_pilot_store
+    status: pending
+    evidence: One real WooCommerce store and bounded test customer, order, product, shipping, and refund fixtures require owner approval before value canary work.
+  - id: canary_approval
+    status: pending
+    evidence: No approved maintenance window, exact pilot scope, value ceiling, observation interval, stop condition, or rollback decision owner is recorded.
+  - id: pre_change_recovery_point
+    status: pending
+    evidence: A fresh verified PostgreSQL base, WAL position, incremental off-host archive, application configuration snapshot, and signing-reference inventory must precede deployment.
+  - id: production_value_baseline
+    status: pending
+    evidence: Read-only programme, customer, wallet, ledger, lot, reservation, capacity, native command, coupon, and manual queue aggregates require capture in the approved window.
+  - id: disabled_deployment
+    status: pending
+    evidence: Candidate images and additive migrations have not been deployed with every new reward capability disabled.
+  - id: migration_registration
+    status: pending
+    evidence: Production must record every candidate migration version and source digest exactly once before any reward canary is enabled.
+  - id: non_canary_disabled
+    status: pending
+    evidence: Confirm self-hosted local control remains available while unrelated organizations, workspaces, programmes, and connectors receive no expanded reward capability.
+  - id: native_capability_preflight
+    status: pending
+    evidence: One exact-programme WooCommerce connection must advertise the reviewed V2 issue and cancellation capabilities before native reward publication or reservation.
+  - id: merchant_workflow_canary
+    status: pending
+    evidence: An approved owner must author, simulate, review, save, publish, and inspect supported rewards through the strict persisted contract and immutable version boundary.
+  - id: customer_reward_canary
+    status: pending
+    evidence: One approved linked member must see exact affordability, restrictions, availability, progress, confirmation, reservation, fulfilment, and history states without selecting authority.
+  - id: historical_version_canary
+    status: pending
+    evidence: Existing V1 programme evaluation and validated legacy fixed, percentage, and shipping rewards must retain identical outcomes throughout disabled and enabled rollout.
+  - id: fixed_discount_canary
+    status: pending
+    evidence: Reserve, issue, capture, redeem, cancel, retry, and reconcile one restricted fixed-discount benefit through the native WooCommerce outcome.
+  - id: percentage_discount_canary
+    status: pending
+    evidence: Reserve, issue, capture, redeem, cancel, retry, and reconcile one uncapped 0.01-to-100-percent benefit while every maximum-cap attempt fails closed.
+  - id: free_shipping_canary
+    status: pending
+    evidence: Reserve, issue, capture, redeem, cancel, retry, and reconcile one eligible native free-shipping benefit without changing checkout independence.
+  - id: free_product_canary
+    status: pending
+    evidence: Reserve, issue, capture, redeem, cancel, retry, and reconcile one exact-product and bounded-quantity native benefit using WooCommerce core.
+  - id: restriction_matrix_canary
+    status: pending
+    evidence: Minimum spend, product, category, exclusion, sale-item, tier, validity, and stacking decisions must match simulator, persisted definition, connector command, and native outcome.
+  - id: availability_capacity_canary
+    status: pending
+    evidence: Date boundaries, tier eligibility, global quantity, and points budget must accept the last valid claim, reject the next, and reconcile without partial allocation.
+  - id: per_customer_limit_canary
+    status: pending
+    evidence: Concurrent and replayed claims for one approved member must create one allowed effect and reject every claim beyond the persisted per-member limit.
+  - id: native_cancellation_expiry
+    status: pending
+    evidence: Native cancellation and expiry must preserve immutable command history, compensate only the matching reservation, and never guess an ambiguous provider outcome.
+  - id: manual_claim_canary
+    status: pending
+    evidence: One exclusive-access or custom-perk claim must atomically reserve points and capacity, create one tenant-scoped case, and snapshot exact fulfilment instructions.
+  - id: manual_fulfilment_canary
+    status: pending
+    evidence: An authorized operator must start and definitively fulfil one case exactly once, capture the reservation, and retain a minimized opaque delivery reference.
+  - id: manual_rejection_compensation
+    status: pending
+    evidence: Definitive rejection must append one failure transition and one exact compensating release while returning points and limited capacity once.
+  - id: ambiguous_native_recovery
+    status: pending
+    evidence: A controlled ambiguous connector outcome must retain points and capacity, stop bounded retries for review, and reconcile before any capture, release, or reuse.
+  - id: connector_outage_checkout
+    status: pending
+    evidence: Stop or isolate connector command delivery during native checkout, then recover accepted work without duplicate effect while checkout remains successful.
+  - id: worker_outage_checkout
+    status: pending
+    evidence: Stop reward workers during native checkout, expire leases, restart processing, and prove one recovered effect with no checkout or ledger difference.
+  - id: cross_tenant_denial
+    status: pending
+    evidence: Unrelated organization, programme, customer, wallet, reward, reservation, case, operation, and connector selectors must reveal nothing and create no effect.
+  - id: ledger_reconciliation
+    status: pending
+    evidence: Every canary reservation, capture, release, cancellation, expiry, and manual decision must reconcile to immutable transactions, lots, balances, and original attribution.
+  - id: coupon_reconciliation
+    status: pending
+    evidence: Native commands, WooCommerce benefits, captures, cancellations, redemptions, expiry, retries, and ambiguous states must reconcile with zero unexplained difference.
+  - id: capacity_reconciliation
+    status: pending
+    evidence: Global quantity, points budget, per-member usage, accepted reservations, fulfilled value, rejected value, and released capacity must reconcile exactly.
+  - id: queue_reconciliation
+    status: pending
+    evidence: No native command or manual case may be lost, duplicated, exhausted invisibly, leased indefinitely, or left without one explicit recoverable state.
+  - id: disable_accepted_work_continuity
+    status: pending
+    evidence: Disabling expanded rewards must block new claims while every accepted native reservation and manual case remains visible, recoverable, fulfillable, or compensable.
+  - id: rollback_rehearsal
+    status: pending
+    evidence: Disable the pilot capability, drain or hold accepted work, restore prior images, and retain additive history, customer access, native value, reservations, and audit evidence.
+  - id: observation_window
+    status: pending
+    evidence: Observe the bounded canary after rollback rehearsal and record latency, errors, retries, ambiguity, queues, checkout, privacy, capacity, and reconciliation health.
+  - id: final_reconciliation
+    status: pending
+    evidence: Confirm zero unexplained programme, reward, customer, ledger, lot, reservation, capacity, command, coupon, manual case, queue, checkout, tenant, or privacy difference.
+artifacts:
+  - id: read_only_baseline
+    status: verified
+    path: docs/plan/evidence/M04/production/rewards-read-only-baseline-2026-08-27.json
+    sha256: 5780acc62fdb250040ab8b76a06802aa4604d2023b60a336ee263c70eb0dbe60
+  - id: release_inventory
+    status: pending
+    path: null
+    sha256: null
+  - id: approval_record
+    status: pending
+    path: null
+    sha256: null
+  - id: recovery_point
+    status: pending
+    path: null
+    sha256: null
+  - id: production_baseline
+    status: pending
+    path: null
+    sha256: null
+  - id: canary_journal
+    status: pending
+    path: null
+    sha256: null
+  - id: reconciliation_report
+    status: pending
+    path: null
+    sha256: null
+  - id: rollback_report
+    status: pending
+    path: null
+    sha256: null
+  - id: observation_report
+    status: pending
+    path: null
+    sha256: null
+automaticFails:
+  - id: unsupported_reward
+    rule: an authorable reward has no executable native or audited manual fulfilment state machine
+  - id: unsupported_stored_value
+    rule: store credit gift card cash redemption cash-like value or maximum-capped percentage reward becomes publishable
+  - id: duplicate_business_effect
+    rule: duplicate replay delayed delivery or concurrent processing creates another native or manual business effect
+  - id: capacity_oversubscription
+    rule: global quantity points budget wallet funds or per-member capacity oversubscribes or partially allocates
+  - id: member_limit_bypass
+    rule: a per-customer limit can be bypassed by replay concurrency identity alias or connector ordering
+  - id: ambiguous_native_outcome
+    rule: an ambiguous native outcome releases captures reissues or reuses points or capacity before reconciliation
+  - id: duplicate_compensation
+    rule: definitive rejection cancellation or expiry loses original reservation attribution or compensates more than once
+  - id: untrusted_authority
+    rule: browser input Auth claims email domain or connector metadata grants tenant customer wallet reward or value authority
+  - id: cross_tenant_exposure
+    rule: unrelated tenant programme customer reward reservation case operation connector or evidence becomes visible or mutable
+  - id: checkout_dependency
+    rule: WooCommerce checkout synchronously depends on the Hub worker entitlement provider or reward command outcome
+  - id: accepted_work_stranded
+    rule: disabling expanded rewards hides or strands an accepted native reservation or manual fulfilment case
+  - id: sensitive_evidence
+    rule: reusable signing material coupon plaintext raw payload personal data or private ledger metadata enters logs support output or evidence
+  - id: unexplained_reconciliation
+    rule: any ledger balance lot reservation capacity command coupon case queue checkout tenancy or privacy reconciliation has an unexplained difference
+  - id: canary_scope_breach
+    rule: production enables expanded rewards outside the exact approved pilot scope value ceiling or observation window
+  - id: missing_production_evidence
+    rule: approved release pilot store recovery point canary rollback observation or final reconciliation evidence is absent
+  - id: score_or_critical_finding
+    rule: module score or any category floor is missed or a critical security tenancy privacy ledger recovery accessibility data-loss or immutable-history finding remains

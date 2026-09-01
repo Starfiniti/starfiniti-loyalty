@@ -1,0 +1,41 @@
+{
+  "schema": "starfiniti.rsync-source-security-canary.v1",
+  "status": "passed",
+  "candidateVersion": "3.5.0",
+  "protocol": 32,
+  "pairs": 2,
+  "files": 2,
+  "bytes": 21,
+  "internalNetwork": true,
+  "publishedPorts": 0,
+  "sourceSignatureVerified": true,
+  "safeSourceTreeVerified": true,
+  "confinementVerified": true,
+  "forcedCommandNegative": true,
+  "distributionPathsPreserved": true,
+  "globalLibraryUpgradeRequired": false,
+  "endpoints": [
+    {
+      "id": "proxmox-host",
+      "currentVersion": "3.4.1+ds1-5+deb13u3",
+      "currentExecutableSha256": "d3b6ea55b3ae83d3ff683f3375ef7f902147a8a572099b8d5d4b7a4a553f156a",
+      "currentWrapperSha256": "d4739b6f82a93894aeb027dc55b02ff655eca7b8dd06accd733eada5865585f1",
+      "candidateExecutableSha256": "962b026fd37b68dce86a5601b24cddafc68db8d8c3b9d60c5b63c554fcee7b7c",
+      "candidateWrapperSha256": "263d7bf7934442aa585e54152cf9ae8f93b01b1bd9719454deb4dc6f31b0bad8",
+      "nativeAclVersion": "2.3.2-2+b1"
+    },
+    {
+      "id": "database-guest",
+      "currentVersion": "3.2.7-1ubuntu1.5",
+      "currentExecutableSha256": "6b4fb867cb49d0332b72b234656311c807ab68b0537905fda7a3e7481a139f16",
+      "currentWrapperSha256": "cb46c1bf89c25e1193eb16e9201405bc0e39d2c2d03bff42d3cee86ef15e3050",
+      "candidateExecutableSha256": "5c754e6809d1ac79b81def92056059a31c12bb40fc476a81b5489ad318c7f188",
+      "candidateWrapperSha256": "263d7bf7934442aa585e54152cf9ae8f93b01b1bd9719454deb4dc6f31b0bad8",
+      "nativeAclVersion": "2.3.2-1build1.1"
+    }
+  ],
+  "productionMutation": false,
+  "observedAt": "2026-08-29T10:37:33.438Z",
+  "planSha256": "46adc671b15fddead44c014edb334dc815ef14ee4d17bcdc3f18dd2ffb9c120f",
+  "teardown": "passed"
+}

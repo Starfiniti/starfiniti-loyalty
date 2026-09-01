@@ -1,6 +1,6 @@
 # Starfiniti Loyalty Enterprise Roadmap
 
-Last reviewed: 2026-08-13
+Last reviewed: 2026-08-31
 
 This is the active delivery plan after production `v0.1.10`. It supersedes the broad unfinished phases in `docs/product/MASTER_PLAN.md`; completed phase evidence remains historical truth in `docs/plan/TASKS.yaml`.
 
@@ -130,10 +130,16 @@ M01 may wait for real-store access while M02 proceeds. Later modules remain sequ
 ### M15 — Enterprise hardening and GA
 
 - Measure capacity; inject worker/network/database/provider/retry failures; complete code/dependency/container/secret/licence/SBOM/DAST/infra scans; resolve independent penetration findings; prove clean-room recovery/RPO/RTO; complete dashboards/alerts/runbooks/on-call/incidents; run a 30-day reconciled canary; verify product claims and obtain owner GA approval.
+- ADR-0112 supplies a production-disabled digest-pinned central monitoring
+  candidate plus a least-authority native textfile agent and disposable Linux
+  canary. It does not satisfy approved-host, live-source, receiver, dead-man,
+  exercise, reconciliation, or production-activation gates.
 
 ### M16 — Continuous self-improvement
 
 - Monthly metrics/error/support/reconciliation/fraud/campaign/churn/usability/performance/security/billing review; convert recurring failures into tests/validators/monitors/runbooks/rules; review provider changes; rescore material changes; run quarterly recovery/isolation/privacy/SCIM/incident exercises; maintain an evidence-ranked backlog and ADR history.
+- ADR-0107 now provides one cutoff-bound engineering classification for all thirteen provider/platform/recovery entries. It does not satisfy the elapsed monthly review, candidate acceptance, independent review, owner approval, deployment, or reconciliation gates; M16 remains 77/100.
+- ADR-0113 makes every future monthly, quarterly, reconciliation, score, and approval V1 artifact a closed minimized schema. Unknown members, boundedness failures, duplicates, machine-detectable personal or credential material, and control or bidirectional text fail closed; private inputs remain environment-owned and extension requires a superseding version.
 
 ## Compatibility and authority boundaries
 
@@ -145,4 +151,6 @@ M01 may wait for real-store access while M02 proceeds. Later modules remain sequ
 
 ## External owner inputs
 
-Only these inputs may remain for their production gates: an approved real WooCommerce store, Stripe and Klaviyo test/production credentials, an enterprise IdP test tenant, independent penetration testing, production prices/Price IDs, and explicit GA approval. They do not block repository implementation of the next safe module.
+[`OWNER_GATES.md`](OWNER_GATES.md) is the generated, priority-ordered handoff for every remaining owner, approved-environment, credential, independent-review, maintenance, elapsed-canary, and GA gate. It is derived from the authoritative fourteen-item [`IMPROVEMENT_BACKLOG.yaml`](IMPROVEMENT_BACKLOG.yaml), validated by `npm run owner-gates:validate`, and distinguishes current evidence artifacts from evidence that can only be created after the external action occurs.
+
+Credentials, receiver destinations, private inventories, customer data, and provider payloads remain outside Git. An owner approval is scoped to one gate and does not imply merge, release, deployment, reboot, destructive exercise, canary, tenant, ledger, database, billing, or GA authority. External inputs do not block repository implementation of the next safe module.

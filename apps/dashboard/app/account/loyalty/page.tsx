@@ -1,4 +1,6 @@
 import Link from "next/link";
+import Image from "next/image";
+import { RefreshCw, ShieldAlert } from "lucide-react";
 import { redirect } from "next/navigation";
 import { signOut } from "@/app/actions";
 import {
@@ -9,10 +11,17 @@ import {
 import {
   CUSTOMER_COPY,
   customerLocalePath,
-  resolveCustomerLocale,
   type CustomerLocale,
 } from "@/lib/customer-locale";
 import { customerExportReauthenticationPath } from "@/lib/customer-export";
+import { isSelfServiceRewardKind } from "@/lib/customer-rewards";
+import { selectCustomerAccount } from "@/lib/customer-experience-presentation";
+import { TierProgress } from "@/components/tier-progress";
+import { CustomerReferralPanel } from "./customer-referral-panel";
+import { CustomerLoyaltyExperience } from "./customer-loyalty-experience";
+import { CustomerLinkedStores } from "./customer-linked-stores";
+import { getCustomerLinksState } from "@/lib/server/customer-links";
+import starfinitiIcon from "../../../../../docs/design/prototype-source/assets/images/starfiniti-icon.png";
 
 export default async function CustomerLoyaltyPage({
   searchParams,
@@ -21,25 +30,65 @@ export default async function CustomerLoyaltyPage({
     linked?: string;
     redeemed?: string;
     redemption?: string;
-    lang?: string;
+    account?: string;
   }>;
 }) {
-  const [{ linked, redeemed, redemption, lang }, state] = await Promise.all([
+  const [query, state, customerLinks] = await Promise.all([
     searchParams,
     getCustomerLoyaltyAccounts(),
+    getCustomerLinksState(),
   ]);
+  const { linked, redeemed, redemption } = query;
   if (state.kind === "unauthenticated") {
-    const locale = resolveCustomerLocale(lang);
-    redirect(customerLocalePath("/login?next=%2Faccount%2Floyalty", locale));
+    redirect(customerLocalePath("/login?next=%2Faccount%2Floyalty", "en"));
   }
-  const locale = resolveCustomerLocale(lang);
+  if (state.kind === "unavailable") return <CustomerExperienceUnavailable />;
+  const locale: CustomerLocale = "en";
   const copy = CUSTOMER_COPY[locale];
+  const selectedAccount = selectCustomerAccount(state.accounts, query.account);
+  const messages = [
+    linked === "1"
+      ? ({ kind: "success", text: copy.connected } as const)
+      : null,
+    redeemed === "1"
+      ? ({ kind: "success", text: copy.rewardReserved } as const)
+      : null,
+    redemption
+      ? ({
+          kind: "error",
+          text: redemptionMessage(redemption, locale),
+        } as const)
+      : null,
+  ].filter((message) => message !== null);
+
+  if (selectedAccount?.enhancements_enabled) {
+    return (
+      <CustomerLoyaltyExperience
+        account={selectedAccount}
+        accounts={state.accounts}
+        customerLinks={
+          customerLinks.kind === "ready"
+            ? customerLinks
+            : { kind: "unavailable" }
+        }
+        messages={messages}
+      />
+    );
+  }
 
   return (
     <main className="member-page" id="main-content" tabIndex={-1}>
       <header className="member-topbar">
         <Link className="member-brand" href="/account/loyalty">
-          <span aria-hidden="true">SF</span>
+          <span aria-hidden="true">
+            <Image
+              alt=""
+              height={34}
+              priority
+              src={starfinitiIcon}
+              width={34}
+            />
+          </span>
           Starfiniti Loyalty
         </Link>
         <form action={signOut}>
@@ -69,20 +118,39 @@ export default async function CustomerLoyaltyPage({
           <h1>{copy.accountTitle}</h1>
           <p>{copy.accountIntro}</p>
         </div>
-        {state.accounts.length === 0 ? (
+        {!selectedAccount ? (
           <section className="member-empty">
             <h2>{copy.noAccountTitle}</h2>
             <p>{copy.noAccountBody}</p>
           </section>
         ) : (
           <div className="member-accounts">
-            {state.accounts.map((account) => (
-              <AccountCard
-                account={account}
-                key={account.account_id}
-                locale={locale}
-              />
-            ))}
+            {state.accounts.length > 1 ? (
+              <nav
+                className="member-core-account-switcher"
+                aria-label="Store accounts"
+              >
+                {state.accounts.map((account) => (
+                  <Link
+                    aria-current={
+                      account.account_id === selectedAccount.account_id
+                    }
+                    href={`/account/loyalty?account=${account.account_id}`}
+                    key={account.account_id}
+                  >
+                    {account.store_name}
+                  </Link>
+                ))}
+              </nav>
+            ) : null}
+            <AccountCard account={selectedAccount} locale={locale} />
+            <CustomerLinkedStores
+              state={
+                customerLinks.kind === "ready"
+                  ? customerLinks
+                  : { kind: "unavailable" }
+              }
+            />
           </div>
         )}
         {state.accounts.length > 0 ? (
@@ -97,6 +165,28 @@ export default async function CustomerLoyaltyPage({
             </Link>
           </section>
         ) : null}
+      </section>
+    </main>
+  );
+}
+
+function CustomerExperienceUnavailable() {
+  return (
+    <main className="member-recovery" id="main-content" tabIndex={-1}>
+      <section role="alert">
+        <span aria-hidden="true">
+          <ShieldAlert />
+        </span>
+        <p>LOYALTY ACCOUNT</p>
+        <h1>Your loyalty details are temporarily unavailable</h1>
+        <p>
+          We could not verify your current balance safely. No customer, store,
+          or programme details are shown from an incomplete response. Your
+          points and account history are not changed.
+        </p>
+        <Link href="/account/loyalty">
+          <RefreshCw aria-hidden="true" /> Try again
+        </Link>
       </section>
     </main>
   );
@@ -146,6 +236,21 @@ function AccountCard({
           {formatDate(account.next_expiry_at, locale)}.
         </p>
       ) : null}
+      {account.tier_progress ? (
+        <TierProgress
+          availablePoints={account.available_points}
+          mode="member"
+          nextExpiryAt={account.next_expiry_at}
+          nextExpiryPoints={account.next_expiry_points}
+          progress={account.tier_progress}
+        />
+      ) : null}
+      {account.referral ? (
+        <CustomerReferralPanel
+          experience={account.referral}
+          operationId={crypto.randomUUID()}
+        />
+      ) : null}
       <div className="member-columns">
         <section>
           <h3>{copy.availableRewards}</h3>
@@ -158,11 +263,12 @@ function AccountCard({
                   <div>
                     <strong>{reward.name}</strong>
                     <span>
-                      {formatPoints(reward.costPoints, locale)}{" "}
-                      {locale === "sl-SI" ? "točk" : "points"}
+                      {formatPoints(reward.costPoints, locale)} points
                     </span>
                   </div>
-                  {ready && reward.affordable && isNativeReward(reward.kind) ? (
+                  {ready &&
+                  reward.affordable &&
+                  isSelfServiceRewardKind(reward.kind) ? (
                     <Link
                       className="member-redeem"
                       href={customerLocalePath(
@@ -260,14 +366,9 @@ function activityLabel(item: CustomerActivity, locale: CustomerLocale): string {
     expire: copy.pointsExpired,
     refund_reversal: copy.refundAdjustment,
     manual_adjustment: copy.accountAdjustment,
+    opening_balance: "Imported opening balance",
   };
   return labels[item.kind] ?? copy.loyaltyActivity;
-}
-
-function isNativeReward(kind: string): boolean {
-  return ["fixed_discount", "percentage_discount", "free_shipping"].includes(
-    kind,
-  );
 }
 
 function redemptionMessage(status: string, locale: CustomerLocale): string {

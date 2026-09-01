@@ -1,20 +1,14 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { MerchantShell } from "@/components/merchant-shell";
-import {
-  merchantLocalePath,
-  merchantText,
-  resolveMerchantLocale,
-} from "@/lib/merchant-locale";
+import { merchantLocalePath, merchantText } from "@/lib/merchant-locale";
 import { getMerchantExperienceTheme } from "@/lib/server/experience-theme";
 import { getMerchantProgrammeState } from "@/lib/server/programme";
 import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
 import { ExperienceEditor } from "./experience-editor";
 
-export default async function ExperiencePage({
-  searchParams,
-}: Readonly<{ searchParams: Promise<{ lang?: string | string[] }> }>) {
-  const locale = resolveMerchantLocale((await searchParams).lang);
+export default async function ExperiencePage() {
+  const locale = "en" as const;
   const t = (source: string) => merchantText(locale, source);
   const tenant = await getAuthenticatedTenantState();
   if (tenant.kind === "unauthenticated") {
@@ -84,16 +78,13 @@ export default async function ExperiencePage({
         {theme.scopeReady && context.workspace && context.programmeGroup ? (
           <ExperienceEditor
             canEdit={canEdit}
+            copyOperationId={crypto.randomUUID()}
+            initialCopy={theme.copy}
             initialTheme={theme.definition}
-            initialTranslations={theme.translations}
             merchantLocale={locale}
             operationId={crypto.randomUUID()}
             programmeGroupId={context.programmeGroup.public_id}
             workspaceId={context.workspace.public_id}
-            translationOperationIds={{
-              en: crypto.randomUUID(),
-              "sl-SI": crypto.randomUUID(),
-            }}
           />
         ) : (
           <section className="customer-panel empty-state">

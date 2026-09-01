@@ -1,0 +1,121 @@
+schema: starfiniti.next-runtime-review.v1
+reviewedAt: 2026-08-29
+owner: engineering
+officialSources:
+  release:
+    url: https://github.com/vercel/next.js/releases/tag/v16.3.3
+    version: 16.3.3
+    publishedAt: 2026-08-25T16:17:10Z
+  advisories:
+    - id: GHSA-2xp9-vwfh-vxw4
+      cve: null
+      url: https://github.com/vercel/next.js/security/advisories/GHSA-2xp9-vwfh-vxw4
+      severity: critical
+      vulnerableRange: <16.3.3
+      patchedVersion: 16.3.3
+      precondition: AVIF input reaches the Next.js Image Optimization API
+    - id: GHSA-p293-qw3h-jr36
+      cve: CVE-2026-75604
+      url: https://github.com/vercel/next.js/security/advisories/GHSA-p293-qw3h-jr36
+      severity: critical
+      vulnerableRange: ">=16.0 <16.3.3"
+      patchedVersion: 16.3.3
+      precondition: Windows-hosted Pages or App Router server without Cache Components
+affected:
+  production:
+    release: v0.1.11
+    commit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
+    nextVersion: 16.3.0
+    platform: linux/amd64
+    imageOptimizationDisabled: false
+    status: affected-until-approved-release-deployment
+  candidateBeforeReview:
+    branch: codex/enterprise-roadmap-integration
+    commit: a71a84b6d35438043ce3a0f7db86cf2231c9b3c5
+    nextVersion: 16.3.0
+    imageOptimizationDisabled: true
+packages:
+  previous:
+    next:
+      version: 16.3.0
+      tarball: https://registry.npmjs.org/next/-/next-16.3.0.tgz
+      integrity: sha512-NEdGOzH+08eTXMUp9UYkA99Nhi5N6Thrhc1jgFOQgfgnGK/dA2hRwBpXep+exdFQrnwlRf/3Wixyp8lLBUpE2A==
+      shasum: 03ed9eaf21bac38ceab5aa6f3b03f0fff587b42b
+    eslintConfigNext:
+      version: 16.3.0
+      tarball: https://registry.npmjs.org/eslint-config-next/-/eslint-config-next-16.3.0.tgz
+      integrity: sha512-lPrf1kHsMJEZqO0uXkNB400c5MGrhrTk3BNX7P0ol4gt61+iUlQfjy9TyIOEA9eOXrf+5+mYbT/JsY8+zqUByQ==
+      shasum: b6e7cdceb55d98577837937898d1be71e9d17273
+  candidate:
+    next:
+      version: 16.3.3
+      tarball: https://registry.npmjs.org/next/-/next-16.3.3.tgz
+      integrity: sha512-tuRTx1nQ/yVw83cwJBo9F+njGUgMn3UHQycreWHB8XsStvvAh1AthbI8/4IpKnFaF58F+iSiHejYOlMQ/eq83g==
+      shasum: dc062aa903c34e2af41a0ffa2ad99c9369447d07
+    eslintConfigNext:
+      version: 16.3.3
+      tarball: https://registry.npmjs.org/eslint-config-next/-/eslint-config-next-16.3.3.tgz
+      integrity: sha512-teqtsR26tnlfXFHfVLTM/4tzEzU8DMu6GS1sddZzhfGzgd2f2ofbgDUcsk6cssSCzX6Tk6fmWifJcdANSdPJrw==
+      shasum: bc1d635194f4d81ef4ef9338547b20a432022e2b
+    lockPackages:
+      - id: "@next/env"
+        version: 16.3.3
+        integrity: sha512-U2eYQRwXj+dsqxV79zFqExDdatnNY/ZWc2nsJU1p/OgT7fd3dXwlF6OjYaFQCfMoeTA19PWq+wVmYgimVA+V+g==
+      - id: "@next/eslint-plugin-next"
+        version: 16.3.3
+        integrity: sha512-pbEh30vvjKpDoTAmo1v3q2uM4JUi8QaEBpbmjWvGfoec2jLghy/WNtvzAT0bk+Ik9oz6etjt4YjXEk4BQnicCw==
+      - id: "@next/swc-darwin-arm64"
+        version: 16.3.3
+        integrity: sha512-8Hiv32QJPwdV6KYJ8meR9SBA061tQqnIKTJDocvOXlEQqib0xMFpzArosuffFUUc0sslbh7QQ8a3Yey1QV8EIw==
+      - id: "@next/swc-darwin-x64"
+        version: 16.3.3
+        integrity: sha512-A1lgKgwVchRYmSe467zdwhxT9040dd8lH+o65sL5Jet8fjB4kegw/rDyPIpYVRb6jAqwXFOJpjIXJLxQKLiE3A==
+      - id: "@next/swc-linux-arm64-gnu"
+        version: 16.3.3
+        integrity: sha512-bf0FIssMFueU2dm7vQEWWxk0c8UjKTdW0yzuh0sQsD8pf1+KCLDdaqhYZNMYGmXwEOiHAUzgBKudovIlcvvBjg==
+      - id: "@next/swc-linux-arm64-musl"
+        version: 16.3.3
+        integrity: sha512-W7viwCk9JY/cAkdz/A273rd5bb3RgT/IHwR7Upv90tunjBWNtAAhGhoecHh+teRNRSinuAFmE+l7fwZ4YKkrXg==
+      - id: "@next/swc-linux-x64-gnu"
+        version: 16.3.3
+        integrity: sha512-0W46zw1N3ODpI6n0GeivHvvob1pooozgZVqy65k0mh4/7vr+FbY9+WpHzNVXjHipJf/A3FDheBG19H1s5A25rA==
+      - id: "@next/swc-linux-x64-musl"
+        version: 16.3.3
+        integrity: sha512-H4mBso8ZTMBPtdT0PN0pBx2ayTvQuTuvS6qT13d77yVFJXAPCxkyIhLTmdMaGTJs0krQYI/qpzdHijCeihXhbg==
+      - id: "@next/swc-win32-arm64-msvc"
+        version: 16.3.3
+        integrity: sha512-cTMUJpcEGmeywofCUfhR+rSsoE33+rVPnPEYNTNdLNlsOeEg/vktOsKUSTb28vUGqD2jkm4Zaskcwn7OCI6FQg==
+      - id: "@next/swc-win32-x64-msvc"
+        version: 16.3.3
+        integrity: sha512-2VR4cTBzHXaBjnGsuH6GyJjENzQOmHeAh11uY1iUhjm3j5dEUrVJuUj+VL78jaGi/Dik8xS76zEj18BsFhlVZQ==
+      - id: "@swc/helpers"
+        version: 0.5.23
+        integrity: sha512-5lSsMOTXURePglDfvuAQUqkGek9Hg2kksOYay2m0+XR++b2NWYL/4sWyuvVBIs8oKnJaxkdi9whaL/sqN13afw==
+    imageOptimizationDisabled: true
+decision:
+  disposition: update-exact-patch-and-rebuild
+  breakingChangeIdentified: false
+  requiredEvidence:
+    - exact-package-lock-provenance
+    - validator-self-test
+    - dashboard-tests-types-lint-and-build
+    - repository-and-production-audit
+    - image-build-sbom-and-trivy
+    - codeql-and-dast
+    - database-and-woocommerce-regression
+  rollback: Disable or withdraw the candidate and forward-fix; never restore a deployable artifact to Next.js 16.3.0.
+ciEvidence:
+  path: docs/plan/evidence/M16/runs/next-runtime-c3b2954-2026-08-29T155152Z.json
+  sha256: d90150e1ec818f1fa092df6cf6a91137c1333cf5b97b4eafb4bcfe3b4ec205ca
+  implementationCommit: c3b29542035772ddcbc48d92e2b159ac605dd80f
+  analysisMergeCommit: 4722ec6f5ca5ead74d4f80587150135c6b789e8e
+  ciRunId: 33261152926
+  securityRunId: 33261152934
+  conclusion: passed
+authority:
+  productionAccess: false
+  mergeApproved: false
+  releaseApproved: false
+  deploymentApproved: false
+  productionReconciled: false
+  rollbackToVulnerableVersionAllowed: false

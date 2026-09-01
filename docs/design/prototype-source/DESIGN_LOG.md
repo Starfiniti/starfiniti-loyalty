@@ -80,6 +80,14 @@ rosy_wallet (customer redemption → merchant profile timeline).
 - Search, notifications, date-range are visual affordances only.
 - Charts are static SVG (values consistent with seeded numbers).
 
+## Vendored runtime security patch (29 Aug 2026)
+
+- `deck-stage.js` and generated `support.js` now authenticate both the exact
+  parent/self `WindowProxy` and its load-time origin before reading host/editor
+  `message` data. Missing parent referrer evidence fails closed. ADR-0097 and
+  the M15 security validator deliberately preserve this local patch when the
+  upstream design runtime is refreshed.
+
 ## Final QA pass (10 Aug 2026)
 - All 18 routes loaded individually: zero console errors.
 - Verifier-checked: overview (desktop + tablet), customer profile (adjustment flow), earning (full-screen create flow), customers (table + mobile nav patch).

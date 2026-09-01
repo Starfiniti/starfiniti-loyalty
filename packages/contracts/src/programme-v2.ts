@@ -4,6 +4,10 @@ import {
   programmeRewardDefinitionV1,
   programmeTierDefinitionV1,
 } from "./programme";
+import { programmeRewardDefinitionV2 } from "./reward-v2";
+import { pointExpiryPolicyV2 } from "./point-expiry-v2";
+import { referralPolicyV1 } from "./referral";
+import { tierPolicyV2 } from "./tier-policy-v2";
 
 const code = z.string().regex(/^[a-z][a-z0-9_-]{0,79}$/u);
 const POSTGRES_BIGINT_MAX = 9_223_372_036_854_775_807n;
@@ -17,6 +21,29 @@ const timestamp = z.iso.datetime({ offset: true });
 const selector = z.string().trim().min(1).max(255);
 const selectorList = z.array(selector).max(100).default([]);
 const operationKey = z.string().min(1).max(255);
+const legacyProgrammeRewardKinds = new Set<string>([
+  "fixed_discount",
+  "percentage_discount",
+  "free_shipping",
+]);
+const legacyProgrammeRewardDefinitionForV2 =
+  programmeRewardDefinitionV1.superRefine((reward, context) => {
+    if (!legacyProgrammeRewardKinds.has(reward.kind)) {
+      context.addIssue({
+        code: "custom",
+        message: "Unsupported legacy reward kind in ProgrammeDefinitionV2",
+        path: ["kind"],
+      });
+    }
+    if (Object.prototype.hasOwnProperty.call(reward.configuration, "version")) {
+      context.addIssue({
+        code: "custom",
+        message:
+          "Versioned reward configuration must satisfy RewardDefinitionV2",
+        path: ["configuration", "version"],
+      });
+    }
+  });
 
 export const earningSourceV2 = z.enum([
   "purchase",
@@ -133,7 +160,11 @@ export const earningRuleV2 = z
   .strict()
   .superRefine((rule, context) => {
     const { startsAt, endsAt } = rule.conditions;
-    if (startsAt !== null && endsAt !== null && startsAt >= endsAt) {
+    if (
+      startsAt !== null &&
+      endsAt !== null &&
+      Date.parse(startsAt) >= Date.parse(endsAt)
+    ) {
       context.addIssue({
         code: "custom",
         message: "Rule end must follow rule start",
@@ -228,12 +259,33 @@ export const programmeDefinitionV2 = z
     currencyMinorUnitDigits: z.number().int().min(0).max(6),
     pendingDays: z.number().int().min(0).max(365),
     pointsExpireAfterDays: z.number().int().min(1).max(3650),
+    pointsExpiryPolicy: pointExpiryPolicyV2.optional(),
+    referralPolicy: referralPolicyV1.optional(),
     tiers: z.array(programmeTierDefinitionV1).min(1),
-    rewards: z.array(programmeRewardDefinitionV1).default([]),
+    tierPolicy: tierPolicyV2.optional(),
+    rewards: z
+      .array(
+        z.union([
+          programmeRewardDefinitionV2,
+          legacyProgrammeRewardDefinitionForV2,
+        ]),
+      )
+      .default([]),
     earningRules: z.array(earningRuleV2).min(1).max(200),
   })
   .strict()
   .superRefine((definition, context) => {
+    if (
+      definition.pointsExpiryPolicy &&
+      definition.pointsExpiryPolicy.expireAfterDays !==
+        definition.pointsExpireAfterDays
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "The versioned expiry policy must match pointsExpireAfterDays",
+        path: ["pointsExpiryPolicy", "expireAfterDays"],
+      });
+    }
     const codes = new Set<string>();
     let enabledBaseRules = 0;
     definition.earningRules.forEach((rule, index) => {
@@ -257,13 +309,130 @@ export const programmeDefinitionV2 = z
       });
     }
 
-    const legacySurface = programmeDefinitionV1.safeParse({
+    const rewardCodes = new Set<string>();
+    definition.rewards.forEach((reward, index) => {
+      const legacyConfiguration = reward.configuration as Record<
+        string,
+        unknown
+      >;
+      if (rewardCodes.has(reward.code)) {
+        context.addIssue({
+          code: "custom",
+          message: `Duplicate reward code: ${reward.code}`,
+          path: ["rewards", index, "code"],
+        });
+      }
+      rewardCodes.add(reward.code);
+      if (
+        reward.configuration.version !== "2" &&
+        ["fixed_discount", "percentage_discount"].includes(reward.kind) &&
+        legacyConfiguration.currencyMinorUnitDigits !==
+          definition.currencyMinorUnitDigits
+      ) {
+        context.addIssue({
+          code: "custom",
+          message: "Legacy reward precision must match programme precision",
+          path: ["rewards", index, "configuration", "currencyMinorUnitDigits"],
+        });
+      }
+    });
+
+    if (definition.tierPolicy) {
+      const baseRule = definition.earningRules.find(
+        (rule) => rule.enabled && rule.effect.kind === "base_rate",
+      );
+      const policyCodes = definition.tierPolicy.levels.map(
+        (level) => level.tierCode,
+      );
+      const tierCodes = definition.tiers.map((tier) => tier.code);
+      if (
+        policyCodes.length !== tierCodes.length ||
+        policyCodes.some((policyCode, index) => policyCode !== tierCodes[index])
+      ) {
+        context.addIssue({
+          code: "custom",
+          message:
+            "Advanced tier policy levels must match the ordered programme tiers",
+          path: ["tierPolicy", "levels"],
+        });
+      }
+      definition.tierPolicy.levels.forEach((level, levelIndex) => {
+        const tier = definition.tiers[levelIndex];
+        if (
+          tier &&
+          baseRule?.effect.kind === "base_rate" &&
+          BigInt(tier.pointsPerMajorUnit) * 10_000n !==
+            BigInt(baseRule.effect.pointsPerMajorUnit) *
+              BigInt(level.benefits.earningMultiplierBasisPoints)
+        ) {
+          context.addIssue({
+            code: "custom",
+            message:
+              "Tier earning multiplier must exactly match the displayed points rate",
+            path: [
+              "tierPolicy",
+              "levels",
+              levelIndex,
+              "benefits",
+              "earningMultiplierBasisPoints",
+            ],
+          });
+        }
+        level.benefits.rewardCodes.forEach((rewardCode, rewardIndex) => {
+          const reward = definition.rewards.find(
+            (candidate) => candidate.code === rewardCode,
+          );
+          if (!reward) {
+            context.addIssue({
+              code: "custom",
+              message: `Unknown tier benefit reward code: ${rewardCode}`,
+              path: [
+                "tierPolicy",
+                "levels",
+                levelIndex,
+                "benefits",
+                "rewardCodes",
+                rewardIndex,
+              ],
+            });
+          } else {
+            const executableReward =
+              programmeRewardDefinitionV2.safeParse(reward);
+            if (
+              executableReward.success &&
+              executableReward.data.configuration.availability.tierCodes.includes(
+                level.tierCode,
+              )
+            ) {
+              return;
+            }
+            context.addIssue({
+              code: "custom",
+              message:
+                "Tier benefit rewards must use V2 fulfilment and include the tier in availability",
+              path: [
+                "tierPolicy",
+                "levels",
+                levelIndex,
+                "benefits",
+                "rewardCodes",
+                rewardIndex,
+              ],
+            });
+          }
+        });
+      });
+    }
+
+    const legacyTierSurface = programmeDefinitionV1.safeParse({
       version: "1",
       tiers: definition.tiers,
-      rewards: definition.rewards,
+      rewards: definition.rewards.filter(
+        (reward) => reward.configuration.version !== "2",
+      ),
     });
-    if (!legacySurface.success) {
-      for (const issue of legacySurface.error.issues) {
+    if (!legacyTierSurface.success) {
+      for (const issue of legacyTierSurface.error.issues) {
         context.addIssue({
           code: "custom",
           message: issue.message,

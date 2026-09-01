@@ -1,0 +1,91 @@
+schema: starfiniti.rsync-source-security-evidence.v2
+status: in_progress
+observedAt: 2026-08-29T10:40:51Z
+candidate:
+  branch: codex/enterprise-roadmap-integration
+  commit: dff4c2e7fd89bef0b43063a5a3af8ba74de0368d
+plan:
+  path: infrastructure/testing/rsync-source-security/plan.yaml
+  sha256: cb6fee76b837c5274172182d7a58de71d2ccf13901722f856833b2ce6e7e0912
+bootstrapCanary:
+  report:
+    path: docs/plan/evidence/M16/runs/rsync-source-security-f61c44b-2026-08-29T101026Z.json
+    sha256: d596b2a8d3ee1754d3d1f2ccbe56cafc58301b61087c228bf47eabb4a38e9483
+  github:
+    workflowRunId: 33247037670
+    jobId: 99086186056
+    artifactId: 9713232691
+    artifactName: security-rsync-source-30111881b41edc4d7af2dacca199e5bd2075ab18
+    artifactArchiveSha256: d7d85894ff62adfbc01e638ae7bea5d6b6b7f028dc77b6ad62944947068021b5
+    artifactCreatedAt: 2026-08-29T10:12:20Z
+    headCommit: f61c44bd306819593ff89110caf2da1174390cf6
+    mergeCommit: 30111881b41edc4d7af2dacca199e5bd2075ab18
+digestLockCanary:
+  report:
+    path: docs/plan/evidence/M16/runs/rsync-source-security-dff4c2e-2026-08-29T103733Z.json
+    sha256: 54c55fdb56170308eca7becc5120254e540f8f58de0b7d03448688097149a2de
+  github:
+    workflowRunId: 33248120835
+    jobId: 99089014687
+    artifactId: 9713549190
+    artifactName: security-rsync-source-752f7b4126a46cc0c730d91b08237375b2a3f704
+    artifactArchiveSha256: 79862829d75524c29b63a389b90e7eff379048219ee32f82bb66f1ae5ed70452
+    artifactCreatedAt: 2026-08-29T10:39:10Z
+    headCommit: dff4c2e7fd89bef0b43063a5a3af8ba74de0368d
+    mergeCommit: 752f7b4126a46cc0c730d91b08237375b2a3f704
+checks:
+  - id: architecture_decision
+    status: passed
+    evidence: ADR-0095 compares waiting, cross-suite packages, a universal binary, and separate native builds; it selects native side-by-side artifacts and documents selector-only rollback.
+  - id: upstream_source
+    status: passed
+    evidence: The plan binds the official rsync 3.5.0 archive, detached signature, release-key export, full signer fingerprint, exact sizes, and independent SHA-256 values.
+  - id: safe_source_tree
+    status: passed
+    evidence: The verifier binds the complete 615-entry source tree and rejects path traversal, duplicate roots or members, hard links, special files, escaping links, link chains, and symbolic-link parents.
+  - id: endpoint_native_builds
+    status: passed
+    evidence: The same signed source is compiled independently in digest-pinned Debian 13 and Ubuntu 24.04 builders with native dpkg-buildflags hardening; PIE, non-executable stack, RELRO, and immediate binding are mandatory before copy to the fixed versioned root.
+  - id: distribution_rollback
+    status: passed
+    evidence: Runtime construction revalidates the exact current distribution rsync package, executable paths, and native libacl version after the side-by-side candidate is copied.
+  - id: validator_self_test
+    status: passed
+    evidence: The repository plan validator, runner self-test, source-verifier adversarial fixtures, focused ESLint, shell syntax checks, and workflow validation pass locally.
+  - id: bootstrap_canary
+    status: passed
+    evidence: GitHub Security run 33247037670 job 99086186056 compiled the signed source independently on digest-pinned Debian 13 and Ubuntu 24.04 images, passed both bounded transfer pairs, tore down every disposable resource, and retained the exact minimized report.
+  - id: candidate_digest_lock
+    status: passed
+    evidence: The locked plan pins the distinct Debian and Ubuntu executable SHA-256 values and the shared wrapper SHA-256 exactly to the retained bootstrap report; the second Linux run reproduced every pinned value.
+  - id: digest_lock_canary
+    status: passed
+    evidence: GitHub Security run 33248120835 job 99089014687 rebuilt the exact locked plan, reproduced both endpoint binaries and the shared wrapper, passed both bounded transfer pairs and confinement rejection, and retained the teardown-complete report.
+  - id: operations_escrow_v3
+    status: pending
+    evidence: Operations has not staged, verified, approved, and proved offline recovery use of a V3 escrow containing both native binaries, the shared wrapper, signed sources, build evidence, and rollback inputs.
+  - id: real_forced_command
+    status: pending
+    evidence: The exact candidate has not run through the production recovery SSH identity, reviewed rrsync forced command, key restrictions, path selector, and negative-command gate.
+  - id: manual_timer_archives
+    status: pending
+    evidence: No real manual archive or scheduled archive has used this candidate, and archive retention, retry, reconciliation, monitoring, and rollback remain unproved.
+  - id: production_rollout
+    status: pending
+    evidence: No production package, library, executable, selector, SSH service, timer, archive, database, guest, host, or VM has been changed by this repository slice.
+  - id: isolated_restore
+    status: pending
+    evidence: No archive transferred by these exact endpoint binaries has restored PostgreSQL, Auth, application, signing material, configuration, and connector secrets in an isolated environment.
+  - id: independent_review
+    status: pending
+    evidence: Recovery, operations, security, and an independent reviewer have not approved the exact artifact set, production activation procedure, rollback, and restore evidence.
+productionAccess: false
+productionMutation: false
+productionAuthority: false
+automaticFails:
+  - The source archive, detached signature, release key, signer fingerprint, safe source-tree manifest, endpoint build, or locked candidate digest differs from the reviewed plan.
+  - A build or rollout replaces a distribution rsync path, changes the host package database, upgrades the global ACL library, or requires a library downgrade for rollback.
+  - A canary uses host networking, a published port, a bind or persistent volume, a writable root, extra capabilities, a production route or credential, or survives teardown.
+  - The compatibility result counts metadata as recovery payload, exceeds the file byte or output bounds, omits either required version pair, or publishes before teardown succeeds.
+  - A production selector changes before V3 escrow, real forced-command, manual and timer archive, monitoring, reconciliation, rollback, isolated restore, and independent-review gates pass.
+  - Any evidence claims production access, mutation, authority, recovery readiness, security compliance, or module completion that was not deterministically observed on the exact candidate.

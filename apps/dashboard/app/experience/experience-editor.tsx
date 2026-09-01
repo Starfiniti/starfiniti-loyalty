@@ -2,76 +2,171 @@
 
 import {
   contrastAgainstWhite,
-  type ExperienceLocaleV1,
-  type ExperienceThemeDefinitionV1,
-  type ExperienceTranslationDefinitionV1,
+  type ExperienceCopyDefinitionV2,
+  type ExperienceHeroAssetV2,
+  type ExperienceSectionV2,
+  type ExperienceThemeDefinitionV2,
 } from "@starfiniti/contracts";
+import type { LucideIcon } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  CircleUserRound,
+  Crown,
+  Gift,
+  History,
+  LayoutDashboard,
+  Monitor,
+  PanelTop,
+  ShieldCheck,
+  ShoppingBag,
+  Smartphone,
+  Sparkles,
+  Store,
+  UsersRound,
+  WifiOff,
+} from "lucide-react";
+import type { CSSProperties } from "react";
 import { useActionState, useMemo, useState } from "react";
 import { experienceFontStack } from "@/lib/experience-theme";
+import { visibleCustomerExperienceSections } from "@/lib/customer-experience-presentation";
 import { merchantText, type MerchantLocale } from "@/lib/merchant-locale";
-import { saveExperienceTheme, saveExperienceTranslation } from "./actions";
+import { saveExperienceCopy, saveExperienceTheme } from "./actions";
 
 const initialActionState = { kind: "idle", message: "" } as const;
 
+const sectionMeta: Readonly<
+  Record<
+    ExperienceSectionV2,
+    Readonly<{
+      label: string;
+      detail: string;
+      icon: LucideIcon;
+      optional: boolean;
+    }>
+  >
+> = {
+  overview: {
+    label: "Overview",
+    detail: "Balance, status, and next expiry",
+    icon: LayoutDashboard,
+    optional: false,
+  },
+  earning: {
+    label: "Ways to earn",
+    detail: "Published earning methods",
+    icon: Sparkles,
+    optional: false,
+  },
+  rewards: {
+    label: "Rewards",
+    detail: "Discovery and redemption",
+    icon: Gift,
+    optional: true,
+  },
+  vip: {
+    label: "VIP status",
+    detail: "Tier progress and history",
+    icon: Crown,
+    optional: true,
+  },
+  referrals: {
+    label: "Referrals",
+    detail: "Sharing and qualification",
+    icon: UsersRound,
+    optional: true,
+  },
+  history: {
+    label: "Points history",
+    detail: "Immutable value changes",
+    icon: History,
+    optional: false,
+  },
+  account: {
+    label: "Account",
+    detail: "Connection, privacy, and export",
+    icon: CircleUserRound,
+    optional: false,
+  },
+};
+
+const heroIcons: Readonly<Record<ExperienceHeroAssetV2, LucideIcon | null>> = {
+  none: null,
+  sparkles: Sparkles,
+  gift: Gift,
+  crown: Crown,
+};
+
+type PreviewSurface = "member" | "public" | "woocommerce";
+type PreviewViewport = "desktop" | "mobile";
+type PreviewState = "ready" | "guest" | "offline" | "empty";
+
 export function ExperienceEditor({
   canEdit,
+  copyOperationId,
+  initialCopy,
   initialTheme,
-  initialTranslations,
   operationId,
-  translationOperationIds,
   programmeGroupId,
   workspaceId,
   merchantLocale,
 }: Readonly<{
   canEdit: boolean;
-  initialTheme: ExperienceThemeDefinitionV1;
-  initialTranslations: Readonly<
-    Record<
-      ExperienceLocaleV1,
-      Readonly<{
-        definition: ExperienceTranslationDefinitionV1;
-        revision: number;
-      }>
-    >
-  >;
+  copyOperationId: string;
+  initialCopy: Readonly<{
+    definition: ExperienceCopyDefinitionV2;
+    revision: number;
+  }>;
+  initialTheme: ExperienceThemeDefinitionV2;
   operationId: string;
-  translationOperationIds: Readonly<Record<ExperienceLocaleV1, string>>;
   programmeGroupId: string;
   workspaceId: string;
   merchantLocale: MerchantLocale;
 }>) {
   const t = (source: string) => merchantText(merchantLocale, source);
   const [theme, setTheme] = useState(initialTheme);
-  const [translation, setTranslation] = useState(
-    initialTranslations.en.definition,
-  );
+  const [copy, setCopy] = useState(initialCopy.definition);
+  const [surface, setSurface] = useState<PreviewSurface>("member");
+  const [viewport, setViewport] = useState<PreviewViewport>("desktop");
+  const [previewState, setPreviewState] = useState<PreviewState>("ready");
   const [actionState, formAction, pending] = useActionState(
     saveExperienceTheme,
     initialActionState,
   );
-  const [translationActionState, translationAction, translationPending] =
-    useActionState(saveExperienceTranslation, initialActionState);
-  const previewText = (...[english]: [string, string]) => english;
-  const previewBalance = new Intl.NumberFormat("en-GB").format(2450);
+  const [copyActionState, copyAction, copyPending] = useActionState(
+    saveExperienceCopy,
+    initialActionState,
+  );
   const contrast = useMemo(
     () => contrastAgainstWhite(theme.brandColor),
     [theme.brandColor],
   );
 
-  const updateTranslation = (
-    field: keyof Omit<ExperienceTranslationDefinitionV1, "version" | "locale">,
+  function updateCopy(
+    field: keyof Omit<ExperienceCopyDefinitionV2, "version" | "locale">,
     value: string,
-  ) => {
-    setTranslation({ ...translation, [field]: value });
-  };
+  ) {
+    setCopy({ ...copy, [field]: value });
+  }
+
+  function moveSection(index: number, direction: -1 | 1) {
+    const target = index + direction;
+    if (target < 0 || target >= theme.sectionOrder.length) return;
+    const sectionOrder = [...theme.sectionOrder];
+    [sectionOrder[index], sectionOrder[target]] = [
+      sectionOrder[target]!,
+      sectionOrder[index]!,
+    ];
+    setTheme({ ...theme, sectionOrder });
+  }
 
   return (
-    <div className="experience-editor">
+    <div className="experience-editor experience-editor-v2">
       <div className="experience-controls-stack">
         <form
-          className="experience-controls"
           action={formAction}
           aria-labelledby="theme-title"
+          className="experience-controls"
         >
           <input name="lang" type="hidden" value={merchantLocale} />
           <input name="operationId" type="hidden" value={operationId} />
@@ -83,15 +178,29 @@ export function ExperienceEditor({
           />
           <input name="heroText" type="hidden" value={theme.heroText} />
           <input name="pointsLabel" type="hidden" value={theme.pointsLabel} />
+          {theme.sectionOrder.map((section) => (
+            <input
+              key={section}
+              name="sectionOrder"
+              type="hidden"
+              value={section}
+            />
+          ))}
+
           <div className="section-heading">
             <div>
-              <p className="login-eyebrow">{t("Controlled design tokens")}</p>
-              <h2 id="theme-title">{t("Customer theme")}</h2>
+              <p className="login-eyebrow">{t("Controlled presentation")}</p>
+              <h2 id="theme-title">{t("Brand and composition")}</h2>
+              <p>
+                {t(
+                  "Use reviewed tokens and semantic sections. No custom code, remote fonts, or arbitrary assets enter customer pages.",
+                )}
+              </p>
             </div>
             <span>{canEdit ? t("Owner/admin") : t("Read only")}</span>
           </div>
 
-          <div className="experience-fields">
+          <div className="experience-fields experience-token-grid">
             <label>
               <span>{t("Brand color")}</span>
               <div className="color-field">
@@ -123,7 +232,7 @@ export function ExperienceEditor({
                   setTheme({
                     ...theme,
                     displayFont: event.target
-                      .value as ExperienceThemeDefinitionV1["displayFont"],
+                      .value as ExperienceThemeDefinitionV2["displayFont"],
                   })
                 }
                 value={theme.displayFont}
@@ -132,9 +241,6 @@ export function ExperienceEditor({
                 <option value="editorial-serif">{t("Editorial serif")}</option>
                 <option value="modern-serif">{t("Modern serif")}</option>
               </select>
-              <small>
-                {t("Local stacks only; no remote font or tracking request.")}
-              </small>
             </label>
             <label>
               <span>{t("Card radius")}</span>
@@ -146,7 +252,7 @@ export function ExperienceEditor({
                     ...theme,
                     cardRadiusPx: Number(
                       event.target.value,
-                    ) as ExperienceThemeDefinitionV1["cardRadiusPx"],
+                    ) as ExperienceThemeDefinitionV2["cardRadiusPx"],
                   })
                 }
                 value={theme.cardRadiusPx}
@@ -157,7 +263,46 @@ export function ExperienceEditor({
               </select>
             </label>
             <label>
-              <span>{t("Widget position")}</span>
+              <span>{t("Content density")}</span>
+              <select
+                disabled={!canEdit}
+                name="density"
+                onChange={(event) =>
+                  setTheme({
+                    ...theme,
+                    density: event.target
+                      .value as ExperienceThemeDefinitionV2["density"],
+                  })
+                }
+                value={theme.density}
+              >
+                <option value="comfortable">{t("Comfortable")}</option>
+                <option value="compact">{t("Compact")}</option>
+              </select>
+            </label>
+            <label>
+              <span>{t("Hero icon")}</span>
+              <select
+                disabled={!canEdit}
+                name="heroAsset"
+                onChange={(event) =>
+                  setTheme({
+                    ...theme,
+                    heroAsset: event.target
+                      .value as ExperienceThemeDefinitionV2["heroAsset"],
+                  })
+                }
+                value={theme.heroAsset}
+              >
+                <option value="none">{t("None")}</option>
+                <option value="sparkles">{t("Sparkles")}</option>
+                <option value="gift">{t("Gift")}</option>
+                <option value="crown">{t("Crown")}</option>
+              </select>
+              <small>{t("Reviewed Lucide icons only.")}</small>
+            </label>
+            <label>
+              <span>{t("WooCommerce panel position")}</span>
               <select
                 disabled={!canEdit}
                 name="widgetPosition"
@@ -173,39 +318,113 @@ export function ExperienceEditor({
                 <option value="right">{t("Right")}</option>
               </select>
             </label>
-            <fieldset className="experience-toggles">
-              <legend>{t("Visible sections")}</legend>
-              <label>
-                <input
-                  checked={theme.showTier}
-                  disabled={!canEdit}
-                  name="showTier"
-                  onChange={(event) =>
-                    setTheme({ ...theme, showTier: event.target.checked })
-                  }
-                  type="checkbox"
-                />
-                {t("Tier progress")}
-              </label>
-              <label>
-                <input
-                  checked={theme.showRewards}
-                  disabled={!canEdit}
-                  name="showRewards"
-                  onChange={(event) =>
-                    setTheme({ ...theme, showRewards: event.target.checked })
-                  }
-                  type="checkbox"
-                />
-                {t("Available rewards")}
-              </label>
-            </fieldset>
           </div>
+
+          <fieldset className="experience-toggles experience-visibility-grid">
+            <legend>{t("Optional customer sections")}</legend>
+            <label>
+              <input
+                checked={theme.showRewards}
+                disabled={!canEdit}
+                name="showRewards"
+                onChange={(event) =>
+                  setTheme({ ...theme, showRewards: event.target.checked })
+                }
+                type="checkbox"
+              />
+              <span>
+                <strong>{t("Rewards")}</strong>
+                <small>{t("Discovery and redemption cards")}</small>
+              </span>
+            </label>
+            <label>
+              <input
+                checked={theme.showTier}
+                disabled={!canEdit}
+                name="showTier"
+                onChange={(event) =>
+                  setTheme({ ...theme, showTier: event.target.checked })
+                }
+                type="checkbox"
+              />
+              <span>
+                <strong>{t("VIP status")}</strong>
+                <small>{t("Tier progress and history")}</small>
+              </span>
+            </label>
+            <label>
+              <input
+                checked={theme.showReferrals}
+                disabled={!canEdit}
+                name="showReferrals"
+                onChange={(event) =>
+                  setTheme({ ...theme, showReferrals: event.target.checked })
+                }
+                type="checkbox"
+              />
+              <span>
+                <strong>{t("Referrals")}</strong>
+                <small>{t("Sharing and qualification progress")}</small>
+              </span>
+            </label>
+          </fieldset>
+
+          <fieldset className="experience-section-order">
+            <legend>{t("Section order")}</legend>
+            <p>
+              {t(
+                "All seven semantic sections remain in the contract. Core value, history, privacy, and account access cannot be hidden.",
+              )}
+            </p>
+            <ol>
+              {theme.sectionOrder.map((section, index) => {
+                const meta = sectionMeta[section];
+                const Icon = meta.icon;
+                return (
+                  <li key={section}>
+                    <span
+                      className="experience-section-icon"
+                      aria-hidden="true"
+                    >
+                      <Icon />
+                    </span>
+                    <span>
+                      <strong>{t(meta.label)}</strong>
+                      <small>
+                        {t(meta.detail)} ·{" "}
+                        {t(meta.optional ? "Optional" : "Always visible")}
+                      </small>
+                    </span>
+                    <span className="experience-order-actions">
+                      <button
+                        aria-label={`${t("Move")} ${t(meta.label)} ${t("up")}`}
+                        disabled={!canEdit || index === 0}
+                        onClick={() => moveSection(index, -1)}
+                        type="button"
+                      >
+                        <ArrowUp aria-hidden="true" />
+                      </button>
+                      <button
+                        aria-label={`${t("Move")} ${t(meta.label)} ${t("down")}`}
+                        disabled={
+                          !canEdit || index === theme.sectionOrder.length - 1
+                        }
+                        onClick={() => moveSection(index, 1)}
+                        type="button"
+                      >
+                        <ArrowDown aria-hidden="true" />
+                      </button>
+                    </span>
+                  </li>
+                );
+              })}
+            </ol>
+          </fieldset>
 
           <div className="experience-save">
             <p>
               {t(
-                "Raw CSS, JavaScript, font URLs, and uploads are excluded from this boundary.",
+                "Saving revisions one audited presentation; preview state controls are never persisted.",
               )}
             </p>
             <button
@@ -213,7 +432,7 @@ export function ExperienceEditor({
               disabled={!canEdit || pending || contrast < 4.5}
               type="submit"
             >
-              {pending ? t("Saving…") : t("Save theme")}
+              {pending ? t("Saving…") : t("Save presentation")}
             </button>
           </div>
           <p
@@ -225,16 +444,12 @@ export function ExperienceEditor({
         </form>
 
         <form
-          action={translationAction}
-          aria-labelledby="translation-title"
+          action={copyAction}
+          aria-labelledby="copy-title"
           className="experience-controls translation-controls"
         >
           <input name="lang" type="hidden" value={merchantLocale} />
-          <input
-            name="operationId"
-            type="hidden"
-            value={translationOperationIds.en}
-          />
+          <input name="operationId" type="hidden" value={copyOperationId} />
           <input name="workspaceId" type="hidden" value={workspaceId} />
           <input
             name="programmeGroupId"
@@ -243,15 +458,19 @@ export function ExperienceEditor({
           />
           <div className="section-heading">
             <div>
-              <p className="login-eyebrow">{t("Allowlisted locale copy")}</p>
-              <h2 id="translation-title">{t("Customer translations")}</h2>
+              <p className="login-eyebrow">{t("English customer copy")}</p>
+              <h2 id="copy-title">{t("Labels and messages")}</h2>
+              <p>
+                {t(
+                  "English is the only active customer language. There is no locale switcher in this experience.",
+                )}
+              </p>
             </div>
             <span>
-              {t("Revision")} {initialTranslations.en.revision || "—"}
+              {t("Revision")} {initialCopy.revision || "—"}
             </span>
           </div>
           <div className="experience-fields">
-            <input name="locale" type="hidden" value="en" />
             <label>
               <span>{t("Points label")}</span>
               <input
@@ -259,10 +478,10 @@ export function ExperienceEditor({
                 maxLength={30}
                 name="pointsLabel"
                 onChange={(event) =>
-                  updateTranslation("pointsLabel", event.target.value)
+                  updateCopy("pointsLabel", event.target.value)
                 }
                 required
-                value={translation.pointsLabel}
+                value={copy.pointsLabel}
               />
             </label>
             <label className="wide-field">
@@ -271,11 +490,9 @@ export function ExperienceEditor({
                 disabled={!canEdit}
                 maxLength={120}
                 name="heroText"
-                onChange={(event) =>
-                  updateTranslation("heroText", event.target.value)
-                }
+                onChange={(event) => updateCopy("heroText", event.target.value)}
                 required
-                value={translation.heroText}
+                value={copy.heroText}
               />
             </label>
             {(
@@ -292,11 +509,9 @@ export function ExperienceEditor({
                   disabled={!canEdit}
                   maxLength={maxLength}
                   name={field}
-                  onChange={(event) =>
-                    updateTranslation(field, event.target.value)
-                  }
+                  onChange={(event) => updateCopy(field, event.target.value)}
                   required
-                  value={translation[field]}
+                  value={copy[field]}
                 />
               </label>
             ))}
@@ -307,137 +522,259 @@ export function ExperienceEditor({
                 maxLength={120}
                 name="earnMessage"
                 onChange={(event) =>
-                  updateTranslation("earnMessage", event.target.value)
+                  updateCopy("earnMessage", event.target.value)
                 }
                 required
-                value={translation.earnMessage}
+                value={copy.earnMessage}
               />
             </label>
           </div>
           <div className="experience-save">
             <p>
               {t(
-                "English is the active launch language. Stored legacy translations remain isolated from the live experience.",
+                "Legacy stored locales remain rollback history and are not selected or rendered.",
               )}
             </p>
             <button
               className="primary"
-              disabled={!canEdit || translationPending}
+              disabled={!canEdit || copyPending}
               type="submit"
             >
-              {translationPending
-                ? t("Saving…")
-                : `${t("Save copy")} (English)`}
+              {copyPending ? t("Saving…") : t("Save English copy")}
             </button>
           </div>
           <p
             aria-live="polite"
-            className={`action-message ${translationActionState.kind}`}
+            className={`action-message ${copyActionState.kind}`}
           >
-            {translationActionState.message}
+            {copyActionState.message}
           </p>
         </form>
       </div>
 
-      <section className="experience-preview" aria-labelledby="preview-title">
+      <section
+        className="experience-preview experience-preview-v2"
+        aria-labelledby="preview-title"
+      >
         <div className="section-heading">
           <div>
-            <p className="login-eyebrow">{t("Responsive preview")}</p>
-            <h2 id="preview-title">{t("Member wallet")}</h2>
+            <p className="login-eyebrow">{t("Deterministic preview")}</p>
+            <h2 id="preview-title">{t("Customer composition")}</h2>
           </div>
           <span>{t("Sample data")}</span>
         </div>
-        <div className="wallet-preview">
-          <div className="wallet-preview-header">
-            <span
-              style={{ backgroundColor: theme.brandColor }}
-              aria-hidden="true"
-            >
-              R
-            </span>
-            <strong
-              style={{ fontFamily: experienceFontStack(theme.displayFont) }}
-            >
-              {previewText("Rewards", "Nagrade")}
-            </strong>
+        <div className="experience-preview-toolbar">
+          <div aria-label={t("Preview surface")} role="group">
+            {(
+              [
+                ["member", "Member", CircleUserRound],
+                ["public", "Public page", PanelTop],
+                ["woocommerce", "WooCommerce", Store],
+              ] as const
+            ).map(([value, label, Icon]) => (
+              <button
+                aria-pressed={surface === value}
+                key={value}
+                onClick={() => setSurface(value)}
+                type="button"
+              >
+                <Icon aria-hidden="true" /> {t(label)}
+              </button>
+            ))}
           </div>
-          <div className="wallet-preview-body">
-            <article
-              className="wallet-balance"
-              style={{
-                backgroundColor: theme.brandColor,
-                borderRadius: theme.cardRadiusPx,
-              }}
+          <div aria-label={t("Preview viewport")} role="group">
+            <button
+              aria-label={t("Desktop preview")}
+              aria-pressed={viewport === "desktop"}
+              onClick={() => setViewport("desktop")}
+              type="button"
             >
-              <small>{translation.balanceLabel}</small>
-              <strong>
-                {previewBalance} <span>{translation.pointsLabel}</span>
-              </strong>
-              {theme.showTier ? (
-                <div className="wallet-tier">
-                  <span>Bloom</span>
-                  <span>{previewText("€182 to Icon", "Še 182 € do Icon")}</span>
-                  <i>
-                    <b />
-                  </i>
-                </div>
-              ) : null}
-            </article>
-            {theme.showRewards ? (
-              <div className="wallet-rewards">
-                <h3
-                  style={{ fontFamily: experienceFontStack(theme.displayFont) }}
-                >
-                  {translation.rewardsLabel}
-                </h3>
-                <div>
-                  <article style={{ borderRadius: theme.cardRadiusPx }}>
-                    <strong>{previewText("€5 discount", "5 € popusta")}</strong>
-                    <span>500 {translation.pointsLabel}</span>
-                    <span
-                      className="wallet-redeem"
-                      style={{ backgroundColor: theme.brandColor }}
-                    >
-                      {translation.redeemLabel}
-                    </span>
-                  </article>
-                  <article style={{ borderRadius: theme.cardRadiusPx }}>
-                    <strong>
-                      {previewText("Free shipping", "Brezplačna dostava")}
-                    </strong>
-                    <span>700 {translation.pointsLabel}</span>
-                    <span
-                      className="wallet-redeem"
-                      style={{ backgroundColor: theme.brandColor }}
-                    >
-                      {translation.redeemLabel}
-                    </span>
-                  </article>
-                </div>
-              </div>
-            ) : null}
+              <Monitor aria-hidden="true" />
+            </button>
+            <button
+              aria-label={t("Mobile preview")}
+              aria-pressed={viewport === "mobile"}
+              onClick={() => setViewport("mobile")}
+              type="button"
+            >
+              <Smartphone aria-hidden="true" />
+            </button>
           </div>
-          <span
-            aria-label={`${t("Widget preview on the")} ${t(theme.widgetPosition === "left" ? "Left" : "Right")}`}
-            className={`wallet-widget ${theme.widgetPosition}`}
-            style={{ backgroundColor: theme.brandColor }}
-          >
-            ★
-          </span>
         </div>
         <div
-          className="guest-preview"
-          style={{ borderRadius: theme.cardRadiusPx }}
+          className="experience-preview-states"
+          aria-label={t("Preview state")}
+          role="group"
         >
-          <h3 style={{ fontFamily: experienceFontStack(theme.displayFont) }}>
-            {translation.heroText}
-          </h3>
-          <p>{translation.earnMessage}</p>
-          <span style={{ backgroundColor: theme.brandColor }}>
-            {translation.joinLabel}
-          </span>
+          {(
+            [
+              ["ready", "Ready"],
+              ["guest", "Guest"],
+              ["offline", "Hub offline"],
+              ["empty", "Empty programme"],
+            ] as const
+          ).map(([value, label]) => (
+            <button
+              aria-pressed={previewState === value}
+              key={value}
+              onClick={() => setPreviewState(value)}
+              type="button"
+            >
+              {t(label)}
+            </button>
+          ))}
         </div>
+        <ExperiencePreview
+          copy={copy}
+          state={previewState}
+          surface={surface}
+          theme={theme}
+          viewport={viewport}
+        />
+        <p className="experience-preview-note">
+          <ShieldCheck aria-hidden="true" />
+          {surface === "woocommerce"
+            ? t(
+                "WooCommerce renders locally cached data and native coupons; checkout never waits for the Hub.",
+              )
+            : t(
+                "Preview uses the same bounded presentation contract as the customer read model.",
+              )}
+        </p>
       </section>
     </div>
   );
+}
+
+function ExperiencePreview({
+  copy,
+  state,
+  surface,
+  theme,
+  viewport,
+}: Readonly<{
+  copy: ExperienceCopyDefinitionV2;
+  state: PreviewState;
+  surface: PreviewSurface;
+  theme: ExperienceThemeDefinitionV2;
+  viewport: PreviewViewport;
+}>) {
+  const HeroIcon = heroIcons[theme.heroAsset];
+  const visibleSections = visibleCustomerExperienceSections(theme);
+  const style = {
+    "--experience-preview-brand": theme.brandColor,
+    "--experience-preview-radius": `${theme.cardRadiusPx}px`,
+    "--experience-preview-font": experienceFontStack(theme.displayFont),
+  } as CSSProperties;
+
+  return (
+    <div
+      className={`experience-composition ${viewport} ${theme.density}`}
+      data-state={state}
+      data-surface={surface}
+      style={style}
+    >
+      <div className="experience-composition-topbar">
+        <span aria-hidden="true">
+          <Sparkles />
+        </span>
+        <strong>Rosy Rewards</strong>
+        <small>{surface === "woocommerce" ? "My account" : "Loyalty"}</small>
+      </div>
+
+      {state === "guest" ? (
+        <div className="experience-composition-guest">
+          {HeroIcon ? <HeroIcon aria-hidden="true" /> : null}
+          <h3>{copy.heroText}</h3>
+          <p>{copy.earnMessage}</p>
+          <span>{copy.joinLabel}</span>
+        </div>
+      ) : (
+        <>
+          <div className="experience-composition-hero">
+            <div>
+              <small>
+                {state === "offline"
+                  ? "Last verified balance"
+                  : copy.balanceLabel}
+              </small>
+              <strong>{state === "empty" ? "0" : "2,450"}</strong>
+              <span>{copy.pointsLabel}</span>
+              <p>
+                {state === "offline"
+                  ? "The Hub is unavailable. Cached loyalty details remain visible."
+                  : state === "empty"
+                    ? "Your first eligible activity will appear here."
+                    : "Bloom member · €182 to Icon"}
+              </p>
+            </div>
+            {state === "offline" ? (
+              <WifiOff aria-hidden="true" />
+            ) : HeroIcon ? (
+              <HeroIcon aria-hidden="true" />
+            ) : null}
+          </div>
+
+          <div className="experience-composition-sections">
+            {visibleSections.map((section) => {
+              const meta = sectionMeta[section];
+              const Icon = meta.icon;
+              return (
+                <article key={section}>
+                  <Icon aria-hidden="true" />
+                  <span>
+                    <strong>
+                      {section === "rewards" ? copy.rewardsLabel : meta.label}
+                    </strong>
+                    <small>
+                      {previewSectionDetail(section, state, surface, copy)}
+                    </small>
+                  </span>
+                </article>
+              );
+            })}
+          </div>
+        </>
+      )}
+
+      {surface === "woocommerce" ? (
+        <span
+          className={`experience-composition-widget ${theme.widgetPosition}`}
+        >
+          <ShoppingBag aria-hidden="true" />
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+function previewSectionDetail(
+  section: ExperienceSectionV2,
+  state: PreviewState,
+  surface: PreviewSurface,
+  copy: ExperienceCopyDefinitionV2,
+): string {
+  if (state === "offline") {
+    return section === "account"
+      ? "Native account access remains available"
+      : "Last locally verified customer state";
+  }
+  if (state === "empty") {
+    return section === "history"
+      ? "No points activity yet"
+      : "This section is ready for published content";
+  }
+  const details: Record<ExperienceSectionV2, string> = {
+    overview: "2,450 available · 120 pending",
+    earning: "5 points per eligible €1",
+    rewards: `€5 discount · ${copy.redeemLabel}`,
+    vip: "Bloom · 64% to Icon",
+    referrals: "Share link ready · 2 qualified",
+    history: "Order released · +750 points",
+    account:
+      surface === "woocommerce"
+        ? "Native My account and coupon access"
+        : "Verified store · export available",
+  };
+  return details[section];
 }

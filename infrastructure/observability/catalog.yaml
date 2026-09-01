@@ -1,0 +1,580 @@
+schema: starfiniti.observability-catalog.v1
+version: 1
+status: accepted
+principles:
+  - PostgreSQL and the immutable ledger remain value authority; telemetry is evidence only.
+  - Checkout and protected-value operations never depend on the monitoring plane.
+  - Critical tenancy ledger privacy recovery and checkout signals page independently of billing state.
+  - Metrics use bounded operational labels and never contain tenant customer order coupon credential or payload data.
+labels:
+  allowed:
+    [
+      environment,
+      service,
+      component,
+      operation,
+      provider,
+      severity,
+      deployment_mode,
+      queue,
+      surface,
+      outcome,
+      target_class,
+    ]
+  forbidden:
+    [
+      tenant,
+      tenant_id,
+      organization_id,
+      workspace_id,
+      customer,
+      customer_id,
+      member_id,
+      order_id,
+      email,
+      coupon,
+      credential,
+      token,
+      payload,
+      correlation_id,
+    ]
+  maximumSeriesPerSignal: 500
+owners:
+  - id: platform-on-call
+    responsibility: Edge application worker database host and deployment availability.
+  - id: value-integrity-on-call
+    responsibility: Ledger queue connector checkout and protected-value correctness.
+  - id: security-on-call
+    responsibility: Tenant isolation identity privacy certificate and security findings.
+  - id: recovery-on-call
+    responsibility: PostgreSQL WAL backup recovery and restore-exercise readiness.
+routes:
+  - id: protected-value-page
+    acknowledgementMinutes: 5
+    escalationMinutes: 10
+    repeatMinutes: 15
+    billingIndependent: true
+  - id: platform-page
+    acknowledgementMinutes: 10
+    escalationMinutes: 20
+    repeatMinutes: 30
+    billingIndependent: true
+  - id: security-page
+    acknowledgementMinutes: 5
+    escalationMinutes: 10
+    repeatMinutes: 15
+    billingIndependent: true
+  - id: operations-ticket
+    acknowledgementMinutes: 240
+    escalationMinutes: 480
+    repeatMinutes: 1440
+    billingIndependent: true
+sources:
+  - id: edge-prober
+    boundary: Non-destructive synthetic readiness Auth and certificate probes from outside the application host.
+  - id: application-runtime
+    boundary: Server-side bounded HTTP histograms and checkout-independence counters.
+  - id: worker-runtime
+    boundary: Aggregate worker liveness queue age delivery and ambiguous-outcome metrics.
+  - id: postgres-exporter
+    boundary: Restricted aggregate database pool WAL storage and integrity observations.
+  - id: backup-controller
+    boundary: Aggregate incremental-change transfer dedicated-repository archive retention and completion observations without paths names identifiers or contents.
+  - id: host-exporter
+    boundary: Aggregate VM host filesystem CPU memory and network observations.
+  - id: security-evidence
+    boundary: Finding totals and exact-head scan age without report contents.
+  - id: exercise-controller
+    boundary: Exercise completion age and result status without identities or raw incident evidence.
+  - id: monitoring-plane
+    boundary: Exact catalogue coverage and required-series presence computed by the independently deployed monitoring configuration.
+signals:
+  - id: central_api_probe
+    metric: probe_success
+    source: edge-prober
+    type: gauge
+    unit: ratio
+    requiredLabels: [environment, service, surface]
+  - id: webhook_ack_seconds
+    metric: starfiniti_webhook_ack_seconds_bucket
+    source: application-runtime
+    type: histogram
+    unit: seconds
+    requiredLabels: [environment, service, operation]
+  - id: event_to_ledger_seconds
+    metric: starfiniti_event_to_ledger_seconds_bucket
+    source: worker-runtime
+    type: histogram
+    unit: seconds
+    requiredLabels: [environment, service, operation]
+  - id: wallet_read_seconds
+    metric: starfiniti_wallet_read_seconds_bucket
+    source: application-runtime
+    type: histogram
+    unit: seconds
+    requiredLabels: [environment, service, operation]
+  - id: queue_oldest_seconds
+    metric: starfiniti_queue_oldest_seconds
+    source: worker-runtime
+    type: gauge
+    unit: seconds
+    requiredLabels: [environment, service, queue]
+  - id: dead_letter_count
+    metric: starfiniti_dead_letter_count
+    source: worker-runtime
+    type: gauge
+    unit: items
+    requiredLabels: [environment, service, queue]
+  - id: worker_up
+    metric: starfiniti_worker_up
+    source: worker-runtime
+    type: gauge
+    unit: ratio
+    requiredLabels: [environment, service, component]
+  - id: ambiguous_outcome_count
+    metric: starfiniti_ambiguous_outcome_count
+    source: worker-runtime
+    type: gauge
+    unit: items
+    requiredLabels: [environment, service, provider]
+  - id: database_pool_ratio
+    metric: starfiniti_database_pool_used_ratio
+    source: postgres-exporter
+    type: gauge
+    unit: ratio
+    requiredLabels: [environment, service]
+  - id: database_disk_ratio
+    metric: starfiniti_database_disk_available_ratio
+    source: host-exporter
+    type: gauge
+    unit: ratio
+    requiredLabels: [environment, service]
+  - id: wal_archive_lag_seconds
+    metric: starfiniti_postgres_wal_archive_lag_seconds
+    source: backup-controller
+    type: gauge
+    unit: seconds
+    requiredLabels: [environment, service]
+  - id: backup_age_seconds
+    metric: starfiniti_postgres_base_backup_age_seconds
+    source: backup-controller
+    type: gauge
+    unit: seconds
+    requiredLabels: [environment, service]
+  - id: backup_transfer_ratio
+    metric: starfiniti_backup_cycle_transfer_amplification_ratio
+    source: backup-controller
+    type: gauge
+    unit: ratio
+    requiredLabels: [environment, service]
+  - id: backup_transfer_bytes
+    metric: starfiniti_backup_cycle_transferred_bytes
+    source: backup-controller
+    type: gauge
+    unit: bytes
+    requiredLabels: [environment, service]
+  - id: offsite_archive_timestamp
+    metric: starfiniti_postgres_offsite_archive_unixtime_seconds
+    source: backup-controller
+    type: gauge
+    unit: unix_seconds
+    requiredLabels: [environment, service]
+  - id: offsite_archive_attempt_success
+    metric: starfiniti_postgres_offsite_archive_last_attempt_success
+    source: backup-controller
+    type: gauge
+    unit: ratio
+    requiredLabels: [environment, service]
+  - id: borg_repository_isolated
+    metric: starfiniti_postgres_borg_repository_isolated
+    source: backup-controller
+    type: gauge
+    unit: ratio
+    requiredLabels: [environment, service]
+  - id: borg_maintenance_timestamp
+    metric: starfiniti_postgres_borg_maintenance_unixtime_seconds
+    source: backup-controller
+    type: gauge
+    unit: unix_seconds
+    requiredLabels: [environment, service]
+  - id: borg_maintenance_attempt_success
+    metric: starfiniti_postgres_borg_maintenance_last_attempt_success
+    source: backup-controller
+    type: gauge
+    unit: ratio
+    requiredLabels: [environment, service]
+  - id: borg_recent_max_interval
+    metric: starfiniti_postgres_borg_recent_archive_max_interval_seconds
+    source: backup-controller
+    type: gauge
+    unit: seconds
+    requiredLabels: [environment, service]
+  - id: borg_recent_archive_count
+    metric: starfiniti_postgres_borg_recent_archive_count
+    source: backup-controller
+    type: gauge
+    unit: items
+    requiredLabels: [environment, service]
+  - id: ledger_difference_count
+    metric: starfiniti_ledger_unexplained_difference_count
+    source: postgres-exporter
+    type: gauge
+    unit: items
+    requiredLabels: [environment, service]
+  - id: tenant_violation_total
+    metric: starfiniti_tenant_boundary_violation_total
+    source: application-runtime
+    type: counter
+    unit: items
+    requiredLabels: [environment, service, surface]
+  - id: checkout_dependency_total
+    metric: starfiniti_checkout_hub_dependency_failure_total
+    source: application-runtime
+    type: counter
+    unit: items
+    requiredLabels: [environment, service, surface]
+  - id: privacy_replay_failed_count
+    metric: starfiniti_privacy_replay_failed_action_count
+    source: worker-runtime
+    type: gauge
+    unit: items
+    requiredLabels: [environment, service, operation]
+  - id: authentik_probe
+    metric: probe_success
+    source: edge-prober
+    type: gauge
+    unit: ratio
+    requiredLabels: [environment, service, surface]
+  - id: certificate_expiry_seconds
+    metric: probe_ssl_earliest_cert_expiry
+    source: edge-prober
+    type: gauge
+    unit: unix_seconds
+    requiredLabels: [environment, service, surface]
+  - id: security_high_count
+    metric: starfiniti_security_unresolved_high_count
+    source: security-evidence
+    type: gauge
+    unit: items
+    requiredLabels: [environment, service]
+  - id: recovery_exercise_age_seconds
+    metric: starfiniti_recovery_exercise_age_seconds
+    source: exercise-controller
+    type: gauge
+    unit: seconds
+    requiredLabels: [environment, service, target_class]
+  - id: incident_route_exercise_age_seconds
+    metric: starfiniti_incident_route_exercise_age_seconds
+    source: exercise-controller
+    type: gauge
+    unit: seconds
+    requiredLabels: [environment, service]
+  - id: required_series_present_ratio
+    metric: starfiniti_observability_required_series_present_ratio
+    source: monitoring-plane
+    type: gauge
+    unit: ratio
+    requiredLabels: [environment, service]
+alerts:
+  - id: StarfinitiCentralApiUnavailable
+    signalIds: [central_api_probe]
+    severity: critical
+    owner: platform-on-call
+    route: platform-page
+    runbook: OPS-001
+    dashboard: starfiniti-operations
+    for: 2m
+    keepFiringFor: 5m
+    expression: min by (environment, service, surface) (min_over_time(probe_success{job="starfiniti-central-api"}[2m])) < 1
+    summary: Central API synthetic readiness is unavailable.
+  - id: StarfinitiWebhookAcknowledgementSlow
+    signalIds: [webhook_ack_seconds]
+    severity: high
+    owner: value-integrity-on-call
+    route: platform-page
+    runbook: OPS-002
+    dashboard: starfiniti-operations
+    for: 5m
+    keepFiringFor: 10m
+    expression: histogram_quantile(0.95, sum by (environment, service, le) (rate(starfiniti_webhook_ack_seconds_bucket[5m]))) > 2
+    summary: Valid webhook acknowledgement p95 exceeds two seconds.
+  - id: StarfinitiEventToLedgerSlow
+    signalIds: [event_to_ledger_seconds]
+    severity: high
+    owner: value-integrity-on-call
+    route: protected-value-page
+    runbook: OPS-003
+    dashboard: starfiniti-operations
+    for: 5m
+    keepFiringFor: 10m
+    expression: histogram_quantile(0.95, sum by (environment, service, le) (rate(starfiniti_event_to_ledger_seconds_bucket[5m]))) > 10
+    summary: Accepted event to immutable ledger effect p95 exceeds ten seconds.
+  - id: StarfinitiWalletReadSlow
+    signalIds: [wallet_read_seconds]
+    severity: warning
+    owner: platform-on-call
+    route: operations-ticket
+    runbook: OPS-001
+    dashboard: starfiniti-operations
+    for: 10m
+    keepFiringFor: 10m
+    expression: histogram_quantile(0.95, sum by (environment, service, le) (rate(starfiniti_wallet_read_seconds_bucket[5m]))) > 0.3
+    summary: Authorized customer wallet read p95 exceeds 300 milliseconds.
+  - id: StarfinitiQueueBacklog
+    signalIds: [queue_oldest_seconds]
+    severity: high
+    owner: value-integrity-on-call
+    route: protected-value-page
+    runbook: OPS-003
+    dashboard: starfiniti-operations
+    for: 5m
+    keepFiringFor: 15m
+    expression: max by (environment, service, queue) (starfiniti_queue_oldest_seconds) > 60
+    summary: A loyalty processing queue has work older than sixty seconds.
+  - id: StarfinitiDeadLettersPresent
+    signalIds: [dead_letter_count]
+    severity: high
+    owner: value-integrity-on-call
+    route: protected-value-page
+    runbook: OPS-004
+    dashboard: starfiniti-operations
+    for: 1m
+    keepFiringFor: 15m
+    expression: sum by (environment, service, queue) (starfiniti_dead_letter_count) > 0
+    summary: A loyalty queue contains dead-letter work.
+  - id: StarfinitiWorkerUnavailable
+    signalIds: [worker_up]
+    severity: high
+    owner: platform-on-call
+    route: platform-page
+    runbook: OPS-003
+    dashboard: starfiniti-operations
+    for: 2m
+    keepFiringFor: 10m
+    expression: min by (environment, service, component) (starfiniti_worker_up) < 1
+    summary: A required worker class is unavailable.
+  - id: StarfinitiAmbiguousProviderOutcome
+    signalIds: [ambiguous_outcome_count]
+    severity: critical
+    owner: value-integrity-on-call
+    route: protected-value-page
+    runbook: OPS-005
+    dashboard: starfiniti-operations
+    for: 0s
+    keepFiringFor: 15m
+    expression: sum by (environment, service, provider) (starfiniti_ambiguous_outcome_count) > 0
+    summary: A provider outcome is ambiguous and protected value remains reserved.
+  - id: StarfinitiDatabasePoolSaturated
+    signalIds: [database_pool_ratio]
+    severity: high
+    owner: platform-on-call
+    route: platform-page
+    runbook: OPS-006
+    dashboard: starfiniti-operations
+    for: 5m
+    keepFiringFor: 10m
+    expression: max by (environment, service) (starfiniti_database_pool_used_ratio) > 0.8
+    summary: PostgreSQL connection-pool use exceeds eighty percent.
+  - id: StarfinitiDatabaseDiskLow
+    signalIds: [database_disk_ratio]
+    severity: critical
+    owner: recovery-on-call
+    route: platform-page
+    runbook: OPS-006
+    dashboard: starfiniti-operations
+    for: 5m
+    keepFiringFor: 30m
+    expression: min by (environment, service) (starfiniti_database_disk_available_ratio) < 0.15
+    summary: Database filesystem available capacity is below fifteen percent.
+  - id: StarfinitiWalRpoBreached
+    signalIds: [wal_archive_lag_seconds]
+    severity: critical
+    owner: recovery-on-call
+    route: protected-value-page
+    runbook: OPS-007
+    dashboard: starfiniti-operations
+    for: 0s
+    keepFiringFor: 30m
+    expression: max by (environment, service) (starfiniti_postgres_wal_archive_lag_seconds) > 300
+    summary: Authoritative PostgreSQL WAL archive lag exceeds the five-minute RPO objective.
+  - id: StarfinitiBaseBackupStale
+    signalIds: [backup_age_seconds]
+    severity: high
+    owner: recovery-on-call
+    route: platform-page
+    runbook: OPS-007
+    dashboard: starfiniti-operations
+    for: 15m
+    keepFiringFor: 30m
+    expression: max by (environment, service) (starfiniti_postgres_base_backup_age_seconds) > 86400
+    summary: The latest verified PostgreSQL base backup is older than one day.
+  - id: StarfinitiBackupTransferAmplification
+    signalIds: [backup_transfer_ratio, backup_transfer_bytes]
+    severity: critical
+    owner: recovery-on-call
+    route: platform-page
+    runbook: OPS-008
+    dashboard: starfiniti-operations
+    for: 1m
+    keepFiringFor: 30m
+    expression: starfiniti_backup_cycle_transfer_amplification_ratio > 4 and starfiniti_backup_cycle_transferred_bytes > 1073741824
+    summary: A backup cycle transfers over four times changed bytes and more than one GiB.
+  - id: StarfinitiOffsiteArchiveRpoBreached
+    signalIds: [offsite_archive_timestamp, offsite_archive_attempt_success]
+    severity: critical
+    owner: recovery-on-call
+    route: protected-value-page
+    runbook: OPS-007
+    dashboard: starfiniti-operations
+    for: 0s
+    keepFiringFor: 30m
+    expression: absent(starfiniti_postgres_offsite_archive_unixtime_seconds{environment="production"}) or absent(starfiniti_postgres_offsite_archive_last_attempt_success{environment="production"}) or time() - max by (environment, service) (starfiniti_postgres_offsite_archive_unixtime_seconds{environment="production"}) > 300 or min by (environment, service) (starfiniti_postgres_offsite_archive_last_attempt_success{environment="production"}) < 1
+    summary: The dedicated off-site PostgreSQL archive is absent stale or its last attempt failed.
+  - id: StarfinitiPostgresBorgRepositoryIsolationLost
+    signalIds: [borg_repository_isolated]
+    severity: critical
+    owner: recovery-on-call
+    route: protected-value-page
+    runbook: OPS-007
+    dashboard: starfiniti-operations
+    for: 0s
+    keepFiringFor: 30m
+    expression: absent(starfiniti_postgres_borg_repository_isolated{environment="production"}) or min by (environment, service) (starfiniti_postgres_borg_repository_isolated{environment="production"}) < 1
+    summary: PostgreSQL backup repository isolation is absent or actual identity verification failed.
+  - id: StarfinitiPostgresBorgRetentionGap
+    signalIds:
+      [
+        borg_maintenance_attempt_success,
+        borg_recent_max_interval,
+        borg_recent_archive_count,
+      ]
+    severity: critical
+    owner: recovery-on-call
+    route: protected-value-page
+    runbook: OPS-007
+    dashboard: starfiniti-operations
+    for: 0s
+    keepFiringFor: 30m
+    expression: absent(starfiniti_postgres_borg_maintenance_last_attempt_success{environment="production"}) or absent(starfiniti_postgres_borg_recent_archive_max_interval_seconds{environment="production"}) or absent(starfiniti_postgres_borg_recent_archive_count{environment="production"}) or min by (environment, service) (starfiniti_postgres_borg_maintenance_last_attempt_success{environment="production"}) < 1 or max by (environment, service) (starfiniti_postgres_borg_recent_archive_max_interval_seconds{environment="production"}) > 300 or min by (environment, service) (starfiniti_postgres_borg_recent_archive_count{environment="production"}) < 1
+    summary: Dedicated PostgreSQL retention failed or left a recent recovery interval above five minutes.
+  - id: StarfinitiPostgresBorgMaintenanceStale
+    signalIds: [borg_maintenance_timestamp]
+    severity: high
+    owner: recovery-on-call
+    route: platform-page
+    runbook: OPS-007
+    dashboard: starfiniti-operations
+    for: 5m
+    keepFiringFor: 30m
+    expression: absent(starfiniti_postgres_borg_maintenance_unixtime_seconds{environment="production"}) or time() - max by (environment, service) (starfiniti_postgres_borg_maintenance_unixtime_seconds{environment="production"}) > 108000
+    summary: Dedicated PostgreSQL Borg maintenance has no successful evidence within thirty hours.
+  - id: StarfinitiLedgerDifference
+    signalIds: [ledger_difference_count]
+    severity: critical
+    owner: value-integrity-on-call
+    route: protected-value-page
+    runbook: OPS-009
+    dashboard: starfiniti-operations
+    for: 0s
+    keepFiringFor: 30m
+    expression: max by (environment, service) (starfiniti_ledger_unexplained_difference_count) > 0
+    summary: Immutable ledger or derived balance reconciliation has an unexplained difference.
+  - id: StarfinitiTenantBoundaryViolation
+    signalIds: [tenant_violation_total]
+    severity: critical
+    owner: security-on-call
+    route: security-page
+    runbook: OPS-010
+    dashboard: starfiniti-operations
+    for: 0s
+    keepFiringFor: 30m
+    expression: sum by (environment, service, surface) (increase(starfiniti_tenant_boundary_violation_total[5m])) > 0
+    summary: A tenant-boundary guard recorded a violation.
+  - id: StarfinitiCheckoutHubDependency
+    signalIds: [checkout_dependency_total]
+    severity: critical
+    owner: value-integrity-on-call
+    route: protected-value-page
+    runbook: OPS-011
+    dashboard: starfiniti-operations
+    for: 0s
+    keepFiringFor: 30m
+    expression: sum by (environment, service, surface) (increase(starfiniti_checkout_hub_dependency_failure_total[5m])) > 0
+    summary: WooCommerce checkout failed because of a central-hub dependency.
+  - id: StarfinitiPrivacyReplayFailure
+    signalIds: [privacy_replay_failed_count]
+    severity: critical
+    owner: security-on-call
+    route: security-page
+    runbook: OPS-012
+    dashboard: starfiniti-operations
+    for: 0s
+    keepFiringFor: 30m
+    expression: sum by (environment, service, operation) (starfiniti_privacy_replay_failed_action_count) > 0
+    summary: A privacy suppression deletion or deprovisioning replay failed.
+  - id: StarfinitiIdentityBrokerUnavailable
+    signalIds: [authentik_probe]
+    severity: high
+    owner: security-on-call
+    route: platform-page
+    runbook: OPS-013
+    dashboard: starfiniti-operations
+    for: 5m
+    keepFiringFor: 10m
+    expression: min by (environment, service, surface) (min_over_time(probe_success{job="starfiniti-authentik"}[5m])) < 1
+    summary: Brokered identity login is unavailable.
+  - id: StarfinitiCertificateExpiresSoon
+    signalIds: [certificate_expiry_seconds]
+    severity: high
+    owner: security-on-call
+    route: operations-ticket
+    runbook: OPS-014
+    dashboard: starfiniti-operations
+    for: 1h
+    keepFiringFor: 1h
+    expression: min by (environment, service, surface) (probe_ssl_earliest_cert_expiry - time()) < 1209600
+    summary: A production certificate expires in less than fourteen days.
+  - id: StarfinitiSecurityHighFinding
+    signalIds: [security_high_count]
+    severity: critical
+    owner: security-on-call
+    route: security-page
+    runbook: OPS-015
+    dashboard: starfiniti-operations
+    for: 0s
+    keepFiringFor: 1h
+    expression: sum by (environment, service) (starfiniti_security_unresolved_high_count) > 0
+    summary: A Critical or High security finding is unresolved.
+  - id: StarfinitiRecoveryExerciseStale
+    signalIds: [recovery_exercise_age_seconds]
+    severity: warning
+    owner: recovery-on-call
+    route: operations-ticket
+    runbook: OPS-016
+    dashboard: starfiniti-operations
+    for: 1h
+    keepFiringFor: 1h
+    expression: max by (environment, service, target_class) (starfiniti_recovery_exercise_age_seconds) > 7948800
+    summary: Clean-room recovery evidence is older than ninety-two days.
+  - id: StarfinitiIncidentRouteExerciseStale
+    signalIds: [incident_route_exercise_age_seconds]
+    severity: warning
+    owner: platform-on-call
+    route: operations-ticket
+    runbook: OPS-017
+    dashboard: starfiniti-operations
+    for: 1h
+    keepFiringFor: 1h
+    expression: max by (environment, service) (starfiniti_incident_route_exercise_age_seconds) > 2678400
+    summary: Incident paging and escalation evidence is older than thirty-one days.
+  - id: StarfinitiRequiredTelemetryMissing
+    signalIds: [required_series_present_ratio]
+    severity: high
+    owner: platform-on-call
+    route: platform-page
+    runbook: OPS-017
+    dashboard: starfiniti-operations
+    for: 2m
+    keepFiringFor: 10m
+    expression: absent(starfiniti_observability_required_series_present_ratio{environment="production"}) or min by (environment, service) (starfiniti_observability_required_series_present_ratio{environment="production"}) < 1
+    summary: Required operational time series are absent stale or incomplete.

@@ -1,0 +1,255 @@
+schema: starfiniti.ecosystem-canary.v1
+status: in_progress
+observedAt: 2026-08-27T16:16:45Z
+currentProduction:
+  release: v0.1.11
+  applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
+candidate:
+  pullRequest: 57
+  commit: f1717701a8aea8b4ac8863ce9473021cd7329127
+  approvedRelease: false
+  operatorAccess: true
+  pilotStoreApproved: false
+  canaryApproved: false
+publicBaseline:
+  dashboardHealth: 200
+  login: 200
+  authWithoutKey: 401
+  restWithoutKey: 401
+  canonicalDns: true
+score:
+  total: 90
+  target: 90
+  minimumCategoryRatio: 0.8
+  categories:
+    - id: correctness
+      weight: 20
+      score: 20
+      evidence: "Explicit topology, verified identity, immutable conversion, scoped API, webhook lifecycle, and supported client contracts have deterministic database-backed outcomes."
+    - id: security
+      weight: 15
+      score: 15
+      evidence: "PostgreSQL derives tenant, actor, identity, value, rate, quota, credential, endpoint, and delivery authority; RLS, grants, minimization, and secret boundaries pass."
+    - id: ledger_reliability
+      weight: 15
+      score: 15
+      evidence: "Sharing and identity commands are value-free, foreign value uses one immutable occurrence snapshot, and API activities reuse the canonical idempotent ledger pipeline."
+    - id: tests
+      weight: 15
+      score: 15
+      evidence: "Exact candidate checks cover 958 workspace tests, 81 migrations, 68 pgTAP files, all concurrency probes, both images, four WooCommerce runtimes, and client vectors."
+    - id: performance
+      weight: 10
+      score: 8
+      evidence: "Cardinality, payloads, quotas, retries, timestamps, rates, response reads, and worker claims are bounded; production latency and capacity observation remain pending."
+    - id: operability
+      weight: 10
+      score: 3
+      evidence: "Disabled-first rollout, health views, rotation, retirement, outage continuity, rollback, and runbooks exist; release, canaries, reconciliation, and observation remain pending."
+    - id: maintainability
+      weight: 15
+      score: 14
+      evidence: "Versioned contracts, additive migrations, supported clients, shared vectors, ADRs, tests, runbooks, and compatibility boundaries remain synchronized."
+checks:
+  - id: exact_head_ci
+    status: passed
+    evidence: "CI run 33101922228 and Security run 33101922223 passed at integrated candidate commit f1717701a8aea8b4ac8863ce9473021cd7329127 with all eleven PR checks green."
+  - id: migration_replay
+    status: passed
+    evidence: "Exact candidate CI replayed all 81 additive migration files and all 68 pgTAP files with the complete database and concurrency boundary green."
+  - id: contract_client_matrix
+    status: passed
+    evidence: "Strict topology, linking, currency, Service API, webhook, and lifecycle contracts plus supported TypeScript and PHP clients pass shared executable vectors."
+  - id: database_authority_matrix
+    status: passed
+    evidence: "PostgreSQL derives tenant, actor, workspace, programme, identity, wallet, rate, quota, credential, endpoint, delivery, and value authority behind RLS and explicit grants."
+  - id: concurrency_matrix
+    status: passed
+    evidence: "All repository two-session probes pass across value, capacity, audiences, exports, topology, linking, conversion, quotas, endpoint lifecycle, identity, billing, and migration boundaries."
+  - id: woocommerce_runtime_matrix
+    status: passed
+    evidence: "Minimum and current WordPress and WooCommerce pass with HPOS and legacy storage while ecosystem capabilities remain asynchronous and outside checkout."
+  - id: browser_accessibility
+    status: passed
+    evidence: "Production components pass desktop, mobile, dark, keyboard, focus, reduced motion, contrast, responsive overflow, degraded/read-only states, and English-only review."
+  - id: checkout_independence_matrix
+    status: passed
+    evidence: "WooCommerce runtime and connector regression suites preserve local checkout, native coupons, ingestion, refunds, releases, and accepted-work recovery without ecosystem availability."
+  - id: public_production_baseline
+    status: passed
+    evidence: "Canonical DNS resolves; dashboard health and login return HTTP 200 while unauthenticated Supabase Auth and REST roots return HTTP 401."
+  - id: operator_access
+    status: passed
+    evidence: "The approved read-only Proxmox route confirms application VM 970 and Supabase VM 971 are running without changing service, configuration, topology, identity, production data, checkout, or loyalty value."
+  - id: client_package_vectors
+    status: passed
+    evidence: "Dependency-light TypeScript and PHP 8.1 packages pass identical Service API request, exact raw-body signature, timestamp, bounded response, and stable replay-identity vectors."
+  - id: approved_release
+    status: pending
+    evidence: "Draft PR 57 is exact-head green but explicit merge, immutable release, and deployment approval remain required."
+  - id: approved_pilot_store
+    status: pending
+    evidence: "One real multi-store WooCommerce pilot with approved topology, linking, currency, API, webhook, refund, quota, outage, and rollback fixtures requires owner approval."
+  - id: canary_approval
+    status: pending
+    evidence: "No approved maintenance window, ecosystem scope, currency and value ceiling, observation interval, stop condition, or rollback decision owner is recorded."
+  - id: pre_change_recovery_point
+    status: pending
+    evidence: "A fresh verified PostgreSQL base, WAL position, incremental off-host archive, application configuration snapshot, and integration signing-reference inventory must precede deployment."
+  - id: production_source_baseline
+    status: pending
+    evidence: "Fresh minimized topology, identity, wallet, currency, event, ledger, quota, credential, endpoint, delivery, audit, checkout, and privacy aggregates require capture."
+  - id: disabled_deployment
+    status: pending
+    evidence: "Candidate images and additive migrations have not been deployed with every M11 capability and isolated process disabled."
+  - id: migration_registration
+    status: pending
+    evidence: "Production must record every candidate migration version and source digest exactly once before ecosystem canaries can run."
+  - id: non_canary_disabled
+    status: pending
+    evidence: "Unrelated organizations, workspaces, programmes, stores, customers, sessions, providers, credentials, endpoints, and workers must receive no M11 capability."
+  - id: ecosystem_entitlement_canary
+    status: pending
+    evidence: "Ecosystem capabilities must remain disabled globally and enable only for the approved Starfiniti tenant and exact slice under test."
+  - id: isolated_topology_reconciliation
+    status: pending
+    evidence: "The existing isolated group, workspace membership, connector protection, wallet boundaries, and zero command-created ledger effects must reconcile exactly."
+  - id: shared_topology_reconciliation
+    status: pending
+    evidence: "One explicitly approved workspace must join the exact shared policy, reconcile immutable revision and projection, then return to reviewed scope."
+  - id: connector_removal_protection
+    status: pending
+    evidence: "A workspace with connector history must fail removal without changing topology, accepted connector evidence, customer access, or loyalty value."
+  - id: verified_customer_link_canary
+    status: pending
+    evidence: "One approved second-store identity must use fresh signed proof and reconcile Auth subject, source identity, canonical customer, wallet, and event reads."
+  - id: unlink_relink_rollback
+    status: pending
+    evidence: "Only a value-free secondary identity may unlink and relink while revisions, provenance, wallet value, history, and customer access remain exact."
+  - id: approved_rate_provider
+    status: pending
+    evidence: "Production conversion requires owner approval of one provider identifier, allowed currencies, evidence age, direction, precision, rounding, and outage policy."
+  - id: provider_adapter_isolation
+    status: pending
+    evidence: "Provider material must exist only in the isolated ingestion process and remain absent from browser, peers, database evidence, logs, support output, and artifacts."
+  - id: foreign_order_conversion
+    status: pending
+    evidence: "One approved foreign order must reconcile source amount, currency, occurrence snapshot, exact rational base amount, programme evaluation, explanation, and ledger effect."
+  - id: foreign_refund_snapshot_reuse
+    status: pending
+    evidence: "Refunding the canary order must reuse the original award snapshot with no current-rate lookup, arithmetic drift, duplicate reversal, or unexplained points."
+  - id: currency_analytics_reconciliation
+    status: pending
+    evidence: "Source, rate, provider, instant, rounding, base amount, award, refund, liability, and analytics currency definitions must reconcile exactly."
+  - id: service_account_issuance
+    status: pending
+    evidence: "One least-privilege credential must be displayed once while only digest, hint, scope, quota, revision, actor, and audit evidence persist."
+  - id: customer_sync_replay
+    status: pending
+    evidence: "Replaying one opaque customer command must reconcile one source identity and receipt, no email merge, no cross-tenant authority, and zero ledger effects."
+  - id: activity_event_ledger_replay
+    status: pending
+    evidence: "Replaying one signed custom activity must reconcile one canonical event, effect, explanation, cap decision, immutable transaction, and exact retry result."
+  - id: credential_rotation_revocation
+    status: pending
+    evidence: "Bounded-overlap rotation and immediate revocation must preserve exact revision history while the prior credential fails outside its authority window."
+  - id: quota_concurrency_observation
+    status: pending
+    evidence: "Concurrent requests at the fixed-minute boundary must produce exact accepted and rejected counts without alternate credential, route, ordering, or retry bypass."
+  - id: webhook_secret_mount_isolation
+    status: pending
+    evidence: "One disabled endpoint must mount its one-time material only into its endpoint-isolated worker with no database, peer, log, or artifact disclosure."
+  - id: webhook_delivery_replay
+    status: pending
+    evidence: "One minimized signed event and receiver replay must retain stable delivery identity, exact bytes and signatures, and exactly one downstream effect."
+  - id: webhook_disable_rotation_reactivation
+    status: pending
+    evidence: "Disable before authorization, rotate only while disabled, update the reviewed mount, then reactivate with exact revision and attempt evidence."
+  - id: webhook_retirement_reconciliation
+    status: pending
+    evidence: "Retirement must scrub the live destination, prevent new authorization, stop the isolated worker, and retain immutable delivery, rotation, and audit evidence."
+  - id: production_outage_continuity
+    status: pending
+    evidence: "Stopping API, conversion, provider, and webhook components independently must preserve checkout, ingestion, refunds, releases, reconciliation, and promised value."
+  - id: latency_capacity_observation
+    status: pending
+    evidence: "Record bounded command and read latency, quota behavior, queue depth, provider timing, worker resources, response size, and failure classification."
+  - id: rollback_rehearsal
+    status: pending
+    evidence: "Disable every M11 capability, revoke canary credentials, stop isolated processes, restore prior images, and retain additive evidence, access, checkout, and loyalty value."
+  - id: observation_window
+    status: pending
+    evidence: "Observe controlled canaries after rollback rehearsal and record topology, identity, rates, quotas, deliveries, latency, errors, retries, privacy, and reconciliation."
+  - id: final_reconciliation
+    status: pending
+    evidence: "Confirm zero unexplained topology, identity, wallet, currency, event, ledger, quota, credential, endpoint, delivery, audit, checkout, privacy, or customer-value difference."
+artifacts:
+  - id: read_only_baseline
+    status: verified
+    path: docs/plan/evidence/M11/production/ecosystem-read-only-baseline-2026-08-27.json
+    sha256: b450f2ae3346a46afaa19b6553018c9709cccc1946f91fbc33d04f31a74ad71f
+  - id: release_inventory
+    status: pending
+    path: null
+    sha256: null
+  - id: approval_record
+    status: pending
+    path: null
+    sha256: null
+  - id: recovery_point
+    status: pending
+    path: null
+    sha256: null
+  - id: production_baseline
+    status: pending
+    path: null
+    sha256: null
+  - id: canary_journal
+    status: pending
+    path: null
+    sha256: null
+  - id: reconciliation_report
+    status: pending
+    path: null
+    sha256: null
+  - id: rollback_report
+    status: pending
+    path: null
+    sha256: null
+  - id: observation_report
+    status: pending
+    path: null
+    sha256: null
+automaticFails:
+  - id: implicit_sharing_authority
+    rule: "wallet sharing customer linking workspace membership or programme topology is inferred from email domain organization membership mutable claims or browser selectors"
+  - id: cross_tenant_exposure
+    rule: "an unrelated tenant workspace customer rate credential endpoint event wallet ledger delivery or operational selector becomes visible mutable or externally actionable"
+  - id: duplicate_ecosystem_effect
+    rule: "retry concurrency replay rotation lease recovery or receiver replay creates another identity receipt event ledger quota endpoint delivery or downstream business effect"
+  - id: historical_rate_drift
+    rule: "caller-supplied processing-time refund-time or mutable current rate changes occurrence-bound conversion evidence award refund liability or analytics"
+  - id: identity_merge_violation
+    rule: "email attribute provider profile or unverified proof merges customer authority or links a wallet with incompatible existing value"
+  - id: credential_or_secret_leak
+    rule: "raw reusable service API webhook provider or signing material appears in database browser logs support evidence another process or an artifact"
+  - id: webhook_destination_escape
+    rule: "redirect DNS rebinding private reserved mixed answer unpinned socket or unbounded response reaches an internal or unapproved receiver"
+  - id: quota_or_rate_bypass
+    rule: "alternate credential route ordering concurrency or retry exceeds the exact fixed-minute quota provider bound payload size attempt ceiling or rate policy"
+  - id: connector_or_history_stranding
+    rule: "workspace removal unlink endpoint retirement disablement or rollback loses connector history identity provenance customer access immutable evidence or loyalty value"
+  - id: ecosystem_value_dependency
+    rule: "checkout ingestion refunds releases reconciliation balances promised rewards or existing redemption depends on ecosystem API currency provider or webhook availability"
+  - id: client_contract_drift
+    rule: "supported TypeScript PHP Service API or Standard Webhooks bytes signature timestamp replay identity or minimized payload diverges from the versioned server contract"
+  - id: unsafe_rollout
+    rule: "topology sharing linking conversion API credential endpoint or webhook is enabled outside the approved pilot before recovery baseline disabled deployment and isolation pass"
+  - id: reconciliation_gap
+    rule: "topology identity currency event ledger quota endpoint delivery audit analytics checkout or privacy evidence differs from immutable source facts"
+  - id: sensitive_evidence
+    rule: "contact identity raw payload reusable key signature coupon plaintext private selector rate-provider material or ledger metadata enters browser logs support output or evidence"
+  - id: score_or_approval_bypass
+    rule: "module status completion approval provider policy artifact score total or category floor is changed without exact synchronized evidence"
+  - id: unexplained_or_unapproved_close
+    rule: "any topology identity currency API webhook client value checkout privacy approval artifact score floor or critical finding remains unresolved"

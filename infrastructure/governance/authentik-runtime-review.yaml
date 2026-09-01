@@ -1,0 +1,63 @@
+schema: starfiniti.authentik-runtime-review.v1
+reviewedAt: 2026-08-31
+reviewCutoff: 2026-08-31T05:55:01Z
+runtimeEvidence:
+  path: docs/plan/evidence/M16/runs/authentik-runtime-88c8046-2026-08-31T055501Z.json
+  bytes: 3257
+  sha256: 4e89321c09f46bb4b3cd7e2690eed54110c9e516c0537d88b2c4424b141b5cb0
+  implementationCommit: 88c8046d5844bd3208dab7ca8bc814e0c1978fde
+  observedVersionFamily: "2026.5"
+  observedExactVersion: 2026.5.6
+officialSources:
+  securityPolicy: https://docs.goauthentik.io/security/policy/
+  releaseIndex: https://github.com/goauthentik/authentik/releases
+  deployedRelease: https://github.com/goauthentik/authentik/releases/tag/version/2026.5.6
+  currentFeatureRelease: https://github.com/goauthentik/authentik/releases/tag/version/2026.8.0
+  currentFeatureNotes: https://docs.goauthentik.io/releases/2026.8/
+supportDecision:
+  policy: the current and previous feature release are supported only at their latest patch
+  deployedFeatureLine: "2026.5"
+  deployedPatch: 2026.5.6
+  deployedPatchPublishedAt: 2026-07-22
+  deployedIsLatestPatchInFeatureLineThroughCutoff: true
+  currentFeatureLine: "2026.8"
+  currentFeaturePatch: 2026.8.0
+  currentFeaturePatchPublishedAt: 2026-08-18
+  deployedState: supported-prior-feature-line-current-patch
+  candidateAccepted: false
+impact:
+  previousClassification: installed-version-unknown-blocks-upgrade-decision
+  classification: supported-prior-feature-line-current-patch
+  previousSeverity: high
+  severity: medium
+  securityRelevant: true
+  affectedModules: [M01, M13, M15, M16]
+  riskIds: [R-029, R-044, R-048]
+  owner: engineering
+  disposition: retain-2026-5-6-until-2026-8-identity-and-recovery-rehearsal
+  rationale: The public login shell and three independently fetched same-version assets prove that the served runtime is exact Authentik 2026.5.6, which is the latest patch in the still-supported prior feature line through the cutoff. This resolves the version unknown only; it does not identify the image or outposts or prove the current feature-line upgrade.
+  rollback: Preserve the exact current broker database configuration export signing material local break-glass path Supabase callback contract and image/outpost inventory before any candidate change; a failed rehearsal leaves 2026.5.6 running and creates no production mutation.
+remainingGates:
+  - container-image-and-outpost-inventory
+  - private-configuration-and-signing-recovery-export
+  - exact-2026-8-release-and-deprecation-diff
+  - oidc-saml-scim-fixtures
+  - stale-session-and-deprovisioning-canary
+  - clean-room-recovery
+  - independent-review
+  - owner-approval
+limitations:
+  publicShellIsRuntimeEvidence: true
+  containerImageIdentityProven: false
+  outpostVersionsProven: false
+  privateConfigurationProven: false
+  identityCompatibilityProven: false
+  recoveryProven: false
+  elapsedMonthlyReviewComplete: false
+authority:
+  mergeApproved: false
+  releaseApproved: false
+  providerUpgradeApproved: false
+  deploymentApproved: false
+  productionMutation: false
+  productionReconciled: false

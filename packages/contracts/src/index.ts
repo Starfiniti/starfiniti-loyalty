@@ -4,11 +4,32 @@ export * from "./woocommerce";
 export * from "./ledger";
 export * from "./programme";
 export * from "./programme-v2";
+export * from "./tier-policy-v2";
+export * from "./tier-progression";
+export * from "./point-expiry-v2";
+export * from "./reward-v2";
+export * from "./reward-fulfilment";
 export * from "./reporting";
+export * from "./analytics-outcomes";
+export * from "./analytics-cohorts";
+export * from "./analytics-export";
 export * from "./experience";
 export * from "./customer-export";
 export * from "./entitlements";
+export * from "./billing";
 export * from "./activity";
+export * from "./referral";
+export * from "./audience";
+export * from "./campaign";
+export * from "./notification";
+export * from "./customer-experience";
+export * from "./ecosystem";
+export * from "./currency";
+export * from "./service-api";
+export * from "./migration";
+export * from "./enterprise-identity";
+export * from "./enterprise-administration";
+export * from "./scim";
 
 export const commerceEnvelopeV1 = z.object({
   version: z.literal("1"),

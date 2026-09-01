@@ -1,0 +1,24 @@
+{
+  "schema": "starfiniti.managed-billing-canary-artifact.v1",
+  "artifactId": "read_only_baseline",
+  "candidateCommit": "9bea3d4d210dd222d739495d3b1741c62462c7a2",
+  "observedAt": "2026-08-27T18:52:44Z",
+  "result": "verified",
+  "summary": "The canonical public endpoints and approved read-only Proxmox route passed the managed-billing pre-canary availability and self-hosted baseline without mutation.",
+  "checks": ["public_production_baseline", "operator_access"],
+  "details": {
+    "dashboardHealth": 200,
+    "login": 200,
+    "authWithoutKey": 401,
+    "restWithoutKey": 401,
+    "canonicalDns": true,
+    "applicationVm": 970,
+    "databaseVm": 971,
+    "applicationVmState": "running",
+    "databaseVmState": "running",
+    "deploymentMode": "self_hosted",
+    "providerConfigured": false,
+    "scope": "read_only",
+    "mutationCount": 0
+  }
+}

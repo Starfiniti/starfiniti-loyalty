@@ -1,0 +1,452 @@
+schema: starfiniti.authentik-source-compatibility.v1
+reviewedAt: 2026-08-31
+reviewCutoff: 2026-08-31T12:00:00Z
+scope:
+  provider: authentik
+  baseline: 2026.5.6
+  candidate: 2026.8.0
+  evidenceClass: immutable-source-and-openapi-contract
+  productionRuntimeChanged: false
+  privateConfigurationRead: false
+provenance:
+  baseline:
+    release: https://github.com/goauthentik/authentik/releases/tag/version/2026.5.6
+    tagObject: 80babf5b9e88d2bfa21a3c0c80e9db143f8b94a
+    commit: 0c67ea476be6319f1b2a41cb0f5ed128af37b99b
+    schema:
+      path: schema.yml
+      gitBlob: 8ded89a4d1f97112190f953bffbc37c21c0e3516
+      bytes: 1712010
+      sha256: d4460a399f8ad27309518ef52dcc2c15cbddfe316239b47fc3365cb75ddad3b7
+    runtimeEvidence: docs/plan/evidence/M16/runs/authentik-runtime-88c8046-2026-08-31T055501Z.json
+  candidate:
+    release: https://github.com/goauthentik/authentik/releases/tag/version/2026.8.0
+    releaseNotes: https://docs.goauthentik.io/releases/2026.8/
+    publishedAt: 2026-08-18T22:04:25Z
+    tagObject: 428801ce2f5a6db4ef167f09023a95dde4c592d3
+    commit: f3753ec20ce13ef672401a131379d1a5a2d3439b
+    tagVerification:
+      verified: false
+      reason: unsigned
+    schema:
+      path: schema.yml
+      gitBlob: 71519604a9659037993c269553d79a9bac649108
+      bytes: 1803002
+      sha256: 7eb0cc4fac5a22e1f856ed7933a7fddb231d1e1bb5710e60dfc41e3e2e046750
+    releaseNotesSource:
+      path: website/docs/releases/2026/v2026.8.md
+      gitBlob: b2830b30c8626e25e8ded7535a208d6b02273241
+      bytes: 19344
+      sha256: 41995dd4cf748401e8e9ecd9a8cbecbfda10c160ca9e509c9bbe8d8c6e645c6d
+    releaseAsset:
+      name: server.oci.tar
+      bytes: 746491392
+      sha256: 83786edd88e64fc69c4bef801211df7cd2670357afb67b826bbcba6b660f7a4a
+    registry:
+      image: ghcr.io/goauthentik/server:2026.8.0
+      indexDigest: sha256:7421753cfea67e89a6d295a1f0173ccea3866b33768c88dad90453b151cdcfd5
+      linuxAmd64IndexDigest: sha256:5217eed4e86a3c6666ecf81c3430753ef958f97f93ac614070d458c10e0b2b33
+      linuxAmd64ManifestDigest: sha256:21000cebe8e51eca0620034096586d675cedec8925ac750f7f8966d86eeb0da0
+      linuxAmd64AttestationDigest: sha256:8470929d918149da17b07410875999112043762ed4e242f5010906da4f5e60b4
+  sourceArtifacts:
+    - path: authentik/providers/scim/clients/users.py
+      bytes: 5933
+      sha256: 10204cd456c3c5f29dbb31d4b3f34424e088544eda08832658493ef4aae96d17
+    - path: authentik/providers/scim/clients/groups.py
+      bytes: 17419
+      sha256: 3fc85fb83c42c1b56c4ed9a154b2c972d6641582fa2515887635741c12d58ee0
+    - path: authentik/providers/scim/clients/base.py
+      bytes: 6326
+      sha256: ee95c004a62fe9e781725a6f24b85e26d5c7ee1ae28696c34952c88e0f79af5e
+    - path: authentik/providers/scim/clients/schema.py
+      bytes: 8521
+      sha256: abcedc4478800406887a86b738f16e51d2e204e70f7adce0f8d76a137df998fa
+    - path: authentik/sources/oauth/api/source.py
+      bytes: 9033
+      sha256: 91353515a6402dda100aeafdb4f9bc3ea8cb5a44b02c11dc35d1a3978c8088bf
+    - path: authentik/sources/saml/api/source.py
+      bytes: 3934
+      sha256: d044e864aa6e96989f9781e07f0eb82b0d8202acb9f08b268a09798ba03ce671
+    - path: authentik/providers/oauth2/api/providers.py
+      bytes: 8673
+      sha256: 3fb7e1f4fc5f088719b54ee0fb92f5b7cd1ddf4523427aae8ebc78ce4684bd15
+    - path: authentik/providers/oauth2/id_token.py
+      bytes: 7887
+      sha256: a9a3fbd58cd11e853f5ab14742b1d154606cae73121e6187f683493315ec0f0e
+officialSources:
+  securityPolicy: https://docs.goauthentik.io/security/policy/
+  releaseNotes: https://docs.goauthentik.io/releases/2026.8/
+  scimProvider: https://docs.goauthentik.io/add-secure-apps/providers/scim/
+  oauthSources: https://docs.goauthentik.io/users-sources/sources/protocols/oauth/
+  samlSources: https://docs.goauthentik.io/users-sources/sources/protocols/saml/
+  sourceTree: https://github.com/goauthentik/authentik/tree/version/2026.8.0
+approach:
+  compared:
+    - id: exact-disposable-runtime-rehearsal
+      strength: proves migration runtime outposts protocols recovery and rollback together
+      limitation: requires private configuration image and outpost inventory plus isolated recovery inputs not present in repository evidence
+    - id: immutable-source-and-openapi-contract
+      strength: proves the exact candidate source and every repository-owned admin request stays structurally supported without production access
+      limitation: cannot prove migrations runtime behavior provider traffic outposts recovery or rollback
+  chosen: immutable-source-and-openapi-contract
+  rationale: Close the deterministic source-contract question now while retaining the stronger exact disposable runtime rehearsal as a mandatory candidate gate.
+adminSurface:
+  implementation: apps/dashboard/lib/server/authentik-federation-admin.ts
+  operationCount: 27
+  requestSchemaCount: 18
+  requestShapeCount: 9
+  sentFieldOccurrenceCount: 248
+  exactSentFieldOccurrenceCount: 240
+  compatibleChangedSentFieldOccurrenceCount: 8
+  oauthSourceFieldOccurrenceCount: 46
+  otherRequestShapeFieldOccurrenceCount: 202
+  missingOperations: 0
+  removedSentFields: 0
+  newRequiredRequestFields: 0
+  requestShapes:
+    - id: oauth-source
+      fieldsPerSchema: 23
+      schemaOccurrences: 2
+      fieldOccurrences: 46
+      schemas: [OAuthSourceRequest, PatchedOAuthSourceRequest]
+      fields:
+        - name
+        - slug
+        - enabled
+        - promoted
+        - authentication_flow
+        - enrollment_flow
+        - user_property_mappings
+        - group_property_mappings
+        - policy_engine_mode
+        - user_matching_mode
+        - group_matching_mode
+        - provider_type
+        - authorization_url
+        - access_token_url
+        - profile_url
+        - pkce
+        - consumer_key
+        - consumer_secret
+        - additional_scopes
+        - oidc_well_known_url
+        - oidc_jwks_url
+        - oidc_jwks
+        - authorization_code_auth_method
+    - id: saml-source
+      fieldsPerSchema: 26
+      schemaOccurrences: 2
+      fieldOccurrences: 52
+      schemas: [SAMLSourceRequest, PatchedSAMLSourceRequest]
+      fields:
+        - name
+        - slug
+        - enabled
+        - promoted
+        - authentication_flow
+        - enrollment_flow
+        - user_property_mappings
+        - group_property_mappings
+        - policy_engine_mode
+        - user_matching_mode
+        - group_matching_mode
+        - pre_authentication_flow
+        - sso_url
+        - slo_url
+        - allow_idp_initiated
+        - force_authn
+        - name_id_policy
+        - binding_type
+        - verification_kp
+        - signing_kp
+        - encryption_kp
+        - digest_algorithm
+        - signature_algorithm
+        - temporary_user_delete_after
+        - signed_assertion
+        - signed_response
+    - id: certificate-key-pair
+      fieldsPerSchema: 3
+      schemaOccurrences: 2
+      fieldOccurrences: 6
+      schemas: [CertificateKeyPairRequest, PatchedCertificateKeyPairRequest]
+      fields: [name, certificate_data, key_data]
+    - id: authentication-flow
+      fieldsPerSchema: 9
+      schemaOccurrences: 2
+      fieldOccurrences: 18
+      schemas: [FlowRequest, PatchedFlowRequest]
+      fields:
+        - name
+        - slug
+        - title
+        - designation
+        - policy_engine_mode
+        - compatibility_mode
+        - layout
+        - denied_action
+        - authentication
+    - id: identification-stage
+      fieldsPerSchema: 14
+      schemaOccurrences: 2
+      fieldOccurrences: 28
+      schemas: [IdentificationStageRequest, PatchedIdentificationStageRequest]
+      fields:
+        - name
+        - user_fields
+        - password_stage
+        - captcha_stage
+        - case_insensitive_matching
+        - show_matched_user
+        - enrollment_flow
+        - recovery_flow
+        - passwordless_flow
+        - sources
+        - show_source_labels
+        - pretend_user_exists
+        - enable_remember_me
+        - webauthn_stage
+    - id: user-login-stage
+      fieldsPerSchema: 7
+      schemaOccurrences: 2
+      fieldOccurrences: 14
+      schemas: [UserLoginStageRequest, PatchedUserLoginStageRequest]
+      fields:
+        - name
+        - session_duration
+        - terminate_other_sessions
+        - remember_me_offset
+        - network_binding
+        - geoip_binding
+        - remember_device
+    - id: flow-stage-binding
+      fieldsPerSchema: 7
+      schemaOccurrences: 2
+      fieldOccurrences: 14
+      schemas: [FlowStageBindingRequest, PatchedFlowStageBindingRequest]
+      fields:
+        - target
+        - stage
+        - evaluate_on_plan
+        - re_evaluate_policies
+        - order
+        - policy_engine_mode
+        - invalid_response_action
+    - id: oauth2-provider
+      fieldsPerSchema: 23
+      schemaOccurrences: 2
+      fieldOccurrences: 46
+      schemas: [OAuth2ProviderRequest, PatchedOAuth2ProviderRequest]
+      fields:
+        - name
+        - authentication_flow
+        - authorization_flow
+        - invalidation_flow
+        - property_mappings
+        - client_type
+        - grant_types
+        - client_id
+        - client_secret
+        - access_code_validity
+        - access_token_validity
+        - refresh_token_validity
+        - refresh_token_threshold
+        - include_claims_in_id_token
+        - signing_key
+        - encryption_key
+        - redirect_uris
+        - logout_uri
+        - logout_method
+        - sub_mode
+        - issuer_mode
+        - jwt_federation_sources
+        - jwt_federation_providers
+    - id: application
+      fieldsPerSchema: 12
+      schemaOccurrences: 2
+      fieldOccurrences: 24
+      schemas: [ApplicationRequest, PatchedApplicationRequest]
+      fields:
+        - name
+        - slug
+        - provider
+        - backchannel_providers
+        - open_in_new_tab
+        - meta_launch_url
+        - meta_icon
+        - meta_description
+        - meta_publisher
+        - policy_engine_mode
+        - group
+        - meta_hide
+  operations:
+    - [GET, "/api/v3/sources/oauth/{slug}/", sources_oauth_retrieve]
+    - [GET, "/api/v3/sources/saml/{slug}/", sources_saml_retrieve]
+    - [PATCH, "/api/v3/sources/oauth/{slug}/", sources_oauth_partial_update]
+    - [PATCH, "/api/v3/sources/saml/{slug}/", sources_saml_partial_update]
+    - [POST, "/api/v3/sources/oauth/", sources_oauth_create]
+    - [POST, "/api/v3/sources/saml/", sources_saml_create]
+    - [
+        GET,
+        "/api/v3/crypto/certificatekeypairs/",
+        crypto_certificatekeypairs_list,
+      ]
+    - [
+        PATCH,
+        "/api/v3/crypto/certificatekeypairs/{kp_uuid}/",
+        crypto_certificatekeypairs_partial_update,
+      ]
+    - [
+        POST,
+        "/api/v3/crypto/certificatekeypairs/",
+        crypto_certificatekeypairs_create,
+      ]
+    - [GET, "/api/v3/flows/instances/{slug}/", flows_instances_retrieve]
+    - [PATCH, "/api/v3/flows/instances/{slug}/", flows_instances_partial_update]
+    - [POST, "/api/v3/flows/instances/", flows_instances_create]
+    - [GET, "/api/v3/stages/identification/", stages_identification_list]
+    - [
+        PATCH,
+        "/api/v3/stages/identification/{stage_uuid}/",
+        stages_identification_partial_update,
+      ]
+    - [POST, "/api/v3/stages/identification/", stages_identification_create]
+    - [GET, "/api/v3/stages/user_login/", stages_user_login_list]
+    - [
+        PATCH,
+        "/api/v3/stages/user_login/{stage_uuid}/",
+        stages_user_login_partial_update,
+      ]
+    - [POST, "/api/v3/stages/user_login/", stages_user_login_create]
+    - [GET, "/api/v3/flows/bindings/", flows_bindings_list]
+    - [
+        PATCH,
+        "/api/v3/flows/bindings/{fsb_uuid}/",
+        flows_bindings_partial_update,
+      ]
+    - [POST, "/api/v3/flows/bindings/", flows_bindings_create]
+    - [GET, "/api/v3/providers/oauth2/", providers_oauth2_list]
+    - [PATCH, "/api/v3/providers/oauth2/{id}/", providers_oauth2_partial_update]
+    - [POST, "/api/v3/providers/oauth2/", providers_oauth2_create]
+    - [GET, "/api/v3/core/applications/{slug}/", core_applications_retrieve]
+    - [
+        PATCH,
+        "/api/v3/core/applications/{slug}/",
+        core_applications_partial_update,
+      ]
+    - [POST, "/api/v3/core/applications/", core_applications_create]
+  compatibleChanges:
+    - field: OAuthSourceRequest.authorization_url
+      change: maxLength-255-removed
+      disposition: compatible-widening
+    - field: OAuthSourceRequest.access_token_url
+      change: maxLength-255-removed
+      disposition: compatible-widening
+    - field: OAuthSourceRequest.profile_url
+      change: maxLength-255-removed
+      disposition: compatible-widening
+    - field: OAuth2ProviderRequest.grant_types
+      change: enum-reference-renamed-and-token-exchange-added
+      disposition: authorization-code-value-preserved
+    - field: SAMLSourceRequest.issuer
+      change: replaced-by-optional-issuer_override-and-required-response-url_issuer-added
+      disposition: compatible-because-starfiniti-writes-neither-and-parses-only-pk
+releaseImpact:
+  breakingChanges:
+    - hash-password-cli-input-only
+    - webauthn-prevent-duplicate-device-option-removed
+  ownedSurfaceIntersection: none
+  deprecations:
+    - AUTHENTIK_POSTGRESQL__CONN_OPTIONS
+    - AUTHENTIK_POSTGRESQL__REPLICA__CONN_OPTIONS
+  migrationChecks:
+    - configure-and-assert-base-url-before-2026-11
+    - inventory-and-upgrade-all-outposts-to-exact-server-version
+    - verify-rust-entrypoint-health-and-proxy-outpost-behavior
+    - inventory-deprecated-postgresql-connection-options
+protocolContracts:
+  oidc:
+    expected:
+      scopes: [openid]
+      upstreamType: openidconnect
+      downstreamGrantTypes: [authorization_code]
+      downstreamSubjectMode: hashed_user_id
+      redirectMatching: strict
+      supabaseCallback: https://api.loyalty.starfiniti.com/auth/v1/callback
+    sourceDisposition: preserved-with-additive-token-exchange-and-dcr-capabilities-unused
+    runtimeProof: false
+  saml:
+    expected:
+      idpInitiated: false
+      forceAuthn: false
+      signedAssertion: true
+      signedResponse: true
+      digest: http://www.w3.org/2001/04/xmlenc#sha256
+      signature: http://www.w3.org/2001/04/xmldsig-more#rsa-sha256
+    sourceDisposition: request-fields-preserved-issuer-response-change-requires-candidate-metadata-fixture
+    runtimeProof: false
+  scim:
+    expected:
+      userExternalId: authentik-user-uid-correlated-with-hashed-oidc-subject
+      groupExternalId: authentik-group-primary-key
+      discoveryPagination: [startIndex, count]
+      maximumCount: 200
+      memberRemovalPath: 'members[value eq "<uuid>"]'
+      authorizationAuthority: live-postgresql-membership-and-rls
+    sourceDisposition: candidate-pagination-and-member-removal-forms-are-supported-by-starfiniti-contracts
+    runtimeProof: false
+  deprovisioning:
+    expected:
+      idpDeactivationMayDeleteAuthentikSessions: true
+      staleApplicationSessionRechecksLiveMembership: true
+      idpClaimsGrantTenantAuthority: false
+      invitationOrScimProvisioningRequired: true
+    sourceDisposition: candidate-session-deletion-is-defense-in-depth-and-does-not-replace-database-authorization
+    runtimeProof: false
+verdict:
+  sourceContractCompatible: true
+  candidateRuntimeExecuted: false
+  identityCompatibilityProven: false
+  recoveryProven: false
+  rollbackProven: false
+  upgradeAccepted: false
+  deployedVersionRetained: 2026.5.6
+remainingGates:
+  - private-configuration-and-signing-recovery-export
+  - base-url-and-deprecated-postgresql-option-inventory
+  - exact-container-image-and-same-version-outpost-inventory
+  - disposable-exact-2026-8-runtime-rehearsal
+  - oidc-and-saml-admin-reconciliation-fixtures
+  - scim-discovery-user-group-membership-and-deprovisioning-fixtures
+  - stale-session-live-membership-and-rls-canary
+  - clean-room-recovery-and-rollback
+  - independent-review
+  - owner-approval
+rollback:
+  currentRuntime: retain-authentik-2026-5-6
+  candidateFailure: reject-before-production-and-preserve-current-runtime
+  preserve:
+    - database-and-private-configuration-export
+    - signing-and-encryption-material
+    - local-break-glass-owner
+    - supabase-callback-and-provider-identifiers
+    - exact-current-image-and-outpost-inventory
+  forbidden:
+    - production-upgrade-from-source-contract-alone
+    - deleting-membership-federation-or-audit-history
+    - email-domain-group-or-jwt-claim-authorization
+limitations:
+  exactCandidateSourcePinned: true
+  exactCandidateRuntimeObserved: false
+  privateConfigurationObserved: false
+  imageAndOutpostInventoryObserved: false
+  protocolTrafficExecuted: false
+  productionMutation: false
+authority:
+  productionAccess: false
+  mergeApproved: false
+  releaseApproved: false
+  providerUpgradeApproved: false
+  deploymentApproved: false
+  productionMutation: false
+  productionReconciled: false

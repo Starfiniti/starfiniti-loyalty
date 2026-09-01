@@ -1,0 +1,79 @@
+schema: starfiniti.borgbackup-security-plan.v1
+status: candidate
+profile: production-recovery-client
+architecture: amd64
+baseImage: debian:13-slim@sha256:d7e12182ce18b85b93007c1dedf31f2d29e01ccf3182cc4017c709b6259bc132
+sources:
+  release: https://github.com/borgbackup/borg/releases/tag/1.4.5
+  installation: https://borgbackup.readthedocs.io/en/1.4.5/installation.html
+  changes: https://borgbackup.readthedocs.io/en/1.4.5/changes.html#version-1-4-5-2026-07-19
+  security: https://borgbackup.readthedocs.io/en/1.4.5/support.html#security-contact
+  debianPackage: https://packages.debian.org/trixie/borgbackup
+  debianSecurity: https://security-tracker.debian.org/tracker/CVE-2026-62268
+installed:
+  package:
+    authority: debian-archive
+    name: borgbackup
+    version: 1.4.0-5
+    repositoryUrl: https://deb.debian.org/debian
+    suite: trixie
+    url: https://deb.debian.org/debian/pool/main/b/borgbackup/borgbackup_1.4.0-5_amd64.deb
+    sha256: 51e1cbdee1fccb31e9c63b93fda81d5fffb14289dc31ba27984e04ebb0c85733
+    executablePath: /usr/bin/borg
+    executableSha256: babb2b42edd64283220d1f1ca57119d41d8f8b93e4af9c5606874b60dd43bc4d
+  security:
+    cve: CVE-2026-62268
+    status: affected
+    debianDisposition: no-dsa-minor-issue
+candidate:
+  authority: borgbackup-upstream-release
+  version: 1.4.5
+  glibcMinimum: "2.31"
+  installRoot: /opt/starfiniti/borg/1.4.5
+  executablePath: /opt/starfiniti/borg/1.4.5/borg-dir/borg.exe
+  executableSha256: e0a23534bf28aa90940f749bb25dbbeecd401e9bf1de1dd8872cedc45f98718d
+  versionLine: borg.exe 1.4.5
+  asset:
+    url: https://github.com/borgbackup/borg/releases/download/1.4.5/borg-linux-glibc231-x86_64.tgz
+    sha256: b6cba6b5eee19d51fbf4d89c6090dd40647b856755fffe2e26417365536f2c58
+    bytes: 29702061
+    signatureUrl: https://github.com/borgbackup/borg/releases/download/1.4.5/borg-linux-glibc231-x86_64.tgz.asc
+    signatureSha256: 9e7027a2573028e67d9138ccd3de4008d3fad22a5840ac4711f7d56fe89f850a
+    readmeUrl: https://github.com/borgbackup/borg/releases/download/1.4.5/00_README.txt
+    readmeSha256: 9245dd1cfffb1b40d7f1b112e9e917902f2ca255b63a417f671d3da3a12e204a
+  signing:
+    keyserverUrl: https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x6D5BEF9ADD2075805747B70F9F88FB52FAF7B393
+    primaryFingerprint: 6D5BEF9ADD2075805747B70F9F88FB52FAF7B393
+  extractedTree:
+    root: borg-dir
+    entries: 106
+    files: 95
+    bytes: 79942815
+    manifestSha256: 09fb420dce78c94814520628cf68ecdd77ab75d4fd9c794f8916874f2a767827
+compatibility:
+  currentClientVersion: 1.4.0
+  candidateClientVersion: 1.4.5
+  remoteServerVersions: [1.4.0, 1.4.5]
+  requiredOperations:
+    [
+      init,
+      create,
+      info-json,
+      list-json,
+      check-repository,
+      prune-dry-run,
+      compact,
+      extract,
+    ]
+  maximumArchives: 4
+  maximumFiles: 8
+  maximumPayloadBytes: 1048576
+  networkMode: none
+rollback:
+  preserveDebianPackage: true
+  preserveRepositories: true
+  preserveArchives: true
+  operationsEscrowRequiredBeforeProduction: true
+  productionActivationRequiresExactPath: true
+  productionActivationRequiresExactDigest: true
+  productionMutation: false

@@ -1,0 +1,104 @@
+schema: starfiniti.authentik-2026-8-runtime-plan.v1
+reviewedAt: 2026-08-31
+candidate:
+  version: 2026.8.0
+  commit: f3753ec20ce13ef672401a131379d1a5a2d3439b
+  image:
+    ref: ghcr.io/goauthentik/server@sha256:21000cebe8e51eca0620034096586d675cedec8925ac750f7f8966d86eeb0da0
+    indexDigest: sha256:7421753cfea67e89a6d295a1f0173ccea3866b33768c88dad90453b151cdcfd5
+    linuxAmd64ManifestDigest: sha256:21000cebe8e51eca0620034096586d675cedec8925ac750f7f8966d86eeb0da0
+dependencies:
+  postgres:
+    version: 16-alpine
+    ref: postgres@sha256:075f7ba66bc9b3ce7d6b8b635208ff61cd7cf1a67d71ec530eec5d7ae0cbe571
+    linuxAmd64ManifestDigest: sha256:075f7ba66bc9b3ce7d6b8b635208ff61cd7cf1a67d71ec530eec5d7ae0cbe571
+  operator:
+    version: 24.20.0-alpine
+    ref: node@sha256:4caaaf42195bcd6f6f3559a413b20cb8f8ad089e231ee874cf7701643966689f
+    linuxAmd64ManifestDigest: sha256:4caaaf42195bcd6f6f3559a413b20cb8f8ad089e231ee874cf7701643966689f
+isolation:
+  networkInternal: true
+  publishedHostPorts: 0
+  dockerSocketMounted: false
+  hostBindMounts:
+    - repository source files read-only
+  productionRoutesAllowed: false
+  productionCredentialsAllowed: false
+  syntheticCredentialsOnly: true
+  removeContainersAndNetworkAlways: true
+  pullImagesBeforeIsolation: true
+runtime:
+  platform: linux/amd64
+  startupTimeoutSeconds: 300
+  scenarioTimeoutSeconds: 180
+  maximumReportBytes: 65536
+  reportPathPattern: dist/authentik-2026-8-runtime/[a-z0-9][a-z0-9._-]{1,79}.json
+  authentikHealthPaths:
+    - /-/health/live/
+    - /-/health/ready/
+  authentikApiOrigin: http://authentik-runtime-server:9000
+  scimBaseUrl: http://scim-runtime-sink:8080/v2
+  supabaseCallbackUrl: https://supabase.runtime.invalid/auth/v1/callback
+scenarios:
+  - id: R01-EXACT-IMAGE-IDENTITY
+    proves: Every runtime image resolves to the reviewed Linux/amd64 manifest.
+  - id: R02-ISOLATED-BOOT-AND-HEALTH
+    proves: PostgreSQL Authentik server worker and the SCIM sink start without a production route.
+  - id: R03-OIDC-DISABLED-RECONCILIATION
+    proves: The production federation client creates a disabled OIDC source and dedicated source-only flow.
+  - id: R04-IDEMPOTENT-SECRET-ROTATION
+    proves: Reconciliation and OIDC secret rotation preserve resource identity and exactly two flow bindings.
+  - id: R05-SAML-DISABLED-RECONCILIATION
+    proves: The production federation client creates a disabled signed SAML source using a public synthetic certificate.
+  - id: R06-DOWNSTREAM-OIDC-INVARIANTS
+    proves: The hidden downstream provider uses authorization code hashed subject and one strict Supabase callback.
+  - id: R07-DOWNSTREAM-OIDC-DISCOVERY
+    proves: Candidate discovery metadata exposes the expected issuer and authorization code endpoints.
+  - id: R08-SCIM-BEARER-FAIL-CLOSED
+    proves: A missing or incorrect SCIM bearer token is rejected before resource access.
+  - id: R09-SCIM-DISCOVERY-AND-PAGINATION
+    proves: The exact SCIM schedule is triggered through Authentik's permissioned schedule API before ServiceProviderConfig discovery and bounded startIndex and count pagination.
+  - id: R10-SCIM-USER-GROUP-PROVISIONING
+    proves: A synthetic Authentik user and group reach the SCIM sink with candidate externalId semantics.
+  - id: R11-SCIM-GROUP-MEMBERSHIP
+    proves: Candidate group provisioning links the remotely assigned user identifier.
+  - id: R12-SCIM-MEMBERSHIP-REMOVAL
+    proves: Removing group membership sends the quoted RFC 7644 member removal path.
+  - id: R13-SCIM-DEPROVISIONING
+    proves: Deactivation is delivered as active false without granting Starfiniti tenant authority.
+  - id: R14-TEARDOWN-AND-MINIMIZATION
+    proves: Disposable resources are removed and the report contains no token secret PII or raw response.
+report:
+  schema: starfiniti.authentik-2026-8-runtime-report.v1
+  minimumPassedScenarios: 14
+  forbiddenKeys:
+    - token
+    - secret
+    - password
+    - email
+    - username
+    - name
+    - raw
+    - body
+    - response
+  forbiddenValues:
+    - loyalty.starfiniti.com
+    - auth.starfiniti.com
+    - api.loyalty.starfiniti.com
+officialSources:
+  - https://docs.goauthentik.io/install-config/automated-install/
+  - https://docs.goauthentik.io/install-config/install/docker-compose/
+  - https://docs.goauthentik.io/add-secure-apps/providers/scim/
+  - https://docs.goauthentik.io/releases/2026.8/
+  - https://github.com/goauthentik/authentik/blob/f3753ec20ce13ef672401a131379d1a5a2d3439b/authentik/tasks/schedules/api.py
+  - https://github.com/goauthentik/authentik/blob/f3753ec20ce13ef672401a131379d1a5a2d3439b/authentik/tasks/schedules/signals.py
+  - https://github.com/goauthentik/authentik/blob/f3753ec20ce13ef672401a131379d1a5a2d3439b/authentik/lib/sync/outgoing/models.py
+  - https://github.com/goauthentik/authentik/blob/f3753ec20ce13ef672401a131379d1a5a2d3439b/authentik/lib/sync/outgoing/tasks.py
+  - https://github.com/goauthentik/authentik/blob/f3753ec20ce13ef672401a131379d1a5a2d3439b/authentik/providers/scim/management/commands/scim_sync.py
+  - https://supabase.com/docs/guides/self-hosting/self-hosted-oauth
+  - https://supabase.com/docs/guides/auth/sessions
+limitations:
+  - Uses only synthetic identities and an RFC-focused SCIM sink.
+  - Does not exercise a real enterprise IdP tenant or the production Authentik deployment.
+  - Does not replace database RLS SCIM stale-session or cross-tenant acceptance evidence.
+  - Must not change any M13 production canary check from pending to passed.

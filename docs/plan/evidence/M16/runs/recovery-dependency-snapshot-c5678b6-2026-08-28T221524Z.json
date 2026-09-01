@@ -1,0 +1,269 @@
+{
+  "schema": "starfiniti.recovery-dependency-snapshot.v1",
+  "observedAt": "2026-08-28T22:14:37Z",
+  "completedAt": "2026-08-28T22:15:26Z",
+  "candidateCommit": "c5678b652024bb2a625f07d150e8ffd0b5d9e0cb",
+  "policySha256": "805a6ae14723b3db1f8884720ddd3029dee2e98877bfb48fb50df776204899cd",
+  "sourceSnapshot": {
+    "path": "docs/plan/evidence/M16/runs/provider-source-snapshot-257e99c-2026-08-28T212100Z.json",
+    "sha256": "5786186426b065493f5c01b5d76742322e2e8ed3fe92b8f80c30d787caa516be",
+    "observedAt": "2026-08-28T21:20:36Z",
+    "completedAt": "2026-08-28T21:20:42Z",
+    "catalogueCount": 13
+  },
+  "rsyncCandidate": {
+    "planPath": "infrastructure/testing/recovery-transport/plan.yaml",
+    "planSha256": "61a6ce61853ac61f54dcce4557dad11285f9879ec2392e9dc221c33829f217d3",
+    "versionOrEntry": "proxmox-host=3.5.0+ds1-2;database-guest=3.5.0-1ppa~noble1",
+    "provenanceSha256": "61a6ce61853ac61f54dcce4557dad11285f9879ec2392e9dc221c33829f217d3",
+    "endpoints": [
+      {
+        "id": "proxmox-host",
+        "version": "3.5.0+ds1-2",
+        "packageSha256": "5f0ecada9a0b4729f18aca43260bb8bcb16f95750c562409f84555b9de59a094"
+      },
+      {
+        "id": "database-guest",
+        "version": "3.5.0-1ppa~noble1",
+        "packageSha256": "3ae102d79c9a82d1f1aee94bde3afa3142a7ef6f367484f130d6fba05c3c1648"
+      }
+    ]
+  },
+  "endpointCount": 2,
+  "providerCount": 6,
+  "installedCaptureComplete": true,
+  "candidateEvidenceComplete": false,
+  "reviewComplete": false,
+  "impactClassified": false,
+  "approvalComplete": false,
+  "productionMutation": false,
+  "limitation": "This artifact proves the complete installed recovery-dependency fact catalogue supplied through the approved read-only route. It does not attest the operator route, complete candidate selection, classify provider impact, approve an upgrade, close dependency review, or authorize production mutation.",
+  "endpoints": [
+    {
+      "schema": "starfiniti.recovery-endpoint-facts.v1",
+      "endpointId": "proxmox-host",
+      "observedAt": "2026-08-28T22:14:37Z",
+      "captureMethod": "approved-read-only-ssh",
+      "productionMutation": false,
+      "os": {
+        "id": "debian",
+        "versionId": "13",
+        "release": "Debian GNU/Linux 13 (trixie)",
+        "codename": "trixie"
+      },
+      "packages": [
+        {
+          "id": "rsync",
+          "version": "3.4.1+ds1-5+deb13u3",
+          "architecture": "amd64"
+        },
+        {
+          "id": "borgbackup",
+          "version": "1.4.0-5",
+          "architecture": "amd64"
+        },
+        {
+          "id": "openssh-client",
+          "version": "1:10.0p1-7+deb13u4",
+          "architecture": "amd64"
+        },
+        {
+          "id": "openssh-server",
+          "version": "1:10.0p1-7+deb13u4",
+          "architecture": "amd64"
+        },
+        {
+          "id": "pve-manager",
+          "version": "9.2.3",
+          "architecture": "all"
+        }
+      ],
+      "executables": [
+        {
+          "id": "rsync",
+          "sha256": "d3b6ea55b3ae83d3ff683f3375ef7f902147a8a572099b8d5d4b7a4a553f156a"
+        },
+        {
+          "id": "borg",
+          "sha256": "babb2b42edd64283220d1f1ca57119d41d8f8b93e4af9c5606874b60dd43bc4d"
+        },
+        {
+          "id": "ssh",
+          "sha256": "af3b04ec5653755032fc18ad02445e4e51170e75d8bac4265647d423caa9a83e"
+        },
+        {
+          "id": "sshd",
+          "sha256": "379c5c895b2728e249acd62417cc1388245af3da2ed1cba2e407deae40c32f9d"
+        }
+      ],
+      "platforms": [
+        {
+          "id": "proxmox",
+          "version": "9.2.3",
+          "runningVersion": "9.2.3/d0fde103346cf89a",
+          "kernelVersion": "7.0.6-2-pve"
+        }
+      ]
+    },
+    {
+      "schema": "starfiniti.recovery-endpoint-facts.v1",
+      "endpointId": "database-guest",
+      "observedAt": "2026-08-28T22:14:38Z",
+      "captureMethod": "approved-read-only-ssh",
+      "productionMutation": false,
+      "os": {
+        "id": "ubuntu",
+        "versionId": "24.04",
+        "release": "Ubuntu 24.04.4 LTS",
+        "codename": "noble"
+      },
+      "packages": [
+        {
+          "id": "rsync",
+          "version": "3.2.7-1ubuntu1.5",
+          "architecture": "amd64"
+        },
+        {
+          "id": "openssh-client",
+          "version": "1:9.6p1-3ubuntu13.18",
+          "architecture": "amd64"
+        },
+        {
+          "id": "openssh-server",
+          "version": "1:9.6p1-3ubuntu13.18",
+          "architecture": "amd64"
+        }
+      ],
+      "executables": [
+        {
+          "id": "rsync",
+          "sha256": "6b4fb867cb49d0332b72b234656311c807ab68b0537905fda7a3e7481a139f16"
+        },
+        {
+          "id": "ssh",
+          "sha256": "3b0701113d8982d71c8cc74e5a1949f03c6f71da804cf4f3507315afbf07042c"
+        },
+        {
+          "id": "sshd",
+          "sha256": "02580eb1cc489f0359e3008b62c8dee14183b9252c81bf638ed4d911fe624ae2"
+        }
+      ],
+      "platforms": []
+    }
+  ],
+  "providers": [
+    {
+      "id": "rsync",
+      "installed": [
+        {
+          "id": "proxmox-host",
+          "versionOrRelease": "rsync=3.4.1+ds1-5+deb13u3",
+          "provenanceSha256": "d557bfec014dac623815091e3728f4a7a09d3e07cdef247b5876f37371f7eb5d"
+        },
+        {
+          "id": "database-guest",
+          "versionOrRelease": "rsync=3.2.7-1ubuntu1.5",
+          "provenanceSha256": "478838d7cae3e43635846543c21925aa0786efca48af0bb407ec97c896b6b9bc"
+        }
+      ],
+      "candidate": {
+        "status": "captured",
+        "versionOrEntry": "proxmox-host=3.5.0+ds1-2;database-guest=3.5.0-1ppa~noble1",
+        "provenanceSha256": "61a6ce61853ac61f54dcce4557dad11285f9879ec2392e9dc221c33829f217d3",
+        "reason": null
+      }
+    },
+    {
+      "id": "borgbackup",
+      "installed": [
+        {
+          "id": "proxmox-host",
+          "versionOrRelease": "borgbackup=1.4.0-5",
+          "provenanceSha256": "913b583c79f2cad6c9523d68fd482f275684ac11ba412118e6d1b5a06c722a56"
+        }
+      ],
+      "candidate": {
+        "status": "unresolved",
+        "versionOrEntry": null,
+        "provenanceSha256": null,
+        "reason": "Human candidate selection, official-source impact classification, ownership, and provenance review remain required."
+      }
+    },
+    {
+      "id": "openssh",
+      "installed": [
+        {
+          "id": "proxmox-host",
+          "versionOrRelease": "openssh-client=1:10.0p1-7+deb13u4;openssh-server=1:10.0p1-7+deb13u4",
+          "provenanceSha256": "e2ab399bce7467ed82d47da2bdb9936b4ed66bc8c6d13b1e6d1797c4834c62c3"
+        },
+        {
+          "id": "database-guest",
+          "versionOrRelease": "openssh-client=1:9.6p1-3ubuntu13.18;openssh-server=1:9.6p1-3ubuntu13.18",
+          "provenanceSha256": "b55eecb54a33c54ce8375f7341c77cc5faf18ba1e461b9b27dbc5ff8e1df6b74"
+        }
+      ],
+      "candidate": {
+        "status": "unresolved",
+        "versionOrEntry": null,
+        "provenanceSha256": null,
+        "reason": "Human candidate selection, official-source impact classification, ownership, and provenance review remain required."
+      }
+    },
+    {
+      "id": "debian",
+      "installed": [
+        {
+          "id": "proxmox-host",
+          "versionOrRelease": "Debian GNU/Linux 13 (trixie)",
+          "provenanceSha256": "b41327785d41efd0bd804af53b50cc229f5ef32f6ed62fc5812f052864ad97ee"
+        }
+      ],
+      "candidate": {
+        "status": "unresolved",
+        "versionOrEntry": null,
+        "provenanceSha256": null,
+        "reason": "Human candidate selection, official-source impact classification, ownership, and provenance review remain required."
+      }
+    },
+    {
+      "id": "ubuntu",
+      "installed": [
+        {
+          "id": "database-guest",
+          "versionOrRelease": "Ubuntu 24.04.4 LTS",
+          "provenanceSha256": "7f238d23631ec30be2eef7170bf15484a9e9f285258f3ac7387074c29d61b30a"
+        }
+      ],
+      "candidate": {
+        "status": "unresolved",
+        "versionOrEntry": null,
+        "provenanceSha256": null,
+        "reason": "Human candidate selection, official-source impact classification, ownership, and provenance review remain required."
+      }
+    },
+    {
+      "id": "proxmox",
+      "installed": [
+        {
+          "id": "proxmox-host",
+          "versionOrRelease": "9.2.3/d0fde103346cf89a",
+          "provenanceSha256": "d25cc58d00add3f4c6efa49ff3bea9a1af07dddf5a1d071cfa00ff91da25e5a6"
+        }
+      ],
+      "candidate": {
+        "status": "unresolved",
+        "versionOrEntry": null,
+        "provenanceSha256": null,
+        "reason": "Human candidate selection, official-source impact classification, ownership, and provenance review remain required."
+      }
+    }
+  ],
+  "unresolvedCandidates": [
+    "borgbackup",
+    "openssh",
+    "debian",
+    "ubuntu",
+    "proxmox"
+  ]
+}

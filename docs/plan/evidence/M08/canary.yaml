@@ -1,0 +1,281 @@
+schema: starfiniti.notification-canary.v1
+status: in_progress
+observedAt: 2026-08-27T16:16:45Z
+currentProduction:
+  release: v0.1.11
+  applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
+candidate:
+  pullRequest: 57
+  commit: d81526183ab2ce685c3cea8166d8c3886ecb03ba
+  approvedRelease: false
+  operatorAccess: true
+  pilotStoreApproved: false
+  canaryApproved: false
+publicBaseline:
+  dashboardHealth: 200
+  login: 200
+  unsignedWooCommerceIngress: 401
+  canonicalDns: true
+score:
+  total: 90
+  target: 90
+  minimumCategoryRatio: 0.8
+  categories:
+    - id: correctness
+      weight: 20
+      score: 20
+      evidence: "Provider-neutral events, exact consent, isolated adapters, immutable templates, bounded delivery state, suppression, retries, ambiguity, and health have deterministic repository behavior."
+    - id: security
+      weight: 15
+      score: 15
+      evidence: "PostgreSQL derives tenant, actor, contact, consent, provider, endpoint, template, lease, and delivery authority with RLS, explicit grants, minimized payloads, and mounted secret fingerprints."
+    - id: ledger_reliability
+      weight: 15
+      score: 15
+      evidence: "Notification state is append-only and separate from immutable loyalty value; provider outage, withdrawal, retry, and rollback cannot rewrite or block ledger, refund, or reconciliation paths."
+    - id: tests
+      weight: 15
+      score: 15
+      evidence: "Exact candidate checks cover the complete workspace, database replay and pgTAP suites, concurrency probes, production images, provider sinks, browser flows, and WooCommerce runtimes."
+    - id: performance
+      weight: 10
+      score: 8
+      evidence: "Bounded claims, response sizes, attempts, rate windows, issue projections, late contact resolution, isolated workers, and local checkout pass; production latency observation remains pending."
+    - id: operability
+      weight: 10
+      score: 3
+      evidence: "Disabled-first profiles, health, dead letters, manual review, runbooks, rollback boundaries, and evidence schemas exist; release, provider canaries, rehearsal, and observation remain pending."
+    - id: maintainability
+      weight: 15
+      score: 14
+      evidence: "Versioned contracts, additive migrations, provider-neutral authority, immutable templates, ADRs, regression tests, runbooks, and living evidence remain synchronized."
+checks:
+  - id: exact_head_ci
+    status: passed
+    evidence: "CI run 33098958759 and Security run 33098958749 passed at integrated candidate commit d81526183ab2ce685c3cea8166d8c3886ecb03ba with all eleven PR checks green."
+  - id: contract_notification_matrix
+    status: passed
+    evidence: "Strict contracts cover nine provider-neutral events, purpose consent, suppression, SMTP, Klaviyo, signed webhooks, immutable templates, dispatch authorization, attempts, and minimized health."
+  - id: database_authority_matrix
+    status: passed
+    evidence: "PostgreSQL derives tenant, actor, customer link, consent, suppression, template, provider connection, endpoint, delivery, lease, attempt, and entitlement authority behind explicit grants and RLS."
+  - id: consent_suppression_matrix
+    status: passed
+    evidence: "Auth-derived purpose preferences, stronger provider and system suppression, privacy erasure, supersession, and dispatch-time authorization fail closed across exact retries and concurrent withdrawal."
+  - id: smtp_adapter_matrix
+    status: passed
+    evidence: "The isolated SMTP worker passes strict configuration, verified contact, immutable template, deterministic message identity, bounded retry, dead-letter, manual review, and real local sink tests."
+  - id: klaviyo_adapter_matrix
+    status: passed
+    evidence: "The isolated managed worker passes tenant and key binding, minimized profiles and events, pinned revision, suppression import, unsubscribe, bounded provider responses, and ambiguity tests."
+  - id: webhook_adapter_matrix
+    status: passed
+    evidence: "Endpoint-isolated workers pass exact-body HMAC, stable delivery identity, rotation, public-only DNS, socket pinning, redirect rejection, bounded responses, rate, retry, and local receiver tests."
+  - id: template_health_matrix
+    status: passed
+    evidence: "Immutable English template versions, exact token allowlists, actor-bound tests, escaped rendering, minimized aggregates, bounded canonical issues, and malformed-container failure pass."
+  - id: browser_accessibility
+    status: passed
+    evidence: "Production notification studio components pass desktop, mobile, dark theme, keyboard template selection and preview, safe test visibility, responsive navigation, and zero browser diagnostics."
+  - id: privacy_minimization
+    status: passed
+    evidence: "Contracts, database reads, workers, logs, health, support output, and evidence exclude reusable secrets, contacts, rendered content, raw payloads, provider bodies, coupon material, and private ledger metadata."
+  - id: value_checkout_independence
+    status: passed
+    evidence: "Notification workers are separate from loyalty value processing; events, consent, provider failure, retry, and disablement never control awards, refunds, reconciliation, balances, or native checkout."
+  - id: rollback_compatibility_repository
+    status: passed
+    evidence: "Provider and entitlement disablement plus prior-image rollback stop new external actions while immutable events, consent, templates, accepted attempts, review state, and value paths remain recoverable."
+  - id: operations_documentation
+    status: passed
+    evidence: "SMTP, Klaviyo, signed webhook, deployment, privacy, incident, dead-letter, reconciliation, backup, and rollback documentation define deterministic operator boundaries."
+  - id: public_production_baseline
+    status: passed
+    evidence: "Canonical DNS resolves; dashboard health and login return HTTP 200 with no-store or private caching, and unsigned WooCommerce ingestion returns HTTP 401."
+  - id: operator_access
+    status: passed
+    evidence: "The approved read-only Proxmox route confirms application VM 970 and Supabase VM 971 are running without changing service, configuration, data, or loyalty value."
+  - id: approved_release
+    status: pending
+    evidence: "Draft PR 57 is exact-head green but explicit merge, immutable release, and deployment approval remain required."
+  - id: approved_pilot_store
+    status: pending
+    evidence: "One real WooCommerce pilot and bounded notification fixtures require owner approval before external delivery."
+  - id: canary_approval
+    status: pending
+    evidence: "No approved maintenance window, provider scope, message ceiling, observation interval, stop condition, or rollback decision owner is recorded."
+  - id: pre_change_recovery_point
+    status: pending
+    evidence: "A fresh verified PostgreSQL base, WAL position, off-host archive, application configuration snapshot, and provider signing-reference inventory must precede deployment."
+  - id: production_notification_baseline
+    status: pending
+    evidence: "Read-only event, consent, suppression, template, connection, endpoint, delivery, attempt, review, and queue aggregates require capture."
+  - id: disabled_deployment
+    status: pending
+    evidence: "Candidate images and additive migrations have not been deployed with every notification provider disabled."
+  - id: migration_registration
+    status: pending
+    evidence: "Production must record every candidate migration version and source digest exactly once before notification providers can be enabled."
+  - id: non_canary_disabled
+    status: pending
+    evidence: "Unrelated organizations, workspaces, purposes, provider connections, endpoints, templates, customers, events, and sessions must receive no notification capability."
+  - id: smtp_local_sink_canary
+    status: pending
+    evidence: "The production image must pass one exact local SMTP sink transaction with no provider credential, external recipient, or value-worker dependency."
+  - id: smtp_transactional_canary
+    status: pending
+    evidence: "One approved self-hosted transactional event must resolve verified contact late, bind the immutable template, submit once, and retain minimized evidence."
+  - id: smtp_test_delivery_canary
+    status: pending
+    evidence: "One owner or admin test must resolve only the requesting actor at authorization, show the test prefix, and remain isolated from normal delivery."
+  - id: klaviyo_profile_canary
+    status: pending
+    evidence: "One managed test profile must use the approved tenant-bound connection and minimized verified contact projection without becoming identity authority."
+  - id: klaviyo_event_canary
+    status: pending
+    evidence: "One provider-neutral event must retain its immutable event identity as the provider unique reference and be accepted once."
+  - id: klaviyo_consent_canary
+    status: pending
+    evidence: "Subscribe, local withdrawal, unsubscribe, and provider suppression import must preserve stronger local authority and stop ambiguous opt-in for review."
+  - id: webhook_signature_canary
+    status: pending
+    evidence: "One reviewed receiver must verify stable delivery identity, exact transmitted bytes, timestamp, and current Standard Webhooks signature."
+  - id: webhook_rotation_canary
+    status: pending
+    evidence: "A bounded current and previous signing-key window must validate both approved signatures then retire the previous fingerprint without replay."
+  - id: webhook_replay_canary
+    status: pending
+    evidence: "Replaying the stable webhook delivery must be claimed once by the receiver and create no second downstream effect."
+  - id: webhook_destination_policy_canary
+    status: pending
+    evidence: "Production must reject redirects and private, reserved, mixed, or changed DNS answers while using the approved public pinned destination."
+  - id: consent_withdrawal_canary
+    status: pending
+    evidence: "Withdrawing each purpose immediately before dispatch authorization must prevent external contact and retain the immutable decision."
+  - id: suppression_import_canary
+    status: pending
+    evidence: "Provider or trusted suppression must tighten local eligibility immediately and must not be cleared by customer, merchant, retry, or provider success."
+  - id: event_deduplication_canary
+    status: pending
+    evidence: "Exact event retries, lease expiry, worker restart, and concurrent claims must converge on one provider-neutral event and at most one accepted submission."
+  - id: schedule_timezone_canary
+    status: pending
+    evidence: "Scheduled and expiry notifications must use exact instants and configured timezone behavior across normal and daylight-saving boundaries."
+  - id: retry_dead_letter_canary
+    status: pending
+    evidence: "Transient failures must follow bounded database backoff while deterministic failures terminate and attempt exhaustion remains visible."
+  - id: ambiguity_manual_review_canary
+    status: pending
+    evidence: "Controlled post-authorization SMTP, opt-in, and webhook ambiguity must stop in minimized manual review without automatic resubmission."
+  - id: template_version_canary
+    status: pending
+    evidence: "Accepted normal and test deliveries must retain the exact immutable global or tenant template version and hash through retries and later publication."
+  - id: delivery_health_canary
+    status: pending
+    evidence: "Merchant health must reconcile purpose counts, provider aggregates, queue state, dead letters, and bounded canonical issues without contact or secret exposure."
+  - id: event_family_canary
+    status: pending
+    evidence: "Approved fixtures must cover points earned, released, expiring, rewards, tiers, referrals, campaigns, connector health, and billing event families as applicable."
+  - id: provider_outage_canary
+    status: pending
+    evidence: "SMTP, Klaviyo, webhook receiver, and DNS failures must remain isolated, bounded, visible, and unable to alter loyalty value."
+  - id: value_continuity_canary
+    status: pending
+    evidence: "Awards, releases, refunds, reversals, reconciliation, balances, promised rewards, and customer access must continue while all notification providers are unavailable."
+  - id: checkout_outage_canary
+    status: pending
+    evidence: "WooCommerce checkout and native coupons must remain operational with the Hub and every notification worker or provider unavailable."
+  - id: cross_tenant_denial
+    status: pending
+    evidence: "Unrelated organization, customer link, event, preference, suppression, template, connection, endpoint, delivery, attempt, health, and provider selectors must reveal nothing and create no external action."
+  - id: delivery_reconciliation
+    status: pending
+    evidence: "Every accepted, suppressed, retryable, dead-lettered, manual-review, disabled, or completed provider operation must reconcile to one immutable event and exact attempts."
+  - id: consent_reconciliation
+    status: pending
+    evidence: "Latest purpose consent, trusted suppression, privacy erasure, provider suppression, supersession, and every withheld dispatch must reconcile exactly."
+  - id: provider_reconciliation
+    status: pending
+    evidence: "SMTP submission evidence, Klaviyo profile and event results, signed webhook receiver claims, template bindings, and provider aggregates must reconcile exactly."
+  - id: queue_reconciliation
+    status: pending
+    evidence: "No event, delivery, test, provider operation, or webhook may be lost, duplicated, leased indefinitely, retried past bounds, hidden by disablement, or absent from health."
+  - id: rollback_rehearsal
+    status: pending
+    evidence: "Stop isolated providers, preserve accepted work and review state, restore prior images, and retain additive events, consent, templates, attempts, health, and every value path."
+  - id: observation_window
+    status: pending
+    evidence: "Observe the bounded canary after rollback rehearsal and record consent, provider, queue, delivery, value, checkout, privacy, tenancy, and reconciliation health."
+  - id: final_reconciliation
+    status: pending
+    evidence: "Confirm zero unexplained event, consent, suppression, template, provider, delivery, queue, value, checkout, tenancy, privacy, or customer-contact difference."
+artifacts:
+  - id: read_only_baseline
+    status: verified
+    path: docs/plan/evidence/M08/production/notification-read-only-baseline-2026-08-27.json
+    sha256: 497f60f961842c5a139dbfed4f16571619387e206ef423a7aca757c5ea266770
+  - id: release_inventory
+    status: pending
+    path: null
+    sha256: null
+  - id: approval_record
+    status: pending
+    path: null
+    sha256: null
+  - id: recovery_point
+    status: pending
+    path: null
+    sha256: null
+  - id: production_baseline
+    status: pending
+    path: null
+    sha256: null
+  - id: canary_journal
+    status: pending
+    path: null
+    sha256: null
+  - id: reconciliation_report
+    status: pending
+    path: null
+    sha256: null
+  - id: rollback_report
+    status: pending
+    path: null
+    sha256: null
+  - id: observation_report
+    status: pending
+    path: null
+    sha256: null
+automaticFails:
+  - id: consent_bypass
+    rule: "a withdrawn missing superseded or purpose-mismatched consent still authorizes a notification provider action"
+  - id: suppression_bypass
+    rule: "provider system privacy-erasure or trusted suppression is cleared weakened or bypassed by customer merchant worker or retry state"
+  - id: duplicate_delivery
+    rule: "duplicate replay delayed delivery lease recovery or concurrent processing creates another provider submission or customer message"
+  - id: provider_authority
+    rule: "SMTP Klaviyo webhook or provider response becomes authoritative for tenant consent identity value template or delivery history"
+  - id: tenant_connection_mismatch
+    rule: "a tenant provider connection V2 fingerprint endpoint template customer event or delivery authority is mismatched browser-selected fast-digested or not bound to the exact connection UUID"
+  - id: deployment_mode_violation
+    rule: "self-hosted invokes managed Klaviyo or remote entitlement while managed or disabled state starts an unapproved provider path"
+  - id: webhook_destination_escape
+    rule: "a redirect DNS rebinding private reserved mixed answer unpinned socket or unbounded response reaches an internal or unapproved destination"
+  - id: webhook_replay_or_signature_failure
+    rule: "webhook retries change delivery identity exact bytes timestamp or signature or a receiver replay is accepted as a new effect"
+  - id: ambiguous_delivery_retry
+    rule: "an ambiguous SMTP Klaviyo subscribe or webhook acceptance is automatically retried instead of entering bounded manual review"
+  - id: unbounded_retry_or_queue
+    rule: "provider work retries exceeds its hard ceiling loses its lease boundary or remains indefinitely accepted without visible terminal or review state"
+  - id: provider_outage_value_impact
+    rule: "an SMTP Klaviyo webhook DNS or receiver outage delays rejects rewrites or reverses loyalty value consent history refunds or reconciliation"
+  - id: checkout_dependency
+    rule: "WooCommerce checkout synchronously depends on notification events contacts templates workers providers consent or delivery outcomes"
+  - id: accepted_work_stranded
+    rule: "disablement rollback suppression or prior-image recovery hides or deletes accepted event delivery attempt template consent or review evidence"
+  - id: sensitive_evidence
+    rule: "reusable provider or signing material contact data coupon plaintext raw payload rendered content provider body or private ledger metadata enters logs support output or evidence"
+  - id: cross_tenant_exposure
+    rule: "an unrelated tenant contact event preference suppression template connection endpoint delivery attempt health issue or provider result becomes visible or mutable"
+  - id: unexplained_or_unapproved_close
+    rule: "any consent event template provider delivery queue tenancy privacy value checkout approval artifact score floor or critical finding remains unresolved"

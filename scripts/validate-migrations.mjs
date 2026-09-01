@@ -17,6 +17,11 @@ for (const file of migrations) {
   if (/service_role|secret_key|password\s*=/iu.test(sql)) {
     throw new Error(`Possible credential in migration: ${file}`);
   }
+  if (/\bpg_catalog\.(?:coalesce|greatest|least|nullif)\s*\(/iu.test(sql)) {
+    throw new Error(
+      `PostgreSQL conditional expressions cannot be schema-qualified: ${file}`,
+    );
+  }
 }
 
 console.log(`Validated ${migrations.length} migration file(s).`);
@@ -42,6 +47,18 @@ if (!/schemas\s*=\s*\[[^\]]*"loyalty"[^\]]*\]/u.test(apiBlock)) {
 
 if (/schemas\s*=\s*\[[^\]]*"loyalty_private"[^\]]*\]/u.test(apiBlock)) {
   throw new Error("loyalty_private must never be exposed through the Data API");
+}
+
+const autoExposeAssignments =
+  apiBlock.match(/^\s*auto_expose_new_tables\s*=\s*(?:true|false)\s*$/gmu) ??
+  [];
+if (
+  autoExposeAssignments.length !== 1 ||
+  !/^\s*auto_expose_new_tables\s*=\s*false\s*$/u.test(autoExposeAssignments[0])
+) {
+  throw new Error(
+    "Supabase Data API must define exactly one false automatic-grant setting",
+  );
 }
 
 const testsDirectory = "supabase/tests";

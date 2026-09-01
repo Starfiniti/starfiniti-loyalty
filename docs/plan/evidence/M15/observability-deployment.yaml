@@ -1,0 +1,98 @@
+schema: starfiniti.observability-deployment-evidence.v1
+status: in_progress
+observedAt: 2026-08-31T14:46:06Z
+production:
+  monitoringActivated: false
+  receiverRoutingActivated: false
+  nodeExporterInstalled: false
+claim:
+  enabled: false
+  linuxCanaryPath: docs/plan/evidence/M15/runs/observability-deployment-canary-532458e.json
+  linuxCanarySha256: 1053150436c29aca013eab3dd1db6d00e4003972d1c212cfbff9693f4b6a775f
+  linuxCanaryRunId: 33404179664
+  linuxCanaryJobId: 99527528327
+  linuxCanaryArtifactId: 9762587898
+  linuxCanaryArtifactSha256: 982ec5e82aeefb561eccc2fccd52b6d07413ad66c862753c6699ba260dcdd4f2
+assets:
+  - id: plan
+    path: infrastructure/observability/deployment/plan.yaml
+    sha256: 88695da1b481f169cc0e0632610896fba8b7f2bb13a2838262ca73ff3b059676
+  - id: compose
+    path: infrastructure/observability/compose.yml
+    sha256: 06c7c2120e7357afe3894640aefacd7c4c8a9d25bf73ff305dfd84681995f9e5
+  - id: prometheus
+    path: infrastructure/observability/prometheus/prometheus.yml
+    sha256: 10b78229acac453f356eb4c85b2133011b08e45ba9def00a937982a9487fb583
+  - id: rules
+    path: infrastructure/observability/prometheus/rules.yaml
+    sha256: fa20afac82fdd5d93d95c9b1b4fed9d590c8118b3377865ddfa4a1948cde2fcf
+  - id: alertmanager
+    path: infrastructure/observability/alertmanager/safe-default.yml
+    sha256: 61a24b2a10c9f956c79415618441dcae04dd8b43b65c51148d9c19dcd1c86094
+  - id: blackbox
+    path: infrastructure/observability/blackbox/blackbox.yml
+    sha256: 2629c7d48ad28cb0d9cc22bdcc63329e08747eb2d0bd472c32b6d1b11d0477b3
+  - id: postgres
+    path: infrastructure/observability/postgres-exporter/safe-default.yml
+    sha256: d5197b346a724e0283f794b55ab60758a6f0fd497a2a4c4ecb807e0d1089b00f
+  - id: datasource
+    path: infrastructure/observability/grafana/provisioning/datasources/prometheus.yaml
+    sha256: 3193b3e1248a80c6be3e91640de283b86f490a12c8e167e9559cef8e0456fef2
+  - id: dashboard
+    path: infrastructure/observability/grafana/provisioning/starfiniti-dashboards/starfiniti-operations.json
+    sha256: 594468c5bc1550a32066cd499fe4b149c6f2556e48e64ef6b9104a474f2a5066
+  - id: nodeUnit
+    path: infrastructure/observability/node-exporter/starfiniti-node-exporter.service
+    sha256: 02697a3aa868fd9e4026eb7bb82017de0767d86f3f033fe9bbe88a1782d50eff
+  - id: envExample
+    path: infrastructure/observability/deployment/.env.example
+    sha256: 88466c89ce938845f8b2d993c2fce113dd58deaabb973553dd20e78fc5d33dc0
+checks:
+  - id: official_provenance
+    status: passed
+    evidence: The plan binds current official releases to exact tag objects or commits, Linux amd64 artifacts, registries, and licences reviewed on 2026-08-31.
+  - id: image_digest_binding
+    status: passed
+    evidence: All five central services use exact multi-architecture image index digests and separately record the reviewed Linux amd64 manifest digest.
+  - id: compose_isolation
+    status: passed
+    evidence: The candidate enforces read-only roots, dropped capabilities, no-new-privileges, resource bounds, loopback administration, unpublished exporters, and isolated control traffic.
+  - id: operator_secret_separation
+    status: passed
+    evidence: Receiver configuration, Grafana administrator password, PostgreSQL exporter modules, and discovery targets are required explicit operator-owned mounts with safe empty defaults in Git.
+  - id: prometheus_discovery_minimization
+    status: passed
+    evidence: File discovery uses bounded service classes, rewrites retained instances, drops authentication selectors, and keeps only the exact operational metric and label allowlists.
+  - id: component_configuration
+    status: passed
+    evidence: Prometheus, Alertmanager, blackbox, and PostgreSQL exporter configurations are source controlled and fail safe without a live receiver, database module, or target.
+  - id: grafana_locked_provisioning
+    status: passed
+    evidence: Grafana provisions the locked operations dashboard and Prometheus 3.14.0 source while disabling anonymous access, sign-up, analytics, updates, and plugin administration.
+  - id: native_textfile_exporter
+    status: passed
+    evidence: The exact node exporter archive and hardened non-root systemd unit enable only the textfile collector and grant no host, process, network, Docker, or database inspection authority.
+  - id: validator_selftest
+    status: passed
+    evidence: Deterministic validation rejects mutable images, public ports, privilege, egress drift, embedded targets or credentials, unsafe probes, false authority, and digest mismatch.
+  - id: exact_head_linux_canary
+    status: passed
+    evidence: Security run 33404179664 job 99527528327 passed the clean Linux amd64 canary at exact implementation head 532458eab54242649d47d5e6485169830407e058; retained artifact 9762587898 binds exact versions and indexes, promtool and amtool checks, loopback administration, internal-only unpublished Grafana, unpublished exporters, hardened runtimes, false production authority, and zero-residue teardown.
+  - id: approved_monitoring_environment
+    status: pending
+    evidence: A dedicated monitoring host, storage, retention, access, time synchronization, backup, rollback ownership, and bounded activation window require explicit approval.
+  - id: live_target_inventory
+    status: pending
+    evidence: Minimized application, worker, PostgreSQL, edge, and host target files must bind approved production sources without retaining raw target or tenant identity.
+  - id: receiver_binding
+    status: pending
+    evidence: Environment-owned Alertmanager routes must bind each protected route class to approved primary and secondary destinations without credentials or identities entering Git.
+  - id: dead_man_delivery
+    status: pending
+    evidence: An independently hosted and controlled dead-man route must prove it pages when Prometheus, Alertmanager, the monitoring host, or the monitoring network disappears.
+  - id: production_activation
+    status: pending
+    evidence: Production services, node exporter installation, target scraping, and receiver routing remain unauthorized until all prerequisites and an explicit owner activation approval pass.
+  - id: observation_and_reconciliation
+    status: pending
+    evidence: At least one complete operational and backup cycle must reconcile targets, alerts, routes, backup evidence, checkout independence, privacy, and value invariants with zero unexplained difference.

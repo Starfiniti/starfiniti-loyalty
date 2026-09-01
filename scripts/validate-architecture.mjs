@@ -68,7 +68,7 @@ for (const [relativePath, markers] of required) {
   }
 }
 
-for (const adr of [
+const acceptedAdrs = [
   "0005-database-authorization-boundaries.md",
   "0006-double-entry-points-ledger.md",
   "0007-transactional-inbox-outbox.md",
@@ -77,7 +77,43 @@ for (const adr of [
   "0010-database-authoritative-entitlements.md",
   "0011-versioned-earning-rules-and-authoritative-cap-accounting.md",
   "0012-purpose-bound-merchant-activity-ingestion.md",
-]) {
+  "0013-capability-negotiated-native-reward-fulfilment.md",
+  "0016-first-attribution-and-minimized-referral-risk.md",
+  "0017-historical-referral-qualification-and-cooling.md",
+  "0018-leased-atomic-referral-reward-lifecycle.md",
+  "0019-auth-derived-reversible-referral-review.md",
+  "0020-auth-derived-referral-experience-and-fact-sourced-funnel.md",
+  "0021-allowlisted-audiences-and-immutable-snapshots.md",
+  "0022-explicit-instant-campaign-schedules-and-bound-control-assignment.md",
+  "0023-atomic-campaign-capacity-and-attributed-value.md",
+  "0024-canonical-campaign-triggers-and-campaign-funded-rewards.md",
+  "0025-minimized-campaign-results-and-honest-attribution.md",
+  "0026-cumulative-purchase-campaign-refund-compensation.md",
+  "0027-derived-fixed-discount-campaign-liability.md",
+  "0028-statement-consistent-audience-snapshots.md",
+  "0029-database-timed-campaign-lifecycle.md",
+  "0030-published-programme-campaign-selector-authority.md",
+  "0031-provider-neutral-notification-events-and-local-consent-authority.md",
+  "0032-isolated-database-authorized-smtp-delivery.md",
+  "0033-tenant-bound-klaviyo-projection-and-consent-sync.md",
+  "0034-standard-hmac-webhooks-with-pinned-public-destinations.md",
+  "0035-immutable-tenant-email-templates-and-actor-bound-tests.md",
+  "0037-demand-driven-woocommerce-snapshots-and-classic-placements.md",
+  "0038-namespaced-store-api-and-flagged-blocks-panel.md",
+  "0039-controlled-english-presentation-v2-and-degraded-delivery.md",
+  "0040-ledger-sourced-versioned-analytics-and-explicit-liability-valuation.md",
+  "0081-fail-closed-self-hosted-supabase-compatibility.md",
+  "0082-request-bound-dashboard-content-security-policy.md",
+  "0084-bounded-provider-source-provenance-snapshots.md",
+  "0089-minimized-whole-host-proxmox-consumer-inventory.md",
+  "0090-isolated-whole-host-proxmox-compatibility-rehearsal.md",
+  "0097-source-and-origin-bound-prototype-messages-and-minimized-sast-evidence.md",
+  "0098-keyed-federation-credential-fingerprints-and-secure-scan-fixtures.md",
+  "0099-extension-aware-sast-and-tenant-bound-provider-credential-kdf.md",
+  "0105-tag-derived-woocommerce-release-version.md",
+];
+
+for (const adr of acceptedAdrs) {
   const relativePath = `docs/architecture/ADR/${adr}`;
   const content = readFileSync(join(root, relativePath), "utf8");
   for (const marker of [
@@ -98,5 +134,5 @@ for (const adr of [
 }
 
 console.log(
-  `Validated ${required.size} architecture models and 8 accepted architecture decisions.`,
+  `Validated ${required.size} architecture models and ${acceptedAdrs.length} accepted architecture decisions.`,
 );

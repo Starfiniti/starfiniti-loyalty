@@ -1,0 +1,264 @@
+{
+  "schema": "starfiniti.proxmox-security-package-canary.v1",
+  "generatedAt": "2026-08-29T00:31:01Z",
+  "candidate": {
+    "path": "infrastructure/governance/proxmox-security-update-plan.yaml",
+    "fileSha256": "ec010eb667d6166ee5adc0ee0cd2d6ecdf5b2a114e345b018b51c704d64df075",
+    "provenanceSha256": "39f30c67a374b041944a598ce2334fed3fcb8e5f64264b3db08847d5ee23ff9f"
+  },
+  "canary": {
+    "path": "infrastructure/testing/proxmox-security-packages/plan.yaml",
+    "fileSha256": "5a733adb6348145285d68d4f21a6763583e3bfeb430b778958af4cad1fc7051e",
+    "planDigest": "b74bec9d57faf955f31297841ec3d97c568bce01c820c84e095e7cab9a3d4e61",
+    "baseImage": "debian:13-slim@sha256:d7e12182ce18b85b93007c1dedf31f2d29e01ccf3182cc4017c709b6259bc132",
+    "architecture": "amd64",
+    "commit": "957e1ded55992331bfae703de5decf2e9913f4bb",
+    "runnerEnvironment": "github-hosted",
+    "network": "default-bridge-official-sources-only",
+    "hostNetwork": false,
+    "publishedPorts": 0
+  },
+  "trustAnchors": {
+    "debian": {
+      "authority": "debian-archive-keyring",
+      "keyringSha256": "506b815cbb32d9b6066b4a2aa524071e071761e7e7f68c3ac74f3061ba852017",
+      "provenance": "digest-pinned-debian-base-image-and-signed-bootstrap"
+    },
+    "proxmox": {
+      "authority": "proxmox-archive-keyring-trixie",
+      "url": "https://enterprise.proxmox.com/debian/proxmox-archive-keyring-trixie.gpg",
+      "sha256": "136673be77aba35dcce385b28737689ad64fd785a797e57897589aed08db6e45",
+      "releaseFingerprint": "24B30F06ECC1836A4E5EFECBA7BCD1420BFE778E"
+    }
+  },
+  "repositories": [
+    {
+      "id": "debian-trixie",
+      "inReleaseSha256": "98b25b5cd185c59d34aa6e4c3e9b5b8f01bbe9d104fe2dcfbcd30dc0a14a59ed",
+      "packagesSha256": "be70297f6ea499e8ef0bd93906719298c795bc3dc4ce72560f13e6c9836bfedb",
+      "signingFingerprints": [
+        "41587F7DB8C774BCCF131416762F67A0B2C39DE4",
+        "4CB50190207B4758A3F73A796ED0E7B82643E131",
+        "B8E5F13176D2A7A75220028078DBA3BC47EF2265"
+      ],
+      "signatureVerified": true,
+      "signedIndexBound": true,
+      "observationInReleaseMatch": true,
+      "observationPackagesMatch": true
+    },
+    {
+      "id": "debian-trixie-backports",
+      "inReleaseSha256": "39332305340dc11ceeedbad2e37545278bf201ce3a0613a3d5da3525d73c86e5",
+      "packagesSha256": "b2a695b662b61ea8e2c8f233e685f4ecc7ee23a2337b923e59ea28a87d909031",
+      "signingFingerprints": [
+        "4CB50190207B4758A3F73A796ED0E7B82643E131",
+        "B8E5F13176D2A7A75220028078DBA3BC47EF2265"
+      ],
+      "signatureVerified": true,
+      "signedIndexBound": true,
+      "observationInReleaseMatch": false,
+      "observationPackagesMatch": false
+    },
+    {
+      "id": "debian-trixie-updates",
+      "inReleaseSha256": "83e00ffe195e6714b50ac282b4c5e1039e219767e7fffc4c806b5b6042d59e15",
+      "packagesSha256": "a855cb0d5a041e97b7e449de8de7c233ef6207f10c7ba62df6a77a887a461f13",
+      "signingFingerprints": [
+        "4CB50190207B4758A3F73A796ED0E7B82643E131",
+        "B8E5F13176D2A7A75220028078DBA3BC47EF2265"
+      ],
+      "signatureVerified": true,
+      "signedIndexBound": true,
+      "observationInReleaseMatch": false,
+      "observationPackagesMatch": true
+    },
+    {
+      "id": "debian-trixie-security",
+      "inReleaseSha256": "324858a9652243a987a7bbbe812fc41aabfc2a9cd86c65bd9a9c17bbe4fd8ee4",
+      "packagesSha256": "11c0fc6929fd9288c4cd575c2bdd1e5c3652a1c5e191d9a6249e329a69704e6a",
+      "signingFingerprints": [
+        "89C87ACEA5DD6B8E6A7068808E9F831205B4BA95",
+        "B0CAB9266E8C3929798B3EEEBDE6D2B9216EC7A8"
+      ],
+      "signatureVerified": true,
+      "signedIndexBound": true,
+      "observationInReleaseMatch": false,
+      "observationPackagesMatch": false
+    },
+    {
+      "id": "proxmox-trixie-no-subscription",
+      "inReleaseSha256": "d7f85d4c39628b4187b2435b78762ded58f47b32ec65c5e6cc5eeebde992d249",
+      "packagesSha256": "e3675a92287d0a77e15f1ca512fa95ca56564624eff7d4164f2bd91f3cd091c7",
+      "signingFingerprints": [
+        "24B30F06ECC1836A4E5EFECBA7BCD1420BFE778E"
+      ],
+      "signatureVerified": true,
+      "signedIndexBound": true,
+      "observationInReleaseMatch": false,
+      "observationPackagesMatch": false
+    }
+  ],
+  "packages": [
+    {
+      "id": "base-files",
+      "version": "13.8+deb13u6",
+      "architecture": "amd64",
+      "size": 73300,
+      "sha256": "c4bb697554ef3e6588b38ffb73e27a22698c2b9525b1c7223b06d42d155e63fa",
+      "signedMetadataVerified": true,
+      "exactUrlVerified": true,
+      "packageFieldsVerified": true,
+      "packageBytesRetained": false
+    },
+    {
+      "id": "pve-qemu-kvm",
+      "version": "11.0.3-3",
+      "architecture": "amd64",
+      "size": 32388816,
+      "sha256": "dc3d3eab976cce76ddc50ea72c54b04a5ddaf97f24e3a81f3a3c17fb07b4d21e",
+      "signedMetadataVerified": true,
+      "exactUrlVerified": true,
+      "packageFieldsVerified": true,
+      "packageBytesRetained": false
+    },
+    {
+      "id": "libpve-storage-perl",
+      "version": "9.1.9",
+      "architecture": "all",
+      "size": 178080,
+      "sha256": "27ee5273b0c3a1e17d458c34a0b8871d8a3a4fdf732538dfdad013fc7c259253",
+      "signedMetadataVerified": true,
+      "exactUrlVerified": true,
+      "packageFieldsVerified": true,
+      "packageBytesRetained": false
+    },
+    {
+      "id": "qemu-server",
+      "version": "9.2.7",
+      "architecture": "amd64",
+      "size": 374696,
+      "sha256": "4a60b67ffec4769998f7af75bdf42b33510fdcb480130c2e98edc67a5f4948b1",
+      "signedMetadataVerified": true,
+      "exactUrlVerified": true,
+      "packageFieldsVerified": true,
+      "packageBytesRetained": false
+    },
+    {
+      "id": "pve-manager",
+      "version": "9.2.11",
+      "architecture": "all",
+      "size": 648256,
+      "sha256": "4ed3869ff368974e57f966f15faa57d925ba75d54aa47dfc166e7f3de49ff3eb",
+      "signedMetadataVerified": true,
+      "exactUrlVerified": true,
+      "packageFieldsVerified": true,
+      "packageBytesRetained": false
+    },
+    {
+      "id": "libpve-common-perl",
+      "version": "9.2.1",
+      "architecture": "all",
+      "size": 137416,
+      "sha256": "179ec2ed61414c6809cc11f5b4b434bbb1ece60a3a2fd5e3b862574d0555b2bc",
+      "signedMetadataVerified": true,
+      "exactUrlVerified": true,
+      "packageFieldsVerified": true,
+      "packageBytesRetained": false
+    },
+    {
+      "id": "pve-container",
+      "version": "6.1.13",
+      "architecture": "all",
+      "size": 162676,
+      "sha256": "95bdc35b6e8db25f85656b0c4d703803230f798e225bf87306fb9df45ecf01ce",
+      "signedMetadataVerified": true,
+      "exactUrlVerified": true,
+      "packageFieldsVerified": true,
+      "packageBytesRetained": false
+    },
+    {
+      "id": "pve-ha-manager",
+      "version": "5.2.5",
+      "architecture": "amd64",
+      "size": 101312,
+      "sha256": "ba9a65bcaef945f7ac73cd2bf9438ddb3b140511ae6683e01063e259e07ab510",
+      "signedMetadataVerified": true,
+      "exactUrlVerified": true,
+      "packageFieldsVerified": true,
+      "packageBytesRetained": false
+    },
+    {
+      "id": "proxmox-mini-journalreader",
+      "version": "1.7",
+      "architecture": "amd64",
+      "size": 13924,
+      "sha256": "869d7903eb7cb84fc395a8d7716511f396b5c7daef8ec04d86726cc900f6cd14",
+      "signedMetadataVerified": true,
+      "exactUrlVerified": true,
+      "packageFieldsVerified": true,
+      "packageBytesRetained": false
+    },
+    {
+      "id": "proxmox-widget-toolkit",
+      "version": "5.2.8",
+      "architecture": "all",
+      "size": 234296,
+      "sha256": "57949c2c71ae574aba4dab7fe48b30bb7db8dea7548624eff14aedcd4735f9bc",
+      "signedMetadataVerified": true,
+      "exactUrlVerified": true,
+      "packageFieldsVerified": true,
+      "packageBytesRetained": false
+    },
+    {
+      "id": "proxmox-kernel-7.0.14-14-pve-signed",
+      "version": "7.0.14-14",
+      "architecture": "amd64",
+      "size": 131014420,
+      "sha256": "bfade38b890924f177b4bb5238bafab7f47370f912fe0290ec4e2e8727c8ac9d",
+      "signedMetadataVerified": true,
+      "exactUrlVerified": true,
+      "packageFieldsVerified": true,
+      "packageBytesRetained": false
+    },
+    {
+      "id": "proxmox-kernel-7.0",
+      "version": "7.0.14-14",
+      "architecture": "amd64",
+      "size": 13832,
+      "sha256": "d5102cf4fb890b52033bfc8d4dc537526042fe2f48332f77748140b1057c3e03",
+      "signedMetadataVerified": true,
+      "exactUrlVerified": true,
+      "packageFieldsVerified": true,
+      "packageBytesRetained": false
+    }
+  ],
+  "summary": {
+    "repositoryCount": 5,
+    "signatureCount": 10,
+    "metadataObservationMatches": 1,
+    "packageCount": 12,
+    "packageBytes": 165341024,
+    "dpkgStatusBeforeSha256": "d2582ded344de92e8dbff10a050a8a65078511000027faae635440eed94bafd4",
+    "dpkgStatusAfterSha256": "d2582ded344de92e8dbff10a050a8a65078511000027faae635440eed94bafd4",
+    "candidatePackageInstallationOccurred": false,
+    "packageBytesRetained": false,
+    "productionCredentialsProvided": false,
+    "productionRouteInputProvided": false,
+    "productionMutation": false,
+    "teardownPassed": true
+  },
+  "gates": {
+    "candidatePackageBytesVerified": true,
+    "repositoryToolSignatureReverified": true,
+    "freshSignedMetadataBindsEveryCandidate": true,
+    "candidateDependencySimulationReverified": false,
+    "installedStartingStateReverified": false,
+    "compatibilityProved": false,
+    "rollbackEscrowComplete": false,
+    "recoveryReady": false,
+    "maintenanceApproved": false,
+    "rebootApproved": false,
+    "productionMutation": false
+  },
+  "reportSha256": "0b703cc553f2304de75f28160e7482b09718794205efa7615fb39f2eab0f0382"
+}

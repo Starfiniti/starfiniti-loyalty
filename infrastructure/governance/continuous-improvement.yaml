@@ -1,0 +1,185 @@
+schema: starfiniti.continuous-improvement-plan.v1
+version: 1
+timezone: UTC
+reviewCalendar:
+  monthly:
+    period: calendar-month
+    dueDaysAfterPeriodEnd: 10
+    minimumConsecutiveReviewsForInitialClose: 2
+    requiredSections:
+      [
+        activation,
+        errors,
+        support,
+        reconciliation,
+        fraud,
+        campaigns,
+        churn,
+        usability,
+        performance,
+        security,
+        billing,
+        providerChanges,
+        backlog,
+        moduleScores,
+      ]
+  quarterly:
+    period: calendar-quarter
+    dueDaysAfterPeriodEnd: 30
+    minimumBundlesForInitialClose: 1
+    requiredExercises:
+      [restore, tenantIsolation, privacy, scimDeprovisioning, incident]
+providerCatalogue:
+  - id: supabase
+    source: https://supabase.com/changelog.md
+    reviewFrequency: monthly
+  - id: postgresql
+    source: https://www.postgresql.org/support/versioning/
+    reviewFrequency: monthly
+  - id: woocommerce
+    source: https://developer.woocommerce.com/changelog/
+    reviewFrequency: monthly
+  - id: stripe
+    source: https://docs.stripe.com/changelog
+    reviewFrequency: monthly
+  - id: authentik
+    source: https://docs.goauthentik.io/releases/
+    reviewFrequency: monthly
+  - id: klaviyo
+    source: https://developers.klaviyo.com/en/docs/changelog_
+    reviewFrequency: monthly
+  - id: nodejs
+    source: https://nodejs.org/en/about/previous-releases
+    reviewFrequency: monthly
+  - id: rsync
+    source: https://download.samba.org/pub/rsync/NEWS
+    reviewFrequency: monthly
+    installedEndpoints: [proxmox-host, database-guest]
+    requiresCandidateProvenanceSha256: true
+  - id: borgbackup
+    source: https://borgbackup.readthedocs.io/en/stable/changes.html
+    reviewFrequency: monthly
+    installedEndpoints: [proxmox-host]
+    requiresCandidateProvenanceSha256: true
+  - id: openssh
+    source: https://www.openssh.com/releasenotes.html
+    reviewFrequency: monthly
+    installedEndpoints: [proxmox-host, database-guest]
+    requiresCandidateProvenanceSha256: true
+  - id: debian
+    source: https://www.debian.org/security/
+    reviewFrequency: monthly
+    installedEndpoints: [proxmox-host]
+    requiresCandidateProvenanceSha256: true
+  - id: ubuntu
+    source: https://ubuntu.com/security/notices
+    reviewFrequency: monthly
+    installedEndpoints: [database-guest]
+    requiresCandidateProvenanceSha256: true
+  - id: proxmox
+    source: https://forum.proxmox.com/forums/security-advisories.26/
+    reviewFrequency: monthly
+    installedEndpoints: [proxmox-host]
+    requiresCandidateProvenanceSha256: true
+providerSourceSnapshot:
+  schema: starfiniti.provider-source-snapshot.v1
+  catalogueCount: 13
+  timeoutMs: 20000
+  maximumRedirects: 5
+  maximumResponseBytes: 4000000
+  maximumHeaderBytes: 32768
+  minimumTlsVersion: TLSv1.2
+  acceptedContentTypes: [text/html, text/plain, text/markdown]
+  acceptedContentEncodings: [identity]
+  allowedRedirectHosts:
+    openssh: [www.openssh.org]
+  contentRetained: false
+  reviewComplete: false
+  impactClassified: false
+  installedEvidenceComplete: false
+  output:
+    absolutePathRequired: true
+    extension: .json
+    overwrite: false
+    mode: "0600"
+backlog:
+  path: docs/plan/IMPROVEMENT_BACKLOG.yaml
+  ranking:
+    formula: severityPoints + (2 * merchantImpact) + (2 * customerImpact) + confidence - effort - dependencyPenalty
+    severityPoints: { critical: 40, high: 30, medium: 20, low: 10 }
+    integerRange: { minimum: 0, maximum: 10 }
+    sort: [score-descending, id-ascending]
+  criticalDueDays: 2
+  highDueDays: 14
+  incompleteCriticalHighRequire: [approvedRiskSha256, nextReviewAt, dependency]
+recurringFailure:
+  thresholdOccurrences: 2
+  minimumDurableControls: 1
+  allowedControls: [regressionTest, validator, monitor, runbook, agentRule]
+  registry:
+    schema: starfiniti.recurring-failure-registry.v1
+    path: docs/plan/evidence/M16/recurring-failures.yaml
+    evidenceDigestsRequired: true
+    candidateCannotClaimMergeOrActivation: true
+moduleRescoring:
+  materialChangeRequiresRescore: true
+  target: 90
+  minimumCategoryRatio: 0.8
+  categories:
+    correctness: 20
+    security: 15
+    ledgerReliability: 15
+    tests: 15
+    performance: 10
+    operability: 10
+    maintainability: 15
+experiments:
+  requireDeclaredPrimaryMetric: true
+  requireBaselineAndTarget: true
+  requirePredeclaredGuardrails: true
+  promotionRequiresMetricImprovement: true
+  promotionRequiresAllGuardrailsPass: true
+  stopOnGuardrailBreach: true
+decisions:
+  supersedeByAdr: true
+  rewriteHistoricalEvidence: false
+artifacts:
+  schemaPolicy:
+    objectMembers: closed
+    minimumArtifactBytes: 2
+    maximumArtifactBytes: 262144
+    maximumStringCodeUnits: 4096
+    maximumArrayItems: 100
+    rejectLeadingOrTrailingWhitespace: true
+    rejectControlOrBidirectionalText: true
+    rejectMachineDetectablePersonalOrCredentialMaterial: true
+    strictUtf8: true
+    stableNoFollowRead: true
+    reviewerIdentity: role-slug
+    privateInputs: environment-owned
+    extensionRequires: superseding-schema-and-adr
+  governanceBindings: [candidateCommit, planSha256, backlogSha256]
+  approvalBindsPriorArtifacts: true
+  required:
+    - id: monthly-review-primary
+      schema: starfiniti.monthly-improvement-review.v1
+    - id: monthly-review-repeat
+      schema: starfiniti.monthly-improvement-review.v1
+    - id: quarterly-exercise-bundle
+      schema: starfiniti.quarterly-exercise-bundle.v1
+    - id: final-reconciliation
+      schema: starfiniti.improvement-reconciliation.v1
+    - id: approval-record
+      schema: starfiniti.improvement-approval-record.v1
+requiredApprovalRoles: [product, engineering, security, operations, owner]
+automaticFails:
+  - a due monthly review or quarterly exercise is missing stale incomplete or represented as a healthy zero
+  - a Critical backlog item is overdue or a High item exceeds its bounded remediation window without approved risk evidence
+  - a recurring failure reaches two occurrences without at least one linked durable regression control
+  - a material change ships without rescoring every affected module against the current evidence
+  - an experiment is promoted without improving its declared primary metric or while any guardrail fails
+  - a provider or dependency change is accepted without official-source review impact classification and an owner
+  - a quarterly restore tenancy privacy SCIM or incident exercise has an unexplained failure or protected-value difference
+  - an obsolete decision is silently rewritten instead of being superseded through an ADR
+  - a closeout artifact contains an unknown member unbounded content duplicate evidence or machine-detectable personal credential control or bidirectional material
+  - completion is claimed below 90 total below a category floor or without distinct digest-bound artifacts and all approvals

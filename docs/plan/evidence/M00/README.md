@@ -18,7 +18,8 @@ The competitive matrix uses official Smile, LoyaltyLion, and Yotpo documentation
 
 ## Baseline and target
 
-- Whole-product baseline: 49/100 in `docs/plan/evaluations/product-score.json`.
+- Whole-product baseline at this M00 cutoff: 49/100. The active score file later
+  evolved under ADR-0080; this historical result is not rewritten.
 - Released engineering score: 95/100 with recovery/real-store automatic failure still active.
 - Enterprise target: at least 90/100 overall and per module, at least 80% of each relevant category, and no deterministic failure.
 
@@ -27,7 +28,9 @@ The competitive matrix uses official Smile, LoyaltyLion, and Yotpo documentation
 - Clean baseline `npm.cmd run check`: stopped at repository-wide Prettier because the Windows checkout reports the known tracked CRLF baseline across 180 files; no later script ran.
 - `npm ci`: passed and restored 962 packages from the lockfile; this corrected an incomplete local install that initially lacked the declared worker `esbuild` binary.
 - Changed-file Prettier: passed.
-- `TASKS.yaml` and product-score JSON parse: passed with 27 unique tasks, 17 enterprise modules, valid dependencies, one active module, and a reconciled score of 49.
+- `TASKS.yaml` and the then-current product-score JSON parse passed with 27 unique
+  tasks, 17 enterprise modules, valid dependencies, one active module, and a
+  reconciled historical score of 49.
 - Lint, all workspace typechecks, and 177 unit tests: passed.
 - Dashboard and worker production builds: passed.
 - CI, deployment, architecture, accessibility, WooCommerce, and migration validators: passed. Architecture validation covers eight models and five accepted ADRs.
@@ -53,3 +56,22 @@ M00 scores 94/100. Its largest discovered weakness—the undocumented developmen
 ## Rollout and rollback
 
 M00 changes documentation and task authority only; no runtime, database, tenant, or value state changes. Rollback is a commit revert. Completed P0–P7 evidence remains retained either way.
+
+## Follow-up — 2026-08-30 task-graph owner-input guard
+
+The historical M00 cutoff and 94/100 score above remain unchanged. The earlier
+inline task parse is now supplemented by a durable root gate:
+`npm run task-graph:validate`. It validates 27 top-level tasks, 108 task/slice
+nodes, exact M00-M16 coverage, unique bounded IDs, valid replacements and
+acyclic dependencies, locked active/deferred scope, Shopify deferral, fixed
+90/0.8 deterministic completion authority, measurable module fields, and
+effective owner inputs for every active enterprise slice. Twenty-three mutation
+cases include pending-work, hidden-follow-up, invalid-date/root-shape,
+dependency-removal, false/sub-90 completion, baseline-drift, and
+unreviewed-locale paths and prove the guard fails closed.
+
+The follow-up exposed and corrected one real planning defect: active M09 and its
+S06 closeout relied on an approved release/window, linked real WooCommerce
+pilot, and recovery/rollback authority but declared no owner inputs. Those
+dependencies are now explicit at both levels. This changes planning authority
+only and provides no release, canary, product-score, or production evidence.

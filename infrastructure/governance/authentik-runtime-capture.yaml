@@ -1,0 +1,46 @@
+schema: starfiniti.authentik-runtime-capture-plan.v1
+providerId: authentik
+origin: https://auth.starfiniti.com
+entryPath: /
+healthPaths:
+  live: /-/health/live/
+  ready: /-/health/ready/
+assetRoles:
+  stylesheet: ^/static/dist/styles/flow-(?<version>[0-9]{4}\.[0-9]{1,2}\.[0-9]+)\.css$
+  polyfill: ^/static/dist/poly-(?<version>[0-9]{4}\.[0-9]{1,2}\.[0-9]+)\.js$
+  flowInterface: ^/static/dist/flow/FlowInterface-(?<version>[0-9]{4}\.[0-9]{1,2}\.[0-9]+)\.js$
+network:
+  method: GET
+  minimumTlsVersion: TLSv1.2
+  timeoutMs: 10000
+  maximumRedirects: 2
+  redirectPolicy: same-origin-relative-only
+  dnsPolicy: public-addresses-only-and-socket-pinned
+  contentEncoding: identity
+  maximumHeaderBytes: 32768
+  maximumRootBytes: 2097152
+  maximumAssetBytes: 8388608
+  maximumHealthBytes: 4096
+output:
+  rawContentRetained: false
+  responseHeadersRetained: false
+  cookiesRetained: false
+  addressesRetained: false
+  mode: "0600"
+claims:
+  proves:
+    - exact served runtime patch visible in the public login shell
+    - three same-version public static assets were independently retrieved and hashed
+    - public live and ready endpoints returned HTTP 200 during the bounded capture
+  doesNotProve:
+    - container image identity or digest
+    - embedded component or outpost versions
+    - private configuration export or signing material recovery
+    - OIDC SAML SCIM deprovisioning or upgrade compatibility
+    - upgrade acceptance deployment approval production mutation or reconciliation
+authority:
+  credentialsUsed: false
+  privateConfigurationRead: false
+  productionMutation: false
+  upgradeAccepted: false
+  deploymentApproved: false

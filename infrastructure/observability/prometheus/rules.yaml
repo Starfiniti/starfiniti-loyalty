@@ -1,0 +1,463 @@
+groups:
+  - name: starfiniti-loyalty-slos
+    interval: 30s
+    rules:
+      - alert: StarfinitiCentralApiUnavailable
+        expr: min by (environment, service, surface) (min_over_time(probe_success{job="starfiniti-central-api"}[2m])) < 1
+        for: 2m
+        keep_firing_for: 5m
+        labels:
+          {
+            severity: critical,
+            owner: platform-on-call,
+            route: platform-page,
+            service: starfiniti-loyalty,
+          }
+        annotations:
+          {
+            runbook: OPS-001,
+            dashboard: starfiniti-operations,
+            summary: Central API synthetic readiness is unavailable.,
+          }
+      - alert: StarfinitiWebhookAcknowledgementSlow
+        expr: histogram_quantile(0.95, sum by (environment, service, le) (rate(starfiniti_webhook_ack_seconds_bucket[5m]))) > 2
+        for: 5m
+        keep_firing_for: 10m
+        labels:
+          {
+            severity: high,
+            owner: value-integrity-on-call,
+            route: platform-page,
+            service: starfiniti-loyalty,
+          }
+        annotations:
+          {
+            runbook: OPS-002,
+            dashboard: starfiniti-operations,
+            summary: Valid webhook acknowledgement p95 exceeds two seconds.,
+          }
+      - alert: StarfinitiEventToLedgerSlow
+        expr: histogram_quantile(0.95, sum by (environment, service, le) (rate(starfiniti_event_to_ledger_seconds_bucket[5m]))) > 10
+        for: 5m
+        keep_firing_for: 10m
+        labels:
+          {
+            severity: high,
+            owner: value-integrity-on-call,
+            route: protected-value-page,
+            service: starfiniti-loyalty,
+          }
+        annotations:
+          {
+            runbook: OPS-003,
+            dashboard: starfiniti-operations,
+            summary: Accepted event to immutable ledger effect p95 exceeds ten seconds.,
+          }
+      - alert: StarfinitiWalletReadSlow
+        expr: histogram_quantile(0.95, sum by (environment, service, le) (rate(starfiniti_wallet_read_seconds_bucket[5m]))) > 0.3
+        for: 10m
+        keep_firing_for: 10m
+        labels:
+          {
+            severity: warning,
+            owner: platform-on-call,
+            route: operations-ticket,
+            service: starfiniti-loyalty,
+          }
+        annotations:
+          {
+            runbook: OPS-001,
+            dashboard: starfiniti-operations,
+            summary: Authorized customer wallet read p95 exceeds 300 milliseconds.,
+          }
+      - alert: StarfinitiQueueBacklog
+        expr: max by (environment, service, queue) (starfiniti_queue_oldest_seconds) > 60
+        for: 5m
+        keep_firing_for: 15m
+        labels:
+          {
+            severity: high,
+            owner: value-integrity-on-call,
+            route: protected-value-page,
+            service: starfiniti-loyalty,
+          }
+        annotations:
+          {
+            runbook: OPS-003,
+            dashboard: starfiniti-operations,
+            summary: A loyalty processing queue has work older than sixty seconds.,
+          }
+      - alert: StarfinitiDeadLettersPresent
+        expr: sum by (environment, service, queue) (starfiniti_dead_letter_count) > 0
+        for: 1m
+        keep_firing_for: 15m
+        labels:
+          {
+            severity: high,
+            owner: value-integrity-on-call,
+            route: protected-value-page,
+            service: starfiniti-loyalty,
+          }
+        annotations:
+          {
+            runbook: OPS-004,
+            dashboard: starfiniti-operations,
+            summary: A loyalty queue contains dead-letter work.,
+          }
+      - alert: StarfinitiWorkerUnavailable
+        expr: min by (environment, service, component) (starfiniti_worker_up) < 1
+        for: 2m
+        keep_firing_for: 10m
+        labels:
+          {
+            severity: high,
+            owner: platform-on-call,
+            route: platform-page,
+            service: starfiniti-loyalty,
+          }
+        annotations:
+          {
+            runbook: OPS-003,
+            dashboard: starfiniti-operations,
+            summary: A required worker class is unavailable.,
+          }
+      - alert: StarfinitiAmbiguousProviderOutcome
+        expr: sum by (environment, service, provider) (starfiniti_ambiguous_outcome_count) > 0
+        for: 0s
+        keep_firing_for: 15m
+        labels:
+          {
+            severity: critical,
+            owner: value-integrity-on-call,
+            route: protected-value-page,
+            service: starfiniti-loyalty,
+          }
+        annotations:
+          {
+            runbook: OPS-005,
+            dashboard: starfiniti-operations,
+            summary: A provider outcome is ambiguous and protected value remains reserved.,
+          }
+      - alert: StarfinitiDatabasePoolSaturated
+        expr: max by (environment, service) (starfiniti_database_pool_used_ratio) > 0.8
+        for: 5m
+        keep_firing_for: 10m
+        labels:
+          {
+            severity: high,
+            owner: platform-on-call,
+            route: platform-page,
+            service: starfiniti-loyalty,
+          }
+        annotations:
+          {
+            runbook: OPS-006,
+            dashboard: starfiniti-operations,
+            summary: PostgreSQL connection-pool use exceeds eighty percent.,
+          }
+      - alert: StarfinitiDatabaseDiskLow
+        expr: min by (environment, service) (starfiniti_database_disk_available_ratio) < 0.15
+        for: 5m
+        keep_firing_for: 30m
+        labels:
+          {
+            severity: critical,
+            owner: recovery-on-call,
+            route: platform-page,
+            service: starfiniti-loyalty,
+          }
+        annotations:
+          {
+            runbook: OPS-006,
+            dashboard: starfiniti-operations,
+            summary: Database filesystem available capacity is below fifteen percent.,
+          }
+      - alert: StarfinitiWalRpoBreached
+        expr: max by (environment, service) (starfiniti_postgres_wal_archive_lag_seconds) > 300
+        for: 0s
+        keep_firing_for: 30m
+        labels:
+          {
+            severity: critical,
+            owner: recovery-on-call,
+            route: protected-value-page,
+            service: starfiniti-loyalty,
+          }
+        annotations:
+          {
+            runbook: OPS-007,
+            dashboard: starfiniti-operations,
+            summary: Authoritative PostgreSQL WAL archive lag exceeds the five-minute RPO objective.,
+          }
+      - alert: StarfinitiBaseBackupStale
+        expr: max by (environment, service) (starfiniti_postgres_base_backup_age_seconds) > 86400
+        for: 15m
+        keep_firing_for: 30m
+        labels:
+          {
+            severity: high,
+            owner: recovery-on-call,
+            route: platform-page,
+            service: starfiniti-loyalty,
+          }
+        annotations:
+          {
+            runbook: OPS-007,
+            dashboard: starfiniti-operations,
+            summary: The latest verified PostgreSQL base backup is older than one day.,
+          }
+      - alert: StarfinitiBackupTransferAmplification
+        expr: starfiniti_backup_cycle_transfer_amplification_ratio > 4 and starfiniti_backup_cycle_transferred_bytes > 1073741824
+        for: 1m
+        keep_firing_for: 30m
+        labels:
+          {
+            severity: critical,
+            owner: recovery-on-call,
+            route: platform-page,
+            service: starfiniti-loyalty,
+          }
+        annotations:
+          {
+            runbook: OPS-008,
+            dashboard: starfiniti-operations,
+            summary: A backup cycle transfers over four times changed bytes and more than one GiB.,
+          }
+      - alert: StarfinitiOffsiteArchiveRpoBreached
+        expr: absent(starfiniti_postgres_offsite_archive_unixtime_seconds{environment="production"}) or absent(starfiniti_postgres_offsite_archive_last_attempt_success{environment="production"}) or time() - max by (environment, service) (starfiniti_postgres_offsite_archive_unixtime_seconds{environment="production"}) > 300 or min by (environment, service) (starfiniti_postgres_offsite_archive_last_attempt_success{environment="production"}) < 1
+        for: 0s
+        keep_firing_for: 30m
+        labels:
+          {
+            severity: critical,
+            owner: recovery-on-call,
+            route: protected-value-page,
+            service: starfiniti-loyalty,
+          }
+        annotations:
+          {
+            runbook: OPS-007,
+            dashboard: starfiniti-operations,
+            summary: The dedicated off-site PostgreSQL archive is absent stale or its last attempt failed.,
+          }
+      - alert: StarfinitiPostgresBorgRepositoryIsolationLost
+        expr: absent(starfiniti_postgres_borg_repository_isolated{environment="production"}) or min by (environment, service) (starfiniti_postgres_borg_repository_isolated{environment="production"}) < 1
+        for: 0s
+        keep_firing_for: 30m
+        labels:
+          {
+            severity: critical,
+            owner: recovery-on-call,
+            route: protected-value-page,
+            service: starfiniti-loyalty,
+          }
+        annotations:
+          {
+            runbook: OPS-007,
+            dashboard: starfiniti-operations,
+            summary: PostgreSQL backup repository isolation is absent or actual identity verification failed.,
+          }
+      - alert: StarfinitiPostgresBorgRetentionGap
+        expr: absent(starfiniti_postgres_borg_maintenance_last_attempt_success{environment="production"}) or absent(starfiniti_postgres_borg_recent_archive_max_interval_seconds{environment="production"}) or absent(starfiniti_postgres_borg_recent_archive_count{environment="production"}) or min by (environment, service) (starfiniti_postgres_borg_maintenance_last_attempt_success{environment="production"}) < 1 or max by (environment, service) (starfiniti_postgres_borg_recent_archive_max_interval_seconds{environment="production"}) > 300 or min by (environment, service) (starfiniti_postgres_borg_recent_archive_count{environment="production"}) < 1
+        for: 0s
+        keep_firing_for: 30m
+        labels:
+          {
+            severity: critical,
+            owner: recovery-on-call,
+            route: protected-value-page,
+            service: starfiniti-loyalty,
+          }
+        annotations:
+          {
+            runbook: OPS-007,
+            dashboard: starfiniti-operations,
+            summary: Dedicated PostgreSQL retention failed or left a recent recovery interval above five minutes.,
+          }
+      - alert: StarfinitiPostgresBorgMaintenanceStale
+        expr: absent(starfiniti_postgres_borg_maintenance_unixtime_seconds{environment="production"}) or time() - max by (environment, service) (starfiniti_postgres_borg_maintenance_unixtime_seconds{environment="production"}) > 108000
+        for: 5m
+        keep_firing_for: 30m
+        labels:
+          {
+            severity: high,
+            owner: recovery-on-call,
+            route: platform-page,
+            service: starfiniti-loyalty,
+          }
+        annotations:
+          {
+            runbook: OPS-007,
+            dashboard: starfiniti-operations,
+            summary: Dedicated PostgreSQL Borg maintenance has no successful evidence within thirty hours.,
+          }
+      - alert: StarfinitiLedgerDifference
+        expr: max by (environment, service) (starfiniti_ledger_unexplained_difference_count) > 0
+        for: 0s
+        keep_firing_for: 30m
+        labels:
+          {
+            severity: critical,
+            owner: value-integrity-on-call,
+            route: protected-value-page,
+            service: starfiniti-loyalty,
+          }
+        annotations:
+          {
+            runbook: OPS-009,
+            dashboard: starfiniti-operations,
+            summary: Immutable ledger or derived balance reconciliation has an unexplained difference.,
+          }
+      - alert: StarfinitiTenantBoundaryViolation
+        expr: sum by (environment, service, surface) (increase(starfiniti_tenant_boundary_violation_total[5m])) > 0
+        for: 0s
+        keep_firing_for: 30m
+        labels:
+          {
+            severity: critical,
+            owner: security-on-call,
+            route: security-page,
+            service: starfiniti-loyalty,
+          }
+        annotations:
+          {
+            runbook: OPS-010,
+            dashboard: starfiniti-operations,
+            summary: A tenant-boundary guard recorded a violation.,
+          }
+      - alert: StarfinitiCheckoutHubDependency
+        expr: sum by (environment, service, surface) (increase(starfiniti_checkout_hub_dependency_failure_total[5m])) > 0
+        for: 0s
+        keep_firing_for: 30m
+        labels:
+          {
+            severity: critical,
+            owner: value-integrity-on-call,
+            route: protected-value-page,
+            service: starfiniti-loyalty,
+          }
+        annotations:
+          {
+            runbook: OPS-011,
+            dashboard: starfiniti-operations,
+            summary: WooCommerce checkout failed because of a central-hub dependency.,
+          }
+      - alert: StarfinitiPrivacyReplayFailure
+        expr: sum by (environment, service, operation) (starfiniti_privacy_replay_failed_action_count) > 0
+        for: 0s
+        keep_firing_for: 30m
+        labels:
+          {
+            severity: critical,
+            owner: security-on-call,
+            route: security-page,
+            service: starfiniti-loyalty,
+          }
+        annotations:
+          {
+            runbook: OPS-012,
+            dashboard: starfiniti-operations,
+            summary: A privacy suppression deletion or deprovisioning replay failed.,
+          }
+      - alert: StarfinitiIdentityBrokerUnavailable
+        expr: min by (environment, service, surface) (min_over_time(probe_success{job="starfiniti-authentik"}[5m])) < 1
+        for: 5m
+        keep_firing_for: 10m
+        labels:
+          {
+            severity: high,
+            owner: security-on-call,
+            route: platform-page,
+            service: starfiniti-loyalty,
+          }
+        annotations:
+          {
+            runbook: OPS-013,
+            dashboard: starfiniti-operations,
+            summary: Brokered identity login is unavailable.,
+          }
+      - alert: StarfinitiCertificateExpiresSoon
+        expr: min by (environment, service, surface) (probe_ssl_earliest_cert_expiry - time()) < 1209600
+        for: 1h
+        keep_firing_for: 1h
+        labels:
+          {
+            severity: high,
+            owner: security-on-call,
+            route: operations-ticket,
+            service: starfiniti-loyalty,
+          }
+        annotations:
+          {
+            runbook: OPS-014,
+            dashboard: starfiniti-operations,
+            summary: A production certificate expires in less than fourteen days.,
+          }
+      - alert: StarfinitiSecurityHighFinding
+        expr: sum by (environment, service) (starfiniti_security_unresolved_high_count) > 0
+        for: 0s
+        keep_firing_for: 1h
+        labels:
+          {
+            severity: critical,
+            owner: security-on-call,
+            route: security-page,
+            service: starfiniti-loyalty,
+          }
+        annotations:
+          {
+            runbook: OPS-015,
+            dashboard: starfiniti-operations,
+            summary: A Critical or High security finding is unresolved.,
+          }
+      - alert: StarfinitiRecoveryExerciseStale
+        expr: max by (environment, service, target_class) (starfiniti_recovery_exercise_age_seconds) > 7948800
+        for: 1h
+        keep_firing_for: 1h
+        labels:
+          {
+            severity: warning,
+            owner: recovery-on-call,
+            route: operations-ticket,
+            service: starfiniti-loyalty,
+          }
+        annotations:
+          {
+            runbook: OPS-016,
+            dashboard: starfiniti-operations,
+            summary: Clean-room recovery evidence is older than ninety-two days.,
+          }
+      - alert: StarfinitiIncidentRouteExerciseStale
+        expr: max by (environment, service) (starfiniti_incident_route_exercise_age_seconds) > 2678400
+        for: 1h
+        keep_firing_for: 1h
+        labels:
+          {
+            severity: warning,
+            owner: platform-on-call,
+            route: operations-ticket,
+            service: starfiniti-loyalty,
+          }
+        annotations:
+          {
+            runbook: OPS-017,
+            dashboard: starfiniti-operations,
+            summary: Incident paging and escalation evidence is older than thirty-one days.,
+          }
+      - alert: StarfinitiRequiredTelemetryMissing
+        expr: absent(starfiniti_observability_required_series_present_ratio{environment="production"}) or min by (environment, service) (starfiniti_observability_required_series_present_ratio{environment="production"}) < 1
+        for: 2m
+        keep_firing_for: 10m
+        labels:
+          {
+            severity: high,
+            owner: platform-on-call,
+            route: platform-page,
+            service: starfiniti-loyalty,
+          }
+        annotations:
+          {
+            runbook: OPS-017,
+            dashboard: starfiniti-operations,
+            summary: Required operational time series are absent stale or incomplete.,
+          }

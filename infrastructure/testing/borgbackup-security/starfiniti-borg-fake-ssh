@@ -1,0 +1,32 @@
+#!/bin/sh
+set -eu
+
+test "$#" -ge 2
+case "$1" in
+  canary@current-server)
+    remote_borg=/usr/bin/borg
+    requested_borg=borg
+    ;;
+  canary@candidate-server)
+    remote_borg=/opt/starfiniti/borg/1.4.5/borg-dir/borg.exe
+    requested_borg=/opt/starfiniti/borg/1.4.5/borg-dir/borg.exe
+    ;;
+  *)
+    exit 64
+    ;;
+esac
+shift
+
+test "$1" = "$requested_borg"
+shift
+test "${1:-}" = serve
+shift
+for option in "$@"; do
+  case "$option" in
+    --critical|--info|--debug|--debug-topic=repository.*|--storage-quota=*) ;;
+    *) exit 64 ;;
+  esac
+done
+
+cd /work
+exec "$remote_borg" serve "$@"

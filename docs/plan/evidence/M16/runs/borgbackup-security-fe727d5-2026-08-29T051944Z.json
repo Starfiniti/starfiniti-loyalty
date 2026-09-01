@@ -1,0 +1,55 @@
+{
+  "schema": "starfiniti.borgbackup-security-canary-evidence.v1",
+  "status": "passed",
+  "observedAt": "2026-08-29T05:19:44.164Z",
+  "planSha256": "f4a5ce0a8de4a34f6014cba06574292237821e0d1e17f1b67c30410a656ef1a3",
+  "imageId": "sha256:905373e857778335ca7a6e49638c54334f8079b29c8ad32af4f6b71b36787a77",
+  "candidate": {
+    "version": "1.4.5",
+    "executableSha256": "e0a23534bf28aa90940f749bb25dbbeecd401e9bf1de1dd8872cedc45f98718d",
+    "treeManifestSha256": "09fb420dce78c94814520628cf68ecdd77ab75d4fd9c794f8916874f2a767827",
+    "signatureVerified": true,
+    "rawAssetRetained": false
+  },
+  "rollback": {
+    "version": "1.4.0",
+    "packageVersion": "1.4.0-5",
+    "packageSha256": "51e1cbdee1fccb31e9c63b93fda81d5fffb14289dc31ba27984e04ebb0c85733",
+    "executableSha256": "babb2b42edd64283220d1f1ca57119d41d8f8b93e4af9c5606874b60dd43bc4d",
+    "packageBytesRetained": false
+  },
+  "compatibility": {
+    "pairs": 4,
+    "archives": 4,
+    "files": 2,
+    "payloadBytes": 32,
+    "operations": [
+      "init",
+      "create",
+      "info-json",
+      "list-json",
+      "check-repository",
+      "prune-dry-run",
+      "compact",
+      "extract"
+    ]
+  },
+  "isolation": {
+    "networkMode": "none",
+    "readOnlyRootfs": true,
+    "user": "65532:65532",
+    "capDrop": [
+      "ALL"
+    ],
+    "noNewPrivileges": true,
+    "pidsLimit": 256,
+    "memoryBytes": 1073741824,
+    "nanoCpus": 2000000000,
+    "publishedPorts": 0
+  },
+  "teardown": {
+    "containerRemoved": true,
+    "imageRemoved": true
+  },
+  "productionMutation": false
+}

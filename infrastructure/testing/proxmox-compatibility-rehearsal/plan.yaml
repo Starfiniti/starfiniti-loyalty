@@ -1,0 +1,286 @@
+schema: starfiniti.proxmox-compatibility-rehearsal-plan.v1
+version: 1
+status: candidate
+createdAt: 2026-08-29T04:20:00Z
+bindings:
+  candidate:
+    path: infrastructure/governance/proxmox-security-update-plan.yaml
+    fileSha256: ec010eb667d6166ee5adc0ee0cd2d6ecdf5b2a114e345b018b51c704d64df075
+    provenanceSha256: 39f30c67a374b041944a598ce2334fed3fcb8e5f64264b3db08847d5ee23ff9f
+  packageEvidence:
+    path: docs/plan/evidence/M16/runs/proxmox-security-package-canary-957e1de-2026-08-29T003101Z.json
+    fileSha256: 3eec19512a6b2535cf0c6359144c1807b78e01015f43c470ad53335c6eb1090e
+    reportSha256: 0b703cc553f2304de75f28160e7482b09718794205efa7615fb39f2eab0f0382
+  preflightEvidence:
+    path: docs/plan/evidence/M16/runs/proxmox-security-preflight-5659404-2026-08-29T013145Z.json
+    fileSha256: b18037b19263020fabce46c2b6b13ec69b640775d2747dae474521191cba8a85
+    reportSha256: 898d10bde0e5dd1103dfd8838f19febff3e781ac95ecf305d4767eadf20a110a
+  inventoryPlan:
+    path: infrastructure/testing/proxmox-compatibility-inventory/plan.yaml
+    fileSha256: 19232bf6eaf0463c26aae96e30f767f8983b92e99171efa2f5b0c9929561b081
+  inventoryEvidence:
+    path: docs/plan/evidence/M16/runs/proxmox-compatibility-inventory-e7825b6-2026-08-29T023345Z.json
+    fileSha256: f6af50f506044e7578dcd02f800c1c71680e322460bf81cf4faa705b0ff5e25f
+    reportSha256: 495d7960a59359794fdb5024171c2e2de66cf69fc7b6701447ae285b46ee376f
+    projectionSha256: e5b11768254534c2f4bd18a2734b78c5c2a63250d32c7715b86dd18c7b3689de
+objectives:
+  maximumInventoryAgeSeconds: 300
+  maximumRunSeconds: 14400
+  maximumStageSeconds: 3600
+  maximumDriverOutputBytes: 65536
+  maximumReportBytes: 262144
+  qemuProfileCount: 15
+  lxcProfileCount: 4
+  storageProfileCount: 2
+  requiredServiceCount: 9
+safety:
+  targetClass: isolated-equivalent-proxmox-host
+  environmentMarker: starfiniti-proxmox-rehearsal-v1
+  equivalentPhysicalBootRequired: true
+  nestedOnlyAccepted: false
+  syntheticProfileGuestsRequired: true
+  criticalSourcesReadOnly: true
+  publicIngressAllowed: false
+  externalEgressAllowed: false
+  productionRoutesAllowed: false
+  productionCredentialsAllowed: false
+  productionTargetAllowed: false
+  candidatePackagesPreStaged: true
+  destroyAfterRun: true
+  outOfProcessExpiryRequired: true
+expectedCandidate:
+  architecture: x86_64
+  bootMode: bios
+  hardwareVirtualizationFlag: vmx
+  candidateKernel: 7.0.14-14-pve
+  priorKernel: 7.0.6-2-pve
+  packageCount: 12
+  packageBytes: 165341024
+  removals: 0
+  downgrades: 0
+  packages:
+    - { id: base-files, version: 13.8+deb13u6, action: upgrade }
+    - { id: pve-qemu-kvm, version: 11.0.3-3, action: upgrade }
+    - { id: libpve-storage-perl, version: 9.1.9, action: upgrade }
+    - { id: qemu-server, version: 9.2.7, action: upgrade }
+    - { id: pve-manager, version: 9.2.11, action: upgrade }
+    - { id: libpve-common-perl, version: 9.2.1, action: upgrade }
+    - { id: pve-container, version: 6.1.13, action: upgrade }
+    - { id: pve-ha-manager, version: 5.2.5, action: upgrade }
+    - { id: proxmox-mini-journalreader, version: "1.7", action: upgrade }
+    - { id: proxmox-widget-toolkit, version: 5.2.8, action: upgrade }
+    - {
+        id: proxmox-kernel-7.0.14-14-pve-signed,
+        version: 7.0.14-14,
+        action: install,
+      }
+    - { id: proxmox-kernel-7.0, version: 7.0.14-14, action: upgrade }
+criticalWorkloadRelease:
+  application:
+    release: v0.1.11
+    tagObjectSha: ee11cca4e3af3a8a7cc7cf1df13ccf438a3c6efd
+    commitSha: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
+  supabase:
+    compatibilityPath: infrastructure/environments/proxmox/supabase-compatibility.json
+    compatibilitySha256: 1add7b7e0df5580ea36e032f26849515fdbbb2e960247013ab72fb1cbaa0ac1a
+    releaseRef: self-hosted/v0.8.0
+    commitSha: 241bb11c0627f2981746d37033f57dbfa81d29b0
+    composeVariantSha256: 3c0cc8d931fba8e40923b1e05961d10692cbd7e7cb378d59cdb7f2b590ca4a55
+    platform: linux/amd64
+    imageSetSha256: 51f16d49a921d60cc321658030d2edb14c1dec4211f0872764e815edfaa0abfd
+sourceMatrix:
+  qemuProfiles:
+    - {
+        profileSha256: 058406295f8b8b04a98f764378832748ca5e709fad58194f592cf0a85504c820,
+        sourceCount: 1,
+      }
+    - {
+        profileSha256: 182bd5dee2db513a64695d3f62dfe4d1e896b5fd70074473f5d84214b20c8bd7,
+        sourceCount: 1,
+      }
+    - {
+        profileSha256: 2ff80906c020fd3f6a84816a8160e5553e4689783b7ac80efd99b39c9025feaf,
+        sourceCount: 2,
+      }
+    - {
+        profileSha256: 399ec511c3d108a6f62f4134f019bdf2748b6f85c9601b4e8ba10be7a775a612,
+        sourceCount: 1,
+      }
+    - {
+        profileSha256: 4f2ae2dc2117ce6a451dceb79992830aba4f39b66494efa4f03f405b911a39d1,
+        sourceCount: 1,
+      }
+    - {
+        profileSha256: 58fd742756755bb924a52d3dc701e33f060913e85852c03ea3fa9c77be9a7a40,
+        sourceCount: 1,
+      }
+    - {
+        profileSha256: 692f58829f2ee746c654e1e9551beff66f87aeee657f2e9d14f77ddc0e6f6dec,
+        sourceCount: 2,
+      }
+    - {
+        profileSha256: 86997c2c302f53f1c96469069d562730598bf4e43675fbf513bca33c0961ce22,
+        sourceCount: 2,
+      }
+    - {
+        profileSha256: ba46886273228cf1f2c89bf29209a76a03a9a86285a8d9257b544b3e53fd8d14,
+        sourceCount: 1,
+      }
+    - {
+        profileSha256: bb38fcffa66363c9dc62b45ee606ca6185fbde3fcbabe132d3bd11da21241346,
+        sourceCount: 1,
+      }
+    - {
+        profileSha256: be7f5207fc4c3194d8e8513c1992079d62eb185b87320e9ddef1b732fde8d58b,
+        sourceCount: 1,
+      }
+    - {
+        profileSha256: ccaf3a2fbcb66d4fccad20f2ae2ec80a377f6c2a42b6efacd1cfe569307cc85c,
+        sourceCount: 1,
+      }
+    - {
+        profileSha256: e0478bf7b599fe630f43eff9692a476d6d60c29f2b775c7290b8dad8063bf697,
+        sourceCount: 1,
+      }
+    - {
+        profileSha256: ef1f5e51a0ec7e8cd448e80e3f48c7c47d85fd1cd2e8705d67f5f12a4892fce4,
+        sourceCount: 1,
+      }
+    - {
+        profileSha256: f28d1dc600f90c9dd6a6950199eb8495f874578827fdcdf59573e96cb78eec79,
+        sourceCount: 1,
+      }
+  lxcProfiles:
+    - {
+        profileSha256: 133ecc15da0bacad7865a36582cf318389d2d47fbcc75d82e0ea70c107a6f3f0,
+        sourceCount: 1,
+      }
+    - {
+        profileSha256: 29d11ad53a0dcfc6913c7ac2f54e54fc939c224c29d7cb2b163a0e89c87c7e53,
+        sourceCount: 1,
+      }
+    - {
+        profileSha256: 831722cbe0fa89eb661cd6b6eb708422ac092e2eeffafa159df852aaae807dc7,
+        sourceCount: 1,
+      }
+    - {
+        profileSha256: c59f36ba8cf66695b8fa1931a5680da4209572dcfde12b1583beb2f50fd9ae6d,
+        sourceCount: 1,
+      }
+  storageProfiles:
+    - {
+        type: dir,
+        content: [backup, images, import, iso, rootdir, snippets, vztmpl],
+      }
+    - { type: lvmthin, content: [images, rootdir] }
+  requiredServices:
+    - pve-cluster.service
+    - pvedaemon.service
+    - pveproxy.service
+    - pvestatd.service
+    - pvescheduler.service
+    - pve-ha-crm.service
+    - pve-ha-lrm.service
+    - qmeventd.service
+    - ssh.service
+  criticalWorkloads:
+    - {
+        id: application,
+        type: qemu,
+        profileSha256: 692f58829f2ee746c654e1e9551beff66f87aeee657f2e9d14f77ddc0e6f6dec,
+      }
+    - {
+        id: database,
+        type: qemu,
+        profileSha256: 692f58829f2ee746c654e1e9551beff66f87aeee657f2e9d14f77ddc0e6f6dec,
+      }
+  rehearsalRows:
+    - candidate-host-boot
+    - qemu-profiles
+    - lxc-profiles
+    - storage-profiles
+    - management-services
+    - critical-workload-clones
+stages:
+  - {
+      id: inspect_isolation,
+      adapter: inspect_isolated_equivalent_host_v1,
+      timeoutSeconds: 60,
+    }
+  - {
+      id: verify_candidate_bytes,
+      adapter: verify_prestaged_candidate_v1,
+      timeoutSeconds: 300,
+    }
+  - {
+      id: install_candidate,
+      adapter: install_exact_candidate_v1,
+      timeoutSeconds: 1800,
+    }
+  - {
+      id: reboot_candidate_host,
+      adapter: reboot_isolated_candidate_v1,
+      timeoutSeconds: 1800,
+    }
+  - {
+      id: verify_host_boot,
+      adapter: verify_candidate_host_boot_v1,
+      timeoutSeconds: 300,
+    }
+  - {
+      id: verify_management_services,
+      adapter: verify_management_services_v1,
+      timeoutSeconds: 300,
+    }
+  - {
+      id: verify_storage_profiles,
+      adapter: verify_storage_profiles_v1,
+      timeoutSeconds: 900,
+    }
+  - {
+      id: verify_qemu_profiles,
+      adapter: verify_qemu_profiles_v1,
+      timeoutSeconds: 1800,
+    }
+  - {
+      id: verify_lxc_profiles,
+      adapter: verify_lxc_profiles_v1,
+      timeoutSeconds: 1800,
+    }
+  - {
+      id: restore_critical_workload_clones,
+      adapter: restore_critical_workload_clones_v1,
+      timeoutSeconds: 3600,
+    }
+  - {
+      id: verify_critical_workload_clones,
+      adapter: verify_critical_workload_clones_v1,
+      timeoutSeconds: 1800,
+    }
+  - {
+      id: reconcile_rehearsal,
+      adapter: reconcile_rehearsal_v1,
+      timeoutSeconds: 600,
+    }
+  - {
+      id: destroy_rehearsal,
+      adapter: destroy_isolated_rehearsal_v1,
+      timeoutSeconds: 900,
+      alwaysRun: true,
+    }
+gates:
+  candidatePackageBytesVerified: true
+  repositoryToolSignatureReverified: true
+  candidateDependencySimulationReverified: true
+  installedStartingStateReverified: true
+  consumerInventoryCaptured: true
+  rehearsalExecuted: false
+  independentReviewApproved: false
+  compatibilityProved: false
+  rollbackEscrowComplete: false
+  recoveryReady: false
+  repositoryPolicyApproved: false
+  maintenanceApproved: false
+  installationApproved: false
+  rebootApproved: false
+  productionMutation: false

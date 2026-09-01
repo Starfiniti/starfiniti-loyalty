@@ -1,0 +1,189 @@
+schema: starfiniti.continuous-improvement.v1
+status: in_progress
+observedAt: 2026-08-31T20:35:50Z
+candidate:
+  branch: codex/enterprise-roadmap-integration
+  commit: 7fb4403863e7409e38bf4fbfc1f3ec68d6325e3f
+  initialCloseApproved: false
+plan:
+  path: infrastructure/governance/continuous-improvement.yaml
+  sha256: b39db2fc0d83f1f1aea7500c9196e32b04bf962d5592f333947362ec4155185a
+backlog:
+  path: docs/plan/IMPROVEMENT_BACKLOG.yaml
+  sha256: af5c5a6bd2d132c6b31c0e27add9677a6571faaa68a785b5593106bca4fbabbe
+artifacts:
+  monthlyReviewPrimaryPath: null
+  monthlyReviewPrimarySha256: null
+  monthlyReviewRepeatPath: null
+  monthlyReviewRepeatSha256: null
+  quarterlyExerciseBundlePath: null
+  quarterlyExerciseBundleSha256: null
+  finalReconciliationPath: null
+  finalReconciliationSha256: null
+  approvalRecordPath: null
+  approvalRecordSha256: null
+score:
+  total: 77
+  target: 90
+  minimumCategoryRatio: 0.8
+  categories:
+    - id: correctness
+      weight: 20
+      score: 17
+      evidence: The versioned calendar, ranking, review, exercise, and completion contracts are deterministic; elapsed review evidence remains pending.
+    - id: security
+      weight: 15
+      score: 12
+      evidence: Evidence minimization and mandatory security, privacy, tenancy, SCIM, and incident review are specified; live exercises remain pending.
+    - id: ledgerReliability
+      weight: 15
+      score: 12
+      evidence: Reconciliation and recurring-failure controls preserve immutable value requirements; repeated live zero-difference evidence remains pending.
+    - id: tests
+      weight: 15
+      score: 15
+      evidence: The validator uses a positive closeout fixture and adversarial corruption cases for cadence, ranking, controls, scores, experiments, exercises, and approvals.
+    - id: performance
+      weight: 10
+      score: 5
+      evidence: Performance is a mandatory monthly section and material changes require rescoring, but no repeated production performance review exists yet.
+    - id: operability
+      weight: 10
+      score: 2
+      evidence: The operating contract and runbook exist, but two elapsed monthly reviews, one quarterly bundle, owner roster, and schedule activation remain pending.
+    - id: maintainability
+      weight: 15
+      score: 14
+      evidence: Stable schemas, official-source catalogue, exact ranking, append-only evidence, and ADR supersession make future decisions reconstructable.
+checks:
+  - id: repository_contract
+    status: passed
+    evidence: The canonical contract fixes UTC cadence, review sections, thirteen official sources, bounded content-free source snapshots, exact recovery host and guest endpoints, installed and candidate provenance digests, ranking arithmetic, regression threshold, score floors, experiment guardrails, five closed minimized V1 closeout artifacts, and automatic failures.
+  - id: backlog_contract
+    status: passed
+    evidence: The evidence-ranked backlog records fourteen current external and dependency gates with exact integer inputs, recomputable scores, stable order, evidence paths, and owner inputs; the 2026-08-31 managed-billing repair and 3604822111248-byte recovery-transfer incident are reflected without changing any gate state or score, and capacity plus whole-system fault runs remain separate blockers.
+  - id: task_graph_binding
+    status: passed
+    evidence: M16 declares measurable cadence, provider, regression, experiment, exercise, scoring, rollout, rollback, owner-input, and evidence requirements.
+  - id: runbook_contract
+    status: passed
+    evidence: The runbook defines monthly and quarterly operation, evidence minimization, absence handling, regression promotion, exercise safety, independent review, and append-only correction.
+  - id: adr_contract
+    status: passed
+    evidence: ADR-0068 compares four approaches, cites canonical official providers, defines the cadence decision, and preserves rollback and historical evidence semantics; ADR-0113 selects closed minimized V1 closeout artifacts over permissive or encrypted repository payloads and requires a superseding version for future extension.
+  - id: validator_selftest
+    status: passed
+    evidence: The completion fixture and thirty-seven adversarial mutations prove that cadence, freshness, exact blocker-set and evidence bindings, ranking, recurring controls, rescoring, experiment guardrails, canonical closed-artifact policy, closed nested artifact schemas, unknown fields, identity keys, embedded email and common credential material, control or bidirectional text, bounded content, duplicate evidence, exercises, approvals, and score floors fail closed; the recurring-failure registry additionally rejects twenty schema threshold occurrence chronology anchor path digest control delivery production plan-bound and remaining-gate corruptions; the source collector rejects twenty-six source, network, response, digest, review-claim, output, and byte-preservation corruptions without network access, the installed-state collector rejects thirty-six fact, endpoint, component, chronology, digest, historical-source, full-candidate, output, and false-authority corruptions without network or SSH access, the Supabase repository review rejects forty-seven source package lock alignment Node Data API schema automatic-grant immutable-CI task ADR byte-preservation and false-authority corruptions, the bounded federation/notification dependency review rejects thirty-two provenance exact-shape manifest nested-lock compatibility source-control rollback task ADR and false-authority corruptions, the cutoff-bound provider-impact register rejects forty-six source installed-state catalogue pin candidate evidence task ADR and false-authority corruptions without network or SSH access, and the Authentik 2026.8 source-contract validator binds twenty-seven owned operations and two hundred forty-eight sent request-field occurrences across eighteen schemas with two hundred forty exact and eight compatible while rejecting provenance route protocol rollback limitation task ADR and false-authority corruptions offline.
+  - id: exact_head_ci
+    status: passed
+    evidence: >-
+      Exact integrated code head 7fb4403863e7409e38bf4fbfc1f3ec68d6325e3f passed CI run 33434852244 and Security run 33434852266 with all eleven workflow jobs green; external CodeQL also passed. The complete baseline contains 999 workspace tests, both production images, all 89 migrations, all 70 pgTAP files with 3831 assertions, all 22 concurrency probes, all four WooCommerce runtimes, DAST, supply chain, and recovery transport. It includes the post-review managed-session and usage boundary, preserving V1 claim identity, separating provider attempts from policy holds, and failing closed across snapshot visibility. Evidence-only head 609705692d2fe38e64b12360d392e1c62aabdf74 subsequently passed CI 33435854855, Security 33435854858, and external CodeQL with all twelve PR checks green and PR 57 merge-clean. Earlier dependency, provider-impact, Authentik source-contract, and fourteen-scenario disposable Authentik runtime records remain effective. These records prove repository and disposable candidate-runtime verification only and change no provider acceptance or production authority.
+  - id: owner_roster
+    status: pending
+    evidence: Product, engineering, security, operations, monthly-review, quarterly-exercise, and owner roles require named environment-owned assignments.
+  - id: schedules_active
+    status: pending
+    evidence: Approved UTC monthly and quarterly schedule instances and notification routes are not active.
+  - id: monthly_review_primary
+    status: pending
+    evidence: The first complete elapsed calendar-month review has not been recorded.
+  - id: monthly_review_repeat
+    status: pending
+    evidence: A second distinct consecutive calendar-month review has not been recorded.
+  - id: monthly_continuity
+    status: pending
+    evidence: Two complete consecutive periods with no source or review gap cannot yet be proven.
+  - id: activation_review
+    status: pending
+    evidence: Activation baseline, observation, target, interpretation, and disposition require elapsed source evidence.
+  - id: errors_support_review
+    status: pending
+    evidence: Error and support patterns require fresh sources, stable fingerprints, impact, and disposition.
+  - id: reconciliation_fraud_review
+    status: pending
+    evidence: Immutable-value reconciliation and minimized fraud outcomes require elapsed review evidence.
+  - id: campaign_churn_review
+    status: pending
+    evidence: Campaign outcomes and churn require versioned definitions, fresh sources, and owner interpretation.
+  - id: usability_performance_review
+    status: pending
+    evidence: Merchant and customer usability plus supported performance evidence require an elapsed review.
+  - id: security_billing_review
+    status: pending
+    evidence: Security findings and managed billing usage, invoice, entitlement, and protected-path evidence require an elapsed review.
+  - id: provider_review
+    status: pending
+    evidence: >-
+      The verified 6534-byte source snapshot and 8813-byte installed snapshot bind all thirteen official sources, both opaque recovery endpoints, and all six installed recovery providers. ADR-0107 composes those immutable inputs into one cutoff-bound engineering register; ADR-0108 appends the public served Authentik 2026.5.6 correction under effective decision SHA-256 3b8372a74aee6128b947e43c3ff3beba34029434b197c4340dff0d9cb3f6dfc3 with two Critical, four High, four Medium, and three Low entries. ADR-0109 pins exact Authentik 2026.8.0 source, OpenAPI, release, OCI, and protocol provenance and proves twenty-seven owned operations plus two hundred forty-eight sent request-field occurrences remain structurally supported. ADR-0110 then proves the exact 2026.8.0 disposable candidate boots and completes fourteen synthetic OIDC, SAML, and SCIM scenarios with minimized evidence and teardown. It does not identify the current production image or outposts, recover private configuration or signing material, exercise a real enterprise IdP or Starfiniti database authorization, prove rollback, or approve an upgrade. PostgreSQL remains coupled to the exact Supabase platform image, Stripe remains on Clover pending a complete Dahlia contract and replay canary, and every automatic-upgrade, merge, release, deployment, production mutation, reconciliation, independent-review, owner-approval, and elapsed-monthly assertion remains false. The separate Node.js, WordPress/WooCommerce, Next.js, federation/notification, Proxmox, BorgBackup, OpenSSH, and recovery records remain effective. Provider acceptance, recovery, repository policy, maintenance, reboot, post-change proof, independent review, and monthly acceptance remain incomplete, so this check stays pending.
+  - id: dependency_pins
+    status: pending
+    evidence: >-
+      ADR-0107 makes dependency state explicit through one cutoff, ADR-0108 appends the minimized Authentik served-runtime correction, ADR-0109 pins the exact 2026.8.0 source/OCI candidate, and ADR-0110 proves only that candidate's isolated synthetic runtime behavior. Supabase self-hosted v0.8.0 remains the platform baseline; PostgreSQL 17.6.1.136 is behind upstream 17.11 but cannot be decoupled from the official compatible Supabase bundle; WooCommerce 11.0.1 and Node.js 24.20.0 are exact candidate pins; Stripe stays on 2026-02-25.clover until a complete Dahlia contract replay and test-clock canary; Klaviyo stays on 2026-07-15; and production Authentik stays on 2026.5.6 until the exact current image, outposts, private configuration, Base URL and deprecated-option inventory, real IdP/database identity compatibility, recovery, and rollback evidence are approved. Exact installed facts and selected side-by-side candidates cover rsync, BorgBackup, OpenSSH, Debian, Ubuntu, and Proxmox at both recovery endpoints, with immutable source, candidate simulation, package compatibility, and rollback evidence where available. The effective register prohibits automatic upgrade and records provider-specific rollback, but platform compatibility, recovery, private escrow, repository policy, owner approvals, installation, reboot, production observation, and reconciliation still require evidence, so dependency pins remain pending.
+  - id: backlog_freshness
+    status: pending
+    evidence: The backlog must be regenerated from the completed review cutoff and contain no stale or silently closed item.
+  - id: backlog_priority
+    status: pending
+    evidence: Final score arithmetic, order, due dates, dependencies, and accepted-risk links require independent review.
+  - id: no_overdue_critical_high
+    status: pending
+    evidence: Completion requires no overdue unaccepted Critical or High item at the review cutoff.
+  - id: recurring_failure_inventory
+    status: pending
+    evidence: The interim evidence-bound registry now records the 2026-08-28 and 2026-08-31 PostgreSQL off-site shared-lock starvation incidents as two distinct chronological anchors under one Critical R-004 fingerprint. It binds the exact decision implementation and production evidence while the defect remains present. Two elapsed monthly review periods and their independently reviewed incident/support inventories are still required, so this check remains pending.
+  - id: durable_regression_controls
+    status: pending
+    evidence: The repeated PostgreSQL off-site starvation record binds exact candidate bytes for the backup-assets validator archive-RPO and repository-isolation alerts and OPS-007. Every delivery status is honestly candidate with null merge production and observation evidence; repository merge dedicated-repository provisioning paging activation continuity retention and isolated restore remain required before the monthly merged-control gate can pass.
+  - id: module_rescoring
+    status: pending
+    evidence: ADR-0080 and the product-score V2 validator preserve the 54/100 deployed-production history and rescore exact integrated code head 7fb4403863e7409e38bf4fbfc1f3ec68d6325e3f at an unchanged 83/100 after the M14 managed-session and usage recovery repair; M09 remains 88/100 and M14 remains provisional 90/100 because repository verification adds no approved deployment canary activation recovery rollback observation or reconciliation evidence, and every module materially changed during the two future elapsed review periods still requires its own exact rescore.
+  - id: score_history
+    status: pending
+    evidence: The original V1 whole-product score is now retained byte-for-byte under an exact SHA-256 binding and V2 separates production from candidate evidence; initial M16 close still requires two elapsed reviews with prior/current whole-product and affected-module history.
+  - id: experiment_registry
+    status: pending
+    evidence: Experiments require immutable declarations of primary metric, baseline, target, guardrails, exposure, owner, and decision.
+  - id: experiment_guardrails
+    status: pending
+    evidence: Every promoted experiment must show primary-metric improvement and all guardrails passing; every breach must stop.
+  - id: quarterly_restore
+    status: pending
+    evidence: A current approved full-service restore exercise with measured RPO, RTO, source coverage, and zero unexplained difference is absent.
+  - id: quarterly_tenant_isolation
+    status: pending
+    evidence: A current adversarial tenant-isolation and revoked-membership exercise is absent.
+  - id: quarterly_privacy
+    status: pending
+    evidence: A current consent, suppression, export, deletion, pseudonymization, and retention exercise is absent.
+  - id: quarterly_scim
+    status: pending
+    evidence: A current SCIM deprovisioning, stale-session, forged-domain, group, and metadata exercise is absent.
+  - id: quarterly_incident
+    status: pending
+    evidence: A current protected-path incident notification, escalation, postmortem, and regression exercise is absent.
+  - id: exercise_reconciliation
+    status: pending
+    evidence: All five distinct quarterly exercise reports must reconcile with zero protected-value, tenant, privacy, recovery, checkout, or data-loss difference.
+  - id: adr_supersession
+    status: pending
+    evidence: The elapsed periods must prove changed material decisions append a superseding ADR and do not rewrite history.
+  - id: living_documents_current
+    status: pending
+    evidence: Roadmap, task graph, status, risks, scorecard, changelog, iteration log, backlog, and evidence index must agree through the review cutoff.
+  - id: independent_review
+    status: pending
+    evidence: An independent reviewer must verify chronology, freshness, digests, rankings, controls, scores, experiments, exercises, and document agreement.
+  - id: owner_approval
+    status: pending
+    evidence: Product, engineering, security, operations, and owner approvals remain unissued.
+automaticFails:
+  - a due monthly review or quarterly exercise is missing stale incomplete or represented as a healthy zero
+  - a Critical backlog item is overdue or a High item exceeds its bounded remediation window without approved risk evidence
+  - a recurring failure reaches two occurrences without at least one linked durable regression control
+  - a material change ships without rescoring every affected module against the current evidence
+  - an experiment is promoted without improving its declared primary metric or while any guardrail fails
+  - a provider or dependency change is accepted without official-source review impact classification and an owner
+  - a quarterly restore tenancy privacy SCIM or incident exercise has an unexplained failure or protected-value difference
+  - an obsolete decision is silently rewritten instead of being superseded through an ADR
+  - a closeout artifact contains an unknown member unbounded content duplicate evidence or machine-detectable personal credential control or bidirectional material
+  - completion is claimed below 90 total below a category floor or without distinct digest-bound artifacts and all approvals

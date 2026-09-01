@@ -1,0 +1,156 @@
+schema: starfiniti.supabase-runtime-review.v1
+reviewedAt: 2026-08-29
+owner: engineering
+officialSources:
+  changelog: https://supabase.com/changelog.md
+  dataApiSecurity: https://supabase.com/docs/guides/api/securing-your-api
+  releases:
+    cli:
+      url: https://github.com/supabase/cli/releases/tag/v2.116.0
+      version: 2.116.0
+      publishedAt: 2026-08-26T19:51:24Z
+    supabaseJs:
+      url: https://github.com/supabase/supabase-js/releases/tag/v2.112.4
+      version: 2.112.4
+      publishedAt: 2026-08-24T10:32:46Z
+    ssr:
+      url: https://github.com/supabase/ssr/releases/tag/v0.12.5
+      version: 0.12.5
+      publishedAt: 2026-08-24T11:32:32Z
+packages:
+  previous:
+    cli:
+      version: 2.113.0
+      integrity: sha512-GWlx87NpsT1opPOLWRkaTnXEUUchWmCMPVCLRU22GD+oJEH/sVnUI9NCrMZuf5XpmQE+aSbPogHW69UIbVL32w==
+      shasum: null
+    supabaseJs:
+      version: 2.112.3
+      integrity: sha512-Jv1bxVQmEJNkjvPEhFaKjPzsh+Ozyew6lWGD+SoYcsclDEP1z7yEvKvfUQfzy0DkxRIQnZNxmmWtAzw5XLTQoA==
+      shasum: null
+    ssr:
+      version: 0.12.4
+      integrity: sha512-xHzcgI8cC1TpBKSwJcR5Yd8CCwfIq0SBc5yb4yz/YFw5tbCrEQ0QT3a+2jymCxHgQWLfzwN93HZ6eRbcoMkOlA==
+      shasum: null
+  candidate:
+    cli:
+      version: 2.116.0
+      tarball: https://registry.npmjs.org/supabase/-/supabase-2.116.0.tgz
+      integrity: sha512-cMUHkpjBacq4oLGWnMM2HC2drmUlAlfN/PQb31RARoIdYJ8sqA0xONvqBR6yd5v7w8dXuCPwvfd4N1NTHjBKEw==
+      shasum: f3628bddff4aed857dba5bea5211908a39c16e03
+    supabaseJs:
+      version: 2.112.4
+      tarball: https://registry.npmjs.org/@supabase/supabase-js/-/supabase-js-2.112.4.tgz
+      integrity: sha512-UiCX1udlFY1fQQrO7Z3GU7obQsju0w5Vk9mOOwalfo/+Gy+tahWVenSSuu5E/GTy/q//HxvGv2IrCdW66/61kw==
+      shasum: a9f987cced71b7a4dda52d37f915a31c6fa265c9
+    ssr:
+      version: 0.12.5
+      tarball: https://registry.npmjs.org/@supabase/ssr/-/ssr-0.12.5.tgz
+      integrity: sha512-0GllaAtHe7FHs6tlSg1CwkFw0a7aai1Shs9rEqSs/HaVkJzPk35C9r0Z8WUtKJ3eY6G/Y5y47YvCro3LynrAJg==
+      shasum: df9a289a7d3974e554da7a4741fb2320fcf06927
+    jose:
+      version: 6.2.10
+      integrity: sha512-iiW7J9qRFlGxvCOIBDBDxFePQSn7ZMAnrYGhrrOo6siO/MIqwfyilLR27pkfDgUk+raLuzADS8A3S/KLBisc0g==
+    lockPackages:
+      - {
+          id: "@supabase/auth-js",
+          version: 2.112.4,
+          integrity: "sha512-z8DesgwLzKM5PiT0yNmJU8VJyh1zAhYi+20Z7drdJQLXg/wWW4yGt/un+He5ERYUo94Vz66t5aeyr1DIDemI5A==",
+        }
+      - {
+          id: "@supabase/functions-js",
+          version: 2.112.4,
+          integrity: "sha512-DQ0aVH8wSQAccVqNoEkec62qCu2QRNyoGN53RqsVZ1k6F1zq4/v8scrlR6LNT2RJmT97apiTmORijPVhErCS2g==",
+        }
+      - {
+          id: "@supabase/postgrest-js",
+          version: 2.112.4,
+          integrity: "sha512-uaubtPSeg2TR4wrtfQoQWgkTAe+a0qWX2KhmwvTfNl5mGN9+U7owiJt6abk3o/V6O899PSRD1yzxs5RlF4xTug==",
+        }
+      - {
+          id: "@supabase/realtime-js",
+          version: 2.112.4,
+          integrity: "sha512-vZ+j079SKrM0Xiq7MJCvQKLDpaH2kfKfLY68xuQE1sqsCsMmx1CyrDBJHsxZ3cX01VOs5SI9igmoZAF3BmdZxw==",
+        }
+      - {
+          id: "@supabase/storage-js",
+          version: 2.112.4,
+          integrity: "sha512-lQ0JemuTlMIXVKgSci1qez8yPnM5hyDngeAfEBjZS2Om4D+Cus0EE5BE6glFobrxdyii1OF4UzWfF0zcQgDq5A==",
+        }
+      - {
+          id: "@supabase/cli-darwin-arm64",
+          version: 2.116.0,
+          integrity: "sha512-Mvfxf5q7oQ1KR59ndFFyGkh12IfwKH5ZOv7OWtHsFkBuwHtHiJgY6Zwd3w09tnat4spkpDTFavclBlLsOQnh2A==",
+        }
+      - {
+          id: "@supabase/cli-darwin-x64",
+          version: 2.116.0,
+          integrity: "sha512-dxKmIPcVunC8sPTuU+eVWj2SOB5tLoRTE5FX6J/KMZhGH03khTn6ptHvaanZp0YwaACbm//uoffUlJKZrAgt0w==",
+        }
+      - {
+          id: "@supabase/cli-linux-arm64",
+          version: 2.116.0,
+          integrity: "sha512-ZmV96NQqcgx1MH4jWdfyqqjLghy57mRI5bysy6lM7MezsirQh+eXaOdWI0xCy7r7FA09k2fKLGh+r7r0X3mxBg==",
+        }
+      - {
+          id: "@supabase/cli-linux-arm64-musl",
+          version: 2.116.0,
+          integrity: "sha512-6lYrbKFJT5NKbEKGBJTArEc1F3oMfWxnQeq8+RZ4wSLjCq4uwluh6+fzKCsLVxZgPOg4r+RZRqDdb+/cLi0yyg==",
+        }
+      - {
+          id: "@supabase/cli-linux-x64",
+          version: 2.116.0,
+          integrity: "sha512-o0PvHKyQSKEuC3jJqeV2qorgyMIFGDWQ1Bj+OXf0p80ddgktnJFlDElCU+VDKZkuwLC6vO/LMoBql34zFHzXhw==",
+        }
+      - {
+          id: "@supabase/cli-linux-x64-musl",
+          version: 2.116.0,
+          integrity: "sha512-EtPJPHUvLHvXHkvZHAEr+i6w/bDVm5BOPD+09uXgUffsUbNAzfZ8r7Fb94+SfWI+dQwivw4WmijsX7tlx61Zcg==",
+        }
+      - {
+          id: "@supabase/cli-windows-arm64",
+          version: 2.116.0,
+          integrity: "sha512-IiglNMXXssDiZbeSRvixYH7eYDDvhiEa2CrOSj419jO5vLrMKvzi1ATxe8E4i7MpKuI9S5U/3tA3rFlIMHtwrg==",
+        }
+      - {
+          id: "@supabase/cli-windows-x64",
+          version: 2.116.0,
+          integrity: "sha512-pz4zNDs3KCEx0l9JS9Xaiuzd5WXrISajVlBSxC5/2Jyo2+g+N/ftQJDYTHQ6Jir5fNelIqSHIXZelmGds14upw==",
+        }
+configuration:
+  dataApiSchemas: [public, graphql_public, loyalty]
+  privateSchemaExcluded: loyalty_private
+  autoExposeNewTables: false
+  authorization: explicit-grants-plus-rls
+compatibility:
+  repositoryNode: ">=24.0.0"
+  packageMinimumNode: ">=22.0.0"
+  contractChange: false
+  migrationChange: false
+  ledgerChange: false
+  productionStackChange: false
+decision:
+  disposition: exact-patch-refresh-with-explicit-api-grant-boundary
+  breakingChangeIdentified: false
+  releaseNotes:
+    - CLI 2.116.0 restores auto_expose_new_tables default true and fixes stale connections and stdin overflow.
+    - supabase-js 2.112.4 hardens zero-timeout lock handling and refresh rejection behavior.
+    - SSR 0.12.5 warns when unsupported auth storage configuration would be ignored.
+  rollback: Revert the repository package set as one unit and keep auto_expose_new_tables false; never restore implicit grants.
+ciEvidence:
+  path: docs/plan/evidence/M16/runs/supabase-runtime-1b9a4d4-2026-08-29T172357Z.json
+  sizeBytes: 5932
+  sha256: 3826e55e239bb4a2f9a3ee6d3d3f3e7541c5de0572d0d53dcd552b3cccd21aa7
+  implementationCommit: 1b9a4d4767eb504b65b5e06d5d8e8ec444dd46c3
+  analysisMergeCommit: bb19a18be4b889573cfb163df3d924933c90bfeb
+  ciRunId: 33265165945
+  securityRunId: 33265166008
+  externalCodeqlCheckRunId: 99134053293
+  conclusion: passed
+authority:
+  productionAccess: false
+  mergeApproved: false
+  releaseApproved: false
+  deploymentApproved: false
+  productionStackUpgradeApproved: false
+  productionMutation: false
+  productionReconciled: false

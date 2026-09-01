@@ -1,6 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { programmeDefinitionV2 } from "@starfiniti/contracts";
 import { MerchantShell } from "@/components/merchant-shell";
 import {
   merchantLocalePath,
@@ -10,9 +11,18 @@ import {
 import { hasEntitlement } from "@/lib/entitlements";
 import { getEntitlementSnapshot } from "@/lib/server/entitlements";
 import { getMerchantProgrammeState } from "@/lib/server/programme";
+import {
+  getProgrammeExpiryLiability,
+  getProgrammeTierPerformance,
+} from "@/lib/server/programme";
+import { getRewardFulfilmentState } from "@/lib/server/reward-fulfilment";
 import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
 import { EarningRulesEditor } from "./earning-rules-editor";
+import { ExpandedRewardsEditor } from "./expanded-rewards-editor";
 import { ProgrammeEditor, type ProgrammeEditorMode } from "./programme-editor";
+import { RewardFulfilmentQueue } from "./reward-fulfilment-queue";
+import { shouldShowRewardFulfilmentQueue } from "./reward-fulfilment-visibility";
+import { VipTiersEditor } from "./vip-tiers-editor";
 
 const sectionCopy: Record<
   ProgrammeEditorMode,
@@ -65,12 +75,25 @@ export async function ProgrammeSectionPage({
   }
   if (tenant.kind === "unassigned") redirect(merchantLocalePath("/", locale));
 
+  const entitlements =
+    mode === "earning" || mode === "rewards" || mode === "tiers"
+      ? await getEntitlementSnapshot(tenant.context)
+      : null;
   if (mode === "earning") {
-    const entitlements = await getEntitlementSnapshot(tenant.context);
+    if (!entitlements) redirect(merchantLocalePath("/programme", locale));
     if (!hasEntitlement(entitlements, "programme.v2")) {
       redirect(merchantLocalePath("/programme", locale));
     }
   }
+  const expandedRewardsEnabled =
+    mode === "rewards" &&
+    entitlements !== null &&
+    hasEntitlement(entitlements, "rewards.expanded");
+  const advancedVipEnabled =
+    mode === "tiers" &&
+    entitlements !== null &&
+    hasEntitlement(entitlements, "programme.v2") &&
+    hasEntitlement(entitlements, "vip.advanced");
 
   const state = await getMerchantProgrammeState(tenant.context);
   if (!state.programme) redirect(merchantLocalePath("/programme", locale));
@@ -81,6 +104,29 @@ export async function ProgrammeSectionPage({
     state.versions.find((version) => version.status === "published") ??
     state.versions[0];
   const copy = sectionCopy[mode];
+  const baselineHasAdvancedVip =
+    programmeDefinitionV2.safeParse(baseline?.configuration).data
+      ?.tierPolicy !== undefined;
+  const expiryLiability =
+    mode === "earning"
+      ? await getProgrammeExpiryLiability(state.programme.id)
+      : null;
+  const renderedAt = new Date().toISOString();
+  const tierPerformance =
+    mode === "tiers"
+      ? await getProgrammeTierPerformance(state.programme.id, renderedAt)
+      : null;
+  const fulfilment =
+    mode === "rewards"
+      ? await getRewardFulfilmentState(state.programme.id)
+      : null;
+  const canOperate = ["owner", "admin", "operator"].includes(
+    tenant.context.membershipRole,
+  );
+  const showFulfilmentQueue = shouldShowRewardFulfilmentQueue(
+    expandedRewardsEnabled,
+    fulfilment?.cases.length ?? 0,
+  );
 
   return (
     <MerchantShell
@@ -127,10 +173,28 @@ export async function ProgrammeSectionPage({
         {mode === "earning" ? (
           <EarningRulesEditor
             canEdit={canEdit}
+            expiryLiability={expiryLiability!}
             initialConfiguration={baseline?.configuration}
             operationId={crypto.randomUUID()}
             programmeId={state.programme.id}
             simulationOccurredAt={new Date().toISOString()}
+          />
+        ) : mode === "rewards" && expandedRewardsEnabled ? (
+          <ExpandedRewardsEditor
+            canEdit={canEdit}
+            initialConfiguration={baseline?.configuration}
+            operationId={crypto.randomUUID()}
+            programmeId={state.programme.id}
+          />
+        ) : mode === "tiers" &&
+          (advancedVipEnabled || baselineHasAdvancedVip) ? (
+          <VipTiersEditor
+            canEdit={canEdit && advancedVipEnabled}
+            initialConfiguration={baseline?.configuration}
+            operationId={crypto.randomUUID()}
+            programmeId={state.programme.id}
+            simulatedAt={renderedAt}
+            tierPerformance={tierPerformance!}
           />
         ) : (
           <ProgrammeEditor
@@ -142,7 +206,32 @@ export async function ProgrammeSectionPage({
             programmeId={state.programme.id}
           />
         )}
+        {showFulfilmentQueue && fulfilment ? (
+          <FulfilmentQueue canOperate={canOperate} fulfilment={fulfilment} />
+        ) : null}
       </main>
     </MerchantShell>
+  );
+}
+
+function FulfilmentQueue({
+  canOperate,
+  fulfilment,
+}: Readonly<{
+  canOperate: boolean;
+  fulfilment: Awaited<ReturnType<typeof getRewardFulfilmentState>>;
+}>) {
+  return (
+    <RewardFulfilmentQueue
+      asOf={new Date().toISOString()}
+      canOperate={canOperate}
+      cases={fulfilment.cases}
+      operations={fulfilment.cases.map((item) => ({
+        caseId: item.caseId,
+        startOperationId: crypto.randomUUID(),
+        resolveOperationId: crypto.randomUUID(),
+      }))}
+      summary={fulfilment.summary}
+    />
   );
 }

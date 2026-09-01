@@ -1,5 +1,6 @@
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
+import { referralAttributionEvidenceV1 } from "./referral";
 
 const merchantOperationKey = z.string().trim().min(1).max(255);
 const merchantReason = z
@@ -220,6 +221,7 @@ export const wooCommerceOrderFactV1 = z
         .strict(),
     ]),
     paymentKind: z.enum(["money", "gift-card", "store-credit"]),
+    referral: referralAttributionEvidenceV1.nullable().optional(),
     lines: z.array(wooCommerceOrderLineV1),
     shippingTotal: wooCommerceDecimal,
     shippingRefundedTotal: wooCommerceDecimal.default("0"),
@@ -475,7 +477,7 @@ const wooCommerceCouponIssuePayloadV1 = z
     kind: z.literal("issue_coupon"),
     reservationId: z.uuid(),
     code: z.string().regex(/^SF[A-Z0-9]{20,48}$/u),
-    externalCustomerId: z.string().min(1).max(255),
+    externalCustomerId: wooCommerceNumericId,
     expiresAt: z.iso.datetime({ offset: true }),
     reward: z.discriminatedUnion("kind", [
       z
@@ -494,6 +496,217 @@ const wooCommerceCouponIssuePayloadV1 = z
         })
         .strict(),
       z.object({ kind: z.literal("free_shipping") }).strict(),
+    ]),
+  })
+  .strict();
+
+export const wooCommerceConnectorCapability = z.enum([
+  "coupon.issue.v2",
+  "customer_experience.snapshot.v1",
+]);
+
+const wooCommerceSnapshotText = z
+  .string()
+  .trim()
+  .min(1)
+  .max(200)
+  .refine((value) => !/[<>\u0000-\u001f\u007f]/u.test(value), {
+    message: "Snapshot text contains unsupported markup or control characters",
+  });
+const wooCommerceSnapshotPoints = z
+  .string()
+  .regex(/^(?:0|-?[1-9][0-9]{0,18})$/u)
+  .refine(
+    (value) => {
+      const parsed = BigInt(value);
+      return (
+        parsed >= -9_223_372_036_854_775_808n &&
+        parsed <= 9_223_372_036_854_775_807n
+      );
+    },
+    { message: "Snapshot value exceeds PostgreSQL bigint capacity" },
+  );
+const wooCommerceSnapshotPositivePoints = wooCommerceSnapshotPoints.refine(
+  (value) => BigInt(value) > 0n,
+  { message: "Snapshot value must be positive" },
+);
+const wooCommerceSnapshotInstant = z.iso.datetime({ offset: true });
+
+export const wooCommerceCustomerExperienceSnapshotV1 = z
+  .object({
+    version: z.literal("1"),
+    revision: wooCommerceSnapshotPositivePoints,
+    externalCustomerId: wooCommerceNumericId,
+    generatedAt: wooCommerceSnapshotInstant,
+    refreshAfter: wooCommerceSnapshotInstant,
+    staleAfter: wooCommerceSnapshotInstant,
+    accountStatus: z.enum([
+      "programme_unavailable",
+      "ready_without_activity",
+      "ready",
+      "wallet_blocked",
+      "wallet_closed",
+    ]),
+    enhancementsEnabled: z.boolean(),
+    programmeName: wooCommerceSnapshotText.nullable(),
+    balances: z
+      .object({
+        pending: wooCommerceSnapshotPoints,
+        available: wooCommerceSnapshotPoints,
+        reserved: wooCommerceSnapshotPoints,
+      })
+      .strict(),
+    currentTier: z
+      .object({ name: wooCommerceSnapshotText })
+      .strict()
+      .nullable(),
+    nextExpiry: z
+      .object({
+        points: wooCommerceSnapshotPositivePoints,
+        expiresAt: wooCommerceSnapshotInstant,
+      })
+      .strict()
+      .nullable(),
+    earningMethods: z
+      .array(
+        z
+          .object({
+            name: wooCommerceSnapshotText,
+            availableNow: z.boolean(),
+          })
+          .strict(),
+      )
+      .max(8),
+    rewards: z
+      .array(
+        z
+          .object({
+            name: wooCommerceSnapshotText,
+            kind: z.enum([
+              "fixed_discount",
+              "percentage_discount",
+              "free_product",
+              "free_shipping",
+              "exclusive_access",
+              "custom",
+            ]),
+            costPoints: wooCommerceSnapshotPositivePoints,
+            affordable: z.boolean(),
+          })
+          .strict(),
+      )
+      .max(10),
+  })
+  .strict()
+  .superRefine((snapshot, context) => {
+    const generatedAt = Date.parse(snapshot.generatedAt);
+    const refreshAfter = Date.parse(snapshot.refreshAfter);
+    const staleAfter = Date.parse(snapshot.staleAfter);
+    if (refreshAfter <= generatedAt || refreshAfter - generatedAt > 3_600_000) {
+      context.addIssue({
+        code: "custom",
+        message: "Snapshot refresh must follow generation within one hour",
+        path: ["refreshAfter"],
+      });
+    }
+    if (staleAfter <= refreshAfter || staleAfter - generatedAt > 172_800_000) {
+      context.addIssue({
+        code: "custom",
+        message: "Snapshot staleness must follow refresh within 48 hours",
+        path: ["staleAfter"],
+      });
+    }
+    const available = BigInt(snapshot.balances.available);
+    snapshot.rewards.forEach((reward, index) => {
+      if (reward.affordable !== BigInt(reward.costPoints) <= available) {
+        context.addIssue({
+          code: "custom",
+          message: "Snapshot reward affordability does not match the balance",
+          path: ["rewards", index, "affordable"],
+        });
+      }
+    });
+  });
+
+const wooCommerceCustomerExperienceSnapshotPayloadV1 = z
+  .object({
+    kind: z.literal("put_customer_experience_snapshot"),
+    snapshot: wooCommerceCustomerExperienceSnapshotV1,
+  })
+  .strict();
+
+const wooCommerceCouponRestrictionsCommandV2 = z
+  .object({
+    minimumSpendMinor: z
+      .string()
+      .regex(/^(?:0|[1-9][0-9]*)$/u)
+      .nullable(),
+    currencyMinorUnitDigits: z.int().min(0).max(6),
+    productIds: z.array(wooCommerceNumericId).max(100),
+    excludedProductIds: z.array(wooCommerceNumericId).max(100),
+    categoryIds: z.array(wooCommerceNumericId).max(100),
+    excludedCategoryIds: z.array(wooCommerceNumericId).max(100),
+    excludeSaleItems: z.boolean(),
+    stacking: z.enum(["exclusive", "combinable"]),
+  })
+  .strict()
+  .superRefine((restrictions, context) => {
+    for (const [includedField, excludedField] of [
+      ["productIds", "excludedProductIds"],
+      ["categoryIds", "excludedCategoryIds"],
+    ] as const) {
+      const excluded = new Set(restrictions[excludedField]);
+      restrictions[includedField].forEach((value, index) => {
+        if (excluded.has(value)) {
+          context.addIssue({
+            code: "custom",
+            message: "A selector cannot be both included and excluded",
+            path: [includedField, index],
+          });
+        }
+      });
+    }
+  });
+
+const wooCommerceCouponIssuePayloadV2 = z
+  .object({
+    kind: z.literal("issue_coupon"),
+    reservationId: z.uuid(),
+    code: z.string().regex(/^SF[A-Z0-9]{20,48}$/u),
+    externalCustomerId: wooCommerceNumericId,
+    expiresAt: z.iso.datetime({ offset: true }),
+    reward: z.discriminatedUnion("kind", [
+      z
+        .object({
+          kind: z.literal("fixed_discount"),
+          amountMinor: z.string().regex(/^[1-9][0-9]*$/u),
+          currencyMinorUnitDigits: z.int().min(0).max(6),
+          restrictions: wooCommerceCouponRestrictionsCommandV2,
+        })
+        .strict(),
+      z
+        .object({
+          kind: z.literal("percentage_discount"),
+          percentageBasisPoints: z.int().min(1).max(10_000),
+          maximumDiscountMinor: z.null(),
+          currencyMinorUnitDigits: z.int().min(0).max(6),
+          restrictions: wooCommerceCouponRestrictionsCommandV2,
+        })
+        .strict(),
+      z
+        .object({
+          kind: z.literal("free_shipping"),
+          restrictions: wooCommerceCouponRestrictionsCommandV2,
+        })
+        .strict(),
+      z
+        .object({
+          kind: z.literal("free_product"),
+          productId: wooCommerceNumericId,
+          quantity: z.int().min(1).max(10),
+          restrictions: wooCommerceCouponRestrictionsCommandV2,
+        })
+        .strict(),
     ]),
   })
   .strict();
@@ -547,6 +760,36 @@ export const wooCommerceConnectorCommandEnvelopeV1 = z
     }
   });
 
+export const wooCommerceConnectorCommandEnvelopeV2 = z
+  .object({
+    version: z.literal("1"),
+    commandId: z.uuid(),
+    connectionId: z.uuid(),
+    topic: z.literal("woocommerce.coupon.issue"),
+    payloadVersion: z.literal("v2"),
+    deliveredAt: z.iso.datetime({ offset: true }),
+    payload: wooCommerceCouponIssuePayloadV2,
+  })
+  .strict();
+
+export const wooCommerceConnectorSnapshotCommandEnvelopeV1 = z
+  .object({
+    version: z.literal("1"),
+    commandId: z.uuid(),
+    connectionId: z.uuid(),
+    topic: z.literal("woocommerce.customer_experience.put"),
+    payloadVersion: z.literal("v1"),
+    deliveredAt: z.iso.datetime({ offset: true }),
+    payload: wooCommerceCustomerExperienceSnapshotPayloadV1,
+  })
+  .strict();
+
+export const wooCommerceConnectorCommandEnvelope = z.union([
+  wooCommerceConnectorCommandEnvelopeV2,
+  wooCommerceConnectorSnapshotCommandEnvelopeV1,
+  wooCommerceConnectorCommandEnvelopeV1,
+]);
+
 /** @deprecated Use the connector-wide command envelope. */
 export const wooCommerceCouponCommandEnvelopeV1 =
   wooCommerceConnectorCommandEnvelopeV1;
@@ -556,6 +799,18 @@ export type WooCommerceCouponCommandEnvelopeV1 = z.infer<
 >;
 export type WooCommerceConnectorCommandEnvelopeV1 = z.infer<
   typeof wooCommerceConnectorCommandEnvelopeV1
+>;
+export type WooCommerceConnectorCommandEnvelopeV2 = z.infer<
+  typeof wooCommerceConnectorCommandEnvelopeV2
+>;
+export type WooCommerceConnectorSnapshotCommandEnvelopeV1 = z.infer<
+  typeof wooCommerceConnectorSnapshotCommandEnvelopeV1
+>;
+export type WooCommerceConnectorCommandEnvelope = z.infer<
+  typeof wooCommerceConnectorCommandEnvelope
+>;
+export type WooCommerceCustomerExperienceSnapshotV1 = z.infer<
+  typeof wooCommerceCustomerExperienceSnapshotV1
 >;
 
 export const merchantRequestConnectorReconciliationCommandV1 = z
@@ -593,8 +848,32 @@ export const wooCommerceCommandRequestV1 = z.discriminatedUnion("kind", [
       connectionId: z.uuid(),
       requestId: z.uuid(),
       batchSize: z.int().min(1).max(25).default(10),
+      capabilities: z.array(wooCommerceConnectorCapability).max(16).default([]),
+      snapshotCustomerIds: z.array(wooCommerceNumericId).max(25).default([]),
     })
-    .strict(),
+    .strict()
+    .superRefine((request, context) => {
+      if (
+        request.snapshotCustomerIds.length > 0 &&
+        !request.capabilities.includes("customer_experience.snapshot.v1")
+      ) {
+        context.addIssue({
+          code: "custom",
+          message: "Snapshot customer requests require connector capability",
+          path: ["snapshotCustomerIds"],
+        });
+      }
+      if (
+        new Set(request.snapshotCustomerIds).size !==
+        request.snapshotCustomerIds.length
+      ) {
+        context.addIssue({
+          code: "custom",
+          message: "Snapshot customer requests must be unique",
+          path: ["snapshotCustomerIds"],
+        });
+      }
+    }),
   z
     .object({
       version: z.literal("1"),

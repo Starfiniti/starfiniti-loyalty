@@ -1,0 +1,112 @@
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  evaluation_interval: 15s
+
+rule_files:
+  - /etc/prometheus/rules/*.yaml
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: [alertmanager:9093]
+
+scrape_configs:
+  - job_name: monitoring-plane
+    static_configs:
+      - targets: [prometheus:9090]
+        labels: { environment: monitoring, service: prometheus }
+      - targets: [alertmanager:9093]
+        labels: { environment: monitoring, service: alertmanager }
+      - targets: [grafana:3000]
+        labels: { environment: monitoring, service: grafana }
+      - targets: [blackbox-exporter:9115]
+        labels: { environment: monitoring, service: blackbox-exporter }
+      - targets: [postgres-exporter:9187]
+        labels: { environment: monitoring, service: postgres-exporter }
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: (?:prometheus_build_info|alertmanager_build_info|grafana_build_info|blackbox_exporter_build_info|postgres_exporter_build_info)
+        action: keep
+      - regex: (?:__name__|job|environment|service|version|revision|goversion|goarch|goos|tags)
+        action: labelkeep
+
+  - job_name: starfiniti-runtime
+    file_sd_configs:
+      - files: [/etc/prometheus/targets/runtime-*.json]
+        refresh_interval: 30s
+    relabel_configs:
+      - source_labels: [service]
+        target_label: instance
+        regex: ([a-z][a-z0-9-]{1,31})
+        replacement: ${1}
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: starfiniti_(?:webhook_ack_seconds_bucket|event_to_ledger_seconds_bucket|wallet_read_seconds_bucket|queue_oldest_seconds|dead_letter_count|worker_up|ambiguous_outcome_count|tenant_boundary_violation_total|checkout_hub_dependency_failure_total|privacy_replay_failed_action_count|security_unresolved_high_count|recovery_exercise_age_seconds|incident_route_exercise_age_seconds|required_series_present_ratio)
+        action: keep
+      - regex: (?:__name__|job|environment|service|component|queue|surface|operation|target_class|le)
+        action: labelkeep
+
+  - job_name: starfiniti-host-textfile
+    file_sd_configs:
+      - files: [/etc/prometheus/targets/host-*.json]
+        refresh_interval: 30s
+    relabel_configs:
+      - source_labels: [service]
+        target_label: instance
+        regex: ([a-z][a-z0-9-]{1,31})
+        replacement: ${1}
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: starfiniti_(?:database_disk_available_ratio|postgres_wal_archive_lag_seconds|postgres_base_backup_age_seconds|backup_cycle_transfer_amplification_ratio|backup_cycle_transferred_bytes|postgres_offsite_archive_unixtime_seconds|postgres_offsite_archive_last_attempt_success|postgres_borg_repository_isolated|postgres_borg_maintenance_unixtime_seconds|postgres_borg_maintenance_last_attempt_success|postgres_borg_recent_archive_max_interval_seconds|postgres_borg_recent_archive_count)
+        action: keep
+      - regex: (?:__name__|job|environment|service)
+        action: labelkeep
+
+  - job_name: starfiniti-postgres
+    metrics_path: /probe
+    file_sd_configs:
+      - files: [/etc/prometheus/targets/postgres-*.json]
+        refresh_interval: 30s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [auth_module]
+        target_label: __param_auth_module
+      - source_labels: [service]
+        target_label: instance
+        regex: ([a-z][a-z0-9-]{1,31})
+        replacement: ${1}
+      - target_label: __address__
+        replacement: postgres-exporter:9187
+      - regex: auth_module
+        action: labeldrop
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: (?:pg_up|starfiniti_database_pool_used_ratio|starfiniti_ledger_unexplained_difference_count)
+        action: keep
+      - regex: (?:__name__|job|environment|service)
+        action: labelkeep
+
+  - job_name: starfiniti-edge-probes
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    file_sd_configs:
+      - files: [/etc/prometheus/targets/blackbox-*.json]
+        refresh_interval: 30s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [service]
+        target_label: instance
+        regex: ([a-z][a-z0-9-]{1,31})
+        replacement: ${1}
+      - target_label: __address__
+        replacement: blackbox-exporter:9115
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: (?:probe_success|probe_ssl_earliest_cert_expiry)
+        action: keep
+      - regex: (?:__name__|job|environment|service|target_class|instance)
+        action: labelkeep

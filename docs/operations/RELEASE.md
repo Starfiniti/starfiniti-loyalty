@@ -1,0 +1,54 @@
+# Release operations
+
+## Current state
+
+The GitHub `Release` workflow is manually disabled. Production remains `v0.1.11`. Do not enable or dispatch the replacement workflow until every prerequisite below is present and independently reviewed.
+
+## Required external controls
+
+- Protect `main`: pull requests required, at least one approving review, stale approvals dismissed, conversations resolved, required CI checks strict and successful, force pushes and deletion disabled, and administrator enforcement enabled.
+- Create an active tag ruleset targeting exactly `refs/tags/v*.*.*`. Require tag creation control and signed commits/tags; block update and deletion. Any bypass actor must be explicit, non-exempt, and audited.
+- Create a `release` environment restricted to protected branches. Add an independent required reviewer, enable prevent-self-review, and disable administrator bypass.
+- Create a fine-grained `RELEASE_POLICY_TOKEN` secret with repository Administration, Actions, Checks, Commit statuses, and Contents permissions set to read only. It must not write contents, tags, packages, releases, actions, environments, or any other repository resource.
+- Close the release-security and licence obligations tracked in `RISKS.md`, and obtain the explicit release/production approvals required by the enterprise task graph.
+
+The preflight checks every API-visible control again. GitHub's environment read response does not expose the administrator-bypass toggle, so the independent release owner must verify that setting in the environment UI before each enablement window. A green preflight is evidence, not permission to weaken any control.
+
+## Prepare the candidate
+
+1. Merge only an approved clean candidate to protected `main` after exact CI and security checks pass.
+2. Create a signed annotated semantic-version tag at the exact current `main` commit. Never move or recreate a version tag.
+3. Verify the tag locally and on GitHub, then wait for every required check on the exact commit.
+4. Record the exact 40-character candidate SHA and version without the `v` prefix.
+
+## Dispatch
+
+After the workflow has been explicitly re-enabled and the release owner has approved this exact candidate:
+
+```powershell
+gh api repos/Starfiniti/starfiniti-loyalty/dispatches `
+  --method POST `
+  -f event_type=release `
+  -F 'client_payload[tag]=v0.1.12' `
+  -F 'client_payload[candidate_sha]=0123456789abcdef0123456789abcdef01234567'
+```
+
+Replace both example values. Dispatching a tag name or abbreviated SHA is invalid.
+
+## Observe and approve
+
+1. Confirm preflight verified exact main, tag signature and target, required checks, branch protection, active tag ruleset, release environment, and release absence.
+2. Confirm the build checked out the exact SHA and completed the full repository, database, image, WooCommerce, security, licence, and packaging gates.
+3. Review the uploaded sealed artifact's GitHub digest, internal checksums, source archive, plugin ZIP, image metadata, SBOMs, and release metadata before environment approval.
+4. The required reviewer must be independent of the dispatcher and candidate author where policy requires separation. Do not approve an unexplained warning or a candidate different from the recorded SHA.
+5. After publish, reconcile GHCR digests, attestations, release assets/checksums, signed tag, source archive, WooCommerce version, and production rollout evidence.
+
+## Failure and rollback
+
+- Before publish, reject the environment approval or cancel the run. No release/package write should exist.
+- After any registry or release write, treat the version as immutable. Do not force a tag, replace an asset, or overwrite an image tag.
+- Retain the sealed artifact and logs. Determine the exact last successful write, then either forward-complete the same verified bytes or withdraw the release through an explicitly reviewed incident decision.
+- Production deployment is separate. A successful release does not authorize deployment, migration, tenant enablement, or data change.
+- If an external control drifts, disable the workflow again before investigating.
+
+See [ADR-0115](../architecture/ADR/0115-default-branch-controlled-sealed-releases.md) for the authority model.

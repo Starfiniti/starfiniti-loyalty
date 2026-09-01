@@ -14,12 +14,25 @@ const commands = readFileSync(
   "plugins/woocommerce/src/class-commands.php",
   "utf8",
 );
+const snapshot = readFileSync(
+  "plugins/woocommerce/src/class-experience-snapshot.php",
+  "utf8",
+);
+const blocks = readFileSync("plugins/woocommerce/src/class-blocks.php", "utf8");
+const blocksIntegration = readFileSync(
+  "plugins/woocommerce/src/class-blocks-integration.php",
+  "utf8",
+);
 const privacy = readFileSync(
   "plugins/woocommerce/src/class-privacy.php",
   "utf8",
 );
 const uninstall = readFileSync("plugins/woocommerce/uninstall.php", "utf8");
 const outbox = readFileSync("plugins/woocommerce/src/class-outbox.php", "utf8");
+const referrals = readFileSync(
+  "plugins/woocommerce/src/class-referrals.php",
+  "utf8",
+);
 const receiver = readFileSync(
   "apps/dashboard/app/api/v1/integrations/woocommerce/events/route.ts",
   "utf8",
@@ -41,6 +54,10 @@ for (const [label, content, requirements] of [
       "register_activation_hook",
       "FeaturesUtil::declare_compatibility",
       "class-outbox.php",
+      "class-referrals.php",
+      "class-experience-snapshot.php",
+      "class-blocks.php",
+      "cart_checkout_blocks",
     ],
   ],
   [
@@ -48,6 +65,7 @@ for (const [label, content, requirements] of [
     plugin,
     [
       "Outbox::boot()",
+      "Referrals::boot()",
       "manage_woocommerce",
       "woocommerce_account_loyalty_endpoint",
       "woocommerce_before_cart",
@@ -82,12 +100,47 @@ for (const [label, content, requirements] of [
     commands,
     [
       "as_schedule_recurring_action",
+      "capabilities",
+      "coupon.issue.v2",
+      "customer_experience.snapshot.v1",
+      "snapshotCustomerIds",
       "woocommerce_coupon_is_valid",
       "set_usage_limit(1)",
+      "set_minimum_amount",
+      "set_product_ids",
+      "set_product_categories",
+      "set_limit_usage_to_x_items",
+      "applyRestrictions",
       "_starfiniti_command_id",
       "_starfiniti_external_customer_id",
       "woocommerce.coupon.issue",
       "woocommerce.coupon.cancel",
+    ],
+  ],
+  [
+    "experience snapshot",
+    snapshot,
+    [
+      "MAX_SNAPSHOT_BYTES",
+      "pendingCustomerIds",
+      "update_option",
+      "snapshot_revision_conflict",
+      "delete_user",
+      "hash_equals",
+    ],
+  ],
+  [
+    "Blocks integration",
+    `${blocks}\n${blocksIntegration}`,
+    [
+      "woocommerce_store_api_register_endpoint_data",
+      "CartSchema::IDENTIFIER",
+      "blocksDataEnabled",
+      "progressivePanelEnabled",
+      "render_block_woocommerce/cart",
+      "IntegrationInterface",
+      "get_script_handles",
+      "wp_set_script_translations",
     ],
   ],
   [
@@ -127,6 +180,20 @@ for (const [label, content, requirements] of [
     ],
   ],
   [
+    "referrals",
+    referrals,
+    [
+      "template_redirect",
+      "woocommerce_checkout_create_order",
+      "stf_ref",
+      "REMOTE_ADDR",
+      "hash_hmac('sha256'",
+      "sourceNetworkFingerprint",
+      "paymentFingerprint",
+      "shippingFingerprint",
+    ],
+  ],
+  [
     "receiver",
     receiver,
     [
@@ -144,7 +211,11 @@ for (const [label, content, requirements] of [
       "verifyWooCommerceDelivery",
       "readBoundedRequestBody(request, MAX_BODY_BYTES)",
       "wooCommerceCommandRequestV1.safeParse",
+      "wooCommerceConnectorCommandEnvelope.safeParse",
+      "parsed.data.capabilities",
+      "queue_woocommerce_customer_snapshots_v1",
       "claim_woocommerce_commands",
+      "platform = 'woocommerce'",
     ],
   ],
   [
@@ -173,7 +244,7 @@ for (const forbidden of [
 ]) {
   if (
     forbidden.test(
-      `${bootstrap}\n${plugin}\n${settings}\n${cli}\n${commands}\n${privacy}\n${uninstall}\n${outbox}\n${receiver}`,
+      `${bootstrap}\n${plugin}\n${settings}\n${cli}\n${commands}\n${snapshot}\n${blocks}\n${blocksIntegration}\n${privacy}\n${uninstall}\n${outbox}\n${referrals}\n${receiver}`,
     )
   ) {
     throw new Error(

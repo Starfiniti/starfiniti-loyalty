@@ -12,10 +12,43 @@ services:
       DASHBOARD_PUBLIC_ORIGIN: ${DASHBOARD_PUBLIC_ORIGIN:?required}
       DATABASE_URL: ${DATABASE_URL:?required}
       WOOCOMMERCE_SIGNING_MATERIAL_FILE: /run/secrets/woocommerce_signing_material
+      LOYALTY_FEDERATION_CONFIG_FILE: /run/secrets/federation_management_config
+      LOYALTY_AUTHENTIK_API_TOKEN_FILE: /run/secrets/authentik_federation_token
+      LOYALTY_SUPABASE_SERVICE_ROLE_KEY_FILE: /run/secrets/supabase_service_role_key
+      LOYALTY_FEDERATION_FINGERPRINT_KEY_FILE: /run/secrets/federation_fingerprint_key
+      LOYALTY_STRIPE_WEBHOOK_SECRET_FILE: /run/secrets/stripe_webhook_secret
+      LOYALTY_STRIPE_API_KEY_FILE: /run/secrets/stripe_api_key
     extra_hosts:
       - "${SUPABASE_PUBLIC_HOST:?required}:${SUPABASE_INTERNAL_PROXY_IP:?required}"
     secrets:
       - woocommerce_signing_material
+    volumes:
+      - type: bind
+        source: "${LOYALTY_FEDERATION_CONFIG_PATH:-/dev/null}"
+        target: /run/secrets/federation_management_config
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: "${LOYALTY_AUTHENTIK_API_TOKEN_PATH:-/dev/null}"
+        target: /run/secrets/authentik_federation_token
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: "${LOYALTY_SUPABASE_SERVICE_ROLE_KEY_PATH:-/dev/null}"
+        target: /run/secrets/supabase_service_role_key
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: "${LOYALTY_FEDERATION_FINGERPRINT_KEY_PATH:-/dev/null}"
+        target: /run/secrets/federation_fingerprint_key
+        read_only: true
+        bind:
+          create_host_path: false
+      - ${LOYALTY_STRIPE_WEBHOOK_SECRET_PATH:-/dev/null}:/run/secrets/stripe_webhook_secret:ro
+      - ${LOYALTY_STRIPE_API_KEY_PATH:-/dev/null}:/run/secrets/stripe_api_key:ro
     ports:
       - "${DASHBOARD_BIND_ADDRESS:?set a loopback or private IPv4 address}:3000:3000"
     security_opt:
@@ -46,6 +79,119 @@ services:
     environment:
       NODE_ENV: production
       LOYALTY_WORKER_DATABASE_URL: ${LOYALTY_WORKER_DATABASE_URL:?required}
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    stop_grace_period: 75s
+
+  notification-worker:
+    profiles: ["smtp"]
+    image: ${WORKER_IMAGE:?set WORKER_IMAGE to an immutable tag}
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    environment:
+      NODE_ENV: production
+      LOYALTY_WORKER_MODE: notification
+      LOYALTY_WORKER_DATABASE_URL: ${LOYALTY_WORKER_DATABASE_URL:?required}
+      LOYALTY_SMTP_ENABLED: "true"
+      LOYALTY_SMTP_HOST: ${LOYALTY_SMTP_HOST:-127.0.0.1}
+      LOYALTY_SMTP_PORT: ${LOYALTY_SMTP_PORT:-587}
+      LOYALTY_SMTP_SECURITY: ${LOYALTY_SMTP_SECURITY:-starttls}
+      LOYALTY_SMTP_FROM_ADDRESS: ${LOYALTY_SMTP_FROM_ADDRESS:-loyalty@localhost.invalid}
+      LOYALTY_SMTP_USERNAME: ${LOYALTY_SMTP_USERNAME:-}
+      LOYALTY_SMTP_PASSWORD_FILE: ${LOYALTY_SMTP_PASSWORD_FILE:-}
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    stop_grace_period: 75s
+
+  klaviyo-worker:
+    profiles: ["klaviyo"]
+    image: ${WORKER_IMAGE:?set WORKER_IMAGE to an immutable tag}
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    environment:
+      NODE_ENV: production
+      LOYALTY_WORKER_MODE: klaviyo
+      LOYALTY_WORKER_DATABASE_URL: ${LOYALTY_WORKER_DATABASE_URL:?required}
+      LOYALTY_KLAVIYO_ENABLED: "true"
+      LOYALTY_KLAVIYO_CONNECTION_ID: ${LOYALTY_KLAVIYO_CONNECTION_ID:-00000000-0000-0000-0000-000000000000}
+      LOYALTY_KLAVIYO_API_KEY_FILE: /run/secrets/klaviyo_api_key
+    volumes:
+      - ${LOYALTY_KLAVIYO_API_KEY_PATH:-/dev/null}:/run/secrets/klaviyo_api_key:ro
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    stop_grace_period: 75s
+
+  webhook-worker:
+    profiles: ["webhook"]
+    image: ${WORKER_IMAGE:?set WORKER_IMAGE to an immutable tag}
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    environment:
+      NODE_ENV: production
+      LOYALTY_WORKER_MODE: webhook
+      LOYALTY_WORKER_DATABASE_URL: ${LOYALTY_WORKER_DATABASE_URL:?required}
+      LOYALTY_WEBHOOK_ENABLED: "true"
+      LOYALTY_WEBHOOK_ENDPOINT_ID: ${LOYALTY_WEBHOOK_ENDPOINT_ID:-00000000-0000-0000-0000-000000000000}
+      LOYALTY_WEBHOOK_ALLOWED_ORIGIN: ${LOYALTY_WEBHOOK_ALLOWED_ORIGIN:-https://invalid.example}
+      LOYALTY_WEBHOOK_CURRENT_SECRET_FILE: /run/secrets/webhook_current_secret
+      LOYALTY_WEBHOOK_PREVIOUS_SECRET_FILE: ${LOYALTY_WEBHOOK_PREVIOUS_SECRET_FILE:-}
+    volumes:
+      - ${LOYALTY_WEBHOOK_CURRENT_SECRET_PATH:-/dev/null}:/run/secrets/webhook_current_secret:ro
+      - ${LOYALTY_WEBHOOK_PREVIOUS_SECRET_PATH:-/dev/null}:/run/secrets/webhook_previous_secret:ro
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    stop_grace_period: 75s
+
+  reporting-worker:
+    profiles: ["reporting"]
+    image: ${WORKER_IMAGE:?set WORKER_IMAGE to an immutable tag}
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    environment:
+      NODE_ENV: production
+      LOYALTY_WORKER_MODE: reporting
+      LOYALTY_WORKER_DATABASE_URL: ${LOYALTY_WORKER_DATABASE_URL:?required}
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    stop_grace_period: 75s
+
+  billing-worker:
+    profiles: ["billing"]
+    image: ${WORKER_IMAGE:?set WORKER_IMAGE to an immutable tag}
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    environment:
+      NODE_ENV: production
+      LOYALTY_WORKER_MODE: billing
+      LOYALTY_WORKER_DATABASE_URL: ${LOYALTY_WORKER_DATABASE_URL:?required}
+      LOYALTY_STRIPE_API_KEY_FILE: /run/secrets/stripe_usage_api_key
+    volumes:
+      - ${LOYALTY_STRIPE_USAGE_API_KEY_PATH:-/dev/null}:/run/secrets/stripe_usage_api_key:ro
     security_opt:
       - no-new-privileges:true
     cap_drop:

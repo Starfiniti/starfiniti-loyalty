@@ -1,0 +1,112 @@
+{
+  "schema": "starfiniti.authentik-runtime-snapshot.v1",
+  "observedAt": "2026-08-31T05:55:01Z",
+  "repository": {
+    "commit": "88c8046d5844bd3208dab7ca8bc814e0c1978fde",
+    "cleanBefore": true,
+    "cleanAfter": true,
+    "planPath": "infrastructure/governance/authentik-runtime-capture.yaml",
+    "planSha256": "3b7630e23ef01157f06d452f2ebdc70405cfe6f64e3839c4e795b4a34738384b"
+  },
+  "provider": {
+    "id": "authentik",
+    "origin": "https://auth.starfiniti.com"
+  },
+  "transport": {
+    "method": "GET",
+    "minimumTlsVersion": "TLSv1.2",
+    "dnsPublicOnly": true,
+    "socketPinned": true,
+    "contentEncoding": "identity",
+    "rawContentRetained": false,
+    "responseHeadersRetained": false,
+    "cookiesRetained": false,
+    "addressesRetained": false
+  },
+  "root": {
+    "path": "/",
+    "finalPath": "/if/flow/starfiniti-authentication-flow/?next=%2F",
+    "redirects": [
+      {
+        "status": 302,
+        "path": "/flows/-/default/authentication/"
+      },
+      {
+        "status": 302,
+        "path": "/if/flow/starfiniti-authentication-flow/"
+      }
+    ],
+    "status": 200,
+    "contentType": "text/html",
+    "bytes": 100198,
+    "sha256": "59ca1d4bf6cea3591ec6c5398b8a53e4eaeaf0fbdcd9da29ffb846452ffe3048",
+    "tlsProtocol": "TLSv1.3"
+  },
+  "version": {
+    "family": "2026.5",
+    "exact": "2026.5.6",
+    "assets": [
+      {
+        "role": "stylesheet",
+        "path": "/static/dist/styles/flow-2026.5.6.css",
+        "version": "2026.5.6",
+        "status": 200,
+        "contentType": "text/css",
+        "bytes": 124102,
+        "sha256": "ffe35040145f58ca0a321259bafebf94f13ad27972bcf6a72abd4fef6d08f3ba"
+      },
+      {
+        "role": "polyfill",
+        "path": "/static/dist/poly-2026.5.6.js",
+        "version": "2026.5.6",
+        "status": 200,
+        "contentType": "text/javascript",
+        "bytes": 427679,
+        "sha256": "61d8f067be7c5466d446f05228eae967a878571b1f7e99c7a4f5bd8a13ef2b2e"
+      },
+      {
+        "role": "flowInterface",
+        "path": "/static/dist/flow/FlowInterface-2026.5.6.js",
+        "version": "2026.5.6",
+        "status": 200,
+        "contentType": "text/javascript",
+        "bytes": 48634,
+        "sha256": "a696e7f42c5c89e31b89dbe7cefbf0467ee73b78c82a37023bc5bd439fc24459"
+      }
+    ]
+  },
+  "health": {
+    "live": {
+      "path": "/-/health/live/",
+      "status": 200,
+      "contentType": null,
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "ready": {
+      "path": "/-/health/ready/",
+      "status": 200,
+      "contentType": "text/html",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "claims": {
+    "servedRuntimePatchObserved": true,
+    "containerImageDigestObserved": false,
+    "outpostVersionsObserved": false,
+    "privateConfigurationObserved": false,
+    "identityCompatibilityProven": false,
+    "upgradeAccepted": false
+  },
+  "authority": {
+    "credentialsUsed": false,
+    "productionAccess": false,
+    "privateConfigurationRead": false,
+    "productionMutation": false,
+    "mergeApproved": false,
+    "releaseApproved": false,
+    "deploymentApproved": false,
+    "productionReconciled": false
+  }
+}
