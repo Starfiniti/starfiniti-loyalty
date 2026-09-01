@@ -10,6 +10,13 @@ their minimized result and SHA-256 binding belong in Git. This hardening creates
 no elapsed artifact, approval, production authority, or score change: M16
 remains 77/100 with 32 checks pending.
 
+ADR-0116 records the separate 2026-09-01 integration boundary. The minimized
+`main-integration-2026-09-01.yaml` receipt binds PR #57's reviewed head, merge
+commit, post-merge CI and Security runs, manually disabled Release workflow, and
+unchanged v0.1.11 production identity. It promotes exact merged `main` only as
+the candidate score subject and advances three R-004 controls to `merged`; it is
+not release, deployment, activation, observation, or protected-value evidence.
+
 The final owner-only action queue is generated as
 [`docs/plan/OWNER_GATES.md`](../../OWNER_GATES.md) from the exact ranked
 `IMPROVEMENT_BACKLOG.yaml` bytes. Run `npm run owner-gates:validate` to prove
@@ -26,16 +33,18 @@ exercise bundle, candidate acceptance, regression controls, scoring,
 independent review, and owner approval pending.
 
 ADR-0111 adds the interim `recurring-failures.yaml` register after one protected
-recovery failure reached its second observed occurrence. Run
+recovery failure reached its second observed occurrence. ADR-0116 now binds all
+three controls to exact merged-main evidence. Run
 `npm run continuous-improvement:validate`; the registry gate binds two distinct
 chronological incident anchors plus exact ADR-0071, dedicated-controller,
-backup-validator, Prometheus-rule, and OPS-007 bytes. Twenty adversarial cases
-reject invented or collapsed recurrence, reused anchors, unsafe paths, digest
-drift, missing or duplicate controls, and false merge or production activation.
-All current controls are `candidate`, all delivery proofs are null, and
-production explicitly retains the shared-lock defect without dedicated-repository
-or paging activation. This record does not substitute for the two elapsed monthly
-reviews or pass `recurring_failure_inventory` or `durable_regression_controls`.
+backup-validator, Prometheus-rule, OPS-007, and merge-receipt bytes. Adversarial
+cases reject invented or collapsed recurrence, reused anchors, unsafe paths,
+digest drift, missing or duplicate controls, false ancestry, release/deployment
+overclaim, and false production activation. All current controls are `merged`;
+production and observation proofs remain null, and production explicitly retains
+the shared-lock defect without dedicated-repository or paging activation. This
+record does not substitute for the two elapsed monthly reviews or pass
+`recurring_failure_inventory` or `durable_regression_controls`.
 
 ADR-0110 adds a separate exact-candidate runtime rehearsal without changing the
 live Authentik 2026.5.6 broker. Run

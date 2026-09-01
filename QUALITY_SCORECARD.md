@@ -1,8 +1,8 @@
 # Quality Scorecard
 
-The engineering score is evidence-based for the exact integration candidate and
-does not claim deployment or product readiness. Whole-product scoring below keeps
-deployed production separate from the unmerged candidate.
+The engineering score is evidence-based for exact merged `main` and does not
+claim deployment or product readiness. Whole-product scoring below keeps deployed
+production separate from the merged, unreleased candidate.
 
 | Category                      |  Weight | Current | Evidence                                                                                                                                                                |
 | ----------------------------- | ------: | ------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -25,10 +25,10 @@ candidate distinct. The digest-bound V1 production score remains preserved.
 
 <!-- product-score:v2 production=54 candidate=83 target=90 eligible=false -->
 
-| Category              | Weight | Production v0.1.11 | Integration candidate | Primary remaining gap                                                          |
+| Category              | Weight | Production v0.1.11 | Merged main candidate | Primary remaining gap                                                          |
 | --------------------- | -----: | -----------------: | --------------------: | ------------------------------------------------------------------------------ |
 | Activation            |     10 |                  3 |                     3 | No approved real-store value and outage sequence                               |
-| Feature breadth       |     25 |                 10 |                    24 | M04-M14 are implemented but unmerged, disabled, and uncanaried                 |
+| Feature breadth       |     25 |                 10 |                    24 | M04-M14 are merged into main but undeployed, disabled, and uncanaried          |
 | Merchant usability    |     15 |                 11 |                    14 | Approved production observation remains                                        |
 | Customer value        |     15 |                  5 |                    13 | Real-store customer validation and delivery observation remain                 |
 | Reliability           |     15 |                 13 |                    13 | Real-store outage and complete full-service recovery proof                     |
@@ -36,11 +36,13 @@ candidate distinct. The digest-bound V1 production score remains preserved.
 | Enterprise/commercial |     10 |                  4 |                     8 | Enterprise IdP, provider, metering, and managed billing canaries               |
 | **Total**             |    100 |             **54** |                **83** | Target is 90, every category must reach 80%, and automatic failures must clear |
 
-The candidate score is the development-prioritization subject, not a production or
-completion claim. Deployed production is the only completion subject. Both remain
-ineligible because activation is below its mandatory category floor and the required
-real-store/canary/recovery evidence is absent. The deployed production score remains
-54 until a reviewed release and live evidence change it.
+The merged-main candidate score is the development-prioritization subject, not a
+production or completion claim. Deployed production is the only completion
+subject. Both remain
+ineligible because activation is below its mandatory category floor, required
+real-store/canary/recovery evidence is absent, and Critical recovery, host,
+production-runtime, and release-policy gates remain unresolved. The deployed
+production score remains 54 until a reviewed release and live evidence change it.
 
 Every module also requires at least 90/100 and at least 80% of every relevant category. Unexplained value differences, cross-tenant access, duplicate effects, checkout dependency, missing recovery/canary evidence, or unresolved critical/high findings fail the gate regardless of score.
 

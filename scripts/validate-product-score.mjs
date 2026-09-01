@@ -331,7 +331,7 @@ function validateSubject(subject, scoreDocument) {
   } else if (
     subject.kind !== "integration_candidate" ||
     subject.release !== null ||
-    subject.branch !== "codex/enterprise-roadmap-integration"
+    subject.branch !== "main"
   ) {
     fail("candidate subject identity differs");
   }
@@ -510,6 +510,17 @@ function validateDocument(
       validateSubject(subject, scoreDocument),
     ]),
   );
+  for (const subject of scoreDocument.subjects) {
+    const failStates = new Map(
+      subject.automaticFailStates.map((state) => [state.id, state.status]),
+    );
+    if (
+      failStates.get("unresolved_critical_high") !== "active" ||
+      failStates.get("required_live_evidence_absent") !== "active"
+    ) {
+      fail(`${subject.id} mandatory unresolved gates are suppressed`);
+    }
+  }
   if (
     scoreDocument.productionSubject !== "production" ||
     scoreDocument.decisionSubject !== "candidate" ||
@@ -565,6 +576,11 @@ if (process.argv.includes("--self-test")) {
     ],
     ["duplicate subject", (value) => (value.subjects[1].id = "production")],
     [
+      "candidate branch drift",
+      (value) =>
+        (value.subjects[1].branch = "codex/enterprise-roadmap-integration"),
+    ],
+    [
       "missing evidence path",
       (value) =>
         (value.subjects[1].categories[0].evidencePaths[0] = "docs/missing.md"),
@@ -582,6 +598,13 @@ if (process.argv.includes("--self-test")) {
     [
       "automatic fail omission",
       (value) => value.subjects[1].automaticFailStates.pop(),
+    ],
+    [
+      "critical finding suppression",
+      (value) =>
+        (value.subjects[0].automaticFailStates.find(
+          (state) => state.id === "unresolved_critical_high",
+        ).status = "clear"),
     ],
     ["false completion", (value) => (value.completionEligible = true)],
     [

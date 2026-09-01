@@ -127,7 +127,9 @@ to one exact repository evidence path, SHA-256, UTC instant, and unique section
 anchor. Bind decisions, implementations, and candidate controls to their exact
 repository bytes. A candidate control records null merge, production, and
 observation evidence; it cannot satisfy the monthly merged-control gate until
-those distinct proofs exist. Validate this fail-closed register with
+those distinct proofs exist. The current R-004 controls are merged under
+ADR-0116, but their production and observation proofs remain null; they still do
+not satisfy the monthly active-control gate. Validate this fail-closed register with
 `npm run continuous-improvement:validate`. The register accelerates incident
 follow-up but does not substitute for either elapsed monthly review.
 

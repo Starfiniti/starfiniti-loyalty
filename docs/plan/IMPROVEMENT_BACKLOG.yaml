@@ -1,6 +1,6 @@
 schema: starfiniti.improvement-backlog.v1
 version: 1
-observedAt: 2026-08-31T20:35:50Z
+observedAt: 2026-09-01T08:30:08Z
 ranking:
   formula: severityPoints + (2 * merchantImpact) + (2 * customerImpact) + confidence - effort - dependencyPenalty
   severityPoints: { critical: 40, high: 30, medium: 20, low: 10 }
@@ -13,12 +13,12 @@ items:
     customerImpact: 10
     effort: 2
     confidence: 10
-    dependencyPenalty: 1
-    score: 87
+    dependencyPenalty: 0
+    score: 88
     status: blocked_external
     evidence: infrastructure/governance/next-runtime-review.yaml
-    dependency: Exact integrated implementation 7fb4403863e7409e38bf4fbfc1f3ec68d6325e3f and evidence head 609705692d2fe38e64b12360d392e1c62aabdf74 passed CI 33435854855 Security 33435854858 and external CodeQL with all twelve checks green, including both images, all 89 migrations, 3831 pgTAP assertions, 22 concurrency probes, and all four WooCommerce runtimes; approved merge release deployment rollback observation and protected-value reconciliation remain.
-    ownerInput: Product and security approve merge and release; operations separately approves deployment and production reconciliation.
+    dependency: PR 57 merged exact reviewed head 149724a3a2fad89d1a7990e0c3114be2754ecab6 into main as c85d93d0e6e0273543078050e697f04309f11d93; post-merge CI 33475350770 and Security 33475350801 passed on that merge commit, the Release workflow remains disabled_manually, production remains v0.1.11, and approved release deployment rollback observation and protected-value reconciliation remain.
+    ownerInput: Product and security approve the exact release; operations separately approves deployment and production reconciliation.
   - id: IMP-011
     title: Repair the production Proxmox host across five published security advisories
     severity: critical

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "evaluatedAt": "2026-08-31",
+  "evaluatedAt": "2026-09-01",
   "target": 90,
   "minimumCategoryRatio": 0.8,
   "productionSubject": "production",
@@ -55,7 +55,7 @@
     {
       "id": "production",
       "kind": "release",
-      "evaluatedAt": "2026-08-31",
+      "evaluatedAt": "2026-09-01",
       "release": "v0.1.11",
       "branch": null,
       "sourceCommit": "0ced4b666a55d836bd3d4927337fe057a71bb4ba",
@@ -150,8 +150,8 @@
         },
         {
           "id": "unresolved_critical_high",
-          "status": "clear",
-          "evidence": "Repository and image security gates report no unresolved known Critical or High finding; independent penetration testing is a separate GA prerequisite."
+          "status": "active",
+          "evidence": "R-004 recovery isolation, R-059 Proxmox security, and R-060 released Next.js 16.3.0 remain Critical and unresolved in production; independent penetration testing is also pending."
         },
         {
           "id": "required_live_evidence_absent",
@@ -164,10 +164,10 @@
     {
       "id": "candidate",
       "kind": "integration_candidate",
-      "evaluatedAt": "2026-08-31",
+      "evaluatedAt": "2026-09-01",
       "release": null,
-      "branch": "codex/enterprise-roadmap-integration",
-      "sourceCommit": "7fb4403863e7409e38bf4fbfc1f3ec68d6325e3f",
+      "branch": "main",
+      "sourceCommit": "c85d93d0e6e0273543078050e697f04309f11d93",
       "score": 83,
       "target": 90,
       "minimumCategoryRatio": 0.8,
@@ -184,7 +184,7 @@
           "id": "feature_breadth",
           "weight": 25,
           "score": 24,
-          "evidence": "M03-M14 implement earning rewards VIP referrals campaigns notifications experience analytics ecosystem migration enterprise identity and managed billing; live canary proof remains.",
+          "evidence": "M03-M14 implement earning rewards VIP referrals campaigns notifications experience analytics ecosystem migration enterprise identity and managed billing on merged main; deployment and live canary proof remain.",
           "evidencePaths": [
             "docs/plan/TASKS.yaml",
             "docs/plan/evidence/M16/integration-review-2026-08-27.md"
@@ -268,8 +268,8 @@
         },
         {
           "id": "unresolved_critical_high",
-          "status": "clear",
-          "evidence": "Exact code head 7fb4403863e7409e38bf4fbfc1f3ec68d6325e3f passed CI 33434852244 and Security 33434852266, including CodeQL DAST dependency image secret and supply-chain gates; independent penetration testing remains a separate prerequisite."
+          "status": "active",
+          "evidence": "Main merge commit c85d93d0e6e0273543078050e697f04309f11d93 passed post-merge CI 33475350770 and Security 33475350801, but R-004 recovery activation, R-059 host security, R-064 release policy, and independent penetration testing remain unresolved gates."
         },
         {
           "id": "required_live_evidence_absent",
@@ -277,7 +277,7 @@
           "evidence": "The real-store pilot, approved capacity and fault runs, complete clean-room recovery, module canaries, and thirty-day GA observation are absent."
         }
       ],
-      "remainingGate": "Merge and release approval, approved pilot and credentials, disabled deployments, exact reconciliation, recovery and monitoring exercises, independent penetration test, thirty-day canary, and final approvals."
+      "remainingGate": "Release approval, approved pilot and credentials, disabled deployments, exact reconciliation, recovery and monitoring exercises, independent penetration test, thirty-day canary, and final approvals."
     }
   ]
 }

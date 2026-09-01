@@ -1,5 +1,5 @@
 version: 3
-updated: 2026-08-30
+updated: 2026-09-01
 scope:
   active:
     [
@@ -451,7 +451,7 @@ tasks:
         no undocumented dependency,
       ]
     owner_inputs:
-      - reviewed merge and immutable release approval for the stacked M04 through M09 branch chain
+      - reviewed immutable release approval for the exact merged M04 through M14 main candidate
       - one explicitly approved Starfiniti-controlled or merchant-authorized WooCommerce canary store and test customer
     acceptance:
       [
@@ -484,6 +484,7 @@ tasks:
         docs/product/COMPETITIVE_CAPABILITY_MATRIX.md,
         docs/architecture/ADR/0009-sequential-evidence-gated-enterprise-modules.md,
         docs/architecture/ADR/0080-versioned-production-and-candidate-product-scores.md,
+        docs/architecture/ADR/0116-merged-main-release-candidate-evidence.md,
       ]
     evidence:
       - docs/plan/evidence/M00/README.md
@@ -3835,6 +3836,7 @@ tasks:
         docs/architecture/ADR/0108-minimized-public-authentik-runtime-evidence.md,
         docs/architecture/ADR/0109-authentik-2026-8-source-compatibility-contract.md,
         docs/architecture/ADR/0110-isolated-authentik-2026-8-runtime-rehearsal.md,
+        docs/architecture/ADR/0116-merged-main-release-candidate-evidence.md,
         infrastructure/governance/recovery-artifact-escrow-v3.yaml,
         infrastructure/governance/authentik-runtime-capture.yaml,
         infrastructure/testing/authentik-2026-8-runtime/plan.yaml,
@@ -3848,6 +3850,7 @@ tasks:
         docs/plan/evidence/M16/README.md,
         docs/plan/evidence/M16/continuous-improvement.yaml,
         docs/plan/evidence/M16/recurring-failures.yaml,
+        docs/plan/evidence/M16/main-integration-2026-09-01.yaml,
         scripts/validate-continuous-improvement-evidence.mjs,
         docs/plan/evidence/M16/runs/provider-source-snapshot-257e99c-2026-08-28T212100Z.json,
         docs/plan/evidence/M16/runs/recovery-dependency-snapshot-c5678b6-2026-08-28T221524Z.json,
@@ -3966,4 +3969,5 @@ tasks:
         ADR-0102 binds the two official Critical Next.js advisories released v0.1.11 and candidate 16.3.0 impact exact 16.3.3 Next.js and matching lint package provenance image-optimization defence and a no-vulnerable-rollback policy; exact implementation c3b29542035772ddcbc48d92e2b159ac605dd80f passed CI 33261152926 Security 33261152934 and external CodeQL with all twelve checks green and its immutable 5199-byte evidence file SHA-256 d90150e1ec818f1fa092df6cf6a91137c1333cf5b97b4eafb4bcfe3b4ec205ca binds both images SBOMs Trivy CodeQL DAST 995 tests 87 migrations 3790 pgTAP assertions 22 concurrency probes and four WooCommerce runtime jobs while merge release deployment reconciliation and every production mutation remain false,
         ADR-0106 selects only fast-xml-parser 5.11.1 Nodemailer 9.0.6 and smtp-server 3.19.4 as one exact compatible untrusted-input patch set; the governance record and thirty-two-corruption validator bind Git tags commits npm tarballs integrity licences Node floors exact record shape nested lock resolution retained source-level SAML and SMTP controls coherent rollback candidate-runtime change and entirely false production authority while unrelated dependency changes remain deferred; clean install audited 972 packages with zero vulnerabilities focused SAML and SMTP tests pass 36 and 18 cases and the complete 997-test local root gate both production builds static database secret production-audit licence and diff checks pass; exact implementation c14a8f5802ddee02882cceb2c2f3e01cdcd47fba passed CI 33281041057 Security 33281041055 and external CodeQL 99176310303 with all twelve checks green and PR 57 merge-clean while merge release deployment and elapsed review remain pending,
         delivery-chain audit found every open roadmap PR from 29 through 56 merge-clean with zero failed or pending checks after exact-head repairs to PRs 29 30 31 32 and 42,
+        PR 57 merged reviewed head 149724a3a2fad89d1a7990e0c3114be2754ecab6 into main as c85d93d0e6e0273543078050e697f04309f11d93 on 2026-09-01; post-merge CI 33475350770 and Security 33475350801 passed on the merge commit while Release workflow 333373957 remained disabled_manually production remained v0.1.11 and no tag release deployment or loyalty-value mutation occurred; ADR-0116 promotes exact merged main only as the unchanged 83/100 candidate subject and advances three R-004 controls to merged_pending_activation without claiming production repair,
       ]

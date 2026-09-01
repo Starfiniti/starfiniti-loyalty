@@ -1,5 +1,28 @@
 # Iteration Log
 
+## 2026-09-01 — Merged-main evidence reconciliation
+
+- Verified that PR #57 merged reviewed head
+  `149724a3a2fad89d1a7990e0c3114be2754ecab6` into `main` as
+  `c85d93d0e6e0273543078050e697f04309f11d93` and that post-merge CI
+  `33475350770` and Security `33475350801` passed on that exact commit.
+- Added ADR-0116 and one minimized, digest-bound merge receipt. The product score
+  now uses exact merged `main` as the candidate subject while deployed production
+  remains v0.1.11. Scores stay 83/100 and 54/100 respectively because merging
+  adds no activation, canary, recovery, provider, observation, or customer-value
+  evidence.
+- Advanced the R-004 backup validator, archive-RPO alert contract, and recovery
+  runbook from candidate to merged while retaining null production and observation
+  proofs and the live defect. IMP-012 rises only from 87 to 88 because its merge
+  dependency is complete; release, deployment, observation, and reconciliation
+  remain independently gated. Release workflow `333373957` remains manually
+  disabled and no production or loyalty-value state changed.
+- Adversarial review found that both score subjects still labelled the
+  `unresolved_critical_high` automatic failure clear despite open Critical
+  production recovery, host/runtime security, and release-policy risks. Corrected
+  both states to active and added a validator mutation that rejects future
+  suppression; the scores do not change.
+
 ## 2026-08-31 — Current-candidate rescore and owner-queue refresh
 
 - Reconstructed the unfinished task graph after PR #57 became exact-head green. Every remaining product slice is a real-environment closeout; no hidden repository feature slice remains. The M16 product score and generated owner queue still bound an August 29 candidate, so the material-change rule required a current rescore after the M14 managed-session and usage recovery repair.
