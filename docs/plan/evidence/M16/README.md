@@ -27,6 +27,14 @@ three failures, seven occurrences, and sixty-six adversarial cases. M16 remains
 migrations, every deterministic evidence/security/recovery gate, WooCommerce
 source and budget checks, production audit, and licence validation. Release,
 deployment, production, and protected loyalty value are unchanged.
+Initial exact-head CI run `33535519709` failed closed in baseline job
+`99948754528` because the storefront pgTAP reference used a Windows CRLF
+working-tree digest instead of the canonical LF Git blob. The database replay,
+containers, all four WooCommerce cells, DAST, internal/external CodeQL, and
+supply-chain jobs passed on that head; the failed baseline is retained as
+negative evidence. The corrected validator canonicalizes CRLF to LF for text
+digest comparison, rejects lone carriage returns, exercises an all-CRLF reader,
+and binds the actual Git digest. Fresh exact-head proof is still required.
 
 The semantic monitoring slice legitimately evolves the Prometheus and runbook
 working-tree bytes. The recurrence validator now honors ADR-0119's historical

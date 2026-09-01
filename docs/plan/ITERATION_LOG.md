@@ -2305,3 +2305,10 @@
   review, stacked merge, later exact-head observation, and the approved
   disabled/enabled tenant canary remain open. Production, M16's 77/100 score,
   checkout, entitlements, ledger value, and customer state did not change.
+- Initial exact-head CI `33535519709` failed closed in baseline job
+  `99948754528` while the separate database replay and the other completed
+  runtime/security jobs passed. The registry had captured a Windows CRLF
+  working-tree digest for an LF Git SQL control. The correction binds the Git
+  digest, canonicalizes only CRLF text checkout conversion, rejects lone
+  carriage returns, and self-tests an all-CRLF reader. The failed run remains
+  negative evidence and a new exact-head run is required.

@@ -11,6 +11,11 @@
   The complete local gate passes 1,010 workspace tests, both production builds,
   static validation of 90 migrations, and every repository security, recovery,
   evidence, WooCommerce, audit, and licence check.
+  Initial exact-head CI `33535519709` correctly failed baseline job
+  `99948754528` when the registry contained a Windows CRLF working-tree digest
+  for an LF Git SQL control. The correction binds the Git-canonical digest,
+  accepts equivalent CRLF checkouts, rejects lone carriage returns, and requires
+  fresh exact-head proof; the failed run remains negative evidence.
   These are repository candidates only: independent review, stacked merge,
   later exact-head observation, and the approved disabled/enabled production
   canary remain pending. M16 stays 77/100, production stays v0.1.11, and no

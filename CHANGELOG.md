@@ -14,6 +14,11 @@
   review, stacked merge, later exact-head observation, and production canary.
   Production, release, entitlements, checkout, ledger value, and scores are
   unchanged.
+  Initial exact-head CI `33535519709` failed closed in baseline job
+  `99948754528` because one evidence digest represented a Windows CRLF checkout
+  rather than the LF Git blob. The correction canonicalizes CRLF only for text
+  comparison, rejects lone carriage returns, binds the real Git digest, and
+  retains the failure while requiring a fresh run.
 
 - Corrected the notification studio's rollout and deployment presentation.
   Disabled notification capability now blocks template publication, SMTP tests,

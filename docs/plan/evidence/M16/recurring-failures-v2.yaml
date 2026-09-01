@@ -165,7 +165,7 @@ failures:
         type: validator
         reference:
           path: scripts/validate-recurring-failure-registry.mjs
-          sha256: e12b91fe3bf1fba7c830bd9f542b02b6b3d461f99ed8502817b8726a3a6d8d69
+          sha256: 42bbb427a3cfb04099f21701a2e9af15c6c3e7cc1d19b6b5ee0ce0ed01d64126
         deliveryStatus: candidate
         mergeEvidence: null
         activationEvidence: null
@@ -215,7 +215,7 @@ failures:
         productionMutation: false
     decision:
       path: docs/architecture/ADR/0122-recurring-entitlement-authoring-drift-control.md
-      sha256: e7707316ae6cf1477cfc5aedb60ee3fcd7b7ec2451b9abe67888319028e974de
+      sha256: a1e8823993ef4c6098dabe559c77fec561a853d413776410dd7f93a58b1f2e34
     implementation:
       path: scripts/validate-entitlements.mjs
       sha256: 53bf37e4fffaa8fcf8b8774e9f45c5e567a847cc2131b73c45587441a13bf4a4
@@ -233,7 +233,7 @@ failures:
         type: regressionTest
         reference:
           path: supabase/tests/experience_themes_test.sql
-          sha256: 53df956e51e6b9b559caf936a9166f92371b7d92d761d444151146350e346378
+          sha256: ef55a5a93e19e443491ad587e10fe07e7aa3da4ac6083a6aa0a2caa94621ce70
         deliveryStatus: candidate
         mergeEvidence: null
         activationEvidence: null
@@ -254,7 +254,7 @@ failures:
       lastVerifiedAt: "2026-09-01T16:45:00Z"
       evidence:
         path: docs/architecture/ADR/0122-recurring-entitlement-authoring-drift-control.md
-        sha256: e7707316ae6cf1477cfc5aedb60ee3fcd7b7ec2451b9abe67888319028e974de
+        sha256: a1e8823993ef4c6098dabe559c77fec561a853d413776410dd7f93a58b1f2e34
         anchor: "Register `authorization.entitlement-authoring-boundary-drift` under R-025"
       negativeEvidenceRetained: true
       exhaustiveDiscoveryClaimed: false

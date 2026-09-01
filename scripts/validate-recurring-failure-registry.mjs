@@ -480,7 +480,11 @@ function validateBoundReference(
   if (!digestPattern.test(reference.sha256 ?? "")) {
     fail(`${label}.sha256 is invalid`);
   }
-  const content = reader(reference.path);
+  const rawContent = reader(reference.path);
+  if (rawContent.replaceAll("\r\n", "").includes("\r")) {
+    fail(`${label} contains a non-canonical carriage return`);
+  }
+  const content = rawContent.replaceAll("\r\n", "\n");
   if (digest(content) !== reference.sha256) fail(`${label} digest differs`);
   if (requireAnchor) {
     if (
@@ -1677,6 +1681,9 @@ function selfTestLegacyRegistry(registry) {
 
 function selfTestRegistryV2(registry) {
   validateRegistryV2(structuredClone(registry));
+  validateRegistryV2(structuredClone(registry), (path) =>
+    readRegularRepositoryFile(path).replaceAll(/\r?\n/gu, "\r\n"),
+  );
   const recoveryIndex = registry.failures.findIndex(
     (failure) => failure.fingerprint === requiredRecoveryFingerprint,
   );

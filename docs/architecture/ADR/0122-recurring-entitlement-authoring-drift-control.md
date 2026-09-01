@@ -71,6 +71,9 @@ granting authority to the browser.
 7. Mark the new controls candidate-only until the stacked PR chain receives an
    eligible independent review and merges. This decision changes no production
    entitlement, rollout, provider, checkout, ledger, or customer state.
+8. Bind text evidence to Git-canonical LF bytes while accepting an equivalent
+   CRLF checkout and rejecting lone carriage returns. Repository content stays
+   exact without making the gate depend on the operator's checkout platform.
 
 ## Consequences
 

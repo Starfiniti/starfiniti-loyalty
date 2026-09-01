@@ -13,6 +13,11 @@ R-025, and R-065 and rejects 66 adversarial corruptions. The new controls remain
 candidate-only until independent review, stacked merge, later exact-head
 observation, and approved production canary. Production and all scores remain
 unchanged.
+Initial exact-head CI run `33535519709` failed closed in baseline job
+`99948754528`: a Windows CRLF checkout digest had been recorded for an LF Git
+SQL control. The registry now binds the actual Git bytes, canonicalizes only
+CRLF to LF for text comparison, rejects lone carriage returns, and exercises a
+CRLF checkout in self-test. A fresh exact-head run is mandatory.
 
 M08-S05A is repository-complete in draft PR #61. The notification entitlement
 presentation now matches the already-authoritative PostgreSQL commands: disabled
