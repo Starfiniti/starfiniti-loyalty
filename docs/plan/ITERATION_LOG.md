@@ -51,6 +51,13 @@
   `9391499454d193ac4cdf61223173cd170c5be3a6`. The M15 manifest is rebound to
   that release-workflow digest at 7/27; fresh exact-head automation remains a
   separate gate.
+- Exact evidence head `4ac7414eab29e1a30ebfe61e1d995c8ce138dec1`
+  passed CI `33501867357`, Security `33501867336`, and external CodeQL
+  `99837291269`. Fresh artifact bytes reconcile zero CodeQL and repository
+  findings, zero image vulnerability/misconfiguration/secret findings, two
+  informational-only ZAP observations, and the unchanged 29 reciprocal-licence
+  occurrences across 15 dispositions. The new digest-bound Medium review
+  restores M15 Security to 19/27 without closing the eight external gates.
 
 ## 2026-09-01 — Fail-closed GitHub branch and release-tag policy
 

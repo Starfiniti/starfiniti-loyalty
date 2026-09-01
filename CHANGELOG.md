@@ -15,8 +15,10 @@
   preflight to enforce these controls, exact branch check/app identities, signed
   and last-push approval policy, and the two distinct tag rulesets. Release,
   deployment, and production remain unchanged. The changed release-workflow
-  input returns M15 Security to 7/27 at exact implementation `dee2009`; prior
-  `fec7f86` artifacts remain historical and require fresh exact-head replacement.
+  input first returned M15 Security to 7/27. Exact candidate `4ac7414` then
+  passed CI `33501867357`, Security `33501867336`, and external CodeQL
+  `99837291269`; a new digest-bound review restores 19/27 without relabeling the
+  historical `fec7f86` artifacts.
 
 - Enforced the repository-side release authority boundary without enabling
   Release. Protected `main` now requires twelve exact app-bound checks, signed

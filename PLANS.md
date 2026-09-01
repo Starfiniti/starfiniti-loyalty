@@ -16,10 +16,11 @@ distinct tag rulesets before release. This does not remove the independent
 reviewer, environment, expanded read-only token, tag, security/licence, or
 approval gates.
 
-Because this slice changes `.github/workflows/release.yml`, M15 Security now
-binds exact implementation `9391499454d193ac4cdf61223173cd170c5be3a6`
-and is intentionally 7/27 until fresh exact-head CI, Security, CodeQL, image,
-SBOM, DAST, freshness, WooCommerce, and Medium-review evidence is reconciled.
+Because this slice changes `.github/workflows/release.yml`, M15 Security first
+returned to 7/27. Fresh exact candidate
+`4ac7414eab29e1a30ebfe61e1d995c8ce138dec1` passed CI `33501867357`, Security
+`33501867336`, and external CodeQL `99837291269`; exact image, SBOM, DAST,
+freshness, WooCommerce, and Medium-review reconciliation now restores 19/27.
 The earlier `fec7f86` results remain historical and are not relabelled.
 
 The repository-side release boundary is now fail-closed. Protected `main`
@@ -95,11 +96,12 @@ residue. Repository validation passes 9/16 deployment checks; exact-head Linux,
 approved-host, live-target, receiver, dead-man, activation, and observation
 evidence remain pending. The broader M15 operations gate remains 14/35,
 production has no monitoring plane, and product/module scores do not change.
-Because this slice changes the Security workflow and exact checkout semantics,
+Because this slice changed the Security workflow and exact checkout semantics,
 the older exact-head scanner, image, SBOM, DAST, header, freshness, Medium-
-triage, development-audit, and WooCommerce evidence is historical only. M15
-Security is intentionally back at 7/27 until the new exact head passes and its
-artifacts are reconciled; prior runs were not relabelled.
+triage, development-audit, and WooCommerce evidence became historical only.
+Fresh candidate `4ac7414` now has exact green CI/Security/CodeQL and
+digest-bound artifact reconciliation, so M15 Security is again 19/27 without
+relabeling prior runs.
 
 An active read-only production incident review on 2026-08-31 confirmed the old
 VM 971 full-tree transfer loop was not running: the guest sent only 13,508 bytes

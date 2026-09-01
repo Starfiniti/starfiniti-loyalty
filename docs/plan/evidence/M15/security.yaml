@@ -1,12 +1,12 @@
 schema: starfiniti.security-evidence.v1
 status: in_progress
-observedAt: 2026-09-01T11:14:31Z
+observedAt: 2026-09-01T11:30:38Z
 currentProduction:
   release: v0.1.11
   applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
 candidate:
   branch: codex/post-merge-release-gate-reconciliation
-  commit: 9391499454d193ac4cdf61223173cd170c5be3a6
+  commit: 4ac7414eab29e1a30ebfe61e1d995c8ce138dec1
   securityOwnerApproved: false
 inputs:
   securityWorkflow:
@@ -45,8 +45,8 @@ artifacts:
   findingRegisterPath: null
   findingRegisterSha256: null
 triage:
-  path: null
-  sha256: null
+  path: docs/plan/evidence/M15/runs/security-medium-triage-4ac7414.yaml
+  sha256: 626427b2cdb906fe2ebc206686b369f6e67761cbb28783f988eb7c090e9bd5c7
 checks:
   - id: workflow_contract
     status: passed
@@ -70,35 +70,35 @@ checks:
     status: passed
     evidence: Repository validators reject drift-sensitive evidence, false completion, missing checks, unsafe DAST, optimizer reintroduction, unplanned reciprocal components, incomplete source inputs, and release publication before source verification.
   - id: exact_head_ci
-    status: pending
-    evidence: Exact candidate 9391499454d193ac4cdf61223173cd170c5be3a6 has not yet run after the transitive-action release-workflow correction; fresh CI, Security, external CodeQL, database, image, and WooCommerce evidence is required.
+    status: passed
+    evidence: Exact candidate 4ac7414eab29e1a30ebfe61e1d995c8ce138dec1 passed all seven CI jobs in run 33501867357, all four Security jobs in run 33501867336, external CodeQL check 99837291269, database replay, container builds, and all four minimum/current HPOS/legacy WooCommerce cells; PR #58 checks were green and branch policy separately blocked merge for independent review.
   - id: codeql_sast
-    status: pending
-    evidence: Fresh CodeQL security-extended analysis must run against exact candidate 9391499454d193ac4cdf61223173cd170c5be3a6 and retain a minimized digest-bound zero-Critical/High result before this check can pass.
+    status: passed
+    evidence: Security run 33501867336 job 99836826912 produced CodeQL 2.26.4 security-extended analysis 80d4d99ad347ac8bdc30613e6efac5945e4e36ac bound to exact candidate 4ac7414eab29e1a30ebfe61e1d995c8ce138dec1 with zero findings; artifact 9798065419 has archive digest sha256:74b95107dd933787c0c71b85debba67f96233399ed079bf19cf4bf8b1165d2cf and summary SHA-256 236e250c6f532147adffc2e8d39f1fa7bd652f9d0647912071a9322e07465ea3.
   - id: repository_secret_misconfiguration_scan
-    status: pending
-    evidence: The repository vulnerability, misconfiguration, secret, and licence scan must be rerun and digest-bound to exact candidate 9391499454d193ac4cdf61223173cd170c5be3a6; historical candidate results are not relabelled.
+    status: passed
+    evidence: Supply-chain job 99836826949 scanned exact candidate 4ac7414eab29e1a30ebfe61e1d995c8ce138dec1 with Trivy 0.74.0; artifact 9798148602 archive digest sha256:fb09d251c467b584b7c1c90c43eccc6880d7bf327031e435660e4895b8c66f73 contains repository summary SHA-256 17a37e4832979b427676ede6a1c17b550d48511915f915c2e48d691b02545943 with zero vulnerability, misconfiguration, secret, or licence finding.
   - id: dashboard_image_scan
-    status: pending
-    evidence: A fresh dashboard image must be built from exact candidate 9391499454d193ac4cdf61223173cd170c5be3a6 and pass digest-bound vulnerability, misconfiguration, secret, and licence scans.
+    status: passed
+    evidence: Supply-chain job 99836826949 built dashboard image sha256:857e28bae1ee8a7cc7c92e05775d9877effa4fab499a095830d95845ebd12e86; full report SHA-256 1ce006bcf1535b9afc37fc98aa75954412539677e80381006c316f69ba083ee9 contains zero vulnerability, misconfiguration, or secret and no Critical, High, or Unknown licence finding.
   - id: worker_image_scan
-    status: pending
-    evidence: A fresh worker image must be built from exact candidate 9391499454d193ac4cdf61223173cd170c5be3a6, pass its runtime-import probe, and pass all digest-bound security and licence scans.
+    status: passed
+    evidence: Supply-chain job 99836826949 built worker image sha256:818b0c75b5f79c43a9945d34839e2828062c89e455f0f752e650b196a84d2c8e, passed the declared runtime-import probe, and produced report SHA-256 74b01cae9ecc1096583e8d37751cb5acfbe7eebadc019d38f0759acf5a934976 with zero vulnerability, misconfiguration, or secret and no Critical, High, or Unknown licence finding.
   - id: dashboard_sbom
-    status: pending
-    evidence: The exact-candidate dashboard image requires a fresh CycloneDX inventory reconciled to the reciprocal-source plan and bound to the new image digest.
+    status: passed
+    evidence: Exact dashboard image inventory SHA-256 53033fb9046d95c1b8b668e62ad46527cb21cc4c892f9eeee6d089afef58658b identifies starfiniti-dashboard and passed CycloneDX generation plus reciprocal-source-plan reconciliation in supply-chain job 99836826949.
   - id: worker_sbom
-    status: pending
-    evidence: The exact-candidate worker image requires a fresh CycloneDX inventory reconciled to the reciprocal-source plan and bound to the new image digest.
+    status: passed
+    evidence: Exact worker image inventory SHA-256 1d80cac7f6fdc721c4495d4571f80125cfa443afab70a724ac0a90fd7426f682 identifies starfiniti-worker and passed CycloneDX generation plus reciprocal-source-plan reconciliation in supply-chain job 99836826949.
   - id: disposable_dast
-    status: pending
-    evidence: ZAP 2.17.0 must rerun against the internal no-port disposable dashboard built from the exact candidate, retain a minimized report, and prove teardown with zero unresolved High alert.
+    status: passed
+    evidence: Security job 99836826956 ran ZAP 2.17.0 only against the internal no-port disposable target; artifact 9798079097 archive digest sha256:868617879bc45e0f67bed6cc3d082a658091c41419bdfdd870bdad9a5915d5de and report SHA-256 1a434a314c0812a32c0906ab384574a9eb772b26e07bf95933eb138531be6520 contain two informational and zero Low, Medium, or High alerts, with teardown passing.
   - id: dashboard_response_security_headers
-    status: pending
-    evidence: The fresh disposable exact-candidate dashboard must independently prove nonce-shaped script policy, framing denial, MIME protection, and image-route refusal before active scanning.
+    status: passed
+    evidence: DAST job 99836826956 independently proved nonce-shaped strict script policy, framing denial, MIME protection, and image-route refusal on exact candidate 4ac7414eab29e1a30ebfe61e1d995c8ce138dec1 before active scanning.
   - id: scanner_database_freshness
-    status: pending
-    evidence: The next exact-candidate Security run must retain CodeQL, ZAP, and Trivy versions plus vulnerability-database and check-bundle update evidence inside the approved freshness bound.
+    status: passed
+    evidence: Exact Security run 33501867336 used CodeQL 2.26.4, ZAP 2.17.0, and Trivy 0.74.0; the vulnerability database was updated 2026-09-01T01:14:10.330329814Z and downloaded 2026-09-01T05:56:41.659718044Z, while check bundle sha256:1583562f8b90ed2a071b99f0e5ffff6b57e4ceb6ca3e4796577b4e6a339eb74c was downloaded 2026-09-01T05:56:19.918064176Z inside the approved 24-hour start bound.
   - id: release_sbom_verification
     status: pending
     evidence: A real tagged release must publish both SBOMs, exact corresponding source, manifest, notices, and connector package with all six pre-checksum payloads matching the attested checksum file; the release record must also prove the connector version equals the tag.
@@ -121,11 +121,11 @@ checks:
     status: pending
     evidence: Exact-head automated sources contain zero unresolved Critical or High item; the final reconciled register also needs the production review and independent penetration-test sources.
   - id: medium_and_false_positive_review
-    status: pending
-    evidence: A new digest-bound Medium, informational, licence, and false-positive review must reconcile the fresh exact-candidate Security artifacts; the historical fec7f86 review remains immutable and is not rebound.
+    status: passed
+    evidence: Digest-bound review security-medium-triage-4ac7414.yaml reconciles Security run 33501867336 to zero Critical/High vulnerability, misconfiguration, secret, or DAST Medium finding, two informational ZAP observations, 29 reciprocal licence occurrences across 15 exact dispositions, zero false positives, available product source, and 14 third-party release obligations that continue to block tagged image distribution under R-056.
   - id: development_advisory_resolved
-    status: pending
-    evidence: The local production audit and exact-candidate CI complete-tree audit must be rerun and must report zero unresolved development advisories before this check can pass.
+    status: passed
+    evidence: The local production audit and exact-candidate CI complete-tree audit found zero vulnerabilities; CI run 33501867357 passed all four Linux minimum/current HPOS/legacy WooCommerce runtime cells and the complete baseline at 4ac7414eab29e1a30ebfe61e1d995c8ce138dec1.
   - id: security_owner_approval
     status: pending
     evidence: The named security owner must review exact artifacts findings residual risks and rollback guidance before accepting the module.
