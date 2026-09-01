@@ -1317,7 +1317,7 @@ tasks:
           - server read/action tests fail closed on malformed containers and role errors while the Hub-style notification studio exposes six templates, safe preview, consent/provider aggregates, and bounded canonical issues
           - real-component Playwright review passed template switching, dark theme, mobile navigation, key actions, and zero browser diagnostics; synthetic screenshots are retained under docs/plan/evidence/M08
       - id: M08-S05A-NOTIFICATION-ENTITLEMENT-UX
-        status: in_progress
+        status: completed
         dependencies: [M08-S05-TEMPLATES-AND-HEALTH]
         hypothesis: Presenting the same deployment and entitlement decision already enforced by PostgreSQL prevents merchants from entering work that must fail while preserving safe endpoint shutdown.
         baseline: The notification summary exposed a disabled rollout, but template publication, SMTP test, webhook creation, and key rotation still appeared available until their authoritative commands rejected the stale request; managed deployments also displayed the self-hosted-only SMTP test.
@@ -1341,6 +1341,8 @@ tasks:
           - PostgreSQL command tracing confirms publication creation rotation and SMTP test remain authoritative while endpoint disable and retirement deliberately remain available after capability disablement
           - focused access and action tests distinguish role rollout and deployment boundaries without changing server command inputs
           - the complete local repository gate passes 1010 workspace tests both production builds every deterministic validator and static validation of 90 migrations and 70 pgTAP files
+          - implementation head 04da41a67ee449d62d4e6479caae05e24e170349 passed exact-head CI run 33530596023 and Security run 33530595912 including 70 pgTAP files with 3845 assertions four WooCommerce runtime cells CodeQL DAST supply-chain scans and recovery transport rehearsals; external CodeQL check 99932887645 also passed
+          - draft PR 61 retains the stacked merge and independent review gates; production provider entitlement endpoint template delivery ledger customer and score state did not change
       - id: M08-S06-CANARY-AND-CLOSE
         status: in_progress
         acceptance:
