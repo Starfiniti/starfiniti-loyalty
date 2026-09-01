@@ -30,6 +30,12 @@
   bytes, exact service start chronology, internal HTTP 200/public HTTP 404
   Studio profile boundary, rollback equivalence, minimized evidence, and
   protected state; no surviving Critical, High, or correctness finding remains.
+- Exact implementation `be4e760662902614ba2a89a4737f02cc8ebb41e2`
+  passed CI `33541330311`, Security `33541330357`, and external CodeQL
+  `99968545083`. All twelve PR checks are green, including database replay, both
+  images, all four WooCommerce runtime cells, DAST, supply-chain policy, and the
+  9m35s isolated recovery/Authentik transport rehearsal. PR #63 is clean and
+  mergeable but remains a stacked draft pending independent review.
 
 ## 2026-09-01 — Storefront authoring entitlement correction
 

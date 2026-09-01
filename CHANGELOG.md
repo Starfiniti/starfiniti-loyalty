@@ -14,6 +14,9 @@
   to the reversible Studio recreation; database, application, Auth, Data API,
   backup configuration, checkout, loyalty value, and scores did not change.
   Exact future Supabase upgrade rehearsal and clean-room recovery remain open.
+  Exact implementation `be4e760662902614ba2a89a4737f02cc8ebb41e2`
+  passed CI `33541330311`, Security `33541330357`, and external CodeQL
+  `99968545083`; all twelve checks are green and PR #63 is clean/mergeable.
 
 - Added ADR-0122 and a durable M16 control for recurring entitlement-authoring
   drift. The entitlement gate now verifies the exact 23 PostgreSQL authoring

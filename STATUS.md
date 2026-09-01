@@ -19,7 +19,11 @@
   `codex/m01-supabase-studio-parity`; production database, application, Auth,
   Data API, backup configuration, checkout, and loyalty value were unchanged.
   The complete local gate passes all 1,010 workspace tests and both production
-  builds; exact-head CI and independent review remain pending.
+  builds. Exact implementation head
+  `be4e760662902614ba2a89a4737f02cc8ebb41e2` passed CI `33541330311`,
+  Security `33541330357`, and external CodeQL `99968545083`; all twelve PR
+  checks are green and PR #63 is clean/mergeable. Independent review remains
+  pending.
 
 - M16 now treats entitlement-authoring boundary drift as a recurring Critical
   failure under R-025. Storefront persistence and notification presentation are

@@ -601,7 +601,7 @@ tasks:
       - migration 20260828190000 enables RLS on the three previously uncovered private tenant coordination tables while retaining reviewed owner-function bypass and zero direct-role policies
       - the compatibility self-test covers 90 migrations, all 175 tenant tables, one official and one reviewed asymmetric-JWKS Compose variant, 15 mounted assets, 11 linux/amd64 image IDs, immutable historical/current production evidence, internal Studio HTTP 200 and public HTTP 404 profile smokes, and 52 deterministic corruptions
       - the approved Studio-only no-pull no-build no-dependency recreation now has exact schema parity on the same healthy reviewed image; all other services, the post-change archive, anonymous-denial checks, and zero protected-state aggregates pass
-      - the complete local repository gate passes all 1010 workspace tests, every module security recovery accessibility and WooCommerce validator, and both production builds; exact-head CI and independent review remain pending
+      - exact implementation be4e760662902614ba2a89a4737f02cc8ebb41e2 passes CI 33541330311 Security 33541330357 and external CodeQL 99968545083 with all 12 checks green; independent review remains pending
       - ADR-0070 and the undeployed backup candidate convert prolonged shared Borg-lock contention from false success into a bounded 120-second wait and visible status 75 with semantic and Linux Bash syntax gates
       - the exact M01 validator rejects schema drift future timestamps mutable release selectors contradictory store or restore authority unreconciled container counts negative aggregates duplicate checks obvious sensitive values and false completion through eleven adversarial fixtures
 
