@@ -1,5 +1,21 @@
 # Status
 
+- GitHub repository-native security is now fail-closed under ADR-0117. Actions
+  permit only the eight action repositories currently used by repository
+  workflows, with full-SHA pinning required; neither all GitHub-owned actions nor
+  all verified creators are implicitly trusted, and default workflow permissions
+  stay read-only.
+  Vulnerability alerts, unpaused Dependabot security updates, secret scanning,
+  push protection, and private vulnerability reporting are enabled. The initial
+  scan found two deterministic Stripe-format unit-test fixtures; both were
+  resolved as `used_in_tests`, no external credential or rotation is claimed,
+  and Dependabot, code-scanning, and secret-scanning each report zero open
+  alerts. The disabled release preflight now checks these controls and zero-open
+  alert state, requires the exact twelve check/app pairs and signed/last-push
+  branch policy, and correctly validates the two complementary tag rulesets
+  separately. Non-provider pattern scanning and validity checks remain disabled
+  and are not overclaimed. Release, deployment, and production remain unchanged.
+
 - GitHub release policy is now fail-closed at the repository boundary. At
   `2026-09-01T10:00:52Z`, protected `main` required the twelve exact current
   checks from GitHub Actions and GitHub Advanced Security, verified signatures,

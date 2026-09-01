@@ -31,14 +31,14 @@ jobs:
         run: |
           set -euo pipefail
           if [[ -z "${GH_TOKEN:-}" ]]; then
-            echo "RELEASE_POLICY_TOKEN must have read-only Administration, Actions, Checks, Commit statuses, and Contents access." >&2
+            echo "RELEASE_POLICY_TOKEN must have read-only Administration, Actions, Checks, Code scanning alerts, Commit statuses, Contents, Dependabot alerts, and Secret scanning alerts access." >&2
             exit 1
           fi
           [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
           [[ "$CANDIDATE_SHA" =~ ^[0-9a-f]{40}$ ]]
 
           repository="$GITHUB_REPOSITORY"
-          api_version="2022-11-28"
+          api_version="2026-03-10"
           main_sha="$(gh api -H "X-GitHub-Api-Version: $api_version" "repos/$repository/git/ref/heads/main" --jq '.object.sha')"
           [[ "$main_sha" == "$CANDIDATE_SHA" ]]
 
@@ -60,13 +60,44 @@ jobs:
           protection="$(gh api -H "X-GitHub-Api-Version: $api_version" "repos/$repository/branches/main/protection")"
           jq -e '
             .required_status_checks.strict == true and
-            (([.required_status_checks.contexts[]?, .required_status_checks.checks[]?.context] | unique | length) > 0) and
-            .required_pull_request_reviews.required_approving_review_count >= 1 and
+            .required_signatures.enabled == true and
+            .required_pull_request_reviews.required_approving_review_count == 1 and
             .required_pull_request_reviews.dismiss_stale_reviews == true and
+            .required_pull_request_reviews.require_last_push_approval == true and
             .required_conversation_resolution.enabled == true and
             .enforce_admins.enabled == true and
             .allow_force_pushes.enabled == false and
-            .allow_deletions.enabled == false
+            .allow_deletions.enabled == false and
+            ([.required_status_checks.contexts[]] | sort) ==
+              ([
+                "CodeQL",
+                "baseline",
+                "codeql",
+                "containers",
+                "dast",
+                "database",
+                "recovery-transport",
+                "supply-chain",
+                "woocommerce-runtime (current-hpos)",
+                "woocommerce-runtime (current-legacy)",
+                "woocommerce-runtime (minimum-hpos)",
+                "woocommerce-runtime (minimum-legacy)"
+              ] | sort) and
+            ([.required_status_checks.checks[] | {context, app_id}] | sort_by(.context, .app_id)) ==
+              ([
+                {context: "CodeQL", app_id: 57789},
+                {context: "baseline", app_id: 15368},
+                {context: "codeql", app_id: 15368},
+                {context: "containers", app_id: 15368},
+                {context: "dast", app_id: 15368},
+                {context: "database", app_id: 15368},
+                {context: "recovery-transport", app_id: 15368},
+                {context: "supply-chain", app_id: 15368},
+                {context: "woocommerce-runtime (current-hpos)", app_id: 15368},
+                {context: "woocommerce-runtime (current-legacy)", app_id: 15368},
+                {context: "woocommerce-runtime (minimum-hpos)", app_id: 15368},
+                {context: "woocommerce-runtime (minimum-legacy)", app_id: 15368}
+              ] | sort_by(.context, .app_id))
           ' <<<"$protection" >/dev/null
 
           check_runs="$(gh api -H "X-GitHub-Api-Version: $api_version" "repos/$repository/commits/$CANDIDATE_SHA/check-runs?per_page=100")"
@@ -106,25 +137,87 @@ jobs:
             }
           done
 
-          protected_tag_ruleset=false
+          creation_ruleset_id=""
+          immutability_ruleset_id=""
           while IFS= read -r ruleset_id; do
             ruleset="$(gh api -H "X-GitHub-Api-Version: $api_version" "repos/$repository/rulesets/$ruleset_id")"
             if jq -e '
+              .name == "Release tag creation authority" and
               .target == "tag" and
               .enforcement == "active" and
               .conditions.ref_name.include == ["refs/tags/v*.*.*"] and
               (.conditions.ref_name.exclude | length) == 0 and
-              ([.rules[].type] | contains(["creation", "update", "deletion", "required_signatures"])) and
-              all((.bypass_actors // [])[]; .bypass_mode != "exempt")
+              ([.rules[].type] | sort) == ["creation"] and
+              (.bypass_actors // []) == [{
+                actor_id: 120020919,
+                actor_type: "User",
+                bypass_mode: "always"
+              }]
             ' <<<"$ruleset" >/dev/null; then
-              protected_tag_ruleset=true
-              break
+              [[ -z "$creation_ruleset_id" ]]
+              creation_ruleset_id="$ruleset_id"
+            fi
+            if jq -e '
+              .name == "Signed immutable release tags" and
+              .target == "tag" and
+              .enforcement == "active" and
+              .conditions.ref_name.include == ["refs/tags/v*.*.*"] and
+              (.conditions.ref_name.exclude | length) == 0 and
+              ([.rules[].type] | sort) == (["update", "deletion", "required_signatures"] | sort) and
+              ((.bypass_actors // []) | length) == 0
+            ' <<<"$ruleset" >/dev/null; then
+              [[ -z "$immutability_ruleset_id" ]]
+              immutability_ruleset_id="$ruleset_id"
             fi
           done < <(
             gh api --paginate -H "X-GitHub-Api-Version: $api_version" "repos/$repository/rulesets?includes_parents=true" \
               --jq '.[] | select(.target == "tag" and .enforcement == "active") | .id'
           )
-          [[ "$protected_tag_ruleset" == "true" ]]
+          [[ -n "$creation_ruleset_id" ]]
+          [[ -n "$immutability_ruleset_id" ]]
+          [[ "$creation_ruleset_id" != "$immutability_ruleset_id" ]]
+
+          repository_security="$(gh api -H "X-GitHub-Api-Version: $api_version" "repos/$repository")"
+          jq -e '
+            .security_and_analysis.dependabot_security_updates.status == "enabled" and
+            .security_and_analysis.secret_scanning.status == "enabled" and
+            .security_and_analysis.secret_scanning_push_protection.status == "enabled"
+          ' <<<"$repository_security" >/dev/null
+
+          actions_policy="$(gh api -H "X-GitHub-Api-Version: $api_version" "repos/$repository/actions/permissions")"
+          jq -e '
+            .enabled == true and
+            .allowed_actions == "selected" and
+            .sha_pinning_required == true
+          ' <<<"$actions_policy" >/dev/null
+          selected_actions="$(gh api -H "X-GitHub-Api-Version: $api_version" "repos/$repository/actions/permissions/selected-actions")"
+          jq -e '
+            .github_owned_allowed == false and
+            .verified_allowed == false and
+            (.patterns_allowed | sort) == ([
+              "actions/attest-build-provenance@*",
+              "actions/checkout@*",
+              "actions/download-artifact@*",
+              "actions/setup-node@*",
+              "actions/upload-artifact@*",
+              "anchore/sbom-action@*",
+              "aquasecurity/trivy-action@*",
+              "github/codeql-action@*"
+            ] | sort)
+          ' <<<"$selected_actions" >/dev/null
+
+          gh api -H "X-GitHub-Api-Version: $api_version" "repos/$repository/vulnerability-alerts" >/dev/null
+          dependabot_updates="$(gh api -H "X-GitHub-Api-Version: $api_version" "repos/$repository/automated-security-fixes")"
+          jq -e '.enabled == true and .paused == false' <<<"$dependabot_updates" >/dev/null
+          private_reporting="$(gh api -H "X-GitHub-Api-Version: $api_version" "repos/$repository/private-vulnerability-reporting")"
+          jq -e '.enabled == true' <<<"$private_reporting" >/dev/null
+
+          open_secret_alerts="$(gh api --paginate -H "X-GitHub-Api-Version: $api_version" "repos/$repository/secret-scanning/alerts?state=open&per_page=100" --jq '.[].number')"
+          open_dependabot_alerts="$(gh api --paginate -H "X-GitHub-Api-Version: $api_version" "repos/$repository/dependabot/alerts?state=open&per_page=100" --jq '.[].number')"
+          open_code_alerts="$(gh api --paginate -H "X-GitHub-Api-Version: $api_version" "repos/$repository/code-scanning/alerts?state=open&per_page=100" --jq '.[].number')"
+          [[ -z "$open_secret_alerts" ]]
+          [[ -z "$open_dependabot_alerts" ]]
+          [[ -z "$open_code_alerts" ]]
 
           release_environment="$(gh api -H "X-GitHub-Api-Version: $api_version" "repos/$repository/environments/release")"
           jq -e '

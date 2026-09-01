@@ -19,6 +19,8 @@ const evidencePath =
   "docs/plan/evidence/M15/release-policy-audit-2026-09-01.yaml";
 const hardeningEvidencePath =
   "docs/plan/evidence/M15/release-policy-hardening-2026-09-01.yaml";
+const securityHardeningEvidencePath =
+  "docs/plan/evidence/M15/repository-security-hardening-2026-09-01.yaml";
 const validationCommand = "npm run release-policy:audit:validate";
 const commitPattern = /^[0-9a-f]{40}$/u;
 const timestampPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/u;
@@ -55,6 +57,26 @@ const expectedHardeningGates = [
   "supply and independently permission-review the read-only policy token",
   "close release-security and reciprocal-licence obligations",
   "approve the exact release separately from deployment",
+];
+const expectedSecurityHardeningGates = [
+  "add an eligible independent repository reviewer and obtain approval on the exact candidate",
+  "create and verify the signed annotated version tag at exact approved main",
+  "create the protected release environment",
+  "configure an independent environment reviewer and prevent self-review",
+  "independently verify environment administrator bypass is disabled",
+  "supply and independently permission-review the expanded read-only policy token",
+  "close release-security and reciprocal-licence obligations",
+  "approve the exact release separately from deployment",
+];
+const expectedActionPatterns = [
+  "actions/attest-build-provenance@*",
+  "actions/checkout@*",
+  "actions/download-artifact@*",
+  "actions/setup-node@*",
+  "actions/upload-artifact@*",
+  "anchore/sbom-action@*",
+  "aquasecurity/trivy-action@*",
+  "github/codeql-action@*",
 ];
 
 function fail(message) {
@@ -636,6 +658,350 @@ function validateHardening(document, audit) {
   }
 }
 
+function validateSecurityHardening(document, hardening) {
+  exactKeys(
+    document,
+    [
+      "schema",
+      "status",
+      "observedAt",
+      "precondition",
+      "repository",
+      "actionsPolicy",
+      "securityFeatures",
+      "alertTriage",
+      "releaseBoundary",
+      "mutation",
+      "remainingGates",
+    ],
+    "repository security hardening evidence",
+  );
+  if (
+    document.schema !== "starfiniti.github-repository-security-hardening.v1" ||
+    document.status !== "hardened" ||
+    document.observedAt !== "2026-09-01T10:44:39Z" ||
+    exactUtc(document.observedAt, "security hardening observedAt") <=
+      exactUtc(hardening.observedAt, "hardening observedAt")
+  ) {
+    fail("repository security hardening identity or chronology differs");
+  }
+
+  exactKeys(
+    document.precondition,
+    ["path", "sha256"],
+    "security hardening precondition",
+  );
+  const hardeningDigest = createHash("sha256")
+    .update(readFileSync(join(root, hardeningEvidencePath)))
+    .digest("hex");
+  if (
+    document.precondition.path !== hardeningEvidencePath ||
+    document.precondition.sha256 !== hardeningDigest ||
+    hardeningDigest !==
+      "6d56b16c3a44e33d5fab60c3271aa0d4c4e058bcb3c5127e2309ae1d519a7fc5"
+  ) {
+    fail("repository security hardening precondition binding differs");
+  }
+
+  exactKeys(
+    document.repository,
+    [
+      "owner",
+      "name",
+      "visibility",
+      "defaultBranch",
+      "observedMainCommit",
+      "evidenceBranchHead",
+    ],
+    "security hardening repository",
+  );
+  if (
+    document.repository.owner !== "Starfiniti" ||
+    document.repository.name !== "starfiniti-loyalty" ||
+    document.repository.visibility !== "public" ||
+    document.repository.defaultBranch !== "main" ||
+    document.repository.observedMainCommit !==
+      "c85d93d0e6e0273543078050e697f04309f11d93" ||
+    document.repository.evidenceBranchHead !==
+      "3dd71c26b08741800b67f9d82bd8cbae8beb7fcc" ||
+    !commitPattern.test(document.repository.observedMainCommit ?? "") ||
+    !commitPattern.test(document.repository.evidenceBranchHead ?? "")
+  ) {
+    fail("repository security hardening repository identity differs");
+  }
+
+  exactKeys(
+    document.actionsPolicy,
+    [
+      "enabled",
+      "allowedActions",
+      "shaPinningRequired",
+      "defaultWorkflowPermissions",
+      "canApprovePullRequestReviews",
+      "githubOwnedAllowed",
+      "verifiedCreatorsAllowed",
+      "patternsAllowed",
+      "workflowActionReferences",
+      "uniqueWorkflowActionReferences",
+      "unpinnedWorkflowActionReferences",
+    ],
+    "security hardening actions policy",
+  );
+  if (
+    document.actionsPolicy.enabled !== true ||
+    document.actionsPolicy.allowedActions !== "selected" ||
+    document.actionsPolicy.shaPinningRequired !== true ||
+    document.actionsPolicy.defaultWorkflowPermissions !== "read" ||
+    document.actionsPolicy.canApprovePullRequestReviews !== false ||
+    document.actionsPolicy.githubOwnedAllowed !== false ||
+    document.actionsPolicy.verifiedCreatorsAllowed !== false ||
+    JSON.stringify(document.actionsPolicy.patternsAllowed) !==
+      JSON.stringify(expectedActionPatterns) ||
+    document.actionsPolicy.workflowActionReferences !== 41 ||
+    document.actionsPolicy.uniqueWorkflowActionReferences !== 9 ||
+    document.actionsPolicy.unpinnedWorkflowActionReferences !== 0
+  ) {
+    fail("repository actions policy differs");
+  }
+
+  exactKeys(
+    document.securityFeatures,
+    [
+      "vulnerabilityAlertsEnabled",
+      "dependabotSecurityUpdatesEnabled",
+      "dependabotSecurityUpdatesPaused",
+      "secretScanningEnabled",
+      "secretScanningPushProtectionEnabled",
+      "privateVulnerabilityReportingEnabled",
+      "nonProviderPatternScanningEnabled",
+      "validityChecksEnabled",
+      "unavailableOptionsClaimed",
+    ],
+    "repository security features",
+  );
+  if (
+    document.securityFeatures.vulnerabilityAlertsEnabled !== true ||
+    document.securityFeatures.dependabotSecurityUpdatesEnabled !== true ||
+    document.securityFeatures.dependabotSecurityUpdatesPaused !== false ||
+    document.securityFeatures.secretScanningEnabled !== true ||
+    document.securityFeatures.secretScanningPushProtectionEnabled !== true ||
+    document.securityFeatures.privateVulnerabilityReportingEnabled !== true ||
+    document.securityFeatures.nonProviderPatternScanningEnabled !== false ||
+    document.securityFeatures.validityChecksEnabled !== false ||
+    document.securityFeatures.unavailableOptionsClaimed !== false
+  ) {
+    fail("repository security feature state differs or is overclaimed");
+  }
+
+  exactKeys(
+    document.alertTriage,
+    ["openDependabotAlerts", "openCodeScanningAlerts", "secretScanning"],
+    "repository alert triage",
+  );
+  exactKeys(
+    document.alertTriage.secretScanning,
+    [
+      "discovered",
+      "resolved",
+      "open",
+      "resolution",
+      "externalCredentialRotated",
+      "locations",
+      "rationale",
+    ],
+    "secret scanning triage",
+  );
+  if (
+    document.alertTriage.openDependabotAlerts !== 0 ||
+    document.alertTriage.openCodeScanningAlerts !== 0 ||
+    document.alertTriage.secretScanning.discovered !== 2 ||
+    document.alertTriage.secretScanning.resolved !== 2 ||
+    document.alertTriage.secretScanning.open !== 0 ||
+    document.alertTriage.secretScanning.resolution !== "used_in_tests" ||
+    document.alertTriage.secretScanning.externalCredentialRotated !== false ||
+    document.alertTriage.secretScanning.rationale !==
+      "Both detections are deterministic synthetic Stripe-format unit-test fixtures constructed from fixed constants or repeat operations. Neither value was issued by Stripe or used outside local verification."
+  ) {
+    fail("repository alert triage differs or overclaims credential handling");
+  }
+  const expectedLocations = [
+    {
+      alertNumber: 1,
+      path: "apps/dashboard/lib/server/stripe-billing-webhook.test.ts",
+      line: 17,
+      commit: "679d7eb7bce3bc31c38559f6cf0e4d5cf2025e60",
+    },
+    {
+      alertNumber: 2,
+      path: "apps/dashboard/lib/server/stripe-billing-webhook.test.ts",
+      line: 104,
+      commit: "679d7eb7bce3bc31c38559f6cf0e4d5cf2025e60",
+    },
+  ];
+  if (
+    !Array.isArray(document.alertTriage.secretScanning.locations) ||
+    JSON.stringify(document.alertTriage.secretScanning.locations) !==
+      JSON.stringify(expectedLocations)
+  ) {
+    fail("secret scanning locations differ");
+  }
+  for (const location of document.alertTriage.secretScanning.locations) {
+    exactKeys(
+      location,
+      ["alertNumber", "path", "line", "commit"],
+      "secret scanning location",
+    );
+  }
+
+  exactKeys(
+    document.releaseBoundary,
+    [
+      "workflowId",
+      "workflowState",
+      "releaseEnvironmentExists",
+      "policyTokenConfigured",
+      "releaseCreated",
+      "deploymentChanged",
+      "productionChanged",
+    ],
+    "security hardening release boundary",
+  );
+  if (
+    document.releaseBoundary.workflowId !== 333373957 ||
+    document.releaseBoundary.workflowState !== "disabled_manually" ||
+    document.releaseBoundary.releaseEnvironmentExists !== false ||
+    document.releaseBoundary.policyTokenConfigured !== false ||
+    document.releaseBoundary.releaseCreated !== false ||
+    document.releaseBoundary.deploymentChanged !== false ||
+    document.releaseBoundary.productionChanged !== false
+  ) {
+    fail("repository security hardening release boundary differs");
+  }
+
+  exactKeys(
+    document.mutation,
+    [
+      "repositorySecurityPolicyChanged",
+      "actionsPolicyChanged",
+      "vulnerabilityAlertsChanged",
+      "dependabotSecurityUpdatesChanged",
+      "secretScanningChanged",
+      "privateVulnerabilityReportingChanged",
+      "alertDispositionChanged",
+      "branchProtectionChanged",
+      "tagRulesetsChanged",
+      "workflowEnabled",
+      "tagCreated",
+      "releaseCreated",
+      "deploymentChanged",
+      "productionChanged",
+      "rollback",
+    ],
+    "repository security hardening mutation",
+  );
+  if (
+    document.mutation.repositorySecurityPolicyChanged !== true ||
+    document.mutation.actionsPolicyChanged !== true ||
+    document.mutation.vulnerabilityAlertsChanged !== true ||
+    document.mutation.dependabotSecurityUpdatesChanged !== true ||
+    document.mutation.secretScanningChanged !== true ||
+    document.mutation.privateVulnerabilityReportingChanged !== true ||
+    document.mutation.alertDispositionChanged !== true ||
+    document.mutation.branchProtectionChanged !== false ||
+    document.mutation.tagRulesetsChanged !== false ||
+    document.mutation.workflowEnabled !== false ||
+    document.mutation.tagCreated !== false ||
+    document.mutation.releaseCreated !== false ||
+    document.mutation.deploymentChanged !== false ||
+    document.mutation.productionChanged !== false
+  ) {
+    fail("repository security hardening mutation boundary differs");
+  }
+
+  exactKeys(
+    document.mutation.rollback,
+    [
+      "actionsPolicy",
+      "vulnerabilityAlerts",
+      "dependabotSecurityUpdates",
+      "secretScanning",
+      "privateVulnerabilityReporting",
+      "alertDisposition",
+    ],
+    "repository security hardening rollback",
+  );
+  const rollback = document.mutation.rollback;
+  exactKeys(
+    rollback.actionsPolicy,
+    ["method", "endpoint", "payload"],
+    "actions policy rollback",
+  );
+  exactKeys(
+    rollback.actionsPolicy.payload,
+    ["enabled", "allowed_actions", "sha_pinning_required"],
+    "actions policy rollback payload",
+  );
+  exactKeys(
+    rollback.vulnerabilityAlerts,
+    ["method", "endpoint"],
+    "vulnerability alerts rollback",
+  );
+  exactKeys(
+    rollback.dependabotSecurityUpdates,
+    ["method", "endpoint"],
+    "dependabot updates rollback",
+  );
+  exactKeys(
+    rollback.secretScanning,
+    ["method", "endpoint", "statuses"],
+    "secret scanning rollback",
+  );
+  exactKeys(
+    rollback.secretScanning.statuses,
+    ["secretScanning", "pushProtection"],
+    "secret scanning rollback statuses",
+  );
+  exactKeys(
+    rollback.privateVulnerabilityReporting,
+    ["method", "endpoint"],
+    "private vulnerability reporting rollback",
+  );
+  if (
+    rollback.actionsPolicy.method !== "PUT" ||
+    rollback.actionsPolicy.endpoint !==
+      "repos/Starfiniti/starfiniti-loyalty/actions/permissions" ||
+    rollback.actionsPolicy.payload.enabled !== true ||
+    rollback.actionsPolicy.payload.allowed_actions !== "all" ||
+    rollback.actionsPolicy.payload.sha_pinning_required !== false ||
+    rollback.vulnerabilityAlerts.method !== "DELETE" ||
+    rollback.vulnerabilityAlerts.endpoint !==
+      "repos/Starfiniti/starfiniti-loyalty/vulnerability-alerts" ||
+    rollback.dependabotSecurityUpdates.method !== "DELETE" ||
+    rollback.dependabotSecurityUpdates.endpoint !==
+      "repos/Starfiniti/starfiniti-loyalty/automated-security-fixes" ||
+    rollback.secretScanning.method !== "PATCH" ||
+    rollback.secretScanning.endpoint !==
+      "repos/Starfiniti/starfiniti-loyalty" ||
+    rollback.secretScanning.statuses.secretScanning !== "disabled" ||
+    rollback.secretScanning.statuses.pushProtection !== "disabled" ||
+    rollback.privateVulnerabilityReporting.method !== "DELETE" ||
+    rollback.privateVulnerabilityReporting.endpoint !==
+      "repos/Starfiniti/starfiniti-loyalty/private-vulnerability-reporting" ||
+    rollback.alertDisposition !==
+      "Resolution comments are append-only audit evidence. Reopening a verified test fixture is not a security rollback and requires a separately reviewed reason."
+  ) {
+    fail("repository security hardening rollback differs");
+  }
+
+  if (
+    !Array.isArray(document.remainingGates) ||
+    JSON.stringify(document.remainingGates) !==
+      JSON.stringify(expectedSecurityHardeningGates)
+  ) {
+    fail("repository security hardening remaining gates differ");
+  }
+}
+
 function validateBindings() {
   const rootPackage = JSON.parse(
     readFileSync(join(root, "package.json"), "utf8"),
@@ -656,19 +1022,26 @@ function validateBindings() {
   );
   if (
     !m15?.risks?.includes("R-064") ||
+    !m15?.risks?.includes("R-065") ||
     !m15?.docs?.includes(
       "docs/architecture/ADR/0115-default-branch-controlled-sealed-releases.md",
+    ) ||
+    !m15?.docs?.includes(
+      "docs/architecture/ADR/0117-repository-native-continuous-security-controls.md",
     ) ||
     !m15?.docs?.includes("docs/operations/RELEASE.md") ||
     !security?.verification?.includes(validationCommand) ||
     !security?.evidence?.includes(evidencePath) ||
     !security?.evidence?.includes(hardeningEvidencePath) ||
+    !security?.evidence?.includes(securityHardeningEvidencePath) ||
     !security?.evidence?.includes("scripts/validate-release-policy-audit.mjs")
   ) {
     fail("M15 task binding differs");
   }
   const risks = readFileSync(join(root, "RISKS.md"), "utf8");
-  if (!risks.includes("| R-064 |")) fail("R-064 is missing");
+  if (!risks.includes("| R-064 |") || !risks.includes("| R-065 |")) {
+    fail("release-policy risks are missing");
+  }
 }
 
 function selfTestAudit(document) {
@@ -771,18 +1144,106 @@ function selfTestHardening(document, audit) {
   return cases.length;
 }
 
+function selfTestSecurityHardening(document, hardening) {
+  const cases = [
+    ["unknown security hardening field", (value) => (value.extra = true)],
+    [
+      "security precondition drift",
+      (value) => (value.precondition.sha256 = "0".repeat(64)),
+    ],
+    [
+      "unrestricted actions",
+      (value) => (value.actionsPolicy.allowedActions = "all"),
+    ],
+    [
+      "unpinned actions",
+      (value) => (value.actionsPolicy.shaPinningRequired = false),
+    ],
+    [
+      "implicit GitHub-owned action expansion",
+      (value) => (value.actionsPolicy.githubOwnedAllowed = true),
+    ],
+    [
+      "verified creator expansion",
+      (value) => (value.actionsPolicy.verifiedCreatorsAllowed = true),
+    ],
+    [
+      "third-party pattern expansion",
+      (value) => value.actionsPolicy.patternsAllowed.push("example/action@*"),
+    ],
+    [
+      "secret scanning disabled",
+      (value) => (value.securityFeatures.secretScanningEnabled = false),
+    ],
+    [
+      "dependabot disabled",
+      (value) =>
+        (value.securityFeatures.dependabotSecurityUpdatesEnabled = false),
+    ],
+    [
+      "unavailable feature overclaim",
+      (value) =>
+        (value.securityFeatures.nonProviderPatternScanningEnabled = true),
+    ],
+    [
+      "open secret alert",
+      (value) => (value.alertTriage.secretScanning.open = 1),
+    ],
+    [
+      "false credential rotation",
+      (value) =>
+        (value.alertTriage.secretScanning.externalCredentialRotated = true),
+    ],
+    [
+      "alert location drift",
+      (value) => (value.alertTriage.secretScanning.locations[0].line = 18),
+    ],
+    [
+      "release workflow enablement",
+      (value) => (value.releaseBoundary.workflowState = "active"),
+    ],
+    [
+      "production mutation overclaim",
+      (value) => (value.mutation.productionChanged = true),
+    ],
+    [
+      "rollback weakening",
+      (value) =>
+        (value.mutation.rollback.actionsPolicy.payload.allowed_actions =
+          "selected"),
+    ],
+    ["missing security hardening gate", (value) => value.remainingGates.pop()],
+  ];
+  for (const [label, mutate] of cases) {
+    const candidate = structuredClone(document);
+    mutate(candidate);
+    let rejected = false;
+    try {
+      validateSecurityHardening(candidate, hardening);
+    } catch {
+      rejected = true;
+    }
+    if (!rejected) fail(`self-test accepted ${label}`);
+  }
+  return cases.length;
+}
+
 const args = process.argv.slice(2);
 if (args.some((argument) => argument !== "--self-test")) {
   fail("usage: node scripts/validate-release-policy-audit.mjs [--self-test]");
 }
 const audit = readEvidence(evidencePath);
 const hardening = readEvidence(hardeningEvidencePath);
+const securityHardening = readEvidence(securityHardeningEvidencePath);
 validateAudit(audit);
 validateHardening(hardening, audit);
+validateSecurityHardening(securityHardening, hardening);
 validateBindings();
 const cases = args.includes("--self-test")
-  ? selfTestAudit(audit) + selfTestHardening(hardening, audit)
+  ? selfTestAudit(audit) +
+    selfTestHardening(hardening, audit) +
+    selfTestSecurityHardening(securityHardening, hardening)
   : 0;
 console.log(
-  `Validated the disabled release workflow from absent controls through strict branch and immutable tag hardening${cases ? ` with ${cases} adversarial cases` : ""}; eight external release gates remain and no tag, release, deployment, or production mutation is claimed.`,
+  `Validated the disabled release workflow from absent controls through strict branch, immutable tag, Actions, dependency, secret-scanning, alert-triage, and private-reporting hardening${cases ? ` with ${cases} adversarial cases` : ""}; eight external release gates remain and no tag, release, deployment, or production mutation is claimed.`,
 );

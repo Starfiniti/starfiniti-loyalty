@@ -3225,6 +3225,7 @@ tasks:
         R-050,
         R-052,
         R-064,
+        R-065,
       ]
     docs:
       [
@@ -3233,6 +3234,7 @@ tasks:
         docs/operations/RUNBOOKS.md,
         docs/testing/TEST_STRATEGY.md,
         docs/architecture/ADR/0115-default-branch-controlled-sealed-releases.md,
+        docs/architecture/ADR/0117-repository-native-continuous-security-controls.md,
       ]
     evidence: [docs/plan/evidence/M15/README.md]
     slices:
@@ -3409,6 +3411,7 @@ tasks:
             docs/plan/evidence/M15/security.yaml,
             docs/plan/evidence/M15/release-policy-audit-2026-09-01.yaml,
             docs/plan/evidence/M15/release-policy-hardening-2026-09-01.yaml,
+            docs/plan/evidence/M15/repository-security-hardening-2026-09-01.yaml,
             scripts/validate-release-policy-audit.mjs,
             docs/plan/evidence/M15/runs/security-medium-triage-f9c83ac.yaml,
             docs/plan/evidence/M15/runs/security-medium-triage-188d9d8.yaml,

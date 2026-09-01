@@ -15,6 +15,18 @@ the explicitly recorded owner through audited non-exempt bypass. The second has
 no bypass and independently requires a signature while denying update and
 deletion, so creation authority cannot bypass signature or immutability.
 
+Repository-native security is also fail-closed. GitHub Actions accepts only
+the eight action repositories currently used by repository workflows, denies
+implicit GitHub-owned and verified-creator trust, and requires every action
+reference to use a full commit SHA.
+Dependency alerts, unpaused Dependabot security updates, secret scanning, push
+protection, and private vulnerability reporting are enabled. The two alerts
+found during enablement were deterministic Stripe-format unit-test fixtures;
+they were resolved as `used_in_tests`, no external credential was involved, and
+the current Dependabot, code-scanning, and secret-scanning open-alert counts are
+zero. Non-provider pattern scanning and validity checks remain reported disabled
+and are not claimed as release controls.
+
 Only one administrator/collaborator currently exists, so the required branch
 approval is not satisfiable yet. This is intentionally fail-closed. Add an
 eligible independent collaborator and obtain that person's approval; do not
@@ -24,7 +36,10 @@ security/licence closure, and explicit release approval also remain absent.
 
 `release-policy-hardening-2026-09-01.yaml` records exact rule identities and
 rollback endpoints. `npm run release-policy:audit:validate` validates it against
-the immutable precondition snapshot.
+the immutable precondition snapshot. The chronological successor
+`repository-security-hardening-2026-09-01.yaml` records the Actions, dependency,
+secret-scanning, alert-triage, and private-reporting state plus exact rollback
+endpoints.
 
 ### Pre-hardening audited state — 2026-09-01
 
@@ -44,8 +59,9 @@ evidence and a fail-closed checklist, not release approval.
 
 - Keep the current `main` protection exact. Add an eligible independent reviewer and obtain one approval; never remove checks, signature enforcement, last-pusher separation, conversation resolution, force-push/deletion blocks, or administrator enforcement to bypass the missing reviewer.
 - Keep both active `refs/tags/v*.*.*` rulesets. Creation authority must remain limited to the explicit audited non-exempt actor; the separate no-bypass ruleset must continue enforcing signatures and blocking update/deletion.
+- Keep Actions restricted to the exact selected-action policy and full-SHA references. Keep vulnerability alerts, unpaused Dependabot security updates, secret scanning, push protection, and private vulnerability reporting enabled; resolve or remediate every open repository security alert before release.
 - Create a `release` environment restricted to protected branches. Add an independent required reviewer, enable prevent-self-review, and disable administrator bypass.
-- Create a fine-grained `RELEASE_POLICY_TOKEN` secret with repository Administration, Actions, Checks, Commit statuses, and Contents permissions set to read only. It must not write contents, tags, packages, releases, actions, environments, or any other repository resource.
+- Create a fine-grained `RELEASE_POLICY_TOKEN` secret with repository Administration, Actions, Checks, Code scanning alerts, Commit statuses, Contents, Dependabot alerts, and Secret scanning alerts permissions set to read only. It must not write contents, tags, packages, releases, alerts, actions, environments, or any other repository resource.
 - Close the release-security and licence obligations tracked in `RISKS.md`, and obtain the explicit release/production approvals required by the enterprise task graph.
 
 The preflight checks every API-visible control again. GitHub's environment read response does not expose the administrator-bypass toggle, so the independent release owner must verify that setting in the environment UI before each enablement window. A green preflight is evidence, not permission to weaken any control.

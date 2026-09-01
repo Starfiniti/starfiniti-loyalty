@@ -1,5 +1,18 @@
 # Changelog
 
+- Enabled repository-native continuous security without enabling Release.
+  Actions now allow only the eight action repositories used by current workflows,
+  deny implicit GitHub-owned and verified-creator trust, and require full-SHA
+  pinning. Vulnerability alerts, unpaused Dependabot security updates, secret
+  scanning, push protection, and private vulnerability reporting are live. Two
+  deterministic Stripe-format unit-test
+  fixtures were resolved as `used_in_tests`; zero Dependabot, code-scanning, or
+  secret-scanning alerts remain open and no external credential rotation is
+  claimed. ADR-0117 and the chronological evidence successor extend release
+  preflight to enforce these controls, exact branch check/app identities, signed
+  and last-push approval policy, and the two distinct tag rulesets. Release,
+  deployment, and production remain unchanged.
+
 - Enforced the repository-side release authority boundary without enabling
   Release. Protected `main` now requires twelve exact app-bound checks, signed
   commits, one review, stale-review dismissal, last-pusher separation, resolved

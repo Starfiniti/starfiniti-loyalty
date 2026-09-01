@@ -1,5 +1,36 @@
 # Iteration Log
 
+## 2026-09-01 — Repository-native security and release-preflight correction
+
+- A live repository audit found GitHub Actions allowed every action without
+  platform-enforced SHA pinning, while vulnerability alerts, Dependabot security
+  updates, secret scanning, push protection, and private vulnerability reporting
+  were disabled. All 41 current workflow action references were already pinned
+  to full commit SHAs across nine unique references.
+- Restricted Actions to the eight action repositories used by current workflows,
+  denied implicit GitHub-owned and verified-creator trust, required full-SHA
+  references, enabled vulnerability alerts and unpaused Dependabot security
+  updates, enabled secret scanning and push protection, and enabled private
+  vulnerability reporting. Default workflow permission remains read-only and
+  workflows cannot approve pull requests.
+- Secret scanning found two historical Stripe-format strings at lines 17 and
+  104 of `stripe-billing-webhook.test.ts`. Masked inspection proved both are
+  deterministic synthetic fixtures constructed from constants or repeat
+  operations. They were resolved as `used_in_tests`; no Stripe-issued secret,
+  credential exposure, or rotation is claimed. Dependabot, code-scanning, and
+  secret-scanning now each report zero open alerts.
+- Adversarial review found that the disabled release preflight still demanded
+  creation, update, deletion, and signature rules in one tag ruleset. That could
+  never accept the safer split introduced earlier. The correction requires the
+  exact creation-authority and no-bypass immutability rulesets separately, binds
+  the exact twelve check/app pairs, signatures and last-push approval, rechecks
+  repository security policy, and fails on any open repository alert.
+- ADR-0117, chronological minimized evidence, rollback endpoints, and expanded
+  adversarial validation preserve the boundary. Non-provider pattern scanning
+  and validity checks remain reported disabled and are not overclaimed. Release
+  workflow `333373957` remains disabled; no tag, release, deployment, or
+  production state changed.
+
 ## 2026-09-01 — Fail-closed GitHub branch and release-tag policy
 
 - Reconstructed current repository authority, exact check providers, settings,

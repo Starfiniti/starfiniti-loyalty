@@ -1,5 +1,17 @@
 # Execution Plan
 
+ADR-0117 is the current safe M15 repository-security slice. GitHub Actions is
+restricted to the eight action repositories currently used by repository workflows
+and requires full-SHA references. Dependency alerts and unpaused security updates,
+secret scanning and push protection, and private vulnerability reporting are
+live. The two historical detections were synthetic Stripe-format test fixtures
+and are resolved as `used_in_tests`; all three repository alert classes now have
+zero open items. The disabled release preflight must revalidate the exact action
+policy, repository security features, zero alerts, exact twelve branch checks,
+signed/last-push policy, and both distinct tag rulesets before release. This does
+not remove the independent reviewer, environment, expanded read-only token,
+tag, security/licence, or approval gates.
+
 The repository-side release boundary is now fail-closed. Protected `main`
 requires all twelve exact checks, verified signatures, one independent approval,
 stale-review dismissal, last-pusher separation, resolved conversations, and
@@ -14,8 +26,11 @@ approval remain open.
 The earlier `2026-09-01T09:09:45Z` read-only audit is retained as immutable
 precondition evidence rather than rewritten. Its successor
 `release-policy-hardening-2026-09-01.yaml` records the exact policy mutation and
-rollback endpoints. `npm run release-policy:audit:validate` must validate both
-states and continue rejecting publication or production overclaim.
+rollback endpoints. The next successor,
+`repository-security-hardening-2026-09-01.yaml`, binds the external security
+settings, minimized alert triage, and rollback. `npm run
+release-policy:audit:validate` must validate all three states and continue
+rejecting publication or production overclaim.
 
 Production containment on 2026-09-01 disabled only the scheduled whole-host raw
 Borg timer after proving it still shared the authoritative PostgreSQL archive

@@ -72,6 +72,18 @@ the environment, independent environment reviewer, policy token, exact release
 tag, security/licence closure, and owner approval remain external. Release stays
 disabled, and no release or production authority was exercised.
 
+ADR-0117 and
+`docs/plan/evidence/M15/repository-security-hardening-2026-09-01.yaml` add the
+next chronological external-policy layer: selected full-SHA Actions, dependency
+alerts and unpaused security updates, secret scanning and push protection,
+private vulnerability reporting, and zero open repository security alerts. The
+release preflight now checks those controls with the expanded read-only policy
+token. It also validates the two complementary tag rulesets separately. This is
+required because combining creation authority and signature enforcement in one
+bypassed ruleset would let the creator bypass signatures, while requiring all
+four rules in one non-existent ruleset would make the hardened split impossible
+to release through.
+
 ## References
 
 - [GitHub `repository_dispatch`](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#repository_dispatch)

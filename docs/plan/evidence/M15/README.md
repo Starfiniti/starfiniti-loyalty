@@ -11,6 +11,21 @@ reviewers, policy token, exact signed tag, security/licence closure, and owner
 approval remain absent. The workflow remains disabled and no tag, release,
 deployment, or production state changed.
 
+The next chronological successor,
+`repository-security-hardening-2026-09-01.yaml`, proves that Actions now accepts
+only the eight action repositories used by current workflows, denies implicit
+GitHub-owned and verified-creator trust, and requires full-SHA references.
+Vulnerability alerts, unpaused Dependabot security updates, secret scanning,
+push protection, and private vulnerability reporting are live. Enablement found
+two deterministic Stripe-format unit-test fixtures; both were resolved as
+`used_in_tests`, zero repository security alerts remain open, and no
+Stripe-issued credential or rotation is claimed. ADR-0117 extends the disabled
+release preflight to reject drift in these settings or any open Dependabot,
+code-scanning, or secret-scanning alert. It also repairs the preflight to require
+the two complementary tag rulesets separately; the earlier single-ruleset test
+could never accept the safer split. Non-provider patterns and validity checks
+remain disabled and are not overclaimed. R-065 tracks this boundary.
+
 The 2026-09-01 VM 971 investigation is retained in
 `backup-traffic-containment-2026-09-01.yaml`. It proves that the multi-terabyte
 counter and 249.6 MB/s peak are historical 2026-08-14 evidence, while the
