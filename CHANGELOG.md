@@ -1,5 +1,15 @@
 # Changelog
 
+- Stabilized the M15 capacity adapter self-test after repeated full-suite and
+  stress execution reproduced an event-loop-only false failure. All four
+  adapters and every scenario decision passed; the sub-second Windows harness
+  alone occasionally exceeded the real 25 ms production-driver threshold. The
+  canonical 24-minute workload remains unchanged at 25 ms. Only the loopback
+  self-test now uses a bounded 250 ms scheduler ceiling, while failures retain
+  minimized adapter, scenario-decision, and driver-decision diagnostics without
+  exposing authority, origin, payload, or credentials. One hundred consecutive
+  post-fix stress iterations pass.
+
 - Added an append-only read-only production follow-up for the VM 971 backup
   incident. A ten-second tap sample, complete latest-day/month RRD, five
   consecutive PostgreSQL archive completions, timer state, and public
