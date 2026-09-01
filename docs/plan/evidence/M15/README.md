@@ -24,6 +24,21 @@ Repository validators and the Linux runtime fixture grant no production
 activation, interface discovery, receiver, backup, database, checkout, or
 loyalty authority. R-004 and R-049 stay open.
 
+Exact implementation `f822a7933ac207e83ec780b3cbe1c8cdb704cedb`
+passed CI `33518906422`, Security `33518906410`, and independent CodeQL
+`99893417542`. Security job `99892856858` executed the semantic collector's
+positive, argument-rejection, and wrong-direction Linux runtime fixtures and
+artifact `9804957219` retains the exact 1,302-byte observability report under
+SHA-256 `66800ed2f7691a7d76016db4864fb9f1b56e90a3e29607e92c6c467dcf72a25f`;
+the downloaded archive is bound under SHA-256
+`fc11949574cfc57d5878593f78e1f0a33e109a6be95234cc961788d899d927e2`.
+A subsequent read-only production check measured 468,904 guest-egress bytes
+over twenty seconds and a 10,376.71 bytes/s one-hour RRD peak. The whole-VM
+timer remained disabled/inactive and the latest PostgreSQL backup service
+result was success with exit status zero. This refresh changes neither the
+10/16 deployment score nor the 14/35 operations score; live activation and
+independent delivery/reconciliation evidence remain absent.
+
 The chronological release-policy successor
 `release-policy-hardening-2026-09-01.yaml` proves strict app-bound protection on
 `main`, signed commits, review/last-pusher separation, stale-review dismissal,
@@ -114,9 +129,10 @@ existing operations catalogue. Exact current image indexes bind Prometheus,
 Alertmanager, Grafana, blackbox_exporter, and postgres_exporter to a hardened
 central Compose plane; an exact native node_exporter archive and non-root unit
 permit only aggregate textfile collection. `observability-deployment.yaml`
-records 10/16 repository checks passing and keeps the clean exact-head Linux
-canary plus approved environment, live targets, receivers, independent
-dead-man, production activation, and full-cycle reconciliation pending.
+records 10/16 repository checks passing. The clean exact-head Linux canary now
+passes and is retained; approved environment, live targets, receivers,
+independent dead-man, production activation, and full-cycle reconciliation
+remain pending.
 Production still has no monitoring service or host exporter, broader
 `operations.yaml` remains 14/35, and this evidence grants no receiver,
 deployment, checkout, database, or loyalty-value authority.

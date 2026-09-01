@@ -26,8 +26,15 @@
   uplink for one minute, while `StarfinitiBackupNetworkCountersMissing` pages
   on any absent input or capture age above 90 seconds. The catalogue is now
   34 signals/29 alerts, the locked dashboard has 14 panels, and focused
-  deployment plus 35-check operations validation passes. Linux CI will execute
-  the collector's positive and fail-closed runtime fixture; production remains
+  deployment plus 35-check operations validation passes. Exact implementation
+  `f822a7933ac207e83ec780b3cbe1c8cdb704cedb` passed CI `33518906422`, Security
+  `33518906410`, independent CodeQL `99893417542`, and the collector's positive
+  and fail-closed Linux runtime fixture. The retained observability canary and
+  artifact now bind that exact implementation. A fresh read-only production
+  sample at `2026-09-01T14:33:35Z` measured only 23,445.2 guest-egress bytes/s
+  over twenty seconds and a 10,376.71 bytes/s one-hour RRD peak; the whole-VM
+  timer remained disabled/inactive and the latest PostgreSQL backup result was
+  successful. Production remains
   unmodified and unmonitored, R-004/R-049 remain open, and all scores remain
   unchanged. Full-gate traversal also found an evidence-lifecycle defect: the
   recurrence validator compared merged historical control digests with the

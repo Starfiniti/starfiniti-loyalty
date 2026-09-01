@@ -1,5 +1,29 @@
 # Iteration Log
 
+## 2026-09-01 — Exact-head semantic collector and live freshness evidence
+
+- Reconciled the previously local-only wording after exact implementation
+  `f822a7933ac207e83ec780b3cbe1c8cdb704cedb` passed CI `33518906422`, Security
+  `33518906410`, and independent CodeQL `99893417542`. Security job
+  `99892856858` ran the positive, argument-rejection, and wrong-direction Linux
+  collector fixtures before the disposable observability stack canary.
+- Retained the exact 1,302-byte canary from artifact `9804957219` under report
+  SHA-256 `66800ed2f7691a7d76016db4864fb9f1b56e90a3e29607e92c6c467dcf72a25f`
+  and downloaded-archive SHA-256
+  `fc11949574cfc57d5878593f78e1f0a33e109a6be95234cc961788d899d927e2`.
+  The deterministic validator now accepts that exact report and provenance
+  instead of the pre-semantic-collector canary.
+- Rechecked production read-only at `2026-09-01T14:33:35Z`. VM 971's approved
+  guest-egress counter advanced by 468,904 bytes over twenty seconds, or
+  23,445.2 bytes/s; its latest one-hour RRD peak was 10,376.71 bytes/s. The
+  whole-VM timer remained disabled/inactive, the PostgreSQL timer remained
+  enabled/active, and the latest PostgreSQL backup service result was success
+  with exit status zero.
+- The 3.605 TB total remains historical cumulative incident evidence, not an
+  active rate. Production still has no monitoring plane; R-004/R-049 remain
+  open, observability deployment stays 10/16, operations stays 14/35, and no
+  score, release, deployment, database, checkout, or loyalty value changed.
+
 ## 2026-09-01 — Semantic backup-network rate guard
 
 - Reconstructed the ranked backlog after the read-only VM 971 follow-up. Every

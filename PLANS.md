@@ -25,6 +25,16 @@ Prometheus alerts, 14 locked dashboard panels, digest-bound collector assets,
 static adversarial cases, and the Linux runtime fixture. Cumulative totals are
 evidence, never rates; no interface or VM identity may enter metrics. This
 slice changes no production state, R-004/R-049 status, or score.
+Exact implementation `f822a7933ac207e83ec780b3cbe1c8cdb704cedb`
+passed CI `33518906422`, Security `33518906410`, and independent CodeQL
+`99893417542`. The retained Security artifact now binds the Linux amd64
+observability report to that commit, while the job executed the semantic
+collector's positive and fail-closed runtime fixtures. A fresh read-only
+production check at `2026-09-01T14:33:35Z` measured only 23,445.2 guest-egress
+bytes/s over twenty seconds and a 10,376.71 bytes/s one-hour RRD peak. The
+whole-VM timer remained disabled/inactive and the latest PostgreSQL backup
+service result was success. These facts correct stale evidence only; they do
+not activate monitoring or close R-004/R-049.
 The recurrence gate must preserve this distinction as the rules evolve:
 already-merged R-004 control revisions validate at their recorded merge commit,
 while the new semantic collector/rules remain current candidate bytes until a
@@ -149,11 +159,12 @@ blackbox_exporter 0.28.0, and postgres_exporter 0.20.1 are bound to exact OCI
 indexes in an isolated hardened Compose plane, while node_exporter 1.12.1 is a
 separate non-root textfile-only native agent. Target files, receivers, Grafana
 administrator material, and PostgreSQL exporter modules remain environment
-owned. A clean Linux amd64 Security-job canary must prove native configuration,
-exact versions, loopback administration, unpublished exporters, and zero
-residue. Repository validation passes 9/16 deployment checks; exact-head Linux,
-approved-host, live-target, receiver, dead-man, activation, and observation
-evidence remain pending. The broader M15 operations gate remains 14/35,
+owned. A clean Linux amd64 Security-job canary proves native configuration,
+exact versions, loopback administration, unpublished exporters, zero residue,
+and the semantic collector runtime fixture at implementation `f822a79`.
+Repository validation passes 10/16 deployment checks; approved-host,
+live-target, receiver, dead-man, activation, and observation evidence remain
+pending. The broader M15 operations gate remains 14/35,
 production has no monitoring plane, and product/module scores do not change.
 Because this slice changed the Security workflow and exact checkout semantics,
 the older exact-head scanner, image, SBOM, DAST, header, freshness, Medium-

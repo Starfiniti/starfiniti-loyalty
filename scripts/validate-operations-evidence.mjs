@@ -1432,7 +1432,8 @@ function validateDocument(
     candidateEvidence.currentProduction?.wholeVmBackupTimerEnabled !== false ||
     candidateEvidence.currentProduction?.postgresBackupTimerEnabled !== true ||
     !commitPattern.test(candidateEvidence.candidate?.commit) ||
-    candidateEvidence.candidate?.branch !== "codex/m15-operations-incidents"
+    candidateEvidence.candidate?.branch !==
+      "codex/m16-transitive-action-regression"
   ) {
     fail("evidence identity production baseline or candidate is invalid");
   }

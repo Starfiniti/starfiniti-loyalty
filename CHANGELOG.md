@@ -21,6 +21,18 @@
   release, production review, independent test/retest, final reconciliation, and
   approval gates remain open; no production state changed.
 
+- Reconciled the semantic backup-network control to exact Linux and fresh
+  production evidence. CI `33518906422`, Security `33518906410`, and independent
+  CodeQL `99893417542` pass at implementation
+  `f822a7933ac207e83ec780b3cbe1c8cdb704cedb`; retained artifact `9804957219`
+  binds the Linux amd64 observability canary while the Security job executes the
+  collector's positive and fail-closed runtime fixtures. A new read-only VM 971
+  sample measured 468,904 guest-egress bytes over twenty seconds and only a
+  10,376.71 bytes/s one-hour RRD peak. The whole-VM timer remains
+  disabled/inactive and the latest PostgreSQL backup service result is success.
+  R-004/R-049, production monitoring activation, M15 scores, release, and
+  loyalty state remain unchanged.
+
 - Added ADR-0120 and a production-disabled semantic network-rate guard for the
   VM 971 incident shape. A hardened non-root oneshot reads only two
   operator-bound Linux network counters, atomically publishes three

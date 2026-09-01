@@ -3609,6 +3609,7 @@ tasks:
             docs/plan/evidence/M15/backup-traffic-read-only-follow-up-2026-09-01.yaml,
             docs/plan/evidence/M15/observability-deployment.yaml,
             docs/plan/evidence/M15/runs/observability-deployment-canary-532458e.json,
+            docs/plan/evidence/M15/runs/observability-deployment-canary-f822a79.json,
             infrastructure/observability/catalog.yaml,
             infrastructure/observability/deployment/plan.yaml,
             infrastructure/observability/compose.yml,

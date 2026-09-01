@@ -1,18 +1,18 @@
 schema: starfiniti.observability-deployment-evidence.v1
 status: in_progress
-observedAt: 2026-09-01T13:53:18Z
+observedAt: 2026-09-01T14:24:55Z
 production:
   monitoringActivated: false
   receiverRoutingActivated: false
   nodeExporterInstalled: false
 claim:
   enabled: false
-  linuxCanaryPath: docs/plan/evidence/M15/runs/observability-deployment-canary-532458e.json
-  linuxCanarySha256: 1053150436c29aca013eab3dd1db6d00e4003972d1c212cfbff9693f4b6a775f
-  linuxCanaryRunId: 33404179664
-  linuxCanaryJobId: 99527528327
-  linuxCanaryArtifactId: 9762587898
-  linuxCanaryArtifactSha256: 982ec5e82aeefb561eccc2fccd52b6d07413ad66c862753c6699ba260dcdd4f2
+  linuxCanaryPath: docs/plan/evidence/M15/runs/observability-deployment-canary-f822a79.json
+  linuxCanarySha256: 66800ed2f7691a7d76016db4864fb9f1b56e90a3e29607e92c6c467dcf72a25f
+  linuxCanaryRunId: 33518906410
+  linuxCanaryJobId: 99892856858
+  linuxCanaryArtifactId: 9804957219
+  linuxCanaryArtifactSha256: fc11949574cfc57d5878593f78e1f0a33e109a6be95234cc961788d899d927e2
 assets:
   - id: plan
     path: infrastructure/observability/deployment/plan.yaml
@@ -89,7 +89,7 @@ checks:
     evidence: Deterministic validation rejects mutable images, public ports, privilege, egress drift, embedded targets or credentials, unsafe probes, semantic-collector path, cadence, authority, topology and output drift, false authority, and digest mismatch; Linux additionally executes positive and fail-closed collector fixtures.
   - id: exact_head_linux_canary
     status: passed
-    evidence: Security run 33404179664 job 99527528327 passed the clean Linux amd64 canary at exact implementation head 532458eab54242649d47d5e6485169830407e058; retained artifact 9762587898 binds exact versions and indexes, promtool and amtool checks, loopback administration, internal-only unpublished Grafana, unpublished exporters, hardened runtimes, false production authority, and zero-residue teardown.
+    evidence: Security run 33518906410 job 99892856858 passed the clean Linux amd64 canary and the semantic counter collector's positive argument-rejection and wrong-direction runtime fixtures at exact implementation head f822a7933ac207e83ec780b3cbe1c8cdb704cedb; retained artifact 9804957219 binds exact versions and indexes, promtool and amtool checks, loopback administration, internal-only unpublished Grafana, unpublished exporters, hardened runtimes, false production authority, and zero-residue teardown.
   - id: approved_monitoring_environment
     status: pending
     evidence: A dedicated monitoring host, storage, retention, access, time synchronization, backup, rollback ownership, and bounded activation window require explicit approval.
