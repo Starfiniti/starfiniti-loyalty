@@ -11,7 +11,9 @@
   claimed. ADR-0117 and the chronological evidence successor extend release
   preflight to enforce these controls, exact branch check/app identities, signed
   and last-push approval policy, and the two distinct tag rulesets. Release,
-  deployment, and production remain unchanged.
+  deployment, and production remain unchanged. The changed release-workflow
+  input returns M15 Security to 7/27 at exact implementation `dee2009`; prior
+  `fec7f86` artifacts remain historical and require fresh exact-head replacement.
 
 - Enforced the repository-side release authority boundary without enabling
   Release. Protected `main` now requires twelve exact app-bound checks, signed

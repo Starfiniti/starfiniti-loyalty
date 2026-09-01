@@ -15,6 +15,11 @@
   branch policy, and correctly validates the two complementary tag rulesets
   separately. Non-provider pattern scanning and validity checks remain disabled
   and are not overclaimed. Release, deployment, and production remain unchanged.
+  The release-workflow change invalidates prior candidate-bound automated
+  security evidence: `security.yaml` now binds exact implementation
+  `dee20094d1609a8a10e26a4dd1fc71ac69f02940` at 7/27 passed and 20 pending.
+  The earlier `fec7f86` results remain immutable historical evidence; fresh
+  exact-head automation and digest-bound Medium review are required.
 
 - GitHub release policy is now fail-closed at the repository boundary. At
   `2026-09-01T10:00:52Z`, protected `main` required the twelve exact current

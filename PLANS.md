@@ -12,6 +12,12 @@ signed/last-push policy, and both distinct tag rulesets before release. This doe
 not remove the independent reviewer, environment, expanded read-only token,
 tag, security/licence, or approval gates.
 
+Because this slice changes `.github/workflows/release.yml`, M15 Security now
+binds exact implementation `dee20094d1609a8a10e26a4dd1fc71ac69f02940`
+and is intentionally 7/27 until fresh exact-head CI, Security, CodeQL, image,
+SBOM, DAST, freshness, WooCommerce, and Medium-review evidence is reconciled.
+The earlier `fec7f86` results remain historical and are not relabelled.
+
 The repository-side release boundary is now fail-closed. Protected `main`
 requires all twelve exact checks, verified signatures, one independent approval,
 stale-review dismissal, last-pusher separation, resolved conversations, and

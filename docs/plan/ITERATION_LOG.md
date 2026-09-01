@@ -30,6 +30,11 @@
   and validity checks remain reported disabled and are not overclaimed. Release
   workflow `333373957` remains disabled; no tag, release, deployment, or
   production state changed.
+- Committed the workflow and evidence boundary as exact implementation
+  `dee20094d1609a8a10e26a4dd1fc71ac69f02940`. Because the release workflow is
+  an M15 security input, `security.yaml` returns from 19/27 to 7/27 rather than
+  relabelling the historical `fec7f86` scans and Medium review. Fresh exact-head
+  automation, artifact reconciliation, and triage remain pending.
 
 ## 2026-09-01 — Fail-closed GitHub branch and release-tag policy
 
