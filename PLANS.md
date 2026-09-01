@@ -1,12 +1,15 @@
 # Execution Plan
 
-M09-S05A is active after adversarial review reproduced a managed-capability
-bypass in customer-experience authoring. ADR-0121 applies the
+M09-S05A is repository-complete after adversarial review reproduced a
+managed-capability bypass in customer-experience authoring. ADR-0121 applies the
 `storefront.experience` decision at both persistence roots, keeps disabled
 configuration readable, makes the merchant editor honestly read-only, and
 adds the existing Analytics route to persistent navigation. The complete local
-gate passes with 1,001 tests and both builds; exact-head database replay and
-independent review remain before closure.
+gate passes with 1,001 tests and both builds. Exact implementation
+`996d78227f310b949fe352264f655fde1f3bdb09` passed CI `33525862937` and
+Security `33525862820` across all twelve checks, including 3,845 pgTAP
+assertions. Eligible independent PR review and the stacked merge chain remain;
+M09-S06 production canary and close is still the active module gate.
 Production, the M09 canary, its 88/100 score, and loyalty value are unchanged.
 
 ADR-0120 is the current repository-safe M15 operations slice. It adds a

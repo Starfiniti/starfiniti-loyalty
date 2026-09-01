@@ -1617,7 +1617,7 @@ tasks:
         status: completed
         follow_up_entitlement:
           id: M09-S05A-STOREFRONT-AUTHORING-ENTITLEMENT
-          status: in_progress
+          status: completed
           hypothesis: A persistence-level capability guard prevents disabled managed tenants from creating presentation revisions while preserving all existing customer and loyalty value.
           baseline: Enhanced customer reads resolve storefront.experience but V1 and V2 theme and copy commands can still mutate their authoring tables when that managed capability is disabled.
           acceptance:
@@ -1639,7 +1639,8 @@ tasks:
           evidence:
             - ADR-0121 records the persistence-boundary decision and rollback consequences
             - migration 20260901150526 adds one private exact-table trigger function to both experience authoring roots without changing public interfaces
-            - the complete local repository gate passes 1001 workspace tests both production builds 90-migration and 70-pgTAP static validation secret audit and licence gates; exact-head Linux replay and independent review remain pending
+            - the complete local repository gate passes 1001 workspace tests both production builds 90-migration and 70-pgTAP static validation secret audit and licence gates
+            - exact implementation 996d78227f310b949fe352264f655fde1f3bdb09 passed CI run 33525862937 and Security run 33525862820 with all twelve checks green including all 70 pgTAP files and 3845 assertions; eligible independent PR review and merge remain pending without changing production
         acceptance:
           - controlled assets copy spacing ordering preview states responsive layouts refresh labels and offline states are polished and bounded
           - keyboard screen-reader zoom reduced-motion contrast slow-network no-script and total-Hub-outage evidence passes

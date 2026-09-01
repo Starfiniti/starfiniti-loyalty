@@ -144,8 +144,9 @@ Status: in progress. M09-S01 through M09-S05 are complete; M09-S06 disabled depl
 
 ## S05A — Storefront authoring entitlement correction
 
-- Status: implementation complete; exact-head Linux replay and independent
-  adversarial review are pending before this follow-up closes.
+- Status: repository implementation and deterministic verification complete;
+  eligible independent PR review and merge remain pending in the stacked
+  delivery chain.
 - Reproduction: a managed organization with `storefront.experience` disabled
   could still create V1/V2 theme and English-copy revisions. Customer reads,
   role checks, tenant scope, idempotency, and audit remained safe, but the
@@ -164,8 +165,15 @@ Status: in progress. M09-S01 through M09-S05 are complete; M09-S06 disabled depl
   vulnerability production audit, and licence inventory also pass. The expanded
   experience pgTAP plan covers managed default denial, V1/V2 writes, unchanged
   revisions, explicit canary enablement, later disablement, and retained reads.
-- Exact-head verification: pending on the required Ubuntu database/container
-  jobs because this workstation has no running Docker or Podman engine.
+- Exact-head verification: implementation `996d78227f310b949fe352264f655fde1f3bdb09`
+  passed [CI run 33525862937](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/33525862937)
+  and [Security run 33525862820](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/33525862820)
+  across all twelve checks. Ubuntu replay applied all 90 migrations and passed
+  all 70 pgTAP files with 3,845 assertions; both images, the full baseline,
+  every supported WooCommerce runtime, CodeQL, DAST, supply chain, and recovery
+  transport also passed. Author-side adversarial review removed an unnecessary
+  worker-role bypass before the exact run; eligible independent merge review is
+  still required by repository governance.
 - Production and score: unchanged. The M09 production canary remains disabled,
   module score remains 88/100, and no theme, copy, customer, WooCommerce,
   checkout, ledger, coupon, deployment, or entitlement record was changed.
