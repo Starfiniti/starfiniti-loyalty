@@ -1,5 +1,31 @@
 # Status
 
+- M16 now treats entitlement-authoring boundary drift as a recurring Critical
+  failure under R-025. Storefront persistence and notification presentation are
+  retained as two distinct chronological occurrences. ADR-0122 extends the
+  normal entitlement validator from catalogue parity to the exact 23 mutation
+  roots across nine capabilities, forbids protected `core.*` value paths, and
+  binds the storefront database/pgTAP and notification access regressions.
+  `npm run entitlements:validate` passes 11 corruption cases; the generalized
+  recurrence gate passes 66 cases across three failures and seven occurrences.
+  The complete local gate passes 1,010 workspace tests, both production builds,
+  static validation of 90 migrations, and every repository security, recovery,
+  evidence, WooCommerce, audit, and licence check.
+  Initial exact-head CI `33535519709` correctly failed baseline job
+  `99948754528` when the registry contained a Windows CRLF working-tree digest
+  for an LF Git SQL control. The correction binds the Git-canonical digest,
+  accepts equivalent CRLF checkouts, rejects lone carriage returns, and requires
+  fresh exact-head proof; the failed run remains negative evidence. Correction
+  head `3e90aeb9e37adf4269b25ad39c4266a36062cd28` passed CI `33536497818`,
+  Security `33536497798`, and external CodeQL `99952492414`; all twelve checks
+  are green, including 70 pgTAP files/3,845 assertions, 22 concurrency probes,
+  both images, and all four WooCommerce cells. Draft PR #62 is clean and
+  mergeable but has no eligible independent review.
+  These are repository candidates only: independent review, stacked merge,
+  later exact-head observation, and the approved disabled/enabled production
+  canary remain pending. M16 stays 77/100, production stays v0.1.11, and no
+  entitlement, checkout, provider, ledger, customer, or protected value changed.
+
 - M08 adversarial workflow tracing found a presentation defect, not a database
   bypass: the notification summary could say rollout was disabled while
   publication, SMTP test, webhook creation, and key rotation still appeared

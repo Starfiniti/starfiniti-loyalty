@@ -1,6 +1,6 @@
 schema: starfiniti.recurring-failure-registry.v2
 status: in_progress
-observedAt: "2026-09-01T11:53:28Z"
+observedAt: "2026-09-01T16:45:00Z"
 supersedes:
   registry:
     schema: starfiniti.recurring-failure-registry.v1
@@ -165,7 +165,7 @@ failures:
         type: validator
         reference:
           path: scripts/validate-recurring-failure-registry.mjs
-          sha256: 4aa1c05bb3af463c7ea6b5d585042cdc489135112959f20d57ad951d3d873255
+          sha256: 42bbb427a3cfb04099f21701a2e9af15c6c3e7cc1d19b6b5ee0ce0ed01d64126
         deliveryStatus: candidate
         mergeEvidence: null
         activationEvidence: null
@@ -192,3 +192,80 @@ failures:
       - observe the merged controls on a later exact-head Security run
       - inspect exact composite-action source whenever a pinned action revision changes
       - retain all failed attempts and the non-exhaustive discovery limitation
+
+  - fingerprint: authorization.entitlement-authoring-boundary-drift
+    riskId: R-025
+    severity: Critical
+    state: control_candidate
+    summary: Cross-layer entitlement checks twice allowed managed authoring behavior to drift from PostgreSQL authority and deployment-mode policy.
+    occurrences:
+      - id: storefront-authoring-entitlement-drift-2026-09-01
+        observedAt: "2026-09-01T15:27:17Z"
+        evidence:
+          path: docs/plan/evidence/M09/README.md
+          sha256: df762a20cd764f5026ca3d6db31f6b18fa7f6d2d9851036f744d59659d52c141
+          anchor: "## S05A — Storefront authoring entitlement correction"
+        productionMutation: false
+      - id: notification-authoring-presentation-drift-2026-09-01
+        observedAt: "2026-09-01T16:13:44Z"
+        evidence:
+          path: docs/plan/evidence/M08/README.md
+          sha256: 451948d7d80799dd05743fa652313e3e7f10819db4ccb4cc88003a9e33a9cde4
+          anchor: "## M08-S05A — Notification entitlement and deployment presentation"
+        productionMutation: false
+    decision:
+      path: docs/architecture/ADR/0122-recurring-entitlement-authoring-drift-control.md
+      sha256: a1e8823993ef4c6098dabe559c77fec561a853d413776410dd7f93a58b1f2e34
+    implementation:
+      path: scripts/validate-entitlements.mjs
+      sha256: 53bf37e4fffaa8fcf8b8774e9f45c5e567a847cc2131b73c45587441a13bf4a4
+    controls:
+      - id: entitlement-authoring-boundary-validator
+        type: validator
+        reference:
+          path: scripts/validate-entitlements.mjs
+          sha256: 53bf37e4fffaa8fcf8b8774e9f45c5e567a847cc2131b73c45587441a13bf4a4
+        deliveryStatus: candidate
+        mergeEvidence: null
+        activationEvidence: null
+        observationEvidence: null
+      - id: storefront-entitlement-regression
+        type: regressionTest
+        reference:
+          path: supabase/tests/experience_themes_test.sql
+          sha256: ef55a5a93e19e443491ad587e10fe07e7aa3da4ac6083a6aa0a2caa94621ce70
+        deliveryStatus: candidate
+        mergeEvidence: null
+        activationEvidence: null
+        observationEvidence: null
+      - id: notification-entitlement-regression
+        type: regressionTest
+        reference:
+          path: apps/dashboard/app/notifications/notification-access.test.ts
+          sha256: aa5e4cba414aec0d1d8adbe41eea475adc9ce27c7fbc2d8e8d5abe5877df3cfd
+        deliveryStatus: candidate
+        mergeEvidence: null
+        activationEvidence: null
+        observationEvidence: null
+    current:
+      defectPresent: false
+      externalControlActive: false
+      observationComplete: false
+      lastVerifiedAt: "2026-09-01T16:45:00Z"
+      evidence:
+        path: docs/architecture/ADR/0122-recurring-entitlement-authoring-drift-control.md
+        sha256: a1e8823993ef4c6098dabe559c77fec561a853d413776410dd7f93a58b1f2e34
+        anchor: "Register `authorization.entitlement-authoring-boundary-drift` under R-025"
+      negativeEvidenceRetained: true
+      exhaustiveDiscoveryClaimed: false
+      authority:
+        productionMutation: false
+        releaseEnabled: false
+        releaseCreated: false
+        deploymentChanged: false
+        protectedValueChanged: false
+    remainingGates:
+      - merge the stacked entitlement corrections and registry after eligible independent review
+      - observe the merged controls on a later exact-head CI and Security run
+      - exercise disabled and enabled tenant decisions in the approved production canary
+      - extend the mutation-root inventory whenever an authoring capability or persistence root is added

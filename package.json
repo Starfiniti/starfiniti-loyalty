@@ -109,7 +109,7 @@
     "owner-gates:render": "node scripts/render-owner-gates.mjs --write",
     "owner-gates:validate": "node scripts/render-owner-gates.mjs --self-test",
     "product-score:validate": "node scripts/validate-product-score.mjs --self-test",
-    "entitlements:validate": "node scripts/validate-entitlements.mjs",
+    "entitlements:validate": "node scripts/validate-entitlements.mjs --self-test",
     "architecture:validate": "node scripts/validate-architecture.mjs",
     "accessibility:validate": "node scripts/validate-accessibility.mjs",
     "woocommerce:validate": "node scripts/validate-woocommerce.mjs && node scripts/validate-woocommerce-localization.mjs && node scripts/validate-woocommerce-storefront.mjs && node scripts/validate-woocommerce-blocks.mjs",

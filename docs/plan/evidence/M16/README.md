@@ -2,21 +2,46 @@
 
 ADR-0119 preserves the accepted recovery-specific
 `recurring-failures.yaml` V1 bytes under SHA-256 and introduces the generalized
-`recurring-failures-v2.yaml` register. V2 retains both R-004 Borg-lock
-occurrences and adds three R-065 GitHub Actions occurrences: startup failure
-`33499712113` and setup failures in attempts one and two of run `33499821641`.
+`recurring-failures-v2.yaml` register. ADR-0122 extends that register after the
+storefront persistence and notification presentation corrections exposed a
+second stable entitlement-authoring failure under R-025. V2 now retains both
+R-004 Borg-lock occurrences, three R-065 GitHub Actions occurrences, and both
+R-025 entitlement-authoring occurrences.
+The Actions record retains startup failure `33499712113` and setup failures in
+attempts one and two of run `33499821641`.
 The record binds the exact corrected thirteen-pattern selected-actions policy,
 full-SHA pinning, false implicit GitHub-owned and verified-creator trust, and the
 successful third attempt while preserving every failed attempt as negative
 evidence. The live external policy is active; the release preflight and three
 source-controlled validators remain candidate-only until both the stack base and
 this stacked change are independently reviewed and merged.
+The new entitlement record binds the exact twenty-three-root/nine-capability
+authoring validator, both storefront persistence regressions, and the
+notification access regression. All three controls remain candidate-only.
 `exhaustiveDiscoveryClaimed` remains false:
 exact pinned source proves the current observed composite dependencies, not
 future action revisions. `npm run continuous-improvement:validate` now reports
-two failures, five occurrences, and fifty-eight adversarial cases. M16 remains
-77/100 with 32 checks pending; release, deployment, production, and protected
-loyalty value are unchanged.
+three failures, seven occurrences, and sixty-six adversarial cases. M16 remains
+77/100 with 32 checks pending. The complete local `npm run check` passes with
+1,010 workspace tests, both production builds, static validation of 90
+migrations, every deterministic evidence/security/recovery gate, WooCommerce
+source and budget checks, production audit, and licence validation. Release,
+deployment, production, and protected loyalty value are unchanged.
+Initial exact-head CI run `33535519709` failed closed in baseline job
+`99948754528` because the storefront pgTAP reference used a Windows CRLF
+working-tree digest instead of the canonical LF Git blob. The database replay,
+containers, all four WooCommerce cells, DAST, internal/external CodeQL, and
+supply-chain jobs passed on that head; the failed baseline is retained as
+negative evidence. The corrected validator canonicalizes CRLF to LF for text
+digest comparison, rejects lone carriage returns, exercises an all-CRLF reader,
+and binds the actual Git digest. Fresh exact-head proof was required.
+Correction head `3e90aeb9e37adf4269b25ad39c4266a36062cd28` passed exact-head
+CI `33536497818`, Security `33536497798`, and external CodeQL `99952492414`.
+All twelve checks are green: the database job replayed 90 migrations and passed
+70 pgTAP files/3,845 assertions plus all 22 concurrency probes; both images and
+all four WooCommerce runtime cells passed; and DAST, supply-chain, CodeQL, and
+the 9m49s recovery-transport rehearsal passed. Draft PR #62 is clean and
+mergeable but remains unreviewed and unmerged.
 
 The semantic monitoring slice legitimately evolves the Prometheus and runbook
 working-tree bytes. The recurrence validator now honors ADR-0119's historical

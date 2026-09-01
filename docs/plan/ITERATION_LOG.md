@@ -2281,3 +2281,41 @@
 - Seventeen focused access, stale-command, and real rendered-markup tests pass. The complete local repository gate passes 1,010 workspace tests, both production builds, every deterministic validator, and static validation of 90 migrations and 70 pgTAP files.
 - Implementation head `04da41a67ee449d62d4e6479caae05e24e170349` passed exact-head CI run `33530596023` and Security run `33530595912`, including 70 pgTAP files with 3,845 assertions, all four WooCommerce runtime cells, CodeQL, DAST, supply-chain scans, and recovery-transport rehearsals; external CodeQL check `99932887645` also passed.
 - M08-S05A is repository-complete in draft PR #61. The PR remains behind the stacked merge and independent-review gates; M08-S06 provider canary, production, and score state remain unchanged.
+
+## 2026-09-01 — Recurring entitlement-authoring drift control
+
+- Reconstructed the M02 capability catalogue, the exact managed authoring
+  trigger inventory, the M09 storefront correction, and the M08 notification
+  presentation correction. The two defects have one stable fingerprint:
+  role-correct managed authoring did not consistently reflect PostgreSQL's live
+  capability and deployment-mode decision across persistence and presentation.
+- Compared retaining only focused tests, trusting browser projection, disabling
+  all recovery actions, and one cross-layer validator. ADR-0122 selects the
+  validator while keeping PostgreSQL authoritative and retaining risk-reducing
+  endpoint shutdown.
+- Extended the normal entitlement gate to require all 23 reviewed mutation
+  roots across nine capabilities, reject protected `core.*` roots, and bind the
+  exact storefront trigger/pgTAP/read-only sequence plus notification access,
+  rendered state, stale-command, endpoint-lifecycle, and managed SMTP boundaries.
+- Extended the V2 recurring-failure registry without rewriting V1 history. It
+  now retains seven chronological occurrences across R-004, R-025, and R-065,
+  with three exact R-025 controls marked candidate-only. Sixty-six adversarial
+  registry cases and eleven entitlement corruptions pass locally.
+- This is durable repository prevention, not production proof. Independent
+  review, stacked merge, later exact-head observation, and the approved
+  disabled/enabled tenant canary remain open. Production, M16's 77/100 score,
+  checkout, entitlements, ledger value, and customer state did not change.
+- Initial exact-head CI `33535519709` failed closed in baseline job
+  `99948754528` while the separate database replay and the other completed
+  runtime/security jobs passed. The registry had captured a Windows CRLF
+  working-tree digest for an LF Git SQL control. The correction binds the Git
+  digest, canonicalizes only CRLF text checkout conversion, rejects lone
+  carriage returns, and self-tests an all-CRLF reader. The failed run remains
+  negative evidence and a new exact-head run is required.
+- Correction head `3e90aeb9e37adf4269b25ad39c4266a36062cd28` passed CI
+  `33536497818`, Security `33536497798`, and external CodeQL `99952492414` with
+  all twelve checks green. Database replay passed 70 pgTAP files/3,845
+  assertions and all 22 concurrency probes; both images, all four WooCommerce
+  cells, DAST, supply-chain, and the complete recovery-transport rehearsal also
+  passed. PR #62 is clean and mergeable, but remains draft, unreviewed, and
+  unmerged; production and score boundaries are unchanged.
