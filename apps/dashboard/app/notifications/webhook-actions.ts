@@ -190,5 +190,8 @@ function databaseMessage(error: unknown): string | null {
   if (message === "disable the webhook endpoint before retiring it") {
     return "Disable the endpoint before retiring it.";
   }
+  if (message === "notifications are not enabled for this organization") {
+    return "Notification rollout is disabled. Existing delivery evidence and safe endpoint shutdown remain available.";
+  }
   return null;
 }

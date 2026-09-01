@@ -14,6 +14,20 @@
   penetration test, release, deployment, GA, production, checkout, database,
   or loyalty-value change is claimed.
 
+- M08 adversarial workflow tracing found a presentation defect, not a database
+  bypass: the notification summary could say rollout was disabled while
+  publication, SMTP test, webhook creation, and key rotation still appeared
+  usable. The merchant surface now composes live role, projected entitlement,
+  and deployment mode. Disabled rollout blocks new authoring and rotation but
+  retains template, delivery, issue, and endpoint evidence plus safe endpoint
+  disable/retirement; managed mode no longer offers the self-hosted-only SMTP
+  test. Stale commands remain PostgreSQL-authorized and receive bounded exact
+  guidance. Seventeen focused tests and the complete local gate pass with 1,010
+  workspace tests, both production builds, every deterministic validator, and
+  90-migration/70-pgTAP static validation. Exact-head review remains pending.
+  Production, providers, M08's provisional score, and loyalty value are
+  unchanged.
+
 - M09 adversarial review found a database-authority gap in customer-experience
   authoring: managed tenants with `storefront.experience` disabled could still
   save V1/V2 theme or English-copy revisions. ADR-0121 and additive migration
@@ -24,13 +38,12 @@
   Analytics is present in the persistent sidebar. The complete local gate
   passes 1,001 workspace tests, both production builds, every deterministic
   validator, static validation of 90 migrations and 70 pgTAP files, secret
-  scan, zero-vulnerability production audit, and licence inventory. Exact
-  original implementation `996d78227f310b949fe352264f655fde1f3bdb09` then passed CI
-  `33525862937` and Security `33525862820` across all twelve checks, including
-  all 70 pgTAP files and 3,845 assertions. The rebased exact-head checks,
-  current solo adversarial review, and stacked merge remain pending. Production,
-  M09's 88/100 score, checkout, coupons, ledger value, and tenant entitlements
-  are unchanged.
+  scan, zero-vulnerability production audit, and licence inventory. Rebased
+  exact head `23cfa779a0c2ad3db5b77f9ec408188efd526aeb` passed CI `33603821632`,
+  Security `33603821664`, and external CodeQL `100163613082` across all twelve
+  checks, including all 70 pgTAP files and 3,845 assertions, then merged as
+  verified commit `7458237` under ADR-0124. Production, M09's 88/100 score,
+  checkout, coupons, ledger value, and tenant entitlements are unchanged.
 
 - ADR-0120 closes the repository detection gap exposed by VM 971's historical
   internal full-stream pattern without claiming the stream has returned. The

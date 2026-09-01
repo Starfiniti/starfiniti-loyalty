@@ -21,6 +21,19 @@
   release, production review, independent test/retest, final reconciliation, and
   approval gates remain open; no production state changed.
 
+- Corrected the notification studio's rollout and deployment presentation.
+  Disabled notification capability now blocks template publication, SMTP tests,
+  webhook creation, and key rotation while retaining templates, provider and
+  issue evidence, endpoint reads, and owner/admin endpoint disable or retirement.
+  Managed deployments may still publish immutable templates and manage signed
+  webhooks, but no longer offer the self-hosted-only SMTP test. PostgreSQL
+  remains authoritative for stale or forged commands. Seventeen focused tests
+  and the complete local gate pass with 1,010 workspace tests, both production
+  builds, every deterministic validator, and 90-migration/70-pgTAP static
+  validation; exact-head verification is pending. Production, providers,
+  entitlements, endpoints, templates, deliveries, checkout, ledger value, and
+  scores are unchanged.
+
 - Added ADR-0121 and an additive database-authoritative guard for storefront
   theme and English-copy authoring. Managed tenants whose
   `storefront.experience` capability is disabled now fail before either
@@ -31,10 +44,10 @@
   sidebar. The complete local gate passes 1,001 workspace tests, both builds,
   every deterministic validator, 90-migration/70-pgTAP static validation,
   secret scan, zero-vulnerability production audit, and licence inventory.
-  Exact implementation `996d78227f310b949fe352264f655fde1f3bdb09`
-  passed CI `33525862937` and Security `33525862820` across all twelve checks,
-  including all 70 pgTAP files and 3,845 assertions. Rebased exact-head checks,
-  current solo adversarial review, and the stacked merge remain pending. Production,
+  Rebased exact head `23cfa779a0c2ad3db5b77f9ec408188efd526aeb` passed CI
+  `33603821632`, Security `33603821664`, and external CodeQL `100163613082`
+  across all twelve checks, including all 70 pgTAP files and 3,845 assertions,
+  then merged as verified commit `7458237` under ADR-0124. Production,
   self-hosted defaults, checkout, coupons, ledger value, M09 status, and scores
   are unchanged.
 

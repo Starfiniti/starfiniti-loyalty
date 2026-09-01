@@ -8,6 +8,7 @@ import {
   sendNotificationTest,
   type NotificationActionState,
 } from "./actions";
+import { resolveNotificationAuthoringAccess } from "./notification-access";
 
 const idle: NotificationActionState = { kind: "idle", message: "" };
 
@@ -59,17 +60,26 @@ function ActionMessage({
 
 export function NotificationTemplateStudio({
   canManage,
+  deploymentMode,
+  entitlementEnabled,
   publishOperationId,
   testOperationId,
   templates,
   workspaceId,
 }: Readonly<{
   canManage: boolean;
+  deploymentMode: "managed" | "self_hosted";
+  entitlementEnabled: boolean;
   publishOperationId: string;
   testOperationId: string;
   templates: readonly MerchantNotificationEmailTemplateV1[];
   workspaceId: string;
 }>) {
+  const access = resolveNotificationAuthoringAccess(
+    canManage,
+    entitlementEnabled,
+    deploymentMode,
+  );
   const [selectedEventType, setSelectedEventType] = useState(
     templates[0]?.eventType ?? "loyalty.points.earned",
   );
@@ -144,7 +154,7 @@ export function NotificationTemplateStudio({
             <span>Subject</span>
             <input
               defaultValue={selected.subjectTemplate}
-              disabled={!canManage || publishPending}
+              disabled={!access.authoringEnabled || publishPending}
               maxLength={200}
               name="subjectTemplate"
               required
@@ -154,7 +164,7 @@ export function NotificationTemplateStudio({
             <span>Plain-text message</span>
             <textarea
               defaultValue={selected.textTemplate}
-              disabled={!canManage || publishPending}
+              disabled={!access.authoringEnabled || publishPending}
               maxLength={4000}
               name="textTemplate"
               required
@@ -178,17 +188,15 @@ export function NotificationTemplateStudio({
             </p>
             <button
               className="ui-button ui-button-primary"
-              disabled={!canManage || publishPending}
+              disabled={!access.authoringEnabled || publishPending}
               type="submit"
             >
               <Save aria-hidden="true" />
               {publishPending ? "Publishing…" : "Publish new version"}
             </button>
           </div>
-          {!canManage ? (
-            <p className="notification-role-note">
-              Owner or admin access is required to publish.
-            </p>
+          {access.notice ? (
+            <p className="notification-role-note">{access.notice}</p>
           ) : null}
           <ActionMessage state={publishState} />
         </form>
@@ -217,13 +225,18 @@ export function NotificationTemplateStudio({
             <input name="operationId" type="hidden" value={testOperationId} />
             <button
               className="ui-button"
-              disabled={!canManage || testPending}
+              disabled={!access.testDeliveryEnabled || testPending}
               type="submit"
             >
               <FlaskConical aria-hidden="true" />
               {testPending ? "Queueing…" : "Send active version test"}
             </button>
             <p>Recipient: your verified Starfiniti sign-in email.</p>
+            {access.testDeliveryNotice ? (
+              <p className="notification-role-note">
+                {access.testDeliveryNotice}
+              </p>
+            ) : null}
           </form>
           <ActionMessage state={testState} />
         </aside>
