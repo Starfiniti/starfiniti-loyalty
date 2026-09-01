@@ -1,0 +1,250 @@
+{
+  "schemaVersion": "starfiniti.supabase-production-baseline.v2",
+  "previousEvidence": {
+    "path": "docs/plan/evidence/M01/supabase-compatibility-2026-08-28.json",
+    "sha256": "aa860ff696ea0ebfd6b1bb36b879e282cba706110498d5990d2f6c67fab4d052"
+  },
+  "observedAt": "2026-09-01T17:41:55Z",
+  "environment": "production",
+  "vmId": 971,
+  "compatibilityStatus": "repository_files_and_runtime_compatible_upgrade_and_restore_pending",
+  "compatibilityContractSha256": "1add7b7e0df5580ea36e032f26849515fdbbb2e960247013ab72fb1cbaa0ac1a",
+  "upstream": {
+    "releaseRef": "self-hosted/v0.8.0",
+    "tagObjectSha": "e1af732589cd468edb49500ebc04e4367d4c56ad",
+    "commitSha": "241bb11c0627f2981746d37033f57dbfa81d29b0"
+  },
+  "compose": {
+    "variantId": "asymmetric-jwks-enabled",
+    "sha256": "3c0cc8d931fba8e40923b1e05961d10692cbd7e7cb378d59cdb7f2b590ca4a55",
+    "officialSha256": "ccff9999a5ec72de91082eef84e2cac7bb6d92dd0057feb4e474c38ebf0b21cb",
+    "criticalAssetManifestSha256": "75f3858219a8d579536c1d6777db613eb5e14bb7ac76191cfff20adb73ea5b46",
+    "reviewedDifference": "four asymmetric-JWKS mappings enabled"
+  },
+  "runtime": {
+    "platform": "linux/amd64",
+    "gateway": "envoy",
+    "postgresMajor": 17,
+    "postgresMetaUser": "postgres",
+    "apiExternalPath": "/auth/v1",
+    "postgrestSchemas": "public,graphql_public,loyalty",
+    "kongPresent": false,
+    "analyticsPresent": false,
+    "vectorPresent": false,
+    "asymmetricJwtPrivateKeyCount": 2,
+    "asymmetricJwksPublicKeyCount": 2,
+    "studioPostgrestSchemaParity": true
+  },
+  "studioRecreation": {
+    "approvedBy": "product-owner-thread",
+    "scope": "studio-only",
+    "startedAt": "2026-09-01T17:39:54.834866256Z",
+    "verifiedAt": "2026-09-01T17:41:54Z",
+    "dryRunVerified": true,
+    "noDependencies": true,
+    "noBuild": true,
+    "pullPolicy": "never",
+    "previousComposeConfigHash": "71d777a1898e150321da68c1dd34d840325a194c8bf168110168e4dbaaed3c99",
+    "currentComposeConfigHash": "9f51d51f7e9957d9af65642e57180ff529c02ba1c1f885ceb66fec21030974d6",
+    "imageId": "sha256:606aca9fdaa753b60968d5c304e2ada83869b76c9043684e63d5885aca9550e8",
+    "health": "healthy",
+    "internalProfileStatus": 200,
+    "publicProfileStatus": 404,
+    "restartCount": 0,
+    "previousSchemas": "public,graphql_public",
+    "currentSchemas": "public,graphql_public,loyalty",
+    "rollbackEnvironmentSha256": "4d807f720763584aa5147be238b1ae315133c61c15ea152498e429262120a593",
+    "rollbackEnvironmentMode": "0600",
+    "rollbackDiffersOnlyBySchema": true,
+    "postChangeBackupCompletedAt": "2026-09-01T17:39:58Z",
+    "postChangeBackupResult": "success",
+    "postChangeBackupExitStatus": 0,
+    "publicHealthStatus": 200,
+    "publicLoginStatus": 200,
+    "authAnonymousStatus": 401,
+    "dataApiAnonymousStatus": 401,
+    "requiredServiceCount": 11,
+    "healthyServiceCount": 11,
+    "unchangedServiceCount": 10
+  },
+  "imageInventory": [
+    {
+      "service": "studio",
+      "configuredImage": "supabase/studio:2026.08.03-sha-022b374",
+      "resolvedDigest": "sha256:606aca9fdaa753b60968d5c304e2ada83869b76c9043684e63d5885aca9550e8",
+      "healthy": true,
+      "restartCount": 0,
+      "startedAt": "2026-09-01T17:39:54.834866256Z"
+    },
+    {
+      "service": "envoy",
+      "configuredImage": "envoyproxy/envoy:v1.39.0",
+      "resolvedDigest": "sha256:d59f7f5fa10cff6d5892b6c5e7df5c9297ddfb2c3683e33fbfb82da24de4fa66",
+      "healthy": true,
+      "restartCount": 0,
+      "startedAt": "2026-08-13T08:09:35.62655302Z"
+    },
+    {
+      "service": "auth",
+      "configuredImage": "supabase/gotrue:v2.189.0",
+      "resolvedDigest": "sha256:385184459f57569c54c25209f51f3b2be99ddd7c4ce9e3555b5d3eea8447b7cf",
+      "healthy": true,
+      "restartCount": 0,
+      "startedAt": "2026-08-13T08:09:35.76367112Z"
+    },
+    {
+      "service": "rest",
+      "configuredImage": "postgrest/postgrest:v14.12",
+      "resolvedDigest": "sha256:54000f24847d01a2c2302e0041cf0618b875c57fb48507d743cfa9aaa50bf43c",
+      "healthy": true,
+      "restartCount": 0,
+      "startedAt": "2026-08-13T11:54:28.784951759Z"
+    },
+    {
+      "service": "realtime",
+      "configuredImage": "supabase/realtime:v2.102.3",
+      "resolvedDigest": "sha256:aa1c92c0cf326007563641730ec9da9c60478caa6853887775365fa2c097a471",
+      "healthy": true,
+      "restartCount": 0,
+      "startedAt": "2026-08-26T15:44:55.171794258Z"
+    },
+    {
+      "service": "storage",
+      "configuredImage": "supabase/storage-api:v1.60.4",
+      "resolvedDigest": "sha256:c8eb9858eafec891a97c27125470aaad54703c3f4eb4d55ca7f1bf6c6411febf",
+      "healthy": true,
+      "restartCount": 0,
+      "startedAt": "2026-08-13T08:09:36.715392179Z"
+    },
+    {
+      "service": "imgproxy",
+      "configuredImage": "darthsim/imgproxy:v3.30.1",
+      "resolvedDigest": "sha256:3b709e4a0e5e8e0e959b556b7031229202b4b8e7e7d955c517ea7abed68ee34d",
+      "healthy": true,
+      "restartCount": 0,
+      "startedAt": "2026-08-13T08:09:29.781259514Z"
+    },
+    {
+      "service": "meta",
+      "configuredImage": "supabase/postgres-meta:v0.96.6",
+      "resolvedDigest": "sha256:a84cc713585eea7b401e4a2561ec4a1e48c87083d1c7ecb4502f204bb4391300",
+      "healthy": true,
+      "restartCount": 0,
+      "startedAt": "2026-08-13T08:09:35.730934604Z"
+    },
+    {
+      "service": "functions",
+      "configuredImage": "supabase/edge-runtime:v1.74.0",
+      "resolvedDigest": "sha256:2781daf92394db91f7e94129cc3d04ec474ad16a8fe64b3fbeef6e7d557ab120",
+      "healthy": true,
+      "restartCount": 0,
+      "startedAt": "2026-08-13T08:09:46.472280083Z"
+    },
+    {
+      "service": "db",
+      "configuredImage": "supabase/postgres:17.6.1.136",
+      "resolvedDigest": "sha256:f371b5f3f2ac0a05703f33d6e6134515fb2498cab708fb948a0aeb7481467c00",
+      "healthy": true,
+      "restartCount": 0,
+      "startedAt": "2026-08-18T10:07:12.417093739Z"
+    },
+    {
+      "service": "supavisor",
+      "configuredImage": "supabase/supavisor:2.9.5",
+      "resolvedDigest": "sha256:31c2f05b13b11069660fdfae2f6cfd37b509748d2710aca121cfee8b16cb8b07",
+      "healthy": true,
+      "restartCount": 0,
+      "startedAt": "2026-08-13T08:38:48.615565231Z"
+    }
+  ],
+  "protectedState": {
+    "commerceConnections": 0,
+    "customers": 0,
+    "wallets": 0,
+    "ledgerTransactions": 0,
+    "rewardReservations": 0
+  },
+  "checks": [
+    {
+      "id": "release_provenance",
+      "status": "passed",
+      "evidence": "The production release ref and recorded tag-object SHA still match the official resolved self-hosted v0.8.0 source."
+    },
+    {
+      "id": "compose_official_source",
+      "status": "passed",
+      "evidence": "The active Compose remains the exact reviewed production variant and all fifteen mounted static assets remain bound by the compatibility contract."
+    },
+    {
+      "id": "compose_variant",
+      "status": "passed",
+      "evidence": "The live Compose SHA-256 remains 3c0cc8d931fba8e40923b1e05961d10692cbd7e7cb378d59cdb7f2b590ca4a55 with only the four reviewed asymmetric-JWKS mappings."
+    },
+    {
+      "id": "image_inventory",
+      "status": "passed",
+      "evidence": "All eleven required services remained healthy on their reviewed images; only Studio was recreated and its exact image ID did not change."
+    },
+    {
+      "id": "envoy_gateway",
+      "status": "passed",
+      "evidence": "Envoy remained healthy and no Kong service or container appeared."
+    },
+    {
+      "id": "auth_external_path",
+      "status": "passed",
+      "evidence": "The live Auth environment retains the canonical HTTPS API origin ending in /auth/v1, and unauthenticated probing remained denied."
+    },
+    {
+      "id": "postgrest_schema",
+      "status": "passed",
+      "evidence": "PostgREST continues to expose exactly public, graphql_public, and loyalty; unauthenticated Data API probing remained denied."
+    },
+    {
+      "id": "postgres_major",
+      "status": "passed",
+      "evidence": "The database container was not recreated and remained healthy on the reviewed PostgreSQL 17.6 Supabase image."
+    },
+    {
+      "id": "postgres_meta_owner",
+      "status": "passed",
+      "evidence": "The postgres-meta container was not recreated and retains the reviewed postgres ownership path."
+    },
+    {
+      "id": "optional_services",
+      "status": "passed",
+      "evidence": "Kong, Analytics, and Vector remain absent from the live default service set."
+    },
+    {
+      "id": "studio_runtime_schema_parity",
+      "status": "passed",
+      "evidence": "An approved no-pull, no-build, no-dependency recreation changed only Studio; its live schema environment now exactly matches public,graphql_public,loyalty, the reviewed container is healthy, and its internal profile endpoint returns HTTP 200 without public gateway exposure."
+    },
+    {
+      "id": "upgrade_rehearsal",
+      "status": "pending",
+      "evidence": "No later Supabase release is approved and no exact next-release upgrade rehearsal has been performed."
+    },
+    {
+      "id": "clean_room_restore",
+      "status": "pending",
+      "evidence": "The current stack and image inventory have not yet passed the complete M15 clean-room Auth, database, configuration, and application restore."
+    }
+  ],
+  "productionChange": {
+    "performed": true,
+    "reversible": true,
+    "databaseChanged": false,
+    "applicationChanged": false,
+    "authChanged": false,
+    "dataApiChanged": false,
+    "backupConfigurationChanged": false,
+    "checkoutChanged": false,
+    "loyaltyValueChanged": false
+  },
+  "limitations": [
+    "This bounded recreation is not a Supabase release upgrade and does not authorize a future image, Compose, environment, service, or database change.",
+    "A later Supabase release still requires a separately reviewed exact upgrade rehearsal against current official breaking changes and the retained rollback boundary.",
+    "Complete clean-room database, Supabase Auth, application, configuration, and signing-material recovery remains mandatory and is not inferred from a healthy Studio recreation."
+  ]
+}

@@ -547,11 +547,10 @@ tasks:
           - applicable Supabase breaking changes fail deterministically before deployment
           - no compatibility evidence contains a secret or raw container environment
         owner_inputs:
-          - approved isolated Studio recreation and browser smoke test
           - approved exact next-release upgrade rehearsal
           - approved M15 clean-room recovery exercise
         acceptance:
-          - repository migrations and all 173 tenant tables pass the compatibility and RLS gates
+          - repository migrations and all 175 tenant tables pass the compatibility and RLS gates
           - the live source bundle matches one exact approved Compose variant and all critical mounted assets
           - every required linux/amd64 image ID matches the reviewed inventory
           - Envoy Auth PostgREST PostgreSQL postgres-meta optional-service and JWKS boundaries match the contract
@@ -563,8 +562,8 @@ tasks:
           - a tenant table is created without RLS
           - runtime parity or restore is inferred from healthy containers
         security_boundary: The validator reads owner-only environment files locally, emits no values, inspects only local image IDs, and rejects symlinked or unreviewed source assets and binds.
-        rollout: Run offline before any Supabase recreation or upgrade; production remains unchanged until every pending runtime and recovery approval passes.
-        rollback: Keep the current approved bundle and image IDs; stop on preflight failure, forward-fix database history, and never disable RLS to restore an unreviewed caller.
+        rollout: Run offline before any Supabase recreation or upgrade; the approved Studio-only recreation now passes while a future release upgrade and clean-room recovery retain separate approvals.
+        rollback: Keep the current approved bundle and image IDs; the mode-0600 pre-schema environment is a Studio-only rollback artifact, while database history is forward-fixed and RLS is never disabled to restore an unreviewed caller.
         verification:
           - npm run supabase:preflight -- --compose <path> --env <path> --version-file <path> --provenance-file <path> --bundle-root <path> --platform linux/amd64
           - npm run deployment:validate
@@ -574,9 +573,10 @@ tasks:
         evidence:
           - infrastructure/environments/proxmox/supabase-compatibility.json
           - docs/plan/evidence/M01/supabase-compatibility-2026-08-28.json
+          - docs/plan/evidence/M01/supabase-compatibility-2026-09-01.json
           - supabase/migrations/20260828190000_private_table_rls_completion.sql
           - supabase/tests/private_table_rls_completion_test.sql
-          - repository and read-only production-source checks pass; Studio recreation, exact future upgrade rehearsal, and clean-room restore remain pending
+          - the immutable historical baseline and Studio recreation successor pass; exact future upgrade rehearsal and clean-room restore remain pending
     docs:
       [
         docs/integrations/WOOCOMMERCE.md,
@@ -585,6 +585,7 @@ tasks:
         docs/operations/SUPABASE_COMPATIBILITY.md,
         docs/architecture/ADR/0070-bounded-visible-postgres-backup-lock-contention.md,
         docs/architecture/ADR/0081-fail-closed-self-hosted-supabase-compatibility.md,
+        docs/architecture/ADR/0123-isolated-supabase-studio-schema-parity.md,
       ]
     evidence:
       - docs/plan/evidence/M01/README.md
@@ -595,10 +596,12 @@ tasks:
       - docs/plan/evidence/M01/backup-transfer-amplification-2026-08-14.md
       - docs/plan/evidence/M01/post-incident-cadence-revalidation-2026-08-31.md
       - docs/plan/evidence/M01/supabase-compatibility-2026-08-28.json
+      - docs/plan/evidence/M01/supabase-compatibility-2026-09-01.json
       - infrastructure/environments/proxmox/supabase-compatibility.json
       - migration 20260828190000 enables RLS on the three previously uncovered private tenant coordination tables while retaining reviewed owner-function bypass and zero direct-role policies
-      - the compatibility self-test covers 87 migrations, all 173 tenant tables, one official and one reviewed asymmetric-JWKS Compose variant, 15 mounted assets, 11 linux/amd64 image IDs, and 39 deterministic corruptions
-      - read-only VM 971 evidence matches the reviewed source files and service inventory; an older Studio container still needs approved recreation and smoke testing before runtime parity can pass
+      - the compatibility self-test covers 90 migrations, all 175 tenant tables, one official and one reviewed asymmetric-JWKS Compose variant, 15 mounted assets, 11 linux/amd64 image IDs, immutable historical/current production evidence, internal Studio HTTP 200 and public HTTP 404 profile smokes, and 52 deterministic corruptions
+      - the approved Studio-only no-pull no-build no-dependency recreation now has exact schema parity on the same healthy reviewed image; all other services, the post-change archive, anonymous-denial checks, and zero protected-state aggregates pass
+      - the complete local repository gate passes all 1010 workspace tests, every module security recovery accessibility and WooCommerce validator, and both production builds; exact-head CI and independent review remain pending
       - ADR-0070 and the undeployed backup candidate convert prolonged shared Borg-lock contention from false success into a bounded 120-second wait and visible status 75 with semantic and Linux Bash syntax gates
       - the exact M01 validator rejects schema drift future timestamps mutable release selectors contradictory store or restore authority unreconciled container counts negative aggregates duplicate checks obvious sensitive values and false completion through eleven adversarial fixtures
 

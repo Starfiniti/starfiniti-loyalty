@@ -52,6 +52,26 @@ The preflight inspects only local image IDs, never container environments. After
 
 The current lock supports `linux/amd64`. A different platform requires a reviewed digest set rather than a bypass. Never export `docker inspect` wholesale: it contains secret environment values. Do not store `.env`, JWT keys, database passwords, SMTP credentials, service keys, or raw container configuration in repository evidence.
 
+## Studio runtime parity
+
+ADR-0123 records the approved 2026-09-01 correction for a Studio container
+created before `PGRST_DB_SCHEMAS` gained `loyalty`. A restart is insufficient
+because container environment is fixed at creation time. The accepted command
+boundary recreates only `studio` from the active reviewed Compose and owner-only
+environment, with `--no-deps`, `--no-build`, `--pull never`, a prior dry run,
+and a bounded healthy wait.
+
+Before repeating such a correction, require the exact reviewed Compose digest,
+a successful current PostgreSQL archive, all services healthy, the exact local
+image ID, and an owner-only rollback environment. Afterwards verify schema
+parity, the same image, zero restarts, an internal Studio HTTP 200 with the same
+route unavailable through the public gateway, all other services unchanged and healthy,
+a post-change archive, public application health, anonymous Auth/Data API
+denial, and protected commerce/value reconciliation. The accepted V2 successor
+under `docs/plan/evidence/M01/` preserves the prior baseline by SHA-256 and
+closes only Studio runtime parity. It is not authority for a release upgrade,
+database recreation, or clean-room recovery claim.
+
 ## Upgrade and rollback
 
 Treat every Supabase release as a separate database-platform change. Review the current official breaking-change changelog, create a new lock and ADR, rehearse the exact upgrade and restore, and prove Envoy/Auth/PostgREST/Studio/PostgreSQL behavior before production. PostgreSQL 15 data directories do not become PostgreSQL 17 data directories through a container-tag change.

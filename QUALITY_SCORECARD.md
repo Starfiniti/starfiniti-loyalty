@@ -17,6 +17,14 @@ production separate from the merged, unreleased candidate.
 
 Automatic fail remains active until complete application/Auth/signing-secret recovery and the real-store pilot exist. A higher total cannot override that missing critical gate.
 
+The 2026-09-01 ADR-0123 production correction closes one M01-S01 runtime
+compatibility check without changing a score. Studio now uses the exact reviewed
+three-schema environment on the same image; all other services, post-change
+backup, public smoke, anonymous denial, and zero protected-state aggregates
+pass. Exact upgrade rehearsal, clean-room recovery, real-store activation, and
+the broader canary gates remain open, so production stays 54/100 and the
+integration candidate stays 83/100.
+
 ## Whole-product readiness
 
 Engineering quality and product completeness are deliberately separate. ADR-0080
