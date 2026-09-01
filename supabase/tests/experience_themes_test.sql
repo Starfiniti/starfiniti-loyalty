@@ -645,7 +645,7 @@ select throws_ok(
 );
 select results_eq(
   $$ select revision from loyalty.experience_themes $$,
-  array[3],
+  array[4],
   'denied authoring leaves the existing theme revision unchanged'
 );
 
@@ -712,7 +712,7 @@ select results_eq(
      and translation.programme_group_id = theme.programme_group_id
      and translation.locale = 'en'
   $$,
-  array['4|1'::text],
+  array['5|1'::text],
   'disabled capability preserves readable theme and copy history'
 );
 
