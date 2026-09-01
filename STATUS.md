@@ -9,7 +9,10 @@
   more than 210-second intervals, with the final cycle receiving 580,947 rsync
   bytes and creating `loyalty-postgres-20260901T123358Z`. The whole-VM timer
   remains disabled/inactive, the PostgreSQL timer remains enabled/active, and
-  dashboard readiness and login return HTTP 200. The observation changed
+  dashboard readiness and login return HTTP 200. A closed YAML successor binds
+  the accepted containment record by SHA-256, and the operations validator now
+  recomputes the tap delta, complete-day coverage, archive chronology, timer
+  boundary, unchanged gates, and false authority. The observation changed
   nothing in production and does not close R-004 or authorize re-enabling the
   whole-VM timer.
 

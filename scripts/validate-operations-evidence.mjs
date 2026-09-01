@@ -19,6 +19,8 @@ const paths = {
   evidence: "docs/plan/evidence/M15/operations.yaml",
   containment:
     "docs/plan/evidence/M15/backup-traffic-containment-2026-09-01.yaml",
+  trafficFollowUp:
+    "docs/plan/evidence/M15/backup-traffic-read-only-follow-up-2026-09-01.yaml",
   catalogue: "infrastructure/observability/catalog.yaml",
   rules: "infrastructure/observability/prometheus/rules.yaml",
   routing: "infrastructure/observability/routing-policy.yaml",
@@ -38,6 +40,7 @@ const readText = (relativePath) =>
   readFileSync(join(root, relativePath), "utf8");
 const evidence = YAML.parse(readText(paths.evidence));
 const containment = YAML.parse(readText(paths.containment));
+const trafficFollowUp = YAML.parse(readText(paths.trafficFollowUp));
 const catalogue = YAML.parse(readText(paths.catalogue));
 const rules = YAML.parse(readText(paths.rules));
 const routing = YAML.parse(readText(paths.routing));
@@ -399,6 +402,293 @@ function validateBackupTrafficContainment(candidate) {
       "backup-traffic containment chronology or remaining gates are invalid",
     );
   }
+}
+
+function archiveTimestamp(name) {
+  const match =
+    /^loyalty-postgres-(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/u.exec(
+      name,
+    );
+  if (!match) fail("backup-traffic follow-up archive name is invalid");
+  const [, year, month, day, hour, minute, second] = match;
+  return Date.parse(`${year}-${month}-${day}T${hour}:${minute}:${second}Z`);
+}
+
+function validateBackupTrafficFollowUp(candidate, prior) {
+  exactKeys(
+    candidate,
+    [
+      "schema",
+      "status",
+      "observed",
+      "priorEvidence",
+      "production",
+      "traffic",
+      "backup",
+      "health",
+      "remainingGates",
+      "authority",
+    ],
+    "backup-traffic follow-up",
+  );
+  exactKeys(
+    candidate.observed,
+    ["startedAt", "finishedAt", "captureMethod", "productionMutation"],
+    "backup-traffic follow-up observation",
+  );
+  exactKeys(
+    candidate.priorEvidence,
+    ["path", "sha256"],
+    "backup-traffic follow-up prior evidence",
+  );
+  exactKeys(
+    candidate.production,
+    ["release", "applicationCommit", "vmId", "vmName", "vmRunning"],
+    "backup-traffic follow-up production",
+  );
+  exactKeys(
+    candidate.traffic,
+    [
+      "tapSample",
+      "latestDay",
+      "historicalMonthPeak",
+      "activeFullStreamObserved",
+    ],
+    "backup-traffic follow-up traffic",
+  );
+  exactKeys(
+    candidate.traffic.tapSample,
+    [
+      "rxBeforeBytes",
+      "rxAfterBytes",
+      "durationSeconds",
+      "deltaBytes",
+      "cumulativeCounterIsRate",
+    ],
+    "backup-traffic follow-up tap sample",
+  );
+  exactKeys(
+    candidate.traffic.latestDay,
+    [
+      "sampleCount",
+      "sampleIntervalSeconds",
+      "estimatedBytes",
+      "meanBytesPerSecond",
+      "maximumBytesPerSecond",
+      "latestBucket",
+    ],
+    "backup-traffic follow-up latest day",
+  );
+  exactKeys(
+    candidate.traffic.historicalMonthPeak,
+    ["maximumBytesPerSecond", "observedBucket"],
+    "backup-traffic follow-up historical peak",
+  );
+  exactKeys(
+    candidate.backup,
+    ["wholeVm", "postgres"],
+    "backup-traffic follow-up backup state",
+  );
+  exactKeys(
+    candidate.backup.wholeVm,
+    ["timerEnabled", "timerActive", "serviceState", "serviceLastExitAt"],
+    "backup-traffic follow-up whole-VM state",
+  );
+  exactKeys(
+    candidate.backup.postgres,
+    [
+      "timerEnabled",
+      "timerActive",
+      "latestServiceResult",
+      "objectiveSeconds",
+      "maximumObservedIntervalSeconds",
+      "archives",
+    ],
+    "backup-traffic follow-up PostgreSQL state",
+  );
+  exactKeys(
+    candidate.health,
+    ["readinessStatus", "loginStatus"],
+    "backup-traffic follow-up health",
+  );
+  exactKeys(
+    candidate.authority,
+    [
+      "r004Closed",
+      "monitoringActivated",
+      "timerReenableAuthorized",
+      "releaseAuthorized",
+      "deploymentAuthorized",
+      "loyaltyValueChanged",
+    ],
+    "backup-traffic follow-up authority",
+  );
+
+  const expectedPriorDigest = rawDigest(readText(paths.containment));
+  if (
+    candidate.schema !== "starfiniti.backup-traffic-follow-up.v1" ||
+    candidate.status !== "contained_unresolved" ||
+    candidate.observed.captureMethod !== "approved-read-only-ssh" ||
+    candidate.observed.productionMutation !== false ||
+    candidate.priorEvidence.path !== paths.containment ||
+    candidate.priorEvidence.sha256 !== expectedPriorDigest ||
+    candidate.production.release !== prior.production.release ||
+    candidate.production.applicationCommit !==
+      prior.production.applicationCommit ||
+    candidate.production.vmId !== prior.production.vmId ||
+    candidate.production.vmName !== prior.production.vmName ||
+    candidate.production.vmRunning !== true ||
+    candidate.traffic.tapSample.cumulativeCounterIsRate !== false ||
+    candidate.traffic.activeFullStreamObserved !== false ||
+    candidate.backup.wholeVm.timerEnabled !== false ||
+    candidate.backup.wholeVm.timerActive !== false ||
+    candidate.backup.wholeVm.serviceState !== "retained_failed_containment" ||
+    candidate.backup.postgres.timerEnabled !== true ||
+    candidate.backup.postgres.timerActive !== true ||
+    candidate.backup.postgres.latestServiceResult !== "success" ||
+    candidate.health.readinessStatus !== 200 ||
+    candidate.health.loginStatus !== 200 ||
+    Object.values(candidate.authority).some((value) => value !== false)
+  ) {
+    fail("backup-traffic follow-up identity or safety boundary is invalid");
+  }
+
+  const startedAt = exactUtc(
+    candidate.observed.startedAt,
+    "backup-traffic follow-up startedAt",
+  );
+  const finishedAt = exactUtc(
+    candidate.observed.finishedAt,
+    "backup-traffic follow-up finishedAt",
+  );
+  const wholeVmLastExitAt = exactUtc(
+    candidate.backup.wholeVm.serviceLastExitAt,
+    "backup-traffic follow-up whole-VM last exit",
+  );
+  const latestBucket = exactUtc(
+    candidate.traffic.latestDay.latestBucket,
+    "backup-traffic follow-up latest bucket",
+  );
+  const historicalBucket = exactUtc(
+    candidate.traffic.historicalMonthPeak.observedBucket,
+    "backup-traffic follow-up historical bucket",
+  );
+  if (
+    candidate.observed.startedAt !== "2026-09-01T12:32:47Z" ||
+    candidate.observed.finishedAt !== "2026-09-01T12:34:23Z" ||
+    candidate.traffic.latestDay.latestBucket !== "2026-09-01T12:33:00Z" ||
+    candidate.traffic.historicalMonthPeak.observedBucket !==
+      "2026-08-14T03:00:00Z" ||
+    candidate.backup.wholeVm.serviceLastExitAt !== "2026-08-31T23:33:07Z" ||
+    finishedAt <= startedAt ||
+    finishedAt - startedAt > 5 * 60 * 1000 ||
+    latestBucket < startedAt ||
+    latestBucket > finishedAt ||
+    historicalBucket >= startedAt ||
+    wholeVmLastExitAt >= startedAt
+  ) {
+    fail("backup-traffic follow-up chronology is invalid");
+  }
+
+  if (
+    !Array.isArray(candidate.backup.postgres.archives) ||
+    candidate.backup.postgres.archives.length !== 5
+  ) {
+    fail("backup-traffic follow-up archive set is invalid");
+  }
+
+  const numericFacts = [
+    candidate.traffic.tapSample.rxBeforeBytes,
+    candidate.traffic.tapSample.rxAfterBytes,
+    candidate.traffic.tapSample.durationSeconds,
+    candidate.traffic.tapSample.deltaBytes,
+    candidate.traffic.latestDay.sampleCount,
+    candidate.traffic.latestDay.sampleIntervalSeconds,
+    candidate.traffic.latestDay.estimatedBytes,
+    candidate.traffic.latestDay.meanBytesPerSecond,
+    candidate.traffic.latestDay.maximumBytesPerSecond,
+    candidate.traffic.historicalMonthPeak.maximumBytesPerSecond,
+    candidate.backup.postgres.objectiveSeconds,
+    candidate.backup.postgres.maximumObservedIntervalSeconds,
+    ...candidate.backup.postgres.archives.flatMap((archive) => [
+      archive.transferredFileBytes,
+      archive.receivedWireBytes,
+    ]),
+  ];
+  if (
+    numericFacts.some((value) => !Number.isSafeInteger(value) || value < 0) ||
+    candidate.traffic.tapSample.rxAfterBytes -
+      candidate.traffic.tapSample.rxBeforeBytes !==
+      candidate.traffic.tapSample.deltaBytes ||
+    candidate.traffic.tapSample.durationSeconds !== 10 ||
+    candidate.traffic.tapSample.deltaBytes !== 1013 ||
+    candidate.traffic.latestDay.sampleCount !== 1440 ||
+    candidate.traffic.latestDay.sampleIntervalSeconds !== 60 ||
+    candidate.traffic.latestDay.sampleCount *
+      candidate.traffic.latestDay.sampleIntervalSeconds !==
+      86400 ||
+    Math.floor(candidate.traffic.latestDay.estimatedBytes / 86400) !==
+      candidate.traffic.latestDay.meanBytesPerSecond ||
+    candidate.traffic.latestDay.estimatedBytes !== 287384753 ||
+    candidate.traffic.latestDay.maximumBytesPerSecond !== 107013 ||
+    candidate.traffic.historicalMonthPeak.maximumBytesPerSecond !== 249641465 ||
+    candidate.traffic.latestDay.maximumBytesPerSecond >=
+      candidate.traffic.historicalMonthPeak.maximumBytesPerSecond
+  ) {
+    fail("backup-traffic follow-up traffic arithmetic is invalid");
+  }
+
+  const expectedArchives = [
+    ["loyalty-postgres-20260901T122028Z", 67868, 581300],
+    ["loyalty-postgres-20260901T122348Z", 50878, 580608],
+    ["loyalty-postgres-20260901T122658Z", 50826, 580622],
+    ["loyalty-postgres-20260901T123028Z", 67887, 581605],
+    ["loyalty-postgres-20260901T123358Z", 50923, 580947],
+  ];
+  const archiveTimes = candidate.backup.postgres.archives.map(
+    (archive, index) => {
+      exactKeys(
+        archive,
+        ["name", "transferredFileBytes", "receivedWireBytes", "result"],
+        `backup-traffic follow-up archive ${index}`,
+      );
+      const expected = expectedArchives[index];
+      if (
+        archive.name !== expected[0] ||
+        archive.transferredFileBytes !== expected[1] ||
+        archive.receivedWireBytes !== expected[2] ||
+        archive.result !== "success" ||
+        archive.receivedWireBytes <= archive.transferredFileBytes ||
+        archive.receivedWireBytes >= 1024 * 1024
+      ) {
+        fail("backup-traffic follow-up archive evidence drifted");
+      }
+      return archiveTimestamp(archive.name);
+    },
+  );
+  const intervals = archiveTimes
+    .slice(1)
+    .map((value, index) => (value - archiveTimes[index]) / 1000);
+  const maximumInterval = Math.max(...intervals);
+  if (
+    intervals.some((value) => !Number.isInteger(value) || value <= 0) ||
+    candidate.backup.postgres.objectiveSeconds !== 300 ||
+    maximumInterval !==
+      candidate.backup.postgres.maximumObservedIntervalSeconds ||
+    maximumInterval !== 210 ||
+    maximumInterval > candidate.backup.postgres.objectiveSeconds
+  ) {
+    fail("backup-traffic follow-up archive chronology is invalid");
+  }
+
+  if (
+    !Array.isArray(candidate.remainingGates) ||
+    JSON.stringify(candidate.remainingGates) !==
+      JSON.stringify(prior.remainingGates)
+  ) {
+    fail("backup-traffic follow-up remaining gates drifted");
+  }
+  scanArtifact(candidate, "backup-traffic follow-up");
 }
 
 function rawDigest(raw) {
@@ -1244,6 +1534,7 @@ function validateDocument(
 }
 
 validateBackupTrafficContainment(containment);
+validateBackupTrafficFollowUp(trafficFollowUp, containment);
 
 const result = validateDocument(
   evidence,
@@ -1274,6 +1565,97 @@ if (process.argv.includes("--self-test")) {
   assert.throws(
     () => validateBackupTrafficContainment(falseContainment),
     /containment identity or safety boundary is invalid/u,
+  );
+
+  const unknownFollowUpField = structuredClone(trafficFollowUp);
+  unknownFollowUpField.extra = true;
+  assert.throws(
+    () => validateBackupTrafficFollowUp(unknownFollowUpField, containment),
+    /backup-traffic follow-up keys differ/u,
+  );
+
+  const driftedPriorDigest = structuredClone(trafficFollowUp);
+  driftedPriorDigest.priorEvidence.sha256 = "0".repeat(64);
+  assert.throws(
+    () => validateBackupTrafficFollowUp(driftedPriorDigest, containment),
+    /identity or safety boundary is invalid/u,
+  );
+
+  const cumulativeAsRate = structuredClone(trafficFollowUp);
+  cumulativeAsRate.traffic.tapSample.cumulativeCounterIsRate = true;
+  assert.throws(
+    () => validateBackupTrafficFollowUp(cumulativeAsRate, containment),
+    /identity or safety boundary is invalid/u,
+  );
+
+  const driftedTapDelta = structuredClone(trafficFollowUp);
+  driftedTapDelta.traffic.tapSample.deltaBytes += 1;
+  assert.throws(
+    () => validateBackupTrafficFollowUp(driftedTapDelta, containment),
+    /traffic arithmetic is invalid/u,
+  );
+
+  const incompleteDay = structuredClone(trafficFollowUp);
+  incompleteDay.traffic.latestDay.sampleCount = 1439;
+  assert.throws(
+    () => validateBackupTrafficFollowUp(incompleteDay, containment),
+    /traffic arithmetic is invalid/u,
+  );
+
+  const falseActiveStream = structuredClone(trafficFollowUp);
+  falseActiveStream.traffic.activeFullStreamObserved = true;
+  assert.throws(
+    () => validateBackupTrafficFollowUp(falseActiveStream, containment),
+    /identity or safety boundary is invalid/u,
+  );
+
+  const unsafeTimer = structuredClone(trafficFollowUp);
+  unsafeTimer.backup.wholeVm.timerEnabled = true;
+  assert.throws(
+    () => validateBackupTrafficFollowUp(unsafeTimer, containment),
+    /identity or safety boundary is invalid/u,
+  );
+
+  const stoppedPostgresTimer = structuredClone(trafficFollowUp);
+  stoppedPostgresTimer.backup.postgres.timerActive = false;
+  assert.throws(
+    () => validateBackupTrafficFollowUp(stoppedPostgresTimer, containment),
+    /identity or safety boundary is invalid/u,
+  );
+
+  const erasedArchive = structuredClone(trafficFollowUp);
+  erasedArchive.backup.postgres.archives.pop();
+  assert.throws(
+    () => validateBackupTrafficFollowUp(erasedArchive, containment),
+    /archive set is invalid/u,
+  );
+
+  const failedArchive = structuredClone(trafficFollowUp);
+  failedArchive.backup.postgres.archives[4].result = "failed";
+  assert.throws(
+    () => validateBackupTrafficFollowUp(failedArchive, containment),
+    /archive evidence drifted/u,
+  );
+
+  const falseRecoveryClose = structuredClone(trafficFollowUp);
+  falseRecoveryClose.authority.r004Closed = true;
+  assert.throws(
+    () => validateBackupTrafficFollowUp(falseRecoveryClose, containment),
+    /identity or safety boundary is invalid/u,
+  );
+
+  const falseProductionMutation = structuredClone(trafficFollowUp);
+  falseProductionMutation.observed.productionMutation = true;
+  assert.throws(
+    () => validateBackupTrafficFollowUp(falseProductionMutation, containment),
+    /identity or safety boundary is invalid/u,
+  );
+
+  const falseMonitoringActivation = structuredClone(trafficFollowUp);
+  falseMonitoringActivation.authority.monitoringActivated = true;
+  assert.throws(
+    () => validateBackupTrafficFollowUp(falseMonitoringActivation, containment),
+    /identity or safety boundary is invalid/u,
   );
 
   const forbiddenLabel = structuredClone(catalogue);
@@ -1633,5 +2015,5 @@ if (process.argv.includes("--self-test")) {
 }
 
 console.log(
-  `Validated ${requiredChecks.size} M15 operations checks, ${catalogue.signals.length} bounded signals, and ${catalogue.alerts.length} exact alerts; ${requiredChecks.size - result.incomplete.length} passed and ${result.incomplete.length} remain non-passing.`,
+  `Validated the immutable containment record and read-only traffic follow-up, ${requiredChecks.size} M15 operations checks, ${catalogue.signals.length} bounded signals, and ${catalogue.alerts.length} exact alerts; ${requiredChecks.size - result.incomplete.length} passed and ${result.incomplete.length} remain non-passing.`,
 );

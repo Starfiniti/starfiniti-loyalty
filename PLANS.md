@@ -3,9 +3,12 @@
 The latest bounded production observation is retained as append-only M15
 evidence. VM 971's current tap and RRD rates remain quiet, five consecutive
 PostgreSQL archives met the current 300-second cadence objective, public
-readiness passed, and the whole-VM timer remained disabled. This is freshness
-evidence only: it does not change the active repository slice, close R-004, or
-authorize production mutation, timer re-enablement, release, or deployment.
+readiness passed, and the whole-VM timer remained disabled. The machine-readable
+successor binds the prior containment digest and makes traffic arithmetic,
+archive chronology, timer safety, remaining gates, and false authority part of
+the operations regression gate. This is freshness evidence only: it does not
+change the active repository slice, close R-004, or authorize production
+mutation, timer re-enablement, release, or deployment.
 
 ADR-0119 is the active repository-safe M16 slice on the stacked
 `codex/m16-transitive-action-regression` branch. It preserves the accepted V1

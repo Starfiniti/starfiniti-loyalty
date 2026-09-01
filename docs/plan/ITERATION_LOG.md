@@ -14,7 +14,10 @@
   bytes, created `loyalty-postgres-20260901T123358Z`, and exited successfully.
   Public readiness and login both returned HTTP 200.
 - Added a minimized append-only successor rather than editing the immutable
-  August incident evidence. No production state changed, and R-004 remains
+  August incident evidence. A closed YAML record binds that prior evidence by
+  SHA-256, recomputes traffic and archive chronology, and rejects thirteen
+  adversarial history, counter, timer, archive, mutation, monitoring, and
+  authority corruptions. No production state changed, and R-004 remains
   Critical pending the dedicated repository, monitoring, retention, custody,
   and isolated full-service restore gates.
 

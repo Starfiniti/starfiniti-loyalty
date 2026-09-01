@@ -60,14 +60,17 @@ the dedicated repository, monitoring, retention, transport, and isolated
 restore gates close.
 
 The later append-only
-`backup-traffic-read-only-follow-up-2026-09-01.md` revalidates containment
-without changing production. A ten-second tap sample increased by only 1,013
-bytes; the complete latest-day RRD estimated approximately 274 MiB total and
-peaked at 107,013 bytes/s; and the month maximum remains pinned to 14 August.
-Five consecutive PostgreSQL archives completed at intervals no greater than
-210 seconds, while the whole-VM timer stayed disabled and public readiness and
-login returned HTTP 200. This freshness evidence does not close the dedicated
-repository, monitoring, retention, custody, or isolated-restore gates.
+`backup-traffic-read-only-follow-up-2026-09-01.yaml` and its narrative `.md`
+revalidate containment without changing production. The YAML successor binds
+the accepted containment file by SHA-256; the operations validator recomputes
+the tap delta, complete-day coverage, mean, archive ordering and maximum
+interval, exact timer state, unchanged remaining gates, and false authority.
+A ten-second tap sample increased by only 1,013 bytes; the complete latest-day
+RRD estimated approximately 274 MiB total and peaked at 107,013 bytes/s; and
+the month maximum remains pinned to 14 August. Five consecutive PostgreSQL
+archives completed at intervals no greater than 210 seconds, while the
+whole-VM timer stayed disabled and public readiness and login returned HTTP 200. This freshness evidence does not close the dedicated repository,
+monitoring, retention, custody, or isolated-restore gates.
 
 The 2026-09-01 read-only GitHub policy audit makes ADR-0115's external release
 gap exact. `main` has no branch protection, the repository has no ruleset or
