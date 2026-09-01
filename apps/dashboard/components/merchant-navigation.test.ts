@@ -36,6 +36,15 @@ describe("merchant programme navigation", () => {
     expect(campaign?.match("/campaigns/history")).toBe(true);
   });
 
+  it("exposes analytics as a real Grow destination", () => {
+    const analytics = merchantNavigation.find(
+      (item) => item.href === "/analytics",
+    );
+    expect(analytics?.label).toBe("Analytics");
+    expect(analytics?.group).toBeUndefined();
+    expect(analytics?.match("/analytics/reports")).toBe(true);
+  });
+
   it("exposes enterprise access as a real Platform destination", () => {
     const access = merchantNavigation.find(
       (item) => item.href === "/organization/access",

@@ -118,6 +118,22 @@ describe("controlled experience commands", () => {
     expect(rpc).not.toHaveBeenCalled();
   });
 
+  it("explains a database-authoritative storefront rollout denial", async () => {
+    rpc.mockResolvedValue({
+      data: null,
+      error: {
+        code: "42501",
+        message: "storefront experience capability disabled",
+      },
+    });
+    await expect(saveExperienceTheme(idle, themeForm())).resolves.toEqual({
+      kind: "error",
+      message:
+        "Customer experience authoring is disabled for this organization.",
+    });
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
   it("saves English copy even if a stale language selector is forged", async () => {
     rpc.mockResolvedValue({
       data: [

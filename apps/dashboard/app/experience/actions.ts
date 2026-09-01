@@ -82,6 +82,16 @@ export async function saveExperienceTheme(
       target_idempotency_key: command.data.idempotencyKey,
       target_correlation_id: command.data.correlationId,
     });
+  if (
+    error?.code === "42501" &&
+    error.message === "storefront experience capability disabled"
+  ) {
+    return {
+      kind: "error",
+      message:
+        "Customer experience authoring is disabled for this organization.",
+    };
+  }
   if (error?.code === "42501") {
     return {
       kind: "error",
@@ -185,6 +195,16 @@ export async function saveExperienceCopy(
       target_idempotency_key: command.data.idempotencyKey,
       target_correlation_id: command.data.correlationId,
     });
+  if (
+    error?.code === "42501" &&
+    error.message === "storefront experience capability disabled"
+  ) {
+    return {
+      kind: "error",
+      message:
+        "Customer experience authoring is disabled for this organization.",
+    };
+  }
   if (error?.code === "42501") {
     return {
       kind: "error",

@@ -14,6 +14,21 @@
   penetration test, release, deployment, GA, production, checkout, database,
   or loyalty-value change is claimed.
 
+- M09 adversarial review found a database-authority gap in customer-experience
+  authoring: managed tenants with `storefront.experience` disabled could still
+  save V1/V2 theme or English-copy revisions. ADR-0121 and additive migration
+  `20260901150526` add an exact-table capability trigger while retaining
+  self-hosted defaults, old command/read contracts, audit history, and every
+  protected value path. The merchant editor now fails closed to read-only with
+  accurate rollout guidance, stale saves report the capability decision, and
+  Analytics is present in the persistent sidebar. The complete local gate
+  passes 1,001 workspace tests, both production builds, every deterministic
+  validator, static validation of 90 migrations and 70 pgTAP files, secret
+  scan, zero-vulnerability production audit, and licence inventory. Exact-head
+  checks and current solo adversarial review remain pending. Production, M09's
+  88/100 score, checkout, coupons, ledger value, and tenant entitlements are
+  unchanged.
+
 - ADR-0120 closes the repository detection gap exposed by VM 971's historical
   internal full-stream pattern without claiming the stream has returned. The
   production-disabled candidate now samples one approved guest-ingress counter

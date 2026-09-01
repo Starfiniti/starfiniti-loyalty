@@ -1615,6 +1615,31 @@ tasks:
           - exact-head run 32859649418 at bf5ec90 passed baseline both images 56 migrations all 44 pgTAP files with 2392 assertions and every minimum/current HPOS/legacy WooCommerce runtime cell including staged flags actual Store API responses native coupons no-script and forced Hub failure
       - id: M09-S05-BRANDING-ACCESSIBILITY-AND-OUTAGE-HARDENING
         status: completed
+        follow_up_entitlement:
+          id: M09-S05A-STOREFRONT-AUTHORING-ENTITLEMENT
+          status: in_progress
+          hypothesis: A persistence-level capability guard prevents disabled managed tenants from creating presentation revisions while preserving all existing customer and loyalty value.
+          baseline: Enhanced customer reads resolve storefront.experience but V1 and V2 theme and copy commands can still mutate their authoring tables when that managed capability is disabled.
+          acceptance:
+            - disabled managed tenants cannot insert or update theme or English-copy revisions through V1 V2 or stale browser commands
+            - explicit tenant enablement restores authoring and a later disable stops new writes without hiding existing configuration
+            - self-hosted defaults old readers command signatures audit evidence value paths native coupons and checkout remain compatible
+            - Analytics is reachable from the persistent merchant navigation
+          failure_modes:
+            - UI-only gating is bypassed by an older RPC client
+            - billing state is mistaken for product capability authority
+            - disabling authoring hides customer value or deletes presentation history
+            - generic permission copy misreports a rollout denial as a role failure
+          rollout: Apply the additive trigger migration before the dashboard and retain the existing disabled M09 production canary until owner inputs are approved.
+          rollback: Return the dashboard to read-only and remove only the two new mutation triggers for a verified compatibility defect while retaining rows readers history value and checkout.
+          verification:
+            - dashboard action and navigation tests
+            - pgTAP managed default canary disable V1 V2 retained-read and unchanged-revision cases
+            - migration replay static grants RLS secret build and full repository gates
+          evidence:
+            - ADR-0121 records the persistence-boundary decision and rollback consequences
+            - migration 20260901150526 adds one private exact-table trigger function to both experience authoring roots without changing public interfaces
+            - the complete local repository gate passes 1001 workspace tests both production builds 90-migration and 70-pgTAP static validation secret audit and licence gates; exact-head Linux replay and independent review remain pending
         acceptance:
           - controlled assets copy spacing ordering preview states responsive layouts refresh labels and offline states are polished and bounded
           - keyboard screen-reader zoom reduced-motion contrast slow-network no-script and total-Hub-outage evidence passes
@@ -1666,6 +1691,7 @@ tasks:
         docs/architecture/ADR/0037-demand-driven-woocommerce-snapshots-and-classic-placements.md,
         docs/architecture/ADR/0038-namespaced-store-api-and-flagged-blocks-panel.md,
         docs/architecture/ADR/0039-controlled-english-presentation-v2-and-degraded-delivery.md,
+        docs/architecture/ADR/0121-storefront-authoring-entitlement-boundary.md,
         docs/architecture/ADR/0074-guest-safe-advanced-vip-catalogue.md,
         docs/architecture/ADR/0075-guest-safe-public-earning-catalogue.md,
         docs/architecture/ADR/0076-guest-safe-public-reward-catalogue.md,

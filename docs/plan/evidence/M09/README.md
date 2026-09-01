@@ -142,6 +142,34 @@ Status: in progress. M09-S01 through M09-S05 are complete; M09-S06 disabled depl
 - Retained visual evidence: [editor desktop](experience-v2-editor-desktop.png), [editor mobile](experience-v2-editor-mobile.png), [editor dark](experience-v2-editor-dark.png), [member desktop](experience-v2-member-desktop.png), [member mobile](experience-v2-member-mobile.png), [public desktop](experience-v2-public-desktop.png), and [public mobile](experience-v2-public-mobile.png).
 - Rollback: application readers and writers can return to V1 while additive V2 columns/functions remain inert and auditable. Presentation reset uses `none`, `comfortable`, and canonical order; no rollback mutates programme versions, reservations, coupons, commerce facts, or ledger value.
 
+## S05A — Storefront authoring entitlement correction
+
+- Status: implementation complete; exact-head Linux replay and independent
+  adversarial review are pending before this follow-up closes.
+- Reproduction: a managed organization with `storefront.experience` disabled
+  could still create V1/V2 theme and English-copy revisions. Customer reads,
+  role checks, tenant scope, idempotency, and audit remained safe, but the
+  mutation contradicted the database-authoritative capability contract.
+- Architecture: ADR-0121 selects one private exact-table trigger over UI-only
+  checks or four duplicated command rewrites. Migration `20260901150526`
+  resolves the stored tenant scope before every theme/copy insert or update;
+  self-hosted defaults and trusted migration/administration roles remain compatible.
+- Merchant experience: disabled or unavailable entitlement evidence renders
+  the existing editor read-only with explicit value-preservation guidance, and
+  stale submissions return a rollout-specific error. Analytics now appears in
+  the persistent sidebar instead of relying on an undiscoverable direct route.
+- Local verification: the complete repository gate passes 1,001 workspace
+  tests, both production builds, and every deterministic validator; static
+  validation passes 90 migrations and 70 pgTAP files. Secret scan, zero-
+  vulnerability production audit, and licence inventory also pass. The expanded
+  experience pgTAP plan covers managed default denial, V1/V2 writes, unchanged
+  revisions, explicit canary enablement, later disablement, and retained reads.
+- Exact-head verification: pending on the required Ubuntu database/container
+  jobs because this workstation has no running Docker or Podman engine.
+- Production and score: unchanged. The M09 production canary remains disabled,
+  module score remains 88/100, and no theme, copy, customer, WooCommerce,
+  checkout, ledger, coupon, deployment, or entitlement record was changed.
+
 ## S06 — Canary and close
 
 - Status: in progress; pre-canary automation is complete and no production mutation has been attempted.

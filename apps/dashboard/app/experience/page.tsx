@@ -1,7 +1,10 @@
 import Link from "next/link";
+import { ShieldAlert } from "lucide-react";
 import { redirect } from "next/navigation";
 import { MerchantShell } from "@/components/merchant-shell";
+import { hasEntitlement } from "@/lib/entitlements";
 import { merchantLocalePath, merchantText } from "@/lib/merchant-locale";
+import { getEntitlementSnapshot } from "@/lib/server/entitlements";
 import { getMerchantExperienceTheme } from "@/lib/server/experience-theme";
 import { getMerchantProgrammeState } from "@/lib/server/programme";
 import { getAuthenticatedTenantState } from "@/lib/server/tenant-context";
@@ -20,11 +23,19 @@ export default async function ExperiencePage() {
   if (tenant.kind === "unassigned") redirect(merchantLocalePath("/", locale));
 
   const { context } = tenant;
-  const canEdit = ["owner", "admin"].includes(context.membershipRole);
-  const [theme, programme] = await Promise.all([
+  const canAdminister = ["owner", "admin"].includes(context.membershipRole);
+  const [theme, programme, entitlementResult] = await Promise.all([
     getMerchantExperienceTheme(context),
     getMerchantProgrammeState(context),
+    getEntitlementSnapshot(context).then(
+      (value) => ({ status: "fulfilled" as const, value }),
+      () => ({ status: "rejected" as const }),
+    ),
   ]);
+  const storefrontExperienceEnabled =
+    entitlementResult.status === "fulfilled" &&
+    hasEntitlement(entitlementResult.value, "storefront.experience");
+  const canEdit = canAdminister && storefrontExperienceEnabled;
   const hasPublishedVersion = programme.versions.some(
     (version) => version.status === "published",
   );
@@ -74,6 +85,20 @@ export default async function ExperiencePage() {
             </Link>
           ) : null}
         </div>
+
+        {!storefrontExperienceEnabled ? (
+          <section className="campaign-rollout-notice" role="status">
+            <ShieldAlert aria-hidden="true" />
+            <div>
+              <strong>Customer experience authoring is disabled</strong>
+              <p>
+                Existing theme and copy remain visible, but new revisions are
+                unavailable for this tenant. Loyalty balances, history,
+                redemptions, and native WooCommerce checkout remain unchanged.
+              </p>
+            </div>
+          </section>
+        ) : null}
 
         {theme.scopeReady && context.workspace && context.programmeGroup ? (
           <ExperienceEditor
