@@ -82,6 +82,8 @@ Subjects are 1–200 characters and bodies 1–4,000 characters. Unknown or malf
 
 Disabling the notification entitlement blocks new tests and holds pre-send work but does not remove active bindings, historical versions, accepted attempts, normal delivery evidence, or any loyalty value path.
 
+The merchant studio exposes the same boundary without becoming its authority. When the notification entitlement is disabled, publication, SMTP test, webhook creation, and key rotation controls are unavailable while templates, health, issues, endpoint evidence, and owner/admin disable or retirement remain visible. Managed deployments may publish immutable templates and manage signed webhooks, but only self-hosted deployments can queue the SMTP test. Stale or forged form submissions are still rejected by the PostgreSQL commands.
+
 ## Merchant notification workspace
 
 `loyalty.get_notification_workspace_v1(workspaceId, issueLimit)` derives tenant scope from the live membership and returns exactly six active template projections, three provider summaries (`smtp`, `klaviyo`, `webhook`), aggregate transactional/marketing consent counts, deployment/entitlement state, and at most 100 newest canonical issues.
