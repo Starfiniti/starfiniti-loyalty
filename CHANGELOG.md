@@ -25,10 +25,13 @@
   incident. A ten-second tap sample, complete latest-day/month RRD, five
   consecutive PostgreSQL archive completions, timer state, and public
   readiness prove that the historical 200–235 MB/s full-stream loop remains
-  absent. The whole-VM timer remains disabled, the PostgreSQL timer remains
-  healthy, and R-004 stays open for dedicated-repository, monitoring,
-  retention, custody, and isolated-restore evidence. No production state or
-  loyalty value changed.
+  absent. A closed YAML successor binds the accepted containment evidence by
+  SHA-256, and the operations validator recomputes traffic and archive
+  chronology while rejecting cumulative-counter, erased-archive, unsafe-timer,
+  production-mutation, monitoring-activation, and false-closure claims. The
+  whole-VM timer remains disabled, the PostgreSQL timer remains healthy, and
+  R-004 stays open for dedicated-repository, monitoring, retention, custody,
+  and isolated-restore evidence. No production state or loyalty value changed.
 
 - Added ADR-0119 and a generalized M16 recurring-failure registry without
   rewriting the accepted recovery-specific V1 bytes. V2 retains the two R-004

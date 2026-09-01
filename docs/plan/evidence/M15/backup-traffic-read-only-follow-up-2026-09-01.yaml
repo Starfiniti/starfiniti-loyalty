@@ -1,0 +1,85 @@
+schema: starfiniti.backup-traffic-follow-up.v1
+status: contained_unresolved
+observed:
+  startedAt: 2026-09-01T12:32:47Z
+  finishedAt: 2026-09-01T12:34:23Z
+  captureMethod: approved-read-only-ssh
+  productionMutation: false
+priorEvidence:
+  path: docs/plan/evidence/M15/backup-traffic-containment-2026-09-01.yaml
+  sha256: e4658ddbc290af6e58f721898ae833c8b7327c376ab5cd321069d2171c5e477f
+production:
+  release: v0.1.11
+  applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
+  vmId: 971
+  vmName: loyalty-prod-supabase
+  vmRunning: true
+traffic:
+  tapSample:
+    rxBeforeBytes: 3605053629220
+    rxAfterBytes: 3605053630233
+    durationSeconds: 10
+    deltaBytes: 1013
+    cumulativeCounterIsRate: false
+  latestDay:
+    sampleCount: 1440
+    sampleIntervalSeconds: 60
+    estimatedBytes: 287384753
+    meanBytesPerSecond: 3326
+    maximumBytesPerSecond: 107013
+    latestBucket: 2026-09-01T12:33:00Z
+  historicalMonthPeak:
+    maximumBytesPerSecond: 249641465
+    observedBucket: 2026-08-14T03:00:00Z
+  activeFullStreamObserved: false
+backup:
+  wholeVm:
+    timerEnabled: false
+    timerActive: false
+    serviceState: retained_failed_containment
+    serviceLastExitAt: 2026-08-31T23:33:07Z
+  postgres:
+    timerEnabled: true
+    timerActive: true
+    latestServiceResult: success
+    objectiveSeconds: 300
+    maximumObservedIntervalSeconds: 210
+    archives:
+      - name: loyalty-postgres-20260901T122028Z
+        transferredFileBytes: 67868
+        receivedWireBytes: 581300
+        result: success
+      - name: loyalty-postgres-20260901T122348Z
+        transferredFileBytes: 50878
+        receivedWireBytes: 580608
+        result: success
+      - name: loyalty-postgres-20260901T122658Z
+        transferredFileBytes: 50826
+        receivedWireBytes: 580622
+        result: success
+      - name: loyalty-postgres-20260901T123028Z
+        transferredFileBytes: 67887
+        receivedWireBytes: 581605
+        result: success
+      - name: loyalty-postgres-20260901T123358Z
+        transferredFileBytes: 50923
+        receivedWireBytes: 580947
+        result: success
+health:
+  readinessStatus: 200
+  loginStatus: 200
+remainingGates:
+  - provision and escrow a distinct encrypted PostgreSQL Borg repository
+  - bind distinct canonical repository identities local lock cache and security state
+  - complete approved rsync transport rollout and rollback escrow
+  - prove manual timer maintenance contention alert and retention behavior
+  - activate archive-age transfer-amplification and missing-series paging
+  - complete an isolated restore before retiring shared PostgreSQL history
+  - redesign and reapprove whole-host backup before re-enabling its timer
+authority:
+  r004Closed: false
+  monitoringActivated: false
+  timerReenableAuthorized: false
+  releaseAuthorized: false
+  deploymentAuthorized: false
+  loyaltyValueChanged: false
