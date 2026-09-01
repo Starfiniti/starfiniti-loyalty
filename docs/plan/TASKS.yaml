@@ -3224,12 +3224,15 @@ tasks:
         R-049,
         R-050,
         R-052,
+        R-064,
       ]
     docs:
       [
         docs/operations/BACKUP_RESTORE.md,
+        docs/operations/RELEASE.md,
         docs/operations/RUNBOOKS.md,
         docs/testing/TEST_STRATEGY.md,
+        docs/architecture/ADR/0115-default-branch-controlled-sealed-releases.md,
       ]
     evidence: [docs/plan/evidence/M15/README.md]
     slices:
@@ -3391,6 +3394,7 @@ tasks:
         verification:
           [
             npm run ci:validate,
+            npm run release-policy:audit:validate,
             npm run security:validate,
             npm run release:sources:validate,
             npm run woocommerce:package:validate,
@@ -3403,6 +3407,8 @@ tasks:
         evidence:
           [
             docs/plan/evidence/M15/security.yaml,
+            docs/plan/evidence/M15/release-policy-audit-2026-09-01.yaml,
+            scripts/validate-release-policy-audit.mjs,
             docs/plan/evidence/M15/runs/security-medium-triage-f9c83ac.yaml,
             docs/plan/evidence/M15/runs/security-medium-triage-188d9d8.yaml,
             docs/plan/evidence/M15/runs/security-medium-triage-fe8a6ff.yaml,
@@ -3429,7 +3435,7 @@ tasks:
         status: in_progress
         dependencies: [M15-S01-CAPACITY-ENVELOPE]
         hypothesis: A digest-bound controller that begins before provisioning and refuses public or production routing can measure full database identity application signing privacy and value recovery without turning a disposable drill into production authority.
-        baseline: PostgreSQL base/WAL backup and one isolated database-only PITR drill exist, but the live off-host archive shares a Borg repository with the long whole-VM sequence and its hourly retention can thin recent recovery points below the target; the Debian host runs rsync 3.4.1 and the Ubuntu database VM runs 3.2.7 even though upstream 3.5 closes directly applicable restricted-wrapper confinement and peer-input flaws; exact Debian and rsync-project Launchpad candidates plus the exact pre-change host rsync host libacl1 and guest rsync rollback artifacts now pass the plan-bound internal canary through official signed metadata URLs hashes and package metadata, while operations escrow host-consumer compatibility dedicated-repository and dual-endpoint production rollout plus application Authentik Supabase Auth configuration signing escrow privacy replay full-service RTO repeatability and clean teardown remain unproved.
+        baseline: PostgreSQL base/WAL backup and one isolated database-only PITR drill exist, but the live off-host archive shares a Borg repository with the long whole-VM sequence and its hourly retention can thin recent recovery points below the target; a 2026-09-01 incident check disabled the raw whole-VM timer after its prior 1h34m36s archive gap and next shared-lock failure while retaining every archive and the active PostgreSQL timer; the Debian host runs rsync 3.4.1 and the Ubuntu database VM runs 3.2.7 even though upstream 3.5 closes directly applicable restricted-wrapper confinement and peer-input flaws; exact Debian and rsync-project Launchpad candidates plus the exact pre-change host rsync host libacl1 and guest rsync rollback artifacts now pass the plan-bound internal canary through official signed metadata URLs hashes and package metadata, while operations escrow host-consumer compatibility dedicated-repository and dual-endpoint production rollout plus application Authentik Supabase Auth configuration signing escrow privacy replay full-service RTO repeatability and clean teardown remain unproved.
         targets:
           [
             authoritative PostgreSQL RPO at or below 300 seconds from a fresh pre-failure source marker,
@@ -3491,6 +3497,7 @@ tasks:
         evidence:
           [
             docs/plan/evidence/M15/recovery.yaml,
+            docs/plan/evidence/M15/backup-traffic-containment-2026-09-01.yaml,
             infrastructure/testing/recovery/plan.yaml,
             scripts/run-clean-room-recovery.mjs,
             scripts/validate-clean-room-recovery-evidence.mjs,
@@ -3518,7 +3525,7 @@ tasks:
         status: in_progress
         dependencies: [M15-S02-FAULT-INJECTION, M15-S04-CLEAN-ROOM-RECOVERY]
         hypothesis: A versioned bounded-label signal catalogue with exact Prometheus rules locked dashboards independent paging and monotonic incident evidence can detect every protected-value failure without turning monitoring into value authority or checkout dependency.
-        baseline: Production has application readiness and backup service checks but no active Prometheus Alertmanager Grafana Loki Promtail or node-exporter service; the historical 3.60 TB VM 971 transmit counter required manual diagnosis, and a 2026-08-31 raw whole-VM migration repeated shared-lock starvation and caused an exact 1h34m36s off-site gap without deployed archive-age paging; repository rules and dashboards exist but no digest-pinned deployable plane or measured alert delivery escalation incident exercise exists.
+        baseline: Production has application readiness and backup service checks but no active Prometheus Alertmanager Grafana Loki Promtail or node-exporter service; the historical 3.60 TB VM 971 counter required manual diagnosis, host RRD and Borg evidence confirm the old amplification stayed on the internal VM-to-host path, and a 2026-08-31 raw whole-VM migration repeated shared-lock starvation and caused an exact 1h34m36s off-site gap without deployed archive-age paging; the raw whole-VM timer was disabled on 2026-09-01 after its next shared-lock failure while the PostgreSQL timer remained healthy, but repository rules and dashboards still have no live digest-pinned plane or measured alert delivery escalation incident exercise.
         targets:
           [
             every availability latency queue provider database WAL backup ledger tenant privacy checkout security and evidence-freshness signal has one bounded source owner route runbook threshold and dashboard,
@@ -3580,6 +3587,7 @@ tasks:
         evidence:
           [
             docs/plan/evidence/M15/operations.yaml,
+            docs/plan/evidence/M15/backup-traffic-containment-2026-09-01.yaml,
             docs/plan/evidence/M15/observability-deployment.yaml,
             docs/plan/evidence/M15/runs/observability-deployment-canary-532458e.json,
             infrastructure/observability/catalog.yaml,
@@ -3797,6 +3805,7 @@ tasks:
         R-059,
         R-060,
         R-061,
+        R-064,
       ]
     docs:
       [
@@ -3836,6 +3845,7 @@ tasks:
         docs/architecture/ADR/0108-minimized-public-authentik-runtime-evidence.md,
         docs/architecture/ADR/0109-authentik-2026-8-source-compatibility-contract.md,
         docs/architecture/ADR/0110-isolated-authentik-2026-8-runtime-rehearsal.md,
+        docs/architecture/ADR/0115-default-branch-controlled-sealed-releases.md,
         docs/architecture/ADR/0116-merged-main-release-candidate-evidence.md,
         infrastructure/governance/recovery-artifact-escrow-v3.yaml,
         infrastructure/governance/authentik-runtime-capture.yaml,

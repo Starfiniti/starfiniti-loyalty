@@ -1,6 +1,6 @@
 schema: starfiniti.improvement-backlog.v1
 version: 1
-observedAt: 2026-09-01T08:30:08Z
+observedAt: 2026-09-01T09:25:02Z
 ranking:
   formula: severityPoints + (2 * merchantImpact) + (2 * customerImpact) + confidence - effort - dependencyPenalty
   severityPoints: { critical: 40, high: 30, medium: 20, low: 10 }
@@ -17,7 +17,7 @@ items:
     score: 88
     status: blocked_external
     evidence: infrastructure/governance/next-runtime-review.yaml
-    dependency: PR 57 merged exact reviewed head 149724a3a2fad89d1a7990e0c3114be2754ecab6 into main as c85d93d0e6e0273543078050e697f04309f11d93; post-merge CI 33475350770 and Security 33475350801 passed on that merge commit, the Release workflow remains disabled_manually, production remains v0.1.11, and approved release deployment rollback observation and protected-value reconciliation remain.
+    dependency: PR 57 merged exact reviewed head 149724a3a2fad89d1a7990e0c3114be2754ecab6 into main as c85d93d0e6e0273543078050e697f04309f11d93; post-merge CI 33475350770 and Security 33475350801 passed on that merge commit. The live audit found the Release workflow disabled_manually, unprotected main, zero rulesets, zero environments, no repository release-policy secret, and eight external release gates; production remains v0.1.11, and approved release deployment rollback observation and protected-value reconciliation remain.
     ownerInput: Product and security approve the exact release; operations separately approves deployment and production reconciliation.
   - id: IMP-011
     title: Repair the production Proxmox host across five published security advisories
@@ -56,8 +56,8 @@ items:
     score: 79
     status: blocked_external
     evidence: docs/plan/evidence/M01/backup-transfer-amplification-2026-08-14.md
-    dependency: Read-only investigation attributes the 3604822111248-byte VM 971 transmit history to the obsolete pre-incremental complete-cluster stream repeated every few minutes on 2026-08-13 and 2026-08-14, while the current high-rate loop is absent; approved dedicated repository provisioning, recovery-material escrow, timer and retention canary, and an isolated restore window remain.
-    ownerInput: Operations owner approves production backup configuration change and independent recovery review.
+    dependency: Read-only investigation attributes the 3604822111248-byte VM 971 transmit history to the obsolete pre-incremental complete-cluster stream repeated every few minutes on 2026-08-13 and 2026-08-14, while the current high-rate loop is absent. The conflicting raw whole-VM timer is disabled and PostgreSQL cadence is healthy; approved dedicated repository provisioning, recovery-material escrow, redesigned whole-VM scheduling, monitored timer and retention canary, and an isolated restore window remain.
+    ownerInput: Operations and security approve the isolated repository and recovery boundary; an independent reviewer accepts the timer, retention, and restore evidence before whole-VM scheduling is re-enabled.
   - id: IMP-002
     title: Deploy protected production monitoring and independent incident routes
     severity: critical

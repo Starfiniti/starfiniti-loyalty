@@ -1,5 +1,54 @@
 # Iteration Log
 
+## 2026-09-01 — Live release-policy audit
+
+- Queried the current GitHub workflow, branch-protection, ruleset, environment,
+  repository-secret, Actions-permission, release, and exact-main check state
+  without mutating it. The replacement Release workflow is manually disabled,
+  production remains v0.1.11, and merged `main` has eleven green check runs.
+- The required authority boundary does not yet exist: `main` is unprotected,
+  there are zero repository rulesets and environments, and no repository
+  `RELEASE_POLICY_TOKEN` secret is configured. Inherited secret presence is not
+  asserted because the repository API cannot establish it.
+- Added `release-policy-audit-2026-09-01.yaml` and a validator with fourteen
+  adversarial cases. The evidence keeps eight independent gates open and rejects
+  false protection, ruleset, environment, secret, approval, release, or
+  production-mutation claims. No GitHub setting, tag, release, deployment, or
+  production state changed.
+
+## 2026-09-01 — VM 971 traffic and recovery-path containment
+
+- Reconstructed the reported multi-terabyte VM 971 pattern from direct tap,
+  bridge, physical-interface, RRD, timer, process, lock, journal, and Borg
+  evidence. Month RRD pins the 249,641,465-byte/s peak and matching
+  228,902,338-byte/s disk read to 2026-08-14. The latest day peaks at 107,013
+  bytes/s and totals approximately 271.9 MB; a live timer cycle received about
+  0.58 MB. The 3.605 TB VM/tap counter is cumulative, not traffic since
+  yesterday.
+- Confirmed the traffic stayed on the internal VM-to-host path. During the
+  2026-08-13T18:00Z–2026-08-14T10:00Z incident window, host outbound RRD peaked
+  at 279,067 bytes/s and totalled approximately 440.8 MB, while Borg added only
+  roughly 5 KB of deduplicated data per repeated multi-gigabyte input stream.
+  The current 3.782 TB physical `eno1` total includes later whole-host backups
+  and cannot be attributed to the earlier loop.
+- Confirmed the retired full-stream exporter is retained only as a root-owned
+  non-executable rollback file and no active unit references it. The active
+  PostgreSQL path uses restricted incremental rsync staging. A separate live
+  defect remained: the enabled whole-host controller was configured for raw
+  disk mode, shared the PostgreSQL Borg serialization boundary, caused the
+  previously measured 1h34m36s archive gap, and its 2026-09-01 timer run failed
+  because a PostgreSQL cycle held the shared lock.
+- Disabled and stopped only `starfiniti-pve-borg-backup.timer`. Existing
+  archives, scripts, configuration, local base/WAL generation, VM, database,
+  application, checkout, and loyalty value were retained. The PostgreSQL timer
+  remained enabled/active and created `loyalty-postgres-20260901T092222Z` at
+  09:22:58Z after receiving 576,022 bytes; public health and login returned 200
+  and Auth correctly rejected its unauthenticated root with 401.
+- The action is reversible but the timer must not be re-enabled until ADR-0071
+  isolates the PostgreSQL repository or an approved supervised recovery window
+  explicitly accepts the RPO exposure. Monitoring, dedicated repository,
+  retention, transport rollout, and isolated restore remain open under R-004.
+
 ## 2026-09-01 — Merged-main evidence reconciliation
 
 - Verified that PR #57 merged reviewed head

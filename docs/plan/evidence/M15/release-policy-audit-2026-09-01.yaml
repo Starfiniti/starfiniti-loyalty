@@ -1,0 +1,62 @@
+schema: starfiniti.github-release-policy-audit.v1
+status: external_controls_absent
+observedAt: 2026-09-01T09:09:45Z
+repository:
+  owner: Starfiniti
+  name: starfiniti-loyalty
+  visibility: public
+  defaultBranch: main
+  archived: false
+  disabled: false
+candidate:
+  mainCommit: c85d93d0e6e0273543078050e697f04309f11d93
+  observedCheckCount: 11
+  successfulCheckCount: 11
+workflow:
+  id: 333373957
+  name: Release
+  path: .github/workflows/release.yml
+  state: disabled_manually
+  releaseForCandidate: false
+latestRelease:
+  tag: v0.1.11
+  publishedAt: 2026-08-13T20:01:21Z
+branchProtection:
+  branch: main
+  exists: false
+  requiredChecksConfigured: false
+  signedCommitsRequired: false
+  administratorEnforcement: false
+tagRulesets:
+  totalCount: 0
+  activeVersionTagCount: 0
+releaseEnvironment:
+  totalCount: 0
+  exists: false
+  independentReviewerConfigured: false
+  preventSelfReview: false
+  protectedBranchRestriction: false
+  administratorBypassDisabled: null
+policyToken:
+  repositorySecretNamed: false
+  inheritedOrEnvironmentSecretObserved: null
+  permissionReviewComplete: false
+actionsPolicy:
+  defaultWorkflowPermissions: read
+  canApprovePullRequestReviews: false
+  allowedActions: all
+  shaPinningRequired: false
+approvals:
+  releaseSecurity: false
+  licence: false
+  ownerRelease: false
+productionMutation: false
+remainingGates:
+  - protect main with exact required checks and signed-commit enforcement
+  - activate an exact version-tag ruleset with immutable signed tags
+  - create the protected release environment
+  - configure an independent required reviewer and prevent self-review
+  - independently verify administrator bypass is disabled
+  - supply and independently permission-review the read-only policy token
+  - close release-security and reciprocal-licence obligations
+  - approve the exact release separately from deployment

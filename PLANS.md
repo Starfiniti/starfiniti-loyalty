@@ -1,5 +1,24 @@
 # Execution Plan
 
+The 2026-09-01 read-only GitHub policy audit makes the next release boundary
+explicit: the workflow remains manually disabled, `main` is unprotected, and
+the repository has zero rulesets, zero environments, and no repository
+`RELEASE_POLICY_TOKEN`. Keep release and deployment disabled until all eight
+independent controls in `docs/plan/evidence/M15/release-policy-audit-2026-09-01.yaml`
+are present and reviewed. Validate the closed snapshot with
+`npm run release-policy:audit:validate`; never treat merged green checks as
+publication or production authority.
+
+Production containment on 2026-09-01 disabled only the scheduled whole-host raw
+Borg timer after proving it still shared the authoritative PostgreSQL archive
+lock and repository. The apparent 200–249 MB/s VM 971 burst is historical RRD
+evidence from 2026-08-14, not a current five-minute transfer: the latest day
+peaks at 107 KB/s and the post-containment database cycle received 576,022
+bytes before creating `loyalty-postgres-20260901T092222Z`. Existing whole-host
+and PostgreSQL archives remain intact. Keep the raw whole-host timer disabled
+until ADR-0071's dedicated PostgreSQL repository and monitored restore boundary
+pass; do not trade the five-minute database RPO for an unsupervised raw VM run.
+
 PR #57 merged reviewed head `149724a3a2fad89d1a7990e0c3114be2754ecab6`
 into `main` as `c85d93d0e6e0273543078050e697f04309f11d93` on 2026-09-01.
 Post-merge CI `33475350770` and Security `33475350801` passed on that

@@ -1,5 +1,26 @@
 # Changelog
 
+- Added a closed live GitHub release-policy audit and adversarial validator.
+  The read-only snapshot records eleven green checks on merged `main` while
+  proving that branch protection, rulesets, environments, and the repository
+  policy token are absent and the replacement Release workflow remains
+  manually disabled. Eight external publication gates remain explicit; the
+  audit made no repository-policy, release, deployment, or production change.
+
+- Contained the recurring production recovery conflict without stopping the
+  loyalty VM or database. Live Proxmox RRD and interface counters show that VM
+  971's 3.605 TB value is cumulative from the 2026-08-14 full-stream incident;
+  current one-day traffic peaks at 107 KB/s. Host RRD and Borg's kilobyte-scale
+  deduplicated additions confirm that the old amplification stayed on the
+  internal VM-to-host path; later physical totals include whole-host backups.
+  The whole-host job remained configured for raw disks, shared the PostgreSQL
+  Borg boundary, and had both caused a 1h34m36s
+  off-site gap and failed its next scheduled run on the shared lock. Its timer
+  is now disabled/inactive. The three-minute PostgreSQL timer remained active
+  and created `loyalty-postgres-20260901T092222Z` after containment with 67,757
+  changed bytes and 576,022 wire bytes. Existing archives, database, VM,
+  application, checkout, and loyalty value were unchanged; R-004 remains open.
+
 - Reconciled the enterprise handoff after PR #57 merged reviewed head
   `149724a3a2fad89d1a7990e0c3114be2754ecab6` into `main` as
   `c85d93d0e6e0273543078050e697f04309f11d93`. Post-merge CI

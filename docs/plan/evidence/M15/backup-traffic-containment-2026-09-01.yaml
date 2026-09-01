@@ -1,0 +1,66 @@
+schema: starfiniti.backup-traffic-containment.v1
+status: contained_unresolved
+observedAt: 2026-09-01T09:25:02Z
+production:
+  release: v0.1.11
+  applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
+  vmId: 971
+  vmName: loyalty-prod-supabase
+  vmUptimeSeconds: 1646545
+traffic:
+  vmNetoutBytes: 3605015860623
+  vmNetinBytes: 14095726007
+  vmbr10RxBytes: 3621526758483
+  vmbr10TxBytes: 185369859012
+  eno1RxBytes: 424950545900
+  eno1TxBytes: 3781936540077
+  historicalPeak:
+    observedBucket: 2026-08-14T03:00:00Z
+    netoutBytesPerSecond: 249641465
+    diskReadBytesPerSecond: 228902338
+  historicalHostWindow:
+    start: 2026-08-13T18:00:00Z
+    end: 2026-08-14T10:00:00Z
+    maximumNetoutBytesPerSecond: 279067
+    approximateNetoutBytes: 440834246
+  latestDay:
+    maximumNetoutBytesPerSecond: 107013
+    approximateNetoutBytes: 271851854
+  interpretation: The multi-terabyte VM and bridge counters are cumulative from the contained 2026-08-14 VM-to-host full-stream incident. Host RRD stayed below 279067 outbound bytes per second during the observed incident window and Borg added only kilobytes of deduplicated data per repeated multi-gigabyte input, so the amplified stream did not leave the server. The later physical eno1 total includes subsequent whole-host backups and is not causal evidence for the incident. No current full-stream transfer was observed.
+rootCause:
+  historicalAmplification: The retired content-from-command exporter represented the complete recovery set as one changing stdin object and retransmitted it before Borg deduplication on every cycle.
+  currentArchivePath: The active PostgreSQL job uses restricted incremental rsync staging and then Borg creation.
+  recurringRecoveryConflict: The enabled whole-host controller was configured for raw disk mode and shared the PostgreSQL local and remote Borg serialization boundary. Its 2026-08-31 run caused a 1h34m36s PostgreSQL off-site gap, and its 2026-09-01 scheduled run failed because a PostgreSQL cycle already held the shared lock.
+containment:
+  wholeVmBackupTimerEnabled: false
+  wholeVmBackupTimerActive: false
+  postgresBackupTimerEnabled: true
+  postgresBackupTimerActive: true
+  legacyFullStreamExecutable: false
+  existingArchivesRetained: true
+  databaseServiceChanged: false
+  vmChanged: false
+  applicationChanged: false
+  loyaltyValueChanged: false
+verification:
+  postContainmentArchive: loyalty-postgres-20260901T092222Z
+  transferredFileBytes: 67757
+  receivedWireBytes: 576022
+  archiveCompletedAt: 2026-09-01T09:22:58Z
+  dashboardHealthStatus: 200
+  dashboardLoginStatus: 200
+  authRootStatus: 401
+  currentTapRxDeltaBytesOverFiveSeconds: 521
+remainingGates:
+  - provision and escrow a distinct encrypted PostgreSQL Borg repository
+  - bind distinct canonical repository identities local lock cache and security state
+  - complete approved rsync transport rollout and rollback escrow
+  - prove manual timer maintenance contention alert and retention behavior
+  - activate archive-age transfer-amplification and missing-series paging
+  - complete an isolated restore before retiring shared PostgreSQL history
+  - redesign and reapprove whole-host backup before re-enabling its timer
+productionMutation:
+  performed: true
+  scope: The existing starfiniti-pve-borg-backup.timer was disabled and stopped. No script configuration archive database VM application checkout or loyalty-value state was changed.
+  reversible: true
+  reenableGate: Do not re-enable the whole-host timer until the PostgreSQL repository is isolated or an approved supervised recovery window explicitly accepts the resulting RPO exposure.

@@ -1,5 +1,36 @@
 # Status
 
+- A read-only GitHub policy audit at `2026-09-01T09:09:45Z` found that the
+  replacement release workflow is still manually disabled and exact merged
+  `main` has eleven green check runs, but `main` has no branch protection,
+  there are zero repository rulesets, zero environments, and no repository
+  `RELEASE_POLICY_TOKEN` secret. The audit keeps eight exact external control,
+  independent-review, security/licence, and approval gates open.
+  `release-policy-audit-2026-09-01.yaml` and
+  `npm run release-policy:audit:validate` preserve and adversarially validate
+  the snapshot. The audit changed no GitHub setting and grants no release or
+  deployment authority.
+
+- A 2026-09-01 production incident check separated VM 971's cumulative
+  3.605 TB counter from current traffic. Proxmox month RRD pins the historical
+  249.6 MB/s peak to 2026-08-14; the latest day peaks at 107 KB/s and a captured
+  PostgreSQL cycle received only 576,022 wire bytes. Host RRD remained below
+  279 KB/s outbound during the historical window and Borg added only kilobytes
+  per repeated stream, confirming that the amplification stayed on the internal
+  VM-to-host path. The later 3.782 TB physical `eno1` total includes subsequent
+  whole-host backups and is not attributable to the incident. The still-enabled
+  whole-host controller was configured for raw disk mode, shared the Borg
+  serialization boundary, had already caused the exact 1h34m36s PostgreSQL
+  archive gap, and its 2026-09-01 scheduled run failed on that same shared
+  lock. As reversible containment, only
+  `starfiniti-pve-borg-backup.timer` was disabled/stopped. The authoritative
+  PostgreSQL timer stayed enabled and produced
+  `loyalty-postgres-20260901T092222Z` afterward; dashboard health and login
+  remained HTTP 200. Existing archives and all VM, database, application,
+  checkout, and loyalty-value state were retained. R-004 remains Critical
+  until ADR-0071's dedicated repository, monitoring, retention, and isolated
+  restore gates pass.
+
 - PR #57 merged reviewed head `149724a3a2fad89d1a7990e0c3114be2754ecab6`
   into `main` as `c85d93d0e6e0273543078050e697f04309f11d93` at
   `2026-09-01T05:53:23Z`. Post-merge CI `33475350770` and Security

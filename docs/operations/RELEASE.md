@@ -4,6 +4,20 @@
 
 The GitHub `Release` workflow is manually disabled. Production remains `v0.1.11`. Do not enable or dispatch the replacement workflow until every prerequisite below is present and independently reviewed.
 
+### Audited state — 2026-09-01
+
+A read-only live audit found eleven successful check runs on exact merged `main`,
+but no branch protection on `main`, zero repository rulesets, zero repository
+environments, and no repository `RELEASE_POLICY_TOKEN` secret. The workflow was
+still `disabled_manually`; no tag or release was created and no production
+mutation occurred. The API cannot prove whether a secret with the same name is
+inherited, so inheritance is recorded as unknown rather than accepted.
+
+The minimized source record is
+`docs/plan/evidence/M15/release-policy-audit-2026-09-01.yaml`. Run
+`npm run release-policy:audit:validate` before relying on it. It is absence
+evidence and a fail-closed checklist, not release approval.
+
 ## Required external controls
 
 - Protect `main`: pull requests required, at least one approving review, stale approvals dismissed, conversations resolved, required CI checks strict and successful, force pushes and deletion disabled, and administrator enforcement enabled.

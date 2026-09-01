@@ -1,5 +1,30 @@
 # M15 Evidence — GA Hardening
 
+The 2026-09-01 VM 971 investigation is retained in
+`backup-traffic-containment-2026-09-01.yaml`. It proves that the multi-terabyte
+counter and 249.6 MB/s peak are historical 2026-08-14 evidence, while the
+latest day peaks at 107 KB/s and a post-containment PostgreSQL cycle received
+576,022 bytes. Host RRD and Borg's kilobyte-scale deduplicated additions confirm
+that the historical amplification stayed on the internal VM-to-host path; the
+later physical counter includes subsequent whole-host backups. The still-enabled
+whole-host controller was configured for raw disk mode and shared the
+PostgreSQL Borg boundary, so its timer was disabled/stopped as reversible
+containment. Existing archives were retained; the PostgreSQL timer remained
+active and created a new archive. R-004 and M15-S04/S05 remain non-passing until
+the dedicated repository, monitoring, retention, transport, and isolated
+restore gates close.
+
+The 2026-09-01 read-only GitHub policy audit makes ADR-0115's external release
+gap exact. `main` has no branch protection, the repository has no ruleset or
+environment, no repository `RELEASE_POLICY_TOKEN` secret is configured, and the
+release-security, licence, and owner approvals are absent. Release workflow
+`333373957` remains `disabled_manually`, so the missing controls cannot be
+bypassed by a publication attempt. The minimized
+`release-policy-audit-2026-09-01.yaml` snapshot and
+`npm run release-policy:audit:validate` reject false protection, ruleset,
+environment, token, approval, release, or production claims. They create no
+GitHub setting, secret, tag, release, deployment, or production mutation.
+
 ADR-0112 adds the missing production-disabled deployment boundary beneath the
 existing operations catalogue. Exact current image indexes bind Prometheus,
 Alertmanager, Grafana, blackbox_exporter, and postgres_exporter to a hardened

@@ -1,6 +1,6 @@
 schema: starfiniti.continuous-improvement.v1
 status: in_progress
-observedAt: 2026-09-01T08:30:08Z
+observedAt: 2026-09-01T09:25:02Z
 candidate:
   branch: main
   commit: c85d93d0e6e0273543078050e697f04309f11d93
@@ -10,7 +10,7 @@ plan:
   sha256: b39db2fc0d83f1f1aea7500c9196e32b04bf962d5592f333947362ec4155185a
 backlog:
   path: docs/plan/IMPROVEMENT_BACKLOG.yaml
-  sha256: 51845d44730c9381eb33adb00d8ff833912fb50b7949610fbc907b98ea80c358
+  sha256: 7e68a78344e033a648719267806b8a3ef7606a8686fcc461b6b2dd71d7a40612
 artifacts:
   monthlyReviewPrimaryPath: null
   monthlyReviewPrimarySha256: null
@@ -61,7 +61,7 @@ checks:
     evidence: The canonical contract fixes UTC cadence, review sections, thirteen official sources, bounded content-free source snapshots, exact recovery host and guest endpoints, installed and candidate provenance digests, ranking arithmetic, regression threshold, score floors, experiment guardrails, five closed minimized V1 closeout artifacts, and automatic failures.
   - id: backlog_contract
     status: passed
-    evidence: The evidence-ranked backlog records fourteen current external and dependency gates with exact integer inputs, recomputable scores, stable order, evidence paths, and owner inputs; PR 57 merge completion removes only its merge dependency and raises IMP-012 from 87 to 88 while release, deployment, recovery-transfer, capacity, fault, and every live closeout gate remain separate blockers.
+    evidence: The evidence-ranked backlog records fourteen current external and dependency gates with exact integer inputs, recomputable scores, stable order, evidence paths, and owner inputs. PR 57 merge completion removes only its merge dependency and raises IMP-012 from 87 to 88; the live release audit keeps eight external publication gates explicit. Disabling the conflicting raw whole-VM timer contains the immediate PostgreSQL archive starvation path without closing dedicated-repository, monitoring, retention, transport, or restore work. Release, deployment, recovery, capacity, fault, and every live closeout gate remain separate blockers.
   - id: task_graph_binding
     status: passed
     evidence: M16 declares measurable cadence, provider, regression, experiment, exercise, scoring, rollout, rollback, owner-input, and evidence requirements.
@@ -130,7 +130,7 @@ checks:
     evidence: Completion requires no overdue unaccepted Critical or High item at the review cutoff.
   - id: recurring_failure_inventory
     status: pending
-    evidence: The interim evidence-bound registry now records the 2026-08-28 and 2026-08-31 PostgreSQL off-site shared-lock starvation incidents as two distinct chronological anchors under one Critical R-004 fingerprint. It binds the exact decision implementation and production evidence while the defect remains present. Two elapsed monthly review periods and their independently reviewed incident/support inventories are still required, so this check remains pending.
+    evidence: The interim evidence-bound registry records the 2026-08-28 and 2026-08-31 PostgreSQL off-site shared-lock starvation incidents as two distinct chronological anchors under one Critical R-004 fingerprint. On 2026-09-01 the conflicting raw whole-VM timer was disabled while PostgreSQL cadence stayed healthy, but the shared repository design and permanent recovery gates remain unresolved. Two elapsed monthly review periods and their independently reviewed incident/support inventories are still required, so this check remains pending.
   - id: durable_regression_controls
     status: pending
     evidence: The repeated PostgreSQL off-site starvation record binds exact bytes for the backup-assets validator archive-RPO alert contract and OPS-007. All three controls are merged through PR 57 under one digest-bound main-integration receipt, while production and observation evidence remain null; dedicated-repository provisioning paging activation continuity retention and isolated restore remain required before the active-control gate can pass.
