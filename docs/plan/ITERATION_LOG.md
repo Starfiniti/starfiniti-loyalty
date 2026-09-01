@@ -46,6 +46,11 @@
   thirteen exact patterns without enabling implicit GitHub-owned or
   verified-creator trust. These failures are retained as negative evidence and
   do not advance M15 Security.
+- Committed the exact direct-and-transitive policy, release preflight, ADR,
+  validator, and append-only failure/success evidence as
+  `9391499454d193ac4cdf61223173cd170c5be3a6`. The M15 manifest is rebound to
+  that release-workflow digest at 7/27; fresh exact-head automation remains a
+  separate gate.
 
 ## 2026-09-01 — Fail-closed GitHub branch and release-tag policy
 

@@ -17,7 +17,7 @@ reviewer, environment, expanded read-only token, tag, security/licence, or
 approval gates.
 
 Because this slice changes `.github/workflows/release.yml`, M15 Security now
-binds exact implementation `dee20094d1609a8a10e26a4dd1fc71ac69f02940`
+binds exact implementation `9391499454d193ac4cdf61223173cd170c5be3a6`
 and is intentionally 7/27 until fresh exact-head CI, Security, CodeQL, image,
 SBOM, DAST, freshness, WooCommerce, and Medium-review evidence is reconciled.
 The earlier `fec7f86` results remain historical and are not relabelled.

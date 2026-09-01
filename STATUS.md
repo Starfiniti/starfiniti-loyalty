@@ -19,7 +19,7 @@
   and are not overclaimed. Release, deployment, and production remain unchanged.
   The release-workflow change invalidates prior candidate-bound automated
   security evidence: `security.yaml` now binds exact implementation
-  `dee20094d1609a8a10e26a4dd1fc71ac69f02940` at 7/27 passed and 20 pending.
+  `9391499454d193ac4cdf61223173cd170c5be3a6` at 7/27 passed and 20 pending.
   The earlier `fec7f86` results remain immutable historical evidence; fresh
   exact-head automation and digest-bound Medium review are required.
   Security pull-request run `33499712113` failed before job creation under the
