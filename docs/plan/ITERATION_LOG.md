@@ -1,5 +1,23 @@
 # Iteration Log
 
+## 2026-09-01 — VM 971 backup-traffic containment follow-up
+
+- Rechecked the active production path through the approved read-only operator
+  route after another alert presented VM 971's cumulative counter as current
+  traffic. The complete latest-day RRD estimated 287,384,753 bytes, averaged
+  3,326 bytes/s, and peaked at 107,013 bytes/s; a direct ten-second tap sample
+  increased by 1,013 bytes. The month RRD pins the historical 249,641,465
+  bytes/s maximum to `2026-08-14T03:00:00Z`.
+- Confirmed the whole-VM timer remains disabled/inactive and the PostgreSQL
+  timer remains enabled/active. Five consecutive PostgreSQL archives completed
+  within a maximum 210-second interval; the latest received 580,947 rsync
+  bytes, created `loyalty-postgres-20260901T123358Z`, and exited successfully.
+  Public readiness and login both returned HTTP 200.
+- Added a minimized append-only successor rather than editing the immutable
+  August incident evidence. No production state changed, and R-004 remains
+  Critical pending the dedicated repository, monitoring, retention, custody,
+  and isolated full-service restore gates.
+
 ## 2026-09-01 — Generalized recurring-failure regression control
 
 - Preserved the accepted recovery-specific V1 registry byte-for-byte under

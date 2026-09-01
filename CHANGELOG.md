@@ -1,5 +1,14 @@
 # Changelog
 
+- Added an append-only read-only production follow-up for the VM 971 backup
+  incident. A ten-second tap sample, complete latest-day/month RRD, five
+  consecutive PostgreSQL archive completions, timer state, and public
+  readiness prove that the historical 200–235 MB/s full-stream loop remains
+  absent. The whole-VM timer remains disabled, the PostgreSQL timer remains
+  healthy, and R-004 stays open for dedicated-repository, monitoring,
+  retention, custody, and isolated-restore evidence. No production state or
+  loyalty value changed.
+
 - Added ADR-0119 and a generalized M16 recurring-failure registry without
   rewriting the accepted recovery-specific V1 bytes. V2 retains the two R-004
   Borg-lock occurrences and adds the R-065 GitHub Actions startup failure plus
