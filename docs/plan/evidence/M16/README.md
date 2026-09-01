@@ -1,5 +1,23 @@
 # M16 Evidence — Continuous Improvement
 
+ADR-0119 preserves the accepted recovery-specific
+`recurring-failures.yaml` V1 bytes under SHA-256 and introduces the generalized
+`recurring-failures-v2.yaml` register. V2 retains both R-004 Borg-lock
+occurrences and adds three R-065 GitHub Actions occurrences: startup failure
+`33499712113` and setup failures in attempts one and two of run `33499821641`.
+The record binds the exact corrected thirteen-pattern selected-actions policy,
+full-SHA pinning, false implicit GitHub-owned and verified-creator trust, and the
+successful third attempt while preserving every failed attempt as negative
+evidence. The live external policy is active; the release preflight and three
+source-controlled validators remain candidate-only until both the stack base and
+this stacked change are independently reviewed and merged.
+`exhaustiveDiscoveryClaimed` remains false:
+exact pinned source proves the current observed composite dependencies, not
+future action revisions. `npm run continuous-improvement:validate` now reports
+two failures, five occurrences, and fifty-eight adversarial cases. M16 remains
+77/100 with 32 checks pending; release, deployment, production, and protected
+loyalty value are unchanged.
+
 ADR-0113 closes the repository boundary for the five future closeout artifacts.
 `npm run continuous-improvement:validate` now treats every V1 object level as a
 closed schema and runs thirty-seven completion corruptions covering unknown

@@ -122,16 +122,26 @@ Close each calendar month within ten days. The initial M16 gate requires two dis
 8. Sign and checksum the completed monthly artifact. Do not overwrite it after review.
 
 Between monthly closes, record an observed second occurrence in
-`docs/plan/evidence/M16/recurring-failures.yaml`. Bind each distinct occurrence
-to one exact repository evidence path, SHA-256, UTC instant, and unique section
-anchor. Bind decisions, implementations, and candidate controls to their exact
-repository bytes. A candidate control records null merge, production, and
-observation evidence; it cannot satisfy the monthly merged-control gate until
-those distinct proofs exist. The current R-004 controls are merged under
-ADR-0116, but their production and observation proofs remain null; they still do
-not satisfy the monthly active-control gate. Validate this fail-closed register with
-`npm run continuous-improvement:validate`. The register accelerates incident
-follow-up but does not substitute for either elapsed monthly review.
+`docs/plan/evidence/M16/recurring-failures-v2.yaml`. The accepted
+`recurring-failures.yaml` V1 file is immutable historical evidence and remains
+bound by SHA-256. Bind each distinct occurrence to one exact repository evidence
+path, SHA-256, UTC instant, and unique section anchor. Bind decisions,
+implementations, and controls to their exact repository bytes. A candidate
+control has null merge, activation, and observation evidence; a merged control
+requires distinct merge evidence; an active control additionally requires
+activation evidence; closure requires separate observation evidence. The
+current R-004 controls are merged under ADR-0116, but activation and observation
+proofs remain null. The R-065 external selected-actions policy is active, but
+its source-controlled regression controls remain candidate-only pending
+independent review and merge. Neither satisfies the monthly active-and-observed
+control gate.
+
+For action or plugin ecosystems, record only dependencies proven by exact
+current source and fail-closed runtime evidence. Never mark discovery exhaustive:
+a changed pinned revision can add a new composite dependency and must trigger a
+fresh source review, policy update, and evidence successor. Validate the register
+with `npm run continuous-improvement:validate`. It accelerates incident follow-up
+but does not substitute for either elapsed monthly review.
 
 ## Quarterly exercises
 

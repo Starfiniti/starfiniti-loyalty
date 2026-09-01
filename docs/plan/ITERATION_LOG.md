@@ -1,5 +1,32 @@
 # Iteration Log
 
+## 2026-09-01 — Generalized recurring-failure regression control
+
+- Preserved the accepted recovery-specific V1 registry byte-for-byte under
+  SHA-256 and introduced ADR-0119 plus
+  `starfiniti.recurring-failure-registry.v2` instead of placing a repository
+  control-plane incident into misleading dedicated-repository/paging fields.
+- Retained both R-004 Borg-lock incidents and added three R-065 occurrences:
+  Security startup failure `33499712113` and supply-chain setup failures from
+  attempts one and two of run `33499821641`. Each occurrence has its own UTC
+  instant and exact digest-bound anchor in the append-only correction evidence.
+- Bound the corrected live selected-actions state to thirteen exact patterns,
+  full-SHA pinning, and false implicit GitHub-owned or verified-creator trust.
+  Attempt three remains the successful correction proof; the three failures
+  remain negative evidence.
+- Added a generalized closed current-state and authority envelope. The external
+  repository setting is active, while the release preflight, workflow-policy
+  validator, release-policy evidence validator, and recurring-failure
+  validator remain candidate-only pending independent review and merge of both
+  the stack base and this stacked change.
+- Added explicit `exhaustiveDiscoveryClaimed: false`: reviewed pinned source
+  proves the current observed dependency set, not every dependency a future
+  composite-action revision may introduce. Fifty-eight adversarial cases reject
+  erased failures, cache restore/save loss, policy drift, broad trust, disabled
+  pinning, successful-proof loss, V1 drift, and release/deployment/production
+  overclaims. M16 remains 77/100; candidate and deployed-production scores stay
+  83/100 and 54/100.
+
 ## 2026-09-01 — Repository-native security and release-preflight correction
 
 - A live repository audit found GitHub Actions allowed every action without

@@ -14,6 +14,21 @@
   penetration test, release, deployment, GA, production, checkout, database,
   or loyalty-value change is claimed.
 
+- ADR-0119 preserves the accepted `starfiniti.recurring-failure-registry.v1`
+  bytes and supersedes its recovery-only state shape with a generalized V2
+  register. V2 now reconstructs two R-004 Borg-lock occurrences and three
+  R-065 GitHub Actions occurrences: startup failure `33499712113`, then
+  supply-chain setup failures in attempts one and two of run `33499821641`.
+  The exact correction evidence retains all failures, the successful third
+  attempt, thirteen selected action patterns, full-SHA pinning, false implicit
+  GitHub-owned and verified-creator trust, and
+  `exhaustiveDiscoveryClaimed: false`. Four source-controlled regression
+  controls remain candidate-only until PR #59 passes exact-head checks,
+  adversarial solo review, and merge under ADR-0124. PR #58 is already merged as
+  verified commit `63418ee`. Fifty-eight adversarial cases pass. This claims no
+  independent review and changes no Release, deployment, production, score, or
+  loyalty value state.
+
 - GitHub repository-native security is now fail-closed under ADR-0117 and its
   transitive-action correction ADR-0118. Actions permit only thirteen exact
   patterns: nine direct repository workflow references plus four newly required
@@ -219,16 +234,18 @@
   rather than the superseded 27 August traffic snapshot.
 
 - ADR-0111 converts that repeated protected-path failure into an additive M16
-  control record without claiming the fix is delivered. The new registry binds
+  control record without claiming the fix is active. The preserved V1 registry binds
   two distinct UTC occurrences and exact evidence anchors to one stable
   `recovery.postgres-offsite.shared-borg-lock-starvation` fingerprint. It also
   binds exact ADR-0071, controller, validator, monitor, and OPS-007 bytes.
   Twenty adversarial cases reject one-occurrence substitution, reused
   anchors, path escape, digest drift, missing or duplicate controls, and false
-  merge or production activation. Every control remains `candidate`; production
-  still has the defect, no dedicated repository or paging, and no merge,
-  continuity, retention, restore, elapsed-monthly, independent-review, or owner
-  evidence. M16 remains 77/100, candidate 83/100, and production 54/100.
+  merge or production activation. ADR-0116 advances every R-004 control to
+  `merged`, while production still has the defect, no dedicated repository or
+  paging, and no activation, continuity, retention, restore, elapsed-monthly,
+  independent-review, or owner evidence. ADR-0119 now supersedes the schema
+  through V2 without rewriting this V1 record. M16 remains 77/100, candidate
+  83/100, and production 54/100.
 
 - ADR-0110 adds the still-missing exact Authentik 2026.8.0 runtime rehearsal
   without touching the live 2026.5.6 broker. Exact Authentik, PostgreSQL, and

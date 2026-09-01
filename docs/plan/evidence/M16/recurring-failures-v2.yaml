@@ -1,0 +1,194 @@
+schema: starfiniti.recurring-failure-registry.v2
+status: in_progress
+observedAt: "2026-09-01T11:53:28Z"
+supersedes:
+  registry:
+    schema: starfiniti.recurring-failure-registry.v1
+    path: docs/plan/evidence/M16/recurring-failures.yaml
+    sha256: 5b9bd0b668818b276266420d61afdea4b75dff2fb059ba6f91406a7ecf584c81
+  decision:
+    path: docs/architecture/ADR/0119-generalized-recurring-failure-registry.md
+    sha256: a13c2f1318e25203175b0790b413b3a3c85b0eaa035da7e4147b25db2cef7ac1
+policy:
+  thresholdOccurrences: 2
+  allowedControls: [regressionTest, validator, monitor, runbook, agentRule]
+  evidenceDigestsRequired: true
+  candidateCannotClaimMergeOrActivation: true
+  exhaustiveDiscoveryClaimsAllowed: false
+failures:
+  - fingerprint: recovery.postgres-offsite.shared-borg-lock-starvation
+    riskId: R-004
+    severity: Critical
+    state: merged_pending_activation
+    summary: The whole-VM Borg lock twice starved the PostgreSQL off-site archive beyond its five-minute recovery objective.
+    occurrences:
+      - id: shared-lock-starvation-2026-08-28
+        observedAt: "2026-08-28T01:21:10Z"
+        evidence:
+          path: docs/plan/evidence/M01/backup-transfer-amplification-2026-08-14.md
+          sha256: ce2d46c03b5b136dff0b6236521ffac7162e88e8789da2bc4b979eb6ea8457b7
+          anchor: "## Live follow-up — 2026-08-28"
+        productionMutation: false
+      - id: shared-lock-starvation-2026-08-31
+        observedAt: "2026-08-31T12:08:18Z"
+        evidence:
+          path: docs/plan/evidence/M01/backup-transfer-amplification-2026-08-14.md
+          sha256: ce2d46c03b5b136dff0b6236521ffac7162e88e8789da2bc4b979eb6ea8457b7
+          anchor: "## Repeat off-site lock starvation — 2026-08-31 13:50 CEST"
+        productionMutation: false
+    decision:
+      path: docs/architecture/ADR/0071-dedicated-postgresql-borg-repository.md
+      sha256: 8ef0a03cb5c7fff18ce3269f1a1319df6e9b5a4d3a5befdeb0688c5439854835
+    implementation:
+      path: infrastructure/environments/proxmox/scripts/starfiniti-loyalty-postgres-borg-controller
+      sha256: 3692c7bc830300ce63594b8dbceb77cb8942fb136a6ba405a7b5a589f4ab44dc
+    controls:
+      - id: backup-assets-validator
+        type: validator
+        reference:
+          path: scripts/validate-backup-assets.mjs
+          sha256: 61420ebdb03bea3a6b0ce9ecbea299aae699971bedb5905c58fa81b300d68844
+        deliveryStatus: merged
+        mergeEvidence:
+          path: docs/plan/evidence/M16/main-integration-2026-09-01.yaml
+          sha256: 45ba2c59c8be7089f470b0ed21f4f486ed5c6370e65cbbfd1dc63fb52157c1e5
+        activationEvidence: null
+        observationEvidence: null
+      - id: archive-rpo-monitor
+        type: monitor
+        reference:
+          path: infrastructure/observability/prometheus/rules.yaml
+          sha256: fa20afac82fdd5d93d95c9b1b4fed9d590c8118b3377865ddfa4a1948cde2fcf
+        deliveryStatus: merged
+        mergeEvidence:
+          path: docs/plan/evidence/M16/main-integration-2026-09-01.yaml
+          sha256: 45ba2c59c8be7089f470b0ed21f4f486ed5c6370e65cbbfd1dc63fb52157c1e5
+        activationEvidence: null
+        observationEvidence: null
+      - id: recovery-rpo-runbook
+        type: runbook
+        reference:
+          path: docs/operations/RUNBOOKS.md
+          sha256: 8e17a789ee0cf13991baf716cec2062959c098071d02672fd87e7671d48b5b82
+        deliveryStatus: merged
+        mergeEvidence:
+          path: docs/plan/evidence/M16/main-integration-2026-09-01.yaml
+          sha256: 45ba2c59c8be7089f470b0ed21f4f486ed5c6370e65cbbfd1dc63fb52157c1e5
+        activationEvidence: null
+        observationEvidence: null
+    current:
+      defectPresent: true
+      externalControlActive: false
+      observationComplete: false
+      lastVerifiedAt: "2026-08-31T12:12:08Z"
+      evidence:
+        path: docs/plan/evidence/M01/backup-transfer-amplification-2026-08-14.md
+        sha256: ce2d46c03b5b136dff0b6236521ffac7162e88e8789da2bc4b979eb6ea8457b7
+        anchor: "## Repeat off-site lock starvation — 2026-08-31 13:50 CEST"
+      negativeEvidenceRetained: true
+      exhaustiveDiscoveryClaimed: false
+      authority:
+        productionMutation: false
+        releaseEnabled: false
+        releaseCreated: false
+        deploymentChanged: false
+        protectedValueChanged: false
+    remainingGates:
+      - provision dedicated repository and owner-only configuration
+      - activate repository-isolated archive and maintenance units
+      - activate node-exporter metrics and protected-value paging
+      - prove manual and timer archive continuity
+      - prove retention and isolated restore
+
+  - fingerprint: security.github-actions.transitive-policy-inventory
+    riskId: R-065
+    severity: Critical
+    state: control_candidate
+    summary: Direct-only GitHub Actions policy inventory repeatedly blocked pinned public sub-actions and composite dependencies before security scanning could complete.
+    occurrences:
+      - id: actions-startup-failure-33499712113
+        observedAt: "2026-09-01T10:53:44Z"
+        evidence:
+          path: docs/plan/evidence/M15/repository-actions-policy-correction-2026-09-01.yaml
+          sha256: 8ef1445417ce944cba72ebb773c6827a51e5bef5643ae07e37e81cc4227caf34
+          anchor: "pullRequestStartup:"
+        productionMutation: false
+      - id: actions-setup-failure-33499821641-attempt-1
+        observedAt: "2026-09-01T10:55:06Z"
+        evidence:
+          path: docs/plan/evidence/M15/repository-actions-policy-correction-2026-09-01.yaml
+          sha256: 8ef1445417ce944cba72ebb773c6827a51e5bef5643ae07e37e81cc4227caf34
+          anchor: "- attempt: 1"
+        productionMutation: false
+      - id: actions-setup-failure-33499821641-attempt-2
+        observedAt: "2026-09-01T11:03:49Z"
+        evidence:
+          path: docs/plan/evidence/M15/repository-actions-policy-correction-2026-09-01.yaml
+          sha256: 8ef1445417ce944cba72ebb773c6827a51e5bef5643ae07e37e81cc4227caf34
+          anchor: "- attempt: 2"
+        productionMutation: false
+    decision:
+      path: docs/architecture/ADR/0118-transitive-github-actions-policy-correction.md
+      sha256: 900f715764caac168a48590f44b10b5f48c889c8dce833e5fb28593f46d202ca
+    implementation:
+      path: .github/workflows/release.yml
+      sha256: 12267e96be4550ed002600b80a137cde4b5716b617cc630b96634bfc76bd5ff3
+    controls:
+      - id: release-action-policy-preflight
+        type: regressionTest
+        reference:
+          path: .github/workflows/release.yml
+          sha256: 12267e96be4550ed002600b80a137cde4b5716b617cc630b96634bfc76bd5ff3
+        deliveryStatus: candidate
+        mergeEvidence: null
+        activationEvidence: null
+        observationEvidence: null
+      - id: workflow-action-policy-validator
+        type: validator
+        reference:
+          path: scripts/validate-workflows.mjs
+          sha256: 7eb8a84ac98e8aeb4ddc23ccd63575bf29378f792ed3b84200867cbbd7db89ba
+        deliveryStatus: candidate
+        mergeEvidence: null
+        activationEvidence: null
+        observationEvidence: null
+      - id: release-policy-evidence-validator
+        type: validator
+        reference:
+          path: scripts/validate-release-policy-audit.mjs
+          sha256: f5e80b2010d49bacecb0a3ef36f8441cc71d48396047a25d8702c4ff7892db71
+        deliveryStatus: candidate
+        mergeEvidence: null
+        activationEvidence: null
+        observationEvidence: null
+      - id: recurring-failure-regression-validator
+        type: validator
+        reference:
+          path: scripts/validate-recurring-failure-registry.mjs
+          sha256: 48503856b53e47f521dfa0be64c931b1e8891213a47d7925a8685a342fec1875
+        deliveryStatus: candidate
+        mergeEvidence: null
+        activationEvidence: null
+        observationEvidence: null
+    current:
+      defectPresent: false
+      externalControlActive: true
+      observationComplete: false
+      lastVerifiedAt: "2026-09-01T11:11:22Z"
+      evidence:
+        path: docs/plan/evidence/M15/repository-actions-policy-correction-2026-09-01.yaml
+        sha256: 8ef1445417ce944cba72ebb773c6827a51e5bef5643ae07e37e81cc4227caf34
+        anchor: "correctedActionsPolicy:"
+      negativeEvidenceRetained: true
+      exhaustiveDiscoveryClaimed: false
+      authority:
+        productionMutation: false
+        releaseEnabled: false
+        releaseCreated: false
+        deploymentChanged: false
+        protectedValueChanged: false
+    remainingGates:
+      - merge candidate validators and release preflight after eligible independent approval
+      - observe the merged controls on a later exact-head Security run
+      - inspect exact composite-action source whenever a pinned action revision changes
+      - retain all failed attempts and the non-exhaustive discovery limitation
