@@ -16,9 +16,10 @@ no bypass and independently requires a signature while denying update and
 deletion, so creation authority cannot bypass signature or immutability.
 
 Repository-native security is also fail-closed. GitHub Actions accepts only
-the eight action repositories currently used by repository workflows, denies
-implicit GitHub-owned and verified-creator trust, and requires every action
-reference to use a full commit SHA.
+the exact thirteen-pattern ADR-0118 allowlist covering nine direct references
+and four newly required Trivy composite patterns, denies implicit GitHub-owned
+and verified-creator trust, and requires every resolved action reference to use
+a full commit SHA.
 Dependency alerts, unpaused Dependabot security updates, secret scanning, push
 protection, and private vulnerability reporting are enabled. The two alerts
 found during enablement were deterministic Stripe-format unit-test fixtures;
@@ -39,7 +40,9 @@ rollback endpoints. `npm run release-policy:audit:validate` validates it against
 the immutable precondition snapshot. The chronological successor
 `repository-security-hardening-2026-09-01.yaml` records the Actions, dependency,
 secret-scanning, alert-triage, and private-reporting state plus exact rollback
-endpoints.
+endpoints. `repository-actions-policy-correction-2026-09-01.yaml` is its
+append-only successor for the fail-closed CodeQL matching and Trivy composite
+dependency correction; ADR-0118 owns the exact thirteen-pattern policy.
 
 ### Pre-hardening audited state — 2026-09-01
 

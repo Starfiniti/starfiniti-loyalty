@@ -1,7 +1,10 @@
 # Changelog
 
 - Enabled repository-native continuous security without enabling Release.
-  Actions now allow only the eight action repositories used by current workflows,
+  ADR-0118 corrects ADR-0117's first direct-only action inventory after
+  fail-closed startup/setup evidence: Actions now allow thirteen exact patterns
+  covering nine direct references and four newly required Trivy composite
+  patterns,
   deny implicit GitHub-owned and verified-creator trust, and require full-SHA
   pinning. Vulnerability alerts, unpaused Dependabot security updates, secret
   scanning, push protection, and private vulnerability reporting are live. Two

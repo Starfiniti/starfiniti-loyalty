@@ -1,16 +1,20 @@
 # Execution Plan
 
-ADR-0117 is the current safe M15 repository-security slice. GitHub Actions is
-restricted to the eight action repositories currently used by repository workflows
-and requires full-SHA references. Dependency alerts and unpaused security updates,
-secret scanning and push protection, and private vulnerability reporting are
-live. The two historical detections were synthetic Stripe-format test fixtures
-and are resolved as `used_in_tests`; all three repository alert classes now have
-zero open items. The disabled release preflight must revalidate the exact action
-policy, repository security features, zero alerts, exact twelve branch checks,
-signed/last-push policy, and both distinct tag rulesets before release. This does
-not remove the independent reviewer, environment, expanded read-only token,
-tag, security/licence, or approval gates.
+ADR-0118 is the active correction to ADR-0117's M15 repository-security slice.
+GitHub Actions is restricted to thirteen exact allowed patterns: nine direct
+references plus four newly required SHA-pinned Trivy composite patterns exposed
+by two fail-closed job-setup attempts and exact pinned source. Implicit
+GitHub-owned and verified-creator trust stays disabled, and full-SHA references
+remain mandatory. Dependency alerts and
+unpaused security updates, secret scanning and push protection, and private
+vulnerability reporting are live. The two historical secret detections were
+synthetic Stripe-format test fixtures and are resolved as `used_in_tests`; all
+three repository alert classes now have zero open items. The disabled release
+preflight must revalidate the exact action policy, repository security features,
+zero alerts, exact twelve branch checks, signed/last-push policy, and both
+distinct tag rulesets before release. This does not remove the independent
+reviewer, environment, expanded read-only token, tag, security/licence, or
+approval gates.
 
 Because this slice changes `.github/workflows/release.yml`, M15 Security now
 binds exact implementation `dee20094d1609a8a10e26a4dd1fc71ac69f02940`

@@ -1,6 +1,6 @@
 # ADR-0117: Repository-native continuous security controls
 
-- Status: Accepted
+- Status: Accepted; action allowlist superseded in part by ADR-0118
 - Date: 2026-09-01
 - Scope: GitHub repository security, dependency alerts, secret scanning, and release preflight
 

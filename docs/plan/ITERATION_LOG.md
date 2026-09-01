@@ -35,6 +35,17 @@
   an M15 security input, `security.yaml` returns from 19/27 to 7/27 rather than
   relabelling the historical `fec7f86` scans and Medium review. Fresh exact-head
   automation, artifact reconciliation, and triage remain pending.
+- Pull-request Security run `33499712113` failed before job creation under the
+  first repository-level CodeQL pattern. Manual run `33499821641` proved the
+  exact CodeQL `init` and `analyze` sub-actions initialize, then failed the
+  supply-chain setup on two full-SHA Trivy composite dependencies omitted from
+  the direct workflow inventory: `aquasecurity/setup-trivy` and `actions/cache`.
+  The first retry failed closed on `actions/cache/restore`; exact source at the
+  reported `setup-trivy` commit also proved `actions/cache/save` and an
+  already-allowed checkout reference. ADR-0118 corrects the allowlist to
+  thirteen exact patterns without enabling implicit GitHub-owned or
+  verified-creator trust. These failures are retained as negative evidence and
+  do not advance M15 Security.
 
 ## 2026-09-01 — Fail-closed GitHub branch and release-tag policy
 

@@ -196,13 +196,18 @@ jobs:
             .verified_allowed == false and
             (.patterns_allowed | sort) == ([
               "actions/attest-build-provenance@*",
+              "actions/cache@*",
+              "actions/cache/restore@*",
+              "actions/cache/save@*",
               "actions/checkout@*",
               "actions/download-artifact@*",
               "actions/setup-node@*",
               "actions/upload-artifact@*",
               "anchore/sbom-action@*",
+              "aquasecurity/setup-trivy@*",
               "aquasecurity/trivy-action@*",
-              "github/codeql-action@*"
+              "github/codeql-action/analyze@*",
+              "github/codeql-action/init@*"
             ] | sort)
           ' <<<"$selected_actions" >/dev/null
 

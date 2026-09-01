@@ -3235,6 +3235,7 @@ tasks:
         docs/testing/TEST_STRATEGY.md,
         docs/architecture/ADR/0115-default-branch-controlled-sealed-releases.md,
         docs/architecture/ADR/0117-repository-native-continuous-security-controls.md,
+        docs/architecture/ADR/0118-transitive-github-actions-policy-correction.md,
       ]
     evidence: [docs/plan/evidence/M15/README.md]
     slices:
@@ -3412,6 +3413,7 @@ tasks:
             docs/plan/evidence/M15/release-policy-audit-2026-09-01.yaml,
             docs/plan/evidence/M15/release-policy-hardening-2026-09-01.yaml,
             docs/plan/evidence/M15/repository-security-hardening-2026-09-01.yaml,
+            docs/plan/evidence/M15/repository-actions-policy-correction-2026-09-01.yaml,
             scripts/validate-release-policy-audit.mjs,
             docs/plan/evidence/M15/runs/security-medium-triage-f9c83ac.yaml,
             docs/plan/evidence/M15/runs/security-medium-triage-188d9d8.yaml,
@@ -3421,6 +3423,8 @@ tasks:
             reviewed artifact head 74a37e930cda44e4eedb550bd4a6237da03c75c5 passed CI 33384160196 and Security 33384160199 with 19 of 27 checks passing while eight release production review independent test reconciliation and approval gates remain open,
             exact candidate fec7f86fd0d7db91e8527bf9d5ed82976fcc8615 passed CI 33405444851 and Security 33405444839; fresh exact automated observability image SBOM DAST and Medium-review artifacts restore 19 of 27 checks while eight tagged-release production-review independent-test reconciliation and approval gates remain open,
             release-workflow and repository-security implementation dee20094d1609a8a10e26a4dd1fc71ac69f02940 invalidates candidate-bound automated and triage evidence; security.yaml therefore records 7 of 27 checks passing until fresh exact-head automation and digest-bound review are reconciled,
+            ADR-0118 retains Security startup failure 33499712113 and manual setup failure 33499821641 as negative evidence,
+            then corrects the external Actions policy to nine direct plus four newly required transitive full-SHA patterns without implicit GitHub-owned or verified-creator trust; neither failed run advances the 7 of 27 security gate,
             docs/architecture/ADR/0064-deployable-artifact-security-and-isolated-dast.md,
             docs/architecture/ADR/0082-request-bound-dashboard-content-security-policy.md,
             docs/architecture/ADR/0083-release-bound-corresponding-source-artifacts.md,

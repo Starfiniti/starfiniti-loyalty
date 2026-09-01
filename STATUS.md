@@ -1,10 +1,12 @@
 # Status
 
-- GitHub repository-native security is now fail-closed under ADR-0117. Actions
-  permit only the eight action repositories currently used by repository
-  workflows, with full-SHA pinning required; neither all GitHub-owned actions nor
-  all verified creators are implicitly trusted, and default workflow permissions
-  stay read-only.
+- GitHub repository-native security is now fail-closed under ADR-0117 and its
+  transitive-action correction ADR-0118. Actions permit only thirteen exact
+  patterns: nine direct repository workflow references plus four newly required
+  full-SHA Trivy composite patterns GitHub exposed through setup failures and
+  exact pinned source. Neither all
+  GitHub-owned actions nor all verified creators are implicitly trusted, and
+  default workflow permissions stay read-only.
   Vulnerability alerts, unpaused Dependabot security updates, secret scanning,
   push protection, and private vulnerability reporting are enabled. The initial
   scan found two deterministic Stripe-format unit-test fixtures; both were
@@ -20,6 +22,14 @@
   `dee20094d1609a8a10e26a4dd1fc71ac69f02940` at 7/27 passed and 20 pending.
   The earlier `fec7f86` results remain immutable historical evidence; fresh
   exact-head automation and digest-bound Medium review are required.
+  Security pull-request run `33499712113` failed before job creation under the
+  first repository-level CodeQL pattern. Manual run `33499821641` then proved
+  the two exact CodeQL sub-actions could initialize and identified only
+  `actions/cache` and `aquasecurity/setup-trivy` as omitted transitive
+  dependencies. A second fail-closed setup exposed `actions/cache/restore`, and
+  exact pinned source also required `actions/cache/save`. All four patterns are
+  now explicit; the failed runs remain negative evidence, not Security
+  completion.
 
 - GitHub release policy is now fail-closed at the repository boundary. At
   `2026-09-01T10:00:52Z`, protected `main` required the twelve exact current

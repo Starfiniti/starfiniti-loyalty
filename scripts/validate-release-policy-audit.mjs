@@ -21,6 +21,8 @@ const hardeningEvidencePath =
   "docs/plan/evidence/M15/release-policy-hardening-2026-09-01.yaml";
 const securityHardeningEvidencePath =
   "docs/plan/evidence/M15/repository-security-hardening-2026-09-01.yaml";
+const actionsPolicyCorrectionEvidencePath =
+  "docs/plan/evidence/M15/repository-actions-policy-correction-2026-09-01.yaml";
 const validationCommand = "npm run release-policy:audit:validate";
 const commitPattern = /^[0-9a-f]{40}$/u;
 const timestampPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/u;
@@ -77,6 +79,21 @@ const expectedActionPatterns = [
   "anchore/sbom-action@*",
   "aquasecurity/trivy-action@*",
   "github/codeql-action@*",
+];
+const expectedCorrectedActionPatterns = [
+  "actions/attest-build-provenance@*",
+  "actions/cache@*",
+  "actions/cache/restore@*",
+  "actions/cache/save@*",
+  "actions/checkout@*",
+  "actions/download-artifact@*",
+  "actions/setup-node@*",
+  "actions/upload-artifact@*",
+  "anchore/sbom-action@*",
+  "aquasecurity/setup-trivy@*",
+  "aquasecurity/trivy-action@*",
+  "github/codeql-action/analyze@*",
+  "github/codeql-action/init@*",
 ];
 
 function fail(message) {
@@ -1002,6 +1019,382 @@ function validateSecurityHardening(document, hardening) {
   }
 }
 
+function validateActionsPolicyCorrection(document, securityHardening) {
+  exactKeys(
+    document,
+    [
+      "schema",
+      "status",
+      "observedAt",
+      "precondition",
+      "repository",
+      "failClosedEvidence",
+      "correctedActionsPolicy",
+      "verification",
+      "releaseBoundary",
+      "mutation",
+      "remainingGates",
+    ],
+    "Actions policy correction evidence",
+  );
+  if (
+    document.schema !== "starfiniti.github-actions-policy-correction.v1" ||
+    document.status !== "corrected" ||
+    document.observedAt !== "2026-09-01T11:11:22Z" ||
+    exactUtc(document.observedAt, "Actions correction observedAt") <=
+      exactUtc(securityHardening.observedAt, "security hardening observedAt")
+  ) {
+    fail("Actions policy correction identity or chronology differs");
+  }
+
+  exactKeys(
+    document.precondition,
+    ["path", "sha256"],
+    "Actions correction precondition",
+  );
+  const securityHardeningDigest = createHash("sha256")
+    .update(readFileSync(join(root, securityHardeningEvidencePath)))
+    .digest("hex");
+  if (
+    document.precondition.path !== securityHardeningEvidencePath ||
+    document.precondition.sha256 !== securityHardeningDigest ||
+    securityHardeningDigest !==
+      "53a90e01f3d1955b00ceaa4b7e5fb54baeda3d13ada0782e68fdc4527e04a3a8"
+  ) {
+    fail("Actions policy correction precondition binding differs");
+  }
+
+  exactKeys(
+    document.repository,
+    [
+      "owner",
+      "name",
+      "visibility",
+      "defaultBranch",
+      "observedMainCommit",
+      "evidenceBranchHead",
+    ],
+    "Actions correction repository",
+  );
+  if (
+    document.repository.owner !== "Starfiniti" ||
+    document.repository.name !== "starfiniti-loyalty" ||
+    document.repository.visibility !== "public" ||
+    document.repository.defaultBranch !== "main" ||
+    document.repository.observedMainCommit !==
+      "c85d93d0e6e0273543078050e697f04309f11d93" ||
+    document.repository.evidenceBranchHead !==
+      "ac2ad6c901ebad6d6d2f38b890e0913bfb2f942c"
+  ) {
+    fail("Actions policy correction repository identity differs");
+  }
+
+  exactKeys(
+    document.failClosedEvidence,
+    [
+      "pullRequestStartup",
+      "directPolicyProbe",
+      "supplyChainSetupAttempts",
+      "transitiveSourceInspection",
+      "finding",
+    ],
+    "Actions correction negative evidence",
+  );
+  const startup = document.failClosedEvidence.pullRequestStartup;
+  exactKeys(
+    startup,
+    ["runId", "event", "headCommit", "conclusion", "jobCount"],
+    "Actions correction startup failure",
+  );
+  const probe = document.failClosedEvidence.directPolicyProbe;
+  exactKeys(
+    probe,
+    [
+      "runId",
+      "event",
+      "headCommit",
+      "attempt",
+      "conclusion",
+      "codeqlJobId",
+      "codeqlConclusion",
+      "dastJobId",
+      "dastConclusion",
+    ],
+    "Actions correction direct policy probe",
+  );
+  const expectedSupplyChainAttempts = [
+    {
+      attempt: 1,
+      jobId: 99830334324,
+      conclusion: "failure",
+      stage: "Set up job",
+      annotationPath: ".github",
+      disallowedActions: [
+        {
+          action: "aquasecurity/setup-trivy",
+          commit: "3fb12ec12f41e471780db15c232d5dd185dcb514",
+          source: "aquasecurity/trivy-action composite dependency",
+        },
+        {
+          action: "actions/cache",
+          commit: "27d5ce7f107fe9357f9df03efb73ab90386fccae",
+          source: "aquasecurity/trivy-action composite dependency",
+        },
+      ],
+    },
+    {
+      attempt: 2,
+      jobId: 99832633787,
+      conclusion: "failure",
+      stage: "Set up job",
+      annotationPath: ".github",
+      disallowedActions: [
+        {
+          action: "actions/cache/restore",
+          commit: "9255dc7a253b0ccc959486e2bca901246202afeb",
+          source: "aquasecurity/setup-trivy composite dependency",
+        },
+      ],
+    },
+  ];
+  const expectedResolvedActions = [
+    {
+      action: "actions/cache/restore",
+      commit: "9255dc7a253b0ccc959486e2bca901246202afeb",
+      policyPattern: "actions/cache/restore@*",
+      newlyRequired: true,
+    },
+    {
+      action: "actions/checkout",
+      commit: "8e8c483db84b4bee98b60c0593521ed34d9990e8",
+      policyPattern: "actions/checkout@*",
+      newlyRequired: false,
+    },
+    {
+      action: "actions/cache/save",
+      commit: "9255dc7a253b0ccc959486e2bca901246202afeb",
+      policyPattern: "actions/cache/save@*",
+      newlyRequired: true,
+    },
+  ];
+  const sourceInspection =
+    document.failClosedEvidence.transitiveSourceInspection;
+  exactKeys(
+    sourceInspection,
+    ["repository", "commit", "path", "resolvedActions"],
+    "transitive action source inspection",
+  );
+  if (
+    startup.runId !== 33499712113 ||
+    startup.event !== "pull_request" ||
+    startup.headCommit !== "ac2ad6c901ebad6d6d2f38b890e0913bfb2f942c" ||
+    startup.conclusion !== "startup_failure" ||
+    startup.jobCount !== 0 ||
+    probe.runId !== 33499821641 ||
+    probe.event !== "workflow_dispatch" ||
+    probe.headCommit !== "ac2ad6c901ebad6d6d2f38b890e0913bfb2f942c" ||
+    probe.attempt !== 1 ||
+    probe.conclusion !== "failure" ||
+    probe.codeqlJobId !== 99830334394 ||
+    probe.codeqlConclusion !== "success" ||
+    probe.dastJobId !== 99830334338 ||
+    probe.dastConclusion !== "success" ||
+    JSON.stringify(document.failClosedEvidence.supplyChainSetupAttempts) !==
+      JSON.stringify(expectedSupplyChainAttempts) ||
+    sourceInspection.repository !== "aquasecurity/setup-trivy" ||
+    sourceInspection.commit !== "3fb12ec12f41e471780db15c232d5dd185dcb514" ||
+    sourceInspection.path !== "action.yaml" ||
+    JSON.stringify(sourceInspection.resolvedActions) !==
+      JSON.stringify(expectedResolvedActions) ||
+    document.failClosedEvidence.finding !==
+      "Repository-level CodeQL matching did not admit public sub-action references, direct workflow inventory omitted two full-SHA composite dependencies, and the first transitive correction did not include public cache restore/save sub-actions from the pinned setup-trivy source."
+  ) {
+    fail("Actions correction negative evidence differs");
+  }
+  for (const attempt of document.failClosedEvidence.supplyChainSetupAttempts) {
+    exactKeys(
+      attempt,
+      [
+        "attempt",
+        "jobId",
+        "conclusion",
+        "stage",
+        "annotationPath",
+        "disallowedActions",
+      ],
+      "Actions correction supply-chain attempt",
+    );
+    for (const action of attempt.disallowedActions) {
+      exactKeys(
+        action,
+        ["action", "commit", "source"],
+        "disallowed transitive action",
+      );
+      if (!commitPattern.test(action.commit ?? "")) {
+        fail("disallowed transitive action commit is invalid");
+      }
+    }
+  }
+  for (const action of sourceInspection.resolvedActions) {
+    exactKeys(
+      action,
+      ["action", "commit", "policyPattern", "newlyRequired"],
+      "resolved transitive action",
+    );
+    if (!commitPattern.test(action.commit ?? "")) {
+      fail("resolved transitive action commit is invalid");
+    }
+  }
+
+  exactKeys(
+    document.correctedActionsPolicy,
+    [
+      "enabled",
+      "allowedActions",
+      "shaPinningRequired",
+      "githubOwnedAllowed",
+      "verifiedCreatorsAllowed",
+      "patternsAllowed",
+      "directWorkflowActionReferences",
+      "uniqueDirectWorkflowActionReferences",
+      "observedTransitiveActionReferences",
+      "newlyRequiredTransitivePolicyPatterns",
+      "unpinnedResolvedActionReferences",
+    ],
+    "corrected Actions policy",
+  );
+  const corrected = document.correctedActionsPolicy;
+  if (
+    corrected.enabled !== true ||
+    corrected.allowedActions !== "selected" ||
+    corrected.shaPinningRequired !== true ||
+    corrected.githubOwnedAllowed !== false ||
+    corrected.verifiedCreatorsAllowed !== false ||
+    JSON.stringify(corrected.patternsAllowed) !==
+      JSON.stringify(expectedCorrectedActionPatterns) ||
+    corrected.directWorkflowActionReferences !== 41 ||
+    corrected.uniqueDirectWorkflowActionReferences !== 9 ||
+    corrected.observedTransitiveActionReferences !== 5 ||
+    corrected.newlyRequiredTransitivePolicyPatterns !== 4 ||
+    corrected.unpinnedResolvedActionReferences !== 0
+  ) {
+    fail("corrected Actions policy differs");
+  }
+
+  exactKeys(
+    document.verification,
+    [
+      "runId",
+      "attempt",
+      "event",
+      "headCommit",
+      "supplyChainJobId",
+      "supplyChainConclusion",
+      "policyCorrected",
+      "fullSecurityEvidenceClaimed",
+    ],
+    "Actions policy correction verification",
+  );
+  const verification = document.verification;
+  if (
+    verification.runId !== 33499821641 ||
+    verification.attempt !== 3 ||
+    verification.event !== "workflow_dispatch" ||
+    verification.headCommit !== "ac2ad6c901ebad6d6d2f38b890e0913bfb2f942c" ||
+    verification.supplyChainJobId !== 99833061733 ||
+    verification.supplyChainConclusion !== "success" ||
+    verification.policyCorrected !== true ||
+    verification.fullSecurityEvidenceClaimed !== false
+  ) {
+    fail("Actions policy correction verification differs or overclaims");
+  }
+
+  exactKeys(
+    document.releaseBoundary,
+    [
+      "workflowId",
+      "workflowState",
+      "releaseEnvironmentExists",
+      "policyTokenConfigured",
+      "releaseCreated",
+      "deploymentChanged",
+      "productionChanged",
+    ],
+    "Actions correction release boundary",
+  );
+  if (
+    document.releaseBoundary.workflowId !== 333373957 ||
+    document.releaseBoundary.workflowState !== "disabled_manually" ||
+    document.releaseBoundary.releaseEnvironmentExists !== false ||
+    document.releaseBoundary.policyTokenConfigured !== false ||
+    document.releaseBoundary.releaseCreated !== false ||
+    document.releaseBoundary.deploymentChanged !== false ||
+    document.releaseBoundary.productionChanged !== false
+  ) {
+    fail("Actions correction release boundary differs");
+  }
+
+  exactKeys(
+    document.mutation,
+    [
+      "actionsPolicyChanged",
+      "implicitGitHubOwnedTrustEnabled",
+      "verifiedCreatorTrustEnabled",
+      "shaPinningDisabled",
+      "workflowEnabled",
+      "tagCreated",
+      "releaseCreated",
+      "deploymentChanged",
+      "productionChanged",
+      "rollback",
+    ],
+    "Actions correction mutation",
+  );
+  exactKeys(
+    document.mutation.rollback,
+    [
+      "method",
+      "endpoint",
+      "githubOwnedAllowed",
+      "verifiedCreatorsAllowed",
+      "patternsAllowed",
+      "consequence",
+    ],
+    "Actions correction rollback",
+  );
+  const rollback = document.mutation.rollback;
+  if (
+    document.mutation.actionsPolicyChanged !== true ||
+    document.mutation.implicitGitHubOwnedTrustEnabled !== false ||
+    document.mutation.verifiedCreatorTrustEnabled !== false ||
+    document.mutation.shaPinningDisabled !== false ||
+    document.mutation.workflowEnabled !== false ||
+    document.mutation.tagCreated !== false ||
+    document.mutation.releaseCreated !== false ||
+    document.mutation.deploymentChanged !== false ||
+    document.mutation.productionChanged !== false ||
+    rollback.method !== "PUT" ||
+    rollback.endpoint !==
+      "repos/Starfiniti/starfiniti-loyalty/actions/permissions/selected-actions" ||
+    rollback.githubOwnedAllowed !== false ||
+    rollback.verifiedCreatorsAllowed !== false ||
+    JSON.stringify(rollback.patternsAllowed) !==
+      JSON.stringify(expectedActionPatterns) ||
+    rollback.consequence !==
+      "The direct-only policy fails closed before the current Security workflow can complete; it does not authorize broader Actions access."
+  ) {
+    fail("Actions correction mutation or rollback differs");
+  }
+
+  if (
+    !Array.isArray(document.remainingGates) ||
+    JSON.stringify(document.remainingGates) !==
+      JSON.stringify(expectedSecurityHardeningGates)
+  ) {
+    fail("Actions policy correction remaining gates differ");
+  }
+}
+
 function validateBindings() {
   const rootPackage = JSON.parse(
     readFileSync(join(root, "package.json"), "utf8"),
@@ -1029,11 +1422,15 @@ function validateBindings() {
     !m15?.docs?.includes(
       "docs/architecture/ADR/0117-repository-native-continuous-security-controls.md",
     ) ||
+    !m15?.docs?.includes(
+      "docs/architecture/ADR/0118-transitive-github-actions-policy-correction.md",
+    ) ||
     !m15?.docs?.includes("docs/operations/RELEASE.md") ||
     !security?.verification?.includes(validationCommand) ||
     !security?.evidence?.includes(evidencePath) ||
     !security?.evidence?.includes(hardeningEvidencePath) ||
     !security?.evidence?.includes(securityHardeningEvidencePath) ||
+    !security?.evidence?.includes(actionsPolicyCorrectionEvidencePath) ||
     !security?.evidence?.includes("scripts/validate-release-policy-audit.mjs")
   ) {
     fail("M15 task binding differs");
@@ -1228,6 +1625,77 @@ function selfTestSecurityHardening(document, hardening) {
   return cases.length;
 }
 
+function selfTestActionsPolicyCorrection(document, securityHardening) {
+  const cases = [
+    ["unknown correction field", (value) => (value.extra = true)],
+    [
+      "correction precondition drift",
+      (value) => (value.precondition.sha256 = "0".repeat(64)),
+    ],
+    [
+      "startup failure erased",
+      (value) => (value.failClosedEvidence.pullRequestStartup.jobCount = 1),
+    ],
+    [
+      "transitive dependency erased",
+      (value) =>
+        value.failClosedEvidence.supplyChainSetupAttempts[0].disallowedActions.pop(),
+    ],
+    [
+      "transitive source dependency erased",
+      (value) =>
+        value.failClosedEvidence.transitiveSourceInspection.resolvedActions.pop(),
+    ],
+    [
+      "implicit GitHub trust",
+      (value) => (value.correctedActionsPolicy.githubOwnedAllowed = true),
+    ],
+    [
+      "verified creator trust",
+      (value) => (value.correctedActionsPolicy.verifiedCreatorsAllowed = true),
+    ],
+    [
+      "corrected policy expansion",
+      (value) =>
+        value.correctedActionsPolicy.patternsAllowed.push("example/action@*"),
+    ],
+    [
+      "unpinned resolved action",
+      (value) =>
+        (value.correctedActionsPolicy.unpinnedResolvedActionReferences = 1),
+    ],
+    [
+      "failed correction verification",
+      (value) => (value.verification.supplyChainConclusion = "failure"),
+    ],
+    [
+      "full security overclaim",
+      (value) => (value.verification.fullSecurityEvidenceClaimed = true),
+    ],
+    [
+      "release enablement overclaim",
+      (value) => (value.releaseBoundary.workflowState = "active"),
+    ],
+    [
+      "broad rollback",
+      (value) => (value.mutation.rollback.githubOwnedAllowed = true),
+    ],
+    ["missing correction gate", (value) => value.remainingGates.pop()],
+  ];
+  for (const [label, mutate] of cases) {
+    const candidate = structuredClone(document);
+    mutate(candidate);
+    let rejected = false;
+    try {
+      validateActionsPolicyCorrection(candidate, securityHardening);
+    } catch {
+      rejected = true;
+    }
+    if (!rejected) fail(`self-test accepted ${label}`);
+  }
+  return cases.length;
+}
+
 const args = process.argv.slice(2);
 if (args.some((argument) => argument !== "--self-test")) {
   fail("usage: node scripts/validate-release-policy-audit.mjs [--self-test]");
@@ -1235,15 +1703,20 @@ if (args.some((argument) => argument !== "--self-test")) {
 const audit = readEvidence(evidencePath);
 const hardening = readEvidence(hardeningEvidencePath);
 const securityHardening = readEvidence(securityHardeningEvidencePath);
+const actionsPolicyCorrection = readEvidence(
+  actionsPolicyCorrectionEvidencePath,
+);
 validateAudit(audit);
 validateHardening(hardening, audit);
 validateSecurityHardening(securityHardening, hardening);
+validateActionsPolicyCorrection(actionsPolicyCorrection, securityHardening);
 validateBindings();
 const cases = args.includes("--self-test")
   ? selfTestAudit(audit) +
     selfTestHardening(hardening, audit) +
-    selfTestSecurityHardening(securityHardening, hardening)
+    selfTestSecurityHardening(securityHardening, hardening) +
+    selfTestActionsPolicyCorrection(actionsPolicyCorrection, securityHardening)
   : 0;
 console.log(
-  `Validated the disabled release workflow from absent controls through strict branch, immutable tag, Actions, dependency, secret-scanning, alert-triage, and private-reporting hardening${cases ? ` with ${cases} adversarial cases` : ""}; eight external release gates remain and no tag, release, deployment, or production mutation is claimed.`,
+  `Validated the disabled release workflow from absent controls through strict branch, immutable tag, repository security, direct-action, and transitive-action hardening${cases ? ` with ${cases} adversarial cases` : ""}; eight external release gates remain and no tag, release, deployment, or production mutation is claimed.`,
 );

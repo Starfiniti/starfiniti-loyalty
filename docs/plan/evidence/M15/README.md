@@ -26,6 +26,17 @@ the two complementary tag rulesets separately; the earlier single-ruleset test
 could never accept the safer split. Non-provider patterns and validity checks
 remain disabled and are not overclaimed. R-065 tracks this boundary.
 
+ADR-0118 and the next chronological successor,
+`repository-actions-policy-correction-2026-09-01.yaml`, retain the first live
+startup/setup failures instead of rewriting ADR-0117's evidence. The corrected
+policy has thirteen exact patterns: nine direct references plus four newly
+required full-SHA Trivy composite patterns GitHub exposed across two setup
+failures and exact pinned source: `actions/cache`,
+`aquasecurity/setup-trivy`, `actions/cache/restore`, and
+`actions/cache/save`. The CodeQL `init` and `analyze` sub-actions remain explicit
+because the first repository-level pattern failed closed before job creation.
+Implicit GitHub-owned and verified-creator trust stays disabled.
+
 The release-workflow and repository-security correction changed an input to the
 M15 security gate. `security.yaml` now binds implementation commit
 `dee20094d1609a8a10e26a4dd1fc71ac69f02940` and honestly returns to 7/27
@@ -112,7 +123,7 @@ M15-S01 is active with seven of 23 checks passing. `capacity.yaml` separates rep
 
 M15-S02 is active. `fault-injection.yaml` separates the disposable-only controller from the two approved production-like runs and independent WAL, queue, ledger, WooCommerce, checkout, and no-loss reconciliation. No production fault is authorized by repository readiness.
 
-M15-S03 is active with 7 of 27 checks passing. The exact workflow/tool/image/DAST/release contracts remain repository-validated. Prior CI/Security evidence through `fec7f86`, including the digest-bound Medium review, is preserved but no longer counts for changed workflow commit `dee2009`. Fresh exact-head automation and triage plus release-bound corresponding-source generation under ADR-0083, a real corrected tag and package/attestation verification, approved non-destructive production review, independent penetration testing/retest, final Critical/High reconciliation, and owner approval remain gated. R-056 and R-062 stay open. Repository readiness authorizes no release, production scan, or mutation.
+M15-S03 is active with 7 of 27 checks passing. The exact workflow/tool/image/DAST/release contracts remain repository-validated. Prior CI/Security evidence through `fec7f86`, including the digest-bound Medium review, is preserved but no longer counts for the changed release workflow. ADR-0118's fail-closed startup/setup evidence corrects only the external allowlist and also does not count as scan completion. Fresh exact-head automation and triage plus release-bound corresponding-source generation under ADR-0083, a real corrected tag and package/attestation verification, approved non-destructive production review, independent penetration testing/retest, final Critical/High reconciliation, and owner approval remain gated. R-056 and R-062 stay open. Repository readiness authorizes no release, production scan, or mutation.
 
 M15-S04 is active. `recovery.yaml` separates the digest-bound fourteen-stage full-service clean-room controller from two approved isolated recoveries, measured RPO/RTO, identity/configuration/signing/privacy/value reconciliation, independent review, and zero-residue teardown. ADR-0071 additionally supplies an undeployed dedicated PostgreSQL Borg repository/lock/cache and exact recent-retention candidate after live timing disproved shared-repository RPO. `recovery-transport.yaml` binds ADR-0073's exact candidate and pre-change rollback packages, signed authorities, URLs, checksums, metadata, OS images, passing rollback-aware exact-head internal-only disposable canary, artifact/report hashes, and false-completion boundary. Operations escrow, host-consumer compatibility, real dual-endpoint rollout, and isolated restore remain pending. Repository readiness authorizes no repository provisioning, package installation, backup, credential, retention action, identity, route, or recovery execution.
 
