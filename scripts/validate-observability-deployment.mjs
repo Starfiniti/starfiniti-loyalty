@@ -161,15 +161,15 @@ const passedEvidenceChecks = new Set([
   "exact_head_linux_canary",
 ]);
 const acceptedLinuxCanary = {
-  path: "docs/plan/evidence/M15/runs/observability-deployment-canary-532458e.json",
+  path: "docs/plan/evidence/M15/runs/observability-deployment-canary-f822a79.json",
   reportSha256:
-    "1053150436c29aca013eab3dd1db6d00e4003972d1c212cfbff9693f4b6a775f",
-  candidateCommit: "532458eab54242649d47d5e6485169830407e058",
-  runId: 33404179664,
-  jobId: 99527528327,
-  artifactId: 9762587898,
+    "66800ed2f7691a7d76016db4864fb9f1b56e90a3e29607e92c6c467dcf72a25f",
+  candidateCommit: "f822a7933ac207e83ec780b3cbe1c8cdb704cedb",
+  runId: 33518906410,
+  jobId: 99892856858,
+  artifactId: 9804957219,
   artifactSha256:
-    "982ec5e82aeefb561eccc2fccd52b6d07413ad66c862753c6699ba260dcdd4f2",
+    "fc11949574cfc57d5878593f78e1f0a33e109a6be95234cc961788d899d927e2",
 };
 const linuxCanaryPathPattern =
   /^docs\/plan\/evidence\/M15\/runs\/observability-deployment-canary-[0-9a-f]{7}\.json$/u;
