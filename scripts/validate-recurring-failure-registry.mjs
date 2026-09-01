@@ -35,6 +35,8 @@ const requiredRecoveryFingerprint =
   "recovery.postgres-offsite.shared-borg-lock-starvation";
 const requiredActionsFingerprint =
   "security.github-actions.transitive-policy-inventory";
+const requiredEntitlementFingerprint =
+  "authorization.entitlement-authoring-boundary-drift";
 const requiredLegacyRegistry = Object.freeze({
   schema: "starfiniti.recurring-failure-registry.v1",
   path: legacyRegistryPath,
@@ -116,6 +118,39 @@ const requiredActionsGates = new Set([
   "observe the merged controls on a later exact-head Security run",
   "inspect exact composite-action source whenever a pinned action revision changes",
   "retain all failed attempts and the non-exhaustive discovery limitation",
+]);
+const requiredEntitlementOccurrences = new Map([
+  [
+    "storefront-authoring-entitlement-drift-2026-09-01",
+    {
+      observedAt: "2026-09-01T15:27:17Z",
+      evidencePath: "docs/plan/evidence/M09/README.md",
+      anchor: "## S05A — Storefront authoring entitlement correction",
+    },
+  ],
+  [
+    "notification-authoring-presentation-drift-2026-09-01",
+    {
+      observedAt: "2026-09-01T16:13:44Z",
+      evidencePath: "docs/plan/evidence/M08/README.md",
+      anchor:
+        "## M08-S05A — Notification entitlement and deployment presentation",
+    },
+  ],
+]);
+const requiredEntitlementControlPaths = new Map([
+  ["scripts/validate-entitlements.mjs", "validator"],
+  ["supabase/tests/experience_themes_test.sql", "regressionTest"],
+  [
+    "apps/dashboard/app/notifications/notification-access.test.ts",
+    "regressionTest",
+  ],
+]);
+const requiredEntitlementGates = new Set([
+  "merge the stacked entitlement corrections and registry after eligible independent review",
+  "observe the merged controls on a later exact-head CI and Security run",
+  "exercise disabled and enabled tenant decisions in the approved production canary",
+  "extend the mutation-root inventory whenever an authoring capability or persistence root is added",
 ]);
 const requiredActionsPolicyPatterns = Object.freeze([
   "actions/attest-build-provenance@*",
@@ -1037,8 +1072,8 @@ function validateRegistryV2(document, reader = readRegularRepositoryFile) {
     "V2 allowed controls",
   );
 
-  if (!Array.isArray(document.failures) || document.failures.length !== 2) {
-    fail("V2 registry requires exactly the two reviewed failures");
+  if (!Array.isArray(document.failures) || document.failures.length !== 3) {
+    fail("V2 registry requires exactly the three reviewed failures");
   }
   const fingerprints = new Set();
   for (const failure of document.failures) {
@@ -1326,7 +1361,11 @@ function validateRegistryV2(document, reader = readRegularRepositoryFile) {
 
   exactSet(
     fingerprints,
-    new Set([requiredRecoveryFingerprint, requiredActionsFingerprint]),
+    new Set([
+      requiredRecoveryFingerprint,
+      requiredActionsFingerprint,
+      requiredEntitlementFingerprint,
+    ]),
     "V2 required failure fingerprints",
   );
   const recovery = document.failures.find(
@@ -1464,6 +1503,72 @@ function validateRegistryV2(document, reader = readRegularRepositoryFile) {
     "GitHub Actions recurrence remaining gates",
   );
   validateActionsCorrection(YAML.parse(reader(actionsCorrectionPath)));
+
+  const entitlement = document.failures.find(
+    (failure) => failure.fingerprint === requiredEntitlementFingerprint,
+  );
+  if (
+    entitlement.riskId !== "R-025" ||
+    entitlement.severity !== "Critical" ||
+    entitlement.state !== "control_candidate" ||
+    entitlement.occurrences.length !== 2 ||
+    entitlement.decision.path !==
+      "docs/architecture/ADR/0122-recurring-entitlement-authoring-drift-control.md" ||
+    entitlement.implementation.path !== "scripts/validate-entitlements.mjs"
+  ) {
+    fail("entitlement-authoring recurrence record differs");
+  }
+  exactSet(
+    new Set(entitlement.occurrences.map((occurrence) => occurrence.id)),
+    new Set(requiredEntitlementOccurrences.keys()),
+    "entitlement-authoring recurrence occurrences",
+  );
+  for (const occurrence of entitlement.occurrences) {
+    const expected = requiredEntitlementOccurrences.get(occurrence.id);
+    if (
+      occurrence.observedAt !== expected.observedAt ||
+      occurrence.evidence.path !== expected.evidencePath ||
+      occurrence.evidence.anchor !== expected.anchor
+    ) {
+      fail("entitlement-authoring recurrence occurrence differs");
+    }
+  }
+  exactSet(
+    new Set(entitlement.controls.map((control) => control.reference.path)),
+    new Set(requiredEntitlementControlPaths.keys()),
+    "entitlement-authoring recurrence controls",
+  );
+  for (const control of entitlement.controls) {
+    if (
+      control.type !==
+        requiredEntitlementControlPaths.get(control.reference.path) ||
+      control.deliveryStatus !== "candidate" ||
+      control.mergeEvidence !== null ||
+      control.activationEvidence !== null ||
+      control.observationEvidence !== null
+    ) {
+      fail("entitlement-authoring recurrence control delivery differs");
+    }
+  }
+  if (
+    entitlement.current.defectPresent !== false ||
+    entitlement.current.externalControlActive !== false ||
+    entitlement.current.observationComplete !== false ||
+    entitlement.current.lastVerifiedAt !== "2026-09-01T16:45:00Z" ||
+    entitlement.current.evidence.path !==
+      "docs/architecture/ADR/0122-recurring-entitlement-authoring-drift-control.md" ||
+    entitlement.current.evidence.anchor !==
+      "Register `authorization.entitlement-authoring-boundary-drift` under R-025" ||
+    entitlement.current.negativeEvidenceRetained !== true ||
+    entitlement.current.exhaustiveDiscoveryClaimed !== false
+  ) {
+    fail("entitlement-authoring recurrence current state differs");
+  }
+  exactSet(
+    new Set(entitlement.remainingGates),
+    requiredEntitlementGates,
+    "entitlement-authoring recurrence remaining gates",
+  );
 }
 
 function selfTestLegacyRegistry(registry) {
@@ -1578,6 +1683,9 @@ function selfTestRegistryV2(registry) {
   const actionsIndex = registry.failures.findIndex(
     (failure) => failure.fingerprint === requiredActionsFingerprint,
   );
+  const entitlementIndex = registry.failures.findIndex(
+    (failure) => failure.fingerprint === requiredEntitlementFingerprint,
+  );
   const cases = [
     ["V2 schema drift", (value) => (value.schema = "v1")],
     [
@@ -1670,7 +1778,45 @@ function selfTestRegistryV2(registry) {
         (value.failures[actionsIndex].current.observationComplete = true),
     ],
     [
-      "unknown third failure",
+      "storefront entitlement occurrence erased",
+      (value) => value.failures[entitlementIndex].occurrences.shift(),
+    ],
+    [
+      "notification entitlement occurrence erased",
+      (value) => value.failures[entitlementIndex].occurrences.pop(),
+    ],
+    [
+      "entitlement occurrence chronology reversed",
+      (value) =>
+        (value.failures[entitlementIndex].occurrences[1].observedAt =
+          "2026-09-01T15:00:00Z"),
+    ],
+    [
+      "entitlement durable control erased",
+      (value) => value.failures[entitlementIndex].controls.pop(),
+    ],
+    [
+      "entitlement risk relabelled",
+      (value) => (value.failures[entitlementIndex].riskId = "R-065"),
+    ],
+    [
+      "entitlement external control overclaim",
+      (value) =>
+        (value.failures[entitlementIndex].current.externalControlActive = true),
+    ],
+    [
+      "entitlement production authority overclaim",
+      (value) =>
+        (value.failures[entitlementIndex].current.authority.productionMutation =
+          true),
+    ],
+    [
+      "entitlement successful observation overclaim",
+      (value) =>
+        (value.failures[entitlementIndex].current.observationComplete = true),
+    ],
+    [
+      "unknown fourth failure",
       (value) => value.failures.push(value.failures[0]),
     ],
   ];

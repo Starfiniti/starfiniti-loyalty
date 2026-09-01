@@ -1,5 +1,14 @@
 # Risk Register
 
+ADR-0122 records the second stable entitlement-authoring boundary failure under
+R-025 and adds candidate repository controls: a closed 23-root/nine-capability
+PostgreSQL mutation inventory, protected-value exclusion, storefront persistence
+and pgTAP bindings, and notification access/deployment bindings. The focused
+defects are corrected in the stacked candidate, but independent review, merge,
+later exact-head observation, and production disabled/enabled canary remain open.
+R-051 now tracks seven exact occurrences across R-004, R-025, and R-065; neither
+risk closes and M16 remains 77/100.
+
 ADR-0120 adds a production-disabled, topology-minimized semantic network-rate
 guard for R-004/R-049. Repository controls now reject missing or stale counter
 evidence and the observed high guest-to-host/quiet-uplink shape, but production

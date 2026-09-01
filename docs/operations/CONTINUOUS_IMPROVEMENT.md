@@ -133,8 +133,11 @@ activation evidence; closure requires separate observation evidence. The
 current R-004 controls are merged under ADR-0116, but activation and observation
 proofs remain null. The R-065 external selected-actions policy is active, but
 its source-controlled regression controls remain candidate-only pending
-independent review and merge. Neither satisfies the monthly active-and-observed
-control gate.
+independent review and merge. The R-025 entitlement-authoring record binds the
+two corrected occurrences to the exact cross-layer validator, storefront pgTAP
+sequence, and notification access test. Those controls are also candidate-only;
+production disabled/enabled canary observation remains open. None satisfies the
+monthly active-and-observed control gate.
 
 For action or plugin ecosystems, record only dependencies proven by exact
 current source and fail-closed runtime evidence. Never mark discovery exhaustive:

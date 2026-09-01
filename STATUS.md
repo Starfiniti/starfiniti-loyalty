@@ -1,5 +1,21 @@
 # Status
 
+- M16 now treats entitlement-authoring boundary drift as a recurring Critical
+  failure under R-025. Storefront persistence and notification presentation are
+  retained as two distinct chronological occurrences. ADR-0122 extends the
+  normal entitlement validator from catalogue parity to the exact 23 mutation
+  roots across nine capabilities, forbids protected `core.*` value paths, and
+  binds the storefront database/pgTAP and notification access regressions.
+  `npm run entitlements:validate` passes 11 corruption cases; the generalized
+  recurrence gate passes 66 cases across three failures and seven occurrences.
+  The complete local gate passes 1,010 workspace tests, both production builds,
+  static validation of 90 migrations, and every repository security, recovery,
+  evidence, WooCommerce, audit, and licence check.
+  These are repository candidates only: independent review, stacked merge,
+  later exact-head observation, and the approved disabled/enabled production
+  canary remain pending. M16 stays 77/100, production stays v0.1.11, and no
+  entitlement, checkout, provider, ledger, customer, or protected value changed.
+
 - M08 adversarial workflow tracing found a presentation defect, not a database
   bypass: the notification summary could say rollout was disabled while
   publication, SMTP test, webhook creation, and key rotation still appeared

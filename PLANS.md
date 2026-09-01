@@ -1,5 +1,19 @@
 # Execution Plan
 
+ADR-0122 is the active repository-safe M16 slice on
+`codex/m16-entitlement-drift-regression`. The same cross-layer failure recurred
+in storefront persistence and notification presentation: role-correct managed
+authoring did not consistently reflect the database-authoritative capability
+decision. The normal entitlement gate now proves all 23 reviewed mutation roots
+across nine authoring capabilities, excludes every protected `core.*` value
+path, binds the two storefront persistence guards and pgTAP sequence, and binds
+notification role/capability/deployment presentation including safe shutdown.
+The generalized registry now retains seven exact occurrences across R-004,
+R-025, and R-065 and rejects 66 adversarial corruptions. The new controls remain
+candidate-only until independent review, stacked merge, later exact-head
+observation, and approved production canary. Production and all scores remain
+unchanged.
+
 M08-S05A is repository-complete in draft PR #61. The notification entitlement
 presentation now matches the already-authoritative PostgreSQL commands: disabled
 rollout blocks publication, SMTP tests, endpoint creation, and key rotation while
@@ -66,18 +80,11 @@ the operations regression gate. This is freshness evidence only: it does not
 change the active repository slice, close R-004, or authorize production
 mutation, timer re-enablement, release, or deployment.
 
-ADR-0119 is the active repository-safe M16 slice on the stacked
-`codex/m16-transitive-action-regression` branch. It preserves the accepted V1
-recovery registry by exact digest and adds a generalized V2 record for both
-R-004 and the repeated R-065 GitHub Actions policy failure. The immediate gate
-is deterministic: preserve all five occurrence anchors, require the exact
-thirteen selected action patterns and full-SHA policy with both broad trust
-switches false, retain the successful third attempt without upgrading failed
-attempts to completion, and reject exhaustive future composite-dependency
-claims. The preflight and three validators remain candidate controls until both
-the stack base PR #58 and this stacked change are independently reviewed and
-merged. No release or production authority is introduced and all product scores
-remain unchanged.
+ADR-0119 is the preceding generalized M16 recurrence slice. It preserves the
+accepted V1 recovery registry by exact digest and records R-004 plus the repeated
+R-065 GitHub Actions policy failure. Its exact action patterns, full-SHA policy,
+negative attempts, successful correction, and non-exhaustive future-dependency
+boundary remain required by ADR-0122's additive seven-occurrence registry.
 
 ADR-0118 is the active correction to ADR-0117's M15 repository-security slice.
 GitHub Actions is restricted to thirteen exact allowed patterns: nine direct

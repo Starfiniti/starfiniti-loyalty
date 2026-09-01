@@ -1,5 +1,20 @@
 # Changelog
 
+- Added ADR-0122 and a durable M16 control for recurring entitlement-authoring
+  drift. The entitlement gate now verifies the exact 23 PostgreSQL authoring
+  mutation roots across nine capabilities, excludes protected `core.*` value
+  paths, binds storefront persistence and disabled/enabled/disabled pgTAP
+  behavior, and binds notification role/capability/deployment presentation with
+  safe endpoint shutdown retained. The generalized registry now preserves seven
+  exact occurrences under R-004, R-025, and R-065 and rejects 66 adversarial
+  corruptions. The complete local gate passes 1,010 workspace tests, both
+  production builds, static validation of 90 migrations, and all deterministic
+  security, recovery, evidence, WooCommerce, audit, and licence checks. All new
+  controls remain candidate-only pending independent
+  review, stacked merge, later exact-head observation, and production canary.
+  Production, release, entitlements, checkout, ledger value, and scores are
+  unchanged.
+
 - Corrected the notification studio's rollout and deployment presentation.
   Disabled notification capability now blocks template publication, SMTP tests,
   webhook creation, and key rotation while retaining templates, provider and
