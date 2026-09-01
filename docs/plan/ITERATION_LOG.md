@@ -1,5 +1,36 @@
 # Iteration Log
 
+## 2026-09-01 — Semantic backup-network rate guard
+
+- Reconstructed the ranked backlog after the read-only VM 971 follow-up. Every
+  higher-ranked production action still requires an independent reviewer,
+  approved environment, private credential, execution window, or owner gate,
+  so the next safe slice remained repository-only M15 operations hardening.
+- Compared the Linux netdev collector, Proxmox API polling, and a semantic
+  node_exporter textfile collector. ADR-0120 selects the smallest authority:
+  two operator-bound sysfs counters, no network, fixed bounded labels, atomic
+  output, and Prometheus-derived rates. This catches the high internal guest
+  stream plus quiet physical uplink shape without exposing interface or VM
+  identity or treating a cumulative total as a current rate.
+- Added the non-root oneshot/timer, two alerts, three signals, dashboard rate
+  and freshness panel, OPS-008 response, deployment instructions, exact asset
+  hashes, and task/evidence bindings. Adversarial checks reject rate, ratio,
+  duration, freshness, absence, path, cadence, privilege, topology, digest, and
+  false-authority drift. A Linux-only runtime fixture additionally proves valid
+  output mode and positive, argument-rejection, and wrong-direction behavior.
+- Focused observability-deployment and 35-check operations validation pass
+  locally. Local Windows has no Bash runtime; exact-head Linux automation is
+  the required runtime proof. Production activation remains false, the
+  whole-VM timer remains disabled, R-004/R-049 stay open, and no score or
+  loyalty state changes.
+- The first full gate then failed because the recurrence validator re-read a
+  merged historical Prometheus digest from the evolving working tree before
+  applying its existing exact-merge-commit proof. The repair preserves the V1
+  registry bytes and V2's historical R-004 control references, validates those
+  merged bytes at commit `c85d93d`, and continues validating candidate control
+  bytes against the current tree. The V2 candidate validator reference is
+  rebound to its new exact digest; the 58 adversarial recurrence cases pass.
+
 ## 2026-09-01 — Capacity self-test event-loop isolation
 
 - The complete repository gate produced one unexplained capacity self-test

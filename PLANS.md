@@ -14,6 +14,22 @@ pass plus a 24-hour cooling-off period after the newest exact-head check. Merge
 the exact-head-green PR #58 stack sequentially, then reconcile merged `main`;
 do not deploy production or inflate any module score from these merges.
 
+ADR-0120 is the current repository-safe M15 operations slice. It adds a
+semantic guest-versus-uplink rate guard for the exact VM 971 failure shape that
+the existing instrumented backup-cycle metrics cannot see. Keep its systemd
+collector and timer disabled in production until an approved monitoring host,
+private operator-owned sysfs mappings, synthetic threshold/absence exercise,
+receiver routes, dead-man path, rollback window, and independent observation
+are available. The immediate repository gate is 34 bounded signals, 29 exact
+Prometheus alerts, 14 locked dashboard panels, digest-bound collector assets,
+static adversarial cases, and the Linux runtime fixture. Cumulative totals are
+evidence, never rates; no interface or VM identity may enter metrics. This
+slice changes no production state, R-004/R-049 status, or score.
+The recurrence gate must preserve this distinction as the rules evolve:
+already-merged R-004 control revisions validate at their recorded merge commit,
+while the new semantic collector/rules remain current candidate bytes until a
+reviewed merge. Never rewrite V1 history to make a new working-tree digest fit.
+
 The M15 capacity self-test now separates loopback adapter correctness from a
 real driver-performance claim. Its sub-second local harness uses a bounded
 250 ms event-loop ceiling and safe decision-only failure diagnostics; the
@@ -127,7 +143,7 @@ score or production state and grants no merge, release, deployment, reboot,
 exercise, canary, tenant, ledger, database, billing, or GA authority.
 
 ADR-0112 is the active safe M15 observability-deployment slice. It turns the
-existing 31-signal/27-alert contract into a production-disabled deployment
+existing 34-signal/29-alert contract into a production-disabled deployment
 candidate: Prometheus 3.14.0, Alertmanager 0.34.0, Grafana 13.2.0,
 blackbox_exporter 0.28.0, and postgres_exporter 0.20.1 are bound to exact OCI
 indexes in an isolated hardened Compose plane, while node_exporter 1.12.1 is a

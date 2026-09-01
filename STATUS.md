@@ -14,6 +14,27 @@
   penetration test, release, deployment, GA, production, checkout, database,
   or loyalty-value change is claimed.
 
+- ADR-0120 closes the repository detection gap exposed by VM 971's historical
+  internal full-stream pattern without claiming the stream has returned. The
+  production-disabled candidate now samples one approved guest-ingress counter
+  and one approved physical-uplink egress counter every 30 seconds through a
+  hardened non-root systemd oneshot that denies all IP traffic while retaining
+  read-only host sysfs visibility. It exports only two monotonic
+  totals and one capture timestamp with fixed bounded labels; Prometheus, not
+  the collector, derives the rates. `StarfinitiBackupInternalStreamSuspected`
+  requires guest egress above 104,857,600 bytes/s and four times physical
+  uplink for one minute, while `StarfinitiBackupNetworkCountersMissing` pages
+  on any absent input or capture age above 90 seconds. The catalogue is now
+  34 signals/29 alerts, the locked dashboard has 14 panels, and focused
+  deployment plus 35-check operations validation passes. Linux CI will execute
+  the collector's positive and fail-closed runtime fixture; production remains
+  unmodified and unmonitored, R-004/R-049 remain open, and all scores remain
+  unchanged. Full-gate traversal also found an evidence-lifecycle defect: the
+  recurrence validator compared merged historical control digests with the
+  evolving working tree before checking their recorded merge commit. Merged
+  controls now validate against exact `c85d93d` bytes, candidate controls still
+  validate current bytes, and the immutable V1 registry remains byte-identical.
+
 - The M15 loopback capacity self-test intermittently failed under the complete
   workstation gate and again during stress iteration 7 and classified stress
   iteration 19. The classified failure had no missing adapter and no failed

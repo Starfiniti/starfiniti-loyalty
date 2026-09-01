@@ -17,6 +17,15 @@ The deployment environment must provide the named signal sources, bind receiver 
 
 The Proxmox PostgreSQL archive and maintenance scripts atomically publish aggregate `*.prom` files for node_exporter's textfile collector. Configure node_exporter with `--collector.textfile.directory=/var/lib/node_exporter/textfile_collector` and verify the directory is scraped before enabling the four dedicated-recovery alerts. The files contain only the bounded environment/service labels plus completion time, completed-attempt status, repository-isolation status, recent archive count, and maximum retained interval. Repository selectors, canonical IDs, paths, archive names, credentials, and backup contents never enter metrics. The alert rules treat absent series as failure; repository metrics do not authorize or block backup, restore, checkout, or loyalty value operations.
 
+`node-exporter/starfiniti-backup-network-counters` closes the uninstrumented
+stream gap without enabling the broad netdev collector. Its private owner file
+maps exactly one guest-observation `rx_bytes` counter and one physical-uplink
+`tx_bytes` counter to fixed semantic metric names. The hardened 30-second
+oneshot service exposes no interface, VM, bridge, address, path, route, or
+credential label. Prometheus derives rates from the counters, rejects stale
+capture evidence, and pages on the reviewed high internal-flow threshold; a
+cumulative total alone is never an active-transfer conclusion.
+
 Telemetry is never authority for loyalty value. Monitoring failure cannot block checkout, refunds, releases, promised reward redemption, customer balance/history access, exports, or reconciliation. No metric label, dashboard variable, alert annotation, or retained exercise summary may contain tenant, organization, workspace, customer, member, order, email, coupon, credential, token, payload, or correlation identifiers.
 
 Validate the repository contract with:

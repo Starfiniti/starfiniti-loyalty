@@ -458,6 +458,14 @@ function validateBoundReference(
   }
 }
 
+function validateHistoricalReference(reference, label) {
+  exactKeys(reference, new Set(["path", "sha256"]), label);
+  safeRepositoryPath(reference.path, `${label}.path`);
+  if (!digestPattern.test(reference.sha256 ?? "")) {
+    fail(`${label}.sha256 is invalid`);
+  }
+}
+
 function validateProof(proof, reader, label) {
   if (proof === null) return;
   validateBoundReference(proof, reader, label);
@@ -632,11 +640,16 @@ function validateLegacyRegistry(document, reader = readRegularRepositoryFile) {
         fail(`${failure.fingerprint} control identity differs`);
       }
       controlIds.add(control.id);
-      validateBoundReference(
-        control.reference,
-        reader,
-        `${failure.fingerprint}.${control.id} reference`,
-      );
+      const controlReferenceLabel = `${failure.fingerprint}.${control.id} reference`;
+      if (control.deliveryStatus === "merged") {
+        validateHistoricalReference(control.reference, controlReferenceLabel);
+      } else {
+        validateBoundReference(
+          control.reference,
+          reader,
+          controlReferenceLabel,
+        );
+      }
       if (controlReferences.has(control.reference.path)) {
         fail(`${failure.fingerprint} control reference is duplicated`);
       }
@@ -1151,11 +1164,16 @@ function validateRegistryV2(document, reader = readRegularRepositoryFile) {
         fail(`${failure.fingerprint} control identity differs`);
       }
       controlIds.add(control.id);
-      validateBoundReference(
-        control.reference,
-        reader,
-        `${failure.fingerprint}.${control.id} reference`,
-      );
+      const controlReferenceLabel = `${failure.fingerprint}.${control.id} reference`;
+      if (control.deliveryStatus === "merged") {
+        validateHistoricalReference(control.reference, controlReferenceLabel);
+      } else {
+        validateBoundReference(
+          control.reference,
+          reader,
+          controlReferenceLabel,
+        );
+      }
       if (controlPaths.has(control.reference.path)) {
         fail(`${failure.fingerprint} control reference is duplicated`);
       }

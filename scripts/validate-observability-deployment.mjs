@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, statSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -21,6 +23,14 @@ const paths = {
     "infrastructure/observability/grafana/provisioning/starfiniti-dashboards/starfiniti-operations.json",
   nodeUnit:
     "infrastructure/observability/node-exporter/starfiniti-node-exporter.service",
+  backupNetworkScript:
+    "infrastructure/observability/node-exporter/starfiniti-backup-network-counters",
+  backupNetworkUnit:
+    "infrastructure/observability/node-exporter/starfiniti-backup-network-counters.service",
+  backupNetworkTimer:
+    "infrastructure/observability/node-exporter/starfiniti-backup-network-counters.timer",
+  backupNetworkEnvExample:
+    "infrastructure/observability/node-exporter/backup-network-counters.env.example",
   envExample: "infrastructure/observability/deployment/.env.example",
   runtimeExample:
     "infrastructure/observability/deployment/examples/runtime.example.json",
@@ -33,6 +43,8 @@ const paths = {
   evidence: "docs/plan/evidence/M15/observability-deployment.yaml",
   tasks: "docs/plan/TASKS.yaml",
   adr: "docs/architecture/ADR/0112-digest-pinned-observability-deployment-boundary.md",
+  backupNetworkAdr:
+    "docs/architecture/ADR/0120-semantic-backup-network-rate-guard.md",
   runbook: "docs/operations/OBSERVABILITY_DEPLOYMENT.md",
 };
 
@@ -598,6 +610,10 @@ function validateComponentConfigs({
   postgres,
   datasource,
   nodeUnit,
+  backupNetworkScript,
+  backupNetworkUnit,
+  backupNetworkTimer,
+  backupNetworkEnvExample,
 }) {
   if (
     Object.keys(alertmanager ?? {}).some((key) =>
@@ -661,6 +677,170 @@ function validateComponentConfigs({
     )
   ) {
     fail("native node exporter authority or collector set drifted");
+  }
+
+  const requiredCollectorTokens = [
+    "set -Eeuo pipefail",
+    "STARFINITI_BACKUP_GUEST_EGRESS_COUNTER_FILE",
+    "STARFINITI_BACKUP_PHYSICAL_EGRESS_COUNTER_FILE",
+    "^/sys/class/net/[A-Za-z0-9][A-Za-z0-9_.:-]{0,14}/statistics/rx_bytes$",
+    "^/sys/class/net/[A-Za-z0-9][A-Za-z0-9_.:-]{0,14}/statistics/tx_bytes$",
+    "starfiniti_backup_guest_egress_bytes_total",
+    "starfiniti_backup_physical_uplink_egress_bytes_total",
+    "starfiniti_backup_network_counter_capture_unixtime_seconds",
+    'service="starfiniti-loyalty"',
+    "chmod 0644",
+    "mv -f --",
+  ];
+  if (
+    requiredCollectorTokens.some(
+      (token) => !backupNetworkScript.includes(token),
+    ) ||
+    /\b(?:curl|wget|ssh|scp|sftp|pvesh|qm|eval|source)\b/u.test(
+      backupNetworkScript,
+    ) ||
+    /(?:interface|device|vm_id|vmid|path)="\$\{/u.test(backupNetworkScript)
+  ) {
+    fail("semantic backup network collector boundary drifted");
+  }
+
+  const requiredCollectorUnitTokens = [
+    "Type=oneshot",
+    "User=starfiniti-node-exporter",
+    "Group=starfiniti-node-exporter",
+    "EnvironmentFile=/etc/starfiniti/backup-network-counters.env",
+    "ExecStart=/opt/starfiniti/monitoring/starfiniti-backup-network-counters",
+    "NoNewPrivileges=yes",
+    "IPAddressDeny=any",
+    "ProtectSystem=strict",
+    "ProtectHome=yes",
+    "ProtectKernelTunables=yes",
+    "ProtectKernelModules=yes",
+    "ProtectControlGroups=yes",
+    "MemoryDenyWriteExecute=yes",
+    "RestrictAddressFamilies=AF_UNIX",
+    "CapabilityBoundingSet=",
+    "AmbientCapabilities=",
+    "ReadOnlyPaths=/sys/class/net",
+    "ReadWritePaths=/var/lib/node_exporter/textfile_collector",
+    "TimeoutStartSec=10s",
+  ];
+  if (
+    requiredCollectorUnitTokens.some(
+      (token) => !backupNetworkUnit.includes(token),
+    ) ||
+    /(?:User=root|Group=root|PrivateNetwork=|NetworkNamespacePath=|JoinsNamespaceOf=)/u.test(
+      backupNetworkUnit,
+    )
+  ) {
+    fail("semantic backup network collector unit authority drifted");
+  }
+
+  for (const token of [
+    "OnBootSec=30s",
+    "OnUnitInactiveSec=30s",
+    "AccuracySec=1s",
+    "RandomizedDelaySec=0",
+    "Persistent=true",
+    "Unit=starfiniti-backup-network-counters.service",
+  ]) {
+    if (!backupNetworkTimer.includes(token)) {
+      fail("semantic backup network collector cadence drifted");
+    }
+  }
+  const counterEnvironmentEntries = backupNetworkEnvExample
+    .trim()
+    .split(/\r?\n/u);
+  if (
+    counterEnvironmentEntries.length !== 3 ||
+    !counterEnvironmentEntries.includes(
+      "STARFINITI_MONITORING_ENVIRONMENT=production",
+    ) ||
+    !counterEnvironmentEntries.includes(
+      "STARFINITI_BACKUP_GUEST_EGRESS_COUNTER_FILE=/sys/class/net/GUEST_PATH/statistics/rx_bytes",
+    ) ||
+    !counterEnvironmentEntries.includes(
+      "STARFINITI_BACKUP_PHYSICAL_EGRESS_COUNTER_FILE=/sys/class/net/REPLACE_UPLINK/statistics/tx_bytes",
+    ) ||
+    /(?:971|vmbr|eno|tap|loyalty-prod)/iu.test(backupNetworkEnvExample)
+  ) {
+    fail("semantic backup network collector example leaks topology or drifted");
+  }
+}
+
+function validateBackupNetworkCollectorRuntime() {
+  if (process.platform !== "linux") return;
+
+  const fixtureDirectory = mkdtempSync(
+    join(tmpdir(), "starfiniti-backup-network-"),
+  );
+  const script = join(root, paths.backupNetworkScript);
+  const baseEnvironment = {
+    ...process.env,
+    STARFINITI_MONITORING_ENVIRONMENT: "test",
+    STARFINITI_BACKUP_GUEST_EGRESS_COUNTER_FILE:
+      "/sys/class/net/lo/statistics/rx_bytes",
+    STARFINITI_BACKUP_PHYSICAL_EGRESS_COUNTER_FILE:
+      "/sys/class/net/lo/statistics/tx_bytes",
+    STARFINITI_BACKUP_NETWORK_METRICS_DIR: fixtureDirectory,
+  };
+  const execute = (args = [], environment = baseEnvironment) =>
+    spawnSync("bash", [script, ...args], {
+      encoding: "utf8",
+      env: environment,
+      timeout: 10_000,
+    });
+
+  try {
+    const successful = execute();
+    if (successful.status !== 0 || successful.error) {
+      fail(
+        `semantic backup network collector runtime failed: ${successful.stderr || successful.error?.message || "unknown error"}`,
+      );
+    }
+    const outputPath = join(fixtureDirectory, "starfiniti-backup-network.prom");
+    const output = readFileSync(outputPath, "utf8");
+    const samples = output
+      .split(/\r?\n/u)
+      .filter((line) => line.length > 0 && !line.startsWith("#"));
+    if (
+      samples.length !== 3 ||
+      !samples.some((line) =>
+        /^starfiniti_backup_guest_egress_bytes_total\{environment="test",service="starfiniti-loyalty"\} [0-9]{1,20}$/u.test(
+          line,
+        ),
+      ) ||
+      !samples.some((line) =>
+        /^starfiniti_backup_physical_uplink_egress_bytes_total\{environment="test",service="starfiniti-loyalty"\} [0-9]{1,20}$/u.test(
+          line,
+        ),
+      ) ||
+      !samples.some((line) =>
+        /^starfiniti_backup_network_counter_capture_unixtime_seconds\{environment="test",service="starfiniti-loyalty"\} [0-9]{10}$/u.test(
+          line,
+        ),
+      ) ||
+      /(?:\/sys\/class\/net|\blo\b)/u.test(output) ||
+      (statSync(outputPath).mode & 0o777) !== 0o644
+    ) {
+      fail("semantic backup network collector runtime output drifted");
+    }
+
+    const argumentRejected = execute(["unexpected"]);
+    if (argumentRejected.status !== 64) {
+      fail("semantic backup network collector accepted an argument");
+    }
+
+    const wrongDirectionRejected = execute([], {
+      ...baseEnvironment,
+      STARFINITI_BACKUP_GUEST_EGRESS_COUNTER_FILE:
+        "/sys/class/net/lo/statistics/tx_bytes",
+    });
+    if (wrongDirectionRejected.status !== 78) {
+      fail("semantic backup network collector accepted a wrong-direction path");
+    }
+  } finally {
+    rmSync(fixtureDirectory, { force: true, recursive: true });
   }
 }
 
@@ -861,7 +1041,15 @@ function validateLinuxCanary(claim, canaryRaw) {
   }
 }
 
-function validateEvidence(evidence, canaryRaw, raws, tasks, adr, runbook) {
+function validateEvidence(
+  evidence,
+  canaryRaw,
+  raws,
+  tasks,
+  adr,
+  backupNetworkAdr,
+  runbook,
+) {
   if (
     evidence?.schema !== "starfiniti.observability-deployment-evidence.v1" ||
     evidence.status !== "in_progress" ||
@@ -913,6 +1101,10 @@ function validateEvidence(evidence, canaryRaw, raws, tasks, adr, runbook) {
     paths.plan,
     paths.compose,
     paths.adr,
+    paths.backupNetworkScript,
+    paths.backupNetworkUnit,
+    paths.backupNetworkTimer,
+    paths.backupNetworkAdr,
   ]) {
     if (!slice.evidence?.includes(required)) {
       fail(`task graph is missing evidence ${required}`);
@@ -921,6 +1113,9 @@ function validateEvidence(evidence, canaryRaw, raws, tasks, adr, runbook) {
   if (
     !adr.includes("Status: Accepted") ||
     !adr.includes("production claim disabled") ||
+    !backupNetworkAdr.includes("Status: Accepted") ||
+    !backupNetworkAdr.includes("Cumulative totals are evidence, never rates") ||
+    !backupNetworkAdr.includes("production activation remains false") ||
     !runbook.includes("Production activation remains disabled") ||
     !runbook.includes("observability:environment:validate") ||
     !runbook.includes("promtool") ||
@@ -943,6 +1138,7 @@ function validateDocument(input) {
     input.raws,
     input.tasks,
     input.adr,
+    input.backupNetworkAdr,
     input.runbook,
   );
 }
@@ -959,6 +1155,10 @@ function load() {
     "datasource",
     "dashboard",
     "nodeUnit",
+    "backupNetworkScript",
+    "backupNetworkUnit",
+    "backupNetworkTimer",
+    "backupNetworkEnvExample",
     "envExample",
   ];
   const raws = Object.fromEntries(
@@ -982,6 +1182,10 @@ function load() {
     postgres: parseYaml(raws.postgres),
     datasource: parseYaml(raws.datasource),
     nodeUnit: raws.nodeUnit,
+    backupNetworkScript: raws.backupNetworkScript,
+    backupNetworkUnit: raws.backupNetworkUnit,
+    backupNetworkTimer: raws.backupNetworkTimer,
+    backupNetworkEnvExample: raws.backupNetworkEnvExample,
     exampleTexts: {
       runtime: readText(paths.runtimeExample),
       host: readText(paths.hostExample),
@@ -992,12 +1196,14 @@ function load() {
     canaryRaw: readText(canaryPath),
     tasks: parseYaml(readText(paths.tasks)),
     adr: readText(paths.adr),
+    backupNetworkAdr: readText(paths.backupNetworkAdr),
     runbook: readText(paths.runbook),
   };
 }
 
 const input = load();
 validateDocument(input);
+validateBackupNetworkCollectorRuntime();
 
 if (process.argv.includes("--self-test")) {
   const mutate = (callback, pattern) => {
@@ -1092,6 +1298,31 @@ if (process.argv.includes("--self-test")) {
     );
   }, /node exporter authority/u);
   mutate((candidate) => {
+    candidate.backupNetworkUnit = candidate.backupNetworkUnit.replace(
+      "User=starfiniti-node-exporter",
+      "User=root",
+    );
+  }, /collector unit authority/u);
+  mutate((candidate) => {
+    candidate.backupNetworkUnit = candidate.backupNetworkUnit.replace(
+      "IPAddressDeny=any",
+      "IPAddressDeny=none",
+    );
+  }, /collector unit authority/u);
+  mutate((candidate) => {
+    candidate.backupNetworkTimer = candidate.backupNetworkTimer.replace(
+      "OnUnitInactiveSec=30s",
+      "OnUnitInactiveSec=5m",
+    );
+  }, /collector cadence/u);
+  mutate((candidate) => {
+    candidate.backupNetworkScript += "\ncurl https://example.invalid\n";
+  }, /collector boundary/u);
+  mutate((candidate) => {
+    candidate.backupNetworkEnvExample =
+      candidate.backupNetworkEnvExample.replace("GUEST_PATH", "tap971i0");
+  }, /leaks topology/u);
+  mutate((candidate) => {
     candidate.plan.hostExporter.archiveSha256 = "0".repeat(64);
   }, /node exporter archiveSha256 provenance/u);
   mutate((candidate) => {
@@ -1148,5 +1379,5 @@ if (process.argv.includes("--self-test")) {
 }
 
 console.log(
-  `Validated ${componentIds.size} pinned observability services, one native textfile agent, ${requiredChecks.size} evidence checks, and 36 adversarial cases; ${passedEvidenceChecks.size} checks pass and ${requiredChecks.size - passedEvidenceChecks.size} remain external or runtime-gated.`,
+  `Validated ${componentIds.size} pinned observability services, one native textfile agent, one semantic backup-network collector with a Linux runtime fixture, ${requiredChecks.size} evidence checks, and 41 adversarial cases; ${passedEvidenceChecks.size} checks pass and ${requiredChecks.size - passedEvidenceChecks.size} remain external or runtime-gated.`,
 );

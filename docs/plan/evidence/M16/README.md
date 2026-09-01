@@ -18,6 +18,14 @@ two failures, five occurrences, and fifty-eight adversarial cases. M16 remains
 77/100 with 32 checks pending; release, deployment, production, and protected
 loyalty value are unchanged.
 
+The semantic monitoring slice legitimately evolves the Prometheus and runbook
+working-tree bytes. The recurrence validator now honors ADR-0119's historical
+boundary: merged V1/V2 R-004 controls are checked against the exact recorded
+`c85d93d` merge commit, while candidate controls continue to require current
+working-tree byte equality. This preserves the immutable V1 registry and its
+historical digests without blocking additive monitor evolution or weakening
+the existing exact-commit proof.
+
 ADR-0113 closes the repository boundary for the five future closeout artifacts.
 `npm run continuous-improvement:validate` now treats every V1 object level as a
 closed schema and runs thirty-seven completion corruptions covering unknown
