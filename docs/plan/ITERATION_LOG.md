@@ -2312,3 +2312,10 @@
   digest, canonicalizes only CRLF text checkout conversion, rejects lone
   carriage returns, and self-tests an all-CRLF reader. The failed run remains
   negative evidence and a new exact-head run is required.
+- Correction head `3e90aeb9e37adf4269b25ad39c4266a36062cd28` passed CI
+  `33536497818`, Security `33536497798`, and external CodeQL `99952492414` with
+  all twelve checks green. Database replay passed 70 pgTAP files/3,845
+  assertions and all 22 concurrency probes; both images, all four WooCommerce
+  cells, DAST, supply-chain, and the complete recovery-transport rehearsal also
+  passed. PR #62 is clean and mergeable, but remains draft, unreviewed, and
+  unmerged; production and score boundaries are unchanged.

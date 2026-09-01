@@ -17,7 +17,12 @@ Initial exact-head CI run `33535519709` failed closed in baseline job
 `99948754528`: a Windows CRLF checkout digest had been recorded for an LF Git
 SQL control. The registry now binds the actual Git bytes, canonicalizes only
 CRLF to LF for text comparison, rejects lone carriage returns, and exercises a
-CRLF checkout in self-test. A fresh exact-head run is mandatory.
+CRLF checkout in self-test. Correction head
+`3e90aeb9e37adf4269b25ad39c4266a36062cd28` then passed CI `33536497818`,
+Security `33536497798`, and external CodeQL `99952492414` with all twelve checks
+green, including 70 pgTAP files/3,845 assertions, all 22 concurrency probes, and
+all four WooCommerce cells. PR #62 is clean and mergeable but remains draft and
+unreviewed.
 
 M08-S05A is repository-complete in draft PR #61. The notification entitlement
 presentation now matches the already-authoritative PostgreSQL commands: disabled

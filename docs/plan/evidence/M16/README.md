@@ -34,7 +34,14 @@ containers, all four WooCommerce cells, DAST, internal/external CodeQL, and
 supply-chain jobs passed on that head; the failed baseline is retained as
 negative evidence. The corrected validator canonicalizes CRLF to LF for text
 digest comparison, rejects lone carriage returns, exercises an all-CRLF reader,
-and binds the actual Git digest. Fresh exact-head proof is still required.
+and binds the actual Git digest. Fresh exact-head proof was required.
+Correction head `3e90aeb9e37adf4269b25ad39c4266a36062cd28` passed exact-head
+CI `33536497818`, Security `33536497798`, and external CodeQL `99952492414`.
+All twelve checks are green: the database job replayed 90 migrations and passed
+70 pgTAP files/3,845 assertions plus all 22 concurrency probes; both images and
+all four WooCommerce runtime cells passed; and DAST, supply-chain, CodeQL, and
+the 9m49s recovery-transport rehearsal passed. Draft PR #62 is clean and
+mergeable but remains unreviewed and unmerged.
 
 The semantic monitoring slice legitimately evolves the Prometheus and runbook
 working-tree bytes. The recurrence validator now honors ADR-0119's historical

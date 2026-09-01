@@ -15,7 +15,12 @@
   `99948754528` when the registry contained a Windows CRLF working-tree digest
   for an LF Git SQL control. The correction binds the Git-canonical digest,
   accepts equivalent CRLF checkouts, rejects lone carriage returns, and requires
-  fresh exact-head proof; the failed run remains negative evidence.
+  fresh exact-head proof; the failed run remains negative evidence. Correction
+  head `3e90aeb9e37adf4269b25ad39c4266a36062cd28` passed CI `33536497818`,
+  Security `33536497798`, and external CodeQL `99952492414`; all twelve checks
+  are green, including 70 pgTAP files/3,845 assertions, 22 concurrency probes,
+  both images, and all four WooCommerce cells. Draft PR #62 is clean and
+  mergeable but has no eligible independent review.
   These are repository candidates only: independent review, stacked merge,
   later exact-head observation, and the approved disabled/enabled production
   canary remain pending. M16 stays 77/100, production stays v0.1.11, and no

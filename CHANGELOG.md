@@ -18,7 +18,12 @@
   `99948754528` because one evidence digest represented a Windows CRLF checkout
   rather than the LF Git blob. The correction canonicalizes CRLF only for text
   comparison, rejects lone carriage returns, binds the real Git digest, and
-  retains the failure while requiring a fresh run.
+  retains the failure while requiring a fresh run. Correction head
+  `3e90aeb9e37adf4269b25ad39c4266a36062cd28` passed CI `33536497818`,
+  Security `33536497798`, and external CodeQL `99952492414`; all twelve checks
+  are green with 70 pgTAP files/3,845 assertions, all 22 concurrency probes, both
+  images, and all four WooCommerce cells. Draft PR #62 remains unreviewed and
+  unmerged.
 
 - Corrected the notification studio's rollout and deployment presentation.
   Disabled notification capability now blocks template publication, SMTP tests,
