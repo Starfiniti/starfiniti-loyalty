@@ -1,5 +1,19 @@
 # Status
 
+- M08 adversarial workflow tracing found a presentation defect, not a database
+  bypass: the notification summary could say rollout was disabled while
+  publication, SMTP test, webhook creation, and key rotation still appeared
+  usable. The merchant surface now composes live role, projected entitlement,
+  and deployment mode. Disabled rollout blocks new authoring and rotation but
+  retains template, delivery, issue, and endpoint evidence plus safe endpoint
+  disable/retirement; managed mode no longer offers the self-hosted-only SMTP
+  test. Stale commands remain PostgreSQL-authorized and receive bounded exact
+  guidance. Seventeen focused tests and the complete local gate pass with 1,010
+  workspace tests, both production builds, every deterministic validator, and
+  90-migration/70-pgTAP static validation. Exact-head review remains pending.
+  Production, providers, M08's provisional score, and loyalty value are
+  unchanged.
+
 - M09 adversarial review found a database-authority gap in customer-experience
   authoring: managed tenants with `storefront.experience` disabled could still
   save V1/V2 theme or English-copy revisions. ADR-0121 and additive migration

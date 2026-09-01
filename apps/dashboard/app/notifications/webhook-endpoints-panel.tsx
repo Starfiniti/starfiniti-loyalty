@@ -25,6 +25,7 @@ import {
   rotateWebhookEndpointAction,
   type WebhookActionState,
 } from "./webhook-actions";
+import { resolveNotificationAuthoringAccess } from "./notification-access";
 
 const initialState: WebhookActionState = {
   kind: "idle",
@@ -54,14 +55,23 @@ type OperationIds = Readonly<{
 }>;
 
 export function WebhookEndpointsPanel({
+  deploymentMode,
   document,
+  entitlementEnabled,
   operationIds,
   workspaceId,
 }: Readonly<{
+  deploymentMode: "managed" | "self_hosted";
   document: NotificationWebhookEndpointsDocumentV1;
+  entitlementEnabled: boolean;
   operationIds: OperationIds;
   workspaceId: string;
 }>) {
+  const access = resolveNotificationAuthoringAccess(
+    document.canManage,
+    entitlementEnabled,
+    deploymentMode,
+  );
   return (
     <section
       className="notification-webhook-panel"
@@ -82,7 +92,7 @@ export function WebhookEndpointsPanel({
         </span>
       </div>
 
-      {document.canManage ? (
+      {access.authoringEnabled ? (
         <CreateEndpointForm
           operationId={operationIds.create}
           workspaceId={workspaceId}
@@ -90,7 +100,7 @@ export function WebhookEndpointsPanel({
       ) : (
         <div className="notification-webhook-readonly" role="note">
           <LockKeyhole aria-hidden="true" />
-          <span>Owner or admin access is required for lifecycle changes.</span>
+          <span>{access.notice}</span>
         </div>
       )}
 
@@ -106,7 +116,8 @@ export function WebhookEndpointsPanel({
         <div className="notification-webhook-grid">
           {document.endpoints.map((endpoint) => (
             <EndpointCard
-              canManage={document.canManage}
+              canManage={access.lifecycleEnabled}
+              canRotate={access.authoringEnabled}
               endpoint={endpoint}
               key={endpoint.endpointId}
               operationIds={operationIds.endpoints[endpoint.endpointId]!}
@@ -204,10 +215,12 @@ function CreateEndpointForm({
 
 function EndpointCard({
   canManage,
+  canRotate,
   endpoint,
   operationIds,
 }: Readonly<{
   canManage: boolean;
+  canRotate: boolean;
   endpoint: NotificationWebhookEndpointReadV1;
   operationIds: Readonly<{
     disable: string;
@@ -297,10 +310,12 @@ function EndpointCard({
             />
           ) : (
             <>
-              <RotateForm
-                endpointId={endpoint.endpointId}
-                operationId={operationIds.rotate}
-              />
+              {canRotate ? (
+                <RotateForm
+                  endpointId={endpoint.endpointId}
+                  operationId={operationIds.rotate}
+                />
+              ) : null}
               <LifecycleForm
                 action="retire"
                 endpointId={endpoint.endpointId}

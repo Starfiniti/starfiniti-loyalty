@@ -1,5 +1,18 @@
 # Changelog
 
+- Corrected the notification studio's rollout and deployment presentation.
+  Disabled notification capability now blocks template publication, SMTP tests,
+  webhook creation, and key rotation while retaining templates, provider and
+  issue evidence, endpoint reads, and owner/admin endpoint disable or retirement.
+  Managed deployments may still publish immutable templates and manage signed
+  webhooks, but no longer offer the self-hosted-only SMTP test. PostgreSQL
+  remains authoritative for stale or forged commands. Seventeen focused tests
+  and the complete local gate pass with 1,010 workspace tests, both production
+  builds, every deterministic validator, and 90-migration/70-pgTAP static
+  validation; exact-head verification is pending. Production, providers,
+  entitlements, endpoints, templates, deliveries, checkout, ledger value, and
+  scores are unchanged.
+
 - Added ADR-0121 and an additive database-authoritative guard for storefront
   theme and English-copy authoring. Managed tenants whose
   `storefront.experience` capability is disabled now fail before either

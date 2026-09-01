@@ -1316,6 +1316,31 @@ tasks:
           - focused contracts and worker tests verify exact event tokens, immutable active versions, visible test prefix, no arbitrary recipient, separate normal/test claim routes, deterministic lifecycle outcomes, and real loopback SMTP acceptance
           - server read/action tests fail closed on malformed containers and role errors while the Hub-style notification studio exposes six templates, safe preview, consent/provider aggregates, and bounded canonical issues
           - real-component Playwright review passed template switching, dark theme, mobile navigation, key actions, and zero browser diagnostics; synthetic screenshots are retained under docs/plan/evidence/M08
+      - id: M08-S05A-NOTIFICATION-ENTITLEMENT-UX
+        status: in_progress
+        dependencies: [M08-S05-TEMPLATES-AND-HEALTH]
+        hypothesis: Presenting the same deployment and entitlement decision already enforced by PostgreSQL prevents merchants from entering work that must fail while preserving safe endpoint shutdown.
+        baseline: The notification summary exposed a disabled rollout, but template publication, SMTP test, webhook creation, and key rotation still appeared available until their authoritative commands rejected the stale request; managed deployments also displayed the self-hosted-only SMTP test.
+        acceptance:
+          - role and notification entitlement independently govern authoring without granting tenant or provider authority in the browser
+          - disabled rollout retains template delivery issue and endpoint reads plus owner/admin endpoint disable and retirement while blocking publication tests endpoint creation and key rotation
+          - managed tenants may publish safe immutable templates and manage webhooks but cannot queue the self-hosted SMTP test
+          - stale or forged commands still fail at PostgreSQL and receive deployment or rollout-specific guidance without implying a send or secret issue
+        failure_modes:
+          - a disabled control is mistaken for the authorization boundary
+          - disabling notifications hides accepted evidence or prevents endpoint shutdown
+          - managed mode offers an SMTP action that can never be authorized
+          - role entitlement and deployment mode are collapsed into misleading error copy
+        rollout: Ship the presentation correction with the disabled M08 candidate; no provider, tenant entitlement, endpoint, template, or delivery state changes.
+        rollback: Revert the presentation helper while retaining PostgreSQL command enforcement, immutable templates, delivery evidence, endpoint lifecycle, and every protected loyalty path.
+        verification:
+          - focused access-model and stale-command tests
+          - dashboard lint typecheck accessibility and production build
+          - complete repository gate and exact-head CI/Security checks
+        evidence:
+          - PostgreSQL command tracing confirms publication creation rotation and SMTP test remain authoritative while endpoint disable and retirement deliberately remain available after capability disablement
+          - focused access and action tests distinguish role rollout and deployment boundaries without changing server command inputs
+          - the complete local repository gate passes 1010 workspace tests both production builds every deterministic validator and static validation of 90 migrations and 70 pgTAP files
       - id: M08-S06-CANARY-AND-CLOSE
         status: in_progress
         acceptance:

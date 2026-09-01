@@ -113,4 +113,42 @@ describe("notification server actions", () => {
     );
     expect(result.kind).toBe("error");
   });
+
+  it("reports a stale rollout denial without implying a send", async () => {
+    rpc.mockResolvedValue({ data: null, error: { code: "42501" } });
+    const result = await sendNotificationTest(
+      idle,
+      form({
+        workspaceId,
+        eventType: "loyalty.points.released",
+      }),
+    );
+    expect(result).toEqual({
+      kind: "error",
+      message:
+        "Your live organization role or notification rollout cannot perform this action.",
+    });
+  });
+
+  it("reports the self-hosted SMTP boundary to a stale managed client", async () => {
+    rpc.mockResolvedValue({
+      data: null,
+      error: {
+        code: "42501",
+        message: "self-hosted notifications are not enabled",
+      },
+    });
+    const result = await sendNotificationTest(
+      idle,
+      form({
+        workspaceId,
+        eventType: "loyalty.points.released",
+      }),
+    );
+    expect(result).toEqual({
+      kind: "error",
+      message:
+        "SMTP test delivery requires self-hosted mode with notifications enabled.",
+    });
+  });
 });

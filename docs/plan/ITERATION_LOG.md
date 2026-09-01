@@ -2271,3 +2271,11 @@
   remain before close. Production,
   M09's canary/88 score, checkout, coupons, ledger value, and entitlements did
   not change.
+
+## 2026-09-01 — Notification entitlement and deployment presentation
+
+- Reconstructed all notification merchant controls from the projected workspace through the exact template, test-delivery, webhook-create, key-rotation, disable, and retirement commands.
+- Confirmed PostgreSQL already blocked new publication, tests, endpoints, and rotations when notification capability was disabled, while deliberately retaining endpoint disable and retirement. The defect was that the browser still presented every control as usable.
+- Found a separate deployment mismatch: managed mode displayed an SMTP test even though the command is intentionally restricted to self-hosted deployments.
+- Added one deterministic access model over live role, projected entitlement, and deployment mode. It disables only new authoring/key work, retains bounded evidence and safe shutdown, and never replaces server authorization.
+- Seventeen focused access, stale-command, and real rendered-markup tests pass. The complete local repository gate passes 1,010 workspace tests, both production builds, every deterministic validator, and static validation of 90 migrations and 70 pgTAP files. Exact-head CI/Security checks remain before repository close; provider canary, production, and score state remain unchanged.
