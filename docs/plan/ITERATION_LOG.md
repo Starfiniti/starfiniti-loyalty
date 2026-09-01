@@ -1,5 +1,34 @@
 # Iteration Log
 
+## 2026-09-01 — Storefront authoring entitlement correction
+
+- Adversarial reconstruction found that customer reads and WooCommerce
+  snapshots respected `storefront.experience`, while managed V1/V2 theme and
+  English-copy commands could still mutate their persistence roots after that
+  capability was disabled. Billing state remained intentionally separate and
+  did not repair the product-authority gap.
+- ADR-0121 selects one private exact-table trigger over UI-only gating or four
+  duplicated command rewrites. Disabled managed tenants now fail before either
+  table changes; an explicit tenant canary restores authoring, a later disable
+  stops new revisions, and existing configuration remains readable. Self-hosted
+  defaults, old command signatures, audit history, customer value, native
+  coupons, and checkout remain compatible.
+- The merchant editor reflects the same decision as a read-only state and maps
+  stale submissions to capability-specific guidance. The existing Analytics
+  route is now reachable from persistent merchant navigation.
+- The complete local gate passed 1,001 workspace tests, both production builds,
+  all deterministic validators, 90-migration/70-pgTAP static validation, secret
+  scanning, a zero-vulnerability production audit, and licence inventory.
+  Exact implementation `996d78227f310b949fe352264f655fde1f3bdb09`
+  passed CI `33525862937` and Security `33525862820` across all twelve checks;
+  Ubuntu replay passed all 70 pgTAP files with 3,845 assertions. The initial
+  exact run correctly exposed two stale test expectations, which were corrected
+  from the actual immutable revision sequence rather than waived.
+- M09-S05A is repository-complete. Eligible independent PR review, the stacked
+  merge chain, M09-S06 release/canary evidence, and all owner production inputs
+  remain pending. Production, entitlements, scores, checkout, coupons, and
+  loyalty value were not changed.
+
 ## 2026-09-01 — Exact-head semantic collector and live freshness evidence
 
 - Reconciled the previously local-only wording after exact implementation

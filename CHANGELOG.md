@@ -30,8 +30,11 @@
   receive accurate guidance. Analytics is now reachable from the persistent
   sidebar. The complete local gate passes 1,001 workspace tests, both builds,
   every deterministic validator, 90-migration/70-pgTAP static validation,
-  secret scan, zero-vulnerability production audit, and licence inventory;
-  exact-head Linux replay is pending. Production,
+  secret scan, zero-vulnerability production audit, and licence inventory.
+  Exact implementation `996d78227f310b949fe352264f655fde1f3bdb09`
+  passed CI `33525862937` and Security `33525862820` across all twelve checks,
+  including all 70 pgTAP files and 3,845 assertions. Eligible independent PR
+  review and the stacked merge chain remain pending. Production,
   self-hosted defaults, checkout, coupons, ledger value, M09 status, and scores
   are unchanged.
 

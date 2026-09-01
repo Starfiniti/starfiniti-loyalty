@@ -24,10 +24,13 @@
   Analytics is present in the persistent sidebar. The complete local gate
   passes 1,001 workspace tests, both production builds, every deterministic
   validator, static validation of 90 migrations and 70 pgTAP files, secret
-  scan, zero-vulnerability production audit, and licence inventory. Exact-head
-  checks and current solo adversarial review remain pending. Production, M09's
-  88/100 score, checkout, coupons, ledger value, and tenant entitlements are
-  unchanged.
+  scan, zero-vulnerability production audit, and licence inventory. Exact
+  original implementation `996d78227f310b949fe352264f655fde1f3bdb09` then passed CI
+  `33525862937` and Security `33525862820` across all twelve checks, including
+  all 70 pgTAP files and 3,845 assertions. The rebased exact-head checks,
+  current solo adversarial review, and stacked merge remain pending. Production,
+  M09's 88/100 score, checkout, coupons, ledger value, and tenant entitlements
+  are unchanged.
 
 - ADR-0120 closes the repository detection gap exposed by VM 971's historical
   internal full-stream pattern without claiming the stream has returned. The
