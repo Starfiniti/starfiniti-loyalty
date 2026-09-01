@@ -1,5 +1,6 @@
 import {
   Activity,
+  BarChart3,
   Coins,
   Gem,
   Gift,
@@ -74,6 +75,12 @@ export const merchantNavigation: readonly MerchantNavigationItem[] = [
     href: "/campaigns",
     icon: Megaphone,
     match: (pathname) => pathname.startsWith("/campaigns"),
+  },
+  {
+    label: "Analytics",
+    href: "/analytics",
+    icon: BarChart3,
+    match: (pathname) => pathname.startsWith("/analytics"),
   },
   {
     label: "Connector operations",

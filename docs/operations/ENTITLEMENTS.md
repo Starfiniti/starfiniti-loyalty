@@ -21,9 +21,16 @@ Use the deployment administration database identity, never a dashboard/runtime/w
 
 Every record requires an actor reference, an 8–1,000 character reason, an effective start, and optionally an exclusive end. Tenant limits are non-negative PostgreSQL `bigint` values and are returned to JavaScript as text.
 
+Customer-experience theme and English-copy mutations have an independent
+table-level `storefront.experience` guard. A disabled decision makes the
+merchant editor read-only while preserving existing presentation rows and all
+customer/value reads. Operators must not remove this guard to work around a
+managed rollout; append an attributed tenant entitlement or rollout decision
+instead.
+
 ## Verification
 
-Run `npm run entitlements:validate`, contract and dashboard tests, and `npm run db:verify`. The pgTAP suite proves RLS, exact limits, self-hosted defaults, managed fail-closed behavior, deterministic 0/100% rollout, explicit tenant canaries, forged-claim denial, revoked-member denial, cross-tenant isolation, private Price IDs, protected paths, and immutable history.
+Run `npm run entitlements:validate`, contract and dashboard tests, and `npm run db:verify`. The pgTAP suite proves RLS, exact limits, self-hosted defaults, managed fail-closed behavior, deterministic 0/100% rollout, explicit tenant canaries, storefront authoring denial and retained reads, forged-claim denial, revoked-member denial, cross-tenant isolation, private Price IDs, protected paths, and immutable history.
 
 ## Rollback
 

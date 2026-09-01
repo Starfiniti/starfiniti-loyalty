@@ -2,9 +2,48 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(62);
+select plan(76);
 
 select has_table('loyalty', 'experience_themes', 'experience theme table exists');
+select has_function(
+  'loyalty_private',
+  'enforce_storefront_experience_entitlement_v1',
+  array[]::text[],
+  'storefront authoring entitlement trigger function exists'
+);
+select results_eq(
+  $$
+    select routine.prosecdef
+      and exists (
+        select 1 from unnest(routine.proconfig) as setting
+        where setting = 'search_path=""'
+      )
+    from pg_proc as routine
+    join pg_namespace as namespace on namespace.oid = routine.pronamespace
+    where namespace.nspname = 'loyalty_private'
+      and routine.proname = 'enforce_storefront_experience_entitlement_v1'
+  $$,
+  array[true],
+  'storefront authoring guard is security definer with an empty search path'
+);
+select ok(
+  not has_function_privilege(
+    'authenticated',
+    'loyalty_private.enforce_storefront_experience_entitlement_v1()',
+    'EXECUTE'
+  ),
+  'browser sessions cannot call the private storefront guard directly'
+);
+select has_trigger(
+  'loyalty', 'experience_themes',
+  'zy_storefront_entitlement_experience_themes',
+  'theme persistence resolves the storefront entitlement'
+);
+select has_trigger(
+  'loyalty', 'experience_translations',
+  'zy_storefront_entitlement_experience_translations',
+  'copy persistence resolves the storefront entitlement'
+);
 select has_column('loyalty', 'experience_themes', 'density', 'V2 density column exists');
 select has_column('loyalty', 'experience_themes', 'hero_asset', 'V2 controlled hero asset column exists');
 select has_column('loyalty', 'experience_themes', 'show_referrals', 'V2 referral visibility column exists');
@@ -549,6 +588,132 @@ select results_eq(
     array['overview','rewards','earning','vip','history','referrals','account']::text[]
   ) $$,
   'a legacy update cannot erase controlled V2 presentation state'
+);
+
+reset role;
+select loyalty_private.set_deployment_mode(
+  'managed', 1, 'test:storefront-entitlement',
+  'Exercise managed storefront authoring denial', now()
+);
+
+set local role authenticated;
+set local request.jwt.claim.sub = '75000000-0000-4000-8000-000000000001';
+select results_eq(
+  $$
+    select enabled
+    from loyalty.get_my_entitlements_v1(
+      '75000000-0000-4000-8000-000000000100'
+    )
+    where capability_key = 'storefront.experience'
+  $$,
+  array[false],
+  'managed storefront experience defaults disabled'
+);
+select throws_ok(
+  $$ select * from loyalty.save_experience_theme_command(
+    '75000000-0000-4000-8000-000000000110',
+    '75000000-0000-4000-8000-000000000120',
+    '#1f3a5f', 'system-sans', 14, 'Disabled legacy edit', 'Points',
+    true, true, 'left', 'theme:disabled:legacy',
+    '75000000-0000-4000-8000-000000000230'
+  ) $$,
+  '42501', 'storefront experience capability disabled',
+  'disabled capability rejects legacy theme authoring'
+);
+select throws_ok(
+  $$ select * from loyalty.save_experience_theme_v2_command(
+    '75000000-0000-4000-8000-000000000110',
+    '75000000-0000-4000-8000-000000000120',
+    '#1f3a5f', 'system-sans', 14, 'Disabled V2 edit', 'Points',
+    true, true, 'left', 'comfortable', 'sparkles', true,
+    array['overview','earning','rewards','vip','referrals','history','account'],
+    'theme:disabled:v2', '75000000-0000-4000-8000-000000000231'
+  ) $$,
+  '42501', 'storefront experience capability disabled',
+  'disabled capability rejects V2 theme authoring'
+);
+select throws_ok(
+  $$ select * from loyalty.save_experience_copy_v2_command(
+    '75000000-0000-4000-8000-000000000110',
+    '75000000-0000-4000-8000-000000000120',
+    'Disabled copy', 'Points', 'Your balance', 'Your rewards',
+    'Redeem', 'Join free', 'Earn points on eligible orders.',
+    'copy:disabled:v2', '75000000-0000-4000-8000-000000000232'
+  ) $$,
+  '42501', 'storefront experience capability disabled',
+  'disabled capability rejects English copy authoring'
+);
+select results_eq(
+  $$ select revision from loyalty.experience_themes $$,
+  array[3],
+  'denied authoring leaves the existing theme revision unchanged'
+);
+
+reset role;
+select loyalty_private.set_organization_entitlement(
+  '75000000-0000-4000-8000-000000000100',
+  'storefront.experience', 'enabled', null, 'canary',
+  'test:storefront-entitlement',
+  'Enable the reviewed storefront authoring canary', now(), null
+);
+set local role authenticated;
+set local request.jwt.claim.sub = '75000000-0000-4000-8000-000000000001';
+select results_eq(
+  $$ select outcome from loyalty.save_experience_theme_v2_command(
+    '75000000-0000-4000-8000-000000000110',
+    '75000000-0000-4000-8000-000000000120',
+    '#1f3a5f', 'system-sans', 14, 'Enabled V2 edit', 'Points',
+    true, true, 'left', 'comfortable', 'sparkles', true,
+    array['overview','earning','rewards','vip','referrals','history','account'],
+    'theme:enabled:v2', '75000000-0000-4000-8000-000000000233'
+  ) $$,
+  array['updated'::text],
+  'explicit tenant canary enables V2 theme authoring'
+);
+select results_eq(
+  $$ select outcome from loyalty.save_experience_copy_v2_command(
+    '75000000-0000-4000-8000-000000000110',
+    '75000000-0000-4000-8000-000000000120',
+    'Enabled copy', 'Points', 'Your balance', 'Your rewards',
+    'Redeem', 'Join free', 'Earn points on eligible orders.',
+    'copy:enabled:v2', '75000000-0000-4000-8000-000000000234'
+  ) $$,
+  array['created'::text],
+  'explicit tenant canary enables English copy authoring'
+);
+
+reset role;
+select loyalty_private.set_organization_entitlement(
+  '75000000-0000-4000-8000-000000000100',
+  'storefront.experience', 'disabled', null, 'manual_override',
+  'test:storefront-entitlement',
+  'Disable new storefront authoring without hiding history', now(), null
+);
+set local role authenticated;
+set local request.jwt.claim.sub = '75000000-0000-4000-8000-000000000001';
+select throws_ok(
+  $$ select * from loyalty.save_experience_copy_v2_command(
+    '75000000-0000-4000-8000-000000000110',
+    '75000000-0000-4000-8000-000000000120',
+    'Denied again', 'Points', 'Your balance', 'Your rewards',
+    'Redeem', 'Join free', 'Earn points on eligible orders.',
+    'copy:disabled:again', '75000000-0000-4000-8000-000000000235'
+  ) $$,
+  '42501', 'storefront experience capability disabled',
+  'a later disable decision stops new copy authoring'
+);
+select results_eq(
+  $$
+    select theme.revision::text || '|' || translation.revision::text
+    from loyalty.experience_themes as theme
+    join loyalty.experience_translations as translation
+      on translation.organization_id = theme.organization_id
+     and translation.workspace_id = theme.workspace_id
+     and translation.programme_group_id = theme.programme_group_id
+     and translation.locale = 'en'
+  $$,
+  array['4|1'::text],
+  'disabled capability preserves readable theme and copy history'
 );
 
 reset role;
