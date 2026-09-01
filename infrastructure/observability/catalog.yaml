@@ -173,6 +173,24 @@ signals:
     type: gauge
     unit: bytes
     requiredLabels: [environment, service]
+  - id: backup_guest_egress_total
+    metric: starfiniti_backup_guest_egress_bytes_total
+    source: host-exporter
+    type: counter
+    unit: bytes
+    requiredLabels: [environment, service]
+  - id: backup_physical_uplink_egress_total
+    metric: starfiniti_backup_physical_uplink_egress_bytes_total
+    source: host-exporter
+    type: counter
+    unit: bytes
+    requiredLabels: [environment, service]
+  - id: backup_network_capture_timestamp
+    metric: starfiniti_backup_network_counter_capture_unixtime_seconds
+    source: host-exporter
+    type: gauge
+    unit: unix_seconds
+    requiredLabels: [environment, service]
   - id: offsite_archive_timestamp
     metric: starfiniti_postgres_offsite_archive_unixtime_seconds
     source: backup-controller
@@ -419,6 +437,33 @@ alerts:
     keepFiringFor: 30m
     expression: starfiniti_backup_cycle_transfer_amplification_ratio > 4 and starfiniti_backup_cycle_transferred_bytes > 1073741824
     summary: A backup cycle transfers over four times changed bytes and more than one GiB.
+  - id: StarfinitiBackupInternalStreamSuspected
+    signalIds: [backup_guest_egress_total, backup_physical_uplink_egress_total]
+    severity: high
+    owner: recovery-on-call
+    route: platform-page
+    runbook: OPS-008
+    dashboard: starfiniti-operations
+    for: 1m
+    keepFiringFor: 30m
+    expression: max by (environment, service) (rate(starfiniti_backup_guest_egress_bytes_total[2m])) > 104857600 and on (environment, service) max by (environment, service) (rate(starfiniti_backup_guest_egress_bytes_total[2m])) > 4 * max by (environment, service) (rate(starfiniti_backup_physical_uplink_egress_bytes_total[2m]))
+    summary: A high-rate guest-to-host flow exceeds the physical-uplink comparison and requires attribution.
+  - id: StarfinitiBackupNetworkCountersMissing
+    signalIds:
+      [
+        backup_guest_egress_total,
+        backup_physical_uplink_egress_total,
+        backup_network_capture_timestamp,
+      ]
+    severity: high
+    owner: recovery-on-call
+    route: platform-page
+    runbook: OPS-008
+    dashboard: starfiniti-operations
+    for: 0s
+    keepFiringFor: 30m
+    expression: absent(starfiniti_backup_guest_egress_bytes_total{environment="production"}) or absent(starfiniti_backup_physical_uplink_egress_bytes_total{environment="production"}) or absent(starfiniti_backup_network_counter_capture_unixtime_seconds{environment="production"}) or time() - max by (environment, service) (starfiniti_backup_network_counter_capture_unixtime_seconds{environment="production"}) > 90
+    summary: Semantic backup network counters are absent or stale.
   - id: StarfinitiOffsiteArchiveRpoBreached
     signalIds: [offsite_archive_timestamp, offsite_archive_attempt_success]
     severity: critical

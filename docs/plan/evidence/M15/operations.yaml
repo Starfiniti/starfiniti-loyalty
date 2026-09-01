@@ -20,16 +20,16 @@ candidate:
 assets:
   catalog:
     path: infrastructure/observability/catalog.yaml
-    sha256: 3a51d8ac56ea058fcfc9d7e40ba31cc062b84a33fa34b69bc985f19a1be0e73b
+    sha256: 5cb685e03be48ac0ca0882259c14f29f1f20112400331426ad27bb48fc1e8c24
   prometheusRules:
     path: infrastructure/observability/prometheus/rules.yaml
-    sha256: fa20afac82fdd5d93d95c9b1b4fed9d590c8118b3377865ddfa4a1948cde2fcf
+    sha256: edfb165b3ad9ef13c846ae3eb58b4ab5f991c98a6b7fe887dd076eda3a6b5163
   routingPolicy:
     path: infrastructure/observability/routing-policy.yaml
     sha256: 0989ebc43c9ef735e19d77887a908d0758a147ba1a774e2a95d2275683423188
   dashboard:
     path: infrastructure/observability/grafana/provisioning/starfiniti-dashboards/starfiniti-operations.json
-    sha256: 594468c5bc1550a32066cd499fe4b149c6f2556e48e64ef6b9104a474f2a5066
+    sha256: 8378d343eb09cffb489850bd7c030191ceb6d4a8b0007f869da52c977129a8ef
 claim:
   enabled: false
   monitoringActivated: false
@@ -51,13 +51,13 @@ checks:
     evidence: Production inspection at 2026-09-01T09:25:02Z found VM 971 cumulative netout at 3605015860623 bytes while the latest day peaked at 107013 bytes per second; historical host RRD and Borg statistics confirmed the amplification stayed internal, the raw whole-VM timer was disabled after its repeated shared-lock conflict, PostgreSQL archive loyalty-postgres-20260901T092222Z completed afterward, and no active monitoring plane exists.
   - id: catalog_contract
     status: passed
-    evidence: The versioned catalogue defines thirty-one bounded signals twenty-seven alerts four owner roles four billing-independent routes and exact source boundaries.
+    evidence: The versioned catalogue defines thirty-four bounded signals twenty-nine alerts four owner roles four billing-independent routes and exact source boundaries.
   - id: prometheus_rule_parity
     status: passed
     evidence: Every catalogue alert has one exact Prometheus rule with matching expression duration owner route severity runbook dashboard and summary.
   - id: grafana_dashboard_contract
     status: passed
-    evidence: A locked source-provisioned operations dashboard covers service value tenancy checkout WAL queues workers database backup amplification dedicated off-site recovery and evidence freshness without tenant variables.
+    evidence: A locked source-provisioned operations dashboard covers service value tenancy checkout WAL queues workers database instrumented backup amplification semantic guest and physical network rates dedicated off-site recovery and evidence freshness without tenant variables.
   - id: routing_policy_contract
     status: passed
     evidence: A vendor-neutral route policy enforces bounded grouping acknowledgement escalation last-known-good reload and independently controlled destinations without storing receiver identity or credentials.
@@ -69,7 +69,7 @@ checks:
     evidence: Ledger tenant privacy checkout WAL-RPO security and ambiguous native-value failures page immediately and cannot be inhibited by billing or entitlement state.
   - id: backup_amplification_guard
     status: passed
-    evidence: The backup alert combines more than four-times transfer amplification with more than one GiB transferred; OPS-008 distinguishes cumulative counters internal bridge traffic and active rates.
+    evidence: The instrumented backup alert combines more than four-times transfer amplification with more than one GiB transferred; a separate semantic collector and rate alert detect guest egress above 100 MiB per second and four times physical uplink while stale or absent counters fail visibly, and OPS-008 states that cumulative totals are never rates.
   - id: offsite_recovery_guard
     status: passed
     evidence: Linux fixtures bind the dedicated actual Borg identity, atomically publish archive and maintenance outcomes, and fail before compaction when a retained 48-hour recovery interval exceeds 300 seconds; absent stale or failed metrics page immediately.
@@ -84,7 +84,7 @@ checks:
     evidence: The postmortem template records exact fingerprints timing impact integrity reconciliation failed safeguards owners due dates and durable regression controls.
   - id: validator_selftest
     status: passed
-    evidence: Deterministic self-tests reject alert drift forbidden labels unsafe completion stale routes duplicate exercises unexplained value differences and missing approvals.
+    evidence: Deterministic self-tests reject alert drift including the semantic rate ratio and stale-counter guard forbidden labels unsafe completion stale routes duplicate exercises unexplained value differences and missing approvals.
   - id: exact_head_ci
     status: passed
     evidence: GitHub CI run 33136287294 passed all seven jobs and Security run 33136287286 passed supply-chain CodeQL and isolated DAST at exact implementation head 81e230962d2052ba5e38e4cf00aed744bd5246b5.

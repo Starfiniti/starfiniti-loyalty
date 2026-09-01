@@ -165,7 +165,7 @@ failures:
         type: validator
         reference:
           path: scripts/validate-recurring-failure-registry.mjs
-          sha256: 48503856b53e47f521dfa0be64c931b1e8891213a47d7925a8685a342fec1875
+          sha256: 4aa1c05bb3af463c7ea6b5d585042cdc489135112959f20d57ad951d3d873255
         deliveryStatus: candidate
         mergeEvidence: null
         activationEvidence: null

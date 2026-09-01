@@ -53,6 +53,26 @@ The host agent is deliberately separate from Compose. Download `node_exporter-1.
 
 Use a locked non-login `starfiniti-node-exporter` account and the reviewed `infrastructure/observability/node-exporter/starfiniti-node-exporter.service`. The unit disables all default collectors and enables only the textfile collector at `/var/lib/node_exporter/textfile_collector`. Bind its listener to an approved private monitoring address in an environment-owned override; never expose it publicly. The backup scripts atomically publish only bounded aggregate `*.prom` files.
 
+Install the exact `starfiniti-backup-network-counters` script plus its service
+and timer under the same approved monitoring change. Copy
+`backup-network-counters.env.example` to the owner-controlled
+`/etc/starfiniti/backup-network-counters.env`, replace both placeholders with
+the independently verified guest-observation `rx_bytes` and physical-uplink
+`tx_bytes` sysfs files, make the file root-owned and readable by only the
+`starfiniti-node-exporter` group, and validate that the two paths differ. The
+private names never become metric labels or retained public evidence. The
+collector cannot create IP sockets or send IP traffic, has no Linux capability, and publishes only two
+monotonic counters plus capture time through atomic textfile replacement.
+
+Before enabling the timer, compare a bounded direct counter delta with the
+published values, prove the capture-age alert on a disposable fixture, and
+exercise the high-internal-stream rule with synthetic counters rather than
+production traffic. The alert threshold is 100 MiB/s, more than four times the
+physical-uplink rate, sustained for one minute. It signals an internal flow
+requiring attribution; it does not establish exfiltration or authorize process
+termination. Production activation remains disabled until the normal
+activation gate below is approved.
+
 ## Activation gate
 
 Do not start the production candidate until every deployment evidence check through `dead_man_delivery` has passed. Start disabled from paging where the provider supports it, confirm all exact targets and rules, query every dashboard panel, prove missing-series alerts, then exercise primary and secondary delivery plus the independently hosted dead-man route. Only an explicit owner-approved activation may set production monitoring and routing claims true.

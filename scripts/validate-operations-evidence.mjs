@@ -128,6 +128,8 @@ const requiredAlerts = new Set([
   "StarfinitiWalRpoBreached",
   "StarfinitiBaseBackupStale",
   "StarfinitiBackupTransferAmplification",
+  "StarfinitiBackupInternalStreamSuspected",
+  "StarfinitiBackupNetworkCountersMissing",
   "StarfinitiOffsiteArchiveRpoBreached",
   "StarfinitiPostgresBorgRepositoryIsolationLost",
   "StarfinitiPostgresBorgRetentionGap",
@@ -950,6 +952,30 @@ function validateCatalogue(
   ) {
     fail("backup amplification guard lost its ratio or absolute threshold");
   }
+  const internalStreamAlert = alertById.get(
+    "StarfinitiBackupInternalStreamSuspected",
+  );
+  if (
+    normalizeExpression(internalStreamAlert.expression) !==
+      normalizeExpression(
+        "max by (environment, service) (rate(starfiniti_backup_guest_egress_bytes_total[2m])) > 104857600 and on (environment, service) max by (environment, service) (rate(starfiniti_backup_guest_egress_bytes_total[2m])) > 4 * max by (environment, service) (rate(starfiniti_backup_physical_uplink_egress_bytes_total[2m]))",
+      ) ||
+    internalStreamAlert.for !== "1m"
+  ) {
+    fail("semantic internal-stream guard lost its rate ratio or duration");
+  }
+  const networkCountersAlert = alertById.get(
+    "StarfinitiBackupNetworkCountersMissing",
+  );
+  if (
+    normalizeExpression(networkCountersAlert.expression) !==
+      normalizeExpression(
+        'absent(starfiniti_backup_guest_egress_bytes_total{environment="production"}) or absent(starfiniti_backup_physical_uplink_egress_bytes_total{environment="production"}) or absent(starfiniti_backup_network_counter_capture_unixtime_seconds{environment="production"}) or time() - max by (environment, service) (starfiniti_backup_network_counter_capture_unixtime_seconds{environment="production"}) > 90',
+      ) ||
+    networkCountersAlert.for !== "0s"
+  ) {
+    fail("semantic network-counter freshness guard is incomplete");
+  }
   const offsiteArchiveAlert = alertById.get(
     "StarfinitiOffsiteArchiveRpoBreached",
   );
@@ -1074,6 +1100,9 @@ function validateDashboard(
     "starfiniti_database_disk_available_ratio",
     "starfiniti_backup_cycle_transfer_amplification_ratio",
     "starfiniti_backup_cycle_transferred_bytes",
+    "starfiniti_backup_guest_egress_bytes_total",
+    "starfiniti_backup_physical_uplink_egress_bytes_total",
+    "starfiniti_backup_network_counter_capture_unixtime_seconds",
     "starfiniti_postgres_offsite_archive_unixtime_seconds",
     "starfiniti_postgres_offsite_archive_last_attempt_success",
     "starfiniti_postgres_borg_repository_isolated",
@@ -1088,6 +1117,29 @@ function validateDashboard(
     if (!dashboardText.includes(requiredMetric)) {
       fail(`Grafana dashboard omits ${requiredMetric}`);
     }
+  }
+  const semanticNetworkPanel = candidateDashboard.panels.find(
+    (panel) => panel.id === 14,
+  );
+  const freshnessOverride = semanticNetworkPanel?.fieldConfig?.overrides?.find(
+    (override) =>
+      override.matcher?.id === "byFrameRefID" &&
+      override.matcher?.options === "C",
+  );
+  const freshnessProperties = new Map(
+    freshnessOverride?.properties?.map((property) => [
+      property.id,
+      property.value,
+    ]) ?? [],
+  );
+  if (
+    semanticNetworkPanel?.title !==
+      "Semantic backup network rates and freshness" ||
+    semanticNetworkPanel.fieldConfig?.defaults?.unit !== "Bps" ||
+    freshnessProperties.get("unit") !== "s" ||
+    freshnessProperties.get("thresholds")?.steps?.[1]?.value !== 90
+  ) {
+    fail("Grafana semantic network rate or freshness units drifted");
   }
   if (
     /tenant|customer|member|order|email|coupon/iu.test(
@@ -1672,6 +1724,28 @@ if (process.argv.includes("--self-test")) {
     /drifted from the catalogue/u,
   );
 
+  const weakenedInternalStream = structuredClone(catalogue);
+  weakenedInternalStream.alerts.find(
+    (alert) => alert.id === "StarfinitiBackupInternalStreamSuspected",
+  ).expression = weakenedInternalStream.alerts
+    .find((alert) => alert.id === "StarfinitiBackupInternalStreamSuspected")
+    .expression.replace("> 104857600", "> 1000");
+  assert.throws(
+    () => validateCatalogue(weakenedInternalStream, rules, routing),
+    /internal-stream guard lost/u,
+  );
+
+  const staleCounterAccepted = structuredClone(catalogue);
+  staleCounterAccepted.alerts.find(
+    (alert) => alert.id === "StarfinitiBackupNetworkCountersMissing",
+  ).expression = staleCounterAccepted.alerts
+    .find((alert) => alert.id === "StarfinitiBackupNetworkCountersMissing")
+    .expression.replace("> 90", "> 91");
+  assert.throws(
+    () => validateCatalogue(staleCounterAccepted, rules, routing),
+    /freshness guard is incomplete/u,
+  );
+
   const delayedProtectedPage = structuredClone(catalogue);
   delayedProtectedPage.alerts.find(
     (alert) => alert.id === "StarfinitiLedgerDifference",
@@ -1691,6 +1765,20 @@ if (process.argv.includes("--self-test")) {
         datasourceProvisioning,
       ),
     /dashboard contract drifted/u,
+  );
+
+  const ambiguousFreshnessUnit = structuredClone(dashboard);
+  ambiguousFreshnessUnit.panels.find(
+    (panel) => panel.id === 14,
+  ).fieldConfig.overrides = [];
+  assert.throws(
+    () =>
+      validateDashboard(
+        ambiguousFreshnessUnit,
+        dashboardProvisioning,
+        datasourceProvisioning,
+      ),
+    /network rate or freshness units drifted/u,
   );
 
   const falseCompletion = structuredClone(evidence);

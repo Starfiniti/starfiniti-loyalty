@@ -223,6 +223,40 @@ groups:
             dashboard: starfiniti-operations,
             summary: A backup cycle transfers over four times changed bytes and more than one GiB.,
           }
+      - alert: StarfinitiBackupInternalStreamSuspected
+        expr: max by (environment, service) (rate(starfiniti_backup_guest_egress_bytes_total[2m])) > 104857600 and on (environment, service) max by (environment, service) (rate(starfiniti_backup_guest_egress_bytes_total[2m])) > 4 * max by (environment, service) (rate(starfiniti_backup_physical_uplink_egress_bytes_total[2m]))
+        for: 1m
+        keep_firing_for: 30m
+        labels:
+          {
+            severity: high,
+            owner: recovery-on-call,
+            route: platform-page,
+            service: starfiniti-loyalty,
+          }
+        annotations:
+          {
+            runbook: OPS-008,
+            dashboard: starfiniti-operations,
+            summary: A high-rate guest-to-host flow exceeds the physical-uplink comparison and requires attribution.,
+          }
+      - alert: StarfinitiBackupNetworkCountersMissing
+        expr: absent(starfiniti_backup_guest_egress_bytes_total{environment="production"}) or absent(starfiniti_backup_physical_uplink_egress_bytes_total{environment="production"}) or absent(starfiniti_backup_network_counter_capture_unixtime_seconds{environment="production"}) or time() - max by (environment, service) (starfiniti_backup_network_counter_capture_unixtime_seconds{environment="production"}) > 90
+        for: 0s
+        keep_firing_for: 30m
+        labels:
+          {
+            severity: high,
+            owner: recovery-on-call,
+            route: platform-page,
+            service: starfiniti-loyalty,
+          }
+        annotations:
+          {
+            runbook: OPS-008,
+            dashboard: starfiniti-operations,
+            summary: Semantic backup network counters are absent or stale.,
+          }
       - alert: StarfinitiOffsiteArchiveRpoBreached
         expr: absent(starfiniti_postgres_offsite_archive_unixtime_seconds{environment="production"}) or absent(starfiniti_postgres_offsite_archive_last_attempt_success{environment="production"}) or time() - max by (environment, service) (starfiniti_postgres_offsite_archive_unixtime_seconds{environment="production"}) > 300 or min by (environment, service) (starfiniti_postgres_offsite_archive_last_attempt_success{environment="production"}) < 1
         for: 0s

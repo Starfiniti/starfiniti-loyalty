@@ -1,5 +1,26 @@
 # Changelog
 
+- Added ADR-0120 and a production-disabled semantic network-rate guard for the
+  VM 971 incident shape. A hardened non-root oneshot reads only two
+  operator-bound Linux network counters, atomically publishes three
+  topology-free textfile metrics, and has no network, process, Docker,
+  database, backup, or loyalty mutation authority. The bounded catalogue now
+  has 34 signals and 29 exact alerts: one detects guest egress above 100 MiB/s
+  and four times physical-uplink egress for one minute, while the other pages
+  immediately when either counter is absent or capture evidence is older than
+  90 seconds. The locked dashboard shows derived rates and capture age;
+  deterministic corruption tests and a Linux runtime fixture reject weakened
+  thresholds, stale-evidence coercion, topology leakage, unsafe authority,
+  arguments, wrong-direction paths, malformed output, and non-atomic mode
+  drift. The full gate exposed that immutable V1/V2 recurrence controls were
+  incorrectly re-read from the evolving working tree before their existing
+  merge-commit proof; the validator now checks merged control bytes at the
+  recorded merge commit while candidate controls still bind current bytes.
+  Accepted V1 and V2 history remains unchanged except for rebinding the
+  candidate validator's own new digest. Focused gates pass locally. Production
+  activation remains false, R-004 stays open, and no product score, service,
+  network, database, checkout, or loyalty value changed.
+
 - Stabilized the M15 capacity adapter self-test after repeated full-suite and
   stress execution reproduced an event-loop-only false failure. All four
   adapters and every scenario decision passed; the sub-second Windows harness

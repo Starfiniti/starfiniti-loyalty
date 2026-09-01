@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+umask 0077
+
+readonly exit_usage=64
+readonly exit_config=78
+readonly default_metrics_dir="/var/lib/node_exporter/textfile_collector"
+readonly output_name="starfiniti-backup-network.prom"
+
+fail() {
+  local -r message="$1"
+  local -r status="${2:-$exit_config}"
+  printf 'starfiniti backup network counter collector: %s\n' "$message" >&2
+  exit "$status"
+}
+
+if (( $# != 0 )); then
+  fail "arguments are not accepted" "$exit_usage"
+fi
+
+readonly monitoring_environment="${STARFINITI_MONITORING_ENVIRONMENT:-}"
+readonly guest_counter="${STARFINITI_BACKUP_GUEST_EGRESS_COUNTER_FILE:-}"
+readonly physical_counter="${STARFINITI_BACKUP_PHYSICAL_EGRESS_COUNTER_FILE:-}"
+readonly metrics_dir="${STARFINITI_BACKUP_NETWORK_METRICS_DIR:-$default_metrics_dir}"
+
+if [[ ! "$monitoring_environment" =~ ^(production|staging|canary|test)$ ]]; then
+  fail "monitoring environment is invalid"
+fi
+
+if [[ ! "$guest_counter" =~ ^/sys/class/net/[A-Za-z0-9][A-Za-z0-9_.:-]{0,14}/statistics/rx_bytes$ ]]; then
+  fail "guest egress counter path is invalid"
+fi
+if [[ ! "$physical_counter" =~ ^/sys/class/net/[A-Za-z0-9][A-Za-z0-9_.:-]{0,14}/statistics/tx_bytes$ ]]; then
+  fail "physical egress counter path is invalid"
+fi
+if [[ "$guest_counter" == "$physical_counter" ]]; then
+  fail "counter paths must differ"
+fi
+if [[ ! -d "$metrics_dir" || -L "$metrics_dir" || ! -w "$metrics_dir" ]]; then
+  fail "metrics directory is unavailable unsafe or not writable"
+fi
+
+read_counter() {
+  local -r path="$1"
+  local value
+  if [[ ! -f "$path" || ! -r "$path" ]]; then
+    fail "an approved counter is unavailable"
+  fi
+  IFS= read -r value < "$path" || fail "an approved counter could not be read"
+  if [[ ! "$value" =~ ^[0-9]{1,20}$ ]]; then
+    fail "an approved counter is not an unsigned decimal"
+  fi
+  printf '%s' "$value"
+}
+
+readonly guest_egress_bytes="$(read_counter "$guest_counter")"
+readonly physical_egress_bytes="$(read_counter "$physical_counter")"
+readonly captured_at="$(date +%s)"
+
+temporary="$(mktemp "$metrics_dir/.starfiniti-backup-network.XXXXXX")"
+cleanup() {
+  if [[ -n "${temporary:-}" && -e "$temporary" ]]; then
+    rm -f -- "$temporary"
+  fi
+}
+trap cleanup EXIT HUP INT TERM
+
+{
+  printf '# HELP starfiniti_backup_guest_egress_bytes_total Monotonic guest-to-host bytes on the approved backup observation path.\n'
+  printf '# TYPE starfiniti_backup_guest_egress_bytes_total counter\n'
+  printf 'starfiniti_backup_guest_egress_bytes_total{environment="%s",service="starfiniti-loyalty"} %s\n' "$monitoring_environment" "$guest_egress_bytes"
+  printf '# HELP starfiniti_backup_physical_uplink_egress_bytes_total Monotonic host physical-uplink egress bytes on the approved comparison path.\n'
+  printf '# TYPE starfiniti_backup_physical_uplink_egress_bytes_total counter\n'
+  printf 'starfiniti_backup_physical_uplink_egress_bytes_total{environment="%s",service="starfiniti-loyalty"} %s\n' "$monitoring_environment" "$physical_egress_bytes"
+  printf '# HELP starfiniti_backup_network_counter_capture_unixtime_seconds Successful semantic network-counter capture time.\n'
+  printf '# TYPE starfiniti_backup_network_counter_capture_unixtime_seconds gauge\n'
+  printf 'starfiniti_backup_network_counter_capture_unixtime_seconds{environment="%s",service="starfiniti-loyalty"} %s\n' "$monitoring_environment" "$captured_at"
+} > "$temporary"
+
+chmod 0644 "$temporary"
+mv -f -- "$temporary" "$metrics_dir/$output_name"
+temporary=""
