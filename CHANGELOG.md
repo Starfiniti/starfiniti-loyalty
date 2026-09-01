@@ -1,5 +1,23 @@
 # Changelog
 
+- Added ADR-0123 and closed the stale production Supabase Studio schema-runtime
+  follow-up. An exact dry run proved a no-pull/no-build/no-dependency command
+  would recreate only Studio from the already-reviewed production Compose and
+  local image. The recreated container is healthy on the same image with the
+  exact `public,graphql_public,loyalty` schema list; the other ten services
+  remained healthy, a post-change PostgreSQL archive passed, public
+  dashboard/login stayed available, anonymous Auth/Data API access stayed
+  denied, and protected commerce/value aggregates remained zero. The immutable
+  2026-08-28 baseline is SHA-256-bound by a V2 successor, and the compatibility
+  gate now covers 90 migrations, all 175 tenant tables, historical/current
+  evidence, and 52 adversarial corruptions. This production change was limited
+  to the reversible Studio recreation; database, application, Auth, Data API,
+  backup configuration, checkout, loyalty value, and scores did not change.
+  Exact future Supabase upgrade rehearsal and clean-room recovery remain open.
+  Exact implementation `be4e760662902614ba2a89a4737f02cc8ebb41e2`
+  passed CI `33541330311`, Security `33541330357`, and external CodeQL
+  `99968545083`; all twelve checks are green and PR #63 is clean/mergeable.
+
 - Added ADR-0122 and a durable M16 control for recurring entitlement-authoring
   drift. The entitlement gate now verifies the exact 23 PostgreSQL authoring
   mutation roots across nine capabilities, excludes protected `core.*` value

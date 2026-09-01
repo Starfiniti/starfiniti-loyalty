@@ -25,10 +25,16 @@ const contractPath = join(
   root,
   "infrastructure/environments/proxmox/supabase-compatibility.json",
 );
-const evidencePath = join(
+const historicalEvidencePath = join(
   root,
   "docs/plan/evidence/M01/supabase-compatibility-2026-08-28.json",
 );
+const evidencePath = join(
+  root,
+  "docs/plan/evidence/M01/supabase-compatibility-2026-09-01.json",
+);
+const historicalEvidenceSha256 =
+  "aa860ff696ea0ebfd6b1bb36b879e282cba706110498d5990d2f6c67fab4d052";
 const migrationsPath = join(root, "supabase/migrations");
 const sha256Pattern = /^[0-9a-f]{64}$/u;
 const commitPattern = /^[0-9a-f]{40}$/u;
@@ -58,7 +64,7 @@ const asymmetricJwksMappingContract = {
   "realtime.JWT_JWKS": '${JWT_JWKS:-{"keys":[]}}',
   "storage.SUPABASE_JWKS": '${JWT_JWKS:-{"keys":[]}}',
 };
-const expectedEvidenceChecks = new Map([
+const historicalExpectedEvidenceChecks = new Map([
   ["release_provenance", "passed"],
   ["compose_official_source", "passed"],
   ["compose_variant", "passed"],
@@ -72,6 +78,10 @@ const expectedEvidenceChecks = new Map([
   ["studio_runtime_schema_parity", "pending"],
   ["upgrade_rehearsal", "pending"],
   ["clean_room_restore", "pending"],
+]);
+const currentExpectedEvidenceChecks = new Map([
+  ...historicalExpectedEvidenceChecks,
+  ["studio_runtime_schema_parity", "passed"],
 ]);
 
 function fail(message) {
@@ -876,45 +886,76 @@ export function validateMigrationCompatibility(directory) {
   );
 }
 
-function validateProductionEvidence(evidence, contract, contractDigest) {
+function exactEvidenceTimestamp(value, label, minimum) {
+  const instant = Date.parse(value);
+  if (
+    typeof value !== "string" ||
+    !value.endsWith("Z") ||
+    !Number.isFinite(instant) ||
+    instant > Date.now() + 5 * 60_000 ||
+    instant < Date.parse(minimum)
+  ) {
+    fail(`${label} timestamp is invalid`);
+  }
+  return instant;
+}
+
+function validateProductionEvidence(
+  evidence,
+  contract,
+  contractDigest,
+  { historical = false, previousEvidenceDigest = null } = {},
+) {
+  const expectedTopLevelKeys = [
+    "schemaVersion",
+    "observedAt",
+    "environment",
+    "vmId",
+    "compatibilityStatus",
+    "compatibilityContractSha256",
+    "upstream",
+    "compose",
+    "runtime",
+    "imageInventory",
+    "checks",
+    "limitations",
+  ];
+  if (historical) {
+    expectedTopLevelKeys.push("productionChanged");
+  } else {
+    expectedTopLevelKeys.push(
+      "previousEvidence",
+      "studioRecreation",
+      "protectedState",
+      "productionChange",
+    );
+  }
   assertExactKeys(
     evidence,
-    [
-      "schemaVersion",
-      "observedAt",
-      "environment",
-      "vmId",
-      "compatibilityStatus",
-      "compatibilityContractSha256",
-      "upstream",
-      "compose",
-      "runtime",
-      "imageInventory",
-      "checks",
-      "productionChanged",
-      "limitations",
-    ],
+    expectedTopLevelKeys,
     "Supabase production evidence",
   );
+  const correctIdentity = historical
+    ? evidence.schemaVersion === "starfiniti.supabase-production-baseline.v1" &&
+      evidence.compatibilityStatus ===
+        "repository_and_files_compatible_runtime_follow_up_required" &&
+      evidence.productionChanged === false
+    : evidence.schemaVersion === "starfiniti.supabase-production-baseline.v2" &&
+      evidence.compatibilityStatus ===
+        "repository_files_and_runtime_compatible_upgrade_and_restore_pending";
   if (
-    evidence.schemaVersion !== "starfiniti.supabase-production-baseline.v1" ||
+    !correctIdentity ||
     evidence.environment !== "production" ||
     evidence.vmId !== 971 ||
-    evidence.compatibilityStatus !==
-      "repository_and_files_compatible_runtime_follow_up_required" ||
-    evidence.compatibilityContractSha256 !== contractDigest ||
-    evidence.productionChanged !== false
+    evidence.compatibilityContractSha256 !== contractDigest
   ) {
     fail("Supabase production evidence authority or status is invalid");
   }
-  const observedAt = Date.parse(evidence.observedAt);
-  if (
-    !Number.isFinite(observedAt) ||
-    observedAt > Date.now() + 5 * 60_000 ||
-    observedAt < Date.parse("2026-08-28T00:00:00Z")
-  ) {
-    fail("Supabase production evidence timestamp is invalid");
-  }
+  const observedAt = exactEvidenceTimestamp(
+    evidence.observedAt,
+    "Supabase production evidence",
+    historical ? "2026-08-28T00:00:00Z" : "2026-09-01T00:00:00Z",
+  );
   assert.deepEqual(
     evidence.upstream,
     {
@@ -972,7 +1013,7 @@ function validateProductionEvidence(evidence, contract, contractDigest) {
       vectorPresent: false,
       asymmetricJwtPrivateKeyCount: 2,
       asymmetricJwksPublicKeyCount: 2,
-      studioPostgrestSchemaParity: false,
+      studioPostgrestSchemaParity: !historical,
     },
     "production runtime evidence has drifted",
   );
@@ -986,7 +1027,16 @@ function validateProductionEvidence(evidence, contract, contractDigest) {
   for (const entry of evidence.imageInventory) {
     assertExactKeys(
       entry,
-      ["service", "configuredImage", "resolvedDigest", "healthy"],
+      historical
+        ? ["service", "configuredImage", "resolvedDigest", "healthy"]
+        : [
+            "service",
+            "configuredImage",
+            "resolvedDigest",
+            "healthy",
+            "restartCount",
+            "startedAt",
+          ],
       "runtime image entry",
     );
     if (
@@ -1000,12 +1050,163 @@ function validateProductionEvidence(evidence, contract, contractDigest) {
     ) {
       fail("production image inventory contains invalid or duplicate evidence");
     }
+    if (!historical) {
+      if (entry.restartCount !== 0) {
+        fail("a production service restarted after the bounded correction");
+      }
+      exactEvidenceTimestamp(
+        entry.startedAt,
+        `${entry.service} runtime start`,
+        "2026-08-01T00:00:00Z",
+      );
+    }
     inventoryByService.set(entry.service, entry);
   }
   for (const service of contract.requiredServices) {
     if (!inventoryByService.has(service)) {
       fail(`production image inventory is missing ${service}`);
     }
+  }
+  if (!historical) {
+    assert.deepEqual(
+      evidence.previousEvidence,
+      {
+        path: "docs/plan/evidence/M01/supabase-compatibility-2026-08-28.json",
+        sha256: previousEvidenceDigest,
+      },
+      "current evidence must preserve the exact historical baseline",
+    );
+    assertExactKeys(
+      evidence.studioRecreation,
+      [
+        "approvedBy",
+        "scope",
+        "startedAt",
+        "verifiedAt",
+        "dryRunVerified",
+        "noDependencies",
+        "noBuild",
+        "pullPolicy",
+        "previousComposeConfigHash",
+        "currentComposeConfigHash",
+        "imageId",
+        "health",
+        "internalProfileStatus",
+        "publicProfileStatus",
+        "restartCount",
+        "previousSchemas",
+        "currentSchemas",
+        "rollbackEnvironmentSha256",
+        "rollbackEnvironmentMode",
+        "rollbackDiffersOnlyBySchema",
+        "postChangeBackupCompletedAt",
+        "postChangeBackupResult",
+        "postChangeBackupExitStatus",
+        "publicHealthStatus",
+        "publicLoginStatus",
+        "authAnonymousStatus",
+        "dataApiAnonymousStatus",
+        "requiredServiceCount",
+        "healthyServiceCount",
+        "unchangedServiceCount",
+      ],
+      "Studio recreation evidence",
+    );
+    const recreation = evidence.studioRecreation;
+    const startedAt = exactEvidenceTimestamp(
+      recreation.startedAt,
+      "Studio recreation start",
+      "2026-09-01T00:00:00Z",
+    );
+    const verifiedAt = exactEvidenceTimestamp(
+      recreation.verifiedAt,
+      "Studio recreation verification",
+      "2026-09-01T00:00:00Z",
+    );
+    const backupAt = exactEvidenceTimestamp(
+      recreation.postChangeBackupCompletedAt,
+      "post-change backup",
+      "2026-09-01T00:00:00Z",
+    );
+    if (
+      recreation.approvedBy !== "product-owner-thread" ||
+      recreation.scope !== "studio-only" ||
+      recreation.dryRunVerified !== true ||
+      recreation.noDependencies !== true ||
+      recreation.noBuild !== true ||
+      recreation.pullPolicy !== "never" ||
+      !sha256Pattern.test(recreation.previousComposeConfigHash) ||
+      !sha256Pattern.test(recreation.currentComposeConfigHash) ||
+      recreation.previousComposeConfigHash ===
+        recreation.currentComposeConfigHash ||
+      recreation.imageId !==
+        contract.platformImageDigests["linux/amd64"].studio ||
+      recreation.health !== "healthy" ||
+      recreation.internalProfileStatus !== 200 ||
+      recreation.publicProfileStatus !== 404 ||
+      recreation.restartCount !== 0 ||
+      recreation.previousSchemas !== "public,graphql_public" ||
+      recreation.currentSchemas !== contract.environment.postgrestSchemas ||
+      !sha256Pattern.test(recreation.rollbackEnvironmentSha256) ||
+      recreation.rollbackEnvironmentMode !== "0600" ||
+      recreation.rollbackDiffersOnlyBySchema !== true ||
+      recreation.postChangeBackupResult !== "success" ||
+      recreation.postChangeBackupExitStatus !== 0 ||
+      recreation.publicHealthStatus !== 200 ||
+      recreation.publicLoginStatus !== 200 ||
+      recreation.authAnonymousStatus !== 401 ||
+      recreation.dataApiAnonymousStatus !== 401 ||
+      recreation.requiredServiceCount !== contract.requiredServices.length ||
+      recreation.healthyServiceCount !== contract.requiredServices.length ||
+      recreation.unchangedServiceCount !==
+        contract.requiredServices.length - 1 ||
+      inventoryByService.get("studio").startedAt !== recreation.startedAt ||
+      [...inventoryByService.values()].some(
+        (entry) =>
+          entry.service !== "studio" &&
+          Date.parse(entry.startedAt) >= startedAt,
+      ) ||
+      startedAt > backupAt ||
+      backupAt > verifiedAt ||
+      verifiedAt > observedAt
+    ) {
+      fail(
+        "Studio recreation scope, rollback, health, or chronology is invalid",
+      );
+    }
+    assertExactKeys(
+      evidence.protectedState,
+      [
+        "commerceConnections",
+        "customers",
+        "wallets",
+        "ledgerTransactions",
+        "rewardReservations",
+      ],
+      "protected production state",
+    );
+    if (
+      Object.values(evidence.protectedState).some(
+        (value) => !Number.isSafeInteger(value) || value !== 0,
+      )
+    ) {
+      fail("Studio recreation changed or obscured protected production state");
+    }
+    assert.deepEqual(
+      evidence.productionChange,
+      {
+        performed: true,
+        reversible: true,
+        databaseChanged: false,
+        applicationChanged: false,
+        authChanged: false,
+        dataApiChanged: false,
+        backupConfigurationChanged: false,
+        checkoutChanged: false,
+        loyaltyValueChanged: false,
+      },
+      "production change boundary drifted",
+    );
   }
   if (!Array.isArray(evidence.checks) || evidence.checks.length !== 13) {
     fail("production compatibility baseline must contain exactly 13 checks");
@@ -1024,21 +1225,32 @@ function validateProductionEvidence(evidence, contract, contractDigest) {
       fail("production compatibility baseline contains an invalid check");
     }
     checkIds.add(check.id);
-    if (expectedEvidenceChecks.get(check.id) !== check.status) {
+    const expectedChecks = historical
+      ? historicalExpectedEvidenceChecks
+      : currentExpectedEvidenceChecks;
+    if (expectedChecks.get(check.id) !== check.status) {
       fail("production compatibility baseline check set has drifted");
     }
   }
-  if (checkIds.size !== expectedEvidenceChecks.size) {
+  const expectedChecks = historical
+    ? historicalExpectedEvidenceChecks
+    : currentExpectedEvidenceChecks;
+  if (checkIds.size !== expectedChecks.size) {
     fail("production compatibility baseline check set has drifted");
   }
   const pending = evidence.checks.filter((check) => check.status === "pending");
+  const expectedPending = historical
+    ? [
+        "studio_runtime_schema_parity",
+        "upgrade_rehearsal",
+        "clean_room_restore",
+      ]
+    : ["upgrade_rehearsal", "clean_room_restore"];
   if (
-    pending.length !== 3 ||
-    !pending.some((check) => check.id === "studio_runtime_schema_parity") ||
-    !pending.some((check) => check.id === "upgrade_rehearsal") ||
-    !pending.some((check) => check.id === "clean_room_restore")
+    pending.length !== expectedPending.length ||
+    expectedPending.some((id) => !pending.some((check) => check.id === id))
   ) {
-    fail("production evidence must preserve all three runtime follow-ups");
+    fail("production evidence does not preserve the exact runtime follow-ups");
   }
   if (
     !Array.isArray(evidence.limitations) ||
@@ -1427,11 +1639,11 @@ function runSelfTest(contract, productionEvidence, contractDigest) {
       /authority or status is invalid/u,
     ],
     [
-      "production mutation claim",
+      "database mutation overclaim",
       (candidate) => {
-        candidate.productionChanged = true;
+        candidate.productionChange.databaseChanged = true;
       },
-      /authority or status is invalid/u,
+      /production change boundary drifted/u,
     ],
     [
       "image digest drift",
@@ -1441,10 +1653,10 @@ function runSelfTest(contract, productionEvidence, contractDigest) {
       /invalid or duplicate evidence/u,
     ],
     [
-      "hidden pending runtime check",
+      "hidden pending upgrade check",
       (candidate) => {
         candidate.checks.find(
-          (check) => check.id === "studio_runtime_schema_parity",
+          (check) => check.id === "upgrade_rehearsal",
         ).status = "passed";
       },
       /check set has drifted/u,
@@ -1485,13 +1697,108 @@ function runSelfTest(contract, productionEvidence, contractDigest) {
       },
       /timestamp is invalid/u,
     ],
+    [
+      "historical evidence digest drift",
+      (candidate) => {
+        candidate.previousEvidence.sha256 = "0".repeat(64);
+      },
+      /preserve the exact historical baseline/u,
+    ],
+    [
+      "unbounded recreation scope",
+      (candidate) => {
+        candidate.studioRecreation.scope = "complete-stack";
+      },
+      /scope, rollback, health, or chronology/u,
+    ],
+    [
+      "dependency recreation",
+      (candidate) => {
+        candidate.studioRecreation.noDependencies = false;
+      },
+      /scope, rollback, health, or chronology/u,
+    ],
+    [
+      "image pull permitted",
+      (candidate) => {
+        candidate.studioRecreation.pullPolicy = "missing";
+      },
+      /scope, rollback, health, or chronology/u,
+    ],
+    [
+      "schema parity rollback",
+      (candidate) => {
+        candidate.studioRecreation.currentSchemas = "public,graphql_public";
+      },
+      /scope, rollback, health, or chronology/u,
+    ],
+    [
+      "post-change backup failure",
+      (candidate) => {
+        candidate.studioRecreation.postChangeBackupResult = "failed";
+      },
+      /scope, rollback, health, or chronology/u,
+    ],
+    [
+      "unproven rollback equivalence",
+      (candidate) => {
+        candidate.studioRecreation.rollbackDiffersOnlyBySchema = false;
+      },
+      /scope, rollback, health, or chronology/u,
+    ],
+    [
+      "anonymous Auth access",
+      (candidate) => {
+        candidate.studioRecreation.authAnonymousStatus = 200;
+      },
+      /scope, rollback, health, or chronology/u,
+    ],
+    [
+      "Studio application smoke failure",
+      (candidate) => {
+        candidate.studioRecreation.internalProfileStatus = 503;
+      },
+      /scope, rollback, health, or chronology/u,
+    ],
+    [
+      "public Studio exposure",
+      (candidate) => {
+        candidate.studioRecreation.publicProfileStatus = 200;
+      },
+      /scope, rollback, health, or chronology/u,
+    ],
+    [
+      "protected value drift",
+      (candidate) => {
+        candidate.protectedState.ledgerTransactions = 1;
+      },
+      /changed or obscured protected production state/u,
+    ],
+    [
+      "collateral service restart hidden",
+      (candidate) => {
+        candidate.studioRecreation.unchangedServiceCount = 9;
+      },
+      /scope, rollback, health, or chronology/u,
+    ],
+    [
+      "collateral service runtime replaced",
+      (candidate) => {
+        candidate.imageInventory[1].startedAt =
+          candidate.studioRecreation.verifiedAt;
+      },
+      /scope, rollback, health, or chronology/u,
+    ],
   ];
   for (const [label, mutate, pattern] of evidenceCorruptions) {
     const candidate = structuredClone(productionEvidence);
     mutate(candidate);
     expectFailure(
       label,
-      () => validateProductionEvidence(candidate, contract, contractDigest),
+      () =>
+        validateProductionEvidence(candidate, contract, contractDigest, {
+          previousEvidenceDigest: historicalEvidenceSha256,
+        }),
       pattern,
     );
   }
@@ -1534,11 +1841,29 @@ const contract = validateContract(
   parseJson(contractSource, "compatibility contract"),
 );
 const migrationResult = validateMigrationCompatibility(migrationsPath);
+const historicalEvidenceSource = readFileSync(historicalEvidencePath, "utf8");
+if (sha256(historicalEvidenceSource) !== historicalEvidenceSha256) {
+  fail("historical Supabase production evidence bytes drifted");
+}
+const historicalEvidence = parseJson(
+  historicalEvidenceSource,
+  "historical Supabase production evidence",
+);
+validateProductionEvidence(
+  historicalEvidence,
+  contract,
+  sha256(contractSource),
+  {
+    historical: true,
+  },
+);
 const evidence = parseJson(
   readFileSync(evidencePath, "utf8"),
   "Supabase production evidence",
 );
-validateProductionEvidence(evidence, contract, sha256(contractSource));
+validateProductionEvidence(evidence, contract, sha256(contractSource), {
+  previousEvidenceDigest: historicalEvidenceSha256,
+});
 
 const options = parseArguments(process.argv.slice(2));
 let corruptionCount = 0;
@@ -1595,6 +1920,6 @@ if (
   );
 } else {
   console.log(
-    `Validated Supabase compatibility contract, ${migrationResult.migrationFiles} migrations, ${migrationResult.tenantTables} tenant tables, production baseline, and ${corruptionCount} adversarial corruptions.`,
+    `Validated Supabase compatibility contract, ${migrationResult.migrationFiles} migrations, ${migrationResult.tenantTables} tenant tables, immutable historical and current production evidence, and ${corruptionCount} adversarial corruptions.`,
   );
 }

@@ -1,5 +1,42 @@
 # Iteration Log
 
+## 2026-09-01 — Supabase Studio runtime schema parity
+
+- Reconstructed the accepted ADR-0081 boundary against current official
+  Supabase breaking-change and self-hosted update guidance, exact production
+  Compose bytes, the current owner-only schema allowlist, all eleven healthy
+  service images, a fresh successful PostgreSQL archive, public health, and a
+  sealed pre-schema rollback environment.
+- Compared restart, full-stack recreation, release upgrade, and isolated
+  recreation. A restart would preserve the stale creation-time environment;
+  full-stack recreation or upgrade would widen risk. The dry-run-proven
+  Studio-only command therefore used no dependency start, image pull, or build.
+- Production Studio became healthy on the same reviewed image with
+  `public,graphql_public,loyalty`. The other ten services stayed healthy and
+  unrestarted, a post-change archive succeeded, dashboard/login remained HTTP
+  200, anonymous Auth/Data API requests remained HTTP 401, and connections,
+  customers, wallets, ledger transactions, and reward reservations remained
+  zero.
+- ADR-0123 and the V2 successor preserve the 2026-08-28 baseline by exact
+  SHA-256. The validator now checks immutable history, operation scope,
+  rollback, chronology, service health, anonymous denial, protected state, 90
+  migrations, all 175 tenant tables, and 52 adversarial corruptions. Exact
+  future upgrade rehearsal and complete clean-room recovery remain pending; no
+  score changed.
+- The complete local `npm run check` gate passes formatting, lint, type checks,
+  all 1,010 workspace tests, every module/canary/security/recovery validator,
+  accessibility and WooCommerce checks, and both production builds. The inline
+  adversarial diff review independently compared the historical Git and working
+  bytes, exact service start chronology, internal HTTP 200/public HTTP 404
+  Studio profile boundary, rollback equivalence, minimized evidence, and
+  protected state; no surviving Critical, High, or correctness finding remains.
+- Exact implementation `be4e760662902614ba2a89a4737f02cc8ebb41e2`
+  passed CI `33541330311`, Security `33541330357`, and external CodeQL
+  `99968545083`. All twelve PR checks are green, including database replay, both
+  images, all four WooCommerce runtime cells, DAST, supply-chain policy, and the
+  9m35s isolated recovery/Authentik transport rehearsal. PR #63 is clean and
+  mergeable but remains a stacked draft pending independent review.
+
 ## 2026-09-01 — Storefront authoring entitlement correction
 
 - Adversarial reconstruction found that customer reads and WooCommerce
