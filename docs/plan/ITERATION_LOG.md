@@ -1,5 +1,24 @@
 # Iteration Log
 
+## 2026-09-01 — Capacity self-test event-loop isolation
+
+- The complete repository gate produced one unexplained capacity self-test
+  failure, while an immediate isolated rerun passed. Repeating the exact test
+  reproduced the failure on iteration 7; after adding bounded diagnostic
+  classification, another stress run reproduced it on iteration 19.
+- The classified run had all four adapters observed, every measured scenario
+  decision passing, and only the driver event-loop decision failing. The
+  sub-second Windows loopback harness was therefore applying the real 25 ms
+  production-driver threshold to workstation scheduler noise rather than an
+  adapter failure.
+- Kept the canonical 24-minute workload and 25 ms threshold unchanged. Only the
+  loopback self-test uses a bounded 250 ms event-loop ceiling. Failures now name
+  only missing public adapter IDs, failed public decision names, and driver
+  decision names; authority, origin, payload, and credential material remain
+  excluded. The focused gate and 100 consecutive post-fix stress iterations
+  pass. Capacity evidence, scores, release, deployment, and production are
+  unchanged.
+
 ## 2026-09-01 — VM 971 backup-traffic containment follow-up
 
 - Rechecked the active production path through the approved read-only operator

@@ -14,6 +14,16 @@
   penetration test, release, deployment, GA, production, checkout, database,
   or loyalty-value change is claimed.
 
+- The M15 loopback capacity self-test intermittently failed under the complete
+  workstation gate and again during stress iteration 7 and classified stress
+  iteration 19. The classified failure had no missing adapter and no failed
+  scenario decision; only the driver event-loop decision exceeded the canonical
+  25 ms threshold during the sub-second Windows harness. The production-like
+  24-minute workload remains unchanged. The self-test now uses a bounded 250 ms
+  event-loop ceiling and emits only minimized adapter/decision classifications
+  on failure. One hundred consecutive post-fix stress iterations pass. This
+  changes no capacity claim, production target, score, or loyalty state.
+
 - A bounded read-only production follow-up at `2026-09-01T12:34:23Z` again
   refuted a renewed VM 971 full-stream incident. The ten-second tap delta was
   1,013 bytes; the complete latest-day RRD estimated 287,384,753 bytes

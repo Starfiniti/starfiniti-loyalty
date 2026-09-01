@@ -14,6 +14,13 @@ pass plus a 24-hour cooling-off period after the newest exact-head check. Merge
 the exact-head-green PR #58 stack sequentially, then reconcile merged `main`;
 do not deploy production or inflate any module score from these merges.
 
+The M15 capacity self-test now separates loopback adapter correctness from a
+real driver-performance claim. Its sub-second local harness uses a bounded
+250 ms event-loop ceiling and safe decision-only failure diagnostics; the
+canonical 25 ms threshold, workload rates, production-like evidence gate, and
+independent k6 cross-check remain unchanged. No capacity or production claim is
+promoted by a stable self-test.
+
 The latest bounded production observation is retained as append-only M15
 evidence. VM 971's current tap and RRD rates remain quiet, five consecutive
 PostgreSQL archives met the current 300-second cadence objective, public

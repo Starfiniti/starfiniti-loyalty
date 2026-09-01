@@ -147,6 +147,15 @@ remain release-blocking under R-056.
 
 M15-S01 is active with seven of 23 checks passing. `capacity.yaml` separates repository readiness from an approved production-like measured run and exact value reconciliation. ADR-0104 adds an exact digest-pinned Grafana k6 contract that must match the canonical phases, scenarios, rates, drops, contracts, thresholds, target digest, and false production authority; repository validation and Linux image inspection cannot substitute for the still-pending approved real independent run. No supported capacity is claimed while that manifest is in progress.
 
+The local capacity runner self-test deliberately uses a bounded 250 ms
+event-loop ceiling only for its sub-second loopback adapter exercise. Repeated
+stress isolated an intermittent Windows failure to the driver event-loop
+decision while all four adapters and scenario decisions passed. The canonical
+production-like workload remains unchanged at 25 ms, and both real driver runs,
+the independent k6 cross-check, reconciliation, review, and supported-capacity
+claim remain pending. Failure diagnostics expose only closed adapter and
+decision identifiers. One hundred consecutive post-fix stress iterations pass.
+
 M15-S02 is active. `fault-injection.yaml` separates the disposable-only controller from the two approved production-like runs and independent WAL, queue, ledger, WooCommerce, checkout, and no-loss reconciliation. No production fault is authorized by repository readiness.
 
 M15-S03 is active with 19 of 27 checks passing. Exact candidate `4ac7414` supplies fresh CI, Security, external CodeQL, image, SBOM, DAST, header, scanner-freshness, development-audit, WooCommerce, and digest-bound Medium-review evidence under the corrected thirteen-pattern Actions policy. Release-bound corresponding-source generation under ADR-0083, a real corrected tag and package/attestation verification, approved non-destructive production review, independent penetration testing/retest, final Critical/High reconciliation, and owner approval remain gated. R-056 and R-062 stay open. Repository readiness authorizes no release, production scan, or mutation.

@@ -1270,6 +1270,13 @@ async function selfTest() {
         measured: true,
       },
     ];
+    workload.driver = {
+      ...workload.driver,
+      maximumEventLoopP95Ms: Math.max(
+        250,
+        workload.driver.maximumEventLoopP95Ms,
+      ),
+    };
     workload.scenarios = workload.scenarios.map((scenario) => ({
       ...scenario,
       ratePerSecond: 10,
@@ -1335,8 +1342,37 @@ async function selfTest() {
       allowLoopbackHttp: true,
       allowDirtyRepository: true,
     });
-    if (report.status !== "passed" || seen.size !== 4)
-      fail("self-test did not pass all four adapters");
+    if (report.status !== "passed" || seen.size !== 4) {
+      const missingAdapters = [
+        "authenticated_get",
+        "readiness",
+        "service_customer_upsert",
+        "woocommerce_order_upsert",
+      ].filter((adapter) => !seen.has(adapter));
+      const failedDecisions = report.phases
+        .filter((phase) => phase.measured)
+        .flatMap((phase) =>
+          phase.scenarios.flatMap((scenario) =>
+            Object.entries(scenario.decisions)
+              .filter(([, passed]) => passed !== true)
+              .map(([decision]) =>
+                [phase.id, scenario.adapter, decision].join(":"),
+              ),
+          ),
+        );
+      const failedDriverDecisions = Object.entries(report.driverDecisions)
+        .filter(([, passed]) => passed !== true)
+        .map(([decision]) => decision);
+      fail(
+        [
+          "self-test did not pass all four adapters",
+          `status=${report.status}`,
+          `missing=${missingAdapters.join(",") || "none"}`,
+          `decisions=${failedDecisions.join(",") || "none"}`,
+          `driver=${failedDriverDecisions.join(",") || "none"}`,
+        ].join("; "),
+      );
+    }
     const serialized = readFileSync(reportPath, "utf8");
     for (const forbidden of [
       serviceToken,
