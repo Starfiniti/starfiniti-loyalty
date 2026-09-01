@@ -14,6 +14,19 @@
   penetration test, release, deployment, GA, production, checkout, database,
   or loyalty-value change is claimed.
 
+- A bounded read-only production follow-up at `2026-09-01T12:34:23Z` again
+  refuted a renewed VM 971 full-stream incident. The ten-second tap delta was
+  1,013 bytes; the complete latest-day RRD estimated 287,384,753 bytes
+  (approximately 274 MiB), averaged 3,326 bytes/s, and peaked at 107,013
+  bytes/s. The monthly 249,641,465 bytes/s peak remains pinned to
+  `2026-08-14T03:00:00Z`. Five consecutive PostgreSQL archives completed at no
+  more than 210-second intervals, with the final cycle receiving 580,947 rsync
+  bytes and creating `loyalty-postgres-20260901T123358Z`. The whole-VM timer
+  remains disabled/inactive, the PostgreSQL timer remains enabled/active, and
+  dashboard readiness and login return HTTP 200. The observation changed
+  nothing in production and does not close R-004 or authorize re-enabling the
+  whole-VM timer.
+
 - ADR-0119 preserves the accepted `starfiniti.recurring-failure-registry.v1`
   bytes and supersedes its recovery-only state shape with a generalized V2
   register. V2 now reconstructs two R-004 Borg-lock occurrences and three

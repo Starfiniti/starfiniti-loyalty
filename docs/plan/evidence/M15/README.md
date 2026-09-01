@@ -72,6 +72,16 @@ active and created a new archive. R-004 and M15-S04/S05 remain non-passing until
 the dedicated repository, monitoring, retention, transport, and isolated
 restore gates close.
 
+The later append-only
+`backup-traffic-read-only-follow-up-2026-09-01.md` revalidates containment
+without changing production. A ten-second tap sample increased by only 1,013
+bytes; the complete latest-day RRD estimated approximately 274 MiB total and
+peaked at 107,013 bytes/s; and the month maximum remains pinned to 14 August.
+Five consecutive PostgreSQL archives completed at intervals no greater than
+210 seconds, while the whole-VM timer stayed disabled and public readiness and
+login returned HTTP 200. This freshness evidence does not close the dedicated
+repository, monitoring, retention, custody, or isolated-restore gates.
+
 The 2026-09-01 read-only GitHub policy audit makes ADR-0115's external release
 gap exact. `main` has no branch protection, the repository has no ruleset or
 environment, no repository `RELEASE_POLICY_TOKEN` secret is configured, and the
