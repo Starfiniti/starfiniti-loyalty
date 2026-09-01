@@ -9,7 +9,10 @@
   remains authoritative for stale or forged commands. Seventeen focused tests
   and the complete local gate pass with 1,010 workspace tests, both production
   builds, every deterministic validator, and 90-migration/70-pgTAP static
-  validation; exact-head verification is pending. Production, providers,
+  validation. Implementation head `04da41a` passed exact-head CI run
+  `33530596023`, Security run `33530595912`, 3,845 database assertions, all four
+  WooCommerce cells, and external CodeQL check `99932887645`. Draft PR #61 keeps
+  the stacked merge and independent review gates. Production, providers,
   entitlements, endpoints, templates, deliveries, checkout, ledger value, and
   scores are unchanged.
 

@@ -1,14 +1,15 @@
 # Execution Plan
 
-M08-S05A is the active repository-safe correction. Complete the notification
-entitlement presentation against the already-authoritative PostgreSQL commands:
-disabled rollout must block publication, SMTP tests, endpoint creation, and key
-rotation while preserving bounded evidence and owner/admin endpoint shutdown;
-managed mode must not offer the self-hosted SMTP test. The complete local gate
-passes with 1,010 tests and both builds; record exact-head CI/Security evidence
-and close only the repository slice. M08-S06 still requires approved provider credentials, deployment, canary,
-reconciliation, rollback, and observation. Do not change production, provider,
-entitlement, or module score state for this correction.
+M08-S05A is repository-complete in draft PR #61. The notification entitlement
+presentation now matches the already-authoritative PostgreSQL commands: disabled
+rollout blocks publication, SMTP tests, endpoint creation, and key rotation while
+preserving bounded evidence and owner/admin endpoint shutdown; managed mode does
+not offer the self-hosted SMTP test. Implementation head `04da41a` passed exact-head
+CI/Security, 3,845 database assertions, all four WooCommerce cells, and CodeQL.
+The stacked merge and independent review gates remain. M08-S06 still requires
+approved provider credentials, deployment, canary, reconciliation, rollback, and
+observation. Do not change production, provider, entitlement, or module score
+state for this correction.
 
 M09-S05A is repository-complete after adversarial review reproduced a
 managed-capability bypass in customer-experience authoring. ADR-0121 applies the

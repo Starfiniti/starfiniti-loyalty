@@ -10,8 +10,11 @@
   test. Stale commands remain PostgreSQL-authorized and receive bounded exact
   guidance. Seventeen focused tests and the complete local gate pass with 1,010
   workspace tests, both production builds, every deterministic validator, and
-  90-migration/70-pgTAP static validation. Exact-head review remains pending.
-  Production, providers, M08's provisional score, and loyalty value are
+  90-migration/70-pgTAP static validation. Implementation head `04da41a` passed
+  CI `33530596023`, Security `33530595912`, 3,845 database assertions, all four
+  WooCommerce cells, and external CodeQL check `99932887645`. The repository
+  slice is complete in draft PR #61; stacked merge and independent review remain.
+  Production, providers, M08-S06, M08's provisional score, and loyalty value are
   unchanged.
 
 - M09 adversarial review found a database-authority gap in customer-experience
