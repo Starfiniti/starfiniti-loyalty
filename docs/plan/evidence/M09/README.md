@@ -142,6 +142,42 @@ Status: in progress. M09-S01 through M09-S05 are complete; M09-S06 disabled depl
 - Retained visual evidence: [editor desktop](experience-v2-editor-desktop.png), [editor mobile](experience-v2-editor-mobile.png), [editor dark](experience-v2-editor-dark.png), [member desktop](experience-v2-member-desktop.png), [member mobile](experience-v2-member-mobile.png), [public desktop](experience-v2-public-desktop.png), and [public mobile](experience-v2-public-mobile.png).
 - Rollback: application readers and writers can return to V1 while additive V2 columns/functions remain inert and auditable. Presentation reset uses `none`, `comfortable`, and canonical order; no rollback mutates programme versions, reservations, coupons, commerce facts, or ledger value.
 
+## S05A — Storefront authoring entitlement correction
+
+- Status: repository implementation and deterministic verification complete;
+  rebased exact-head checks, current solo adversarial review, and merge remain
+  pending in the stacked delivery chain.
+- Reproduction: a managed organization with `storefront.experience` disabled
+  could still create V1/V2 theme and English-copy revisions. Customer reads,
+  role checks, tenant scope, idempotency, and audit remained safe, but the
+  mutation contradicted the database-authoritative capability contract.
+- Architecture: ADR-0121 selects one private exact-table trigger over UI-only
+  checks or four duplicated command rewrites. Migration `20260901150526`
+  resolves the stored tenant scope before every theme/copy insert or update;
+  self-hosted defaults and trusted migration/administration roles remain compatible.
+- Merchant experience: disabled or unavailable entitlement evidence renders
+  the existing editor read-only with explicit value-preservation guidance, and
+  stale submissions return a rollout-specific error. Analytics now appears in
+  the persistent sidebar instead of relying on an undiscoverable direct route.
+- Local verification: the complete repository gate passes 1,001 workspace
+  tests, both production builds, and every deterministic validator; static
+  validation passes 90 migrations and 70 pgTAP files. Secret scan, zero-
+  vulnerability production audit, and licence inventory also pass. The expanded
+  experience pgTAP plan covers managed default denial, V1/V2 writes, unchanged
+  revisions, explicit canary enablement, later disablement, and retained reads.
+- Prior exact-head verification: implementation `996d78227f310b949fe352264f655fde1f3bdb09`
+  passed [CI run 33525862937](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/33525862937)
+  and [Security run 33525862820](https://github.com/Starfiniti/starfiniti-loyalty/actions/runs/33525862820)
+  across all twelve checks. Ubuntu replay applied all 90 migrations and passed
+  all 70 pgTAP files with 3,845 assertions; both images, the full baseline,
+  every supported WooCommerce runtime, CodeQL, DAST, supply chain, and recovery
+  transport also passed. Author-side adversarial review removed an unnecessary
+  worker-role bypass before the exact run; the rebased exact head still requires
+  current checks and the solo adversarial review required by ADR-0124.
+- Production and score: unchanged. The M09 production canary remains disabled,
+  module score remains 88/100, and no theme, copy, customer, WooCommerce,
+  checkout, ledger, coupon, deployment, or entitlement record was changed.
+
 ## S06 — Canary and close
 
 - Status: in progress; pre-canary automation is complete and no production mutation has been attempted.

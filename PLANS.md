@@ -14,6 +14,19 @@ pass plus a 24-hour cooling-off period after the newest exact-head check. Merge
 the exact-head-green PR #58 stack sequentially, then reconcile merged `main`;
 do not deploy production or inflate any module score from these merges.
 
+M09-S05A is active after adversarial review reproduced a
+managed-capability bypass in customer-experience authoring. ADR-0121 applies the
+`storefront.experience` decision at both persistence roots, keeps disabled
+configuration readable, makes the merchant editor honestly read-only, and
+adds the existing Analytics route to persistent navigation. The complete local
+gate previously passed with 1,001 tests and both builds. Original exact
+implementation `996d78227f310b949fe352264f655fde1f3bdb09` passed CI `33525862937` and
+Security `33525862820` across all twelve checks, including 3,845 pgTAP
+assertions. The rebased exact-head checks, current solo adversarial review, and
+stacked merge remain; M09-S06 production canary and close is still the active
+module gate.
+Production, the M09 canary, its 88/100 score, and loyalty value are unchanged.
+
 ADR-0120 is the current repository-safe M15 operations slice. It adds a
 semantic guest-versus-uplink rate guard for the exact VM 971 failure shape that
 the existing instrumented backup-cycle metrics cannot see. Keep its systemd

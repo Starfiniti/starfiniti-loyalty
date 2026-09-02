@@ -647,7 +647,7 @@ function runSelfTests(taskGraph) {
     ],
     [
       "terminal-task-active-slice",
-      "is terminal while M09-S06-CANARY-AND-CLOSE remains active",
+      "is terminal while M09-",
       (graph) => {
         const task = findModule(graph, "M09");
         task.status = "complete";

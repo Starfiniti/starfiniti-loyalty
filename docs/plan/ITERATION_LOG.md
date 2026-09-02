@@ -1,5 +1,35 @@
 # Iteration Log
 
+## 2026-09-01 — Storefront authoring entitlement correction
+
+- Adversarial reconstruction found that customer reads and WooCommerce
+  snapshots respected `storefront.experience`, while managed V1/V2 theme and
+  English-copy commands could still mutate their persistence roots after that
+  capability was disabled. Billing state remained intentionally separate and
+  did not repair the product-authority gap.
+- ADR-0121 selects one private exact-table trigger over UI-only gating or four
+  duplicated command rewrites. Disabled managed tenants now fail before either
+  table changes; an explicit tenant canary restores authoring, a later disable
+  stops new revisions, and existing configuration remains readable. Self-hosted
+  defaults, old command signatures, audit history, customer value, native
+  coupons, and checkout remain compatible.
+- The merchant editor reflects the same decision as a read-only state and maps
+  stale submissions to capability-specific guidance. The existing Analytics
+  route is now reachable from persistent merchant navigation.
+- The complete local gate passed 1,001 workspace tests, both production builds,
+  all deterministic validators, 90-migration/70-pgTAP static validation, secret
+  scanning, a zero-vulnerability production audit, and licence inventory.
+  Exact implementation `996d78227f310b949fe352264f655fde1f3bdb09`
+  passed CI `33525862937` and Security `33525862820` across all twelve checks;
+  Ubuntu replay passed all 70 pgTAP files with 3,845 assertions. The initial
+  exact run correctly exposed two stale test expectations, which were corrected
+  from the actual immutable revision sequence rather than waived.
+- M09-S05A reached repository-complete on its original exact head. Rebased
+  exact-head checks, current solo adversarial review, the stacked merge,
+  M09-S06 release/canary evidence, and all owner production inputs remain
+  pending. Production, entitlements, scores, checkout, coupons, and loyalty
+  value were not changed.
+
 ## 2026-09-01 — Exact-head semantic collector and live freshness evidence
 
 - Reconciled the previously local-only wording after exact implementation
@@ -2219,3 +2249,26 @@
 - Reconstructed the live backup path after a renewed multi-terabyte VM 971 alert. A twenty-second tap sample measured only 13,508 guest bytes, public health returned 200, and the restricted recovery source contained today's completed bases and a WAL artifact newer than twenty seconds. The historical tar-stream amplification remained absent.
 - Identified a separate one-time whole-VM raw migration holding the shared Borg lock from 12:35 CEST. The PostgreSQL off-site unit waited from 12:36:50 under a deployed 14,400-second lock wait and five-hour service timeout; its last archive completed at 12:33:41 and was about 79 minutes old at observation. The host had no node-exporter textfile evidence, so the repository-defined missing/stale alerts could not page.
 - Bound exact live script and unit hashes to the incident record and confirmed they match neither ADR-0070's bounded visible failure nor ADR-0071's accepted dedicated repository/controller. The migration later exited successfully and the waiting service transferred 1,594,074 changed bytes, created a new archive, and exited zero; the exact completed-archive gap was 1 hour 34 minutes 36 seconds. The next timer-triggered run created a second archive and exited zero at 14:12:08, restoring cadence without closing the design failure. R-004 and both M15 recovery and operations stay non-passing. The migration and waiter were not interrupted; no production configuration, service, database, route, checkout path, or loyalty value changed by the inspection.
+
+## 2026-09-01 — Storefront authoring entitlement correction
+
+- Reconstructed M02 and M09 capability flow after the product-surface audit and
+  refuted a self-hosted activation defect: all locally implementable features
+  remain enabled by default without Stripe or remote licensing.
+- Reproduced a narrower managed-mode defect: `storefront.experience` controlled
+  enhanced reads and snapshots, but the compatible V1/V2 theme and copy
+  commands could still mutate their persistence roots while disabled.
+- Compared UI-only gating, four command rewrites, and one exact-table trigger.
+  ADR-0121 selects the trigger so old RPC clients cannot bypass PostgreSQL and
+  future command wrappers inherit the same decision.
+- Added fail-closed merchant presentation and capability-specific stale-command
+  feedback while preserving existing configuration and all value paths. Added
+  the already implemented Analytics route to persistent merchant navigation.
+- The complete local repository gate passes 1,001 workspace tests, both
+  production builds, every deterministic validator, static validation of 90
+  migrations and 70 pgTAP files, secret scan, zero-vulnerability production
+  audit, and licence inventory. Container replay is unavailable without a local
+  Docker/Podman engine; commit, exact-head checks, and the current solo
+  adversarial review remain before close. Production,
+  M09's canary/88 score, checkout, coupons, ledger value, and entitlements did
+  not change.

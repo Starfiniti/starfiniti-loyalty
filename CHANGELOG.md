@@ -21,6 +21,23 @@
   release, production review, independent test/retest, final reconciliation, and
   approval gates remain open; no production state changed.
 
+- Added ADR-0121 and an additive database-authoritative guard for storefront
+  theme and English-copy authoring. Managed tenants whose
+  `storefront.experience` capability is disabled now fail before either
+  authoring table changes; explicit canary enablement restores writes, later
+  disablement stops new revisions, and existing configuration remains readable.
+  The merchant editor presents the same fail-closed state and stale commands
+  receive accurate guidance. Analytics is now reachable from the persistent
+  sidebar. The complete local gate passes 1,001 workspace tests, both builds,
+  every deterministic validator, 90-migration/70-pgTAP static validation,
+  secret scan, zero-vulnerability production audit, and licence inventory.
+  Exact implementation `996d78227f310b949fe352264f655fde1f3bdb09`
+  passed CI `33525862937` and Security `33525862820` across all twelve checks,
+  including all 70 pgTAP files and 3,845 assertions. Rebased exact-head checks,
+  current solo adversarial review, and the stacked merge remain pending. Production,
+  self-hosted defaults, checkout, coupons, ledger value, M09 status, and scores
+  are unchanged.
+
 - Reconciled the semantic backup-network control to exact Linux and fresh
   production evidence. CI `33518906422`, Security `33518906410`, and independent
   CodeQL `99893417542` pass at implementation
