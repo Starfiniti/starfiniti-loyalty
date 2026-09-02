@@ -24,10 +24,11 @@
   Ubuntu replay passed all 70 pgTAP files with 3,845 assertions. The initial
   exact run correctly exposed two stale test expectations, which were corrected
   from the actual immutable revision sequence rather than waived.
-- M09-S05A is repository-complete. Eligible independent PR review, the stacked
-  merge chain, M09-S06 release/canary evidence, and all owner production inputs
-  remain pending. Production, entitlements, scores, checkout, coupons, and
-  loyalty value were not changed.
+- M09-S05A reached repository-complete on its original exact head. Rebased
+  exact-head checks, current solo adversarial review, the stacked merge,
+  M09-S06 release/canary evidence, and all owner production inputs remain
+  pending. Production, entitlements, scores, checkout, coupons, and loyalty
+  value were not changed.
 
 ## 2026-09-01 — Exact-head semantic collector and live freshness evidence
 
@@ -2267,7 +2268,7 @@
   production builds, every deterministic validator, static validation of 90
   migrations and 70 pgTAP files, secret scan, zero-vulnerability production
   audit, and licence inventory. Container replay is unavailable without a local
-  Docker/Podman engine; independent review, commit, and exact-head Ubuntu replay
-  remain before close. Production,
+  Docker/Podman engine; commit, exact-head checks, and the current solo
+  adversarial review remain before close. Production,
   M09's canary/88 score, checkout, coupons, ledger value, and entitlements did
   not change.
