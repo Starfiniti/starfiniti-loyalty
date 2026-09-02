@@ -1,5 +1,160 @@
 # Iteration Log
 
+## 2026-09-01 — Repository-native security and release-preflight correction
+
+- A live repository audit found GitHub Actions allowed every action without
+  platform-enforced SHA pinning, while vulnerability alerts, Dependabot security
+  updates, secret scanning, push protection, and private vulnerability reporting
+  were disabled. All 41 current workflow action references were already pinned
+  to full commit SHAs across nine unique references.
+- Restricted Actions to the eight action repositories used by current workflows,
+  denied implicit GitHub-owned and verified-creator trust, required full-SHA
+  references, enabled vulnerability alerts and unpaused Dependabot security
+  updates, enabled secret scanning and push protection, and enabled private
+  vulnerability reporting. Default workflow permission remains read-only and
+  workflows cannot approve pull requests.
+- Secret scanning found two historical Stripe-format strings at lines 17 and
+  104 of `stripe-billing-webhook.test.ts`. Masked inspection proved both are
+  deterministic synthetic fixtures constructed from constants or repeat
+  operations. They were resolved as `used_in_tests`; no Stripe-issued secret,
+  credential exposure, or rotation is claimed. Dependabot, code-scanning, and
+  secret-scanning now each report zero open alerts.
+- Adversarial review found that the disabled release preflight still demanded
+  creation, update, deletion, and signature rules in one tag ruleset. That could
+  never accept the safer split introduced earlier. The correction requires the
+  exact creation-authority and no-bypass immutability rulesets separately, binds
+  the exact twelve check/app pairs, signatures and last-push approval, rechecks
+  repository security policy, and fails on any open repository alert.
+- ADR-0117, chronological minimized evidence, rollback endpoints, and expanded
+  adversarial validation preserve the boundary. Non-provider pattern scanning
+  and validity checks remain reported disabled and are not overclaimed. Release
+  workflow `333373957` remains disabled; no tag, release, deployment, or
+  production state changed.
+- Committed the workflow and evidence boundary as exact implementation
+  `dee20094d1609a8a10e26a4dd1fc71ac69f02940`. Because the release workflow is
+  an M15 security input, `security.yaml` returns from 19/27 to 7/27 rather than
+  relabelling the historical `fec7f86` scans and Medium review. Fresh exact-head
+  automation, artifact reconciliation, and triage remain pending.
+- Pull-request Security run `33499712113` failed before job creation under the
+  first repository-level CodeQL pattern. Manual run `33499821641` proved the
+  exact CodeQL `init` and `analyze` sub-actions initialize, then failed the
+  supply-chain setup on two full-SHA Trivy composite dependencies omitted from
+  the direct workflow inventory: `aquasecurity/setup-trivy` and `actions/cache`.
+  The first retry failed closed on `actions/cache/restore`; exact source at the
+  reported `setup-trivy` commit also proved `actions/cache/save` and an
+  already-allowed checkout reference. ADR-0118 corrects the allowlist to
+  thirteen exact patterns without enabling implicit GitHub-owned or
+  verified-creator trust. These failures are retained as negative evidence and
+  do not advance M15 Security.
+- Committed the exact direct-and-transitive policy, release preflight, ADR,
+  validator, and append-only failure/success evidence as
+  `9391499454d193ac4cdf61223173cd170c5be3a6`. The M15 manifest is rebound to
+  that release-workflow digest at 7/27; fresh exact-head automation remains a
+  separate gate.
+- Exact evidence head `4ac7414eab29e1a30ebfe61e1d995c8ce138dec1`
+  passed CI `33501867357`, Security `33501867336`, and external CodeQL
+  `99837291269`. Fresh artifact bytes reconcile zero CodeQL and repository
+  findings, zero image vulnerability/misconfiguration/secret findings, two
+  informational-only ZAP observations, and the unchanged 29 reciprocal-licence
+  occurrences across 15 dispositions. The new digest-bound Medium review
+  restores M15 Security to 19/27 without closing the eight external gates.
+
+## 2026-09-01 — Fail-closed GitHub branch and release-tag policy
+
+- Reconstructed current repository authority, exact check providers, settings,
+  and collaborators. The authenticated repository owner has Administration
+  authority; twelve successful checks are supplied by GitHub Actions app 15368
+  and GitHub Advanced Security app 57789. Only one administrator/collaborator
+  exists, so no eligible independent reviewer can be selected honestly.
+- Protected `main` with strict exact app-bound checks, signed commits, one
+  approval, stale-review dismissal, last-pusher separation, conversation
+  resolution, administrator enforcement, and blocked force pushes/deletion.
+  PR #58 moved from clean-but-unreviewed to `REVIEW_REQUIRED`, which is the
+  intended fail-closed result until a second reviewer exists.
+- Added two complementary active `refs/tags/v*.*.*` rulesets. One restricts
+  creation to the explicitly identified owner in audited non-exempt bypass mode.
+  The second independently requires signatures and blocks update/deletion with
+  no bypass. Adversarial review caught and corrected an initial arrangement that
+  placed the signature rule beside the bypassed creation rule; the final split
+  prevents creation authority from bypassing signature or immutability.
+- Retained the earlier absence audit byte-for-byte and added a successor evidence
+  record with exact rule identities, rollback endpoints, unresolved reviewer,
+  environment, token, tag, security/licence, and approval gates. Release workflow
+  `333373957` remains manually disabled; no tag, release, deployment, or
+  production mutation occurred.
+
+## 2026-09-01 — Live release-policy audit
+
+- Queried the current GitHub workflow, branch-protection, ruleset, environment,
+  repository-secret, Actions-permission, release, and exact-main check state
+  without mutating it. The replacement Release workflow is manually disabled,
+  production remains v0.1.11, and merged `main` has eleven green check runs.
+- The required authority boundary does not yet exist: `main` is unprotected,
+  there are zero repository rulesets and environments, and no repository
+  `RELEASE_POLICY_TOKEN` secret is configured. Inherited secret presence is not
+  asserted because the repository API cannot establish it.
+- Added `release-policy-audit-2026-09-01.yaml` and a validator with fourteen
+  adversarial cases. The evidence keeps eight independent gates open and rejects
+  false protection, ruleset, environment, secret, approval, release, or
+  production-mutation claims. No GitHub setting, tag, release, deployment, or
+  production state changed.
+
+## 2026-09-01 — VM 971 traffic and recovery-path containment
+
+- Reconstructed the reported multi-terabyte VM 971 pattern from direct tap,
+  bridge, physical-interface, RRD, timer, process, lock, journal, and Borg
+  evidence. Month RRD pins the 249,641,465-byte/s peak and matching
+  228,902,338-byte/s disk read to 2026-08-14. The latest day peaks at 107,013
+  bytes/s and totals approximately 271.9 MB; a live timer cycle received about
+  0.58 MB. The 3.605 TB VM/tap counter is cumulative, not traffic since
+  yesterday.
+- Confirmed the traffic stayed on the internal VM-to-host path. During the
+  2026-08-13T18:00Z–2026-08-14T10:00Z incident window, host outbound RRD peaked
+  at 279,067 bytes/s and totalled approximately 440.8 MB, while Borg added only
+  roughly 5 KB of deduplicated data per repeated multi-gigabyte input stream.
+  The current 3.782 TB physical `eno1` total includes later whole-host backups
+  and cannot be attributed to the earlier loop.
+- Confirmed the retired full-stream exporter is retained only as a root-owned
+  non-executable rollback file and no active unit references it. The active
+  PostgreSQL path uses restricted incremental rsync staging. A separate live
+  defect remained: the enabled whole-host controller was configured for raw
+  disk mode, shared the PostgreSQL Borg serialization boundary, caused the
+  previously measured 1h34m36s archive gap, and its 2026-09-01 timer run failed
+  because a PostgreSQL cycle held the shared lock.
+- Disabled and stopped only `starfiniti-pve-borg-backup.timer`. Existing
+  archives, scripts, configuration, local base/WAL generation, VM, database,
+  application, checkout, and loyalty value were retained. The PostgreSQL timer
+  remained enabled/active and created `loyalty-postgres-20260901T092222Z` at
+  09:22:58Z after receiving 576,022 bytes; public health and login returned 200
+  and Auth correctly rejected its unauthenticated root with 401.
+- The action is reversible but the timer must not be re-enabled until ADR-0071
+  isolates the PostgreSQL repository or an approved supervised recovery window
+  explicitly accepts the RPO exposure. Monitoring, dedicated repository,
+  retention, transport rollout, and isolated restore remain open under R-004.
+
+## 2026-09-01 — Merged-main evidence reconciliation
+
+- Verified that PR #57 merged reviewed head
+  `149724a3a2fad89d1a7990e0c3114be2754ecab6` into `main` as
+  `c85d93d0e6e0273543078050e697f04309f11d93` and that post-merge CI
+  `33475350770` and Security `33475350801` passed on that exact commit.
+- Added ADR-0116 and one minimized, digest-bound merge receipt. The product score
+  now uses exact merged `main` as the candidate subject while deployed production
+  remains v0.1.11. Scores stay 83/100 and 54/100 respectively because merging
+  adds no activation, canary, recovery, provider, observation, or customer-value
+  evidence.
+- Advanced the R-004 backup validator, archive-RPO alert contract, and recovery
+  runbook from candidate to merged while retaining null production and observation
+  proofs and the live defect. IMP-012 rises only from 87 to 88 because its merge
+  dependency is complete; release, deployment, observation, and reconciliation
+  remain independently gated. Release workflow `333373957` remains manually
+  disabled and no production or loyalty-value state changed.
+- Adversarial review found that both score subjects still labelled the
+  `unresolved_critical_high` automatic failure clear despite open Critical
+  production recovery, host/runtime security, and release-policy risks. Corrected
+  both states to active and added a validator mutation that rejects future
+  suppression; the scores do not change.
+
 ## 2026-08-31 — Current-candidate rescore and owner-queue refresh
 
 - Reconstructed the unfinished task graph after PR #57 became exact-head green. Every remaining product slice is a real-environment closeout; no hidden repository feature slice remains. The M16 product score and generated owner queue still bound an August 29 candidate, so the material-change rule required a current rescore after the M14 managed-session and usage recovery repair.

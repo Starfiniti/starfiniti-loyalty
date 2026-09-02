@@ -1,0 +1,108 @@
+schema: starfiniti.github-release-policy-hardening.v1
+status: partially_hardened
+observedAt: 2026-09-01T10:00:52Z
+precondition:
+  path: docs/plan/evidence/M15/release-policy-audit-2026-09-01.yaml
+  sha256: d50088031448244ec620e58c5959fcd70b77935c3a56fecba7c6910fba2ee85b
+repository:
+  owner: Starfiniti
+  name: starfiniti-loyalty
+  defaultBranch: main
+  mainCommit: c85d93d0e6e0273543078050e697f04309f11d93
+  visibility: public
+  administratorAuthorityObserved: true
+workflow:
+  id: 333373957
+  state: disabled_manually
+  releaseForCandidate: false
+production:
+  release: v0.1.11
+  changed: false
+branchProtection:
+  exists: true
+  strictRequiredChecks: true
+  requiredChecks:
+    - { context: CodeQL, appId: 57789 }
+    - { context: baseline, appId: 15368 }
+    - { context: codeql, appId: 15368 }
+    - { context: containers, appId: 15368 }
+    - { context: dast, appId: 15368 }
+    - { context: database, appId: 15368 }
+    - { context: recovery-transport, appId: 15368 }
+    - { context: supply-chain, appId: 15368 }
+    - { context: woocommerce-runtime (current-hpos), appId: 15368 }
+    - { context: woocommerce-runtime (current-legacy), appId: 15368 }
+    - { context: woocommerce-runtime (minimum-hpos), appId: 15368 }
+    - { context: woocommerce-runtime (minimum-legacy), appId: 15368 }
+  signedCommitsRequired: true
+  administratorEnforcement: true
+  approvingReviewsRequired: 1
+  dismissStaleReviews: true
+  lastPusherCannotApprove: true
+  conversationsResolved: true
+  forcePushesAllowed: false
+  deletionsAllowed: false
+  independentEligibleReviewerCount: 0
+tagRulesets:
+  totalCount: 2
+  activeVersionTagCount: 2
+  creation:
+    id: 22002643
+    name: Release tag creation authority
+    target: tag
+    enforcement: active
+    include: refs/tags/v*.*.*
+    rules: [creation]
+    bypassActorType: User
+    bypassActorId: 120020919
+    bypassMode: always
+    bypassAudited: true
+  immutability:
+    id: 22002644
+    name: Signed immutable release tags
+    target: tag
+    enforcement: active
+    include: refs/tags/v*.*.*
+    rules: [update, deletion, required_signatures]
+    bypassActorCount: 0
+releaseEnvironment:
+  exists: false
+  independentReviewerConfigured: false
+  preventSelfReview: false
+  protectedBranchRestriction: false
+  administratorBypassDisabled: null
+policyToken:
+  repositorySecretNamed: false
+  inheritedOrEnvironmentSecretObserved: null
+  permissionReviewComplete: false
+approvals:
+  releaseSecurity: false
+  licence: false
+  ownerRelease: false
+mutation:
+  repositoryPolicyChanged: true
+  branchProtectionChanged: true
+  tagRulesetsChanged: true
+  workflowChanged: false
+  tagCreated: false
+  releaseCreated: false
+  deploymentChanged: false
+  productionChanged: false
+  rollback:
+    branchProtection:
+      method: DELETE
+      endpoint: repos/Starfiniti/starfiniti-loyalty/branches/main/protection
+    tagRulesets:
+      method: DELETE
+      endpoints:
+        - repos/Starfiniti/starfiniti-loyalty/rulesets/22002643
+        - repos/Starfiniti/starfiniti-loyalty/rulesets/22002644
+remainingGates:
+  - add an eligible independent repository reviewer and obtain approval on the exact candidate
+  - create and verify the signed annotated version tag at exact approved main
+  - create the protected release environment
+  - configure an independent environment reviewer and prevent self-review
+  - independently verify environment administrator bypass is disabled
+  - supply and independently permission-review the read-only policy token
+  - close release-security and reciprocal-licence obligations
+  - approve the exact release separately from deployment

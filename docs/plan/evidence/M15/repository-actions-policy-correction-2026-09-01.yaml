@@ -1,0 +1,146 @@
+schema: starfiniti.github-actions-policy-correction.v1
+status: corrected
+observedAt: 2026-09-01T11:11:22Z
+precondition:
+  path: docs/plan/evidence/M15/repository-security-hardening-2026-09-01.yaml
+  sha256: 53a90e01f3d1955b00ceaa4b7e5fb54baeda3d13ada0782e68fdc4527e04a3a8
+repository:
+  owner: Starfiniti
+  name: starfiniti-loyalty
+  visibility: public
+  defaultBranch: main
+  observedMainCommit: c85d93d0e6e0273543078050e697f04309f11d93
+  evidenceBranchHead: ac2ad6c901ebad6d6d2f38b890e0913bfb2f942c
+failClosedEvidence:
+  pullRequestStartup:
+    runId: 33499712113
+    event: pull_request
+    headCommit: ac2ad6c901ebad6d6d2f38b890e0913bfb2f942c
+    conclusion: startup_failure
+    jobCount: 0
+  directPolicyProbe:
+    runId: 33499821641
+    event: workflow_dispatch
+    headCommit: ac2ad6c901ebad6d6d2f38b890e0913bfb2f942c
+    attempt: 1
+    conclusion: failure
+    codeqlJobId: 99830334394
+    codeqlConclusion: success
+    dastJobId: 99830334338
+    dastConclusion: success
+  supplyChainSetupAttempts:
+    - attempt: 1
+      jobId: 99830334324
+      conclusion: failure
+      stage: Set up job
+      annotationPath: .github
+      disallowedActions:
+        - action: aquasecurity/setup-trivy
+          commit: 3fb12ec12f41e471780db15c232d5dd185dcb514
+          source: aquasecurity/trivy-action composite dependency
+        - action: actions/cache
+          commit: 27d5ce7f107fe9357f9df03efb73ab90386fccae
+          source: aquasecurity/trivy-action composite dependency
+    - attempt: 2
+      jobId: 99832633787
+      conclusion: failure
+      stage: Set up job
+      annotationPath: .github
+      disallowedActions:
+        - action: actions/cache/restore
+          commit: 9255dc7a253b0ccc959486e2bca901246202afeb
+          source: aquasecurity/setup-trivy composite dependency
+  transitiveSourceInspection:
+    repository: aquasecurity/setup-trivy
+    commit: 3fb12ec12f41e471780db15c232d5dd185dcb514
+    path: action.yaml
+    resolvedActions:
+      - action: actions/cache/restore
+        commit: 9255dc7a253b0ccc959486e2bca901246202afeb
+        policyPattern: actions/cache/restore@*
+        newlyRequired: true
+      - action: actions/checkout
+        commit: 8e8c483db84b4bee98b60c0593521ed34d9990e8
+        policyPattern: actions/checkout@*
+        newlyRequired: false
+      - action: actions/cache/save
+        commit: 9255dc7a253b0ccc959486e2bca901246202afeb
+        policyPattern: actions/cache/save@*
+        newlyRequired: true
+  finding: Repository-level CodeQL matching did not admit public sub-action references, direct workflow inventory omitted two full-SHA composite dependencies, and the first transitive correction did not include public cache restore/save sub-actions from the pinned setup-trivy source.
+correctedActionsPolicy:
+  enabled: true
+  allowedActions: selected
+  shaPinningRequired: true
+  githubOwnedAllowed: false
+  verifiedCreatorsAllowed: false
+  patternsAllowed:
+    - actions/attest-build-provenance@*
+    - actions/cache@*
+    - actions/cache/restore@*
+    - actions/cache/save@*
+    - actions/checkout@*
+    - actions/download-artifact@*
+    - actions/setup-node@*
+    - actions/upload-artifact@*
+    - anchore/sbom-action@*
+    - aquasecurity/setup-trivy@*
+    - aquasecurity/trivy-action@*
+    - github/codeql-action/analyze@*
+    - github/codeql-action/init@*
+  directWorkflowActionReferences: 41
+  uniqueDirectWorkflowActionReferences: 9
+  observedTransitiveActionReferences: 5
+  newlyRequiredTransitivePolicyPatterns: 4
+  unpinnedResolvedActionReferences: 0
+verification:
+  runId: 33499821641
+  attempt: 3
+  event: workflow_dispatch
+  headCommit: ac2ad6c901ebad6d6d2f38b890e0913bfb2f942c
+  supplyChainJobId: 99833061733
+  supplyChainConclusion: success
+  policyCorrected: true
+  fullSecurityEvidenceClaimed: false
+releaseBoundary:
+  workflowId: 333373957
+  workflowState: disabled_manually
+  releaseEnvironmentExists: false
+  policyTokenConfigured: false
+  releaseCreated: false
+  deploymentChanged: false
+  productionChanged: false
+mutation:
+  actionsPolicyChanged: true
+  implicitGitHubOwnedTrustEnabled: false
+  verifiedCreatorTrustEnabled: false
+  shaPinningDisabled: false
+  workflowEnabled: false
+  tagCreated: false
+  releaseCreated: false
+  deploymentChanged: false
+  productionChanged: false
+  rollback:
+    method: PUT
+    endpoint: repos/Starfiniti/starfiniti-loyalty/actions/permissions/selected-actions
+    githubOwnedAllowed: false
+    verifiedCreatorsAllowed: false
+    patternsAllowed:
+      - actions/attest-build-provenance@*
+      - actions/checkout@*
+      - actions/download-artifact@*
+      - actions/setup-node@*
+      - actions/upload-artifact@*
+      - anchore/sbom-action@*
+      - aquasecurity/trivy-action@*
+      - github/codeql-action@*
+    consequence: The direct-only policy fails closed before the current Security workflow can complete; it does not authorize broader Actions access.
+remainingGates:
+  - add an eligible independent repository reviewer and obtain approval on the exact candidate
+  - create and verify the signed annotated version tag at exact approved main
+  - create the protected release environment
+  - configure an independent environment reviewer and prevent self-review
+  - independently verify environment administrator bypass is disabled
+  - supply and independently permission-review the expanded read-only policy token
+  - close release-security and reciprocal-licence obligations
+  - approve the exact release separately from deployment

@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { execFileSync } from "node:child_process";
 import {
   closeSync,
   constants,
@@ -17,7 +18,10 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const realRoot = realpathSync.native(root);
 const registryPath = "docs/plan/evidence/M16/recurring-failures.yaml";
 const planPath = "infrastructure/governance/continuous-improvement.yaml";
+const mainIntegrationPath =
+  "docs/plan/evidence/M16/main-integration-2026-09-01.yaml";
 const digestPattern = /^[0-9a-f]{64}$/u;
+const commitPattern = /^[0-9a-f]{40}$/u;
 const timestampPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/u;
 const allowedControls = new Set([
   "regressionTest",
@@ -38,6 +42,11 @@ const requiredRecoveryControlTypes = new Map([
   ["infrastructure/observability/prometheus/rules.yaml", "monitor"],
   ["docs/operations/RUNBOOKS.md", "runbook"],
 ]);
+const requiredMergeEvidence = Object.freeze({
+  path: "docs/plan/evidence/M16/main-integration-2026-09-01.yaml",
+  sha256: "45ba2c59c8be7089f470b0ed21f4f486ed5c6370e65cbbfd1dc63fb52157c1e5",
+});
+const requiredMergeCommit = "c85d93d0e6e0273543078050e697f04309f11d93";
 const requiredRecoveryOccurrences = new Map([
   [
     "shared-lock-starvation-2026-08-28",
@@ -55,7 +64,6 @@ const requiredRecoveryOccurrences = new Map([
   ],
 ]);
 const requiredRecoveryGates = new Set([
-  "merge reviewed candidate",
   "provision dedicated repository and owner-only configuration",
   "activate repository-isolated archive and maintenance units",
   "activate node-exporter metrics and protected-value paging",
@@ -116,6 +124,145 @@ function exactUtc(value, label) {
     fail(`${label} is invalid`);
   }
   return instant;
+}
+
+function verifyCommitAncestry(ancestor, descendant) {
+  try {
+    execFileSync("git", ["cat-file", "-e", `${ancestor}^{commit}`], {
+      cwd: root,
+      stdio: "ignore",
+    });
+    execFileSync("git", ["cat-file", "-e", `${descendant}^{commit}`], {
+      cwd: root,
+      stdio: "ignore",
+    });
+    execFileSync("git", ["merge-base", "--is-ancestor", ancestor, descendant], {
+      cwd: root,
+      stdio: "ignore",
+    });
+  } catch {
+    fail(
+      "main integration reviewed head is not an ancestor of the merge commit",
+    );
+  }
+}
+
+function validateMainIntegrationEvidence(document) {
+  exactKeys(
+    document,
+    new Set([
+      "schema",
+      "observedAt",
+      "pullRequest",
+      "main",
+      "release",
+      "production",
+    ]),
+    "main integration evidence",
+  );
+  if (document.schema !== "starfiniti.main-integration-evidence.v1") {
+    fail("main integration evidence schema differs");
+  }
+  const observedAt = exactUtc(
+    document.observedAt,
+    "main integration evidence observedAt",
+  );
+  exactKeys(
+    document.pullRequest,
+    new Set([
+      "number",
+      "url",
+      "state",
+      "reviewedHead",
+      "mergeCommit",
+      "mergedAt",
+    ]),
+    "main integration pull request",
+  );
+  const mergedAt = exactUtc(
+    document.pullRequest.mergedAt,
+    "main integration mergedAt",
+  );
+  if (
+    document.pullRequest.number !== 57 ||
+    document.pullRequest.url !==
+      "https://github.com/Starfiniti/starfiniti-loyalty/pull/57" ||
+    document.pullRequest.state !== "merged" ||
+    document.pullRequest.reviewedHead !==
+      "149724a3a2fad89d1a7990e0c3114be2754ecab6" ||
+    document.pullRequest.mergeCommit !==
+      "c85d93d0e6e0273543078050e697f04309f11d93" ||
+    !commitPattern.test(document.pullRequest.reviewedHead ?? "") ||
+    !commitPattern.test(document.pullRequest.mergeCommit ?? "") ||
+    mergedAt > observedAt
+  ) {
+    fail("main integration pull request evidence differs");
+  }
+  verifyCommitAncestry(
+    document.pullRequest.reviewedHead,
+    document.pullRequest.mergeCommit,
+  );
+  exactKeys(
+    document.main,
+    new Set(["commit", "reviewedHeadIsAncestor", "ci", "security"]),
+    "main integration main state",
+  );
+  if (
+    document.main.commit !== document.pullRequest.mergeCommit ||
+    document.main.reviewedHeadIsAncestor !== true
+  ) {
+    fail("main integration ancestry differs");
+  }
+  for (const [name, expectedRunId] of [
+    ["ci", 33475350770],
+    ["security", 33475350801],
+  ]) {
+    const run = document.main[name];
+    exactKeys(
+      run,
+      new Set(["runId", "headCommit", "conclusion"]),
+      `main integration ${name}`,
+    );
+    if (
+      run.runId !== expectedRunId ||
+      run.headCommit !== document.main.commit ||
+      run.conclusion !== "success"
+    ) {
+      fail(`main integration ${name} evidence differs`);
+    }
+  }
+  exactKeys(
+    document.release,
+    new Set(["workflowId", "workflowState", "releaseForMergeCommit"]),
+    "main integration release state",
+  );
+  if (
+    document.release.workflowId !== 333373957 ||
+    document.release.workflowState !== "disabled_manually" ||
+    document.release.releaseForMergeCommit !== false
+  ) {
+    fail("main integration release state differs");
+  }
+  exactKeys(
+    document.production,
+    new Set([
+      "release",
+      "applicationCommit",
+      "deploymentChanged",
+      "loyaltyValueChanged",
+    ]),
+    "main integration production state",
+  );
+  if (
+    document.production.release !== "v0.1.11" ||
+    document.production.applicationCommit !==
+      "0ced4b666a55d836bd3d4927337fe057a71bb4ba" ||
+    !commitPattern.test(document.production.applicationCommit ?? "") ||
+    document.production.deploymentChanged !== false ||
+    document.production.loyaltyValueChanged !== false
+  ) {
+    fail("main integration production state differs");
+  }
 }
 
 function safeRepositoryPath(relativePath, label) {
@@ -197,6 +344,25 @@ function readRegularRepositoryFile(relativePath) {
     fail(`${relativePath} cannot be read as a regular repository file`);
   } finally {
     if (descriptor !== undefined) closeSync(descriptor);
+  }
+}
+
+function validateCommittedFileDigest(commit, reference, label) {
+  if (!commitPattern.test(commit ?? "")) fail(`${label} commit is invalid`);
+  safeRepositoryPath(reference.path, `${label} path`);
+  let content;
+  try {
+    content = execFileSync("git", ["show", `${commit}:${reference.path}`], {
+      cwd: root,
+      encoding: "buffer",
+      maxBuffer: 4 * 1024 * 1024,
+      stdio: ["ignore", "pipe", "ignore"],
+    });
+  } catch {
+    fail(`${label} cannot be read from the merge commit`);
+  }
+  if (digest(content) !== reference.sha256) {
+    fail(`${label} does not match the merge commit`);
   }
 }
 
@@ -540,7 +706,7 @@ function validateRegistry(document, reader = readRegularRepositoryFile) {
   if (
     recoveryFailure.riskId !== "R-004" ||
     recoveryFailure.severity !== "Critical" ||
-    recoveryFailure.state !== "control_candidate" ||
+    recoveryFailure.state !== "merged_pending_activation" ||
     recoveryFailure.occurrences.length !== 2 ||
     recoveryFailure.decision.path !==
       "docs/architecture/ADR/0071-dedicated-postgresql-borg-repository.md" ||
@@ -556,10 +722,21 @@ function validateRegistry(document, reader = readRegularRepositoryFile) {
   );
   for (const control of recoveryFailure.controls) {
     if (
-      control.type !== requiredRecoveryControlTypes.get(control.reference.path)
+      control.type !==
+        requiredRecoveryControlTypes.get(control.reference.path) ||
+      control.deliveryStatus !== "merged" ||
+      control.mergeEvidence?.path !== requiredMergeEvidence.path ||
+      control.mergeEvidence?.sha256 !== requiredMergeEvidence.sha256 ||
+      control.productionEvidence !== null ||
+      control.observationEvidence !== null
     ) {
       fail("repeated PostgreSQL off-site starvation control type differs");
     }
+    validateCommittedFileDigest(
+      requiredMergeCommit,
+      control.reference,
+      `repeated PostgreSQL off-site starvation ${control.id}`,
+    );
   }
   exactSet(
     new Set(recoveryFailure.occurrences.map((occurrence) => occurrence.id)),
@@ -651,11 +828,8 @@ function selfTest(registry) {
         (value.failures[0].controls[0].reference.sha256 = "f".repeat(64)),
     ],
     [
-      "candidate merge overclaim",
-      (value) =>
-        (value.failures[0].controls[0].mergeEvidence = structuredClone(
-          value.failures[0].controls[0].reference,
-        )),
+      "merged proof omission",
+      (value) => (value.failures[0].controls[0].mergeEvidence = null),
     ],
     [
       "active without proof",
@@ -675,6 +849,60 @@ function selfTest(registry) {
     let rejected = false;
     try {
       validateRegistry(candidate);
+    } catch {
+      rejected = true;
+    }
+    if (!rejected) fail(`self-test accepted ${label}`);
+  }
+  let mergedControlDriftRejected = false;
+  try {
+    validateCommittedFileDigest(
+      requiredMergeCommit,
+      {
+        path: "scripts/validate-backup-assets.mjs",
+        sha256: "0".repeat(64),
+      },
+      "self-test merged control",
+    );
+  } catch {
+    mergedControlDriftRejected = true;
+  }
+  if (!mergedControlDriftRejected) {
+    fail("self-test accepted merged control byte drift");
+  }
+  return cases.length + 1;
+}
+
+function selfTestMainIntegration(mainIntegration) {
+  validateMainIntegrationEvidence(structuredClone(mainIntegration));
+  const cases = [
+    [
+      "main integration ancestry overclaim",
+      (value) => (value.main.reviewedHeadIsAncestor = false),
+    ],
+    [
+      "main integration failed run",
+      (value) => (value.main.security.conclusion = "failure"),
+    ],
+    [
+      "main integration release overclaim",
+      (value) => (value.release.releaseForMergeCommit = true),
+    ],
+    [
+      "main integration deployment overclaim",
+      (value) => (value.production.deploymentChanged = true),
+    ],
+    [
+      "main integration value overclaim",
+      (value) => (value.production.loyaltyValueChanged = true),
+    ],
+  ];
+  for (const [label, mutate] of cases) {
+    const candidate = structuredClone(mainIntegration);
+    mutate(candidate);
+    let rejected = false;
+    try {
+      validateMainIntegrationEvidence(candidate);
     } catch {
       rejected = true;
     }
@@ -724,11 +952,16 @@ if (args.some((argument) => argument !== "--self-test")) {
 }
 const registry = YAML.parse(readRegularRepositoryFile(registryPath));
 const plan = YAML.parse(readRegularRepositoryFile(planPath));
+const mainIntegration = YAML.parse(
+  readRegularRepositoryFile(mainIntegrationPath),
+);
 validatePlanBinding(plan);
+validateMainIntegrationEvidence(mainIntegration);
 validateRegistry(registry);
 let caseCount = 0;
 if (args.includes("--self-test")) {
   caseCount = selfTest(registry);
+  caseCount += selfTestMainIntegration(mainIntegration);
   const driftedPlan = structuredClone(plan);
   driftedPlan.recurringFailure.minimumDurableControls = 0;
   let planRejected = false;

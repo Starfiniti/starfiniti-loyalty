@@ -48,6 +48,42 @@ Partial publication is still possible after the first registry write. Operations
 
 Keep the workflow disabled or disable it again. Revoking the policy token, removing the environment approval, or stopping before publish prevents new writes without affecting released artifacts. Never delete and recreate a signed version tag or overwrite a release asset. If the workflow contract changes materially, update the default branch and external controls first, then perform a fresh reviewed dispatch.
 
+## Current evidence — 2026-09-01
+
+The initial read-only audit in
+`docs/plan/evidence/M15/release-policy-audit-2026-09-01.yaml` confirms that the
+replacement workflow remains manually disabled and exact merged `main` has
+eleven green check runs. It also proves the required external boundary is not
+ready: `main` is unprotected, repository rulesets and environments are empty,
+and no repository `RELEASE_POLICY_TOKEN` secret is configured. Eight gates stay
+open, including the signed annotated release tag and explicit owner approval.
+The audit changed no GitHub or production state. Its validator rejects any
+attempt to reinterpret these absences as release authority.
+
+The chronological successor
+`docs/plan/evidence/M15/release-policy-hardening-2026-09-01.yaml` records the
+repository-policy mutation without rewriting that precondition. Protected
+`main` now has strict app-bound checks, verified signatures, review and
+last-pusher separation, stale-review dismissal, conversation resolution,
+administrator enforcement, and force-push/deletion blocks. Complementary tag
+rulesets separate audited signed creation from no-bypass update/deletion denial.
+Only one collaborator exists, so branch approval is deliberately unsatisfied;
+the environment, independent environment reviewer, policy token, exact release
+tag, security/licence closure, and owner approval remain external. Release stays
+disabled, and no release or production authority was exercised.
+
+ADR-0117 and
+`docs/plan/evidence/M15/repository-security-hardening-2026-09-01.yaml` add the
+next chronological external-policy layer: selected full-SHA Actions, dependency
+alerts and unpaused security updates, secret scanning and push protection,
+private vulnerability reporting, and zero open repository security alerts. The
+release preflight now checks those controls with the expanded read-only policy
+token. It also validates the two complementary tag rulesets separately. This is
+required because combining creation authority and signature enforcement in one
+bypassed ruleset would let the creator bypass signatures, while requiring all
+four rules in one non-existent ruleset would make the hardened split impossible
+to release through.
+
 ## References
 
 - [GitHub `repository_dispatch`](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#repository_dispatch)

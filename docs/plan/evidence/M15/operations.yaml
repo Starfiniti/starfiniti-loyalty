@@ -1,15 +1,17 @@
 schema: starfiniti.operations-evidence.v1
 status: in_progress
-observedAt: 2026-08-31T17:22:56Z
+observedAt: 2026-09-01T09:25:02Z
 currentProduction:
   release: v0.1.11
   applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
   monitoringServicesActive: false
   observedServices:
     [prometheus, alertmanager, grafana, loki, promtail, node-exporter]
-  historicalVm971TransmitBytes: 3604822111248
-  recentVm971MaximumNetoutBytesPerSecond: 9761
-  interpretation: The VM counter remains cumulative evidence from the contained full-stream backup incident; the latest hour averaged 3263 bytes per second and peaked at 9761 bytes per second, three real PostgreSQL archives completed in the latest ten minutes without contention, and no active monitoring plane exists.
+  historicalVm971TransmitBytes: 3605015860623
+  recentVm971MaximumNetoutBytesPerSecond: 107013
+  wholeVmBackupTimerEnabled: false
+  postgresBackupTimerEnabled: true
+  interpretation: The VM counter remains cumulative evidence from the contained internal full-stream backup incident; host RRD and Borg's kilobyte-scale deduplicated additions confirm the amplified stream did not leave the server, the latest VM day peaked at 107013 bytes per second and totalled approximately 271851854 bytes, the raw whole-VM timer was disabled after its repeated shared-lock conflict, a real PostgreSQL archive completed afterward, and no active monitoring plane exists.
 candidate:
   branch: codex/m15-operations-incidents
   commit: c2a6fd5ceb80ae4a8b564e19f148d4a63cc85872
@@ -46,7 +48,7 @@ claim:
 checks:
   - id: production_reality
     status: passed
-    evidence: Read-only Proxmox inspection at 2026-08-31T17:22:56Z found VM 971 cumulative receive at 3604822111248 bytes while its latest hour averaged 3263 and peaked at 9761 bytes per second; three real PostgreSQL archives completed in ten minutes without contention, the timer was waiting, the whole-VM service was inactive, and no active monitoring plane exists.
+    evidence: Production inspection at 2026-09-01T09:25:02Z found VM 971 cumulative netout at 3605015860623 bytes while the latest day peaked at 107013 bytes per second; historical host RRD and Borg statistics confirmed the amplification stayed internal, the raw whole-VM timer was disabled after its repeated shared-lock conflict, PostgreSQL archive loyalty-postgres-20260901T092222Z completed afterward, and no active monitoring plane exists.
   - id: catalog_contract
     status: passed
     evidence: The versioned catalogue defines thirty-one bounded signals twenty-seven alerts four owner roles four billing-independent routes and exact source boundaries.

@@ -1,10 +1,113 @@
 # Status
 
-- M16's material-change rescore and owner handoff are being refreshed against the verified 2026-08-31 state rather than the obsolete August 29 candidate. Exact code head `7fb4403863e7409e38bf4fbfc1f3ec68d6325e3f` passed CI `33434852244` and Security `33434852266`; evidence head `609705692d2fe38e64b12360d392e1c62aabdf74` passed CI `33435854855`, Security `33435854858`, and external CodeQL with all twelve PR checks green. The score does not move: deployed production remains 54/100, the integration candidate 83/100, M14 provisional 90/100 with operability below its floor, and M16 77/100. The fourteen-item owner queue now records the 3,604,822,111,248-byte recovery-transfer incident and the exact managed-billing repair without changing any gate state. Production, merge, release, deployment, provider, checkout, database, and loyalty value remain unchanged.
+- The owner explicitly selected temporary solo repository operation under
+  ADR-0124. The repository has one administrator and no eligible second
+  reviewer, so `main` still requires pull requests but now requires zero
+  approvals. The twelve exact app-bound checks, strict current-base evaluation,
+  signed commits, resolved conversations, administrator enforcement, and
+  force-push/deletion blocks remain exact. The exception fails closed after
+  `2026-12-01T05:59:20Z` and must be restored to one approval sooner if a second
+  eligible collaborator is added or the owner revokes it. Release workflow
+  `333373957` remains manually disabled; its preflight now selects the newest
+  run for each required app/check pair, requires it to pass, and waits at least
+  86,400 seconds after the newest exact-head check. No independent review,
+  penetration test, release, deployment, GA, production, checkout, database,
+  or loyalty-value change is claimed.
+
+- GitHub repository-native security is now fail-closed under ADR-0117 and its
+  transitive-action correction ADR-0118. Actions permit only thirteen exact
+  patterns: nine direct repository workflow references plus four newly required
+  full-SHA Trivy composite patterns GitHub exposed through setup failures and
+  exact pinned source. Neither all
+  GitHub-owned actions nor all verified creators are implicitly trusted, and
+  default workflow permissions stay read-only.
+  Vulnerability alerts, unpaused Dependabot security updates, secret scanning,
+  push protection, and private vulnerability reporting are enabled. The initial
+  scan found two deterministic Stripe-format unit-test fixtures; both were
+  resolved as `used_in_tests`, no external credential or rotation is claimed,
+  and Dependabot, code-scanning, and secret-scanning each report zero open
+  alerts. The disabled release preflight now checks these controls and zero-open
+  alert state, requires the exact twelve check/app pairs and signed/last-push
+  branch policy, and correctly validates the two complementary tag rulesets
+  separately. Non-provider pattern scanning and validity checks remain disabled
+  and are not overclaimed. Release, deployment, and production remain unchanged.
+  The solo-policy release-workflow change invalidated prior candidate-bound
+  automated security evidence. Fresh exact candidate
+  `b97dde21de81660b7c182e5b2653fb1617863750` passed CI `33598916504`, Security
+  `33598916554`, and external CodeQL `100148436020`; the new digest-bound Medium
+  review restores `security.yaml` to 19/27 passed and eight pending. The earlier
+  `4ac7414` and `fec7f86` results remain immutable historical evidence.
+  Security pull-request run `33499712113` failed before job creation under the
+  first repository-level CodeQL pattern. Manual run `33499821641` then proved
+  the two exact CodeQL sub-actions could initialize and identified only
+  `actions/cache` and `aquasecurity/setup-trivy` as omitted transitive
+  dependencies. A second fail-closed setup exposed `actions/cache/restore`, and
+  exact pinned source also required `actions/cache/save`. All four patterns are
+  now explicit; the failed runs remain negative evidence, not Security
+  completion.
+
+- GitHub release policy was hardened at the repository boundary. At
+  `2026-09-01T10:00:52Z`, protected `main` required the twelve exact current
+  checks from GitHub Actions and GitHub Advanced Security, verified signatures,
+  one approval, stale-review dismissal, last-pusher separation, resolved
+  conversations, and administrator enforcement; force pushes and deletion were
+  disabled. Active complementary version-tag rulesets permit only audited signed
+  creation and reject update or deletion with no bypass. That historical shape
+  is retained as ADR-0124's rollback precondition; the owner-approved temporary
+  solo policy now uses a zero-approval pull-request rule. The Release workflow remains
+  manually disabled. The protected release environment, independent environment
+  reviewer, policy token, signed exact release tag, security/licence closure, and
+  explicit release approval remain open; no tag, release, deployment, or
+  production state changed.
+
+- A read-only GitHub policy audit at `2026-09-01T09:09:45Z` found that the
+  replacement release workflow is still manually disabled and exact merged
+  `main` has eleven green check runs, but `main` has no branch protection,
+  there are zero repository rulesets, zero environments, and no repository
+  `RELEASE_POLICY_TOKEN` secret. The audit keeps eight exact external control,
+  independent-review, security/licence, and approval gates open.
+  `release-policy-audit-2026-09-01.yaml` and
+  `npm run release-policy:audit:validate` preserve and adversarially validate
+  the snapshot. The audit changed no GitHub setting and grants no release or
+  deployment authority.
+
+- A 2026-09-01 production incident check separated VM 971's cumulative
+  3.605 TB counter from current traffic. Proxmox month RRD pins the historical
+  249.6 MB/s peak to 2026-08-14; the latest day peaks at 107 KB/s and a captured
+  PostgreSQL cycle received only 576,022 wire bytes. Host RRD remained below
+  279 KB/s outbound during the historical window and Borg added only kilobytes
+  per repeated stream, confirming that the amplification stayed on the internal
+  VM-to-host path. The later 3.782 TB physical `eno1` total includes subsequent
+  whole-host backups and is not attributable to the incident. The still-enabled
+  whole-host controller was configured for raw disk mode, shared the Borg
+  serialization boundary, had already caused the exact 1h34m36s PostgreSQL
+  archive gap, and its 2026-09-01 scheduled run failed on that same shared
+  lock. As reversible containment, only
+  `starfiniti-pve-borg-backup.timer` was disabled/stopped. The authoritative
+  PostgreSQL timer stayed enabled and produced
+  `loyalty-postgres-20260901T092222Z` afterward; dashboard health and login
+  remained HTTP 200. Existing archives and all VM, database, application,
+  checkout, and loyalty-value state were retained. R-004 remains Critical
+  until ADR-0071's dedicated repository, monitoring, retention, and isolated
+  restore gates pass.
+
+- PR #57 merged reviewed head `149724a3a2fad89d1a7990e0c3114be2754ecab6`
+  into `main` as `c85d93d0e6e0273543078050e697f04309f11d93` at
+  `2026-09-01T05:53:23Z`. Post-merge CI `33475350770` and Security
+  `33475350801` passed on the merge commit. ADR-0116 and minimized evidence
+  `docs/plan/evidence/M16/main-integration-2026-09-01.yaml` promote exact
+  merged `main` only as the unchanged 83/100 candidate subject. The R-004
+  backup validator, archive-RPO alert contract, and recovery runbook are now
+  merged but not active in production. Release workflow `333373957` remains
+  `disabled_manually`; production remains `v0.1.11` at 54/100, and no tag,
+  release, deployment, provider, database, checkout, or loyalty-value mutation
+  occurred.
+
+- M16's material-change rescore and owner handoff were refreshed against the verified 2026-08-31 state rather than the obsolete August 29 candidate. Exact code head `7fb4403863e7409e38bf4fbfc1f3ec68d6325e3f` passed CI `33434852244` and Security `33434852266`; evidence head `609705692d2fe38e64b12360d392e1c62aabdf74` passed CI `33435854855`, Security `33435854858`, and external CodeQL with all twelve PR checks green. The score did not move: deployed production remains 54/100, the candidate 83/100, M14 provisional 90/100 with operability below its floor, and M16 77/100. The fourteen-item owner queue records the 3,604,822,111,248-byte recovery-transfer incident and the exact managed-billing repair; its 2026-09-01 refresh removes only the now-completed merge dependency from IMP-012.
 
 - PR #57's exact code head `7fb4403863e7409e38bf4fbfc1f3ec68d6325e3f` repairs the deterministic database-test failures found by the first Linux replay: missing V2 usage-summary allowlists, an invalid two-open-account fixture, and V1-to-V2 usage recovery assigning provider attempt zero. The repair preserves a processing V1 claim across evidence normalization, promotes the tenth authorized claim after nine policy holds to claim sequence ten/provider attempt one, keeps pre-network holds outside the send budget, uses one named immutable hold-identity constraint, and separates compatible claim and normalization statements so snapshot visibility cannot strand a processing row. Exact-head CI run `33434852244` passed all seven jobs, including 999 workspace tests, both production images, all 89 migrations, all 70 pgTAP files with 3,831 assertions, all 22 two-session concurrency probes, and all four WooCommerce runtime cells. Security run `33434852266` passed CodeQL, supply-chain, DAST, and recovery-transport. Production, managed billing, release, deployment, and loyalty value remain unchanged.
 
-- The current PR #57 integration candidate adds post-review safety without
+- The now-merged PR #57 integration candidate adds post-review safety without
   changing production. ADR-0114 bounds ambiguous Stripe session retry to 23
   hours, requires immutable reconciliation afterward, enforces one live
   subscription per organization, separates usage claims from actual provider
@@ -20,7 +123,7 @@
   ruleset, independent release-environment review, policy-token, licence, and
   release-security gates are complete. The complete local repository gate now
   passes 999 workspace tests, both production builds, and every static roadmap,
-  security, accessibility, and WooCommerce validator. No merge, tag, release,
+  security, accessibility, and WooCommerce validator. No tag, release,
   deployment, tenant,
   provider, checkout, database, or loyalty-value mutation is claimed.
 
@@ -308,8 +411,8 @@
   passed CI `33261152926`, Security `33261152934`, and external CodeQL with all
   twelve checks green; the immutable evidence file has SHA-256
   `d90150e1ec818f1fa092df6cf6a91137c1333cf5b97b4eafb4bcfe3b4ec205ca`.
-  R-060 and top-ranked IMP-012 remain open only for explicit merge/release and
-  approved deployment, observation, and reconciliation; production is
+  R-060 and top-ranked IMP-012 remain open for explicit release and approved
+  deployment, observation, and reconciliation; production is
   unchanged on 16.3.0.
 
 - ADR-0101 refreshes only the disposable current WooCommerce compatibility
@@ -394,7 +497,7 @@
 
 - ADR-0082 repairs two real Medium DAST response defects, and exact candidate Security run `33204478017` proves zero Critical/High/Medium/Low ZAP alerts plus clean repository, image, SBOM, inventory, and recovery-transport jobs. ADR-0083 binds 13 reciprocal components to deterministic corresponding-source, manifest, licence, and notice artifacts before registry login or image publication; a clean 116.77 MB development bundle also verifies entry by entry without extraction. External CodeQL check `98965711435` then found one real High metadata/read race in the external manifest boundary; the corrected verifier uses no-follow stable descriptors and same-byte hashing for every release envelope and staged source input. Correction head `99844bc` passed CI `33206954257`, Security `33206954318`, and external CodeQL `98970744912`, then built and independently reverified a fresh 116,774,052-byte exact source archive. The unused sharp/libvips optimizer graph is absent. Reviewed-head digest-bound triage now reconciles 29 Medium licence occurrences to 15 dispositions with zero false positives and 14 open third-party release obligations across 12 packages. R-056 remains open because repository proof is not a real tagged artifact or release-security approval; M15-S03 has 19 of 27 checks passing, and production is unchanged.
 - ADR-0081 adds a fail-closed self-hosted Supabase compatibility boundary without changing production. The exact `self-hosted/v0.8.0` source/tag/commit, two reviewed Compose variants, fifteen mounted assets, eleven `linux/amd64` image IDs, Envoy/Auth/PostgREST/PostgreSQL/postgres-meta/JWKS behavior, and all 173 tenant tables are now machine checked through 39 deterministic corruptions. The audit found and additively enabled RLS on three private coordination tables that already had direct grants revoked. Read-only VM 971 evidence matches the reviewed source files and healthy service inventory; its older Studio container still lacks `loyalty` schema parity and requires an approved isolated recreation/smoke test. Exact future upgrade rehearsal and clean-room restore also remain open, and no production container, file, database, checkout path, or loyalty value was changed.
-- ADR-0080 now separates the deployed-production and integration-candidate whole-product scores. Production `v0.1.11` is the only completion subject and remains 54/100; the exact unmerged candidate is the development-prioritization subject at 83/100 because M04-M14 implementation breadth is now represented. Both remain completion-ineligible: activation is 3/10, required live evidence is absent, and no score can replace the real-store pilot, module canaries, recovery, security, observation, reconciliation, or approvals. The fixed-digest V1 history and the V2 score validator prevent history rewriting, arithmetic drift, and candidate-as-production claims.
+- ADR-0080 separates deployed-production and integration-candidate whole-product scores; ADR-0116 now binds exact merged `main` as the candidate subject. Production `v0.1.11` is the only completion subject and remains 54/100; the merged-main candidate remains 83/100 because M04-M14 breadth is implemented but not deployed. Both remain completion-ineligible: activation is 3/10, required live evidence is absent, and no score can replace the real-store pilot, module canaries, recovery, security, observation, reconciliation, or approvals. The fixed-digest V1 history and V2 score validator prevent history rewriting, arithmetic drift, and candidate-as-production claims.
 - Merge-readiness review repaired three concrete boundaries without changing production: ADR-0079 limits the public reader to complete V6 then released English V1, V6 now carries exact immutable programme currency for non-EUR earning/VIP formatting, and expanded reward rows retain editor-only identity through edits/removal. M09 now uses the shared manifest envelope and all eleven M04-M14 validators share one no-follow digest-bound JSON artifact reader. The complete local gate passes 988 tests, every validator/typecheck/build, 87 migrations and 69 pgTAP files, a 1,085-file secret scan, zero production dependency vulnerabilities, and licence validation; exact implementation-head CI/database replay is green in run `33195600450`.
 - ADR-0071's undeployed Borg candidate now has one installed fail-closed `archive|maintain` controller with a single configuration boundary and shared numeric-state/repository-metric primitives. Both systemd units select explicit modes; the old standalone programs remain rollback artifacts. No production script, timer, repository, credential, archive, or recovery state changed.
 
@@ -406,7 +509,7 @@
 - M09's guest reward discovery correction is repository-verified and undeployed under ADR-0076. Strict additive V5 removes legacy raw reward rows from the browser contract and projects supported published benefits, exact point/money evidence, schedules, summarized public conditions, and native/manual delivery while excluding stored value, raw selectors, instructions, exact limits/budgets, internal codes/IDs, segment/customer state, audit evidence, and value authority. Its original V4/V3/V2/V1 rollout bridge remains historical evidence; ADR-0079 supersedes the application reader with complete V6 then released English V1 only. Malformed current data still fails closed. The new catalogue passed focused reduced-motion desktop/mobile review across all six supported benefit presentations with zero overflow or browser diagnostics. Exact implementation head `294c62a` passed all 11 required checks in CI `33165531738` and Security `33165531707`, including 84 migrations, 68 pgTAP files, and 3,740 assertions. Production is unchanged, and M09 remains honestly 88/100 until its approved canary.
 - M09's guest referral discovery correction is repository-verified and undeployed under ADR-0077. Strict additive V6 publishes only the immutable programme-level give-and-get points, minimum first-order spend/currency, attribution and cooling windows, new-customer rule, monthly-limit signal, and database-authoritative available/paused/unavailable state. Customer links, identities, orders, history, risk evidence, exact abuse caps, internal IDs, raw configuration, and value authority remain private. ADR-0079 supersedes the original intermediate fallback chain: the application now requests complete V6 then released English V1 only, and malformed V6 fails closed. Production-rendered reduced-motion review passed at 1512×982 and 390×844 with exact terms, a same-origin private-account action, 44-pixel targets, zero overflow, and zero browser diagnostics. Exact implementation head `3812e67` passed all 11 required checks in CI `33169816691` and Security `33169816719`, including 85 migrations, 68 pgTAP files with 3,753 assertions, all 22 concurrency probes, both images, and all four WooCommerce runtime cells. Production is unchanged, and M09 remains honestly 88/100 until its approved canary.
 - M09's authenticated campaign-discovery correction is repository-verified and undeployed under ADR-0078. Strict additive customer V3 accepts no selectors and derives the Auth subject, active account link, programme, wallet, immutable treatment assignment, lifecycle, and remaining capacity in PostgreSQL. It exposes only bounded safe scheduled/active purchase bonuses and multipliers with exact bigint/basis-point and combination evidence; control, cross-tenant, revoked, paused, ended, exhausted, raw selector, budget, liability, identity, and value facts remain absent. V2/V1 are missing-function-only fallbacks and malformed V3 fails closed. Production-build review passed at 1512×982 and 390×844 with exact extreme values, one H1, unique IDs, zero overflow, and zero diagnostics. Exact implementation head `9644d66` passed CI `33175790670` and Security `33175790673`: 985 workspace tests, 86 migrations, all 68 pgTAP files with 3,772 assertions, all 22 concurrency probes, both images, and all four WooCommerce runtimes passed. Production is unchanged, and M09 remains honestly 88/100 until its approved canary.
-- The exact integration candidate's engineering quality is 95/100. Whole-product readiness is separately 54/100 for deployed production and 83/100 for the unmerged candidate; implemented M04-M14 breadth is no longer described as absent, while every live activation and closeout gate remains open.
+- Exact merged `main` has engineering quality 95/100. Whole-product readiness is separately 54/100 for deployed production and 83/100 for the merged, unreleased candidate; implemented M04-M14 breadth is no longer described as absent, while every live activation and closeout gate remains open.
 - The old local Phase 4 branch and six modified planning files are preserved in a named stash. M00, the M01 evidence gate, M02, and M03 repository implementation merged through PRs #22–#26; active work proceeds from integrated `main`.
 - M04–M14 now use one registered exact canary-envelope catalogue. The complete family fails closed on unreviewed root or nested fields, unknown schemas, future timestamps, evidence strings above 4 KiB, cycles, and invalid task graphs; 154 deterministic corruptions cover fourteen boundary failures for each of eleven modules. Every focused module validator passes while preserving its prior score and pending production controls. This is evidence-integrity hardening only, not deployment or canary completion.
 - M01 is active for an approved real WooCommerce store and full-service recovery proof. A fresh read-only baseline now records healthy production v0.1.11, zero commerce/value rows, successful current PostgreSQL backup jobs, and one successful nightly Borg inventory containing both VM 970 and 971. The exact validator rejects contradictory store/restore authority, unreconciled counts, mutable release identity, sensitive values, and false completion through eleven adversarial fixtures. Archive creation is not a restore: the controlled real-store sequence, full application/Auth/Authentik/configuration/signing recovery, alerts, reconciliation, and approvals remain pending, so the manifest honestly remains one of 22 checks passed. Its external gate does not block dependency-safe repository work.
@@ -540,12 +643,12 @@
 
 ## Database migration state
 
-The active integration branch validates 87 versioned migrations and 69 pgTAP files.
-Exact code-and-evidence head `8c7da2f65dea0e677e1110244393e7b90b6f11bd` passed CI
-`33176416306`, Security `33176416320`, and external CodeQL: clean replay of
-all 86 migrations, all 68 pgTAP files with 3,772 assertions, all 22 concurrency
-probes, both production images, and all four WooCommerce runtime variants. The
-current PR-head rollup remains authoritative for documentation-only successors.
+Merged `main` validates 89 versioned migrations and 70 pgTAP files. Post-merge
+CI `33475350770` and Security `33475350801` passed on exact merge commit
+`c85d93d0e6e0273543078050e697f04309f11d93`, including all 3,831 pgTAP
+assertions, all 22 concurrency probes, both production images, and all four
+WooCommerce runtime variants. The minimized merge receipt and these post-merge
+runs are the current integration authority.
 Production has applied twenty-eight migrations through `20260813200000`, contains
 the audited initial Starfiniti owner scope and explicit `programme.v2` canary, and
 still has no customer or loyalty-ledger value.
@@ -554,15 +657,19 @@ still has no customer or loyalty-ledger value.
 
 Public repository `Starfiniti/starfiniti-loyalty`; PR `#6` merged the Phase 7 WooCommerce pipeline, PR `#7` merged Phase 9, PR `#9` merged Authentik workforce SSO, PR `#10` merged the English-only launch presentation, PR `#17` merged the Hub-style redesign, PR `#20` merged the focused Programme workflows, PR `#26` merged M03, and PR `#27` versioned the production-backup repair. Release `v0.1.11` runs the exact M03/recovery commit in production. GitHub recognizes the repository license as GNU AGPLv3.
 
-The active implementation branch is `codex/enterprise-roadmap-integration`; ready PR
-#57 targets `main`, consolidates M04–M16, and is merge-clean. Latest exact
-implementation head `45e9a12a4bb75ece2a3e370dda35739cf253b1a7` passed CI
-`33223681162`, Security `33223681183`, and external CodeQL `99023166148` with
-all twelve PR checks green; the current PR-head rollup remains the handoff authority. Stale Phase 4 local planning changes remain preserved as
+PR #57 merged reviewed head `149724a3a2fad89d1a7990e0c3114be2754ecab6`
+into `main` as `c85d93d0e6e0273543078050e697f04309f11d93`. The active
+documentation and validator branch is
+`codex/post-merge-release-gate-reconciliation`, created from that exact merged
+main. Stale Phase 4 local planning changes remain preserved as
 `preserve stale phase-4 planning state before enterprise roadmap 2026-08-13` and are
 not part of this branch.
 
 ## Last verification
+
+- Exact merged-main commit `c85d93d0e6e0273543078050e697f04309f11d93`
+  passed post-merge CI `33475350770` and Security `33475350801`. Release workflow
+  `333373957` remains manually disabled; no release or deployment followed.
 
 - Exact code-and-evidence head `2aedc97747dc38a8dfcdf745fb9ae3085f52d28e`
   passed CI `33183341956`, Security `33183341957`, and external CodeQL `98890257326` with all
@@ -646,7 +753,12 @@ not part of this branch.
 
 ## Next recommended task
 
-Review ready PR #57, then activate only approved external closeouts after a separate merge/release decision: the real WooCommerce pilot, monitoring/recovery/security exercises, module canaries, the thirty-day GA window, and the real monthly/quarterly M16 cadence. Do not substitute repository fixtures or green merge checks for production or elapsed evidence.
+Close ADR-0115's external repository-policy and owner release gates for exact
+merged main `c85d93d0e6e0273543078050e697f04309f11d93`. Only then activate
+separately approved external closeouts: the real WooCommerce pilot,
+monitoring/recovery/security exercises, module canaries, the thirty-day GA
+window, and the real monthly/quarterly M16 cadence. Do not substitute merged code
+or green integration checks for production or elapsed evidence.
 
 ## Blockers
 

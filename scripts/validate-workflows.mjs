@@ -210,7 +210,6 @@ const publishJob = releaseWorkflow.jobs.publish;
 const preflightSteps = preflightJob.steps ?? [];
 const buildSteps = buildJob.steps ?? [];
 const publishSteps = publishJob.steps ?? [];
-const preflightContract = JSON.stringify(preflightSteps);
 const buildContract = JSON.stringify(buildSteps);
 const publishContract = JSON.stringify(publishSteps);
 const releaseSteps = [...buildSteps, ...publishSteps];
@@ -241,11 +240,16 @@ requireCondition(
   `${releaseWorkflowPath}: publication must consume the approved preflight and build through the release environment`,
 );
 requireCondition(
-  !preflightContract.includes("actions/checkout") &&
-    !publishContract.includes("actions/checkout") &&
-    !publishContract.includes("actions/setup-node") &&
-    !publishContract.includes("npm ") &&
-    !publishContract.includes("docker build"),
+  preflightSteps.every((step) => step.uses === undefined) &&
+    publishSteps.every(
+      (step) =>
+        !step.uses?.startsWith("actions/checkout@") &&
+        !step.uses?.startsWith("actions/setup-node@"),
+    ) &&
+    publishSteps.every(
+      (step) =>
+        !step.run?.includes("npm ") && !step.run?.includes("docker build"),
+    ),
   `${releaseWorkflowPath}: authority and publication jobs must not execute candidate repository code`,
 );
 const authorityStep = preflightSteps.find(
@@ -263,16 +267,62 @@ for (const authorityBoundary of [
   "releases?per_page=100",
   'grep -Fqx "$RELEASE_TAG"',
   ".required_status_checks.strict == true",
-  ".required_pull_request_reviews.required_approving_review_count >= 1",
+  ".required_signatures.enabled == true",
+  ".required_pull_request_reviews.required_approving_review_count == 0",
+  ".required_pull_request_reviews.dismiss_stale_reviews == false",
+  ".required_pull_request_reviews.require_last_push_approval == false",
   ".enforce_admins.enabled == true",
   ".allow_force_pushes.enabled == false",
   ".allow_deletions.enabled == false",
+  "[.required_status_checks.contexts[]] | sort",
+  '{context: "CodeQL", app_id: 57789}',
+  '{context: "baseline", app_id: 15368}',
+  '{context: "recovery-transport", app_id: 15368}',
+  '{context: "woocommerce-runtime (minimum-legacy)", app_id: 15368}',
   "commits/$CANDIDATE_SHA/check-runs",
   "commits/$CANDIDATE_SHA/statuses",
   ".app.id == $appId",
   '.conditions.ref_name.include == ["refs/tags/v*.*.*"]',
-  'contains(["creation", "update", "deletion", "required_signatures"])',
-  '.bypass_mode != "exempt"',
+  '.name == "Release tag creation authority"',
+  '([.rules[].type] | sort) == ["creation"]',
+  "actor_id: 120020919",
+  '.name == "Signed immutable release tags"',
+  '([.rules[].type] | sort) == (["update", "deletion", "required_signatures"] | sort)',
+  "((.bypass_actors // []) | length) == 0",
+  '"repos/$repository/actions/permissions"',
+  '"repos/$repository/actions/permissions/selected-actions"',
+  '.allowed_actions == "selected"',
+  ".sha_pinning_required == true",
+  ".github_owned_allowed == false",
+  '"actions/attest-build-provenance@*"',
+  '"actions/cache@*"',
+  '"actions/cache/restore@*"',
+  '"actions/cache/save@*"',
+  '"actions/checkout@*"',
+  '"actions/download-artifact@*"',
+  '"actions/setup-node@*"',
+  '"actions/upload-artifact@*"',
+  '"anchore/sbom-action@*"',
+  '"aquasecurity/setup-trivy@*"',
+  '"aquasecurity/trivy-action@*"',
+  '"github/codeql-action/analyze@*"',
+  '"github/codeql-action/init@*"',
+  '.security_and_analysis.dependabot_security_updates.status == "enabled"',
+  '.security_and_analysis.secret_scanning.status == "enabled"',
+  '.security_and_analysis.secret_scanning_push_protection.status == "enabled"',
+  '"repos/$repository/vulnerability-alerts"',
+  '"repos/$repository/automated-security-fixes"',
+  '"repos/$repository/private-vulnerability-reporting"',
+  '"repos/$repository/secret-scanning/alerts?state=open&per_page=100"',
+  '"repos/$repository/dependabot/alerts?state=open&per_page=100"',
+  '"repos/$repository/code-scanning/alerts?state=open&per_page=100"',
+  '"repos/$repository/collaborators?affiliation=direct&per_page=100"',
+  'login: "Starfiniti"',
+  "id: 120020919",
+  'sort_by(.completed_at // .started_at // "")',
+  "Newest required app-bound check",
+  "minimum_release_cooling_seconds=86400",
+  "now_epoch - cooling_started_epoch < minimum_release_cooling_seconds",
   "environments/release",
   '.type == "required_reviewers"',
   ".prevent_self_review == true",

@@ -1,6 +1,6 @@
 # Starfiniti Loyalty Enterprise Roadmap
 
-Last reviewed: 2026-08-31
+Last reviewed: 2026-09-01
 
 This is the active delivery plan after production `v0.1.10`. It supersedes the broad unfinished phases in `docs/product/MASTER_PLAN.md`; completed phase evidence remains historical truth in `docs/plan/TASKS.yaml`.
 
@@ -138,6 +138,10 @@ M01 may wait for real-store access while M02 proceeds. Later modules remain sequ
 ### M16 — Continuous self-improvement
 
 - Monthly metrics/error/support/reconciliation/fraud/campaign/churn/usability/performance/security/billing review; convert recurring failures into tests/validators/monitors/runbooks/rules; review provider changes; rescore material changes; run quarterly recovery/isolation/privacy/SCIM/incident exercises; maintain an evidence-ranked backlog and ADR history.
+- ADR-0116 promotes exact merged `main` only as the 83/100 candidate subject and
+  advances three R-004 controls to merged. Production remains v0.1.11 at 54/100;
+  release, deployment, activation, observation, reconciliation, and elapsed
+  review gates remain open.
 - ADR-0107 now provides one cutoff-bound engineering classification for all thirteen provider/platform/recovery entries. It does not satisfy the elapsed monthly review, candidate acceptance, independent review, owner approval, deployment, or reconciliation gates; M16 remains 77/100.
 - ADR-0113 makes every future monthly, quarterly, reconciliation, score, and approval V1 artifact a closed minimized schema. Unknown members, boundedness failures, duplicates, machine-detectable personal or credential material, and control or bidirectional text fail closed; private inputs remain environment-owned and extension requires a superseding version.
 

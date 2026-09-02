@@ -17,6 +17,8 @@ import YAML from "yaml";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const paths = {
   evidence: "docs/plan/evidence/M15/operations.yaml",
+  containment:
+    "docs/plan/evidence/M15/backup-traffic-containment-2026-09-01.yaml",
   catalogue: "infrastructure/observability/catalog.yaml",
   rules: "infrastructure/observability/prometheus/rules.yaml",
   routing: "infrastructure/observability/routing-policy.yaml",
@@ -35,6 +37,7 @@ const paths = {
 const readText = (relativePath) =>
   readFileSync(join(root, relativePath), "utf8");
 const evidence = YAML.parse(readText(paths.evidence));
+const containment = YAML.parse(readText(paths.containment));
 const catalogue = YAML.parse(readText(paths.catalogue));
 const rules = YAML.parse(readText(paths.rules));
 const routing = YAML.parse(readText(paths.routing));
@@ -197,6 +200,205 @@ function exactUtc(value, label) {
     fail(`${label} must be an exact UTC timestamp`);
   }
   return Date.parse(value);
+}
+
+function exactKeys(value, expected, label) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    fail(`${label} must be an object`);
+  }
+  const actual = Object.keys(value);
+  if (
+    actual.length !== expected.length ||
+    expected.some((key) => !Object.hasOwn(value, key))
+  ) {
+    fail(`${label} keys differ`);
+  }
+}
+
+function validateBackupTrafficContainment(candidate) {
+  exactKeys(
+    candidate,
+    [
+      "schema",
+      "status",
+      "observedAt",
+      "production",
+      "traffic",
+      "rootCause",
+      "containment",
+      "verification",
+      "remainingGates",
+      "productionMutation",
+    ],
+    "backup-traffic containment",
+  );
+  exactKeys(
+    candidate.production,
+    ["release", "applicationCommit", "vmId", "vmName", "vmUptimeSeconds"],
+    "backup-traffic containment production",
+  );
+  exactKeys(
+    candidate.traffic,
+    [
+      "vmNetoutBytes",
+      "vmNetinBytes",
+      "vmbr10RxBytes",
+      "vmbr10TxBytes",
+      "eno1RxBytes",
+      "eno1TxBytes",
+      "historicalPeak",
+      "historicalHostWindow",
+      "latestDay",
+      "interpretation",
+    ],
+    "backup-traffic containment traffic",
+  );
+  exactKeys(
+    candidate.traffic.historicalPeak,
+    ["observedBucket", "netoutBytesPerSecond", "diskReadBytesPerSecond"],
+    "backup-traffic containment historical peak",
+  );
+  exactKeys(
+    candidate.traffic.historicalHostWindow,
+    ["start", "end", "maximumNetoutBytesPerSecond", "approximateNetoutBytes"],
+    "backup-traffic containment historical host window",
+  );
+  exactKeys(
+    candidate.traffic.latestDay,
+    ["maximumNetoutBytesPerSecond", "approximateNetoutBytes"],
+    "backup-traffic containment latest day",
+  );
+  exactKeys(
+    candidate.rootCause,
+    [
+      "historicalAmplification",
+      "currentArchivePath",
+      "recurringRecoveryConflict",
+    ],
+    "backup-traffic containment root cause",
+  );
+  exactKeys(
+    candidate.containment,
+    [
+      "wholeVmBackupTimerEnabled",
+      "wholeVmBackupTimerActive",
+      "postgresBackupTimerEnabled",
+      "postgresBackupTimerActive",
+      "legacyFullStreamExecutable",
+      "existingArchivesRetained",
+      "databaseServiceChanged",
+      "vmChanged",
+      "applicationChanged",
+      "loyaltyValueChanged",
+    ],
+    "backup-traffic containment action",
+  );
+  exactKeys(
+    candidate.verification,
+    [
+      "postContainmentArchive",
+      "transferredFileBytes",
+      "receivedWireBytes",
+      "archiveCompletedAt",
+      "dashboardHealthStatus",
+      "dashboardLoginStatus",
+      "authRootStatus",
+      "currentTapRxDeltaBytesOverFiveSeconds",
+    ],
+    "backup-traffic containment verification",
+  );
+  exactKeys(
+    candidate.productionMutation,
+    ["performed", "scope", "reversible", "reenableGate"],
+    "backup-traffic containment mutation",
+  );
+  if (
+    candidate?.schema !== "starfiniti.backup-traffic-containment.v1" ||
+    candidate.status !== "contained_unresolved" ||
+    candidate.production?.release !== "v0.1.11" ||
+    !commitPattern.test(candidate.production?.applicationCommit) ||
+    candidate.production?.vmId !== 971 ||
+    candidate.production?.vmName !== "loyalty-prod-supabase" ||
+    candidate.traffic?.historicalPeak?.observedBucket !==
+      "2026-08-14T03:00:00Z" ||
+    candidate.containment?.wholeVmBackupTimerEnabled !== false ||
+    candidate.containment?.wholeVmBackupTimerActive !== false ||
+    candidate.containment?.postgresBackupTimerEnabled !== true ||
+    candidate.containment?.postgresBackupTimerActive !== true ||
+    candidate.containment?.legacyFullStreamExecutable !== false ||
+    candidate.containment?.existingArchivesRetained !== true ||
+    candidate.containment?.databaseServiceChanged !== false ||
+    candidate.containment?.vmChanged !== false ||
+    candidate.containment?.applicationChanged !== false ||
+    candidate.containment?.loyaltyValueChanged !== false ||
+    candidate.verification?.postContainmentArchive !==
+      "loyalty-postgres-20260901T092222Z" ||
+    candidate.verification?.dashboardHealthStatus !== 200 ||
+    candidate.verification?.dashboardLoginStatus !== 200 ||
+    candidate.verification?.authRootStatus !== 401 ||
+    candidate.productionMutation?.performed !== true ||
+    candidate.productionMutation?.reversible !== true
+  ) {
+    fail("backup-traffic containment identity or safety boundary is invalid");
+  }
+  exactUtc(candidate.observedAt, "backup-traffic containment observedAt");
+  if (candidate.observedAt !== "2026-09-01T09:25:02Z") {
+    fail("backup-traffic containment observation identity differs");
+  }
+  exactUtc(
+    candidate.traffic.historicalHostWindow?.start,
+    "backup-traffic containment historical host-window start",
+  );
+  exactUtc(
+    candidate.traffic.historicalHostWindow?.end,
+    "backup-traffic containment historical host-window end",
+  );
+  exactUtc(
+    candidate.verification.archiveCompletedAt,
+    "backup-traffic containment archiveCompletedAt",
+  );
+  if (candidate.verification.archiveCompletedAt !== "2026-09-01T09:22:58Z") {
+    fail("backup-traffic containment archive chronology differs");
+  }
+  for (const value of [
+    candidate.production.vmUptimeSeconds,
+    candidate.traffic.vmNetoutBytes,
+    candidate.traffic.vmNetinBytes,
+    candidate.traffic.vmbr10RxBytes,
+    candidate.traffic.vmbr10TxBytes,
+    candidate.traffic.eno1RxBytes,
+    candidate.traffic.eno1TxBytes,
+    candidate.traffic.historicalPeak.netoutBytesPerSecond,
+    candidate.traffic.historicalPeak.diskReadBytesPerSecond,
+    candidate.traffic.historicalHostWindow.maximumNetoutBytesPerSecond,
+    candidate.traffic.historicalHostWindow.approximateNetoutBytes,
+    candidate.traffic.latestDay.maximumNetoutBytesPerSecond,
+    candidate.traffic.latestDay.approximateNetoutBytes,
+    candidate.verification.transferredFileBytes,
+    candidate.verification.receivedWireBytes,
+    candidate.verification.currentTapRxDeltaBytesOverFiveSeconds,
+  ]) {
+    if (!Number.isSafeInteger(value) || value < 0) {
+      fail("backup-traffic containment contains an invalid numeric fact");
+    }
+  }
+  if (
+    candidate.traffic.latestDay.maximumNetoutBytesPerSecond >=
+      candidate.traffic.historicalPeak.netoutBytesPerSecond ||
+    candidate.traffic.historicalHostWindow.maximumNetoutBytesPerSecond >=
+      candidate.traffic.historicalPeak.netoutBytesPerSecond ||
+    Date.parse(candidate.traffic.historicalHostWindow.start) >=
+      Date.parse(candidate.traffic.historicalHostWindow.end) ||
+    candidate.verification.receivedWireBytes <=
+      candidate.verification.transferredFileBytes ||
+    !Array.isArray(candidate.remainingGates) ||
+    candidate.remainingGates.length !== 7 ||
+    new Set(candidate.remainingGates).size !== 7
+  ) {
+    fail(
+      "backup-traffic containment chronology or remaining gates are invalid",
+    );
+  }
 }
 
 function rawDigest(raw) {
@@ -885,6 +1087,8 @@ function validateDocument(
       candidateEvidence.currentProduction
         ?.recentVm971MaximumNetoutBytesPerSecond,
     ) ||
+    candidateEvidence.currentProduction?.wholeVmBackupTimerEnabled !== false ||
+    candidateEvidence.currentProduction?.postgresBackupTimerEnabled !== true ||
     !commitPattern.test(candidateEvidence.candidate?.commit) ||
     candidateEvidence.candidate?.branch !== "codex/m15-operations-incidents"
   ) {
@@ -943,6 +1147,7 @@ function validateDocument(
     !["in_progress", "complete"].includes(slice.status) ||
     !slice.verification?.includes("npm run operations:validate") ||
     !slice.evidence?.includes(paths.evidence) ||
+    !slice.evidence?.includes(paths.containment) ||
     !slice.evidence?.includes(paths.catalogue) ||
     !slice.evidence?.includes(paths.rules) ||
     !slice.evidence?.includes(paths.routing) ||
@@ -1038,6 +1243,8 @@ function validateDocument(
   return { incomplete };
 }
 
+validateBackupTrafficContainment(containment);
+
 const result = validateDocument(
   evidence,
   catalogue,
@@ -1048,6 +1255,27 @@ const result = validateDocument(
 );
 
 if (process.argv.includes("--self-test")) {
+  const unknownContainmentField = structuredClone(containment);
+  unknownContainmentField.extra = true;
+  assert.throws(
+    () => validateBackupTrafficContainment(unknownContainmentField),
+    /backup-traffic containment keys differ/u,
+  );
+
+  const driftedContainmentObservation = structuredClone(containment);
+  driftedContainmentObservation.observedAt = "2026-09-02T09:25:02Z";
+  assert.throws(
+    () => validateBackupTrafficContainment(driftedContainmentObservation),
+    /observation identity differs/u,
+  );
+
+  const falseContainment = structuredClone(containment);
+  falseContainment.containment.wholeVmBackupTimerEnabled = true;
+  assert.throws(
+    () => validateBackupTrafficContainment(falseContainment),
+    /containment identity or safety boundary is invalid/u,
+  );
+
   const forbiddenLabel = structuredClone(catalogue);
   forbiddenLabel.signals[0].requiredLabels.push("customer_id");
   assert.throws(
@@ -1096,6 +1324,21 @@ if (process.argv.includes("--self-test")) {
         tasks,
       ),
     /lacks complete checks activation or approvals/u,
+  );
+
+  const unsafeWholeVmSchedule = structuredClone(evidence);
+  unsafeWholeVmSchedule.currentProduction.wholeVmBackupTimerEnabled = true;
+  assert.throws(
+    () =>
+      validateDocument(
+        unsafeWholeVmSchedule,
+        catalogue,
+        rules,
+        routing,
+        dashboard,
+        tasks,
+      ),
+    /production baseline or candidate is invalid/u,
   );
 
   assert.throws(

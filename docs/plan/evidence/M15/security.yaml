@@ -1,12 +1,12 @@
 schema: starfiniti.security-evidence.v1
 status: in_progress
-observedAt: 2026-08-31T15:05:00Z
+observedAt: 2026-09-02T06:42:00Z
 currentProduction:
   release: v0.1.11
   applicationCommit: 0ced4b666a55d836bd3d4927337fe057a71bb4ba
 candidate:
-  branch: codex/enterprise-roadmap-integration
-  commit: fec7f86fd0d7db91e8527bf9d5ed82976fcc8615
+  branch: codex/post-merge-release-gate-reconciliation
+  commit: b97dde21de81660b7c182e5b2653fb1617863750
   securityOwnerApproved: false
 inputs:
   securityWorkflow:
@@ -14,7 +14,7 @@ inputs:
     sha256: 9ca550c1fdee420424b375f6284f56f78c19715ecbc0d3ffa8f7eebff4beefb5
   releaseWorkflow:
     path: .github/workflows/release.yml
-    sha256: 0ced5e52a9d7af5c1be07208f2d00fa619fb52b84996b9678adef505f5f3e44e
+    sha256: ecbe1b8f125bf3903f6fc00e916875d21de7cc54610062fb4409da6a730491e9
   dastPlan:
     path: infrastructure/testing/security/zap-automation.yaml
     sha256: af8478c13983e575522077f7a8452d39c55cb1ec7386470bca1241f4fc2f0aff
@@ -45,8 +45,8 @@ artifacts:
   findingRegisterPath: null
   findingRegisterSha256: null
 triage:
-  path: docs/plan/evidence/M15/runs/security-medium-triage-fec7f86.yaml
-  sha256: 5a94b272a2845698cb32c2d031e6262e3ea014fb44f064891fc08d54abbc7dc7
+  path: docs/plan/evidence/M15/runs/security-medium-triage-b97dde2.yaml
+  sha256: 4569baf7fc0fbe90697ca597e7cb3cb0cecc1e416dcc42a7fe093510e4343a18
 checks:
   - id: workflow_contract
     status: passed
@@ -71,34 +71,34 @@ checks:
     evidence: Repository validators reject drift-sensitive evidence, false completion, missing checks, unsafe DAST, optimizer reintroduction, unplanned reciprocal components, incomplete source inputs, and release publication before source verification.
   - id: exact_head_ci
     status: passed
-    evidence: Exact candidate fec7f86fd0d7db91e8527bf9d5ed82976fcc8615 passed all seven CI jobs in run 33405444851, all four Security jobs in run 33405444839, external CodeQL check 99532343137, database replay, container builds, and all four minimum/current HPOS/legacy WooCommerce cells; PR #57 was clean and mergeable.
+    evidence: Exact candidate b97dde21de81660b7c182e5b2653fb1617863750 passed all seven CI jobs in run 33598916504, all four Security jobs in run 33598916554, external CodeQL check 100148436020, database replay, container builds, recovery transport, and all four minimum/current HPOS/legacy WooCommerce cells; PR #58 remained blocked only by merge governance after every required check completed successfully.
   - id: codeql_sast
     status: passed
-    evidence: Security run 33405444839 job 99531771513 produced CodeQL 2.26.4 security-extended analysis b674e9fe9fc54b0d45c554efe574d2dacd50d342 bound to exact candidate fec7f86fd0d7db91e8527bf9d5ed82976fcc8615 with zero findings; artifact 9763001068 has archive digest sha256:f03de70eba0c7187bfa05904d73612cfa7e8cbe716c98ff47ea58a214590ddb7 and summary SHA-256 9df68a0825328ab0e6f4195cb15bf7d0acbf6d378b1d4a3560df1355df68f713.
+    evidence: Security run 33598916554 job 100148062822 produced CodeQL 2.26.4 security-extended analysis 02a28c555e647ccffc0d976da2dbfea966dcc0d4 bound to exact candidate b97dde21de81660b7c182e5b2653fb1617863750 with zero findings; artifact 9834443439 has archive digest sha256:8d82508653e89d7ca66b42987a8b42830562e0d18a3ea0cebf90080f9e73af06 and summary SHA-256 c687b32d7602104b81080ddc034a19c5dce6405bdea52503ffdf2919bdf8e057.
   - id: repository_secret_misconfiguration_scan
     status: passed
-    evidence: Supply-chain job 99531771114 scanned exact candidate fec7f86fd0d7db91e8527bf9d5ed82976fcc8615 with Trivy 0.74.0; artifact 9763094036 archive digest sha256:858ad26c97d173f87041c02bbbed4139bc88fe9cc7ef671d76c61bad043061f6 contains repository summary SHA-256 baad263d0068bcbc56782cc021b3f99b337314f3dc574ba8b4ca9d2f2b739842 with zero vulnerability, misconfiguration, secret, or licence finding.
+    evidence: Supply-chain job 100148062751 scanned exact candidate b97dde21de81660b7c182e5b2653fb1617863750 with Trivy 0.74.0; artifact 9834496253 archive digest sha256:4336c4e7957c96197612d8307fb63d103d61a6cd0cb093e028d6d1edb46343fc contains repository summary SHA-256 b73423fd567b6a4c2138e6b79b8f6d8d307a859fb4f1cda7b45a4ec8a13aceb2 with zero vulnerability, misconfiguration, secret, or licence finding.
   - id: dashboard_image_scan
     status: passed
-    evidence: Supply-chain job 99531771114 built dashboard image sha256:f98f815095e476c208a627b0142bf90229a8ea37d0877fb77578ece138f3e356; full report SHA-256 9d9ea009cb86150cc3ff872387cf309c66536ec0af86d6d4a0f8954f0884ae27 contains zero vulnerability, misconfiguration, or secret and no Critical, High, or Unknown licence finding.
+    evidence: Supply-chain job 100148062751 built dashboard image sha256:20bff8d2a08143266acc53ca1acbafe9a5895393ed8960e773407712054ed18e; full report SHA-256 fe8420a3cdf8f19f3b597ed2033b6a8048cd1e38860a30eb5ff6c81c465e2b90 contains zero vulnerability, misconfiguration, or secret and no Critical, High, or Unknown licence finding.
   - id: worker_image_scan
     status: passed
-    evidence: Supply-chain job 99531771114 built worker image sha256:d9d5a21899c9c3f7b127d16dc4d999b3b00fc618fa4a179a7d8274a786a1d01a, passed the declared runtime-import probe, and produced report SHA-256 f5979e2a979761dc3e6c6b765a8b99b80806c48147ee122bf5eaa63674b1c2ef with zero vulnerability, misconfiguration, or secret and no Critical, High, or Unknown licence finding.
+    evidence: Supply-chain job 100148062751 built worker image sha256:1f9f8bda17dbd4990f6ecce626df80b602d463986a427985c3cb7b062334e573, passed the declared runtime-import probe, and produced report SHA-256 d5806b10a469450c2fbdec25f02157d98caf99b3a8c4f8801f5fc4f9a268c1dc with zero vulnerability, misconfiguration, or secret and no Critical, High, or Unknown licence finding.
   - id: dashboard_sbom
     status: passed
-    evidence: Exact dashboard image inventory SHA-256 c67405f6b6ae6f86f34b76c2fa84d788b2de1b8beea5cd657c1c9191fdb087a3 identifies starfiniti-dashboard and passed CycloneDX generation plus reciprocal-source-plan reconciliation in supply-chain job 99531771114.
+    evidence: Exact dashboard image inventory SHA-256 f9190e2ec9696c8650d105b80418f15814a4c0751e35f798c8eddf8777cca6fb identifies starfiniti-dashboard and passed CycloneDX generation plus reciprocal-source-plan reconciliation in supply-chain job 100148062751.
   - id: worker_sbom
     status: passed
-    evidence: Exact worker image inventory SHA-256 d67708f1ae9225d55274ef6466d3e76975b40ad3d8a5852224e58e6ba87c9f9c identifies starfiniti-worker and passed CycloneDX generation plus reciprocal-source-plan reconciliation in supply-chain job 99531771114.
+    evidence: Exact worker image inventory SHA-256 ca24cb6dcfa809899d95a439369504cc9ea7092875adb84869100b24dbad2bc7 identifies starfiniti-worker and passed CycloneDX generation plus reciprocal-source-plan reconciliation in supply-chain job 100148062751.
   - id: disposable_dast
     status: passed
-    evidence: Security job 99531771578 ran ZAP 2.17.0 only against the internal no-port disposable target; artifact 9763011272 archive digest sha256:790832b98bf98cd1241b531ff623c6de767576d48bc634f4157cf5d42cd1b964 and report SHA-256 ca76b8a26e2b6d208ad4ca18f314283c78e6b7670b873a8970b42136a73bc360 contain two informational and zero Low, Medium, or High alerts, with teardown passing.
+    evidence: Security job 100148062718 ran ZAP 2.17.0 only against the internal no-port disposable target; artifact 9834453392 archive digest sha256:99bb38cc1353ed8e361fc99e7b6f921fca414ef8f126e18c09ee03546651b06d and report SHA-256 1e84f5d62e375dba14ee82259821b8c180c0068782debdf71dbb0e7f5f31b9bd contain two informational and zero Low, Medium, or High alerts, with teardown passing.
   - id: dashboard_response_security_headers
     status: passed
-    evidence: DAST job 99531771578 independently proved nonce-shaped strict script policy, framing denial, MIME protection, and image-route refusal on exact candidate fec7f86fd0d7db91e8527bf9d5ed82976fcc8615 before active scanning.
+    evidence: DAST job 100148062718 independently proved nonce-shaped strict script policy, framing denial, MIME protection, and image-route refusal on exact candidate b97dde21de81660b7c182e5b2653fb1617863750 before active scanning.
   - id: scanner_database_freshness
     status: passed
-    evidence: Exact Security run 33405444839 used CodeQL 2.26.4, ZAP 2.17.0, and Trivy 0.74.0; the vulnerability database was updated 2026-08-31T13:59:52.78069098Z and downloaded 2026-08-31T14:59:23.819669918Z, while check bundle sha256:1583562f8b90ed2a071b99f0e5ffff6b57e4ceb6ca3e4796577b4e6a339eb74c was downloaded 2026-08-31T14:59:24.495927485Z inside the approved 24-hour start bound.
+    evidence: Exact Security run 33598916554 used CodeQL 2.26.4, ZAP 2.17.0, and Trivy 0.74.0; the vulnerability database was updated 2026-09-02T01:09:54.983119421Z and downloaded 2026-09-02T06:21:39.023031685Z, while check bundle sha256:1583562f8b90ed2a071b99f0e5ffff6b57e4ceb6ca3e4796577b4e6a339eb74c was downloaded 2026-09-02T06:21:39.761781755Z inside the approved 24-hour start bound.
   - id: release_sbom_verification
     status: pending
     evidence: A real tagged release must publish both SBOMs, exact corresponding source, manifest, notices, and connector package with all six pre-checksum payloads matching the attested checksum file; the release record must also prove the connector version equals the tag.
@@ -122,10 +122,10 @@ checks:
     evidence: Exact-head automated sources contain zero unresolved Critical or High item; the final reconciled register also needs the production review and independent penetration-test sources.
   - id: medium_and_false_positive_review
     status: passed
-    evidence: Digest-bound review security-medium-triage-fec7f86.yaml reconciles Security run 33405444839 to zero Critical/High vulnerability, misconfiguration, secret, or DAST Medium finding, two informational ZAP observations, 29 reciprocal licence occurrences across 15 exact dispositions, zero false positives, available product source, and 14 third-party release obligations that continue to block tagged image distribution under R-056.
+    evidence: Digest-bound review security-medium-triage-b97dde2.yaml reconciles Security run 33598916554 to zero Critical/High vulnerability, misconfiguration, secret, or DAST Medium finding, two informational ZAP observations, 29 reciprocal licence occurrences across 15 exact dispositions, zero false positives, available product source, and 14 third-party release obligations that continue to block tagged image distribution under R-056.
   - id: development_advisory_resolved
     status: passed
-    evidence: The local production audit and exact-candidate CI complete-tree audit found zero vulnerabilities; CI run 33405444851 passed all four Linux minimum/current HPOS/legacy WooCommerce runtime cells and the complete baseline at fec7f86fd0d7db91e8527bf9d5ed82976fcc8615.
+    evidence: The local production audit and exact-candidate CI complete-tree audit found zero vulnerabilities; CI run 33598916504 passed all four Linux minimum/current HPOS/legacy WooCommerce runtime cells and the complete baseline at b97dde21de81660b7c182e5b2653fb1617863750.
   - id: security_owner_approval
     status: pending
     evidence: The named security owner must review exact artifacts findings residual risks and rollback guidance before accepting the module.

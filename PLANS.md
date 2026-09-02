@@ -1,5 +1,80 @@
 # Execution Plan
 
+ADR-0124 is the temporary active merge-governance exception. The owner chose
+solo repository operation because the public repository has one administrator
+and no eligible second reviewer. Pull requests still remain mandatory, but
+their approval count is zero until `2026-12-01T05:59:20Z`, owner revocation, or
+the addition of a second eligible collaborator. The twelve exact app-bound
+checks, strict current-base evaluation, signed commits, conversation resolution,
+administrator enforcement, and force-push/deletion blocks remain unchanged.
+Every candidate still needs an adversarial diff review and explicit owner merge
+decision; neither is labelled independent. Release stays manually disabled and
+its preflight now requires the newest run for every required app/check pair to
+pass plus a 24-hour cooling-off period after the newest exact-head check. Merge
+the exact-head-green PR #58 stack sequentially, then reconcile merged `main`;
+do not deploy production or inflate any module score from these merges.
+
+ADR-0118 is the active correction to ADR-0117's M15 repository-security slice.
+GitHub Actions is restricted to thirteen exact allowed patterns: nine direct
+references plus four newly required SHA-pinned Trivy composite patterns exposed
+by two fail-closed job-setup attempts and exact pinned source. Implicit
+GitHub-owned and verified-creator trust stays disabled, and full-SHA references
+remain mandatory. Dependency alerts and
+unpaused security updates, secret scanning and push protection, and private
+vulnerability reporting are live. The two historical secret detections were
+synthetic Stripe-format test fixtures and are resolved as `used_in_tests`; all
+three repository alert classes now have zero open items. The disabled release
+preflight must revalidate the exact action policy, repository security features,
+zero alerts, exact twelve branch checks, signed/last-push policy, and both
+distinct tag rulesets before release. This does not remove the independent
+reviewer, environment, expanded read-only token, tag, security/licence, or
+approval gates.
+
+Because the solo slice also changes `.github/workflows/release.yml`, M15 Security
+again returned to 7/27 until fresh evidence existed. Exact candidate
+`b97dde21de81660b7c182e5b2653fb1617863750` passed CI `33598916504`, Security
+`33598916554`, and external CodeQL `100148436020`; exact image, SBOM, DAST,
+freshness, WooCommerce, and digest-bound Medium-review reconciliation restore
+19/27. The earlier `4ac7414` and `fec7f86` results remain historical and are not
+relabelled.
+
+The repository-side release boundary remains fail-closed. Protected `main`
+requires all twelve exact checks, verified signatures, pull requests, resolved
+conversations, and administrator enforcement; force pushes and deletion are
+blocked. Two active version-tag rulesets separate audited signed creation from
+no-bypass immutability. ADR-0124 temporarily replaces the impossible approval
+requirement with bounded solo authority and an exact rollback payload. Keep
+Release disabled while the protected release environment, policy token, signed
+exact tag, security/licence closure, and owner release approval remain open.
+
+The earlier `2026-09-01T09:09:45Z` read-only audit is retained as immutable
+precondition evidence rather than rewritten. Its successor
+`release-policy-hardening-2026-09-01.yaml` records the exact policy mutation and
+rollback endpoints. The next successor,
+`repository-security-hardening-2026-09-01.yaml`, binds the external security
+settings, minimized alert triage, and rollback. `npm run
+release-policy:audit:validate` must validate all three states and continue
+rejecting publication or production overclaim.
+
+Production containment on 2026-09-01 disabled only the scheduled whole-host raw
+Borg timer after proving it still shared the authoritative PostgreSQL archive
+lock and repository. The apparent 200–249 MB/s VM 971 burst is historical RRD
+evidence from 2026-08-14, not a current five-minute transfer: the latest day
+peaks at 107 KB/s and the post-containment database cycle received 576,022
+bytes before creating `loyalty-postgres-20260901T092222Z`. Existing whole-host
+and PostgreSQL archives remain intact. Keep the raw whole-host timer disabled
+until ADR-0071's dedicated PostgreSQL repository and monitored restore boundary
+pass; do not trade the five-minute database RPO for an unsupervised raw VM run.
+
+PR #57 merged reviewed head `149724a3a2fad89d1a7990e0c3114be2754ecab6`
+into `main` as `c85d93d0e6e0273543078050e697f04309f11d93` on 2026-09-01.
+Post-merge CI `33475350770` and Security `33475350801` passed on that
+commit. ADR-0116 therefore makes exact merged `main` the unchanged 83/100
+candidate subject and advances the R-004 validator, monitor contract, and
+runbook to merged status. Production remains `v0.1.11` at 54/100, Release
+workflow `333373957` remains manually disabled, and no tag, release,
+deployment, provider, database, checkout, or loyalty-value mutation occurred.
+
 ADR-0113 is the active safe M16 closeout-artifact hardening slice. The five
 future monthly, quarterly, reconciliation, score, and approval V1 artifacts now
 use exact nested key sets, bounded arrays and text, finite metrics, minimized
@@ -34,11 +109,12 @@ residue. Repository validation passes 9/16 deployment checks; exact-head Linux,
 approved-host, live-target, receiver, dead-man, activation, and observation
 evidence remain pending. The broader M15 operations gate remains 14/35,
 production has no monitoring plane, and product/module scores do not change.
-Because this slice changes the Security workflow and exact checkout semantics,
+Because this slice changed the Security workflow and exact checkout semantics,
 the older exact-head scanner, image, SBOM, DAST, header, freshness, Medium-
-triage, development-audit, and WooCommerce evidence is historical only. M15
-Security is intentionally back at 7/27 until the new exact head passes and its
-artifacts are reconciled; prior runs were not relabelled.
+triage, development-audit, and WooCommerce evidence became historical only.
+Fresh candidate `4ac7414` now has exact green CI/Security/CodeQL and
+digest-bound artifact reconciliation, so M15 Security is again 19/27 without
+relabeling prior runs.
 
 An active read-only production incident review on 2026-08-31 confirmed the old
 VM 971 full-tree transfer loop was not running: the guest sent only 13,508 bytes
@@ -306,7 +382,7 @@ Deliver the enterprise WooCommerce roadmap in `docs/plan/ENTERPRISE_ROADMAP.md` 
 
 ## Current module
 
-M16 — continuous self-improvement is the active dependency-safe repository module while M01 and M04–M15 retain reviewed deployment/canary/reconciliation closeout. M00, M02, and M03 are complete. The complete M04–M16 repository stack is consolidated on ready PR #57 against `main`; the exact candidate and current check evidence are recorded on the PR instead of duplicated here. The current repository gate covers 87 migrations, 69 pgTAP files, the complete concurrency matrix, 995 workspace tests, both images, and all four WooCommerce runtime cells. ADR-0084 adds a clean-commit, metadata-only provenance collector for all thirteen official sources with 26 network-free adversarial cases; its verified artifact has SHA-256 `5786186426b065493f5c01b5d76742322e2e8ed3fe92b8f80c30d787caa516be`. ADR-0085 defines the separate no-SSH installed-state preparation boundary across two opaque recovery endpoints and six providers. Thirty-six network-free/SSH-free cases pass against canonical fact ordering, exact historical committed source and full candidate-plan bytes, safe repository paths, version, executable, output, and false-authority controls. The independently verified 8,813-byte real artifact binds clean implementation `c5678b6` under SHA-256 `9960e01bea1a66856a2e0ed36493b28e183f5e316ce027fef3534ba5043448f7`; installed capture is complete. ADR-0091 selects BorgBackup's exact candidate and ADR-0092 selects the client-only OpenSSH architecture without rewriting that artifact; both digest-bound Linux compatibility canaries pass, while real-provider review and every broader human review, approval, upgrade, and monthly-close assertion remain open. Production remains self-hosted and unchanged.
+M16 — continuous self-improvement is the active dependency-safe repository module while M01 and M04–M15 retain reviewed deployment/canary/reconciliation closeout. M00, M02, and M03 are complete. The complete M04–M16 repository stack is merged into `main` through PR #57; exact merge commit `c85d93d0e6e0273543078050e697f04309f11d93` passed post-merge CI and Security. The current repository gate covers 89 migrations, 70 pgTAP files with 3,831 assertions, 22 concurrency probes, 999 workspace tests, both images, and all four WooCommerce runtime cells. ADR-0084 adds a clean-commit, metadata-only provenance collector for all thirteen official sources with 26 network-free adversarial cases; its verified artifact has SHA-256 `5786186426b065493f5c01b5d76742322e2e8ed3fe92b8f80c30d787caa516be`. ADR-0085 defines the separate no-SSH installed-state preparation boundary across two opaque recovery endpoints and six providers. Thirty-six network-free/SSH-free cases pass against canonical fact ordering, exact historical committed source and full candidate-plan bytes, safe repository paths, version, executable, output, and false-authority controls. The independently verified 8,813-byte real artifact binds clean implementation `c5678b6` under SHA-256 `9960e01bea1a66856a2e0ed36493b28e183f5e316ce027fef3534ba5043448f7`; installed capture is complete. ADR-0091 selects BorgBackup's exact candidate and ADR-0092 selects the client-only OpenSSH architecture without rewriting that artifact; both digest-bound Linux compatibility canaries pass, while real-provider review and every broader human review, approval, upgrade, and monthly-close assertion remain open. Production remains self-hosted and unchanged.
 
 ADR-0094 records the accepted historical IMP-010 package-candidate preparation. It leaves the accepted V1 policy/evidence immutable and makes a hash-bound shared V2 catalogue: sixty-four exact entries including the minimized rsync canary report, verifier source, and current/historical governance evidence, versioned manifests/reports, stable no-follow byte verification, and explicit false package-authority, compatibility, custody, recovery, and production authority. The complete local repository, static database, secret, production-audit, and licence gates pass; exact implementation `b2cbba0b01a0efeffc0fb62eee0c7599d6eb9887` passed CI `33244976784`, Security `33244976845`, and independent CodeQL `99080920204`. V2 remains immutable evidence but its cross-suite rsync package provider is no longer eligible for activation.
 
@@ -458,7 +534,7 @@ The active integrated baseline is released production commit `0ced4b666a55d836bd
 
 ## Next safe work
 
-1. M15: close the S06 repository gate at an exact green head, then retain the immutable-release 30-day canary contract while live capacity, fault, recovery, monitoring, incident, production-review, tagged-release, independent-security, reconciliation, claims, and approval inputs wait for approved windows.
+1. M15: retain exact green merged `main`; close ADR-0115's protected-main, tag-ruleset, independent release-environment, policy-token, licence, release-security, and owner approval gates before any release, then retain the immutable-release 30-day canary contract while live capacity, fault, recovery, monitoring, incident, independent-security, reconciliation, claims, and observation inputs wait for approved windows.
 2. M16: run the closed private BorgBackup/OpenSSH inventory only when an approved destination and reviewers exist, then continue the next dependency-safe provider/recovery contract without claiming offline custody or production authority.
 3. M14: retain the external Stripe sandbox/catalogue/policy, approved release, recovery, managed-tenant lifecycle/usage/invoice canary, rollback, observation, and reconciliation checks for their approved window without changing global self-hosted production.
 4. M13: complete S06's enterprise IdP/SCIM, Authentik private-egress, bilateral agency/support, stale-session, AAL2 recovery/export/deletion, rollback, reconciliation, observation, and category-floor gates when their approved external inputs are available.

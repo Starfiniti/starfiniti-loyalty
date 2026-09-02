@@ -1,5 +1,90 @@
 # Changelog
 
+- Activated a temporary, owner-approved solo-maintainer merge policy under
+  ADR-0124. Pull requests remain mandatory but require zero approvals because
+  the repository has one administrator and no eligible second reviewer. All
+  twelve app-bound checks, strict current-base evaluation, signed commits,
+  resolved conversations, administrator enforcement, and force-push/deletion
+  blocks remain exact. The exception expires no later than
+  `2026-12-01T05:59:20Z` and must be rolled back sooner if a second eligible
+  collaborator appears or the owner revokes it. Release remains manually
+  disabled; its preflight now requires the newest run for every app/check pair
+  to pass and enforces a 24-hour exact-head cooling-off period. This records
+  solo authority honestly and does not claim independent review, penetration
+  testing, release, deployment, or GA approval.
+
+- Rebound M15 automated security evidence after the solo-policy workflow change.
+  Exact candidate `b97dde21de81660b7c182e5b2653fb1617863750` passed CI
+  `33598916504`, Security `33598916554`, and external CodeQL `100148436020`.
+  Fresh digest-bound CodeQL, repository, image, SBOM, DAST, scanner-freshness,
+  WooCommerce, and Medium-triage evidence restores 19/27 checks. The eight tagged
+  release, production review, independent test/retest, final reconciliation, and
+  approval gates remain open; no production state changed.
+
+- Enabled repository-native continuous security without enabling Release.
+  ADR-0118 corrects ADR-0117's first direct-only action inventory after
+  fail-closed startup/setup evidence: Actions now allow thirteen exact patterns
+  covering nine direct references and four newly required Trivy composite
+  patterns,
+  deny implicit GitHub-owned and verified-creator trust, and require full-SHA
+  pinning. Vulnerability alerts, unpaused Dependabot security updates, secret
+  scanning, push protection, and private vulnerability reporting are live. Two
+  deterministic Stripe-format unit-test
+  fixtures were resolved as `used_in_tests`; zero Dependabot, code-scanning, or
+  secret-scanning alerts remain open and no external credential rotation is
+  claimed. ADR-0117 and the chronological evidence successor extend release
+  preflight to enforce these controls, exact branch check/app identities, signed
+  and last-push approval policy, and the two distinct tag rulesets. Release,
+  deployment, and production remain unchanged. The changed release-workflow
+  input first returned M15 Security to 7/27. Exact candidate `4ac7414` then
+  passed CI `33501867357`, Security `33501867336`, and external CodeQL
+  `99837291269`; a new digest-bound review restores 19/27 without relabeling the
+  historical `fec7f86` artifacts.
+
+- Enforced the repository-side release authority boundary without enabling
+  Release. Protected `main` originally required twelve exact app-bound checks,
+  signed commits, one review, stale-review dismissal, last-pusher separation,
+  resolved conversations, and administrator enforcement while blocking force
+  pushes and deletion. ADR-0124 later replaced only the impossible review count
+  with bounded solo authority. Two active tag rulesets still allow only audited
+  signed `v*.*.*` creation and prohibit matching-tag update or deletion without
+  bypass. The protected release environment, policy token, and eight external
+  gates stay open. No tag, release, deployment, or production state changed.
+
+- Added a closed live GitHub release-policy audit and adversarial validator.
+  The read-only snapshot records eleven green checks on merged `main` while
+  proving that branch protection, rulesets, environments, and the repository
+  policy token are absent and the replacement Release workflow remains
+  manually disabled. Eight external publication gates remain explicit; the
+  audit made no repository-policy, release, deployment, or production change.
+
+- Contained the recurring production recovery conflict without stopping the
+  loyalty VM or database. Live Proxmox RRD and interface counters show that VM
+  971's 3.605 TB value is cumulative from the 2026-08-14 full-stream incident;
+  current one-day traffic peaks at 107 KB/s. Host RRD and Borg's kilobyte-scale
+  deduplicated additions confirm that the old amplification stayed on the
+  internal VM-to-host path; later physical totals include whole-host backups.
+  The whole-host job remained configured for raw disks, shared the PostgreSQL
+  Borg boundary, and had both caused a 1h34m36s
+  off-site gap and failed its next scheduled run on the shared lock. Its timer
+  is now disabled/inactive. The three-minute PostgreSQL timer remained active
+  and created `loyalty-postgres-20260901T092222Z` after containment with 67,757
+  changed bytes and 576,022 wire bytes. Existing archives, database, VM,
+  application, checkout, and loyalty value were unchanged; R-004 remains open.
+
+- Reconciled the enterprise handoff after PR #57 merged reviewed head
+  `149724a3a2fad89d1a7990e0c3114be2754ecab6` into `main` as
+  `c85d93d0e6e0273543078050e697f04309f11d93`. Post-merge CI
+  `33475350770` and Security `33475350801` passed. ADR-0116 promotes that exact
+  merged commit only as the unchanged 83/100 candidate, advances the three
+  R-004 controls from candidate to merged, and removes the completed merge
+  dependency from IMP-012. Product scoring now correctly keeps unresolved
+  Critical recovery, host/runtime security, release-policy, and penetration-test
+  gates active instead of treating green integration checks as clearance. The
+  fourteen owner gates remain thirteen external and one dependency-blocked;
+  Release workflow `333373957` remains manually disabled and production remains
+  v0.1.11 at 54/100 with no deployment or loyalty-value change.
+
 - Refreshed the M16 material-change score and generated owner handoff against exact 2026-08-31 implementation evidence. Code head `7fb4403863e7409e38bf4fbfc1f3ec68d6325e3f` passed CI `33434852244` and Security `33434852266` with 999 workspace tests, both images, 89 migrations, 3,831 pgTAP assertions, 22 concurrency probes, and all four WooCommerce runtime cells; evidence head `609705692d2fe38e64b12360d392e1c62aabdf74` passed all twelve PR checks. The fourteen-item backlog now records the 3,604,822,111,248-byte recovery-transfer incident and exact M14 repair without changing a gate state or score. Production remains 54/100, the candidate 83/100, M14 provisional 90/100, and M16 77/100; no production or loyalty-value state changed.
 
 - Repaired additive V2 managed-usage recovery for mixed V1/V2 worker rollout. Counter backfill and active evidence normalization no longer destroy an in-flight V1 claim identity; an expired authorized V1 claim consumes exactly one provider attempt even after nine prior policy holds, while an expired pre-network claim consumes none. Compatible lease creation and V2 normalization now use separate fail-closed statements so PostgreSQL snapshot visibility cannot strand a processing row. Public-function security allowlists and the one-live-subscription fixture now match the intended schema. Exact code head `7fb4403863e7409e38bf4fbfc1f3ec68d6325e3f` passed CI `33434852244` and Security `33434852266`, including all 89 migrations, 3,831 pgTAP assertions, 22 concurrency probes, both images, and all four WooCommerce runtime cells. Production billing remains disabled and unchanged.

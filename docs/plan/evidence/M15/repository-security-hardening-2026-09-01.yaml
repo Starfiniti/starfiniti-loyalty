@@ -1,0 +1,116 @@
+schema: starfiniti.github-repository-security-hardening.v1
+status: hardened
+observedAt: 2026-09-01T10:44:39Z
+precondition:
+  path: docs/plan/evidence/M15/release-policy-hardening-2026-09-01.yaml
+  sha256: 6d56b16c3a44e33d5fab60c3271aa0d4c4e058bcb3c5127e2309ae1d519a7fc5
+repository:
+  owner: Starfiniti
+  name: starfiniti-loyalty
+  visibility: public
+  defaultBranch: main
+  observedMainCommit: c85d93d0e6e0273543078050e697f04309f11d93
+  evidenceBranchHead: 3dd71c26b08741800b67f9d82bd8cbae8beb7fcc
+actionsPolicy:
+  enabled: true
+  allowedActions: selected
+  shaPinningRequired: true
+  defaultWorkflowPermissions: read
+  canApprovePullRequestReviews: false
+  githubOwnedAllowed: false
+  verifiedCreatorsAllowed: false
+  patternsAllowed:
+    - actions/attest-build-provenance@*
+    - actions/checkout@*
+    - actions/download-artifact@*
+    - actions/setup-node@*
+    - actions/upload-artifact@*
+    - anchore/sbom-action@*
+    - aquasecurity/trivy-action@*
+    - github/codeql-action@*
+  workflowActionReferences: 41
+  uniqueWorkflowActionReferences: 9
+  unpinnedWorkflowActionReferences: 0
+securityFeatures:
+  vulnerabilityAlertsEnabled: true
+  dependabotSecurityUpdatesEnabled: true
+  dependabotSecurityUpdatesPaused: false
+  secretScanningEnabled: true
+  secretScanningPushProtectionEnabled: true
+  privateVulnerabilityReportingEnabled: true
+  nonProviderPatternScanningEnabled: false
+  validityChecksEnabled: false
+  unavailableOptionsClaimed: false
+alertTriage:
+  openDependabotAlerts: 0
+  openCodeScanningAlerts: 0
+  secretScanning:
+    discovered: 2
+    resolved: 2
+    open: 0
+    resolution: used_in_tests
+    externalCredentialRotated: false
+    locations:
+      - alertNumber: 1
+        path: apps/dashboard/lib/server/stripe-billing-webhook.test.ts
+        line: 17
+        commit: 679d7eb7bce3bc31c38559f6cf0e4d5cf2025e60
+      - alertNumber: 2
+        path: apps/dashboard/lib/server/stripe-billing-webhook.test.ts
+        line: 104
+        commit: 679d7eb7bce3bc31c38559f6cf0e4d5cf2025e60
+    rationale: Both detections are deterministic synthetic Stripe-format unit-test fixtures constructed from fixed constants or repeat operations. Neither value was issued by Stripe or used outside local verification.
+releaseBoundary:
+  workflowId: 333373957
+  workflowState: disabled_manually
+  releaseEnvironmentExists: false
+  policyTokenConfigured: false
+  releaseCreated: false
+  deploymentChanged: false
+  productionChanged: false
+mutation:
+  repositorySecurityPolicyChanged: true
+  actionsPolicyChanged: true
+  vulnerabilityAlertsChanged: true
+  dependabotSecurityUpdatesChanged: true
+  secretScanningChanged: true
+  privateVulnerabilityReportingChanged: true
+  alertDispositionChanged: true
+  branchProtectionChanged: false
+  tagRulesetsChanged: false
+  workflowEnabled: false
+  tagCreated: false
+  releaseCreated: false
+  deploymentChanged: false
+  productionChanged: false
+  rollback:
+    actionsPolicy:
+      method: PUT
+      endpoint: repos/Starfiniti/starfiniti-loyalty/actions/permissions
+      payload:
+        { enabled: true, allowed_actions: all, sha_pinning_required: false }
+    vulnerabilityAlerts:
+      method: DELETE
+      endpoint: repos/Starfiniti/starfiniti-loyalty/vulnerability-alerts
+    dependabotSecurityUpdates:
+      method: DELETE
+      endpoint: repos/Starfiniti/starfiniti-loyalty/automated-security-fixes
+    secretScanning:
+      method: PATCH
+      endpoint: repos/Starfiniti/starfiniti-loyalty
+      statuses:
+        secretScanning: disabled
+        pushProtection: disabled
+    privateVulnerabilityReporting:
+      method: DELETE
+      endpoint: repos/Starfiniti/starfiniti-loyalty/private-vulnerability-reporting
+    alertDisposition: Resolution comments are append-only audit evidence. Reopening a verified test fixture is not a security rollback and requires a separately reviewed reason.
+remainingGates:
+  - add an eligible independent repository reviewer and obtain approval on the exact candidate
+  - create and verify the signed annotated version tag at exact approved main
+  - create the protected release environment
+  - configure an independent environment reviewer and prevent self-review
+  - independently verify environment administrator bypass is disabled
+  - supply and independently permission-review the expanded read-only policy token
+  - close release-security and reciprocal-licence obligations
+  - approve the exact release separately from deployment

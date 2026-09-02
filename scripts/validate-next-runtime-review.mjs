@@ -677,9 +677,23 @@ function validateReview(review, files) {
   );
   if (
     backlogItem?.severity !== "critical" ||
-    backlogItem?.score !== 87 ||
+    backlogItem?.dependencyPenalty !== 0 ||
+    backlogItem?.score !== 88 ||
     backlogItem?.status !== "blocked_external" ||
-    backlogItem?.evidence !== paths.review
+    backlogItem?.evidence !== paths.review ||
+    backlogItem?.ownerInput !==
+      "Repository owner adds an eligible independent reviewer without weakening policy; that reviewer approves the exact candidate. Product and security then approve the exact release, and operations separately approves deployment and production reconciliation." ||
+    !backlogItem?.dependency?.includes(
+      "PR 57 merged exact reviewed head 149724a3a2fad89d1a7990e0c3114be2754ecab6 into main as c85d93d0e6e0273543078050e697f04309f11d93",
+    ) ||
+    !backlogItem?.dependency?.includes(
+      "Main now requires twelve exact app-bound checks",
+    ) ||
+    !backlogItem?.dependency?.includes("Only one collaborator exists") ||
+    !backlogItem?.dependency?.includes("PR 58 is review-blocked") ||
+    !backlogItem?.dependency?.includes(
+      "Release workflow remains disabled_manually",
+    )
   ) {
     fail("IMP-012 backlog evidence differs");
   }
