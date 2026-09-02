@@ -2,14 +2,34 @@
 
 ## Current state
 
-The GitHub `Release` workflow is manually disabled. Production remains `v0.1.11`. Do not enable or dispatch the replacement workflow until every prerequisite below is present and independently reviewed.
+The GitHub `Release` workflow is manually disabled. Production remains `v0.1.11`. Do not enable or dispatch the replacement workflow until every prerequisite below is present and the exact owner-approved release boundary passes.
+
+### Temporary solo-maintainer boundary — 2026-09-02
+
+ADR-0124 records the owner's explicit decision to operate repository merges
+solo for now. Pull requests remain mandatory but require zero approvals through
+`2026-12-01T05:59:20Z`, or until a second eligible collaborator is added or the
+owner revokes the exception. This is not independent review. Every merge still
+requires the twelve exact app-bound checks, strict current-base evaluation,
+signed commits, resolved conversations, administrator enforcement, blocked
+force pushes/deletion, an adversarial diff review, and an explicit owner merge
+decision.
+
+Release remains disabled and is not authorized by this exception. Its preflight
+now selects the newest run for every required app/check pair, requires each
+newest run to succeed, and enforces at least 86,400 seconds of cooling-off after
+the newest exact-head required check. The protected release environment, policy
+token, signed tag, security/licence closure, and release/deployment decisions
+remain separate gates.
 
 ### Hardened state — 2026-09-01
 
 Protected `main` now requires the twelve exact current checks with their GitHub
-App identities, strict current-base evaluation, verified signatures, one
-approval, stale-review dismissal, last-pusher separation, resolved conversations,
-and administrator enforcement. Force pushes and branch deletion are disabled.
+App identities, strict current-base evaluation, verified signatures, a pull
+request, resolved conversations, and administrator enforcement. Force pushes
+and branch deletion are disabled. ADR-0124 temporarily sets approvals to zero;
+the prior one-approval, stale-dismissal, and last-pusher settings are retained
+as the exact rollback payload rather than claimed as active controls.
 Two active rulesets cover `refs/tags/v*.*.*`: the first restricts creation to
 the explicitly recorded owner through audited non-exempt bypass. The second has
 no bypass and independently requires a signature while denying update and
@@ -28,11 +48,9 @@ the current Dependabot, code-scanning, and secret-scanning open-alert counts are
 zero. Non-provider pattern scanning and validity checks remain reported disabled
 and are not claimed as release controls.
 
-Only one administrator/collaborator currently exists, so the required branch
-approval is not satisfiable yet. This is intentionally fail-closed. Add an
-eligible independent collaborator and obtain that person's approval; do not
-weaken the rule to merge. The protected `release` environment, independent
-environment reviewer, policy token, exact signed annotated tag,
+Only one administrator/collaborator currently exists. The owner has accepted
+the bounded solo-maintainer risk under ADR-0124 instead of creating a false
+second identity. The protected `release` environment, policy token, exact signed annotated tag,
 security/licence closure, and explicit release approval also remain absent.
 
 `release-policy-hardening-2026-09-01.yaml` records exact rule identities and
@@ -60,7 +78,7 @@ evidence and a fail-closed checklist, not release approval.
 
 ## Required external controls
 
-- Keep the current `main` protection exact. Add an eligible independent reviewer and obtain one approval; never remove checks, signature enforcement, last-pusher separation, conversation resolution, force-push/deletion blocks, or administrator enforcement to bypass the missing reviewer.
+- Keep the ADR-0124 `main` protection exact during the temporary solo period: pull requests remain required with zero approvals, all twelve app-bound checks remain strict, signatures/conversation resolution/admin enforcement remain enabled, and force push/deletion remain blocked. Restore the recorded one-approval payload immediately on expiry, owner revocation, or addition of a second eligible collaborator.
 - Keep both active `refs/tags/v*.*.*` rulesets. Creation authority must remain limited to the explicit audited non-exempt actor; the separate no-bypass ruleset must continue enforcing signatures and blocking update/deletion.
 - Keep Actions restricted to the exact selected-action policy and full-SHA references. Keep vulnerability alerts, unpaused Dependabot security updates, secret scanning, push protection, and private vulnerability reporting enabled; resolve or remediate every open repository security alert before release.
 - Create a `release` environment restricted to protected branches. Add an independent required reviewer, enable prevent-self-review, and disable administrator bypass.
@@ -71,7 +89,7 @@ The preflight checks every API-visible control again. GitHub's environment read 
 
 ## Prepare the candidate
 
-1. Merge only an approved clean candidate to protected `main` after exact CI and security checks pass.
+1. Merge only a clean, adversarially reviewed candidate to protected `main` after exact CI and security checks pass and the owner records the exact merge decision.
 2. Create a signed annotated semantic-version tag at the exact current `main` commit. Never move or recreate a version tag.
 3. Verify the tag locally and on GitHub, then wait for every required check on the exact commit.
 4. Record the exact 40-character candidate SHA and version without the `v` prefix.
@@ -95,7 +113,7 @@ Replace both example values. Dispatching a tag name or abbreviated SHA is invali
 1. Confirm preflight verified exact main, tag signature and target, required checks, branch protection, active tag ruleset, release environment, and release absence.
 2. Confirm the build checked out the exact SHA and completed the full repository, database, image, WooCommerce, security, licence, and packaging gates.
 3. Review the uploaded sealed artifact's GitHub digest, internal checksums, source archive, plugin ZIP, image metadata, SBOMs, and release metadata before environment approval.
-4. The required reviewer must be independent of the dispatcher and candidate author where policy requires separation. Do not approve an unexplained warning or a candidate different from the recorded SHA.
+4. During ADR-0124's temporary solo period, record owner approval honestly as solo authority; never label it independent. Do not approve an unexplained warning or a candidate different from the recorded SHA.
 5. After publish, reconcile GHCR digests, attestations, release assets/checksums, signed tag, source archive, WooCommerce version, and production rollout evidence.
 
 ## Failure and rollback

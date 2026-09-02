@@ -1,5 +1,18 @@
 # Changelog
 
+- Activated a temporary, owner-approved solo-maintainer merge policy under
+  ADR-0124. Pull requests remain mandatory but require zero approvals because
+  the repository has one administrator and no eligible second reviewer. All
+  twelve app-bound checks, strict current-base evaluation, signed commits,
+  resolved conversations, administrator enforcement, and force-push/deletion
+  blocks remain exact. The exception expires no later than
+  `2026-12-01T05:59:20Z` and must be rolled back sooner if a second eligible
+  collaborator appears or the owner revokes it. Release remains manually
+  disabled; its preflight now requires the newest run for every app/check pair
+  to pass and enforces a 24-hour exact-head cooling-off period. This records
+  solo authority honestly and does not claim independent review, penetration
+  testing, release, deployment, or GA approval.
+
 - Enabled repository-native continuous security without enabling Release.
   ADR-0118 corrects ADR-0117's first direct-only action inventory after
   fail-closed startup/setup evidence: Actions now allow thirteen exact patterns

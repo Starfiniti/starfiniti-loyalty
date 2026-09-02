@@ -1,5 +1,19 @@
 # Status
 
+- The owner explicitly selected temporary solo repository operation under
+  ADR-0124. The repository has one administrator and no eligible second
+  reviewer, so `main` still requires pull requests but now requires zero
+  approvals. The twelve exact app-bound checks, strict current-base evaluation,
+  signed commits, resolved conversations, administrator enforcement, and
+  force-push/deletion blocks remain exact. The exception fails closed after
+  `2026-12-01T05:59:20Z` and must be restored to one approval sooner if a second
+  eligible collaborator is added or the owner revokes it. Release workflow
+  `333373957` remains manually disabled; its preflight now selects the newest
+  run for each required app/check pair, requires it to pass, and waits at least
+  86,400 seconds after the newest exact-head check. No independent review,
+  penetration test, release, deployment, GA, production, checkout, database,
+  or loyalty-value change is claimed.
+
 - GitHub repository-native security is now fail-closed under ADR-0117 and its
   transitive-action correction ADR-0118. Actions permit only thirteen exact
   patterns: nine direct repository workflow references plus four newly required
@@ -32,15 +46,15 @@
   now explicit; the failed runs remain negative evidence, not Security
   completion.
 
-- GitHub release policy is now fail-closed at the repository boundary. At
+- GitHub release policy was hardened at the repository boundary. At
   `2026-09-01T10:00:52Z`, protected `main` required the twelve exact current
   checks from GitHub Actions and GitHub Advanced Security, verified signatures,
   one approval, stale-review dismissal, last-pusher separation, resolved
   conversations, and administrator enforcement; force pushes and deletion were
   disabled. Active complementary version-tag rulesets permit only audited signed
-  creation and reject update or deletion with no bypass. Because the repository
-  still has only one administrator/collaborator, no eligible independent reviewer
-  exists and PR #58 is correctly `REVIEW_REQUIRED`. The Release workflow remains
+  creation and reject update or deletion with no bypass. That historical shape
+  is retained as ADR-0124's rollback precondition; the owner-approved temporary
+  solo policy now uses a zero-approval pull-request rule. The Release workflow remains
   manually disabled. The protected release environment, independent environment
   reviewer, policy token, signed exact release tag, security/licence closure, and
   explicit release approval remain open; no tag, release, deployment, or

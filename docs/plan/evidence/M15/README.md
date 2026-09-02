@@ -1,14 +1,26 @@
 # M15 Evidence — GA Hardening
 
+ADR-0124 and `solo-maintainer-policy-2026-09-02.yaml` record the owner's
+temporary solo merge decision without inventing an independent reviewer.
+Pull requests remain required with zero approvals through the bounded expiry;
+all twelve app-bound checks, strict base evaluation, signatures, conversation
+resolution, administrator enforcement, and force/deletion blocks remain exact.
+`npm run solo-maintainer:validate` rejects policy drift, false independence,
+second-collaborator operation, removed checks, weakened history, release
+overclaim, expiry, and rollback drift. Release remains manually disabled and
+the 24-hour newest-check cooling-off is only a future publication prerequisite,
+not release or deployment authority.
+
 The chronological release-policy successor
 `release-policy-hardening-2026-09-01.yaml` proves strict app-bound protection on
 `main`, signed commits, review/last-pusher separation, stale-review dismissal,
 conversation resolution, administrator enforcement, blocked force pushes and
 deletion, and two active complementary version-tag rulesets. The earlier absence
 audit remains byte-bound as its precondition. Only one collaborator exists, so
-PR #58 is intentionally review-blocked; the release environment, independent
-reviewers, policy token, exact signed tag, security/licence closure, and owner
-approval remain absent. The workflow remains disabled and no tag, release,
+ADR-0124 temporarily permits solo exact-head merges without an approval while
+retaining the pull-request boundary; the release environment, policy token,
+exact signed tag, security/licence closure, and owner approval remain absent.
+The workflow remains disabled and no tag, release,
 deployment, or production state changed.
 
 The next chronological successor,

@@ -1,0 +1,75 @@
+schema: starfiniti.solo-maintainer-merge-policy.v1
+status: active
+decision:
+  approvedAt: 2026-09-02T05:59:20Z
+  approvedBy: Starfiniti
+  authoritySource: owner instruction in Codex thread 019ff11c-497b-7760-94ed-f49cf9710899
+  scope: protected main pull-request merges
+  reason: The repository has one administrator and no eligible second reviewer; the owner explicitly selected temporary solo operation.
+repository:
+  owner: Starfiniti
+  name: starfiniti-loyalty
+  defaultBranch: main
+  collaboratorCount: 1
+  collaborator:
+    login: Starfiniti
+    id: 120020919
+    admin: true
+previousProtection:
+  observedAt: 2026-09-02T06:11:37Z
+  pullRequestRequired: true
+  requiredApprovingReviewCount: 1
+  dismissStaleReviews: true
+  requireLastPushApproval: true
+activeProtection:
+  observedAt: 2026-09-02T06:16:07Z
+  pullRequestRequired: true
+  requiredApprovingReviewCount: 0
+  dismissStaleReviews: false
+  requireLastPushApproval: false
+  strictRequiredChecks: true
+  requiredChecks:
+    - { context: CodeQL, appId: 57789 }
+    - { context: baseline, appId: 15368 }
+    - { context: codeql, appId: 15368 }
+    - { context: containers, appId: 15368 }
+    - { context: dast, appId: 15368 }
+    - { context: database, appId: 15368 }
+    - { context: recovery-transport, appId: 15368 }
+    - { context: supply-chain, appId: 15368 }
+    - { context: woocommerce-runtime (current-hpos), appId: 15368 }
+    - { context: woocommerce-runtime (current-legacy), appId: 15368 }
+    - { context: woocommerce-runtime (minimum-hpos), appId: 15368 }
+    - { context: woocommerce-runtime (minimum-legacy), appId: 15368 }
+  signedCommits: true
+  conversationResolution: true
+  administratorEnforcement: true
+  forcePushesAllowed: false
+  deletionsAllowed: false
+compensatingControls:
+  exactHeadChecksRequired: true
+  adversarialDiffReviewRequired: true
+  ownerMergeDecisionRequired: true
+  releaseWorkflowState: disabled_manually
+  releaseCoolingOffSeconds: 86400
+  newestRequiredCheckMustPass: true
+  productionDeploymentAuthorized: false
+termination:
+  expiresAt: 2026-12-01T05:59:20Z
+  restoreOnSecondEligibleCollaborator: true
+  restoreOnOwnerRevocation: true
+  failClosedAfterExpiry: true
+rollback:
+  method: PATCH
+  endpoint: repos/Starfiniti/starfiniti-loyalty/branches/main/protection/required_pull_request_reviews
+  payload:
+    dismiss_stale_reviews: true
+    require_code_owner_reviews: false
+    required_approving_review_count: 1
+    require_last_push_approval: true
+nonClaims:
+  - independent review occurred
+  - penetration testing is complete
+  - release is approved
+  - deployment is approved
+  - GA is approved

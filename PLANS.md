@@ -1,5 +1,19 @@
 # Execution Plan
 
+ADR-0124 is the temporary active merge-governance exception. The owner chose
+solo repository operation because the public repository has one administrator
+and no eligible second reviewer. Pull requests still remain mandatory, but
+their approval count is zero until `2026-12-01T05:59:20Z`, owner revocation, or
+the addition of a second eligible collaborator. The twelve exact app-bound
+checks, strict current-base evaluation, signed commits, conversation resolution,
+administrator enforcement, and force-push/deletion blocks remain unchanged.
+Every candidate still needs an adversarial diff review and explicit owner merge
+decision; neither is labelled independent. Release stays manually disabled and
+its preflight now requires the newest run for every required app/check pair to
+pass plus a 24-hour cooling-off period after the newest exact-head check. Merge
+the exact-head-green PR #58 stack sequentially, then reconcile merged `main`;
+do not deploy production or inflate any module score from these merges.
+
 ADR-0118 is the active correction to ADR-0117's M15 repository-security slice.
 GitHub Actions is restricted to thirteen exact allowed patterns: nine direct
 references plus four newly required SHA-pinned Trivy composite patterns exposed
@@ -23,16 +37,14 @@ returned to 7/27. Fresh exact candidate
 freshness, WooCommerce, and Medium-review reconciliation now restores 19/27.
 The earlier `fec7f86` results remain historical and are not relabelled.
 
-The repository-side release boundary is now fail-closed. Protected `main`
-requires all twelve exact checks, verified signatures, one independent approval,
-stale-review dismissal, last-pusher separation, resolved conversations, and
-administrator enforcement; force pushes and deletion are blocked. Two active
-version-tag rulesets separate audited signed creation from no-bypass immutability.
-Only one collaborator exists, so PR #58 intentionally cannot merge until an
-eligible independent reviewer is added and approves it. Keep Release disabled
-while the protected release environment, independent environment reviewer,
-policy token, signed exact tag, security/licence closure, and owner release
-approval remain open.
+The repository-side release boundary remains fail-closed. Protected `main`
+requires all twelve exact checks, verified signatures, pull requests, resolved
+conversations, and administrator enforcement; force pushes and deletion are
+blocked. Two active version-tag rulesets separate audited signed creation from
+no-bypass immutability. ADR-0124 temporarily replaces the impossible approval
+requirement with bounded solo authority and an exact rollback payload. Keep
+Release disabled while the protected release environment, policy token, signed
+exact tag, security/licence closure, and owner release approval remain open.
 
 The earlier `2026-09-01T09:09:45Z` read-only audit is retained as immutable
 precondition evidence rather than rewritten. Its successor

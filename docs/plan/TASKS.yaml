@@ -3226,6 +3226,7 @@ tasks:
         R-052,
         R-064,
         R-065,
+        R-066,
       ]
     docs:
       [
@@ -3236,6 +3237,7 @@ tasks:
         docs/architecture/ADR/0115-default-branch-controlled-sealed-releases.md,
         docs/architecture/ADR/0117-repository-native-continuous-security-controls.md,
         docs/architecture/ADR/0118-transitive-github-actions-policy-correction.md,
+        docs/architecture/ADR/0124-temporary-solo-maintainer-merge-policy.md,
       ]
     evidence: [docs/plan/evidence/M15/README.md]
     slices:
@@ -3398,6 +3400,7 @@ tasks:
           [
             npm run ci:validate,
             npm run release-policy:audit:validate,
+            npm run solo-maintainer:validate,
             npm run security:validate,
             npm run release:sources:validate,
             npm run woocommerce:package:validate,
@@ -3414,7 +3417,9 @@ tasks:
             docs/plan/evidence/M15/release-policy-hardening-2026-09-01.yaml,
             docs/plan/evidence/M15/repository-security-hardening-2026-09-01.yaml,
             docs/plan/evidence/M15/repository-actions-policy-correction-2026-09-01.yaml,
+            docs/plan/evidence/M15/solo-maintainer-policy-2026-09-02.yaml,
             scripts/validate-release-policy-audit.mjs,
+            scripts/validate-solo-maintainer-policy.mjs,
             docs/plan/evidence/M15/runs/security-medium-triage-f9c83ac.yaml,
             docs/plan/evidence/M15/runs/security-medium-triage-188d9d8.yaml,
             docs/plan/evidence/M15/runs/security-medium-triage-fe8a6ff.yaml,

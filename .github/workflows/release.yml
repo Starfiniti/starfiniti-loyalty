@@ -61,9 +61,9 @@ jobs:
           jq -e '
             .required_status_checks.strict == true and
             .required_signatures.enabled == true and
-            .required_pull_request_reviews.required_approving_review_count == 1 and
-            .required_pull_request_reviews.dismiss_stale_reviews == true and
-            .required_pull_request_reviews.require_last_push_approval == true and
+            .required_pull_request_reviews.required_approving_review_count == 0 and
+            .required_pull_request_reviews.dismiss_stale_reviews == false and
+            .required_pull_request_reviews.require_last_push_approval == false and
             .required_conversation_resolution.enabled == true and
             .enforce_admins.enabled == true and
             .allow_force_pushes.enabled == false and
@@ -118,24 +118,45 @@ jobs:
               exit 1
             }
           done
+          cooling_started_at=""
           mapfile -t required_checks < <(
             jq -c '.required_status_checks.checks[]?' <<<"$protection"
           )
           for required_check in "${required_checks[@]}"; do
             context="$(jq -r '.context' <<<"$required_check")"
             app_id="$(jq -r '.app_id' <<<"$required_check")"
-            jq -e --arg context "$context" --argjson appId "$app_id" '
-              any(.check_runs[]?;
-                .name == $context and
-                ($appId == -1 or .app.id == $appId) and
-                .status == "completed" and
-                .conclusion == "success"
-              )
-            ' <<<"$check_runs" >/dev/null || {
-              echo "Required app-bound check $context is not successful on $CANDIDATE_SHA." >&2
+            latest_check="$(jq -c --arg context "$context" --argjson appId "$app_id" '
+              [
+                .check_runs[]?
+                | select(
+                    .name == $context and
+                    ($appId == -1 or .app.id == $appId)
+                  )
+              ]
+              | sort_by(.completed_at // .started_at // "")
+              | last // empty
+            ' <<<"$check_runs")"
+            if [[ -z "$latest_check" ]] || ! jq -e '
+              .status == "completed" and
+              .conclusion == "success" and
+              (.completed_at | type == "string")
+            ' <<<"$latest_check" >/dev/null; then
+              echo "Newest required app-bound check $context is not successful on $CANDIDATE_SHA." >&2
               exit 1
-            }
+            fi
+            completed_at="$(jq -r '.completed_at' <<<"$latest_check")"
+            if [[ -z "$cooling_started_at" || "$completed_at" > "$cooling_started_at" ]]; then
+              cooling_started_at="$completed_at"
+            fi
           done
+          [[ -n "$cooling_started_at" ]]
+          cooling_started_epoch="$(date -u -d "$cooling_started_at" +%s)"
+          now_epoch="$(date -u +%s)"
+          minimum_release_cooling_seconds=86400
+          if (( now_epoch - cooling_started_epoch < minimum_release_cooling_seconds )); then
+            echo "The newest exact-head required check completed at $cooling_started_at; the solo-maintainer release boundary requires 24 hours of cooling-off." >&2
+            exit 1
+          fi
 
           creation_ruleset_id=""
           immutability_ruleset_id=""
@@ -223,6 +244,22 @@ jobs:
           [[ -z "$open_secret_alerts" ]]
           [[ -z "$open_dependabot_alerts" ]]
           [[ -z "$open_code_alerts" ]]
+
+          collaborators="$(gh api --paginate -H "X-GitHub-Api-Version: $api_version" "repos/$repository/collaborators?affiliation=direct&per_page=100" --slurp)"
+          jq -e '
+            [ .[][] | {login, id, permissions, role_name} ] == [{
+              login: "Starfiniti",
+              id: 120020919,
+              permissions: {
+                pull: true,
+                triage: true,
+                push: true,
+                maintain: true,
+                admin: true
+              },
+              role_name: "admin"
+            }]
+          ' <<<"$collaborators" >/dev/null
 
           release_environment="$(gh api -H "X-GitHub-Api-Version: $api_version" "repos/$repository/environments/release")"
           jq -e '
