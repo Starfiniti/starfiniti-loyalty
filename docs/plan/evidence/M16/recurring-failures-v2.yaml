@@ -132,13 +132,13 @@ failures:
       sha256: 900f715764caac168a48590f44b10b5f48c889c8dce833e5fb28593f46d202ca
     implementation:
       path: .github/workflows/release.yml
-      sha256: 12267e96be4550ed002600b80a137cde4b5716b617cc630b96634bfc76bd5ff3
+      sha256: ecbe1b8f125bf3903f6fc00e916875d21de7cc54610062fb4409da6a730491e9
     controls:
       - id: release-action-policy-preflight
         type: regressionTest
         reference:
           path: .github/workflows/release.yml
-          sha256: 12267e96be4550ed002600b80a137cde4b5716b617cc630b96634bfc76bd5ff3
+          sha256: ecbe1b8f125bf3903f6fc00e916875d21de7cc54610062fb4409da6a730491e9
         deliveryStatus: candidate
         mergeEvidence: null
         activationEvidence: null
@@ -147,7 +147,7 @@ failures:
         type: validator
         reference:
           path: scripts/validate-workflows.mjs
-          sha256: 7eb8a84ac98e8aeb4ddc23ccd63575bf29378f792ed3b84200867cbbd7db89ba
+          sha256: dedc719d2260496d4c3f7a3f96efdf01950acbceb3ee9cd55275243c3fe4acef
         deliveryStatus: candidate
         mergeEvidence: null
         activationEvidence: null
