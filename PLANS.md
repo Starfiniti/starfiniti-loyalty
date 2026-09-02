@@ -30,12 +30,13 @@ distinct tag rulesets before release. This does not remove the independent
 reviewer, environment, expanded read-only token, tag, security/licence, or
 approval gates.
 
-Because this slice changes `.github/workflows/release.yml`, M15 Security first
-returned to 7/27. Fresh exact candidate
-`4ac7414eab29e1a30ebfe61e1d995c8ce138dec1` passed CI `33501867357`, Security
-`33501867336`, and external CodeQL `99837291269`; exact image, SBOM, DAST,
-freshness, WooCommerce, and Medium-review reconciliation now restores 19/27.
-The earlier `fec7f86` results remain historical and are not relabelled.
+Because the solo slice also changes `.github/workflows/release.yml`, M15 Security
+again returned to 7/27 until fresh evidence existed. Exact candidate
+`b97dde21de81660b7c182e5b2653fb1617863750` passed CI `33598916504`, Security
+`33598916554`, and external CodeQL `100148436020`; exact image, SBOM, DAST,
+freshness, WooCommerce, and digest-bound Medium-review reconciliation restore
+19/27. The earlier `4ac7414` and `fec7f86` results remain historical and are not
+relabelled.
 
 The repository-side release boundary remains fail-closed. Protected `main`
 requires all twelve exact checks, verified signatures, pull requests, resolved

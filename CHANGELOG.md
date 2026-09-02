@@ -13,6 +13,14 @@
   solo authority honestly and does not claim independent review, penetration
   testing, release, deployment, or GA approval.
 
+- Rebound M15 automated security evidence after the solo-policy workflow change.
+  Exact candidate `b97dde21de81660b7c182e5b2653fb1617863750` passed CI
+  `33598916504`, Security `33598916554`, and external CodeQL `100148436020`.
+  Fresh digest-bound CodeQL, repository, image, SBOM, DAST, scanner-freshness,
+  WooCommerce, and Medium-triage evidence restores 19/27 checks. The eight tagged
+  release, production review, independent test/retest, final reconciliation, and
+  approval gates remain open; no production state changed.
+
 - Enabled repository-native continuous security without enabling Release.
   ADR-0118 corrects ADR-0117's first direct-only action inventory after
   fail-closed startup/setup evidence: Actions now allow thirteen exact patterns
@@ -34,14 +42,14 @@
   historical `fec7f86` artifacts.
 
 - Enforced the repository-side release authority boundary without enabling
-  Release. Protected `main` now requires twelve exact app-bound checks, signed
-  commits, one review, stale-review dismissal, last-pusher separation, resolved
-  conversations, and administrator enforcement while blocking force pushes and
-  deletion. Two active tag rulesets allow only audited signed `v*.*.*` creation
-  and prohibit matching-tag update or deletion without bypass. The repository
-  still has no eligible independent reviewer, protected release environment, or
-  policy token, so PR #58 is intentionally blocked and eight external gates stay
-  open. No tag, release, deployment, or production state changed.
+  Release. Protected `main` originally required twelve exact app-bound checks,
+  signed commits, one review, stale-review dismissal, last-pusher separation,
+  resolved conversations, and administrator enforcement while blocking force
+  pushes and deletion. ADR-0124 later replaced only the impossible review count
+  with bounded solo authority. Two active tag rulesets still allow only audited
+  signed `v*.*.*` creation and prohibit matching-tag update or deletion without
+  bypass. The protected release environment, policy token, and eight external
+  gates stay open. No tag, release, deployment, or production state changed.
 
 - Added a closed live GitHub release-policy audit and adversarial validator.
   The read-only snapshot records eleven green checks on merged `main` while

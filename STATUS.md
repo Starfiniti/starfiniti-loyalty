@@ -31,12 +31,12 @@
   branch policy, and correctly validates the two complementary tag rulesets
   separately. Non-provider pattern scanning and validity checks remain disabled
   and are not overclaimed. Release, deployment, and production remain unchanged.
-  The release-workflow change first invalidated prior candidate-bound automated
-  security evidence. Fresh exact candidate
-  `4ac7414eab29e1a30ebfe61e1d995c8ce138dec1` then passed CI `33501867357`,
-  Security `33501867336`, and external CodeQL `99837291269`; the new
-  digest-bound Medium review restores `security.yaml` to 19/27 passed and eight
-  pending. The earlier `fec7f86` results remain immutable historical evidence.
+  The solo-policy release-workflow change invalidated prior candidate-bound
+  automated security evidence. Fresh exact candidate
+  `b97dde21de81660b7c182e5b2653fb1617863750` passed CI `33598916504`, Security
+  `33598916554`, and external CodeQL `100148436020`; the new digest-bound Medium
+  review restores `security.yaml` to 19/27 passed and eight pending. The earlier
+  `4ac7414` and `fec7f86` results remain immutable historical evidence.
   Security pull-request run `33499712113` failed before job creation under the
   first repository-level CodeQL pattern. Manual run `33499821641` then proved
   the two exact CodeQL sub-actions could initialize and identified only

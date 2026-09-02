@@ -49,13 +49,14 @@ failures and exact pinned source: `actions/cache`,
 because the first repository-level pattern failed closed before job creation.
 Implicit GitHub-owned and verified-creator trust stays disabled.
 
-The release-workflow and repository-security correction changed an input to the
-M15 security gate and first returned `security.yaml` to 7/27. Exact evidence
-head `4ac7414eab29e1a30ebfe61e1d995c8ce138dec1` then passed CI `33501867357`,
-Security `33501867336`, and external CodeQL `99837291269`. Fresh image, SBOM,
-DAST, scanner-freshness, WooCommerce, and digest-bound Medium review
-`security-medium-triage-4ac7414.yaml` restore 19/27. The earlier `fec7f86`
-evidence remains immutable historical proof and is not relabelled.
+The solo-policy release-workflow change invalidated the earlier candidate-bound
+M15 automated evidence and returned `security.yaml` to 7/27 until a fresh run
+completed. Exact evidence head `b97dde21de81660b7c182e5b2653fb1617863750`
+passed CI `33598916504`, Security `33598916554`, and external CodeQL
+`100148436020`. Fresh image, SBOM, DAST, scanner-freshness, WooCommerce, and
+digest-bound Medium review `security-medium-triage-b97dde2.yaml` restore 19/27.
+The earlier `4ac7414` and `fec7f86` evidence remains immutable historical proof
+and is not relabelled.
 
 The 2026-09-01 VM 971 investigation is retained in
 `backup-traffic-containment-2026-09-01.yaml`. It proves that the multi-terabyte
