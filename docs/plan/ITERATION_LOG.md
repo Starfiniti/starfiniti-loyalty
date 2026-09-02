@@ -1,5 +1,127 @@
 # Iteration Log
 
+## 2026-09-01 — Exact-head semantic collector and live freshness evidence
+
+- Reconciled the previously local-only wording after exact implementation
+  `f822a7933ac207e83ec780b3cbe1c8cdb704cedb` passed CI `33518906422`, Security
+  `33518906410`, and independent CodeQL `99893417542`. Security job
+  `99892856858` ran the positive, argument-rejection, and wrong-direction Linux
+  collector fixtures before the disposable observability stack canary.
+- Retained the exact 1,302-byte canary from artifact `9804957219` under report
+  SHA-256 `66800ed2f7691a7d76016db4864fb9f1b56e90a3e29607e92c6c467dcf72a25f`
+  and downloaded-archive SHA-256
+  `fc11949574cfc57d5878593f78e1f0a33e109a6be95234cc961788d899d927e2`.
+  The deterministic validator now accepts that exact report and provenance
+  instead of the pre-semantic-collector canary.
+- Rechecked production read-only at `2026-09-01T14:33:35Z`. VM 971's approved
+  guest-egress counter advanced by 468,904 bytes over twenty seconds, or
+  23,445.2 bytes/s; its latest one-hour RRD peak was 10,376.71 bytes/s. The
+  whole-VM timer remained disabled/inactive, the PostgreSQL timer remained
+  enabled/active, and the latest PostgreSQL backup service result was success
+  with exit status zero.
+- The 3.605 TB total remains historical cumulative incident evidence, not an
+  active rate. Production still has no monitoring plane; R-004/R-049 remain
+  open, observability deployment stays 10/16, operations stays 14/35, and no
+  score, release, deployment, database, checkout, or loyalty value changed.
+
+## 2026-09-01 — Semantic backup-network rate guard
+
+- Reconstructed the ranked backlog after the read-only VM 971 follow-up. Every
+  higher-ranked production action still requires an independent reviewer,
+  approved environment, private credential, execution window, or owner gate,
+  so the next safe slice remained repository-only M15 operations hardening.
+- Compared the Linux netdev collector, Proxmox API polling, and a semantic
+  node_exporter textfile collector. ADR-0120 selects the smallest authority:
+  two operator-bound sysfs counters, no network, fixed bounded labels, atomic
+  output, and Prometheus-derived rates. This catches the high internal guest
+  stream plus quiet physical uplink shape without exposing interface or VM
+  identity or treating a cumulative total as a current rate.
+- Added the non-root oneshot/timer, two alerts, three signals, dashboard rate
+  and freshness panel, OPS-008 response, deployment instructions, exact asset
+  hashes, and task/evidence bindings. Adversarial checks reject rate, ratio,
+  duration, freshness, absence, path, cadence, privilege, topology, digest, and
+  false-authority drift. A Linux-only runtime fixture additionally proves valid
+  output mode and positive, argument-rejection, and wrong-direction behavior.
+- Focused observability-deployment and 35-check operations validation pass
+  locally. Local Windows has no Bash runtime; exact-head Linux automation is
+  the required runtime proof. Production activation remains false, the
+  whole-VM timer remains disabled, R-004/R-049 stay open, and no score or
+  loyalty state changes.
+- The first full gate then failed because the recurrence validator re-read a
+  merged historical Prometheus digest from the evolving working tree before
+  applying its existing exact-merge-commit proof. The repair preserves the V1
+  registry bytes and V2's historical R-004 control references, validates those
+  merged bytes at commit `c85d93d`, and continues validating candidate control
+  bytes against the current tree. The V2 candidate validator reference is
+  rebound to its new exact digest; the 58 adversarial recurrence cases pass.
+
+## 2026-09-01 — Capacity self-test event-loop isolation
+
+- The complete repository gate produced one unexplained capacity self-test
+  failure, while an immediate isolated rerun passed. Repeating the exact test
+  reproduced the failure on iteration 7; after adding bounded diagnostic
+  classification, another stress run reproduced it on iteration 19.
+- The classified run had all four adapters observed, every measured scenario
+  decision passing, and only the driver event-loop decision failing. The
+  sub-second Windows loopback harness was therefore applying the real 25 ms
+  production-driver threshold to workstation scheduler noise rather than an
+  adapter failure.
+- Kept the canonical 24-minute workload and 25 ms threshold unchanged. Only the
+  loopback self-test uses a bounded 250 ms event-loop ceiling. Failures now name
+  only missing public adapter IDs, failed public decision names, and driver
+  decision names; authority, origin, payload, and credential material remain
+  excluded. The focused gate and 100 consecutive post-fix stress iterations
+  pass. Capacity evidence, scores, release, deployment, and production are
+  unchanged.
+
+## 2026-09-01 — VM 971 backup-traffic containment follow-up
+
+- Rechecked the active production path through the approved read-only operator
+  route after another alert presented VM 971's cumulative counter as current
+  traffic. The complete latest-day RRD estimated 287,384,753 bytes, averaged
+  3,326 bytes/s, and peaked at 107,013 bytes/s; a direct ten-second tap sample
+  increased by 1,013 bytes. The month RRD pins the historical 249,641,465
+  bytes/s maximum to `2026-08-14T03:00:00Z`.
+- Confirmed the whole-VM timer remains disabled/inactive and the PostgreSQL
+  timer remains enabled/active. Five consecutive PostgreSQL archives completed
+  within a maximum 210-second interval; the latest received 580,947 rsync
+  bytes, created `loyalty-postgres-20260901T123358Z`, and exited successfully.
+  Public readiness and login both returned HTTP 200.
+- Added a minimized append-only successor rather than editing the immutable
+  August incident evidence. A closed YAML record binds that prior evidence by
+  SHA-256, recomputes traffic and archive chronology, and rejects thirteen
+  adversarial history, counter, timer, archive, mutation, monitoring, and
+  authority corruptions. No production state changed, and R-004 remains
+  Critical pending the dedicated repository, monitoring, retention, custody,
+  and isolated full-service restore gates.
+
+## 2026-09-01 — Generalized recurring-failure regression control
+
+- Preserved the accepted recovery-specific V1 registry byte-for-byte under
+  SHA-256 and introduced ADR-0119 plus
+  `starfiniti.recurring-failure-registry.v2` instead of placing a repository
+  control-plane incident into misleading dedicated-repository/paging fields.
+- Retained both R-004 Borg-lock incidents and added three R-065 occurrences:
+  Security startup failure `33499712113` and supply-chain setup failures from
+  attempts one and two of run `33499821641`. Each occurrence has its own UTC
+  instant and exact digest-bound anchor in the append-only correction evidence.
+- Bound the corrected live selected-actions state to thirteen exact patterns,
+  full-SHA pinning, and false implicit GitHub-owned or verified-creator trust.
+  Attempt three remains the successful correction proof; the three failures
+  remain negative evidence.
+- Added a generalized closed current-state and authority envelope. The external
+  repository setting is active, while the release preflight, workflow-policy
+  validator, release-policy evidence validator, and recurring-failure
+  validator remain candidate-only pending independent review and merge of both
+  the stack base and this stacked change.
+- Added explicit `exhaustiveDiscoveryClaimed: false`: reviewed pinned source
+  proves the current observed dependency set, not every dependency a future
+  composite-action revision may introduce. Fifty-eight adversarial cases reject
+  erased failures, cache restore/save loss, policy drift, broad trust, disabled
+  pinning, successful-proof loss, V1 drift, and release/deployment/production
+  overclaims. M16 remains 77/100; candidate and deployed-production scores stay
+  83/100 and 54/100.
+
 ## 2026-09-01 — Repository-native security and release-preflight correction
 
 - A live repository audit found GitHub Actions allowed every action without

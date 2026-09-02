@@ -669,6 +669,90 @@
       ],
       "title": "Dedicated repository health",
       "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "starfiniti-prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 104857600 }
+            ]
+          },
+          "unit": "Bps"
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byFrameRefID", "options": "C" },
+            "properties": [
+              { "id": "unit", "value": "s" },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    { "color": "green", "value": null },
+                    { "color": "red", "value": 90 }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 29 },
+      "id": 14,
+      "options": {
+        "legend": {
+          "calcs": ["lastNotNull", "max"],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "expr": "max by (environment, service) (rate(starfiniti_backup_guest_egress_bytes_total[2m]))",
+          "legendFormat": "guest to host",
+          "refId": "A"
+        },
+        {
+          "expr": "max by (environment, service) (rate(starfiniti_backup_physical_uplink_egress_bytes_total[2m]))",
+          "legendFormat": "physical uplink",
+          "refId": "B"
+        },
+        {
+          "expr": "time() - max by (environment, service) (starfiniti_backup_network_counter_capture_unixtime_seconds)",
+          "legendFormat": "capture age seconds",
+          "refId": "C"
+        }
+      ],
+      "title": "Semantic backup network rates and freshness",
+      "type": "timeseries"
     }
   ],
   "refresh": "30s",

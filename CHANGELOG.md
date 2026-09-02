@@ -21,6 +21,74 @@
   release, production review, independent test/retest, final reconciliation, and
   approval gates remain open; no production state changed.
 
+- Reconciled the semantic backup-network control to exact Linux and fresh
+  production evidence. CI `33518906422`, Security `33518906410`, and independent
+  CodeQL `99893417542` pass at implementation
+  `f822a7933ac207e83ec780b3cbe1c8cdb704cedb`; retained artifact `9804957219`
+  binds the Linux amd64 observability canary while the Security job executes the
+  collector's positive and fail-closed runtime fixtures. A new read-only VM 971
+  sample measured 468,904 guest-egress bytes over twenty seconds and only a
+  10,376.71 bytes/s one-hour RRD peak. The whole-VM timer remains
+  disabled/inactive and the latest PostgreSQL backup service result is success.
+  R-004/R-049, production monitoring activation, M15 scores, release, and
+  loyalty state remain unchanged.
+
+- Added ADR-0120 and a production-disabled semantic network-rate guard for the
+  VM 971 incident shape. A hardened non-root oneshot reads only two
+  operator-bound Linux network counters, atomically publishes three
+  topology-free textfile metrics, and has no network, process, Docker,
+  database, backup, or loyalty mutation authority. The bounded catalogue now
+  has 34 signals and 29 exact alerts: one detects guest egress above 100 MiB/s
+  and four times physical-uplink egress for one minute, while the other pages
+  immediately when either counter is absent or capture evidence is older than
+  90 seconds. The locked dashboard shows derived rates and capture age;
+  deterministic corruption tests and a Linux runtime fixture reject weakened
+  thresholds, stale-evidence coercion, topology leakage, unsafe authority,
+  arguments, wrong-direction paths, malformed output, and non-atomic mode
+  drift. The full gate exposed that immutable V1/V2 recurrence controls were
+  incorrectly re-read from the evolving working tree before their existing
+  merge-commit proof; the validator now checks merged control bytes at the
+  recorded merge commit while candidate controls still bind current bytes.
+  Accepted V1 and V2 history remains unchanged except for rebinding the
+  candidate validator's own new digest. Focused gates pass locally. Production
+  activation remains false, R-004 stays open, and no product score, service,
+  network, database, checkout, or loyalty value changed.
+
+- Stabilized the M15 capacity adapter self-test after repeated full-suite and
+  stress execution reproduced an event-loop-only false failure. All four
+  adapters and every scenario decision passed; the sub-second Windows harness
+  alone occasionally exceeded the real 25 ms production-driver threshold. The
+  canonical 24-minute workload remains unchanged at 25 ms. Only the loopback
+  self-test now uses a bounded 250 ms scheduler ceiling, while failures retain
+  minimized adapter, scenario-decision, and driver-decision diagnostics without
+  exposing authority, origin, payload, or credentials. One hundred consecutive
+  post-fix stress iterations pass.
+
+- Added an append-only read-only production follow-up for the VM 971 backup
+  incident. A ten-second tap sample, complete latest-day/month RRD, five
+  consecutive PostgreSQL archive completions, timer state, and public
+  readiness prove that the historical 200–235 MB/s full-stream loop remains
+  absent. A closed YAML successor binds the accepted containment evidence by
+  SHA-256, and the operations validator recomputes traffic and archive
+  chronology while rejecting cumulative-counter, erased-archive, unsafe-timer,
+  production-mutation, monitoring-activation, and false-closure claims. The
+  whole-VM timer remains disabled, the PostgreSQL timer remains healthy, and
+  R-004 stays open for dedicated-repository, monitoring, retention, custody,
+  and isolated-restore evidence. No production state or loyalty value changed.
+
+- Added ADR-0119 and a generalized M16 recurring-failure registry without
+  rewriting the accepted recovery-specific V1 bytes. V2 retains the two R-004
+  Borg-lock occurrences and adds the R-065 GitHub Actions startup failure plus
+  both supply-chain setup failures as three distinct chronological occurrences.
+  It binds the exact thirteen-pattern policy, full-SHA requirement, false broad
+  GitHub-owned and verified-creator trust, successful third attempt, candidate
+  preflight/validator controls, and an explicit prohibition on claiming
+  exhaustive future composite-action discovery. Fifty-eight adversarial cases
+  now reject erased negative evidence, policy drift, false merge/release/
+  deployment authority, and V1 history drift. PR #58 is now merged as a verified
+  squash; Release, deployment, production, product scores, and protected loyalty
+  value remain unchanged.
+
 - Enabled repository-native continuous security without enabling Release.
   ADR-0118 corrects ADR-0117's first direct-only action inventory after
   fail-closed startup/setup evidence: Actions now allow thirteen exact patterns

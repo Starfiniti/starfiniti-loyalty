@@ -11,6 +11,34 @@ overclaim, expiry, and rollback drift. Release remains manually disabled and
 the 24-hour newest-check cooling-off is only a future publication prerequisite,
 not release or deployment authority.
 
+ADR-0120 adds a production-disabled semantic backup-network guard to the
+existing instrumented cycle alert. A hardened non-root systemd oneshot samples
+only two operator-bound sysfs totals, emits no topology labels, and atomically
+publishes guest egress, physical-uplink egress, and capture-time metrics to the
+existing textfile directory. Prometheus derives the two-minute rates and pages
+when guest egress exceeds 100 MiB/s and four times uplink for one minute; a
+separate immediate alert rejects absent counters or capture age above 90
+seconds. `observability-deployment.yaml` binds the four new assets and remains
+10/16, while `operations.yaml` remains 14/35 with 34 signals and 29 alerts.
+Repository validators and the Linux runtime fixture grant no production
+activation, interface discovery, receiver, backup, database, checkout, or
+loyalty authority. R-004 and R-049 stay open.
+
+Exact implementation `f822a7933ac207e83ec780b3cbe1c8cdb704cedb`
+passed CI `33518906422`, Security `33518906410`, and independent CodeQL
+`99893417542`. Security job `99892856858` executed the semantic collector's
+positive, argument-rejection, and wrong-direction Linux runtime fixtures and
+artifact `9804957219` retains the exact 1,302-byte observability report under
+SHA-256 `66800ed2f7691a7d76016db4864fb9f1b56e90a3e29607e92c6c467dcf72a25f`;
+the downloaded archive is bound under SHA-256
+`fc11949574cfc57d5878593f78e1f0a33e109a6be95234cc961788d899d927e2`.
+A subsequent read-only production check measured 468,904 guest-egress bytes
+over twenty seconds and a 10,376.71 bytes/s one-hour RRD peak. The whole-VM
+timer remained disabled/inactive and the latest PostgreSQL backup service
+result was success with exit status zero. This refresh changes neither the
+10/16 deployment score nor the 14/35 operations score; live activation and
+independent delivery/reconciliation evidence remain absent.
+
 The chronological release-policy successor
 `release-policy-hardening-2026-09-01.yaml` proves strict app-bound protection on
 `main`, signed commits, review/last-pusher separation, stale-review dismissal,
@@ -72,6 +100,19 @@ active and created a new archive. R-004 and M15-S04/S05 remain non-passing until
 the dedicated repository, monitoring, retention, transport, and isolated
 restore gates close.
 
+The later append-only
+`backup-traffic-read-only-follow-up-2026-09-01.yaml` and its narrative `.md`
+revalidate containment without changing production. The YAML successor binds
+the accepted containment file by SHA-256; the operations validator recomputes
+the tap delta, complete-day coverage, mean, archive ordering and maximum
+interval, exact timer state, unchanged remaining gates, and false authority.
+A ten-second tap sample increased by only 1,013 bytes; the complete latest-day
+RRD estimated approximately 274 MiB total and peaked at 107,013 bytes/s; and
+the month maximum remains pinned to 14 August. Five consecutive PostgreSQL
+archives completed at intervals no greater than 210 seconds, while the
+whole-VM timer stayed disabled and public readiness and login returned HTTP 200. This freshness evidence does not close the dedicated repository,
+monitoring, retention, custody, or isolated-restore gates.
+
 The 2026-09-01 read-only GitHub policy audit makes ADR-0115's external release
 gap exact. `main` has no branch protection, the repository has no ruleset or
 environment, no repository `RELEASE_POLICY_TOKEN` secret is configured, and the
@@ -88,9 +129,10 @@ existing operations catalogue. Exact current image indexes bind Prometheus,
 Alertmanager, Grafana, blackbox_exporter, and postgres_exporter to a hardened
 central Compose plane; an exact native node_exporter archive and non-root unit
 permit only aggregate textfile collection. `observability-deployment.yaml`
-records 9/16 repository checks passing and keeps the clean exact-head Linux
-canary plus approved environment, live targets, receivers, independent
-dead-man, production activation, and full-cycle reconciliation pending.
+records 10/16 repository checks passing. The clean exact-head Linux canary now
+passes and is retained; approved environment, live targets, receivers,
+independent dead-man, production activation, and full-cycle reconciliation
+remain pending.
 Production still has no monitoring service or host exporter, broader
 `operations.yaml` remains 14/35, and this evidence grants no receiver,
 deployment, checkout, database, or loyalty-value authority.
@@ -134,12 +176,21 @@ remain release-blocking under R-056.
 
 M15-S01 is active with seven of 23 checks passing. `capacity.yaml` separates repository readiness from an approved production-like measured run and exact value reconciliation. ADR-0104 adds an exact digest-pinned Grafana k6 contract that must match the canonical phases, scenarios, rates, drops, contracts, thresholds, target digest, and false production authority; repository validation and Linux image inspection cannot substitute for the still-pending approved real independent run. No supported capacity is claimed while that manifest is in progress.
 
+The local capacity runner self-test deliberately uses a bounded 250 ms
+event-loop ceiling only for its sub-second loopback adapter exercise. Repeated
+stress isolated an intermittent Windows failure to the driver event-loop
+decision while all four adapters and scenario decisions passed. The canonical
+production-like workload remains unchanged at 25 ms, and both real driver runs,
+the independent k6 cross-check, reconciliation, review, and supported-capacity
+claim remain pending. Failure diagnostics expose only closed adapter and
+decision identifiers. One hundred consecutive post-fix stress iterations pass.
+
 M15-S02 is active. `fault-injection.yaml` separates the disposable-only controller from the two approved production-like runs and independent WAL, queue, ledger, WooCommerce, checkout, and no-loss reconciliation. No production fault is authorized by repository readiness.
 
 M15-S03 is active with 19 of 27 checks passing. Exact candidate `4ac7414` supplies fresh CI, Security, external CodeQL, image, SBOM, DAST, header, scanner-freshness, development-audit, WooCommerce, and digest-bound Medium-review evidence under the corrected thirteen-pattern Actions policy. Release-bound corresponding-source generation under ADR-0083, a real corrected tag and package/attestation verification, approved non-destructive production review, independent penetration testing/retest, final Critical/High reconciliation, and owner approval remain gated. R-056 and R-062 stay open. Repository readiness authorizes no release, production scan, or mutation.
 
 M15-S04 is active. `recovery.yaml` separates the digest-bound fourteen-stage full-service clean-room controller from two approved isolated recoveries, measured RPO/RTO, identity/configuration/signing/privacy/value reconciliation, independent review, and zero-residue teardown. ADR-0071 additionally supplies an undeployed dedicated PostgreSQL Borg repository/lock/cache and exact recent-retention candidate after live timing disproved shared-repository RPO. `recovery-transport.yaml` binds ADR-0073's exact candidate and pre-change rollback packages, signed authorities, URLs, checksums, metadata, OS images, passing rollback-aware exact-head internal-only disposable canary, artifact/report hashes, and false-completion boundary. Operations escrow, host-consumer compatibility, real dual-endpoint rollout, and isolated restore remain pending. Repository readiness authorizes no repository provisioning, package installation, backup, credential, retention action, identity, route, or recovery execution.
 
-M15-S05 is active. `operations.yaml` separates the 31-signal/27-alert bounded-label catalogue, dedicated off-site archive/repository/retention evidence, required-series coverage page, exact Prometheus/Grafana projections, routing policy, runbooks, incident state machine, and validator from live source activation, receiver binding, named ownership, paging, two independent exercises, zero-difference reconciliation, and approval. Repository readiness authorizes no monitoring service, receiver, page, incident, checkout dependency, or value mutation.
+M15-S05 is active. `operations.yaml` separates the 34-signal/29-alert bounded-label catalogue, dedicated off-site archive/repository/retention evidence, semantic guest/uplink rate and freshness guards, required-series coverage page, exact Prometheus/Grafana projections, routing policy, runbooks, incident state machine, and validator from live source activation, receiver binding, named ownership, paging, two independent exercises, zero-difference reconciliation, and approval. Repository readiness authorizes no monitoring service, receiver, page, incident, checkout dependency, or value mutation.
 
 M15-S06 is active with five repository controls passing. `ga-canary.yaml` separates the repository-enforced one-pilot, 720-hour/thirty-interval immutable-release plan, claims catalogue, daily/final zero-difference contracts, score floors, five minimized artifacts, and 50-check validator from every module closeout, approved release/deployment, live canary, final reconciliation, independent review, M16 handoff, and owner approval. Repository readiness authorizes no deployment, tenant enablement, public claim, approval, checkout change, or loyalty value.

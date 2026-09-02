@@ -69,12 +69,13 @@ Use the incident state machine and communication policy in `INCIDENT_MANAGEMENT.
 
 ## OPS-008 — Backup transfer amplification
 
-**Detect:** one cycle transfers more than four times changed bytes and more than one GiB; investigate sustained guest-to-host egress even when external uplink is quiet. **Owner:** `recovery-on-call`.
+**Detect:** one cycle transfers more than four times changed bytes and more than one GiB; semantic network counters are absent or stale; or the approved guest-to-host path exceeds 100 MiB/s and four times the physical-uplink rate for one minute. **Owner:** `recovery-on-call`.
 
 1. Stop only the offending backup transfer after identifying the exact unit/process. Do not stop PostgreSQL or remove the source backup chain.
-2. Compare guest transmit, bridge receive, physical-uplink transmit, disk read, changed-byte estimate, and transferred-byte total. Cumulative VM counters are not rates.
+2. Compare Prometheus `rate()` over the semantic guest and physical-uplink counters with guest RRD, bridge receive, physical-uplink transmit, disk read, changed-byte estimate, and transferred-byte total. Cumulative VM counters are not rates. A quiet physical uplink refutes matching external egress but does not identify the internal process or prove that the flow is a backup.
 3. Confirm the active stage is the restricted incremental implementation and the PostgreSQL repository/lock differ from the whole-VM repository/lock. A full tar/stream loop or timestamped rollback copy must never be executable by a timer.
-4. Run one bounded manual incremental cycle, verify source/destination totals and the exact dedicated Borg archive, then resume the timer. Retain aggregate start/end counters and amplification ratio.
+4. If semantic counters are absent or older than 90 seconds, keep the network-rate conclusion unknown until the approved private sysfs mapping, collector service, timer, node_exporter scrape, and missing-series alert recover. Never replace missing evidence with zero.
+5. Run one bounded manual incremental cycle, verify source/destination totals and the exact dedicated Borg archive, then resume the timer. Retain aggregate start/end counters and amplification ratio.
 
 ## OPS-009 — Ledger mismatch
 

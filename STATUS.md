@@ -14,6 +14,75 @@
   penetration test, release, deployment, GA, production, checkout, database,
   or loyalty-value change is claimed.
 
+- ADR-0120 closes the repository detection gap exposed by VM 971's historical
+  internal full-stream pattern without claiming the stream has returned. The
+  production-disabled candidate now samples one approved guest-ingress counter
+  and one approved physical-uplink egress counter every 30 seconds through a
+  hardened non-root systemd oneshot that denies all IP traffic while retaining
+  read-only host sysfs visibility. It exports only two monotonic
+  totals and one capture timestamp with fixed bounded labels; Prometheus, not
+  the collector, derives the rates. `StarfinitiBackupInternalStreamSuspected`
+  requires guest egress above 104,857,600 bytes/s and four times physical
+  uplink for one minute, while `StarfinitiBackupNetworkCountersMissing` pages
+  on any absent input or capture age above 90 seconds. The catalogue is now
+  34 signals/29 alerts, the locked dashboard has 14 panels, and focused
+  deployment plus 35-check operations validation passes. Exact implementation
+  `f822a7933ac207e83ec780b3cbe1c8cdb704cedb` passed CI `33518906422`, Security
+  `33518906410`, independent CodeQL `99893417542`, and the collector's positive
+  and fail-closed Linux runtime fixture. The retained observability canary and
+  artifact now bind that exact implementation. A fresh read-only production
+  sample at `2026-09-01T14:33:35Z` measured only 23,445.2 guest-egress bytes/s
+  over twenty seconds and a 10,376.71 bytes/s one-hour RRD peak; the whole-VM
+  timer remained disabled/inactive and the latest PostgreSQL backup result was
+  successful. Production remains
+  unmodified and unmonitored, R-004/R-049 remain open, and all scores remain
+  unchanged. Full-gate traversal also found an evidence-lifecycle defect: the
+  recurrence validator compared merged historical control digests with the
+  evolving working tree before checking their recorded merge commit. Merged
+  controls now validate against exact `c85d93d` bytes, candidate controls still
+  validate current bytes, and the immutable V1 registry remains byte-identical.
+
+- The M15 loopback capacity self-test intermittently failed under the complete
+  workstation gate and again during stress iteration 7 and classified stress
+  iteration 19. The classified failure had no missing adapter and no failed
+  scenario decision; only the driver event-loop decision exceeded the canonical
+  25 ms threshold during the sub-second Windows harness. The production-like
+  24-minute workload remains unchanged. The self-test now uses a bounded 250 ms
+  event-loop ceiling and emits only minimized adapter/decision classifications
+  on failure. One hundred consecutive post-fix stress iterations pass. This
+  changes no capacity claim, production target, score, or loyalty state.
+
+- A bounded read-only production follow-up at `2026-09-01T12:34:23Z` again
+  refuted a renewed VM 971 full-stream incident. The ten-second tap delta was
+  1,013 bytes; the complete latest-day RRD estimated 287,384,753 bytes
+  (approximately 274 MiB), averaged 3,326 bytes/s, and peaked at 107,013
+  bytes/s. The monthly 249,641,465 bytes/s peak remains pinned to
+  `2026-08-14T03:00:00Z`. Five consecutive PostgreSQL archives completed at no
+  more than 210-second intervals, with the final cycle receiving 580,947 rsync
+  bytes and creating `loyalty-postgres-20260901T123358Z`. The whole-VM timer
+  remains disabled/inactive, the PostgreSQL timer remains enabled/active, and
+  dashboard readiness and login return HTTP 200. A closed YAML successor binds
+  the accepted containment record by SHA-256, and the operations validator now
+  recomputes the tap delta, complete-day coverage, archive chronology, timer
+  boundary, unchanged gates, and false authority. The observation changed
+  nothing in production and does not close R-004 or authorize re-enabling the
+  whole-VM timer.
+
+- ADR-0119 preserves the accepted `starfiniti.recurring-failure-registry.v1`
+  bytes and supersedes its recovery-only state shape with a generalized V2
+  register. V2 now reconstructs two R-004 Borg-lock occurrences and three
+  R-065 GitHub Actions occurrences: startup failure `33499712113`, then
+  supply-chain setup failures in attempts one and two of run `33499821641`.
+  The exact correction evidence retains all failures, the successful third
+  attempt, thirteen selected action patterns, full-SHA pinning, false implicit
+  GitHub-owned and verified-creator trust, and
+  `exhaustiveDiscoveryClaimed: false`. Four source-controlled regression
+  controls remain candidate-only until PR #59 passes exact-head checks,
+  adversarial solo review, and merge under ADR-0124. PR #58 is already merged as
+  verified commit `63418ee`. Fifty-eight adversarial cases pass. This claims no
+  independent review and changes no Release, deployment, production, score, or
+  loyalty value state.
+
 - GitHub repository-native security is now fail-closed under ADR-0117 and its
   transitive-action correction ADR-0118. Actions permit only thirteen exact
   patterns: nine direct repository workflow references plus four newly required
@@ -219,16 +288,18 @@
   rather than the superseded 27 August traffic snapshot.
 
 - ADR-0111 converts that repeated protected-path failure into an additive M16
-  control record without claiming the fix is delivered. The new registry binds
+  control record without claiming the fix is active. The preserved V1 registry binds
   two distinct UTC occurrences and exact evidence anchors to one stable
   `recovery.postgres-offsite.shared-borg-lock-starvation` fingerprint. It also
   binds exact ADR-0071, controller, validator, monitor, and OPS-007 bytes.
   Twenty adversarial cases reject one-occurrence substitution, reused
   anchors, path escape, digest drift, missing or duplicate controls, and false
-  merge or production activation. Every control remains `candidate`; production
-  still has the defect, no dedicated repository or paging, and no merge,
-  continuity, retention, restore, elapsed-monthly, independent-review, or owner
-  evidence. M16 remains 77/100, candidate 83/100, and production 54/100.
+  merge or production activation. ADR-0116 advances every R-004 control to
+  `merged`, while production still has the defect, no dedicated repository or
+  paging, and no activation, continuity, retention, restore, elapsed-monthly,
+  independent-review, or owner evidence. ADR-0119 now supersedes the schema
+  through V2 without rewriting this V1 record. M16 remains 77/100, candidate
+  83/100, and production 54/100.
 
 - ADR-0110 adds the still-missing exact Authentik 2026.8.0 runtime rehearsal
   without touching the live 2026.5.6 broker. Exact Authentik, PostgreSQL, and

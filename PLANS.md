@@ -14,6 +14,62 @@ pass plus a 24-hour cooling-off period after the newest exact-head check. Merge
 the exact-head-green PR #58 stack sequentially, then reconcile merged `main`;
 do not deploy production or inflate any module score from these merges.
 
+ADR-0120 is the current repository-safe M15 operations slice. It adds a
+semantic guest-versus-uplink rate guard for the exact VM 971 failure shape that
+the existing instrumented backup-cycle metrics cannot see. Keep its systemd
+collector and timer disabled in production until an approved monitoring host,
+private operator-owned sysfs mappings, synthetic threshold/absence exercise,
+receiver routes, dead-man path, rollback window, and independent observation
+are available. The immediate repository gate is 34 bounded signals, 29 exact
+Prometheus alerts, 14 locked dashboard panels, digest-bound collector assets,
+static adversarial cases, and the Linux runtime fixture. Cumulative totals are
+evidence, never rates; no interface or VM identity may enter metrics. This
+slice changes no production state, R-004/R-049 status, or score.
+Exact implementation `f822a7933ac207e83ec780b3cbe1c8cdb704cedb`
+passed CI `33518906422`, Security `33518906410`, and independent CodeQL
+`99893417542`. The retained Security artifact now binds the Linux amd64
+observability report to that commit, while the job executed the semantic
+collector's positive and fail-closed runtime fixtures. A fresh read-only
+production check at `2026-09-01T14:33:35Z` measured only 23,445.2 guest-egress
+bytes/s over twenty seconds and a 10,376.71 bytes/s one-hour RRD peak. The
+whole-VM timer remained disabled/inactive and the latest PostgreSQL backup
+service result was success. These facts correct stale evidence only; they do
+not activate monitoring or close R-004/R-049.
+The recurrence gate must preserve this distinction as the rules evolve:
+already-merged R-004 control revisions validate at their recorded merge commit,
+while the new semantic collector/rules remain current candidate bytes until a
+reviewed merge. Never rewrite V1 history to make a new working-tree digest fit.
+
+The M15 capacity self-test now separates loopback adapter correctness from a
+real driver-performance claim. Its sub-second local harness uses a bounded
+250 ms event-loop ceiling and safe decision-only failure diagnostics; the
+canonical 25 ms threshold, workload rates, production-like evidence gate, and
+independent k6 cross-check remain unchanged. No capacity or production claim is
+promoted by a stable self-test.
+
+The latest bounded production observation is retained as append-only M15
+evidence. VM 971's current tap and RRD rates remain quiet, five consecutive
+PostgreSQL archives met the current 300-second cadence objective, public
+readiness passed, and the whole-VM timer remained disabled. The machine-readable
+successor binds the prior containment digest and makes traffic arithmetic,
+archive chronology, timer safety, remaining gates, and false authority part of
+the operations regression gate. This is freshness evidence only: it does not
+change the active repository slice, close R-004, or authorize production
+mutation, timer re-enablement, release, or deployment.
+
+ADR-0119 is the active repository-safe M16 slice. It preserves the accepted V1
+recovery registry by exact digest and adds a generalized V2 record for both
+R-004 and the repeated R-065 GitHub Actions policy failure. The immediate gate
+is deterministic: preserve all five occurrence anchors, require the exact
+thirteen selected action patterns and full-SHA policy with both broad trust
+switches false, retain the successful third attempt without upgrading failed
+attempts to completion, and reject exhaustive future composite-dependency
+claims. PR #58 is merged as verified commit `63418ee`; the preflight and three
+validators remain candidate controls until PR #59 passes exact-head checks,
+adversarial solo review, and merge under ADR-0124. No independent review,
+release, or production authority is introduced and all product scores remain
+unchanged.
+
 ADR-0118 is the active correction to ADR-0117's M15 repository-security slice.
 GitHub Actions is restricted to thirteen exact allowed patterns: nine direct
 references plus four newly required SHA-pinned Trivy composite patterns exposed
@@ -97,17 +153,18 @@ score or production state and grants no merge, release, deployment, reboot,
 exercise, canary, tenant, ledger, database, billing, or GA authority.
 
 ADR-0112 is the active safe M15 observability-deployment slice. It turns the
-existing 31-signal/27-alert contract into a production-disabled deployment
+existing 34-signal/29-alert contract into a production-disabled deployment
 candidate: Prometheus 3.14.0, Alertmanager 0.34.0, Grafana 13.2.0,
 blackbox_exporter 0.28.0, and postgres_exporter 0.20.1 are bound to exact OCI
 indexes in an isolated hardened Compose plane, while node_exporter 1.12.1 is a
 separate non-root textfile-only native agent. Target files, receivers, Grafana
 administrator material, and PostgreSQL exporter modules remain environment
-owned. A clean Linux amd64 Security-job canary must prove native configuration,
-exact versions, loopback administration, unpublished exporters, and zero
-residue. Repository validation passes 9/16 deployment checks; exact-head Linux,
-approved-host, live-target, receiver, dead-man, activation, and observation
-evidence remain pending. The broader M15 operations gate remains 14/35,
+owned. A clean Linux amd64 Security-job canary proves native configuration,
+exact versions, loopback administration, unpublished exporters, zero residue,
+and the semantic collector runtime fixture at implementation `f822a79`.
+Repository validation passes 10/16 deployment checks; approved-host,
+live-target, receiver, dead-man, activation, and observation evidence remain
+pending. The broader M15 operations gate remains 14/35,
 production has no monitoring plane, and product/module scores do not change.
 Because this slice changed the Security workflow and exact checkout semantics,
 the older exact-head scanner, image, SBOM, DAST, header, freshness, Medium-
@@ -140,18 +197,17 @@ or GA; it adds no rsync provenance, custody, rollout, retention, restore,
 monitoring, or approval evidence. No production process or loyalty value was
 changed.
 
-ADR-0111 is the active safe M16 recurrence-control slice. An additive
-evidence-bound register records the 2026-08-28 and 2026-08-31 shared Borg-lock
-starvation incidents as two distinct chronological anchors under one Critical
-R-004 fingerprint. It SHA-256 binds ADR-0071, the dedicated controller, the
-backup-assets validator, the archive-RPO monitor, and OPS-007. All three
-controls remain `candidate`, with null merge, production, and observation
-evidence. Twenty adversarial cases reject invented recurrence, path or digest
-drift, missing controls, and delivery overclaims. This is durable repository
-prevention work, not production closure: M16 stays 77/100, the candidate stays
-83/100, production stays 54/100, and the elapsed monthly, merge, provisioning,
-monitoring, continuity, retention, restore, review, and approval gates remain
-open.
+ADR-0111's V1 recovery register remains immutable evidence. It records the
+2026-08-28 and 2026-08-31 shared Borg-lock starvation incidents as two distinct
+chronological anchors under one Critical R-004 fingerprint and SHA-256 binds
+ADR-0071, the dedicated controller, backup-assets validator, archive-RPO
+monitor, and OPS-007. ADR-0116 advances those three controls to `merged`, while
+activation and observation evidence remain null. ADR-0119's V2 register now
+supersedes only the schema and adds the R-065 recurrence without rewriting V1.
+This is durable repository prevention work, not production closure: M16 stays
+77/100, the candidate stays 83/100, production stays 54/100, and elapsed
+monthly, provisioning, monitoring, continuity, retention, restore, review, and
+approval gates remain open.
 
 ADR-0110 is the active safe M13/M15/M16 identity-runtime slice. It preserves
 ADR-0109's exact Authentik 2026.8.0 source/OpenAPI result and adds a fourteen-
