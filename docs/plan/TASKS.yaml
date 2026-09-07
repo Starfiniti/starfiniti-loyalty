@@ -1,5 +1,5 @@
 version: 3
-updated: 2026-09-01
+updated: 2026-09-07
 scope:
   active:
     [
@@ -524,7 +524,7 @@ tasks:
         unexplained coupon,
         unrecoverable Auth application or signing secret,
       ]
-    rollout: Use one controlled programme reward customer and test order set; accept no unbounded customer value.
+    rollout: Follow docs/plan/PILOT_DELIVERY.md for the owner-approved working-store release; use one controlled programme reward customer and test order set without unbounded customer value.
     rollback: Disable the connection, preserve event and ledger evidence, restore prior plugin package and immutable application images.
     verification:
       [

@@ -1,5 +1,14 @@
 # Status
 
+## Current — 2026-09-07
+
+The owner selected [working-store delivery](docs/plan/PILOT_DELIVERY.md) over
+further enterprise expansion. The interrupted PR #61 rebase is resolved, both
+production VMs are reachable, and the application still runs the August image.
+The immediate work is release integration, an isolated WooCommerce store, and
+end-to-end value/outage/recovery verification. No deployment or completion is
+claimed. Older entries below retain historical context, not new approval requests.
+
 - The owner explicitly selected temporary solo repository operation under
   ADR-0124. The repository has one administrator and no eligible second
   reviewer, so `main` still requires pull requests but now requires zero

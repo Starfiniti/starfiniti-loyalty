@@ -1,5 +1,14 @@
 # Execution Plan
 
+## Current delivery direction — 2026-09-07
+
+Finish the [working-store release](docs/plan/PILOT_DELIVERY.md). The owner has
+accepted pilot-first delivery and solo operation. That checklist supersedes the
+enterprise-wide finish dependency for the immediate release. Preserve existing
+code and essential protections; do not expand governance or require independent
+review, new billing, SCIM, agency features, or elapsed maintenance cycles to
+demonstrate a working store. Earlier execution entries below are historical.
+
 ADR-0124 is the temporary active merge-governance exception. The owner chose
 solo repository operation because the public repository has one administrator
 and no eligible second reviewer. Pull requests still remain mandatory, but

@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-09-07 — Working-store delivery
+
+- Resume the interrupted notification correction without discarding its archived
+  predecessor. Narrow immediate delivery to the WooCommerce pilot checklist;
+  enterprise expansion and recurring maintenance are no longer its finish gate.
+  This change does not claim a production deployment or a completed pilot.
+
 - Activated a temporary, owner-approved solo-maintainer merge policy under
   ADR-0124. Pull requests remain mandatory but require zero approvals because
   the repository has one administrator and no eligible second reviewer. All
