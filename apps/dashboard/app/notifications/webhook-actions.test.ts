@@ -169,4 +169,18 @@ describe("notification webhook endpoint actions", () => {
     expect(changeState.mock.calls[0]?.[0]).not.toHaveProperty("organizationId");
     expect(changeState.mock.calls[0]?.[0]).not.toHaveProperty("actorUserId");
   });
+
+  it("reports a stale rollout denial while preserving safe shutdown guidance", async () => {
+    createEndpoint.mockRejectedValue(
+      new Error("notifications are not enabled for this organization"),
+    );
+    await expect(
+      createWebhookEndpointAction(idle, createForm()),
+    ).resolves.toEqual({
+      kind: "error",
+      message:
+        "Notification rollout is disabled. Existing delivery evidence and safe endpoint shutdown remain available.",
+      secret: null,
+    });
+  });
 });

@@ -19,6 +19,7 @@ Current official guidance was reviewed on 2026-08-25. Supabase recommends invoke
 5. The existing isolated SMTP worker processes tests through the same mounted secret, renderer, transport, response bounds, conservative ambiguity policy, and ten-attempt ceiling. A test subject is visibly prefixed. Failure or outage cannot affect normal notification, checkout, ledger, refund, or reconciliation processing.
 6. One Auth-derived merchant read command returns only exact active template content/version, allowed tokens, aggregate consent/suppression counts, provider queue totals, and a bounded recent canonical issue list. It excludes contact, customer identity, payload, subject/body render, destination URL, provider identifier/body, secret/signature/fingerprint, worker identifier, and arbitrary error text. Malformed Data API containers fail closed in the server data boundary.
 7. Disabling the feature blocks new template publication and test sends while preserving historical versions, active bindings, accepted delivery state, health inspection, consent access, and value operations. Provider workers retain their existing provider-specific rollback behavior.
+8. The merchant surface mirrors, but never replaces, the database decision. A disabled notification entitlement leaves templates, provider health, canonical issues, and endpoints readable. It disables template publication, SMTP tests, endpoint creation, and key rotation, while owner/admin endpoint disable and retirement remain available as safe shutdown operations. Managed mode may author immutable templates and manage generic webhooks, but the self-hosted-only SMTP test is shown as unavailable. A stale client still reaches the same PostgreSQL checks and receives bounded deployment- or rollout-specific guidance.
 
 ## Alternatives
 
@@ -40,10 +41,11 @@ Rejected. That would place SMTP credentials and network behavior in the dashboar
 - Test delivery proves the real configured SMTP path without an arbitrary-recipient capability.
 - The initial editor intentionally offers safe text customization rather than arbitrary email HTML design. Branding breadth remains a later controlled-template concern.
 - Read health is diagnostic, not provider or consent authority; canonical database facts remain authoritative.
+- Browser control state is explanatory only. Role, entitlement, deployment mode, endpoint state, and every secret or send authorization continue to be derived and enforced server-side.
 
 ## Operations
 
-Deploy the private schema and merchant read surface with template publication and test enqueue disabled by entitlement. Verify publication, active-version pinning, test resolution to the requesting merchant, real local SMTP delivery, canonical health aggregation, and browser accessibility before any tenant activation. Monitor pending/retryable age, dead-letter/manual-review counts, test outcomes, and suppression changes without contact or payload logging.
+Deploy the private schema and merchant read surface with template publication and test enqueue disabled by entitlement. Verify publication, active-version pinning, test resolution to the requesting merchant, real local SMTP delivery, canonical health aggregation, browser accessibility, disabled-rollout presentation, managed SMTP-test suppression, and retained endpoint shutdown before any tenant activation. Monitor pending/retryable age, dead-letter/manual-review counts, test outcomes, and suppression changes without contact or payload logging.
 
 ## Migration and rollback
 

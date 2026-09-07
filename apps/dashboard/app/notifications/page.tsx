@@ -102,6 +102,8 @@ export default async function NotificationsPage({
             <NotificationSummary workspace={notificationWorkspace} />
             <NotificationTemplateStudio
               canManage={canManage}
+              deploymentMode={notificationWorkspace.deploymentMode}
+              entitlementEnabled={notificationWorkspace.entitlementEnabled}
               publishOperationId={crypto.randomUUID()}
               templates={notificationWorkspace.templates}
               testOperationId={crypto.randomUUID()}
@@ -110,6 +112,8 @@ export default async function NotificationsPage({
             {webhookEndpoints ? (
               <WebhookEndpointsPanel
                 document={webhookEndpoints}
+                deploymentMode={notificationWorkspace.deploymentMode}
+                entitlementEnabled={notificationWorkspace.entitlementEnabled}
                 operationIds={{
                   create: crypto.randomUUID(),
                   endpoints: Object.fromEntries(

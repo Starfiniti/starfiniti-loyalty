@@ -21,8 +21,20 @@ function failure(message: string): NotificationActionState {
   return { kind: "error", message };
 }
 
-function databaseFailure(error: { code?: string } | null) {
+function databaseFailure(error: { code?: string; message?: string } | null) {
   if (error?.code === "42501") {
+    if (error.message === "self-hosted notifications are not enabled") {
+      return failure(
+        "SMTP test delivery requires self-hosted mode with notifications enabled.",
+      );
+    }
+    if (
+      error.message === "notifications are not enabled for this organization"
+    ) {
+      return failure(
+        "Notification rollout is disabled. Existing templates and delivery evidence remain available.",
+      );
+    }
     return failure(
       "Your live organization role or notification rollout cannot perform this action.",
     );

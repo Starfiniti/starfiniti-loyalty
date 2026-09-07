@@ -21,3 +21,4 @@ infrastructure/testing/proxmox-security-preflight/collect-facts.py text eol=lf
 infrastructure/testing/proxmox-compatibility-inventory/collect-facts.py text eol=lf
 infrastructure/testing/proxmox-compatibility-inventory/plan.yaml text eol=lf
 infrastructure/testing/proxmox-compatibility-rehearsal/plan.yaml text eol=lf
+infrastructure/observability/node-exporter/* text eol=lf

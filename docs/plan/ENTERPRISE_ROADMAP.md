@@ -2,7 +2,11 @@
 
 Last reviewed: 2026-09-01
 
-This is the active delivery plan after production `v0.1.10`. It supersedes the broad unfinished phases in `docs/product/MASTER_PLAN.md`; completed phase evidence remains historical truth in `docs/plan/TASKS.yaml`.
+The owner narrowed immediate delivery on 2026-09-07 to
+[a working-store release](PILOT_DELIVERY.md). This enterprise roadmap remains the
+longer-term backlog, not a requirement to demonstrate a usable pilot. It supersedes
+the broad unfinished phases in `docs/product/MASTER_PLAN.md`; completed phase
+evidence remains historical truth in `docs/plan/TASKS.yaml`.
 
 ## Finish definition
 

@@ -57,6 +57,15 @@ M08-S03 is complete. Its real test-account canary remains an S06 owner-input gat
 - Visual evidence uses synthetic non-customer values and contains no contact or secret data: [desktop](notification-studio-desktop.png), [dark](notification-studio-dark.png), and [mobile](notification-studio-mobile.png).
 - Rollback disables new publication/test work while retaining the active binding, immutable versions, accepted normal/test attempts, provider-neutral facts, health evidence, system fallback, and every checkout/value/refund/reconciliation path.
 
+## M08-S05A — Notification entitlement and deployment presentation
+
+- An adversarial merchant-flow trace found that the summary could report notification rollout as disabled while template publication, SMTP testing, webhook creation, and key rotation still appeared usable. PostgreSQL already rejected those commands, so this was a truthful-workflow defect rather than an authorization bypass.
+- One pure access model now composes the live role, database-projected notification entitlement, and deployment mode. Disabled rollout blocks new authoring and key material while retaining all bounded reads and owner/admin endpoint disable or retirement. Entitlement alone never grants a role.
+- Managed mode retains safe immutable template publication and signed-webhook management but suppresses the self-hosted-only SMTP test with exact guidance. A stale command still fails at PostgreSQL; server actions do not imply that a test was sent or a secret was issued.
+- Seventeen focused access, stale-command, and real rendered-markup tests cover entitled management, disabled rollout with retained shutdown, entitlement without role, managed SMTP suppression, and database denial guidance. The complete local repository gate passes 1,010 workspace tests, both production builds, every deterministic validator, and static validation of 90 migrations and 70 pgTAP files.
+- Implementation head `04da41a67ee449d62d4e6479caae05e24e170349` passed exact-head CI run `33530596023` and Security run `33530595912`: 70 pgTAP files with 3,845 assertions, all four WooCommerce runtime cells, CodeQL, DAST, supply-chain scans, and the recovery-transport rehearsals passed. External CodeQL check `99932887645` also passed. Draft PR #61 retains the stacked-merge and independent-review gates.
+- No provider, endpoint, template, delivery, entitlement, database, checkout, ledger, customer, or production state changed.
+
 ## M08-S06 — Fail-closed production canary and close
 
 - `canary.yaml` defines 53 mandatory checks, four synchronized approvals, seven weighted categories, a 90/100 target, an 80% floor in every category, and nine distinct path-, SHA-256-, and semantic-bound production artifacts. [ARTIFACT_CONTRACT.md](ARTIFACT_CONTRACT.md) documents their exact operator-facing schemas.
