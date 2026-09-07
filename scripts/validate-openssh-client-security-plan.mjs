@@ -628,6 +628,9 @@ function validateImplementation(files) {
   requireText(
     files.serverDockerfile,
     [
+      "ARG UBUNTU_SNAPSHOT=20260902T000000Z",
+      'apt-get update --snapshot "$UBUNTU_SNAPSHOT"',
+      'apt-get download --snapshot "$UBUNTU_SNAPSHOT"',
       'openssh-client="$PACKAGE_VERSION"',
       'openssh-server="$PACKAGE_VERSION"',
       'openssh-sftp-server="$PACKAGE_VERSION"',

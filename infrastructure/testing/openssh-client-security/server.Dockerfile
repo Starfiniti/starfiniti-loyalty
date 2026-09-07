@@ -3,6 +3,9 @@ FROM ${BASE_IMAGE}
 
 ARG EXPECTED_ARCHITECTURE=amd64
 ARG PACKAGE_VERSION=1:9.6p1-3ubuntu13.18
+# Reproduce the reviewed guest, not today's moving security repository.
+# https://snapshot.ubuntu.com/ retains signed historical package indexes.
+ARG UBUNTU_SNAPSHOT=20260902T000000Z
 ARG CLIENT_URL=https://security.ubuntu.com/ubuntu/pool/main/o/openssh/openssh-client_9.6p1-3ubuntu13.18_amd64.deb
 ARG CLIENT_SHA256=900ee53c747920694bd508e598702aa794911a7c8273e66f292fe45144a00a9f
 ARG SERVER_URL=https://security.ubuntu.com/ubuntu/pool/main/o/openssh/openssh-server_9.6p1-3ubuntu13.18_amd64.deb
@@ -16,16 +19,18 @@ SHELL ["/bin/sh", "-euxc"]
 RUN test "$(dpkg --print-architecture)" = "$EXPECTED_ARCHITECTURE"; \
     . /etc/os-release; test "$ID" = ubuntu; test "$VERSION_ID" = 24.04; \
     apt-get update; \
-    DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends ca-certificates curl openssh-client="$PACKAGE_VERSION" openssh-server="$PACKAGE_VERSION" openssh-sftp-server="$PACKAGE_VERSION"; \
+    DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends ca-certificates curl; \
+    apt-get update --snapshot "$UBUNTU_SNAPSHOT"; \
+    DEBIAN_FRONTEND=noninteractive apt-get install --snapshot "$UBUNTU_SNAPSHOT" --yes --no-install-recommends openssh-client="$PACKAGE_VERSION" openssh-server="$PACKAGE_VERSION" openssh-sftp-server="$PACKAGE_VERSION"; \
     mkdir -m 0700 /tmp/starfiniti-openssh-server-packages; \
     cd /tmp/starfiniti-openssh-server-packages; \
-    for package in openssh-client openssh-server openssh-sftp-server; do apt-get download "$package=$PACKAGE_VERSION"; done; \
+    for package in openssh-client openssh-server openssh-sftp-server; do apt-get download --snapshot "$UBUNTU_SNAPSHOT" "$package=$PACKAGE_VERSION"; done; \
     set -- openssh-client_*.deb; test "$#" -eq 1; mv "$1" client-metadata.deb; \
     set -- openssh-server_*.deb; test "$#" -eq 1; mv "$1" server-metadata.deb; \
     set -- openssh-sftp-server_*.deb; test "$#" -eq 1; mv "$1" sftp-metadata.deb; \
-    curl --fail --location --proto '=https' --tlsv1.2 --output client-url.deb "$CLIENT_URL"; \
-    curl --fail --location --proto '=https' --tlsv1.2 --output server-url.deb "$SERVER_URL"; \
-    curl --fail --location --proto '=https' --tlsv1.2 --output sftp-url.deb "$SFTP_URL"; \
+    curl --fail --location --proto '=https' --tlsv1.2 --output client-url.deb "https://snapshot.ubuntu.com/ubuntu/$UBUNTU_SNAPSHOT/${CLIENT_URL#https://security.ubuntu.com/ubuntu/}"; \
+    curl --fail --location --proto '=https' --tlsv1.2 --output server-url.deb "https://snapshot.ubuntu.com/ubuntu/$UBUNTU_SNAPSHOT/${SERVER_URL#https://security.ubuntu.com/ubuntu/}"; \
+    curl --fail --location --proto '=https' --tlsv1.2 --output sftp-url.deb "https://snapshot.ubuntu.com/ubuntu/$UBUNTU_SNAPSHOT/${SFTP_URL#https://security.ubuntu.com/ubuntu/}"; \
     printf '%s  %s\n' "$CLIENT_SHA256" client-metadata.deb "$CLIENT_SHA256" client-url.deb "$SERVER_SHA256" server-metadata.deb "$SERVER_SHA256" server-url.deb "$SFTP_SHA256" sftp-metadata.deb "$SFTP_SHA256" sftp-url.deb | sha256sum --check --strict; \
     cmp client-metadata.deb client-url.deb; cmp server-metadata.deb server-url.deb; cmp sftp-metadata.deb sftp-url.deb; \
     for pair in 'client openssh-client' 'server openssh-server' 'sftp openssh-sftp-server'; do set -- $pair; test "$(dpkg-deb --field "$1-metadata.deb" Package)" = "$2"; test "$(dpkg-deb --field "$1-metadata.deb" Version)" = "$PACKAGE_VERSION"; test "$(dpkg-deb --field "$1-metadata.deb" Architecture)" = "$EXPECTED_ARCHITECTURE"; done; \

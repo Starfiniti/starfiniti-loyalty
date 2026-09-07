@@ -51,6 +51,38 @@ working-store demonstration. This release makes no enterprise GA claim.
   is healthy. Verify those before applying production migrations.
 - Nothing has been deployed or marked pilot-complete by these observations.
 
+### Private store prepared — 2026-09-07
+
+The isolated Docker project `starfiniti-loyalty-pilot` now runs on VM 970 at
+loopback port 8088, with dedicated volumes and memory/CPU limits. WordPress 7.1,
+WooCommerce 11.0.1, and the candidate plugin (development version 0.0.0) are active.
+The home page returns HTTP 200. `pilot-setup.php` creates one EUR 20 virtual test
+product idempotently and enables a clearly labelled offline test payment.
+The hub is not connected; no loyalty points or real payments have been created.
+
+Files are in `/opt/starfiniti-loyalty-pilot` on VM 970. Credentials remain in its
+root-only `secrets` directory. WP-CLI echoed the initial test-admin password during
+installation; it was immediately replaced via a private file-backed reset that
+does not print the replacement. Do not use interactive WP-CLI password prompts.
+The production hub, database, domains, and customers are unchanged.
+
+Rollback: stop only this Compose project with `docker compose -f
+/opt/starfiniti-loyalty-pilot/compose.yml stop`. Retain both named volumes and the
+secret directory; do not use `down --volumes` as a routine stop operation.
+
+### Verification and current integration issue
+
+Full local `npm run check` passed with 1,010 tests and both builds at `7813f02`.
+Exact-head CI `34100760238` passed, including database replay and all four
+WooCommerce runtime cells. Security `34100760217` passed all except the historical
+OpenSSH compatibility build: Ubuntu removed package `1:9.6p1-3ubuntu13.18` from the
+moving archive. This is a fixture reproducibility failure, not a failed loyalty
+transaction. The fix uses the [official Ubuntu snapshot service](https://snapshot.ubuntu.com/)
+at 20260902T000000Z while retaining signed indexes, package hashes, metadata, and
+executable hash checks. Those checks pass on VM 970; its legacy Docker builder
+cannot execute the later BuildKit-only COPY flag, so full runtime verification
+remains with CI. This does not upgrade or downgrade production SSH.
+
 ## Next work
 
 1. Verify and integrate the existing notification correction; take only additional

@@ -1,0 +1,56 @@
+# Isolated test data only. No public listener, production database, or real payments.
+name: starfiniti-loyalty-pilot
+services:
+  database:
+    image: mariadb@sha256:bc474f00629f0123c10f9e1bca193a45d18af15a274cf0656acda64f1086c3b6
+    restart: unless-stopped
+    mem_limit: 512m
+    cpus: 0.5
+    environment:
+      MARIADB_DATABASE: loyalty_pilot
+      MARIADB_USER: loyalty_pilot
+      MARIADB_PASSWORD_FILE: /run/secrets/db_password
+      MARIADB_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+    secrets: [db_password, db_root_password]
+    volumes: [database:/var/lib/mysql]
+    healthcheck:
+      test: [CMD, healthcheck.sh, --connect, --innodb_initialized]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+  wordpress:
+    image: wordpress@sha256:b8f37de278183840a09f5a4b5bf5ec9f09177a9984d2fe5cc072b4388128bd9d
+    restart: unless-stopped
+    mem_limit: 512m
+    cpus: 0.75
+    ports: ["127.0.0.1:8088:80"]
+    environment: &wordpress-environment
+      WORDPRESS_DB_HOST: database:3306
+      WORDPRESS_DB_NAME: loyalty_pilot
+      WORDPRESS_DB_USER: loyalty_pilot
+      WORDPRESS_DB_PASSWORD_FILE: /run/secrets/db_password
+    secrets: [db_password]
+    volumes: [wordpress:/var/www/html]
+    depends_on:
+      database:
+        condition: service_healthy
+  cli:
+    image: wordpress@sha256:1e1d1485277d15e0331b598b6e19972243128ead978b7134d758097d82116b99
+    profiles: [tools]
+    user: "33:33"
+    mem_limit: 384m
+    cpus: 0.5
+    environment: *wordpress-environment
+    secrets: [db_password]
+    volumes: [wordpress:/var/www/html]
+    depends_on:
+      database:
+        condition: service_healthy
+secrets:
+  db_password:
+    file: ./secrets/db_password
+  db_root_password:
+    file: ./secrets/db_root_password
+volumes:
+  database:
+  wordpress:

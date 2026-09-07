@@ -2,6 +2,11 @@
 
 ## 2026-09-07 — Working-store delivery
 
+- Prepare an isolated, loopback-only WooCommerce pilot on the existing application
+  VM with an offline test payment and repeatable test-product setup.
+- Restore historical OpenSSH test reproducibility using Ubuntu's signed archive
+  snapshot after the live repository removed the pinned package. Preserve all
+  package and executable checksums; production SSH is unchanged.
 - Apply Dependabot PR #64's exact fast-uri 3.1.7 lockfile correction for four
   high-severity development-tooling advisories. Production dependencies audit clean.
 - Resume the interrupted notification correction without discarding its archived
