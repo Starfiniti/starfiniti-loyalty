@@ -2,6 +2,8 @@
 
 ## 2026-09-07 — Working-store delivery
 
+- Apply Dependabot PR #64's exact fast-uri 3.1.7 lockfile correction for four
+  high-severity development-tooling advisories. Production dependencies audit clean.
 - Resume the interrupted notification correction without discarding its archived
   predecessor. Narrow immediate delivery to the WooCommerce pilot checklist;
   enterprise expansion and recurring maintenance are no longer its finish gate.
