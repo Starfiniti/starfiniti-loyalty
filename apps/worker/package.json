@@ -23,6 +23,6 @@
     "esbuild": "0.28.1",
     "smtp-server": "3.19.4",
     "typescript": "6.0.3",
-    "vitest": "4.1.10"
+    "vitest": "4.1.11"
   }
 }
